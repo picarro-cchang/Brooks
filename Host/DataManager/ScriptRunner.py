@@ -19,6 +19,7 @@
 
 from Host.DataManager import DataSynchronizer
 from Host.Common import timestamp
+from Host.Common import DoAdjustTempOffset
 import string
 
 #Input prefix definitions
@@ -42,6 +43,7 @@ SCRIPT_ARGS_ID = "_ARGS_"
 INSTR_STATUS_ID = "_INSTR_STATUS_"
 SERIAL_INTERFACE_ID = "_SERIAL_"
 USER_CAL_ID = "_USER_CAL_"
+DO_ADJUST_TEMP_OFFSET_ID = "_DO_ADJUST_TEMP_OFFSET_"
 
 # Synchronizer output function name...
 SYNC_OUT_ID = "_SYNC_OUT_"
@@ -186,6 +188,9 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[SERIAL_INTERFACE_ID] = SerialInterface
     dataEnviron[USER_CAL_ID] = UserCalDict.copy()
     dataEnviron[OPTIONS_ID] = Options
+
+    # Make this function accessible to runtime scripts (e.g., the adjustTempOffset.py DataManager script)
+    dataEnviron[DO_ADJUST_TEMP_OFFSET_ID] = DoAdjustTempOffset.doAdjustTempOffset
 
     ##Now set up the direct variables (couldn't decide which one was best, so both!)...
     #for k in DataDict.keys():

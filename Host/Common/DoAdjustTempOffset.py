@@ -36,10 +36,10 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
         raise RuntimeError("data dict is None")
     elif freqConv is None:
         Log("instr dict is None")
-        raise RuntimeError("freqConv object argument is None")
+        raise RuntimeError("freqConv is None")
     elif report is None:
         Log("instr dict is None")
-        raise RuntimeError("report argument is None")
+        raise RuntimeError("report dict is None")
 
     gain = float(instr.get("la_fineLaserCurrent_gain", 0))
     maxStep = float(instr.get("la_fineLaserCurrent_maxStep", 0))
@@ -103,7 +103,8 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                         else:
                             delta = -maxStep
                         
-                        Log("limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta), Level=2)
+                        Log("vLaser=%d limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" %
+                            (vLaserNum, maxStep, deltaOrig, delta), Level=2)
                         
                     # apply change to the current laser temp offset
                     newValue = curValue + delta
