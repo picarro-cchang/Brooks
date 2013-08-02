@@ -29,21 +29,21 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
 
     # All arguments are required.
     if instr is None:
-        Log("instr dict is None")
-        raise RuntimeError("instr dict is None")
+        assert("instr dict is None")
     elif data is None:
-        Log("instr dict is None")
-        raise RuntimeError("data dict is None")
+        assert("data dict is None")
     elif freqConv is None:
-        Log("instr dict is None")
-        raise RuntimeError("freqConv object argument is None")
+        assert("freqConv object argument is None")
     elif report is None:
-        Log("instr dict is None")
-        raise RuntimeError("report argument is None")
+        assert("report argument is None")
 
     gain = float(instr.get("la_fineLaserCurrent_gain", 0))
     maxStep = float(instr.get("la_fineLaserCurrent_maxStep", 0))
-    minFineCurrent = float(instr.get("la_fineLaserCurrent_minFineCurrent", 0))
+
+    # these settings should always be found; just in case they aren't
+    # assign something reasonable (though rather extreme) defaults
+    minFineCurrent = float(instr.get("la_fineLaserCurrent_minFineCurrent", 1000))
+    maxFineCurrent = float(instr.get("la_fineLaserCurrent_maxFineCurrent", 60000))
     laIsEnabled = float(instr.get("la_enabled", 0))
 
     # Note: "ch4_interval" is indeed available in data if we need it (CFKADS)
@@ -65,8 +65,8 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             fineCurrent = data.get("fineLaserCurrent_%d_mean" % vLaserNum, target)
             dev = fineCurrent - target
 
-            #print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f" % (vLaserNum, fineCurrent, target, minFineCurrent)
-
+            #print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f maxFineCurrent=%f" %
+            #     (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
             curValue = freqConv.getLaserTempOffset(vLaserNum)
             
             # save off values in laser dict
@@ -77,6 +77,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             laserDict["gain"] = gain
             laserDict["maxStep"] = maxStep
             laserDict["minFineCurrent"] = minFineCurrent
+            laserDict["maxFineCurrent"] = maxFineCurrent
             
             # set some initial defaults
             laserDict["controlOn"] = False
@@ -86,7 +87,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             if (laIsEnabled > 0):
                 laserDict["controlOn"] = True
                 
-                if (fineCurrent > minFineCurrent):
+                if fineCurrent > minFineCurrent and fineCurrent < maxFineCurrent:
                     #print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
                     
                     # compute adjustment needed
@@ -103,7 +104,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                         else:
                             delta = -maxStep
                         
-                        Log("limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta), Level=2)
+                        Log("Limiting laser temperature adjustment step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta))
                         
                     # apply change to the current laser temp offset
                     newValue = curValue + delta
@@ -111,9 +112,9 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                 else:
                     #print "not in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
                     laserDict["controlOn"] = False
-                    Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
-                        (vLaserNum, fineCurrent, minFineCurrent), Level=2)
-                    
+
+                    Log("Fine laser current is out of range, turning laser temperature control off, vLaser=%d minCurrent=%f maxCurrent=%f fineCurrent=%f" %
+                        (vLaserNum, minFineCurrent, maxFineCurrent, fineCurrent), Level=2)
             else:
                 laserDict["controlOn"] = False
             
