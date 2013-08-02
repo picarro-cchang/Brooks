@@ -43,7 +43,11 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
 
     gain = float(instr.get("la_fineLaserCurrent_gain", 0))
     maxStep = float(instr.get("la_fineLaserCurrent_maxStep", 0))
-    minFineCurrent = float(instr.get("la_fineLaserCurrent_minFineCurrent", 0))
+
+    # these settings should always be found; just in case they aren't
+    # assign something reasonable (though rather extreme) defaults
+    minFineCurrent = float(instr.get("la_fineLaserCurrent_minFineCurrent", 1000))
+    maxFineCurrent = float(instr.get("la_fineLaserCurrent_maxFineCurrent", 60000))
     laIsEnabled = float(instr.get("la_enabled", 0))
 
     # Note: "ch4_interval" is indeed available in data if we need it (CFKADS)
@@ -65,7 +69,8 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             fineCurrent = data.get("fineLaserCurrent_%d_mean" % vLaserNum, target)
             dev = fineCurrent - target
 
-            #print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f" % (vLaserNum, fineCurrent, target, minFineCurrent)
+            #print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f maxFineCurrent=%f" %
+            #     (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
 
             curValue = freqConv.getLaserTempOffset(vLaserNum)
             
@@ -77,6 +82,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             laserDict["gain"] = gain
             laserDict["maxStep"] = maxStep
             laserDict["minFineCurrent"] = minFineCurrent
+            laserDict["maxFineCurrent"] = maxFineCurrent
             
             # set some initial defaults
             laserDict["controlOn"] = False
@@ -86,7 +92,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             if (laIsEnabled > 0):
                 laserDict["controlOn"] = True
                 
-                if (fineCurrent > minFineCurrent):
+                if fineCurrent > minFineCurrent and fineCurrent < maxFineCurrent:
                     #print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
                     
                     # compute adjustment needed
@@ -103,16 +109,21 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                         else:
                             delta = -maxStep
                         
-                        Log("limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta), Level=2)
+                        Log("Limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta))
                         
                     # apply change to the current laser temp offset
                     newValue = curValue + delta
                     laserDict["newValue"] = newValue
                 else:
-                    #print "not in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
+                    #print "not in limits, fineCurrent=%f min=%f max=%f" % (fineCurrent, minFineCurrent, maxFineCurrent)
                     laserDict["controlOn"] = False
-                    Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
-                        (vLaserNum, fineCurrent, minFineCurrent), Level=2)
+                    
+                    if fineCurrent <= minFineCurrent:
+                        Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
+                            (vLaserNum, fineCurrent, minFineCurrent), Level=2)
+                    else:
+                        Log("  vLaser=%d fineCurrent=%f is greater than or equal to maximum fine current mean of %f" %
+                            (vLaserNum, fineCurrent, maxFineCurrent), Level=2)
                     
             else:
                 laserDict["controlOn"] = False
