@@ -43,7 +43,8 @@ SCRIPT_ARGS_ID = "_ARGS_"
 INSTR_STATUS_ID = "_INSTR_STATUS_"
 SERIAL_INTERFACE_ID = "_SERIAL_"
 USER_CAL_ID = "_USER_CAL_"
-DO_ADJUST_TEMP_OFFSET_ID = "_DO_ADJUST_TEMP_OFFSET_"
+UTILS_ID = "_UTILS_"
+
 
 # Synchronizer output function name...
 SYNC_OUT_ID = "_SYNC_OUT_"
@@ -189,8 +190,14 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[USER_CAL_ID] = UserCalDict.copy()
     dataEnviron[OPTIONS_ID] = Options
 
-    # Make this function accessible to runtime scripts (e.g., the adjustTempOffset.py DataManager script)
-    dataEnviron[DO_ADJUST_TEMP_OFFSET_ID] = DoAdjustTempOffset.doAdjustTempOffset
+    # Put the functions we want to expose to runtime scripts in a dictionary
+    # For now we are exposing functions by name. If there are any conflicts,
+    # using a dictionary gives future flexibility to expose them as a
+    # nested dictionary by module name.
+    #
+    # Warning: Do not remove existing dictionary keys that are function names
+    #          or you may break existing scripts!
+    dataEnviron[UTILS_ID] = { "doAdjustTempOffset": DoAdjustTempOffset.doAdjustTempOffset }
 
     ##Now set up the direct variables (couldn't decide which one was best, so both!)...
     #for k in DataDict.keys():

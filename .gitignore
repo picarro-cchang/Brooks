@@ -10,4 +10,11 @@ MobileKit/Tests/filesRowsStats.json
 MobileKit/Tests/stats.json
 MobileKit/Tests/data/test*
 Host/Tests/Coordinator/Output/
+Host/Common/setup_version.py
+Host/build/
+Host/debug.log
+Host/dist/
+MobileKit/build/
+MobileKit/dist/
+repoBzrVer.py
 
