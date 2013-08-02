@@ -48,6 +48,8 @@ def initInstrParams(instr):
     instr["la_fineLaserCurrent_gain"] = 1e-7
     instr["la_fineLaserCurrent_maxStep"] = .001
     instr["la_fineLaserCurrent_minFineCurrent"] = 5000
+    instr["la_fineLaserCurrent_maxFineCurrent"] = 60000
+
     instr["la_enabled"] = 1.0
 
     instr["la_fineLaserCurrent_1_target"] = 26050
@@ -80,8 +82,19 @@ def initGoodData(data=None, devExpected=None, instr=None):
         devExpected[vLaserNum] = curMean - instr[target_name]
 
 
-def initBadData(data):
+def initBadDataLow(data):
     # virtual laser 5 has a sub-par mean
+    # Note: None should match their targets or will result in false negatives
+    #       Testing edge cases around the 60000 limit
+    currentMeansBad = {1: 25974, 2: 60001, 4: 60000, 5: 59999}
+    
+    for vLaserNum in currentMeansBad:
+        name = "fineLaserCurrent_%d_mean" % vLaserNum
+        data[name] = currentMeansBad[vLaserNum]
+
+
+def initBadDataHigh(data):
+    # virtual laser 5 has a too high mean
     # Note: None should match their targets or will result in false negatives
     #       Testing edge cases around the 5000 limit
     currentMeansBad = {1: 25974, 2: 5001, 4: 5000, 5: 4999}
@@ -157,9 +170,9 @@ class TestAdjustLaserTempOffset(object):
                 assert(ctrlName not in self._REPORT_), "%s should not be in _REPORT_" % (ctrlName, )
                 assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
 
-    def test_AdjustOffsetBad(self):
-        print "test_AdjustOffsetBad"
-        initBadData(self._DATA_)
+    def test_AdjustOffsetBadLow(self):
+        print "test_AdjustOffsetBadLow"
+        initBadDataLow(self._DATA_)
         enableControlLoop(self._INSTR_, True)
 
         # do the calculations and stick results in _REPORT_
@@ -190,6 +203,40 @@ class TestAdjustLaserTempOffset(object):
                 # check whether report contains items that should not be there
                 assert(ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
                 assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
+
+    def test_AdjustOffsetBadHigh(self):
+            print "test_AdjustOffsetBadHigh"
+            initBadDataHigh(self._DATA_)
+            enableControlLoop(self._INSTR_, True)
+
+            # do the calculations and stick results in _REPORT_
+            doAdjustTempOffset(instr=self._INSTR_,
+                               data=self._DATA_,
+                               freqConv=self._FREQ_CONV_,
+                               report=self._REPORT_)
+
+            # hard-coded lasers 1, 2, 4, 5 should all have control turned off
+            for v in range(8):
+                vLaserNum = v + 1
+
+                ctrlName = "fineLaserCurrent_%d_controlOn" % vLaserNum
+                offsetName = "fineLaserCurrent_%d_offset" % vLaserNum
+
+                self.outputReport(vLaserNum)
+
+                if vLaserNum == 1 or vLaserNum == 2 or vLaserNum == 4 or vLaserNum == 5:
+                    assert(ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
+                    assert(offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
+
+                    # control loop should be disabled for all lasers
+                    assert(self._REPORT_[ctrlName] == 0)
+
+                    # current offset should be unchanged since control loop disabled
+                    assert(self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
+                else:
+                    # check whether report contains items that should not be there
+                    assert(ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
+                    assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
 
     def test_AdjustControlLoopOff(self):
         print "test_AdjustControlLoopOff"
