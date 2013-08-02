@@ -109,7 +109,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                         else:
                             delta = -maxStep
                         
-                        Log("limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta), Level=2)
+                        Log("Limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta))
                         
                     # apply change to the current laser temp offset
                     newValue = curValue + delta
@@ -117,6 +117,13 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                 else:
                     #print "not in limits, fineCurrent=%f min=%f max=%f" % (fineCurrent, minFineCurrent, maxFineCurrent)
                     laserDict["controlOn"] = False
+                    
+                    if fineCurrent <= minFineCurrent:
+                        Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
+                            (vLaserNum, fineCurrent, minFineCurrent), Level=2)
+                    else:
+                        Log("  vLaser=%d fineCurrent=%f is greater than or equal to maximum fine current mean of %f" %
+                            (vLaserNum, fineCurrent, maxFineCurrent), Level=2)
                     
                     if fineCurrent <= minFineCurrent:
                         Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
