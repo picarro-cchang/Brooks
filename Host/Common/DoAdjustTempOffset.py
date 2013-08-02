@@ -29,17 +29,13 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
 
     # All arguments are required.
     if instr is None:
-        Log("instr dict is None")
-        raise RuntimeError("instr dict is None")
+        assert("instr dict is None")
     elif data is None:
-        Log("instr dict is None")
-        raise RuntimeError("data dict is None")
+        assert("data dict is None")
     elif freqConv is None:
-        Log("instr dict is None")
-        raise RuntimeError("freqConv object argument is None")
+        assert("freqConv object argument is None")
     elif report is None:
-        Log("instr dict is None")
-        raise RuntimeError("report argument is None")
+        assert("report argument is None")
 
     gain = float(instr.get("la_fineLaserCurrent_gain", 0))
     maxStep = float(instr.get("la_fineLaserCurrent_maxStep", 0))
@@ -109,7 +105,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                         else:
                             delta = -maxStep
                         
-                        Log("Limiting step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta))
+                        Log("Limiting laser temperature adjustment step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta))
                         
                     # apply change to the current laser temp offset
                     newValue = curValue + delta
@@ -117,21 +113,9 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                 else:
                     #print "not in limits, fineCurrent=%f min=%f max=%f" % (fineCurrent, minFineCurrent, maxFineCurrent)
                     laserDict["controlOn"] = False
-                    
-                    if fineCurrent <= minFineCurrent:
-                        Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
-                            (vLaserNum, fineCurrent, minFineCurrent), Level=2)
-                    else:
-                        Log("  vLaser=%d fineCurrent=%f is greater than or equal to maximum fine current mean of %f" %
-                            (vLaserNum, fineCurrent, maxFineCurrent), Level=2)
-                    
-                    if fineCurrent <= minFineCurrent:
-                        Log("  vLaser=%d fineCurrent=%f is less than or equal to minimum fine current mean of %f" %
-                            (vLaserNum, fineCurrent, minFineCurrent), Level=2)
-                    else:
-                        Log("  vLaser=%d fineCurrent=%f is greater than or equal to maximum fine current mean of %f" %
-                            (vLaserNum, fineCurrent, maxFineCurrent), Level=2)
-                    
+
+                    Log("Fine laser current is out of range, turning laser temperature control off, vLaser=%d minCurrent=%f maxCurrent=%f fineCurrent=%f" %
+                        (vLaserNum, minFineCurrent, maxFineCurrent, fineCurrent), Level=2)
             else:
                 laserDict["controlOn"] = False
             

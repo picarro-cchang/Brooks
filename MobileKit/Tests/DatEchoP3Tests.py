@@ -21,9 +21,26 @@ import simplejson as json
 import psutil
 
 from Host.Common import SharedTypes
+from Helpers import Process
 
 
 class TestDatEchoP3(object):
+
+    def _canGetTicket(self):
+        try:
+            resp = urllib2.urlopen("%ssec/dummy/1.0/Admin/" % self.localUrl)
+            data = json.loads(resp.read())
+
+            urllib2.urlopen('http://localhost:5000/resetStats')
+
+            if data.get('ticket') != '123456789':
+                return False
+            else:
+                return True
+
+        except:
+            return False
+
 
     def setup_method(self, m):
         baseDir = os.path.abspath(os.path.dirname(__file__))
@@ -37,8 +54,10 @@ class TestDatEchoP3(object):
                                           os.path.join(baseDir, '..', '..')})
 
         p = subprocess.Popen(['python.exe', 'RESTEmulator.py'], env=self.testEnv)
-        time.sleep(3.0)
         self.server = psutil.Process(p.pid)
+        Process.ProcessHelpers.waitForLaunch(self.server,
+                                             self._canGetTicket,
+                                             30.0)
         assert self.server.is_running()
 
         # Other things we may need to cleanup later
@@ -52,12 +71,12 @@ class TestDatEchoP3(object):
 
     def teardown_method(self, m):
         self.server.kill()
-        time.sleep(5.0)
+        Process.ProcessHelpers.waitForKill(self.server, 30.0)
         assert not self.server.is_running()
 
         if self.driverEmulator is not None:
             self.driverEmulator.kill()
-            time.sleep(5.0)
+            Process.ProcessHelpers.waitForKill(self.driverEmulator, 30.0)
             assert not self.driverEmulator.is_running()
             self.driverEmulator = None
 

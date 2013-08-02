@@ -228,6 +228,13 @@ def setLogDate(year, month, day, hour, minute, second):
 def getLines(logName):
     return json.dumps(FILES_DATA[logName])
 
+@APP.route('/resetStats')
+def resetStats():
+    for s in STATS:
+        STATS[s] = 0
+
+    return ''
+
 if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('--unreliable', action='store_true', dest='isUnreliable',
