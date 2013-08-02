@@ -81,19 +81,18 @@ def initGoodData(data=None, devExpected=None, instr=None):
         devExpected[vLaserNum] = curMean - instr[target_name]
 
 
-def initBadDataLow(data):
-    # virtual laser 5 has a sub-par mean
+def initBadDataHigh(data):
+    # virtual laser 2 has a too high mean
     # Note: None should match their targets or will result in false negatives
-    #       Testing edge cases around the 60000 limit
-    currentMeansBad = {1: 25974, 2: 60001, 4: 60000, 5: 59999}
+    currentMeansBad = {1: 25974, 2: 60001, 4: 60000, 5: 69999}
     
     for vLaserNum in currentMeansBad:
         name = "fineLaserCurrent_%d_mean" % vLaserNum
         data[name] = currentMeansBad[vLaserNum]
 
 
-def initBadDataHigh(data):
-    # virtual laser 5 has a too high mean
+def initBadDataLow(data):
+    # virtual laser 5 has a too low mean
     # Note: None should match their targets or will result in false negatives
     #       Testing edge cases around the 5000 limit
     currentMeansBad = {1: 25974, 2: 5001, 4: 5000, 5: 4999}
