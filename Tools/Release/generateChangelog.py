@@ -6,6 +6,7 @@ Generates a changelog between two tags in the repositories.
 
 from __future__ import with_statement
 
+import os
 import sys
 import subprocess
 import optparse
@@ -27,31 +28,48 @@ CONFIG_BASE = 's:/CrdsRepositoryNew/trunk/G2000/Config'
 PRODUCTS = 'products.json'
 
 
-def _generateChangelog(repositoryNames, startTag, endTag):
+def _generateChangelogGit(logFp, startTag, endTag):
     """
-    Generate verbose diffs for all of the changes for all of the
-    repositories we know about between the specified tags.
+    Generate verbose diffs for all of the changes between the specified tags.
+    Assumes that this script is being run of out a git working copy.
     """
 
-    with open('CHANGELOG.raw', 'wb') as changelogFp:
-        for repo in repositoryNames:
-            changelogFp.write("\n%s\n" % repo)
-            changelogFp.flush()
-            print subprocess.list2cmdline(['bzr.exe',
-                               'log',
-                               '-v',
-                               "-r%s..%s" % (startTag, endTag),
-                               '--include-merges',
-                               os.path.abspath(repo)])
-            subprocess.call(['bzr.exe',
-                             'log',
-                             '-v',
-                             "-r%s..%s" % (startTag, endTag),
-                             '--include-merges',
-                             os.path.abspath(repo)],
-                            stdout=changelogFp)
-            changelogFp.write('\n')
-            changelogFp.flush()
+    logFp.write("\ngit logs for: %s\n" % os.getcwd())
+    logFp.flush()
+    subprocess.call(['git.exe',
+                     'log',
+                     '--name-status',
+                     "%s..%s" % (startTag, endTag)],
+                     stdout=logFp)
+    logFp.write("\n")
+    logFp.flush()
+
+
+def _generateChangelogBzr(logFp, repositoryNames, startTag, endTag):
+    """
+    Generate verbose diffs for all of the changes for all of the
+    specified bzr repositories we know about between the specified
+    tags.
+    """
+
+    for repo in repositoryNames:
+        logFp.write("\nbzr logs for: %s\n" % repo)
+        logFp.flush()
+        print subprocess.list2cmdline(['bzr.exe',
+                       'log',
+                       '-v',
+                       "-r%s..%s" % (startTag, endTag),
+                       '--include-merges',
+                       os.path.abspath(repo)])
+        subprocess.call(['bzr.exe',
+                     'log',
+                     '-v',
+                     "-r%s..%s" % (startTag, endTag),
+                     '--include-merges',
+                     os.path.abspath(repo)],
+                    stdout=logFp)
+        logFp.write('\n')
+        logFp.flush()
 
 
 def main():
@@ -72,8 +90,7 @@ Generates a raw changelog for the specified tags.
     options, _ = parser.parse_args()
 
 
-    reposToQuery = [os.path.join(REPO_BASE, REPO),
-                    os.path.join(CONFIG_BASE, 'CommonConfig')]
+    reposToQuery = [os.path.join(CONFIG_BASE, 'CommonConfig')]
 
     if not os.path.isfile(PRODUCTS):
         print "'%s' is missing!" % PRODUCTS
@@ -88,7 +105,9 @@ Generates a raw changelog for the specified tags.
         reposToQuery.append(os.path.join(prodDir, 'AppConfig'))
         reposToQuery.append(os.path.join(prodDir, 'InstrConfig'))
 
-    _generateChangelog(reposToQuery, options.startTag, options.endTag)
+    with open('CHANGELOG.raw', 'wb') as fp:
+        _generateChangelogBzr(fp, reposToQuery, options.startTag, options.endTag)
+        _generateChangelogGit(fp, options.startTag, options.endTag)
 
 
 if __name__ == '__main__':
