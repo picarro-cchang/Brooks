@@ -14,6 +14,7 @@ import pprint
 import re
 import time
 import os.path
+import stat
 
 from distutils import dir_util
 from optparse import OptionParser
@@ -282,6 +283,20 @@ def _branchFromRepo():
 
     if os.path.exists(SANDBOX_DIR):
         print "Removing previous sandbox at '%s'." % SANDBOX_DIR
+        
+        # First fix up the permissions on some pesky .idx and .pack files
+        # If they exist, they are read-only and shutil.rmtree() will bail
+        packFolder = os.path.join(SANDBOX_DIR, 'host', '.git', 'objects', 'pack')
+
+        if os.path.isdir(packFolder):
+            packFiles = os.listdir(packFolder)
+            
+            for file in packFiles:
+                # fix up permissions
+                print "chmod(%s)" % os.path.join(packFolder, file)
+                os.chmod(os.path.join(packFolder, file), stat.S_IREAD | stat.S_IWRITE)
+
+        # now remove the sandbox tree
         shutil.rmtree(SANDBOX_DIR)
 
     os.makedirs(SANDBOX_DIR)
