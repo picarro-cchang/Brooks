@@ -135,114 +135,91 @@ background:url("{{ url_for('static',filename='images/icons/icon-combined-all-v5.
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid">
-        <!--
-        <audio id="plume">
-           <source src="/static/sound/beep-7.mp3" />
-           <source src="/static/sound/beep-7.wav" />
-        </audio>
-        -->
-        <div class="span3" id="id_sidebar" data-no-collapse="true" style="margin-left:0;">
-            <div class="sidebar-nav">
-                <div class="navbar navbar-fixed-top" style="height: 45px;" id="id_topleft">
-                   <div class="navbar-left-inner" style="height: 45px;" id="id_topleftbar">
-                       <div id="id_p3_icon">
-                        <img alt="Picarro" src="/static/images/pcube_ppp_logo_60.png" height="40" />
-                       </div>
-                   </div>
-                </div><br /><br /><br />
-                <div style="height: 45px;" id="id_sidebar_spacer"></div>
-
-                <span>
-                    <form id="setoptions" method="get">
-                    
-                    <div id="id_side_modal_span">
-                      <div id="id_smsg"></div>
-                      <div id="id_smodal"></div>
-                      <div id="id_smod_change"></div>
-                    </div>
-                    <div id="id_modal_span">
-                      <div id="id_msg"></div>
-                      <div id="id_modal"></div>
-                      <div id="id_weather" class="modal fade hide"></div>
-                      <div id="id_mod_change"></div>
-                    </div>
-                    
-                        <br />
-                        
-                        <fieldset>
-                          <div class="clearfix">
-                            <ul class="unstyled">
-                            <div style="margin-left:2px; height:25px;" id="placeholder"><img alt="Initializing Route Trace" src="/static/images/ajax-loader.gif" /></div>
-                            <div style="margin-left:2px; margin-top:10px; margin-bottom:10px;" id="concAndWind">
-                                <span style="margin-right:28px;" id="concData"></span>
-                                <span id="windData"></span>
-                            </div>
-                                <span id="concentrationSparkline"></span>
-                                  <span id="windRose">
-                                      <canvas id="windCanvas" width="50" height="50"/>
-                                  </span>
-                                <li>
-                                    <div id="id_statusPane"></div>
-                                    <div id="id_followPane"></div>
-                                    <div id="id_modePane"></div>
-                                      <div id="id_primeControlButton_span"></div>
-                                      <span id="id_exportButton_span"></span>
-                                </li>
-                                <li>
-                                      <input style="width: 100%;" type="submit" name="F3967418176244ND1N5" class="btn btn-primary btn-fullwidth" value="Select Surveyor" />
-                                </li>
-                            </ul>
-                          </div>
-                        </fieldset>
-                    </form>
-                </span>
-
-            </div>
-        </div>   
-
-        <div class="span10" id="id_content">
+    <div id="id_topbar" class="navbar navbar-fixed-top">
+      <div style="height: 45px;" class="navbar-left-inner">
+        <div style="height: 45px;" class="container">
+          <div>
+            <img alt="Picarro" height="40" src="/static/images/pcube_ppp_logo_60.png" class="pull-left">
+          </div>
+          <div id="id_nav_title" style="color:#585858;margin-right: 10px; margin-top: 5px;" class="pull-right">
+            <h3>Picarro Surveyor™ <span style="color: #008000">for Natural Gas Leaks</span></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="id_p3_canvas" class="container-fluid">
+    </div>
+    <br>
+    <div id="real_content" class="row">
+      <div id="id_p3_gdumap" class="container-fluid">
+       <div class="row">
+          <div id="id_sidebar" data-no-collapse="true" class="span3">
             <span>
-            
-            <div class="navbar navbar-fixed-top" id="id_topright">
-                    <div class="navbar-inner" id="id_topbar">
-                          <div class="container">
-                          
-                            <ul class="nav nav-pills pull-right">
-                              <li class="dropdown">
-                                <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span>Prime User</span><b class="caret"></b></a>
-                              </li>
-                            </ul>
-                          
-                        </div>
-                    </div>
-            </div>            
-            </span>
-            <script type="text/javascript">$('.dropdown-toggle').dropdown()</script>
-            
-            <div id="id_content_spacer" style="height: 45px;"></div>
-            <div id="id_content_title">
-                <h2>Picarro Surveyor&#8482; for Natural Gas Leaks</h2>
-                <br/>
-            </div>
-
-            <span>
-              <div class="row">
-                <div id="id_feedback">
-                  <div style="float:left;" id="id_msg_placeholder">
+              <div style="margin-left:10px">
+                <div id="id_side_modal_span"> 
+                  <div id="id_smsg">          
                   </div>
-                  <div style="float:left;">      </div>
-                  <div style="float:left;" id="concData"></div>
-                  <div style="float:left;">      </div>
-                  <div style="float:left;" id="counter"></div>
+                  <div id="id_smodal">          
+                  </div>
+                  <div id="id_smod_change"> 
+                  </div>
                 </div>
-                <br />
-                <div style="width:100%; top: 5px; bottom: 5px;" id="map_canvas"></div>
+                <div id="id_modal_span">
+                  <div id="id_msg">        
+                  </div>
+                  <div id="id_modal">        
+                  </div>
+                  <div id="id_weather" class="modal fade hide">
+                  </div>
+                  <div id="id_mod_change">
+                  </div>
+                </div>
+                <fieldset>
+                  <div class="clearfix">
+                    <ul class="unstyled">
+                      <div id="placeholder" style="margin-left:2px; height:25px;">
+                        <img src="/stage//img/ajax-loader.gif" alt="Initializing Route Trace">
+                      </div>
+                      <div id="concAndWind" style="margin-left:2px; margin-top:10px; margin-bottom:10px;">
+                        <span id="concData" style="margin-right:28px;">
+                        </span>
+                        <span id="windData">
+                        </span>
+                      </div>
+                      <span id="concentrationSparkline">
+                      </span>
+                      <span id="windRose">
+                        <canvas id="windCanvas" width="50" height="50"/>
+                      </span>
+                      <li>
+                        <div id="id_statusPane">
+                        </div>
+                        <div id="id_followPane">
+                        </div>
+                        <div id="id_modePane">
+                        </div>
+                        <div id="id_primeControlButton_span">
+                        </div><!-- button to select anz goes here <entry:submitVals/>-->
+                        <span id="id_exportButton_span">
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </fieldset>
               </div>
             </span>
-            
+          </div>
+          <div id="top_right" style="width:100%" class="span9">
+            <div id="id_feedback" class="row">
+            </div>
+            <div id="top_right" style="width:100%" class="span9">
+              <div id="id_feedback" class="row">
+            </div>
+            <div id="map_canvas" style="margin-top: 10px">          
+            </div>
+          </div>
+          </div>
         </div>
-
-    </div>
-    </div>
+      </div>
+    </div>     
 {% endblock %}
