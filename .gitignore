@@ -18,3 +18,5 @@ MobileKit/build/
 MobileKit/dist/
 repoBzrVer.py
 Tools/Release/CHANGELOG.raw*
+Host/DataManager/build/
+Host/DataManager/dist/
