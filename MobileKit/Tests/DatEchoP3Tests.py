@@ -1,5 +1,5 @@
 """
-Copyright 2012 Picarro Inc.
+Copyright 2012-2013 Picarro Inc.
 """
 
 from __future__ import with_statement
@@ -435,7 +435,7 @@ class TestDatEchoP3(object):
         self.driverEmulator = psutil.Process(
             subprocess.Popen(['python.exe',
                               './Helpers/DriverEmulatorServer.py'],
-                              self.testEnv).pid)
+                              env=self.testEnv).pid)
         time.sleep(1.0)
 
         assert self.driverEmulator.is_running()
