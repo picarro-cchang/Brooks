@@ -1,5 +1,5 @@
 // dashboardInstructions.js
-/*global alert, ASSETS, console, FileReader, module, require */
+/*global alert, ASSETS, console, FileReader, module, P3TXT, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -10,18 +10,25 @@ define(function(require, exports, module) {
     var _ = require('underscore');
     var Backbone = require('backbone');
     var bufferedTimezone = require('app/utils').bufferedTimezone;
+    var CNSNT = require('common/cnsnt');
     var cjs = require('common/canonical_stringify');
     var DASHBOARD = require('app/dashboardGlobals');
     var instrResource = require('app/utils').instrResource;
-    var iv = require('common/instructionsValidator');
+    var instrValidator = require('common/instructionsValidator').instrValidator;
     var tableFuncs = require('app/tableFuncs');
-    require('jquery-migrate'),
+    var onFacFileUploaded = null;   // This will be the function to call once the facilities file
+                                    //  has been uploaded
+    var onMarkersFileUploaded = null;   // This will be the function to call once the user marker file
+                                    //  has been uploaded
+    require('common/P3TXT');
+    require('jquery-migrate');
     require('jquery-ui');
     require('jquery.maphilight');
     require('jquery.timezone-picker');
     require('jquery.datetimeentry');
     require('jquery.generateFile');
     require('jquery.mousewheel');
+    require('jquery.form'),
     require('bootstrap-modal');
     require('bootstrap-dropdown');
     require('bootstrap-spinedit');
@@ -79,6 +86,13 @@ define(function(require, exports, module) {
         return coords;
     }
 
+    function floatsToString(floatArray) {
+        var i, result = [];
+        for (i = 0; i < floatArray.length; i++) {
+            result.push(String(floatArray[i]));
+        }
+        return result.join(", ");
+    }
     // ============================================================================
     //  Definitions of tables which can be edited by the user
     // ============================================================================
@@ -88,14 +102,14 @@ define(function(require, exports, module) {
 
     var runsDefinition = {id: "runTable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "analyzer", width: "17%", th: "Analyzer", tf: String, eid: "id_analyzer", cf: String},
-        {key: "startEtm", width: "17%", th: "Start", tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
-        {key: "endEtm", width: "17%", th: "End", tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
-        {key: "peaks", width: "9%", th: "Peaks", tf: makeColorPatch, eid: "id_marker", cf: String},
-        {key: "wedges", width: "9%", th: "LISA", tf: makeColorPatch, eid: "id_wedges", cf: String},
-        {key: "analyses", width: "9%", th: "Isotopic", tf: makeColorPatch, eid: "id_analyses", cf: String},
-        {key: "fovs", width: "9%", th: "FOV", tf: makeColorPatch, eid: "id_swath", cf: String},
-        {key: "stabClass", width: "9%", th: "Stab Class", tf: String, eid: "id_stab_class", cf: String},
+        {key: "analyzer", width: "17%", th: P3TXT.dashboard.th_analyzer, tf: String, eid: "id_analyzer", cf: String},
+        {key: "startEtm", width: "17%", th: P3TXT.dashboard.th_startEtm, tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
+        {key: "endEtm", width: "17%", th: P3TXT.dashboard.th_endEtm, tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
+        {key: "peaks", width: "9%", th: P3TXT.dashboard.th_peaks, tf: makeColorPatch, eid: "id_marker", cf: String},
+        {key: "wedges", width: "9%", th: P3TXT.dashboard.th_wedges, tf: makeColorPatch, eid: "id_wedges", cf: String},
+        {key: "analyses", width: "9%", th: P3TXT.dashboard.th_analyses, tf: makeColorPatch, eid: "id_analyses", cf: String},
+        {key: "fovs", width: "9%", th: P3TXT.dashboard.th_fovs, tf: makeColorPatch, eid: "id_swath", cf: String},
+        {key: "stabClass", width: "9%", th: P3TXT.dashboard.th_stabClass, tf: String, eid: "id_stab_class", cf: String},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ],
     vf: function (eidByKey, template, container, onSuccess) {
@@ -107,11 +121,12 @@ define(function(require, exports, module) {
             var tz = DASHBOARD.timezone;
             bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
             function (err) {
-                var msg = 'While converting timezone: ' + err;
-                alert(msg);
+                var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
+                console.log(msg);
+                // alert(msg);
             },
             function (s, result) {
-                console.log('While converting timezone: ' + s);
+                // console.log('While converting timezone: ' + s);
                 rowData.startEtm.posixTime = result.posixTimes[0];
                 rowData.endEtm.posixTime = result.posixTimes[1];
                 rowData.startEtm.localTime = result.timeStrings[0];
@@ -120,42 +135,77 @@ define(function(require, exports, module) {
                 tableFuncs.setCell(row,"endEtm",rowData.endEtm,runsDefinition);
             });
         }
-        console.log(data);
+        // console.log(data);
     }};
 
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "baseType", width: "21%", th: "Type", tf: String, eid: "id_submaps_type", cf: String},
-        {key: "paths", width: "15%", th: "Paths", tf: boolToIcon, eid: "id_submaps_paths",
+        {key: "baseType", width: "19%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_submaps_type", cf: String},
+        // Hide facilities and markers tables
+        // {key: "facilities", width: "11%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_submaps_facilities",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        {key: "paths", width: "11%", th: P3TXT.dashboard.th_paths, tf: boolToIcon, eid: "id_submaps_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "peaks", width: "15%", th: "Peaks", tf: boolToIcon, eid: "id_submaps_peaks",
+        {key: "peaks", width: "11%", th: P3TXT.dashboard.th_peaks, tf: boolToIcon, eid: "id_submaps_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "wedges", width: "15%", th: "LISA", tf: boolToIcon, eid: "id_submaps_wedges",
+        // Hide facilities and markers tables
+        // {key: "markers", width: "11%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_submaps_markers",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        {key: "wedges", width: "11%", th: P3TXT.dashboard.th_wedges, tf: boolToIcon, eid: "id_submaps_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "analyses", width: "15%", th: "Isotopic", tf: boolToIcon, eid: "id_summary_analyses",
+        {key: "analyses", width: "11%", th: P3TXT.dashboard.th_analyses, tf: boolToIcon, eid: "id_submaps_analyses",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "fovs", width: "15%", th: "FOV", tf: boolToIcon, eid: "id_submaps_fovs",
+        {key: "fovs", width: "11%", th: P3TXT.dashboard.th_fovs, tf: boolToIcon, eid: "id_submaps_fovs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
 
     var summaryDefinition = {id: "summarytable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
-        {key: "baseType", width: "18%", th: "Type", tf: String, eid: "id_summary_type", cf: String},
-        {key: "paths", width: "13%", th: "Paths", tf: boolToIcon, eid: "id_summary_paths",
+        {key: "baseType", width: "16%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_summary_type", cf: String},
+        // Hide facilities and markers tables
+        // {key: "facilities", width: "10%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_summary_facilities",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        {key: "paths", width: "10%", th: P3TXT.dashboard.th_paths, tf: boolToIcon, eid: "id_summary_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "peaks", width: "13%", th: "Peaks", tf: boolToIcon, eid: "id_summary_peaks",
+        {key: "peaks", width: "10%", th: P3TXT.dashboard.th_peaks, tf: boolToIcon, eid: "id_summary_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "wedges", width: "13%", th: "LISA", tf: boolToIcon, eid: "id_summary_wedges",
+        // Hide facilities and markers tables
+        // {key: "markers", width: "10%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_summary_markers",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        {key: "wedges", width: "10%", th: P3TXT.dashboard.th_wedges, tf: boolToIcon, eid: "id_summary_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "analyses", width: "13%", th: "Isotopic", tf: boolToIcon, eid: "id_summary_analyses",
+        {key: "analyses", width: "10%", th: P3TXT.dashboard.th_analyses, tf: boolToIcon, eid: "id_summary_analyses",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "fovs", width: "13%", th: "FOV", tf: boolToIcon, eid: "id_summary_fovs",
+        {key: "fovs", width: "10%", th: P3TXT.dashboard.th_fovs, tf: boolToIcon, eid: "id_summary_fovs",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "submapGrid", width: "13%", th: "Grid", tf: boolToIcon, eid: "id_summary_grid",
+        {key: "submapGrid", width: "10%", th: P3TXT.dashboard.th_submapGrid, tf: boolToIcon, eid: "id_summary_grid",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}
     ]};
+
+    var markersFilesDefinition = {id: "markerstable", layout: [
+        {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
+        {key: "filename", width: "48%", th: P3TXT.dashboard.th_csv_filename, tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "hashAndName", width: "48%", th: P3TXT.dashboard.th_csv_hashAndName, tf: makeMarkersFileDownloadButton, eid: "id_markers_hash_and_name", cf: String},
+        {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
+    vf: function (eidByKey, template, container, onSuccess) {
+        return validateMarkersFile(eidByKey, template, container, onSuccess);
+    }};
+
+    var facilitiesDefinition = {id: "facilitiestable", layout: [
+        {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
+        {key: "filename", width: "36%", th: P3TXT.dashboard.th_kml_filename, tf: String, eid: "id_file_upload_name", cf: String},
+        {key: "offsets", width: "12%", th: P3TXT.dashboard.th_offsets, tf: floatsToString, eid: "id_fac_offsets", cf: parseFloats,
+            ef: function (s, b) { s.val(floatsToString(b)); }},
+        {key: "linewidth", width: "12%", th: P3TXT.dashboard.th_linewidth, tf: Number, eid: "id_fac_linewidth", cf: Number},
+        {key: "linecolor", width: "12%", th: P3TXT.dashboard.th_linecolor, tf: makeColorPatch, eid: "id_fac_linecolor", cf: String},
+        {key: "xpath", width: "12%", th: P3TXT.dashboard.th_xpath, tf: String, eid: "id_fac_xpath", cf: String},
+        {key: "hashAndName", width: "12%", th: P3TXT.dashboard.th_kml_hashAndName, tf: makeFacDownloadButton, eid: "id_fac_hash_and_name", cf: String},
+        {width: "2%", th: tableFuncs.clearButton(), tf: tableFuncs.deleteButton}],
+    vf: function (eidByKey, template, container, onSuccess) {
+        return validateFacilities(eidByKey, template, container, onSuccess);
+    }};
     // ============================================================================
     //  Definitions of forms used to edit a row of a table
     // ============================================================================
@@ -164,41 +214,47 @@ define(function(require, exports, module) {
         var header, body, footer;
         var controlClass = "input-large";
         var tz = DASHBOARD.timezone;
-        header = '<div class="modal-header"><h3>' + "Add new run" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.runs_dlg_add_new_run + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
         if (_.isEmpty(DASHBOARD.analyzers)) {
-            body += tableFuncs.editControl("Analyzer", tableFuncs.makeInput("id_analyzer", {"class": controlClass,
-                    "placeholder": "Name of analyzer"}));
+            body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_analyzer, tableFuncs.makeInput("id_analyzer", {"class": controlClass,
+                    "placeholder": P3TXT.dashboard.runs_ph_analyzer}));
         }
         else {
-            body += tableFuncs.editControl("Analyzer", tableFuncs.makeSelect("id_analyzer", {"class": controlClass},
+            body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_analyzer, tableFuncs.makeSelect("id_analyzer", {"class": controlClass},
                     DASHBOARD.analyzersDict));
         }
-        body += tableFuncs.editControl("Start Time", '<div class="input-append">' + tableFuncs.makeInput("id_start_etm",
+
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_start_time, '<div class="input-append">' + tableFuncs.makeInput("id_start_etm",
                 {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
-        body += tableFuncs.editControl("End Time", '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_end_time, '<div class="input-append">' + tableFuncs.makeInput("id_end_etm",
                 {"class": "input-medium datetimeRange", "placeholder": "YYYY-MM-DD HH:MM"}) + '<span class="add-on">' + tz + '</span></div>');
-        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_marker", {"class": controlClass},
-                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
-        body += tableFuncs.editControl("LISAs", tableFuncs.makeSelect("id_wedges", {"class": controlClass},
-                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_analyses", {"class": controlClass},
-                {"#000000": "black", "#00009F": "blue", "#009F00": "green", "#9F0000": "red",
-                 "#009F9F": "cyan",  "#9F009F": "magenta", "#9F9F00": "yellow" }));
-        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_swath", {"class": controlClass},
-                {"#FFFFFF": "white", "#0000FF": "blue", "#00FF00": "green", "#FF0000": "red",
-                 "#00FFFF": "cyan",  "#FF00FF": "magenta", "#FFFF00": "yellow" }));
-        body += tableFuncs.editControl("Stability Class", tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
-                {"*": "*: Use reported weather data", "A": "A: Very Unstable", "B": "B: Unstable",
-                 "C": "C: Slightly Unstable", "D": "D: Neutral", "E": "E: Slightly Stable", "F": "F: Stable" }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_peaks, tableFuncs.makeSelect("id_marker", {"class": controlClass},
+                {"#FFFFFF": P3TXT.colors.white, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green, "#FF0000": P3TXT.colors.red,
+                 "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta, "#FFFF00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_wedges, tableFuncs.makeSelect("id_wedges", {"class": controlClass},
+                {"#FFFFFF": P3TXT.colors.white, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green, "#FF0000": P3TXT.colors.red,
+                 "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta, "#FFFF00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_analyses, tableFuncs.makeSelect("id_analyses", {"class": controlClass},
+                {"#000000": P3TXT.colors.black, "#00009F": P3TXT.colors.blue, "#009F00": P3TXT.colors.green, "#9F0000": P3TXT.colors.red,
+                 "#009F9F": P3TXT.colors.cyan,  "#9F009F": P3TXT.colors.magenta, "#9F9F00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_swath, tableFuncs.makeSelect("id_swath", {"class": controlClass},
+                {"#FFFFFF": P3TXT.colors.white, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green, "#FF0000": P3TXT.colors.red,
+                 "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta, "#FFFF00": P3TXT.colors.yelow }));
+        body += tableFuncs.editControl(P3TXT.dashboard.runs_dlg_stab_class, tableFuncs.makeSelect("id_stab_class", {"class": controlClass},
+                {"*": P3TXT.dashboard.runs_dlg_stab_class_star,
+                 "A": P3TXT.dashboard.runs_dlg_stab_class_a,
+                 "B": P3TXT.dashboard.runs_dlg_stab_class_b,
+                 "C": P3TXT.dashboard.runs_dlg_stab_class_c,
+                 "D": P3TXT.dashboard.runs_dlg_stab_class_d,
+                 "E": P3TXT.dashboard.runs_dlg_stab_class_e,
+                 "F": P3TXT.dashboard.runs_dlg_stab_class_f }));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -207,21 +263,25 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        header = '<div class="modal-header"><h3>' + "Add new figure for each submap" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.submap_dlg_add_new_figure + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
-        body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
-                {"map": "Google map", "satellite": "Satellite", "none": "None"}));
-        body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_background, tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
+                {"map": P3TXT.dashboard.fig_dlg_background_map, "satellite": P3TXT.dashboard.fig_dlg_background_satellite, "none": P3TXT.dashboard.fig_dlg_background_none}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_submaps_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_paths, tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_peaks, tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_wedges, tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_analyses, tableFuncs.makeSelect("id_submaps_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_fovs, tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
@@ -230,26 +290,97 @@ define(function(require, exports, module) {
     {
         var header, body, footer;
         var controlClass = "input-large";
-        header = '<div class="modal-header"><h3>' + "Add new figure for summary" + '</h3></div>';
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.summary_dlg_add_new_figure + '</h3></div>';
         body   = '<div class="modal-body">';
         body += '<form class="form-horizontal">';
-        body += tableFuncs.editControl("Background Type", tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
-                {"map": "Google map", "satellite": "Satellite", "none": "None"}));
-        body += tableFuncs.editControl("Paths", tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Peaks", tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("LISA", tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Isotopic", tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Field of View", tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl("Submap Grid", tableFuncs.makeSelect("id_summary_grid", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_background, tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
+                {"map": P3TXT.dashboard.fig_dlg_background_map, "satellite": P3TXT.dashboard.fig_dlg_background_satellite, "none": P3TXT.dashboard.fig_dlg_background_none}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_summary_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_paths, tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_peaks, tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_wedges, tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_analyses, tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_fovs, tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_grid, tableFuncs.makeSelect("id_summary_grid", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += '</form></div>';
         footer = '<div class="modal-footer">';
         footer += '<p class="validate_tips alert alert-error hide"></p>';
-        footer += '<button type="button" class="btn btn-primary btn-ok">' + "OK" + '</button>';
-        footer += '<button type="button" class="btn btn-cancel">' + "Cancel" + '</button>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
         footer += '</div>';
         return header + body + footer;
     }
 
+    function uploadControl(label, name) {
+        var result = [];
+        result.push('<div class="control-group">');
+        result.push('<label class="control-label" for="' + 'xxx' + '">' + label + '</label>');
+        result.push('<div class="controls">');
+        result.push('<div id="id_file_upload_div" class="custom_file_upload-small">');
+        result.push('<input id="id_file_upload_name" class="file-small" type="text" name="file_info" readonly>');
+        result.push('<div id="id_file_upload_button" class="btn-inverse file_upload-small">');
+        result.push('<input id="id_file_upload" class="fileinput-small" type="file" name="' + name + '">');
+        result.push('</div></div></div></div>');
+        /*
+        result.push('<div class="progress">');
+        result.push('<div class="bar"></div>');
+        result.push('<div class="percent">0%</div>');
+        result.push('</div>');
+        result.push('<div id="status"></div>');
+        */
+        return result.join('\n');
+    }
+
+    function editFacilitiesChrome()
+    {
+        var header, body, footer;
+        var controlClass = "input-large";
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.facs_dlg_add_new_file + '</h3></div>';
+        body   = '<div class="modal-body">';
+        // Use post to allow uploading of the facilities file when the form is submitted
+        body += '<form id="id_fac_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="' + assets + 'fileUpload">';
+        body += uploadControl(P3TXT.dashboard.facs_dlg_kml_file, "kmlUpload");
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_offsets, tableFuncs.makeInput("id_fac_offsets",
+                {"class": controlClass, "placeholder": P3TXT.dashboard.facs_ph_offsets}));
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_linewidth, tableFuncs.makeSelect("id_fac_linewidth", {"class": controlClass},
+                {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8}));
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_linecolor, tableFuncs.makeSelect("id_fac_linecolor", {"class": controlClass},
+                {"#000000": P3TXT.colors.black, "#0000FF": P3TXT.colors.blue, "#00FF00": P3TXT.colors.green,
+                 "#FF0000": P3TXT.colors.red, "#00FFFF": P3TXT.colors.cyan,  "#FF00FF": P3TXT.colors.magenta,
+                 "#FFFF00": P3TXT.colors.yelloww, "#FFFFFF": P3TXT.colors.white }));
+        body += tableFuncs.editControl(P3TXT.dashboard.facs_dlg_xpath, tableFuncs.makeSelect("id_fac_xpath", {"class": controlClass},
+                {".//coordinates": ".//coordinates", ".//LineString/coordinates": ".//LineString/coordinates" }));
+        body += tableFuncs.makeInput("id_fac_hash_and_name", {"class": controlClass, "type":"hidden"});
+        body += '</form></div>';
+        footer = '<div class="modal-footer">';
+        footer += '<p class="validate_tips alert alert-error hide"></p>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
+        footer += '</div>';
+        return header + body + footer;
+    }
+
+    function editMarkersFileChrome()
+    {
+        var header, body, footer;
+        var controlClass = "input-large";
+        header = '<div class="modal-header"><h3>' + P3TXT.dashboard.markers_dlg_add_new_file + '</h3></div>';
+        body   = '<div class="modal-body">';
+        // Use post to allow uploading of the markers file when the form is submitted
+        body += '<form id="id_markers_upload_form" class="form-horizontal" method="post"  enctype="multipart/form-data" action="' + assets + 'fileUpload">';
+        body += uploadControl(P3TXT.dashboard.markers_dlg_csv_file, "csvUpload");
+        body += tableFuncs.makeInput("id_markers_hash_and_name", {"class": controlClass, "type":"hidden"});
+        body += '</form></div>';
+        footer = '<div class="modal-footer">';
+        footer += '<p class="validate_tips alert alert-error hide"></p>';
+        footer += '<button type="button" class="btn btn-primary btn-ok">' + P3TXT.ok + '</button>';
+        footer += '<button type="button" class="btn btn-cancel">' + P3TXT.cancel + '</button>';
+        footer += '</div>';
+        return header + body + footer;
+    }
     // ============================================================================
     //  Helper functions for editing runs
     // ============================================================================
@@ -265,12 +396,13 @@ define(function(require, exports, module) {
         }
         bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[posixTime]},
         function (err) {
-            var msg = 'While converting timezone: ' + err;
-            alert(msg);
+            var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
+            console.log(msg);
+            // alert(msg);
             done(new Error(msg));
         },
         function (s, result) {
-            console.log('While converting timezone: ' + s);
+            // console.log('While converting timezone: ' + s);
             now = result.timeStrings[0];
             now = now.substring(0,now.lastIndexOf(':'));
             console.log(now);
@@ -290,11 +422,11 @@ define(function(require, exports, module) {
         var endMatch = regex.exec(endEtm);
 
         if (!startMatch) {
-            tableFuncs.addError(eidByKey.startEtm, "Invalid start time");
+            tableFuncs.addError(eidByKey.startEtm, P3TXT.dashboard.validator_invalid_start_time);
             numErr += 1;
         }
         if (!endMatch) {
-            tableFuncs.addError(eidByKey.endEtm, "Invalid end time");
+            tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_invalid_end_time);
             numErr += 1;
         }
 
@@ -303,18 +435,150 @@ define(function(require, exports, module) {
                 var sVal = +startMatch[i];
                 var eVal = +endMatch[i];
                 if (eVal < sVal) {
-                    tableFuncs.addError(eidByKey.endEtm, "End time must be after start time");
+                    tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_invalid_times);
                     numErr += 1;
                     break;
                 }
                 else if (eVal > sVal) break;
             }
             if (i>5) {
-                tableFuncs.addError(eidByKey.endEtm, "End time must be after start time");
+                tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_invalid_times);
                 numErr += 1;
             }
         }
         if (numErr === 0) onSuccess();
+    }
+
+
+    // ============================================================================
+    //  Helper functions for editing user marker files
+    // ============================================================================
+    function makeMarkersFileDownloadButton(value) {
+        var result;
+        result = '<a class="csvLink btn btn-mini btn-inverse" href="#' + value + '" data-hash-and-name="' + value + '">Download CSV</a>';
+        return result;
+    }
+
+    function beforeMarkersFileShow(done)
+    {
+        DASHBOARD.uploadFile = null;
+        $("#id_markers_upload_form").ajaxForm({
+            dataType: 'json',
+            success: function(result) {
+                onMarkersFileUploaded(result);
+            }
+        });
+        done(null);
+    }
+
+    function validateMarkersFile(eidByKey,template,container,onSuccess) {
+        var numErr = 0;
+        var markersFile = $("#"+eidByKey.filename).val();
+        onMarkersFileUploaded = function (result) {
+            if ("error" in result) {
+                tableFuncs.addError("id_file_upload_div", result.error);
+                numErr += 1;
+            }
+            else {
+                $("#"+eidByKey.hashAndName).val(result.hash + ':' + markersFile);
+            }
+            if (numErr === 0) onSuccess();
+        };
+        if (DASHBOARD.uploadFile) {
+            $("#id_markers_upload_form").submit();
+        }
+        else {
+            if (!markersFile) {
+                tableFuncs.addError("id_file_upload_div", P3TXT.dashboard.validator_no_markers_file);
+                numErr += 1;
+            }
+            if (numErr === 0) onSuccess();
+        }
+        return false;
+    }
+
+    // ============================================================================
+    //  Helper functions for editing facilities files
+    // ============================================================================
+    function makeFacDownloadButton(value) {
+        var result;
+        result = '<a class="kmlLink btn btn-mini btn-inverse" href="#' + value + '" data-hash-and-name="' + value + '">Download KML</a>';
+        return result;
+    }
+
+    function beforeFacilitiesShow(done)
+    {
+        var bar = $('.bar');
+        var percent = $('.percent');
+        var status = $('#status');
+        DASHBOARD.uploadFile = null;
+        $("#id_fac_upload_form").ajaxForm({
+            dataType: 'json',
+            beforeSend: function() {
+                status.empty();
+                var percentVal = '0%';
+                bar.width(percentVal);
+                percent.html(percentVal);
+            },
+            uploadProgress: function(event, position, total, percentComplete) {
+                var percentVal = percentComplete + '%';
+                bar.width(percentVal);
+                percent.html(percentVal);
+            },
+            success: function(result) {
+                var percentVal = '100%';
+                bar.width(percentVal);
+                percent.html(percentVal);
+                onFacFileUploaded(result);
+            },
+            complete: function(xhr) {
+                status.html(xhr.responseText);
+            }
+        });
+        done(null);
+    }
+
+    function validateFacilities(eidByKey,template,container,onSuccess) {
+        var numErr = 0;
+        var kmlFile = $("#"+eidByKey.filename).val();
+        onFacFileUploaded = function (result) {
+            if ("error" in result) {
+                tableFuncs.addError("id_file_upload_div", result.error);
+                numErr += 1;
+            }
+            else {
+                $("#"+eidByKey.hashAndName).val(result.hash + ':' + kmlFile);
+            }
+            if (numErr === 0) onSuccess();
+        };
+        var offsets = $("#"+eidByKey.offsets).val();
+        if (offsets === "") {   // Replace blank entry with 0, 0
+            offsets = "0, 0";
+            $("#"+eidByKey.offsets).val(offsets);
+        }
+        offsets = parseFloats(offsets);
+
+        if (offsets.length !== 2) {
+            tableFuncs.addError("id_fac_offsets", P3TXT.dashboard.validator_bad_offset);
+            numErr += 1;
+        }
+        else if (offsets[0] < -CNSNT.MAX_OFFSETS || offsets[0] > CNSNT.MAX_OFFSETS ||
+                 offsets[1] < -CNSNT.MAX_OFFSETS || offsets[1] > CNSNT.MAX_OFFSETS) {
+            tableFuncs.addError("id_fac_offsets", P3TXT.dashboard.validator_offset_too_large + CNSNT.MAX_OFFSETS);
+            numErr += 1;
+        }
+
+        if (DASHBOARD.uploadFile) {
+            $("#id_fac_upload_form").submit();
+        }
+        else {
+            if (!kmlFile) {
+                tableFuncs.addError("id_file_upload_div", P3TXT.dashboard.validator_no_facilities_file);
+                numErr += 1;
+            }
+            if (numErr === 0) onSuccess();
+        }
+        return false;
     }
 
     // ============================================================================
@@ -329,10 +593,12 @@ define(function(require, exports, module) {
     // ============================================================================
     //  Default values for new rows in table
     // ============================================================================
-    var initRunRow = {"analyzer": "FCDS2008", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00",
+    var initRunRow = {"analyzer": "", "peaks": "#FFFF00", "wedges": "#0000FF", "fovs": "#00FF00",
                       "analyses": "#FF0000", "stabClass": "*"};
-    var initSubmapRow  = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false };
-    var initSummaryRow = {type: 'map', paths: false, peaks: false, wedges: false, analyses: false, fovs: false, submapGrid: true };
+    var initSubmapRow  = {type: 'map', facilities: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false };
+    var initSummaryRow = {type: 'map', facilities: false, paths: false, peaks: false, markers:false, wedges: false, analyses: false, fovs: false, submapGrid: true };
+    var initFacilitiesRow = {filename: '', linewidth: 2, linecolor: "#000000", xpath: ".//coordinates", hashAndName: '' };
+    var initMarkersFileRow = {filename: '', hashAndName: ''};
 
     // ============================================================================
     //  Define models, views and collections for handling instructions
@@ -355,15 +621,15 @@ define(function(require, exports, module) {
         DASHBOARD.InstructionsFileView = Backbone.View.extend({
             el: $("#id_instructionsfiles"),
             events: {
-                "change .fileinput": "onSelectFile",
-                "dragover .file": "onDragOver",
-                "drop .file": "onDrop",
+                "change #id_instr_upload": "onSelectFile",
+                "dragover #id_instr_upload_name": "onDragOver",
+                "drop #id_instr_upload_name": "onDrop",
                 "click #id_make_report": "onMakeReport",
                 "click #id_save_instructions": "onSaveInstructions"
             },
             initialize: function () {
                 this.instrView = new DASHBOARD.InstructionsView();
-                this.inputFile = this.$el.find('.fileinput');
+                this.inputFile = this.$el.find('#id_instr_upload');
                 this.inputFile.wrap('<div />');
                 $.event.fixHooks.drop = {props: ["dataTransfer"]};
                 this.listenTo(DASHBOARD.instructionsFileModel,"change:file",this.instructionsFileChanged);
@@ -377,7 +643,7 @@ define(function(require, exports, module) {
                         DASHBOARD.instructionsFileModel.set({"contents": iv.currentContents});
                         DASHBOARD.instructionsFileModel.set({"instructions": null}, {silent: true});
                         DASHBOARD.instructionsFileModel.set({"instructions": iv.currentInstructions});
-                        this.$el.find(".file").val('** Instructions not saved **');
+                        this.$el.find("#id_instr_upload_name").val('** Instructions not saved **');
                     }
                     return true;
                 }
@@ -387,13 +653,13 @@ define(function(require, exports, module) {
                 var f = e.get("file");
                 var that = this;
                 if (f !== null) {
-                    this.$el.find(".file").val(f.name);
+                    this.$el.find("#id_instr_upload_name").val(f.name);
                     var reader = new FileReader();
                     // Set up the reader to read a text file
                     reader.readAsText(f);
                     reader.onload = function (e) { that.loadFile(e); };
                 }
-                else this.$el.find(".file").val("");
+                else this.$el.find("#id_instr_upload_name").val("");
             },
             loadFile: function (e) {
                 this.loadContents(e.target.result);
@@ -404,15 +670,15 @@ define(function(require, exports, module) {
                 //  file is selected next time.
                 var old = this.inputFile.parent().html();
                 this.inputFile.parent().html(old);
-                this.inputFile = this.$el.find('.fileinput');
+                this.inputFile = this.$el.find('#id_instr_upload');
                 // Do simple validation to reject malformed files quickly
                 try {
                     lines = contents.split('\n', 16384);
                     // lines.shift();   TODO: Reimplement security stamp for user instruction files
                     var body = lines.join('\n');
                     var instructions = JSON.parse(body);
-                    var v = iv.instrValidator(instructions);
-                    if (!v.valid) throw new Error('Instructions failed validation\n' + v.errorList.join("\n"));
+                    var v = instrValidator(instructions);
+                    if (!v.valid) throw new Error(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
                     // Make sure to send change events, in case file is reloaded
                     DASHBOARD.instructionsFileModel.set({"contents": null}, {silent: true});
                     DASHBOARD.instructionsFileModel.set({"contents": body});
@@ -420,24 +686,24 @@ define(function(require, exports, module) {
                     DASHBOARD.instructionsFileModel.set({"instructions": v.normValues});
                 }
                 catch (err) {
-                    alert("Invalid instructions file: " + err.message);
+                    alert(P3TXT.dashboard.alert_invalid_instructions_file + err.message);
                     DASHBOARD.instructionsFileModel.set({"file": null});
                     return;
                 }
-                console.log(DASHBOARD.instructionsFileModel.get("contents"));
-                console.log(DASHBOARD.instructionsFileModel.get("instructions"));
+                // console.log(DASHBOARD.instructionsFileModel.get("contents"));
+                // console.log(DASHBOARD.instructionsFileModel.get("instructions"));
             },
             onDragOver: function (e) {
                 e.stopPropagation();
                 e.preventDefault();
                 // e.dataTransfer.dropEffect = 'copy';
-                console.log("onDragOver");
+                // console.log("onDragOver");
             },
             onDrop: function (e) {
                 e.stopPropagation();
                 e.preventDefault();
                 var files = e.dataTransfer.files;
-                if (files.length > 1) alert('Cannot process more than one file');
+                if (files.length > 1) alert(P3TXT.dashboard.alert_multiple_files);
                 else {
                     for (var i = 0, f; undefined !== (f = files[i]); i++) {
                         // Make sure we trigger a change to reload files, if necessary
@@ -450,14 +716,14 @@ define(function(require, exports, module) {
                 if (this.getCurrentInstructions()) {
                     var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
-                    var v = iv.instrValidator(instructions);
+                    var v = instrValidator(instructions);
                     if (!v.valid) {
-                        alert('Instructions failed validation\n' + v.errorList.join("\n"));
+                        alert(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
                         return;
                     }
                     DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force},
                     function (err) {
-                        var msg = 'While submitting instructions: ' + err;
+                        var msg = P3TXT.dashboard.alert_while_submitting_instructions + err;
                         alert(msg);
                     },
                     function (s, result) {
@@ -486,7 +752,7 @@ define(function(require, exports, module) {
                                   });
                         // Check if this has been previously submitted
                         if (request_ts !== start_ts) {
-                            alert("This is a duplicate of a previously submitted report");
+                            alert(P3TXT.dashboard.alert_duplicate_instructions);
                             var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
                             if (prev.length > 0) {
                                 DASHBOARD.jobsView.highLightJob(prev[0]);
@@ -497,14 +763,14 @@ define(function(require, exports, module) {
                                 var keyFile = instrResource(hash) + '/' + dirName + '/key.json';
                                 DASHBOARD.SurveyorRpt.resource(keyFile,
                                 function (err) {
-                                    alert('While getting key file data from ' + keyFile + ': ' + err);
+                                    console.log(P3TXT.dashboard.alert_while_getting_key_file_data + keyFile + ': ' + err);
                                 },
                                 function (status, data) {
                                     console.log('While getting key file data from ' + keyFile + ': ' + status);
                                     job.set({user: data.SUBMIT_KEY.user});
                                     job.addLocalTime(function (err) {
                                         DASHBOARD.submittedJobs.add(job);
-                                        job.save();
+                                        // job.save();
                                         job.analyzeStatus(err, status, msg);
                                     }, timezone);
                                 });
@@ -513,7 +779,7 @@ define(function(require, exports, module) {
                         else {
                             job.addLocalTime(function (err) {
                                 DASHBOARD.submittedJobs.add(job);
-                                job.save();
+                                // job.save();
                                 job.analyzeStatus(err, status, msg);
                             });
                         }
@@ -534,12 +800,12 @@ define(function(require, exports, module) {
                         script      : assets + 'rest/download'
                     });
                     e.preventDefault();
-                    this.$el.find(".file").val(name);
+                    this.$el.find("#id_instr_upload_name").val(name);
                 }
             },
             onSelectFile: function (e) {
                 var files = e.target.files; // FileList object
-                if (files.length > 1) alert('Cannot process more than one file');
+                if (files.length > 1) alert(P3TXT.dashboard.alert_multiple_files);
                 else {
                     for (var i = 0, f; undefined !== (f = files[i]); i++) {
                         // Make sure we trigger a change to reload files, if necessary
@@ -549,19 +815,32 @@ define(function(require, exports, module) {
                 }
             }
         });
-
         // ============================================================================
-        //  Instructions - View contains some form elements, the runs table and
+        //  Instructions - View contains some form elements, the runs table, 
+        //   the table of facilities layer files and a button to allow for the
         //   editing of the template
         // ============================================================================
 
         DASHBOARD.InstructionsView = Backbone.View.extend({
             el: $("#id_instructions"),
             events: {
+                "change #id_file_upload": "onSelectFile",
+                // "dragover #id_file_upload_name": "onDragOver",
+                // "drop #id_file_upload_name": "onDrop",
                 "click #id_runs_table_div table button.table-new-row": "newRunsRow",
                 "click #id_runs_table_div table button.table-clear": "clearRuns",
                 "click #id_runs_table_div tbody button.table-delete-row": "deleteRunsRow",
                 "click #id_runs_table_div tbody button.table-edit-row": "editRunsRow",
+                "click #id_facilities_table_div table button.table-new-row": "newFacilitiesRow",
+                "click #id_facilities_table_div table button.table-clear": "clearFacilities",
+                "click #id_facilities_table_div tbody button.table-delete-row": "deleteFacilitiesRow",
+                "click #id_facilities_table_div tbody button.table-edit-row": "editFacilitiesRow",
+                "click #id_markers_files_table_div table button.table-new-row": "newMarkersFileRow",
+                "click #id_markers_files_table_div table button.table-clear": "clearMarkersFiles",
+                "click #id_markers_files_table_div tbody button.table-delete-row": "deleteMarkersFileRow",
+                "click #id_markers_files_table_div tbody button.table-edit-row": "editMarkersFileRow",
+                "click a.kmlLink" : "onKmlLink",
+                "click a.csvLink" : "onCsvLink",
                 "click #id_edit_template": "editTemplate",
                 "shown #id_timezoneModal": "onModalShown",
                 "click #id_save_timezone": "onTimezoneSaved"
@@ -588,7 +867,7 @@ define(function(require, exports, module) {
                 });
                 $('#id_exclRadius').spinedit({
                     minimum: 0,
-                    maximum: 30,
+                    maximum: 50,
                     step: 5,
                     value: 5,
                     numberOfDecimals: 0
@@ -609,7 +888,73 @@ define(function(require, exports, module) {
                 });
                 $("#id_runs_table_div").html(tableFuncs.makeTable([], runsDefinition));
                 styleTable("#id_runs_table_div");
+                
+                // Hide facilities and markers tables
+                if (0) {
+                    $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
+                    styleTable("#id_facilities_table_div");
+                    $("#id_markers_files_table_div").html(tableFuncs.makeTable([], markersFilesDefinition));
+                    styleTable("#id_markers_files_table_div");
+                }
 
+                this.uploadFile = this.$el.find('#id_file_upload');
+                this.uploadFile.wrap('<div />');
+                $.event.fixHooks.drop = {props: ["dataTransfer"]};
+                // this.listenTo(DASHBOARD.instructionsFileModel,"change:file",this.instructionsFileChanged);
+            },
+            onSelectFile: function (e) {
+                var files = e.target.files; // FileList object
+                if (files.length > 1) alert(P3TXT.dashboard.alert_multiple_files);
+                else {
+                    var f = files[0];
+                    if (f !== undefined) {
+                        this.$el.find("#id_file_upload_name").val(f.name);
+                        DASHBOARD.uploadFile = f;
+                    }
+                }
+                $("#id_file_upload_div").next('.help-inline').fadeOut("fast", function () {
+                    $(this).remove();
+                });
+                $("#id_file_upload_div").parents('.control-group').removeClass('error');
+            },
+            onCsvLink: function (e) {
+                var hashAndName = $(e.currentTarget).data("hash-and-name").split(":");
+                var hash = hashAndName[0];
+                var filename = hashAndName[1];
+                var csvUrl = '/csv' + instrResource(hash) + '/' + encodeURI(filename);
+                DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
+                function (err) {
+                    console.log('error: ', err);
+                },
+                function (status, url) {
+                    // url = window.location.origin + url.substring(0,url.lastIndexOf('?')) + pdfUrl;
+                    // console.log(url);
+                    window.location = url.substring(0,url.lastIndexOf('?')) + csvUrl;
+                    // window.open(url,'_blank');
+                    return false;
+                });
+            },
+            // onDragOver: function() { alert("onDragOver"); },
+            // onDrop: function() { alert("onDrop"); },
+            onKmlLink: function (e) {
+                var hashAndName = $(e.currentTarget).data("hash-and-name").split(":");
+                var hash = hashAndName[0];
+                var filename = hashAndName[1];
+                var kmlUrl = '/kml' + instrResource(hash) + '/' + encodeURI(filename);
+                DASHBOARD.SurveyorRpt.geturl({qryobj: {qry: "resource"}, existing_tkt: true},
+                function (err) {
+                    console.log('error: ', err);
+                },
+                function (status, url) {
+                    // url = window.location.origin + url.substring(0,url.lastIndexOf('?')) + pdfUrl;
+                    // console.log(url);
+                    window.location = url.substring(0,url.lastIndexOf('?')) + kmlUrl;
+                    // window.open(url,'_blank');
+                    return false;
+                });
+            },
+            newRunsRow: function (e) {
+                tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
             },
             clearRuns: function (e) {
                 $(e.currentTarget).closest("table").find("tbody").empty();
@@ -619,13 +964,14 @@ define(function(require, exports, module) {
             },
             editRunsRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow);
-                console.log(tableFuncs.getTableData(runsDefinition));
+                // console.log(tableFuncs.getTableData(runsDefinition));
             },
             editTemplate: function () {
                 this.templateView.editTemplate();
             },
             getCurrentInstructions: function () {
                 // Get instructions from GUI elements
+                var hashAndName, i;
                 var current = $.extend(true,{},DASHBOARD.instructionsFileModel.get('instructions'));
                 var oldContents = cjs(DASHBOARD.instructionsFileModel.get('instructions'),null,2);
                 current.title = $("#id_title").val();
@@ -637,12 +983,30 @@ define(function(require, exports, module) {
                 current.exclRadius = +$('#id_exclRadius').val();
                 current.peaksMinAmp = +$('#id_peaksMinAmp').val();
                 current.runs = tableFuncs.getTableData(runsDefinition);
-                for (var i=0; i<current.runs.length; i++) {
+                for (i=0; i<current.runs.length; i++) {
                     current.runs[i].startEtm = Math.round(current.runs[i].startEtm.posixTime/1000);
                     current.runs[i].endEtm = Math.round(current.runs[i].endEtm.posixTime/1000);
                 }
                 current.template = this.templateView.currentTemplate;
-                var v = iv.instrValidator(current);
+                var markersFiles = tableFuncs.getTableData(markersFilesDefinition);
+                if (markersFiles.length > 0) {
+                    current.markersFiles = markersFiles;
+                    for (i=0; i<markersFiles.length; i++) {
+                        hashAndName = markersFiles[i].hashAndName.split(':');
+                        current.markersFiles[i].hash = hashAndName[0];
+                        current.markersFiles[i].filename = hashAndName[1];
+                    }
+                }
+                var facilities = tableFuncs.getTableData(facilitiesDefinition);
+                if (facilities.length > 0) {
+                    current.facilities = facilities;
+                    for (i=0; i<facilities.length; i++) {
+                        hashAndName = facilities[i].hashAndName.split(':');
+                        current.facilities[i].hash = hashAndName[0];
+                        current.facilities[i].filename = hashAndName[1];
+                    }
+                }
+                var v = instrValidator(current);
                 this.currentValid = v.valid;
                 if (!v.valid) alert(v.errorList.join("\n"));
                 else {
@@ -652,8 +1016,31 @@ define(function(require, exports, module) {
                 }
                 return v.valid;
             },
-            newRunsRow: function (e) {
-                tableFuncs.insertRow(e, runsDefinition, this.modalContainer, editRunsChrome, beforeRunsShow, initRunRow);
+            newFacilitiesRow: function (e) {
+                tableFuncs.insertRow(e, facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow, initFacilitiesRow);
+            },
+            clearFacilities: function (e) {
+                $(e.currentTarget).closest("table").find("tbody").empty();
+            },
+            deleteFacilitiesRow: function (e) {
+                $(e.currentTarget).closest("tr").remove();
+            },
+            editFacilitiesRow: function (e) {
+                tableFuncs.editRow($(e.currentTarget).closest("tr"), facilitiesDefinition, this.modalContainer, editFacilitiesChrome, beforeFacilitiesShow);
+                // console.log(tableFuncs.getTableData(facilitiesDefinition));
+            },
+            newMarkersFileRow: function (e) {
+                tableFuncs.insertRow(e, markersFilesDefinition, this.modalContainer, editMarkersFileChrome, beforeMarkersFileShow, initMarkersFileRow);
+            },
+            clearMarkersFiles: function (e) {
+                $(e.currentTarget).closest("table").find("tbody").empty();
+            },
+            deleteMarkersFileRow: function (e) {
+                $(e.currentTarget).closest("tr").remove();
+            },
+            editMarkersFileRow: function (e) {
+                tableFuncs.editRow($(e.currentTarget).closest("tr"), markersFilesDefinition, this.modalContainer, editMarkersFileChrome, beforeMarkersFileShow);
+                // console.log(tableFuncs.getTableData(markersFilesDefinition));
             },
             render: function () {
                 var instructions = DASHBOARD.instructionsFileModel.get('instructions');
@@ -669,6 +1056,31 @@ define(function(require, exports, module) {
                 // Render the template tables
                 this.templateView.loadTemplate();
                 this.templateView.render();
+                // Set up the markersFiles table if necessary
+                var markersFilesTableData = [];
+                if (instructions.hasOwnProperty("markersFiles")) {
+                    instructions.markersFiles.forEach(function (markerFile) {
+                        var row = $.extend({},markerFile);
+                        row.hashAndName = markerFile.hash + ":" + markerFile.filename;
+                        markersFilesTableData.push(row);
+                    });
+                }
+                // Display the markers files table
+                $("#id_markers_files_table_div").html(tableFuncs.makeTable(markersFilesTableData, markersFilesDefinition));
+                styleTable("#id_markers_files_table_div");
+                // Set up the facilities table if necessary
+                var facilitiesTableData = [];
+                if (instructions.hasOwnProperty("facilities")) {
+                    instructions.facilities.forEach(function (fac) {
+                        var row = $.extend({},fac);
+                        row.hashAndName = fac.hash + ":" + fac.filename;
+                        facilitiesTableData.push(row);
+                    });
+                }
+                // Display the facilities table
+                $("#id_facilities_table_div").html(tableFuncs.makeTable(facilitiesTableData, facilitiesDefinition));
+                styleTable("#id_facilities_table_div");
+
                 // Set up the runs table. Some translation is needed because of the timezone 
                 var tz = DASHBOARD.timezone = instructions.timezone;
                 var posixTimes = [];
@@ -678,11 +1090,11 @@ define(function(require, exports, module) {
                 });
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
-                    var msg = 'While converting timezone: ' + err;
-                    alert(msg);
+                    var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
+                    console.log(msg);
                 },
                 function (s, result) {
-                    console.log('While converting timezone: ' + s);
+                    // console.log('While converting timezone: ' + s);
                     var runsTableData = [];
                     instructions.runs.forEach(function (run) {
                         var row = $.extend({},run);
@@ -713,11 +1125,11 @@ define(function(require, exports, module) {
                 }
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
-                    var msg = 'While converting timezone: ' + err;
-                    alert(msg);
+                    var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
+                    console.log(msg);
                 },
                 function (s, result) {
-                    console.log('While converting timezone: ' + s);
+                    // console.log('While converting timezone: ' + s);
                     var localTimes = result.timeStrings;
                     for (var i=0; i<tableData.length; i++) {
                         var rowData = tableData[i];
@@ -773,11 +1185,11 @@ define(function(require, exports, module) {
             },
             editSubmapsRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), submapsDefinition, this.modalContainer, editSubmapsChrome);
-                console.log(tableFuncs.getTableData(submapsDefinition));
+                // console.log(tableFuncs.getTableData(submapsDefinition));
             },
             editSummaryRow: function (e) {
                 tableFuncs.editRow($(e.currentTarget).closest("tr"), summaryDefinition, this.modalContainer, editSummaryChrome);
-                console.log(tableFuncs.getTableData(summaryDefinition));
+                // console.log(tableFuncs.getTableData(summaryDefinition));
             },
             editTemplate: function () {
                 this.render();
@@ -832,4 +1244,3 @@ define(function(require, exports, module) {
     }
     module.exports.init = dashboardInstructionsInit;
 });
-

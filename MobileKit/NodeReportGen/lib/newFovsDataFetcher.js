@@ -124,13 +124,13 @@ define(function(require, exports, module) {
                             }
                         }
                     }
-                    console.log('Computed stability class', indx, s, stabClass);
+                    // console.log('Computed stability class', indx, s, stabClass);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
                         if (err) done(err);
                         else {
                             result[0]['stabClass'] = stabClass;
-                            console.log(JSON.stringify(result[0]));
+                            // console.log(JSON.stringify(result[0]));
                             meta.push(_.omit(result[0],'docmap'));
                             process.nextTick(next);
                         }
@@ -594,6 +594,7 @@ define(function(require, exports, module) {
                                     results.push(JSON.stringify({"R": row, "P": pos, "E": edge}));
                                 }
                             }
+                            console.log("Processed SWATH rows: " + results.length);
                             // console.log("SWATH: " + JSON.stringify(results[results.length-1]));
                             process.nextTick(next);
                         }
@@ -601,7 +602,7 @@ define(function(require, exports, module) {
                 }
                 else {
                     // Data are in results. Write out a fov file and emit "end"
-                    console.log("Number of SWATH rows: " + results.length);
+                    console.log("Total SWATH rows: " + results.length);
                     var fname = 'fov_' + formatNumberLength(self.surveyIndex,5) + "_" +
                                          formatNumberLength(self.runIndex,5) + '.json';
                     jf.appendJson(path.join(self.workDir,fname), results, function (err) {

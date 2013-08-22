@@ -1,10 +1,11 @@
 /* paramsValidator.js provides an object to validate values in a ductionary */
-/*global console, module, require */
+/*global console, module, P3TXT, require */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
     var _ = require('underscore');
+    require('./P3TXT');
 
     /****************************************************************************/
     /*  Routines for parameter validation                                       */
@@ -54,7 +55,7 @@ define(function(require, exports, module) {
                     // Use default value
                     resultDict[name] = default_value;
                 } else {
-                    errorList.push("Required parameter " + name + " missing.");
+                    errorList.push(P3TXT.validator_missing_parameter + name);
                 }
             } else {
                 var value = paramsDict[name];
@@ -63,7 +64,7 @@ define(function(require, exports, module) {
                         value = transform(value);
                     }
                     catch (e) {
-                        errorList.push("Parameter " + name + " fails transformation. Attempting to use value unchanged.");
+                        errorList.push(P3TXT.validator_fails_transformation + name);
                     }
                 }
                 // We have a parameter, validate it
@@ -75,7 +76,7 @@ define(function(require, exports, module) {
                     if (matches && matches[0] === matches.input) {
                         resultDict[name] = value;
                     } else {
-                        errorList.push("Parameter " + name + " fails regex based validation.");
+                        errorList.push(P3TXT.validator_regex_not_matched + name);
                     }
                 }
                 else if (_.isFunction(validator)) {
@@ -84,7 +85,7 @@ define(function(require, exports, module) {
                         if (_.has(v,'normValues')) resultDict[name] = v.normValues;
                         else resultDict[name] = value;
                     } else {
-                        errorList.push("Parameter " + name + " fails predicate based validation.");
+                        errorList.push(P3TXT.validator_predicate_returns_false + name);
                         if (_.has(v,'errorList')) {
                             v.errorList.forEach(function (e) {
                                 errorList.push("  " + e);
@@ -96,7 +97,7 @@ define(function(require, exports, module) {
                     if (typeof value === validator) {
                         resultDict[name] = value;
                     } else {
-                        errorList.push("Parameter " + name + " fails type based validation.");
+                        errorList.push(P3TXT.validator_wrong_type + name);
                     }
                 }
 
@@ -151,10 +152,10 @@ define(function(require, exports, module) {
                 data[1] >= -180.0 && data[1] <= 180.0) {
                 return {"valid": true};
             }
-            else return {"valid": false, "errorList": ["Invalid latitude, longitude pair"]};
+            else return {"valid": false, "errorList": [P3TXT.validator_invalid_latlng]};
         }
         catch (e) {
-            return {"valid": false, "errorList": ["Invalid latitude, longitude pair"]};
+            return {"valid": false, "errorList": [P3TXT.validator_invalid_latlng]};
         }
     }
 

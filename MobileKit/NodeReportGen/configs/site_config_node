@@ -1,0 +1,22 @@
+{
+    "reportProxy": {
+        "host": "localhost",
+        "port": 8300
+    },
+    "reportServer": {
+        "assets": "/",
+        "host": "localhost",
+        "port": 5300,
+        "phantomPath": "C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe",
+        "pdftkPath": "C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe",
+        "pdfZoom": 1.0,
+        "headerFontSize": "150%",
+        "footerFontSize": "70%"
+    },
+    "apiKey": "AIzaSyDuKrJI6smrNA1MOuriEmlW9XFZikNahhs",
+    "host": "192.168.33.10",
+    "port": 3000,
+    "site": "node",
+    "identity": "85490338d7412a6d31e99ef58bce5dPM",
+    "sys": "SUPERADMIN"
+}

@@ -1,12 +1,18 @@
 // reportPeaks.js
 /*global alert, console, module, require */
 /* jshint undef:true, unused:true */
+
+// This defines the model (REPORT.Peak), collection (REPORT.Peaks) and view (REPORT.PeaksTableView) 
+//  for representing concentration peaks
+// The code to read peaks from a JSON file is the getData method of REPORT.Peaks which is called 
+//  from reportViewResources
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var instrResource = require('app/utils').instrResource;
     var REPORT  = require('app/reportGlobals');
     require('jquery.dataTables');
@@ -52,7 +58,7 @@ define(function(require, exports, module) {
                         var url = that.workDir + '/' + names.shift();
                         REPORT.SurveyorRpt.resource(url,
                         function (err) {
-                            alert('While getting peaks data from ' + url + ': ' + err);
+                            console.log('While getting peaks data from ' + url + ': ' + err);
                         },
                         function (status, data) {
                             console.log('While getting peaks data from ' + url + ': ' + status);
@@ -67,6 +73,7 @@ define(function(require, exports, module) {
         });
         REPORT.PeaksTableView = Backbone.View.extend({
             initialize: function () {
+                this.name = "reportPeaks";
                 this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
             },

@@ -57,11 +57,11 @@ define(function(require, exports, module) {
             bufferedTimezone(REPORT.Utilities.timezone,{tz:REPORT.settings.get("timezone"),posixTimes:posixTimes},
             function (err) {
                 var msg = 'While processing timezone in makeRunsTable: ' + err;
-                alert(msg);
+                console.log(msg);
                 done(new Error(msg));
             },
             function (status, data) {
-                console.log('While processing timezone in makeRunsTable: ' + status);
+                // console.log('While processing timezone in makeRunsTable: ' + status);
                 for (i=0; i<runs.length; i++) {
                     var run = REPORT.settings.get("runs").at(runs[i]).attributes;
                     runsTable.push('<tr>');

@@ -55,7 +55,7 @@
  *      "cf" (optional) is a function used to translate the value in a form element into the data to be placed in the cell.
  *            If not specified, the value() method of the form element is used.
  *      "omit" (optional). If this is present and truthy, the column key is not written into tableData.
- * vf: This is the name of a validation function with signature validate(rowData,eidByKey,container). It
+ * vf: This is the name of a validation function with signature validate(rowData,eidByKey,row,container). It
  *      is called when a row is edited or inserted. It should return true to indicate that the row is valid.
  *      "rowData" is a row which is proposed for introduction into the tableData array
  *      "eidByKey" is a dictionary which gives the id of the edit control corresponding to the column key
@@ -207,7 +207,6 @@ define(function(require, exports, module) {
         var onSuccess;
         var data = e.data;
         var eidByKey = data.eidByKey, container = data.container, template = data.template;
-        var row;
 
         onSuccess = function () {
             var rowData = makeRowDataFromEditForm(eidByKey, template);
@@ -283,6 +282,7 @@ define(function(require, exports, module) {
                 $(".validate_tips").fadeOut("fast");
             });
         },
+        makeControl: makeControl,
         makeInput: function (id, attrDict) {
             return makeControl("input", id, attrDict, "");
         },

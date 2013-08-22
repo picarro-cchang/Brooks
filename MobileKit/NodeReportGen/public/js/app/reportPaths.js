@@ -1,6 +1,12 @@
 // reportPaths.js
 /*global alert, console, module, require */
 /* jshint undef:true, unused:true */
+
+// This defines the model (REPORT.Path), collection (REPORT.Paths)
+//  for representing the path of a surveyor and the associated fields of view
+// The code to read path and field of view from JSON files is the getData 
+//  method of REPORT.Paths which is called from reportViewResources
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
@@ -43,14 +49,18 @@ define(function(require, exports, module) {
                 else if (that.loadStage === 'loaded') that.trigger('loaded');
                 else {
                     that.loadStage = 'loading';
+                    // We listen to the doneBlock event to know when it is safe to proceed to the next block
+                    that.listenTo(REPORT.reportViewResources, "doneBlock", next);
                     that.workDir = instrResource(that.pathsRef.SUBMIT_KEY.hash)+'/'+that.pathsRef.SUBMIT_KEY.dir_name;
                     that.pathsFiles = that.pathsRef.OUTPUTS.FILES;
                     names = that.pathsFiles.slice(0);   // These are all the names of the paths files, by survey and run
                     next();
                 }
+
                 function next() {
                     var url;
                     if (names.length === 0) {
+                        that.stopListening(REPORT.reportViewResources, "doneBlock");
                         that.loadStage = 'loaded';  // All paths (and FOVs) have been processed
                         that.trigger('loaded');
                     }
@@ -72,18 +82,18 @@ define(function(require, exports, module) {
                                     lng >= minLng-padLng && lng <= maxLng+padLng) {
                                     if (d["R"] in fovData) { // This is the corresponding location in the FOV data dictionary
                                         d["E"] = fovData[d["R"]]["E"];   // If an edge is available, grab it
-                                        if (d["P"] !== fovData[d["R"]]["P"]) alert("Bad FOV data");  // Check path segment is consistent
+                                        if (d["P"] !== fovData[d["R"]]["P"]) console.log("Bad FOV data");  // Check path segment is consistent
                                     }
                                     that.push(d,{silent: true});    // Add path (and fov) data to the collection
                                 }
                             });
                             that.trigger('block');  // Signal that this block can be rendered
-                            next();
+                            // next gets called when the "doneBlock" event is signalled
                         };
                         if (type === 'path') {  // Get path data from the server - this must later be protected via a ticket
                             REPORT.SurveyorRpt.resource(url,
                             function (err) {
-                                alert('While getting path data from ' + url + ': ' + err);
+                                console.log('While getting path data from ' + url + ': ' + err);
                             },
                             function (status, pathData) {
                                 console.log('While getting path data from ' + url + ': ' + status);
@@ -92,7 +102,7 @@ define(function(require, exports, module) {
                                 if ($.inArray(name.replace("path", "fov"),that.pathsFiles) >= 0) {
                                     REPORT.SurveyorRpt.resource(urlFov,
                                     function (err) {
-                                        alert('While getting FOV data from ' + urlFov + ': ' + err);
+                                        console.log('While getting FOV data from ' + urlFov + ': ' + err);
                                     },
                                     function (status, fData) {
                                         console.log('While getting FOV data from ' + urlFov + ': ' + status);

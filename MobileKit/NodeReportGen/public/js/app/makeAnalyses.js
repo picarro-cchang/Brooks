@@ -1,10 +1,16 @@
 /* makeAnalyses.js renders analysis results */
+/*global module, require */
 /* jshint undef:true, unused:true */
-/* global define */
 
-define (['app/cnsnt', 'app/geohash', 'app/utils', 'app/newIsoMarker', 'app/reportGlobals'],
-function (CNSNT,       gh,            utils,       newIsoMarker,       REPORT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
+    var CNSNT = require('common/cnsnt');
+    var gh = require('app/geohash');
+    var utils = require('app/utils');
+    var newIsoMarker = require('app/newIsoMarker');
+    var REPORT = require('app/reportGlobals');
 
     function analysisColorByRun(run) {
         return REPORT.settings.get("runs").at(run).get("analyses");
@@ -58,5 +64,5 @@ function (CNSNT,       gh,            utils,       newIsoMarker,       REPORT) {
 
         return {"context": ctxAnalyses };
     }
-    return makeAnalyses;
+    module.exports = makeAnalyses;
 });

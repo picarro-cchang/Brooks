@@ -11,7 +11,7 @@ function ($) {
     function GetResource() {
         this.resource = function(res, errorCbFn, successCbFn) {
             var url = '/rest/data' + res;
-            console.log('getResource', url);
+            console.log('Getting data resource: ', url);
             $.getJSON(url, function success(data, textStatus) {
                 successCbFn(textStatus, data);
             }).fail(function(jqXHR) {
@@ -23,7 +23,7 @@ function ($) {
     function Timezone() {
         this.timezone = function(qry_obj, errorCbFn, successCbFn) {
             var url = '/rest/tz?' + $.param(qry_obj);
-            console.log('timezone', url);
+            // console.log('timezone', url);
             $.getJSON(url, function success(data, textStatus) {
                 successCbFn(textStatus, data);
             }).fail(function(jqXHR) {

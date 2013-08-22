@@ -5,7 +5,9 @@
   "private": true,
   "dependencies": {
     "amdefine": ">=0.0.4",
+    "csv": ">=0.3.2",
     "dirty": ">=0.9.7",
+    "elementtree": ">=0.1.5",
     "express": ">=3.1.0",
     "http-proxy": ">=0.10.0",
     "jade": ">=0.28.1",

@@ -1,6 +1,16 @@
 // reportViewResources.js
 /*global module, require */
 /* jshint undef:true, unused:true */
+
+// This file makes the "view resources" which are a set of "layers" and "tables".
+// A "layer" consists of a 2d context with a canvas that is filled with visual 
+//  elements such as wedges, peaks and fields of view
+// A "table" consists of an HTML table representing peaks, surveys, runs etc.
+// 
+// Report pages can be made out of combinations of view resources. Typically a 
+//  report is made out of figures and tables. A figure is made out of one or 
+//  more layers. These are assembled in reportCanvasViews.js
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
@@ -8,9 +18,11 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var makeAnalyses = require('app/makeAnalyses');
     var makeAnalysesTable = require('app/makeAnalysesTable');
+    var makeFacilities = require('app/makeFacilities');
+    var makeMarkers = require('app/makeMarkers');
     var makePeaks = require('app/makePeaks');
     var makePeaksTable = require('app/makePeaksTable');
     var makeRunsTable = require('app/makeRunsTable');
@@ -26,8 +38,8 @@ define(function(require, exports, module) {
             initialize: function () {
                 this.listenTo(REPORT.settings, "change", this.settingsChanged);
                 this.contexts = {'analyses': null, 'none': null, 'map': null, 'satellite': null, 'peaks': null,
-                                 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
-                                 'submapGrid': null };
+                                 'markers': null, 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
+                                 'submapGrid': null, 'facilities': null };
                 this.padX = 30;
                 this.padY = 75;
                 this.submapLinks = {};
@@ -55,7 +67,9 @@ define(function(require, exports, module) {
                 this.makeMapLayer();
                 this.makeSatelliteLayer();
                 this.makeSubmapGridLayer();
+                this.makeFacilitiesLayer();
                 this.makePeaksLayers();
+                this.makeMarkersLayer();
                 this.makeWedgesLayer();
                 this.makeAnalysesLayer();
                 this.makePathsLayers();
@@ -181,6 +195,22 @@ define(function(require, exports, module) {
                 this.submapLinks = result.links;
                 this.trigger("change",{"context": "submapGrid"});
             },
+            makeFacilitiesLayer: function() {
+                var that = this;
+                if (!REPORT.facilities) {
+                    that.trigger("init",{"context": "facilities"});
+                    that.trigger("change",{"context": "facilities"});
+                    return;
+                }
+                that.trigger("init",{"context": "facilities"});
+                REPORT.facilities.once("loaded", function () {
+                    that.facilitiesData = REPORT.facilities.models;
+                    var result = makeFacilities(that, REPORT.settings.get("facilities"));
+                    that.contexts["facilities"] = result.facilities;
+                    that.trigger("change",{"context": "facilities"});
+                });
+                REPORT.facilities.getData();
+            },
             makePeaksLayers: function() {
                 var that = this;
                 that.trigger("init",{"context": "peaks"});
@@ -200,6 +230,22 @@ define(function(require, exports, module) {
                     that.makeSurveysTable();
                 });
                 REPORT.peaks.getData();
+            },
+            makeMarkersLayer: function() {
+                var that = this;
+                if (!REPORT.markers) {
+                    that.trigger("init",{"context": "markers"});
+                    that.trigger("change",{"context": "markers"});
+                    return;
+                }
+                that.trigger("init",{"context": "markers"});
+                REPORT.markers.once("loaded", function () {
+                    that.markersData = REPORT.markers.models;
+                    var result = makeMarkers(that);
+                    that.contexts["markers"] = result.markers;
+                    that.trigger("change",{"context": "markers"});
+                });
+                REPORT.markers.getData();
             },
             makeWedgesLayer: function() {
                 var that = this;
@@ -227,8 +273,9 @@ define(function(require, exports, module) {
                 var that = this;
                 var pathsMaker = newPathsMaker(that);
                 that.pathsCollection = REPORT.paths;
-                function doBlock(survey,run) {
-                    pathsMaker.makePaths(survey,run);
+                function doBlock() {
+                    pathsMaker.makePaths();
+                    that.trigger("doneBlock");
                 }
                 REPORT.paths.on("block", doBlock);
                 that.trigger("init",{"context": "paths"});
