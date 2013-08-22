@@ -66,7 +66,7 @@ define(function(require, exports, module) {
 	var url = "/all?limit=all";
         DASHBOARD.AnzMeta.resource(url,
         function (err) {
-            alert('While retrieving analyzer list from ' + url + ': ' + err);
+            console.log('While retrieving analyzer list from ' + url + ': ' + err);
             startViews();
         },
         function (status, data) {
@@ -93,10 +93,10 @@ define(function(require, exports, module) {
             DASHBOARD.submittedJobs = new DASHBOARD.SubmittedJobs();
             DASHBOARD.SurveyorRpt.getDashboard({user: DASHBOARD.user},
             function (err) {
-                alert("Error fetching user's dashboard: " + err);
+                console.log("Error fetching user's dashboard: " + err);
             },
             function (s, result) {
-                if (result.error) alert("Error fetching user's dashboard: " + result.error);
+                if (result.error) console.log("Error fetching user's dashboard: " + result.error);
                 else {
                     result.dashboard.forEach(function(row) {
                         DASHBOARD.submittedJobs.add(row, {silent:true});

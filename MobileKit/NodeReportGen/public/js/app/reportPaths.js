@@ -82,7 +82,7 @@ define(function(require, exports, module) {
                                     lng >= minLng-padLng && lng <= maxLng+padLng) {
                                     if (d["R"] in fovData) { // This is the corresponding location in the FOV data dictionary
                                         d["E"] = fovData[d["R"]]["E"];   // If an edge is available, grab it
-                                        if (d["P"] !== fovData[d["R"]]["P"]) alert("Bad FOV data");  // Check path segment is consistent
+                                        if (d["P"] !== fovData[d["R"]]["P"]) console.log("Bad FOV data");  // Check path segment is consistent
                                     }
                                     that.push(d,{silent: true});    // Add path (and fov) data to the collection
                                 }
@@ -93,7 +93,7 @@ define(function(require, exports, module) {
                         if (type === 'path') {  // Get path data from the server - this must later be protected via a ticket
                             REPORT.SurveyorRpt.resource(url,
                             function (err) {
-                                alert('While getting path data from ' + url + ': ' + err);
+                                console.log('While getting path data from ' + url + ': ' + err);
                             },
                             function (status, pathData) {
                                 console.log('While getting path data from ' + url + ': ' + status);
@@ -102,7 +102,7 @@ define(function(require, exports, module) {
                                 if ($.inArray(name.replace("path", "fov"),that.pathsFiles) >= 0) {
                                     REPORT.SurveyorRpt.resource(urlFov,
                                     function (err) {
-                                        alert('While getting FOV data from ' + urlFov + ': ' + err);
+                                        console.log('While getting FOV data from ' + urlFov + ': ' + err);
                                     },
                                     function (status, fData) {
                                         console.log('While getting FOV data from ' + urlFov + ': ' + status);

@@ -51,10 +51,10 @@ define(function(require, exports, module) {
                         var url = that.workDir + '/' + names.shift();
                         REPORT.SurveyorRpt.resource(url,
                         function (err) {
-                            alert('While getting analyses data from ' + url + ': ' + err);
+                            console.log('While getting analyses data from ' + url + ': ' + err);
                         },
                         function (status, data) {
-                            console.log('While getting analyses data from ' + url + ': ' + status);
+                            // console.log('While getting analyses data from ' + url + ': ' + status);
                             data.forEach(function (d) { // Can filter by lat-lng limits here
                                 that.push(d, {silent:true});    // All peaks are pushed to the collection
                             });

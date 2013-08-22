@@ -103,14 +103,19 @@ block content
                         div.span12
                             h2 #{P3TXT.dashboard.heading_runs}
                             div#id_runs_table_div
-                    div.row-fluid(style="margin-top:20px;")
-                        div.span12
-                            h2 #{P3TXT.dashboard.heading_user_marker_files}
-                            div#id_markers_files_table_div
-                    div.row-fluid(style="margin-top:20px;")
-                        div.span12
-                            h2 #{P3TXT.dashboard.heading_facilities_files}
-                            div#id_facilities_table_div
+                    
+
+                    if 0
+                        // Hide facilities and markers tables
+                        div.row-fluid(style="margin-top:20px;")
+                            div.span12
+                                h2 #{P3TXT.dashboard.heading_user_marker_files}
+                                div#id_markers_files_table_div
+                        div.row-fluid(style="margin-top:20px;")
+                            div.span12
+                                h2 #{P3TXT.dashboard.heading_facilities_files}
+                                div#id_facilities_table_div
+
                     div.row-fluid
                         div.span12
                         button#id_edit_template.btn.btn-inverse(type="button")

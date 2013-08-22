@@ -84,11 +84,11 @@ define(function(require, exports, module) {
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[this.get("startPosixTime")]},
                 function (err) {
                     var msg = 'While converting timezone: ' + err;
-                    alert(msg);
+                    console.log(msg);
                     done(msg);
                 },
                 function (s, result) {
-                    console.log('While converting timezone: ' + s);
+                    // console.log('While converting timezone: ' + s);
                     that.set({"startLocalTime": result.timeStrings[0]});
                     done(null);
                 });
@@ -223,7 +223,7 @@ define(function(require, exports, module) {
             addJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'add'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);
@@ -238,7 +238,7 @@ define(function(require, exports, module) {
             changeJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'update'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);
@@ -304,7 +304,7 @@ define(function(require, exports, module) {
                 var url = instrResource(job.get("hash")) + '/instructions.json';
                 DASHBOARD.SurveyorRpt.resource(url,
                 function (err) {
-                    alert('While retrieving instructions from ' + url + ': ' + err);
+                    console.log('While retrieving instructions from ' + url + ': ' + err);
                 },
                 function (status, data) {
                     console.log('While retrieving instructions from ' + url + ': ' + status);
@@ -319,7 +319,7 @@ define(function(require, exports, module) {
             removeJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'delete'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);
@@ -342,7 +342,7 @@ define(function(require, exports, module) {
                 var models = DASHBOARD.submittedJobs.models;
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(models), action:'reset'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);

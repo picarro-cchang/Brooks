@@ -43,7 +43,7 @@ define(function(require, exports, module) {
         var id = this.idTracker.objectId(obj);
         console.log("UsageTracker (release): id=" + id + " pending=" + JSON.stringify(this.pending));
         if (id !== null) {
-            if (!this.pending.hasOwnProperty(id)) alert("Error in usage tracking algorithm");
+            if (!this.pending.hasOwnProperty(id)) console.log("Error in usage tracking algorithm");
             else {
                 this.pending[id] -= 1;
             }

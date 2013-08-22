@@ -122,10 +122,11 @@ define(function(require, exports, module) {
             bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
             function (err) {
                 var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
-                alert(msg);
+                console.log(msg);
+                // alert(msg);
             },
             function (s, result) {
-                console.log('While converting timezone: ' + s);
+                // console.log('While converting timezone: ' + s);
                 rowData.startEtm.posixTime = result.posixTimes[0];
                 rowData.endEtm.posixTime = result.posixTimes[1];
                 rowData.startEtm.localTime = result.timeStrings[0];
@@ -134,20 +135,22 @@ define(function(require, exports, module) {
                 tableFuncs.setCell(row,"endEtm",rowData.endEtm,runsDefinition);
             });
         }
-        // console.log`(data);
+        // console.log(data);
     }};
 
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "baseType", width: "19%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_submaps_type", cf: String},
-        {key: "facilities", width: "11%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_submaps_facilities",
-          ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        // Hide facilities and markers tables
+        // {key: "facilities", width: "11%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_submaps_facilities",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "paths", width: "11%", th: P3TXT.dashboard.th_paths, tf: boolToIcon, eid: "id_submaps_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "peaks", width: "11%", th: P3TXT.dashboard.th_peaks, tf: boolToIcon, eid: "id_submaps_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "markers", width: "11%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_submaps_markers",
-          ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        // Hide facilities and markers tables
+        // {key: "markers", width: "11%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_submaps_markers",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "wedges", width: "11%", th: P3TXT.dashboard.th_wedges, tf: boolToIcon, eid: "id_submaps_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "analyses", width: "11%", th: P3TXT.dashboard.th_analyses, tf: boolToIcon, eid: "id_submaps_analyses",
@@ -160,14 +163,16 @@ define(function(require, exports, module) {
     var summaryDefinition = {id: "summarytable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "baseType", width: "16%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_summary_type", cf: String},
-        {key: "facilities", width: "10%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_summary_facilities",
-          ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        // Hide facilities and markers tables
+        // {key: "facilities", width: "10%", th: P3TXT.dashboard.th_facilities, tf: boolToIcon, eid: "id_summary_facilities",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "paths", width: "10%", th: P3TXT.dashboard.th_paths, tf: boolToIcon, eid: "id_summary_paths",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "peaks", width: "10%", th: P3TXT.dashboard.th_peaks, tf: boolToIcon, eid: "id_summary_peaks",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
-        {key: "markers", width: "10%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_summary_markers",
-          ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
+        // Hide facilities and markers tables
+        // {key: "markers", width: "10%", th: P3TXT.dashboard.th_markers, tf: boolToIcon, eid: "id_summary_markers",
+        //   ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "wedges", width: "10%", th: P3TXT.dashboard.th_wedges, tf: boolToIcon, eid: "id_summary_wedges",
           ef: function (s, b) { $(s).val(String(b)); }, cf: function (s) { return s === "true"; }},
         {key: "analyses", width: "10%", th: P3TXT.dashboard.th_analyses, tf: boolToIcon, eid: "id_summary_analyses",
@@ -263,10 +268,12 @@ define(function(require, exports, module) {
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_background, tableFuncs.makeSelect("id_submaps_type", {"class": controlClass},
                 {"map": P3TXT.dashboard.fig_dlg_background_map, "satellite": P3TXT.dashboard.fig_dlg_background_satellite, "none": P3TXT.dashboard.fig_dlg_background_none}));
-        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_submaps_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_submaps_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_paths, tableFuncs.makeSelect("id_submaps_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_peaks, tableFuncs.makeSelect("id_submaps_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_submaps_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_wedges, tableFuncs.makeSelect("id_submaps_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_analyses, tableFuncs.makeSelect("id_submaps_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_fovs, tableFuncs.makeSelect("id_submaps_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -288,10 +295,12 @@ define(function(require, exports, module) {
         body += '<form class="form-horizontal">';
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_background, tableFuncs.makeSelect("id_summary_type", {"class": controlClass},
                 {"map": P3TXT.dashboard.fig_dlg_background_map, "satellite": P3TXT.dashboard.fig_dlg_background_satellite, "none": P3TXT.dashboard.fig_dlg_background_none}));
-        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_summary_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_facilities, tableFuncs.makeSelect("id_summary_facilities", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_paths, tableFuncs.makeSelect("id_summary_paths", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_peaks, tableFuncs.makeSelect("id_summary_peaks", {"class": controlClass}, {"true": "Yes", "false": "No"}));
-        body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
+        // Hide facilities and markers tables
+        // body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_markers, tableFuncs.makeSelect("id_summary_markers", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_wedges, tableFuncs.makeSelect("id_summary_wedges", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_analyses, tableFuncs.makeSelect("id_summary_analyses", {"class": controlClass}, {"true": "Yes", "false": "No"}));
         body += tableFuncs.editControl(P3TXT.dashboard.fig_dlg_fovs, tableFuncs.makeSelect("id_summary_fovs", {"class": controlClass}, {"true": "Yes", "false": "No"}));
@@ -388,11 +397,12 @@ define(function(require, exports, module) {
         bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[posixTime]},
         function (err) {
             var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
-            alert(msg);
+            console.log(msg);
+            // alert(msg);
             done(new Error(msg));
         },
         function (s, result) {
-            console.log('While converting timezone: ' + s);
+            // console.log('While converting timezone: ' + s);
             now = result.timeStrings[0];
             now = now.substring(0,now.lastIndexOf(':'));
             console.log(now);
@@ -753,7 +763,7 @@ define(function(require, exports, module) {
                                 var keyFile = instrResource(hash) + '/' + dirName + '/key.json';
                                 DASHBOARD.SurveyorRpt.resource(keyFile,
                                 function (err) {
-                                    alert(P3TXT.dashboard.alert_while_getting_key_file_data + keyFile + ': ' + err);
+                                    console.log(P3TXT.dashboard.alert_while_getting_key_file_data + keyFile + ': ' + err);
                                 },
                                 function (status, data) {
                                     console.log('While getting key file data from ' + keyFile + ': ' + status);
@@ -878,10 +888,14 @@ define(function(require, exports, module) {
                 });
                 $("#id_runs_table_div").html(tableFuncs.makeTable([], runsDefinition));
                 styleTable("#id_runs_table_div");
-                $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
-                styleTable("#id_facilities_table_div");
-                $("#id_markers_files_table_div").html(tableFuncs.makeTable([], markersFilesDefinition));
-                styleTable("#id_markers_files_table_div");
+                
+                // Hide facilities and markers tables
+                if (0) {
+                    $("#id_facilities_table_div").html(tableFuncs.makeTable([], facilitiesDefinition));
+                    styleTable("#id_facilities_table_div");
+                    $("#id_markers_files_table_div").html(tableFuncs.makeTable([], markersFilesDefinition));
+                    styleTable("#id_markers_files_table_div");
+                }
 
                 this.uploadFile = this.$el.find('#id_file_upload');
                 this.uploadFile.wrap('<div />');
@@ -1077,10 +1091,10 @@ define(function(require, exports, module) {
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
                     var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
-                    alert(msg);
+                    console.log(msg);
                 },
                 function (s, result) {
-                    console.log('While converting timezone: ' + s);
+                    // console.log('While converting timezone: ' + s);
                     var runsTableData = [];
                     instructions.runs.forEach(function (run) {
                         var row = $.extend({},run);
@@ -1112,10 +1126,10 @@ define(function(require, exports, module) {
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:posixTimes},
                 function (err) {
                     var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
-                    alert(msg);
+                    console.log(msg);
                 },
                 function (s, result) {
-                    console.log('While converting timezone: ' + s);
+                    // console.log('While converting timezone: ' + s);
                     var localTimes = result.timeStrings;
                     for (var i=0; i<tableData.length; i++) {
                         var rowData = tableData[i];

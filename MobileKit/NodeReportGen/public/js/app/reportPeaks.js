@@ -58,7 +58,7 @@ define(function(require, exports, module) {
                         var url = that.workDir + '/' + names.shift();
                         REPORT.SurveyorRpt.resource(url,
                         function (err) {
-                            alert('While getting peaks data from ' + url + ': ' + err);
+                            console.log('While getting peaks data from ' + url + ': ' + err);
                         },
                         function (status, data) {
                             console.log('While getting peaks data from ' + url + ': ' + status);

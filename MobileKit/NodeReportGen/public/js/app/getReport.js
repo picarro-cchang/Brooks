@@ -121,7 +121,7 @@ define(function(require, exports, module) {
             instructionsLoaded = true;
             REPORT.SurveyorRpt.resource(keyFile,
             function (err) {
-                alert('While getting key file data from ' + keyFile + ': ' + err);
+                console.log('While getting key file data from ' + keyFile + ': ' + err);
             },
             function (status, data) {
                 console.log('While getting key file data from ' + keyFile + ': ' + status);
@@ -216,10 +216,12 @@ define(function(require, exports, module) {
         settingsTableTop.push('<th>' + P3TXT.getReport.neCorner + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.minPeakAmpl + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.exclusionRadius + '</th>');
-        settingsTableTop.push('<th>' + P3TXT.getReport.facilities + '</th>');
+        // Hide facilities and markers tables
+        // settingsTableTop.push('<th>' + P3TXT.getReport.facilities + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.paths + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.peaks + '</th>');
-        settingsTableTop.push('<th>' + P3TXT.getReport.markers + '</th>');
+        // Hide facilities and markers tables
+        // settingsTableTop.push('<th>' + P3TXT.getReport.markers + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.wedges + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.swaths + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.analyses + '</th>');
