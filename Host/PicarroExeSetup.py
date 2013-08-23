@@ -75,6 +75,7 @@ sys.path.append("Utilities/ConfigManager")
 sys.path.append("Utilities/AircraftValveSwitcher")
 sys.path.append("Utilities/ProgramVariableGainRdd")
 sys.path.append("Utilities/RestartSupervisor")
+sys.path.append('Utilities/KillRestartSupervisor')
 sys.path.append("../Firmware/Utilities")
 ################################################################
 # Start of a pile of special setup with the sole purpose
@@ -325,6 +326,7 @@ consoleList = [
     "Utilities/BackpackServer/backpackServer.py",
     "Utilities/RestartSupervisor/RestartSupervisor.py",
     "Utilities/ProgramVariableGainRdd/programRdd.py",
+    'Utilities/KillRestartSupervisor/KillRestartSupervisor.py',
     "../Firmware/Utilities/CalibrateSystem.py",
     "../Firmware/Utilities/CalibrateFsr.py",
     "../Firmware/Utilities/AdjustWlmOffset.py",
