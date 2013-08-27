@@ -342,7 +342,7 @@ describe('reportServer', function () {
                 //  for the timestamp is leading zero-padded to a width of 13 characters
                 this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
                 var dirName = formatNumberLength(uTime, 13);
-                var instrDir = path.join(ROOT_DIR, hash, dirName);
+                var instrDir = path.join(ROOT_DIR, hash.substr(0,2), hash, dirName);
                 mkdirp.sync(instrDir, null);
                 var fname = path.join(instrDir, 'status.dat');
                 var statObject = {status:1234, floodle:5678};
@@ -370,7 +370,7 @@ describe('reportServer', function () {
                     uTimes.push(uTime);
                     statusList.push(status);
                     var dirName = formatNumberLength(uTime, 13);
-                    var instrDir = path.join(ROOT_DIR, hash, dirName);
+                    var instrDir = path.join(ROOT_DIR, hash.substr(0,2), hash, dirName);
                     mkdirp.sync(instrDir, null);
                     var fname = path.join(instrDir, 'status.dat');
                     var statObject = {status:status, index:i};

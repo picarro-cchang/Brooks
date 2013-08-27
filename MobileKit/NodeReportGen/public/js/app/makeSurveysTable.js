@@ -49,11 +49,11 @@ define(function(require, exports, module) {
             bufferedTimezone(REPORT.Utilities.timezone,{tz:REPORT.settings.get("timezone"),posixTimes:etmList},
             function (err) {
                 var msg = 'While processing timezone in makeSurveysTable: ' + err;
-                alert(msg);
+                console.log(msg);
                 done(new Error(msg));
             },
             function (status, data) {
-                console.log('While processing timezone in makeSurveysTable: ' + status);
+                // console.log('While processing timezone in makeSurveysTable: ' + status);
                 for (i=0; i<surveys.length; i++) {
                     var survey = REPORT.surveys.where({"id": surveys[i]})[0].attributes;
                     surveysTable.push('<tr>');

@@ -227,7 +227,7 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
                     }
                 }
             }
-            req.url = new_path;
+            req.url = encodeURI(new_path);
 
             forwardTheRequest(req, res);
             logger("resourceGet forward succeeded", "debug");
@@ -272,6 +272,8 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
             resourceGet);
 
     app.post('/rest/download', forwardTheRequest);
+
+    app.post('/fileUpload', forwardTheRequest);
 
     app.get(/^(\/|\/force|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, forwardTheRequest);
 

@@ -1,5 +1,5 @@
 // getReport.js
-/*global alert, console, module, require, TEMPLATE_PARAMS */
+/*global alert, console, module, P3TXT, require, TEMPLATE_PARAMS */
 /* jshint undef:true, unused:true */
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
@@ -17,6 +17,8 @@ define(function(require, exports, module) {
     var REPORT = require('app/reportGlobals');
     var reportAnalyses = require('app/reportAnalyses');
     var reportCanvasViews = require('app/reportCanvasViews');
+    var reportFacilities = require('app/reportFacilities');
+    var reportMarkers = require('app/reportMarkers');
     var reportPaths = require('app/reportPaths');
     var reportPeaks = require('app/reportPeaks');
     var reportRuns = require('app/reportRuns');
@@ -24,6 +26,7 @@ define(function(require, exports, module) {
     var reportSurveys = require('app/reportSurveys');
     var reportViewResources = require('app/reportViewResources');
     var p3restapi = require('app/p3restapi');
+    require('common/P3TXT');
 
     var instructionsLoaded = false;
 
@@ -69,6 +72,8 @@ define(function(require, exports, module) {
         REPORT.clientKey = TEMPLATE_PARAMS.clientKey;
 
         reportAnalyses.init();
+        reportFacilities.init();
+        reportMarkers.init();
         reportPaths.init();
         reportPeaks.init();
         reportRuns.init();
@@ -78,6 +83,7 @@ define(function(require, exports, module) {
         reportCanvasViews.init();
         REPORT.usageTracker = newUsageTracker();
         REPORT.settings = new REPORT.Settings();
+        console.log("REPORT at " + new Date() + ": " + JSON.stringify(TEMPLATE_PARAMS.qry));
         renderPage();
     }
 
@@ -115,7 +121,7 @@ define(function(require, exports, module) {
             instructionsLoaded = true;
             REPORT.SurveyorRpt.resource(keyFile,
             function (err) {
-                alert('While getting key file data from ' + keyFile + ': ' + err);
+                console.log('While getting key file data from ' + keyFile + ': ' + err);
             },
             function (status, data) {
                 console.log('While getting key file data from ' + keyFile + ': ' + status);
@@ -138,9 +144,21 @@ define(function(require, exports, module) {
                 // Construct the surveys collection
                 REPORT.surveys = new REPORT.Surveys();
                 readSurveys(data);
-                // Set up the collections for peaks, analyses and paths data (to be read from .json files)
-                REPORT.peaks = new REPORT.Peaks(null, {peaksRef:data.SUBTASKS.getPeaksData});
-                REPORT.analyses = new REPORT.Analyses(null, {analysesRef:data.SUBTASKS.getAnalysesData});
+                // Set up the collections for peaks, markers, analyses and paths data (to be read from .json files)
+                if (data.SUBTASKS.hasOwnProperty("getPeaksData")) REPORT.peaks = new REPORT.Peaks(null, {peaksRef:data.SUBTASKS.getPeaksData});
+                else REPORT.peaks = null;
+
+                REPORT.settings.set({"markersFiles": data.INSTRUCTIONS.markersFiles});
+                if (data.SUBTASKS.hasOwnProperty("getMarkersData")) REPORT.markers = new REPORT.Markers(null, {markersRef:data.SUBTASKS.getMarkersData});
+                else REPORT.markers = null;
+
+                REPORT.settings.set({"facilities": data.INSTRUCTIONS.facilities});
+                if (data.SUBTASKS.hasOwnProperty("getFacilitiesData")) REPORT.facilities = new REPORT.Facilities(null, {facilitiesRef:data.SUBTASKS.getFacilitiesData});
+                else REPORT.facilities = null;
+
+                if (data.SUBTASKS.hasOwnProperty("getAnalysesData")) REPORT.analyses = new REPORT.Analyses(null, {analysesRef:data.SUBTASKS.getAnalysesData});
+                else REPORT.analyses = null;
+
                 if (data.SUBTASKS.hasOwnProperty("getFovsData")) REPORT.paths = new REPORT.Paths(null, {pathsRef:data.SUBTASKS.getFovsData});
                 else REPORT.paths = null;
                 // Create a ReportViewResources object to hold the canvases which make the report
@@ -176,14 +194,15 @@ define(function(require, exports, module) {
     }
 
     function makePdfReport(subreport, params) {
-        var figureComponents = [ "paths", "fovs", "wedges", "tokens", "peaks", "analyses", "submapGrid" ];
+        var figureComponents = [ "facilities", "paths", "fovs", "wedges", "tokens", "peaks", "markers", "analyses", "submapGrid" ];
         var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
         var name = params.name;
 
         $("#reportTitle").html(title);
         $("#rightHead").html(name);
-        $("#leftFoot").html("First submitted by " + params.user + " at " + params.submitTime);
+        $("#leftFoot").html(P3TXT.getReport.firstSubmittedBy + " " + params.user + " " +
+            P3TXT.getReport.firstSubmittedAt + " " + params.submitTime);
         $("#getReportApp").append('<div style="container-fluid">');
         $("#getReportApp").append('<div style="row-fluid">');
         $("#getReportApp").append('<div style="span12">');
@@ -193,15 +212,19 @@ define(function(require, exports, module) {
         var settingsTableBottom = [];
         settingsTableTop.push('<table class="table table-condensed table-fmt1">');
         settingsTableTop.push('<thead><tr>');
-        settingsTableTop.push('<th>SW Corner (Lat,Lng)</th>');
-        settingsTableTop.push('<th>NE Corner (Lat,Lng)</th>');
-        settingsTableTop.push('<th>Min Peak Ampl (ppm)</th>');
-        settingsTableTop.push('<th>Excl Radius (m)</th>');
-        settingsTableTop.push('<th>Paths</th>');
-        settingsTableTop.push('<th>Peaks</th>');
-        settingsTableTop.push('<th>LISAs</th>');
-        settingsTableTop.push('<th>FOV</th>');
-        settingsTableTop.push('<th>Isotopic</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.swCorner + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.neCorner + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.minPeakAmpl + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.exclusionRadius + '</th>');
+        // Hide facilities and markers tables
+        // settingsTableTop.push('<th>' + P3TXT.getReport.facilities + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.paths + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.peaks + '</th>');
+        // Hide facilities and markers tables
+        // settingsTableTop.push('<th>' + P3TXT.getReport.markers + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.wedges + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.swaths + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.analyses + '</th>');
         settingsTableTop.push('</tr></thead>');
         settingsTableTop.push('<tbody>');
         settingsTableTop.push('<tr>');
@@ -215,8 +238,10 @@ define(function(require, exports, module) {
             var pageComponent = subreport.figures.models[i];
             var layers = [];
             var settingsTableMid = [];
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("facilities")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("paths")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("peaks")) + '</td>');
+            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("markers")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("wedges")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("fovs")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("analyses")) + '</td>');
@@ -233,27 +258,28 @@ define(function(require, exports, module) {
             $("#getReportApp").append('<div id="' + id_fig + '" class="reportFigure"; style="position:relative;"/>');
             new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
         }
+
         if (subreport.tables.get("analysesTable")) {
             id = 'id_analysesTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Isotopic Analysis Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_analyses_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("peaksTable")) {
             id = 'id_peaksTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Peaks Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_peaks_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("runsTable")) {
             id = 'id_runsTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Runs Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_runs_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("surveysTable")) {
             id = 'id_surveysTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">Surveys Table</h2>');
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_surveys_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
         }

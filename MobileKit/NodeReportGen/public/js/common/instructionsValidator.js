@@ -1,16 +1,55 @@
+/* instructionsValidator.js is used to validate instructions for making reports */
+/*global console, module, P3TXT, require */
+
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
     var pv = require('./paramsValidator');
+    require('./P3TXT');
     var newParamsValidator = pv.newParamsValidator;
     var validateListUsing = pv.validateListUsing;
     var latlngValidator = pv.latlngValidator;
 
+    function offsetsValidator(data) {
+        try {
+            if (data.length == 2 &&
+                typeof data[0] === "number" && typeof data[1] === "number" &&
+                data[0] >= -0.01 && data[0] <= 0.01 &&
+                data[1] >= -0.01 && data[1] <= 0.01) {
+                return {"valid": true};
+            }
+            else return {"valid": false, "errorList": [P3TXT.dashboard.validator_bad_offset]};
+        }
+        catch (e) {
+            return {"valid": false, "errorList": [P3TXT.dashboard.validator_bad_offset]};
+        }
+    }
+
+    function facValidator(fac) {
+        var  rpv = newParamsValidator(fac,
+            [{"name": "filename", "required": true, "validator": "string"},
+             {"name": "hash", "required": true, "validator": /[0-9a-fA-F]{32}/},
+             {"name": "offsets", "required": false, "validator": offsetsValidator, "default_value":[0.0,0.0]},
+             {"name": "linewidth", "required": false, "validator": "number", "default_value": 2},
+             {"name": "linecolor", "required": false, "validator": /#[0-9a-fA-F]{6}/, "default_value": "#000000"},
+             {"name": "xpath", "required": false, "validator": "string", "default_value": ".//coordinates"}
+            ]);
+        return rpv.validate();
+    }
+
+    function markersFileValidator(fac) {
+        var  rpv = newParamsValidator(fac,
+            [{"name": "filename", "required": true, "validator": "string"},
+             {"name": "hash", "required": true, "validator": /[0-9a-fA-F]{32}/}
+            ]);
+        return rpv.validate();
+    }
+
     function runValidator(run) {
         function postCheck(resultDict, errorList) {
             if (resultDict.startEtm >= resultDict.endEtm) {
-                errorList.push("Starting time must come before ending time");
+                errorList.push(P3TXT.dashboard.validator_invalid_times);
             }
         }
         var rpv = newParamsValidator(run,
@@ -29,8 +68,10 @@ define(function(require, exports, module) {
     function componentsValidator (components) {
         var rpv = newParamsValidator(components,
             [{"name": "baseType", "required":false, "validator": /satellite|map|none/, "default_value": "map"},
+             {"name": "facilities", "required":false, "validator": "boolean", "default_value": false},
              {"name": "paths", "required":false, "validator": "boolean", "default_value": false},
              {"name": "peaks", "required":false, "validator": "boolean", "default_value": false},
+             {"name": "markers", "required":false, "validator": "boolean", "default_value": false},
              {"name": "wedges", "required":false, "validator": "boolean", "default_value": false},
              {"name": "analyses", "required":false, "validator": "boolean", "default_value": false},
              {"name": "fovs", "required":false, "validator": "boolean", "default_value": false},
@@ -88,10 +129,10 @@ define(function(require, exports, module) {
         function postCheck(resultDict, errorList) {
             try {
                 if (resultDict.swCorner[0] >= resultDict.neCorner[0]) {
-                    errorList.push("SW corner latitude must be less than NE corner latitude.");
+                    errorList.push(P3TXT.dashboard.validator_invalid_corner_latitudes);
                 }
                 if (resultDict.swCorner[1] >= resultDict.neCorner[1]) {
-                    errorList.push("SW corner longitude must be less than NE corner longitude.");
+                    errorList.push(P3TXT.dashboard.validator_invalid_corner_longitudes);
                 }
             }
             catch(e) {
@@ -101,7 +142,7 @@ define(function(require, exports, module) {
             [{"name": "title", "required": true, "validator": function(s) {
                 var valid = ((typeof s === "string") && s.trim() !== "" );
                 if (valid) return {valid: true};
-                else return {valid: false, "errorList": ["Title must be a non-empty string"]};
+                else return {valid: false, "errorList": [P3TXT.dashboard.validator_empty_title]};
              }},
              {"name": "instructions_type", "required": false, "validator": "string", "default_value": "makeReport"},
              {"name": "makePdf", "required": false, "validator": "boolean", "default_value": false},
@@ -114,18 +155,12 @@ define(function(require, exports, module) {
              {"name": "fovNWindow", "required": false, "validator": "number", "default_value": 10},
              {"name": "peaksMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "runs", "required": true, "validator": validateListUsing(runValidator)},
+             {"name": "markersFiles", "required": false, "validator": validateListUsing(markersFileValidator), "default_value":[]},
+             {"name": "facilities", "required": false, "validator": validateListUsing(facValidator), "default_value":[]},
              {"name": "timezone", "required":false, "validator": "string", "default_value": "UTC"},
              {"name": "template", "required": true, "validator": templateValidator}], postCheck);
         return rpv.validate();
     }
 
     exports.instrValidator = instrValidator;
-    exports.submapsValidator = submapsValidator;
-    exports.templateValidator = templateValidator;
-    exports.templateSubmapsValidator = templateSubmapsValidator;
-    exports.templateSummaryValidator = templateSummaryValidator;
-    exports.templateTablesValidator = templateTablesValidator;
-    exports.componentsValidator = componentsValidator;
-    exports.runValidator = runValidator;
-
 });
