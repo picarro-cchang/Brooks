@@ -141,6 +141,35 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
         allControlOn = False
     elif not allControlOn:
         Log("Problem detected for at least one laser, turned off temperature control loop for all lasers", Level=2)
+        
+    # if there are any virtual laser groupings, average the computed offsets for all virtual lasers in the group
+    laserGroups = "la_fineLaserCurrent_laserGroups"
+    
+    if laIsEnabled > 0 and allControlOn:
+        if laserGroups in instr:
+            groups = instr[laserGroups]
+            #print "groups =", groups
+            
+            for g in groups:
+                adjValue = 0.0
+
+                for v in g:
+                    if v in allLasersDict:
+                        laserDict = allLasersDict[v]
+                        newValue = laserDict["newValue"]
+                        adjValue += newValue
+                        #print "    v=%d  offset=%f" % (v, newValue)
+
+                # compute offset average across all lasers in the group
+                adjValue = float(adjValue) / len(g)
+                
+                #print "    adjValue=", adjValue
+                
+                # apply this offset to all lasers in the group
+                for v in g:
+                    if v in allLasersDict:
+                        laserDict = allLasersDict[v]
+                        laserDict["newValue"] = adjValue
 
     # save off info in the report and set the laser offset if all is good
     #

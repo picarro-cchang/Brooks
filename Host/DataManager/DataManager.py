@@ -1457,11 +1457,17 @@ class DataManager(object):
             ##Figure out what modes are available and load all details...
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionPath)
             Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
+
             ##Load the instrument data...
             for path in self.Config.InstrDataPaths:
                 cp = CustomConfigObj(path, ignore_option_case=False)
+
                 for k, v in cp.list_items("Data"):
                     self.InstrData[k] = float(v)
+
+                if cp.has_section("EvalData"):
+                    for k, v in cp.list_items("EvalData"):
+                        self.InstrData[k] = eval(v)
 
             ##Load up any customer-specified calibrations...
             try:
