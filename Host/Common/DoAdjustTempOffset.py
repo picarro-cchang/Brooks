@@ -24,7 +24,7 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 EventManagerProxy_Init(APP_NAME)
 
 
-def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
+def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printInfo=False):
     allLasersDict = {}
 
     # All arguments are required.
@@ -65,8 +65,9 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             fineCurrent = data.get("fineLaserCurrent_%d_mean" % vLaserNum, target)
             dev = fineCurrent - target
 
-            #print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f maxFineCurrent=%f" %
-            #     (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
+            if printInfo:
+                print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f maxFineCurrent=%f" % \
+                    (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
 
             curValue = freqConv.getLaserTempOffset(vLaserNum)
             
@@ -89,7 +90,8 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                 laserDict["controlOn"] = True
                 
                 if fineCurrent > minFineCurrent and fineCurrent < maxFineCurrent:
-                    #print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
+                    if printInfo:
+                        print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
                     
                     # compute adjustment needed
                     delta = gain * dev
@@ -148,7 +150,9 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
     if laIsEnabled > 0 and allControlOn:
         if laserGroups in instr:
             groups = instr[laserGroups]
-            #print "groups =", groups
+
+            if printInfo:
+                print "groups =", groups
             
             for g in groups:
                 adjValue = 0.0
@@ -158,12 +162,15 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                         laserDict = allLasersDict[v]
                         newValue = laserDict["newValue"]
                         adjValue += newValue
-                        #print "    v=%d  offset=%f" % (v, newValue)
+
+                        if printInfo:
+                            print "    v=%d  offset=%f" % (v, newValue)
 
                 # compute offset average across all lasers in the group
                 adjValue = float(adjValue) / len(g)
                 
-                #print "    adjValue=", adjValue
+                if printInfo:
+                    print "    adjValue=", adjValue
                 
                 # apply this offset to all lasers in the group
                 for v in g:
