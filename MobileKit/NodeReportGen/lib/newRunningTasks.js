@@ -2,7 +2,7 @@
     persist on the disk a collection of running tasks. These are used to handle orphan tasks left
     behind if the server is prematurely stopped */
 
-/*global module, require */
+/*global console, module, require */
 /*jshint undef:true, unused:true */
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
@@ -30,16 +30,24 @@ define(function(require, exports, module) {
         return this.running.hasOwnProperty(taskKey);
     };
     RunningTasks.prototype.startTask = function (taskKey) {
-        if (taskKey in this.running) throw new Error('startTask failed: task is already running');
-        this.running[taskKey] = (new Date()).valueOf();
-        this.saveRunning();
+        if (taskKey in this.running) {
+            console.log('startTask failed: task is already running');
+        }
+        else {
+            this.running[taskKey] = (new Date()).valueOf();
+            this.saveRunning();
+        }
         return this.running;
     };
     RunningTasks.prototype.endTask = function (taskKey) {
-        if (!(taskKey in this.running)) throw new Error('endTask failed: task is not running');
-        delete this.running[taskKey];
-        this.saveRunning();
-        return this.running;
+        if (!(taskKey in this.running)) {
+            console.log('endTask failed: task is not running');
+        }
+        else {
+            delete this.running[taskKey];
+            this.saveRunning();
+            return this.running;           
+        }
     };
     RunningTasks.prototype.saveRunning = function() {
         this.saveQueue.push(_.clone(this.running));
@@ -53,7 +61,9 @@ define(function(require, exports, module) {
         if (this.saveQueue.length > 0) {
             var r = this.saveQueue.shift();
             fs.writeFile(this.tasksFile, JSON.stringify(r,null,2), 'ascii', function(err) {
-                if (err) throw(new Error('Cannot write to tasks file'));
+                if (err) {
+                    console.log(Error('Cannot write to tasks file'));
+                }
                 else if (that.saveQueue.length > 0) that.next();
                 else {
                     that.writeFlag = true;
@@ -127,7 +137,7 @@ define(function(require, exports, module) {
                 try {
                     var incompleteJobs = _.keys(JSON.parse(data));
                     if (incompleteJobs) next();
-                    else throw new Error("empty jobs file");
+                    else done(Error("empty jobs file"));
                 }
                 catch (e) {
                     refresh();
