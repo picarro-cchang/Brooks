@@ -35,7 +35,11 @@ OUTPUT_COLUMNS = [
     'UNCERTAINTY',
     'REPLAY_MAX',
     'REPLAY_LMIN',
-    'REPLAY_RMIN']
+    'REPLAY_RMIN',
+    'DISPOSITION']
+
+DISPOSITIONS = [
+    'COMPLETE']
 
 
 def genLatestFiles(baseDir,pattern):
@@ -759,7 +763,9 @@ class PeakAnalyzer(object):
                     except:
                         raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
                     # Write file header
-                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % tuple(OUTPUT_COLUMNS))
+                    handle.write("%-14s" * len(OUTPUT_COLUMNS) %
+                                 tuple(OUTPUT_COLUMNS))
+                    handle.write("\n")
 
                 # Make alignedData source from database or specified file
                 if self.usedb:
@@ -777,7 +783,20 @@ class PeakAnalyzer(object):
                     if self.usedb:
                         doc = {}
                         #Note: please assure that value list and doc_hdrs are in the same sequence
-                        for col, val in zip(doc_hdrs, [r.time,r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin]):
+                        dataPairs = zip(doc_hdrs,
+                                        [r.time,
+                                         r.dist,
+                                         r.lng,
+                                         r.lat,
+                                         r.conc,
+                                         r.delta,
+                                         r.uncertainty,
+                                         r.replay_max,
+                                         r.replay_lmin,
+                                         r.replay_rmin,
+                                         DISPOSITIONS.index('COMPLETE')])
+
+                        for col, val in dataPairs:
                             doc[col] = float(val)
 
                             # JSON does not support nan, so change to string "NaN"
@@ -797,8 +816,8 @@ class PeakAnalyzer(object):
                         self.pushData(peakname, doc_data)
                         doc_data = []
                     else:
-                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f\r\n" % (r.time,
-                                     r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin))
+                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f%-14.1f\r\n" % (r.time,
+                                     r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin, DISPOSITIONS.index('COMPLETE')))
 
                 if not self.usedb and handle is not None:
                     handle.close()
