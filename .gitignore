@@ -21,3 +21,5 @@ Tools/Release/CHANGELOG.raw*
 Host/DataManager/build/
 Host/DataManager/dist/
 AddOns/SoilPostProcessor/output/
+AddOns/SoilPostProcessor/build/
+AddOns/SoilPostProcessor/dist/
