@@ -48,7 +48,11 @@ def main(opts):
         'CH4'       : [float(x) for x in rawData['CH4_dry']],
         'H2O'       : [float(x) for x in rawData['H2O']]}
 
-    root = os.path.abspath(os.path.dirname(__file__))
+    if hasattr(sys, 'frozen'):
+        root = os.path.abspath(os.path.dirname(sys.executable))
+    else:
+        root = os.path.abspath(os.path.dirname(__file__))
+
     outputRoot = os.path.join(root, 'output')
     if not os.path.isdir(outputRoot):
         os.makedirs(outputRoot)
