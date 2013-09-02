@@ -20,3 +20,4 @@ repoBzrVer.py
 Tools/Release/CHANGELOG.raw*
 Host/DataManager/build/
 Host/DataManager/dist/
+AddOns/SoilPostProcessor/output/
