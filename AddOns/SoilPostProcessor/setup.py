@@ -36,9 +36,10 @@ dataFiles = [
     ('mpl-data', glob.glob(os.path.join(mplPath, '*.*'))),
     ('mpl-data', [os.path.join(mplPath, 'matplotlibrc')]),
     (r'mpl-data\images', glob.glob(os.path.join(mplPath, 'images', '*.*'))),
-    (r'mpl-data\fonts', glob.glob(os.path.join(mplPath, 'fonts', '*.*')))]
+    (r'mpl-data\fonts', glob.glob(os.path.join(mplPath, 'fonts', '*.*'))),
+	('.', glob.glob('*.csv'))]
 
-core.setup(console=['postProcessor2.py'],
+core.setup(console=['postProcessor.py'],
            data_files=dataFiles,
            options = {
                'py2exe' : {
