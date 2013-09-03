@@ -55,9 +55,9 @@ define(function(require, exports, module) {
                     that.lrt_status = result["status"];
                     if (result["lrt_start_ts"] === result["request_ts"]) {
                         console.log("This is a new request, made at " + result["request_ts"]);
-                        console.log("P3Lrt Status: " + that.lrt_status);
                         that.lrt_parms_hash = result["lrt_parms_hash"];
                         that.lrt_start_ts = result["lrt_start_ts"];
+                        console.log("P3Lrt Status: " + that.lrt_status + " " + that.lrt_parms_hash + '/' + that.lrt_start_ts);
                         pollUntilDone();
                     }
                     else {
@@ -70,17 +70,17 @@ define(function(require, exports, module) {
                                 else {
                                     that.lrt_status = result["status"];
                                     console.log("Since previous request failed, it is being resubmitted at " + result["request_ts"]);
-                                    console.log("P3Lrt Status: " + that.lrt_status);
                                     that.lrt_parms_hash = result["lrt_parms_hash"];
                                     that.lrt_start_ts = result["lrt_start_ts"];
+                                    console.log("P3Lrt Status: " + that.lrt_status + " " + that.lrt_parms_hash + '/' + that.lrt_start_ts);
                                     pollUntilDone();
                                 }
                             });
                         }
                         else {
-                            console.log("P3Lrt Status: " + that.lrt_status);
                             that.lrt_parms_hash = result["lrt_parms_hash"];
                             that.lrt_start_ts = result["lrt_start_ts"];
+                            console.log("P3Lrt Status: " + that.lrt_status + " " + that.lrt_parms_hash + '/' + that.lrt_start_ts);
                             pollUntilDone();
                         }
                     }
@@ -96,7 +96,7 @@ define(function(require, exports, module) {
                 else {
                     that.lrt_status = result["status"];
                     that.lrt_count = result["count"];
-                    console.log("P3Lrt Status: " + that.lrt_status);
+                    console.log("P3Lrt Status: " + that.lrt_status + " " + that.lrt_parms_hash + '/' + that.lrt_start_ts);
                     if (that.lrt_status === rptGenStatus.DONE) fetchFirst();
                     else if (that.lrt_status < 0 || that.lrt_status > rptGenStatus.DONE) that.emit("error", new Error("Failure status: " + that.lrt_status));
                     else setTimeout(pollUntilDone,5000);
@@ -117,7 +117,7 @@ define(function(require, exports, module) {
                 }
                 else {
                     console.log("P3LRT " + that.rsc + ": Fetching " + that.start + " to " + (that.start + result.length - 1) +
-                                " of " + that.lrt_count + " results");
+                                " of " + that.lrt_count + " results from " + that.lrt_parms_hash + '/' + that.lrt_start_ts);
                     that.start += result.length;
                     that.sortPos = result[result.length-1]["lrt_sortpos"];
                     that.emit("data", result);
@@ -138,7 +138,7 @@ define(function(require, exports, module) {
                 }
                 else {
                     console.log("P3LRT " + that.rsc + ": Fetching " + that.start + " to " + (that.start + result.length - 1) +
-                                " of " + that.lrt_count + " results");
+                                " of " + that.lrt_count + " results from " + that.lrt_parms_hash + '/' + that.lrt_start_ts);
                     that.start += result.length;
                     that.sortPos = result[result.length-1]["lrt_sortpos"];
                     that.emit("data", result);

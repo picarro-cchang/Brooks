@@ -505,7 +505,6 @@ define(function(require, exports, module) {
                             else {
                                 self.lrt_status = result["status"];
                                 console.log("Since previous request failed, it is being resubmitted at " + result["request_ts"]);
-                                console.log("P3Lrt Status: " + self.lrt_status);
                                 self.lrt_parms_hash = result["lrt_parms_hash"];
                                 self.lrt_start_ts = result["lrt_start_ts"];
                                 console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
@@ -542,7 +541,7 @@ define(function(require, exports, module) {
                     else {
                         self.lrt_status = result["status"];
                         self.lrt_count = result["count"];
-                        console.log("P3Lrt Status: " + self.lrt_status);
+                        console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
                         if (self.lrt_status === rptGenStatus.DONE) fetchData();
                         else if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
                             console.log('FOVPROCESSOR: self.lrt_status', self.lrt_status);
