@@ -15,6 +15,8 @@ import time
 import threading
 import traceback
 import sys
+import zipfile
+import tempfile
 
 from cStringIO import StringIO
 from numpy import *
@@ -1299,12 +1301,13 @@ class NotebookHandler(Handler):
                 wx.MessageBox("Cannot open %s. File may be in use." % fname)
                 return
             try:
-                d = wx.DirDialog(None,"Select directory tree with individual .h5 files",style=wx.DD_DEFAULT_STYLE,defaultPath=self.datDirName)
+                d = wx.DirDialog(None,"Select directory tree with individual .h5 and/or zipped .h5 files",style=wx.DD_DEFAULT_STYLE,defaultPath=self.datDirName)
                 if d.ShowModal() == wx.ID_OK:
                     path = d.GetPath()
                     self.datDirName = path
                     progress = 0
                     allData = []
+
                     for what,name in walkTree(path,sortDir=sortByName,sortFiles=sortByName):
                         if what == "file" and os.path.splitext(name)[1]==".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
                             if not progress:
@@ -1314,13 +1317,63 @@ class NotebookHandler(Handler):
                                 allData.append(ip.root.results.read())
                             finally:
                                 ip.close()
+
                             pd.Pulse("%s" % os.path.split(name)[1])
                             progress += 1
+
+                        elif what == "file" and os.path.splitext(name)[1]==".zip" and zipfile.is_zipfile(name):
+                            # Note: openFile is tables.file.openFile() which imports the .h5 data.
+                            #       It cannot read the files directly from the archive, so we must
+                            #       unpack them first.
+
+                            # open zip archive
+                            zipArchive = zipfile.ZipFile(name, 'r')
+                            tmpDir = tempfile.gettempdir()
+
+                            try:
+                                zipfiles = zipArchive.namelist()
+                                # enumerate files in the .zip archive
+                                for zfname in zipfiles:
+
+                                    # look for .h5 files
+                                    if os.path.splitext(zfname)[1] == ".h5":
+                                        # create a modal progress dialog if not created yet
+                                        if not progress:
+                                            pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
+
+                                        # extract the .h5 file from the zip archive into the temp dir
+                                        zf = zipArchive.extract(zfname, tmpDir)
+
+                                        # not sure why we have to stick on a .h5 extension since
+                                        # we already checked for it but using same code as above...
+                                        ip = openFile(zf[:-3]+".h5","r")
+                                        try:
+                                            # append the data from this .h5 file
+                                            allData.append(ip.root.results.read())
+                                        finally:
+                                            # clean up
+                                            ip.close()
+                                            os.remove(zf)  # delete the extracted temp file
+
+                                        # update the progress dialog with this filename
+                                        pd.Pulse("%s" % os.path.split(zfname)[1])
+                                        progress += 1
+
+                            finally:
+                                # close this .zip archive
+                                zipArchive.close()
+
+                    # check whether any .h5 data files were found and concatenated
+                    if progress == 0:
+                        wx.MessageBox("No .h5 files found!")
+                        return
+
                     pd.Pulse("Writing output file")
                     # Concatenate everything together and sort by time of data
                     dtypes = array([d.dtype for d in allData])
                     u = array(len(dtypes)*[True])
                     filters = Filters(complevel=1,fletcher32=True)
+
                     # Concatenate by unique data type
                     j = 0
                     for i,t in enumerate(dtypes):
@@ -1336,6 +1389,7 @@ class NotebookHandler(Handler):
                             table = op.createTable(op.root,"results_%d" % j,data,filters=filters)
                             j += 1
                             table.flush()
+
                     info.object.dataFile = fname
                     info.ui.title = "Viewing [" + info.object.dataFile + "]"
                     pd.Update(100,newmsg = "Done. Close box to view results")
@@ -1437,7 +1491,8 @@ class NotebookHandler(Handler):
 
     def onExit(self,info):
         self.close(info,True)
-        
+        sys.exit(0)
+
     def close(self,info,is_ok):
         for ui in info.object.uiSet:
             ui.dispose()
