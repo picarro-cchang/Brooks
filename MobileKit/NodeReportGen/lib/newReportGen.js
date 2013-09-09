@@ -154,7 +154,8 @@ define(function(require, exports, module) {
                     status = {"status": rptGenStatus.IN_PROGRESS,
                               "rpt_contents_hash": that.ticket,
                               "rpt_start_ts": that.request_ts,
-                              "request_ts": that.request_ts};
+                              "request_ts": that.request_ts,
+                              "user": that.user};
                     sf.writeStatus(statusFile, status, function (err) {
                         if (err) callback(err);
                         else {
@@ -163,7 +164,7 @@ define(function(require, exports, module) {
                                 else {
                                     // Indicate that run has started
                                     callback(null, result);
-                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag);
+                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag, that.user);
                                 }
                             });
                         }
@@ -174,7 +175,7 @@ define(function(require, exports, module) {
         handleInstructions(instrDir, instrFname, this.contents);
 
 
-        function obeyInstructions(taskKey, workDir, statusFile, forceFlag) {
+        function obeyInstructions(taskKey, workDir, statusFile, forceFlag, user) {
             var instructions = that.instructions;
             var p3ApiService = that.p3ApiService;
             var rptGenService = that.rptGenService;
@@ -188,7 +189,7 @@ define(function(require, exports, module) {
                 else that.emit('success', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "stop_ts": now_ts, "duration": duration});
             }
 
-            that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts});
+            that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts, "user": user});
             console.log("obeyInstructions type: " + type + " force: " + forceFlag);
             switch (type) {
                 case "ignore":

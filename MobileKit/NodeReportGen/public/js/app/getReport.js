@@ -238,10 +238,12 @@ define(function(require, exports, module) {
             var pageComponent = subreport.figures.models[i];
             var layers = [];
             var settingsTableMid = [];
-            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("facilities")) + '</td>');
+            // Hide facilities and markers tables
+            // settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("facilities")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("paths")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("peaks")) + '</td>');
-            settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("markers")) + '</td>');
+            // Hide facilities and markers tables
+            // settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("markers")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("wedges")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("fovs")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("analyses")) + '</td>');
