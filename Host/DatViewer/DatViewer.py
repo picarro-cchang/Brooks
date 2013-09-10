@@ -1277,6 +1277,7 @@ class CorrelationWindow(Window):
             viewer.trait_view().set(title=self.dataFile)
             viewer.edit_traits()
         except Exception, e:
+            print "An exception occurred: %s\n" % e
             wx.MessageBox("No or incompatible data for correlation plot within window (check averaging)")
             raise
 
@@ -1372,6 +1373,7 @@ class AllanWindow(Window):
             viewer.trait_view().set(title=self.dataFile)
             viewer.edit_traits()
         except Exception, e:
+            print "An exception occurred: %s\n" % e
             wx.MessageBox("No data for Allan standard deviation within window")
             raise
 
@@ -1385,6 +1387,124 @@ class NotebookHandler(Handler):
             info.object.dataFile = d.GetPath()
             info.ui.title = "Viewing [" + info.object.dataFile + "]"
         d.Destroy()
+
+    def onOpenZip(self, info):
+        # first let the user choose the .zip archive
+        dz = wx.FileDialog(None, "Open .zip HDF5 file archive", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="zip files (*.zip)|*.zip")
+        if dz.ShowModal() == wx.ID_OK:
+            zipname = dz.GetPath()
+
+            if os.path.splitext(zipname)[1] == ".zip" and zipfile.is_zipfile(zipname):
+                # use the .zip filename to initialize a .h5 output filename
+                # path is same as the .zip archive
+                fname = os.path.splitext(zipname)[0] + ".h5"
+
+                # give the user a chance to change it and warn about overwrites
+                fd = wx.FileDialog(None, "Output file", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR, defaultFile=fname, wildcard="h5 files (*.h5)|*.h5")
+                if fd.ShowModal() == wx.ID_OK:
+                    fname = fd.GetPath()
+                    if not self.datDirName:
+                        self.datDirName = os.path.split(fname)[0]
+                    try:
+                        op = openFile(fname, "w")
+                    except:
+                        wx.MessageBox("Cannot open %s. File may be in use." % fname)
+                        fd.Destroy()
+                        dz.Destroy()
+                        return
+
+                    self.datDirName = fname
+                    progress = 0
+                    allData = []
+
+                    # Note: openFile is tables.file.openFile() which imports the .h5 data.
+                    #       It cannot read the files directly from the archive, so we must
+                    #       unpack them first.
+
+                    # open zip archive
+                    zipArchive = zipfile.ZipFile(zipname, 'r')
+                    tmpDir = tempfile.gettempdir()
+
+                    try:
+                        zipfiles = zipArchive.namelist()
+                        # enumerate files in the .zip archive
+                        for zfname in zipfiles:
+
+                            # look for .h5 files
+                            if os.path.splitext(zfname)[1] == ".h5":
+                                # create a modal progress dialog if not created yet
+                                if not progress:
+                                    pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
+
+                                # extract the .h5 file from the zip archive into the temp dir
+                                zf = zipArchive.extract(zfname, tmpDir)
+
+                                # not sure why we have to stick on a .h5 extension since
+                                # we already checked for it but using same code as above...
+                                ip = openFile(zf[:-3]+".h5", "r")
+                                try:
+                                    # append the data from this .h5 file
+                                    allData.append(ip.root.results.read())
+                                finally:
+                                    # clean up
+                                    ip.close()
+                                    os.remove(zf)  # delete the extracted temp file
+
+                                # update the progress dialog with this filename
+                                pd.Pulse("%s" % os.path.split(zfname)[1])
+                                progress += 1
+
+                    finally:
+                        # close the .zip archive
+                        zipArchive.close()
+
+                    try:
+                        # check whether any .h5 data files were found and concatenated
+                        if progress == 0:
+                            wx.MessageBox("No .h5 files found!")
+                            return
+
+                        pd.Pulse("Writing output file")
+
+                        # Concatenate everything together and sort by time of data
+                        dtypes = array([dt.dtype for dt in allData])
+                        u = array(len(dtypes)*[True])
+                        filters = Filters(complevel=1, fletcher32=True)
+
+                        # Concatenate by unique data type
+                        j = 0
+                        for i, t in enumerate(dtypes):
+                            if u[i]:
+                                match = (dtypes == t)
+                                u[match] = False
+                                data = concatenate([dm for dm, c in zip(allData, match) if c])
+                                try:
+                                    perm = argsort(data['DATE_TIME'])
+                                except:
+                                    perm = argsort(data['timestamp'])
+                                data = data[perm]
+                                table = op.createTable(op.root, "results_%d" % j, data, filters=filters)
+                                j += 1
+                                table.flush()
+
+                        info.object.dataFile = fname
+                        info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                        pd.Update(100, newmsg="Done. Close box to view results")
+                    finally:
+                        # close the output file
+                        op.close()
+
+                info.object.dataFile = fname
+                info.ui.title = "Viewing [" + info.object.dataFile + "]"
+
+                # destroy the file save dialog
+                fd.Destroy()
+
+            else:
+                wx.MessageBox("%s is not a .zip archive!" % os.path.split(zipname)[1])
+
+        # destroy the file open dialog
+        dz.Destroy()
 
     def onConcatenate(self, info):
         fname = time.strftime("DatViewer_%Y%m%d_%H%M%S.h5", time.localtime())
@@ -1467,8 +1587,9 @@ class NotebookHandler(Handler):
                         return
 
                     pd.Pulse("Writing output file")
+
                     # Concatenate everything together and sort by time of data
-                    dtypes = array([d.dtype for d in allData])
+                    dtypes = array([dt.dtype for dt in allData])
                     u = array(len(dtypes)*[True])
                     filters = Filters(complevel=1, fletcher32=True)
 
@@ -1478,7 +1599,7 @@ class NotebookHandler(Handler):
                         if u[i]:
                             match = (dtypes == t)
                             u[match] = False
-                            data = concatenate([d for d, c in zip(allData, match) if c])
+                            data = concatenate([dm for dm, c in zip(allData, match) if c])
                             try:
                                 perm = argsort(data['DATE_TIME'])
                             except:
@@ -1498,7 +1619,7 @@ class NotebookHandler(Handler):
         d = wx.DirDialog(None, "Open directory with .dat files", style=wx.DD_DEFAULT_STYLE)
         if d.ShowModal() == wx.ID_OK:
             path = d.GetPath()
-            progress = 0
+            #progress = 0
             for what, name in walkTree(path, sortDir=sortByName, sortFiles=sortByName):
                 if what == "file" and os.path.splitext(name)[1] == ".dat":
                     c = Dat2h5(datFileName=name)
@@ -1512,7 +1633,7 @@ class NotebookHandler(Handler):
         d = wx.DirDialog(None, "Open directory with .h5 files", style=wx.DD_DEFAULT_STYLE)
         if d.ShowModal() == wx.ID_OK:
             path = d.GetPath()
-            progress = 0
+            #progress = 0
             for what, name in walkTree(path, sortDir=sortByName, sortFiles=sortByName):
                 if what == "file" and os.path.splitext(name)[1] == ".h5":
                     c = h52Dat(h5FileName=name)
@@ -1612,6 +1733,7 @@ class ViewNotebook(HasTraits):
         self.uiSet = set()
 
         openAction = Action(name="Open H5...", action="onOpen")
+        openZipAction = Action(name="Concatenate H5 ZIP archive...", action="onOpenZip")
         concatenateAction = Action(name="Concatenate H5...", action="onConcatenate")
         convertDatAction = Action(name="Convert DAT to H5...", action="onConvertDatToH5")
         convertH5Action = Action(name="Convert H5 to DAT...", action="onConvertH5ToDat")
@@ -1623,9 +1745,22 @@ class ViewNotebook(HasTraits):
         series3Action = Action(name="3 frames", action="onSeries3")
         xyViewAction = Action(name="Correlation Plot", action="onCorrelation")
         allanAction = Action(name="Allan Standard Deviation Plot", action="onAllanPlot")
+
+        # Curiously, with separators in the menu the exit item needs to be
+        # put in first so it ends up at the bottom of the menu.
         self.traits_view = View(Item("dataFile", style="readonly", show_label=False),
                                 buttons=NoButtons, title="HDF5 File Viewer",
-                                menubar=MenuBar(Menu(openAction, concatenateAction, convertDatAction, batchConvertDatAction, convertH5Action, batchConvertH5Action, exitAction, name='File'),
+                                menubar=MenuBar(Menu(exitAction,
+                                                     Separator(),
+                                                     openAction,
+                                                     openZipAction,
+                                                     concatenateAction,
+                                                     Separator(),
+                                                     convertDatAction,
+                                                     batchConvertDatAction,
+                                                     convertH5Action,
+                                                     batchConvertH5Action,
+                                                     name='File'),
                                                 Menu(Menu(series1Action, series2Action, series3Action,
                                                 name="Time Series Plot"), xyViewAction, allanAction, name='New')),
                                 handler=NotebookHandler(), width=800, resizable=True)
@@ -1665,7 +1800,7 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options["-h"] = ""
 
-    executeTest = False
+    #executeTest = False
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit(0)
