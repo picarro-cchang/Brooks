@@ -41,7 +41,7 @@ define(function(require, exports, module) {
             var string = that.logMessages.join("\n") + "\n";
             this.logMessages = [];
             fs.appendFile(that.logFile, string, 'ascii', function (err) {
-                if (err) throw(new Error('Cannot write to log file'));
+                if (err) console.log('newRptGenMonitor: Cannot write to log file');
                 else if (that.logMessages.length > 0) that.next();
                 else {
                     that.writeFlag = true;

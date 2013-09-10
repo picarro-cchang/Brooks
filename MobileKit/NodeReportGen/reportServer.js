@@ -610,10 +610,15 @@ the authenticating proxy server.
                 else {
                     rptGenMonitor = newRptGenMonitor(REPORTROOT);
                     app.use("/rest/data", express.static(REPORTROOT));
-                    runningTasks.handleIncompleteTasksOnStartup( function () {
+                    runningTasks.handleIncompleteTasksOnStartup( function (err) {
                         var port = SITECONFIG.reportport;
-                        app.listen(port);
-                        console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+                        if (err) {
+                            console.log("Report Server cannot start: " + err);
+                        }
+                        else {
+                            app.listen(port);
+                            console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+                        }
                     });
                 }
             });
