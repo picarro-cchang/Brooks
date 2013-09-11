@@ -37,7 +37,8 @@ class TestPeakAnalyzer(object):
         'UNCERTAINTY',
         'REPLAY_MAX',
         'REPLAY_LMIN',
-        'REPLAY_RMIN']
+        'REPLAY_RMIN',
+        'DISPOSITION']
 
     def setup_method(self, m):
         baseDir = os.path.abspath(os.path.dirname(__file__))
@@ -71,16 +72,43 @@ class TestPeakAnalyzer(object):
 
         analysisFile = DatFile.DatFile(analysisResults)
 
-        assert len(set(TestPeakAnalyzer.ANALYSIS_FIELDS) -
-                   set(analysisFile.columnNames())) is 0
-        assert len(analysisFile['EPOCH_TIME']) is 8
+        assert len(set(TestPeakAnalyzer.ANALYSIS_FIELDS)) == \
+            len(set(analysisFile.columnNames()))
+        assert len(analysisFile['EPOCH_TIME']) is 1
 
-        for f in TestPeakAnalyzer.ANALYSIS_FIELDS:
-            # Ideally we should track a tolerance per-column. I settled on
-            # the tightest tolerance in lieu of that.
-            testing.assert_allclose(File1Analysis.COLUMNS[f],
-                                    [float(x) for x in analysisFile[f]],
-                                    0.001)
+        testing.assert_almost_equal(float(analysisFile['EPOCH_TIME'][0]),
+                                    1378852074.29,
+                                    decimal=2)
+        testing.assert_almost_equal(float(analysisFile['DISTANCE'][0]),
+                                    0.147,
+                                    decimal=3)
+        testing.assert_almost_equal(float(analysisFile['GPS_ABS_LONG'][0]),
+                                    -121.984218,
+                                    decimal=6)
+        testing.assert_almost_equal(float(analysisFile['GPS_ABS_LAT'][0]),
+                                    37.396975,
+                                    decimal=6)
+        testing.assert_almost_equal(float(analysisFile['CONC'][0]),
+                                    17.783,
+                                    decimal=3)
+        testing.assert_almost_equal(float(analysisFile['DELTA'][0]),
+                                    -32.48,
+                                    decimal=2)
+        testing.assert_almost_equal(float(analysisFile['UNCERTAINTY'][0]),
+                                    0.16,
+                                    decimal=2)
+        testing.assert_almost_equal(float(analysisFile['REPLAY_MAX'][0]),
+                                    12.321,
+                                    decimal=3)
+        testing.assert_almost_equal(float(analysisFile['REPLAY_LMIN'][0]),
+                                    2.280,
+                                    decimal=3)
+        testing.assert_almost_equal(float(analysisFile['REPLAY_RMIN'][0]),
+                                    1.930,
+                                    decimal=3)
+        testing.assert_almost_equal(float(analysisFile['DISPOSITION'][0]),
+                                    0.0,
+                                    decimal=1)
 
     def testDatWithNoAnalysis(self):
         shutil.copyfile(os.path.join(self.datRoot, 'file2_analysis.dat'),
@@ -101,6 +129,53 @@ class TestPeakAnalyzer(object):
         analysisFile = DatFile.DatFile(analysisResults)
 
         # Should only be a header tow
-        assert len(set(TestPeakAnalyzer.ANALYSIS_FIELDS) -
-                   set(analysisFile.columnNames())) is 0
+        assert len(set(TestPeakAnalyzer.ANALYSIS_FIELDS)) == \
+            len(set(analysisFile.columnNames()))
         assert len(analysisFile['EPOCH_TIME']) is 0
+
+    def testCancelledAnalysis(self):
+        shutil.copyfile(os.path.join(self.datRoot, 'file3_analysis.dat'),
+                        os.path.join(self.testDir, 'file3_analysis.dat'))
+
+        pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
+                                       listen_path=os.path.join(self.testDir,
+                                                                '*.dat'))
+        analyzerThread = threading.Thread(target=pa.run)
+        analyzerThread.setDaemon(True)
+        analyzerThread.start()
+
+        time.sleep(5.0)
+
+        analysisResults = os.path.join(self.testDir, 'file3_analysis.analysis')
+        assert os.path.exists(analysisResults)
+
+        analysisFile = DatFile.DatFile(analysisResults)
+        assert len(set(TestPeakAnalyzer.ANALYSIS_FIELDS)) == \
+            len(set(analysisFile.columnNames()))
+        assert len(analysisFile['EPOCH_TIME']) is 1
+
+        assert int(float(analysisFile['DISPOSITION'][0])) == \
+            PeakAnalyzer.DISPOSITIONS.index('USER_CANCELLATION')
+
+        shutil.copyfile(os.path.join(self.datRoot, 'file4_analysis.dat'),
+                        os.path.join(self.testDir, 'file4_analysis.dat'))
+
+        pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
+                                       listen_path=os.path.join(self.testDir,
+                                                                '*.dat'))
+        analyzerThread = threading.Thread(target=pa.run)
+        analyzerThread.setDaemon(True)
+        analyzerThread.start()
+
+        time.sleep(5.0)
+
+        analysisResults = os.path.join(self.testDir, 'file4_analysis.analysis')
+        assert os.path.exists(analysisResults)
+
+        analysisFile = DatFile.DatFile(analysisResults)
+        assert len(set(TestPeakAnalyzer.ANALYSIS_FIELDS)) == \
+            len(set(analysisFile.columnNames()))
+        assert len(analysisFile['EPOCH_TIME']) is 1
+
+        assert int(float(analysisFile['DISPOSITION'][0])) == \
+            PeakAnalyzer.DISPOSITIONS.index('USER_CANCELLATION')

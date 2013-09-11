@@ -39,7 +39,13 @@ OUTPUT_COLUMNS = [
     'DISPOSITION']
 
 DISPOSITIONS = [
-    'COMPLETE']
+    'COMPLETE',
+    'USER_CANCELLATION']
+
+
+PeakData = namedtuple('PeakData',
+                      'time dist lng lat conc delta uncertainty replay_max '
+                      'replay_lmin replay_rmin disposition')
 
 
 def genLatestFiles(baseDir,pattern):
@@ -623,26 +629,42 @@ class PeakAnalyzer(object):
     #######################################################################
 
     def doKeelingAnalysis(self,source):
-        """Keep a buffer of recent concentrations within a certain time duration of the present. When the valve mask switches to the value
-        indicating that the recorder has been activated, search the buffer for the peak value and the associated time and GPS location.
-        Perform a Keeling analysis of the data during the interval that the recorder is being played back"""
+        """
+        Keep a buffer of recent concentrations within a certain time
+        duration of the present. When the valve mask switches to the
+        value indicating that the recorder has been activated, search
+        the buffer for the peak value and the associated time and GPS
+        location.  Perform a Keeling analysis of the data during the
+        interval that the recorder is being played back
+        """
 
         MAX_DURATION = 30
         collecting = lambda v: abs(v - round(v))<1e-4 and (int(round(v)) & 1) == 1
+        cancelled = lambda v: abs(v - round(v)) < 1e-4 and (int(round(v)) & 0x10) > 0
+
         tempStore = deque()
         keelingStore = []
         lastPeak = None
         lastCollecting = False
+        isCancelled = False
 
         for dtuple in source:
             if dtuple is None: continue
             if 'HP_Delta_iCH4_Raw' not in dtuple._fields: continue # Swallow data if there is no delta
             collectingNow = collecting(dtuple.ValveMask)
+
             if not collectingNow:
                 tempStore.append(dtuple)
                 while tempStore[-1].EPOCH_TIME - tempStore[0].EPOCH_TIME > MAX_DURATION:
                     tempStore.popleft()
-                if lastCollecting:  # Check to see if there are data for a Keeling plot
+
+                if lastCollecting or isCancelled:  # Check to see if there are data for a Keeling plot
+
+                    # Check one more point ahead to see if the cancellation
+                    # flag is present.
+                    dtuple = source.next()
+                    isCancelled |= cancelled(dtuple.ValveMask)
+
                     if len(keelingStore) > 10+self.samples_to_skip:
                         conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:]
                         delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:]
@@ -665,12 +687,27 @@ class PeakAnalyzer(object):
                         #for s in keelingStore:
                         #    print s.sourceData.conc, s.sourceData.delta, s.sourceData.valves
                         #print "-----------------"
+
+                        disposition = 'COMPLETE'
+
+                        if isCancelled:
+                            disposition = 'USER_CANCELLATION'
+
                         result = linfit(protInvconc,delta,11.0*protInvconc)
                         if lastPeak:
-                            yield namedtuple('PeakData','time dist lng lat conc delta uncertainty replay_max replay_lmin replay_rmin')(delta=result.coeffs[1],
-                                        uncertainty=sqrt(result.cov[1][1]),replay_max=replay_max,replay_lmin=replay_lmin,replay_rmin=replay_rmin,**lastPeak._asdict())
+                            yield PeakData(delta=result.coeffs[1],
+                                           uncertainty=sqrt(result.cov[1][1]),
+                                           replay_max=replay_max,
+                                           replay_lmin=replay_lmin,
+                                           replay_rmin=replay_rmin,
+                                           disposition=disposition,
+                                           **lastPeak._asdict())
                     del keelingStore[:]
             else:
+                if cancelled(dtuple.ValveMask):
+                    isCancelled = True
+                    continue
+
                 keelingStore.append(dtuple)
                 if not lastCollecting:
                     if tempStore:
@@ -794,7 +831,7 @@ class PeakAnalyzer(object):
                                          r.replay_max,
                                          r.replay_lmin,
                                          r.replay_rmin,
-                                         DISPOSITIONS.index('COMPLETE')])
+                                         DISPOSITIONS.index(r.disposition)])
 
                         for col, val in dataPairs:
                             doc[col] = float(val)
@@ -816,8 +853,13 @@ class PeakAnalyzer(object):
                         self.pushData(peakname, doc_data)
                         doc_data = []
                     else:
-                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f%-14.1f\r\n" % (r.time,
-                                     r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin, DISPOSITIONS.index('COMPLETE')))
+                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f"
+                                     "%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f"
+                                     "%-14.1f\n" % (r.time, r.dist, r.lng,
+                                                    r.lat, r.conc, r.delta,
+                                                    r.uncertainty, r.replay_max,
+                                                    r.replay_lmin, r.replay_rmin,
+                                                    DISPOSITIONS.index(r.disposition)))
 
                 if not self.usedb and handle is not None:
                     handle.close()
