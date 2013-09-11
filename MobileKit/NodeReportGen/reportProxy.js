@@ -163,6 +163,7 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
                 new_path = "/rest/RptGen";
                 new_path += "?" + querystring.stringify(req.query);
                 req.url = new_path;
+                // console.log("SurveyorRpt: " + new_path);
                 forwardTheRequest(req, res);
                 logger("queryGet forward to /rest/RptGen succeeded", "debug");
             }
