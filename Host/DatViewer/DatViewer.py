@@ -1464,7 +1464,7 @@ class NotebookHandler(Handler):
                             wx.MessageBox("No .h5 files found!")
                             return
 
-                        pd.Pulse("Writing output file")
+                        pd.Pulse("Writing output file...")
 
                         # Concatenate everything together and sort by time of data
                         dtypes = array([dt.dtype for dt in allData])
@@ -1494,8 +1494,9 @@ class NotebookHandler(Handler):
                         # close the output file
                         op.close()
 
-                info.object.dataFile = fname
-                info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                    # remove these lines? already set above...
+                    info.object.dataFile = fname
+                    info.ui.title = "Viewing [" + info.object.dataFile + "]"
 
                 # destroy the file save dialog
                 fd.Destroy()
@@ -1519,7 +1520,11 @@ class NotebookHandler(Handler):
                 wx.MessageBox("Cannot open %s. File may be in use." % fname)
                 return
             try:
-                d = wx.DirDialog(None, "Select directory tree with individual .h5 and/or zipped .h5 files", style=wx.DD_DEFAULT_STYLE, defaultPath=self.datDirName)
+                # dir must exist, this suppresses the Make New Folder button
+                d = wx.DirDialog(None, "Select directory tree with individual .h5 and/or zipped .h5 files",
+                                 style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+                                 defaultPath=self.datDirName)
+
                 if d.ShowModal() == wx.ID_OK:
                     path = d.GetPath()
                     self.datDirName = path
@@ -1555,6 +1560,10 @@ class NotebookHandler(Handler):
 
                                     # look for .h5 files
                                     if os.path.splitext(zfname)[1] == ".h5":
+                                        # here we need to check whether there is already
+                                        # a .h5 file of the same name in the same folder
+                                        # as this .zip...
+
                                         # create a modal progress dialog if not created yet
                                         if not progress:
                                             pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
@@ -1586,7 +1595,7 @@ class NotebookHandler(Handler):
                         wx.MessageBox("No .h5 files found!")
                         return
 
-                    pd.Pulse("Writing output file")
+                    pd.Pulse("Writing output file...")
 
                     # Concatenate everything together and sort by time of data
                     dtypes = array([dt.dtype for dt in allData])
@@ -1616,7 +1625,9 @@ class NotebookHandler(Handler):
                 op.close()
         
     def onBatchConvertDatToH5(self, info):
-        d = wx.DirDialog(None, "Open directory with .dat files", style=wx.DD_DEFAULT_STYLE)
+        d = wx.DirDialog(None, "Open directory with .dat files",
+                         style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+
         if d.ShowModal() == wx.ID_OK:
             path = d.GetPath()
             #progress = 0
@@ -1630,7 +1641,9 @@ class NotebookHandler(Handler):
         d.Destroy()
 
     def onBatchConvertH5ToDat(self, info):
-        d = wx.DirDialog(None, "Open directory with .h5 files", style=wx.DD_DEFAULT_STYLE)
+        d = wx.DirDialog(None, "Open directory with .h5 files",
+                         style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+
         if d.ShowModal() == wx.ID_OK:
             path = d.GetPath()
             #progress = 0
@@ -1732,38 +1745,50 @@ class ViewNotebook(HasTraits):
         self.tz = pytz.timezone(self.tzString)
         self.uiSet = set()
 
-        openAction = Action(name="Open H5...", action="onOpen")
-        openZipAction = Action(name="Concatenate H5 ZIP archive...", action="onOpenZip")
-        concatenateAction = Action(name="Concatenate H5...", action="onConcatenate")
-        convertDatAction = Action(name="Convert DAT to H5...", action="onConvertDatToH5")
-        convertH5Action = Action(name="Convert H5 to DAT...", action="onConvertH5ToDat")
-        batchConvertDatAction = Action(name="BatchConvert DAT to H5...", action="onBatchConvertDatToH5")
-        batchConvertH5Action = Action(name="BatchConvert H5 to DAT...", action="onBatchConvertH5ToDat")
-        exitAction = Action(name="Exit", action="onExit")
-        series1Action = Action(name="1 frame", action="onSeries1")
-        series2Action = Action(name="2 frames", action="onSeries2")
-        series3Action = Action(name="3 frames", action="onSeries3")
-        xyViewAction = Action(name="Correlation Plot", action="onCorrelation")
-        allanAction = Action(name="Allan Standard Deviation Plot", action="onAllanPlot")
+        # File menu
+        openAction = Action(name="&Open H5...\tCtrl+O", action="onOpen")
+        openZipAction = Action(name="Concatenate &ZIP to H5...\tZ", action="onOpenZip")
+        concatenateAction = Action(name="Concatenate &Folder to H5...\tF", action="onConcatenate")
+        convertDatAction = Action(name="Convert &DAT to H5...", action="onConvertDatToH5")
+        convertH5Action = Action(name="Convert &H5 to DAT...", action="onConvertH5ToDat")
+        batchConvertDatAction = Action(name="&BatchConvert DAT to H5...", action="onBatchConvertDatToH5")
+        batchConvertH5Action = Action(name="Batch&Convert H5 to DAT...", action="onBatchConvertH5ToDat")
+        exitAction = Action(name="E&xit", action="onExit")
 
-        # Curiously, with separators in the menu the exit item needs to be
-        # put in first so it ends up at the bottom of the menu.
+        # New menu
+        series1Action = Action(name="Time Series Plot (&1 Frame)...\t1", action="onSeries1")
+        series2Action = Action(name="Time Series Plot (&2 Frames)...\t2", action="onSeries2")
+        series3Action = Action(name="Time Series Plot (&3 Frames)...\t3", action="onSeries3")
+        xyViewAction = Action(name="&Correlation Plot...\tC", action="onCorrelation")
+        allanAction = Action(name="&Allan Standard Deviation Plot...\tA", action="onAllanPlot")
+
+        # Curiously, when incorporating separators in the menu the last menu item group must
+        # be put in first so it ends up at the bottom of the menu.
         self.traits_view = View(Item("dataFile", style="readonly", show_label=False),
                                 buttons=NoButtons, title="HDF5 File Viewer",
                                 menubar=MenuBar(Menu(exitAction,
                                                      Separator(),
                                                      openAction,
+                                                     Separator(),
                                                      openZipAction,
                                                      concatenateAction,
                                                      Separator(),
                                                      convertDatAction,
-                                                     batchConvertDatAction,
                                                      convertH5Action,
+                                                     Separator(),
+                                                     batchConvertDatAction,
                                                      batchConvertH5Action,
-                                                     name='File'),
-                                                Menu(Menu(series1Action, series2Action, series3Action,
-                                                name="Time Series Plot"), xyViewAction, allanAction, name='New')),
-                                handler=NotebookHandler(), width=800, resizable=True)
+                                                     name='&File'),
+                                                Menu(xyViewAction,
+                                                     allanAction,
+                                                     Separator(),
+                                                     series1Action,
+                                                     series2Action,
+                                                     series3Action,
+                                                     name='&New')),
+                                handler=NotebookHandler(),
+                                width=800,
+                                resizable=True)
 
 _DEFAULT_CONFIG_NAME = "DatViewer.ini"
 HELP_STRING = """\
