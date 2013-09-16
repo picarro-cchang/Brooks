@@ -34,7 +34,8 @@ define(function(require, exports, module) {
         this.forceFlag = forceFlag;
         this.norm_instr = null;
         this.analyses = {};
-        this.dataKeys = ['CONC', 'DELTA', 'UNCERTAINTY', 'EPOCH_TIME'];
+        this.dataKeys = ['CONC', 'DELTA', 'UNCERTAINTY', 'EPOCH_TIME', 'DISPOSITION'];
+        this.dataDefaults = {'DISPOSITION': 0}; // Defaults for missing keys
         this.extraKeys = ['POSITION', 'RUN', 'SURVEY'];
         this.runIndex = 0;
         this.surveys = newN2i();
@@ -146,6 +147,7 @@ define(function(require, exports, module) {
                                                                   "C": "CONC",
                                                                   "T": "EPOCH_TIME",
                                                                   "P": "POSITION",
+                                                                  "Q": "DIPOSITION",
                                                                   "R": "RUN",
                                                                   "S": "SURVEY",
                                                                   "U": "UNCERTAINTY"}
@@ -247,7 +249,12 @@ define(function(require, exports, module) {
                     var runIndex = that.runIndex;
                     for (var j=0; j<that.dataKeys.length; j++) {
                         var key = that.dataKeys[j];
-                        that.analyses[key].push(n2nan(m[key]));
+                        if (m.hasOwnProperty(key) || !that.dataDefaults.hasOwnProperty(key)) {
+                            that.analyses[key].push(n2nan(m[key]));
+                        }
+                        else {
+                            that.analyses[key].push(that.dataDefaults[key]);                          
+                        }
                     }
                     that.analyses['POSITION'].push(gh.encodeGeoHash(m.GPS_ABS_LAT, m.GPS_ABS_LONG));
                     that.analyses['SURVEY'].push(surveyIndex);
@@ -282,6 +289,7 @@ define(function(require, exports, module) {
                 var nLoops = (perm.length > maxLoops) ? maxLoops : perm.length;
                 for (var i=0; i<nLoops; i++) {
                     var p = perm.shift();
+                    var disposition = +(that.analyses['DISPOSITION'][p].toFixed(0));
                     var delta = +(that.analyses['DELTA'][p].toFixed(2));
                     var conc = +(that.analyses['CONC'][p].toFixed(2));
                     var uncertainty = +(that.analyses['UNCERTAINTY'][p].toFixed(2));
@@ -290,7 +298,7 @@ define(function(require, exports, module) {
                     var survey = that.analyses['SURVEY'][p];
                     var run = that.analyses['RUN'][p];
                     var row = JSON.stringify({"D": delta,"C": conc,"T": epochTime,"P": pos,
-                        "R": run,"S": survey, "U": uncertainty});
+                        "Q": disposition, "R": run, "S": survey, "U": uncertainty});
                     result.push(row);
                 }
                 if (!_.isEmpty(result)) {

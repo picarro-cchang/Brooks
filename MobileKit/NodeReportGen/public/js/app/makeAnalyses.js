@@ -17,9 +17,10 @@ define(function(require, exports, module) {
     }
 
     function makeAnalyses(report) {
-        var aCanvas, analyses, color, colors, ctxAnalyses, i, j, lat, lng, run, where, x, xy, y;
+        var aCanvas, analyses, color, colors, ctxAnalyses, disposition, i, j, lat, lng, run, where, x, xy, y;
         var size = 1.0;
         var txtSize = size*18;
+        var grey = "#A0A0A0";
 
         analyses = report.analysesData;
         // Draw the isotopic analyses results on a canvas
@@ -42,6 +43,8 @@ define(function(require, exports, module) {
 
         // Make empty bubbles for each marker color required. Use white labels for isotopic analysis
         aCanvas = {};
+        // We reserve grey markers for bad captures
+        aCanvas[grey] = newIsoMarker(size,grey,"black");
         for (var c in colors) {
             if (colors.hasOwnProperty(c)) {
                 aCanvas[c] = newIsoMarker(size,c,"black");
@@ -52,10 +55,18 @@ define(function(require, exports, module) {
         for (i=0; i<analyses.length; i++) {
             color = analysisColorByRun(run);
             where = gh.decodeGeoHash(analyses[i].attributes.P);
+            // N.B. If the default disposition changes, make corresponding change
+            //  in makeAnalysesTable.js in this directory 
+            if (analyses[i].attributes.hasOwnProperty('Q'))
+                disposition = analyses[i].attributes.Q;
+            else
+                disposition = 0;
+            if (disposition != 0) color = grey;
             lat = where.latitude[2];
             lng = where.longitude[2];
             xy = report.xform(lng, lat);
-            x = xy[0], y = xy[1];
+            x = xy[0];
+            y = xy[1];
             if (report.inView(xy)) {
                 aCanvas[color].annotate(ctxAnalyses, x+report.padX, y+report.padY, report.analysisLabels[i],
                     "bold " + txtSize + "px sans-serif", "white");
