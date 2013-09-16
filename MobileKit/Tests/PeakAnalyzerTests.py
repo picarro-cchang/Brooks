@@ -60,7 +60,8 @@ class TestPeakAnalyzer(object):
 
         pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
                                        listen_path=os.path.join(self.testDir,
-                                                                '*.dat'))
+                                                                '*.dat'),
+                                       legacyValveStop=1378852045.0)
         analyzerThread = threading.Thread(target=pa.run)
         analyzerThread.setDaemon(True)
         analyzerThread.start()
@@ -116,7 +117,8 @@ class TestPeakAnalyzer(object):
 
         pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
                                        listen_path=os.path.join(self.testDir,
-                                                                '*.dat'))
+                                                                '*.dat'),
+                                       legacyValveStop=1347068294.0)
         analyzerThread = threading.Thread(target=pa.run)
         analyzerThread.setDaemon(True)
         analyzerThread.start()
@@ -139,7 +141,8 @@ class TestPeakAnalyzer(object):
 
         pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
                                        listen_path=os.path.join(self.testDir,
-                                                                '*.dat'))
+                                                                '*.dat'),
+                                       legacyValveStop=0.0)
         analyzerThread = threading.Thread(target=pa.run)
         analyzerThread.setDaemon(True)
         analyzerThread.start()
@@ -160,13 +163,6 @@ class TestPeakAnalyzer(object):
         shutil.copyfile(os.path.join(self.datRoot, 'file4_analysis.dat'),
                         os.path.join(self.testDir, 'file4_analysis.dat'))
 
-        pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
-                                       listen_path=os.path.join(self.testDir,
-                                                                '*.dat'))
-        analyzerThread = threading.Thread(target=pa.run)
-        analyzerThread.setDaemon(True)
-        analyzerThread.start()
-
         time.sleep(5.0)
 
         analysisResults = os.path.join(self.testDir, 'file4_analysis.analysis')
@@ -179,3 +175,28 @@ class TestPeakAnalyzer(object):
 
         assert int(float(analysisFile['DISPOSITION'][0])) == \
             PeakAnalyzer.DISPOSITIONS.index('USER_CANCELLATION')
+
+    def testHighUncertainty(self):
+        shutil.copyfile(os.path.join(self.datRoot, 'file5_analysis.dat'),
+                        os.path.join(self.testDir, 'file5_analysis.dat'))
+
+        pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
+                                       listen_path=os.path.join(self.testDir,
+                                                                '*.dat'),
+                                       legacyValveStop=time.mktime(time.gmtime()))
+        analyzerThread = threading.Thread(target=pa.run)
+        analyzerThread.setDaemon(True)
+        analyzerThread.start()
+
+        time.sleep(5.0)
+
+        analysisResults = os.path.join(self.testDir, 'file5_analysis.analysis')
+        assert os.path.exists(analysisResults)
+
+        analysisFile = DatFile.DatFile(analysisResults)
+
+        assert len(analysisFile['EPOCH_TIME']) is 2
+        assert int(float(analysisFile['DISPOSITION'][0])) == \
+            PeakAnalyzer.DISPOSITIONS.index('UNCERTAINTY_OOR')
+        assert int(float(analysisFile['DISPOSITION'][1])) == \
+            PeakAnalyzer.DISPOSITIONS.index('COMPLETE')

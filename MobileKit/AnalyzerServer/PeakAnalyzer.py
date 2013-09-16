@@ -24,6 +24,8 @@ except:
 
 NaN = 1e1000/1e1000
 
+# Permil
+UNCERTAINTY_HIGH_THRESHOLD = 5.0
 
 OUTPUT_COLUMNS = [
     'EPOCH_TIME',
@@ -40,7 +42,8 @@ OUTPUT_COLUMNS = [
 
 DISPOSITIONS = [
     'COMPLETE',
-    'USER_CANCELLATION']
+    'USER_CANCELLATION',
+    'UNCERTAINTY_OOR']
 
 
 PeakData = namedtuple('PeakData',
@@ -159,9 +162,9 @@ def linfit(x,y,sigma):
 
 class PeakAnalyzer(object):
     def __init__(self, *args, **kwargs):
-        '''
-        Constructor
-        '''
+
+        self.legacyValveStop = kwargs['legacyValveStop']
+
         if 'analyzerId' in kwargs:
             self.analyzerId = kwargs['analyzerId']
         else:
@@ -628,7 +631,7 @@ class PeakAnalyzer(object):
     # Perform analysis to determine the isotopic ratio
     #######################################################################
 
-    def doKeelingAnalysis(self,source):
+    def doKeelingAnalysis(self, source):
         """
         Keep a buffer of recent concentrations within a certain time
         duration of the present. When the valve mask switches to the
@@ -652,7 +655,6 @@ class PeakAnalyzer(object):
             if dtuple is None: continue
             if 'HP_Delta_iCH4_Raw' not in dtuple._fields: continue # Swallow data if there is no delta
             collectingNow = collecting(dtuple.ValveMask)
-
             if not collectingNow:
                 tempStore.append(dtuple)
                 while tempStore[-1].EPOCH_TIME - tempStore[0].EPOCH_TIME > MAX_DURATION:
@@ -662,8 +664,9 @@ class PeakAnalyzer(object):
 
                     # Check one more point ahead to see if the cancellation
                     # flag is present.
-                    dtuple = source.next()
-                    isCancelled |= cancelled(dtuple.ValveMask)
+                    if dtuple.EPOCH_TIME > self.legacyValveStop:
+                        dtuple = source.next()
+                        isCancelled |= cancelled(dtuple.ValveMask)
 
                     if len(keelingStore) > 10+self.samples_to_skip:
                         conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:]
@@ -690,13 +693,21 @@ class PeakAnalyzer(object):
 
                         disposition = 'COMPLETE'
 
-                        if isCancelled:
-                            disposition = 'USER_CANCELLATION'
-
                         result = linfit(protInvconc,delta,11.0*protInvconc)
+
                         if lastPeak:
+                            uncertainty = sqrt(result.cov[1][1])
+
+                            if uncertainty > UNCERTAINTY_HIGH_THRESHOLD:
+                                disposition = 'UNCERTAINTY_OOR'
+
+                            if isCancelled:
+                                # This should override other potential
+                                # dispositions.
+                                disposition = 'USER_CANCELLATION'
+
                             yield PeakData(delta=result.coeffs[1],
-                                           uncertainty=sqrt(result.cov[1][1]),
+                                           uncertainty=uncertainty,
                                            replay_max=replay_max,
                                            replay_lmin=replay_lmin,
                                            replay_rmin=replay_rmin,
@@ -704,7 +715,8 @@ class PeakAnalyzer(object):
                                            **lastPeak._asdict())
                     del keelingStore[:]
             else:
-                if cancelled(dtuple.ValveMask):
+                if dtuple.EPOCH_TIME > self.legacyValveStop and \
+                    cancelled(dtuple.ValveMask):
                     isCancelled = True
                     continue
 
@@ -713,6 +725,7 @@ class PeakAnalyzer(object):
                     if tempStore:
                         # We have just started collecting
                         print "Started collecting"
+                        isCancelled = False
                         conc = asarray([s.CH4 for s in tempStore])
                         dist = asarray([s.DISTANCE for s in tempStore])
                         epoch_time = asarray([s.EPOCH_TIME for s in tempStore])
@@ -901,6 +914,12 @@ def main(argv=None):
                       help="Debug mode")
     parser.add_option("--calc-samples_to_skip", dest="samples_to_skip",
                       help="Default calc value for samples_to_skip.", metavar="<CALC_samples_to_skip>")
+    parser.add_option('--legacy-valve-stop', dest='legacyValveStop',
+                      metavar='LEGACY_VALVE_STOP', type='float',
+                      default=time.mktime(time.strptime('Fri Sep 27 23:59:59 2013')),
+                      help=('The time at which to start interpreting the valve '
+                            'masks and values as supporting the user '
+                            'cancellation bit.'))
 
     (options, args) = parser.parse_args()
 
@@ -948,6 +967,7 @@ def main(argv=None):
                  , "sleep_seconds"  #override default sleep_seconds value
                  , "timeout"        #override default REST timeout value
                  , "debug"          #True/False show debug print (in stdout)
+                 , 'legacyValveStop'
                  ]:
         if copt in dir(options):
             class_opts[copt] = getattr(options, copt)
