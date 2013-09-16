@@ -163,7 +163,11 @@ def linfit(x,y,sigma):
 class PeakAnalyzer(object):
     def __init__(self, *args, **kwargs):
 
-        self.legacyValveStop = kwargs['legacyValveStop']
+        if 'legacyValveStop' in kwargs:
+            self.legacyValveStop = kwargs['legacyValveStop']
+        else:
+            self.legacyValveStop = time.mktime(
+                time.strptime('Fri Sep 27 23:59:59 2013'))
 
         if 'analyzerId' in kwargs:
             self.analyzerId = kwargs['analyzerId']
