@@ -24,6 +24,9 @@ define(function(require, exports, module) {
 
     RptGenMonitor.prototype.monitor = function (rptGen) {
         var that = this;
+        rptGen.on('resume', function (d) {
+            that.saveLog('resume: ' + JSON.stringify(d));
+        });
         rptGen.on('start', function (d) {
             that.saveLog('start: ' + JSON.stringify(d));
         });

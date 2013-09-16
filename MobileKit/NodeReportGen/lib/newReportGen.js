@@ -55,8 +55,17 @@ define(function(require, exports, module) {
             callback(new Error("Instructions are not in valid JSON notation"));
             return;
         }
+        this.instrType = 'unknown';
+        if (this.instructions.hasOwnProperty("instructions_type")) {
+            this.instrType = this.instructions["instructions_type"];
+        }
         this.ticket = getTicket(this.contents);
-        this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
+        if (params.hasOwnProperty('resume') && params['resume']) {
+            this.request_ts = params['start_ts'];
+        }
+        else {
+            this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
+        }
         instrDir = path.join(this.reportDir, this.ticket.substr(0,2), this.ticket);
         instrFname = path.join(instrDir, "instructions.json");
 
@@ -73,6 +82,11 @@ define(function(require, exports, module) {
                     fs.readFile(instrFname, "ascii", function (err, data) {
                         if (err) callback(err);
                         else if (data !== contents) callback(new Error("MD5 hash collision in instructions"));
+                        else if (params.hasOwnProperty('resume') && params['resume']) {
+                            // Restart the run
+                            that.emit("resume", {"taskKey": params['taskKey']});
+                            startNewRun(params["force"]);
+                        }
                         else {
                             if (params["force"]) startNewRun(true);
                             else checkForPreviousRuns();
@@ -86,7 +100,7 @@ define(function(require, exports, module) {
                         else {
                             fs.writeFile(instrFname, contents, "ascii", function (err) {
                                 if (err) callback(err);
-                                else startNewRun(false);
+                                else startNewRun(params["force"]);
                             });
                         }
                     });
@@ -154,7 +168,10 @@ define(function(require, exports, module) {
                     status = {"status": rptGenStatus.IN_PROGRESS,
                               "rpt_contents_hash": that.ticket,
                               "rpt_start_ts": that.request_ts,
-                              "request_ts": that.request_ts};
+                              "request_ts": that.request_ts,
+                              "instructions_type": that.instrType,
+                              "user": that.user,
+                              "force": forceFlag};
                     sf.writeStatus(statusFile, status, function (err) {
                         if (err) callback(err);
                         else {
@@ -163,7 +180,7 @@ define(function(require, exports, module) {
                                 else {
                                     // Indicate that run has started
                                     callback(null, result);
-                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag);
+                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag, that.user);
                                 }
                             });
                         }
@@ -174,7 +191,7 @@ define(function(require, exports, module) {
         handleInstructions(instrDir, instrFname, this.contents);
 
 
-        function obeyInstructions(taskKey, workDir, statusFile, forceFlag) {
+        function obeyInstructions(taskKey, workDir, statusFile, forceFlag, user) {
             var instructions = that.instructions;
             var p3ApiService = that.p3ApiService;
             var rptGenService = that.rptGenService;
@@ -188,7 +205,7 @@ define(function(require, exports, module) {
                 else that.emit('success', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "stop_ts": now_ts, "duration": duration});
             }
 
-            that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts});
+            that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts, "user": user});
             console.log("obeyInstructions type: " + type + " force: " + forceFlag);
             switch (type) {
                 case "ignore":
