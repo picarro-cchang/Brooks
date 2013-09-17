@@ -94,7 +94,7 @@ def main(checkForCancellation):
         print "CmdFIFO stopped"
 
 if __name__ == '__main__':
-    parser = optparse.OptionParser(usage=usage)
+    parser = optparse.OptionParser()
     parser.add_option('--without-cancellation', dest='checkForCancellation',
                       default=True, action='store_false')
     options, _ = parser.parse_args()
