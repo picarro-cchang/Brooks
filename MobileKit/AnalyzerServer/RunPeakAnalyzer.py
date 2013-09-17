@@ -77,7 +77,7 @@ def appMain(checkForCancellation):
 
 
 def main(checkForCancellation):
-    th = threading.Thread(target=appMain, args=(checkForCancellation))
+    th = threading.Thread(target=appMain, args=[checkForCancellation])
     th.setDaemon(True)
     th.start()
     rpcServer = CmdFIFO.CmdFIFOServer(("",RPC_PORT_PEAK_ANALYZER),
