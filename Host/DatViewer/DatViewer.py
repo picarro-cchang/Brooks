@@ -1,3 +1,18 @@
+#!/usr/bin/python
+#
+# File Name: DatViewer.py
+# Purpose: DatViewer is a standalone program to import and display Picarro data files,
+#          and to also concatenate and convert their formats.
+#
+# Notes:
+#
+# File History:
+# 2013-09-04 tw  Added file to repository, PEP-8 formatting.
+# 2013-09-10 tw  Added open .zip archive to menu, rearranged File menu, final PEP-8 formatting.
+# 2013-09-16 tw  UI cleanup: added menu shortcuts and accelerators, flattened time series cascade menu,
+#                select folder dialog requires dir to exist.
+
+
 oldSum = sum
 import wx
 import matplotlib
@@ -36,6 +51,10 @@ Button1 = Button   # This is overwritten by pylab import
 ######################################################
 from pylab import *
 
+FULLAPPNAME = "Picarro Data File Viewer"
+APPNAME = "DatViewer"
+APPVERSION = "2.0.0"
+
 
 # cursors
 class Cursors:  # namespace
@@ -48,6 +67,19 @@ cursord = {
     cursors.POINTER: wx.CURSOR_ARROW,
     cursors.SELECT_REGION: wx.CURSOR_CROSS,
     cursors.MAGNIFIER: wx.CURSOR_MAGNIFIER}
+
+
+# Dictionary of known h5 column heading names that are too long and their
+# shortened names for DAT files.
+H5ColNamesToDatNames = {"ch4_splinemax_for_correction": "ch4_splinemax_for_correct",
+                        "fineLaserCurrent_1_controlOn": "fineLaserCurr_1_ctrlOn",
+                        "fineLaserCurrent_2_controlOn": "fineLaserCurr_2_ctrlOn",
+                        "fineLaserCurrent_3_controlOn": "fineLaserCurr_3_ctrlOn",
+                        "fineLaserCurrent_4_controlOn": "fineLaserCurr_4_ctrlOn",
+                        "fineLaserCurrent_5_controlOn": "fineLaserCurr_5_ctrlOn",
+                        "fineLaserCurrent_6_controlOn": "fineLaserCurr_6_ctrlOn",
+                        "fineLaserCurrent_7_controlOn": "fineLaserCurr_7_ctrlOn",
+                        "fineLaserCurrent_8_controlOn": "fineLaserCurr_8_ctrlOn"}
 
 
 # Decorator to protect access to matplotlib figure from several threads
@@ -611,7 +643,7 @@ def formatTime(dateTime):
 
 
 def unixTime(timestamp):
-    dt = (ORIGIN-UNIXORIGIN)+datetime.timedelta(microseconds=1000*timestamp)
+    dt = (ORIGIN - UNIXORIGIN) + datetime.timedelta(microseconds=1000 * timestamp)
     return 86400.0*dt.days + dt.seconds + 1.e-6*dt.microseconds
 
 
@@ -1072,15 +1104,53 @@ class h52Dat(HasTraits):
             self.datFileName = ".".join([root, "dat"])
             d = wx.ProgressDialog("Convert H5 file to DAT format", "Converting %s" % (os.path.split(self.h5FileName)[-1],),
                                   style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE)
+
             ip = openFile(self.h5FileName, "r")
             try:
                 resultsTable = ip.root.results
             except:
                 resultsTable = ip.root.results_0
+
+            # TODO: Use resultsTable.itterows() to iterate rather than reading the whole
+            #       thing into memory. The ability to concatenate a folder of ZIP H5 archives
+            #       into an H5 will probably expose this as a problem.
             dataRows = resultsTable.read()
             colNames = resultsTable.colnames
             numCols = len(colNames)
             timeMode = "DATE_TIME"
+
+            #print "******"
+            ##print "dataRows=", dataRows
+            #print "numRows=", len(dataRows)
+            #print "resultsTable.nrows=", resultsTable.nrows
+            #print "numCols=", numCols
+            #print "colNames=", colNames
+
+            # find any column headings that are too long (more than 25 chars)
+            # and convert them or truncate them
+            #
+            # H5ColNamesToDatNames is a dict of known abbreviations so they
+            # will properly roundtrip (H5 -> DAT -> H5).
+            #
+            # TODO: log this information, and let user view it in a Done dialog
+            for ii in range(numCols):
+                if len(colNames[ii]) > 25:
+                    colNameTrunc = colNames[ii]
+                    if colNames[ii] in H5ColNamesToDatNames:
+                        colNameTrunc = H5ColNamesToDatNames[colNames[ii]]
+                        print "converted '%s' to '%s'" % (colNames[ii], colNameTrunc)
+                        colNames[ii] = colNameTrunc
+                    else:
+                        # column name not in table, all we can do is truncate it
+                        # this will be a problem if this DAT is converted back to H5
+                        # as it won't have identical column headings to the original
+                        colNameTrunc = colNameTrunc[:25]
+                        print "truncated '%s' to '%s'" % (colNames[ii], colNameTrunc)
+                        colNames[ii] = colNameTrunc
+
+            # before we remove columns, print out some example timestamp
+            # column names and values so I can look at them (only those in the first data row)
+
             if "DATE_TIME" in colNames:
                 dateTimeIndex = colNames.index("DATE_TIME")
                 colNames.remove("DATE_TIME")
@@ -1092,31 +1162,61 @@ class h52Dat(HasTraits):
                 dateTimeIndex = colNames.index("timestamp")
                 colNames.remove("timestamp")
                 timeMode = "timestamp"
-                
+
+            #print "dateTimeIndex=", dateTimeIndex
+            #print "******"
+
+            # close the H5 input file
             ip.close()
+
             headingFormat = "%-26s" * (numCols-1) + "\n"
             dataFormat = "%-26f" * (numCols-1) + "\n"
             headings = headingFormat % tuple(colNames)
             linesToBeWritten = ["%-26s%-26s" % ("DATE", "TIME") + headings]
+
             for i, row in enumerate(dataRows):
+                #print "row[dateTimeIndex]=", row[dateTimeIndex]
+                #print "timeMode=", timeMode
+
                 if timeMode in ["timestamp", "time"]:
-                    timestamp = unixTime(row[dateTimeIndex])
+                    timestamp = row[dateTimeIndex]
+
+                    # hack to test origin timestamp
+                    #timestamp = 63513400570000 + (950 * i)
+                    #print "i=%d timestamp=%s" % (i, timestamp)
+
+                    # If timestamp is over 60 trillion we can assume it is
+                    # for msec since 1/1/0000, so convert to epoch time
+                    # (msec since 1/1/1970). Otherwise, assume timestamp
+                    # is already epoch time.
+                    if timestamp > 6e13:
+                        timestamp = unixTime(timestamp)
+
+                    #print "    timestamp=", timestamp
+
                 else:
                     timestamp = row[dateTimeIndex]
+
+                #print "time.localtime(timestamp)=", time.localtime(timestamp)
+
                 dateTimeField = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
                 fracSec = timestamp - int(timestamp)
                 dateTimeField += (".%02d" % round(100*fracSec))
                 dateTimeCols = "%-26s%-26s" % tuple(dateTimeField.split(" "))
+
                 row = list(row)
                 row.remove(row[dateTimeIndex])
                 data = dateTimeCols + (dataFormat % tuple(row))
                 linesToBeWritten.append(data)
+
                 if i % 100 == 0:
                     d.Pulse()
+
             dat = open(self.datFileName, "w")
             dat.writelines(linesToBeWritten)
             dat.close()
             d.Update(100, newmsg="Done. Output is %s" % (os.path.split(self.datFileName)[-1]))
+
         finally:
             if dat is not None:
                 dat.close()
@@ -1381,6 +1481,18 @@ class AllanWindow(Window):
 class NotebookHandler(Handler):
     datDirName = CStr
 
+    def onAbout(self, info):
+        verFormatStr = "%s\n\n" \
+                       "Version:\t%s\n" \
+                       "\n" \
+                       "Web site:\t\twww.picarro.com\n" \
+                       "Technical support:\t408-962-3900\n" \
+                       "Email:\t\ttechsupport@picarro.com\n" \
+                       "\n" \
+                       "Copyright (c) 2005 - 2013, Picarro Inc.\n"
+        verMsg = verFormatStr % (FULLAPPNAME, APPVERSION)
+        wx.MessageBox(verMsg, APPNAME, wx.OK)
+
     def onOpen(self, info):
         d = wx.FileDialog(None, "Open HDF5 file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="h5 files (*.h5)|*.h5")
         if d.ShowModal() == wx.ID_OK:
@@ -1390,7 +1502,10 @@ class NotebookHandler(Handler):
 
     def onOpenZip(self, info):
         # first let the user choose the .zip archive
-        dz = wx.FileDialog(None, "Open .zip HDF5 file archive", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="zip files (*.zip)|*.zip")
+        dz = wx.FileDialog(None, "Open .zip HD5 archive to concatenate",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                           wildcard="zip files (*.zip)|*.zip")
+
         if dz.ShowModal() == wx.ID_OK:
             zipname = dz.GetPath()
 
@@ -1400,7 +1515,11 @@ class NotebookHandler(Handler):
                 fname = os.path.splitext(zipname)[0] + ".h5"
 
                 # give the user a chance to change it and warn about overwrites
-                fd = wx.FileDialog(None, "Output file", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR, defaultFile=fname, wildcard="h5 files (*.h5)|*.h5")
+                fd = wx.FileDialog(None, "Output file",
+                                   style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
+                                   defaultFile=fname,
+                                   wildcard="h5 files (*.h5)|*.h5")
+
                 if fd.ShowModal() == wx.ID_OK:
                     fname = fd.GetPath()
                     if not self.datDirName:
@@ -1415,6 +1534,7 @@ class NotebookHandler(Handler):
 
                     self.datDirName = fname
                     progress = 0
+                    pd = None
                     allData = []
 
                     # Note: openFile is tables.file.openFile() which imports the .h5 data.
@@ -1433,8 +1553,10 @@ class NotebookHandler(Handler):
                             # look for .h5 files
                             if os.path.splitext(zfname)[1] == ".h5":
                                 # create a modal progress dialog if not created yet
-                                if not progress:
-                                    pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
+                                if progress == 0:
+                                    pd = wx.ProgressDialog("Concatenating files",
+                                                           "%s" % os.path.split(zfname)[1],
+                                                           style=wx.PD_APP_MODAL)
 
                                 # extract the .h5 file from the zip archive into the temp dir
                                 zf = zipArchive.extract(zfname, tmpDir)
@@ -1487,12 +1609,19 @@ class NotebookHandler(Handler):
                                 j += 1
                                 table.flush()
 
+                        # Text within the DatViewer window
                         info.object.dataFile = fname
+
+                        # Title for main DatViewer window
                         info.ui.title = "Viewing [" + info.object.dataFile + "]"
                         pd.Update(100, newmsg="Done. Close box to view results")
+
                     finally:
-                        # close the output file
+                        # cleanup
                         op.close()
+
+                        if pd is not None:
+                            pd.Destroy()
 
                     # remove these lines? already set above...
                     info.object.dataFile = fname
@@ -1623,7 +1752,268 @@ class NotebookHandler(Handler):
                     pd.Update(100, newmsg="Done. Close box to view results")
             finally:
                 op.close()
-        
+
+    def defaultFilenameFromDir(self, dir):
+        # walk the tree, return the filename for the first H5 file we find
+        for what, name in walkTree(dir, sortDir=sortByName, sortFiles=sortByName):
+            if what == "file" and os.path.splitext(name)[1] == ".h5":
+                return name
+
+        # no H5 files found, return the filename for the first ZIP H5 archive file we find
+        for what, name in walkTree(dir, sortDir=sortByName, sortFiles=sortByName):
+            if what == "file" and os.path.splitext(name)[1] == ".zip" and zipfile.is_zipfile(name):
+                # open zip archive
+                zipArchive = zipfile.ZipFile(name, 'r')
+
+                try:
+                    zipfiles = zipArchive.namelist()
+
+                    # enumerate files in the .zip archive
+                    for zfname in zipfiles:
+                        if os.path.splitext(zfname)[1] == ".h5":
+                            # clean up and return this zip filename, replacing .zip with
+                            # a .h5 file extension
+                            zipArchive.close()
+                            fname = os.path.splitext(name)[0] + ".h5"
+                            return fname
+                finally:
+                    # close this .zip archive
+                    zipArchive.close()
+
+        # no ZIP H5 archive either - probably a bad dir was passed
+        return None
+
+    def onConcatenateNew(self, info):
+        # dir must exist, this suppresses the Make New Folder button
+        fValidDir = False
+        fPromptForDir = True
+        defaultOutputFilename = None
+        defaultPath = self.datDirName
+
+        # get folder containing files to concatenate
+        while fValidDir is False and fPromptForDir is True:
+            d = wx.DirDialog(None, "Select directory tree containing .h5 and/or zip archive of .h5 files",
+                             style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+                             defaultPath=defaultPath)
+
+            if d.ShowModal() == wx.ID_OK:
+                path = d.GetPath()
+                #self.datDirName = path
+                #progress = 0
+                #allData = []
+
+                # validate by generating a default output filename from the dir name
+                # if None is returned, then it didn't contain any .H5 or ZIPs with .H5 files
+                defaultOutputFilename = self.defaultFilenameFromDir(path)
+
+                if defaultOutputFilename is not None:
+                    fValidDir = True
+
+                else:
+                    # warn user that the folder doesn't contain any H5 or ZIP H5 archives
+                    # let the user choose whether to select a different folder
+                    retCode = wx.MessageBox("Selected folder does not contain any .h5 files or zip archives of .h5 files.\n\nChoose a different folder?",
+                                            path, wx.YES_NO | wx.ICON_ERROR)
+
+                    if retCode == wx.ID_YES:
+                        # use the parent folder for the last selected folder as a new default,
+                        # maybe the user chose the wrong child folder
+                        defaultPath = os.path.split(path)[0]
+                    else:
+                        # user wants to bail, doesn't want to select a different folder
+                        fPromptForDir = False
+
+            else:
+                # user cancelled out, don't prompt for a folder
+                fPromptForDir = False
+
+            # clean up this select folder dialog
+            d.Destroy()
+
+            # save off selected folder if it contains valid H5 or ZIP/H5 files
+            if fValidDir is True:
+                self.datDirName = path
+
+        # user cancelled if still don't have a valid dir, so bail out of concatenating
+        if fValidDir is False:
+            return
+
+        # get output filename
+        # initially use the default filename generated from the selected folder (from above)
+        fname = os.path.split(defaultOutputFilename)[1]
+
+        print "fname=", fname
+
+        # initially use the parent folder of the selected folder
+        defaultOutputPath = os.path.split(self.datDirName)[0]
+
+        print "defaultOutputPath=", defaultOutputPath
+
+        fValidFilename = False
+        fPromptForFilename = True
+        op = None
+
+        while fValidFilename is False and fPromptForFilename is True:
+            # prompt for the filename
+            fd = wx.FileDialog(None, "Concatenated output h5 filename",
+                               style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
+                               defaultFile=fname,
+                               defaultDir=defaultOutputPath,
+                               wildcard="h5 files (*.h5)|*.h5")
+
+            if fd.ShowModal() == wx.ID_OK:
+                fname = fd.GetPath()
+                print "output fname=", fname
+
+                # TODO: assert that self.datDirName is set and folder exists
+                #if not self.datDirName:
+                #    self.datDirName = os.path.split(fname)[0]
+                print "self.datDirName=", self.datDirName
+
+                # test whether we can open and write to the output file
+                try:
+                    op = openFile(fname, "w")
+
+                    # succeeded with open, we have a valid output file and it is now open
+                    fValidFilename = True
+                except:
+                    retCode = wx.MessageBox("Cannot open %s. File may be in use.\n\nTry a different output filename?" % fname,
+                                            caption="Set concatenated output h5 filename",
+                                            style=wx.YES_NO | wx.ICON_ERROR)
+
+                    if retCode == wx.ID_YES:
+                        # user wants to specify a different output file
+                        # use the same folder as this problem output file to prompt again
+                        defaultOutputPath = os.path.split(fname)[0]
+
+                        # generate an output filename, use the selected folder name to generate
+                        # a name but this time append date/time info to it
+                        fnameBase = self.defaultFilenameFromDir(self.datDirName)
+                        fnameBase = os.path.splitext(fnameBase)[0]
+                        fnameSuffix = time.strftime("_%Y%m%d_%H%M%S.h5", time.localtime())
+                        fname = fnameBase + fnameSuffix
+                    else:
+                        # user doesn't want another prompt for a different filename (bailing out)
+                        fPromptForFilename = False
+
+            else:
+                # user cancelled out of the file dialog, done prompting
+                fPromptForFilename = False
+
+            # clean up the file dialog
+            fd.Destroy()
+
+        if fValidFilename is False:
+            return
+
+        # now have a valid input folder and output filename (which is already open)
+        # do the concatenation
+        progress = 0
+        pd = None
+        allData = []
+
+        for what, name in walkTree(path, sortDir=sortByName, sortFiles=sortByName):
+            if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
+                if not progress:
+                    pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(name)[1], style=wx.PD_APP_MODAL)
+                ip = openFile(name[:-3]+".h5", "r")
+                try:
+                    allData.append(ip.root.results.read())
+                finally:
+                    ip.close()
+
+                pd.Pulse("%s" % os.path.split(name)[1])
+                progress += 1
+
+            elif what == "file" and os.path.splitext(name)[1] == ".zip" and zipfile.is_zipfile(name):
+                # Note: openFile is tables.file.openFile() which imports the .h5 data.
+                #       It cannot read the files directly from the archive, so we must
+                #       unpack them first.
+
+                # open zip archive
+                zipArchive = zipfile.ZipFile(name, 'r')
+                tmpDir = tempfile.gettempdir()
+
+                try:
+                    zipfiles = zipArchive.namelist()
+                    # enumerate files in the .zip archive
+                    for zfname in zipfiles:
+
+                        # look for .h5 files
+                        if os.path.splitext(zfname)[1] == ".h5":
+                            # here we need to check whether there is already
+                            # a .h5 file of the same name in the same folder
+                            # as this .zip...
+
+                            # create a modal progress dialog if not created yet
+                            if not progress:
+                                pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
+
+                            # extract the .h5 file from the zip archive into the temp dir
+                            zf = zipArchive.extract(zfname, tmpDir)
+
+                            # not sure why we have to stick on a .h5 extension since
+                            # we already checked for it but using same code as above...
+                            ip = openFile(zf[:-3]+".h5", "r")
+                            try:
+                                # append the data from this .h5 file
+                                allData.append(ip.root.results.read())
+                            finally:
+                                # clean up
+                                ip.close()
+                                os.remove(zf)  # delete the extracted temp file
+
+                            # update the progress dialog with this filename
+                            pd.Pulse("%s" % os.path.split(zfname)[1])
+                            progress += 1
+
+                finally:
+                    # close this .zip archive
+                    zipArchive.close()
+
+        # check whether any valid .h5 data files were found and concatenated
+        if progress == 0:
+            wx.MessageBox("No .h5 files found!")
+            op.Close()
+            return
+
+        # write the output file
+        pd.Pulse("Writing output file...")
+
+        # Concatenate everything together and sort by time of data
+        dtypes = array([dt.dtype for dt in allData])
+        u = array(len(dtypes)*[True])
+        filters = Filters(complevel=1, fletcher32=True)
+
+        # Concatenate by unique data type
+        j = 0
+        for i, t in enumerate(dtypes):
+            if u[i]:
+                match = (dtypes == t)
+                u[match] = False
+                data = concatenate([dm for dm, c in zip(allData, match) if c])
+                try:
+                    perm = argsort(data['DATE_TIME'])
+                except:
+                    perm = argsort(data['timestamp'])
+                data = data[perm]
+                table = op.createTable(op.root, "results_%d" % j, data, filters=filters)
+                j += 1
+                table.flush()
+
+        info.object.dataFile = fname
+        info.ui.title = "Viewing [" + info.object.dataFile + "]"
+
+        # TODO: show a message dialog box here instead
+        #       Would be nice to have a Don't show me this again checkbox.
+        # Could do: http://stackoverflow.com/questions/6012380/wxmessagebox-with-an-auto-close-timer-in-wxpython
+        pd.Update(100, newmsg="Done. Close box to view results")
+
+        # clean up
+        if pd is not None:
+            pd.Destroy()
+        op.close()
+
     def onBatchConvertDatToH5(self, info):
         d = wx.DirDialog(None, "Open directory with .dat files",
                          style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
@@ -1749,10 +2139,11 @@ class ViewNotebook(HasTraits):
         openAction = Action(name="&Open H5...\tCtrl+O", action="onOpen")
         openZipAction = Action(name="Concatenate &ZIP to H5...\tZ", action="onOpenZip")
         concatenateAction = Action(name="Concatenate &Folder to H5...\tF", action="onConcatenate")
-        convertDatAction = Action(name="Convert &DAT to H5...", action="onConvertDatToH5")
-        convertH5Action = Action(name="Convert &H5 to DAT...", action="onConvertH5ToDat")
-        batchConvertDatAction = Action(name="&BatchConvert DAT to H5...", action="onBatchConvertDatToH5")
-        batchConvertH5Action = Action(name="Batch&Convert H5 to DAT...", action="onBatchConvertH5ToDat")
+        concatenateActionNew = Action(name="Concatenate Folder to H5 (NEW)...", action="onConcatenateNew")
+        convertDatAction = Action(name="Convert &DAT to H5...\tAlt+Shift+C", action="onConvertDatToH5")
+        convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+C", action="onConvertH5ToDat")
+        batchConvertDatAction = Action(name="&BatchConvert DAT to H5...\tB", action="onBatchConvertDatToH5")
+        batchConvertH5Action = Action(name="Batch&Convert H5 to DAT...\tC", action="onBatchConvertH5ToDat")
         exitAction = Action(name="E&xit", action="onExit")
 
         # New menu
@@ -1762,9 +2153,12 @@ class ViewNotebook(HasTraits):
         xyViewAction = Action(name="&Correlation Plot...\tC", action="onCorrelation")
         allanAction = Action(name="&Allan Standard Deviation Plot...\tA", action="onAllanPlot")
 
+        # Help menu
+        aboutAction = Action(name="About...", action="onAbout")
+
         # Curiously, when incorporating separators in the menu the last menu item group must
         # be put in first so it ends up at the bottom of the menu.
-        self.traits_view = View(Item("dataFile", style="readonly", show_label=False),
+        self.traits_view = View(Item("dataFile", style="readonly", label="H5 file:", padding=10),
                                 buttons=NoButtons, title="HDF5 File Viewer",
                                 menubar=MenuBar(Menu(exitAction,
                                                      Separator(),
@@ -1772,6 +2166,7 @@ class ViewNotebook(HasTraits):
                                                      Separator(),
                                                      openZipAction,
                                                      concatenateAction,
+                                                     concatenateActionNew,
                                                      Separator(),
                                                      convertDatAction,
                                                      convertH5Action,
@@ -1785,20 +2180,57 @@ class ViewNotebook(HasTraits):
                                                      series1Action,
                                                      series2Action,
                                                      series3Action,
-                                                     name='&New')),
+                                                     name='&New'),
+                                                Menu(aboutAction,
+                                                     name='&Help')),
                                 handler=NotebookHandler(),
                                 width=800,
+                                #height=100,
                                 resizable=True)
 
 _DEFAULT_CONFIG_NAME = "DatViewer.ini"
+_DEFAULT_PREFS_FILENAME = "DatViewerPrefs.ini"
+
+
+def getAppPrefsPath():
+    """
+    Construct a path for user prefs. Examples of what can be stored:
+        last dir used (for file and folder open/save dialogs)
+        menu shortcuts
+        window size and location
+    """
+    appdata = None
+
+    if os.sys.platform == 'darwin':
+        from AppKit import NSSearchPathForDirectoriesInDomains
+        # http://developer.apple.com/DOCUMENTATION/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Functions/Reference/reference.html#//apple_ref/c/func/NSSearchPathForDirectoriesInDomains
+        # NSApplicationSupportDirectory = 14
+        # NSUserDomainMask = 1
+        # True for expanding the tilde into a fully qualified path
+        appdata = os.path.join(NSSearchPathForDirectoriesInDomains(14, 1, True)[0], APPNAME, APPVERSION)
+    elif sys.platform == 'win32':
+        # user appdata folder: APPDATA= Roaming, LOCALAPPDATA= Local
+        # since paths can be machine-specific, use local
+        appdata = os.path.join(os.environ['LOCALAPPDATA'], APPNAME, APPVERSION)
+    else:
+        appdata = os.path.expanduser(os.path.join("~", APPNAME, APPVERSION))
+
+    appPrefsPath = os.path.join(appdata, _DEFAULT_PREFS_FILENAME)
+
+    return appPrefsPath
+
+
 HELP_STRING = """\
-DatViewer.py [-h] [-c<FILENAME>]
+DatViewer.py [-h] [-c<FILENAME>] [-v]
 
 Where the options can be a combination of the following:
 -h  Print this help.
--c  Specify a different config file.  Default = "datViewer.ini"
+-c  Specify a different config file. Default = "datViewer.ini"
+-p  Specify a different prefs file. Default = "datViewerPrefs.ini"
+    in user's local appdata folder.
+-v  Print version number.
 
-View/analyze data in an HDF5 file
+View/analyze data in an HDF5 file.
 """
 
 
@@ -1806,11 +2238,15 @@ def printUsage():
     print HELP_STRING
 
 
+def printVersion():
+    print "%s %s" % (APPNAME, APPVERSION)
+
+
 def handleCommandSwitches():
     import getopt
 
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'hc:p:v'
+    longOpts = ["help", "prefs", "version"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1822,6 +2258,7 @@ def handleCommandSwitches():
     for o, a in switches:
         options[o] = a
 
+    # support /? and /h for help
     if "/?" in args or "/h" in args:
         options["-h"] = ""
 
@@ -1830,16 +2267,29 @@ def handleCommandSwitches():
         printUsage()
         sys.exit(0)
 
+    if "-v" in options or "--version" in options:
+        printVersion()
+        sys.exit(0)
+
     #Start with option defaults...
     configFile = _DEFAULT_CONFIG_NAME
+    prefsFile = getAppPrefsPath()
 
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-    return configFile
+
+    if "-p" in options:
+        prefsFile = options["-p"]
+        print "User prefs file specified at command line: %s" % prefsFile
+    return configFile, prefsFile
 
 if __name__ == "__main__":
-    configFile = handleCommandSwitches()
+    configFile, prefsFile = handleCommandSwitches()
+
+    print "configFile=", configFile
+    print "prefsFile=", prefsFile
+
     config = ConfigObj(configFile)
     viewNotebook = ViewNotebook(config=config)
     viewNotebook.configure_traits(view=viewNotebook.traits_view)
