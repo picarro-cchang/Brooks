@@ -28,6 +28,8 @@ VALVE_STATE_EPSILON = 1.0e-4
 
 # Permil
 UNCERTAINTY_HIGH_THRESHOLD = 5.0
+DELTA_NEGATIVE_THRESHOLD = -80.0
+DELTA_POSITIVE_THRESHOLD = 0.0
 
 OUTPUT_COLUMNS = [
     'EPOCH_TIME',
@@ -45,7 +47,8 @@ OUTPUT_COLUMNS = [
 DISPOSITIONS = [
     'COMPLETE',
     'USER_CANCELLATION',
-    'UNCERTAINTY_OOR']
+    'UNCERTAINTY_OOR',
+    'DELTA_OOR']
 
 
 PeakData = namedtuple('PeakData',
@@ -165,7 +168,7 @@ def linfit(x,y,sigma):
 class PeakAnalyzer(object):
 
     @staticmethod
-    def getDisposition(cancelled, uncertainty):
+    def getDisposition(cancelled, delta, uncertainty):
         disposition = 'COMPLETE'
 
         if cancelled:
@@ -173,6 +176,10 @@ class PeakAnalyzer(object):
 
         elif uncertainty >= UNCERTAINTY_HIGH_THRESHOLD:
             disposition = 'UNCERTAINTY_OOR'
+
+        elif delta <= DELTA_NEGATIVE_THRESHOLD or \
+            delta >= DELTA_POSITIVE_THRESHOLD:
+            disposition = 'DELTA_OOR'
 
         return DISPOSITIONS.index(disposition)
 
@@ -721,6 +728,7 @@ class PeakAnalyzer(object):
             if (notCollectingCount > doneAnalysisThreshold) and \
                 (lastAnalysis is not None):
                 disp = PeakAnalyzer.getDisposition(cancelled,
+                                                   lastAnalysis['delta'],
                                                    lastAnalysis['uncertainty'])
                 yield PeakData(disposition=disp, **lastAnalysis)
 

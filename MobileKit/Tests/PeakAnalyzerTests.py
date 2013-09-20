@@ -18,6 +18,7 @@ sys.path.append(os.path.abspath(os.path.join('..', 'AnalyzerServer')))
 import PeakAnalyzer
 sys.path.append('DataClasses')
 from File6Analysis import File6Analysis
+from File7Analysis import File7Analysis
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))
 from Host.Common import DatFile
@@ -251,4 +252,59 @@ class TestPeakAnalyzer(object):
             [float(r) for r in analysisFile['REPLAY_RMIN']])
         testing.assert_array_almost_equal(
             File6Analysis.DISPOSITION,
+            [float(d) for d in analysisFile['DISPOSITION']])
+
+    def testDeltaOOR(self):
+        shutil.copyfile(os.path.join(self.datRoot, 'file7_analysis.dat'),
+                        os.path.join(self.testDir, 'file7_analysis.dat'))
+
+        pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
+                                       listen_path=os.path.join(self.testDir,
+                                                                '*.dat'),
+                                       legacyValveStop=0.0)
+        analyzerThread = threading.Thread(target=pa.run)
+        analyzerThread.setDaemon(True)
+        analyzerThread.start()
+
+        time.sleep(5.0)
+
+        analysisResults = os.path.join(self.testDir, 'file7_analysis.analysis')
+        assert os.path.exists(analysisResults)
+
+        analysisFile = DatFile.DatFile(analysisResults)
+
+        assert len(analysisFile['EPOCH_TIME']) is 5
+        testing.assert_array_almost_equal(
+            File7Analysis.EPOCH_TIME,
+            [float(t) for t in analysisFile['EPOCH_TIME']])
+        testing.assert_array_almost_equal(
+            File7Analysis.DISTANCE,
+            [float(d) for d in analysisFile['DISTANCE']],
+            decimal=3)
+        testing.assert_array_almost_equal(
+            File7Analysis.GPS_ABS_LONG,
+            [float(p) for p in analysisFile['GPS_ABS_LONG']])
+        testing.assert_array_almost_equal(
+            File7Analysis.GPS_ABS_LAT,
+            [float(p) for p in analysisFile['GPS_ABS_LAT']])
+        testing.assert_array_almost_equal(
+            File7Analysis.CONC,
+            [float(c) for c in analysisFile['CONC']])
+        testing.assert_array_almost_equal(
+            File7Analysis.DELTA,
+            [float(d) for d in analysisFile['DELTA']])
+        testing.assert_array_almost_equal(
+            File7Analysis.UNCERTAINTY,
+            [float(u) for u in analysisFile['UNCERTAINTY']])
+        testing.assert_array_almost_equal(
+            File7Analysis.REPLAY_MAX,
+            [float(r) for r in analysisFile['REPLAY_MAX']])
+        testing.assert_array_almost_equal(
+            File7Analysis.REPLAY_LMIN,
+            [float(r) for r in analysisFile['REPLAY_LMIN']])
+        testing.assert_array_almost_equal(
+            File7Analysis.REPLAY_RMIN,
+            [float(r) for r in analysisFile['REPLAY_RMIN']])
+        testing.assert_array_almost_equal(
+            File7Analysis.DISPOSITION,
             [float(d) for d in analysisFile['DISPOSITION']])
