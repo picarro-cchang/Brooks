@@ -24,6 +24,8 @@ except:
 
 NaN = 1e1000/1e1000
 
+VALVE_STATE_EPSILON = 1.0e-4
+
 # Permil
 UNCERTAINTY_HIGH_THRESHOLD = 5.0
 
@@ -161,6 +163,34 @@ def linfit(x,y,sigma):
 #  analyzer
 
 class PeakAnalyzer(object):
+
+    @staticmethod
+    def getDisposition(cancelled, uncertainty):
+        disposition = 'COMPLETE'
+
+        if cancelled:
+            disposition = 'USER_CANCELLATION'
+
+        elif uncertainty >= UNCERTAINTY_HIGH_THRESHOLD:
+            disposition = 'UNCERTAINTY_OOR'
+
+        return DISPOSITIONS.index(disposition)
+
+    @staticmethod
+    def valveIsCollecting(state):
+        rounded = round(state)
+        roundedErr = abs(state - rounded)
+
+        return roundedErr < VALVE_STATE_EPSILON and (int(rounded) & 0x01) > 0
+
+    @staticmethod
+    def valveIsCancelling(state):
+        rounded = round(state)
+        roundedErr = abs(state - rounded)
+
+        return roundedErr < VALVE_STATE_EPSILON and (int(rounded) & 0x10) > 0
+
+
     def __init__(self, *args, **kwargs):
 
         if 'legacyValveStop' in kwargs:
@@ -646,33 +676,66 @@ class PeakAnalyzer(object):
         """
 
         MAX_DURATION = 30
-        collecting = lambda v: abs(v - round(v))<1e-4 and (int(round(v)) & 1) == 1
-        cancelled = lambda v: abs(v - round(v)) < 1e-4 and (int(round(v)) & 0x10) > 0
 
         tempStore = deque()
+        delayBuff = deque()
         keelingStore = []
+
+        transportLag = 5
+        notCollectingCount = 0
+        doneAnalysisThreshold = 5
+
+        lastAnalysis = None
         lastPeak = None
         lastCollecting = False
-        isCancelled = False
+        cancelled = False
+
 
         for dtuple in source:
-            if dtuple is None: continue
-            if 'HP_Delta_iCH4_Raw' not in dtuple._fields: continue # Swallow data if there is no delta
-            collectingNow = collecting(dtuple.ValveMask)
+            # Previously it was possible for None tuples to be
+            # returned, but that functionality has been removed.
+            assert dtuple is not None
+
+            # Swallow data if there is no delta.
+            if 'HP_Delta_iCH4_Raw' not in dtuple._fields:
+                continue
+
+            if dtuple.EPOCH_TIME > self.legacyValveStop and \
+                PeakAnalyzer.valveIsCancelling(dtuple.ValveMask):
+                cancelled = True
+
+            collectingNow = PeakAnalyzer.valveIsCollecting(dtuple.ValveMask)
+
+            if collectingNow:
+                cancelled = False
+
+            # Delay collecting now by a number of samples to
+            # compensate for gas transport lag after valve switch.
+            delayBuff.append(collectingNow)
+            if len(delayBuff) >= transportLag:
+                collectingNow = delayBuff.popleft()
+
+            # An analysis is done (cancelled or completed) if we are
+            # not in the collecting state for doneAnalysisThreshold
+            # samples and there is some Keeling data to report.
+            if (notCollectingCount > doneAnalysisThreshold) and \
+                (lastAnalysis is not None):
+                disp = PeakAnalyzer.getDisposition(cancelled,
+                                                   lastAnalysis['uncertainty'])
+                yield PeakData(disposition=disp, **lastAnalysis)
+
+                lastAnalysis = None
+                cancelled = False
+
             if not collectingNow:
+                notCollectingCount += 1
                 tempStore.append(dtuple)
-                while tempStore[-1].EPOCH_TIME - tempStore[0].EPOCH_TIME > MAX_DURATION:
+
+                while (tempStore[-1].EPOCH_TIME - tempStore[0].EPOCH_TIME) > MAX_DURATION:
                     tempStore.popleft()
 
-                if lastCollecting or isCancelled:  # Check to see if there are data for a Keeling plot
-
-                    # Check one more point ahead to see if the cancellation
-                    # flag is present.
-                    if dtuple.EPOCH_TIME > self.legacyValveStop:
-                        dtuple = source.next()
-                        isCancelled |= cancelled(dtuple.ValveMask)
-
-                    if len(keelingStore) > 10+self.samples_to_skip:
+                if lastCollecting:
+                    if len(keelingStore) > 10 + self.samples_to_skip:
                         conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:]
                         delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:]
                         protInvconc = 1/maximum(conc,0.001)
@@ -690,46 +753,28 @@ class PeakAnalyzer(object):
                         except:
                             replay_rmin = 0
 
-                        #print "Keeling plot data"
-                        #for s in keelingStore:
-                        #    print s.sourceData.conc, s.sourceData.delta, s.sourceData.valves
-                        #print "-----------------"
-
-                        disposition = 'COMPLETE'
-
                         result = linfit(protInvconc,delta,11.0*protInvconc)
 
                         if lastPeak:
-                            uncertainty = sqrt(result.cov[1][1])
+                            lastAnalysis = dict(
+                                delta=result.coeffs[1],
+                                uncertainty=sqrt(result.cov[1][1]),
+                                replay_max=replay_max,
+                                replay_lmin=replay_lmin,
+                                replay_rmin=replay_rmin,
+                                **lastPeak._asdict())
+                            lastPeak = None
 
-                            if uncertainty > UNCERTAINTY_HIGH_THRESHOLD:
-                                disposition = 'UNCERTAINTY_OOR'
-
-                            if isCancelled:
-                                # This should override other potential
-                                # dispositions.
-                                disposition = 'USER_CANCELLATION'
-
-                            yield PeakData(delta=result.coeffs[1],
-                                           uncertainty=uncertainty,
-                                           replay_max=replay_max,
-                                           replay_lmin=replay_lmin,
-                                           replay_rmin=replay_rmin,
-                                           disposition=disposition,
-                                           **lastPeak._asdict())
                     del keelingStore[:]
             else:
-                if dtuple.EPOCH_TIME > self.legacyValveStop and \
-                    cancelled(dtuple.ValveMask):
-                    isCancelled = True
-                    continue
+                notCollectingCount = 0
 
                 keelingStore.append(dtuple)
+
                 if not lastCollecting:
                     if tempStore:
                         # We have just started collecting
                         print "Started collecting"
-                        isCancelled = False
                         conc = asarray([s.CH4 for s in tempStore])
                         dist = asarray([s.DISTANCE for s in tempStore])
                         epoch_time = asarray([s.EPOCH_TIME for s in tempStore])
@@ -848,7 +893,7 @@ class PeakAnalyzer(object):
                                          r.replay_max,
                                          r.replay_lmin,
                                          r.replay_rmin,
-                                         DISPOSITIONS.index(r.disposition)])
+                                         r.disposition])
 
                         for col, val in dataPairs:
                             doc[col] = float(val)
@@ -876,7 +921,7 @@ class PeakAnalyzer(object):
                                                     r.lat, r.conc, r.delta,
                                                     r.uncertainty, r.replay_max,
                                                     r.replay_lmin, r.replay_rmin,
-                                                    DISPOSITIONS.index(r.disposition)))
+                                                    r.disposition))
 
                 if not self.usedb and handle is not None:
                     handle.close()

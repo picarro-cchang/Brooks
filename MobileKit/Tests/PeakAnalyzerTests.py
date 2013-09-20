@@ -17,12 +17,10 @@ from numpy import testing
 sys.path.append(os.path.abspath(os.path.join('..', 'AnalyzerServer')))
 import PeakAnalyzer
 sys.path.append('DataClasses')
-from File1Analysis import File1Analysis
+from File6Analysis import File6Analysis
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))
 from Host.Common import DatFile
-
-
 
 
 class TestPeakAnalyzer(object):
@@ -93,7 +91,7 @@ class TestPeakAnalyzer(object):
                                     17.783,
                                     decimal=3)
         testing.assert_almost_equal(float(analysisFile['DELTA'][0]),
-                                    -32.48,
+                                    -32.40,
                                     decimal=2)
         testing.assert_almost_equal(float(analysisFile['UNCERTAINTY'][0]),
                                     0.16,
@@ -102,7 +100,7 @@ class TestPeakAnalyzer(object):
                                     12.321,
                                     decimal=3)
         testing.assert_almost_equal(float(analysisFile['REPLAY_LMIN'][0]),
-                                    2.280,
+                                    2.366,
                                     decimal=3)
         testing.assert_almost_equal(float(analysisFile['REPLAY_RMIN'][0]),
                                     1.930,
@@ -200,3 +198,57 @@ class TestPeakAnalyzer(object):
             PeakAnalyzer.DISPOSITIONS.index('UNCERTAINTY_OOR')
         assert int(float(analysisFile['DISPOSITION'][1])) == \
             PeakAnalyzer.DISPOSITIONS.index('COMPLETE')
+
+    def testPeakConcentration(self):
+        shutil.copyfile(os.path.join(self.datRoot, 'file6_analysis.dat'),
+                        os.path.join(self.testDir, 'file6_analysis.dat'))
+
+        pa = PeakAnalyzer.PeakAnalyzer(analyzerId='TEST0000',
+                                       listen_path=os.path.join(self.testDir,
+                                                                '*.dat'),
+                                       legacyValveStop=0.0)
+        analyzerThread = threading.Thread(target=pa.run)
+        analyzerThread.setDaemon(True)
+        analyzerThread.start()
+
+        time.sleep(5.0)
+
+        analysisResults = os.path.join(self.testDir, 'file6_analysis.analysis')
+        assert os.path.exists(analysisResults)
+
+        analysisFile = DatFile.DatFile(analysisResults)
+
+        assert len(analysisFile['EPOCH_TIME']) is 8
+        testing.assert_array_almost_equal(
+            File6Analysis.EPOCH_TIME,
+            [float(t) for t in analysisFile['EPOCH_TIME']])
+        testing.assert_array_almost_equal(
+            File6Analysis.DISTANCE,
+            [float(d) for d in analysisFile['DISTANCE']])
+        testing.assert_array_almost_equal(
+            File6Analysis.GPS_ABS_LONG,
+            [float(p) for p in analysisFile['GPS_ABS_LONG']])
+        testing.assert_array_almost_equal(
+            File6Analysis.GPS_ABS_LAT,
+            [float(p) for p in analysisFile['GPS_ABS_LAT']])
+        testing.assert_array_almost_equal(
+            File6Analysis.CONC,
+            [float(c) for c in analysisFile['CONC']])
+        testing.assert_array_almost_equal(
+            File6Analysis.DELTA,
+            [float(d) for d in analysisFile['DELTA']])
+        testing.assert_array_almost_equal(
+            File6Analysis.UNCERTAINTY,
+            [float(u) for u in analysisFile['UNCERTAINTY']])
+        testing.assert_array_almost_equal(
+            File6Analysis.REPLAY_MAX,
+            [float(r) for r in analysisFile['REPLAY_MAX']])
+        testing.assert_array_almost_equal(
+            File6Analysis.REPLAY_LMIN,
+            [float(r) for r in analysisFile['REPLAY_LMIN']])
+        testing.assert_array_almost_equal(
+            File6Analysis.REPLAY_RMIN,
+            [float(r) for r in analysisFile['REPLAY_RMIN']])
+        testing.assert_array_almost_equal(
+            File6Analysis.DISPOSITION,
+            [float(d) for d in analysisFile['DISPOSITION']])
