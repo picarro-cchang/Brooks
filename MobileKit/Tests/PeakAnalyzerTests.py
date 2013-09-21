@@ -254,7 +254,7 @@ class TestPeakAnalyzer(object):
             File6Analysis.DISPOSITION,
             [float(d) for d in analysisFile['DISPOSITION']])
 
-    def testDeltaOOR(self):
+    def testDeltaOORAndKeelingSize(self):
         shutil.copyfile(os.path.join(self.datRoot, 'file7_analysis.dat'),
                         os.path.join(self.testDir, 'file7_analysis.dat'))
 
@@ -273,7 +273,7 @@ class TestPeakAnalyzer(object):
 
         analysisFile = DatFile.DatFile(analysisResults)
 
-        assert len(analysisFile['EPOCH_TIME']) is 5
+        assert len(analysisFile['EPOCH_TIME']) is 7
         testing.assert_array_almost_equal(
             File7Analysis.EPOCH_TIME,
             [float(t) for t in analysisFile['EPOCH_TIME']])

@@ -31,6 +31,8 @@ UNCERTAINTY_HIGH_THRESHOLD = 5.0
 DELTA_NEGATIVE_THRESHOLD = -80.0
 DELTA_POSITIVE_THRESHOLD = 0.0
 
+CONCENTRATION_HIGH_THRESHOLD = 20.0
+
 OUTPUT_COLUMNS = [
     'EPOCH_TIME',
     'DISTANCE',
@@ -48,7 +50,8 @@ DISPOSITIONS = [
     'COMPLETE',
     'USER_CANCELLATION',
     'UNCERTAINTY_OOR',
-    'DELTA_OOR']
+    'DELTA_OOR',
+    'SAMPLE_SIZE_TOO_SMALL']
 
 
 PeakData = namedtuple('PeakData',
@@ -168,11 +171,14 @@ def linfit(x,y,sigma):
 class PeakAnalyzer(object):
 
     @staticmethod
-    def getDisposition(cancelled, delta, uncertainty):
+    def getDisposition(cancelled, delta, uncertainty, tooFewPoints):
         disposition = 'COMPLETE'
 
         if cancelled:
             disposition = 'USER_CANCELLATION'
+
+        elif tooFewPoints:
+            disposition = 'SAMPLE_SIZE_TOO_SMALL'
 
         elif uncertainty >= UNCERTAINTY_HIGH_THRESHOLD:
             disposition = 'UNCERTAINTY_OOR'
@@ -696,7 +702,7 @@ class PeakAnalyzer(object):
         lastPeak = None
         lastCollecting = False
         cancelled = False
-
+        tooFewPoints = False
 
         for dtuple in source:
             # Previously it was possible for None tuples to be
@@ -729,11 +735,13 @@ class PeakAnalyzer(object):
                 (lastAnalysis is not None):
                 disp = PeakAnalyzer.getDisposition(cancelled,
                                                    lastAnalysis['delta'],
-                                                   lastAnalysis['uncertainty'])
+                                                   lastAnalysis['uncertainty'],
+                                                   tooFewPoints)
                 yield PeakData(disposition=disp, **lastAnalysis)
 
                 lastAnalysis = None
                 cancelled = False
+                tooFewPoints = False
 
             if not collectingNow:
                 notCollectingCount += 1
@@ -773,11 +781,26 @@ class PeakAnalyzer(object):
                                 **lastPeak._asdict())
                             lastPeak = None
 
+                    else:
+                        tooFewPoints = True
+                        if lastPeak:
+                            lastAnalysis = dict(
+                                delta=0.0,
+                                uncertainty=0.0,
+                                replay_max=0.0,
+                                replay_lmin=0.0,
+                                replay_rmin=0.0,
+                                **lastPeak._asdict())
+                            lastPeak = None
+
                     del keelingStore[:]
             else:
                 notCollectingCount = 0
 
-                keelingStore.append(dtuple)
+                if dtuple.CH4 <= CONCENTRATION_HIGH_THRESHOLD:
+                    # Exclude data points where the concentration is above
+                    # the analyzer specification.
+                    keelingStore.append(dtuple)
 
                 if not lastCollecting:
                     if tempStore:
