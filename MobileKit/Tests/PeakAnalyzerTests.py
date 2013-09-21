@@ -47,6 +47,8 @@ class TestPeakAnalyzer(object):
                                           os.path.join(baseDir, '..', '..')})
         self.testDir = os.path.join(self.datRoot, m.__name__)
 
+        print self.testDir
+
         if os.path.isdir(self.testDir):
             shutil.rmtree(self.testDir)
 
@@ -266,7 +268,7 @@ class TestPeakAnalyzer(object):
         analyzerThread.setDaemon(True)
         analyzerThread.start()
 
-        time.sleep(5.0)
+        time.sleep(10.0)
 
         analysisResults = os.path.join(self.testDir, 'file7_analysis.analysis')
         assert os.path.exists(analysisResults)
