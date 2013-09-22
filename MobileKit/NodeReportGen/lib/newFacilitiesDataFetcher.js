@@ -72,22 +72,19 @@ define(function(require, exports, module) {
             processFiles(function (err) {
                 if (err) {
                     sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED,"msg": err.message },
-                        function () { callback(err); });
+                        {"status": rptGenStatus.FAILED,"msg": err.message });
+                    callback(err);
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
-                        if (err) callback(err);
-                        else callback(null);
-                    });
+                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE});
+                    callback(null);
                 }
             });
         }
         else {
             sf.writeStatus(that.statusFile, {"status": rptGenStatus.BAD_PARAMETERS,
-                "msg": ipv.errors() }, function (err) {
-                callback(new Error(ipv.errors()));
-            });
+                "msg": ipv.errors() });
+            callback(new Error(ipv.errors()));
         }
 
         // processFile takes a KML file specified by that.norm_instr.facilities[that.fileIndex]

@@ -14,7 +14,8 @@ define(function(require, exports, module) {
     var DASHBOARD = require('app/dashboardGlobals');
     var instrResource = require('app/utils').instrResource;
     var rptGenStatus = require('common/rptGenStatus');
-    // require('localStorage');
+    
+    require('common/P3TXT');
     require('jquery.dataTables');
 
     $.fn.dataTableExt.oApi.fnDisplayRow = function ( oSettings, nRow )
@@ -96,13 +97,15 @@ define(function(require, exports, module) {
             analyzeStatus: function (err, status, msg)  {
                 var that = this;
                 if (status === rptGenStatus.TASK_NOT_FOUND) {
-                    this.set({'msg': 'Report not found or expired - resubmit', 'status': status});
+                    this.set({'msg': P3TXT.dashboard.report_expired, 'status': status});
                 }
                 else if (status < 0) {
                     this.set({'msg': msg, 'status': status});
                 }
                 else if (err) {
-                    this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
+                    var msg = 'Connection problem: Please reload page or retry in a few minutes';
+                    // this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
+                    this.set({'msg': msg, 'status': rptGenStatus.OTHER_ERROR});
                 }
                 else if (status >= rptGenStatus.DONE) {
                     this.set({'status': status});
@@ -118,8 +121,10 @@ define(function(require, exports, module) {
                     that.analyzeStatus(err);
                 },
                 function (s, result) {
-                    console.log('While getting status: ' + s);
-                    that.analyzeStatus(null, result.status, result.msg);
+                    var code = that.get('hash').substr(0,8) + 'T' + that.get('directory').substr(-6);
+                    var msg = P3TXT.dashboard.send_code + code;
+                    //that.analyzeStatus(null, result.status, result.msg);
+                    that.analyzeStatus(null, result.status, msg);
                 });
             }
         });
@@ -254,7 +259,7 @@ define(function(require, exports, module) {
                 var statusDisplay;
                 var status = model.get('status');
                 if (status < 0) {
-                    statusDisplay = '<span>Error: ' + model.get('msg') + '</span>';
+                    statusDisplay = '<span>' + model.get('msg') + '</span>';
                 }
                 else if (status >= rptGenStatus.DONE) {
                     if (status === rptGenStatus.DONE_WITH_PDF) {

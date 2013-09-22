@@ -336,7 +336,8 @@ the authenticating proxy server.
             if (pv.ok()) {
                 user = req.query.user;
                 userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
-                    res.send(_.extend(result, {error:err, dashboard: data}));
+                    if (err) res.send(_.extend(result, {error:err.message, dashboard: data}));
+                    else res.send(_.extend(result, {error:null, dashboard: data}))
                 });
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
