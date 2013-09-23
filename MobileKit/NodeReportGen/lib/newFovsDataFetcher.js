@@ -243,7 +243,7 @@ define(function(require, exports, module) {
 
                 p3LrtFetcher.on('submit', function (data) {
                     var submission = {};
-                    submission['start_path_run_' + runIndex] = data;
+                    submission['start_path_run_' + runIndex] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
                     sf.writeStatus(that.statusFile, submission);
                 });
 
@@ -368,7 +368,7 @@ define(function(require, exports, module) {
                             
                             p.processor.on('submit', function (data) {
                                 var submission = {};
-                                submission['start_fov_run_' + data.run_index + '_survey_' + data.survey_index] = data;
+                                submission['start_fov_run_' + data.run_index + '_survey_' + data.survey_index] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
                                 sf.writeStatus(that.statusFile, submission);
                             });
 
@@ -450,6 +450,7 @@ define(function(require, exports, module) {
 
         function onFovError(data) {
             that.fovError = data.error;
+            data.error = data.error.message;
             that.fovPending -= 1;
             that.fovInProgress -= 1;
             /*
@@ -460,7 +461,7 @@ define(function(require, exports, module) {
             }
             */
             var submission = {};
-            submission['error_fov_run_' + data.run_index + '_survey_' + data.survey_index] = data;
+            submission['error_fov_run_' + data.run_index + '_survey_' + data.survey_index] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
             sf.writeStatus(that.statusFile, submission);
 
             console.log("FOV error, length: " + that.fovProcessorQueue.length + " inProgress: " + that.fovInProgress);
@@ -599,13 +600,14 @@ define(function(require, exports, module) {
                             if (self.lrt_status === rptGenStatus.DONE) fetchData();
                             else if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
                                 console.log('FOVPROCESSOR: self.lrt_status', self.lrt_status);
-                                self.emit("error", {error: new Error("FOV status: " + that.lrt_status + " Messages: " + JSON.stringify(messages)),
+                                self.emit("error", {error: new Error("FOV status: " + self.lrt_status + " Messages: " + JSON.stringify(messages)),
                                     survey_index: self.surveyIndex, run_index: self.runIndex});
                             }
                             else setTimeout(pollUntilDone,5000);
                         }
                         else {
-                            self.emit("error", new Error("P3 FOV status stuck: " + that.lrt_status + " " + that.lrt_parms_hash + '/' + that.lrt_start_ts));
+                            err = new Error("P3 FOV status stuck: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+                            self.emit("error", {error:err , survey_index: self.surveyIndex, run_index: self.runIndex});
                         }
                     }
                 });

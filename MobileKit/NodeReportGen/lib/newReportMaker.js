@@ -210,7 +210,7 @@ define(function(require, exports, module) {
             return (function (n) {
                 return function (submit_key) {
                     var submission = {};
-                    submission['start_' + n] = submit_key;
+                    submission['start_' + n] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},submit_key);
                     sf.writeStatus(that.statusFile, submission);
                     console.log("RPT_GEN_lrt_task " + n + " scheduled: " + JSON.stringify(submit_key));
                 };

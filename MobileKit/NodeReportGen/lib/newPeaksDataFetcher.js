@@ -228,7 +228,7 @@ define(function(require, exports, module) {
 
             p3LrtFetcher.on('submit', function (data) {
                 var submission = {};
-                submission['start_run_' + runIndex] = data;
+                submission['start_run_' + runIndex] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
                 sf.writeStatus(that.statusFile, submission);
             });
 
