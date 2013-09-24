@@ -152,11 +152,10 @@ if __name__ == "__main__":
 
     d = wx.FileDialog(None, "File to unpickle",
                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                      wildcard="All files (*.*)|*.*")
+                      wildcard="dat files (*.dat)|*.dat|All files (*.*)|*.*")
 
     if d.ShowModal() == wx.ID_OK:
         filename = d.GetPath()
-
         readfunc(filename, 'n', 'y', '')
 
     d.Destroy()
