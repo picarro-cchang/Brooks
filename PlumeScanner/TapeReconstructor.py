@@ -47,14 +47,13 @@ Replace error with plume startends
 v24_vol: Utilize volume and timing to reconstruct pixels
 """
 
-from numpy import *
-from optparse import OptionParser
-# replace this with wx
-#import easygui as eg
+import numpy as np
+import math
+#from optparse import OptionParser
 import wx
 
 import string
-import pdb
+#import pdb
 import pylab
 import scipy
 import scipy.integrate
@@ -76,11 +75,16 @@ def plume_analyzer(filenamepickle):
     if filenamepickle == '':
         d = wx.FileDialog(None, "File to unpickle",
                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                          wildcard="txt files (*.txt)|*.txt")
+                          wildcard="dat files (*.dat)|*.dat|txt files (*.txt)|*.txt|All files (*.*)|*.*")
 
         if d.ShowModal() == wx.ID_OK:
             filenamepickle = d.GetPath()
 
+            # if user selected a .txt file, replace the "_unpickled.txt" suffix with .dat
+            # the unpickled file will be regenerated
+            #
+            # TODO: What if the .dat file doesn't exist? or if the user selected a different
+            #       .txt file that didn't have a "_unpickled.txt" suffix?
             if filenamepickle[len(filenamepickle)-3:] == 'txt':
                 filenamepickle = filenamepickle.replace("_unpickled.txt", ".dat")
             d.Destroy()
@@ -98,7 +102,8 @@ def plume_analyzer(filenamepickle):
 
     #if filenamepickle[len(filenamepickle)-3:] == 'txt':
     #    filenamepickle = filenamepickle.replace("_unpickled.txt", ".dat")
-        
+
+    # unpickle the file, returns the unpickled filename ([0]) and debug info ([1])
     filename = little_reader.readfunc(filenamepickle, 'n', 'y', "CH4_dry")[0]
 
     #####
@@ -145,13 +150,13 @@ def plume_analyzer(filenamepickle):
 
     ###################################################################
     #Loading data
-    data = loadtxt(filename)
+    data = np.loadtxt(filename)
     valves = [x for x in data[:, 3]]    # converts the ndarray into a list
     onindex = valves.index(3)           # determines the index when the valves turn on completely
     pretape = data[1:onindex+10, :]     # Give ten points extra due to trigger happening so close to peak
     print "Data truncated at row %i" % onindex
     tapes = data[onindex:, :]
-    samplerate = average(data[1:, 0] - data[:len(data) - 1, 0])
+    samplerate = np.average(data[1:, 0] - data[:len(data) - 1, 0])
     #pylab.plot(tapes[:,1])
     #pylab.show()
 
@@ -169,12 +174,12 @@ def plume_analyzer(filenamepickle):
         inisearch = [300, 600, 1000]    # for new after first EPA campaign
         refinedsearch = [0]
         for i in inisearch:
-            refinedsearch.append(argmin(d[i:i+100])+i)
+            refinedsearch.append(np.argmin(d[i:i+100])+i)
         refinedsearch.sort()
         refinedsearch.append(1350)
         #refinedsearch.append(850)
         #print "Refined search areas are: ", refinedsearch
-        secderiv = gradient(gradient(sv(tape, 15, 3)))
+        secderiv = np.gradient(np.gradient(sv(tape, 15, 3)))
         startend = []
         for i in refinedsearch:
             if i > 50:
@@ -216,7 +221,7 @@ def plume_analyzer(filenamepickle):
         """
         #pdb.set_trace()
         startend = []
-        secderiv = gradient(gradient(tape))
+        secderiv = np.gradient(np.gradient(tape))
         # threshold for determining 0ness
         for index, item in enumerate(tempstartend):
             if index % 2 != 0:  # odd number indices
@@ -285,11 +290,17 @@ def plume_analyzer(filenamepickle):
     Wind selection for average; use first derivatives in pretape to determine
     where the CH4 plume occurred and use those wind measurements for diagnostics
     """
-    firstderiv = diff(pretape[:, 1])
+    # np.diff() = compute 1st order discrete difference
+    firstderiv = np.diff(pretape[:, 1])
     if plumeset == 'n':
-        tempplumestart = argmax(firstderiv)
-        tempplumeend = argmin(firstderiv[5:]) + 5
-        plumestartend = sort(searchbetter(pretape[:, 1], [tempplumestart, tempplumeend], 1, 7, 'y'))
+        tempplumestart = np.argmax(firstderiv)
+        tempplumeend = np.argmin(firstderiv[5:]) + 5
+
+        # Note: np.sort() uses kind='quicksort' by default, which is O(n**2).
+        #       Use mergesort or heapsort if sorting large arrays, the former needs
+        #       about n/2 workspace but preserves relative order of items with identical
+        #       keys. quicksort does not preserve this relative order either.
+        plumestartend = np.sort(searchbetter(pretape[:, 1], [tempplumestart, tempplumeend], 1, 7, 'y'))
         plumestart = plumestartend[0]
         plumeend = plumestartend[1]
 
@@ -298,9 +309,11 @@ def plume_analyzer(filenamepickle):
     windend = plumestart + delay + (plumeend-plumestart)
 
     print "max: %i, min: %i" % (windstart, windend)
-    stdwind = std(data[windstart:windend, 5])
-    carspeed = average(data[plumestart:plumeend, 7])
-    stdcar = std(data[plumestart:plumeend, 7])
+
+    # compute standard deviation
+    stdwind = np.std(data[windstart:windend, 5])
+    carspeed = np.average(data[plumestart:plumeend, 7])
+    stdcar = np.std(data[plumestart:plumeend, 7])
 
     ####################################################################################\
     #Calculate background
@@ -320,7 +333,7 @@ def plume_analyzer(filenamepickle):
                 cutoff = int(round(0.5*len(i)))
 
                 # 5pt buffer for poor tape cutting
-                backgroundarray.append(average(sort(i)[5:cutoff]))
+                backgroundarray.append(np.average(np.sort(i)[5:cutoff]))
         background = min(backgroundarray)
         return background
 
@@ -366,7 +379,7 @@ def plume_analyzer(filenamepickle):
     """
     align volumes with pixel B, assuming pixel B is co-located with instrument monitoring tube for pretape
     """
-    deltavol = pretapevol[argmax(pretape[:, 1])] - tapeBplot[argmax(tapeBplot[:, 1]), 0]
+    deltavol = pretapevol[np.argmax(pretape[:, 1])] - tapeBplot[np.argmax(tapeBplot[:, 1]), 0]
     print "Vol adjusted by %f scc" % (deltavol)
     pretapevol = pretapevol - deltavol
     pretaperecon = pretape
@@ -384,8 +397,12 @@ def plume_analyzer(filenamepickle):
             points = i[:, 0]
             values = i[:, 1]
             intertape = griddata(points, values, newx, method='linear')
-            temptape = transpose(vstack([newx, intertape]))
-            temptape = temptape[~isnan(temptape).any(1)]     # get rid of NAN
+
+            # stack the newx and intertape arrays vertically and transpose the result
+            temptape = np.transpose(np.vstack([newx, intertape]))
+
+            # numpy.isnan() tests element-wise for NaN and returns result as a bool array
+            temptape = temptape[~np.isnan(temptape).any(1)]     # get rid of NAN
             #print temptape[0, 0], temptape[len(temptape)-1, 0]
             maxarray.append(temptape[0, 0])
             minarray.append(temptape[len(temptape) - 1, 0])
@@ -406,7 +423,7 @@ def plume_analyzer(filenamepickle):
             points = i[:, 0]
             values = i[:, 1]
             intertape = griddata(points, values, newx, method='linear')
-            temptape = transpose(vstack([newerx, intertape[indexarray]]))
+            temptape = np.transpose(np.vstack([newerx, intertape[indexarray]]))
             newertapedeck.append(temptape)
         return newertapedeck, indexarray, minvol, maxvol
 
@@ -443,23 +460,22 @@ def plume_analyzer(filenamepickle):
         Col 8 is Lat
         col 9 is long
         """
-        import math
         lat = pretape[:, 8] * (math.pi/180)
         lon = pretape[:, 9] * (math.pi/180)
         dist = [0]
         for index in range(len(lat)-1):
             rd = 6371*10**3     # radius of earth
             # Using the spherical law of cosines
-            tempdist = math.acos(sin(lat[index])*math.sin(lat[index+1]) +
+            tempdist = math.acos(math.sin(lat[index])*math.sin(lat[index+1]) +
                                  math.cos(lat[index])*math.cos(lat[index+1]) * math.cos(lon[index+1]-lon[index])) * rd
             dist.append(tempdist + dist[index])
         return dist
 
     dist = distanceGPS(pretapetrunc)
-    tapeAdist = transpose(vstack([dist, newtapedeck[0][:, 1]]))
-    tapeBdist = transpose(vstack([dist, newtapedeck[1][:, 1]]))
-    tapeCdist = transpose(vstack([dist, newtapedeck[2][:, 1]]))
-    tapeDdist = transpose(vstack([dist, newtapedeck[3][:, 1]]))
+    tapeAdist = np.transpose(np.vstack([dist, newtapedeck[0][:, 1]]))
+    tapeBdist = np.transpose(np.vstack([dist, newtapedeck[1][:, 1]]))
+    tapeCdist = np.transpose(np.vstack([dist, newtapedeck[2][:, 1]]))
+    tapeDdist = np.transpose(np.vstack([dist, newtapedeck[3][:, 1]]))
 
     def backgrounder(tape, background):
         """
@@ -475,7 +491,7 @@ def plume_analyzer(filenamepickle):
             else:
                 y.append(item-background)
         print "Percentage negative: %f" % ((tracker/float(len(tape)))*100)
-        return transpose(vstack([x, array(y)]))
+        return np.transpose(np.vstack([x, np.array(y)]))
         
     tapeArecon = backgrounder(tapeAdist, background)
     tapeBrecon = backgrounder(tapeBdist, background)
@@ -533,7 +549,7 @@ def plume_analyzer(filenamepickle):
         #numerator = sum([(x/winner) for x in tapeB[:,1]]*windlat)
         numerator = sum([(x) for x in tapeB[:, 1]]*windlat)
         denominator = sum([x for x in tapeB[:, 1]])
-        return average(numerator/denominator)
+        return np.average(numerator/denominator)
 
     #weightaverage = weightaverage([tapeArecon, tapeBrecon, tapeCrecon, tapeDrecon], windlat, w)
     weightaverage = weightaverage(tapeBrecon, windlat)
@@ -545,7 +561,7 @@ def plume_analyzer(filenamepickle):
     def piecewiseIntegrator(tape, windfactor, windlat):
         sums = []
         for i in range(len(tape)-2):
-            windbit = average(windlat[i:i+2])
+            windbit = np.average(windlat[i:i+2])
             sums.append(scipy.integrate.simps(tape[i:i+2, 1], tape[i:i+2, 0])*windfactor*windbit)
         return sum(sums)
             
@@ -555,7 +571,7 @@ def plume_analyzer(filenamepickle):
     tapeBint = piecewiseIntegrator(tapeBrecon, w[2], windlat)
     tapeCint = piecewiseIntegrator(tapeCrecon, w[3], windlat)
     tapeDint = piecewiseIntegrator(tapeDrecon, w[4], windlat)
-    zarray = transpose(vstack([pixelheights, array([0, tapeAint, tapeBint, tapeCint, tapeDint])]))
+    zarray = np.transpose(np.vstack([pixelheights, np.array([0, tapeAint, tapeBint, tapeCint, tapeDint])]))
     
     ###############For use if ground is NOT included
     '''
@@ -602,7 +618,7 @@ def plume_analyzer(filenamepickle):
         maxarray = []
         for i in tapelist:
             maxarray.append(max(i[:, 1]))
-        winner = argmax(maxarray)
+        winner = np.argmax(maxarray)
         hmax = ((maxarray[winner]-background)/2.0)
         print hmax
 
@@ -621,10 +637,14 @@ def plume_analyzer(filenamepickle):
             tape = tapelist[3]
         else:
             print "I don't know what is going on here."
-        peakloc = argmax(tape[:, 1])
+
+        peakloc = np.argmax(tape[:, 1])
+
+        # numpy.argsort() returns indices that would sort an array
+        # kind='quicksort' is default; mergesort or heapsort may be better
         width = []
-        width.append(argsort(abs(tape[:peakloc, 1]-hmax-background))[0])
-        width.append(argsort(abs(tape[peakloc:, 1]-hmax-background))[0]+peakloc)
+        width.append(np.argsort(abs(tape[:peakloc, 1]-hmax-background))[0])
+        width.append(np.argsort(abs(tape[peakloc:, 1]-hmax-background))[0]+peakloc)
     #    print width
     #    pylab.figure(txtlabel)
     #    pylab.scatter(tape[width, 0], tape[width, 1])
@@ -646,7 +666,7 @@ def plume_analyzer(filenamepickle):
     """
     Getting GPS info of the highest peak point
     """
-    peakindex = argmax(pretape[:, 1])
+    peakindex = np.argmax(pretape[:, 1])
     gpslat = pretape[peakindex, 8]
     gpslong = pretape[peakindex, 9]
     print '\n'
@@ -713,17 +733,22 @@ def plume_analyzer(filenamepickle):
         pointsB = getPoints(tapeBdist, 1)
         pointsC = getPoints(tapeCdist, 2)
         pointsD = getPoints(tapeDdist, 3)
-        points = vstack([pointsA, pointsB, pointsC, pointsD])
+        points = np.vstack([pointsA, pointsB, pointsC, pointsD])
         points = [n for n in points]    # convert to list
-        values = hstack([tapeAdist[:, 1], tapeBdist[:, 1], tapeCdist[:, 1], tapeDdist[:, 1]])
+
+        # stack arrays horizontally
+        values = np.hstack([tapeAdist[:, 1], tapeBdist[:, 1], tapeCdist[:, 1], tapeDdist[:, 1]])
         values = [v for v in values]    # convert to list
-        """Interperlating data for plotting"""
+
+        """Interpolating data for plotting"""
         nInterp = nX
         if nX == 0 and len(YCoords) > 0:
             nInterp = (1j) * int(xInterpFactor*(len(points)/len(YCoords)))
             nX = nInterp
             nInterp = xInterpFactor*(1j)*int(len(points)/4)
-        grid_x, grid_y = mgrid[minDistance:maxDistance:nInterp, minHeight:maxHeight:nY]
+
+        # numpy.mgrid() returns dense multi-dimensional meshgrid
+        grid_x, grid_y = np.mgrid[minDistance:maxDistance:nInterp, minHeight:maxHeight:nY]
         grid_z1 = griddata(points, values, (grid_x, grid_y), method='linear')
         interpGridX = grid_x
         interpGridY = grid_y
@@ -740,8 +765,8 @@ def plume_analyzer(filenamepickle):
         cax = plt.imshow(grid_z.T, extent=(minDistance, maxDistance, minHeight-yPad, maxHeight+yPad), aspect=aspect, origin='lower')
         plt.xlim(minDistance, maxDistance)
         plt.ylim(minHeight, maxHeight)
-        points = array(points)      # It has to be reconverted into array!!
-        values = array(values)
+        points = np.array(points)      # It has to be reconverted into array!!
+        values = np.array(values)
         plt.plot(points[:, 0], points[:, 1], 'k.', ms=3)
         plt.xlabel('Horizontal Position [m]', fontsize='large')
         plt.ylabel('Vertical Position [m]', fontsize='large')
@@ -767,6 +792,52 @@ def plume_analyzer(filenamepickle):
     root = Tkinter.Tk()
     root.withdraw()
 
+    labelText = filename[filename.rfind('\\')+1:] + "\t" + \
+        string.ljust(str(carspeed), 12) + "\t" + \
+        string.ljust(str(stdcar), 12) + "\t" + \
+        string.ljust(str(weightaverage), 12)+"\t" + \
+        string.ljust(str(stdwind), 12)+"\t" + \
+        string.ljust(str(deltavol), 12)+"\t" + \
+        string.ljust(str(startend), 12)+"\t" + \
+        string.ljust(str(background), 12)+"\t" + \
+        '[' + "%.2f" % (max(tapeArecon[:, 1]+background)) + ", %.2f" % (max(tapeBrecon[:, 1]+background)) + ", %.2f" % (max(tapeCrecon[:, 1])+background) + ", %.2f" % (max(tapeDrecon[:, 1])+background) + ']' + "\t" + \
+        string.ljust(str(a), 12) + "\t" + \
+        string.ljust(str(ans*10**3), 12) + "\t" + \
+        string.ljust(str(secans), 12) + "\t" + \
+        string.ljust('['+str(plumestart) + ',' + str(plumeend)+']', 12) + "\t" + \
+        string.ljust(str(gpslat), 12) + "\t" + \
+        string.ljust(str(gpslong), 12) + "\t" + \
+        string.ljust(str(fwhm), 12)
+
+    initialText = filename[filename.rfind('\\')+1:] + "\t" + \
+        string.ljust(str(carspeed), 12) + "\t" + \
+        string.ljust(str(stdcar), 12) + "\t" + \
+        string.ljust(str(weightaverage), 12) + "\t" + \
+        string.ljust(str(stdwind), 12) + "\t" + \
+        string.ljust(str(deltavol), 12) + "\t" + \
+        string.ljust(str(startend), 12) + "\t" + \
+        string.ljust(str(background), 12) + "\t" + \
+        '[' + "%.2f" % (max(tapeArecon[:, 1]+background)) + ", %.2f" % (max(tapeBrecon[:, 1]+background)) + ", %.2f" % (max(tapeCrecon[:, 1])+background)+", %.2f" % (max(tapeDrecon[:, 1])+background)+']'+"\t" + \
+        string.ljust(str(a), 12) + "\t" + \
+        string.ljust(str(ans*10**3), 12) + "\t" + \
+        string.ljust(str(secans), 12) + "\t" + \
+        string.ljust('['+str(plumestart) + ',' + str(plumeend) + ']', 12) + "\t" + \
+        string.ljust(str(gpslat), 12) + "\t" + \
+        string.ljust(str(gpslong), 12) + "\t" + \
+        string.ljust(str(fwhm), 12)
+
+    askStringDialog = wx.TextEntryDialog(None,
+                                         labelText,
+                                         "Ans",
+                                         initialText,
+                                         style=wx.OK | wx.CANCEL)
+
+    if askStringDialog.ShowModal() == wx.ID_OK:
+        ans = askStringDialog.GetValue()
+
+    askStringDialog.Destroy()
+         
+    """
     import tkSimpleDialog
     test = tkSimpleDialog.askstring("Ans",
                                     filename[filename.rfind('\\')+1:] + "\t" +
@@ -801,6 +872,8 @@ def plume_analyzer(filenamepickle):
                                     string.ljust(str(gpslat), 12) + "\t" +
                                     string.ljust(str(gpslong), 12) + "\t" +
                                     string.ljust(str(fwhm), 12))
+    """
+
     return ans, filename
 
 #def main():
@@ -813,5 +886,7 @@ def plume_analyzer(filenamepickle):
 #if __name__ == "__main__":
 #    main()
 if __name__ == "__main__":
-    filename = eg.fileopenbox(msg="File to unpickle")
-    plume_analyzer(filename)
+    #filename = eg.fileopenbox(msg="File to unpickle")
+    app = wx.PySimpleApp()
+    #plume_analyzer(filename)
+    plume_analyzer("")
