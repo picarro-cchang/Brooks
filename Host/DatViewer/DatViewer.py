@@ -35,7 +35,8 @@ import tempfile
 
 #from cStringIO import StringIO
 from numpy import *
-from tables import *
+#from tables import *
+import tables
 from scipy.signal import lfilter
 from enthought.traits.api import *
 from enthought.traits.ui.api import *
@@ -930,9 +931,9 @@ class DatViewer(HasTraits):
         self.dataSetName = ""
         self.varName = ""
         if self.dataFile:
-            self.ip = openFile(self.dataFile)
+            self.ip = tables.openFile(self.dataFile)
             for n in self.ip.walkNodes("/"):
-                if isinstance(n, Table):
+                if isinstance(n, tables.Table):
                     self.dataSetNameList.append(n._v_pathname)
             if 1 == len(self.dataSetNameList):
                 self.dataSetName = self.dataSetNameList[0]
@@ -1038,8 +1039,8 @@ class Dat2h5(HasTraits):
             self.h5FileName = ".".join([root, "h5"])
             d = wx.ProgressDialog("Convert DAT file to H5 format", "Converting %s" % (os.path.split(self.datFileName)[-1],),
                                   style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE)
-            h5f = openFile(self.h5FileName, "w")
-            filters = Filters(complevel=1, fletcher32=True)
+            h5f = tables.openFile(self.h5FileName, "w")
+            filters = tables.Filters(complevel=1, fletcher32=True)
             headings = []
             table = None
             for i, line in enumerate(fp):
@@ -1105,7 +1106,7 @@ class h52Dat(HasTraits):
             d = wx.ProgressDialog("Convert H5 file to DAT format", "Converting %s" % (os.path.split(self.h5FileName)[-1],),
                                   style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE)
 
-            ip = openFile(self.h5FileName, "r")
+            ip = tables.openFile(self.h5FileName, "r")
             try:
                 resultsTable = ip.root.results
             except:
@@ -1525,7 +1526,7 @@ class NotebookHandler(Handler):
                     if not self.datDirName:
                         self.datDirName = os.path.split(fname)[0]
                     try:
-                        op = openFile(fname, "w")
+                        op = tables.openFile(fname, "w")
                     except:
                         wx.MessageBox("Cannot open %s. File may be in use." % fname)
                         fd.Destroy()
@@ -1537,10 +1538,9 @@ class NotebookHandler(Handler):
                     pd = None
                     allData = []
 
-                    # Note: openFile is tables.file.openFile() which imports the .h5 data.
-                    #       It cannot read the files directly from the archive, so we must
-                    #       unpack them first.
-
+                    # tables.openFile() imports the .h5 data, but cannot read the files
+                    #  directly from the archive, so we must unpack them first.
+                    #
                     # open zip archive
                     zipArchive = zipfile.ZipFile(zipname, 'r')
                     tmpDir = tempfile.gettempdir()
@@ -1563,7 +1563,7 @@ class NotebookHandler(Handler):
 
                                 # not sure why we have to stick on a .h5 extension since
                                 # we already checked for it but using same code as above...
-                                ip = openFile(zf[:-3]+".h5", "r")
+                                ip = tables.openFile(zf[:-3]+".h5", "r")
                                 try:
                                     # append the data from this .h5 file
                                     allData.append(ip.root.results.read())
@@ -1591,7 +1591,7 @@ class NotebookHandler(Handler):
                         # Concatenate everything together and sort by time of data
                         dtypes = array([dt.dtype for dt in allData])
                         u = array(len(dtypes)*[True])
-                        filters = Filters(complevel=1, fletcher32=True)
+                        filters = tables.Filters(complevel=1, fletcher32=True)
 
                         # Concatenate by unique data type
                         j = 0
@@ -1644,7 +1644,7 @@ class NotebookHandler(Handler):
             if not self.datDirName:
                 self.datDirName = os.path.split(fname)[0]
             try:
-                op = openFile(fname, "w")
+                op = tables.openFile(fname, "w")
             except:
                 wx.MessageBox("Cannot open %s. File may be in use." % fname)
                 return
@@ -1664,7 +1664,7 @@ class NotebookHandler(Handler):
                         if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
                             if not progress:
                                 pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(name)[1], style=wx.PD_APP_MODAL)
-                            ip = openFile(name[:-3]+".h5", "r")
+                            ip = tables.openFile(name[:-3]+".h5", "r")
                             try:
                                 allData.append(ip.root.results.read())
                             finally:
@@ -1674,9 +1674,8 @@ class NotebookHandler(Handler):
                             progress += 1
 
                         elif what == "file" and os.path.splitext(name)[1] == ".zip" and zipfile.is_zipfile(name):
-                            # Note: openFile is tables.file.openFile() which imports the .h5 data.
-                            #       It cannot read the files directly from the archive, so we must
-                            #       unpack them first.
+                            # tables.openFile() imports the .h5 data, but cannot read the files
+                            #  directly from the archive, so we must unpack them first.
 
                             # open zip archive
                             zipArchive = zipfile.ZipFile(name, 'r')
@@ -1702,7 +1701,7 @@ class NotebookHandler(Handler):
 
                                         # not sure why we have to stick on a .h5 extension since
                                         # we already checked for it but using same code as above...
-                                        ip = openFile(zf[:-3]+".h5", "r")
+                                        ip = tables.openFile(zf[:-3]+".h5", "r")
                                         try:
                                             # append the data from this .h5 file
                                             allData.append(ip.root.results.read())
@@ -1729,7 +1728,7 @@ class NotebookHandler(Handler):
                     # Concatenate everything together and sort by time of data
                     dtypes = array([dt.dtype for dt in allData])
                     u = array(len(dtypes)*[True])
-                    filters = Filters(complevel=1, fletcher32=True)
+                    filters = tables.Filters(complevel=1, fletcher32=True)
 
                     # Concatenate by unique data type
                     j = 0
@@ -1872,7 +1871,7 @@ class NotebookHandler(Handler):
 
                 # test whether we can open and write to the output file
                 try:
-                    op = openFile(fname, "w")
+                    op = tables.openFile(fname, "w")
 
                     # succeeded with open, we have a valid output file and it is now open
                     fValidFilename = True
@@ -1916,7 +1915,7 @@ class NotebookHandler(Handler):
             if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
                 if not progress:
                     pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(name)[1], style=wx.PD_APP_MODAL)
-                ip = openFile(name[:-3]+".h5", "r")
+                ip = tables.openFile(name[:-3]+".h5", "r")
                 try:
                     allData.append(ip.root.results.read())
                 finally:
@@ -1926,9 +1925,8 @@ class NotebookHandler(Handler):
                 progress += 1
 
             elif what == "file" and os.path.splitext(name)[1] == ".zip" and zipfile.is_zipfile(name):
-                # Note: openFile is tables.file.openFile() which imports the .h5 data.
-                #       It cannot read the files directly from the archive, so we must
-                #       unpack them first.
+                # tables.openFile() imports the .h5 data, but cannot read the files
+                    #  directly from the archive, so we must unpack them first.
 
                 # open zip archive
                 zipArchive = zipfile.ZipFile(name, 'r')
@@ -1954,7 +1952,7 @@ class NotebookHandler(Handler):
 
                             # not sure why we have to stick on a .h5 extension since
                             # we already checked for it but using same code as above...
-                            ip = openFile(zf[:-3]+".h5", "r")
+                            ip = tables.openFile(zf[:-3]+".h5", "r")
                             try:
                                 # append the data from this .h5 file
                                 allData.append(ip.root.results.read())
@@ -1983,7 +1981,7 @@ class NotebookHandler(Handler):
         # Concatenate everything together and sort by time of data
         dtypes = array([dt.dtype for dt in allData])
         u = array(len(dtypes)*[True])
-        filters = Filters(complevel=1, fletcher32=True)
+        filters = tables.Filters(complevel=1, fletcher32=True)
 
         # Concatenate by unique data type
         j = 0
@@ -2198,6 +2196,7 @@ def getAppPrefsPath():
         last dir used (for file and folder open/save dialogs)
         menu shortcuts
         window size and location
+        don't show me this again checkbox settings
     """
     appdata = None
 
@@ -2226,7 +2225,7 @@ DatViewer.py [-h] [-c<FILENAME>] [-v]
 Where the options can be a combination of the following:
 -h  Print this help.
 -c  Specify a different config file. Default = "datViewer.ini"
--p  Specify a different prefs file. Default = "datViewerPrefs.ini"
+-p  Specify a different prefs file path. Default = "datViewerPrefs.ini"
     in user's local appdata folder.
 -v  Print version number.
 
