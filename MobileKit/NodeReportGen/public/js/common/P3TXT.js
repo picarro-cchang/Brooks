@@ -67,14 +67,161 @@ P3TXT = {
     , show_log_calendar: 'Show Calendar'
     , show_log_list: 'Show List'
     , refresh: 'Refresh'
-    , prior_month: '< Prev Month'
-    , next_month: 'Next Month >'
-    , prior_year: '<< Prev Year'
-    , next_year: 'Next Year >>'
+    , prior_month: '&lt; Prev Month'
+    , next_month: 'Next Month &gt;'
+    , prior_year: '&lt;&lt; Prev Year'
+    , next_year: 'Next Year &gt;&gt;'
     , first_log: 'First Log'
     , last_log: 'Last Log'
     , today: 'Today'
+    , correct_highlighted_fields: 'Please correct the highlighted field(s).'
+    , csrf_abort: 'CSRF verification failed. Request aborted.'
+    , user_password_invalid: "The User/Password combination entered is not valid."
+    , enter_valid_user_password: "Please enter a valid User/Password combination."
+    , unauthorized_admin_abort: 'Unauthorized admin request. Request aborted.'
+    , enter_value_for_fld: "Please enter a value for $."
+    , fld_cannot_be_blank: "$ cannot be blank."
+    , fld_must_equal_fld: "$ must equal $."
+    , svc_for_user_save_success: "$ changes for $ successful."
+    , last_active: "Last Active"
+    , archive: "Archive"
+    , none: "None" // to show when nothing has been selected or displayed!
+    , session_will_expire: "This login session will expire in three minutes."
 
+// gdu text    
+    , amp: 'Amp' 
+    , sigma: 'HalfWidth' 
+    , lat: 'Lat' 
+    , lon: 'Long' 
+    , ch4: 'CH4' 
+    , conc: 'Concentration' 
+    , delta: 'Delta' 
+    , uncertainty: 'Uncertainty' 
+    , note: 'Annotation' 
+    , cancel: 'Cancel' 
+    , ok: 'OK'
+    , save_note: 'Save Annotation'
+    , close: 'Close' 
+    , download_files: 'Download Files'
+    , download_concs: 'Download Concentration' 
+    , download_peaks: 'Download Peaks' 
+    , download_analysis: 'Download Analysis' 
+    , download_notes: 'Download Notes' 
+    , anz_cntls: 'Surveyor Controls' 
+    , restart_log: 'Restart Log' 
+    , switch_to_cptr: 'Start Capture' 
+    , start_survey: "Start Survey" 
+    , stop_survey: "Stop Survey" 
+    , complete_survey: "Complete Survey" 
+    , cancl_ref: 'Cancel Reference' 
+    , cancl_cptr: 'Cancel Capture' 
+    , cancl_ana: 'Cancel Analysis' 
+    , cancl_ana_time: 's left: Cancel' 
+    , calibrate: 'Analyze Reference Gas' 
+    , shutdown: 'Shutdown Surveyor' 
+    , select_log: 'Select Log' 
+    , switch_to_prime: 'Switch to Prime View' 
+    , peak: 'Peak' 
+    , analysis: 'Analysis' 
+    , path: 'Route' 
+    , note_list: 'Select Note to view' 
+    , conn_warning_hdr: 'Connection Warning' 
+    , conn_warning_txt: 'There is a problem with the network connection. Please verify connectivity.' 
+    , survey_mode: 'Survey Mode' 
+    , capture_mode: 'Capture Mode' 
+    , analyzing_mode: 'Analyzing Peak' 
+    , inactive_mode: 'Inactive Mode' 
+    , cancelling_mode: 'Canceling...' 
+    , priming_mode: 'Priming inlet' 
+    , purging_mode: 'Purging inlet' 
+    , injection_pending_mode: 'Injecting Gas' 
+    , prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode  you will have control of the Surveyor.' 
+    , change_min_amp: 'Min Amplitude'  //'Minimum Amplitude' 
+    , change_stab_class: 'Stability Class'  //'Minimum Amplitude' 
+    , restart_datalog_msg: 'Close current data log and open a new one?' 
+    , shutdown_anz_msg: 'Do you want to shut down the Surveyor? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.' 
+    , stop_survey_msg: 'Are you sure you want to stop collecting data?' 
+    , cancel_cap_msg: 'Cancel capture and return to survey mode?' 
+    , cancel_ana_msg: 'Cancel analysis and return to survey mode?' 
+    , cancel_ref_msg: 'Cancel reference gas processing?' 
+    , start_ref_msg: 'Connect reference gas bottle and open valve. Press OK when ready.' 
+    , show_controls: 'Show Controls' 
+    , show_dnote: 'Show route annotations' 
+    , show_pnote: 'Show peak annotations' 
+    , show_anote: 'Show analysis annotations' 
+    , click_show_cntls: 'Click to show controls' 
+    , map_controls: 'Map Controls' 
+    , dnote: 'Route annotation' 
+    , anote: 'Analysis annotation' 
+    , pnote: 'Peak annotation' 
+    , show_notes: 'Show user annotations on map' 
+    , abubble: 'Isotopic Analysis' 
+    , pbubble: 'Peak Bubbles' 
+    , wbubble: 'Wind Markers' 
+    , swath: 'Field of View' 
+    , show_markers: 'Show system markers on map' 
+    , show_txt: 'Show' 
+    , hide_txt: 'Hide' 
+    , plat_outline: 'Plat Outline' 
+    , hlite_plat: 'Highlight Current Plat' 
+    , remove_plat_hlite: 'Remove Current Highlight' 
+    , remove_all_plat_hlite: 'Remove All Highlights' 
+    , select_active_plat: 'Set as Active Plat' 
+    , remove_active_plat: 'Set as Inactive Plat' 
+    , remove_plat: 'Remove plat' 
+    , working: 'Working' 
+    , plat: 'Plat' 
+    , calibration_pulse_injected: 'Reference gas injected' 
+
+    , stream_title: 'Data Transfer Status Indicators' 
+    , stream_ok: 'Data Transfer OK' 
+    , stream_warning: 'Intermittent Data Transfer' 
+    , stream_failed: 'Data Transfer Failed' 
+    , gps_title: 'GPS Status Indicators' 
+    , gps_ok: 'GPS OK' 
+    , gps_warning: 'Unreliable GPS Signal' 
+    , gps_failed: 'GPS Failed' 
+    , gps_uninstalled: 'GPS Not Detectable' 
+    , ws_title: 'Weather Station Status Indicators' 
+    , ws_ok: 'Weather Station OK' 
+    , ws_failed: 'Weather Station Failed' 
+    , ws_uninstalled: 'Weather Station Not Detectable' 
+    , analyzer_title: 'Current Surveyor Status' 
+    , cavity_p: 'Cavity Pressure' 
+    , cavity_t: 'Cavity Temperature' 
+    , wb_t: 'Warm Box Temperature' 
+
+    , stab_star: "*: Use reported weather data" 
+    , stab_a: "A: Very Unstable" 
+    , stab_b: "B: Unstable" 
+    , stab_c: "C: Slightly Unstable" 
+    , stab_d: "D: Neutral" 
+    , stab_e: "E: Slightly Stable" 
+    , stab_f: "F: Stable" 
+
+    , export_as_txt: "Export data as txt file." 
+    , export_as_csv: "Export data as csv file." 
+
+    , copyClipboard: "Ctrl-C copies cursor position to clipboard" 
+
+    , survey_time: "Survey time" 
+    , day: "Day" 
+    , night: "Night" 
+    , sunlight: "Solar Radiation" 
+    , strong_sunlight: "Strong" 
+    , moderate_sunlight: "Moderate" 
+    , overcast_sunlight: "Overcast" 
+    , cloud: "Cloud Cover" 
+    , less50_cloud: "&lt;50%" 
+    , more50_cloud: "&gt;50%" 
+    , wind: "Wind" 
+    , calm_wind: "Calm" 
+    , light_wind: "Light" 
+    , strong_wind: "Strong" 
+    , choose: "Please select an option" 
+    , select_weather: "Weather Conditions"
+
+    
 // datatables text
 // NOTE: _XXXX_ are datatable variable names DO NOT CHANGE the variable names!!!
     , dt_sSearch: "Search"
@@ -164,6 +311,7 @@ P3TXT = {
     , allowgdu_legend: "Allow Picarro Surveyor&#8482; for Natural Gas Leaks"
     , allowgdup_legend: "Allow Picarro Surveyor&#8482; for Natural Gas Leaks (Prime View)"
     , allowgdurpt_legend: "Allow Picarro Surveyor&#8482; Report Generation Portal"
+    , allowgdurptf_legend: "Add &quot;FORCE&quot; switch to Picarro Surveyor&#8482; Report Generation Portal"
     , allowuserprofile_legend: "Allow User Profile"
     , allowadmin_legend: "Allow Administration"
     , allowactive_legend: "Activate the userid"
@@ -369,8 +517,14 @@ P3TXT.getReport.heading_analyses_table = "Isotopic Analysis Table";
 P3TXT.getReport.heading_peaks_table = "Peaks Table";
 P3TXT.getReport.heading_runs_table = "Runs Table";
 P3TXT.getReport.heading_surveys_table = "Surveys Table";
+P3TXT.getReport.dispositions = {};
+P3TXT.getReport.dispositions.complete = "Complete";
+P3TXT.getReport.dispositions.cancelled = "User Cancelled";
+P3TXT.getReport.dispositions.uncertain = "Large Uncertainty";
+P3TXT.getReport.dispositions.outside_range = "Out of Range";
+P3TXT.getReport.dispositions.not_enough_data = "Insufficient Data";
 
-// Names of colors
+// Names of colors (NEVER TRANSLATE, These are for system usage)
 P3TXT.colors = {};
 P3TXT.colors.black = "black";
 P3TXT.colors.blue = "blue";
