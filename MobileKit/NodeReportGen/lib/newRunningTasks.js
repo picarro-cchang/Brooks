@@ -158,7 +158,8 @@ define(function(require, exports, module) {
                                             else {
                                                 console.log("Marking status as bad: " + statusFile);
                                                 sf.writeStatus(statusFile,
-                                                {status: rptGenStatus.FAILED, msg:"Server restarted during job"}, next);
+                                                    {status: rptGenStatus.FAILED, msg:"Server restarted during job"});
+                                                next();
                                             }
                                         });
                                     }

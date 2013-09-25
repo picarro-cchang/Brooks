@@ -1,11 +1,17 @@
 /* makeAnalysesTable.js renders isotopic analysis results into an HTML table */
 /* jshint undef:true, unused:true */
-/* global define */
+/*global module, require, P3TXT */
 
-define (['app/utils', 'app/geohash', 'app/reportGlobals'],
-function (utils, gh, REPORT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
 
+    var gh = require('app/geohash');
+    var REPORT = require('app/reportGlobals');
+    var utils = require('app/utils');
+    require('common/P3TXT');
+    
     function analyzerByRun(run) {
         return REPORT.settings.get("runs").at(run).get("analyzer");
     }
@@ -14,7 +20,13 @@ function (utils, gh, REPORT) {
         var i;
         var analyses, anz, conc, delta, disposition, etm, lat, lng, uncertainty, where;
         var analysesTable = [];
-        var dispositionStrings = {0:'Complete', 1:'User Cancelled', 2:'Large Uncertainty'};
+
+        var dispositionStrings = {0:P3TXT.getReport.dispositions.complete,
+                                  1:P3TXT.getReport.dispositions.cancelled,
+                                  2:P3TXT.getReport.dispositions.uncertain,
+                                  3:P3TXT.getReport.dispositions.outside_range,
+                                  4:P3TXT.getReport.dispositions.not_enough_data};
+
         analyses = report.analysesData;
         if (analyses) {
             // Generate the analysesTable
@@ -72,5 +84,5 @@ function (utils, gh, REPORT) {
         }
         return analysesTable;
     }
-    return makeAnalysesTable;
+    module.exports = makeAnalysesTable;
 });

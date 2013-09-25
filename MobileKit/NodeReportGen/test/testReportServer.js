@@ -80,13 +80,11 @@ describe('statusFileHandlers', function () {
     it('should retrieve a simple dictionary', function (done) {
         var fname = path.join(ROOT_DIR,"temp1.dat");
         var myObj = {a:1, b:2, c:3};
-        sf.writeStatus(fname, myObj, function (err) {
+        sf.writeStatus(fname, myObj);
+        sf.readStatus(fname, function (err, statObj) {
             expect(err).to.be.null;
-            sf.readStatus(fname, function (err, statObj) {
-                expect(err).to.be.null;
-                expect(statObj).to.eql(myObj);
-                done(null);
-            });
+            expect(statObj).to.eql(myObj);
+            done(null);
         });
     });
 
@@ -94,16 +92,12 @@ describe('statusFileHandlers', function () {
         var fname = path.join(ROOT_DIR,"temp1.dat");
         var myObj1 = {a:1, b:2, c:3};
         var myObj2 = {c:4, d:5, e:6};
-        sf.writeStatus(fname, myObj1, function (err) {
+        sf.writeStatus(fname, myObj1);
+        sf.writeStatus(fname, myObj2);
+        sf.readStatus(fname, function (err, statObj) {
             expect(err).to.be.null;
-            sf.writeStatus(fname, myObj2, function (err) {
-                expect(err).to.be.null;
-                sf.readStatus(fname, function (err, statObj) {
-                    expect(err).to.be.null;
-                    expect(statObj).to.eql({a:1, b:2, c:4, d:5, e:6});
-                    done(null);
-                });
-            });
+            expect(statObj).to.eql({a:1, b:2, c:4, d:5, e:6});
+            done(null);
         });
     });
 });

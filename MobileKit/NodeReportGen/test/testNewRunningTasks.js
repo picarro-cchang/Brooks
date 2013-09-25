@@ -120,11 +120,9 @@ describe('Running Task Support', function() {
             var stat2 = path.join(dir2,'status.dat');
             mkdirp.sync(dir1);
             mkdirp.sync(dir2);
-            sf.writeStatus(stat1, { status:rptGenStatus.IN_PROGRESS }, function () {
-                sf.writeStatus(stat2, { status:rptGenStatus.DONE }, function () {
-                    next();
-                });
-            });
+            sf.writeStatus(stat1, { status:rptGenStatus.IN_PROGRESS });
+            sf.writeStatus(stat2, { status:rptGenStatus.DONE });
+            next();
             function next() {
                 var orphans = JSON.parse(fs.readFileSync(rt.tasksFile,'ascii'));
                 expect(orphans).to.have.ownProperty(taskKey1);
@@ -152,11 +150,9 @@ describe('Running Task Support', function() {
             var stat2 = path.join(dir2,'status.dat');
             mkdirp.sync(dir1);
             mkdirp.sync(dir2);
-            sf.writeStatus(stat1, { status:rptGenStatus.IN_PROGRESS }, function () {
-                sf.writeStatus(stat2, { status:rptGenStatus.IN_PROGRESS }, function () {
-                    next();
-                });
-            });
+            sf.writeStatus(stat1, { status:rptGenStatus.IN_PROGRESS });
+            sf.writeStatus(stat2, { status:rptGenStatus.IN_PROGRESS });
+            next();
             function next() {
                 var orphans = JSON.parse(fs.readFileSync(rt.tasksFile,'ascii'));
                 expect(orphans).to.have.ownProperty(taskKey1);
@@ -184,9 +180,8 @@ describe('Running Task Support', function() {
             var stat2 = path.join(dir2,'status.dat');
             mkdirp.sync(dir1);
             mkdirp.sync(dir2);
-            sf.writeStatus(stat2, { status:rptGenStatus.IN_PROGRESS }, function () {
-                next();
-            });
+            sf.writeStatus(stat2, { status:rptGenStatus.IN_PROGRESS });
+            next();
             function next() {
                 var orphans = JSON.parse(fs.readFileSync(rt.tasksFile,'ascii'));
                 expect(orphans).to.have.ownProperty(taskKey1);
@@ -211,9 +206,8 @@ describe('Running Task Support', function() {
             var dir2 = path.join(rt.rootDir,'98765','43210');
             var stat2 = path.join(dir2,'status.dat');
             mkdirp.sync(dir2);
-            sf.writeStatus(stat2, { status:rptGenStatus.IN_PROGRESS }, function () {
-                next();
-            });
+            sf.writeStatus(stat2, { status:rptGenStatus.IN_PROGRESS });
+            next();
             function next() {
                 var orphans = JSON.parse(fs.readFileSync(rt.tasksFile,'ascii'));
                 expect(orphans).to.have.ownProperty(taskKey1);

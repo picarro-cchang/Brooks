@@ -48,6 +48,7 @@ define(function(require, exports, module) {
         // Parse the contents into an object to verify it is syntactically valid JSON
         var instrDir, instrFname;
         var that = this;
+        that.resuming = false;
         try {
             this.instructions = JSON.parse(this.contents);
         }
@@ -62,6 +63,7 @@ define(function(require, exports, module) {
         this.ticket = getTicket(this.contents);
         if (params.hasOwnProperty('resume') && params['resume']) {
             this.request_ts = params['start_ts'];
+            that.resuming = true;
         }
         else {
             this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
@@ -134,10 +136,8 @@ define(function(require, exports, module) {
                                 if (bad) startNewRun(false);
                                 else {
                                     sf.writeStatus(statusFile,
-                                    {status: rptGenStatus.FAILED, msg:'Server failed during job'}, function (err) {
-                                        if (err) callback(err);
-                                        else startNewRun(false);
-                                    });
+                                        {status: rptGenStatus.FAILED, msg:'Server failed during job'});
+                                    startNewRun(false);
                                 }
                             }
                             else callback(null, result);
@@ -171,18 +171,15 @@ define(function(require, exports, module) {
                               "request_ts": that.request_ts,
                               "instructions_type": that.instrType,
                               "user": that.user,
-                              "force": forceFlag};
-                    sf.writeStatus(statusFile, status, function (err) {
+                              "force": forceFlag,
+                              "resume": that.resuming };
+                    sf.writeStatus(statusFile, status);
+                    sf.readStatus(statusFile, function (err, result) {
                         if (err) callback(err);
                         else {
-                            sf.readStatus(statusFile, function (err, result) {
-                                if (err) callback(err);
-                                else {
-                                    // Indicate that run has started
-                                    callback(null, result);
-                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag, that.user);
-                                }
-                            });
+                            // Indicate that run has started
+                            callback(null, result);
+                            obeyInstructions(taskKey, workDir, statusFile, forceFlag, that.user);
                         }
                     });
                 }
@@ -209,7 +206,8 @@ define(function(require, exports, module) {
             console.log("obeyInstructions type: " + type + " force: " + forceFlag);
             switch (type) {
                 case "ignore":
-                    sf.writeStatus(statusFile, {"status": rptGenStatus.DONE}, logCompletion);
+                    sf.writeStatus(statusFile, {"status": rptGenStatus.DONE});
+                    logCompletion();
                     break;
                 case "getAnalysesData":
                     newAnalysesDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
@@ -233,9 +231,8 @@ define(function(require, exports, module) {
                     newReportMaker(rptGenService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 default:
-                    sf.writeStatus(statusFile,{"status": rptGenStatus.FAILED, "msg": "Bad instructions_type"},function (err){
-                        logCompletion(new Error("Bad instructions_type"));
-                    });
+                    sf.writeStatus(statusFile,{"status": rptGenStatus.FAILED, "msg": "Bad instructions_type"});
+                    logCompletion(new Error("Bad instructions_type"));
                     break;
             }
         }
