@@ -19,13 +19,14 @@ Takes in pickled data file and unpickles it into
 9. GPS Long
 10. CO2
 """
+from __future__ import with_statement
 
 import wx
 import cPickle
 import pdb
 import string
 import pylab
-import numpy
+#import numpy
 
 
 def printpretty(floatnum):
@@ -43,11 +44,17 @@ def readfunc(filename, peakplot='y', savefileyn='y', outputvar=""):
     gpslong = []
     stdwindir = []
     var = []
+
+    # replace .dat extension in input file with _unpickled.txt for the output filename
     savefilename = filename.replace(".dat", "_unpickled.txt")
+
+    # TODO: What if user selected a filename that doesn't have a .dat file extension?
+
     if savefileyn == 'y':
         f = open(savefilename, "w")
     else:
         pass
+
     try:
         with open(filename, 'rb') as fileo:
             while True:
@@ -131,6 +138,7 @@ def readfunc(filename, peakplot='y', savefileyn='y', outputvar=""):
                         pylab.plot(time, co2)
                         pylab.xlabel("Epoch Time")
                         pylab.ylabel("CO2")
+
                         pylab.figure("Peripherals")  # Assuming that the valves are off for first 50 pts
                         pylab.subplot(2, 1, 1)
                         pylab.plot(carspeed[:50])
@@ -138,6 +146,7 @@ def readfunc(filename, peakplot='y', savefileyn='y', outputvar=""):
                         pylab.subplot(2, 1, 2)
                         pylab.plot(windlat[:50])
                         pylab.title("Wind Lat")
+
                         pylab.figure("Std Wind Dev")
                         pylab.plot(stdwindir[:50])
                         pylab.show()
@@ -146,6 +155,36 @@ def readfunc(filename, peakplot='y', savefileyn='y', outputvar=""):
         True
     #print savefilename
     return savefilename, var
+
+
+class ReadOptionsDialog(wx.Dialog):
+    def __init__(self, peakplotState=False, outputState=True, outvarTextVal=''):
+        wx.Dialog.__init__(self, None, -1, "Unpickle options", size=(200, 200))
+
+        self.peakPlotCheckbox = wx.CheckBox(self, -1, "Peak plot", (35, 35), (150, 20))
+        self.outputCheckbox = wx.CheckBox(self, -1, "File output", (35, 60), (150, 20))
+        self.outvarLabel = wx.StaticText(self, -1, "outvar:", (35, 90), (55, 20))
+        self.outvarText = wx.TextCtrl(self, -1, "", (80, 87), (80, 20))
+        self.okButton = wx.Button(self, wx.ID_OK, "OK", (80, 140), (40, 20))
+
+        # init control settings
+        self.peakPlotCheckbox.SetValue(peakplotState)
+        self.outputCheckbox.SetValue(outputState)
+        self.outvarText.SetValue(outvarTextVal)
+
+        #self.Bind(wx.EVT_BUTTON, self.onClick, self.okButton)
+
+    def onClick(self, event):
+        #self.Destroy()
+        pass
+
+    def getSettings(self):
+        peakPlotState = self.peakPlotCheckbox.GetValue()
+        outputState = self.outputCheckbox.GetValue()
+        outvarTextVal = self.outvarText.GetValue()
+
+        return peakPlotState, outputState, outvarTextVal
+
 
 if __name__ == "__main__":
     app = wx.PySimpleApp()
@@ -156,9 +195,41 @@ if __name__ == "__main__":
 
     if d.ShowModal() == wx.ID_OK:
         filename = d.GetPath()
-        readfunc(filename, 'n', 'y', '')
+        d.Destroy()
 
-    d.Destroy()
+        peakplot = False
+        savefileyn = True
+        outputvar = ''
+
+        # Pop a dialog with checkboxes for peak plot, output to a file,
+        # and value for outputvar (I think it is an optional additional column of data)
+        rod = ReadOptionsDialog(peakplotState=peakplot, outputState=savefileyn, outvarTextVal=outputvar)
+        result = rod.ShowModal()
+
+        if result == wx.ID_OK:
+            peakplot, savefileyn, outputvar = rod.getSettings()
+        else:
+            print "options dialog canceled"
+
+        # convert options settings to values expected by readfunc
+        if peakplot is True:
+            peakplot = 'y'
+        else:
+            peakplot = 'n'
+
+        if savefileyn is True:
+            savefileyn = 'y'
+        else:
+            savefileyn = 'n'
+
+        print "peakplot=", peakplot
+        print "savefileyn=", savefileyn
+        print "outputvar='%s'" % outputvar
+
+        readfunc(filename, peakplot=peakplot, savefileyn=savefileyn, outputvar=outputvar)
+
+    else:
+        d.Destroy()
 
     #    filename = r'C:\Users\ttsai\Desktop\Uintah Basin Field Campaign\EPA\for paper\batch\plume_1368624776_2013_5_15__6_32.dat'
     #    test = readfunc(filename,'n','n','WIND_DIR_SDEV')

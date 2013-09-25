@@ -156,7 +156,7 @@ def plume_analyzer(filenamepickle):
     pretape = data[1:onindex+10, :]     # Give ten points extra due to trigger happening so close to peak
     print "Data truncated at row %i" % onindex
     tapes = data[onindex:, :]
-    samplerate = np.average(data[1:, 0] - data[:len(data) - 1, 0])
+    #samplerate = np.average(data[1:, 0] - data[:len(data) - 1, 0])
     #pylab.plot(tapes[:,1])
     #pylab.show()
 
@@ -248,10 +248,13 @@ def plume_analyzer(filenamepickle):
 
     ########################################################################
     #Set up GUI to determine startends
+    # TODO: Remove Tkinter and tkSimpleDialog
     import Tkinter
     root = Tkinter.Tk()
+
+    # .withdraw() hides the window
     root.withdraw()
-    import tkSimpleDialog
+    #import tkSimpleDialog
 
     pylab.figure("Tape startpoints")
     pylab.subplot(3, 1, 1)        # Top plot will be with CH4
@@ -266,7 +269,19 @@ def plume_analyzer(filenamepickle):
     pylab.ion()
     pylab.show()
 
-    tempstartend = tkSimpleDialog.askstring("Fix startends", str(startend), initialvalue=str(startend))
+    askStringDialog = wx.TextEntryDialog(None,
+                                         str(startend),
+                                         "Fix startends",
+                                         str(startend),     # initial text
+                                         style=wx.OK | wx.CANCEL)
+
+    if askStringDialog.ShowModal() == wx.ID_OK:
+        tempstartend = askStringDialog.GetValue()
+
+    askStringDialog.Destroy()
+
+    #tempstartend = tkSimpleDialog.askstring("Fix startends", str(startend), initialvalue=str(startend))
+
     startendnew = [float(i.strip()) for i in tempstartend.lstrip('[').rstrip(']').split(',')]
     startend = startendnew
 
@@ -430,8 +445,8 @@ def plume_analyzer(filenamepickle):
     tempans = interpolator([tapeAplot, tapeBplot, tapeCplot, tapeDplot], pretaperecon)
     newtapedeck = tempans[0]
     indexarray = tempans[1]
-    minvol = tempans[2]
-    maxvol = tempans[3]
+    #minvol = tempans[2]
+    #maxvol = tempans[3]
     pretapetrunc = pretaperecon[indexarray, :]
     #pylab.plot(newtapedeck[0][:,0], newtapedeck[0][:,1], label = 'tapeA')
     #pylab.plot(newtapedeck[1][:,0], newtapedeck[1][:,1], label = 'tapeB')
@@ -590,7 +605,7 @@ def plume_analyzer(filenamepickle):
     ans = abs(scipy.integrate.trapz(zarray[:, 1], x=zarray[:, 0])*10**-6)
     print "%f liters per sec" % (ans*10**3)
     #err = sqrt((stdcar/carspeed)**2+(stdwind/windspeed)**2) #Error is calculated only for wind and car and is decimal percentage
-    err = -1
+    #err = -1
     """
     According the weather.gov, at 11:53am in Vernal, UT
     Temperature = 22F or -5.6C
@@ -599,11 +614,13 @@ def plume_analyzer(filenamepickle):
     Pick the highest point but use typical alitude/pressure equation: 101325*(1 - 2.25577*10**-5*h)**5.25588
     """
     #Converting to g/s using ideal gas law in Vernal, UT
-    p = 101325*(1 - 2.25577*10**-5*1676.4)**5.25588     # in Pa units
-    T = -5.6 + 273.15   # in Kelvin
-    R = 8.3144621       # in Pa*m^3*K-1*mol-1
-    M = 16.04           # g/mol molar mass of methane
-    mass = (p*ans*M)/(T*R)
+    #p = 101325*(1 - 2.25577*10**-5*1676.4)**5.25588     # in Pa units
+    #T = -5.6 + 273.15   # in Kelvin
+    #R = 8.3144621       # in Pa*m^3*K-1*mol-1
+    #M = 16.04           # g/mol molar mass of methane
+
+    # for conversion, could have option for output units
+    #mass = (p*ans*M)/(T*R)
     #print "%f g/s" %mass
     #print "%f SCFH" %(ans*10**3*3600/28.32)
     #secans =(ans*10**3*3600/28.32)
