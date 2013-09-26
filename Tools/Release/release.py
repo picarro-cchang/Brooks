@@ -68,7 +68,18 @@ def makeExe(opts):
 
     pprint.pprint(opts)
 
-    with open('products.json', 'r') as prods:
+    productConfigs = "%s.json" % opts.product
+    versionConfig = "%s_version.json" % opts.product
+
+    if not os.path.isfile(productConfigs):
+        print "%s is missing!" % productConfigs
+        sys.exit(1)
+
+    if not os.path.isfile(versionConfig):
+        print "%s is missing!" % versionConfig
+        sys.exit(1)
+
+    with open(productConfigs, 'r') as prods:
         CONFIGS.update(json.load(prods))
 
     pprint.pprint(CONFIGS)
@@ -94,22 +105,13 @@ def makeExe(opts):
         targetMfgDistribBase = MFG_DISTRIB_BASE
         targetDistribBase = DISTRIB_BASE
 
-    # Load configuration mapping metadata
-    if not os.path.isfile('products.json'):
-        print 'products.json is missing!'
-        sys.exit(1)
-
     if opts.makeOfficial:
         _promoteStagedRelease(opts.officialTypes, targetMfgDistribBase,
                               targetDistribBase)
         return
 
-    # Load version metadata
-    if not os.path.isfile('version.json'):
-        print 'version.json is missing!'
-        sys.exit(1)
 
-    with open('version.json', 'r') as ver:
+    with open(versionConfig, 'r') as ver:
         VERSION.update(json.load(ver))
 
     if opts.version:
@@ -124,13 +126,13 @@ def makeExe(opts):
 
     pprint.pprint(VERSION)
 
-    with open('version.json', 'w') as ver:
+    with open(versionConfig, 'w') as ver:
         json.dump(VERSION, ver)
 
     # Commit and push new version number
     retCode = subprocess.call(['git.exe',
                                'add',
-                               'version.json'])
+                               versionConfig])
 
     if retCode != 0:
         print 'Error staging new version metadata in local repo.'
@@ -139,7 +141,7 @@ def makeExe(opts):
     retCode = subprocess.call(['git.exe',
                                'commit',
                                '-m',
-                               'release.py version update (Host).'])
+                               "release.py version update (%s)." % opts.product])
 
     if retCode != 0:
         print 'Error committing new version metadata to local repo.'
@@ -151,8 +153,8 @@ def makeExe(opts):
     if retCode != 0:
         print 'Error pushing new version metadata to repo.'
 
-    _branchFromRepo()
-    _generateReleaseVersion(VERSION)
+    _branchFromRepo(opts.branch)
+    _generateReleaseVersion(opts.product, VERSION)
     _buildExes()
 
     # XXX This is likely superfluous once the configuration files have
@@ -160,29 +162,32 @@ def makeExe(opts):
     _makeLocalConfig()
 
     if opts.createInstallers:
-        _compileInstallers(VERSION)
+        _compileInstallers(opts.product, VERSION)
 
     if opts.createTag:
-        _tagRepository(VERSION)
+        _tagRepository(opts.product, VERSION)
 
         # XXX These should be removed when we finish merging the
         # configuration file directories into the repository.
-        _tagCommonConfig(VERSION)
-        _tagAppInstrConfigs(VERSION)
+        _tagCommonConfig(opts.product, VERSION)
+        _tagAppInstrConfigs(opts.product, VERSION)
 
     if opts.createInstallers:
         # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-        _copyBuildAndInstallers(VERSION)
+        _copyBuildAndInstallers(versionConfig, opts.product, VERSION)
 
-def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
+def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
+                          versionConfig=None, product=None):
     """
     Move the existing staged release to an official directory.
     """
 
-    stagingVer = os.path.join(STAGING_DISTRIB_BASE, 'version.json')
+    assert versionConfig
+
+    stagingVer = os.path.join(STAGING_DISTRIB_BASE, versionConfig)
 
     if not os.path.isfile(stagingVer):
-        print 'Staging version.json is missing!'
+        print "Staging %s is missing!" % versionConfig
         sys.exit(1)
 
     ver = {}
@@ -191,12 +196,13 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
 
     # Always move HostExe and AnalyzerServerExe regardless of the specified
     # types.
-    hostExeDir = os.path.join(mfgDistribBase, 'HostExe', _verAsString(ver))
+    hostExeDir = os.path.join(mfgDistribBase, 'HostExe', _verAsString(product,
+                                                                      ver))
     dir_util.copy_tree(os.path.join(STAGING_MFG_DISTRIB_BASE, 'HostExe'),
                        hostExeDir)
 
     analyzerServerExeDir = os.path.join(mfgDistribBase, 'AnalyzerServerExe',
-                                        _verAsString(ver))
+                                        _verAsString(product, ver))
     dir_util.copy_tree(os.path.join(STAGING_MFG_DISTRIB_BASE,
                                     'AnalyzerServerExe'),
                        analyzerServerExeDir)
@@ -223,7 +229,8 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
         if not doCopy:
             continue
 
-        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c], _verAsString(ver))
+        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c],
+                                            _verAsString(product, ver))
         installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
         targetDir = os.path.join(distribBase, c)
 
@@ -232,7 +239,7 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None):
         shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
                         os.path.join(targetDir, 'Current', installerCurrent))
 
-def _copyBuildAndInstallers(ver):
+def _copyBuildAndInstallers(versionConfig, product, ver):
     """
     Move the installers and the two compiled exe directories to their
     staging location so other people can find them.
@@ -266,35 +273,37 @@ def _copyBuildAndInstallers(ver):
     # Copy the individual installers and update the shortcuts that are
     # used by manufacturing.
     for c in CONFIGS:
-        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c], _verAsString(ver))
+        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c],
+                                            _verAsString(product, ver))
         targetDir = os.path.join(STAGING_DISTRIB_BASE, c)
         os.makedirs(targetDir)
 
         shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
                         os.path.join(targetDir, installer))
 
-    shutil.copyfile('version.json',
-                    os.path.join(STAGING_DISTRIB_BASE, 'version.json'))
+    shutil.copyfile(versionConfig,
+                    os.path.join(STAGING_DISTRIB_BASE, versionConfig))
 
-def _branchFromRepo():
+def _branchFromRepo(branch):
     """
     Branch the named repository into the sandbox.
     """
 
     if os.path.exists(SANDBOX_DIR):
         print "Removing previous sandbox at '%s'." % SANDBOX_DIR
-        
+
         # First fix up the permissions on some pesky .idx and .pack files
         # If they exist, they are read-only and shutil.rmtree() will bail
         packFolder = os.path.join(SANDBOX_DIR, 'host', '.git', 'objects', 'pack')
 
         if os.path.isdir(packFolder):
             packFiles = os.listdir(packFolder)
-            
-            for file in packFiles:
+
+            for f in packFiles:
                 # fix up permissions
-                print "chmod(%s)" % os.path.join(packFolder, file)
-                os.chmod(os.path.join(packFolder, file), stat.S_IREAD | stat.S_IWRITE)
+                print "chmod(%s)" % os.path.join(packFolder, f)
+                os.chmod(os.path.join(packFolder, f),
+                         stat.S_IREAD | stat.S_IWRITE)
 
         # now remove the sandbox tree
         shutil.rmtree(SANDBOX_DIR)
@@ -314,13 +323,14 @@ def _branchFromRepo():
         with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
             retCode = subprocess.call(['git.exe',
                                        'checkout',
-                                       'master'])
+                                       'origin',
+                                       branch])
 
             if retCode != 0:
-                print "Error checking out 'master'."
+                print "Error checking out 'origin/%s'." % branch
                 sys.exit(retCode)
 
-def _generateReleaseVersion(ver):
+def _generateReleaseVersion(product, ver):
     """
     Create the version metadata used by the executables and update the
     pretty version string.
@@ -333,7 +343,7 @@ def _generateReleaseVersion(ver):
                 ["# autogenerated by release.py, %s\n" % time.asctime(),
                  "\n",
                  "def versionString():\n",
-                 "    return '%s'\n" % _verAsString(ver)])
+                 "    return '%s'\n" % _verAsString(product, ver)])
 
 def _buildExes():
     """
@@ -363,7 +373,7 @@ def _buildExes():
             print 'Error building Host.'
             sys.exit(retCode)
 
-def _tagRepository(ver):
+def _tagRepository(product, ver):
     """
     Tags the repository
     """
@@ -371,9 +381,9 @@ def _tagRepository(ver):
     retCode = subprocess.call(['git.exe',
                                'tag',
                                '-a',
-                               _verAsString(ver),
+                               _verAsString(product, ver),
                                '-m',
-                               "Host version %s" % _verAsString(ver)])
+                               "Version %s" % _verAsString(product, ver)])
 
     if retCode != 0:
         print 'Error tagging repository'
@@ -382,21 +392,21 @@ def _tagRepository(ver):
     retCode = subprocess.call(['git.exe',
                                'push',
                                'origin',
-                               _verAsString(ver)])
+                               _verAsString(product, ver)])
 
     if retCode != 0:
         print 'Error pushing tag to repository'
         sys.exit(retCode)
 
-def _tagCommonConfig(ver):
+def _tagCommonConfig(product, ver):
     retCode = subprocess.call(['bzr.exe', 'tag', "--directory=%s" %
-                               COMMON_CONFIG, _verAsString(ver)])
+                               COMMON_CONFIG, _verAsString(product, ver)])
 
     if retCode != 0:
-        print "Error tagging CommonConfig as '%s'." % _verAsString(ver)
+        print "Error tagging CommonConfig as '%s'." % _verAsString(product, ver)
         sys.exit(retCode)
 
-def _tagAppInstrConfigs(ver):
+def _tagAppInstrConfigs(product, ver):
     """
     Tag the AppConfig and InstrConfig repos for each variant. Unlike
     tagOnly.bat, on which this routine is based, we will _not_ also
@@ -414,21 +424,21 @@ def _tagAppInstrConfigs(ver):
             retCode = subprocess.call(['bzr.exe', 'tag',
                                        "--directory=%s" %
                                        os.path.join(configBase, 'AppConfig'),
-                                       _verAsString(ver)])
+                                       _verAsString(product, ver)])
 
             if retCode != 0:
                 print "Error tagging '%s' AppConfig as '%s'." % \
-                    (c, _verAsString(ver))
+                    (c, _verAsString(product, ver))
                 sys.exit(retCode)
 
             retCode = subprocess.call(['bzr.exe', 'tag',
                                        "--directory=%s" %
                                        os.path.join(configBase, 'InstrConfig'),
-                                       _verAsString(ver)])
+                                       _verAsString(product, ver)])
 
             if retCode != 0:
                 print "Error tagging '%s' InstrConfig as '%s'." % \
-                    (c, _verAsString(ver))
+                    (c, _verAsString(product, ver))
                 sys.exit(retCode)
 
 def _makeLocalConfig():
@@ -501,7 +511,7 @@ def _makeLocalConfig():
                             c
                         sys.exit(retCode)
 
-def _compileInstallers(ver):
+def _compileInstallers(product, ver):
     """
     Compiles the installers for each variant. The original runCompInstallers.bat
     used Compil32.exe, but if we use ISCC.exe we should be able to bypass the
@@ -512,7 +522,7 @@ def _compileInstallers(ver):
         print "Compiling '%s'..." % c
 
         args = [ISCC, "/dinstallerType=%s" % c,
-                "/dhostVersion=%s" % _verAsString(ver),
+                "/dhostVersion=%s" % _verAsString(product, ver),
                 "/dresourceDir=%s" % RESOURCE_DIR,
                 "/dsandboxDir=%s" % SANDBOX_DIR,
                 "/dcommonName=%s" % CONFIGS[c],
@@ -529,12 +539,13 @@ def _compileInstallers(ver):
             print "Error building '%s' installer." % c
             sys.exit(retCode)
 
-def _verAsString(ver):
+def _verAsString(product, ver):
     """
     Convert a version dict into a human-readable string.
     """
 
-    return "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
+    number = "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
+    return "%s-%s" % (product, number)
 
 def main():
     usage = """
@@ -570,6 +581,12 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                       help=('Only works with --make-official. Tests the move '
                             'to staging by using a temporary directory as the '
                             'target.'))
+    parser.add_option('--product', dest='product', metavar='PRODUCT',
+                      default=None, help=('The product line to generate the '
+                                          'release for.'))
+    parser.add_option('--branch', dest='branch', metavar='BRANCH',
+                      default='master', help=('The remote branch from which the '
+                                              'release is built.'))
 
     options, _ = parser.parse_args()
 
