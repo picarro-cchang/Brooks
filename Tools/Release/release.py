@@ -323,7 +323,6 @@ def _branchFromRepo(branch):
         with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
             retCode = subprocess.call(['git.exe',
                                        'checkout',
-                                       'origin',
                                        branch])
 
             if retCode != 0:
