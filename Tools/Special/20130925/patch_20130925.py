@@ -32,26 +32,26 @@ DEFAULT_INSTALL_DIR = r'c:\Picarro\G2000'
 DEFAULT_BACKUP_DIR = r'c:\Backup'
 
 
-def backupFile(opts, backupName, backupMode, updateDirList, filename):
+def backupFile(opts, backupName, updateDirList, filename, fAppend=False):
     """
     Create a zipped backup of the existing file. Arguments:
         opts          = options object (need ops.rootDir and opts.backupDir)
 
         backupName    = backup zip filename
 
-        backupMode    = 'w' to write to a new zip file, 'a' to append to existing
-
         updateDirList = list of relative dirs to join with the root install dir
                          e.g. pass ('AppConfig' 'Config','Fitter')
                          for AppConfig/Config/Fitter
 
         filename      = file to back up
+
+        fAppend        = if True, appends to the existing ZIP file
+                         (optional, default is False)
     """
 
     assert opts.backupDir is not None
     assert opts.rootDir is not None
     assert backupName is not None
-    assert backupMode is not None
     assert updateDirList is not None
     assert type(updateDirList) is list
 
@@ -65,35 +65,41 @@ def backupFile(opts, backupName, backupMode, updateDirList, filename):
     updateFilename = os.path.join(updateDir, filename)
     backupFilename = os.path.join(opts.backupDir, backupName)
 
-    logging.debug("Backing up '%s' to '%s', mode = '%s'", updateFilename, backupFilename, backupMode)
+    mode = 'w'
+    if fAppend is True and os.path.exists(updateFilename):
+        mode = 'a'
+
+    logging.debug("Backing up '%s' to '%s', mode = '%s'", updateFilename, backupFilename, mode)
 
     with contextlib.closing(zipfile.ZipFile(backupFilename,
-                                            backupMode,
+                                            mode,
                                             zipfile.ZIP_DEFLATED)) as zipFp:
         fullFilename = updateFilename
         zipFilename = fullFilename[len(updateDir) + len(os.sep):]
         logging.debug("zip: %s -> %s", fullFilename, zipFilename)
+
+        # 2nd arg MUST be the full path, if it is zipFilename the path info is not stored in the zip
         zipFp.write(fullFilename, fullFilename)
 
 
-def backupFolder(opts, backupName, backupMode, updateDirList):
+def backupFolder(opts, backupName, updateDirList, fAppend=False):
     """
     Create a zipped backup of the existing folder. Arguments:
         opts          = options object (need ops.rootDir and opts.backupDir)
 
         backupName    = backup zip filename
 
-        backupMode    = 'w' to write to a new zip file, 'a' to append to existing
-
         updateDirList  = list of relative dirs to join with the root install dir
                          e.g. pass ('AppConfig' 'Config','Fitter')
                          for AppConfig/Config/Fitter
+
+        fAppend        = if True, appends to the existing ZIP file
+                         (optional, default is False)
     """
 
     assert opts.backupDir is not None
     assert opts.rootDir is not None
     assert backupName is not None
-    assert backupMode is not None
     assert updateDirList is not None
     assert type(updateDirList) is list
 
@@ -104,27 +110,41 @@ def backupFolder(opts, backupName, backupMode, updateDirList):
     for d in updateDirList:
         updateDir = os.path.join(updateDir, d)
 
-    logging.debug("Starting backup of '%s' to '%s', mode = '%s'", updateDir, backupName, backupMode)
+    backupFilename = os.path.join(opts.backupDir, backupName)
 
-    with contextlib.closing(zipfile.ZipFile(os.path.join(opts.backupDir,
-                                                         backupName),
-                                            backupMode, zipfile.ZIP_DEFLATED)) as zipFp:
+    mode = 'w'
+    if fAppend is True and os.path.exists(backupFilename):
+        mode = 'a'
+
+    logging.debug("Starting backup of '%s' to '%s', mode = '%s'", updateDir, backupFilename, mode)
+
+    with contextlib.closing(zipfile.ZipFile(backupFilename,
+                                            mode,
+                                            zipfile.ZIP_DEFLATED)) as zipFp:
         for root, dirs, files in os.walk(updateDir):
             for f in files:
                 fullFilename = os.path.join(root, f)
                 zipFilename = fullFilename[len(updateDir) + len(os.sep):]
                 logging.debug("zip: %s -> %s", fullFilename, zipFilename)
-                zipFp.write(fullFilename, zipFilename)
+
+                # 2nd arg MUST be the full path, if it is zipFilename the path info is not stored in the zip
+                zipFp.write(fullFilename, fullFilename)
 
 
-def computeFolderDiffs(opts, updateDirList, newDir, logDir):
+def computeFolderDiffs(opts, updateDirList, newDir, logDir, fAppend=False):
     """
-    Log the diffs between the existing dir and the new one.
+    Log the diffs between the existing dir and the new one to a file
+    named diff.log.
         updateDirList  = list of relative dirs to join with the root install dir
                          e.g. pass ('AppConfig' 'Config','Fitter')
                          for AppConfig/Config/Fitter
 
         newDir         = folder containing new files to install
+
+        logDir         = folder to log the differences to
+
+        fAppend        = if True, appends to the existing file
+                         (optional, default is False)
     """
 
     assert newDir is not None
@@ -133,19 +153,26 @@ def computeFolderDiffs(opts, updateDirList, newDir, logDir):
 
     origDir = opts.rootDir
     for d in updateDirList:
-        os.path.join(origDir, d)
+        origDir = os.path.join(origDir, d)
 
     dirCmp = filecmp.dircmp(origDir, newDir)
+    logFilename = os.path.join(logDir, 'diff.log')
 
-    origStdout = sys.stdout
-    sys.stdout = open(os.path.join(logDir, 'diff.log'), 'wb')
+    mode = 'wb'
+    if fAppend is True and os.path.exists(logFilename):
+        mode = 'ab'
 
-    logging.debug("Comparing '%s' and '%s'", origDir, newDir)
+    # dirCmp only outputs to stdout, redirect it to a file
+    origStdout = sys.stdout     # save stdout
+    sys.stdout = open(logFilename, mode)
+
+    logging.debug("Comparing '%s' and '%s', logging diffs to '%s'",
+                  origDir, newDir, logFilename)
 
     dirCmp.report_full_closure()
 
     sys.stdout.close()
-    sys.stdout = origStdout
+    sys.stdout = origStdout     # restore stdout
 
 
 def copyNewFolder(opts, newDir, updateDirList):
@@ -243,7 +270,7 @@ Copies new coordinators to the existing installation.
 
     try:
         from win32com.shell import shell, shellcon
-        appData = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+        appData = shell.SHGetFolderPath(0, shellcon.CSIDL_LOCAL_APPDATA, 0, 0)
     except:
         appData = os.path.expanduser('~')
 
@@ -279,31 +306,43 @@ Copies new coordinators to the existing installation.
     # ZIP file we're backing up to
     backupName = "Patch20130925-%s.zip" % time.strftime("%Y%m%d-%H%M%SZ", time.gmtime())
 
-    """
+    # initially create new zip and diff files from scratch
+    fAppendZip = False
+    fAppendDiffs = False
+
     # AppConfig/Config/Fitter
     updateDirList = ['AppConfig', 'Config', 'Fitter']
     newDir = os.path.join(options.newFolder, 'AppConfig', 'Config', 'Fitter')
+
+    # backup to the zip file and copy the new folder contents
+    backupFolder(options, backupName, updateDirList, fAppendZip)
+    computeFolderDiffs(options, updateDirList, newDir, logDir, fAppendDiffs)
     copyNewFolder(options, newDir, updateDirList)
+
+    # appending to zip file and diff file from here on out
+    fAppendZip = True
+    fAppendDiffs = True
 
     # AppConfig/Scripts/DataManager
     updateDirList = ['AppConfig', 'Scripts', 'DataManager']
     newDir = os.path.join(options.newFolder, 'AppConfig', 'Scripts', 'DataManager')
+    backupFolder(options, backupName, updateDirList, fAppendZip)
+    computeFolderDiffs(options, updateDirList, newDir, logDir, fAppendDiffs)
     copyNewFolder(options, newDir, updateDirList)
 
     # AppConfig/Scripts/Fitter
     updateDirList = ['AppConfig', 'Scripts', 'Fitter']
     newDir = os.path.join(options.newFolder, 'AppConfig', 'Scripts', 'Fitter')
-    copyNewFolder(options, newDir, updateDirList)
-    """
-
-    # copy all of AppConfig
-    updateDirList = ['AppConfig']
-    newDir = os.path.join(options.newFolder, 'AppConfig')
+    backupFolder(options, backupName, updateDirList, fAppendZip)
+    computeFolderDiffs(options, updateDirList, newDir, logDir, fAppendDiffs)
     copyNewFolder(options, newDir, updateDirList)
 
+    #####################
     # InstrConfig changes
     updateDirList = ['InstrConfig', 'Calibration', 'InstrCal']
     newDir = os.path.join(options.newFolder, 'InstrConfig', 'Calibration', 'InstrCal')
+
+    # INI files that are getting updated (same changes to all)
     updateFilename = ["InstrCal.ini", "InstrCal_Air.ini"]
 
     # back up InstrConfig/Calibration/InstrCal folder (even though we're only
@@ -311,13 +350,11 @@ Copies new coordinators to the existing installation.
     #backupFolder(options, backupName, 'w', updateDirList)
     #computeFolderDiffs(options, updateDirList, newDir, logDir)
 
-    # back up the ini files, create the archive with the first one and append the rest
-    mode = 'w'
+    # back up the ini files we're touching
     for f in updateFilename:
-        backupFile(options, backupName, mode, updateDirList, f)
-        mode = 'a'
+        backupFile(options, backupName, updateDirList, f, fAppendZip)
 
-    # update the InstrCal.ini file with new key-value pairs in [Data] if missing
+    # update the INI files with new key-value pairs in [Data] if missing
     setupItemsToAdd = {"h2o_selfbroadening_linear":         "0.772",
                        "h2o_selfbroadening_quadratic":      "0.02525",
                        "ch4_watercorrection_linear":       "-0.0101",

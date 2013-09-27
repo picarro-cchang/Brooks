@@ -10,10 +10,10 @@ OutputBaseFilename = setup_CFFDS_20130925
 DirExistsWarning=no
 
 [Types]
-Name: "CFFDS"; Description: "CFFDS update"
+Name: "CFFDS"; Description: "CFFDS/CFGDS update"
 
 [Components]
-Name: "CFFDS"; Description: "CFFDS configuration"; Types: CFFDS; Flags: fixed
+Name: "CFFDS"; Description: "CFFDS/CFGDS configuration"; Types: CFFDS; Flags: fixed
 
 [Files]
 Source: "patch_20130925.py"; DestDir: "{tmp}"
