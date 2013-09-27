@@ -53,7 +53,7 @@ def backupFile(opts, backupName, backupMode, updateDirList, filename):
     assert backupName is not None
     assert backupMode is not None
     assert updateDirList is not None
-    assert type(updateDirList) is tuple
+    assert type(updateDirList) is list
 
     if not os.path.isdir(opts.backupDir):
         os.makedirs(opts.backupDir)
@@ -63,13 +63,13 @@ def backupFile(opts, backupName, backupMode, updateDirList, filename):
         updateDir = os.path.join(updateDir, d)
 
     updateFilename = os.path.join(updateDir, filename)
+    backupFilename = os.path.join(opts.backupDir, backupName)
 
-    logging.debug("Backup dir is '%s'", opts.backupDir)
-    logging.debug("Backing up '%s' to '%s', mode = '%s'", updateFilename, backupName, backupMode)
+    logging.debug("Backing up '%s' to '%s', mode = '%s'", updateFilename, backupFilename, backupMode)
 
-    with contextlib.closing(zipfile.ZipFile(os.path.join(opts.backupDir,
-                                                         backupName),
-                                            backupMode, zipfile.ZIP_DEFLATED)) as zipFp:
+    with contextlib.closing(zipfile.ZipFile(backupFilename,
+                                            backupMode,
+                                            zipfile.ZIP_DEFLATED)) as zipFp:
         fullFilename = updateFilename
         zipFilename = fullFilename[len(updateDir) + len(os.sep):]
         logging.debug("zip: %s -> %s", fullFilename, zipFilename)
@@ -95,7 +95,7 @@ def backupFolder(opts, backupName, backupMode, updateDirList):
     assert backupName is not None
     assert backupMode is not None
     assert updateDirList is not None
-    assert type(updateDirList) is tuple
+    assert type(updateDirList) is list
 
     if not os.path.isdir(opts.backupDir):
         os.makedirs(opts.backupDir)
@@ -129,7 +129,7 @@ def computeFolderDiffs(opts, updateDirList, newDir, logDir):
 
     assert newDir is not None
     assert updateDirList is not None
-    assert type(updateDirList) is tuple
+    assert type(updateDirList) is list
 
     origDir = opts.rootDir
     for d in updateDirList:
@@ -154,6 +154,7 @@ def copyNewFolder(opts, newDir, updateDirList):
     custom files the user may have added.)
     """
     assert updateDirList is not None
+    assert type(updateDirList) is list
 
     newDirs = Path.splitToDirs(os.path.abspath(newDir))
 
@@ -183,6 +184,9 @@ def copyNewFolder(opts, newDir, updateDirList):
         for f in files:
             logging.debug("Move '%s' -> '%s'", os.path.join(root, f),
                           os.path.join(destDir, relativePath))
+
+            # shutil.copy2() also copies last access and modification times as well
+            # as retaining the file permissions
             shutil.copy2(os.path.join(root, f),
                          os.path.join(destDir, relativePath))
 
@@ -196,7 +200,6 @@ def fixupIni(opts, updateDirList, filename, section, missingToAddDict):
     assert opts.rootDir is not None
     assert updateDirList is not None
     assert filename is not None
-    assert missingToAddDict is not None
 
     filepath = opts.rootDir
     for d in updateDirList:
@@ -206,19 +209,22 @@ def fixupIni(opts, updateDirList, filename, section, missingToAddDict):
     fChanged = False
 
     if os.path.isfile(filepath):
+        logging.debug("Fixing file '%s'", filepath)
         co = CustomConfigObj(filepath)
 
-        for key in missingToAddDict:
-            try:
-                # see if the key-value pair is already there
-                # generates a KeyError exception if not
-                co.get(section, key)
+        if missingToAddDict is not None:
+            for key in missingToAddDict:
+                try:
+                    # see if the key-value pair is already there
+                    # generates a KeyError exception if not
+                    val = co.get(section, key)
+                    logging.debug("Found key '%s', leaving current value as is (=%s)", key, val)
 
-            except KeyError:
-                # not present, add it and set the update flag
-                logging.debug("Key not found, adding '%s = %s' to '%s'", key, missingToAddDict[key], filepath)
-                co.set(section, key, missingToAddDict[key])
-                fChanged = True
+                except KeyError:
+                    # not present, add it and set the update flag
+                    logging.debug("Key not found, adding '%s = %s' to '%s'", key, missingToAddDict[key], filepath)
+                    co.set(section, key, missingToAddDict[key])
+                    fChanged = True
 
         # write out the INI file only if something changed
         if fChanged is True:
@@ -275,37 +281,41 @@ Copies new coordinators to the existing installation.
 
     """
     # AppConfig/Config/Fitter
-    updateDirList = ('AppConfig', 'Config', 'Fitter')
+    updateDirList = ['AppConfig', 'Config', 'Fitter']
     newDir = os.path.join(options.newFolder, 'AppConfig', 'Config', 'Fitter')
     copyNewFolder(options, newDir, updateDirList)
 
     # AppConfig/Scripts/DataManager
-    updateDirList = ('AppConfig', 'Scripts', 'DataManager')
+    updateDirList = ['AppConfig', 'Scripts', 'DataManager']
     newDir = os.path.join(options.newFolder, 'AppConfig', 'Scripts', 'DataManager')
     copyNewFolder(options, newDir, updateDirList)
 
     # AppConfig/Scripts/Fitter
-    updateDirList = ('AppConfig', 'Scripts', 'Fitter')
+    updateDirList = ['AppConfig', 'Scripts', 'Fitter']
     newDir = os.path.join(options.newFolder, 'AppConfig', 'Scripts', 'Fitter')
     copyNewFolder(options, newDir, updateDirList)
     """
 
     # copy all of AppConfig
-    updateDirList = ('AppConfig',)
+    updateDirList = ['AppConfig']
     newDir = os.path.join(options.newFolder, 'AppConfig')
     copyNewFolder(options, newDir, updateDirList)
 
     # InstrConfig changes
-    updateDirList = ('InstrConfig', 'Calibration', 'InstrCal')
+    updateDirList = ['InstrConfig', 'Calibration', 'InstrCal']
     newDir = os.path.join(options.newFolder, 'InstrConfig', 'Calibration', 'InstrCal')
-    updateFilename = "InstrCal.ini"
+    updateFilename = ["InstrCal.ini", "InstrCal_Air.ini"]
 
     # back up InstrConfig/Calibration/InstrCal folder (even though we're only
     # touching a single file it contains) and log the differences
     #backupFolder(options, backupName, 'w', updateDirList)
     #computeFolderDiffs(options, updateDirList, newDir, logDir)
 
-    backupFile(options, backupName, 'w', updateDirList, updateFilename)
+    # back up the ini files, create the archive with the first one and append the rest
+    mode = 'w'
+    for f in updateFilename:
+        backupFile(options, backupName, mode, updateDirList, f)
+        mode = 'a'
 
     # update the InstrCal.ini file with new key-value pairs in [Data] if missing
     setupItemsToAdd = {"h2o_selfbroadening_linear":         "0.772",
@@ -315,7 +325,8 @@ Copies new coordinators to the existing installation.
                        "ch4_hp_watercorrection_linear":    "-0.0087473",
                        "ch4_hp_watercorrection_quadratic": "-0.0002429"}
 
-    fixupIni(options, updateDirList, updateFilename, "Data", setupItemsToAdd)
+    for f in updateFilename:
+        fixupIni(options, updateDirList, f, "Data", setupItemsToAdd)
 
 
 if __name__ == '__main__':

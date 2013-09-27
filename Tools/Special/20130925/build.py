@@ -43,6 +43,7 @@ Builds the 20130925 patch installer.
 
     # Branch CFFDS AppConfig repository
     if os.path.exists(cffdsDir):
+        print "Temporary CFFDS repository exists, removing folder '%s'", os.path.dirname(cffdsDir)
         shutil.rmtree(os.path.dirname(cffdsDir))
 
     os.makedirs(os.path.dirname(cffdsDir))
