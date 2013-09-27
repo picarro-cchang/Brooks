@@ -26,11 +26,13 @@ Builds the 20130925 patch installer.
     # CFFDS AppConfig on 20130925 is version 22
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-b', '--revision-cffds', dest='revCFFDS',
-                      metavar='REV_CFFDS', default=22,
+                      metavar='REV_CFFDS', default=0,
                       help=('The version of the CFFDS AppConfig to include in '
-                            'the patcher. Default=22, the version as of 20130925.'))
+                            'the patcher. The version as of 20130925 was 22.'))
 
     options, _ = parser.parse_args()
+
+    assert int(options.revCFFDS) >= 22
 
     consts = Constants.Constants()
     assert 'ISCC' in consts
@@ -39,7 +41,7 @@ Builds the 20130925 patch installer.
     # create the .\CFFDS\AppConfig folder to hold files from bzr
     cffdsDir = os.path.join('.', 'CFFDS', 'AppConfig')
 
-    print "Building 20130925 patch installer using CFFDS AppConfig version %d" % options.revCFFDS
+    print "Building 20130925 patch installer using CFFDS AppConfig version %s" % options.revCFFDS
 
     # Branch CFFDS AppConfig repository
     if os.path.exists(cffdsDir):
