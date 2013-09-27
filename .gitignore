@@ -18,6 +18,8 @@ MobileKit/build/
 MobileKit/dist/
 repoBzrVer.py
 Tools/Release/CHANGELOG.raw*
+Tools/Special/20130925/Output
+Tools/Special/20130925/CFFDS
 Host/DataManager/build/
 Host/DataManager/dist/
 AddOns/SoilPostProcessor/output/
