@@ -126,27 +126,54 @@ def readfunc(filename, peakplot='y', savefileyn='y', outputvar=""):
                         pass
                     #pdb.set_trace()
                     if peakplot == 'y':
+                        # instead of plotting epoch time directly,
+                        # plot seconds since the first data point
+
+                        # if you want epoch time, comment out the
+                        # next line
+
+                        # use exact X axis limits
+                        # we're letting pylab autoscale Y limits
+                        # by not setting them explicitly
+
+                        # Concentrations page
                         pylab.figure("Concentrations")
                         pylab.subplot(3, 1, 1)
                         pylab.plot(time, ch4)
                         pylab.title("Concentrations")
                         pylab.ylabel("CH4 (ppm)")
+
                         pylab.subplot(3, 1, 2)
                         pylab.plot(time, h2o)
                         pylab.ylabel("H2O")
+
                         pylab.subplot(3, 1, 3)
                         pylab.plot(time, co2)
                         pylab.xlabel("Epoch Time")
                         pylab.ylabel("CO2")
 
+                        # Peripherals page
                         pylab.figure("Peripherals")  # Assuming that the valves are off for first 50 pts
                         pylab.subplot(2, 1, 1)
+
+                        # I think this is not what was wanted, this only shows the first 50
+                        # points and believe we want to skip those
+                        #pylab.plot(carspeed[:50])  # only shows the first 50 points
+                        #pylab.plot(carspeed[50:])  # shows from point 50 to the end
+
+                        # we'll show a vertical dotted line at 50 points
+
+                        # Car speed
                         pylab.plot(carspeed[:50])
+
                         pylab.title("Car speed")
+
+                        # Wind lat page
                         pylab.subplot(2, 1, 2)
                         pylab.plot(windlat[:50])
                         pylab.title("Wind Lat")
 
+                        # Std Wind Dev page
                         pylab.figure("Std Wind Dev")
                         pylab.plot(stdwindir[:50])
                         pylab.show()
