@@ -223,7 +223,7 @@ class P3RestApi(object):
         
         return eobj
     
-    def get(self, params):
+    def get(self, params, resourcePath = None):
         
         if self.debug == True:
             print "\nP3RestApi.py get\n"
@@ -253,11 +253,20 @@ class P3RestApi(object):
                 if (not self.api_ticket == NONE) and (not self.api_ticket == ERROR):
                     #Try with the existing ticket
                     
-                    path = "/%s/rest/%s/%s/%s/%s" % (self.site
+                    if not resourcePath:
+                        path = "/%s/rest/%s/%s/%s/%s" % (self.site
                                                      , self.svc
                                                      , self.api_ticket
                                                      , self.version
                                                      , self.resource)
+                    else:
+                        path = "/%s/rest/%s/%s/%s/%s/%s" % (self.site
+                                                     , self.svc
+                                                     , self.api_ticket
+                                                     , self.version
+                                                     , self.resource
+                                                     , resourcePath)
+
                     
                     if "qryobj" in params:
                         sep = "?"

@@ -24,6 +24,7 @@ import math
 import urllib
 from P3RestApi import P3RestApi
 
+REPORTROOT = "c:/temp/Pge/"
 
 def getMsUnixTime(timeString=None):
     if timeString is None:
@@ -48,7 +49,7 @@ class AccessReportServer(object):
     def __init__(self, host, site, identity, sys):
         self.p3RestApi = P3RestApi(host=host, port=443, site=site,
                                    identity=identity, psys=sys, svc="gdu",
-                                   debug=False, sleep_seconds=0, version='1.0', resource='SurveyorRpt',
+                                   debug=False, sleep_seconds=5, version='1.0', resource='SurveyorRpt',
                                    rprocs=[
                                    "SurveyorRpt:resource", "SurveyorRpt:getStatus", "SurveyorRpt:submit",
                                    "SurveyorRpt:updateDashboard", "SurveyorRpt:getDashboard"])
@@ -127,33 +128,43 @@ class AccessReportServer(object):
 
 if __name__ == "__main__":
     rptServer = AccessReportServer(
-        host='192.168.56.101', site='pfranz', identity='n2fv6HxiLEb68XJ8zyG0nWJuRTPU1b', sys='pfranz')
+        host='p3.picarro.com', site='pge', identity='M8J5Co0I3XxCOR92RUd6f8CLQULmOq1puY6R6NqiJVw=', sys='pge')
     user = 'stan@picarro.com'
     # rptServer.getDashboard(user)
-    instrFile = r'C:\Users\stan\Downloads\exampleFovs.json'
-    retCode, jobDict = rptServer.submitJob(instrFile, user, force=True)
-    if retCode != 200:
-        raise RuntimeError('Bad return code from submitJob')
-    
-    while True:
-        retCode, statDict = rptServer.getStatus(jobDict['hash'], jobDict['start_ts'])
-        if retCode != 200:
-            raise RuntimeError('Bad return code from getStatus')
-        if statDict['status'] == 16: break
-        sys.stdout.write('.')
-        time.sleep(5.0)
-    sys.stdout.write('\n')
 
-    filePath = statDict['hash'][:2] + '/' + statDict['hash'] + '/' + statDict['dirname'] + '/key.json'
-    retCode, keyData = rptServer.getFile(filePath)
-    if retCode != 200:
-        raise RuntimeError('Bad return code from getting key file')
-    print keyData['OUTPUTS']['FILES']
-    print keyData['OUTPUTS']['FILE_RECORDS']
-
-    for f in keyData['OUTPUTS']['FILES']:
-        filePath = statDict['hash'][:2] + '/' + statDict['hash'] + '/' + statDict['dirname'] + ('/%s' % f)
-        retCode, fileData = rptServer.getFile(filePath)
+    for loop in range(100):
+        sys.stdout.write('%4d ' % loop)
+        instrFile = r'C:\Users\stan\Downloads\PGE_makeFov_bad_path.json'
+        retCode, jobDict = rptServer.submitJob(instrFile, user, force=True)
         if retCode != 200:
-            raise RuntimeError('Bad return code from getting key file')
-        # print fileData
+            raise RuntimeError('Bad return code from submitJob %s' % ((retCode, jobDict),))
+        
+        while True:
+            retCode, statDict = rptServer.getStatus(jobDict['hash'], jobDict['start_ts'])
+            if retCode != 200:
+                raise RuntimeError('Bad return code from getStatus %s' % ((retCode, statDict),))
+            if statDict['status'] == 16: break
+            sys.stdout.write('.')
+            time.sleep(5.0)
+        sys.stdout.write('\n')
+
+        filePath = statDict['hash'][:2] + '/' + statDict['hash'] + '/' + statDict['dirname'] + '/key.json'
+        retCode, keyData = rptServer.getFile(filePath)
+        if retCode != 200:
+            raise RuntimeError('Bad return code from getting key file %s' % ((retCode, keyData),))
+
+        for f in keyData['OUTPUTS']['FILES']:
+            filePath = statDict['hash'][:2] + '/' + statDict['hash'] + '/' + statDict['dirname'] + ('/%s' % f)
+            retCode, fileData = rptServer.getFile(filePath)
+            if retCode != 200:
+                raise RuntimeError('Bad return code from getting file %s' % ((retCode, fileData),))
+            with open(f,'r') as fp:
+                if json.loads(fp.read()) != fileData:
+                    dirname = statDict['dirname']
+                    try:
+                        os.mkdir(dirname)
+                    except OSError:
+                        pass
+                    with open(os.path.join(dirname,f),"w") as op:
+                        op.write(fileData)
+                    print "Mismatched data in", os.path.join(dirname,f)
