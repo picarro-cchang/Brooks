@@ -2,6 +2,8 @@
 Copyright 2013, Picarro Inc.
 """
 
+
+
 from __future__ import with_statement
 
 import sys
@@ -22,9 +24,55 @@ from Chamber import Chamber
 from Measurement import Measurement
 
 
+#  SIDs from the JFAADS v6 fitter:
+#    2  Ammonia and water from AADS (V6 modifies schemes to unify NH3
+#       and H2O measurements)
+#    3  "Big water" from AADS (not used)
+#    4  Ammonia only from AADS (not used starting with V6)
+#   25  CH4 from CFADS
+#   45  N2O only
+#   46  CO2 at 6058.2 wvn developed for JADS
+#   47  N2O, CO2, and HDO
+SPECIES = {
+    'NH3' : [2.0, 3.0, 4.0],
+    'CH4' : [25.0],
+    'N2O' : [45.0, 47.0],
+    'CO2' : [46.0, 47.0],
+    'H2O' : [2.0, 3.0, 47.0]
+    }
+
+
 def _log(msg):
     # Use this as a hook to interface with central app logging later.
     print msg
+
+
+def _epochTimeFromRow(row):
+    return float((row.split()[6]).strip())
+
+
+def _nearestIdx(t, data, roundToZero=True):
+    """
+    Data should be in (epochTime, value) tuples. roundToZero controls the
+    direction.
+    """
+
+    minDt = 100.0
+    idx = 0
+    for i, d in enumerate(data):
+        dt = abs(d[0] - t)
+        if dt < minDt:
+            minDt = dt
+            idx = i
+
+    if data[idx][0] < t and not roundToZero:
+        idx += 1
+    elif data[idx][0] > t and roundToZero:
+        idx -= 1
+
+    assert idx >= 0 and idx < len(data)
+
+    return idx
 
 
 def main(opts):
@@ -38,15 +86,67 @@ def main(opts):
     measurements = Measurement.loadFromCSV(opts.measurementsFile)
     pprint.pprint(measurements)
 
-    # Assume a single dat file with all data points in it?
-    assert opts.datFile
-    rawData = DatFile.DatFile(opts.datFile)
+    # Build the complete dataset for analysis
+    assert opts.datDir
+    rows = []
+    headerRow = None
+
+    for f in os.listdir(opts.datDir):
+        _, ext = os.path.splitext(f)
+
+        if ext != '.dat':
+            continue
+
+        if f == 'master.dat':
+            continue
+
+        with open(os.path.join(opts.datDir, f), 'r') as fp:
+            print "Adding '%s'"  % f
+
+            rawRows = fp.readlines()
+
+            if not headerRow:
+                headerRow = rawRows[0]
+
+            allRows = []
+            for i, r in enumerate(rawRows):
+                if len(r.split()) == len(headerRow.split()):
+                    allRows.append(r)
+                else:
+                    print "Skip: %s %s" % (f, i)
+
+            rows.extend(allRows[1:])
+
+    assert headerRow
+
+    # Sort by epoch time
+    rows.sort(key=_epochTimeFromRow)
+    rows.insert(0, headerRow)
+
+    with open(os.path.join(opts.datDir, 'master.dat'), 'w') as fp:
+        fp.writelines(rows)
+
+    rawData = DatFile.DatFile(os.path.join(opts.datDir, 'master.dat'))
+
     data = {
-        'epochTime' : [float(x) for x in rawData['EPOCH_TIME']],
-        'N2O'       : [float(x) for x in rawData['N2O_dry']],
-        'CO2'       : [float(x) for x in rawData['CO2_dry']],
-        'CH4'       : [float(x) for x in rawData['CH4_dry']],
-        'H2O'       : [float(x) for x in rawData['H2O']]}
+        'CH4' : [],
+        'N2O' : [],
+        'CO2' : [],
+        'H2O' : []
+        }
+
+    if opts.filterData:
+        for i, sid in enumerate(rawData['species']):
+            t = float(rawData['EPOCH_TIME'][i])
+
+            for k in data.keys():
+                if float(sid) in SPECIES[k]:
+                    data[k].append((t, float(rawData[k][i])))
+    else:
+        for i, t in enumerate(rawData['EPOCH_TIME']):
+            print i
+            for k in data.keys():
+                data[k].append((float(t), float(rawData[k][i])))
 
     if hasattr(sys, 'frozen'):
         root = os.path.abspath(os.path.dirname(sys.executable))
@@ -72,15 +172,6 @@ def main(opts):
                        "%s Flux Uncertainty (micromol/m^2/s)" % species])
 
     for m in measurements:
-        # Always compute all results and then use the species selector
-        # to report the requested result(s).
-        startIdx = data['epochTime'].index(m.startEpoch)
-        assert startIdx is not None
-        stopIdx = data['epochTime'].index(m.stopEpoch)
-        assert stopIdx is not None
-
-        epochTime = data['epochTime'][startIdx:stopIdx]
-
         result = [m.name,
                   m.temperatureK,
                   m.chamber,
@@ -93,7 +184,17 @@ def main(opts):
             os.makedirs(measurementDir)
 
         for species in Measurement.SPECIES:
-            conc = data[species][startIdx:stopIdx]
+            print "%s len = %s" % (species, len(data[species]))
+            print "startEpoch = %s" % m.startEpoch
+            startIdx = _nearestIdx(m.startEpoch, data[species],
+                                   roundToZero=False)
+            print "stopEpoch = %s" % m.stopEpoch
+            stopIdx = _nearestIdx(m.stopEpoch, data[species])
+
+            print "startIdx = %s, stopIdx = %s" % (startIdx, stopIdx)
+
+            epochTime = [x[0] for x in data[species][startIdx:stopIdx]]
+            conc = [x[1] for x in data[species][startIdx:stopIdx]]
 
             a, b, sigmaA, sigmaB = ChiSquared.fitStraightLine(
                 epochTime,
@@ -131,9 +232,6 @@ def main(opts):
 
         results.append(result)
 
-
-
-
     with open(os.path.join(outputRoot, 'results.csv'), 'wb') as fp:
         writer = csv.writer(fp)
         writer.writerow(header)
@@ -142,9 +240,9 @@ def main(opts):
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
-    parser.add_option('--dat', dest='datFile', metavar='DAT_FILE',
-                      default=None, help=('The .dat file to run the specified '
-                                          'measurements again.'))
+    parser.add_option('--dat', dest='datDir', metavar='DAT_DIR',
+                      default=None, help=('The directory containing the .dat '
+                                          'files to analyze.'))
     parser.add_option('--chambers', dest='chambersFile',
                       metavar='CHAMBERS_FILE', default=None,
                       help=('The .csv file defining the properties of the '
@@ -153,11 +251,14 @@ if __name__ == '__main__':
                       metavar='MEASUREMENTS_FILE', default=None,
                       help=('The .csv file defining the parameters for '
                             'each individual measurment.'))
+    parser.add_option('--filter', dest='filterData', action='store_true',
+                      default=False,
+                      help=('Filter the aggregate data by species.'))
 
     options, _ = parser.parse_args()
 
-    if not options.datFile:
-        sys.exit('A .dat file must be specified.')
+    if not options.datDir:
+        sys.exit('A .dat file directory must be specified.')
 
     if not options.chambersFile:
         sys.exit('A chamber file must be specified.')
