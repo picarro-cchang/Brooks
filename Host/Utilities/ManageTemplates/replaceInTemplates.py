@@ -5,8 +5,8 @@ import fnmatch
 #import sys
 #import subprocess
 
-#src = r"c:\picarro\G2000\AppConfig"
-src = r"C:\Users\twalder\Documents\Testing\TemplateResults"
+src = r"c:\temp\Templates"
+#src = r"C:\Users\twalder\Documents\Testing\TemplateResults"
 
 patts = ["analyze*.py", "parse*.py", "processor*.py", "fit*.py", "update_cal*.py", "Propo*.py",
          "*analyze*.py", "resync*.py", "slow_display.py", "noiseReduction.py"]

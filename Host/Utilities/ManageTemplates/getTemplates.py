@@ -2,8 +2,8 @@ import os
 #import sys
 import subprocess
 
-#dest = r"c:\temp\Templates"
-dest = r"C:\Users\twalder\Documents\Testing\TemplateResults"
+dest = r"c:\temp\Templates"
+#dest = r"C:\Users\twalder\Documents\Testing\TemplateResults"
 
 # Find all the bzr repositories under root
 #root = r"s:\CrdsRepositoryNew\Releases\G2000\1.3\Config"
