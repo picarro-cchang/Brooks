@@ -2,8 +2,6 @@
 Copyright 2013, Picarro Inc.
 """
 
-
-
 from __future__ import with_statement
 
 import sys
@@ -11,6 +9,7 @@ import optparse
 import pprint
 import time
 import csv
+import shutil
 import os.path
 
 import numpy
@@ -79,12 +78,10 @@ def main(opts):
     # Load chamber configurations
     assert opts.chambersFile
     chambers = Chamber.loadFromCSV(opts.chambersFile)
-    pprint.pprint(chambers)
 
     # Load requested measurement configurations
     assert opts.measurementsFile
     measurements = Measurement.loadFromCSV(opts.measurementsFile)
-    pprint.pprint(measurements)
 
     # Build the complete dataset for analysis
     assert opts.datDir
@@ -144,7 +141,6 @@ def main(opts):
                     data[k].append((t, float(rawData[k][i])))
     else:
         for i, t in enumerate(rawData['EPOCH_TIME']):
-            print i
             for k in data.keys():
                 data[k].append((float(t), float(rawData[k][i])))
 
@@ -153,7 +149,8 @@ def main(opts):
     else:
         root = os.path.abspath(os.path.dirname(__file__))
 
-    outputRoot = os.path.join(root, 'output')
+    outputRoot = os.path.join(root, 'output', time.strftime('%Y%m%d-%H%M%S',
+                                                            time.gmtime()))
     if not os.path.isdir(outputRoot):
         os.makedirs(outputRoot)
 
@@ -184,11 +181,8 @@ def main(opts):
             os.makedirs(measurementDir)
 
         for species in Measurement.SPECIES:
-            print "%s len = %s" % (species, len(data[species]))
-            print "startEpoch = %s" % m.startEpoch
             startIdx = _nearestIdx(m.startEpoch, data[species],
                                    roundToZero=False)
-            print "stopEpoch = %s" % m.stopEpoch
             stopIdx = _nearestIdx(m.stopEpoch, data[species])
 
             print "startIdx = %s, stopIdx = %s" % (startIdx, stopIdx)
@@ -236,6 +230,12 @@ def main(opts):
         writer = csv.writer(fp)
         writer.writerow(header)
         writer.writerows(results)
+
+    shutil.copy(opts.chambersFile,
+                os.path.join(outputRoot, os.path.split(opts.chambersFile)[1]))
+    shutil.copy(opts.measurementsFile,
+                os.path.join(outputRoot,
+                             os.path.split(opts.measurementsFile)[1]))
 
 
 if __name__ == '__main__':
