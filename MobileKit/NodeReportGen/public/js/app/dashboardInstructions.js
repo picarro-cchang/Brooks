@@ -860,7 +860,7 @@ define(function(require, exports, module) {
                 this.currentValid = false;
                 $('#id_peaksMinAmp').spinedit({
                     minimum: 0.03,
-                    maximum: 2.0,
+                    maximum: 30.0,
                     step: 0.01,
                     value: 0.1,
                     numberOfDecimals: 2
