@@ -1,5 +1,7 @@
 # DatViewerPrefs.py
 
+from __future__ import with_statement
+
 import wx
 import os
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -27,6 +29,8 @@ class DatViewerPrefs(object):
         self.InitPrefs()
 
     def InitPrefs(self):
+        # These are the initial built-in prefs settings
+        #
         # [FileManagement]
         self.lastH5OpenDir = None
         self.lastZipConcatDir = None
@@ -39,7 +43,7 @@ class DatViewerPrefs(object):
         self.tz = 'US/Pacific'
 
     def LoadPrefs(self):
-        # get defaults from DatViewer.ini
+        # get defaults from DatViewerPrefs.ini in the app's folder
         if os.path.isfile(self.defaultConfigPath):
             self._LoadConfigFile(self.defaultConfigPath)
 

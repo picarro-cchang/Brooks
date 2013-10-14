@@ -35,6 +35,77 @@ class Frame(wx.Frame):
         LogMsg("Frame __init__")
         wx.Frame.__init__(self, parent, id, title)
 
+        self.panel = wx.Panel(self)
+        self.statusbar = self.CreateStatusBar()
+
+        self.CreateMenus()
+
+    def CreateMenus(self):
+
+        # File menu
+        menuFile = wx.Menu()
+        openH5Item = menuFile.Append(-1,
+                                     "&Open H5...\tCtrl+O",
+                                     "Open an H5 file to plot its data.")
+        menuFile.AppendSeparator()
+        openZipItem = menuFile.Append(-1,
+                                      "Concatenate &ZIP to H5...\tZ",
+                                      "Concatenate all H5 files in a ZIP into a single H5 file.")
+        concatFolderItem = menuFile.Append(-1,
+                                           "Concatenate &folder to H5...\tF",
+                                           "Concatenate all H5 and zipped H5 files within a folder into a single H5 file.")
+        menuFile.AppendSeparator()
+
+        # more File menu items go here...
+
+        exitAppItem = menuFile.Append(-1,
+                                      "E&xit",
+                                      "Quit the H5 Data File Viewer.")
+
+        self.Bind(wx.EVT_MENU, self.OnOpenH5, openH5Item)
+        self.Bind(wx.EVT_MENU, self.OnOpenZip, openZipItem)
+        self.Bind(wx.EVT_MENU, self.OnConcatFolder, concatFolderItem)
+
+        self.Bind(wx.EVT_MENU, self.OnExitApp, exitAppItem)
+
+        # View menu
+        menuView = wx.Menu()
+
+        # Window menu
+        menuWindow = wx.Menu()
+
+        # Help menu
+        menuHelp = wx.Menu()
+        aboutItem = menuHelp.Append(-1,
+                                    "About...",
+                                    "Show information about the H5 Data File Viewer.")
+
+        self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
+
+        # build the menubar
+        self.menubar = wx.MenuBar()
+        self.menubar.Append(menuFile, "&File")
+        self.menubar.Append(menuView, "&View")
+        self.menubar.Append(menuWindow, "&Window")
+        self.menubar.Append(menuHelp, "&Help")
+        self.SetMenuBar(self.menubar)
+
+    def OnOpenH5(self, event):
+        print "OnOpenH5"
+
+    def OnOpenZip(self, event):
+        print "OnOpenZip"
+
+    def OnConcatFolder(self, event):
+        print "OnConcatFolder"
+
+    def OnAbout(self, event):
+        print "OnAbout"
+
+    def OnExitApp(self, event):
+        print "OnExitApp"
+        self.Close()
+
 
 class App(wx.App):
     def __init__(self, redirect=True, filename=None):
@@ -42,7 +113,14 @@ class App(wx.App):
         LogMsg("App __init__")
 
         LogMsg("Loading prefs")
-        self.prefs = DatViewerPrefs(APPNAME, APPVERSION)
+
+        # TODO: Figure out how to reset the prefs from the UI
+        #       Haven't entered the main loop so can't look for Ctrl+Shift
+        #       held down. Other possibilities:
+        #          1. command line option
+        #          2. menu choice to reset prefs at next startup, saves in
+        #             user prefs and resets flag
+        self.prefs = DatViewerPrefs(APPNAME, APPVERSION, fPrefsReset=False)
         self.prefs.LoadPrefs()
         LogMsg("Prefs loaded")
 
@@ -62,16 +140,15 @@ class App(wx.App):
         if self.prefs.viewerFramePos.x != -1 and self.prefs.viewerFramePos.y != -1:
             self.frame.SetPosition(self.prefs.viewerFramePos)
 
+        # events we want to handle
+        self.frame.Bind(wx.EVT_SIZE, self.OnResizeApp)
+        self.frame.Bind(wx.EVT_MOVE, self.OnResizeApp)
+
         self.frame.Show()
         self.SetTopWindow(self.frame)
         #print >> sys.stderr, "A pretend error message"
         LogErrmsg("A pretend error message")
 
-        # add menu bar and status bar
-
-        # events we want to handle
-        self.frame.Bind(wx.EVT_SIZE, self.OnResizeApp)
-        self.frame.Bind(wx.EVT_MOVE, self.OnResizeApp)
         return True
 
     def OnResizeApp(self, event):
@@ -81,8 +158,8 @@ class App(wx.App):
         self.prefs.viewerFrameSize = self.frame.GetSize()
         self.prefs.viewerFramePos = self.frame.GetPosition()
 
-        print "  appSize=", self.prefs.viewerFrameSize
-        print "  appPos=", self.prefs.viewerFramePos
+        #print "  appSize=", self.prefs.viewerFrameSize
+        #print "  appPos=", self.prefs.viewerFramePos
 
     def OnExit(self):
         #print "OnExit"
