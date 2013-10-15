@@ -16,13 +16,16 @@ FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
 APPVERSION = "3.0.0"
 
+g_logMsgLevel = 5
+
 
 def LogErrmsg(str):
     print >> sys.stderr, str
 
 
-def LogMsg(str):
-    print str
+def LogMsg(level, str):
+    if level <= g_logMsgLevel:
+        print str
 
 #################################################
 ## Main UI
@@ -31,8 +34,7 @@ def LogMsg(str):
 
 class Frame(wx.Frame):
     def __init__(self, parent, id, title):
-        #print "Frame __init__"
-        LogMsg("Frame __init__")
+        LogMsg(4, "Frame __init__")
         wx.Frame.__init__(self, parent, id, title)
 
         self.panel = wx.Panel(self)
@@ -41,48 +43,18 @@ class Frame(wx.Frame):
         self.CreateMenus()
 
     def CreateMenus(self):
-
-        # File menu
-        menuFile = wx.Menu()
-        openH5Item = menuFile.Append(-1,
-                                     "&Open H5...\tCtrl+O",
-                                     "Open an H5 file to plot its data.")
-        menuFile.AppendSeparator()
-        openZipItem = menuFile.Append(-1,
-                                      "Concatenate &ZIP to H5...\tZ",
-                                      "Concatenate all H5 files in a ZIP into a single H5 file.")
-        concatFolderItem = menuFile.Append(-1,
-                                           "Concatenate &folder to H5...\tF",
-                                           "Concatenate all H5 and zipped H5 files within a folder into a single H5 file.")
-        menuFile.AppendSeparator()
-
-        # more File menu items go here...
-
-        exitAppItem = menuFile.Append(-1,
-                                      "E&xit",
-                                      "Quit the H5 Data File Viewer.")
-
-        self.Bind(wx.EVT_MENU, self.OnOpenH5, openH5Item)
-        self.Bind(wx.EVT_MENU, self.OnOpenZip, openZipItem)
-        self.Bind(wx.EVT_MENU, self.OnConcatFolder, concatFolderItem)
-
-        self.Bind(wx.EVT_MENU, self.OnExitApp, exitAppItem)
+        menuFile = self.CreateFileMenuItems()
 
         # View menu
-        menuView = wx.Menu()
+        menuView = self.CreateViewMenuItems()
 
         # Window menu
-        menuWindow = wx.Menu()
+        menuWindow = self.CreateWindowMenuItems()
 
         # Help menu
-        menuHelp = wx.Menu()
-        aboutItem = menuHelp.Append(-1,
-                                    "About...",
-                                    "Show information about the H5 Data File Viewer.")
+        menuHelp = self.CreateHelpMenuItems()
 
-        self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
-
-        # build the menubar
+        # build the app menubar
         self.menubar = wx.MenuBar()
         self.menubar.Append(menuFile, "&File")
         self.menubar.Append(menuView, "&View")
@@ -90,29 +62,75 @@ class Frame(wx.Frame):
         self.menubar.Append(menuHelp, "&Help")
         self.SetMenuBar(self.menubar)
 
+    def CreateFileMenuItems(self):
+        menu = wx.Menu()
+        openH5Item = menu.Append(-1,
+                                 "&Open H5...\tCtrl+O",
+                                 "Open an H5 file to plot its data.")
+        menu.AppendSeparator()
+        openZipItem = menu.Append(-1,
+                                  "Concatenate &ZIP to H5...\tZ",
+                                  "Concatenate all H5 files in a ZIP into a single H5 file.")
+        concatFolderItem = menu.Append(-1,
+                                       "Concatenate &folder to H5...\tF",
+                                       "Concatenate all H5 and zipped H5 files within a folder into a single H5 file.")
+        menu.AppendSeparator()
+
+        # more File menu items go here...
+
+        exitAppItem = menu.Append(wx.ID_EXIT,
+                                  "E&xit",
+                                  "Quit the H5 Data File Viewer.")
+
+        # Bindings
+        self.Bind(wx.EVT_MENU, self.OnOpenH5, openH5Item)
+        self.Bind(wx.EVT_MENU, self.OnOpenZip, openZipItem)
+        self.Bind(wx.EVT_MENU, self.OnConcatFolder, concatFolderItem)
+        self.Bind(wx.EVT_MENU, self.OnExitApp, exitAppItem)
+
+        return menu
+
+    def CreateViewMenuItems(self):
+        menu = wx.Menu()
+        # add View menu items here...
+        return menu
+
+    def CreateWindowMenuItems(self):
+        # Window menu typically is empty at startup
+        menuWindow = wx.Menu()
+        return menuWindow
+
+    def CreateHelpMenuItems(self):
+        menuHelp = wx.Menu()
+        aboutItem = menuHelp.Append(wx.ID_ABOUT,
+                                    "About...",
+                                    "Show information about the H5 Data File Viewer.")
+
+        self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
+        return menuHelp
+
     def OnOpenH5(self, event):
-        print "OnOpenH5"
+        LogMsg(4, "OnOpenH5")
 
     def OnOpenZip(self, event):
-        print "OnOpenZip"
+        LogMsg(4, "OnOpenZip")
 
     def OnConcatFolder(self, event):
-        print "OnConcatFolder"
+        LogMsg(4, "OnConcatFolder")
 
     def OnAbout(self, event):
-        print "OnAbout"
+        LogMsg(4, "OnAbout")
 
     def OnExitApp(self, event):
-        print "OnExitApp"
+        LogMsg(4, "OnExitApp")
         self.Close()
 
 
 class App(wx.App):
     def __init__(self, redirect=True, filename=None):
-        #print "App __init__"
-        LogMsg("App __init__")
+        LogMsg(4, "App __init__")
 
-        LogMsg("Loading prefs")
+        LogMsg(4, "Loading prefs")
 
         # TODO: Figure out how to reset the prefs from the UI
         #       Haven't entered the main loop so can't look for Ctrl+Shift
@@ -122,12 +140,12 @@ class App(wx.App):
         #             user prefs and resets flag
         self.prefs = DatViewerPrefs(APPNAME, APPVERSION, fPrefsReset=False)
         self.prefs.LoadPrefs()
-        LogMsg("Prefs loaded")
+        LogMsg(4, "Prefs loaded")
 
         wx.App.__init__(self, redirect, filename)
 
     def OnInit(self):
-        print "OnInit"
+        LogMsg(4, "OnInit")
         self.frame = Frame(parent=None,
                            id=-1,
                            title=FULLAPPNAME)
@@ -146,29 +164,33 @@ class App(wx.App):
 
         self.frame.Show()
         self.SetTopWindow(self.frame)
-        #print >> sys.stderr, "A pretend error message"
-        LogErrmsg("A pretend error message")
+        #LogErrmsg("A pretend error message")
 
         return True
 
     def OnResizeApp(self, event):
-        LogMsg("OnResizeApp")
+        LogMsg(5, "OnResizeApp")
 
-        # update app size and position information for next startup
+        # update app size and position information in prefs
         self.prefs.viewerFrameSize = self.frame.GetSize()
         self.prefs.viewerFramePos = self.frame.GetPosition()
 
-        #print "  appSize=", self.prefs.viewerFrameSize
-        #print "  appPos=", self.prefs.viewerFramePos
+        LogMsg(5, "  appSize=(%d, %d)" % (self.prefs.viewerFrameSize.width, self.prefs.viewerFrameSize.height))
+        LogMsg(5, "  appPos=(%d, %d)" % (self.prefs.viewerFramePos.x, self.prefs.viewerFramePos.y))
+
+        clientSize = self.frame.GetClientSize()
+        LogMsg(5, "  clientSize=(%d, %d)" % (clientSize.width, clientSize.height))
+
+        # must update the panel size to the new client size
+        self.frame.panel.SetSize(clientSize)
 
     def OnExit(self):
-        #print "OnExit"
-        LogMsg("OnExit")
+        LogMsg(4, "OnExit")
 
         # save off prefs
-        LogMsg("Saving prefs")
+        LogMsg(4, "Saving prefs")
         self.prefs.SavePrefs()
-        LogMsg("Prefs saved")
+        LogMsg(4, "Prefs saved")
 
 
 def ParseOptions():
@@ -191,12 +213,18 @@ Picarro H5 file viewer and converter.
                       default=None, help=('output filename for console output, '
                                           'useful for debugging'))
 
+    parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
+                      default=0, help=('set message logging level, '
+                                       '0=highest  5=lowest (noisy)'))
+
     options, _ = parser.parse_args()
 
     return options
 
 
 def main():
+    global g_logMsgLevel
+
     options = ParseOptions()
 
     if options.version is True:
@@ -205,8 +233,12 @@ def main():
 
     redirect = options.redirect
     outputFile = options.outputFile
+    g_logMsgLevel = options.loglevel
 
-    print "redirect=", redirect
+    # force logging
+    #g_logMsgLevel = int(5)
+
+    LogMsg(4, "redirect=%d" % redirect)
 
     # force redirect if outputting console to a file
     if outputFile is not None:
@@ -214,9 +246,9 @@ def main():
 
     app = App(redirect=redirect, filename=outputFile)
 
-    print "before MainLoop"
+    LogMsg(4, "before MainLoop")
     app.MainLoop()
-    print "after MainLoop"
+    LogMsg(4, "after MainLoop")
 
 
 if __name__ == '__main__':
