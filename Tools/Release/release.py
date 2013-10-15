@@ -107,7 +107,7 @@ def makeExe(opts):
 
     if opts.makeOfficial:
         _promoteStagedRelease(opts.officialTypes, targetMfgDistribBase,
-                              targetDistribBase)
+                              targetDistribBase, versionConfig, opts.product)
         return
 
 
@@ -193,19 +193,6 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
     ver = {}
     with open(stagingVer, 'r') as version:
         ver.update(json.load(version))
-
-    # Always move HostExe and AnalyzerServerExe regardless of the specified
-    # types.
-    hostExeDir = os.path.join(mfgDistribBase, 'HostExe', _verAsString(product,
-                                                                      ver))
-    dir_util.copy_tree(os.path.join(STAGING_MFG_DISTRIB_BASE, 'HostExe'),
-                       hostExeDir)
-
-    analyzerServerExeDir = os.path.join(mfgDistribBase, 'AnalyzerServerExe',
-                                        _verAsString(product, ver))
-    dir_util.copy_tree(os.path.join(STAGING_MFG_DISTRIB_BASE,
-                                    'AnalyzerServerExe'),
-                       analyzerServerExeDir)
 
     negate = False
     typesList = None
