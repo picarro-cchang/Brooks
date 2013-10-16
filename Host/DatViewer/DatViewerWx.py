@@ -5,9 +5,21 @@
 # Making it version 3 since this is a new generation app. I'd made the initial
 # DatViewer code version 2 since it never had a version number, just to distinguish
 # it from the old version.
+#
+# Notes:
+#
+# Standard scipy import conventions:
+#   import numpy as np
+#   import numpy.ma as ma
+#   import matplotlib as mpl
+#   from matplotlib import pyplot as plt
+#   import matplotlib.cbook as cbook
+#   import matplotlib.collections as mcol
+#   import matplotlib.patches as mpatches
 
 import wx
 import sys
+import os
 from optparse import OptionParser
 from DatViewerPrefs import DatViewerPrefs
 
@@ -16,7 +28,7 @@ FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
 APPVERSION = "3.0.0"
 
-g_logMsgLevel = 5
+g_logMsgLevel = 5   # should be 0 for check-in
 
 
 def LogErrmsg(str):
@@ -26,6 +38,40 @@ def LogErrmsg(str):
 def LogMsg(level, str):
     if level <= g_logMsgLevel:
         print str
+
+
+#################################################
+## H5 file handler class
+##
+
+class H5Handler(object):
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.filename = os.path.split(filepath)[1]
+        self.dirname = os.path.split(filepath)[0]
+
+        # This should validate that the filepath is a valid H5 file
+        # Need either a validation function or return an error code if not
+
+    def GetFilename(self):
+        return self.filename
+
+    def GetFilepath(self):
+        return self.dirname
+
+
+# A class to hold some GUI stuff
+class GuiDatViewer(object):
+    def __init__(self, filenameTextCtrl=None, dirnameTextCtrl=None):
+        self.filenameTextCtrl = filenameTextCtrl
+        self.dirnameTextCtrl = dirnameTextCtrl
+
+    def GetFilenameTextCtrl(self):
+        return self.filenameTextCtrl
+
+    def GetDirnameTextCtrl(self):
+        return self.dirnameTextCtrl
+
 
 #################################################
 ## Main UI
@@ -37,10 +83,60 @@ class Frame(wx.Frame):
         LogMsg(4, "Frame __init__")
         wx.Frame.__init__(self, parent, id, title)
 
+        self.h5Handler = None
+
+        # create the panel, status bar, and menus
         self.panel = wx.Panel(self)
         self.statusbar = self.CreateStatusBar()
-
         self.CreateMenus()
+
+        # add the controls to the panel
+        topLabel = wx.StaticText(self.panel,
+                                 -1,
+                                 "Current H5 File")
+
+        topLabel.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD))
+
+        # filename and dirname text controls are read-only
+        filenameLabel = wx.StaticText(self.panel, -1, "Filename:")
+        filename = wx.TextCtrl(self.panel, -1, "",
+                               style=wx.TE_READONLY,
+                               size=(200, -1))
+
+        dirLabel = wx.StaticText(self.panel, -1, "Folder:")
+        dirname = wx.TextCtrl(self.panel, -1, "", style=wx.TE_READONLY)
+
+        # do the layout
+        # mainSizer is the top level that manages everything (vertical)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(topLabel, 0, wx.ALL, 15)
+        #mainSizer.Add(wx.StaticLine(self.panel), 0,
+        #              wx.EXPAND | wx.TOP | wx.BOTTOM, 5)
+
+        # filenameSizer is a grid that holds the filename info
+        filenameSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+        filenameSizer.AddGrowableCol(1)
+        filenameSizer.Add(filenameLabel, 0,
+                          wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        filenameSizer.Add(filename, 0, wx.EXPAND)
+        filenameSizer.Add(dirLabel, 0,
+                          wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        filenameSizer.Add(dirname, 0, wx.EXPAND)
+
+        # add the filenameSizer to the mainSizer
+        mainSizer.Add(filenameSizer, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM | wx.RIGHT, 15)
+
+        # set the sizer for the panel
+        self.panel.SetSizer(mainSizer)
+
+        # fit the frame to the needs of the sizer, frame is automatically resized
+        mainSizer.Fit(self)
+
+        # Also prevent the frame from getting any smaller than this size
+        mainSizer.SetSizeHints(self)
+
+        # Save off important GUI controls
+        self.gdv = GuiDatViewer(filenameTextCtrl=filename, dirnameTextCtrl=dirname)
 
     def CreateMenus(self):
         menuFile = self.CreateFileMenuItems()
@@ -112,6 +208,19 @@ class Frame(wx.Frame):
     def OnOpenH5(self, event):
         LogMsg(4, "OnOpenH5")
 
+        d = wx.FileDialog(None, "Open HDF5 file",
+                          style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                          wildcard="h5 files (*.h5)|*.h5")
+        if d.ShowModal() == wx.ID_OK:
+            self.h5Handler = H5Handler(d.GetPath())
+
+            if self.h5Handler is not None:
+                # update the filename and path controls
+                self.gdv.GetFilenameTextCtrl().SetValue(self.h5Handler.GetFilename())
+                self.gdv.GetDirnameTextCtrl().SetValue(self.h5Handler.GetFilepath())
+
+        d.Destroy()
+
     def OnOpenZip(self, event):
         LogMsg(4, "OnOpenZip")
 
@@ -120,6 +229,17 @@ class Frame(wx.Frame):
 
     def OnAbout(self, event):
         LogMsg(4, "OnAbout")
+
+        verFormatStr = "%s\n\n" \
+                       "Version:\t%s\n" \
+                       "\n" \
+                       "Web site:\t\twww.picarro.com\n" \
+                       "Technical support:\t408-962-3900\n" \
+                       "Email:\t\ttechsupport@picarro.com\n" \
+                       "\n" \
+                       "Copyright (c) 2005 - 2013, Picarro Inc.\n"
+        verMsg = verFormatStr % (FULLAPPNAME, APPVERSION)
+        wx.MessageBox(verMsg, APPNAME, wx.OK)
 
     def OnExitApp(self, event):
         LogMsg(4, "OnExitApp")
@@ -214,8 +334,8 @@ Picarro H5 file viewer and converter.
                                           'useful for debugging'))
 
     parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
-                      default=0, help=('set message logging level, '
-                                       '0=highest  5=lowest (noisy)'))
+                      default=g_logMsgLevel, help=('set message logging level, '
+                                                   '0=highest  5=lowest (noisy)'))
 
     options, _ = parser.parse_args()
 
