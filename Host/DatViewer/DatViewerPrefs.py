@@ -1,4 +1,17 @@
 # DatViewerPrefs.py
+#
+#
+# TODO: Need a class to handle prefs that is passed a dictionary
+#       for prefs containing the following info:
+#          pref name
+#          pref description
+#          section name
+#          pref type (float, int, string, etc.)
+#          pref default
+#
+#       Implement class methods to load/save, get/set, reset, etc.
+#
+# For now I'll just hard-code things for the app.
 
 from __future__ import with_statement
 
@@ -32,8 +45,10 @@ class DatViewerPrefs(object):
         # These are the initial built-in prefs settings
         #
         # [FileManagement]
-        self.lastH5OpenDir = None
-        self.lastZipConcatDir = None
+        self.lastH5OpenDir = ""
+
+        self.lastZipOpenDir = ""
+        self.lastZipOpenSaveH5Dir = ""
 
         # [UILayout]
         self.viewerFrameSize = wx.Size(500, 300)
@@ -52,6 +67,14 @@ class DatViewerPrefs(object):
             if os.path.isfile(self.userPrefsPath):
                 self._LoadConfigFile(self.userPrefsPath)
 
+    def ResetPrefs(self):
+        # for manually resetting prefs
+        self.InitPrefs()
+
+        # pull in app defaults from app's INI
+        if os.path.isfile(self.defaultConfigPath):
+            self._LoadConfigFile(self.defaultConfigPath)
+
     def SavePrefs(self):
         self._SaveConfigFile(self.userPrefsPath)
 
@@ -69,15 +92,23 @@ class DatViewerPrefs(object):
         try:
             self.lastH5OpenDir = co.get(section, 'lastH5OpenDir', self.lastH5OpenDir)
             if not os.path.isdir(self.lastH5OpenDir):
-                self.lastH5OpenDir = None
+                self.lastH5OpenDir = ""
         except:
             pass
 
-        #   lastZipConcatDir
+        #   lastZipOpenDir - folder for opening ZIP to create H5 file
         try:
-            self.lastZipConcatDir = co.get(section, 'lastZipConcatDir', self.lastZipConcatDir)
-            if not os.path.isdir(self.lastZipConcatDir):
-                self.lastZipConcatDir = None
+            self.lastZipOpenDir = co.get(section, 'lastZipOpenDir', self.lastZipOpenDir)
+            if not os.path.isdir(self.lastZipOpenDir):
+                self.lastZipOpenDir = ""
+        except:
+            pass
+
+        #   lastZipOpenSaveH5Dir - folder for H5 file created from ZIP archive
+        try:
+            self.lastZipOpenSaveH5Dir = co.get(section, 'lastZipOpenSaveH5Dir', self.lastZipOpenSaveH5Dir)
+            if not os.path.isdir(self.lastZipOpenSaveH5Dir):
+                self.lastZipOpenSaveH5Dir = ""
         except:
             pass
 
@@ -117,7 +148,8 @@ class DatViewerPrefs(object):
             co.add_section(section)
 
         co.set(section, 'lastH5OpenDir', self.lastH5OpenDir)
-        co.set(section, 'lastZipConcatDir', self.lastZipConcatDir)
+        co.set(section, 'lastZipOpenDir', self.lastZipOpenDir)
+        co.set(section, 'lastZipOpenSaveH5Dir', self.lastZipOpenDir)
 
         section = "UILayout"
         if not co.has_section(section):

@@ -20,6 +20,7 @@
 import wx
 import sys
 import os
+import zipfile
 from optparse import OptionParser
 from DatViewerPrefs import DatViewerPrefs
 
@@ -41,10 +42,10 @@ def LogMsg(level, str):
 
 
 #################################################
-## H5 file handler class
+## Class for handling H5 files
 ##
 
-class H5Handler(object):
+class H5File(object):
     def __init__(self, filepath):
         self.filepath = filepath
         self.filename = os.path.split(filepath)[1]
@@ -77,13 +78,27 @@ class GuiDatViewer(object):
 ## Main UI
 ##
 
+# IDs for some menu items
+ID_MENU_PLOTFRAMES_1 = wx.NewId()
+ID_MENU_PLOTFRAMES_2 = wx.NewId()
+ID_MENU_PLOTFRAMES_3 = wx.NewId()
+ID_MENU_PLOT_CORR = wx.NewId()
+ID_MENU_PLOT_ALLAN = wx.NewId()
 
-class Frame(wx.Frame):
-    def __init__(self, parent, id, title):
+mainMenuItems = [ID_MENU_PLOTFRAMES_1,
+                 ID_MENU_PLOTFRAMES_2,
+                 ID_MENU_PLOTFRAMES_3,
+                 ID_MENU_PLOT_CORR,
+                 ID_MENU_PLOT_ALLAN]
+
+
+class AppFrame(wx.Frame):
+    def __init__(self, parent, id, title, prefs):
         LogMsg(4, "Frame __init__")
         wx.Frame.__init__(self, parent, id, title)
 
-        self.h5Handler = None
+        self.h5File = None
+        self.prefs = prefs
 
         # create the panel, status bar, and menus
         self.panel = wx.Panel(self)
@@ -138,6 +153,9 @@ class Frame(wx.Frame):
         # Save off important GUI controls
         self.gdv = GuiDatViewer(filenameTextCtrl=filename, dirnameTextCtrl=dirname)
 
+        # Update menu items
+        self.UpdateMenus()
+
     def CreateMenus(self):
         menuFile = self.CreateFileMenuItems()
 
@@ -187,8 +205,36 @@ class Frame(wx.Frame):
         return menu
 
     def CreateViewMenuItems(self):
+        # These menu items have known IDs (generated at run-time) so
+        # they can be disabled until a valid H5 filename is set
         menu = wx.Menu()
-        # add View menu items here...
+        series1Item = menu.Append(ID_MENU_PLOTFRAMES_1,
+                                  "New Time Series Plot (&1 Frame)...\t1",
+                                  "Open a window with one frame to plot the current H5 data.")
+        series2Item = menu.Append(ID_MENU_PLOTFRAMES_2,
+                                  "New Time Series Plot (&2 Frames)...\t1",
+                                  "Open a window with two frames to plot the current H5 data.")
+        series3Item = menu.Append(ID_MENU_PLOTFRAMES_3,
+                                  "New Time Series Plot (&3 Frames)...\t1",
+                                  "Open a window with three viewerFramePos to plot the current H5 data.")
+
+        menu.AppendSeparator()
+
+        correlationItem = menu.Append(ID_MENU_PLOT_CORR,
+                                      "&Correlation Plot...\tC",
+                                      "Open a new window with a correlation plot of the current H5 data.")
+
+        allenItem = menu.Append(ID_MENU_PLOT_ALLAN,
+                                "&Allan Standard Deviation Plot...\tA",
+                                "Open a new window with an Allan plot of the current H5 data.")
+
+        # Bindings
+        self.Bind(wx.EVT_MENU, self.NotImpl, series1Item)
+        self.Bind(wx.EVT_MENU, self.NotImpl, series2Item)
+        self.Bind(wx.EVT_MENU, self.NotImpl, series3Item)
+        self.Bind(wx.EVT_MENU, self.NotImpl, correlationItem)
+        self.Bind(wx.EVT_MENU, self.NotImpl, allenItem)
+
         return menu
 
     def CreateWindowMenuItems(self):
@@ -205,24 +251,135 @@ class Frame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
         return menuHelp
 
+    def UpdateMenus(self):
+        fEnable = False
+        if self.h5File is not None:
+            fEnable = True
+
+        for item in mainMenuItems:
+            self.menubar.Enable(item, fEnable)
+
+    def NotImpl(self, event):
+        wx.MessageBox("Feature not implemented!", "", wx.OK)
+
     def OnOpenH5(self, event):
         LogMsg(4, "OnOpenH5")
 
+        # use last dir from prefs if it's valid
+        defaultDir = self.prefs.lastH5OpenDir
+
+        if not os.path.isdir(defaultDir):
+            defaultDir = None
+
         d = wx.FileDialog(None, "Open HDF5 file",
+                          defaultDir=defaultDir,
                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
                           wildcard="h5 files (*.h5)|*.h5")
         if d.ShowModal() == wx.ID_OK:
-            self.h5Handler = H5Handler(d.GetPath())
+            self.h5File = H5File(d.GetPath())
 
-            if self.h5Handler is not None:
+            if self.h5File is not None:
                 # update the filename and path controls
-                self.gdv.GetFilenameTextCtrl().SetValue(self.h5Handler.GetFilename())
-                self.gdv.GetDirnameTextCtrl().SetValue(self.h5Handler.GetFilepath())
+                self.gdv.GetFilenameTextCtrl().SetValue(self.h5File.GetFilename())
+                self.gdv.GetDirnameTextCtrl().SetValue(self.h5File.GetFilepath())
+
+                # update last dir in prefs used to open an H5 file
+                self.prefs.lastH5OpenDir = self.h5File.GetFilepath()
+
+                # update menus so choices to create plots are enabled
+                self.UpdateMenus()
 
         d.Destroy()
 
     def OnOpenZip(self, event):
         LogMsg(4, "OnOpenZip")
+
+        # use last dir from prefs if it's valid
+        defaultDir = self.prefs.lastZipOpenDir
+
+        if not os.path.isdir(defaultDir):
+            defaultDir = None
+
+        # prompt user for a ZIP file to open
+        d = wx.FileDialog(None, "Open ZIP HD5 archive to concatenate",
+                          defaultDir=defaultDir,
+                          style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                          wildcard="zip files (*.zip)|*.zip")
+
+        # input ZIP filepath and output H5 filepath
+        zipname = None
+        fname = None
+
+        if d.ShowModal() == wx.ID_OK:
+            zipname = d.GetPath()
+
+        d.Destroy()
+
+        if zipname is None:
+            return
+
+        # prompt user for an output H5 filename and path
+        if os.path.splitext(zipname)[1] == ".zip" and zipfile.is_zipfile(zipname):
+            # use the .zip filename to initialize a .h5 output filename
+            # path is same as the .zip archive
+            fname = os.path.splitext(zipname)[0] + ".h5"
+
+            defaultDir = self.prefs.lastZipOpenSaveH5Dir
+
+            print "defaultDir='%s'" % defaultDir
+
+            if not os.path.isdir(defaultDir):
+                defaultDir = ""
+
+            # give the user a chance to change it and warn about overwrites
+            fd = wx.FileDialog(None, "Output H5 file",
+                               defaultDir=defaultDir,
+                               style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
+                               defaultFile=fname,
+                               wildcard="h5 files (*.h5)|*.h5")
+
+            if fd.ShowModal() == wx.ID_OK:
+                fname = fd.GetPath()
+
+                # see if we can open the output file for writing
+                # if we can't, it is probably in use
+                try:
+                    # I can't make this fail even if the file is open for writing
+                    # in another python shell. Maybe I need to use tables.openFile()
+                    # here just like the original code.
+                    # TODO: Create a class to handle ZIP to H5.
+                    #       Load it up here and validate before continuing.
+                    fp = open(fname, "w")
+                    fp.close()
+                except:
+                    wx.MessageBox("Cannot open %s. File may be in use." % fname)
+                    fname = None
+
+            else:
+                # reset so we bail after cleanup
+                fname = None
+
+            fd.Destroy()
+
+        # done if nothing to do or error occurred above
+        if fname is None:
+            return
+
+        LogMsg(2, "OnOpenZip: zipname='%s'" % zipname)
+        LogMsg(2, "OnOpenZip: fname='%s'" % fname)
+
+        # create the HD5 archive from the zip
+
+        # If it's not valid should we clear the current
+        # H5 file object? There will be an error
+        # dialog popped anyway...
+
+        # update last dir in prefs
+        self.prefs.lastZipOpenDir = os.path.split(zipname)[0]
+        self.prefs.lastZipOpenSaveH5Dir = os.path.split(fname)[0]
+
+        # update menus so choices to create plots are enabled
+        self.UpdateMenus()
 
     def OnConcatFolder(self, event):
         LogMsg(4, "OnConcatFolder")
@@ -266,9 +423,10 @@ class App(wx.App):
 
     def OnInit(self):
         LogMsg(4, "OnInit")
-        self.frame = Frame(parent=None,
-                           id=-1,
-                           title=FULLAPPNAME)
+        self.frame = AppFrame(parent=None,
+                              id=-1,
+                              title=FULLAPPNAME,
+                              prefs=self.prefs)
 
         # TODO: throw up a splash screen while the app loads
 
