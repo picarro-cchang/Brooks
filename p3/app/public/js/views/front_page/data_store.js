@@ -137,7 +137,7 @@ var DataStore = function(){
 				}
 			}
 		}
-		
+
 		var my_log = my_logs[obj.log_name];
 
 		for(var o in obj){
@@ -174,7 +174,7 @@ var DataStore = function(){
 				meanElement.ch4 = sumCh4/interval;
 				di.push(meanElement);
 				sumCh4 = 0;
-			}			
+			}
 		}
 		return di;
 	}
@@ -205,14 +205,14 @@ var DataStore = function(){
 	        		lastBearing = angle;
 	        		decimated.push([lat1, lon1])
 	        	}
-	        }        
+	        }
 	    }
 	    return decimated;
 	};
 
 
 	var getLogMeta = function(callback, callback2){
-		
+
 		var reqobj = {};
 		reqobj.svc = "gdu";
 		reqobj.version = "1.0";
@@ -223,6 +223,7 @@ var DataStore = function(){
 			, 	"anz": "FDDS2015"
 			, 	'startEtm':0
 			,	'varList':'["LOGNAME", "durr"]'
+                        ,       'limit':2000
 			, 	'reverse':'true'
 		};
 
@@ -317,7 +318,7 @@ var DataStore = function(){
 		reqobj.resource = "AnzLog";
 		reqobj.qryobj = {
 				"qry": "byEpoch"
-			, 	"alog": log_name 
+			, 	"alog": log_name
 			, 	'startEtm': 0
 			, 	'decimated': 8
 			,	'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'
@@ -350,7 +351,7 @@ var DataStore = function(){
 		reqobj.resource = "AnzLog";
 		reqobj.qryobj = {
 				  "qry": "byEpoch"
-			, 	"alog": log_name 
+			, 	"alog": log_name
 			, 	'startEtm': 0
 			, 	'decimated': 8
 			,	  'varList':'["CH4","GPS_ABS_LAT","GPS_ABS_LONG"]'
