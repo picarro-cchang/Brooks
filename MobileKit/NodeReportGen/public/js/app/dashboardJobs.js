@@ -180,6 +180,7 @@ define(function(require, exports, module) {
                     ],
                     "sDom":'<"top"lf>rt<"bottom"ip>'
                 });
+                this.jobTableLoading = true;
                 this.jobTable.fnSort([[1,'desc']]);
                 this.jobTable.bind('sort', function() { that.jobTableEvent('Sort'); })
                              .bind('page', function() { that.jobTableEvent('Page'); })
@@ -212,7 +213,10 @@ define(function(require, exports, module) {
                 // When the dashboard is changed in any way, we need to go through the visible
                 //  rows and start calling updateStatus for any jobs not previously updated
                 var that = this;
-                console.log('Datatable event: ' + type);
+                if (this.jobTableLoading) {
+                    this.jobTableLoading = false;
+                    $("#id_jobTableLoading").css("display","none");
+                }
                 // We need to defer determination of visible rows until the table has been refreshed
                 setTimeout(function () { that.findVisible(); }, 200);
             },
@@ -224,8 +228,6 @@ define(function(require, exports, module) {
                 var visibleRows = this.jobTable.$('tr', {"filter":"applied", "page":"current"});
                 var visibleData = this.jobTable._('tr', {"filter":"applied", "page":"current"});
                 this.visibleJobCids = [];
-                console.log(visibleRows);
-                console.log(visibleData);
                 for (var i=0; i<visibleRows.length; i++) {
                     var row = visibleRows[i];
                     var data = visibleData[i];
