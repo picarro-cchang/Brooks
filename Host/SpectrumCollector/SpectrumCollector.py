@@ -10,6 +10,7 @@ File History:
                         are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
                         in which these dictionaries map to tables. For a normal spectrum, sensorData and controlData
                         contain lists with only one element each.
+    19-Oct-2013  sze   Removes use of numpy record arrays, as this was causing a memory leak
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -383,9 +384,9 @@ class SpectrumCollector(object):
         # Convert the contents of self.rdBuffer lists into numpy arrays
         for fname in self.rdBuffer:
             data,dtype = self.rdBuffer[fname]
-            self.rdfDict["rdData"][fname] = numpy.array(data,ctypes2numpy[dtype])
-        self.rdfDict["rdData"]["pztValue"] = self.rdfDict["rdData"]["pztValue"] + 0.0 # Convert integer to floating-point
-        self.rdfDict["rdData"]["tunerValue"] = self.rdfDict["rdData"]["tunerValue"] + 0.0
+            self.rdfDict["rdData"][fname] = numpy.asarray(data,ctypes2numpy[dtype])
+        self.rdfDict["rdData"]["pztValue"] = numpy.asarray(self.rdfDict["rdData"]["pztValue"], dtype='float32')
+        self.rdfDict["rdData"]["tunerValue"] = numpy.asarray(self.rdfDict["rdData"]["tunerValue"], dtype='float32')
 
         # Append averaged sensor data
         for s in self.avgSensors:
@@ -413,11 +414,18 @@ class SpectrumCollector(object):
         #  contain the spectra in a single scheme.
         if self.enableSpectrumFiles:
             if self.useHDF5:
+                # Lookup table giving pyTables column generation function keyed
+                # by the numpy dtype.name
+                colByName = dict(float32=Float32Col, float64=Float64Col, 
+                                 int16=Int16Col, int32=Int32Col, int64=Int64Col,
+                                 uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
                 if self.newHdf5File:
                     # Create HDF5 file
                     filename = "RD_%013d.h5" % (int(time.time()*1000),)
                     self.streamPath = os.path.join(self.streamDir, filename)
                     self.streamFP = openFile(self.streamPath, "w")
+                    # Store the name of the scheme file and the current analyzer mode
+                    #  as user attributes in the new HDF5 file
                     if len(self.schemesUsed) != 1:
                         Log("Only one scheme should be in RDF file %s" % (filename,),Data=self.schemesUsed)
                     else:
@@ -425,28 +433,35 @@ class SpectrumCollector(object):
                         if schemeUsed is not None:
                             self.streamFP.root._v_attrs.schemeFile = schemeUsed[3]
                             self.streamFP.root._v_attrs.modeName = schemeUsed[0]
+                    # Indicate that no tables exist yet in this new file
+                    self.tableDict = {}
+                    self.newHdf5File = False
+
+                # Write out the information into the HDF5 tables
                 for dataKey in self.rdfDict.keys():
                     subDataDict = self.rdfDict[dataKey]
                     if len(subDataDict) > 0:
                         keys,values = zip(*sorted(subDataDict.items()))
-                        if isinstance(values[0], numpy.ndarray):
-                            # Array
-                            dataRec = numpy.rec.fromarrays(values, names=keys)
-                        elif isinstance(values[0], list) or isinstance(values[0], tuple):
-                            # Convert list or tuple to array
-                            dataRec = numpy.rec.fromarrays([numpy.asarray(v) for v in values], names=keys)
-                        else:
-                            raise ValueError("Non-lists or non-arrays are unsupported")
-                        # Either append dataRec to an existing table, or create a new one
-                        if self.newHdf5File:
-                            self.tableDict[dataKey] = self.streamFP.createTable("/", dataKey, dataRec, dataKey, filters=self.hdf5Filters)
-                        else:
-                            try:
-                                self.tableDict[dataKey].append(dataRec)
-                            except:
-                                self.closeHdf5File = True
-                                break
-                self.newHdf5File = False
+                        if dataKey not in self.tableDict:
+                            # We need to build up the colDict whose keys are the column
+                            #  names and whose values are instances of subclasses of Col
+                            # We find out which subclass of Col to use from the dtype of the 
+                            #  value to be stored in that column
+                            h5 = self.streamFP
+                            values = [numpy.asarray(v) for v in values]
+                            colDict = {}
+                            for k, v in zip(keys, values):
+                                colDict[k] = colByName[v.dtype.name]()
+                            self.tableDict[dataKey] = h5.createTable(h5.root, dataKey, colDict, filters=self.hdf5Filters)
+                        table = self.tableDict[dataKey]
+                        # Go through the arrays in values and fill up each row of the table
+                        #  one element at a time
+                        row = table.row
+                        for r in range(len(values[0])):
+                            for i, k in enumerate(keys):
+                                row[k] = values[i][r]
+                            row.append()
+                        table.flush()
 
                 if self.closeHdf5File:
                     self.closeHdf5File = False

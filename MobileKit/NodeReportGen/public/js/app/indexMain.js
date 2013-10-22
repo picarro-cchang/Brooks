@@ -39,7 +39,7 @@ requirejs.config({
         'bootstrap-dropdown': {
             deps: ['jquery']
         },
-        'bootstrap-spinedit': {
+        'bootstrap-spinedit-modified': {
             deps: ['jquery', 'jquery-migrate']
         },
         'bootstrap-transition': {
