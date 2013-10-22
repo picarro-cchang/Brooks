@@ -21,8 +21,13 @@ import wx
 import sys
 import os
 import zipfile
+import pytz
 from optparse import OptionParser
 from DatViewerPrefs import DatViewerPrefs
+
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+from matplotlib.figure import Figure
 
 
 FULLAPPNAME = "Picarro Data File Viewer"
@@ -39,6 +44,214 @@ def LogErrmsg(str):
 def LogMsg(level, str):
     if level <= g_logMsgLevel:
         print str
+
+
+def GenerateUniqueName(window, nPlots, plotWindowsList):
+    # generate the name to view it in the menu,
+    # making sure it is unique
+    name = ""
+
+    if nPlots > 0:
+        if nPlots == 1:
+            name = "%s [1 frame]" % window.name
+        else:
+            name = "%s [%d frames]" % (window.name, int(nPlots))
+    else:
+        name = window.name
+
+    # first see if the window name sans numbering is there
+    found = False
+    for item in plotWindowsList:
+        if item.name == name:
+            found = True
+            break
+
+    if found is True:
+        # already there, will need to try numbering
+        done = False
+        ix = 2
+        while done is False:
+            found = False
+            nameToTry = "%s (%d)" % (name, int(ix))
+
+            for item in plotWindowsList:
+                if item.name == nameToTry:
+                    found = True
+                    break
+
+            if found is False:
+                name = nameToTry
+                done = True
+            else:
+                # already a match, try another name
+                ix += 1
+
+    return name
+
+
+#################################################
+## Class for handling the various plot windows
+## in the Window menu
+#
+class PlotWindow(object):
+    def __init__(self, window):
+        self.window = window
+
+        # cache the id for the window object
+        self.id = window.id
+
+        # the title is used in the Windows menu and should be unique
+        # as should also the id
+        self.name = self.window.title
+
+        # cache the filename and folder
+        self.filename = self.window.filename
+        self.filedir = self.window.filedir
+
+        """
+        # generate the name to view it in the menu,
+        # making sure it is unique
+        name = "%s [%d]" % (window.name, int(nPlots))
+
+        # first see if the window name sans numbering is there
+        found = False
+        for item in plotWindowsList:
+            if item.name == name:
+                found = True
+                break
+
+        if found is True:
+            # already there, will need to try numbering
+            done = False
+            ix = 2
+            while done is False:
+                found = False
+                nameToTry = "%s (%d)" % (name, int(ix))
+
+                for item in plotWindowsList:
+                    if item.name == nameToTry:
+                        found = True
+                        break
+
+                if found is False:
+                    name = nameToTry
+                    done = True
+                else:
+                    # already a match, try another name
+                    ix += 1
+
+        # save off the unique name
+        self.name = name
+        """
+
+    def GetId(self):
+        return self.id
+
+    def GetName(self):
+        return self.name
+
+    def GetWindow(self):
+        return self.window
+
+    def GetFilename(self):
+        return self.filename
+
+    def GetFiledir(self):
+        pass
+
+
+#################################################
+## Class for handling H5 file plots
+##
+#  Best if this class implemented in a separate file
+#  then other apps could import it for plotting H5 data
+#
+class SeriesFrame(wx.Frame):
+    def __init__(self, *a, **k):
+        LogMsg(4, "SeriesFrame __init__")
+        wx.Frame.__init__(self, wx.GetApp().TopWindow, -1,
+                          'SeriesFrame', size=(550, 350))
+
+        # parse args
+        self.tz = k.get("tz", pytz.timezone("UTC"))
+        self.h5File = k.get("h5File", None)
+        self.parent = k.get("parent", None)
+        self.nPlots = k.get("nViewers", 1)
+        self.onCloseCallback = k.get("onCloseCallback", None)
+
+        # TODO: error if there is no H5 file
+
+        # set the name to the filename and a unique ID
+        self.filename = self.h5File.GetFilename()
+        self.filedir = self.h5File.GetFilepath()
+        self.id = wx.NewId()
+
+        # object name is also the filename
+        self.name = self.h5File.GetFilename()
+
+        self.title = GenerateUniqueName(self, self.nPlots, self.parent.plotWindows)
+        #self.SetTitle("".join(["Viewing [", self.name, "]"]))
+        self.SetTitle(self.title)
+
+        # whatever color is set here doesn't seem to matter
+        self.SetBackgroundColour(wx.NamedColour("white"))
+
+        self.figure = Figure()
+        self.axes = self.figure.add_subplot(111)
+
+        self.canvas = FigureCanvas(self, -1, self.figure)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
+        self.SetSizer(self.sizer)
+        self.Fit()
+
+        # Add a menu?
+
+        if self.parent.prefs.plotWindowToolbar is True:
+            self.add_toolbar()
+
+        self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
+
+        self.Show()
+
+    def add_toolbar(self):
+        self.toolbar = NavigationToolbar2Wx(self.canvas)
+        self.toolbar.Realize()
+        if wx.Platform == '__WXMAC__':
+            # Mac platform (OSX 10.3, MacPython) does not seem to cope with
+            # having a toolbar in a sizer. This work-around gets the buttons
+            # back, but at the expense of having the toolbar at the top
+            self.SetToolBar(self.toolbar)
+        else:
+            # On Windows platform, default window size is incorrect, so set
+            # toolbar width to figure width.
+            tw, th = self.toolbar.GetSizeTuple()
+            fw, fh = self.canvas.GetSizeTuple()
+            # By adding toolbar in sizer, we are able to put it at the bottom
+            # of the frame - so appearance is closer to GTK version.
+            # As noted above, doesn't work for Mac.
+            self.toolbar.SetSize(wx.Size(fw, th))
+            self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
+        # update the axes menu on the toolbar
+        self.toolbar.update()
+
+    def OnPaint(self, event):
+        LogMsg(4, "SeriesFrame OnPaint")
+        self.canvas.draw()
+
+    def OnCloseWindow(self, event):
+        # user clicked the Close box
+        LogMsg(4, "SeriesFrame::OnCloseWindow")
+
+        # let parent app know we're being closed so it can do necessary
+        # cleanup (e.g. remove this plot from the Windows menu, etc.)
+        if self.onCloseCallback is not None:
+            self.onCloseCallback(self.id, self.title)
+        else:
+            LogMsg(0, "SeriesFrame: onCloseCallback not registered!")
+
+        self.Destroy()
 
 
 #################################################
@@ -99,6 +312,8 @@ class AppFrame(wx.Frame):
 
         self.h5File = None
         self.prefs = prefs
+
+        self.plotWindows = []
 
         # create the panel, status bar, and menus
         self.panel = wx.Panel(self)
@@ -163,7 +378,10 @@ class AppFrame(wx.Frame):
         menuView = self.CreateViewMenuItems()
 
         # Window menu
-        menuWindow = self.CreateWindowMenuItems()
+        #
+        # We need to hang onto to this menu handle so we can
+        # dynamically update it
+        self.menuWindow = self.CreateWindowMenuItems()
 
         # Help menu
         menuHelp = self.CreateHelpMenuItems()
@@ -172,7 +390,7 @@ class AppFrame(wx.Frame):
         self.menubar = wx.MenuBar()
         self.menubar.Append(menuFile, "&File")
         self.menubar.Append(menuView, "&View")
-        self.menubar.Append(menuWindow, "&Window")
+        self.menubar.Append(self.menuWindow, "&Window")
         self.menubar.Append(menuHelp, "&Help")
         self.SetMenuBar(self.menubar)
 
@@ -229,9 +447,9 @@ class AppFrame(wx.Frame):
                                 "Open a new window with an Allan plot of the current H5 data.")
 
         # Bindings
-        self.Bind(wx.EVT_MENU, self.NotImpl, series1Item)
-        self.Bind(wx.EVT_MENU, self.NotImpl, series2Item)
-        self.Bind(wx.EVT_MENU, self.NotImpl, series3Item)
+        self.Bind(wx.EVT_MENU, self.onSeries1, series1Item)
+        self.Bind(wx.EVT_MENU, self.onSeries2, series2Item)
+        self.Bind(wx.EVT_MENU, self.onSeries3, series3Item)
         self.Bind(wx.EVT_MENU, self.NotImpl, correlationItem)
         self.Bind(wx.EVT_MENU, self.NotImpl, allenItem)
 
@@ -259,8 +477,91 @@ class AppFrame(wx.Frame):
         for item in mainMenuItems:
             self.menubar.Enable(item, fEnable)
 
+    # update menu items in Windows menu
+    # first clear the menu and then add all of the menu items
+    def UpdateWindowMenu(self):
+        windowItemsList = self.menuWindow.GetMenuItems()
+
+        #print "windowItemsList=", windowItemsList
+        #print "  item count=", self.menuWindow.GetMenuItemCount()
+
+        for item in windowItemsList:
+            self.menuWindow.RemoveItem(item)
+
+        # populate with the current plot windows
+        for plotWindow in self.plotWindows:
+            #print "  plotWindow=", plotWindow
+            statusMsg = "Open '%s' and bring it to the top." % plotWindow.GetName()
+            #print "  name=%s", plotWindow.GetName()
+            #print "  id=", plotWindow.GetId()
+            windowItem = self.menuWindow.Append(plotWindow.GetId(),
+                                                plotWindow.GetName(),
+                                                statusMsg)
+
+            self.Bind(wx.EVT_MENU, self.OnSelectPlotWindow, windowItem)
+
+    def UpdateAppFrame(self):
+        # update stuff in the app that isn't a menu
+        # update the name in the title bar if it has changed
+        name = FULLAPPNAME
+        if self.h5File is not None:
+            name = " ".join([FULLAPPNAME, " - ", self.h5File.GetFilename()])
+
+        self.SetTitle(name)
+
     def NotImpl(self, event):
         wx.MessageBox("Feature not implemented!", "", wx.OK)
+
+    def onSeries(self, h5File, nFrames):
+        LogMsg(2, "onSeries")
+        if not h5File:
+            wx.MessageBox("Please open or convert a file first")
+            return
+
+        window = SeriesFrame(nViewers=nFrames,
+                             h5File=h5File,
+                             parent=self,
+                             onCloseCallback=self.OnCloseSeriesFrame)
+
+        # add this to the plot window list and update the Window menu
+        plotWindow = PlotWindow(window)
+        self.plotWindows.append(plotWindow)
+        self.UpdateWindowMenu()
+
+        #window = SeriesWindow(nViewers=nFrames, tz=info.object.tz, parent=info.object)
+        #window.set(dataFile=info.object.dataFile)
+        #window.traits_view.set(title=info.object.dataFile)
+        #window.edit_traits(view=window.traits_view, context=window.cDict)
+
+    def onSeries1(self, event):
+        LogMsg(2, "onSeries1")
+        return self.onSeries(self.h5File, 1)
+
+    def onSeries2(self, event):
+        return self.onSeries(self.h5File, 2)
+        
+    def onSeries3(self, event):
+        return self.onSeries(self.h5File, 3)
+
+    def OnCloseSeriesFrame(self, id, windowName):
+        LogMsg(4, "OnCloseSeriesFrame: id=%d  name=%s" % (int(id), windowName))
+
+        # find this item in the plotWindows list and delete it
+        found = False
+        for plotWindow in self.plotWindows:
+            if id == plotWindow.id:
+                # sanity check
+                assert windowName == plotWindow.name
+
+                found = True
+                self.plotWindows.remove(plotWindow)
+                break
+
+        # we should have found the menu item
+        assert found is True
+
+        # update the Windows menu
+        self.UpdateWindowMenu()
 
     def OnOpenH5(self, event):
         LogMsg(4, "OnOpenH5")
@@ -288,6 +589,8 @@ class AppFrame(wx.Frame):
 
                 # update menus so choices to create plots are enabled
                 self.UpdateMenus()
+
+                self.UpdateAppFrame()
 
         d.Destroy()
 
@@ -326,7 +629,7 @@ class AppFrame(wx.Frame):
 
             defaultDir = self.prefs.lastZipOpenSaveH5Dir
 
-            print "defaultDir='%s'" % defaultDir
+            #print "defaultDir='%s'" % defaultDir
 
             if not os.path.isdir(defaultDir):
                 defaultDir = ""
@@ -384,6 +687,21 @@ class AppFrame(wx.Frame):
     def OnConcatFolder(self, event):
         LogMsg(4, "OnConcatFolder")
 
+    def OnSelectPlotWindow(self, event):
+        LogMsg(4, "OnSelectPlotWindow")
+        id = event.GetId()
+
+        for plotWindow in self.plotWindows:
+            if id == plotWindow.GetId():
+                # open this window if minimized and put it on top
+                window = plotWindow.GetWindow()
+
+                if window.IsIconized():
+                    window.Iconize(False)
+                window.Show()
+                window.Raise()
+                break
+
     def OnAbout(self, event):
         LogMsg(4, "OnAbout")
 
@@ -422,7 +740,7 @@ class App(wx.App):
         wx.App.__init__(self, redirect, filename)
 
     def OnInit(self):
-        LogMsg(4, "OnInit")
+        LogMsg(4, "App::OnInit")
         self.frame = AppFrame(parent=None,
                               id=-1,
                               title=FULLAPPNAME,
@@ -447,7 +765,7 @@ class App(wx.App):
         return True
 
     def OnResizeApp(self, event):
-        LogMsg(5, "OnResizeApp")
+        LogMsg(5, "App::OnResizeApp")
 
         # update app size and position information in prefs
         self.prefs.viewerFrameSize = self.frame.GetSize()
@@ -463,7 +781,7 @@ class App(wx.App):
         self.frame.panel.SetSize(clientSize)
 
     def OnExit(self):
-        LogMsg(4, "OnExit")
+        LogMsg(4, "App::OnExit")
 
         # save off prefs
         LogMsg(4, "Saving prefs")

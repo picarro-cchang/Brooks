@@ -1,13 +1,14 @@
 # DatViewerPrefs.py
 #
 #
-# TODO: Need a class to handle prefs that is passed a dictionary
-#       for prefs containing the following info:
+# TODO: Need a class to handle prefs load/save/get/set that is
+#       initialized with a prefs dictionary containing the following info:
 #          pref name
 #          pref description
 #          section name
 #          pref type (float, int, string, etc.)
 #          pref default
+#          bit flag (?) for pref (system or user), only user persisted
 #
 #       Implement class methods to load/save, get/set, reset, etc.
 #
@@ -53,6 +54,7 @@ class DatViewerPrefs(object):
         # [UILayout]
         self.viewerFrameSize = wx.Size(500, 300)
         self.viewerFramePos = wx.Point(-1, -1)
+        self.plotWindowToolbar = True
 
         # [Config]
         self.tz = 'US/Pacific'
@@ -131,6 +133,13 @@ class DatViewerPrefs(object):
         except:
             pass
 
+        #   plotWindowToolbar - whether plot windows have a toolbar
+        self.plotWindowToolbar = co.getboolean(section,
+                                               'plotWindowToolbar',
+                                               self.plotWindowToolbar)
+
+        #   DatViewerResizable
+
         # [Config]
         section = "Config"
 
@@ -163,7 +172,9 @@ class DatViewerPrefs(object):
         section = "Config"
         if not co.has_section(section):
             co.add_section(section)
-        co.set(section, 'tz', self.tz)
+
+        # something like timezone information should be system not user-specific
+        #co.set(section, 'tz', self.tz)
 
         # create folder to hold user prefs file if it doesn't exist
         # call os.makedirs() all intermediate folders are created as well
