@@ -178,6 +178,12 @@ define(function(require, exports, module) {
                         { "sWidth": "5%", "sTitle": '<button type="button" class="btn btn-mini btn-inverse showAll">Show All</button>',
                           "sClass": "center", "mData": "selected", "bSortable": false}
                     ],
+                    "fnDrawCallback": function ( oSettings ) {
+                        if (that.jobTableLoading) {
+                            that.jobTableLoading = false;
+                            $("#id_jobTableLoading").css("display","none");
+                        }
+                    },
                     "sDom":'<"top"lf>rt<"bottom"ip>'
                 });
                 this.jobTableLoading = true;
@@ -213,10 +219,6 @@ define(function(require, exports, module) {
                 // When the dashboard is changed in any way, we need to go through the visible
                 //  rows and start calling updateStatus for any jobs not previously updated
                 var that = this;
-                if (this.jobTableLoading) {
-                    this.jobTableLoading = false;
-                    $("#id_jobTableLoading").css("display","none");
-                }
                 // We need to defer determination of visible rows until the table has been refreshed
                 setTimeout(function () { that.findVisible(); }, 200);
             },
