@@ -34,6 +34,13 @@ FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
 APPVERSION = "3.0.0"
 
+# Putting prefs in a folder path that doesn't include the point release
+# version so that an update doesn't abandon the old settings. The version
+# can always be bumped if they aren't compatible.
+CONFIGVERSION = "3.0"
+APPCONFIGSPEC = "DatViewerPrefs.ini"
+USERCONFIG = "DatViewerUserPrefs.ini"
+
 g_logMsgLevel = 5   # should be 0 for check-in
 
 
@@ -157,7 +164,7 @@ class PlotWindow(object):
         return self.filename
 
     def GetFiledir(self):
-        pass
+        return self.filedir
 
 
 #################################################
@@ -208,7 +215,7 @@ class SeriesFrame(wx.Frame):
 
         # Add a menu?
 
-        if self.parent.prefs.plotWindowToolbar is True:
+        if self.parent.prefs.config["UILayout"]["plotWindowToolbar"] is True:
             self.add_toolbar()
 
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
@@ -567,10 +574,10 @@ class AppFrame(wx.Frame):
         LogMsg(4, "OnOpenH5")
 
         # use last dir from prefs if it's valid
-        defaultDir = self.prefs.lastH5OpenDir
+        defaultDir = self.prefs.config["FileManagement"]["lastH5OpenDir"]
 
         if not os.path.isdir(defaultDir):
-            defaultDir = None
+            defaultDir = ""
 
         d = wx.FileDialog(None, "Open HDF5 file",
                           defaultDir=defaultDir,
@@ -585,7 +592,7 @@ class AppFrame(wx.Frame):
                 self.gdv.GetDirnameTextCtrl().SetValue(self.h5File.GetFilepath())
 
                 # update last dir in prefs used to open an H5 file
-                self.prefs.lastH5OpenDir = self.h5File.GetFilepath()
+                self.prefs.config["FileManagement"]["lastH5OpenDir"] = self.h5File.GetFilepath()
 
                 # update menus so choices to create plots are enabled
                 self.UpdateMenus()
@@ -598,10 +605,10 @@ class AppFrame(wx.Frame):
         LogMsg(4, "OnOpenZip")
 
         # use last dir from prefs if it's valid
-        defaultDir = self.prefs.lastZipOpenDir
+        defaultDir = self.prefs.config["FileManagement"]["lastZipOpenDir"]
 
         if not os.path.isdir(defaultDir):
-            defaultDir = None
+            defaultDir = ""
 
         # prompt user for a ZIP file to open
         d = wx.FileDialog(None, "Open ZIP HD5 archive to concatenate",
@@ -625,19 +632,22 @@ class AppFrame(wx.Frame):
         if os.path.splitext(zipname)[1] == ".zip" and zipfile.is_zipfile(zipname):
             # use the .zip filename to initialize a .h5 output filename
             # path is same as the .zip archive
-            fname = os.path.splitext(zipname)[0] + ".h5"
+            fname = os.path.splitext(zipname)[0] + ".h5"    # change to .h5 extension
+            fname = os.path.split(fname)[1]                 # extract just the filename
 
-            defaultDir = self.prefs.lastZipOpenSaveH5Dir
-
-            #print "defaultDir='%s'" % defaultDir
+            defaultDir = self.prefs.config["FileManagement"]["lastZipOpenSaveH5Dir"]
 
             if not os.path.isdir(defaultDir):
                 defaultDir = ""
 
+            # I don't think I should use wx.FD_CHANGE_DIR in the style setting.
+            # What that does is change the working directory to the selected dir.
+            # Probably not what is wanted.
+
             # give the user a chance to change it and warn about overwrites
             fd = wx.FileDialog(None, "Output H5 file",
                                defaultDir=defaultDir,
-                               style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
+                               style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                                defaultFile=fname,
                                wildcard="h5 files (*.h5)|*.h5")
 
@@ -677,9 +687,9 @@ class AppFrame(wx.Frame):
         # H5 file object? There will be an error
         # dialog popped anyway...
 
-        # update last dir in prefs
-        self.prefs.lastZipOpenDir = os.path.split(zipname)[0]
-        self.prefs.lastZipOpenSaveH5Dir = os.path.split(fname)[0]
+        # update last dirs in prefs
+        self.prefs.config["FileManagement"]["lastZipOpenDir"] = os.path.split(zipname)[0]
+        self.prefs.config["FileManagement"]["lastZipOpenSaveH5Dir"] = os.path.split(fname)[0]
 
         # update menus so choices to create plots are enabled
         self.UpdateMenus()
@@ -733,11 +743,45 @@ class App(wx.App):
         #          1. command line option
         #          2. menu choice to reset prefs at next startup, saves in
         #             user prefs and resets flag
-        self.prefs = DatViewerPrefs(APPNAME, APPVERSION, fPrefsReset=False)
+        self.prefs = DatViewerPrefs(APPNAME, CONFIGVERSION,
+                                    defaultConfigSpec=APPCONFIGSPEC,
+                                    defaultUserPrefsFilename=USERCONFIG,
+                                    fPrefsReset=False)
         self.prefs.LoadPrefs()
         LogMsg(4, "Prefs loaded")
 
+        # translate prefs that are special types (e.g., wx.Size, wx.Point)
+        self.TranslatePrefsAfterLoad()
+
+        self.DumpPrefs()
+
         wx.App.__init__(self, redirect, filename)
+
+    def TranslatePrefsAfterLoad(self):
+        # these are for prefs whose types are unsupported by configobj
+        # app size
+        sizeTmp = self.prefs.config["UILayout"]["viewerFrameSize"]
+        sizeTmp = wx.Size(sizeTmp[0], sizeTmp[1])
+        self.prefs.config["UILayout"]["viewerFrameSize"] = sizeTmp
+
+        # app position
+        posTmp = self.prefs.config["UILayout"]["viewerFramePos"]
+        posTmp = wx.Point(posTmp[0], posTmp[1])
+        self.prefs.config["UILayout"]["viewerFramePos"] = posTmp
+
+    def TranslatePrefsBeforeSave(self):
+        # convert these prefs back to a list
+        sizeTmp = self.prefs.config["UILayout"]["viewerFrameSize"]
+        sizeTmp = [sizeTmp.width, sizeTmp.height]
+        self.prefs.config["UILayout"]["viewerFrameSize"] = sizeTmp
+
+        posTmp = self.prefs.config["UILayout"]["viewerFramePos"]
+        posTmp = [posTmp.x, posTmp.y]
+        self.prefs.config["UILayout"]["viewerFramePos"] = posTmp
+
+    def DumpPrefs(self):
+        print "lastZipOpenDir='%s'" % self.prefs.config["FileManagement"]["lastZipOpenDir"]
+        pass
 
     def OnInit(self):
         LogMsg(4, "App::OnInit")
@@ -749,10 +793,11 @@ class App(wx.App):
         # TODO: throw up a splash screen while the app loads
 
         # set app size and position
-        self.frame.SetSize(self.prefs.viewerFrameSize)
+        self.frame.SetSize(self.prefs.config["UILayout"]["viewerFrameSize"])
 
-        if self.prefs.viewerFramePos.x != -1 and self.prefs.viewerFramePos.y != -1:
-            self.frame.SetPosition(self.prefs.viewerFramePos)
+        posTmp = self.prefs.config["UILayout"]["viewerFramePos"]
+        if posTmp.x != -1 and posTmp.y != -1:
+            self.frame.SetPosition(posTmp)
 
         # events we want to handle
         self.frame.Bind(wx.EVT_SIZE, self.OnResizeApp)
@@ -768,11 +813,13 @@ class App(wx.App):
         LogMsg(5, "App::OnResizeApp")
 
         # update app size and position information in prefs
-        self.prefs.viewerFrameSize = self.frame.GetSize()
-        self.prefs.viewerFramePos = self.frame.GetPosition()
+        appSize = self.frame.GetSize()
+        appPos = self.frame.GetPosition()
+        self.prefs.config["UILayout"]["viewerFrameSize"] = appSize
+        self.prefs.config["UILayout"]["viewerFramePos"] = appPos
 
-        LogMsg(5, "  appSize=(%d, %d)" % (self.prefs.viewerFrameSize.width, self.prefs.viewerFrameSize.height))
-        LogMsg(5, "  appPos=(%d, %d)" % (self.prefs.viewerFramePos.x, self.prefs.viewerFramePos.y))
+        LogMsg(5, "  appSize=(%d, %d)" % (appSize.width, appSize.height))
+        LogMsg(5, "  appPos=(%d, %d)" % (appPos.x, appPos.y))
 
         clientSize = self.frame.GetClientSize()
         LogMsg(5, "  clientSize=(%d, %d)" % (clientSize.width, clientSize.height))
@@ -782,6 +829,9 @@ class App(wx.App):
 
     def OnExit(self):
         LogMsg(4, "App::OnExit")
+
+        # we must translate certain prefs before persisting them
+        self.TranslatePrefsBeforeSave()
 
         # save off prefs
         LogMsg(4, "Saving prefs")

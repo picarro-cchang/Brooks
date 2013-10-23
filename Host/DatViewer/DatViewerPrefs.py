@@ -1,30 +1,270 @@
 # DatViewerPrefs.py
 #
+# This is a useful class for managing user preferences, based on the Python
+# configobj class.
 #
-# TODO: Need a class to handle prefs load/save/get/set that is
-#       initialized with a prefs dictionary containing the following info:
-#          pref name
-#          pref description
-#          section name
-#          pref type (float, int, string, etc.)
-#          pref default
-#          bit flag (?) for pref (system or user), only user persisted
+# Provide a config spec file that is set up with settings for
+# defaults and it handles the rest. At a minimum, the config spec
+# needs the following entries:
 #
-#       Implement class methods to load/save, get/set, reset, etc.
+# Note: Put the following defs for version and resetPrefsOnNextRestart
+#       at the top of the file, not within a section. Set the
+#       default for version to a new value whenever prefs are changed so
+#       they are no longer compatible with previous user prefs settings that
+#       may have been persisted. This should be a fairly rare occurrence,
+#       typically only if a setting type is changed or some other
+#       incompatibility is introduced.
 #
-# For now I'll just hard-code things for the app.
+#
+#    # this should never be True by default else settings will never be remembered
+#    resetPrefsOnNextRestart = boolean(default=False)
+#
+#    # set the default version number to whatever the prefs version is,
+#    # bumping it by 1 whenever
+#    version = integer(default=1)
 
 from __future__ import with_statement
 
-import wx
+#import wx  # for wx.Size, wx.Point
 import os
-from Host.Common.CustomConfigObj import CustomConfigObj
+from configobj import ConfigObj, flatten_errors
+from validate import Validator
 
-_DEFAULT_CONFIG_NAME = "DatViewer.ini"
-_DEFAULT_PREFS_FILENAME = "DatViewerPrefs.ini"
-_DEFAULT_USER_PREFS_FILENAME = "DatViewerUserPrefs.ini"
+#from validate import Validator, VdtParamError, VdtTypeError, \
+#    VdtValueTooLongError, VdtValueTooShortError, \
+#    VdtValueTooSmallError, VdtValueTooBigError
+
+# AppPrefsSpec.ini should be in the configobj configspec format
+_DEFAULT_PREFS_SPEC_FILENAME = "AppPrefsSpec.ini"
+_DEFAULT_USER_PREFS_FILENAME = "UserPrefs.ini"
+
+"""
+# I couldn't get this working the way I want. Still need to
+# do a conversion back to a list for wx.Size (also wx.Point)
+# for writing out the prefs. So let the app handle the translation.
+# A custom validators for wx.Size (wx_size_list). Will be similar for
+# wx.Point (wx_point_list)
+def wx_size_list(value, length):
+    # Check that the supplied value is a list integers,
+    # 'length' entries must be exactly 2.
+    #length = 2
+    # the Python Validator must have turned off stdout
+    # because I never see any print stmt output...
+    fp = open("debug_dump.txt", 'at')
+    print>> fp, ""
+    print>> fp, "length=", length
+    print>> fp, "value=", value
+
+    # length is supplied as a string
+    # we need to convert it to an integer
+    try:
+        length = int(length)
+    except ValueError:
+        raise VdtParamError('length', length)
+
+    # Check the supplied value is a list
+    if not isinstance(value, list):
+        raise VdtTypeError(value)
+
+    #if length != 2:
+    #    raise VdtParamError('length', length)
+
+    # check the length of the list is correct
+    if len(value) > length:
+        raise VdtValueTooLongError(value)
+    elif len(value) < length:
+        raise VdtValueTooShortError(value)
+
+    # Next, check every member in the list
+    # converting strings as necessary
+    out = []
+    for entry in value:
+        if not isinstance(entry, (str, unicode, int)):
+            # a value in the list
+            # is neither an integer nor a string
+            raise VdtTypeError(value)
+        elif isinstance(entry, (str, unicode)):
+            if not entry.isdigit():
+                raise VdtTypeError(value)
+            else:
+                entry = int(entry)
+
+        ## we don't need to check whether the values are too large or small
+        #if entry < 0:
+        #    raise VdtValueTooSmallError(value)
+        #elif entry > 99:
+        #    raise VdtValueTooBigError(value)
+        out.append(entry)
+    #
+    # if we got this far, all is well
+    # convert the list to a wx.Size object
+    return wx.Size(out[0], out[1])
 
 
+fdict = {
+    'wx_size': wx_size_list
+    #'wx_position': wx_position_list,
+}
+"""
+
+
+class DatViewerPrefs(object):
+    """
+    Constructor has the following arguments:
+
+    appname (required)        Application name
+
+    appversion (required)     Application version string. Used with appname to
+                              construct a path in the user's local appdata dir
+                              to persist user preferences
+
+    defaultConfigSpec         Input configspec file (default is None which uses
+                              "AppPrefsSpec.ini" which you probably don't want)
+
+    defaultUserPrefsFilename  Filename to persist user preferences to, under the
+                              user's local appdata dir (default is None, which
+                              uses "UserPrefs.ini" which you probably don't want)
+
+    fPrefsReset               Set this to True to reset preferences to the defaults
+                              in the defaultConfigSpec file. User preferences are
+                              ignored.
+    """
+    def __init__(self, appname, appversion,
+                 defaultConfigSpec=None,
+                 defaultUserPrefsFilename=None,
+                 fPrefsReset=False):
+        self.defaultConfigSpec = defaultConfigSpec
+
+        # look for the config spec file in the executing app's folder
+        # if not passed in by caller
+        if self.defaultConfigSpec is None:
+            self.defaultConfigSpec = os.path.join(os.getcwd(), _DEFAULT_PREFS_SPEC_FILENAME)
+        else:
+            self.defaultConfigSpec = os.path.join(os.getcwd(), defaultConfigSpec)
+
+        print "configspec=", self.defaultConfigSpec
+
+        # construct a path for persisting the user's private prefs
+        # TODO: fix so path is not Windows-specific
+        appdataDir = os.path.join(os.environ['LOCALAPPDATA'], appname, appversion)
+
+        if defaultUserPrefsFilename is None:
+            self.userPrefsPath = os.path.join(appdataDir, _DEFAULT_USER_PREFS_FILENAME)
+        else:
+            self.userPrefsPath = os.path.join(appdataDir, defaultUserPrefsFilename)
+
+        print "userPrefsPath=", self.userPrefsPath
+
+        self.config = None
+
+        # save off the prefs reset flag -- if reset then we won't load
+        # user-specific prefs
+        self.fPrefsReset = fPrefsReset
+
+        #self.LoadPrefs()
+
+    def LoadPrefs(self):
+        fLoaded = False
+
+        if self.fPrefsReset is False:
+            if os.path.isfile(self.userPrefsPath):
+                self._LoadConfigFile(self.userPrefsPath,
+                                     configspec=self.defaultConfigSpec,
+                                     fCopy=True)
+                fLoaded = True
+
+                # check whether prefs reset on next app start is set in
+                # user file
+                if self.config["resetPrefsOnNextRestart"] is True:
+                    self.fPrefsReset = True
+                    print "resetPrefsOnNextRestart triggered a prefs reset"
+
+                # get last saved version, if differs from spec then
+                # need to reset them
+                ver = self.config["version"]
+                lastVer = ver
+
+                try:
+                    lastVer = int(self.config["lastSavedVersion"])
+                except:
+                    pass
+
+                if lastVer != ver:
+                    self.fPrefsReset = True
+                    print "version mismatch, resetting prefs"
+
+                # set the last saved version to the current so it
+                # is written with persisted user prefs
+                self.config["lastSavedVersion"] = ver
+
+                # we must remove the version so it isn't persisted
+                del self.config["version"]
+
+            else:
+                # user prefs file doesn't exist so force a reset
+                self.fPrefsReset = True
+
+        if self.fPrefsReset is True:
+            # resetting prefs - we won't specify an output file so user
+            # prefs aren't loaded
+            print "resetting user prefs"
+
+            # be sure to clear prefs if they've already been read in
+            if self.config is not None:
+                self.config.clear()
+
+            # now load prefs with only the config spec
+            self._LoadConfigFile(None, configspec=self.defaultConfigSpec,
+                                 fCopy=True)
+
+            # last saved version is the current, remove version so it
+            # isn't persisted
+            self.config["lastSavedVersion"] = self.config["version"]
+            del self.config["version"]
+
+        if fLoaded is False:
+            print "Using system defaults, user prefs don't exist or prefs were reset."
+
+        #print "User file = '%s'" % self.userPrefsPath
+        #print "Config spec = '%s'" % self.defaultConfigSpec
+
+    def _LoadConfigFile(self, filepath, configspec=None, fCopy=False):
+        # fCopy=True  validator will make a copy of the settings so
+        #             defaults are persisted; otherwise they won't be
+        #             written back out
+        #print "_LoadConfigFile: filepath=", filepath
+
+        # we always want to catch errors where the config file is missing
+        self.config = ConfigObj(filepath, configspec=configspec, file_error=True)
+
+        # validate the settings
+        #validator = Validator(fdict)  # includes our own custom checking functions
+        validator = Validator()
+        results = self.config.validate(validator, copy=fCopy)
+
+        # report validation errors
+        if results is not True:
+            for (section_list, key, _) in flatten_errors(self.config, results):
+                if key is not None:
+                    print 'The "%s" key in the section "%s" failed validation' % (key, ', '.join(section_list))
+                else:
+                    print 'The following section was missing:%s ' % ', '.join(section_list)
+
+    def SavePrefs(self):
+        self._SaveConfigFile(self.userPrefsPath)
+
+    def _SaveConfigFile(self, configPath):
+        # create folder to hold user prefs file if it doesn't exist
+        # os.makedirs() creates all intermediate folders as well
+        folder = os.path.split(configPath)[0]
+        if not os.path.exists(folder):
+            print "create folder '%s'" % folder
+            os.makedirs(folder)
+
+        self.config.filename = configPath
+        self.config.write()
+
+"""
 class DatViewerPrefs(object):
     def __init__(self, appname, appversion, defaultConfigPath=None, fPrefsReset=False):
         self.defaultConfigPath = defaultConfigPath
@@ -185,3 +425,4 @@ class DatViewerPrefs(object):
 
         with open(configPath, 'w') as f:
             co.write(f)
+"""
