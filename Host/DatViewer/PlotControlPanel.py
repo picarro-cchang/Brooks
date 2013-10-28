@@ -113,56 +113,60 @@ class PlotControlPanelFlexGrid(wx.Panel):
 
 
 class TestFrame(wx.Frame):
-    def __init__(self):
+    def __init__(self, nPanels=1):
         wx.Frame.__init__(self, None, -1, "Plot Control Frame")
 
         # TODO: pass whether to include the N average controls in the panel
         # fIncludeNavg = True
-        self.panel = PlotControlPanelFlexGrid(self, wx.ID_ANY, style=wx.RAISED_BORDER)
+        self.panels = []
 
-        # populate dropdowns and init other controls in the panel
+        for ix in range(nPanels+1):
+            panel = PlotControlPanelFlexGrid(self, wx.ID_ANY, style=wx.RAISED_BORDER)
+            self.panels.append(panel)
 
-        # InsertItems worked on my Macbook Pro but not on Windows -- WTF??
-        # On Windows it's SetItems.
-        dataSetNameList = ["data A", "data B", "data C"]
-        #self.panel.dataSetNameChoice.InsertItems(dataSetNameList, 0)
-        self.panel.dataSetNameChoice.SetItems(dataSetNameList)
-        self.panel.dataSetNameChoice.SetSelection(0)
+            # populate dropdowns and init other controls in the panel
 
-        # useful for debugging -- print out the function names available
-        """
-        print "type(self.panel.dataSetNameChoice)=", type(self.panel.dataSetNameChoice)
-        choiceFcns = dir(self.panel.dataSetNameChoice)
-        print choiceFcns
+            # InsertItems worked on my Macbook Pro but not on Windows -- WTF??
+            # On Windows it's SetItems.
+            dataSetNameList = ["data A", "data B", "data C"]
+            #panel.dataSetNameChoice.InsertItems(dataSetNameList, 0)
+            panel.dataSetNameChoice.SetItems(dataSetNameList)
+            panel.dataSetNameChoice.SetSelection(0)
 
-        with open("ChoiceFcns.txt", 'w') as fp:
-            for f in choiceFcns:
-                print >>fp, f
-        """
+            # useful for debugging -- print out the function names available
+            """
+            print "type(panel.dataSetNameChoice)=", type(panel.dataSetNameChoice)
+            choiceFcns = dir(panel.dataSetNameChoice)
+            print choiceFcns
 
-        varNameList = ["var1", "var2", "var3"]
-        #self.panel.varNameChoice.InsertItems(varNameList, 0)
-        self.panel.varNameChoice.SetItems(varNameList)
-        self.panel.varNameChoice.SetSelection(0)
+            with open("ChoiceFcns.txt", 'w') as fp:
+                for f in choiceFcns:
+                    print >>fp, f
+            """
 
-        # SetString() is for replacing an existing choice
-        #self.panel.varNameChoice.SetString(0, "replaced var1")
+            varNameList = ["var1", "var2", "var3"]
+            #panel.varNameChoice.InsertItems(varNameList, 0)
+            panel.varNameChoice.SetItems(varNameList)
+            panel.varNameChoice.SetSelection(0)
 
-        self.Bind(wx.EVT_CHOICE, self.OnChooseVar, self.panel.varNameChoice)
+            # SetString() is for replacing an existing choice
+            #panel.varNameChoice.SetString(0, "replaced var1")
 
-        # check the Autoscale Y checkbox and bind
-        self.panel.autoscaleYChk.SetValue(True)
-        self.Bind(wx.EVT_CHECKBOX, self.OnAutoscaleYChk, self.panel.autoscaleYChk)
+            self.Bind(wx.EVT_CHOICE, self.OnChooseVar, panel.varNameChoice)
 
-        # init a text box value
-        self.panel.meanText.SetValue("1.0")
+            # check the Autoscale Y checkbox and bind
+            panel.autoscaleYChk.SetValue(True)
+            self.Bind(wx.EVT_CHECKBOX, self.OnAutoscaleYChk, panel.autoscaleYChk)
 
-        self.Bind(wx.EVT_BUTTON, self.OnCalcAverage, self.panel.calcNAvgBtn)
+            # init a text box value
+            panel.meanText.SetValue("1.0")
 
-        # wrap a sizer around the panel
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
-        self.SetSizer(sizer)
+            self.Bind(wx.EVT_BUTTON, self.OnCalcAverage, panel.calcNAvgBtn)
+
+            # wrap a sizer around the panel
+            sizer = wx.BoxSizer(wx.VERTICAL)
+            sizer.Add(panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
+            self.SetSizer(sizer)
 
     def OnCalcAverage(self, event):
         print "Calculate average button clicked"
