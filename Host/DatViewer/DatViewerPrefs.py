@@ -27,6 +27,7 @@ from __future__ import with_statement
 
 #import wx  # for wx.Size, wx.Point
 import os
+import sys
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 
@@ -36,7 +37,10 @@ from validate import Validator
 
 # AppPrefsSpec.ini should be in the configobj configspec format
 _DEFAULT_PREFS_SPEC_FILENAME = "AppPrefsSpec.ini"
-_DEFAULT_USER_PREFS_FILENAME = "UserPrefs.ini"
+_DEFAULT_USER_PREFS_FILENAME_WIN = "UserPrefs.ini"
+_DEFAULT_USER_PREFS_FILENAME_OSX = ".UserPrefs"
+_DEFAULT_USER_PREFS_FILENAME_UNIX = ".UserPrefs"
+
 
 """
 # I couldn't get this working the way I want. Still need to
@@ -145,11 +149,33 @@ class DatViewerPrefs(object):
         print "configspec=", self.defaultConfigSpec
 
         # construct a path for persisting the user's private prefs
-        # TODO: fix so path is not Windows-specific
-        appdataDir = os.path.join(os.environ['LOCALAPPDATA'], appname, appversion)
+        if os.sys.platform == 'darwin':
+            from AppKit import NSSearchPathForDirectoriesInDomains
+            # http://developer.apple.com/DOCUMENTATION/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Functions/Reference/reference.html#//apple_ref/c/func/NSSearchPathForDirectoriesInDomains
+            # NSApplicationSupportDirectory = 14
+            # NSUserDomainMask = 1
+            # True for expanding the tilde into a fully qualified path
+            appdataDir = os.path.join(NSSearchPathForDirectoriesInDomains(14, 1, True)[0], appname, appversion)
+            prefsFilename = _DEFAULT_USER_PREFS_FILENAME_OSX
+
+        elif sys.platform == 'win32':
+            # This will always be win32 for Windows regardless of the bitness of
+            # the platform, for backwards compatibility.
+            #
+            # See: http://stackoverflow.com/questions/2144748/is-it-safe-to-use-sys-platform-win32-check-on-64-bit-python
+            appdataDir = os.path.join(os.environ['LOCALAPPDATA'], appname, appversion)
+            prefsFilename = _DEFAULT_USER_PREFS_FILENAME_WIN
+
+        else:
+            # OS is probably Linux (could use startswith() to look for it)
+            #
+            # save prefs under a .<appname> directory
+            appnameDir = "".join([".", appname])
+            appdataDir = os.path.join(os.path.expanduser('~'), appnameDir, appversion)
+            prefsFilename = _DEFAULT_USER_PREFS_FILENAME_UNIX
 
         if defaultUserPrefsFilename is None:
-            self.userPrefsPath = os.path.join(appdataDir, _DEFAULT_USER_PREFS_FILENAME)
+            self.userPrefsPath = os.path.join(appdataDir, prefsFilename)
         else:
             self.userPrefsPath = os.path.join(appdataDir, defaultUserPrefsFilename)
 

@@ -209,6 +209,9 @@ class PlotControlPanel(PlotControlPanelGui):
         #print dir(event)
         ix = self.dataSetNameChoice.GetSelection()
         dataSetName = self.dataSetNameChoice.GetStringSelection()
+
+        # could convert this to ASCII
+        #dataSetName = str(dataSetName)
         print "  ix=%d  dataSetName=%s" % (ix, dataSetName)
 
         self.model.settings["strDataSetName"] = dataSetName

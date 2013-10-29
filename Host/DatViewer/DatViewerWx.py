@@ -708,7 +708,8 @@ class AppFrame(wx.Frame):
 
                 if window.IsIconized():
                     window.Iconize(False)
-                window.Show()
+                window.SetFocus()
+                #window.Show()
                 window.Raise()
                 break
 
