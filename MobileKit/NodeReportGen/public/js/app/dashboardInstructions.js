@@ -31,7 +31,7 @@ define(function(require, exports, module) {
     require('jquery.form'),
     require('bootstrap-modal');
     require('bootstrap-dropdown');
-    require('bootstrap-spinedit');
+    require('bootstrap-spinedit-modified');
     require('bootstrap-transition');
 
     // ============================================================================
@@ -860,7 +860,7 @@ define(function(require, exports, module) {
                 this.currentValid = false;
                 $('#id_peaksMinAmp').spinedit({
                     minimum: 0.03,
-                    maximum: 2.0,
+                    maximum: 99.99,
                     step: 0.01,
                     value: 0.1,
                     numberOfDecimals: 2

@@ -98,10 +98,11 @@ define(function(require, exports, module) {
             function (s, result) {
                 if (result.error) console.log("Error fetching user's dashboard: " + result.error);
                 else {
+                    var start = performance.now();
                     result.dashboard.forEach(function(row) {
                         DASHBOARD.submittedJobs.add(row, {silent:true});
                     });
-                    DASHBOARD.submittedJobs.models.forEach(function (job) { job.updateStatus(); });
+                  	console.log('Time to load submittedJobs: ' + (performance.now() - start) + ' ms');
                     DASHBOARD.instructionsFileModel = new DASHBOARD.InstructionsFileModel();
                     DASHBOARD.jobsView = new DASHBOARD.JobsView();
                     DASHBOARD.jobsView.render();

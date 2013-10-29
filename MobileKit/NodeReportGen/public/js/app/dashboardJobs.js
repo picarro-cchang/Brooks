@@ -132,7 +132,6 @@ define(function(require, exports, module) {
         DASHBOARD.SubmittedJobs = Backbone.Collection.extend({
             initialize: function ()  {
             },
-            // localStorage: new Backbone.LocalStorage("JobCollection"),
             model: DASHBOARD.SubmittedJob
         });
 
@@ -168,6 +167,7 @@ define(function(require, exports, module) {
                 };
                 this.showAll = false;
                 this.jobTable = $("#id_jobTable").dataTable({
+                    "bDeferRender": true,
                     "aoColumns": [
                         { "sWidth": "5%", "sTitle": "Reload", "mData": "link", "sClass": "center"},
                         { "sWidth": "15%", "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center", "sType":'time-with-offset'},
@@ -178,9 +178,21 @@ define(function(require, exports, module) {
                         { "sWidth": "5%", "sTitle": '<button type="button" class="btn btn-mini btn-inverse showAll">Show All</button>',
                           "sClass": "center", "mData": "selected", "bSortable": false}
                     ],
+                    "fnDrawCallback": function ( oSettings ) {
+                        if (that.jobTableLoading) {
+                            that.jobTableLoading = false;
+                            $("#id_jobTableLoading").css("display","none");
+                        }
+                    },
                     "sDom":'<"top"lf>rt<"bottom"ip>'
                 });
+                this.jobTableLoading = true;
                 this.jobTable.fnSort([[1,'desc']]);
+                this.jobTable.bind('sort', function() { that.jobTableEvent('Sort'); })
+                             .bind('page', function() { that.jobTableEvent('Page'); })
+                             .bind('filter', function() { that.jobTableEvent('Filter'); });
+                this.visibleJobCids = [];
+                this.activeStatusCids = {}; // Contains cids of jobs which have had updateStatus requests made
                 $.fn.dataTableExt.afnFiltering.push(
                 function( oSettings, aData ) {
                     return that.showAll || $(aData[6]).is(':checked');
@@ -202,6 +214,36 @@ define(function(require, exports, module) {
                     clearTimeout(window.refresh_size);
                     window.refresh_size = setTimeout(function () { update_size(); }, 250);
                 });
+            },
+            jobTableEvent: function (type) {
+                // When the dashboard is changed in any way, we need to go through the visible
+                //  rows and start calling updateStatus for any jobs not previously updated
+                var that = this;
+                // We need to defer determination of visible rows until the table has been refreshed
+                setTimeout(function () { that.findVisible(); }, 200);
+            },
+            findVisible: function () {
+                var that = this;
+                // Get filtered jobs on current page. We need the rows to update cidToRow lookup
+                //  table and the data within the rows to get the cid, which can be used to find
+                //  the job within the submittedJobs collection.
+                var visibleRows = this.jobTable.$('tr', {"filter":"applied", "page":"current"});
+                var visibleData = this.jobTable._('tr', {"filter":"applied", "page":"current"});
+                this.visibleJobCids = [];
+                for (var i=0; i<visibleRows.length; i++) {
+                    var row = visibleRows[i];
+                    var data = visibleData[i];
+                    that.visibleJobCids.push(data.cid);
+                    that.cidToRow[data.cid] = row;
+                    // Maintain a set of "active" status requests, and only start updateStatus for jobs
+                    //  whose status have not previously been requested
+                    if (!(data.cid in that.activeStatusCids)) {
+                        that.activeStatusCids[data.cid] = true;
+                        // Get the job for the given cid and start updateStatus requests
+                        var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: data.cid});
+                        job.updateStatus();
+                    }
+                }
             },
             onShowAll: function (e) {
                 var el = $(e.currentTarget);
@@ -277,7 +319,7 @@ define(function(require, exports, module) {
                 var sel = model.get('shown') ?
                             '<input class="rowCheck" type="checkbox" data-cid="' + model.cid + '" checked>' :
                             '<input class="rowCheck" type="checkbox" data-cid="' + model.cid + '">';
-                return $.extend({link: link, statusDisplay: statusDisplay, selected: sel}, model.attributes);
+                return $.extend({link: link, statusDisplay: statusDisplay, selected: sel, cid: model.cid}, model.attributes);
             },
             highLightJob: function (model) {
                 var row = this.cidToRow[model.cid];
@@ -336,9 +378,15 @@ define(function(require, exports, module) {
                 var that = this;
                 this.cidToRow = [];
                 this.jobTable.fnClearTable();
+                var start = performance.now();
+                var aaData = [];
                 _.forEach(DASHBOARD.submittedJobs.models, function (model) {
-                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData(that.formatSpecials(model))[0]);
+                    var row = that.formatSpecials(model);
+                    aaData.push(row);
                 });
+                var rows = that.jobTable.fnAddData(aaData);
+                console.log("Time to load datatable: " + (performance.now()-start) + " ms");
+
                 $(this.jobTable).css({width: $(this.jobTable).parent().width()});
                 this.jobTable.fnAdjustColumnSizing();
                 return this;
