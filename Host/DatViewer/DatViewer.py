@@ -35,14 +35,23 @@ import tempfile
 
 #from cStringIO import StringIO
 from numpy import *
+
 #from tables import *
 import tables
 from scipy.signal import lfilter
+
+# HasTraits, Float, Bool, Int, Long, Str
 from enthought.traits.api import *
+
 from enthought.traits.ui.api import *
+
 from enthought.traits.ui.wx.editor import Editor
 from enthought.traits.ui.basic_editor_factory import BasicEditorFactory
+
+# is this even used?
 from enthought.traits.ui.menu import *
+#import enthought.traits.ui.menu as entUiMenu
+
 #from traceback import format_exc
 from configobj import ConfigObj
 
@@ -684,6 +693,7 @@ class Plot2D(HasTraits):
     sharex = Instance(matplotlib.axes.Axes)
     sharey = Instance(matplotlib.axes.Axes)
     traits_view = View(Item("plot2dFigure", editor=MPLFigureEditor(), show_label=False), width=700, height=600, resizable=True)
+
     lock = Instance(threading.RLock, ())
     autoscaleOnUpdate = CBool(False)
 
@@ -810,8 +820,14 @@ class XyViewer(HasTraits):
     yLabel = CStr
     mode = CInt(1)  # 1 for line of best fit, 2 for Allan Std Dev
     parent = Instance(object)
-    traits_view = View(Item("plot", style="custom", show_label=False), width=800, height=600,
-                       resizable=True, handler=XyViewerHandler())
+
+    traits_view = View(Item("plot",
+                            style="custom",
+                            show_label=False),
+                       width=800,
+                       height=600,
+                       resizable=True,
+                       handler=XyViewerHandler())
 
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
@@ -868,13 +884,14 @@ class DatViewer(HasTraits):
     parent = Instance(object)
     nLines = CInt(3)
     
-    traits_view = View(
-        Group(
-            Item("plot", style="custom", show_label=False),
-            Item("dataSetName", editor=EnumEditor(name="dataSetNameList")),
-            Item("varName", editor=EnumEditor(name="varNameList")),
-            Item("transform")
-        ))
+    traits_view = View(Group(Item("plot",
+                                  style="custom",
+                                  show_label=False),
+                             Item("dataSetName",
+                                  editor=EnumEditor(name="dataSetNameList")),
+                             Item("varName",
+                                  editor=EnumEditor(name="varNameList")),
+                             Item("transform")))
 
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
@@ -1049,6 +1066,9 @@ class Dat2h5(HasTraits):
                     break
                 if not headings:
                     headings = [a.replace(" ", "_") for a in atoms]
+
+                    #print "headings=", headings
+
                     colDict = {"DATE_TIME": Time64Col()}
                     for h in headings:
                         if h not in ["DATE", "TIME"]:
@@ -2045,7 +2065,10 @@ class NotebookHandler(Handler):
         d.Destroy()
 
     def onConvertDatToH5(self, info):
-        d = wx.FileDialog(None, "Open DAT file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="dat files (*.dat)|*.dat")
+        d = wx.FileDialog(None, "Open DAT file",
+                          style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                          wildcard="dat files (*.dat)|*.dat")
+
         if d.ShowModal() == wx.ID_OK:
             c = Dat2h5(datFileName=d.GetPath())
             d.Destroy()
@@ -2192,13 +2215,15 @@ _DEFAULT_PREFS_FILENAME = "DatViewerPrefs.ini"
 
 def getAppPrefsPath():
     """
-    Construct a path for user prefs. Examples of what can be stored:
+    Construct a path for user prefs. Examples of useful things we may wish to store:
         last dir used (for file and folder open/save dialogs)
         menu shortcuts
         window size and location
         don't show me this again checkbox settings
     """
     appdata = None
+
+    #appData = shell.SHGetFolderPath(0, shellcon.CSIDL_LOCAL_APPDATA, 0, 0)
 
     if os.sys.platform == 'darwin':
         from AppKit import NSSearchPathForDirectoriesInDomains
