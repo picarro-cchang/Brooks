@@ -11,7 +11,9 @@
 # 2013-09-10 tw  Added open .zip archive to menu, rearranged File menu, final PEP-8 formatting.
 # 2013-09-16 tw  UI cleanup: added menu shortcuts and accelerators, flattened time series cascade menu,
 #                select folder dialog requires dir to exist.
-
+# 2013-10-25 sze Used scaled x-axis for calculation of line of best fit in correlation plot to avoid roundoff
+#                errors giving incorrect fits when the number of data points is large
+# 2013-10-27 sze Fixes for matplotlib-1.3. Correct handling of double-click for Windows 7
 
 oldSum = sum
 import wx
@@ -47,15 +49,54 @@ from enthought.traits.ui.menu import *
 from configobj import ConfigObj
 
 Button1 = Button   # This is overwritten by pylab import
-######################################################
-#################  FigureInteraction  ##########################
-######################################################
+#
+# FigureInteraction  ##########################
+#
 from pylab import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
 APPVERSION = "2.0.0"
 
+
+class Bunch(object):
+
+    """ This class is used to group together a collection as a single object, so that they may be accessed as attributes of that object"""
+
+    def __init__(self, **kwds):
+        """ The namespace of the object may be initialized using keyword arguments """
+        self.__dict__.update(kwds)
+
+    def __call__(self, *args, **kwargs):
+        return self.call(self, *args, **kwargs)
+
+
+def bestFit(x, y, d):
+    """ Carry out least-squares polynomial fit of degree d with data x,y """
+    p = polyfit(x, y, d)
+    y = reshape(y, (-1,))
+    y1 = reshape(polyval(p, x), (-1,))
+    res = sum((y - y1) ** 2) / len(y)
+
+    def eval(self, xx):
+        return polyval(self.coeffs, xx)
+    return Bunch(coeffs=p, residual=res, fittedValues=y1, call=eval)
+
+
+def bestFitCentered(x, y, d):
+    """ Polynomial fitting with the x data shifted and normalized so as to improve the conditioning of the normal
+    equations for the fitting """
+    x = array(x)
+    mu_x = mean(x)
+    sdev_x = std(x)
+    xc = (x - mu_x) / sdev_x
+    f = bestFit(xc, y, d)
+
+    def eval(self, xx):
+        return polyval(self.coeffs, (xx - self.xcen) / self.xscale)
+    return Bunch(
+        xcen=mu_x, xscale=sdev_x, coeffs=f.coeffs, residual=f.residual, fittedValues=f.fittedValues,
+        call=eval)
 
 # cursors
 class Cursors:  # namespace
@@ -96,6 +137,7 @@ def checkLock(func):
 
 
 class FigureInteraction(object):
+
     def __init__(self, fig, lock):
         self.fig = fig
         self.lock = lock
@@ -212,7 +254,7 @@ class FigureInteraction(object):
             lastx, lasty, a, ind, lim, trans = cur_xypress
 
             # ignore singular clicks - 5 pixels is a threshold
-            if abs(x-lastx) < 5 or abs(y-lasty) < 5:
+            if abs(x - lastx) < 5 or abs(y - lasty) < 5:
                 self._xypress = None
                 self.draw()
                 return
@@ -290,22 +332,22 @@ class FigureInteraction(object):
 
             elif self._button_pressed == 3:
                 if a.get_xscale() == 'log':
-                    alpha = np.log(Xmax/Xmin)/np.log(x1/x0)
-                    rx1 = pow(Xmin/x0, alpha)*Xmin
-                    rx2 = pow(Xmax/x0, alpha)*Xmin
+                    alpha = np.log(Xmax / Xmin) / np.log(x1 / x0)
+                    rx1 = pow(Xmin / x0, alpha) * Xmin
+                    rx2 = pow(Xmax / x0, alpha) * Xmin
                 else:
-                    alpha = (Xmax-Xmin)/(x1-x0)
-                    rx1 = alpha*(Xmin-x0)+Xmin
-                    rx2 = alpha*(Xmax-x0)+Xmin
+                    alpha = (Xmax - Xmin) / (x1 - x0)
+                    rx1 = alpha * (Xmin - x0) + Xmin
+                    rx2 = alpha * (Xmax - x0) + Xmin
 
                 if a.get_yscale() == 'log':
-                    alpha = np.log(Ymax/Ymin)/np.log(y1/y0)
-                    ry1 = pow(Ymin/y0, alpha)*Ymin
-                    ry2 = pow(Ymax/y0, alpha)*Ymin
+                    alpha = np.log(Ymax / Ymin) / np.log(y1 / y0)
+                    ry1 = pow(Ymin / y0, alpha) * Ymin
+                    ry2 = pow(Ymax / y0, alpha) * Ymin
                 else:
-                    alpha = (Ymax-Ymin)/(y1-y0)
-                    ry1 = alpha*(Ymin-y0)+Ymin
-                    ry2 = alpha*(Ymax-y0)+Ymin
+                    alpha = (Ymax - Ymin) / (y1 - y0)
+                    ry1 = alpha * (Ymin - y0) + Ymin
+                    ry2 = alpha * (Ymax - y0) + Ymin
                 a.set_xlim((rx1, rx2))
                 a.set_ylim((ry1, ry2))
 
@@ -320,7 +362,6 @@ class FigureInteraction(object):
     @checkLock
     def onClick(self, event):
         # Get the axes within which the point falls
-        print "click", event.button
         self._active = "ACTIVE"
         axes = event.inaxes
         if axes not in self.subplots:
@@ -333,8 +374,8 @@ class FigureInteraction(object):
             for a in self.fig.get_axes():
                 if a.in_axes(event):
                     a.relim()
-                    a.autoscale_view()
-                    print "double click"
+                    #a.autoscale_view()
+                    a.autoscale()
                     self.autoscale[a] = True
             self.draw()
             return
@@ -482,8 +523,8 @@ class FigureInteraction(object):
         'the drag callback in pan/zoom mode'
 
         for a, ind in self._xypress:
-            #safer to use the recorded button at the press than current button:
-            #multiple button can get pressed during motion...
+            # safer to use the recorded button at the press than current button:
+            # multiple button can get pressed during motion...
             a.drag_pan(self._button_pressed, event.key, event.x, event.y)
         self.dynamic_update()
 
@@ -501,10 +542,11 @@ class FigureInteraction(object):
         self.canvas.SetCursor(cursor)
 
 
-###############################################################################
-#############################  Allan variance routines   ######################
-###############################################################################
+#
+# Allan variance routines   ######################
+#
 class AllanVar(object):
+
     """ Class for computation of Allan Variance of a data series. Variances are computed over sets of
   size 1,2,...,2**(nBins-1). In order to process a new data point call processDatum(value). In order
   to recover the results, call getVariances(). In order to reset the calculation, call reset(). """
@@ -515,7 +557,7 @@ class AllanVar(object):
         self.counter = 0
         self.bins = []
         for i in range(nBins):
-            self.bins.append(AllanBin(2**i))
+            self.bins.append(AllanBin(2 ** i))
 
     def reset(self):
         """ Resets calculation """
@@ -535,7 +577,9 @@ class AllanVar(object):
 
 
 class AllanBin(object):
+
     """ Internal class for Allan variance calculation """
+
     def __init__(self, averagingLength):
         self.averagingLength = averagingLength
         self.reset()
@@ -554,14 +598,14 @@ class AllanBin(object):
             self.sumNeg += value
             self.numNeg += 1
         if self.numNeg == self.averagingLength:
-            y = (self.sumPos/self.numPos) - (self.sumNeg/self.numNeg)
+            y = (self.sumPos / self.numPos) - (self.sumNeg / self.numNeg)
             self.sum += y
-            self.sumSq += y**2
+            self.sumSq += y ** 2
             self.nPairs += 1
-            self.allanVar = 0.5*self.sumSq/self.nPairs
+            self.allanVar = 0.5 * self.sumSq / self.nPairs
             self.sumPos, self.numPos = 0, 0
             self.sumNeg, self.numNeg = 0, 0
-###############################################################################
+#
 
 
 def sortByName(top, nameList):
@@ -619,7 +663,7 @@ UNIXORIGIN = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
 
 def datetimeToTimestamp(t):
     td = t - ORIGIN
-    return (td.days*86400 + td.seconds)*1000 + td.microseconds//1000
+    return (td.days * 86400 + td.seconds) * 1000 + td.microseconds // 1000
 
 
 def getTimestamp():
@@ -629,7 +673,7 @@ def getTimestamp():
 
 def timestampToUtcDatetime(timestamp):
     """Converts 64-bit millisecond resolution timestamp to UTC datetime"""
-    return ORIGIN + datetime.timedelta(microseconds=1000*timestamp)
+    return ORIGIN + datetime.timedelta(microseconds=1000 * timestamp)
 
 
 def timestampToLocalDatetime(timestamp):
@@ -639,13 +683,13 @@ def timestampToLocalDatetime(timestamp):
 
 
 def formatTime(dateTime):
-    ms = dateTime.microsecond//1000
+    ms = dateTime.microsecond // 1000
     return dateTime.strftime("%Y/%m/%d %H:%M:%S") + (".%03d" % ms)
 
 
 def unixTime(timestamp):
     dt = (ORIGIN - UNIXORIGIN) + datetime.timedelta(microseconds=1000 * timestamp)
-    return 86400.0*dt.days + dt.seconds + 1.e-6*dt.microseconds
+    return 86400.0 * dt.days + dt.seconds + 1.e-6 * dt.microseconds
 
 
 class _MPLFigureEditor(Editor):
@@ -716,7 +760,7 @@ class Plot2D(HasTraits):
         if len(t) > 0:
             dt = datetime.datetime.fromtimestamp(t[0], tz=self.tz)
             t0 = matplotlib.dates.date2num(dt)
-            tbase = t0 + (t-t[0])/(24.0*3600.0)
+            tbase = t0 + (t - t[0]) / (24.0 * 3600.0)
         else:
             tbase = []
         share = {}
@@ -736,7 +780,7 @@ class Plot2D(HasTraits):
         for l in labels:
             l.set(rotation=0, fontsize=10)
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.plot2dFigure.canvas.draw()
+            self.tryCanvasDraw()    
         self.lock.release()
         return handles
 
@@ -744,7 +788,7 @@ class Plot2D(HasTraits):
         self.lock.acquire()
         handle = self.axes.text(*a, **k)
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.plot2dFigure.canvas.draw()
+            self.tryCanvasDraw()    
         self.lock.release()
         return handle
 
@@ -754,7 +798,7 @@ class Plot2D(HasTraits):
         if self.autoscaleOnUpdate:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.plot2dFigure.canvas.draw()
+            self.tryCanvasDraw()    
         self.lock.release()
 
     def updateTimeSeries(self, handle, newX, newY, linkedPlots=None):
@@ -763,21 +807,27 @@ class Plot2D(HasTraits):
         if len(t) > 0:
             dt = datetime.datetime.fromtimestamp(t[0], tz=self.tz)
             t0 = matplotlib.dates.date2num(dt)
-            tbase = t0 + (t-t[0])/(24.0*3600.0)
+            tbase = t0 + (t - t[0]) / (24.0 * 3600.0)
         else:
             tbase = []
         handle.set_data(tbase, newY)
         if self.autoscaleOnUpdate:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.plot2dFigure.canvas.draw()
+            self.tryCanvasDraw()    
         self.lock.release()
 
     def redraw(self):
         self.lock.acquire()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.plot2dFigure.canvas.draw()
+            self.tryCanvasDraw()    
         self.lock.release()
+
+    def tryCanvasDraw(self):
+        try:
+            self.plot2dFigure.canvas.draw()
+        except:
+            pass
 
     def autoscale(self):
         self.axes.relim()
@@ -787,6 +837,7 @@ class Plot2D(HasTraits):
 
 
 class XyViewerHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -840,11 +891,16 @@ class XyViewer(HasTraits):
         self.sel = (self.xData >= self.xLim[0]) & (self.xData <= self.xLim[1])
         boxsel = self.sel & (self.yData >= self.yLim[0]) & (self.yData <= self.yLim[1])
         if self.mode == 1 and any(boxsel):
-            self.poly = polyfit(self.xData[boxsel], self.yData[boxsel], 1)
-            self.plot.axes.set_title("Best fit line: y = %s * x + %s" % (self.poly[0], self.poly[1]))
-            self.fitHandle.set_data(self.xLim, polyval(self.poly, self.xLim))
+            self.poly = bestFitCentered(
+                self.xData[boxsel], self.yData[boxsel], 1)
+            c0, c1 = self.poly.coeffs
+            slope = c0 / self.poly.xscale
+            intercept = c1 - slope * self.poly.xcen
+            self.plot.axes.set_title(
+                "Best fit line: y = %s * x + %s" % (slope, intercept))
+            self.fitHandle.set_data(self.xLim, self.poly(self.xLim))
         elif self.mode == 2:
-            y = self.yData[0]/sqrt(self.xData/self.xData[0])
+            y = self.yData[0] / sqrt(self.xData / self.xData[0])
             self.fitHandle.set_data(self.xData, y)
 
 
@@ -916,8 +972,8 @@ class DatViewer(HasTraits):
                 h.set_linestyle('-')
         
         if any(boxsel):
-            self.mean = oldSum(self.yData[0][boxsel])/sum(boxsel)
-            self.stdDev = sqrt(oldSum((self.yData[0][boxsel]-self.mean)**2)/sum(boxsel))
+            self.mean = oldSum(self.yData[0][boxsel]) / sum(boxsel)
+            self.stdDev = sqrt(oldSum((self.yData[0][boxsel] - self.mean) ** 2) / sum(boxsel))
             self.peakToPeak = ptp(self.yData[0][boxsel])
         if self.parent.listening:
             wx.CallAfter(self.parent.notify, self, self.xLim, self.yLim)
@@ -1002,14 +1058,14 @@ class DatViewer(HasTraits):
         values = self.table.col(self.varName)
         values = eval(self.transform)(values)
         p = argsort(dateTime)
-        fKernel = ones(self.nAverage, dtype=float)/self.nAverage
-        fTime = lfilter(fKernel, [1], dateTime[p])[self.nAverage-1:]
+        fKernel = ones(self.nAverage, dtype=float) / self.nAverage
+        fTime = lfilter(fKernel, [1], dateTime[p])[self.nAverage - 1:]
         if values.ndim > 1:
             for i in range(values.shape[1]):
-                fData = lfilter(fKernel, [1], asarray([v[i] for v in values[p]]))[self.nAverage-1:]
+                fData = lfilter(fKernel, [1], asarray([v[i] for v in values[p]]))[self.nAverage - 1:]
                 self.plot.updateTimeSeries(self.dataHandles[i], fTime, fData)
         else:
-            fData = lfilter(fKernel, [1], values[p])[self.nAverage-1:]
+            fData = lfilter(fKernel, [1], values[p])[self.nAverage - 1:]
             self.plot.updateTimeSeries(self.dataHandles[0], fTime, fData)
         self.notify(self.plot.axes)
             
@@ -1025,7 +1081,7 @@ class Dat2h5(HasTraits):
         start = 0
         result = []
         while True:
-            atom = text[start:start+width].strip()
+            atom = text[start:start + width].strip()
             if not atom:
                 return result
             result.append(atom)
@@ -1049,11 +1105,11 @@ class Dat2h5(HasTraits):
                     break
                 if not headings:
                     headings = [a.replace(" ", "_") for a in atoms]
-                    colDict = {"DATE_TIME": Time64Col()}
+                    colDict = {"DATE_TIME": tables.Time64Col()}
                     for h in headings:
                         if h not in ["DATE", "TIME"]:
-                            colDict[h] = Float32Col()
-                    TableType = type("TableType", (IsDescription,), colDict)
+                            colDict[h] = tables.Float32Col()
+                    TableType = type("TableType", (tables.IsDescription,), colDict)
                     table = h5f.createTable(h5f.root, "results", TableType, filters=filters)
                 else:
                     minCol = 0
@@ -1120,12 +1176,12 @@ class h52Dat(HasTraits):
             numCols = len(colNames)
             timeMode = "DATE_TIME"
 
-            #print "******"
-            ##print "dataRows=", dataRows
-            #print "numRows=", len(dataRows)
-            #print "resultsTable.nrows=", resultsTable.nrows
-            #print "numCols=", numCols
-            #print "colNames=", colNames
+            # print "******"
+            # print "dataRows=", dataRows
+            # print "numRows=", len(dataRows)
+            # print "resultsTable.nrows=", resultsTable.nrows
+            # print "numCols=", numCols
+            # print "colNames=", colNames
 
             # find any column headings that are too long (more than 25 chars)
             # and convert them or truncate them
@@ -1164,27 +1220,27 @@ class h52Dat(HasTraits):
                 colNames.remove("timestamp")
                 timeMode = "timestamp"
 
-            #print "dateTimeIndex=", dateTimeIndex
-            #print "******"
+            # print "dateTimeIndex=", dateTimeIndex
+            # print "******"
 
             # close the H5 input file
             ip.close()
 
-            headingFormat = "%-26s" * (numCols-1) + "\n"
-            dataFormat = "%-26f" * (numCols-1) + "\n"
+            headingFormat = "%-26s" * (numCols - 1) + "\n"
+            dataFormat = "%-26f" * (numCols - 1) + "\n"
             headings = headingFormat % tuple(colNames)
             linesToBeWritten = ["%-26s%-26s" % ("DATE", "TIME") + headings]
 
             for i, row in enumerate(dataRows):
-                #print "row[dateTimeIndex]=", row[dateTimeIndex]
-                #print "timeMode=", timeMode
+                # print "row[dateTimeIndex]=", row[dateTimeIndex]
+                # print "timeMode=", timeMode
 
                 if timeMode in ["timestamp", "time"]:
                     timestamp = row[dateTimeIndex]
 
                     # hack to test origin timestamp
                     #timestamp = 63513400570000 + (950 * i)
-                    #print "i=%d timestamp=%s" % (i, timestamp)
+                    # print "i=%d timestamp=%s" % (i, timestamp)
 
                     # If timestamp is over 60 trillion we can assume it is
                     # for msec since 1/1/0000, so convert to epoch time
@@ -1193,16 +1249,16 @@ class h52Dat(HasTraits):
                     if timestamp > 6e13:
                         timestamp = unixTime(timestamp)
 
-                    #print "    timestamp=", timestamp
+                    # print "    timestamp=", timestamp
 
                 else:
                     timestamp = row[dateTimeIndex]
 
-                #print "time.localtime(timestamp)=", time.localtime(timestamp)
+                # print "time.localtime(timestamp)=", time.localtime(timestamp)
 
                 dateTimeField = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
                 fracSec = timestamp - int(timestamp)
-                dateTimeField += (".%02d" % round(100*fracSec))
+                dateTimeField += (".%02d" % round(100 * fracSec))
                 dateTimeCols = "%-26s%-26s" % tuple(dateTimeField.split(" "))
 
                 row = list(row)
@@ -1232,6 +1288,7 @@ class Window(HasTraits):
 
 
 class SeriesWindowHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1296,6 +1353,7 @@ class SeriesWindow(Window):
 
 
 class CorrelationWindowHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1390,6 +1448,7 @@ class CorrelationWindow(Window):
 
 
 class AllanWindowHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1462,14 +1521,14 @@ class AllanWindow(Window):
             # Find conversion from points to a time axis
             slope, offset = polyfit(arange(n), xV.xData[0][xV.sel], 1)
                 
-            npts = int(floor(log(n)/log(2)))
+            npts = int(floor(log(n) / log(2)))
             av = AllanVar(int(npts))
             for y in xV.yData[0][xV.sel]:
                 av.processDatum(y)
             v = av.getVariances()
             sdev = sqrt(asarray(v[1]))
-            viewer.set(xArray=2**arange(npts)*slope*24*3600, yArray=sdev, xLabel='Time (s)', yLabel='Allan Std Dev',
-                       xMin=1, xMax=2**npts, yMin=sdev.min(), yMax=sdev.max(), xScale='log', yScale='log')
+            viewer.set(xArray=2 ** arange(npts) * slope * 24 * 3600, yArray=sdev, xLabel='Time (s)', yLabel='Allan Std Dev',
+                       xMin=1, xMax=2 ** npts, yMin=sdev.min(), yMax=sdev.max(), xScale='log', yScale='log')
             viewer.update()
             viewer.trait_view().set(title=self.dataFile)
             viewer.edit_traits()
@@ -1563,7 +1622,7 @@ class NotebookHandler(Handler):
 
                                 # not sure why we have to stick on a .h5 extension since
                                 # we already checked for it but using same code as above...
-                                ip = tables.openFile(zf[:-3]+".h5", "r")
+                                ip = tables.openFile(zf[:-3] + ".h5", "r")
                                 try:
                                     # append the data from this .h5 file
                                     allData.append(ip.root.results.read())
@@ -1590,7 +1649,7 @@ class NotebookHandler(Handler):
 
                         # Concatenate everything together and sort by time of data
                         dtypes = array([dt.dtype for dt in allData])
-                        u = array(len(dtypes)*[True])
+                        u = array(len(dtypes) * [True])
                         filters = tables.Filters(complevel=1, fletcher32=True)
 
                         # Concatenate by unique data type
@@ -1664,7 +1723,7 @@ class NotebookHandler(Handler):
                         if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
                             if not progress:
                                 pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(name)[1], style=wx.PD_APP_MODAL)
-                            ip = tables.openFile(name[:-3]+".h5", "r")
+                            ip = tables.openFile(name[:-3] + ".h5", "r")
                             try:
                                 allData.append(ip.root.results.read())
                             finally:
@@ -1701,7 +1760,7 @@ class NotebookHandler(Handler):
 
                                         # not sure why we have to stick on a .h5 extension since
                                         # we already checked for it but using same code as above...
-                                        ip = tables.openFile(zf[:-3]+".h5", "r")
+                                        ip = tables.openFile(zf[:-3] + ".h5", "r")
                                         try:
                                             # append the data from this .h5 file
                                             allData.append(ip.root.results.read())
@@ -1727,7 +1786,7 @@ class NotebookHandler(Handler):
 
                     # Concatenate everything together and sort by time of data
                     dtypes = array([dt.dtype for dt in allData])
-                    u = array(len(dtypes)*[True])
+                    u = array(len(dtypes) * [True])
                     filters = tables.Filters(complevel=1, fletcher32=True)
 
                     # Concatenate by unique data type
@@ -1865,7 +1924,7 @@ class NotebookHandler(Handler):
                 print "output fname=", fname
 
                 # TODO: assert that self.datDirName is set and folder exists
-                #if not self.datDirName:
+                # if not self.datDirName:
                 #    self.datDirName = os.path.split(fname)[0]
                 print "self.datDirName=", self.datDirName
 
@@ -1915,7 +1974,7 @@ class NotebookHandler(Handler):
             if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
                 if not progress:
                     pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(name)[1], style=wx.PD_APP_MODAL)
-                ip = tables.openFile(name[:-3]+".h5", "r")
+                ip = tables.openFile(name[:-3] + ".h5", "r")
                 try:
                     allData.append(ip.root.results.read())
                 finally:
@@ -1952,7 +2011,7 @@ class NotebookHandler(Handler):
 
                             # not sure why we have to stick on a .h5 extension since
                             # we already checked for it but using same code as above...
-                            ip = tables.openFile(zf[:-3]+".h5", "r")
+                            ip = tables.openFile(zf[:-3] + ".h5", "r")
                             try:
                                 # append the data from this .h5 file
                                 allData.append(ip.root.results.read())
@@ -1980,7 +2039,7 @@ class NotebookHandler(Handler):
 
         # Concatenate everything together and sort by time of data
         dtypes = array([dt.dtype for dt in allData])
-        u = array(len(dtypes)*[True])
+        u = array(len(dtypes) * [True])
         filters = tables.Filters(complevel=1, fletcher32=True)
 
         # Concatenate by unique data type
@@ -2183,7 +2242,7 @@ class ViewNotebook(HasTraits):
                                                      name='&Help')),
                                 handler=NotebookHandler(),
                                 width=800,
-                                #height=100,
+                                # height=100,
                                 resizable=True)
 
 _DEFAULT_CONFIG_NAME = "DatViewer.ini"
@@ -2252,7 +2311,7 @@ def handleCommandSwitches():
         print "%s %r" % (data, data)
         sys.exit(1)
 
-    #assemble a dictionary where the keys are the switches and values are switch args...
+    # assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
     for o, a in switches:
         options[o] = a
@@ -2270,7 +2329,7 @@ def handleCommandSwitches():
         printVersion()
         sys.exit(0)
 
-    #Start with option defaults...
+    # Start with option defaults...
     configFile = _DEFAULT_CONFIG_NAME
     prefsFile = getAppPrefsPath()
 
