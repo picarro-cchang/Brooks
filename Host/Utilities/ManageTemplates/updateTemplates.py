@@ -1,6 +1,7 @@
 import os
 #import sys
 import subprocess
+import bzrUtils as bu
 
 dest = r"c:\temp\Templates"
 #dest = r"C:\Users\twalder\Documents\Testing\TemplateResults"
@@ -10,17 +11,22 @@ dest = r"c:\temp\Templates"
 
 # This is the current bzr repository
 root = r"s:\CrdsRepositoryNew\trunk\G2000\Config"
+excludeDirs = ("Backup", "oldCFIDSTemplates")
 
-for base, dirs, files in os.walk(root):
-    if '.bzr' in dirs:
-        #  which excludes root
-        destDir = os.path.join(dest, base[len(root)+1:])
-        try:
-            os.makedirs(destDir)
-        except:  # Already exists
-            pass
-        os.chdir(destDir)
-        subprocess.call(["bzr", "pull"])
+# create generator to enumerate the bzr folders
+gbf = bu.getBzrFolder(root, excludeDirs)
 
-    if base.endswith('.bzr'):
-        del dirs
+for bzrDir, destDirName in gbf:
+    destDir = os.path.join(dest, destDirName)
+
+    print ""
+    print "bzrDir=", bzrDir
+    print "destDir=", destDir
+
+    try:
+        os.makedirs(destDir)
+    except:  # Already exists
+        pass
+
+    os.chdir(destDir)
+    subprocess.call(["bzr", "pull"])
