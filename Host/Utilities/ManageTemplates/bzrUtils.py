@@ -95,6 +95,10 @@ def getBzrFolder(root, excludeDirs):
 
                     yield dirpath, destName
 
+        # no need to go any farther down if this is a .bzr folder (cannot nest bzr repos)
+        if dirpath.endswith('.bzr'):
+            del dirnames
+
 
 if __name__ == "__main__":
     excludeDirs = ("Backup", "oldCFIDSTemplates")
