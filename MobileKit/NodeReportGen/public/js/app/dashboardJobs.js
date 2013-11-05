@@ -121,8 +121,14 @@ define(function(require, exports, module) {
                     that.analyzeStatus(err);
                 },
                 function (s, result) {
-                    var code = that.get('hash').substr(0,8) + 'T' + that.get('directory').substr(-6);
-                    var msg = P3TXT.dashboard.send_code + code;
+                    var code, msg;
+                    if (result.status === rptGenStatus.EMPTY_PDF) {
+                        msg = P3TXT.dashboard.empty_report;
+                    }
+                    else {
+                        code = that.get('hash').substr(0,8) + 'T' + that.get('directory').substr(-6);
+                        msg = P3TXT.dashboard.send_code + code;
+                    }
                     //that.analyzeStatus(null, result.status, result.msg);
                     that.analyzeStatus(null, result.status, msg);
                 });

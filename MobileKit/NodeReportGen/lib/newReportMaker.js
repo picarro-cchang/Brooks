@@ -316,8 +316,15 @@ define(function(require, exports, module) {
                     maxLat = minLat;
                 }
             }
-
             var ss = submaps.slice(0);
+            console.log("Submaps: " + JSON.stringify(ss));
+            if (_.isEmpty(ss)) {
+                sf.writeStatus(that.statusFile, {"status": rptGenStatus.EMPTY_PDF});
+                callback(new Error("No report, empty PDF"));
+            }
+            else {
+                next();
+            }
             function next() {
                 var submap;
                 if (ss.length > 0) {
@@ -339,7 +346,6 @@ define(function(require, exports, module) {
                     });
                 }
             }
-            next();
         }
 
         function concatenatePdf(submapList, done) {
