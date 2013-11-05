@@ -19,9 +19,9 @@ gbf = bu.getBzrFolder(root, excludeDirs)
 for bzrDir, destDirName in gbf:
     destDir = os.path.join(dest, destDirName)
 
-    print ""
-    print "bzrDir=", bzrDir
-    print "destDir=", destDir
+    #print ""
+    #print "bzrDir=", bzrDir
+    #print "destDir=", destDir
 
     try:
         os.makedirs(destDir)
