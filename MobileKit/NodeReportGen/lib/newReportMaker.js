@@ -202,14 +202,16 @@ define(function(require, exports, module) {
         }
         else {
             sf.writeStatus(that.statusFile,
-                {"status": rptGenStatus.FAILED, "msg": v.errorList.join("\n") }, function () {
-                    callback(new Error(v.errorList.join("\n")));
-            });
+                {"status": rptGenStatus.FAILED, "msg": v.errorList.join("\n") });
+            callback(new Error(v.errorList.join("\n")));
         }
 
         function onTaskSubmit(name) {
             return (function (n) {
                 return function (submit_key) {
+                    var submission = {};
+                    submission['start_' + n] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},submit_key);
+                    sf.writeStatus(that.statusFile, submission);
                     console.log("RPT_GEN_lrt_task " + n + " scheduled: " + JSON.stringify(submit_key));
                 };
             })(name);
@@ -218,12 +220,14 @@ define(function(require, exports, module) {
         function onTaskError(name) {
             return (function (n) {
                 return function (err) {
+                    var submission = {};
+                    submission['error_' + n] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error: err};
+                    sf.writeStatus(that.statusFile, submission);
                     if (!that.errorOccured) {
                         sf.writeStatus(that.statusFile,
                             {"status": rptGenStatus.FAILED, "msg": "Subtask " +
-                                n + ": " +err.message }, function () {
-                                callback(err);
-                        });
+                                n + ": " + err.message });
+                        callback(err);
                         that.errorOccured = true;
                     }
                 };
@@ -233,6 +237,9 @@ define(function(require, exports, module) {
         function onTaskEnd(name) {
             return (function (n) {
                 return function (submit_key, key_data) {
+                    var submission = {};
+                    submission['end_' + n] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())};
+                    sf.writeStatus(that.statusFile, submission);
                     that.keyDataBySubtask[n] = key_data;
                     if (!that.errorOccured) {
                         that.pending -= 1;
@@ -252,19 +259,16 @@ define(function(require, exports, module) {
             fs.writeFile(path.join(that.workDir,"key.json"),result,function (err) {
                 if (err) {
                     sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED, "msg": err.message }, function () {
-                            callback(err);
-                    });
+                        {"status": rptGenStatus.FAILED, "msg": err.message });
+                    callback(err);
                 }
                 else {
                     if (that.norm_instr.makePdf) {
                         makePdfReports(that.norm_instr);
                     }
                     else {
-                        sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_NO_PDF}, function(err) {
-                            if (err) callback(err);
-                            else callback(null);
-                        });
+                        sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_NO_PDF});
+                        callback(null);
                     }
                 }
             });
@@ -329,10 +333,8 @@ define(function(require, exports, module) {
                     concatenatePdf(submaps.slice(0), function (err) {
                         if (err) callback(err);
                         else {
-                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_WITH_PDF}, function(err) {
-                                if (err) callback(err);
-                                else callback(null);
-                            });
+                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_WITH_PDF});
+                            callback(null);
                         }
                     });
                 }
@@ -346,18 +348,25 @@ define(function(require, exports, module) {
                 pdfFiles.push(submap.name);
             });
             var cmd = '"' + SITECONFIG.pdftkPath + '" ' + pdfFiles.join(" ") + " cat output report.pdf";
+            var msg;
             console.log(cmd);
             var concat = cp.exec(cmd, {"cwd": that.workDir}, function (err, stdout, stderr) {
                 if (err) {
+                    msg = "Spawning PDF concatenator code: " + err.code;
                     console.log(err.stack);
                     console.log('Error code: ' + err.code);
                     console.log('Signal received: ' + err.signal);
+                    sf.writeStatus(that.statusFile,
+                        {"status": rptGenStatus.FAILED, "msg": msg });
+                    done(err);
                 }
-                console.log('Child Process STDOUT: ' + stdout);
-                console.log('Child Process STDERR: ' + stderr);
+                else {
+                    console.log('Child Process STDOUT: ' + stdout);
+                    console.log('Child Process STDERR: ' + stderr);
+                }
             });
             concat.on('exit', function (code) {
-                console.log('Child process exited with code ' + code);
+                console.log('PDF concatenator exit code: ' + code);
                 if (code === 0) {
                     // Delete the component PDF files, do not wait for completion
                     pdfFiles.forEach(function (fname) {
@@ -365,7 +374,12 @@ define(function(require, exports, module) {
                     });
                     done(null);
                 }
-                else done(new Error("Concatenate Pdf: error code " + code));
+                else {
+                    msg = "PDF concatenator exit code: " + code;
+                    sf.writeStatus(that.statusFile,
+                        {"status": rptGenStatus.FAILED, "msg": msg });
+                    done(new Error(msg));
+                }
             });
         }
 
@@ -375,22 +389,33 @@ define(function(require, exports, module) {
                         url + '" "' + outFile + '" "Letter" "' + SITECONFIG.pdfZoom +
                         '" "' + SITECONFIG.headerFontSize + '" "' +
                         SITECONFIG.footerFontSize + '"';
+            var msg;
             console.log(cmd);
             var convert = cp.exec(cmd, {"cwd": __dirname}, function (err, stdout, stderr) {
                 if (err) {
+                    msg = "Spawning PDF converter code: " + err.code;
                     console.log(err.stack);
                     console.log('Error code: ' + err.code);
                     console.log('Signal received: ' + err.signal);
+                    sf.writeStatus(that.statusFile,
+                        {"status": rptGenStatus.FAILED, "msg": msg });
+                    done(err);
                 }
-                console.log('Child Process STDOUT: ' + stdout);
-                console.log('Child Process STDERR: ' + stderr);
+                else {
+                    console.log('Child Process STDOUT: ' + stdout);
+                    console.log('Child Process STDERR: ' + stderr);
+                }
             });
             convert.on('exit', function (code) {
-                console.log('Child process exited with code ' + code);
                 if (code === 0) {
                     done(null);
                 }
-                else done(new Error("Convert to Pdf: error code " + code));
+                else {
+                    msg = "PDF converter exit code: " + code;
+                    sf.writeStatus(that.statusFile,
+                        {"status": rptGenStatus.FAILED, "msg": msg });
+                    done(new Error(msg));
+                }
             });
         }
     };

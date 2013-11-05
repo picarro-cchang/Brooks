@@ -2,7 +2,7 @@
     persist on the disk a collection of running tasks. These are used to handle orphan tasks left
     behind if the server is prematurely stopped */
 
-/*global module, require */
+/*global console, module, require */
 /*jshint undef:true, unused:true */
 
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
@@ -12,6 +12,7 @@ define(function(require, exports, module) {
     var events = require('events');
     var fs = require('fs');
     var path = require('path');
+    var newRptGenLrtController = require('./newRptGenLrtController');
     var rptGenStatus = require('../public/js/common/rptGenStatus');
     var sf = require('./statusFiles');
     var util = require('util');
@@ -21,6 +22,7 @@ define(function(require, exports, module) {
         events.EventEmitter.call(this); // Allow this to emit events
         this.rootDir = rootDir;
         this.tasksFile = path.join(rootDir, 'RunningTasks.json');
+        this.resumeFile = path.join(rootDir, 'TasksToResume.json');
         this.writeFlag = true;
         this.running = {};
         this.saveQueue = [];
@@ -30,16 +32,24 @@ define(function(require, exports, module) {
         return this.running.hasOwnProperty(taskKey);
     };
     RunningTasks.prototype.startTask = function (taskKey) {
-        if (taskKey in this.running) throw new Error('startTask failed: task is already running');
-        this.running[taskKey] = (new Date()).valueOf();
-        this.saveRunning();
+        if (taskKey in this.running) {
+            console.log('startTask failed: task is already running');
+        }
+        else {
+            this.running[taskKey] = (new Date()).valueOf();
+            this.saveRunning();
+        }
         return this.running;
     };
     RunningTasks.prototype.endTask = function (taskKey) {
-        if (!(taskKey in this.running)) throw new Error('endTask failed: task is not running');
-        delete this.running[taskKey];
-        this.saveRunning();
-        return this.running;
+        if (!(taskKey in this.running)) {
+            console.log('endTask failed: task is not running');
+        }
+        else {
+            delete this.running[taskKey];
+            this.saveRunning();
+            return this.running;           
+        }
     };
     RunningTasks.prototype.saveRunning = function() {
         this.saveQueue.push(_.clone(this.running));
@@ -53,7 +63,9 @@ define(function(require, exports, module) {
         if (this.saveQueue.length > 0) {
             var r = this.saveQueue.shift();
             fs.writeFile(this.tasksFile, JSON.stringify(r,null,2), 'ascii', function(err) {
-                if (err) throw(new Error('Cannot write to tasks file'));
+                if (err) {
+                    console.log(Error('Cannot write to tasks file'));
+                }
                 else if (that.saveQueue.length > 0) that.next();
                 else {
                     that.writeFlag = true;
@@ -84,6 +96,33 @@ define(function(require, exports, module) {
             that.endTask(d.taskKey);
         });
     };
+
+    RunningTasks.prototype.resumeJobsOnStartup = function (rptGenService, done) {
+        var that = this, jobsToResume;
+        fs.readFile(that.resumeFile,'ascii', function (err, data) {
+            if (!err) {
+                try {
+                    jobsToResume = JSON.parse(data);
+                    jobsToResume.forEach(function (taskKey) {
+                        var lrtCont = newRptGenLrtController(rptGenService, "RptGen", {'qry': 'resume', 'taskKey': taskKey});
+                        lrtCont.run();
+                    });
+                    done(null);
+
+                }
+                catch (e) {
+                    console.log('File of jobs to resume corrupted. Continuing...');
+                    done(null);
+                }
+
+            }
+            else {
+                console.log('Cannot read file of jobs to resume. Continuing...');
+                done(null);
+            }
+        });
+    };
+
     RunningTasks.prototype.handleIncompleteTasksOnStartup = function (done) {
         /* At startup, we need to mark as bad (by changing the status) any tasks which were
             left hanging when the server last went down. This is achieved by looking at the 
@@ -91,28 +130,36 @@ define(function(require, exports, module) {
             tasks from the contents of that file, it should be updated with the current running
             tasks (empty) */
         var that = this;
+        var jobsToResume = [];
         fs.readFile(that.tasksFile,'ascii', function (err, data) {
             if (!err) {
                 var next;
-                // console.log(incompleteJobs);
                 next = function () {
                     if (incompleteJobs.length > 0) {
-                        var ij = incompleteJobs.shift();
-                        var workDir = path.join(that.rootDir, ij.replace('_', '/'));
+                        var ij = incompleteJobs.shift().split("_");
+                        var ticket = ij[0];
+                        var request_ts = ij[1];
+                        // Directory name is sharded by first byte of the ticket
+                        var workDir = path.join(that.rootDir, ticket.substr(0,2), ticket, request_ts);
                         var statusFile = path.join(workDir,'status.dat');
-                        // console.log(workDir);
                         fs.exists(workDir, function (exists) {
                             if (exists) {
                                 fs.exists(statusFile, function (exists) {
                                     if (exists) {
-                                        // console.log("Status file found: ", statusFile);
+                                        console.log("Status file found: ", statusFile);
                                         sf.readStatus(statusFile, function (err, status) {
-                                            // console.log("Status of task: " + status.status);
+                                            console.log("Status of task: " + status.status);
                                             if (err || (!status.status) || status.status >= rptGenStatus.DONE) next();
+                                            else if (status.instructions_type == "makeReport") {
+                                                // These are jobs that should be resumed
+                                                jobsToResume.push(ticket + '_' + request_ts);
+                                                next();
+                                            }
                                             else {
-                                                // console.log("Marking status as bad: " + statusFile);
+                                                console.log("Marking status as bad: " + statusFile);
                                                 sf.writeStatus(statusFile,
-                                                {status: rptGenStatus.FAILED, msg:"Server restarted during job"}, next);
+                                                    {status: rptGenStatus.FAILED, msg:"Server restarted during job"});
+                                                next();
                                             }
                                         });
                                     }
@@ -126,10 +173,11 @@ define(function(require, exports, module) {
                 };
                 try {
                     var incompleteJobs = _.keys(JSON.parse(data));
-                    if (incompleteJobs) next();
-                    else throw new Error("empty jobs file");
+                    console.log("Incomplete Jobs: " + JSON.stringify(incompleteJobs));
+                    next();
                 }
                 catch (e) {
+                    console.log("Exception caught in handleIncompleteTasksOnStartup: " + e.message);
                     refresh();
                 }
             }
@@ -137,6 +185,7 @@ define(function(require, exports, module) {
         });
         function refresh() {
             that.saveRunning();
+            fs.writeFileSync(that.resumeFile,JSON.stringify(jobsToResume),'ascii');
             that.waitEmpty(done);
         }
     };

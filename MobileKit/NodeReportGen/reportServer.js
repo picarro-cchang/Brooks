@@ -236,9 +236,53 @@ the authenticating proxy server.
                     pv.get("user"), pv.get("contents"), runningTasks);
                 rptGenMonitor.monitor(reportGen);
                 runningTasks.monitor(reportGen);
-                reportGen.run({"force": pv.get("force")}, function (err, r) {
+                reportGen.run({"force": pv.get("force"), "resume": false}, function (err, r) {
                     if (err) res.send(_.extend(result,{"error": err.message}));
                     else res.send(_.extend(result,r));
+                });
+            }
+            else res.send(_.extend(result,{"error": pv.errors()}));
+            break;
+        case "resume":
+            // This is used to resume a makeReport request which was terminated prematurely by the
+            //  server going down
+            pv = newParamsValidator(req.query,
+                [{"name": "taskKey", "required": true, "validator": "string"}]);
+            if (pv.ok()) {
+                console.log("Resume called for " + pv.get("taskKey"));
+                // Get status and instructions
+                var taskKey = pv.get("taskKey").split("_");
+                var ticket = taskKey[0];
+                var request_ts = taskKey[1];
+                // Directory name is sharded by first byte of the ticket
+                var instrDir = path.join(REPORTROOT, ticket.substr(0,2), ticket); // Instructions
+                var instrFile = path.join(instrDir,'instructions.json');
+                workDir = path.join(instrDir, request_ts); // Status
+                statusFile = path.join(workDir,'status.dat');
+                sf.readStatus(statusFile, function (err, status) {
+                    if (!err) {
+                        if (status.status >= rptGenStatus.DONE) {
+                            res.send(_.extend(result,{"error": "Cannot resume a task that has already completed successfully."}));
+                        }
+                        else {
+                            fs.readFile(instrFile, "ascii", function (err, data) {
+                                if (!err) {
+                                    reportGen = newReportGen(REPORTROOT, p3ApiService, rptGenService,
+                                        status.user, data, runningTasks);
+                                    rptGenMonitor.monitor(reportGen);
+                                    runningTasks.monitor(reportGen);
+                                    reportGen.run({"force": status.force, "resume": true,
+                                        "taskKey":(taskKey[0] + "_" + taskKey[1]),
+                                        "start_ts": status.rpt_start_ts}, function (err, r) {
+                                        if (err) res.send(_.extend(result,{"error": err.message}));
+                                        else res.send(_.extend(result,r));
+                                    });
+                                }
+                                else res.send(_.extend(result,{"error": "Error reading instructions file"}));
+                            });                            
+                        }
+                    }
+                    else res.send(_.extend(result,{"error": "Error reading status file"}));
                 });
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
@@ -292,7 +336,8 @@ the authenticating proxy server.
             if (pv.ok()) {
                 user = req.query.user;
                 userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
-                    res.send(_.extend(result, {error:err, dashboard: data}));
+                    if (err) res.send(_.extend(result, {error:err.message, dashboard: data}));
+                    else res.send(_.extend(result, {error:null, dashboard: data}))
                 });
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
@@ -610,10 +655,22 @@ the authenticating proxy server.
                 else {
                     rptGenMonitor = newRptGenMonitor(REPORTROOT);
                     app.use("/rest/data", express.static(REPORTROOT));
-                    runningTasks.handleIncompleteTasksOnStartup( function () {
+                    runningTasks.handleIncompleteTasksOnStartup( function (err) {
                         var port = SITECONFIG.reportport;
-                        app.listen(port);
-                        console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+                        if (err) {
+                            console.log("Report Server cannot start: " + err);
+                        }
+                        else {
+                            app.listen(port);
+                            runningTasks.resumeJobsOnStartup(rptGenService, function (err) {
+                                if (err) {
+                                    console.log("Problem resuming jobs on startup: " + err);
+                                }
+                                else {
+                                    console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+                                }
+                            });
+                        }
                     });
                 }
             });

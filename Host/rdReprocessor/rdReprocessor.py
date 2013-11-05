@@ -21,7 +21,7 @@ import os.path
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
 from Host.Common import Broadcaster, Listener, StringPickler
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-
+from tables import openFile
 from Host.Common.CustomConfigObj import CustomConfigObj
 
 APP_NAME = "rdReprocessor"

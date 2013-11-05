@@ -21,6 +21,7 @@ File History:
     10-12-07 sze   Allow scripts to use different spectral and spline libraries instead
                     of making these libraries global 
     13-01-29 sze   Add per virtual laser offset for use with FSR hopping or laser current tuning
+    13-10-19 sze   Calculate spectral duration for each spectrum
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -1282,6 +1283,7 @@ class RdfData(object):
                 rdfData.startRow = low
                 rdfData.endRow = high
                 rdfData.spectLatency = latency
+                rdfData.spectDuration = 0.001*(max(rdfData.timestamp) - min(rdfData.timestamp))
                 return rdfData
 
             pace = max(0.1,min(1.0,float(RED_DISCARD_ALL-qSizes[i])/(RED_DISCARD_ALL-RED_THRESHOLD)))

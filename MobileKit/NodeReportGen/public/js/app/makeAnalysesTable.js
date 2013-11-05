@@ -1,19 +1,32 @@
 /* makeAnalysesTable.js renders isotopic analysis results into an HTML table */
 /* jshint undef:true, unused:true */
-/* global define */
+/*global module, require, P3TXT */
 
-define (['app/utils', 'app/geohash', 'app/reportGlobals'],
-function (utils, gh, REPORT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
 
+    var gh = require('app/geohash');
+    var REPORT = require('app/reportGlobals');
+    var utils = require('app/utils');
+    require('common/P3TXT');
+    
     function analyzerByRun(run) {
         return REPORT.settings.get("runs").at(run).get("analyzer");
     }
 
     function makeAnalysesTable(report) {
         var i;
-        var analyses, anz, conc, delta, etm, lat, lng, uncertainty, where;
+        var analyses, anz, conc, delta, disposition, etm, lat, lng, uncertainty, where;
         var analysesTable = [];
+
+        var dispositionStrings = {0:P3TXT.getReport.dispositions.complete,
+                                  1:P3TXT.getReport.dispositions.cancelled,
+                                  2:P3TXT.getReport.dispositions.uncertain,
+                                  3:P3TXT.getReport.dispositions.outside_range,
+                                  4:P3TXT.getReport.dispositions.not_enough_data};
+
         analyses = report.analysesData;
         if (analyses) {
             // Generate the analysesTable
@@ -28,6 +41,12 @@ function (utils, gh, REPORT) {
                 lat = where.latitude[2];
                 lng = where.longitude[2];
                 conc = analyses[i].attributes.C;
+                // N.B. If the default disposition changes, make corresponding change
+                //  in makeAnalyses.js in this directory 
+                if (analyses[i].attributes.hasOwnProperty('Q'))
+                    disposition = analyses[i].attributes.Q;
+                else
+                    disposition = 0;
                 if (report.inMap(lat,lng)) {
                     var des = anz + '_' + utils.getDateTime(new Date(1000*etm)) + 'I';
                     var url = "http://maps.google.com?q=(" + lat + "," + lng + ")+(" + des + ")&z=" + zoom;
@@ -39,6 +58,7 @@ function (utils, gh, REPORT) {
                     analysesTable.push('<td>' + conc.toFixed(1) + '</td>');
                     analysesTable.push('<td>' + delta.toFixed(1) + '</td>');
                     analysesTable.push('<td>' + uncertainty.toFixed(1) + '</td>');
+                    analysesTable.push('<td>' + dispositionStrings[disposition] + '</td>');
                     analysesTable.push('</tr>');
                 }
             }
@@ -46,13 +66,14 @@ function (utils, gh, REPORT) {
                 var header = [];
                 header.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
                 header.push('<thead><tr>');
-                header.push('<th style="width:10%">Label</th>');
+                header.push('<th style="width:8%">Label</th>');
                 header.push('<th style="width:20%">Designation</th>');
                 header.push('<th style="width:20%">Latitude</th>');
                 header.push('<th style="width:20%">Longitude</th>');
-                header.push('<th style="width:10%">Conc</th>');
-                header.push('<th style="width:10%">Isotopic Ratio</th>');
-                header.push('<th style="width:10%">Uncertainty</th>');
+                header.push('<th style="width:8%">Conc</th>');
+                header.push('<th style="width:8%">Isotopic Ratio</th>');
+                header.push('<th style="width:8%">Uncertainty</th>');
+                header.push('<th style="width:8%">Disposition</th>');
                 header.push('</tr></thead>');
                 header.push('<tbody>');
                 analysesTable = header.concat(analysesTable);
@@ -63,5 +84,5 @@ function (utils, gh, REPORT) {
         }
         return analysesTable;
     }
-    return makeAnalysesTable;
+    module.exports = makeAnalysesTable;
 });
