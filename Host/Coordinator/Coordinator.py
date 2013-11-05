@@ -6,6 +6,9 @@ File History:
     08-06-02  sze  Initial version.
     08-12-04  alex Used CustomConfigObj to replace configobj. Monitored coordinator using Supervisor.
     09-01-30  alex moved the output file to ..\..\Log\PulseAnalyzerResults directory instead of the supervisor directory
+    13-11-05  tw   Fixed bug which clobbered header written to .csv file after loading sample descriptions.
+                   Cleaned up use of pprint.pprint (must go on separate line since outputs directly to stdout
+                   and returns None -- should not be combined with print)
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -356,7 +359,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def onLoadSampleDescriptions(self,event):
         try:
-            print "OnLoadSampleDescriptions"
+            print "[onLoadSampleDescriptions]"
             if "Trays" in self.config:
                 trayNames = self.config["Trays"].values()
                 for tray in trayNames:
@@ -459,14 +462,18 @@ class CoordinatorFrame(CoordinatorFrameGui):
         print '[onWriteHeadings]'
         notOpen = self.saveFp == None
         if notOpen:
-            print "\tOpen '%s' for append..." % self.saveFileName
+            print "  Open '%s' for append..." % self.saveFileName
             self.saveFp = file(self.saveFileName,"ab")
+        else:
+            print "  File '%s' is already open" % self.saveFileName
+
         try:
             if len(paramTupleList) > 0:
-                print "\tparamTupleList = "
-                print "\t%s" % pprint.pprint(paramTupleList)
+                print "  paramTupleList ="
+                pprint.pprint(paramTupleList)
+
                 if self.writeParamsToHeader:
-                    print '\tWriting user param headers'
+                    print '  Writing user param headers'
 
                     # Record the user editable parameters
                     userParams = []
@@ -481,9 +488,15 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
-            print "\twriter = %s" % pprint.pprint(writer)
+            print "  writer="
+            pprint.pprint(writer)
+            print ""
+
+            print "  self.Config[\"Output\"]="
+            pprint.pprint(self.config["Output"])
+            print ""
+
             head = []
-            print "\tself.Config[\"Output\"] = %s" % pprint.pprint(self.config["Output"])
             for k in self.config["Output"]:
                 t, f = self.config["Output"][k]
                 m = self.widthRe.match(f.strip())
@@ -491,8 +504,11 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     head.append(("%%%ss" % (m.group(1),)) % t)
                 else:
                     raise ValueError("Format %s does not have a valid width specification" % f.strip())
-            print 'Preparing to insert columns, head: '
+
+            print 'Preparing to insert columns, head='
             pprint.pprint(head)
+            print ""
+
             writer.writerow(head)
             for i,h in enumerate(head):
                 self.fileDataListCtrl.InsertColumn(i,h.strip(),width=-1)
@@ -537,6 +553,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         while not self.replyQueue.empty(): self.replyQueue.get()
 
     def startStateMachineThread(self, paramTupleList=None):
+        print "[startStateMachineThread]"
         if len(paramTupleList) > 0:
             dlg = InitialParamDialogGui(paramTupleList, None, -1, "")
             getParamVals = (dlg.ShowModal() == wx.ID_OK)
@@ -548,7 +565,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 if idx < self.numDispParams:
                     self.setParamText(idx, self.guiParamDict[dlg.nameList[idx]])
             dlg.Destroy()
-            print self.guiParamDict
+            print "  self.guiParamDict=", self.guiParamDict
 
         self.onWriteHeadings(paramTupleList)
 
@@ -600,13 +617,13 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.fileDataListCtrl.SetStringItem(self.lineIndex,i+1,t.strip())
         self.fileDataListCtrl.EnsureVisible(self.lineIndex)
         self.lineIndex += 1
+
         notOpen = (self.saveFp == None)
         if notOpen:
             self.saveFp = file(self.saveFileName,"ab")
+
         try:
             w = csv.writer(self.saveFp)
-
-
             w.writerow(h)
         finally:
             if notOpen:
@@ -635,17 +652,25 @@ class CoordinatorFrame(CoordinatorFrameGui):
             if len(self.outputFileDataList) >= self.maxNumLines:
                 self.onNewFile(None)
         if self.rewriteOutputFile: # Descriptions have changed, rewrite file
+            print '[onIdle: rewriting output file]'
             self.fileDataListCtrl.ClearAll()
+
+            # First we need to open the file so it gets rewritten
+            # onWriteHeadings() leaves it open
+            print "  opening %s for write" % self.saveFileName
+            self.saveFp = file(self.saveFileName,"wb")
+
             self.onWriteHeadings()
             self.lineIndex = 0
-            self.saveFp = file(self.saveFileName,"wb")
             try:
                 for data in self.outputFileDataList:
+                    # we already have the file open
                     self.processData(data)
             finally:
                 self.saveFp.close()
                 self.saveFp = None
                 self.rewriteOutputFile = False
+
         while not self.guiQueue.empty():
             type, data = self.guiQueue.get()
             if type == LOG:
