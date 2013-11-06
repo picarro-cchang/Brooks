@@ -5,13 +5,46 @@
 import wx
 
 
+class DummyPlot(wx.Panel):
+    def __init__(self, *args, **kwds):
+        # extract args intended only for this class
+        if "plotName" in kwds:
+            name = kwds["plotName"]
+            del kwds["plotName"]
+        else:
+            name = "DummyPlot"
+
+        wx.Panel.__init__(self, *args, **kwds)
+
+        self.model = Subject(name=name)
+        self.model.settings = {"mean": "",
+                               "stdDev": "",
+                               "peakToPeak": "",
+                               "nAvg": ""}
+
+        self.model.changed = ""
+
+        self.test1Btn = wx.Button(self, -1, "Test 1")
+        self.test2Btn = wx.Button(self, -1, "Test 2")
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.test1Btn)
+        sizer.Add(self.test2Btn)
+
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+        sizer.SetSizeHints(self)
+
+
 ######################################
 # A simple flex grid for the controls.
 #
 class PlotControlPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
+        # set/override style arg
         kwds["style"] = wx.TAB_TRAVERSAL | wx.SUNKEN_BORDER
 
+        # extract args intended only for this class
         if "panelNum" in kwds:
             self.panelNum = kwds["panelNum"]
             del kwds["panelNum"]
@@ -30,17 +63,21 @@ class PlotControlPanelGui(wx.Panel):
         self.autoscaleYChk = wx.CheckBox(self, -1, "Autoscale Y")
         self.showPointsChk = wx.CheckBox(self, -1, "Show points")
 
+        transformLbl = wx.StaticText(self, -1, "Transform:")
+        self.transformText = wx.TextCtrl(self, -1, "")
+
+        # these text controls are all read-only, they are filled in when the plot is updated
         meanLbl = wx.StaticText(self, -1, "Mean:")
-        self.meanText = wx.TextCtrl(self, -1, "")
+        self.meanText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
 
         stdDevLbl = wx.StaticText(self, -1, "Std. dev.:")
-        self.stdDevText = wx.TextCtrl(self, -1, "")
+        self.stdDevText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
 
         peak2PeakLbl = wx.StaticText(self, -1, "Peak to peak:")
-        self.peak2PeakText = wx.TextCtrl(self, -1, "")
+        self.peak2PeakText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
 
         nAvgLbl = wx.StaticText(self, -1, "N average:")
-        self.nAvgText = wx.TextCtrl(self, -1, "")
+        self.nAvgText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
 
         self.calcNAvgBtn = wx.Button(self, -1, "Calculate")
 
@@ -70,26 +107,22 @@ class PlotControlPanelGui(wx.Panel):
         plotControlsSizer.Add((10, 10))  # some empty space
         plotControlsSizer.Add(checkBoxSizer, 0,
                               wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER_HORIZONTAL)  # some empty space
-        plotControlsSizer.Add((10, 10))  # some empty space
+        plotControlsSizer.Add((20, 20))  # some empty space
 
-        """
-        # checkboxes not in a sizer
-        plotControlsSizer.Add((10, 10))  # some empty space
-        plotControlsSizer.Add(autoscaleYChk, 0,
-                              wx.ALIGN_LEFT)
-        plotControlsSizer.Add((10, 10))  # some empty space
-        #plotControlsSizer.Add((10, 10))  # some empty space
-
-        plotControlsSizer.Add((10, 10))  # some empty space
-        plotControlsSizer.Add(showPointsChk, 0,
-                              wx.ALIGN_LEFT)
-        plotControlsSizer.Add((10, 10))  # some empty space
-        #plotControlsSizer.Add((10, 10))  # some empty space
-        """
-
-        plotControlsSizer.Add(meanLbl, 0,
+        plotControlsSizer.Add(transformLbl, 0,
                               wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.meanText, 0, wx.EXPAND)
+        plotControlsSizer.Add(self.transformText, 0, wx.EXPAND)
+        plotControlsSizer.Add((10, 10))  # some empty space
+
+        # put a little extra vertical space above this next
+        # group of controls
+        topBorder = 10
+        plotControlsSizer.Add(meanLbl, 0,
+                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.TOP,
+                              topBorder)
+        plotControlsSizer.Add(self.meanText, 0,
+                              wx.EXPAND | wx.TOP,
+                              topBorder)
         plotControlsSizer.Add((10, 10))  # some empty space
 
         plotControlsSizer.Add(stdDevLbl, 0,
@@ -108,15 +141,19 @@ class PlotControlPanelGui(wx.Panel):
         plotControlsSizer.Add(self.calcNAvgBtn, 0,
                               wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 
+        # outer sizer adds a margin around everything
+        outerSizer = wx.BoxSizer(wx.VERTICAL)
+        outerSizer.Add(plotControlsSizer, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 10)
+
         # only allow horizontal resize
         #plotControlsSizer.SetFlexibleDirection(wx.HORIZONTAL)
         #plotControlsSizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_NONE)
 
         # size things up
-        self.SetSizer(plotControlsSizer)
+        self.SetSizer(outerSizer)
 
-        plotControlsSizer.Fit(self)
-        plotControlsSizer.SetSizeHints(self)
+        outerSizer.Fit(self)
+        outerSizer.SetSizeHints(self)
 
 
 class TestClientData(object):
@@ -129,12 +166,18 @@ class TestClientData(object):
 
 class Subject(object):
     def __init__(self, *a, **kwds):
+        if "name" in kwds:
+            self.name = kwds["name"]
+        else:
+            self.name = "unknown"
+
         self.listeners = {}
         self.nextListenerIndex = 0
 
     def addListener(self, listenerFunc):
         self.listeners[self.nextListenerIndex] = listenerFunc
         retVal = self.nextListenerIndex
+
         self.nextListenerIndex += 1
         return retVal
 
@@ -156,10 +199,25 @@ class PlotDisplayPanel(PlotDisplayPanelGui):
 
 class PlotControlPanel(PlotControlPanelGui):
     def __init__(self, *a, **kwds):
-        PlotControlPanelGui.__init__(self, *a, **kwds)
-        self.model = Subject()
 
-        # pull settings for autoscale Y and show points from prefs
+        # get the panel name if it's there
+        if "panelName" in kwds:
+            panelName = kwds["panelName"]
+            del kwds["panelName"]
+        else:
+            panelName = ""
+
+        # get the panel number if it's there
+        if "panelNum" in kwds:
+            panelNum = kwds["panelNum"]
+            del kwds["panelNum"]
+        else:
+            panelNum = -1
+
+        PlotControlPanelGui.__init__(self, *a, **kwds)
+        self.model = Subject(name=panelName)
+
+        # TODO: Use settings for autoscale Y and show points from prefs
         fAutoscaleY = False
         fShowPoints = True
 
@@ -169,6 +227,10 @@ class PlotControlPanel(PlotControlPanelGui):
                                "strVarName": ""}
 
         self.model.changed = ""
+
+        # Create a listener for plot updates. The creator of this object needs to register
+        # 
+        self.listenerWrapper = ListenerWrapper(panelNum, panelName)
 
         dataSetNameList = ["", "data A", "data B", "data C"]
         self.dataSetNameChoice.SetItems(dataSetNameList)
@@ -199,6 +261,7 @@ class PlotControlPanel(PlotControlPanelGui):
 
         # Note: wx returns Unicode strings here, we might need to
         #       convert them to ASCII
+        # varName = str(varName)
         self.model.settings["strVarName"] = varName
         self.model.changed = "strVarName"
         self.model.update()
@@ -241,11 +304,15 @@ class PlotControlPanel(PlotControlPanelGui):
 
 
 class ListenerWrapper(object):
-    def __init__(self, index):
+    def __init__(self, index, name):
         self.index = index
+        self.name = name
 
     def plotControlsListener(self, model):
+        # Called when the user changes something in the plot controls.
+        # The listener recipient is the plot.
         print "plotControlsListener:"
+        print "  name=", self.name
         print "  index=", self.index
         print "  settings=", model.settings
         print "  changed=", model.changed
@@ -259,76 +326,84 @@ class ListenerWrapper(object):
 
         print ""
 
+        # update the plot graphic
+
+        # update plot controls value that report computed results
+
 
 class TestFrame(wx.Frame):
-    def __init__(self, nPanels=1):
-        wx.Frame.__init__(self, None, -1, "Plot Control Frame")
+    def __init__(self, nPanels=1, name="Test Frame"):
+        wx.Frame.__init__(self, None, -1, name)
 
         # TODO: pass whether to include the N average controls in the panel
         # fIncludeNavg = True
+
+        # Don't know if we really need to track these or not
         self.panels = []
+        self.plots = []
         self.listeners = []
 
         # Sizer to hold all of the plot controls
-        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        #mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer = wx.FlexGridSizer(rows=nPanels, cols=2)
+        mainSizer.AddGrowableCol(0)
 
         for ix in range(nPanels):
+            # plot panel name isn't exposed in the UI but useful for debugging
+            panelName = "%s - %d" % (name, ix)
+
             panel = PlotControlPanel(self, wx.ID_ANY,
                                      style=wx.RAISED_BORDER,
-                                     panelNum=ix)
+                                     panelNum=ix,
+                                     panelName=panelName)
             self.panels.append(panel)
 
-            listenerWrapper = ListenerWrapper(ix)
+            # create a listener for this plot control panel and register our callback
+            listenerWrapper = ListenerWrapper(ix, name)
 
             ixListener = panel.model.addListener(listenerWrapper.plotControlsListener)
             self.listeners.append(ixListener)
 
-            # wrap a sizer around this panel
-            sizer = wx.BoxSizer(wx.VERTICAL)
-            sizer.Add(panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
-            #self.SetSizer(sizer)
-            #panel.SetSizer(sizer)
+            # the plot control panel also listens to plot updates so register it
 
-            # add this panel sizer to the main sizer
-            mainSizer.Add(sizer, 0, wx.TOP | wx.BOTTOM, 10)
+            # wrap a sizer around the panel with a margin
+            controlsSizer = wx.BoxSizer(wx.VERTICAL)
+            controlsSizer.Add(panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
+
+            # create a dummy plot (right now it just has a couple of buttons)
+            plot = DummyPlot(self, wx.ID_ANY,
+                             style=wx.RAISED_BORDER)
+            self.plots.append(plot)
+
+            # wrap a sizer around this plot with a margin
+            plotSizer = wx.BoxSizer(wx.VERTICAL)
+            plotSizer.Add(plot, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
+
+            """
+            # wrap the plot sizer and its controls sizer in a sizer
+            plotAndControlsSizer = wx.FlexGridSizer(rows=1, cols=2, hgap=15, vgap=15)
+            plotAndControlsSizer.AddGrowableCol(0)
+            plotAndControlsSizer.Add(plotSizer)
+            plotAndControlsSizer.Add(controlsSizer)
+
+            # add the plot and controls sizer to the main sizer
+            mainSizer.Add(plotAndControlsSizer, 0, wx.TOP | wx.BOTTOM, 10)
+            """
+
+            mainSizer.Add(plotSizer)
+            mainSizer.Add(controlsSizer)
 
         # fit the frame to the needs of the main sizer
         self.SetSizer(mainSizer)
         mainSizer.Fit(self)
 
-    """
-    def OnCalcAverage(self, event):
-        print "Calculate average button clicked"
-        print "event=", event
-        print dir(event)
+        # testing idle mode
+        #self.Bind(wx.EVT_IDLE, self.OnIdle)
 
-        tcd = event.GetClientData()
-        print "tcd=", tcd
-        #print "panelNum=", tcd.GetPanelNum()
-
-    def OnAutoscaleYChk(self, event):
-        print "Autoscale Y checkbox clicked"
-        print "event=", event
-        print dir(event)
-
-        tcd = event.GetClientData()
-        print "tcd=", tcd
-
-        co = event.GetClientObject()
-        print "co=", co
-        #print "State=", self.panel.autoscaleYChk.GetValue()
-
-    def OnChooseVar(self, event):
-        print "Selected var changed"
-        print "event=", event
-        print dir(event)
-        print ""
-        tcd = event.GetClientData()
-        print "tcd=", tcd
-        ix = self.panel.varNameChoice.GetSelection()
-        varName = self.panel.varNameChoice.GetStringSelection()
-        print "  ix=%d  varName=%s" % (ix, varName)
-    """
+    def OnIdle(self, event):
+        import time
+        timestr = time.strftime("%Y%m%d-%H:%M:%S")
+        print "OnIdle  ", timestr, "  ", time.clock()
 
 
 class App(wx.App):
@@ -336,9 +411,14 @@ class App(wx.App):
         wx.App.__init__(self, redirect, filename)
 
     def OnInit(self):
-        self.frame = TestFrame(nPanels=3)
+        self.frame = TestFrame(nPanels=3, name="Test Frame 1")
         self.frame.Show()
         self.SetTopWindow(self.frame)
+
+        # create a second test frame
+        self.frame2 = TestFrame(nPanels=2, name="Test Frame 2")
+        self.frame2.Show()
+
         return True
 
 

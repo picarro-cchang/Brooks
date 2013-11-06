@@ -695,6 +695,13 @@ class AppFrame(wx.Frame):
         self.UpdateMenus()
 
     def OnConcatFolder(self, event):
+        # TODO: Add a pref for a workaround for the Windows select folder dialog
+        #       to use the file open dialog instead, with a dummy filename
+        #       set to something like "Filename will be ignored". See this thread:
+        #       http://stackoverflow.com/questions/31059/how-do-you-configure-an-openfiledialog-to-select-folders
+        #
+        #       Write a function to handle folder selection with an argument for
+        #       whether to use this hack or not. Is this a problem on the Mac?
         LogMsg(4, "OnConcatFolder")
 
     def OnSelectPlotWindow(self, event):
