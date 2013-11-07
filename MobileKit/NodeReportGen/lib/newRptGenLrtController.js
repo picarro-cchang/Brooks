@@ -45,7 +45,7 @@ define(function(require, exports, module) {
 
         function makeRequest() {
             that.rptGenService.get(that.rsc, that.params, function (err, result) {
-                console.log("!!!!!!" + that.rsc + JSON.stringify(that.params));
+                // console.log("!!!!!!" + that.rsc + JSON.stringify(that.params));
                 if (err) that.emit("error", err);
                 else {
                     if (result["rpt_start_ts"] === result["request_ts"]) {
