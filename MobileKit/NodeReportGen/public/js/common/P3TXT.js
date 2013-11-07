@@ -396,6 +396,7 @@ P3TXT.dashboard.option_isotopic_table = "Isotopic Table";
 P3TXT.dashboard.option_runs_table = "Runs Table";
 P3TXT.dashboard.option_surveys_table = "Surveys Table";
 
+P3TXT.dashboard.empty_report = "Empty report, check template";
 P3TXT.dashboard.send_code = "Please send this code to Picarro: ";
 P3TXT.dashboard.report_expired = "Report not found or expired. ";
 P3TXT.dashboard.alert_while_converting_timezone = "While converting timezone: ";

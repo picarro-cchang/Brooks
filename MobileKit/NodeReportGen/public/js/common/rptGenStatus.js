@@ -6,6 +6,7 @@ define(function(require, exports, module) {
 	'use strict';
     module.exports = {
         "OTHER_ERROR": -128,
+        "EMPTY_PDF": -8,
         "FAILED": -4,
         "BAD_PARAMETERS": -2,
         "TASK_NOT_FOUND": -1,

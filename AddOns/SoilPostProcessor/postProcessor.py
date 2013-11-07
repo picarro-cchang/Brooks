@@ -47,7 +47,7 @@ def _log(msg):
 
 
 def _epochTimeFromRow(row):
-    return float((row.split()[6]).strip())
+    return float((row.split()[5]).strip())
 
 
 def _nearestIdx(t, data, roundToZero=True):
@@ -123,7 +123,9 @@ def main(opts):
     with open(os.path.join(opts.datDir, 'master.dat'), 'w') as fp:
         fp.writelines(rows)
 
-    rawData = DatFile.DatFile(os.path.join(opts.datDir, 'master.dat'))
+    rawData = DatFile.DatFile(os.path.join(opts.datDir, 'master.dat'),
+                              ['species', 'EPOCH_TIME', 'CH4', 'N2O', 'CO2',
+                               'H2O', 'ChemDetect'])
 
     data = {
         'CH4' : [],
@@ -132,6 +134,14 @@ def main(opts):
         'H2O' : []
         }
 
+    chemDetect = {
+        'CH4' : [],
+        'N2O' : [],
+        'CO2' : [],
+        'H2O' : []
+        }
+
+
     if opts.filterData:
         for i, sid in enumerate(rawData['species']):
             t = float(rawData['EPOCH_TIME'][i])
@@ -139,10 +149,12 @@ def main(opts):
             for k in data.keys():
                 if float(sid) in SPECIES[k]:
                     data[k].append((t, float(rawData[k][i])))
+                    chemDetect[k].append(float(rawData['ChemDetect'][i]))
     else:
         for i, t in enumerate(rawData['EPOCH_TIME']):
             for k in data.keys():
                 data[k].append((float(t), float(rawData[k][i])))
+                chemDetect[k].append(float(rawData['ChemDetect'][i]))
 
     if hasattr(sys, 'frozen'):
         root = os.path.abspath(os.path.dirname(sys.executable))
@@ -187,6 +199,10 @@ def main(opts):
 
             print "startIdx = %s, stopIdx = %s" % (startIdx, stopIdx)
 
+            if stopIdx < startIdx:
+                print "Error: measurement = '%s', start=%s, stop=%s" % (m.name,
+                                                                        m.startEpoch,m.stopEpoch)
+
             epochTime = [x[0] for x in data[species][startIdx:stopIdx]]
             conc = [x[1] for x in data[species][startIdx:stopIdx]]
 
@@ -204,11 +220,16 @@ def main(opts):
                 chambers[m.chamber].flux(b, sigmaB, m.temperatureK)[0],
                 chambers[m.chamber].flux(b, sigmaB, m.temperatureK)[1]])
 
-            pyplot.plot(epochTime, conc, 'bo', label="%s - Raw" % species)
-            pyplot.plot(epochTime, fit, 'r', label="%s - Fit" % species)
-            pyplot.xlabel('Epoch time (s)')
-            pyplot.ylabel("%s concentration (ppm)" % species)
-            pyplot.legend(loc=0)
+            fig, concAxis = pyplot.subplots()
+            concAxis.plot(epochTime, conc, 'bo', label="%s - Raw" % species)
+            concAxis.plot(epochTime, fit, 'r', label="%s - Fit" % species)
+            concAxis.set_xlabel('Epoch time (s)')
+            concAxis.set_ylabel("%s concentration (ppm)" % species)
+#            fig.legend(loc=0)
+            chemDetectAxis = concAxis.twinx()
+            chemDetectAxis.plot(epochTime, chemDetect[species][startIdx:stopIdx])
+            chemDetectAxis.set_ylabel('ChemDetect')
+            chemDetectAxis.set_ylim([-0.2, 1.2])
             pyplot.savefig(os.path.join(measurementDir, "%s.png" % species),
                            bbox_inches=0)
             pyplot.close()
