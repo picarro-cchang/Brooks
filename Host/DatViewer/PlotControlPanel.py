@@ -3,6 +3,7 @@
 # Class of a panel of plot controls for DatViewer plots.
 #
 import wx
+from PlotControlPanelGui import PlotControlPanelGui
 
 
 class DummyPlot(wx.Panel):
@@ -51,9 +52,14 @@ class DummyPlot(wx.Panel):
             #self.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
 
             # this does work, but apparently only on Windows
+            # but it doesn't block the message queue so
+            # clicking on other controls just queues them up
             wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
             import time
             time.sleep(5)
+
+            # there is also a busy info dialog in wx
+            # http://www.blog.pythonlibrary.org/2010/06/26/the-dialogs-of-wxpython-part-1-of-2/
 
             import random
             nAvg = random.random() * 25
@@ -69,134 +75,6 @@ class DummyPlot(wx.Panel):
         # self.model.changed = <whatever needs to be updated>
         # self.model.settings = <values>
         # self.model.update()
-
-
-######################################
-# A simple flex grid for the controls.
-#
-class PlotControlPanelGui(wx.Panel):
-    def __init__(self, *args, **kwds):
-        # set/override style arg
-        kwds["style"] = wx.TAB_TRAVERSAL | wx.SUNKEN_BORDER
-
-        # extract args intended only for this class
-        if "panelNum" in kwds:
-            self.panelNum = kwds["panelNum"]
-            del kwds["panelNum"]
-        else:
-            self.panelNum = 0
-
-        wx.Panel.__init__(self, *args, **kwds)
-
-        # Create the controls
-        dataSetNameLbl = wx.StaticText(self, wx.ID_ANY, "Data set name:")
-        self.dataSetNameChoice = wx.Choice(self, -1)
-
-        varNameLbl = wx.StaticText(self, -1, "Var name:")
-        self.varNameChoice = wx.Choice(self, -1)
-
-        self.autoscaleYChk = wx.CheckBox(self, -1, "Autoscale Y")
-        self.showPointsChk = wx.CheckBox(self, -1, "Show points")
-
-        transformLbl = wx.StaticText(self, -1, "Transform:")
-        self.transformText = wx.TextCtrl(self, -1, "")
-
-        # these text controls are all read-only, they are filled in when the plot is updated
-        meanLbl = wx.StaticText(self, -1, "Mean:")
-        self.meanText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-
-        stdDevLbl = wx.StaticText(self, -1, "Std. dev.:")
-        self.stdDevText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-
-        peak2PeakLbl = wx.StaticText(self, -1, "Peak to peak:")
-        self.peak2PeakText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-
-        nAvgLbl = wx.StaticText(self, -1, "N average:")
-        self.nAvgText = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
-
-        self.calcNAvgBtn = wx.Button(self, -1, "Calculate")
-
-        # Do the layout
-
-        # plotControlsSizer is a grid that holds everything
-        plotControlsSizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-        plotControlsSizer.AddGrowableCol(1)
-
-        plotControlsSizer.Add(dataSetNameLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.dataSetNameChoice, 0, wx.EXPAND)
-        plotControlsSizer.Add((10, 10))  # some empty space
-
-        plotControlsSizer.Add(varNameLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.varNameChoice, 0, wx.EXPAND)
-        plotControlsSizer.Add((10, 10))  # some empty space
-
-        # the checkboxes are wrapped in a vertical box sub-sizer
-        checkBoxSizer = wx.BoxSizer(wx.VERTICAL)
-        checkBoxSizer.Add(self.autoscaleYChk)
-        checkBoxSizer.Add(self.showPointsChk)
-
-        # center the checkboxes in the middle column
-        # or we could left align it (like it was without this sizer)
-        plotControlsSizer.Add((10, 10))  # some empty space
-        plotControlsSizer.Add(checkBoxSizer, 0,
-                              wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER_HORIZONTAL)  # some empty space
-        plotControlsSizer.Add((20, 20))  # some empty space
-
-        plotControlsSizer.Add(transformLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.transformText, 0, wx.EXPAND)
-        plotControlsSizer.Add((10, 10))  # some empty space
-
-        # put a little extra vertical space above this next
-        # group of controls
-        topBorder = 10
-        plotControlsSizer.Add(meanLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.TOP,
-                              topBorder)
-        plotControlsSizer.Add(self.meanText, 0,
-                              wx.EXPAND | wx.TOP,
-                              topBorder)
-        plotControlsSizer.Add((10, 10))  # some empty space
-
-        plotControlsSizer.Add(stdDevLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.stdDevText, 0, wx.EXPAND)
-        plotControlsSizer.Add((10, 10))  # some empty space
-
-        plotControlsSizer.Add(peak2PeakLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.peak2PeakText, 0, wx.EXPAND)
-        plotControlsSizer.Add((10, 10))  # some empty space
-
-        plotControlsSizer.Add(nAvgLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        plotControlsSizer.Add(self.nAvgText, 0, wx.EXPAND)
-        plotControlsSizer.Add(self.calcNAvgBtn, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-
-        # outer sizer adds a margin around everything
-        outerSizer = wx.BoxSizer(wx.VERTICAL)
-        outerSizer.Add(plotControlsSizer, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 10)
-
-        # only allow horizontal resize
-        #plotControlsSizer.SetFlexibleDirection(wx.HORIZONTAL)
-        #plotControlsSizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_NONE)
-
-        # size things up
-        self.SetSizer(outerSizer)
-
-        outerSizer.Fit(self)
-        outerSizer.SetSizeHints(self)
-
-
-class TestClientData(object):
-    def __init__(self, panelNum):
-        self.panelNum = panelNum
-
-    def GetPanelNum(self):
-        return self.panelNum
 
 
 class Subject(object):
@@ -395,7 +273,7 @@ class PlotListenerWrapper(object):
 
 
 class TestFrame(wx.Frame):
-    def __init__(self, nPanels=1, name="Test Frame"):
+    def __init__(self, nPanels=1, name="Test Frame", debug=False):
         wx.Frame.__init__(self, None, -1, name)
 
         # TODO: pass whether to include the N average controls in the panel
@@ -422,14 +300,6 @@ class TestFrame(wx.Frame):
                                      panelName=panelName)
             self.panels.append(panel)
 
-            """
-            # create a listener for this plot control panel and register our callback
-            listenerWrapper = ListenerWrapper(ix, name)
-
-            ixListener = panel.model.addListener(listenerWrapper.plotControlsListener)
-            self.listeners.append(ixListener)
-            """
-
             # wrap a sizer around the panel with a margin
             controlsSizer = wx.BoxSizer(wx.VERTICAL)
             controlsSizer.Add(panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
@@ -438,13 +308,6 @@ class TestFrame(wx.Frame):
             plot = DummyPlot(self, wx.ID_ANY,
                              style=wx.RAISED_BORDER)
             self.plots.append(plot)
-
-            """
-            # the plot control panel also listens to plot updates so register it
-            controlsListenerWrapper = PlotListenerWrapper(ix, name)
-            ixPlotListener = plot.model.addListener(controlsListenerWrapper.plotListener)
-            self.plotListeners.append(ixPlotListener)
-            """
 
             # wrap a sizer around this plot with a margin
             plotSizer = wx.BoxSizer(wx.VERTICAL)
@@ -464,19 +327,21 @@ class TestFrame(wx.Frame):
             mainSizer.Add(plotSizer)
             mainSizer.Add(controlsSizer)
 
+            # for debugging it may be handy to have our own listeners registered
+            # all they do is output text
+            # put these first so we get the messages before anything else does
+            if debug is True:
+                listenerWrapper = ListenerWrapper(ix, name)
+                panel.model.addListener(listenerWrapper.plotControlsListener)
+
+                plotListenerWrapper = PlotListenerWrapper(ix, name)
+                plot.model.addListener(plotListenerWrapper.plotListener)
+
             # register the plot panel's listener with the plot
             plot.model.addListener(panel.updateControls)
 
             # register the plot's listener with the plot controls
             panel.model.addListener(plot.updatePlot)
-
-            # for debugging it may be handy to have our own listeners registered
-            # all they do is output text
-            listenerWrapper = ListenerWrapper(ix, name)
-            panel.model.addListener(listenerWrapper.plotControlsListener)
-
-            controlsListenerWrapper = PlotListenerWrapper(ix, name)
-            plot.model.addListener(controlsListenerWrapper.plotListener)
 
         # fit the frame to the needs of the main sizer
         self.SetSizer(mainSizer)
@@ -496,13 +361,14 @@ class App(wx.App):
         wx.App.__init__(self, redirect, filename)
 
     def OnInit(self):
-        self.frame = TestFrame(nPanels=3, name="Test Frame 1")
+        debug = True
+        self.frame = TestFrame(nPanels=3, name="Test Frame 1", debug=debug)
         self.frame.Show()
         self.SetTopWindow(self.frame)
 
         # create a second test frame to prove this works
-        #self.frame2 = TestFrame(nPanels=2, name="Test Frame 2")
-        #self.frame2.Show()
+        self.frame2 = TestFrame(nPanels=2, name="Test Frame 2", debug=debug)
+        self.frame2.Show()
 
         return True
 
