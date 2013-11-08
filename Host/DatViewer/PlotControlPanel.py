@@ -35,6 +35,41 @@ class DummyPlot(wx.Panel):
         sizer.Fit(self)
         sizer.SetSizeHints(self)
 
+    def updatePlot(self, modelControls):
+        #print "updatePlot:"
+        #print "  settings=", modelControls.settings
+        #print "  changed=", modelControls.changed
+        #print ""
+
+        # sample code for updating controls
+        if modelControls.changed == "nAvgCalculate":
+            # calculate the N average and update it
+            # assume this operation can take a while
+            # change to a busy cursor
+            #
+            # this doesn't work...
+            #self.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
+
+            # this does work, but apparently only on Windows
+            wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
+            import time
+            time.sleep(5)
+
+            import random
+            nAvg = random.random() * 25
+            self.model.changed = "nAvg"
+            self.model.settings["nAvg"] = nAvg
+            self.model.update()
+            #self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+            wx.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+        # something changed in the controls
+        # compute something or whatever
+        # then update the controls
+        # self.model.changed = <whatever needs to be updated>
+        # self.model.settings = <values>
+        # self.model.update()
+
 
 ######################################
 # A simple flex grid for the controls.
@@ -302,7 +337,22 @@ class PlotControlPanel(PlotControlPanelGui):
         self.model.changed = "nAvgCalculate"
         self.model.update()
 
+    def updateControls(self, plotModel):
+        # called by the plot when there are controls to update
+        #print "plotModel.settings=", plotModel.settings
+        #print "plotModel.changed=", plotModel.changed
 
+        # update appropriate controls with the new values here...
+        # self.meanText.SetValue()
+        # self.stdDevText.SetValue()
+        # self.peak2PeakText.SetValue()
+        # self.nAvgText.SetValue()
+
+        if plotModel.changed == "nAvg":
+            self.nAvgText.SetValue(str(plotModel.settings["nAvg"]))
+
+
+# this is really a plot controls listener, should rename this class
 class ListenerWrapper(object):
     def __init__(self, index, name):
         self.index = index
@@ -326,9 +376,22 @@ class ListenerWrapper(object):
 
         print ""
 
-        # update the plot graphic
 
-        # update plot controls value that report computed results
+class PlotListenerWrapper(object):
+    def __init__(self, index, name):
+        self.index = index
+        self.name = name
+
+    def plotListener(self, model):
+        # Called when the plot computes something that needs to
+        # be updated in the plot controls (mean, std. dev., etc.).
+        # The listener recipient is the plot controls.
+        print "plotListener:"
+        print "  name=", self.name
+        print "  index=", self.index
+        print "  settings=", model.settings
+        print "  changed=", model.changed
+        print ""
 
 
 class TestFrame(wx.Frame):
@@ -342,6 +405,7 @@ class TestFrame(wx.Frame):
         self.panels = []
         self.plots = []
         self.listeners = []
+        self.plotListeners = []
 
         # Sizer to hold all of the plot controls
         #mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -358,13 +422,13 @@ class TestFrame(wx.Frame):
                                      panelName=panelName)
             self.panels.append(panel)
 
+            """
             # create a listener for this plot control panel and register our callback
             listenerWrapper = ListenerWrapper(ix, name)
 
             ixListener = panel.model.addListener(listenerWrapper.plotControlsListener)
             self.listeners.append(ixListener)
-
-            # the plot control panel also listens to plot updates so register it
+            """
 
             # wrap a sizer around the panel with a margin
             controlsSizer = wx.BoxSizer(wx.VERTICAL)
@@ -374,6 +438,13 @@ class TestFrame(wx.Frame):
             plot = DummyPlot(self, wx.ID_ANY,
                              style=wx.RAISED_BORDER)
             self.plots.append(plot)
+
+            """
+            # the plot control panel also listens to plot updates so register it
+            controlsListenerWrapper = PlotListenerWrapper(ix, name)
+            ixPlotListener = plot.model.addListener(controlsListenerWrapper.plotListener)
+            self.plotListeners.append(ixPlotListener)
+            """
 
             # wrap a sizer around this plot with a margin
             plotSizer = wx.BoxSizer(wx.VERTICAL)
@@ -392,6 +463,20 @@ class TestFrame(wx.Frame):
 
             mainSizer.Add(plotSizer)
             mainSizer.Add(controlsSizer)
+
+            # register the plot panel's listener with the plot
+            plot.model.addListener(panel.updateControls)
+
+            # register the plot's listener with the plot controls
+            panel.model.addListener(plot.updatePlot)
+
+            # for debugging it may be handy to have our own listeners registered
+            # all they do is output text
+            listenerWrapper = ListenerWrapper(ix, name)
+            panel.model.addListener(listenerWrapper.plotControlsListener)
+
+            controlsListenerWrapper = PlotListenerWrapper(ix, name)
+            plot.model.addListener(controlsListenerWrapper.plotListener)
 
         # fit the frame to the needs of the main sizer
         self.SetSizer(mainSizer)
@@ -415,9 +500,9 @@ class App(wx.App):
         self.frame.Show()
         self.SetTopWindow(self.frame)
 
-        # create a second test frame
-        self.frame2 = TestFrame(nPanels=2, name="Test Frame 2")
-        self.frame2.Show()
+        # create a second test frame to prove this works
+        #self.frame2 = TestFrame(nPanels=2, name="Test Frame 2")
+        #self.frame2.Show()
 
         return True
 
