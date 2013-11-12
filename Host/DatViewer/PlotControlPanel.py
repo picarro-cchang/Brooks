@@ -4,6 +4,7 @@
 #
 import wx
 from PlotControlPanelGui import PlotControlPanelGui
+#from PlotPanel import PlotPanel2
 
 
 class DummyPlot(wx.Panel):
@@ -48,12 +49,15 @@ class DummyPlot(wx.Panel):
             # assume this operation can take a while
             # change to a busy cursor
             #
-            # this doesn't work...
+            # this doesn't work on Windows...
             #self.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
 
             # this does work, but apparently only on Windows
             # but it doesn't block the message queue so
             # clicking on other controls just queues them up
+            #
+            # I really need to put up a plexiglass (invisible window
+            # that grabs all of the messages)
             wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
             import time
             time.sleep(5)
@@ -65,9 +69,10 @@ class DummyPlot(wx.Panel):
             nAvg = random.random() * 25
             self.model.changed = "nAvg"
             self.model.settings["nAvg"] = nAvg
-            self.model.update()
-            #self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
             wx.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+            #self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+            self.model.update()
 
         # something changed in the controls
         # compute something or whatever
@@ -324,7 +329,9 @@ class TestFrame(wx.Frame):
             mainSizer.Add(plotAndControlsSizer, 0, wx.TOP | wx.BOTTOM, 10)
             """
 
-            mainSizer.Add(plotSizer)
+            mainSizer.AddGrowableRow(ix)
+
+            mainSizer.Add(plotSizer, 0, wx.EXPAND)
             mainSizer.Add(controlsSizer)
 
             # for debugging it may be handy to have our own listeners registered

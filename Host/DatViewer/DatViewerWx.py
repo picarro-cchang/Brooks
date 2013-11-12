@@ -24,6 +24,8 @@ import zipfile
 import pytz
 from optparse import OptionParser
 from DatViewerPrefs import DatViewerPrefs
+from PlotControlPanel import PlotControlPanel
+from PlotPanel import PlotPanel, PlotPanel2, MplPanel
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
@@ -41,7 +43,7 @@ CONFIGVERSION = "3.0"
 APPCONFIGSPEC = "DatViewerPrefs.ini"
 USERCONFIG = "DatViewerUserPrefs.ini"
 
-g_logMsgLevel = 5   # should be 0 for check-in
+g_logMsgLevel = 0   # should be 0 for check-in
 
 
 def LogErrmsg(str):
@@ -115,42 +117,6 @@ class PlotWindow(object):
         self.filename = self.window.filename
         self.filedir = self.window.filedir
 
-        """
-        # generate the name to view it in the menu,
-        # making sure it is unique
-        name = "%s [%d]" % (window.name, int(nPlots))
-
-        # first see if the window name sans numbering is there
-        found = False
-        for item in plotWindowsList:
-            if item.name == name:
-                found = True
-                break
-
-        if found is True:
-            # already there, will need to try numbering
-            done = False
-            ix = 2
-            while done is False:
-                found = False
-                nameToTry = "%s (%d)" % (name, int(ix))
-
-                for item in plotWindowsList:
-                    if item.name == nameToTry:
-                        found = True
-                        break
-
-                if found is False:
-                    name = nameToTry
-                    done = True
-                else:
-                    # already a match, try another name
-                    ix += 1
-
-        # save off the unique name
-        self.name = name
-        """
-
     def GetId(self):
         return self.id
 
@@ -178,6 +144,7 @@ class SeriesFrame(wx.Frame):
         LogMsg(4, "SeriesFrame __init__")
         wx.Frame.__init__(self, wx.GetApp().TopWindow, -1,
                           'SeriesFrame', size=(550, 350))
+        #wx.Frame.__init__(self, None, -1, "")
 
         # parse args
         self.tz = k.get("tz", pytz.timezone("UTC"))
@@ -200,29 +167,123 @@ class SeriesFrame(wx.Frame):
         #self.SetTitle("".join(["Viewing [", self.name, "]"]))
         self.SetTitle(self.title)
 
+        self.panels = []
+        self.plots = []
+
         # whatever color is set here doesn't seem to matter
-        self.SetBackgroundColour(wx.NamedColour("white"))
+        #self.SetBackgroundColour(wx.NamedColour("white"))
 
-        self.figure = Figure()
-        self.axes = self.figure.add_subplot(111)
+        # sizer which wraps around everything
+        #mainSizer = wx.FlexGridSizer(rows=self.nPlots, cols=2)
+        #mainSizer.AddGrowableCol(0)
 
-        self.canvas = FigureCanvas(self, -1, self.figure)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
-        self.SetSizer(self.sizer)
-        self.Fit()
+        for ix in range(self.nPlots):
+            # plot panel name isn't exposed in the UI but useful for debugging
+            panelName = "%s - %d" % (self.title, ix)
+
+            panel = PlotControlPanel(self, wx.ID_ANY,
+                                     style=wx.SUNKEN_BORDER,
+                                     panelNum=ix,
+                                     panelName=panelName)
+            self.panels.append(panel)
+
+            # wrap a sizer around the panel with a margin
+            controlsSizer = wx.BoxSizer(wx.VERTICAL)
+            controlsSizer.Add(panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 20)
+
+            panelSize = controlsSizer.GetMinSize()
+            print "panelSize=", panelSize
+
+            """
+            # TODO: get size to use from prefs if it isn't -1 (initial value)
+
+            # for now I'll use the panel size for initial sizing of the plot
+
+            figure = Figure()
+            #axes = figure.add_subplot(111)
+            figure.add_subplot(111)
+            canvas = FigureCanvas(self, -1, figure)
+
+            canvas.SetSize(panelSize)
+            self.plots.append(canvas)
+
+            fWrapPlotWithSizer = True
+
+            if fWrapPlotWithSizer is True:
+                plotSizer = wx.BoxSizer(wx.VERTICAL)
+                plotSizer.Add(canvas, 1, wx.LEFT | wx.LEFT | wx.TOP | wx.GROW, 15)
+                mainSizer.Add(plotSizer, 0, wx.EXPAND)
+                mainSizer.AddGrowableRow(ix)
+                mainSizer.Add(plotSizer, 0, wx.EXPAND)
+                mainSizer.Add(controlsSizer)
+
+            else:
+                mainSizer.AddGrowableRow(ix)
+                mainSizer.Add(canvas, 0, wx.EXPAND)
+                mainSizer.Add(controlsSizer)
+            """
+
+            # initialize the canvas size
+            # TODO: get the size from prefs
+            canvasSize = wx.Size(panelSize.width * 2, panelSize.height)
+
+            # create the plot
+            #plot = PlotPanel(self, wx.ID_ANY,
+            plot = MplPanel(self, wx.ID_ANY,
+                            #style=wx.SUNKEN_BORDER,
+                            canvasSize=canvasSize)
+
+            # This doesn't work, I need to get it to recalc size
+            # somehow...
+            #plot.canvas.SetSize(panelSize)
+            #plot.sizer.SetSizeHints(plot)
+            #plot.Fit()
+
+            """
+            plotSizer = wx.BoxSizer(wx.VERTICAL)
+            plotSizer.Add(plot, 0, wx.LEFT | wx.TOP | wx.EXPAND, 20)
+            plot.SetSize(panelSize)
+
+            mainSizer.AddGrowableRow(ix)
+            mainSizer.Add(plotSizer, 1, wx.EXPAND)
+            mainSizer.Add(controlsSizer)
+            """
+
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+            sizer.Add(plot, 1, flag=wx.EXPAND)
+            #sizer.Add(panel, 0)
+            sizer.Add(controlsSizer, 0, flag=wx.ALIGN_CENTER_VERTICAL)
+
+            mainSizer.Add(sizer, 1, flag=wx.EXPAND)
+
+            ##mainSizer.AddGrowableRow(ix)
+            #mainSizer.Add(plot, 1, wx.EXPAND)
+            ##mainSizer.Add(controlsSizer, 0)
+            #mainSizer.Add(panel, 0)
+
+        # fit the frame to the needs of the main sizer
+        self.SetSizer(mainSizer)
+        mainSizer.Fit(self)
 
         # Add a menu?
 
+        # TODO: Each plot needs its own toolbar...
         if self.parent.prefs.config["UILayout"]["plotWindowToolbar"] is True:
             self.add_toolbar()
 
+        # events we want to handle
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
+        self.Bind(wx.EVT_SIZE, self.OnResizeFrame)
+        self.Bind(wx.EVT_MOVE, self.OnResizeFrame)
 
         self.Show()
 
     def add_toolbar(self):
+        # TODO: subclass the toolbar so we can customize it
+        # for info on customizing the toolbar (removing buttons, etc.)
+        #    http://dalelane.co.uk/blog/?p=778#more-778
         self.toolbar = NavigationToolbar2Wx(self.canvas)
         self.toolbar.Realize()
         if wx.Platform == '__WXMAC__':
@@ -246,6 +307,38 @@ class SeriesFrame(wx.Frame):
     def OnPaint(self, event):
         LogMsg(4, "SeriesFrame OnPaint")
         self.canvas.draw()
+
+    def OnResizeFrame(self, event):
+        LogMsg(5, "SeriesFrame::OnResizeFrame")
+
+        frameSize = self.GetSize()
+        framePos = self.GetPosition()
+
+        LogMsg(5, "  frameSize=(%d, %d)" % (frameSize.width, frameSize.height))
+        LogMsg(5, "  framePos=(%d, %d)" % (framePos.x, framePos.y))
+
+        # execute handlers in the superclass
+        # this is important - else the resize isn't handled
+        # by the sizers at all...
+        event.Skip()
+
+        # update plot size and position information in prefs
+        # just look at the size of the first plot canvas
+        """
+        appSize = self.frame.GetSize()
+        appPos = self.frame.GetPosition()
+        self.prefs.config["UILayout"]["viewerFrameSize"] = appSize
+        self.prefs.config["UILayout"]["viewerFramePos"] = appPos
+
+        LogMsg(5, "  appSize=(%d, %d)" % (appSize.width, appSize.height))
+        LogMsg(5, "  appPos=(%d, %d)" % (appPos.x, appPos.y))
+
+        clientSize = self.frame.GetClientSize()
+        LogMsg(5, "  clientSize=(%d, %d)" % (clientSize.width, clientSize.height))
+
+        # must update the panel size to the new client size
+        self.frame.panel.SetSize(clientSize)
+        """
 
     def OnCloseWindow(self, event):
         # user clicked the Close box
@@ -777,6 +870,23 @@ class App(wx.App):
         posTmp = wx.Point(posTmp[0], posTmp[1])
         self.prefs.config["UILayout"]["viewerFramePos"] = posTmp
 
+        # plot size
+        #
+        # ...for 1 plot in the viewer
+        sizeTmp = self.prefs.config["UILayout"]["plotSize_1"]
+        sizeTmp = wx.Size(sizeTmp[0], sizeTmp[1])
+        self.prefs.config["UILayout"]["plotSize_1"] = sizeTmp
+
+        # ...for 2 plots in the viewer
+        sizeTmp = self.prefs.config["UILayout"]["plotSize_2"]
+        sizeTmp = wx.Size(sizeTmp[0], sizeTmp[1])
+        self.prefs.config["UILayout"]["plotSize_2"] = sizeTmp
+
+        # ...for 3 plots in the viewer
+        sizeTmp = self.prefs.config["UILayout"]["plotSize_3"]
+        sizeTmp = wx.Size(sizeTmp[0], sizeTmp[1])
+        self.prefs.config["UILayout"]["plotSize_3"] = sizeTmp
+
     def TranslatePrefsBeforeSave(self):
         # convert these prefs back to a list
         sizeTmp = self.prefs.config["UILayout"]["viewerFrameSize"]
@@ -786,6 +896,18 @@ class App(wx.App):
         posTmp = self.prefs.config["UILayout"]["viewerFramePos"]
         posTmp = [posTmp.x, posTmp.y]
         self.prefs.config["UILayout"]["viewerFramePos"] = posTmp
+
+        sizeTmp = self.prefs.config["UILayout"]["plotSize_1"]
+        sizeTmp = [sizeTmp.width, sizeTmp.height]
+        self.prefs.config["UILayout"]["plotSize_1"] = sizeTmp
+
+        sizeTmp = self.prefs.config["UILayout"]["plotSize_2"]
+        sizeTmp = [sizeTmp.width, sizeTmp.height]
+        self.prefs.config["UILayout"]["plotSize_2"] = sizeTmp
+
+        sizeTmp = self.prefs.config["UILayout"]["plotSize_3"]
+        sizeTmp = [sizeTmp.width, sizeTmp.height]
+        self.prefs.config["UILayout"]["plotSize_3"] = sizeTmp
 
     def DumpPrefs(self):
         print "lastZipOpenDir='%s'" % self.prefs.config["FileManagement"]["lastZipOpenDir"]

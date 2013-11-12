@@ -5,8 +5,11 @@ import wx
 
 class PlotControlPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
-        # set/override style arg
-        kwds["style"] = wx.TAB_TRAVERSAL | wx.SUNKEN_BORDER
+        # ensure tab support
+        if "style" in kwds:
+            kwds["style"] |= wx.TAB_TRAVERSAL
+        else:
+            kwds["style"] = wx.TAB_TRAVERSAL
 
         # extract args intended only for this class
         if "panelNum" in kwds:
@@ -105,16 +108,21 @@ class PlotControlPanelGui(wx.Panel):
         plotControlsSizer.Add(self.calcNAvgBtn, 0,
                               wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 
+        # attemptto not disallow resize outer window any smaller so
+        # controls not cut off, but didn't work
+        #plotControlsSizer.Fit(self)
+        #plotControlsSizer.SetSizeHints(self)
+
         # outer sizer adds a margin around everything
-        outerSizer = wx.BoxSizer(wx.VERTICAL)
-        outerSizer.Add(plotControlsSizer, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 10)
+        self.outerSizer = wx.BoxSizer(wx.VERTICAL)
+        self.outerSizer.Add(plotControlsSizer, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 10)
 
         # only allow horizontal resize
         #plotControlsSizer.SetFlexibleDirection(wx.HORIZONTAL)
         #plotControlsSizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_NONE)
 
         # size things up
-        self.SetSizer(outerSizer)
+        self.SetSizer(self.outerSizer)
 
-        outerSizer.Fit(self)
-        outerSizer.SetSizeHints(self)
+        self.outerSizer.Fit(self)
+        self.outerSizer.SetSizeHints(self)
