@@ -59,6 +59,35 @@ class DummyPlot(wx.Panel):
             # I really need to put up a plexiglass (invisible window
             # that grabs all of the messages)
             wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
+
+            # TODO: Test whether calling the wx.Frame method Enable(False)
+            #       works to disable any user input in the frame, then
+            #       enable it when done.
+            #
+            # This doesn't seem to work, user clicks still get queued up.
+            parent = self.GetParent()
+            print "parent=", parent
+
+            # Disable the UI controls
+            #parent.Enable(False)
+
+            # According to this, Freeze() prevents the window from being redrawn
+            #   http://www.wxpython.org/docs/api/wx.Window-class.html
+            #parent.Freeze()
+
+            # Could try making a transparent window/panel (plexiglass) that
+            # covers the frame while the computation is taking place.
+            # See these links:
+            # http://stackoverflow.com/questions/6670483/wxpythons-settransparent-doesnt-capture-user-input-if-set-to-an-opacity-of-zer
+            # http://stackoverflow.com/questions/1032138/wxpython-good-way-to-overlay-a-wx-panel-on-an-existing-wx-panel
+            # 
+            # This SetTransparent() call does work.
+            #parent.SetTransparent(128)
+
+            # Test code for overlaying a panel on existing is here and it works:
+            # C:\Users\twalder\Documents\Python test code\wxTest\OverlayPanelOverExisting.py
+
+            # Test for taking some time to do a computation.
             import time
             time.sleep(5)
 
@@ -71,6 +100,14 @@ class DummyPlot(wx.Panel):
             self.model.settings["nAvg"] = nAvg
             wx.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
             #self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+            # Enable controls in UI
+            #parent.Enable(True)
+
+            # Enable redraws
+            #parent.Thaw()
+
+            #parent.SetTransparent(255)
 
             self.model.update()
 

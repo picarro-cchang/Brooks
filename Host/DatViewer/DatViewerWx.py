@@ -142,14 +142,23 @@ class PlotWindow(object):
 class SeriesFrame(wx.Frame):
     def __init__(self, *a, **k):
         LogMsg(4, "SeriesFrame __init__")
+
+        # parent arg is required
+        self.parent = k["parent"]
+
+        # set style from prefs
+        style = k.get("style", wx.DEFAULT_FRAME_STYLE)
+
+        if self.parent.prefs.config["UILayout"]["showViewerFrameInTaskbar"] is False:
+            style |= wx.FRAME_NO_TASKBAR
+            print "don't show frame in taskbar"
+
         wx.Frame.__init__(self, wx.GetApp().TopWindow, -1,
-                          'SeriesFrame', size=(550, 350))
-        #wx.Frame.__init__(self, None, -1, "")
+                          'SeriesFrame', style=style, size=(550, 350))
 
         # parse args
         self.tz = k.get("tz", pytz.timezone("UTC"))
         self.h5File = k.get("h5File", None)
-        self.parent = k.get("parent", None)
         self.nPlots = k.get("nViewers", 1)
         self.onCloseCallback = k.get("onCloseCallback", None)
 
