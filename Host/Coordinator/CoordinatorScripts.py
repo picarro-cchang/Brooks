@@ -281,42 +281,82 @@ def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0,
     LOGFUNC("Pulse analyzer set\n")
 
 def pulseAnalyzerStartRunning():
-    DATAMGR.PulseAnalyzer_StartRunning()
-    LOGFUNC("Pulse analyzer started\n")
+    try:
+        ret = DATAMGR.PulseAnalyzer_StartRunning()
+        LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
+        return ret
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerStartRunning: %r, ret=%s\n" % (err, ret))
 
 def pulseAnalyzerStopRunning():
-    DATAMGR.PulseAnalyzer_StopRunning()
-    LOGFUNC("Pulse analyzer stopped\n")
+    try:
+        DATAMGR.PulseAnalyzer_StopRunning()
+        LOGFUNC("Pulse analyzer stopped\n")
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerStopRunning: %r\n" % err)
 
 def pulseAnalyzerStartAddingData():
-    DATAMGR.PulseAnalyzer_StartAddingData()
-    LOGFUNC("Started adding data to pulse analyzer\n")
+    try:
+        DATAMGR.PulseAnalyzer_StartAddingData()
+        LOGFUNC("Started adding data to pulse analyzer\n")
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerStartAddingData: %r\n" % err)
 
 def pulseAnalyzerStopAddingData():
-    DATAMGR.PulseAnalyzer_StopAddingData()
-    LOGFUNC("Stopped adding data to pulse analyzer\n")
+    try:
+        DATAMGR.PulseAnalyzer_StopAddingData()
+        LOGFUNC("Stopped adding data to pulse analyzer\n")
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerStopAddingData: %r\n" % err)
 
 def pulseAnalyzerGetDataReady():
-    return DATAMGR.PulseAnalyzer_GetDataReady()
+    try:
+        ret = DATAMGR.PulseAnalyzer_GetDataReady()
+        LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
+        return ret
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerGetDataReady: %r\n" % err)
 
 def pulseAnalyzerIsTriggeredStatus():
-    return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
+    try:
+        return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerIsTriggeredStatus: %r\n" % err)
 
 def pulseAnalyzerGetOutput():
-    return DATAMGR.PulseAnalyzer_GetOutput()
+    try:
+        return DATAMGR.PulseAnalyzer_GetOutput()
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerGetOutput: %r\n" % err)
 
 def pulseAnalyzerGetTimestamp():
-    return DATAMGR.PulseAnalyzer_GetTimestamp()
+    try:
+        return DATAMGR.PulseAnalyzer_GetTimestamp()
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerGetTimestamp: %r\n" % err)
 
 def pulseAnalyzerReset():
-    return DATAMGR.PulseAnalyzer_Reset()
-    LOGFUNC("Pulse analyzer reset\n")
+    try:
+        return DATAMGR.PulseAnalyzer_Reset()
+        LOGFUNC("Pulse analyzer reset\n")
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerReset: %r\n" % err)
 
 def pulseAnalyzerGetStatistics():
-    return DATAMGR.PulseAnalyzer_GetStatistics()
+    try:
+        ret = DATAMGR.PulseAnalyzer_GetStatistics()
+        LOGFUNC("pulseAnalyzerGetStatistics: ret=%s\n" % ret)
+        return ret
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerGetStatistics: %r\n" % err)
 
 def pulseAnalyzerGetPulseStartEndTime():
-    return DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
+    try:
+        ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
+        LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
+        return ret
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerGetPulseStartEndTime: %r\n" % err)
 
 ##########################
 # Data manager functions

@@ -825,6 +825,7 @@ class DataManager(object):
                               thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
                               validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
                               bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
+        #print "RPC_PulseAnalyzer_Set"
         try:
             self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
                                                triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
@@ -837,6 +838,7 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartRunning(self):
+        #print "RPC_PulseAnalyzer_StartRunning"
         # Run pulse analyzer with state machine
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -847,6 +849,7 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopRunning(self):
+        #print "RPC_PulseAnalyzer_StopRunning"
         # Stop pulse analyzer with state machine
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -874,7 +877,7 @@ class DataManager(object):
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetOutput(self):
         """Returns the result list in the format of [status, pulseFinished, concBufferDict].
-        It won't clear the pulse anlayzer buffer.
+        It won't clear the pulse analyzer buffer.
         """
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -883,6 +886,7 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetTimestamp(self):
+        #print "RPC_PulseAnalyzer_GetTimestamp"
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
@@ -904,6 +908,7 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_Reset(self):
+        #print "RPC_PulseAnalyzer_Reset"
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
@@ -912,6 +917,7 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatistics(self):
+        #print "RPC_PulseAnalyzer_GetStatistics"
         """Retrieve statistics of data in pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
@@ -920,6 +926,7 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetPulseStartEndTime(self):
+        #print "RPC_PulseAnalyzer_GetPulseStartEndTime"
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
