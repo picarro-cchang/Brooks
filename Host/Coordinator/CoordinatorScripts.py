@@ -275,6 +275,7 @@ def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0,
                      thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
                      validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
                      bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
+    # TODO: cache the params in PulseAnalyzerState
     DATAMGR.PulseAnalyzer_Set(source, concNameList, targetConc, thres1Pair, thres2Pair,
                              triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
                              timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
@@ -285,6 +286,10 @@ def pulseAnalyzerStartRunning():
         ret = DATAMGR.PulseAnalyzer_StartRunning()
         LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
         return ret
+    except PulseAnalyzerNoneError:
+        # TODO: DataMgr probably was restarted. Instantiate a new one
+        #       from the cached params in PulseAnalyzerState and start it.
+        LOGFUNC("pulseAnalyzerStartRunning: no pulse analyzer (TODO: try to restart pulse analyzer)")
     except Exception, err:
         LOGFUNC("pulseAnalyzerStartRunning: %r, ret=%s\n" % (err, ret))
 
@@ -299,6 +304,8 @@ def pulseAnalyzerStartAddingData():
     try:
         DATAMGR.PulseAnalyzer_StartAddingData()
         LOGFUNC("Started adding data to pulse analyzer\n")
+    except PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerStartAddingData: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerStartAddingData: %r\n" % err)
 
@@ -306,6 +313,8 @@ def pulseAnalyzerStopAddingData():
     try:
         DATAMGR.PulseAnalyzer_StopAddingData()
         LOGFUNC("Stopped adding data to pulse analyzer\n")
+    except PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerStopAddingData: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerStopAddingData: %r\n" % err)
 
@@ -314,24 +323,32 @@ def pulseAnalyzerGetDataReady():
         ret = DATAMGR.PulseAnalyzer_GetDataReady()
         LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
         return ret
+    except PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetDataReady: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetDataReady: %r\n" % err)
 
 def pulseAnalyzerIsTriggeredStatus():
     try:
         return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
+    except PulseAnalyzerNoneError:
+        LOGFUNC("PulseAnalyzer_IsTriggeredStatus: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerIsTriggeredStatus: %r\n" % err)
 
 def pulseAnalyzerGetOutput():
     try:
         return DATAMGR.PulseAnalyzer_GetOutput()
+    except PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetOutput: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetOutput: %r\n" % err)
 
 def pulseAnalyzerGetTimestamp():
     try:
         return DATAMGR.PulseAnalyzer_GetTimestamp()
+    except PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetTimestamp: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetTimestamp: %r\n" % err)
 
@@ -339,6 +356,10 @@ def pulseAnalyzerReset():
     try:
         return DATAMGR.PulseAnalyzer_Reset()
         LOGFUNC("Pulse analyzer reset\n")
+    except PulseAnalyzerNoneError:
+        # TODO: DataMgr likely shutdown and restarted. Instantiate a new one
+        #       from the cached params, start it, and reset it.
+        LOGFUNC("pulseAnalyzerReset: no pulse analyzer (TODO: try to restart pulse analyzer)")
     except Exception, err:
         LOGFUNC("pulseAnalyzerReset: %r\n" % err)
 
@@ -347,6 +368,8 @@ def pulseAnalyzerGetStatistics():
         ret = DATAMGR.PulseAnalyzer_GetStatistics()
         LOGFUNC("pulseAnalyzerGetStatistics: ret=%s\n" % ret)
         return ret
+    except PulseAnalyzerNoneError:
+        LOGFUNC("PulseAnalyzer_GetStatistics: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetStatistics: %r\n" % err)
 
@@ -355,6 +378,8 @@ def pulseAnalyzerGetPulseStartEndTime():
         ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
         LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
         return ret
+    except PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetPulseStartEndTime: no pulse analyzer")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetPulseStartEndTime: %r\n" % err)
 
