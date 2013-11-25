@@ -47,6 +47,13 @@ import Pyro.errors
 from Host.Common.CubicSpline import CubicSpline
 from Host.Common import CmdFIFO
 
+# how do I make this file aware of these exception classes? gives this run-time error:
+# ImportError: cannot import name PulseAnalyzerNoneError
+
+# this gives the run-time error:
+# Error 'module' object has no attribute 'PulseAnalyzerNoneError' in state StateWaitEvaporatorClean
+#from Host import DataManager   # DataManager.PulseAnalyzerNoneError, DataManager.PulseAnalyzerBufferEmptyError
+
 #Set up a useful TimeStamp function...
 if sys.platform == 'win32':
     TimeStamp = clock
@@ -276,20 +283,23 @@ def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0,
                      validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
                      bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
     # TODO: cache the params in PulseAnalyzerState
+    LOGFUNC("*** entering pulseAnalyzerSet()\n")
+    
     DATAMGR.PulseAnalyzer_Set(source, concNameList, targetConc, thres1Pair, thres2Pair,
                              triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
                              timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
     LOGFUNC("Pulse analyzer set\n")
 
 def pulseAnalyzerStartRunning():
+    LOGFUNC("*** entering pulseAnalyzerStartRunning()\n")
     try:
         ret = DATAMGR.PulseAnalyzer_StartRunning()
         LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
         return ret
-    except PulseAnalyzerNoneError:
+    except DATAMGR.PulseAnalyzerNoneError:
         # TODO: DataMgr probably was restarted. Instantiate a new one
         #       from the cached params in PulseAnalyzerState and start it.
-        LOGFUNC("pulseAnalyzerStartRunning: no pulse analyzer (TODO: try to restart pulse analyzer)")
+        LOGFUNC("pulseAnalyzerStartRunning: no pulse analyzer (TODO: try to restart pulse analyzer)\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerStartRunning: %r, ret=%s\n" % (err, ret))
 
@@ -304,8 +314,8 @@ def pulseAnalyzerStartAddingData():
     try:
         DATAMGR.PulseAnalyzer_StartAddingData()
         LOGFUNC("Started adding data to pulse analyzer\n")
-    except PulseAnalyzerNoneError:
-        LOGFUNC("pulseAnalyzerStartAddingData: no pulse analyzer")
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerStartAddingData: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerStartAddingData: %r\n" % err)
 
@@ -313,75 +323,103 @@ def pulseAnalyzerStopAddingData():
     try:
         DATAMGR.PulseAnalyzer_StopAddingData()
         LOGFUNC("Stopped adding data to pulse analyzer\n")
-    except PulseAnalyzerNoneError:
-        LOGFUNC("pulseAnalyzerStopAddingData: no pulse analyzer")
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerStopAddingData: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerStopAddingData: %r\n" % err)
 
 def pulseAnalyzerGetDataReady():
+    LOGFUNC("*** entering pulseAnalyzerGetDataReady()\n")
     try:
         ret = DATAMGR.PulseAnalyzer_GetDataReady()
         LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
         return ret
-    except PulseAnalyzerNoneError:
-        LOGFUNC("pulseAnalyzerGetDataReady: no pulse analyzer")
+    except CmdFIFO.RemoteException, err:
+        LOGFUNC("   pulseAnalyzerGetDataReady: RemoteException: %r\n" % err)
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetDataReady: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetDataReady: %r\n" % err)
 
 def pulseAnalyzerIsTriggeredStatus():
     try:
         return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
-    except PulseAnalyzerNoneError:
-        LOGFUNC("PulseAnalyzer_IsTriggeredStatus: no pulse analyzer")
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("PulseAnalyzer_IsTriggeredStatus: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerIsTriggeredStatus: %r\n" % err)
 
 def pulseAnalyzerGetOutput():
     try:
         return DATAMGR.PulseAnalyzer_GetOutput()
-    except PulseAnalyzerNoneError:
-        LOGFUNC("pulseAnalyzerGetOutput: no pulse analyzer")
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetOutput: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetOutput: %r\n" % err)
 
 def pulseAnalyzerGetTimestamp():
+    LOGFUNC("*** Entering pulseAnalyzerGetTimestamp()\n")
     try:
         return DATAMGR.PulseAnalyzer_GetTimestamp()
-    except PulseAnalyzerNoneError:
-        LOGFUNC("pulseAnalyzerGetTimestamp: no pulse analyzer")
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetTimestamp: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetTimestamp: %r\n" % err)
 
 def pulseAnalyzerReset():
+    LOGFUNC("*** Entering pulseAnalyzerReset()\n")
     try:
-        return DATAMGR.PulseAnalyzer_Reset()
+        ret = DATAMGR.PulseAnalyzer_Reset()
         LOGFUNC("Pulse analyzer reset\n")
-    except PulseAnalyzerNoneError:
+        return ret
+    except CmdFIFO.RemoteException, err:
+        LOGFUNC("   pulseAnalyzerReset: RemoteException %r\n" % err)
+    except DATAMGR.PulseAnalyzerNoneError:
         # TODO: DataMgr likely shutdown and restarted. Instantiate a new one
         #       from the cached params, start it, and reset it.
-        LOGFUNC("pulseAnalyzerReset: no pulse analyzer (TODO: try to restart pulse analyzer)")
+        LOGFUNC("pulseAnalyzerReset: no pulse analyzer (TODO: try to restart pulse analyzer)\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerReset: %r\n" % err)
 
 def pulseAnalyzerGetStatistics():
+    LOGFUNC("*** entering pulseAnalyzerGetStatistics()\n")
     try:
         ret = DATAMGR.PulseAnalyzer_GetStatistics()
         LOGFUNC("pulseAnalyzerGetStatistics: ret=%s\n" % ret)
         return ret
-    except PulseAnalyzerNoneError:
-        LOGFUNC("PulseAnalyzer_GetStatistics: no pulse analyzer")
+    except CmdFIFO.RemoteException, err:
+        LOGFUNC("   pulseAnalyzerGetStatistics: RemoteException: %r\n" % err)
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("PulseAnalyzer_GetStatistics: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetStatistics: %r\n" % err)
 
 def pulseAnalyzerGetPulseStartEndTime():
+    LOGFUNC("*** entering pulseAnalyzerGetPulseStartEndTime()\n")
     try:
         ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
         LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
         return ret
-    except PulseAnalyzerNoneError:
-        LOGFUNC("pulseAnalyzerGetPulseStartEndTime: no pulse analyzer")
+    except CmdFIFO.RemoteException, err:
+        LOGFUNC("   pulseAnalyzerGetPulseStartEndTime: RemoteException: %r\n" % err)
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetPulseStartEndTime: no pulse analyzer\n")
     except Exception, err:
         LOGFUNC("pulseAnalyzerGetPulseStartEndTime: %r\n" % err)
+        
+def pulseAnalyzerGetStatus():
+    LOGFUNC("*** entering pulseAnalyzerGetStatus()\n")
+    try:
+        ret = DATAMGR.PulseAnalyzer_GetStatus()
+        LOGFUNC("pulseAnalyzerGetStatus: ret=%s\n" % ret)
+        return ret
+    except CmdFIFO.RemoteException, err:
+        LOGFUNC("   pulseAnalyzerGetStatus: RemoteException: %r\n" % err)
+    except DATAMGR.PulseAnalyzerNoneError:
+        LOGFUNC("pulseAnalyzerGetStatus: no pulse analyzer\n")
+    except Exception, err:
+        LOGFUNC("pulseAnalyzerGetStatus %r\n" % err)
+    
 
 ##########################
 # Data manager functions
