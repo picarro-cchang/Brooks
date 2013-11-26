@@ -131,7 +131,7 @@ class PulseAnalyzerStatus(object):
         print "------------------"
 
     def configuration(self):
-        return (self.args, self.kwargs)
+        return (self.source, self.concNameList, self.args, self.kwargs)
 
     def setNextDataBad(self):
         self.nextDataBad = True
@@ -491,10 +491,10 @@ def pulseAnalyzerStopAddingData():
 
 
 def pulseAnalyzerGetDataReady():
-    LOGFUNC("*** entering pulseAnalyzerGetDataReady()\n")
+    #LOGFUNC("*** entering pulseAnalyzerGetDataReady()\n")
     try:
         ret = DATAMGR.PulseAnalyzer_GetDataReady()
-        LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
+        #LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
         return ret
 
     except CmdFIFO.RemoteException, err:
@@ -600,7 +600,7 @@ def pulseAnalyzerReset():
         LOGFUNC("   pulseAnalyzerReset: RemoteException, attempting to restart pulse analyzer\n")
 
         ret = _reinit_pulseAnalyzer()
-        LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %s" % ret)
+        LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %s\n" % ret)
         return ret
 
     except CmdFIFO.ShutdownInProgress:
@@ -625,12 +625,32 @@ def pulseAnalyzerReset():
 
 
 def _reinit_pulseAnalyzer():
+    LOGFUNC("_reinit_pulseAnalyzer\n")
+
     # try to instantiate a new pulse analyzer
     # returns False if not successful
     retVal = False
 
     try:
         source, concNameList, args, kwargs = PULSE_ANALYZER.configuration()
+        
+        LOGFUNC("Calling PulseAnalyzer_Set: arguments\n")
+        LOGFUNC("source=%s\n" % source)
+        LOGFUNC("concNameList=%s\n" % concNameList)
+        
+        if args is not None:
+            LOGFUNC("  args=%s\n" % str(args))
+        else:
+            LOGFUNC("  args=None\n")
+
+        if kwargs is not None:
+            LOGFUNC("  kwargs:\n")
+            for key in kwargs:
+                LOGFUNC("    %s = %s\n" % (key, str(kwargs[key])))
+        else:
+            LOGFUNC("  kwargs=None\n")
+
+        LOGFUNC("Calling PulseAnalyzer_Set...\n")
         DATAMGR.PulseAnalyzer_Set(source, concNameList, *args, **kwargs)
         LOGFUNC("    _reinit_pulseAnalyzer: new pulse analyzer set\n")
 
@@ -643,7 +663,7 @@ def _reinit_pulseAnalyzer():
                 # (_reinit_pulseAnalyzer) is called from pulseAnalyzerReset(),
                 # to avoid a potential infinite loop
                 ret = DATAMGR.PulseAnalyzer_Reset()
-                LOGFUNC("    _reinit_pulseAnalyzer: PulseAnalyzer_Reset returned ret=%s" % ret)
+                LOGFUNC("    _reinit_pulseAnalyzer: PulseAnalyzer_Reset returned ret=%s\n" % ret)
 
                 if ret is True:
                     retVal = True
@@ -654,12 +674,12 @@ def _reinit_pulseAnalyzer():
                     PULSE_ANALYZER.setNextDataBad()
 
             except CmdFIFO.RemoteException:
-                LOGFUNC("    _reinit_pulseAnalyzer: RemoteException on PulseAnalyzer_Reset")
+                LOGFUNC("    _reinit_pulseAnalyzer: RemoteException on PulseAnalyzer_Reset\n")
                 PULSE_ANALYZER.setActive(False)
                 PULSE_ANALYZER.setNextDataBad()
 
             except CmdFIFO.ShutdownInProgress:
-                LOGFUNC("    _reinit_pulseAnalyzer: ShutdownInProgress on PulseAnalyzer_Reset")
+                LOGFUNC("    _reinit_pulseAnalyzer: ShutdownInProgress on PulseAnalyzer_Reset\n")
                 PULSE_ANALYZER.setActive(False)
                 PULSE_ANALYZER.setNextDataBad()
 
@@ -747,19 +767,19 @@ def pulseAnalyzerGetPulseStartEndTime():
 
 
 def pulseAnalyzerGetStatus():
-    LOGFUNC("*** entering pulseAnalyzerGetStatus()\n")
+    #LOGFUNC("*** entering pulseAnalyzerGetStatus()\n")
     try:
         ret = DATAMGR.PulseAnalyzer_GetStatus()
-        LOGFUNC("pulseAnalyzerGetStatus: ret=%s\n" % ret)
+        #LOGFUNC("pulseAnalyzerGetStatus: ret=%s\n" % ret)
         return ret
 
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("   pulseAnalyzerGetStatus: RemoteException: %r\n" % err)
+    except CmdFIFO.RemoteException:
+        LOGFUNC("   pulseAnalyzerGetStatus: RemoteException\n")
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
         return "RemoteException"
 
-    except CmdFIFO.ShutdownInProgress, err:
+    except CmdFIFO.ShutdownInProgress:
         LOGFUNC("  pulseAnalyzerGetStatus: ShutdownInProgress\n")
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
@@ -776,8 +796,10 @@ def pulseAnalyzerGetStatus():
 
 
 def pulseAnalyzerIsDataBad():
+    LOGFUNC("pulseAnalyzerIsDataBad\n")
     isBad = PULSE_ANALYZER.isNextDataBad()
     PULSE_ANALYZER.clearNextDataBad()
+    LOGFUNC("  isBad=%s\n" % isBad)
     return isBad()
 
 
