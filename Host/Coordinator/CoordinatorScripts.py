@@ -146,6 +146,31 @@ class PulseAnalyzerStatus(object):
 
 PULSE_ANALYZER = PulseAnalyzerStatus()
 
+# Pulse Analyzer Exception Handling wrapper decorator
+def pulseAnalyzerMakeSafe(func):
+    def callf(*args, **kwargs):
+        try:
+            ret = func(*args, **kwargs)
+            return ret
+        except CmdFIFO.RemoteException, err:
+            LOGFUNC("%s: RemoteException: %r\n" % (func.__name__, err))
+            PULSE_ANALYZER.setActive(False)
+            PULSE_ANALYZER.setNextDataBad()
+            return False
+        except CmdFIFO.ShutdownInProgress:
+            LOGFUNC("%s: ShutdownInProgress\n" % func.__name__)
+            PULSE_ANALYZER.setActive(False)
+            PULSE_ANALYZER.setNextDataBad()
+            return False
+        except Pyro.errors.ProtocolError:
+            LOGFUNC("  %s: ProtocolError\n" % func.__name__)
+            PULSE_ANALYZER.setActive(False)
+            PULSE_ANALYZER.setNextDataBad()
+            return False
+        #except Exception, err:
+        #    LOGFUNC("%s: %r\n" % (func.__name__, err))
+    return callf
+
 
 ##############
 # General file utilities
@@ -347,6 +372,9 @@ def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0,
     LOGFUNC("Pulse analyzer set\n")
 """
 
+"""
+# Keeping this around for now in case arg passing is a problem for the
+# two fixed args
 def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
     LOGFUNC("*** entering pulseAnalyzerSet()\n")
 
@@ -384,244 +412,161 @@ def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
 
     #except Exception, err:
     #    LOGFUNC("pulseAnalyzerSet: %r, ret=%s\n" % (err, ret))
+"""
+
+@pulseAnalyzerMakeSafe
+def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
+    LOGFUNC("*** entering pulseAnalyzerSet()\n")
+
+    # Cache the params so we can re-instantiate the pulse analyzer
+    # if the DataManager is restarted.
+    ret = PULSE_ANALYZER.setConfiguration(source, concNameList, *args, **kwargs)
+
+    # Note: we could init PULSE_ANALYZER first and then call setConfiguration()
+    if ret is not False:
+        PULSE_ANALYZER.setActive(True)
+        PULSE_ANALYZER.clearNextDataBad()
+        LOGFUNC("Pulse analyzer set\n")
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerStartRunning():
     LOGFUNC("*** entering pulseAnalyzerStartRunning()\n")
-    try:
-        ret = DATAMGR.PulseAnalyzer_StartRunning()
-        LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
-        return ret
 
-    except CmdFIFO.RemoteException, err:
-        # DataMgr probably was restarted so there is no pulse analyzer.
-        # We'll instantiate one with the cached params later on, when it is reset.
-        LOGFUNC("  pulseAnalyzerStartRunning: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        # DataMgr is being shutdown. Instantiate one later with the cached params.
-        LOGFUNC("  pulseAnalyzerStartRunning: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        # DataMgr has been shutdown so connection failed, try to instantiate pulse analyzer later
-        LOGFUNC("  pulseAnalyzerStartRunning: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerStartRunning: %r, ret=%s\n" % (err, ret))
+    ret = DATAMGR.PulseAnalyzer_StartRunning()
+    LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerStopRunning():
-    try:
-        DATAMGR.PulseAnalyzer_StopRunning()
-        LOGFUNC("Pulse analyzer stopped\n")
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerStopRunning: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerStopRunning: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerStopRunning: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerStopRunning: %r\n" % err)
+    ret = DATAMGR.PulseAnalyzer_StopRunning()
+    LOGFUNC("Pulse analyzer stopped\n")
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerStartAddingData():
-    try:
-        DATAMGR.PulseAnalyzer_StartAddingData()
-        LOGFUNC("Started adding data to pulse analyzer\n")
+    ret = DATAMGR.PulseAnalyzer_StartAddingData()
+    LOGFUNC("Started adding data to pulse analyzer\n")
+    return ret
 
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerStartAddingData: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerStartAddingData: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerStartAddingData: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerStartAddingData: %r\n" % err)
-
-
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerStopAddingData():
-    try:
-        ret = DATAMGR.PulseAnalyzer_StopAddingData()
-        LOGFUNC("Stopped adding data to pulse analyzer\n")
-        return ret
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerStopAddingData: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerStopAddingData: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        # DataMgr has been shutdown so connection failed, try to instantiate pulse analyzer later
-        LOGFUNC("  pulseAnalyzerStopAddingData: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerStopAddingData: %r\n" % err)
+    ret = DATAMGR.PulseAnalyzer_StopAddingData()
+    LOGFUNC("Stopped adding data to pulse analyzer\n")
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerGetDataReady():
     #LOGFUNC("*** entering pulseAnalyzerGetDataReady()\n")
-    try:
-        ret = DATAMGR.PulseAnalyzer_GetDataReady()
-        #LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
-        return ret
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerGetDataReady: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress:
-        LOGFUNC("  pulseAnalyzerGetDataReady: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerGetDataReady: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerGetDataReady: %r\n" % err)
+    ret = DATAMGR.PulseAnalyzer_GetDataReady()
+    #LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerIsTriggeredStatus():
-    try:
-        return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerIsTriggeredStatus: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerIsTriggeredStatus: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerIsTriggeredStatus: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerIsTriggeredStatus: %r\n" % err)
+    return DATAMGR.PulseAnalyzer_IsTriggeredStatus()
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerGetOutput():
-    try:
-        return DATAMGR.PulseAnalyzer_GetOutput()
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerGetOutput: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerGetOutput: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerGetOutput: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerGetOutput: %r\n" % err)
+    return DATAMGR.PulseAnalyzer_GetOutput()
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerGetTimestamp():
     LOGFUNC("*** Entering pulseAnalyzerGetTimestamp()\n")
-    try:
-        return DATAMGR.PulseAnalyzer_GetTimestamp()
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerGetTimestamp: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerGetTimestamp: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerGetTimestamp: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerGetTimestamp: %r\n" % err)
+    return DATAMGR.PulseAnalyzer_GetTimestamp()
 
 
+# Exceptions are handled specifically according to their type so the safe
+# exception wrapper decorator cannot be used here.
 def pulseAnalyzerReset():
     LOGFUNC("*** Entering pulseAnalyzerReset()\n")
-    try:
-        ret = DATAMGR.PulseAnalyzer_Reset()
-        LOGFUNC("Pulse analyzer reset\n")
-        return ret
 
-    except CmdFIFO.RemoteException:
-        # Most likely the DataManager was restarted so there is no pulse analyzer
-        # Try to instantiate one and start it
-        # TODO: We could try several times and wait a bit in between each attempt...
-        LOGFUNC("   pulseAnalyzerReset: RemoteException, attempting to restart pulse analyzer\n")
+    maxAttempts = 5
+    nAttempts = 0
+    delay = 0
+    done = False
+    ret = False
 
-        ret = _reinit_pulseAnalyzer()
-        LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %s\n" % ret)
-        return ret
+    while not done:
+        try:
+            ret = DATAMGR.PulseAnalyzer_Reset()
+            LOGFUNC("Pulse analyzer reset\n")
 
-    except CmdFIFO.ShutdownInProgress:
-        # DataMgr is going down, can't attempt to instantiate the pulse analyzer
-        # until it comes back up again. This data will be bad.
-        # TODO: wait a bit and try to restart the pulse analyzer
-        LOGFUNC("  pulseAnalyzerReset: ShutdownInProgress\n")
+            # not sure why reset would ever fail without triggering an exception,
+            # but just in case try again after a short delay
+            if ret is True:
+                done = True
+            else:
+                delay = 1
+                LOGFUNC("   pulseAnalyzerReset: reset returned False, attempting to restart pulse analyzer\n")
+
+        except CmdFIFO.RemoteException:
+            # Most likely the DataManager was restarted so there is no pulse analyzer
+            # Try to instantiate one and start it
+            # TODO: Try several times and wait a bit in between each attempt...
+            LOGFUNC("   pulseAnalyzerReset: RemoteException, attempting to restart pulse analyzer\n")
+
+            ret = _reinit_pulseAnalyzer()
+            LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %s\n" % ret)
+            #return ret
+
+            # we're done if this attempt succeeded
+            if ret is not False:
+                done = True
+            else:
+                # only need to delay a short time because the DataManager is running
+                delay = 1
+
+        except CmdFIFO.ShutdownInProgress:
+            # DataMgr is going down, can't attempt to instantiate the pulse analyzer
+            # until it comes back up again. This data will be bad.
+            # TODO: Wait several seconds and try to restart the pulse analyzer
+            LOGFUNC("  pulseAnalyzerReset: ShutdownInProgress\n")
+            #PULSE_ANALYZER.setActive(False)
+            #PULSE_ANALYZER.setNextDataBad()
+            #return False
+
+            # DataManager going down, may take a while to come back up
+            delay = 8
+
+        except Pyro.errors.ProtocolError:
+            # DataMgr is not running.
+            # TODO: Wait several seconds and try to restart the pulse analyzer
+            #LOGFUNC("  pulseAnalyzerReset: ProtocolError\n")
+            #PULSE_ANALYZER.setActive(False)
+            #PULSE_ANALYZER.setNextDataBad()
+            #return False
+
+            # DataManger is already down, should come back up in a few seconds
+            delay = 5
+
+        # since this is commented out any exception we didn't catch will be re-raised
+        # after the finally code is executed
+        #except Exception, err:
+        #    LOGFUNC("pulseAnalyzerReset: %r\n" % err)
+
+        finally:
+            # bail if too many attempts; otherwise wait and try again
+            nAttempts += 1
+
+            if nAttempts >= maxAttempts:
+                done = True
+
+            if done is False and delay > 0:
+                sleep(delay)
+
+    if ret is False:
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
-        return False
 
-    except Pyro.errors.ProtocolError:
-        # DataMgr is not running.
-        # TODO: wait a bit and try to restart the pulse analyzer
-        LOGFUNC("  pulseAnalyzerReset: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-        return False
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerReset: %r\n" % err)
+    return ret
 
 
 def _reinit_pulseAnalyzer():
@@ -633,7 +578,8 @@ def _reinit_pulseAnalyzer():
 
     try:
         source, concNameList, args, kwargs = PULSE_ANALYZER.configuration()
-        
+
+        """
         LOGFUNC("Calling PulseAnalyzer_Set: arguments\n")
         LOGFUNC("source=%s\n" % source)
         LOGFUNC("concNameList=%s\n" % concNameList)
@@ -649,6 +595,7 @@ def _reinit_pulseAnalyzer():
                 LOGFUNC("    %s = %s\n" % (key, str(kwargs[key])))
         else:
             LOGFUNC("  kwargs=None\n")
+        """
 
         LOGFUNC("Calling PulseAnalyzer_Set...\n")
         DATAMGR.PulseAnalyzer_Set(source, concNameList, *args, **kwargs)
@@ -696,7 +643,7 @@ def _reinit_pulseAnalyzer():
         LOGFUNC("  _reinit_pulseAnalyzer: RemoteException: %r\n" % err)
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
-        return False
+        retVal = False
 
     except CmdFIFO.ShutdownInProgress, err:
         # Caught the exception, DataMgr is being shutdown.
@@ -704,95 +651,39 @@ def _reinit_pulseAnalyzer():
         LOGFUNC("  _reinit_pulseAnalyzer: ShutdownInProgress: %r\n" % err)
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
-        return False
+        retVal = False
 
     except Pyro.errors.ProtocolError:
         LOGFUNC("  _reinit_pulseAnalyzer: ProtocolError\n")
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
+        retVal = False
 
     return retVal
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerGetStatistics():
     LOGFUNC("*** entering pulseAnalyzerGetStatistics()\n")
-    try:
-        ret = DATAMGR.PulseAnalyzer_GetStatistics()
-        LOGFUNC("pulseAnalyzerGetStatistics: ret=%s\n" % ret)
-        return ret
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerGetStatistics: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerGetStatistics: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerGetStatistics: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerGetStatistics: %r\n" % err)
+    ret = DATAMGR.PulseAnalyzer_GetStatistics()
+    LOGFUNC("pulseAnalyzerGetStatistics: ret=%s\n" % ret)
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerGetPulseStartEndTime():
     LOGFUNC("*** entering pulseAnalyzerGetPulseStartEndTime()\n")
-    try:
-        ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
-        LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
-        return ret
-
-    except CmdFIFO.RemoteException, err:
-        LOGFUNC("  pulseAnalyzerGetPulseStartEndTime: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        LOGFUNC("  pulseAnalyzerGetPulseStartEndTime: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerGetPulseStartEndTime: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerGetPulseStartEndTime: %r\n" % err)
+    ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
+    LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
+    return ret
 
 
+@pulseAnalyzerMakeSafe
 def pulseAnalyzerGetStatus():
     #LOGFUNC("*** entering pulseAnalyzerGetStatus()\n")
-    try:
-        ret = DATAMGR.PulseAnalyzer_GetStatus()
-        #LOGFUNC("pulseAnalyzerGetStatus: ret=%s\n" % ret)
-        return ret
-
-    except CmdFIFO.RemoteException:
-        LOGFUNC("   pulseAnalyzerGetStatus: RemoteException\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-        return "RemoteException"
-
-    except CmdFIFO.ShutdownInProgress:
-        LOGFUNC("  pulseAnalyzerGetStatus: ShutdownInProgress\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-        return "ShutdownInProgress"
-
-    except Pyro.errors.ProtocolError:
-        LOGFUNC("  pulseAnalyzerGetStatus: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-        return "ProtocolError"
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerGetStatus %r\n" % err)
+    ret = DATAMGR.PulseAnalyzer_GetStatus()
+    #LOGFUNC("pulseAnalyzerGetStatus: ret=%s\n" % ret)
+    return ret
 
 
 def pulseAnalyzerIsDataBad():
