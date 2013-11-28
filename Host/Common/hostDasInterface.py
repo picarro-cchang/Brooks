@@ -307,24 +307,58 @@ class DasInterface(Singleton):
     def getSensorData(self):
         """Retrieves sensor data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdSensorData(self.sensorIndex)
-        if data.timestamp!=0 and data.timestamp>=self.lastSensorTime:
+        if data.timestamp != 0 and data.timestamp >= self.lastSensorTime:
             self.lastSensorTime = data.timestamp
             self.sensorIndex += 1
             if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
                 self.sensorIndex = 0
             self.sensorHistory.record(data)
             return data
+
+    def getSensorDataBlock(self):
+        """Retrieves a block of sensor data from the analyzer. If there are valid entries in the block, the number  is 
+        computed and returned together with the block itself. If there are no valid entries, return None."""
+        block = self.hostToDspSender.rdSensorDataBlock(self.sensorIndex)
+        validEntries = 0
+        for data in block:
+            if data.timestamp != 0 and data.timestamp >= self.lastSensorTime:
+                self.lastSensorTime = data.timestamp
+                validEntries += 1
+                self.sensorIndex += 1
+                if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
+                    self.sensorIndex = 0
+                self.sensorHistory.record(data)
+            else:
+                break
+        return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
                 
     def getRingdownData(self):
         """Retrieves ringdown data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdRingdownData(
               self.ringdownIndex)
-        if data.timestamp!=0 and data.timestamp>=self.lastRingdownTime:
+        if data.timestamp != 0 and data.timestamp >= self.lastRingdownTime:
             self.lastRingdownTime = data.timestamp
             self.ringdownIndex += 1
             if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
                 self.ringdownIndex = 0
             return data
+
+    def getRingdownDataBlock(self):
+        """Retrieves a block of ringdown data from the analyzer. If there are valid entries in the block, the number  is 
+        computed and returned together with the block itself. If there are no valid entries, return None."""
+        block = self.hostToDspSender.rdRingdownDataBlock(
+              self.ringdownIndex)
+        validEntries = 0
+        for data in block:
+            if data.timestamp != 0 and data.timestamp >= self.lastRingdownTime:
+                self.lastRingdownTime = data.timestamp
+                validEntries += 1
+                self.ringdownIndex += 1
+                if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
+                    self.ringdownIndex = 0
+            else:
+                break
+        return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
 
     def uploadSchedule(self,operationGroups):
         """Upload all operation groups to the instrument"""
@@ -634,6 +668,7 @@ class HostToDspSender(Singleton):
         """Reads single uint value to ringdown memory"""
         result = c_uint(value)
         self.usb.hpiWrite(interface.RDMEM_ADDRESS+4*offset,result)
+
     @usbLockProtect
     def rdSensorData(self,index):
         # Performs a host read of the data in the specified sensor stream
@@ -643,14 +678,42 @@ class HostToDspSender(Singleton):
         data = interface.SensorEntryType()
         self.usb.hpiRead(SENSOR_BASE + 16*index,data)
         return data
+
+    maxSensorBlockSize = 512/16
+    @usbLockProtect
+    def rdSensorDataBlock(self,index):
+        # Performs a host read of the data starting at the specified sensor stream
+        #  entry "index". Note that each entry is of size 16 bytes
+        # We fetch a block of data, which is an array of SensorEntryType of optimal size 512 bytes,
+        #  since this is the USB block size. However, we do not read past the end of the sensor entry
+        #  buffer. which is of size interface.NUM_SENSOR_ENTRIES
+        numEntries = min(self.maxSensorBlockSize, interface.NUM_SENSOR_ENTRIES - index )
+        block = (interface.SensorEntryType *  numEntries)()
+        self.usb.hpiRead(SENSOR_BASE + 16*index, block)
+        return block
+
     @usbLockProtect
     def rdRingdownData(self,index):
         # Performs a host read of the data in the specified ringdown
         #  entry. Note that the index is the entry number, and each entry
         #  is of size 4*RINGDOWN_ENTRY_SIZE bytes
         data = interface.RingdownEntryType()
-        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index,data)
+        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index, data)
         return data
+
+    maxRingdownBlockSize = 512/(4*interface.RINGDOWN_ENTRY_SIZE)
+    @usbLockProtect
+    def rdRingdownDataBlock(self, index):
+        # Performs a host read of the data starting at the specified ringdown
+        #  entry "index". Note that each entry is of size 4*RINGDOWN_ENTRY_SIZE bytes
+        # We fetch a block of ringdowns, which is an array of RingdownEntryType of optimal size 512 bytes,
+        #  since this is the USB block size. However, we do not read past the end of the ringdown entry
+        #  buffer. which is of size interface.NUM_RINGDOWN_ENTRIES
+        numEntries = min(self.maxRingdownBlockSize, interface.NUM_RINGDOWN_ENTRIES - index )
+        block = (interface.RingdownEntryType *  numEntries)()
+        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index, block)
+        return block
+
     @usbLockProtect
     def rdMessageTimestamp(self,index):
         # Performs a host read of the timestamp associated with

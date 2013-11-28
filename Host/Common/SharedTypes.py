@@ -23,6 +23,7 @@ import ctypes
 import os
 import time
 from Host.autogen import interface
+from Host.Common.namedtuple import namedtuple
 
 # Constants...
 ACCESS_PUBLIC = 0
@@ -135,6 +136,7 @@ class Bunch(object):
     def __repr__(self):
         return self.__str__()
 
+HandlerTuple = namedtuple('HandlerTuple', ['duration', 'nprocessed', 'finished'])
 class makeHandler(object):
     """This class is used to call a reader function repeatedly and to perform some specified
     action on the output of that reader, either for a duration which is as close as
@@ -149,16 +151,27 @@ class makeHandler(object):
         self.reader = readerFunc
 
     def process(self,timeLimit):
+        # Call reader function and send output to processFunc repeatedly until timeLimit is reached or until there
+        #   is nothing more to process.
+        #  processFunc returns the number of entries successfully processed. For backwards compatibility
+        #  if processFunc returns None this actually means that one entry was processed.
+        # We return the time taken during this 
         start = time.clock()
+        nprocessed = 0
+        finished = False
         while time.clock()-start < timeLimit:
             d = self.reader()
             if d is not None:
-                self.processFunc(d)
+                n = self.processFunc(d)
+                if n is None:
+                    n = 1
+                nprocessed += n
             else:
+                finished = True
                 break
 
         duration = time.clock()-start
-        return duration
+        return HandlerTuple (duration = duration, nprocessed=nprocessed, finished=finished)
 
 schemeTableClassMemo = {}
 def getSchemeTableClass(numRows):
