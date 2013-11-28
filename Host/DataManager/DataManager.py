@@ -847,6 +847,7 @@ class DataManager(object):
             self.addToPulseAnalyzer = False
             return True
         except Exception, err:
+            print "RPC_PulseAnalyzer_Set: Exception: err=", err
             return err
 
     @CmdFIFO.rpc_wrap
@@ -943,11 +944,16 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetPulseStartEndTime(self):
-        #print "RPC_PulseAnalyzer_GetPulseStartEndTime"
+        print "RPC_PulseAnalyzer_GetPulseStartEndTime"
         if self.pulseAnalyzer == None:
+            print "RPC_PulseAnalyzer_GetPulseStartEndTime: pulseAnalyzer=None"
+            Log("RPC_PulseAnalyzer_GetPulseStartEndTime: pulseAnalyzer=None!!\n")
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
-        return self.pulseAnalyzer.getPulseStartEndTime()
+        #return self.pulseAnalyzer.getPulseStartEndTime()
+        retVal = self.pulseAnalyzer.getPulseStartEndTime()
+        Log("  retVal=", Data=retVal)
+        return retVal
 
     #
     # Below pulse analyzer functions are used by Command Interface

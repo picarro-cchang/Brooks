@@ -257,8 +257,23 @@ class PulseAnalyzer(object):
         return statDict.copy()
         
     def getPulseStartEndTime(self):
+        # Log is not defined so cannot use it here.
+        #if __debug__: Log("*** entering getPulseStartEndTime\n", Level = 0)
+        print "*** entering getPulseStartEndTime"
         outBuffer = self.selectBuffer()
+        #if __debug__: Log("  selectBuffer", Level = 0)
+
+        #print "  type(outBuffer)=", type(outBuffer)
+        #print "  outBuffer[timestamp]=", outBuffer["timestamp"]
         timeArray = array(outBuffer["timestamp"])
+        
+        #if __debug__: Log("  timeArray", dict(tArr=timeArray), Level = 0)
+        #if __debug__: Log("  timeArray[0]", dict(tArr0=timeArray[0]), Level = 0)
+        #if __debug__: Log("  timeArray[-1]", dict(tArrm1=timeArray[-1]), Level = 0)
+        #print "getPulseStartEndTime: type(timeArray)=%s", type(timeArray)
+        #print "getPulseStartEndTime: timeArray=%r", timeArray
+        print ("  timeArray[0]", timeArray[0])
+        print ("  timeArray[-1]", timeArray[-1])
         return (timeArray[0], timeArray[-1])
         
     def getConcNameList(self):

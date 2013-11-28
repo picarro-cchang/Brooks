@@ -119,16 +119,85 @@ class PulseAnalyzerStatus(object):
         self.args = args
         self.kwargs = kwargs
 
+        # Make sure proper defaults used if not passed in the configuration
+        defaults = { "targetConc": None,
+                     "thres1Pair": [0.0, 0.0],
+                     "thres2Pair": [0.0, 0.0],
+                     "triggerType": "in",
+                     "waitTime": 0.0,
+                     "validTimeAfterTrigger": 0.0,
+                     "validTimeBeforeEnd": 0.0,
+                     "timeout": 0.0,
+                     "bufSize": 500,
+                     "numPointsToTrigger": 1,
+                     "numPointsToRelease": 1,
+                     "armCond": None
+                   }
+                   
+        for key in defaults:
+            if key not in self.kwargs:
+                self.kwargs[key] = defaults[key]
+                LOGFUNC("%s not set, setting to default '%s'\n" % (key, str(defaults[key])))
+            else:
+                LOGFUNC("using input arg '%s' = '%s'\n" % (key, str(self.kwargs[key])))
+        """
+        if "targetConc" not in self.kwargs:
+            LOGFUNC("targetConc not set, setting to default\n")
+            self.kwargs["targetConc"] = None
+
+        if "thres1Pair" not in self.kwargs:
+            LOGFUNC("thres1Pair not set, setting to default\n")
+            self.kwargs["thres1Pair"] = [0.0, 0.0]
+            
+        if "thres2Pair" not in self.kwargs:
+            LOGFUNC("thres2Pair not set, setting to default\n")
+            self.kwargs["thres2Pair"] = [0.0, 0.0]
+
+        if "triggerType" not in self.kwargs:
+            LOGFUNC("triggerType not set, setting to default\n")
+            self.kwargs["triggerType"] = "in"
+
+        if "waitTime" not in self.kwargs:
+            LOGFUNC("waitTime not set, setting to default\n")
+            self.kwargs["waitTime"] = 0.0
+
+        if "validTimeAfterTrigger" not in self.kwargs:
+            LOGFUNC("validTimeAfterTrigger not set, setting to default\n")
+            self.kwargs["validTimeAfterTrigger"] = 0.0
+
+        if "validTimeBeforeEnd" not in self.kwargs:
+            LOGFUNC("validTimeBeforeEnd not set, setting to default\n")
+            self.kwargs["validTimeBeforeEnd"] = 0.0
+
+        if "timeout" not in self.kwargs:
+            LOGFUNC("timeout not set, setting to default\n")
+            self.kwargs["timeout"] = 0.0
+
+        if "bufSize" not in self.kwargs:
+            LOGFUNC("bufSize not set, setting to default\n")
+            self.kwargs["bufSize"] = 500
+            
+        if "numPointsToTrigger" not in self.kwargs:
+            LOGFUNC("numPointsToTrigger not set, setting to default\n")
+            self.kwargs["numPointsToTrigger"] = 1
+            
+        if "numPointsToRelease" not in self.kwargs:
+            LOGFUNC("numPointsToRelease not set, setting to default\n")
+            self.kwargs["numPointsToRelease"] = 1
+            
+        if "armCond" not in self.kwargs:
+            LOGFUNC("armCond not set, setting to default\n")
+            self.kwargs["armCond"] = None
+        """
+
     def printConfiguration(self):
-        print "------------------"
-        print "printConfiguration:"
-        print "source=", source
-        print "concNameList=", concNameList
-        print self.args
-        print ""
-        print self.kwargs
-        print ""
-        print "------------------"
+        LOGFUNC("------------------\n")
+        LOGFUNC("printConfiguration:\n")
+        LOGFUNC("  source= %s\n" % source)
+        LOGFUNC("  concNameList=%s\n" %str(concNameList))
+        LOGFUNC("  args=%r\n\n" % self.args)
+        LOGFUNC("  kwargs=%s\n" % str(kwargs))
+        LOGFUNC("------------------\n")
 
     def configuration(self):
         return (self.source, self.concNameList, self.args, self.kwargs)
@@ -167,8 +236,11 @@ def pulseAnalyzerMakeSafe(func):
             PULSE_ANALYZER.setActive(False)
             PULSE_ANALYZER.setNextDataBad()
             return False
-        #except Exception, err:
-        #    LOGFUNC("%s: %r\n" % (func.__name__, err))
+        except Exception, err:
+            LOGFUNC("%s: Exception: %r\n" % (func.__name__, err))
+            PULSE_ANALYZER.setActive(False)
+            PULSE_ANALYZER.setNextDataBad()
+            return False
     return callf
 
 
@@ -372,55 +444,20 @@ def pulseAnalyzerSet(source, concNameList, targetConc = None, thres1Pair = [0.0,
     LOGFUNC("Pulse analyzer set\n")
 """
 
-"""
-# Keeping this around for now in case arg passing is a problem for the
-# two fixed args
-def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
-    LOGFUNC("*** entering pulseAnalyzerSet()\n")
-
-    # Cache the params so we can re-instantiate the pulse analyzer
-    # if the DataManager is restarted.
-    PULSE_ANALYZER.setConfiguration(source, concNameList, *args, **kwargs)
-
-    try:
-        ret = DATAMGR.PulseAnalyzer_Set(source, concNameList, *args, **kwargs)
-        PULSE_ANALYZER.setActive(True)
-        PULSE_ANALYZER.clearNextDataBad()
-        LOGFUNC("Pulse analyzer set\n")
-        return ret
-
-    except CmdFIFO.RemoteException, err:
-        # Caught the exception, most likely there is no pulse analyzer.
-        # We'll try to instantiate it again later with the cached params.
-        LOGFUNC("  pulseAnalyzerSet: RemoteException: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except CmdFIFO.ShutdownInProgress, err:
-        # Caught the exception, DataMgr is being shutdown.
-        # We'll try to instantiate the pulse analyzer later using the cached params.
-        LOGFUNC("  pulseAnalyzerSet: ShutdownInProgress: %r\n" % err)
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    except Pyro.errors.ProtocolError:
-        # DataMgr has been shutdown so connection failed
-        # We'll try to instantiate the pulse analyzer later using cached params.
-        LOGFUNC("  pulseAnalyzerSet: ProtocolError\n")
-        PULSE_ANALYZER.setActive(False)
-        PULSE_ANALYZER.setNextDataBad()
-
-    #except Exception, err:
-    #    LOGFUNC("pulseAnalyzerSet: %r, ret=%s\n" % (err, ret))
-"""
-
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
     LOGFUNC("*** entering pulseAnalyzerSet()\n")
 
-    # Cache the params so we can re-instantiate the pulse analyzer
-    # if the DataManager is restarted.
+    # First cache the params so we can re-instantiate the pulse analyzer
+    # if the DataManager gets restarted.
     ret = PULSE_ANALYZER.setConfiguration(source, concNameList, *args, **kwargs)
+    LOGFUNC("pulseAnalyzerSet: setConfiguration returned ret=%s\n" % str(ret))
+
+    # Retrieve the arg list, as some defaults may have been set that
+    # were not passed in by the caller, then call the DataManager
+    source, concNameList, args, kwargs = PULSE_ANALYZER.configuration()
+    LOGFUNC("Calling PulseAnalyzer_Set...\n")
+    ret = DATAMGR.PulseAnalyzer_Set(source, concNameList, *args, **kwargs)
 
     # Note: we could init PULSE_ANALYZER first and then call setConfiguration()
     if ret is not False:
@@ -432,8 +469,7 @@ def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerStartRunning():
-    LOGFUNC("*** entering pulseAnalyzerStartRunning()\n")
-
+    #LOGFUNC("*** entering pulseAnalyzerStartRunning()\n")
     ret = DATAMGR.PulseAnalyzer_StartRunning()
     LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
     return ret
@@ -497,7 +533,6 @@ def pulseAnalyzerReset():
     while not done:
         try:
             ret = DATAMGR.PulseAnalyzer_Reset()
-            LOGFUNC("Pulse analyzer reset\n")
 
             # not sure why reset would ever fail without triggering an exception,
             # but just in case try again after a short delay
@@ -505,20 +540,19 @@ def pulseAnalyzerReset():
                 done = True
             else:
                 delay = 1
-                LOGFUNC("   pulseAnalyzerReset: reset returned False, attempting to restart pulse analyzer\n")
+                LOGFUNC("   pulseAnalyzerReset: PulseAnalyzer_Reset returned False\n")
 
         except CmdFIFO.RemoteException:
             # Most likely the DataManager was restarted so there is no pulse analyzer
-            # Try to instantiate one and start it
-            # TODO: Try several times and wait a bit in between each attempt...
-            LOGFUNC("   pulseAnalyzerReset: RemoteException, attempting to restart pulse analyzer\n")
+            # Try to instantiate one and start it. We'll make a number of attempts (maxAttempts)
+            # and wait a bit in between each try...
+            LOGFUNC("   pulseAnalyzerReset: RemoteException\n")
 
             ret = _reinit_pulseAnalyzer()
-            LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %s\n" % ret)
-            #return ret
+            #LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %r\n" % ret)
 
             # we're done if this attempt succeeded
-            if ret is not False:
+            if ret is True:
                 done = True
             else:
                 # only need to delay a short time because the DataManager is running
@@ -529,20 +563,14 @@ def pulseAnalyzerReset():
             # until it comes back up again. This data will be bad.
             # TODO: Wait several seconds and try to restart the pulse analyzer
             LOGFUNC("  pulseAnalyzerReset: ShutdownInProgress\n")
-            #PULSE_ANALYZER.setActive(False)
-            #PULSE_ANALYZER.setNextDataBad()
-            #return False
 
-            # DataManager going down, may take a while to come back up
+            # DataManager shutting down, allow time to come back up
             delay = 8
 
         except Pyro.errors.ProtocolError:
             # DataMgr is not running.
             # TODO: Wait several seconds and try to restart the pulse analyzer
-            #LOGFUNC("  pulseAnalyzerReset: ProtocolError\n")
-            #PULSE_ANALYZER.setActive(False)
-            #PULSE_ANALYZER.setNextDataBad()
-            #return False
+            LOGFUNC("  pulseAnalyzerReset: ProtocolError\n")
 
             # DataManger is already down, should come back up in a few seconds
             delay = 5
@@ -556,10 +584,11 @@ def pulseAnalyzerReset():
             # bail if too many attempts; otherwise wait and try again
             nAttempts += 1
 
-            if nAttempts >= maxAttempts:
+            if nAttempts > maxAttempts:
                 done = True
 
             if done is False and delay > 0:
+                LOGFUNC("  pulseAnalyzerReset: attempting to restart pulse analyzer (n=%d)" % int(nAttempts))
                 sleep(delay)
 
     if ret is False:
@@ -570,10 +599,13 @@ def pulseAnalyzerReset():
 
 
 def _reinit_pulseAnalyzer():
+    """
+    Tries to instantiate a new pulse analyzer and start it running.
+    Return value: True on success
+                  False if not successful
+    """
     LOGFUNC("_reinit_pulseAnalyzer\n")
 
-    # try to instantiate a new pulse analyzer
-    # returns False if not successful
     retVal = False
 
     try:
