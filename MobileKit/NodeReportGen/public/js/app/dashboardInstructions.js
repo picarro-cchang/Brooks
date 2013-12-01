@@ -62,8 +62,10 @@ define(function(require, exports, module) {
         return r;
     }
 
-    function insertLocal(v) {
-        return {localTime: v, timezone: DASHBOARD.timezone};
+    function makeTimeObject(v) {
+        // The string contains both the local time and posix time, separated by "|"
+        var times = v.split("|")
+        return {localTime: times[0], posixTime: +times[1], timezone: DASHBOARD.timezone};
     }
 
     function makeColorPatch(value) {
@@ -103,8 +105,8 @@ define(function(require, exports, module) {
     var runsDefinition = {id: "runTable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "analyzer", width: "17%", th: P3TXT.dashboard.th_analyzer, tf: String, eid: "id_analyzer", cf: String},
-        {key: "startEtm", width: "17%", th: P3TXT.dashboard.th_startEtm, tf: extractLocal, eid: "id_start_etm", cf: insertLocal, ef: editTime},
-        {key: "endEtm", width: "17%", th: P3TXT.dashboard.th_endEtm, tf: extractLocal, eid: "id_end_etm", cf: insertLocal, ef: editTime},
+        {key: "startEtm", width: "17%", th: P3TXT.dashboard.th_startEtm, tf: extractLocal, eid: "id_start_etm", cf: makeTimeObject, ef: editTime},
+        {key: "endEtm", width: "17%", th: P3TXT.dashboard.th_endEtm, tf: extractLocal, eid: "id_end_etm", cf: makeTimeObject, ef: editTime},
         {key: "peaks", width: "9%", th: P3TXT.dashboard.th_peaks, tf: makeColorPatch, eid: "id_marker", cf: String},
         {key: "wedges", width: "9%", th: P3TXT.dashboard.th_wedges, tf: makeColorPatch, eid: "id_wedges", cf: String},
         {key: "analyses", width: "9%", th: P3TXT.dashboard.th_analyses, tf: makeColorPatch, eid: "id_analyses", cf: String},
@@ -114,30 +116,7 @@ define(function(require, exports, module) {
     ],
     vf: function (eidByKey, template, container, onSuccess) {
         return validateRun(eidByKey, template, container, onSuccess);
-    },
-    cb: function (type, data, rowData, row) {
-        // Convert the local time to posix time using the server and update the local time string with the time zone
-        if (type === "add" || type === "update") {
-            var tz = DASHBOARD.timezone;
-            bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, timeStrings:[rowData.startEtm.localTime,rowData.endEtm.localTime]},
-            function (err) {
-                var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
-                console.log(msg);
-                // alert(msg);
-            },
-            function (s, result) {
-                // console.log('While converting timezone: ' + s);
-                rowData.startEtm.posixTime = result.posixTimes[0];
-                rowData.endEtm.posixTime = result.posixTimes[1];
-                rowData.startEtm.localTime = result.timeStrings[0];
-                rowData.endEtm.localTime = result.timeStrings[1];
-                tableFuncs.setCell(row,"startEtm",rowData.startEtm,runsDefinition);
-                tableFuncs.setCell(row,"endEtm",rowData.endEtm,runsDefinition);
-            });
-        }
-        // console.log(data);
     }};
-
     var submapsDefinition = {id: "submapstable", layout: [
         {width: "2%", th: tableFuncs.newRowButton(), tf: tableFuncs.editButton},
         {key: "baseType", width: "19%", th: P3TXT.dashboard.th_baseType, tf: String, eid: "id_submaps_type", cf: String},
@@ -446,7 +425,27 @@ define(function(require, exports, module) {
                 numErr += 1;
             }
         }
-        if (numErr === 0) onSuccess();
+        if (numErr === 0) {
+            // Call the server to convert local time strings into Posix time and place a string
+            //  with the results (separated by a |) back into the text controls, since these are 
+            //  going to be used (together with the timezone) to make the time object. By placing
+            //  this in the validation routine, we can ask the user to try again if the server is 
+            //  down.
+            var tz = DASHBOARD.timezone;
+            bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, timeStrings:[startEtm,endEtm]},
+            function (err) {
+                var msg = P3TXT.dashboard.alert_while_converting_timezone + err;
+                console.log(msg);
+                tableFuncs.addError(eidByKey.endEtm, P3TXT.dashboard.validator_timezone_conversion_error);
+                numErr += 1;
+            },
+            function (s, result) {
+                // console.log('While converting timezone: ' + s);
+                $("#"+eidByKey.startEtm).val(result.timeStrings[0] + "|" + result.posixTimes[0]);
+                $("#"+eidByKey.endEtm).val(result.timeStrings[1] + "|" + result.posixTimes[1]);
+                onSuccess();
+            });
+        }
     }
 
 

@@ -399,7 +399,7 @@ P3TXT.dashboard.option_surveys_table = "Surveys Table";
 P3TXT.dashboard.empty_report = "Empty report, check template";
 P3TXT.dashboard.send_code = "Please send this code to Picarro: ";
 P3TXT.dashboard.report_expired = "Report not found or expired. ";
-P3TXT.dashboard.alert_while_converting_timezone = "While converting timezone: ";
+P3TXT.dashboard.alert_while_converting_timezone = "Server error while converting timezone: ";
 P3TXT.dashboard.alert_invalid_instructions_file = "Invalid instructions file: ";
 P3TXT.dashboard.alert_multiple_files = "Cannot process more than one file";
 P3TXT.dashboard.alert_while_submitting_instructions = "While submitting instructions: ";
@@ -497,6 +497,7 @@ P3TXT.dashboard.validator_offset_too_large = "Maximum absolute offset exceeded (
 P3TXT.dashboard.validator_instructions_failed_validation = "Instructions failed validation";
 P3TXT.dashboard.validator_invalid_corner_latitudes = "SW corner latitude must be less than NE corner latitude.";
 P3TXT.dashboard.validator_invalid_corner_longitudes = "SW corner longitude must be less than NE corner longitude.";
+P3TXT.dashboard.validator_timezone_conversion_error = "Server unresponsive - click OK again to retry.";
 
 // GETREPORT strings
 P3TXT.getReport = {};
