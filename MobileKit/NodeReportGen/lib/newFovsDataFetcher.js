@@ -511,7 +511,7 @@ define(function(require, exports, module) {
         this.workDir = workDir;
         this.forceFlag = forceFlag;
         this.lastPollResults = {};
-        this.maxPollRepeats = 12; // Error out if we get same status and count for one minute
+        this.maxPollRepeats = 48; // Error out if we get same status and count for four minutes
         this.pollRepeats = 0;
     }
 

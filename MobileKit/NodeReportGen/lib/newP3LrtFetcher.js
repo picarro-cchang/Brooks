@@ -48,7 +48,7 @@ define(function(require, exports, module) {
     P3LrtFetcher.prototype.run = function () {
         var that = this;
         var lastPollResults = {};
-        var maxPollRepeats = 12; // Error out if we get same status and count for one minute
+        var maxPollRepeats = 48; // Error out if we get same status and count for four minutes
         var pollRepeats = 0;
 
         function makeRequest() {
