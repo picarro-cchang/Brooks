@@ -19,15 +19,12 @@ APP_NAME = "hostDasInterface"
 
 import sys
 import logging
-import thread
 import threading
 import time
 from ctypes import addressof
-from ctypes import c_char, c_byte, c_float, c_int, c_longlong
-from ctypes import c_short, c_uint, c_ushort, sizeof, Structure
-from configobj import ConfigObj
+from ctypes import c_char, c_float, c_int, c_longlong
+from ctypes import c_short, c_uint, sizeof
 from time import sleep, clock
-from numpy import *
 import sqlite3
 import Queue
 import copy
@@ -38,7 +35,7 @@ from Host.Common.SharedTypes    import Singleton, getSchemeTableClass, DasCommsE
 from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
 from Host.Common.analyzerUsbIf  import AnalyzerUsb
-from Host.Common.EventManagerProxy import *
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 EventManagerProxy_Init(APP_NAME)
 
 # The 6713 has 192KB of internal memory from 0 through 0x2FFFF
@@ -66,10 +63,10 @@ RINGDOWN_BASE    = interface.DSP_DATA_ADDRESS
 ValveSequenceType = (interface.ValveSequenceEntryType * interface.NUM_VALVE_SEQUENCE_ENTRIES)
 
 class Operation(object):
-    def __init__(self,opcode,operandList=[],env=0):
+    def __init__(self,opcode,operandList=None,env=0):
         self.opcode = lookup(opcode)
         self.env = lookup(env)
-        self.operandList = [lookup(opr) for opr in operandList]
+        self.operandList = [] if operandList is None else [lookup(opr) for opr in operandList]
 
 class OperationGroup(object):
     def __init__(self,priority,period,operationList=None):
@@ -990,15 +987,17 @@ def protectedRead(func):
         while True:
             rxId, exc, result = self.rxQueue.get()
             self.dbLock.release()
+            if exc: # This may be from current read of from some previous writes
+                raise exc
             if rxId == txId:
                 break
-        if exc:
-            raise exc
+            else:
+                Log("Unexpected ID when fetching from database", Level = 2)
         return result
     return wrapper
 
 class StateDatabase(Singleton):
-    periodByLevel = [1.0,10.0,100.0,1000.0,10000.0]
+    periodByLevel = [10.0,100.0,1000.0,10000.0]
     initialized = False
     txId = 0
     def __init__(self,fileName=None):
@@ -1023,6 +1022,16 @@ class StateDatabase(Singleton):
             self.wlmHistCheckPeriod_s = 1800
         elif fileName is not None:
             raise ValueError("StateDatabase has already been initialized")
+
+    def checkInitialized(self):
+        if not self.initialized:
+            raise ValueError("Cannot execute when database is closed")
+
+    def close(self):
+        self.stopThread.set()
+        self.hThread.join()
+        self.initialized = False
+
     def getId(self):
         StateDatabase.txId += 1
         return StateDatabase.txId
@@ -1170,38 +1179,44 @@ class StateDatabase(Singleton):
         return values
         
     def txQueueHandler(self):
-        print "txQueueHandler thread id = ", thread.get_ident()
         """Creates the connection to the database and services the queue of requests"""
         self.con = sqlite3.connect(self.fileName)
-        tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
-        if not tableNames:
-            self.con.execute("pragma auto_vacuum=FULL")
-        if "dasRegInt" not in tableNames:
-            self.con.execute("create table dasRegInt (name text primary key,value integer)")
-        if "dasRegFloat" not in tableNames:
-            self.con.execute("create table dasRegFloat (name text primary key,value real)")
-        if "wlmHistory" not in tableNames:
-            self.con.execute("create table wlmHistory (timestamp integer," +
-                             "vLaserNum integer, wlmOffset real," +
-                             "freqMin real, valMin real, freqMax real, valMax real)")
-        if "history" not in tableNames:
-            self.con.execute(
-                "create table history (level integer," +
-                "time integer,streamNum integer,value real," +
-                "minVal real,maxVal real,idx integer)")
-        self.con.commit()
-        while not self.stopThread.isSet():
-            txId,func,args = self.txQueue.get()
-            # Place a response on rxQueue if there is a return value or if an error occurs
-            #  N.B. If a tx request does not return a value but throws an exception, this will
-            #  be sent back. It is up to the rxQueue handler to check that the id of the response
-            #  matches that of the request, and to ignore exceptions from tx requests without
-            #  responses. This is done for speed, so that tx requests can return without waiting
-            #  for the database commit.
-            try:
-                r = func(*args)
-                e = None
+        try:
+            tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
+            if not tableNames:
+                if sys.version_info < (2,7):
+                    self.con.execute("pragma auto_vacuum=FULL")
+                else:
+                    self.con.execute("pragma journal_mode=WAL")
+            if "dasRegInt" not in tableNames:
+                self.con.execute("create table dasRegInt (name text primary key,value integer)")
+            if "dasRegFloat" not in tableNames:
+                self.con.execute("create table dasRegFloat (name text primary key,value real)")
+            if "wlmHistory" not in tableNames:
+                self.con.execute("create table wlmHistory (timestamp integer," +
+                                 "vLaserNum integer, wlmOffset real," +
+                                 "freqMin real, valMin real, freqMax real, valMax real)")
+            if "history" not in tableNames:
+                self.con.execute(
+                    "create table history (level integer," +
+                    "time integer,streamNum integer,value real," +
+                    "minVal real,maxVal real,idx integer)")
+            self.con.commit()
+            while not self.stopThread.isSet():
+                txId,func,args = self.txQueue.get()
+                # Place a response on rxQueue if there is a return value or if an error occurs
+                #  N.B. If a tx request does not return a value but throws an exception, this will
+                #  be sent back. It is up to the rxQueue handler to check that the id of the response
+                #  matches that of the request, and to ignore exceptions from tx requests without
+                #  responses. This is done for speed, so that tx requests can return without waiting
+                #  for the database commit.
+                try:
+                    r = func(*args)
+                    e = None
+                except Exception, e:
+                    pass
                 if (r is not None) or (e is not None):
                     self._safeRxQueuePut((txId,e,r))
-            except Exception,e:
-                pass
+        finally:
+            self.con.commit()
+            self.con.close()

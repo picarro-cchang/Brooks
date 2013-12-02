@@ -27,8 +27,8 @@ import types
 import traceback
 from numpy import array, transpose
 
-from DasConfigure import DasConfigure
-from DriverAnalogInterface import AnalogInterface
+from Host.Driver.DasConfigure import DasConfigure
+from Host.Driver.DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
@@ -38,7 +38,7 @@ from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDat
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.hostDasInterface import Operation
-from Host.Common.InstErrors import *
+from Host.Common.InstErrors import INST_ERROR_OKAY
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
@@ -908,7 +908,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def shelveWlmCal(self,wlmCalDict):
         """Save the WLM calibration data as a dictionary to the WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:
-            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+            raise ValueError("WLM_EEPROM is not available")
         wlmCal = interface.WLMCalibrationType()
         dictToCtypes(wlmCalDict,wlmCal)
         if ctypes.sizeof(wlmCal) != 4096:
@@ -1302,6 +1302,7 @@ class Driver(SharedTypes.Singleton):
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
             self.streamSaver.closeStreamFile()
+            self.dasInterface.stateDatabase.close()
 
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""

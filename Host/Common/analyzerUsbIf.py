@@ -19,9 +19,9 @@
 #  Copyright (c) 2008 Picarro, Inc. All rights reserved
 #
 from sys import platform
-from usb import LibUSB, usb_bus, usb_device, USB_ENDPOINT_OUT, USB_ENDPOINT_IN
+from Host.Common.usb import LibUSB, USB_ENDPOINT_OUT, USB_ENDPOINT_IN
 from ctypes import byref, create_string_buffer, c_ubyte, c_ushort, c_short, c_uint, sizeof, addressof
-from hexfile import HexFile
+from Host.Common.hexfile import HexFile
 from Host.autogen import usbdefs
 from Host.Common.SharedTypes import Singleton
 import struct
@@ -155,7 +155,7 @@ class AnalyzerUsb(Singleton):
         if self.interfaceClaimed:
             stat = self.usb.usbReleaseInterface(self.handle,0)
             if stat < 0:
-                raise ClaimInterfaceError("Error %s (%d) while releasing interface for %s" % (self.usb.usbStrerror(),stat,func.__name__))
+                raise ClaimInterfaceError("Error %s (%d) while releasing interface." % (self.usb.usbStrerror(),stat))
             self.interfaceClaimed = False
         self.checkHandleAndClose()
 
@@ -453,13 +453,12 @@ class AnalyzerUsb(Singleton):
         self.hpicWrite(0x00010001)
         for addr,value in addrValueList:
             self.hpiaWrite(addr)
-            self.hpidWrite(c_int(value))
+            self.hpidWrite(c_uint(value))
 
     def loadDspFile(self,fp):
         """Use the HPI to send a file to the DSP"""
         hexFile = HexFile(fp)
         regions = hexFile.process()
-        block = 128 # Maximum length for download
         for r in regions:
             # r.data contains the data as a list of bytes.
             self.hpiWrite(r.address,create_string_buffer("".join(r.data),len(r.data)))
@@ -504,5 +503,5 @@ bitrevList = \
 
 bitrevStr = "".join([chr(b) for b in bitrevList])
 
-def bitReverse(str):
-    return str.translate(bitrevStr)
+def bitReverse(inputStr):
+    return inputStr.translate(bitrevStr)
