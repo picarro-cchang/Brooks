@@ -950,10 +950,9 @@ class DataManager(object):
             Log("RPC_PulseAnalyzer_GetPulseStartEndTime: pulseAnalyzer=None!!\n")
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
-        #return self.pulseAnalyzer.getPulseStartEndTime()
-        retVal = self.pulseAnalyzer.getPulseStartEndTime()
-        Log("  retVal=", Data=retVal)
-        return retVal
+        #print "RPC_PulseAnalyzer_GetPulseStartEndTime: returning"
+        #Log("RPC_PulseAnalyzer_GetPulseStartEndTime: returning\n")
+        return self.pulseAnalyzer.getPulseStartEndTime()
 
     #
     # Below pulse analyzer functions are used by Command Interface

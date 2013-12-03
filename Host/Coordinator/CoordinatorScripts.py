@@ -137,58 +137,10 @@ class PulseAnalyzerStatus(object):
         for key in defaults:
             if key not in self.kwargs:
                 self.kwargs[key] = defaults[key]
-                LOGFUNC("%s not set, setting to default '%s'\n" % (key, str(defaults[key])))
+                #LOGFUNC("%s not set, setting to default '%s'\n" % (key, str(defaults[key])))
             else:
-                LOGFUNC("using input arg '%s' = '%s'\n" % (key, str(self.kwargs[key])))
-        """
-        if "targetConc" not in self.kwargs:
-            LOGFUNC("targetConc not set, setting to default\n")
-            self.kwargs["targetConc"] = None
-
-        if "thres1Pair" not in self.kwargs:
-            LOGFUNC("thres1Pair not set, setting to default\n")
-            self.kwargs["thres1Pair"] = [0.0, 0.0]
-            
-        if "thres2Pair" not in self.kwargs:
-            LOGFUNC("thres2Pair not set, setting to default\n")
-            self.kwargs["thres2Pair"] = [0.0, 0.0]
-
-        if "triggerType" not in self.kwargs:
-            LOGFUNC("triggerType not set, setting to default\n")
-            self.kwargs["triggerType"] = "in"
-
-        if "waitTime" not in self.kwargs:
-            LOGFUNC("waitTime not set, setting to default\n")
-            self.kwargs["waitTime"] = 0.0
-
-        if "validTimeAfterTrigger" not in self.kwargs:
-            LOGFUNC("validTimeAfterTrigger not set, setting to default\n")
-            self.kwargs["validTimeAfterTrigger"] = 0.0
-
-        if "validTimeBeforeEnd" not in self.kwargs:
-            LOGFUNC("validTimeBeforeEnd not set, setting to default\n")
-            self.kwargs["validTimeBeforeEnd"] = 0.0
-
-        if "timeout" not in self.kwargs:
-            LOGFUNC("timeout not set, setting to default\n")
-            self.kwargs["timeout"] = 0.0
-
-        if "bufSize" not in self.kwargs:
-            LOGFUNC("bufSize not set, setting to default\n")
-            self.kwargs["bufSize"] = 500
-            
-        if "numPointsToTrigger" not in self.kwargs:
-            LOGFUNC("numPointsToTrigger not set, setting to default\n")
-            self.kwargs["numPointsToTrigger"] = 1
-            
-        if "numPointsToRelease" not in self.kwargs:
-            LOGFUNC("numPointsToRelease not set, setting to default\n")
-            self.kwargs["numPointsToRelease"] = 1
-            
-        if "armCond" not in self.kwargs:
-            LOGFUNC("armCond not set, setting to default\n")
-            self.kwargs["armCond"] = None
-        """
+                #LOGFUNC("using input arg '%s' = '%s'\n" % (key, str(self.kwargs[key])))
+                pass
 
     def printConfiguration(self):
         LOGFUNC("------------------\n")
@@ -705,9 +657,10 @@ def pulseAnalyzerGetStatistics():
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetPulseStartEndTime():
     LOGFUNC("*** entering pulseAnalyzerGetPulseStartEndTime()\n")
-    ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
-    LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
-    return ret
+    return DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
+    #ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
+    #LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
+    #return ret
 
 
 @pulseAnalyzerMakeSafe
@@ -723,7 +676,7 @@ def pulseAnalyzerIsDataBad():
     isBad = PULSE_ANALYZER.isNextDataBad()
     PULSE_ANALYZER.clearNextDataBad()
     LOGFUNC("  isBad=%s\n" % isBad)
-    return isBad()
+    return isBad
 
 
 ##########################
