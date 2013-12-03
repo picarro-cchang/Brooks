@@ -35,11 +35,9 @@ public class HomePage extends BasePage {
 	@CacheLookup
 	private WebElement menuProcess;
 	
-//	@FindBy(how = How.LINK_TEXT, using = "Picarro Surveyor� for Natural Gas Leaks")
 	@FindBy(how = How.XPATH, using = "//span[@id='id_menu_list']/li[2]/a")
 	private WebElement linkNGL;
 	
-//	@FindBy(how = How.LINK_TEXT, using = "Picarro Surveyor� Report Generation Portal")
 	@FindBy(how = How.XPATH, using = "//span[@id='id_menu_list']/li[3]/a")
 	private WebElement linkRGP;
 	
