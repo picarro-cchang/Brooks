@@ -897,6 +897,9 @@ def plume():
 def test():
     return render_template('test.html')
 
+@app.route('/utility')
+def utility():
+    return render_template('calUtility.html')
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
