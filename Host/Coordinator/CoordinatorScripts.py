@@ -23,17 +23,20 @@
 #   FREQCONV and LOGFUNC are set from outside
 
 from time import sleep, mktime, localtime, strptime, strftime, time, clock, ctime
-from datetime import datetime, timedelta, MINYEAR
+#from datetime import datetime, timedelta, MINYEAR
+from datetime import datetime, MINYEAR
 from numpy import *
 from configobj import ConfigObj
-import traceback
+#import traceback
 import socket
 import sys
-import os
-from os.path import abspath, exists, join, split
+#import os
+#from os.path import abspath, exists, join, split
+from os.path import abspath, join, split
 import matplotlib
 matplotlib.use('Agg')
-from matplotlib import pyplot, dates
+#from matplotlib import pyplot, dates
+from matplotlib import dates
 from matplotlib.ticker import MaxNLocator
 import urllib2
 from xml.dom import minidom
@@ -46,6 +49,7 @@ import Pyro.errors
 
 from Host.Common.CubicSpline import CubicSpline
 from Host.Common import CmdFIFO
+from Host.Common.Coordinator import PulseAnalyzerStatus
 
 # how do I make this file aware of these exception classes? gives this run-time error:
 # ImportError: cannot import name PulseAnalyzerNoneError
@@ -98,6 +102,7 @@ class MeasBufferStatus(object):
 MEAS_BUFFER = MeasBufferStatus()
 
 
+"""
 class PulseAnalyzerStatus(object):
     def __init__(self):
         self.source = None
@@ -166,6 +171,10 @@ class PulseAnalyzerStatus(object):
 
 
 PULSE_ANALYZER = PulseAnalyzerStatus()
+"""
+
+PULSE_ANALYZER = PulseAnalyzerStatus.PulseAnalyzerStatus()
+
 
 # Pulse Analyzer Exception Handling wrapper decorator
 def pulseAnalyzerMakeSafe(func):
@@ -1056,7 +1065,7 @@ def calcInjectDateTime(logDate,logTime,injTime):
     fmtd = "%Y/%m/%d"
     fmtt = "%H:%M:%S"
     d1 = mktime(strptime(logDate+" "+logTime,fmt))
-    t2 = '23:59:57'
+    #t2 = '23:59:57'
     d2 = mktime(strptime(logDate+" "+injTime,fmt))
     if d1<d2:
         d2 = d2 - 24*3600
@@ -1324,6 +1333,7 @@ def loadMaster():
 def writeMaster(fileName=None):
     DRIVER.writeIniFile(fileName)
 
+'''
 def dummyGetLog():
     return """   Print Date: 2008/08/13   10:04:35
    Site Name: CTC, System Name: PAL, System SNo: 142218
@@ -1340,6 +1350,7 @@ def dummyGetLog():
                10:05:20 Sample 2 Injected
 |
 """
+'''
 
 def dummyGetLog():
     return """   Print Date: 2008/08/13   10:04:35
@@ -1438,10 +1449,12 @@ class Comms(object):
                 self.cols = [c.strip() for c in self.cols][:-1]
 
     def clearPulseBuffer(self):
-        reply = self.sendAndGet("_PULSE_CLEARBUFFER")
+        #reply = self.sendAndGet("_PULSE_CLEARBUFFER")
+        self.sendAndGet("_PULSE_CLEARBUFFER")
 
     def clearMeasBuffer(self):
-        reply = self.sendAndGet("_MEAS_CLEARBUFFER")
+        #reply = self.sendAndGet("_MEAS_CLEARBUFFER")
+        self.sendAndGet("_MEAS_CLEARBUFFER")
 
     def getBufferFirst(self):
         reply = self.sendAndGet("_PULSE_GETBUFFERFIRST")
