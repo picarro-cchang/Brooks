@@ -3,7 +3,15 @@ requirejs.config({
     paths: {
 		'mocha' : '/node_modules/mocha/mocha',
 		'chai' : '/node_modules/chai/chai',
+		'app'  : '/public/js/app',
+		'common' : '/public/js/common',
+		'underscore' : '/node_modules/underscore/underscore',
     },
+	shim: {
+		'underscore': {
+			exports: '_'
+		}
+	},
 	/*
 	paths: {
 		'jquery' : '/app/libs/jquery',
@@ -31,7 +39,7 @@ requirejs.config({
 	urlArgs: 'bust=' + (new Date()).getTime()
 });
 
-requirejs(['mytest'], function () {
+requirejs(['testUtils'], function () {
     if (window.mochaPhantomJS) { mochaPhantomJS.run(); }
     else { mocha.run(); }
 });
