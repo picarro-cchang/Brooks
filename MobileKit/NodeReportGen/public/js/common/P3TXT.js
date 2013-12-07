@@ -498,6 +498,8 @@ P3TXT.dashboard.validator_instructions_failed_validation = "Instructions failed 
 P3TXT.dashboard.validator_invalid_corner_latitudes = "SW corner latitude must be less than NE corner latitude.";
 P3TXT.dashboard.validator_invalid_corner_longitudes = "SW corner longitude must be less than NE corner longitude.";
 P3TXT.dashboard.validator_timezone_conversion_error = "Server unresponsive - click OK again to retry.";
+P3TXT.dashboard.validator_too_many_submaps = "Cannot have more than 100 submaps."
+P3TXT.dashboard.validator_submaps = "Invalid submap specification."
 
 // GETREPORT strings
 P3TXT.getReport = {};

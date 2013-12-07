@@ -60,10 +60,15 @@ define(function(require, exports, module) {
     //   function (status, result) { console.log("Success, status: " + status + 
     //                               " result: " + JSON.stringify(result)); }
     // The underlying service is called with at most "chunkSize" times to convert
+    // If the conversions fail, we retry after a delay, up to a total of maxRetries 
+    //  times over the entire request.
 
     function bufferedTimezone(service, qry_obj, errorCbFn, successCbFn) {
         var chunk, subqry, input, output1, output2;
         var chunkSize = 100;
+        var maxRetries = 5;
+        var retryDelay_ms = 1000;
+        var retry = 0;
         if ("posixTimes" in qry_obj && qry_obj.posixTimes.length>0) {
             input = qry_obj.posixTimes.slice(0);
             output1 = [];
@@ -77,7 +82,14 @@ define(function(require, exports, module) {
                     subqry = {"tz": qry_obj.tz, "posixTimes": chunk};
                     service(subqry,
                     function (err) {
-                        errorCbFn(err);
+                        retry += 1;
+                        if (retry <= maxRetries) {
+                            input = chunk.concat(input);
+                            setTimeout(next1, retryDelay_ms);
+                        }
+                        else {
+                            errorCbFn(err);
+                        }
                     },
                     function (s, result) {
                         output1.push.apply(output1, result.posixTimes);
@@ -101,7 +113,14 @@ define(function(require, exports, module) {
                     subqry = {"tz": qry_obj.tz, "timeStrings": chunk};
                     service(subqry,
                     function (err) {
-                        errorCbFn(err);
+                        retry += 1;
+                        if (retry <= maxRetries) {
+                            input = chunk.concat(input);
+                            setTimeout(next2, retryDelay_ms);
+                        }
+                        else {
+                            errorCbFn(err);
+                        }
                     },
                     function (s, result) {
                         output1.push.apply(output1, result.posixTimes);
@@ -124,10 +143,20 @@ define(function(require, exports, module) {
         return "/" + hash.substr(0,2) + "/" + hash;
     }
 
+    // Submap grid string is alphabetic row string followed by numeric column string
+    // Row labels are A-Z, AA-AZ, BA-BZ, etc. Column labels are numbers
+    function submapGridString(row, col) {
+        var rowString;
+        if (row < 26) rowString = String.fromCharCode(65+row);
+        else rowString = String.fromCharCode(64+Math.floor(row/26)) + String.fromCharCode(65+Math.floor(row % 26));
+        return rowString + (col + 1);
+    }
+
     module.exports.hex2RGB = hex2RGB;
     module.exports.dec2hex = dec2hex;
     module.exports.colorTuple2Hex = colorTuple2Hex;
     module.exports.getDateTime = getDateTime;
     module.exports.bufferedTimezone = bufferedTimezone;
     module.exports.instrResource = instrResource;
+    module.exports.submapGridString = submapGridString;
 });

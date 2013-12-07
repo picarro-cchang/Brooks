@@ -118,11 +118,17 @@ define(function(require, exports, module) {
     }
 
     function submapsValidator (submaps) {
-        var rpv = newParamsValidator(submaps,
-            [{"name": "nx", "required":false, "validator": "number", "default_value": 1},
-             {"name": "ny", "required":false, "validator": "number", "default_value": 1}
-            ]);
-        return rpv.validate();
+        try {
+            if ("nx" in submaps && "ny" in submaps &&
+                typeof submaps.nx === "number" && typeof submaps.ny === "number" &&
+                submaps.nx * submaps.ny <= 100) {
+                return {"valid": true};
+            }
+            else return {"valid": false, "errorList": [P3TXT.dashboard.validator_too_many_submaps]};
+        }
+        catch (e) {
+            return {"valid": false, "errorList": [P3TXT.dashboard.validator_submaps]};
+        }
     }
 
     function instrValidator(instr) {

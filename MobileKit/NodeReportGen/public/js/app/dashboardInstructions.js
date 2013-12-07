@@ -873,14 +873,14 @@ define(function(require, exports, module) {
                 });
                 $('#id_submapsRows').spinedit({
                     minimum: 1,
-                    maximum: 10,
+                    maximum: 100,
                     step: 1,
                     value: 1,
                     numberOfDecimals: 0
                 });
                 $('#id_submapsColumns').spinedit({
                     minimum: 1,
-                    maximum: 10,
+                    maximum: 100,
                     step: 1,
                     value: 1,
                     numberOfDecimals: 0

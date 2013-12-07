@@ -6,7 +6,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
 define(function(require, exports, module) {
     'use strict';
-
+    var $ = require('jquery');
     var gh = require('app/geohash');
     var REPORT = require('app/reportGlobals');
     var utils = require('app/utils');
@@ -18,7 +18,7 @@ define(function(require, exports, module) {
 
     function makeAnalysesTable(report) {
         var i;
-        var analyses, anz, conc, delta, disposition, etm, lat, lng, uncertainty, where;
+        var analyses, anz, col, conc, delta, disposition, etm, lat, lng, row, uncertainty, where;
         var analysesTable = [];
 
         var dispositionStrings = {0:P3TXT.getReport.dispositions.complete,
@@ -40,6 +40,8 @@ define(function(require, exports, module) {
                 where = gh.decodeGeoHash(analyses[i].attributes.P);
                 lat = where.latitude[2];
                 lng = where.longitude[2];
+                col = Math.floor(report.subx*(lng - report.minLng)/(report.maxLng - report.minLng));
+                row = Math.floor(report.suby*(lat - report.maxLat)/(report.minLat - report.maxLat));
                 conc = analyses[i].attributes.C;
                 // N.B. If the default disposition changes, make corresponding change
                 //  in makeAnalyses.js in this directory 
@@ -53,6 +55,13 @@ define(function(require, exports, module) {
                     analysesTable.push('<tr>');
                     analysesTable.push('<td>' + report.analysisLabels[i] + '</td>');
                     analysesTable.push('<td><a href="' + url + '" target="_blank">' +  des + '</a></td>');
+                    if (report.subx > 1 || report.suby > 1) {
+                        var submapGridString = utils.submapGridString(row, col);
+                        var link = REPORT.reportViewResources.submapLinks[submapGridString];
+                        url = window.location.pathname + '?' + $.param({"swCorner": link.swCorner,
+                                  "neCorner": link.neCorner, "name":submapGridString });
+                        analysesTable.push('<td><a href="' + url + '" target="_blank">' + submapGridString + '</a></td>');
+                    }
                     analysesTable.push('<td>' + lat.toFixed(6) + '</td>');
                     analysesTable.push('<td>' + lng.toFixed(6) + '</td>');
                     analysesTable.push('<td>' + conc.toFixed(1) + '</td>');
@@ -67,9 +76,15 @@ define(function(require, exports, module) {
                 header.push('<table class="table table-striped table-condensed table-fmt1 table-datatable">');
                 header.push('<thead><tr>');
                 header.push('<th style="width:8%">Label</th>');
-                header.push('<th style="width:20%">Designation</th>');
-                header.push('<th style="width:20%">Latitude</th>');
-                header.push('<th style="width:20%">Longitude</th>');
+                if (report.subx > 1 || report.suby > 1) {
+                    header.push('<th style="width:20%">Designation</th>');
+                    header.push('<th style="width:10%">Submap</th>');
+                }
+                else {
+                    header.push('<th style="width:30%">Designation</th>');
+                }
+                header.push('<th style="width:15%">Latitude</th>');
+                header.push('<th style="width:15%">Longitude</th>');
                 header.push('<th style="width:8%">Conc</th>');
                 header.push('<th style="width:8%">Isotopic Ratio</th>');
                 header.push('<th style="width:8%">Uncertainty</th>');
