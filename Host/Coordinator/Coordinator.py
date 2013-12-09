@@ -25,13 +25,14 @@ import getopt
 import csv
 import re
 import threading
-import pprint
+#import pprint
 
 from Queue import Queue
 
 from CoordinatorFrameGui import CoordinatorFrameGui
 from CoordinatorParamGui import InitialParamDialogGui
-from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
+#from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
+from CoordinatorStateMachine import StateMachine, OK, EXCEPTION
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_COORDINATOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj

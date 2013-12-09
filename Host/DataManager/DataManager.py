@@ -83,7 +83,7 @@ import serial
 import math
 import time
 import traceback
-import string
+#import string
 from inspect import isclass
 from collections import deque
 import ScriptRunner
@@ -105,7 +105,8 @@ from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SafeFile import SafeFile, FileExists
+#from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.SafeFile import FileExists
 from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.Listener import Listener
@@ -838,7 +839,6 @@ class DataManager(object):
                               thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
                               validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
                               bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
-        #print "RPC_PulseAnalyzer_Set"
         try:
             self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
                                                triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
@@ -852,7 +852,6 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartRunning(self):
-        #print "RPC_PulseAnalyzer_StartRunning"
         # Run pulse analyzer with state machine
         if self.pulseAnalyzer == None:
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
@@ -864,7 +863,6 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopRunning(self):
-        #print "RPC_PulseAnalyzer_StopRunning"
         # Stop pulse analyzer with state machine
         if self.pulseAnalyzer == None:
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
@@ -904,7 +902,6 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetTimestamp(self):
-        #print "RPC_PulseAnalyzer_GetTimestamp"
         if self.pulseAnalyzer == None:
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
@@ -926,7 +923,6 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_Reset(self):
-        #print "RPC_PulseAnalyzer_Reset"
         if self.pulseAnalyzer == None:
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
@@ -935,7 +931,6 @@ class DataManager(object):
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatistics(self):
-        #print "RPC_PulseAnalyzer_GetStatistics"
         """Retrieve statistics of data in pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
@@ -950,8 +945,6 @@ class DataManager(object):
             Log("RPC_PulseAnalyzer_GetPulseStartEndTime: pulseAnalyzer=None!!\n")
             raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
-        #print "RPC_PulseAnalyzer_GetPulseStartEndTime: returning"
-        #Log("RPC_PulseAnalyzer_GetPulseStartEndTime: returning\n")
         return self.pulseAnalyzer.getPulseStartEndTime()
 
     #
