@@ -7,7 +7,7 @@
         "assets": "/",
         "host": "localhost",
         "port": 5300,
-        "phantomPath": "C:\\Program Files (x86)\\phantomjs-1.9.0-windows\\phantomjs.exe",
+        "phantomPath": "C:\\Program Files (x86)\\phantomjs-1.9.2-windows\\phantomjs.exe",
         "pdftkPath": "C:\\Program Files (x86)\\PDF Labs\\PDFtk Server\\bin\\pdftk.exe",
         "pdfZoom": 1.0,
         "headerFontSize": "150%",
