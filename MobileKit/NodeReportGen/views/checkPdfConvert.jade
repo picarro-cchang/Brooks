@@ -1,7 +1,7 @@
 extends layout_require
 
 block scripts
-    script(type='text/javascript')
+    script(type='text/javascript').
         ASSETS = '#{assets}';
         
     script(type='text/javascript', data-main='#{assets}js/app/checkPdfConvertMain.js', src='#{assets}js/require-jquery.js')

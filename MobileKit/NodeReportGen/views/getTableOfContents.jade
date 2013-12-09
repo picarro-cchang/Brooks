@@ -4,7 +4,7 @@ block scripts
     script(type='text/javascript').
         ASSETS = '#{assets}';
         
-    script(type='text/javascript', data-main='#{assets}js/app/getReportMain.js', src='#{assets}js/require-jquery.js')
+    script(type='text/javascript', data-main='#{assets}js/app/getTableOfContentsMain.js', src='#{assets}js/require-jquery.js')
     script(type='text/javascript').
         var TEMPLATE_PARAMS = {
             apiKey: "#{apiKey}",
@@ -28,8 +28,8 @@ block content
             div#leftHead.leftHead
                 | #{P3TXT.getReport.leftHeading}
             div#rightHead.rightHead
-        div#reportTitle(style="display:none")
+        div#reportTitle(align="center")
         div#startPage(style="display:none")
-        div#getReportApp
+        div#tableOfContents(style="width:80%;margin-left:auto;margin-right:auto;margin-top:50px;")
         div(style="height:50px")
             div#leftFoot.leftFoot
