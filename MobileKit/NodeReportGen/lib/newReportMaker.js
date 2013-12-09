@@ -275,6 +275,7 @@ define(function(require, exports, module) {
         }
 
         function makePdfReports(instructions) {
+            var contents = [];
             var subx = instructions.submaps.nx;
             var suby = instructions.submaps.ny;
             var rptMaxLat = instructions.neCorner[0];
@@ -294,7 +295,7 @@ define(function(require, exports, module) {
             var tables = instructions.template.summary.tables;
             if (!_.isEmpty(instructions.template.summary.figures) ||
                 tables.analysesTable || tables.peaksTable || tables.surveysTable || tables.runsTable) {
-                submaps.push({"url": url.format({"pathname": baseUrl, "query": {"name":"Summary"}}), "name": "summary.pdf"});
+                submaps.push({"pathname": baseUrl, "query": {"name":"Summary"}, "name": "summary.pdf"});
             }
 
             tables = instructions.template.submaps.tables;
@@ -308,14 +309,15 @@ define(function(require, exports, module) {
                         swCorner = gh.encodeGeoHash(minLat, minLng);
                         neCorner = gh.encodeGeoHash(maxLat, maxLng);
                         name = String.fromCharCode(65 + my) + (mx + 1);
-                        submaps.push({"url": url.format({"pathname": baseUrl,
-                            "query": {"neCorner":neCorner, "swCorner":swCorner, "name":name}}),
-                            "name": (name + ".pdf")});
+                        submaps.push({"pathname": baseUrl,
+                                      "query": {"neCorner":neCorner, "swCorner":swCorner, "name":name},
+                                      "name": (name + ".pdf")});
                         minLng = maxLng;
                     }
                     maxLat = minLat;
                 }
             }
+            var startPage = 2; // Table of contents is page 1
             var ss = submaps.slice(0);
             console.log("Submaps: " + JSON.stringify(ss));
             if (_.isEmpty(ss)) {
@@ -329,19 +331,43 @@ define(function(require, exports, module) {
                 var submap;
                 if (ss.length > 0) {
                     submap = ss.shift();
-                    convertToPdf(submap.url, submap.name, function (err) {
+                    var query = _.extend(submap.query, {startPage: startPage});
+                    var urlWithQuery = url.format({"pathname": submap.pathname, "query": query});
+                    convertToPdf(urlWithQuery, submap.name, function (err, pdfPages) {
                         if (err) callback(err);
                         else {
+                            contents.push({name:query.name, startPage:startPage, numPages:pdfPages});
+                            startPage += pdfPages;
                             process.nextTick(next);
                         }
                     });
                 }
                 else {
-                    concatenatePdf(submaps.slice(0), function (err) {
-                        if (err) callback(err);
+                    // console.log("TABLE OF CONTENTS: " + path.join(that.workDir,"tableOfContents.json"));
+                    fs.writeFile(path.join(that.workDir,"tableOfContents.json"), JSON.stringify(contents), function (err) {
+                        if (err) {
+                            sf.writeStatus(that.statusFile,
+                                {"status": rptGenStatus.FAILED, "msg": err.message });
+                            callback(err);
+                        }
                         else {
-                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_WITH_PDF});
-                            callback(null);
+                            var proto = (SITECONFIG.reportport === 443) ? "https" : "http";
+                            var prefix = proto + '://' + SITECONFIG.reporthost + ':' + SITECONFIG.reportport;
+                            var baseUrl = prefix + '/getTableOfContentsLocal/' + that.submit_key.hash + '/' + that.submit_key.dir_name;
+                            var tocFile = "tableOfContents.pdf";
+                            convertToPdf(baseUrl, tocFile, function (err, pdfPages) {
+                                if (err) callback(err);
+                                else {
+                                    var initList = [{name: tocFile}];
+                                    concatenatePdf(initList.concat(submaps), function (err) {
+                                        if (err) callback(err);
+                                        else {
+                                            sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE_WITH_PDF});
+                                            callback(null);
+                                        }
+                                    });
+                                }
+                            });
                         }
                     });
                 }
@@ -367,24 +393,11 @@ define(function(require, exports, module) {
                     done(err);
                 }
                 else {
-                    console.log('Child Process STDOUT: ' + stdout);
-                    console.log('Child Process STDERR: ' + stderr);
-                }
-            });
-            concat.on('exit', function (code) {
-                console.log('PDF concatenator exit code: ' + code);
-                if (code === 0) {
-                    // Delete the component PDF files, do not wait for completion
-                    pdfFiles.forEach(function (fname) {
-                        fs.unlink(path.join(that.workDir, fname));
-                    });
+                    if (stdout.length > 0) console.log('PDF concatenator STDOUT:\n' + stdout);
+                    else console.log('PDF concatenator STDOUT is empty.');
+                    if (stderr.length > 0) console.log('PDF concatenator STDERR:\n' + stderr);
+                    else console.log('PDF concatenator STDERR is empty.');
                     done(null);
-                }
-                else {
-                    msg = "PDF concatenator exit code: " + code;
-                    sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED, "msg": msg });
-                    done(new Error(msg));
                 }
             });
         }
@@ -396,10 +409,11 @@ define(function(require, exports, module) {
                         '" "' + SITECONFIG.headerFontSize + '" "' +
                         SITECONFIG.footerFontSize + '"';
             var msg;
+            var pdfPages = 0;
             console.log(cmd);
             var convert = cp.exec(cmd, {"cwd": __dirname}, function (err, stdout, stderr) {
                 if (err) {
-                    msg = "Spawning PDF converter code: " + err.code;
+                    msg = "Spawning PhantomJS code: " + err.code;
                     console.log(err.stack);
                     console.log('Error code: ' + err.code);
                     console.log('Signal received: ' + err.signal);
@@ -408,19 +422,14 @@ define(function(require, exports, module) {
                     done(err);
                 }
                 else {
-                    console.log('Child Process STDOUT: ' + stdout);
-                    console.log('Child Process STDERR: ' + stderr);
-                }
-            });
-            convert.on('exit', function (code) {
-                if (code === 0) {
-                    done(null);
-                }
-                else {
-                    msg = "PDF converter exit code: " + code;
-                    sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED, "msg": msg });
-                    done(new Error(msg));
+                    if (stdout.length > 0) console.log('PhantomJS STDOUT:\n' + stdout);
+                    else console.log('PhantomJS STDOUT is empty.');
+                    if (stderr.length > 0) console.log('PhantomJS STDERR:\n' + stderr);
+                    else console.log('PhantomJS STDERR is empty.');
+                    var pageRegexp = /PDF_PAGES:\s*(\d+)/;
+                    var matchArray = pageRegexp.exec(stdout);
+                    if (matchArray.length == 2) pdfPages = + matchArray[1];
+                    done(null, pdfPages);
                 }
             });
         }

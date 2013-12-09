@@ -7,6 +7,7 @@ reportServer.js is the node program which:
     b) /getReport and /getReportLocal: Produce a page with a report. /getReport is
        used by the browser which accesses the report server via the authenticating proxy server whereas /getReportLocal
        is used internally by the reportServer to produce a PDF file via a headless browser.
+    c) /getTableOfContentsLocal: Produce a page with the table of contents for a report.
     
 2) Provides rest calls:
     a) /rest/RptGen/submit: submit a report generation instructions file
@@ -382,6 +383,23 @@ the authenticating proxy server.
         });
     }
 
+    function handleGetTableOfContentsLocal(req, res) {
+        res.render("getTableOfContents",
+            {apiKey: SITECONFIG.apiKey,
+             assets: "/",
+             clientKey: SITECONFIG.clientKey,
+             hash: req.params.hash,
+             host: "",
+             identity: "",
+             P3TXT: P3TXT,
+             port: "",
+             psys: "",
+             qry: req.query,
+             site: "",
+             ts:req.params.ts
+        });
+    }
+
     function _index(req, res, force) {
         res.render("index",
             {assets: SITECONFIG.assets,
@@ -444,6 +462,8 @@ the authenticating proxy server.
     app.get("/getReport/:hash/:ts", handleGetReport);
 
     app.get("/getReportLocal/:hash/:ts", handleGetReportLocal);
+
+    app.get("/getTableOfContentsLocal/:hash/:ts", handleGetTableOfContentsLocal);
 
     app.get("/rest/RptGen", handleRptGen);
 

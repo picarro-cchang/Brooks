@@ -96,19 +96,26 @@ define(function(require, exports, module) {
             },
             analyzeStatus: function (err, status, msg)  {
                 var that = this;
+                if (!err) DASHBOARD.connectionErrors = 0;
                 if (status === rptGenStatus.TASK_NOT_FOUND) {
                     this.set({'msg': P3TXT.dashboard.report_expired, 'status': status});
                 }
                 else if (status < 0) {
                     this.set({'msg': msg, 'status': status});
                 }
-                else if (err) {
-                    var msg = 'Connection problem: Please reload page or retry in a few minutes';
-                    // this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
-                    this.set({'msg': msg, 'status': rptGenStatus.OTHER_ERROR});
-                }
                 else if (status >= rptGenStatus.DONE) {
                     this.set({'status': status});
+                }
+                else if (err) {
+                    DASHBOARD.connectionErrors += 1;
+                    if (DASHBOARD.connectionErrors > 5) {
+                        msg = 'Connection problem: Please reload page or retry in a few minutes';
+                        // this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
+                        this.set({'msg': msg, 'status': rptGenStatus.OTHER_ERROR});                        
+                    }
+                    else {
+                        setTimeout(function () { that.updateStatus(); }, 5000);
+                    }
                 }
                 else setTimeout(function () { that.updateStatus(); }, 5000);
             },

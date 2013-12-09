@@ -128,6 +128,14 @@ define(function(require, exports, module) {
 
                 REPORT.settings.set(_.pick(data.INSTRUCTIONS,settingsKeys));
 
+                // Fill out the starting page number
+                if ('startPage' in qry) {
+                    REPORT.settings.set({"startPage": +qry.startPage});
+                }
+                else {
+                    REPORT.settings.set({"startPage": 1});                    
+                }
+
                 // Override the corners from the qry parameters if they exist
                 if ('swCorner' in qry) {
                     REPORT.settings.set({"swCorner": gh.decodeToLatLng(qry.swCorner), "submaps":{"nx":1, "ny":1}});
@@ -197,16 +205,44 @@ define(function(require, exports, module) {
         var figureComponents = [ "facilities", "paths", "fovs", "wedges", "tokens", "peaks", "markers", "analyses", "submapGrid" ];
         var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
+        var startPage = REPORT.settings.get("startPage");
         var name = params.name;
 
-        $("#reportTitle").html(title);
+        $("#leftHead").html(title);
         $("#rightHead").html(name);
+        $("#startPage").html(startPage);
         $("#leftFoot").html(P3TXT.getReport.firstSubmittedBy + " " + params.user + " " +
             P3TXT.getReport.firstSubmittedAt + " " + params.submitTime);
         $("#getReportApp").append('<div style="container-fluid">');
         $("#getReportApp").append('<div style="row-fluid">');
         $("#getReportApp").append('<div style="span12">');
-        $("#getReportApp").append('<h1 style="text-align:center;">' + title + '</h1>');
+        
+        // $("#getReportApp").append('<h1 style="text-align:center;">' + title + '</h1>');
+
+        if (subreport.tables.get("analysesTable")) {
+            id = 'id_analysesTable';
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_analyses_table + '</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
+            new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
+        }
+        if (subreport.tables.get("peaksTable")) {
+            id = 'id_peaksTable';
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_peaks_table + '</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
+            new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
+        }
+        if (subreport.tables.get("runsTable")) {
+            id = 'id_runsTable';
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_runs_table + '</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
+            new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
+        }
+        if (subreport.tables.get("surveysTable")) {
+            id = 'id_surveysTable';
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_surveys_table + '</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
+            new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
+        }
 
         var settingsTableTop = [];
         var settingsTableBottom = [];
@@ -234,6 +270,8 @@ define(function(require, exports, module) {
         settingsTableTop.push('<td>' + REPORT.settings.get("exclRadius").toFixed(0) + '</td>');
         settingsTableBottom.push('</tr>');
         settingsTableBottom.push('</tbody></table>');
+
+        
         for (var i=0; i<subreport.figures.models.length; i++) {
             var pageComponent = subreport.figures.models[i];
             var layers = [];
@@ -247,8 +285,11 @@ define(function(require, exports, module) {
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("wedges")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("fovs")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("analyses")) + '</td>');
-            $("#getReportApp").append('<div class="reportTable"; style="position:relative;">' +
-                settingsTableTop.join("") + settingsTableMid.join("") + settingsTableBottom.join("") + '</div>');
+            
+            /* COMMENTING OUT SETTINGS TABLE */
+
+            // $("#getReportApp").append('<div class="reportTable"; style="position:relative;">' +
+            //    settingsTableTop.join("") + settingsTableMid.join("") + settingsTableBottom.join("") + '</div>');
 
             layers.push(pageComponent.get("baseType"));
             for (var j=0; j<figureComponents.length; j++) {
@@ -259,31 +300,6 @@ define(function(require, exports, module) {
             var id_fig = 'id_page_' + (i+1) + 'fig';
             $("#getReportApp").append('<div id="' + id_fig + '" class="reportFigure"; style="position:relative;"/>');
             new REPORT.CompositeViewWithLinks({el: $('#' + id_fig), name: id_fig.slice(3), layers:layers.slice(0)});
-        }
-
-        if (subreport.tables.get("analysesTable")) {
-            id = 'id_analysesTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_analyses_table + '</h2>');
-            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
-            new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
-        }
-        if (subreport.tables.get("peaksTable")) {
-            id = 'id_peaksTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_peaks_table + '</h2>');
-            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
-            new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
-        }
-        if (subreport.tables.get("runsTable")) {
-            id = 'id_runsTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_runs_table + '</h2>');
-            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
-            new REPORT.RunsTableView({el: $('#' + id), dataTables: false});
-        }
-        if (subreport.tables.get("surveysTable")) {
-            id = 'id_surveysTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_surveys_table + '</h2>');
-            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
-            new REPORT.SurveysTableView({el: $('#' + id), dataTables: false});
         }
         REPORT.reportViewResources.render();
         $("#getReportApp").append('</div></div></div>');

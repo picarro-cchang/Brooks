@@ -22,7 +22,8 @@ define(function(require, exports, module) {
                     "fovMinLeak": 1.0,
                     "fovNWindow": 10,
                     "peaksMinAmp": 0.1,
-                    "timezone": "GMT"
+                    "timezone": "GMT",
+                    "startPage": 1
                 };
             }
         });

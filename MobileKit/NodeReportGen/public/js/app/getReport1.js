@@ -34,7 +34,8 @@ function ($, _, Backbone, gh, REPORT, CNSNT,
                     "submaps": {"nx": 1, "ny": 2},
                     "peaksMinAmp": 0.1,
                     "timezone": "GMT",
-                    "reportTimezone": "GMT"
+                    "reportTimezone": "GMT",
+                    "startPage": 1
                 };
             }
         });
