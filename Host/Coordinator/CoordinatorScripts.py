@@ -104,7 +104,8 @@ MEAS_BUFFER = MeasBufferStatus()
 PULSE_ANALYZER = PulseAnalyzerStatus.PulseAnalyzerStatus()
 
 # Bitmap for logging pulse analyzer info in the Coordinator log (for debugging)
-PA_LOG_MASK_Exceptions = 0x0001     # log exceptions
+PA_LOG_MASK_Exceptions = 0x0001     # exceptions
+PA_LOG_MASK_ResetAttempts = 0x0002  # info during reset attempts
 
 logPulseAnalyzer = 0
 
@@ -329,38 +330,29 @@ def isExtValveSequencerOn():
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerSet(source, concNameList, *args, **kwargs):
-    #LOGFUNC("*** entering pulseAnalyzerSet()\n")
-
     # First cache the params so we can re-instantiate the pulse analyzer
     # if the DataManager gets restarted.
     ret = PULSE_ANALYZER.setConfiguration(source, concNameList, *args, **kwargs)
-    #LOGFUNC("pulseAnalyzerSet: setConfiguration returned ret=%s\n" % str(ret))
 
     # Retrieve the arg list, as some defaults may have been set that
     # were not passed in by the caller, then call the DataManager
     source, concNameList, args, kwargs = PULSE_ANALYZER.configuration()
-    #LOGFUNC("Calling PulseAnalyzer_Set...\n")
     ret = DATAMGR.PulseAnalyzer_Set(source, concNameList, *args, **kwargs)
 
     if ret is True:
         # Success, set the status as active and no bad data
         PULSE_ANALYZER.setActive(True)
         PULSE_ANALYZER.clearNextDataBad()
-        #LOGFUNC("Pulse analyzer set\n")
     else:
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
-        LOGFUNC("Pulse analyzer set failed!")
+        LOGFUNC("pulseAnalyzerSet: failed!")
     return ret
 
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerStartRunning():
-    #LOGFUNC("*** entering pulseAnalyzerStartRunning()\n")
     return DATAMGR.PulseAnalyzer_StartRunning()
-    #ret = DATAMGR.PulseAnalyzer_StartRunning()
-    #LOGFUNC("Pulse analyzer started ret=%s\n" % ret)
-    #return ret
 
 
 @pulseAnalyzerMakeSafe
@@ -376,6 +368,7 @@ def pulseAnalyzerStartAddingData():
     LOGFUNC("Started adding data to pulse analyzer\n")
     return ret
 
+    
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerStopAddingData():
     ret = DATAMGR.PulseAnalyzer_StopAddingData()
@@ -385,12 +378,8 @@ def pulseAnalyzerStopAddingData():
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetDataReady():
-    #LOGFUNC("*** entering pulseAnalyzerGetDataReady()\n")
     return DATAMGR.PulseAnalyzer_GetDataReady()
-    #ret = DATAMGR.PulseAnalyzer_GetDataReady()
-    #LOGFUNC("pulseAnalyzerGetDataReady: ret=%s\n" % ret)
-    #return ret
-
+    
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerIsTriggeredStatus():
@@ -411,8 +400,6 @@ def pulseAnalyzerGetTimestamp():
 # Exceptions are handled specifically according to their type so the safe
 # exception wrapper decorator cannot be used here.
 def pulseAnalyzerReset():
-    #LOGFUNC("*** Entering pulseAnalyzerReset()\n")
-
     maxAttempts = 5
     nAttempts = 0
     delay = 0
@@ -429,19 +416,21 @@ def pulseAnalyzerReset():
                 done = True
             else:
                 delay = 2
-                LOGFUNC("pulseAnalyzerReset: PulseAnalyzer_Reset returned False\n")
+                if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                    LOGFUNC("pulseAnalyzerReset: PulseAnalyzer_Reset returned False\n")
 
         except CmdFIFO.RemoteException:
             # Most likely the DataManager was restarted so there is no pulse analyzer
             # Try to instantiate one and start it. We'll try maxAttempts times
             # and wait a bit in between each try...
-            #LOGFUNC("pulseAnalyzerReset: RemoteException\n")
-
             nAttempts += 1
-            LOGFUNC("pulseAnalyzerReset: RemoteException: nAttempts=%d\n" % nAttempts)
+            
+            if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                LOGFUNC("pulseAnalyzerReset: RemoteException: nAttempts=%d\n" % nAttempts)
 
             ret = _reinit_pulseAnalyzer()
-            #LOGFUNC("   pulseAnalyzerReset: restart pulse analyzer = %r\n" % ret)
+            if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                LOGFUNC("pulseAnalyzerReset: reinit pulse analyzer = %r\n" % ret)
 
             # we're done if this attempt succeeded
             if ret is True:
@@ -454,7 +443,8 @@ def pulseAnalyzerReset():
             # DataMgr is going down, can't attempt to instantiate the pulse analyzer
             # until it comes back up again. This data will be bad.
             # TODO: Wait several seconds and try to restart the pulse analyzer
-            LOGFUNC("pulseAnalyzerReset: ShutdownInProgress\n")
+            if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                LOGFUNC("pulseAnalyzerReset: ShutdownInProgress\n")
 
             # DataManager shutting down, allow some time to come back up
             delay = 8
@@ -462,7 +452,8 @@ def pulseAnalyzerReset():
         except Pyro.errors.ProtocolError:
             # DataMgr is not running.
             # TODO: Wait several seconds and try to restart the pulse analyzer
-            LOGFUNC("pulseAnalyzerReset: ProtocolError\n")
+            if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                LOGFUNC("pulseAnalyzerReset: ProtocolError\n")
 
             # DataManger is already down, should come back up in a few seconds
             delay = 5
@@ -470,7 +461,8 @@ def pulseAnalyzerReset():
         # since this is commented out any exception we didn't catch will be re-raised
         # after the finally code is executed
         #except Exception, err:
-        #    LOGFUNC("pulseAnalyzerReset: %r\n" % err)
+        #    if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+        #        LOGFUNC("pulseAnalyzerReset: %r\n" % err)
 
         finally:
             # bail if too many attempts; otherwise wait and try again
@@ -478,12 +470,16 @@ def pulseAnalyzerReset():
                 done = True
 
             if done is False and delay > 0:
-                LOGFUNC("pulseAnalyzerReset: attempting to restart pulse analyzer (n=%d)" % int(nAttempts))
+                if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                    LOGFUNC("pulseAnalyzerReset: attempting to restart pulse analyzer (n=%d)\n" % int(nAttempts))
                 sleep(delay)
 
     if ret is False:
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
+        
+    if nAttempts > 0:
+        LOGFUNC("pulseAnalyzerReset: restart (nAttempts=%d, success=%d)\n" % (int(nAttempts), ret))
 
     return ret
 
@@ -494,45 +490,25 @@ def _reinit_pulseAnalyzer():
     Return value: True on success
                   False if not successful
     """
-    LOGFUNC("_reinit_pulseAnalyzer\n")
+    if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+        LOGFUNC("_reinit_pulseAnalyzer\n")
 
     retVal = False
 
     try:
         source, concNameList, args, kwargs = PULSE_ANALYZER.configuration()
-
-        """
-        LOGFUNC("Calling PulseAnalyzer_Set: arguments\n")
-        LOGFUNC("source=%s\n" % source)
-        LOGFUNC("concNameList=%s\n" % concNameList)
-        
-        if args is not None:
-            LOGFUNC("  args=%s\n" % str(args))
-        else:
-            LOGFUNC("  args=None\n")
-
-        if kwargs is not None:
-            LOGFUNC("  kwargs:\n")
-            for key in kwargs:
-                LOGFUNC("    %s = %s\n" % (key, str(kwargs[key])))
-        else:
-            LOGFUNC("  kwargs=None\n")
-        """
-
-        #LOGFUNC("Calling PulseAnalyzer_Set...\n")
         DATAMGR.PulseAnalyzer_Set(source, concNameList, *args, **kwargs)
-        #LOGFUNC("    _reinit_pulseAnalyzer: new pulse analyzer set\n")
 
         # now start it running and reset it
         ret = pulseAnalyzerStartRunning()
 
         if ret is True:
             try:
-                # must call DataMgr function directly since this function
-                # (_reinit_pulseAnalyzer) is called from pulseAnalyzerReset(),
-                # to avoid a potential infinite loop
+                # must call DataMgr function directly to avoid a potential infinite loop
                 ret = DATAMGR.PulseAnalyzer_Reset()
-                #LOGFUNC("    _reinit_pulseAnalyzer: PulseAnalyzer_Reset returned ret=%s\n" % ret)
+                
+                if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                    LOGFUNC("_reinit_pulseAnalyzer: PulseAnalyzer_Reset returned ret=%s\n" % ret)
 
                 if ret is True:
                     retVal = True
@@ -543,17 +519,20 @@ def _reinit_pulseAnalyzer():
                     PULSE_ANALYZER.setNextDataBad()
 
             except CmdFIFO.RemoteException:
-                LOGFUNC("    _reinit_pulseAnalyzer: RemoteException on PulseAnalyzer_Reset\n")
+                if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                    LOGFUNC("_reinit_pulseAnalyzer: RemoteException on PulseAnalyzer_Reset\n")
                 PULSE_ANALYZER.setActive(False)
                 PULSE_ANALYZER.setNextDataBad()
 
             except CmdFIFO.ShutdownInProgress:
-                LOGFUNC("    _reinit_pulseAnalyzer: ShutdownInProgress on PulseAnalyzer_Reset\n")
+                if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                    LOGFUNC("_reinit_pulseAnalyzer: ShutdownInProgress on PulseAnalyzer_Reset\n")
                 PULSE_ANALYZER.setActive(False)
                 PULSE_ANALYZER.setNextDataBad()
 
             except Pyro.errors.ProtocolError:
-                LOGFUNC("    _reinit_pulseAnalyzer: ProtocolError on PulseAnalyzer_Reset\n")
+                if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+                    LOGFUNC("_reinit_pulseAnalyzer: ProtocolError on PulseAnalyzer_Reset\n")
                 PULSE_ANALYZER.setActive(False)
                 PULSE_ANALYZER.setNextDataBad()
 
@@ -562,21 +541,22 @@ def _reinit_pulseAnalyzer():
     except CmdFIFO.RemoteException, err:
         # Caught the exception, most likely there is no pulse analyzer.
         # We'll try to instantiate it again later with the cached params.
-        LOGFUNC("  _reinit_pulseAnalyzer: RemoteException: %r\n" % err)
+        if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+            LOGFUNC("_reinit_pulseAnalyzer: RemoteException: %r\n" % err)
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
         retVal = False
 
     except CmdFIFO.ShutdownInProgress, err:
-        # Caught the exception, DataMgr is being shutdown.
-        # We'll try to instantiate the pulse analyzer later using the cached params.
-        LOGFUNC("  _reinit_pulseAnalyzer: ShutdownInProgress: %r\n" % err)
+        if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+            LOGFUNC("_reinit_pulseAnalyzer: ShutdownInProgress: %r\n" % err)
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
         retVal = False
 
     except Pyro.errors.ProtocolError:
-        LOGFUNC("  _reinit_pulseAnalyzer: ProtocolError\n")
+        if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
+            LOGFUNC("_reinit_pulseAnalyzer: ProtocolError\n")
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
         retVal = False
@@ -591,51 +571,38 @@ def pulseAnalyzerResetIfNotActive():
     Return value: True if already active or successfully reset
                   False if not active and reset failed
     """
-    LOGFUNC("*** Entering pulseAnalyzerResetIfNotActive()\n")
-    
-    # state will be None if there is no pulse analyzer or the
-    # DataManager is shutting down/not running
+    # status=None when no pulse analyzer or DataManager shutting down/not running
     status = pulseAnalyzerGetStatus()
     ret = True      # assume already running
 
-    if status is None:
-        ret = pulseAnalyzerResets()
-        
+    #LOGFUNC("\npulseAnalyzerResetIfNotActive: status=%s\n" % str(status))
+
+    if not status:
+        LOGFUNC("\nNo pulse analyzer! Attempting to reset\n")
+        ret = pulseAnalyzerReset()
+
     return ret
 
+    
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetStatistics():
-    #LOGFUNC("*** entering pulseAnalyzerGetStatistics()\n")
     return DATAMGR.PulseAnalyzer_GetStatistics()
-    #ret = DATAMGR.PulseAnalyzer_GetStatistics()
-    #LOGFUNC("pulseAnalyzerGetStatistics: ret=%s\n" % ret)
-    #return ret
 
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetPulseStartEndTime():
-    #LOGFUNC("*** entering pulseAnalyzerGetPulseStartEndTime()\n")
     return DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
-    #ret = DATAMGR.PulseAnalyzer_GetPulseStartEndTime()
-    #LOGFUNC("pulseAnalyzerGetPulseStartEndTime: ret=%s\n" % ret)
-    #return ret
 
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetStatus():
-    #LOGFUNC("*** entering pulseAnalyzerGetStatus()\n")
     return DATAMGR.PulseAnalyzer_GetStatus()
-    #ret = DATAMGR.PulseAnalyzer_GetStatus()
-    #LOGFUNC("pulseAnalyzerGetStatus: ret=%s\n" % ret)
-    #return ret
 
 
-def pulseAnalyzerIsDataBad():
-    #LOGFUNC("pulseAnalyzerIsDataBad\n")
+def pulseAnalyzerIsDataGood():
     isBad = PULSE_ANALYZER.isNextDataBad()
     PULSE_ANALYZER.clearNextDataBad()
-    #LOGFUNC("pulseAnalyzerIsDataBad: isBad=%s\n" % isBad)
-    return isBad
+    return not isBad
 
 
 ##########################
