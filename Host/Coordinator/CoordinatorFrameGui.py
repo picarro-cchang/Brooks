@@ -9,6 +9,8 @@ import wx
 
 class CoordinatorFrameGui(wx.Frame):
     def __init__(self, hasSampleDescr, hasSampleNum, useSeptum, hasPause, paramTupleList, numDispParams, *args, **kwds):
+        # Note: If you add params to this method, please update the App class below
+        #       to support UI testing/development.
         # begin wxGlade: CoordinatorFrameGui.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
@@ -21,15 +23,15 @@ class CoordinatorFrameGui(wx.Frame):
         self.window_1_pane_2 = wx.Panel(self.window_1, wx.ID_ANY, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
         self.window_1_pane_1 = wx.Panel(self.window_1, wx.ID_ANY, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
         self.statusbar = self.CreateStatusBar(1, 0)
-        self.newFileButton = wx.Button(self.panel_1, -1, "New output file")
-        self.label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Filename")
+        self.label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Filename:")
         self.filenameTextCtrl = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
+        self.newFileButton = wx.Button(self.panel_1, -1, "New Output File...")
         if self.hasSampleDescr:
-            self.loadSampleDescrButton = wx.Button(self.panel_1, -1, "Load Sample Descriptions")
+            self.loadSampleDescrButton = wx.Button(self.panel_1, -1, "Load Sample Descriptions...")
         else:
             self.loadSampleDescrButton = None
         if hasSampleNum:
-            self.labelChangeSampleNum = wx.StaticText(self.panel_1, -1, "Run Sample Number", style=wx.ALIGN_CENTRE)
+            self.labelChangeSampleNum = wx.StaticText(self.panel_1, -1, "Run sample number:", style=wx.ALIGN_CENTRE)
             self.textCtrlChangeSampleNum = wx.TextCtrl(self.panel_1, -1, "1", style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
         else:
             self.labelChangeSampleNum = None
@@ -43,10 +45,10 @@ class CoordinatorFrameGui(wx.Frame):
             self.frameMenubar = wx.MenuBar()
             menuItem = wx.Menu()
             self.idPause = wx.NewId()
-            self.idResume = wx.NewId()               
-            menuItem.Append(self.idPause, "Pause", "", wx.ITEM_NORMAL)
-            menuItem.Append(self.idResume, "Resume", "", wx.ITEM_NORMAL)
-            self.frameMenubar.Append(menuItem, "Control")
+            self.idResume = wx.NewId()
+            menuItem.Append(self.idPause, "&Pause", "", wx.ITEM_NORMAL)
+            menuItem.Append(self.idResume, "&Resume", "", wx.ITEM_NORMAL)
+            self.frameMenubar.Append(menuItem, "&Control")
             self.SetMenuBar(self.frameMenubar)
         
         self.paramLabelList = []
@@ -59,7 +61,7 @@ class CoordinatorFrameGui(wx.Frame):
         self.fileDataListCtrl = wx.ListCtrl(self.window_1_pane_1, wx.ID_ANY, style=wx.LC_REPORT|wx.LC_VRULES|wx.SUNKEN_BORDER)
         self.label_2 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Log")
         self.logTextCtrl = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "", style=wx.TE_MULTILINE)
-        self.label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Sample Description (select or enter new description)")
+        self.label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Sample description (select or enter new description):")
         self.sampleDescrComboBox = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN)
         self.manualButton = wx.Button(self.panel_1, -1, "Injected")
 
@@ -106,10 +108,10 @@ class CoordinatorFrameGui(wx.Frame):
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_6.Add(self.newFileButton, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 10)
-        sizer_2.Add(self.label_1, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
-        sizer_2.Add(self.filenameTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_2.Add(self.label_1, 0, wx.LEFT|wx.TOP|wx.ALIGN_LEFT, 10)
+        sizer_2.Add(self.filenameTextCtrl, 1, wx.LEFT|wx.TOP|wx.ALIGN_LEFT, 10)
         sizer_6.Add(sizer_2, 0, wx.EXPAND, 0)
+        sizer_6.Add(self.newFileButton, 0, wx.ALL|wx.ALIGN_LEFT, 10)
         sizer_5.Add(sizer_6, 1, wx.EXPAND, 0)
 
         for idx in range(len(self.paramLabelList)):
@@ -119,14 +121,16 @@ class CoordinatorFrameGui(wx.Frame):
             sizer_5.Add(sizerParam, 0, wx.EXPAND, 10) 
         
         if self.hasSampleDescr:
-            sizer_5.Add(self.loadSampleDescrButton, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
+            sizer_5.Add(self.loadSampleDescrButton, 0, wx.LEFT|wx.TOP|wx.ALIGN_LEFT, 10)
         if self.hasSampleNum:    
             sizerChangeSampleNum = wx.BoxSizer(wx.VERTICAL)
             sizerChangeSampleNum.Add(self.labelChangeSampleNum, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 10)
             sizerChangeSampleNum.Add(self.textCtrlChangeSampleNum, 0, wx.ALL|wx.EXPAND, 10)            
             sizer_5.Add(sizerChangeSampleNum, 0, wx.EXPAND, 10) 
         if self.useSeptum:
-            sizer_5.Add(self.changeSeptumButton, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
+            sizer_useSeptum = wx.BoxSizer(wx.HORIZONTAL)
+            sizer_useSeptum.Add(self.changeSeptumButton, 0, wx.RIGHT|wx.ALIGN_RIGHT, 10)
+            sizer_5.Add(sizer_useSeptum, 0, wx.LEFT|wx.TOP|wx.ALIGN_LEFT, 10)
         sizer_1.Add(sizer_5, 0, wx.BOTTOM|wx.EXPAND, 5)
         sizer_8.Add(self.fileDataListCtrl, 1, wx.EXPAND, 5)
         self.window_1_pane_1.SetSizer(sizer_8)
@@ -138,7 +142,7 @@ class CoordinatorFrameGui(wx.Frame):
         sizer_7.Add(self.label_3, 0, wx.LEFT, 5)
         sizer_7.Add(self.sampleDescrComboBox, 1, wx.ALL|wx.EXPAND, 5)
         sizer_4.Add(sizer_7, 1, wx.EXPAND, 0)
-        sizer_4.Add(self.manualButton, 0, wx.ALL|wx.EXPAND, 2)
+        sizer_4.Add(self.manualButton, 0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5)
         sizer_1.Add(sizer_4, 0, wx.EXPAND, 0)
         self.panel_1.SetSizer(sizer_1)
         sizer_3.Add(self.panel_1, 1, wx.EXPAND, 0)
@@ -177,11 +181,83 @@ class CoordinatorFrameGui(wx.Frame):
 
 # end of class CoordinatorFrameGui
 
-
+"""
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    coordinatorFrame = CoordinatorFrameGui(None, wx.ID_ANY, "")
+
+    # hasSampleDescr, hasSampleNum, useSeptum, hasPause, paramTupleList, numDispParams
+    #coordinatorFrame = CoordinatorFrameGui(None, wx.ID_ANY, "")
+    coordinatorFrame = CoordinatorFrameGui(True, True, True, False, None, 0)
     app.SetTopWindow(coordinatorFrame)
     coordinatorFrame.Show()
     app.MainLoop()
+"""
+
+
+class App(wx.App):
+    def __init__(self, redirect=True, filename=None,
+                 hasSampleDescr=True,
+                 hasSampleNum=True,
+                 useSeptum=True,
+                 hasPause=False,
+                 paramTupleList=None,
+                 numDispParams=0):
+
+        self.hasSampleDescr = hasSampleDescr
+        self.hasSampleNum = hasSampleNum
+        self.useSeptum = useSeptum
+        self.hasPause = hasPause
+
+        if paramTupleList is not None:
+            self.paramTupleList = paramTupleList
+        else:
+            self.paramTupleList = ('param1', 'param2')
+
+        self.numDispParams = numDispParams
+
+        wx.App.__init__(self, redirect, filename)
+
+    def OnInit(self):
+        wx.InitAllImageHandlers()
+        self.frame = CoordinatorFrameGui(self.hasSampleDescr,
+                                         self.hasSampleNum,
+                                         self.useSeptum,
+                                         self.hasPause,
+                                         self.paramTupleList,
+                                         self.numDispParams,
+                                         parent=None)
+        self.frame.Show()
+        self.SetTopWindow(self.frame)
+
+        return True
+
+
+def main():
+    # wx.PySimpleApp() is being deprecated
+    #app = wx.PySimpleApp()
+    #TestFrame().Show()
+
+    # Set this to False so output goes to cmd window it was run from
+    # True opens a new cmd window for the output.
+    redirect = False
+
+    # Params passed on to CoordinatorFrameGui
+    paramTupleList = None
+    paramTupleList = ('Line', 'Analysis', 'Time Code')
+    numDispParams = 3
+
+    app = App(redirect=redirect,
+              hasSampleDescr=True,
+              hasSampleNum=True,
+              useSeptum=True,
+              hasPause=True,
+              paramTupleList=paramTupleList,
+              numDispParams=numDispParams)
+    app.MainLoop()
+
+if __name__ == "__main__":
+    main()
+
+
+
