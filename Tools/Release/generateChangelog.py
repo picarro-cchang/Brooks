@@ -25,8 +25,6 @@ REPO = 'trunk'
 
 CONFIG_BASE = 's:/CrdsRepositoryNew/trunk/G2000/Config'
 
-PRODUCTS = 'products.json'
-
 
 def _generateChangelogGit(logFp, startTag, endTag):
     """
@@ -86,18 +84,22 @@ Generates a raw changelog for the specified tags.
     parser.add_option('--end', dest='endTag', metavar='END_TAG',
                       default='', help=('The tag to end entry generation '
                                           'with.'))
+    parser.add_option('--product', dest='product', metavar='PRODUCT', default=None, help=('The product line to generate '
+                                                                                         'the release for.'))
 
     options, _ = parser.parse_args()
 
 
     reposToQuery = [os.path.join(CONFIG_BASE, 'CommonConfig')]
+    
+    productConfigs = "%s.json" % options.product
 
-    if not os.path.isfile(PRODUCTS):
-        print "'%s' is missing!" % PRODUCTS
+    if not os.path.isfile(productConfigs):
+        print "'%s' is missing!" % productConfigs
         sys.exit(1)
 
     products = {}
-    with open(PRODUCTS, 'rb') as prodsFp:
+    with open(productConfigs, 'rb') as prodsFp:
         products.update(json.load(prodsFp))
 
     for p in products:
