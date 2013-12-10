@@ -7,9 +7,10 @@ import Queue
 import os
 import sys
 import time
+import traceback
 
 from numpy import *
-from scipy.optimize import leastsq
+from scipy.optimize import leastsq, brent
 import itertools
 
 NOT_A_NUMBER = 1e1000/1e1000
@@ -241,6 +242,11 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
     phi = asarray(phi)
     theta = asarray(theta)
     data = concatenate((cos(theta),sin(theta)))
+    # We need to have enough data from at least 3 quadrants before it is safe to use the full model
+    # With less data than that, we only fit p0, forcing p1 and p2 to be zero 
+    hist, bin_edges = histogram(theta,asarray([-pi,-0.5*pi,0,0.5*pi,pi]))
+    useFull = sum(hist > 20)>=3
+    if useFull:
         def mock(params,phi):    # Generates mock data
             p0,p1,p2 = params
             th = p0 + arctan2(p2+sin(phi),p1+cos(phi))
@@ -266,6 +272,17 @@ def calCompass(phi,theta,params0=[0.0,0.0,0.0]):
             return x
         else:
             raise RuntimeError("Calibration failed")
+    else: # Just use a one-dimensional model with p1=p2=0
+        def mock(p0,phi):    # Generates mock data
+            th = p0 + phi
+            return concatenate((cos(th),sin(th)))
+        def fun(p0):    # Function to be minimized
+            return sum((mock(p0,phi)-data)**2)
+        x = brent(fun, brack=(-pi,0,pi))
+        pfine = linspace(-pi,pi,501);
+        ctst = mock(x,pfine)
+        n = len(ctst)
+        return [x, 0, 0]
         
 # First generate a true wind source that does no averaging but simply subtracts the vehicle velocity
 #  from the anemometer velocity. This is done in the frame of the anemometer, which is nominally aligned
@@ -381,7 +398,8 @@ def trueWindSource(derivCdataSource,distFromAxle,speedFactor=1.0):
                     rot = -arctan2(iCorr,rCorr)
                     print "Rotation: %10.2f degrees %10.2f degrees, Scale:%10.4f" % ((180/pi)*rot,(180/pi)*p0,num/den)
                 except:
-                    pass
+                    print traceback.format_exc()
+                    
         yield CalibCdataTuple(*(d+(tVel,[p0,p1,p2],[rCorr,iCorr]))) 
 
 # Calculate the statistics of the wind velocity by averaging the northerly and easterly components of the wind velocity
