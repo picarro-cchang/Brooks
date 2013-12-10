@@ -203,7 +203,7 @@ define(function(require, exports, module) {
 
     function makePdfReport(subreport, params) {
         var figureComponents = [ "facilities", "paths", "fovs", "wedges", "tokens", "peaks", "markers", "analyses", "submapGrid" ];
-        var id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
+        var i, id, neCorner = REPORT.settings.get("neCorner"), swCorner = REPORT.settings.get("swCorner");
         var title = REPORT.settings.get("title");
         var startPage = REPORT.settings.get("startPage");
         var name = params.name;
@@ -219,17 +219,17 @@ define(function(require, exports, module) {
         
         // $("#getReportApp").append('<h1 style="text-align:center;">' + title + '</h1>');
 
-        if (subreport.tables.get("analysesTable")) {
-            id = 'id_analysesTable';
-            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_analyses_table + '</h2>');
-            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
-            new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
-        }
         if (subreport.tables.get("peaksTable")) {
             id = 'id_peaksTable';
             $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_peaks_table + '</h2>');
             $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
             new REPORT.PeaksTableView({el: $('#' + id), dataTables: false});
+        }
+        if (subreport.tables.get("analysesTable")) {
+            id = 'id_analysesTable';
+            $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_analyses_table + '</h2>');
+            $("#getReportApp").append('<div id="' + id + '" class="reportTable"; style="position:relative;"/>');
+            new REPORT.AnalysesTableView({el: $('#' + id), dataTables: false});
         }
         if (subreport.tables.get("runsTable")) {
             id = 'id_runsTable';
@@ -248,10 +248,12 @@ define(function(require, exports, module) {
         var settingsTableBottom = [];
         settingsTableTop.push('<table class="table table-condensed table-fmt1">');
         settingsTableTop.push('<thead><tr>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.figureNumber + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.swCorner + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.neCorner + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.minPeakAmpl + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.exclusionRadius + '</th>');
+        settingsTableTop.push('<th>' + P3TXT.getReport.baseType + '</th>');
         // Hide facilities and markers tables
         // settingsTableTop.push('<th>' + P3TXT.getReport.facilities + '</th>');
         settingsTableTop.push('<th>' + P3TXT.getReport.paths + '</th>');
@@ -263,19 +265,18 @@ define(function(require, exports, module) {
         settingsTableTop.push('<th>' + P3TXT.getReport.analyses + '</th>');
         settingsTableTop.push('</tr></thead>');
         settingsTableTop.push('<tbody>');
-        settingsTableTop.push('<tr>');
-        settingsTableTop.push('<td>' + swCorner[0].toFixed(5) + ', ' + swCorner[1].toFixed(5) + '</td>');
-        settingsTableTop.push('<td>' + neCorner[0].toFixed(5) + ', ' + neCorner[1].toFixed(5) + '</td>');
-        settingsTableTop.push('<td>' + REPORT.settings.get("peaksMinAmp").toFixed(2) + '</td>');
-        settingsTableTop.push('<td>' + REPORT.settings.get("exclRadius").toFixed(0) + '</td>');
-        settingsTableBottom.push('</tr>');
         settingsTableBottom.push('</tbody></table>');
 
-        
-        for (var i=0; i<subreport.figures.models.length; i++) {
+        var settingsTableMid = [];
+        for (i=0; i<subreport.figures.models.length; i++) {
             var pageComponent = subreport.figures.models[i];
-            var layers = [];
-            var settingsTableMid = [];
+            settingsTableMid.push('<tr>');
+            settingsTableMid.push('<td>' + (i+1) + '</td>');
+            settingsTableMid.push('<td>' + swCorner[0].toFixed(5) + ', ' + swCorner[1].toFixed(5) + '</td>');
+            settingsTableMid.push('<td>' + neCorner[0].toFixed(5) + ', ' + neCorner[1].toFixed(5) + '</td>');
+            settingsTableMid.push('<td>' + REPORT.settings.get("peaksMinAmp").toFixed(2) + '</td>');
+            settingsTableMid.push('<td>' + REPORT.settings.get("exclRadius").toFixed(0) + '</td>');
+            settingsTableMid.push('<td>' + pageComponent.get("baseType") + '</td>');
             // Hide facilities and markers tables
             // settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("facilities")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("paths")) + '</td>');
@@ -285,11 +286,16 @@ define(function(require, exports, module) {
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("wedges")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("fovs")) + '</td>');
             settingsTableMid.push('<td>' + boolToIcon(pageComponent.get("analyses")) + '</td>');
-            
-            /* COMMENTING OUT SETTINGS TABLE */
+            settingsTableBottom.push('</tr>');
+        }
 
-            // $("#getReportApp").append('<div class="reportTable"; style="position:relative;">' +
-            //    settingsTableTop.join("") + settingsTableMid.join("") + settingsTableBottom.join("") + '</div>');
+        $("#getReportApp").append('<h2 class="reportTableHeading">' + P3TXT.getReport.heading_settings_table + '</h2>');
+        $("#getReportApp").append('<div class="reportTable"; style="position:relative;">' +
+            settingsTableTop.join("") + settingsTableMid.join("") + settingsTableBottom.join("") + '</div>');
+        
+        for (i=0; i<subreport.figures.models.length; i++) {
+            var pageComponent = subreport.figures.models[i];
+            var layers = [];
 
             layers.push(pageComponent.get("baseType"));
             for (var j=0; j<figureComponents.length; j++) {

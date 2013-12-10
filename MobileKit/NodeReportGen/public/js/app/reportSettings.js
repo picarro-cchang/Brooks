@@ -23,7 +23,8 @@ define(function(require, exports, module) {
                     "fovNWindow": 10,
                     "peaksMinAmp": 0.1,
                     "timezone": "GMT",
-                    "startPage": 1
+                    "startPage": 1,
+                    "wedgeRadius": 50.0
                 };
             }
         });

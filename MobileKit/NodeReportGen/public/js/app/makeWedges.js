@@ -18,6 +18,7 @@ define(function(require, exports, module) {
     function makeWedges(report) {
         var i, x, xy, y;
         var color, ctxWedges,lat, lng, peaks, run, where;
+        var wedgeRadius = REPORT.settings.get("wedgeRadius");
 
         peaks = report.peaksData;
         // Draw the wind wedges on a canvas
@@ -39,7 +40,7 @@ define(function(require, exports, module) {
                 x = xy[0], y = xy[1];
                 ctxWedges.fillStyle = "rgba(" + wedgeColor[0] + "," + wedgeColor[1] + "," + wedgeColor[2] + ",0.5)";
                 if (report.inView(xy)) {
-                    var radius = 50.0 / report.mpp;
+                    var radius = wedgeRadius / report.mpp;
                     var minBearing, maxBearing;
                     if (typeof(windMean) === "number" && typeof(windSdev) === "number") {
                         if (windSdev < 90.0) {

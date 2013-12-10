@@ -40,8 +40,10 @@ define(function(require, exports, module) {
                 this.contexts = {'analyses': null, 'none': null, 'map': null, 'satellite': null, 'peaks': null,
                                  'markers': null, 'tokens': null, 'fovs': null, 'paths': null, 'wedges': null,
                                  'submapGrid': null, 'facilities': null };
-                this.padX = 30;
-                this.padY = 75;
+                this.padX = null;
+                this.padY = null;
+                this.minPadX = 30;
+                this.minPadY = 75;
                 this.submapLinks = {};
                 this.runsData = {};
                 this.surveysData = {};
@@ -78,6 +80,7 @@ define(function(require, exports, module) {
             },
             setupReport: function () {
                 var cosLat, deltaLat, deltaLng, fac, mppx, mppy, Xp, Yp;
+                var wedgeRadius = REPORT.settings.get("wedgeRadius");
                 this.minLat = REPORT.settings.get("swCorner")[0];
                 this.minLng = REPORT.settings.get("swCorner")[1];
                 this.maxLat = REPORT.settings.get("neCorner")[0];
@@ -104,6 +107,8 @@ define(function(require, exports, module) {
                 mppx = Xp / (deltaLng * this.nx);
                 mppy = Yp / (deltaLat * this.ny);
                 this.mpp = 0.5 * (mppx + mppy);
+                this.padX = Math.max(this.minPadX, 1.05*wedgeRadius/this.mpp);
+                this.padY = Math.max(this.minPadY, 1.05*wedgeRadius/this.mpp);
 
                 // Transformation to pixels
                 this.xform = function (lng, lat) {
