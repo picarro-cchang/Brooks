@@ -25,13 +25,14 @@ import getopt
 import csv
 import re
 import threading
-import pprint
+#import pprint
 
 from Queue import Queue
 
 from CoordinatorFrameGui import CoordinatorFrameGui
 from CoordinatorParamGui import InitialParamDialogGui
-from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
+#from CoordinatorStateMachine import State, StateMachine, OK, EXCEPTION, TIMEOUT
+from CoordinatorStateMachine import StateMachine, OK, EXCEPTION
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_COORDINATOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -359,7 +360,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def onLoadSampleDescriptions(self,event):
         try:
-            print "[onLoadSampleDescriptions]"
+            #print "[onLoadSampleDescriptions]"
             if "Trays" in self.config:
                 trayNames = self.config["Trays"].values()
                 for tray in trayNames:
@@ -459,21 +460,22 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.enableManualButton()
 
     def onWriteHeadings(self, paramTupleList=[]):
-        print '[onWriteHeadings]'
+        #print '[onWriteHeadings]'
         notOpen = self.saveFp == None
         if notOpen:
-            print "  Open '%s' for append..." % self.saveFileName
+            #print "  Open '%s' for append..." % self.saveFileName
             self.saveFp = file(self.saveFileName,"ab")
         else:
-            print "  File '%s' is already open" % self.saveFileName
+            #print "  File '%s' is already open" % self.saveFileName
+            pass
 
         try:
             if len(paramTupleList) > 0:
-                print "  paramTupleList ="
-                pprint.pprint(paramTupleList)
+                #print "  paramTupleList ="
+                #pprint.pprint(paramTupleList)
 
                 if self.writeParamsToHeader:
-                    print '  Writing user param headers'
+                    #print '  Writing user param headers'
 
                     # Record the user editable parameters
                     userParams = []
@@ -488,13 +490,13 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.saveFp.writelines(userParams)
 
             writer = csv.writer(self.saveFp)
-            print "  writer="
-            pprint.pprint(writer)
-            print ""
+            #print "  writer="
+            #pprint.pprint(writer)
+            #print ""
 
-            print "  self.Config[\"Output\"]="
-            pprint.pprint(self.config["Output"])
-            print ""
+            #print "  self.Config[\"Output\"]="
+            #pprint.pprint(self.config["Output"])
+            #print ""
 
             head = []
             for k in self.config["Output"]:
@@ -505,9 +507,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 else:
                     raise ValueError("Format %s does not have a valid width specification" % f.strip())
 
-            print 'Preparing to insert columns, head='
-            pprint.pprint(head)
-            print ""
+            #print 'Preparing to insert columns, head='
+            #pprint.pprint(head)
+            #print ""
 
             writer.writerow(head)
             for i,h in enumerate(head):
@@ -553,7 +555,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
         while not self.replyQueue.empty(): self.replyQueue.get()
 
     def startStateMachineThread(self, paramTupleList=None):
-        print "[startStateMachineThread]"
+        #print "[startStateMachineThread]"
         if len(paramTupleList) > 0:
             dlg = InitialParamDialogGui(paramTupleList, None, -1, "")
             getParamVals = (dlg.ShowModal() == wx.ID_OK)
@@ -565,7 +567,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                 if idx < self.numDispParams:
                     self.setParamText(idx, self.guiParamDict[dlg.nameList[idx]])
             dlg.Destroy()
-            print "  self.guiParamDict=", self.guiParamDict
+            #print "  self.guiParamDict=", self.guiParamDict
 
         self.onWriteHeadings(paramTupleList)
 
@@ -652,12 +654,12 @@ class CoordinatorFrame(CoordinatorFrameGui):
             if len(self.outputFileDataList) >= self.maxNumLines:
                 self.onNewFile(None)
         if self.rewriteOutputFile: # Descriptions have changed, rewrite file
-            print '[onIdle: rewriting output file]'
+            #print '[onIdle: rewriting output file]'
             self.fileDataListCtrl.ClearAll()
 
             # First we need to open the file so it gets rewritten
             # onWriteHeadings() leaves it open
-            print "  opening %s for write" % self.saveFileName
+            #print "  opening %s for write" % self.saveFileName
             self.saveFp = file(self.saveFileName,"wb")
 
             self.onWriteHeadings()

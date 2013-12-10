@@ -83,7 +83,7 @@ import serial
 import math
 import time
 import traceback
-import string
+#import string
 from inspect import isclass
 from collections import deque
 import ScriptRunner
@@ -105,7 +105,8 @@ from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SafeFile import SafeFile, FileExists
+#from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.SafeFile import FileExists
 from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.Listener import Listener
@@ -190,6 +191,16 @@ class CommandError(DataManagerError):
     """Root of all exceptions caused by a bad/inappropriate command."""
 class InvalidModeSelection(DataManagerError):
     """An invalid mode was selected."""
+
+class PulseAnalyzerNoneError(Exception):
+    """Exception for Pulse Analyzer is None exception"""
+    pass
+
+class PulseAnalyzerBufferEmptyError(Exception):
+    """Exception for Pulse Analyzer empty buffer exception"""
+    pass
+
+
     ####
     ## Classes...
     ####
@@ -820,6 +831,9 @@ class DataManager(object):
         if name in self.InstrData:
             self.InstrData[name] = target
 
+    ###############################
+    ## Pulse Analyzer RPC functions
+    ###############################
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0],
                               thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
@@ -831,123 +845,136 @@ class DataManager(object):
                                                timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
             self.runPulseAnalyzer = False
             self.addToPulseAnalyzer = False
-            return "OK"
+            return True
         except Exception, err:
+            print "RPC_PulseAnalyzer_Set: Exception: err=", err
             return err
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartRunning(self):
         # Run pulse analyzer with state machine
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
         self.pulseAnalyzer.resetAnalyzer()
         self.runPulseAnalyzer = True
         self.addToPulseAnalyzer = False
-        return "OK"
+        return True
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopRunning(self):
         # Stop pulse analyzer with state machine
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
         self.runPulseAnalyzer = False
-        return "OK"
+        return True
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartAddingData(self):
         # Manually add data into pulse analyzer buffer
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
         self.pulseAnalyzer.resetAnalyzer()
         self.addToPulseAnalyzer = True
         self.runPulseAnalyzer = False
-        return "OK"
+        return True
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopAddingData(self):
         # Stop manually adding data into pulse analyzer buffer
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
         self.addToPulseAnalyzer = False
-        return "OK"
+        return True
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetOutput(self):
         """Returns the result list in the format of [status, pulseFinished, concBufferDict].
-        It won't clear the pulse anlayzer buffer.
+        It won't clear the pulse analyzer buffer.
         """
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getOutput()
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        return self.pulseAnalyzer.getOutput()
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetTimestamp(self):
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getTimestamp()
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        return self.pulseAnalyzer.getTimestamp()
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetDataReady(self):
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getDataReady()
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        return self.pulseAnalyzer.getDataReady()
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_IsTriggeredStatus(self):
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.isTriggeredStatus()
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        return self.pulseAnalyzer.isTriggeredStatus()
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_Reset(self):
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            self.pulseAnalyzer.resetAnalyzer()
-            return "OK"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        self.pulseAnalyzer.resetAnalyzer()
+        return True
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatistics(self):
         """Retrieve statistics of data in pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getStatistics()
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        return self.pulseAnalyzer.getStatistics()
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetPulseStartEndTime(self):
+        print "RPC_PulseAnalyzer_GetPulseStartEndTime"
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getPulseStartEndTime()
+            print "RPC_PulseAnalyzer_GetPulseStartEndTime: pulseAnalyzer=None"
+            Log("RPC_PulseAnalyzer_GetPulseStartEndTime: pulseAnalyzer=None!!\n")
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
+        return self.pulseAnalyzer.getPulseStartEndTime()
+
+    #
     # Below pulse analyzer functions are used by Command Interface
+    #
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetBuffer(self):
         """Get every analysis output from pulse analyzer buffer. This will also clear the whole buffer"""
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            if len(self.pulseBuffer) == 0:
-                return "Pulse buffer empty"
-            self.pulseBufferLock.acquire()
-            ret = self.pulseBuffer
-            self.pulseBuffer = []
-            self.pulseBufferLock.release()
-            return ret
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        if len(self.pulseBuffer) == 0:
+            raise PulseAnalyzerBufferEmptyError("Pulse buffer empty")
+
+        self.pulseBufferLock.acquire()
+        ret = self.pulseBuffer
+        self.pulseBuffer = []
+        self.pulseBufferLock.release()
+        return ret
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetBufferFirst(self):
         """Get the first pulse analysis data from pulse analyzer buffer. It will also remove this data from the buffer"""
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
         else:
             if len(self.pulseBuffer) == 0:
-                return "Pulse buffer empty"
+                raise PulseAnalyzerBufferEmptyError("Pulse buffer empty")
+
             self.pulseBufferLock.acquire()
             try:
                 ret = self.pulseBuffer[0]
@@ -956,26 +983,30 @@ class DataManager(object):
                 pass
             finally:
                 self.pulseBufferLock.release()
+
             return ret
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_ClearBuffer(self):
         """Clear all the data in the internal pulse analyzer buffer"""
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            self.pulseBufferLock.acquire()
-            self.pulseBuffer = []
-            self.pulseBufferLock.release()
-            return "OK"
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
+
+        self.pulseBufferLock.acquire()
+        self.pulseBuffer = []
+        self.pulseBufferLock.release()
+        return True
 
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatus(self):
         if self.pulseAnalyzer == None:
-            return "No Pulse Analyzer"
-        else:
-            return self.pulseAnalyzer.getStatus()
+            raise PulseAnalyzerNoneError("No Pulse Analyzer")
 
+        return self.pulseAnalyzer.getStatus()
+
+    #==============================
+    # local PulseAnalyzer functions
+    #==============================
     def _AddToPulseBuffer(self, pulseData):
         self.pulseBufferLock.acquire()
         try:
@@ -987,6 +1018,9 @@ class DataManager(object):
         finally:
             self.pulseBufferLock.release()
 
+    ###################################
+    ## Measurement buffer RPC functions
+    ###################################
     @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Set(self, source, colList, bufSize):
         """Set up an internal measurement buffer for the Coordinator"""
