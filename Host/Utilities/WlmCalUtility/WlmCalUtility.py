@@ -80,7 +80,7 @@ class Model(object):
         """Specify a listener function that is called when property "propName" is assigned a value.
            The listener is passed the value which is assigned to propName"""
         if propName not in self.__class__.propNames:
-            raise ValueError("No such property")
+            raise ValueError("No such property '%s'" % propName)
         listeners = object.__getattribute__(self, "listeners")
         if propName not in listeners:
             listeners[propName] = []
@@ -110,8 +110,9 @@ class Model(object):
 class WlmCalModel(Model):
     propNames = [ "etalon_1", "etalon_1_dark", "reference_1", "reference_1_dark", 
                    "etalon_2", "etalon_2_dark", "reference_2", "reference_2_dark", 
-                   "ratio_1", "ratio_2", "center_1", "center_2", "scale_1", "scale_2", 
-                   "phase" ]
+                   "ratio_1", "ratio_2", "center_1", "center_2",
+                   "scale_1", "scale_2", "norm_scale_1", "norm_scale_2", 
+                   "phase_deg", "phase_rad" ]
     pass
 
 class SensorListener(object):
@@ -189,7 +190,10 @@ class WlmCalUtility(WlmCalUtilityGui):
             ("center_2","%.3f"),
             ("scale_1","%.3f"), 
             ("scale_2","%.3f"), 
-            ("phase","%.1f") ]
+            ("norm_scale_1","%.3f"), 
+            ("norm_scale_2","%.3f"),
+            ("phase_deg","%.1f"),
+            ("phase_rad","%.3f")]
         # Make each edit box a listener to the corresponding model property
         for (name, fmt) in self.displayNames:
             def setTextCtrl(value, ctrlName="text_ctrl_"+name, fmt=fmt):
@@ -226,6 +230,9 @@ class WlmCalUtility(WlmCalUtilityGui):
 
     def onMeasureDark(self, evt):
         self.measureDark = True
+        
+    def onSaveData(self, evt):
+        print "onSaveData not yet implemented, coming soon!"
 
     def onTimer(self, evt):
         if self.clear or self.measureDark:
@@ -290,7 +297,16 @@ class WlmCalUtility(WlmCalUtilityGui):
         r2 = asarray(r2)
         self.model.center_1, self.model.center_2, self.model.scale_1, self.model.scale_2, phi = \
             WlmCalUtilities.parametricEllipse(r1, r2)
-        self.model.phase = phi * 180 / pi
+
+        if self.model.scale_1 < self.model.scale_2:
+            self.model.norm_scale_2 = (self.model.scale_2 * float64(1.05)) / (self.model.scale_1)
+            self.model.norm_scale_1  = float64(1.05)
+        else:
+            self.model.norm_scale_1 = (self.model.scale_1 * float64(1.05)) / (self.model.scale_2)
+            self.model.norm_scale_2  = float64(1.05)
+
+        self.model.phase_deg = phi * 180 / pi
+        self.model.phase_rad = phi
         t = linspace(0.0, 2.0*pi, self.ellipsePoints)
         for x,y in zip(self.model.center_1 + self.model.scale_1 * cos(t),
                        self.model.center_2 + self.model.scale_2 * sin(t + phi)):
