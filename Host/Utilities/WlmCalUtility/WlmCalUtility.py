@@ -236,7 +236,7 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.config = CustomConfigObj(configFile, list_values = True)
 
         self.fileTime = self.config.get("Files", "file_time", "gmt").lower()
-        self.saveImage = self.config.get("Files", "save_image", "0")
+        self.saveImage = self.config.getboolean("Files", "save_image", False)
         self.saveImageType = self.config.get("Files", "save_image_type", "png")
 
         self.model = WlmCalModel()
@@ -418,7 +418,7 @@ class WlmCalUtility(WlmCalUtilityGui):
             #print "data filename=", saveFileName
             self.doSaveData(saveFileName, epochTime)
 
-            if self.saveImage == "1":
+            if self.saveImage is True:
                 saveFileName = self.makeFilename(epochTime=epochTime, fileType="image")
                 #print "image filename=", saveFileName
                 self.grabScreenshot(saveFileName)
