@@ -142,6 +142,10 @@ class SensorListener(object):
         self.sensorByStream = {}
         for st,s in zip(self.streams, self.sensorList):
             self.sensorByStream[st] = s
+
+        # folder must exist or open will fail
+        if not os.path.isdir(r"c:\temp"):
+            os.makedirs(r"c:\temp")
         self.fp = open(r"c:\temp\debug.txt","a")
 
     def streamFilter(self,result):
