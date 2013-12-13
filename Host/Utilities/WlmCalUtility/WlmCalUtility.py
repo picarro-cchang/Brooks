@@ -132,7 +132,7 @@ class WlmCalModel(Model):
 class SensorListener(object):
     # Listens to sensor broadcasts from the driver and lines up points with the
     # same timestamps.
-    def __init__(self):
+    def __init__(self, debugFilename=None, debug=False):
         self.doc = {}
         self.deque = deque()
         self.queue = Queue(0)                          
@@ -144,9 +144,29 @@ class SensorListener(object):
             self.sensorByStream[st] = s
 
         # folder must exist or open will fail
-        if not os.path.isdir(r"c:\temp"):
-            os.makedirs(r"c:\temp")
-        self.fp = open(r"c:\temp\debug.txt","a")
+        self.debug = debug
+        self.debugFilename = debugFilename
+        self.fp = None
+
+        if self.debugFilename is None:
+            self.debug = False
+
+        if self.debug is True:
+            debugFileDir = os.path.dirname(self.debugFilename)
+
+            if not os.path.isdir(debugFileDir):
+                try:
+                    os.makedirs(debugFileDir)
+                except:
+                    print "Failed creating debug directory '%s', debug disabled" % debugFileDir
+                    self.debug = False
+
+        if self.debug is True:
+            try:
+                self.fp = open(self.debugFilename, "a")
+            except:
+                print "Failed opening debug file '%s', debug disabled" % self.debugFilename
+                self.debug = False
 
     def streamFilter(self,result):
         while len(self.deque) >= 100: self.deque.popleft()
@@ -156,14 +176,22 @@ class SensorListener(object):
             if len(self.doc) > 1:
                 rDoc = self.doc.copy() 
                 self.doc = { "timestamp": result.timestamp }
+
                 if result.streamNum in self.sensorByStream:
                     self.doc[self.sensorByStream[result.streamNum]] = result.value
+
                 if "Etalon1" not in rDoc:
                     for i in range(len(self.deque)):
                         d = self.deque[-i-1]
-                        print >> self.fp, "%3d %15s %4s %15s" % (-i-1, d[0], d[1], d[2])
-                    print >> self.fp
+
+                        if self.debug is True:
+                            print >> self.fp, "%3d %15s %4s %15s" % (-i-1, d[0], d[1], d[2])
+
+                    if self.debug is True:
+                        print >> self.fp
+
                 return rDoc
+
             else:
                 self.doc = { "timestamp": result.timestamp }
                 if result.streamNum in self.sensorByStream:
@@ -255,7 +283,10 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.model.reference_1_dark = 0
         self.model.reference_2_dark = 0
 
-        self.sL = SensorListener()
+        debug = self.config.getboolean("Debug", "sensor_listener_debug", False)
+        debugFilename = self.config.get("Debug", "sensor_listener_output", "C:/temp/WlmCalUtility_debug.txt")
+        self.sL = SensorListener(debugFilename=debugFilename, debug=debug)
+
         bg = wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE)
         self.graph_ratios.SetGraphProperties(xlabel='Ratio 1',
                                              timeAxes=(False,False),
