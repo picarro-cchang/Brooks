@@ -11,6 +11,9 @@
 #
 # HISTORY:
 #   7-May-2013  sze  Initial version.
+#  12-Dec-2013  tw   Reports normalized scales and phase angle in radians; saves CSV and app
+#                    screenshot; uses config file for output folders, etc.; added version
+#                    number.
 #
 #  Copyright (c) 2013 Picarro, Inc. All rights reserved
 #
@@ -48,6 +51,10 @@ else:
 AppPath = os.path.abspath(AppPath)
 
 APP_NAME = "WlmCalUtility"
+
+# Using hard-coded lazy method. Builds could someday be improved to incorporate a json
+# file and automatically bump the build number.
+APP_VERSION = "1.1.0-1"
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -205,6 +212,9 @@ class SensorListener(object):
 class WlmCalUtility(WlmCalUtilityGui):
     def __init__(self, configFile, *args, **kwds):
         WlmCalUtilityGui.__init__(self, *args, **kwds)
+
+        self.SetTitle("WLM Calibration Utility %s" % APP_VERSION)
+
         self.clear = False
         self.measureDark = False
         self.maxDequeLength = 500
