@@ -27,6 +27,7 @@ from Queue import Queue
 import time
 import wx
 import csv
+from PIL import ImageGrab
 
 from WlmCalUtilityGui import WlmCalUtilityGui
 
@@ -203,6 +204,8 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.config = CustomConfigObj(configFile, list_values = True)
 
         self.fileTime = self.config.get("Files", "file_time", "gmt").lower()
+        self.saveImage = self.config.get("Files", "save_image", "0")
+        self.saveImageType = self.config.get("Files", "save_image_type", "png")
 
         self.model = WlmCalModel()
         self.displayNames = [ 
@@ -370,51 +373,29 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.graph_ratios.Update()
 
         if self.saveData:
+            # write data and optional screen capture image
             self.saveData = False
-            saveFileName = self.makeFilename("save")
 
-            with open(saveFileName, "wb") as fp:
-                # header and row
-                h = []
-                r = []
-                w = csv.writer(fp, delimiter=',')
+            # for now use current time (could get it from measurement data)
+            epochTime = time.time()
 
-                # set time info
-                if self.fileTime == "local":
-                    maketime = time.localtime
-                else:
-                    maketime = time.gmtime
+            saveFileName = self.makeFilename(epochTime=epochTime, fileType="save")
+            #print "data filename=", saveFileName
+            self.doSaveData(saveFileName, epochTime)
 
-                # for now using current time (is the measurement time available? does it matter much?)
-                epochTime = time.time()
-                tm = maketime(epochTime)
+            if self.saveImage == "1":
+                saveFileName = self.makeFilename(epochTime=epochTime, fileType="image")
+                #print "image filename=", saveFileName
+                self.grabScreenshot(saveFileName)
 
-                h.append("Time Code")
-                r.append(time.strftime("%Y/%m/%d %H:%M:%S", tm))
+    def makeFilename(self, epochTime=None, fileType="save"):
+        if epochTime is None:
+            epochTime = time.time()
 
-                h.append("Timestamp")
-                r.append("%.2f" % epochTime)
-
-                for (name, fmt) in self.displayNames:
-                    # use the text label for the column headings
-                    ctrlName = "text_ctrl_" + name
-                    ctrlLabel = "label_" + name
-
-                    if hasattr(self, ctrlName) and hasattr(self, ctrlLabel):
-                        label = getattr(self, ctrlLabel).GetLabelText()
-                        value = getattr(self, ctrlName).GetValue()
-                        print "label=", label, "value=", value
-                        h.append(label)
-                        r.append(value)
-                    else:
-                        print "Either %s or %s don't exist!" % (ctrlName, ctrlLabel)
-
-                w.writerow(h)
-                w.writerow(r)
-
-    def makeFilename(self, fileType="save"):
         if fileType == "log":
             (dirName, baseName) = os.path.split(self.config.get("Files", "log", "C:/WlmCalUtility/Log/Log"))
+        elif fileType == "image":
+            (dirName, baseName) = os.path.split(self.config.get("Files", "images", "C:/WlmCalUtility/Images/WlmCalUtil"))
         else:
             (dirName, baseName) = os.path.split(self.config.get("Files", "output", "C:/WlmCalUtility/Data/WlmCalUtil"))
 
@@ -422,9 +403,9 @@ class WlmCalUtility(WlmCalUtilityGui):
             os.makedirs(dirName)
 
         if self.fileTime == "local":
-            self.lastFileTime = time.localtime()
+            self.lastFileTime = time.localtime(epochTime)
         else:
-            self.lastFileTime = time.gmtime()
+            self.lastFileTime = time.gmtime(epochTime)
 
         if self.analyzerName != None and self.analyzerName not in baseName:
             if baseName != "":
@@ -433,11 +414,67 @@ class WlmCalUtility(WlmCalUtilityGui):
                 baseName = self.analyzerName
 
         if fileType == "log":
-            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.txt",self.lastFileTime)))
+            fileName = os.path.join(dirName,
+                                    "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.txt", self.lastFileTime)))
+        elif fileType == "image":
+            fileName = os.path.join(dirName,
+                                    "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.", self.lastFileTime)))
+            fileName = fileName + self.saveImageType
         else:
-            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.csv",self.lastFileTime)))
+            fileName = os.path.join(dirName,
+                                    "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.csv", self.lastFileTime)))
 
         return fileName
+
+    def doSaveData(self, saveFileName, epochTime):
+        with open(saveFileName, "wb") as fp:
+            # header and row
+            h = []
+            r = []
+            w = csv.writer(fp, delimiter=',')
+
+            # set time info
+            if self.fileTime == "local":
+                maketime = time.localtime
+            else:
+                maketime = time.gmtime
+
+            # for now using current time (is the measurement time available? does it matter much?)
+            tm = maketime(epochTime)
+
+            h.append("Time Code")
+            r.append(time.strftime("%Y/%m/%d %H:%M:%S", tm))
+
+            h.append("Timestamp")
+            r.append("%.2f" % epochTime)
+
+            for (name, fmt) in self.displayNames:
+                # use the text label for the column headings
+                ctrlName = "text_ctrl_" + name
+                ctrlLabel = "label_" + name
+
+                if hasattr(self, ctrlName) and hasattr(self, ctrlLabel):
+                    label = getattr(self, ctrlLabel).GetLabelText()
+                    value = getattr(self, ctrlName).GetValue()
+                    #print "label=", label, "value=", value
+                    h.append(label)
+                    r.append(value)
+                else:
+                    print "Either %s or %s don't exist!" % (ctrlName, ctrlLabel)
+
+            w.writerow(h)
+            w.writerow(r)
+
+    def grabScreenshot(self, filename):
+        # take a screen shot of this app only
+        # Note: Resulting image is black if any of the app window extends to a 2nd monitor
+        #       Really only a problem for developers.
+        curSize = self.GetSize()
+        curPos = self.GetPosition()
+        bbox = (curPos.x, curPos.y, curPos.x + curSize.width, curPos.y + curSize.height)
+
+        im = ImageGrab.grab(bbox=bbox)
+        im.save(filename)
 
 
 if __name__ == "__main__":
