@@ -408,9 +408,8 @@ class RDFrequencyConverter(Singleton):
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)
             else:
-                Log("WLM Calibration point cannot be used", Data=dict(rowNum=rowNum, 
-                                                                      angleError=min(angleError, 2*pi-angleError),
-                                                                      tempError=abs(tempError)))
+                Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %  
+                    (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
         return entry
 
     def run(self):
