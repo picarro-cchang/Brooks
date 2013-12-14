@@ -16,13 +16,19 @@ import shutil
 import cPickle
 import pprint
 import math
+import threading
 
 import simplejson as json
 import psutil
 
 from Host.Common import SharedTypes
-from Helpers import Process
+from Host.Common.Win32 import Kernel32
+from MobileKit.Tests.Helpers import EventSinkServer
+from MobileKit.Tests.Helpers import Process
 
+
+PUSH_TIMEOUT_MS = 10.0 * 60.0 * 1000.0
+LONG_PUSH_TIMEOUT_MS = 20.0 * 60.0 * 1000.0
 
 class TestDatEchoP3(object):
 
@@ -48,6 +54,10 @@ class TestDatEchoP3(object):
         self.datRoot = os.path.join(baseDir, 'data')
         self.emptyDatDir = os.path.join(baseDir, 'data', 'empty')
 
+        self.evts = EventSinkServer.EventSinkServer()
+        self.evtsThread = threading.Thread(target=self.evts.run)
+        self.evtsThread.start()
+
         self.localUrl = 'http://localhost:5000/test/rest/'
 
         self.testEnv = os.environ.update({'PYTHONPATH' :
@@ -70,6 +80,9 @@ class TestDatEchoP3(object):
                 shutil.rmtree(path)
 
     def teardown_method(self, m):
+        self.evts.stop()
+        self.evtsThread.join()
+
         self.server.kill()
         Process.ProcessHelpers.waitForKill(self.server, 30.0)
         assert not self.server.is_running()
@@ -176,6 +189,9 @@ class TestDatEchoP3(object):
         endDt = datetime.datetime.utcfromtimestamp(end)
         assert (endDt - beginDt).days == 5.0
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testOneMissedFile(self):
         testDatDir = os.path.join(self.datRoot, 'test2')
         assert not os.path.isdir(testDatDir)
@@ -189,6 +205,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -217,10 +235,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -248,6 +269,9 @@ class TestDatEchoP3(object):
         endDt = datetime.datetime.utcfromtimestamp(end)
         assert (endDt - beginDt).days == 5.0
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testRowCacheCreation(self):
         # Should return a file that we have copied already and verify that the
         # cache is created (and contains the correct data).
@@ -263,6 +287,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -297,10 +323,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events-cache'],
                  env=self.testEnv).pid)
 
-        time.sleep(10.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -328,6 +357,9 @@ class TestDatEchoP3(object):
 
         assert nRows == 16207
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testIncompleteFile(self):
         # Should return a file that we have copied already and verify that the
         # cache is created (and contains the correct data).
@@ -343,6 +375,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -377,10 +411,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(60.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -413,6 +450,9 @@ class TestDatEchoP3(object):
         endDt = datetime.datetime.utcfromtimestamp(end)
         assert (endDt - beginDt).days == 5.0
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testOneMissedFileAndThenLive(self):
         testDatDir = os.path.join(self.datRoot, 'test5')
         assert not os.path.isdir(testDatDir)
@@ -426,6 +466,9 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        print "CreateEvent: %s" % target
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -454,10 +497,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -473,10 +519,15 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
 
+        print "CreateEvent: %s" % target
+        h = Kernel32.createEvent(1, target)
+
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -506,6 +557,9 @@ class TestDatEchoP3(object):
 
         assert stats['pushedFiles'] == 2
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testEmptyDirThenLive(self):
         testDatDir = os.path.join(self.datRoot, 'test6')
         assert not os.path.isdir(testDatDir)
@@ -534,7 +588,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
         time.sleep(10.0)
@@ -553,10 +608,14 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
 
+        h = Kernel32.createEvent(1, target)
+
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert datEcho.is_running()
 
@@ -584,6 +643,9 @@ class TestDatEchoP3(object):
 
         assert stats['pushedFiles'] == 1
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testDayRolloverUnknownFile(self):
         """
         The stress test revealed that when the day rolled over, any
@@ -610,6 +672,9 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+        
+        handles = []
+        handles.append(Kernel32.createEvent(1, target))
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -638,7 +703,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
         time.sleep(15.0)
@@ -654,6 +720,8 @@ class TestDatEchoP3(object):
             os.makedirs(targetDir)
         except:
             pass
+
+        handles.append(Kernel32.createEvent(1, target))
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -674,11 +742,14 @@ class TestDatEchoP3(object):
         except:
             pass
 
+        handles.append(Kernel32.createEvent(1, target))
+
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
-        # Give DatEchoP3 a chance to send back everything
-        time.sleep(300.0)
+
+        res = Kernel32.waitForMultipleObjects(handles, 1, LONG_PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -694,6 +765,8 @@ class TestDatEchoP3(object):
             assert int(fr[1]) == 16207
         assert set([fr[0] for fr in filesAndRows]) == set(files)
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
 
     def testNoLogFiles(self):
         """
@@ -730,7 +803,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
         time.sleep(15.0)
@@ -761,6 +835,9 @@ class TestDatEchoP3(object):
         assert (endDt - beginDt).days == 5.0
 
         assert stats['pushedFiles'] == 0
+
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
 
     def testNoEmptyIdSent(self):
         """
@@ -797,7 +874,8 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
         time.sleep(5.0)
@@ -834,6 +912,9 @@ class TestDatEchoP3(object):
 
         assert stats['pushedFiles'] == 0
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testMissingReturnLastRow(self):
         """
         Currently, P3 sometimes will not include the lastRow field
@@ -854,6 +935,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -888,10 +971,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -927,6 +1013,9 @@ class TestDatEchoP3(object):
 
         assert stats['pushedFiles'] == 1
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testFileContents(self):
         """
         Verify that the pushed contents match the actual on-disk content.
@@ -944,6 +1033,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -972,10 +1063,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -1019,6 +1113,9 @@ class TestDatEchoP3(object):
         localLines = self._logLinesToDict(os.path.join(targetDir, target))
         assert uniqServerRows == localLines
 
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
     def testHandleEmptyDatFile(self):
         """
         Make sure we delete any empty dat files that we encounter since they
@@ -1050,6 +1147,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
 
+        h = Kernel32.createEvent(1, target)
+
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
 
@@ -1077,10 +1176,14 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(120.0)
+
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -1130,8 +1233,14 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%d"))
         os.makedirs(badTargetDir)
 
+        handles = []
+        handles.append(Kernel32.createEvent(1, badTarget))
+
         shutil.copyfile(os.path.join(self.datRoot, 'file3.dat'),
                         os.path.join(badTargetDir, badTarget))
+
+        # Avoid the files having the same name
+        time.sleep(1.0)
 
         # Good file
         targetDt = datetime.datetime.utcnow() - datetime.timedelta(days=1.0)
@@ -1141,6 +1250,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+
+        handles.append(Kernel32.createEvent(1, target))
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -1169,10 +1280,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events'],
                  env=self.testEnv).pid)
 
-        time.sleep(120.0)
+        # 10 minute timeout
+        res = Kernel32.waitForMultipleObjects(handles, 1, LONG_PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -1205,6 +1319,10 @@ class TestDatEchoP3(object):
         assert os.path.isfile(os.path.join(badTargetDir, "%s.bad" % badTarget))
         assert not os.path.isfile(os.path.join(badTargetDir, badTarget))
 
+        assert len(self.evts) == 2
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+        assert self.evts[1][0].startswith('Renaming')
+
     def testMalformedRowCache(self):
         """
         Test that a mis-pickled row cache is handled correctly.
@@ -1221,6 +1339,8 @@ class TestDatEchoP3(object):
                                  targetDt.strftime("%m"),
                                  targetDt.strftime("%d"))
         os.makedirs(targetDir)
+        
+        h = Kernel32.createEvent(1, target)
 
         shutil.copyfile(os.path.join(self.datRoot, 'file1.dat'),
                         os.path.join(targetDir, target))
@@ -1260,10 +1380,13 @@ class TestDatEchoP3(object):
                         self.localUrl),
                  '-yid',
                  "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
-                 '-sAPITEST'],
+                 '-sAPITEST',
+                 '--use-events-cache'],
                  env=self.testEnv).pid)
 
-        time.sleep(10.0)
+        # 10 minute timeout
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0        
 
         assert self.driverEmulator.is_running()
         assert self.server.is_running()
@@ -1278,3 +1401,7 @@ class TestDatEchoP3(object):
             nRows = cPickle.load(fp)
 
         assert nRows == 16207
+
+        assert len(self.evts) == 1
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+
