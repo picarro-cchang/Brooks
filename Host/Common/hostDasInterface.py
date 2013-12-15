@@ -1203,7 +1203,10 @@ class StateDatabase(Singleton):
                     "minVal real,maxVal real,idx integer)")
             self.con.commit()
             while not self.stopThread.isSet():
-                txId,func,args = self.txQueue.get()
+                try:
+                    txId,func,args = self.txQueue.get(timeout=0.5)
+                except Queue.Empty: # See if we need to stop
+                    continue
                 # Place a response on rxQueue if there is a return value or if an error occurs
                 #  N.B. If a tx request does not return a value but throws an exception, this will
                 #  be sent back. It is up to the rxQueue handler to check that the id of the response
