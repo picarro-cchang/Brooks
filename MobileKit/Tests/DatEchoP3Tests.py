@@ -74,7 +74,7 @@ class TestDatEchoP3(object):
         self.driverEmulator = None
 
         for d in ['test2', 'test3', 'test4', 'test5', 'test6', 'test7', 'test8',
-                  'test9', 'test10', 'test11', 'test12', 'test13', 'test14']:
+                  'test9', 'test10', 'test11', 'test12', 'test13', 'test14', 'test15']:
             path = os.path.join(self.datRoot, d)
             if os.path.isdir(path):
                 shutil.rmtree(path)
@@ -1405,3 +1405,93 @@ class TestDatEchoP3(object):
         assert len(self.evts) == 1
         assert self.evts[0][0].startswith('DatEchoP3 instantiated')
 
+    def testResendCounts(self):
+        """
+        Test that the resend logic works correctly in the face of
+        inconsistent information. Since we don't know the exact cause
+        for this behavior (at this point) we will have the REST
+        emulator pretend like the file is not present every time its
+        metadata is requested.
+        """
+        testDatDir = os.path.join(self.datRoot, 'test15')
+        assert not os.path.isdir(testDatDir)
+
+        # Use date/times close to today so we trigger the 5-day check on
+        # the server.
+        targetDt = datetime.datetime.utcnow() - datetime.timedelta(days=2.0)
+        target = targetDt.strftime("TEST23-%Y%m%d-%H%M%SZ-DataLog_User"
+                                   "_Minimal.dat")
+        targetDir = os.path.join(testDatDir, targetDt.strftime("%Y"),
+                                 targetDt.strftime("%m"),
+                                 targetDt.strftime("%d"))
+        os.makedirs(targetDir)
+
+        r = urllib2.urlopen("http://localhost:5000/setLogDate/%d/%d/%d"
+                            "/%d/%d/%d" % (targetDt.year, targetDt.month,
+                                           targetDt.day, targetDt.hour,
+                                           targetDt.minute, targetDt.second))
+        r.read()
+        
+        badTarget = target
+        h = Kernel32.createEvent(1, target)
+
+        shutil.copyfile(os.path.join(self.datRoot, 'file4.dat'),
+                        os.path.join(targetDir, target))
+
+        time.sleep(1.0)
+
+        targetDt = datetime.datetime.utcnow() - datetime.timedelta(days=2.0)
+        target = targetDt.strftime("TEST23-%Y%m%d-%H%M%SZ-DataLog_User"
+                                   "_Minimal.dat")
+        targetDir = os.path.join(testDatDir, targetDt.strftime("%Y"),
+                                 targetDt.strftime("%m"),
+                                 targetDt.strftime("%d"))
+
+        shutil.copyfile(os.path.join(self.datRoot, 'file4.dat'),
+                        os.path.join(targetDir, target))        
+
+        assert self.driverEmulator is None
+
+        self.driverEmulator = psutil.Process(
+            subprocess.Popen(['python.exe',
+                              './Helpers/DriverEmulatorServer.py'],
+                              env=self.testEnv).pid)
+        time.sleep(1.0)
+
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
+
+        datEcho = psutil.Process(
+            subprocess.Popen(
+                ['python.exe', '../AnalyzerServer/DatEchoP3.py',
+                 '-ddat',
+                 "-l%s/*.dat" % os.path.join(self.datRoot, 'test15'),
+                 '-n200',
+                 "-i%sgdu/<TICKET>/15.0/AnzMeta/" % self.localUrl,
+                 "-p%sgdu/<TICKET>/15.0/AnzLog/" % self.localUrl,
+                 "-k%ssec/dummy/15.0/Admin/" % self.localUrl,
+                 "--log-metadata-url=%sgdu/<TICKET>/15.0/AnzLogMeta/" % (
+                        self.localUrl),
+                 '-yid',
+                 "--driver-port=%d" % SharedTypes.RPC_PORT_DRIVER_EMULATOR,
+                 '-sAPITEST',
+                 '--use-events-resend'],
+                 env=self.testEnv).pid)
+
+        res = Kernel32.waitForSingleObject(h, PUSH_TIMEOUT_MS)
+        assert res == Kernel32.WAIT_OBJECT_0
+
+        assert self.driverEmulator.is_running()
+        assert self.server.is_running()
+        assert datEcho.is_running()
+
+        datEcho.kill()
+
+        assert len(self.evts) == 3
+        assert self.evts[0][0].startswith('DatEchoP3 instantiated')
+        assert self.evts[1][0].startswith('5 consecutive attempts')
+        assert self.evts[2][0].startswith('Renaming')
+
+        # Verify that the file has been renamed to "bad"
+        assert os.path.exists(os.path.join(targetDir, "%s.bad" % badTarget))
+        

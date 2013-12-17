@@ -94,6 +94,7 @@ class DataEchoP3(object):
 
         self.useEvents = kwargs['useEvents']
         self.useEventsOnCache = kwargs['useEventsOnCache']
+        self.useEventsResend = kwargs['useEventsResend']
 
         self.ticket = 'None'
         self.ipRegistered = False
@@ -579,7 +580,7 @@ class DataEchoP3(object):
         """
         renameAsBad = False
 
-        if self.useEvents:
+        if self.useEvents or self.useEventsResend:
             print "Open event name: %s" % os.path.basename(fname)
             evt = Kernel32.openEvent(Kernel32.EVENT_MODIFY_STATE, os.path.basename(fname))
             if evt is None:
@@ -600,6 +601,7 @@ class DataEchoP3(object):
                     EventManagerProxy.Log("%s consecutive attempts have been made to push '%s' to P3. "
                                           "Flagging file as bad." % (self.NUM_RESEND_ATTEMPTS, fname), Level=2)
                     del self.resendCounts[fname]
+
                     renameAsBad = True
             else:
                 if fname in self.resendCounts:
@@ -612,7 +614,7 @@ class DataEchoP3(object):
             lineCount = 1
             line = ''
 
-            while True:
+            while True and not renameAsBad:
                 # Check to see if a new file is available. There is a
                 # scenario where an incomplete dat file will never
                 # have a trailing newline and we will sit here forever
@@ -697,6 +699,14 @@ class DataEchoP3(object):
                 # continuing since one "bad" file should not hold up
                 # pushing the rest of the files.
                 EventManagerProxy.LogExc()
+
+            if self.useEventsResend:
+                assert evt is not None
+                res = Kernel32.setEvent(evt)
+
+                if res != 0:
+                    print "SetEvent: GetLastError = %s" % Kernel32.getLastError()
+
 
     def pushToP3(self, fname):
         """
@@ -865,6 +875,8 @@ Runs an echo server that sends data to P3.
                       'Use Win32 events to signal when file push(es) are complete.')
     parser.add_option('--use-events-cache', dest='useEventsOnCache', default=False, action='store_true',
                       help='For testing; Use Win32 events to signal when cache generated for a file.')
+    parser.add_option('--use-events-resend', dest='useEventsResend', default=False, action='store_true',
+                      help='For testing; Use Win32 events to signal when a resend exception occurs.')
 
     options, _ = parser.parse_args()
 

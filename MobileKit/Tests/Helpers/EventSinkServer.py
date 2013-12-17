@@ -29,6 +29,5 @@ class EventSinkServer(object):
     def __getitem__(self, idx):
         return self.events[idx]
 
-    def RPC_LogEvent(self, *args):
+    def RPC_LogEvent(self, *args, **kwargs):
         self.events.append(args)
-
