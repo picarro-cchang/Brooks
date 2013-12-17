@@ -27,6 +27,7 @@ from numpy import *
 import os
 #from Queue import Queue, Empty
 from Queue import Queue
+from optparse import OptionParser
 import time
 import wx
 import csv
@@ -50,16 +51,30 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
+
 APP_NAME = "WlmCalUtility"
+_DEFAULT_CONFIG_NAME = "WlmCalUtility.ini"
 
 # Using hard-coded lazy method. Builds could someday be improved to incorporate a json
 # file and automatically bump the build number.
-APP_VERSION = "1.1.0-1"
+APPVERSION = "1.1.0-2"
 
 EventManagerProxy_Init(APP_NAME)
 
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
                                     APP_NAME, IsDontCareConnection = False)
+
+
+g_logMsgLevel = 0   # should be 0 for check-in
+
+
+def LogErrmsg(str):
+    print >> sys.stderr, str
+
+
+def LogMsg(level, str):
+    if level <= g_logMsgLevel:
+        print str
 
 
 class Model(object):
@@ -165,14 +180,14 @@ class SensorListener(object):
                 try:
                     os.makedirs(debugFileDir)
                 except:
-                    print "Failed creating debug directory '%s', debug disabled" % debugFileDir
+                    LogErrMsg("Failed creating debug directory '%s', debug disabled" % debugFileDir)
                     self.debug = False
 
         if self.debug is True:
             try:
                 self.fp = open(self.debugFilename, "a")
             except:
-                print "Failed opening debug file '%s', debug disabled" % self.debugFilename
+                LogErrMsg("Failed opening debug file '%s', debug disabled" % self.debugFilename)
                 self.debug = False
 
     def streamFilter(self,result):
@@ -213,7 +228,7 @@ class WlmCalUtility(WlmCalUtilityGui):
     def __init__(self, configFile, *args, **kwds):
         WlmCalUtilityGui.__init__(self, *args, **kwds)
 
-        self.SetTitle("WLM Calibration Utility %s" % APP_VERSION)
+        self.SetTitle("WLM Calibration Utility %s" % APPVERSION)
 
         self.clear = False
         self.measureDark = False
@@ -271,10 +286,14 @@ class WlmCalUtility(WlmCalUtilityGui):
             ("phase_rad", "%.3f")]
 
         # Make each edit box a listener to the corresponding model property
+        # Save them so they can be unregistered at app shutdown
+        self.registered_listeners = {}
+
         for (name, fmt) in self.displayNames:
             def setTextCtrl(value, ctrlName="text_ctrl_"+name, fmt=fmt):
                 getattr(self, ctrlName).SetValue(fmt % value)
             self.model.register_listener(name, setTextCtrl)
+            self.registered_listeners[name] = setTextCtrl
 
         self.editableNames = [ "etalon_1_dark", "reference_1_dark", 
                                "etalon_2_dark", "reference_2_dark" ]
@@ -311,6 +330,8 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
         self.timer.Start(1000)
 
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+
     def onClearData(self, evt):
         self.clear = True
 
@@ -320,6 +341,19 @@ class WlmCalUtility(WlmCalUtilityGui):
     def onSaveData(self, evt):
         # Save the data on the next timer event
         self.saveData = True
+
+    def onClose(self, evt):
+        LogMsg(4, "WlmCalUtility::onClose")
+        self.cleanup()
+        self.Destroy()
+
+    def cleanup(self):
+        # Kill the timer
+        self.timer.Stop()
+
+        # Remove each edit box listener from the model
+        for name in self.registered_listeners:
+            self.model.remove_listener(name, self.registered_listeners[name])
 
     def onTimer(self, evt):
         if self.clear or self.measureDark:
@@ -345,7 +379,7 @@ class WlmCalUtility(WlmCalUtilityGui):
                 self.reference2Deque.append(r["Reference2"])
                 if len(self.reference2Deque) > self.maxDequeLength: self.reference2Deque.popleft()
             except:
-                print "Error: ", r
+                LogErrmsg("Error: %r" % r)
 
         self.polarWaveform.Clear()
         self.ellipse.Clear()
@@ -392,10 +426,11 @@ class WlmCalUtility(WlmCalUtilityGui):
         try:
             self.model.center_1, self.model.center_2, self.model.scale_1, self.model.scale_2, phi = \
                 WlmCalUtilities.parametricEllipse(r1, r2)
+
         except ValueError:
             # ValueError exception is thrown when the input arrays are empty
             # (usually if running without an instrument) -- set some values that won't crash us
-            print "ValueError: is the instrument running?"
+            LogMsg(1, "ValueError: is the instrument running?")
             self.model.center_1 = -1.0
             self.model.center_2 = -1.0
             self.model.scale_1 = -1.0
@@ -425,12 +460,12 @@ class WlmCalUtility(WlmCalUtilityGui):
             epochTime = time.time()
 
             saveFileName = self.makeFilename(epochTime=epochTime, fileType="save")
-            #print "data filename=", saveFileName
+            LogMsg(2, "save: data filename=%s" % saveFileName)
             self.doSaveData(saveFileName, epochTime)
 
             if self.saveImage is True:
                 saveFileName = self.makeFilename(epochTime=epochTime, fileType="image")
-                #print "image filename=", saveFileName
+                LogMsg(2, "save: image filename=%s" % saveFileName)
                 self.grabScreenshot(saveFileName)
 
     def makeFilename(self, epochTime=None, fileType="save"):
@@ -469,9 +504,12 @@ class WlmCalUtility(WlmCalUtilityGui):
             fileName = os.path.join(dirName,
                                     "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.csv", self.lastFileTime)))
 
+        fileName = os.path.normpath(fileName)
         return fileName
 
     def doSaveData(self, saveFileName, epochTime):
+        LogMsg(4, "WlmCalUtility::doSaveData")
+
         with open(saveFileName, "wb") as fp:
             # header and row
             h = []
@@ -501,11 +539,11 @@ class WlmCalUtility(WlmCalUtilityGui):
                 if hasattr(self, ctrlName) and hasattr(self, ctrlLabel):
                     label = getattr(self, ctrlLabel).GetLabelText()
                     value = getattr(self, ctrlName).GetValue()
-                    #print "label=", label, "value=", value
+                    LogMsg(5, "label=%s   value=%s" % (label, value))
                     h.append(label)
                     r.append(value)
                 else:
-                    print "Either %s or %s don't exist!" % (ctrlName, ctrlLabel)
+                    LogMsg(1, "%s and/or %s don't exist!" % (ctrlName, ctrlLabel))
 
             w.writerow(h)
             w.writerow(r)
@@ -522,12 +560,110 @@ class WlmCalUtility(WlmCalUtilityGui):
         im.save(filename)
 
 
-if __name__ == "__main__":
-    app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
+class App(wx.App):
+    def __init__(self, *args, **kwds):
+        """
+        Init the App object. Required arguments:
+        configFile=configFile   Full path to the configuration file.
+        """
+        LogMsg(4, "App::__init__")
 
-    configFile = os.path.dirname(AppPath) + "/" + "WlmCalUtility.ini"
-    frame_1 = WlmCalUtility(configFile, None, -1, "")
-    app.SetTopWindow(frame_1)
-    frame_1.Show()
+        # configFile argument is required
+        self.configFile = kwds["configFile"]
+        del kwds["configFile"]
+
+        # init wx.App
+        wx.App.__init__(self, *args, **kwds)
+
+    def OnInit(self):
+        LogMsg(4, "App::OnInit")
+
+        self.frame_1 = WlmCalUtility(self.configFile, None, -1, "")
+        self.SetTopWindow(self.frame_1)
+        self.frame_1.Show()
+        return True
+
+    def OnResizeApp(self, event):
+        LogMsg(4, "App::OnResizeApp")
+
+    def OnExit(self):
+        LogMsg(4, "App::OnExit")
+
+
+def ParseOptions():
+    usage = """
+%prog [options]
+
+Picarro wavelength monitor calibration tool.
+"""
+
+    parser = OptionParser(usage=usage)
+
+    parser.add_option('-v', '--version', dest='version', action='store_true',
+                      default=None, help=('report version number for this application'))
+
+    parser.add_option('-r', '--redirect', dest='redirect', action='store_true',
+                      default=False, help=('redirect output to a separate console window, '
+                                           'useful for debugging'))
+
+    parser.add_option('-c', '--configFile', dest='configFile', action='store', type='string',
+                      default=None, help=('configuration filename'))
+
+    parser.add_option('-o', '--outfile', dest='outputFile', action='store', type='string',
+                      default=None, help=('output filename for console output, '
+                                          'useful for debugging'))
+
+    parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
+                      default=g_logMsgLevel, help=('set message logging level, '
+                                                   '0=highest  5=lowest (noisy)'))
+
+    options, _ = parser.parse_args()
+
+    return options
+
+
+def main():
+    global g_logMsgLevel
+
+    options = ParseOptions()
+
+    if options.version is True:
+        print APPVERSION
+        return
+
+    g_logMsgLevel = options.loglevel
+    redirect = options.redirect
+    outputFile = options.outputFile
+
+    if options.configFile is None:
+        configFile = os.path.join(os.path.dirname(AppPath), _DEFAULT_CONFIG_NAME)
+        LogMsg(0, "No config file specified.  Using default: '%s'" % os.path.basename(configFile))
+
+    else:
+        configFile = options.configFile
+        LogMsg(0, "Config file specified at command line: '%s'" % configFile)
+
+    print "main (start): configFile=", configFile
+
+    if not os.path.isfile(configFile):
+        LogErrmsg("Config file '%s' does not exist, exiting!", configFile)
+        return
+
+    # forces noisy logging
+    #g_logMsgLevel = int(5)
+
+    LogMsg(4, "main: redirect=%d" % redirect)
+
+    # force redirect if outputting console to a file
+    if outputFile is not None:
+        redirect = True
+
+    app = App(redirect=redirect, filename=outputFile, configFile=configFile)
+
+    LogMsg(4, "before MainLoop")
     app.MainLoop()
+    LogMsg(4, "after MainLoop")
+
+
+if __name__ == '__main__':
+    main()
