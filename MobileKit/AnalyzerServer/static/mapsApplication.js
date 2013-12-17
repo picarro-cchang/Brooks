@@ -47,174 +47,41 @@ this.gdu_logger = gdu_logger;
 var COOKIE_PREFIX = "p3gdu";
 var COOKIE_NAMES = {};
 
-//default (eng) values for dsp.  Override this 
-//for each language specific labels
-var COOKIE_PREFIX = "p3gdu";
-var COOKIE_NAMES = {};
-var TXT = {
-        amp: 'Amp',
-        sigma: 'HalfWidth',
-        lat: 'Lat',
-        lon: 'Long',
-        ch4: 'CH4',
-        conc: 'Concentration',
-        delta: 'Delta',
-        driver_warning: 'Do not use this software while operating a vehicle.  Tap ok to agree that you are not driving.',
-        uncertainty: 'Uncertainty',
-        note: 'Annotation',
-        cancel: 'Cancel',
-        ok: 'OK',
-        save_note: 'Save Annotation',
-        close: 'Close',
-        download_files: 'Download Files',
-        download_concs: 'Download Concentration',
-        download_peaks: 'Download Peaks',
-        download_analysis: 'Download Analysis',
-        download_notes: 'Download Notes',
-        anz_cntls: 'Surveyor Controls',
-        restart_log: 'Restart Log',
-        switch_to_cptr: 'Start Capture',
-        start_survey: "Start Survey",
-        stop_survey: "Stop Survey",
-        complete_survey: "Complete Survey",
-        cancl_ref: 'Cancel Reference',
-        cancl_cptr: 'Cancel Capture',
-        cancl_ana: 'Cancel Analysis',
-        cancl_ana_time: 's left: Cancel',
-        calibrate: 'Analyze Reference Gas',
-        shutdown: 'Shutdown Surveyor',
-        select_log: 'Select Log',
-        switch_to_prime: 'Switch to Prime View',
-        peak: 'Peak',
-        analysis: 'Analysis',
-        path: 'Route',
-        note_list: 'Select Note to view',
-        conn_warning_hdr: 'Connection Warning',
-        conn_warning_txt: 'There is a problem with the network connection. Please verify connectivity.',
-        survey_mode: 'Survey Mode',
-        capture_mode: 'Capture Mode',
-        analyzing_mode: 'Analyzing Peak',
-        inactive_mode: 'Inactive Mode',
-        cancelling_mode: 'Canceling...',
-        priming_mode: 'Priming inlet',
-        purging_mode: 'Purging inlet',
-        injection_pending_mode: 'Injecting Gas',
-        prime_conf_msg: 'Do you want to switch to Prime View Mode? \n\nWhen the browser is in Prime View Mode, you will have control of the Surveyor.',
-        change_min_amp: 'Min Amplitude', //'Minimum Amplitude',
-        change_stab_class: 'Stability Class', //'Minimum Amplitude',
-        restart_datalog_msg: 'Close current data log and open a new one?',
-        shutdown_anz_msg: 'Do you want to shut down the Surveyor? \n\nWhen the analyzer is shutdown it can take 30 to 45 minutes warm up.',
-        stop_survey_msg: 'Are you sure you want to stop collecting data?',
-        cancel_cap_msg: 'Cancel capture and return to survey mode?',
-        cancel_ana_msg: 'Cancel analysis and return to survey mode?',
-        cancel_ref_msg: 'Cancel reference gas processing?',
-        start_ref_msg: 'Connect reference gas bottle and open valve. Press OK when ready.',
-        show_controls: 'Show Controls',
-        show_dnote: 'Show route annotations',
-        show_pnote: 'Show peak annotations',
-        show_anote: 'Show analysis annotations',
-        click_show_cntls: 'Click to show controls',
-        map_controls: 'Map Controls',
-        dnote: 'Route annotation',
-        anote: 'Analysis annotation',
-        pnote: 'Peak annotation',
-        show_notes: 'Show user annotations on map',
-        abubble: 'Isotopic Analysis',
-        pbubble: 'Peak Bubbles',
-        wbubble: 'Wind Markers',
-        swath: 'Field of View',
-        show_markers: 'Show system markers on map',
-        show_txt: 'Show',
-        hide_txt: 'Hide',
-        plat_outline: 'Plat Outline',
-        hlite_plat: 'Highlight Current Plat',
-        remove_plat_hlite: 'Remove Current Highlight',
-        remove_all_plat_hlite: 'Remove All Highlights',
-        select_active_plat: 'Set as Active Plat',
-        remove_active_plat: 'Set as Inactive Plat',
-        remove_plat: 'Remove plat',
-        working: 'Working',
-        plat: 'Plat',
-        calibration_pulse_injected: 'Reference gas injected',
-        
-        stream_title: 'Data Transfer Status Indicators',
-        stream_ok: 'Data Transfer OK',
-        stream_warning: 'Intermittent Data Transfer',
-        stream_failed: 'Data Transfer Failed',
-        gps_title: 'GPS Status Indicators',
-        gps_ok: 'GPS OK',
-        gps_warning: 'Unreliable GPS Signal',
-        gps_failed: 'GPS Failed',
-        gps_uninstalled: 'GPS Not Detectable',
-        ws_title: 'Weather Station Status Indicators',
-        ws_ok: 'Weather Station OK',
-        ws_failed: 'Weather Station Failed',
-        ws_uninstalled: 'Weather Station Not Detectable',
-        analyzer_title: 'Current Surveyor Status',
-        cavity_p: 'Cavity Pressure',
-        cavity_t: 'Cavity Temperature',
-        wb_t: 'Warm Box Temperature',
-        
-        stab_star: "*: Use reported weather data",
-        stab_a: "A: Very Unstable",
-        stab_b: "B: Unstable",
-        stab_c: "C: Slightly Unstable",
-        stab_d: "D: Neutral",
-        stab_e: "E: Slightly Stable",
-        stab_f: "F: Stable",
-        
-        export_as_txt: "Export data as txt file.",
-        export_as_csv: "Export data as csv file.",
-            
-        copyClipboard: "Ctrl-C copies cursor position to clipboard",
-            
-        survey_time: "Survey time",
-        day: "Day",
-        night: "Night",
-        sunlight: "Solar Radiation",
-        strong_sunlight: "Strong",
-        moderate_sunlight: "Moderate",
-        overcast_sunlight: "Overcast",
-        cloud: "Cloud Cover",
-        less50_cloud: "&lt;50%",
-        more50_cloud: "&gt;50%",
-        wind: "Wind",
-        calm_wind: "Calm",
-        light_wind: "Light",
-        strong_wind: "Strong",
-        choose: "Please select an option",
-        select_weather: "Weather Conditions"
-    };
-
 //Html button
 var HBTN = {
-        exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn btn-fullwidth">' + TXT.download_concs + '</button></div>',
-        exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn btn-fullwidth">' + TXT.download_peaks + '</button></div>',
-        exptAnalysisBtn: '<div><button id="id_exptAnalysisBtn" type="button" onclick="exportAnalysis();" class="btn btn-fullwidth">' + TXT.download_analysis + '</button></div>',
-        exptNoteBtn: '<div><button id="id_exptNoteBtn" type="button" onclick="exportNotes();" class="btn btn-fullwidth">' + TXT.download_notes + '</button></div>',
-        restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-fullwidth">' + TXT.restart_log + '</button></div>',
-        captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-fullwidth">' + TXT.switch_to_cptr + '</button></div>',
-        cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-fullwidth">' + TXT.cancl_cptr + '</button></div>',
-        cancelAnaBtn: '<div><button id="id_cancelAnaBtn" type="button" onclick="cancelAnaSwitch();" class="btn btn-fullwidth">' + TXT.cancl_ana + '</button></div>',
-        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="referenceGas();" class="btn btn-fullwidth">' + TXT.calibrate + '</button></div>',
-        shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn btn-danger btn-fullwidth">' + TXT.shutdown + '</button></div>',
-        downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-fullwidth">' + TXT.download_files + '</button></div>',
-        analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn btn-fullwidth">' + TXT.anz_cntls + '</button></div>',
-        warningCloseBtn: '<div><button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn btn-fullwidth">' + TXT.close + '</button></div>',
-        modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn btn-fullwidth">' + TXT.close + '</button></div>',
-        switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn btn-fullwidth">' + TXT.select_log + '</button></div>',
-        switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn btn-fullwidth">' + TXT.switch_to_prime + '</button></div>',
-        changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
-        changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
-        changeStabClassCancelBtn: '<div><button id="id_changeStabClassCancelBtn" onclick="changeStabClassVal(false);" class="btn btn-fullwidth">' + TXT.cancel + '</button></div>',
-        changeStabClassOkBtn: '<div><button id="id_changeStabClassOkBtn" onclick="changeStabClassVal(true);" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
-        agreeToDriverWarningBtn: '<div><button id="id_agreeToDriverWarningBtn" onclick="restoreModChangeDiv();" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
+        exptLogBtn: '<div><button id="id_exptLogBtn" type="button" onclick="exportLog();" class="btn btn-fullwidth">' + P3TXT.download_concs + '</button></div>',
+        exptPeakBtn: '<div><button id="id_exptPeakBtn" type="button" onclick="exportPeaks();" class="btn btn-fullwidth">' + P3TXT.download_peaks + '</button></div>',
+        exptAnalysisBtn: '<div><button id="id_exptAnalysisBtn" type="button" onclick="exportAnalysis();" class="btn btn-fullwidth">' + P3TXT.download_analysis + '</button></div>',
+        exptNoteBtn: '<div><button id="id_exptNoteBtn" type="button" onclick="exportNotes();" class="btn btn-fullwidth">' + P3TXT.download_notes + '</button></div>',
+
+        exptLogBtnDis: '<div><button id="id_exptLogBtn" disabled type="button" onclick="exportLog();" class="btn btn-fullwidth">' + P3TXT.download_concs + '</button></div>',
+        exptPeakBtnDis: '<div><button id="id_exptPeakBtn" disabled type="button" onclick="exportPeaks();" class="btn btn-fullwidth">' + P3TXT.download_peaks + '</button></div>',
+        exptAnalysisBtnDis: '<div><button id="id_exptAnalysisBtn" disabled type="button" onclick="exportAnalysis();" class="btn btn-fullwidth">' + P3TXT.download_analysis + '</button></div>',
+        exptNoteBtnDis: '<div><button id="id_exptNoteBtn" disabled type="button" onclick="exportNotes();" class="btn btn-fullwidth">' + P3TXT.download_notes + '</button></div>',
+
+        restartBtn: '<div><button id="id_restartBtn" type="button" onclick="restart_datalog();" class="btn btn-fullwidth">' + P3TXT.restart_log + '</button></div>',
+        captureBtn: '<div><button id="id_captureBtn" type="button" onclick="captureSwitch();" class="btn btn-fullwidth">' + P3TXT.switch_to_cptr + '</button></div>',
+        cancelCapBtn: '<div><button id="id_cancelCapBtn" type="button" onclick="cancelCapSwitch();" class="btn btn-fullwidth">' + P3TXT.cancl_cptr + '</button></div>',
+        cancelAnaBtn: '<div><button id="id_cancelAnaBtn" type="button" onclick="cancelAnaSwitch();" class="btn btn-fullwidth">' + P3TXT.cancl_ana + '</button></div>',
+        calibrateBtn: '<div><button id="id_calibrateBtn" type="button" onclick="referenceGas();" class="btn btn-fullwidth">' + P3TXT.calibrate + '</button></div>',
+        shutdownBtn: '<div><button id="id_shutdownBtn" type="button" onclick="shutdown_analyzer();" class="btn btn-danger btn-fullwidth">' + P3TXT.shutdown + '</button></div>',
+        downloadBtn: '<div><button id="id_downloadBtn" type="button" onclick="modalPaneExportControls();" class="btn btn-fullwidth">' + P3TXT.download_files + '</button></div>',
+        analyzerCntlBtn: '<div><button id="id_analyzerCntlBtn" type="button" onclick="modalPanePrimeControls();" class="btn btn-fullwidth">' + P3TXT.anz_cntls + '</button></div>',
+        warningCloseBtn: '<div><button id="id_warningCloseBtn" onclick="restoreModalDiv();" class="btn btn-fullwidth">' + P3TXT.close + '</button></div>',
+        modChangeCloseBtn: '<div><button id="id_modChangeCloseBtn" onclick="restoreModChangeDiv();" class="btn btn-fullwidth">' + P3TXT.close + '</button></div>',
+        switchLogBtn: '<div><button id="id_switchLogBtn" onclick="switchLog();" class="btn btn-fullwidth">' + P3TXT.select_log + '</button></div>',
+        switchToPrimeBtn: '<div><button id="id_switchToPrimeBtn" onclick="switchToPrime();" class="btn btn-fullwidth">' + P3TXT.switch_to_prime + '</button></div>',
+        changeMinAmpCancelBtn: '<div><button id="id_changeMinAmpCancelBtn" onclick="changeMinAmpVal(false);" class="btn btn-fullwidth">' + P3TXT.cancel + '</button></div>',
+        changeMinAmpOkBtn: '<div><button id="id_changeMinAmpOkBtn" onclick="changeMinAmpVal(true);" class="btn btn-fullwidth">' + P3TXT.ok + '</button></div>',
+        changeStabClassCancelBtn: '<div><button id="id_changeStabClassCancelBtn" onclick="changeStabClassVal(false);" class="btn btn-fullwidth">' + P3TXT.cancel + '</button></div>',
+        changeStabClassOkBtn: '<div><button id="id_changeStabClassOkBtn" onclick="changeStabClassVal(true);" class="btn btn-fullwidth">' + P3TXT.ok + '</button></div>',
+        
         changeMinAmpOkHidBtn: '<div style="display: hidden;"><button id="id_changeMinAmpOkHidBtn" onclick="changeMinAmpVal(true);"/></div>',
-        allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-fullwidth">' + TXT.remove_all_plat_hlite + '</button></div>',
-        surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn btn-fullwidth">' + TXT.stop_survey + '</button></div>',
-        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn btn-fullwidth">' + TXT.complete_survey + '</button></div>',
-        copyClipboardOkBtn: '<div><button id="id_copyClipboardOkBtn" type="button" onclick="copyCliboard();" class="btn btn-fullwidth">' + TXT.ok + '</button></div>',
-        weatherFormOkBtn: '<div><button id="id_weatherFormOkBtn" type="button" class="btn btn-fullwidth">' + TXT.ok + '</button></div>'
+        allHliteCntl: '<div><button id="id_allHliteCntl" type="button" onclick="removeAllHlites();" class="btn btn-fullwidth">' + P3TXT.remove_all_plat_hlite + '</button></div>',
+        surveyOnOffBtn: '<div><button id="id_surveyOnOffBtn" type="button" onclick="stopSurvey();" class="btn btn-fullwidth">' + P3TXT.stop_survey + '</button></div>',
+        completeSurveyBtn: '<div><button id="id_completeSurveyBtn" type="button" onclick="completeSurvey();" class="btn btn-fullwidth">' + P3TXT.complete_survey + '</button></div>',
+        copyClipboardOkBtn: '<div><button id="id_copyClipboardOkBtn" type="button" onclick="copyCliboard();" class="btn btn-fullwidth">' + P3TXT.ok + '</button></div>',
+        weatherFormOkBtn: '<div><button id="id_weatherFormOkBtn" type="button" class="btn btn-fullwidth">' + P3TXT.ok + '</button></div>'
     };
 
 // List of Html buttons (<li>....</li><li>....</li>...)
@@ -227,13 +94,13 @@ var LBTNS = {
 function modalNetWarning() {
     var hdr, body, footer, c1array, c2array;
     
-    body = '<p><h3>' + TXT.conn_warning_txt + '</h3></p>';
+    body = '<p><h3>' + P3TXT.conn_warning_txt + '</h3></p>';
     
     c1array = [];
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.conn_warning_hdr + '</h3>');
+    c1array.push('<h3>' + P3TXT.conn_warning_hdr + '</h3>');
     c2array.push(HBTN.warningCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
     footer = "";
@@ -262,6 +129,26 @@ if (!CNSNT) {
     CNSNT.resource_AnzLrt = "";
     CNSNT.sys = "";
     CNSNT.identity = "";
+}
+
+CNSNT.google_maptype_name = {
+    "ROADMAP": true
+    , "SATELLITE": true
+    , "HYBRID": true
+    , "TERRAIN": true
+}
+
+CNSNT.baidu_maptype_name = {
+    "BMAP_NORMAL_MAP": "地图"
+    , "BMAP_PERSPECTIVE_MAP": "三维"
+    , "BMAP_SATELLITE_MAP": "卫星"
+    , "BMAP_HYBRID_MAP": "混合"
+};
+CNSNT.baidu_name_maptype = {};
+for (var ky in CNSNT.baidu_maptype_name) {
+    if (CNSNT.baidu_maptype_name.hasOwnProperty(ky)) {
+        CNSNT.baidu_name_maptype[CNSNT.baidu_maptype_name[ky]] = ky;
+    }
 }
 
 // initial "|" is expected with no trailing "|"
@@ -340,18 +227,18 @@ CNSNT.gmt_offset = get_time_zone_offset();
 CNSNT.rest_default_timeout = 60000;
 
 CNSNT.stab_control = {
-    "*": TXT.stab_star
-    , A: TXT.stab_a
-    , B: TXT.stab_b
-    , C: TXT.stab_c
-    , D: TXT.stab_d
-    , E: TXT.stab_e
-    , F: TXT.stab_f
+    "*": P3TXT.stab_star
+    , A: P3TXT.stab_a
+    , B: P3TXT.stab_b
+    , C: P3TXT.stab_c
+    , D: P3TXT.stab_d
+    , E: P3TXT.stab_e
+    , F: P3TXT.stab_f
 };
 
 CNSNT.export_control = {
-    "file": TXT.export_as_txt
-  , "csv": TXT.export_as_csv
+    "file": P3TXT.export_as_txt
+  , "csv": P3TXT.export_as_csv
 };
 
 
@@ -451,7 +338,7 @@ var modePane = function() {
     
     if (CNSNT.prime_view) {
         pane = '<div style="margin-left:20px;">'
-            + '<h2 id="mode">Survey Mode</h2>'
+            + '<h2 id="mode">' + P3TXT.survey_mode + '</h2>'
             + '</div>';
     }
     
@@ -549,7 +436,9 @@ CSTATE.map = undefined;
 CSTATE.mapListener = {};
         
 CSTATE.marker = null;
+
 CSTATE.gglOptions = null;
+CSTATE.baiduOptions = null;
 
 CSTATE.peakMarkers = [];
 CSTATE.analysisMarkers = [];
@@ -614,6 +503,10 @@ CSTATE.showingWeatherDialog = false;
 CSTATE.inferredStabClass = null;
 CSTATE.prevInferredStabClass = null;
 
+// show download buttons for peaks & analysis
+CSTATE.peaksDownload = false;
+CSTATE.analysisDownload = false;
+
 var TIMER = {
         prime: null,
         resize: null,
@@ -626,11 +519,12 @@ var TIMER = {
         progress: null, //timer for updateProgress
         mode: null, // timer for getMode 
         periph: null, // timer for checkPeriphUpdate
-        swath: null // timer for showing swath
+        swath: null, // timer for showing swath
+        centerTimer: null // timer for centering the map
     };
     
-var modeStrings = {0: TXT.survey_mode, 1: TXT.capture_mode, 2: TXT.capture_mode, 3: TXT.analyzing_mode, 4: TXT.inactive_mode, 
-                   5: TXT.cancelling_mode, 6: TXT.priming_mode, 7: TXT.purging_mode, 8: TXT.injection_pending_mode };
+var modeStrings = {0: P3TXT.survey_mode, 1: P3TXT.capture_mode, 2: P3TXT.capture_mode, 3: P3TXT.analyzing_mode, 4: P3TXT.inactive_mode, 
+                   5: P3TXT.cancelling_mode, 6: P3TXT.priming_mode, 7: P3TXT.purging_mode, 8: P3TXT.injection_pending_mode };
                    
 // Calculate the additional wind direction standard deviation based on the wind speed and the car speed.
 //  This is an empirical model to estimate the performace of the measurement process.
@@ -717,144 +611,553 @@ function tableChrome(tblStyle, trStyle, c1array, c2array, c3array, c4array) {
     return tbl;
 }
 
+
+// ALL Map API interaction should be here
+
+function positionMapControlDiv() {
+    var pge_wdth, hgth_top, lpge_wdth, new_width, new_height, new_top, cen;
+    pge_wdth = $('#id_topbar').width(); // - ($('#id_sidebar').width() + 20);
+    hgth_top = $('#id_topbar').height() + $('#id_feedback').height() + $('#id_content_title').height();
+
+    $("#id_mapControlDiv").css('position', 'absolute');
+    $("#id_mapControlDiv").css('top', hgth_top + 10);
+    $("#id_mapControlDiv").css('bottom', 'auto');
+    $("#id_mapControlDiv").css('left', pge_wdth - 230);
+    $("#id_mapControlDiv").css('right', 'auto');
+}
+
+function baiduMapTypeFromName(mtname) {
+    var mt;
+    switch(mtname) {
+        case "BMAP_NORMAL_MAP":
+            mt = BMAP_NORMAL_MAP;
+            break;
+        case "BMAP_HYBIRD_MAP":
+            mt = BMAP_HYBIRD_MAP;
+            break;
+        case "BMAP_PERSPECTIVE_MAP":
+            mt = BMAP_PERSPECTIVE_MAP;
+            break;
+        case "BMAP_SATELLITE_MAP":
+            mt = BMAP_SATELLITE_MAP;
+            break;
+        default:
+            mt = BMAP_NORMAL_MAP;
+            break;
+    }
+    //console.log(mtname, mt);
+    return mt
+}
+
+function slowConvert(lngArray, latArray, done) {
+    var newLngArray = [], newLatArray = [];
+    var nLeft = lngArray.length;
+    for (var i=0; i<lngArray.length; i++) {
+        var where = new BMap.Point(lngArray[i], latArray[i]);
+        var cb = (function (j) {
+            return function(point) {
+                newLngArray[j] = point.lng;
+                newLatArray[j] = point.lat;
+                nLeft -= 1;
+                if (nLeft === 0) done(null,newLngArray,newLatArray);
+            };
+        })(i);
+        BMap.Convertor.translate(where, 0, cb);
+    }
+}
+
+function batchConvert(lngArray, latArray, done) {
+    var dLng = 0.008, dLat = 0.03;
+    var minLng = 72.004; //, maxLng = 137.8347;
+    var minLat = 0.8293; //, maxLat = 55.8271;
+
+    function transform(xfm, lng, lat) {
+        // Apply the transform in xfm to coordinates (lng,lat)
+        // xfm = [lngBase, latBase, sLng0, sLat0, dsLngdLng, dsLatdLng, dsLngdLat, dsLatdLat]
+        var cLng = lng - xfm[0];
+        var cLat = lat - xfm[1];
+        var sLng = xfm[2]+ cLng*xfm[4] + cLat*xfm[6];
+        var sLat = xfm[3]+ cLng*xfm[5] + cLat*xfm[7];
+        return [lng+sLng, lat+sLat];
+    }
+
+    function processSingle(lng, lat, cb) {
+        // Find lower left corner of interpolation cell as a base 36 "key"
+        var lngIndex = Math.floor((lng - minLng)/dLng);
+        var latIndex = Math.floor((lat - minLat)/dLat);
+        var key = (10000*lngIndex + latIndex).toString(36);
+        // Fill the xform dictionary by calling Baidu API if this cell has
+        //  not yet been seen
+        if (key in localStorage) {
+            cb(null, transform(JSON.parse(localStorage[key]),lng,lat));
+        }
+        else {
+            var lngBase = minLng + lngIndex*dLng;
+            var latBase = minLat + latIndex*dLat;
+            var oldLng = [lngBase, lngBase+dLng, lngBase];
+            var oldLat = [latBase, latBase, latBase+dLat];
+            slowConvert(oldLng, oldLat, function (err, newLng, newLat) {
+                if (err) done(err);
+                else {
+                    // Calculate shifts in the coordinates at three anchor points
+                    var sLng = [], sLat = [];
+                    sLng[0] = newLng[0] - oldLng[0]; sLat[0] = newLat[0] - oldLat[0];
+                    sLng[1] = newLng[1] - oldLng[1]; sLat[1] = newLat[1] - oldLat[1];
+                    sLng[2] = newLng[2] - oldLng[2]; sLat[2] = newLat[2] - oldLat[2];
+                    // Compute derivatives of the shift function using finite differences
+                    localStorage[key] = JSON.stringify([lngBase, latBase,
+                        sLng[0], sLat[0],
+                        (sLng[1]-sLng[0])/dLng, (sLat[1]-sLat[0])/dLng,
+                        (sLng[2]-sLng[0])/dLat, (sLat[2]-sLat[0])/dLat]);
+                    cb(null, transform(JSON.parse(localStorage[key]),lng,lat));
+                }
+            });
+        }
+    }
+
+    if (lngArray.length !== latArray.length) {
+        done(new Error("Longitude and latitude arrays must be of equal length"));
+    }
+    else {
+        var newLngArray = [];
+        var newLatArray = [];
+        var k = 0;
+        var next = function () {
+            if (k == latArray.length) done(null, newLngArray, newLatArray);
+            else {
+                processSingle(lngArray[k], latArray[k], function (err, newCoords) {
+                    if (err) done (err);
+                    else {
+                        newLngArray.push(newCoords[0]);
+                        newLatArray.push(newCoords[1]);
+                        k += 1;
+                        next();
+                    }
+                });
+            }
+        };
+        next();
+    }
+}
+
+
+function doConvertThenProcess(data, processTheData) {
+    switch(CNSNT.provider) {
+        case "google":
+            processTheData();
+            break;
+
+        case "baidu":
+            if (CNSNT.provider_gpsconvert === true) {
+                batchConvert(data.result.GPS_ABS_LONG
+                    , data.result.GPS_ABS_LAT
+                    , function(err, new_lngs, new_lats) {
+
+                        if (err) {
+                            console.log("some bacthConvert err: ", err);
+                        } else {
+                            data.result.GPS_ABS_LONG = new_lngs;
+                            data.result.GPS_ABS_LAT = new_lats;
+                            processTheData();
+                        }
+                    });
+            } else {
+                processTheData();
+            }
+            break;
+    }
+};
+
 function newMap(canvas) {
-    return new google.maps.Map(canvas, CSTATE.gglOptions);
-    // return new Microsoft.Maps.Map(canvas, CSTATE.bingOptions); 
+    if (!CNSNT.hasOwnProperty("provider")) {
+        CNSNT.provider = "google";
+    }
+    if (!CNSNT.hasOwnProperty("provider_gpsconvert")) {
+        CNSNT.provider_gpsconvert = false;
+    }
+    switch(CNSNT.provider) {
+        case "google":
+            return new google.maps.Map(canvas, CSTATE.gglOptions);
+            break;
+
+        case "baidu":
+            //console.log("CSTATE.baiduOptions", CSTATE.baiduOptions);
+            return new BMap.Map(canvas, CSTATE.baiduOptions);
+            break;
+    }
 }
 function newLatLng(lat, lng) {
-    return new google.maps.LatLng(lat, lng);
+    switch(CNSNT.provider) {
+        case "google":
+            return new google.maps.LatLng(lat, lng);
+            break;
+
+        case "baidu":
+            return new BMap.Point(lng, lat);
+            break;
+    }
     // return new Microsoft.Maps.Location(lat, lng);
 }
 
 function newPolyline(map, clr) {
-    var pl = new google.maps.Polyline(
-        {path: new google.maps.MVCArray(),
-            strokeColor: clr,
-            strokeOpactity: 1.0,
-            strokeWeight: 2}
-    );
-    pl.setMap(map);
-    return pl;
+    switch(CNSNT.provider) {
+        case "google":
+            var pl = new google.maps.Polyline(
+                {path: new google.maps.MVCArray(),
+                    strokeColor: clr,
+                    strokeOpactity: 1.0,
+                    strokeWeight: 2}
+            );
+            pl.setMap(map);
+            return pl;
+            break;
 
-    // var pl = new Microsoft.Maps.Polyline([], {strokeColor: clr, strokeThickness: 2, });
-    // map.entities.push(pl);
-    // return pl;
+        case "baidu":
+            var pl = new BMap.Polyline([]
+                , {strokeColor: clr
+                    , strokeOpactity: 1.0
+                    , strokeWeight: 2});
+            map.addOverlay(pl);
+            return pl;
+            break;
+    }
+
 }
 
 function newPolygonWithoutOutline(map, clr, opacity, vertices, visible) {
-    var poly = new google.maps.Polygon(
-        {   paths: vertices,
-            strokeColor: "#000000",
-            strokeOpacity: 0.0,
-            strokeWeight: 0,
-            fillColor: clr,
-            visible: visible,
-            fillOpacity: opacity}
-    );
-    poly.setMap(map);
-    return poly;
+    switch(CNSNT.provider) {
+        case "google":
+            var poly = new google.maps.Polygon(
+                {   paths: vertices,
+                    strokeColor: "#000000",
+                    strokeOpacity: 0.0,
+                    strokeWeight: 0,
+                    fillColor: clr,
+                    visible: visible,
+                    fillOpacity: opacity}
+            );
+            poly.setMap(map);
+            return poly;
+            break;
+
+        case "baidu":
+            var poly = new BMap.Polygon(vertices
+                , {strokeColor: "#000000"
+                   , strokeOpacity: 0.0
+                   , strokeWeight: 0.01
+                   , fillColor: clr
+                   //, visible: visible
+                   , fillOpacity: opacity}
+            );
+            map.addOverlay(poly);
+            return poly;
+            break;
+    }
 }
 
 function pushToPath(path, where) {
-    path.getPath().push(where);
-    // var locs = path.getLocations();
-    // locs.push(where);
-    // path.setLocations();
+    switch(CNSNT.provider) {
+        case "google":
+            path.getPath().push(where);
+            break;
+
+        case "baidu":
+            if (!CSTATE.hasOwnProperty('cpoints')) {
+                CSTATE.cpoints = [];
+            }
+
+            //console.log("baidu where:", where)
+            //alert("pause");
+            if (where.lng == 0) {
+                alert("lng is 0");
+            }
+            if (where.lat == 0) {
+                alert("lat is 0");
+            }
+            CSTATE.cpoints.push(where);
+            break;
+    }
 }
 
 function newPoint(x, y) {
-    return new google.maps.Point(x, y);
+    switch(CNSNT.provider) {
+        case "google":
+            return new google.maps.Point(x, y);
+            break;
+
+        case "baidu":
+            return new BMap.Point(x, y);
+            break;
+    }
     // return new Microsoft.Maps.Point(x, y);
 }
 
 function newRectangle(minlng, maxlng, minlat, maxlat) {
-    var sw, ne, bounds, rectOpts, rect;
+    switch(CNSNT.provider) {
+        case "google":
+            var sw, ne, bounds, rectOpts, rect;
 
-    sw = newLatLng(minlat, minlng);
-    ne = newLatLng(maxlat, maxlng);
-    bounds = new google.maps.LatLngBounds(sw, ne);
+            sw = newLatLng(minlat, minlng);
+            ne = newLatLng(maxlat, maxlng);
+            bounds = new google.maps.LatLngBounds(sw, ne);
 
-    rectOpts = {
-        strokeColor: CNSNT.normal_plat_outline_color,
-        strokeOpacity: CNSNT.normal_plat_outline_opacity,
-        strokeWeight: CNSNT.normal_plat_outline_weight,
-        fillColor: "#FFFFFF",
-        fillOpacity: 0,
-        bounds: bounds,
-        editable: false,
-        visible: true
-    };
-    rect = new google.maps.Rectangle(rectOpts);
-    return rect; 
+            rectOpts = {
+                strokeColor: CNSNT.normal_plat_outline_color,
+                strokeOpacity: CNSNT.normal_plat_outline_opacity,
+                strokeWeight: CNSNT.normal_plat_outline_weight,
+                fillColor: "#FFFFFF",
+                fillOpacity: 0,
+                bounds: bounds,
+                editable: false,
+                visible: true
+            };
+            rect = new google.maps.Rectangle(rectOpts);
+            return rect;
+            break;
+
+        case "baidu":
+            var vertices, sw, se, nw, ne;
+            sw = newLatLng(minlat, minlng);
+            se = newLatLng(minlat, maxlng);
+            ne = newLatLng(maxlat, minlng);
+            nw = newLatLng(maxlat, maxlng);
+            vertices = [sw, se, ne, nw];
+            var poly = new BMap.Polygon(vertices
+                , {strokeColor: CNSNT.normal_plat_outline_color
+                    , strokeOpacity: CNSNT.normal_plat_outline_opacity
+                    , strokeWeight: CNSNT.normal_plat_outline_weight
+                    , fillColor: "#FFFFFF"
+                    , fillOpacity: 0
+                }
+            );
+            map.addOverlay(poly);
+            return poly;
+            break;
+    }
 }
 
 function newGroundOverlay(minlng, maxlng, minlat, maxlat, img) {
-    var sw, ne, bounds, goOpts, go;
+    switch(CNSNT.provider) {
+        case "google":
+            var sw, ne, bounds, goOpts, go;
 
-    sw = newLatLng(minlat, minlng);
-    ne = newLatLng(maxlat, maxlng);
-    bounds = new google.maps.LatLngBounds(sw, ne);
+            sw = newLatLng(minlat, minlng);
+            ne = newLatLng(maxlat, maxlng);
+            bounds = new google.maps.LatLngBounds(sw, ne);
 
-    go = new google.maps.GroundOverlay(img, bounds);
-    return go;
+            go = new google.maps.GroundOverlay(img, bounds);
+            return go;
+            break;
+
+        case "baidu":
+            return null;
+            break;
+    }
+}
+function baidu_checkZoom() {
+    var zm = CSTATE.map.getZoom();
+    if (zm !== CSTATE.current_zoom) {
+        CSTATE.current_zoom = zm;
+        setCookie(COOKIE_NAMES.zoom, CSTATE.current_zoom, CNSNT.cookie_duration);
+    }
 }
 
+function centerTheMap(cen) {
+    switch(CNSNT.provider) {
+        case "google":
+            CSTATE.map.setCenter(cen);
+            break;
+
+        case "baidu":
+            baidu_checkZoom();
+            CSTATE.map.centerAndZoom(cen, CSTATE.current_zoom);
+            break;
+    }
+}
+
+function centerTheMapLast() {
+    if (CSTATE.lastwhere) {
+        switch(CNSNT.provider) {
+            case "google":
+                CSTATE.map.setCenter(CSTATE.lastwhere);
+                break;
+
+            case "baidu":
+                baidu_checkZoom();
+                CSTATE.map.centerAndZoom(CSTATE.lastwhere, CSTATE.current_zoom);
+                preserveLastCenter(CSTATE.lastwhere);
+                break;
+        }
+    }
+}
+
+function centerTheMapLastTimed() {
+    if (CSTATE.follow) {
+        centerTheMapLast();
+    }
+    TIMER.centerTimer = null;
+}
+
+
 function newAnzLocationMarker(map) {
-    var mk = new google.maps.Marker({position: map.getCenter(), visible: false});
-    mk.setMap(map);
-    return mk;
-    // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null); 
-    // map.entities.push(mk);
-    // return mk;
+    switch(CNSNT.provider) {
+        case "google":
+            var mk = new google.maps.Marker({position: map.getCenter(), visible: false});
+            mk.setMap(map);
+            return mk;
+            break;
+
+        case "baidu":
+            var mk_icon = new BMap.Icon("http://api.map.baidu.com/images/marker_red_sprite.png"
+                , new BMap.Size(46, 50)
+
+            );
+            var mk = new BMap.Marker( map.getCenter(), {icon: mk_icon, offset: new BMap.Size(11.5, -5)} );
+            map.addOverlay(mk);
+            return mk;
+            break;
+    }
 }
 
 function newToken(map, latlng) {
     var size = 2.0;
     var token = makeToken(size,"rgba(64,255,255,255)","black");
-    var mk = new google.maps.Marker({position: latlng, 
-        icon: new google.maps.MarkerImage(token.url,null,null,newPoint(token.radius,token.radius))});
-    mk.setMap(map);
-    return mk;    
+
+    switch(CNSNT.provider) {
+        case "google":
+            var mk_icon = new google.maps.MarkerImage(token.url,null,null,newPoint(token.radius,token.radius));
+            var mk = new google.maps.Marker({position: latlng,
+                icon: mk_icon});
+            mk.setMap(map);
+            return mk;
+            break;
+
+        case "baidu":
+            var mk_icon = new BMap.Icon(token.url, new BMap.Size(2*token.radius,2*token.radius));
+            var mk = new BMap.Marker( latlng
+                , {icon: mk_icon
+                });
+            map.addOverlay(mk);
+            return mk;
+            break;
+    }
 }
 
 function newPeakMarker(map, latLng, amp, sigma, ch4) {
+    //console.log("newPeakMarker");
     var size, fontsize, mk;
     size = Math.max(0.75,0.25*Math.round(4.0*Math.pow(amp, 1.0 / 4.0)));
     fontsize = 20.0 * size;
-    mk = new google.maps.Marker({position: latLng,
-        title: TXT.amp + ": " + amp.toFixed(2) + " " + TXT.sigma + ": " + sigma.toFixed(1),
-        icon: makeMarker(size,"rgba(64,255,255,255)","black",ch4.toFixed(1),"bold "+ fontsize +"px sans-serif","black")
-        });
-    mk.setMap(map);
-    return mk;
+    var marker_url = makeMarker(size,"rgba(64,255,255,255)","black",ch4.toFixed(1),"bold "+ fontsize +"px sans-serif","black");
+
+    switch(CNSNT.provider) {
+        case "google":
+            mk = new google.maps.Marker({position: latLng,
+                title: P3TXT.amp + ": " + amp.toFixed(2) + " " + P3TXT.sigma + ": " + sigma.toFixed(1),
+                icon: marker_url
+            });
+            mk.setMap(map);
+            return mk;
+            break;
+
+        case "baidu":
+            var mk_icon = new BMap.Icon(marker_url, new BMap.Size(36 * size + 1,65 * size + 1));
+            var mk = new BMap.Marker( latLng
+                , {icon: mk_icon
+                    , offset: new BMap.Size(0, -1*(65 * size + 1)/2)
+                    , title: P3TXT.amp + ": " + amp.toFixed(2) + " " + P3TXT.sigma + ": " + sigma.toFixed(1)
+                    , enableClicking: true
+                });
+            mk.setZIndex(10);
+            map.addOverlay(mk);
+            return mk;
+            break;
+    }
+
     // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null); 
     // map.entities.push(mk);
     // return mk;
 }
 
-function newWindMarker(map, latLng, radius, dir, dirSdev) {
-    var wr, wedge;
+function newWindMarker(map, latLng, radius, dir, dirSdev, amp, sigma) {
+    var wr, wedge, sz;
     wedge = makeWindWedge(radius,dir,2*dirSdev);
-    wr = new google.maps.Marker({position: latLng, icon: new google.maps.MarkerImage(wedge.url,null,null,newPoint(wedge.radius,wedge.radius)),zIndex:0});
-    wr.setMap(map);
-    return wr;
+    switch(CNSNT.provider) {
+        case "google":
+            wr = new google.maps.Marker({position: latLng
+                , icon: new google.maps.MarkerImage(wedge.url,null,null,newPoint(wedge.radius,wedge.radius))
+                ,zIndex:0
+            });
+            wr.setMap(map);
+            return wr;
+            break;
+
+        case "baidu":
+            var mk_icon = new BMap.Icon(wedge.url, new BMap.Size(2*wedge.radius, 2*wedge.radius));
+            var mk = new BMap.Marker( latLng
+                , {icon: mk_icon
+                , title: P3TXT.amp + ": " + amp.toFixed(2) + " " + P3TXT.sigma + ": " + sigma.toFixed(1)
+                });
+            mk.setZIndex(0);
+            map.addOverlay(mk);
+            return mk;
+            break;
+    }
+
 }
 
-function newAnalysisMarker(map, latLng, delta, uncertainty) {
-    var result, mk;
-    result = delta.toFixed(1) + " +/- " + uncertainty.toFixed(1);
-    result = result.replace("+", "%2B").replace(" ", "+");
-    mk = new google.maps.Marker({position: latLng,
-        icon: new google.maps.MarkerImage(
-            "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=bbtl|" + result + CNSNT.analysis_bbl_clr,
-            null,
-            null,
-            newPoint(0, 0)
-        )}
-        );
-    mk.setMap(map);
-    return mk;
-    // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null); 
+function newAnalysisMarker(map, latLng, delta, uncertainty, disposition) {
+    var amarker, mk, mk_text, mk_icon, txtpx;
+
+    mk_text = delta.toFixed(1) + " +/- " + uncertainty.toFixed(1);
+    txtpx = mk_text.length * 7.6; // This is just an average that seems to works with bold 14px sans-serif
+
+    var fillColor = "#FF8080";
+    var txtColor = "black";
+    var strokeColor = "black";
+
+    switch(disposition) {
+        case 1.0:
+            fillColor = "#9C9C9C";
+            break;
+
+        case 2.0:
+        case 3.0:
+        case 4.0:
+            fillColor = "red";
+            txtColor = "white";
+            strokeColor = "black";
+            break;
+    }
+
+    amarker = makeAnalysisMarker(txtpx, fillColor, strokeColor, mk_text,"bold 14px sans-serif",
+				 txtColor);
+
+    switch(CNSNT.provider) {
+        case "google":
+            mk = new google.maps.Marker({position: latLng
+                , icon: new google.maps.MarkerImage(amarker.url,null,null,newPoint(amarker.width/2,(amarker.height/2)-10))
+                ,zIndex:11
+            });
+            mk.setMap(map);
+
+            return mk;
+            break;
+
+        case "baidu":
+            mk_icon = new BMap.Icon(amarker.url, new BMap.Size(amarker.width, amarker.height));
+            mk = new BMap.Marker( latLng
+                , {icon: mk_icon
+                   , offset: new BMap.Size(0, 0)
+                   , title: mk_text
+                   , enableClicking: true
+                });
+            mk.setZIndex(11);
+            map.addOverlay(mk);
+            return mk;
+            break;
+    }
+    // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null);
     // map.entities.push(mk);
     // return mk;
 }
@@ -880,18 +1183,25 @@ function newNoteMarker(map, latLng, text, cat) {
             mkrAnchor = CNSNT.path_bbl_anchor;
         }
     }
-    mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr;
-    mk = new google.maps.Marker({position: latLng,
-        icon: new google.maps.MarkerImage(
-            mkrUrlFrag,
-            null,
-            mkrOrigin,
-            mkrAnchor
-        )}
-        );
-    mk.setMap(map);
-    return mk;
-    // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null); 
+    switch(CNSNT.provider) {
+        case "google":
+            mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr;
+            mk = new google.maps.Marker({position: latLng,
+                    icon: new google.maps.MarkerImage(
+                        mkrUrlFrag,
+                        null,
+                        mkrOrigin,
+                        mkrAnchor
+                    )}
+            );
+            mk.setMap(map);
+            return mk;
+            break;
+
+        case "baidu":
+            break;
+    }
+    // var mk = new Microsoft.Maps.Pushpin(map.getCenter(), null);
     // map.entities.push(mk);
     // return mk;
 }
@@ -917,26 +1227,183 @@ function updateNoteMarkerText(map, mkr, text, cat) {
             mkrAnchor = CNSNT.path_bbl_anchor;
         }
     }
-    mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr;
-    micon = new google.maps.MarkerImage(
-        mkrUrlFrag,
-        null,
-        mkrOrigin,
-        mkrAnchor
-    );
-    mkr.setIcon(micon);
+    switch(CNSNT.provider) {
+        case "google":
+            mkrUrlFrag = "http://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=" + mkrBbl + pathTxt + mkrClr;
+            micon = new google.maps.MarkerImage(
+                mkrUrlFrag,
+                null,
+                mkrOrigin,
+                mkrAnchor
+            );
+            mkr.setIcon(micon);
+            break;
+
+        case "baidu":
+            break;
+    }
+}
+
+function newDomEventListener(lobj, levent, lfn) {
+    var lstnr;
+    switch(CNSNT.provider) {
+        case "google":
+            lstnr = new google.maps.event.addDomListener(lobj, levent, lfn);
+            return lstnr;
+            break;
+
+        case "baidu":
+            return null;
+            break;
+    }
+}
+
+function newEventListener(lobj, levent, lfn) {
+    var lstnr;
+    switch(CNSNT.provider) {
+        case "google":
+            lstnr = new google.maps.event.addListener(lobj, levent, lfn);
+            return lstnr;
+            break;
+
+        case "baidu":
+            lobj.addEventListener(levent, lfn);
+            return null;
+            break;
+    }
+}
+
+function removeMarkerFromMap(mkr, map) {
+    switch(CNSNT.provider) {
+        case "google":
+            mkr.setMap(null);
+            break;
+
+        case "baidu":
+            map.removeOverlay(mkr);
+            break;
+    }
 }
 
 function removeListener(handle) {
-    google.maps.event.removeListener(handle);
+    switch(CNSNT.provider) {
+        case "google":
+            google.maps.event.removeListener(handle);
+            break;
+
+        case "baidu":
+            break;
+    }
 }
+
+function attachPlatListener(plat, plname) {
+    var platClickListener;
+    platClickListener = newEventListener(plat, 'click', function() {
+        modalPanePlatControls(plname);
+    });
+    PLATOBJS[plname].listener = platClickListener;
+}
+
+function attachGoListener(plat, plname) {
+    var goClickListener;
+    goClickListener = newEventListener(plat, 'click', function() {
+        modalPanePlatControls(plname);
+    });
+    PLATOBJS[plname].go_listener = goClickListener;
+}
+
+function removeGoListener(plobj) {
+    switch(CNSNT.provider) {
+        case "google":
+            google.maps.event.removeListener(plobj.go_listener);
+            break;
+
+        case "baidu":
+            break;
+    }
+    plobj.go_listener = null;
+}
+
+function getLatFromLoc(loc) {
+    switch(CNSNT.provider) {
+        case "google":
+            return loc.lat();
+            break;
+
+        case "baidu":
+            return loc.lat;
+            break;
+    }
+}
+
+function getLngFromLoc(loc) {
+    switch(CNSNT.provider) {
+        case "google":
+            return loc.lng();
+            break;
+
+        case "baidu":
+            return loc.lng;
+            break;
+    }
+}
+
+function getPathStrokeColor(path) {
+    switch(CNSNT.provider) {
+        case "google":
+            return path.strokeColor;
+            break;
+
+        case "baidu":
+            return path.getStrokeColor();
+            break;
+    }
+}
+
+
+function getPathLength(path) {
+    switch(CNSNT.provider) {
+        case "google":
+            return path.getPath().getLength();
+            break;
+
+        case "baidu":
+            return path.getPath().length;
+            break;
+    }
+}
+
+function getLastPathPoint(path) {
+    switch(CNSNT.provider) {
+        case "google":
+            var pathLen = path.getPath().getLength();
+            if (pathLen > 0) {
+                return path.getPath().getAt(pathLen - 1);
+            } else {
+                return 0;
+            }
+            break;
+
+        case "baidu":
+            var pathLen = CSTATE.cpoints.length;
+            if (pathLen > 0) {
+                return CSTATE.cpoints[pathLen - 1];
+            } else {
+                return 0;
+            }
+            break;
+    }
+}
+
+// ALL Map API interactions go above HERE!!
 
 function clearPeakMarkerArray() {
     var i, ky;
     CSTATE.clearLeaks = true;
     CSTATE.peakNoteDict = {};
     for (i = 0; i < CSTATE.peakMarkers.length; i += 1) {
-        CSTATE.peakMarkers[i].setMap(null);
+
+        removeMarkerFromMap(CSTATE.peakMarkers[i], CSTATE.map);
     }
     for (ky in CSTATE.peakBblListener) {
         removeListener(CSTATE.peakBblListener[ky]);
@@ -951,7 +1418,7 @@ function clearAnalysisMarkerArray() {
     CSTATE.clearAnalyses = true;
     CSTATE.analysisNoteDict = {};
     for (i = 0; i < CSTATE.analysisMarkers.length; i += 1) {
-        CSTATE.analysisMarkers[i].setMap(null);
+        removeMarkerFromMap(CSTATE.analysisMarkers[i], CSTATE.map);
     }
     for (ky in CSTATE.analysisBblListener) {
         removeListener(CSTATE.analysisBblListener[ky]);
@@ -965,7 +1432,7 @@ function clearSwathPolys() {
     var i;
     CSTATE.clearSwath = true;
     for (i = 0; i < CSTATE.swathPolys.length; i += 1) {
-        CSTATE.swathPolys[i].setMap(null);
+        removeMarkerFromMap(CSTATE.swathPolys[i], CSTATE.map);
     }
     CSTATE.swathPolys = [];
     //CSTATE.swathPathShowArray = [];
@@ -986,7 +1453,7 @@ function clearWindMarkerArray() {
     var i;
     CSTATE.clearWind = true;
     for (i = 0; i < CSTATE.windMarkers.length; i += 1) {
-        CSTATE.windMarkers[i].setMap(null);
+        removeMarkerFromMap(CSTATE.windMarkers[i], CSTATE.map);
     }
     CSTATE.windMarkers = [];
     CSTATE.peakLine = 1;
@@ -996,7 +1463,7 @@ function clearDatNoteMarkers(emptyTheDict) {
     var ky;
     CSTATE.clearDatNote = true;
     for (ky in CSTATE.datNoteMarkers) {
-        CSTATE.datNoteMarkers[ky].setMap(null);
+        removeMarkerFromMap(CSTATE.datNoteMarkers[i], CSTATE.map);
     }
     for (ky in CSTATE.datNoteListener) {
         removeListener(CSTATE.datNoteListener[ky]);
@@ -1015,7 +1482,7 @@ function clearAnalysisNoteMarkers() {
     var ky;
     CSTATE.clearAnalysisNote = true;
     for (ky in CSTATE.analysisNoteMarkers) {
-        CSTATE.analysisNoteMarkers[ky].setMap(null);
+        removeMarkerFromMap(CSTATE.analysisNoteMarkers[i], CSTATE.map);
     }
     for (ky in CSTATE.analysisNoteListener) {
         removeListener(CSTATE.analysisNoteListener[ky]);
@@ -1030,7 +1497,7 @@ function clearPeakNoteMarkers() {
     var ky;
     CSTATE.clearPeakNote = true;
     for (ky in CSTATE.peakNoteMarkers) {
-        CSTATE.peakNoteMarkers[ky].setMap(null);
+        removeMarkerFromMap(CSTATE.peakNoteMarkers[i], CSTATE.map);
     }
     for (ky in CSTATE.peakNoteListener) {
         removeListener(CSTATE.peakNoteListener[ky]);
@@ -1104,7 +1571,7 @@ function MapControl(controlDiv, map) {
     controlUI.style.borderWidth = '2px';
     controlUI.style.cursor = 'pointer';
     controlUI.style.textAlign = 'center';
-    controlUI.title = TXT.click_show_cntls;
+    controlUI.title = P3TXT.click_show_cntls;
     controlDiv.appendChild(controlUI);
 
     // Set CSS for the control interior.
@@ -1113,10 +1580,10 @@ function MapControl(controlDiv, map) {
     controlText.style.fontSize = '12px';
     controlText.style.paddingLeft = '4px';
     controlText.style.paddingRight = '4px';
-    controlText.innerHTML = TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass;
+    controlText.innerHTML = P3TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass;
     controlUI.appendChild(controlText);
 
-    google.maps.event.addDomListener(controlUI, 'click', function () {
+    newDomEventListener(controlUI, 'click', function () {
         modalPaneMapControls();
     });
     
@@ -1127,48 +1594,117 @@ function MapControl(controlDiv, map) {
 
 function initialize_map() {
     var where, mapListener;
-
+    if (!CNSNT.hasOwnProperty("provider")) {
+        CNSNT.provider = "google";
+    }
+    if (!CNSNT.hasOwnProperty("provider_gpsconvert")) {
+        CNSNT.provider_gpsconvert = false;
+    }
     CSTATE.map = newMap(document.getElementById("map_canvas"));
-
-    CNSNT.peak_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high 
+    CNSNT.peak_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high
     CNSNT.analysis_bbl_anchor = newPoint(0, 42); //d_bubble_text_small is 42px high
     CNSNT.path_bbl_anchor = newPoint(0, 0);
 
     CNSNT.peak_bbl_origin = newPoint(0, 0);
     CNSNT.analysis_bbl_origin = newPoint(0, 0);
     CNSNT.path_bbl_origin = newPoint(0, 0);
-    
-    CNSNT.mapControlDiv = document.createElement('DIV');
-    CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
-    
-    CNSNT.mapControlDiv.index = 1;
-    CSTATE.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(CNSNT.mapControlDiv);
-    
+
     clearMapListener();
-    mapListener = google.maps.event.addListener(CSTATE.map, 'center_changed', function () {
-        where = CSTATE.map.getCenter();
-        CSTATE.center_lat = where.lat();
-        CSTATE.center_lon = where.lng();
-        setCookie(COOKIE_NAMES.center_latitude, CSTATE.center_lat, CNSNT.cookie_duration);
-        setCookie(COOKIE_NAMES.center_longitude, CSTATE.center_lon, CNSNT.cookie_duration);
-        $("#center_latitude").val(where.lat());
-        $("#center_longitude").val(where.lng());
-    });
-    CSTATE.mapListener[mapListener] = mapListener;
-    
-    mapListener = google.maps.event.addListener(CSTATE.map, 'zoom_changed', function () {
-        CSTATE.current_zoom = CSTATE.map.getZoom();
-        setCookie(COOKIE_NAMES.zoom, CSTATE.current_zoom, CNSNT.cookie_duration);
-        CSTATE.gglOptions["zoom"] = CSTATE.current_zoom;
-    });
-    CSTATE.mapListener[mapListener] = mapListener;
-    
-    mapListener = google.maps.event.addListener(CSTATE.map, 'maptypeid_changed', function () {
-        CSTATE.current_mapTypeId = CSTATE.map.getMapTypeId();
-        setCookie(COOKIE_NAMES.mapTypeId, CSTATE.current_mapTypeId, CNSNT.cookie_duration);
-    });
-    CSTATE.mapListener[mapListener] = mapListener;
-    
+
+    switch(CNSNT.provider) {
+        case "google":
+            CNSNT.mapControlDiv = document.createElement('DIV');
+            CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
+            CNSNT.mapControlDiv.index = 1;
+
+            CSTATE.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(CNSNT.mapControlDiv);
+
+            mapListener = newEventListener(CSTATE.map, 'center_changed', function () {
+                where = CSTATE.map.getCenter();
+                preserveLastCenter(where);
+            });
+            CSTATE.mapListener[mapListener] = mapListener;
+
+            mapListener = newEventListener(CSTATE.map, 'zoom_changed', function () {
+                CSTATE.current_zoom = CSTATE.map.getZoom();
+                setCookie(COOKIE_NAMES.zoom, CSTATE.current_zoom, CNSNT.cookie_duration);
+                CSTATE.gglOptions["zoom"] = CSTATE.current_zoom;
+            });
+            CSTATE.mapListener[mapListener] = mapListener;
+
+            mapListener = newEventListener(CSTATE.map, 'maptypeid_changed', function () {
+                CSTATE.current_mapTypeId = CSTATE.map.getMapTypeId();
+                setCookie(COOKIE_NAMES.mapTypeId, CSTATE.current_mapTypeId, CNSNT.cookie_duration);
+            });
+            CSTATE.mapListener[mapListener] = mapListener;
+
+            newEventListener(CSTATE.map,"rightclick",function(event) {
+                var lat = getLatFromLoc(event.latLng);
+                var lng = getLngFromLoc(event.latLng);
+                modalPaneCopyClipboard(lat.toFixed(5) + ', ' + lng.toFixed(5));
+            });
+
+            break;
+
+        case "baidu":
+            CSTATE.map.addControl(new BMap.MapTypeControl());
+            CSTATE.map.addControl(new BMap.NavigationControl());
+            CSTATE.map.addControl(new BMap.ScaleControl());
+            CSTATE.map.setZoom(CSTATE.current_zoom);
+
+// creating a div to hold the picarro map control element
+            CNSNT.mapControlDiv = document.createElement('a');
+            CNSNT.mapControlDiv.id = 'id_mapControlDiv';
+            CNSNT.mapControl = new MapControl(CNSNT.mapControlDiv, CSTATE.map);
+            CNSNT.mapControlDiv.index = 1;
+
+            var kids = $("#top_right").find("#id_mapControlDiv");
+            if (kids.length === 0) {
+                $("#top_right").append(CNSNT.mapControlDiv);
+            }
+            CNSNT.mapControlDiv.onclick = function() {
+                modalPaneMapControls();
+            };
+
+            //CSTATE.map.setMapType(baiduMapTypeFromName(CSTATE.current_mapTypeId));
+            where = newLatLng(CSTATE.center_lat, CSTATE.center_lon);
+            centerTheMap(where);
+
+            mapListener = newEventListener(CSTATE.map, 'moveend', function () {
+                //console.log("moveend");
+                where = CSTATE.map.getCenter();
+                preserveLastCenter(where);
+            });
+            CSTATE.mapListener[mapListener] = mapListener;
+
+            mapListener = newEventListener(CSTATE.map, 'zoomend', function () {
+                //console.log("zoomend");
+                CSTATE.current_zoom = CSTATE.map.getZoom();
+                setCookie(COOKIE_NAMES.zoom, CSTATE.current_zoom, CNSNT.cookie_duration);
+            });
+            CSTATE.mapListener[mapListener] = mapListener;
+
+            mapListener = newEventListener(CSTATE.map, 'maptypechange', function () {
+                //console.log("maptypechange");
+
+                var typeName = CSTATE.map.getMapType().getName();
+                if (CNSNT.baidu_name_maptype.hasOwnProperty(typeName)) {
+                    CSTATE.current_mapTypeId = CNSNT.baidu_name_maptype[typeName];
+                    setCookie(COOKIE_NAMES.mapTypeId, CSTATE.current_mapTypeId, CNSNT.cookie_duration);
+                    //console.log('set maptype', CSTATE.current_mapTypeId);
+                }
+            });
+            CSTATE.mapListener[mapListener] = mapListener;
+            newEventListener(CSTATE.map,"rightclick",function(event) {
+                console.log("point", event.point);
+                var lat = getLatFromLoc(event.point);
+                var lng = getLngFromLoc(event.point);
+                modalPaneCopyClipboard(lat.toFixed(5) + ', ' + lng.toFixed(5));
+            });
+
+            break;
+    }
+
     CSTATE.path = newPolyline(CSTATE.map, CNSNT.normal_path_color);
     clearPathListener();
     
@@ -1179,9 +1715,10 @@ function initialize_map() {
     CSTATE.lastMeasPathDeltaLat = null;
     CSTATE.lastMeasPathDeltaLon = null;
 
-    var pathListener = google.maps.event.addListener(CSTATE.path, 'click', function (event) {
+    var pathListener = newEventListener(CSTATE.path, 'click', function (event) {
         var newhash, closepobjs, i, pobj;
-        newhash = encodeGeoHash(event.latLng.lat(), event.latLng.lng());
+        newhash = encodeGeoHash(getLatFromLoc(event.latLng)
+            , getLngFromLoc(event.latLng));
         closepobjs = getNearest(newhash, 1);
         for (i = 0; i < closepobjs.length; i += 1) {
             pobj = closepobjs[i];
@@ -1198,14 +1735,14 @@ function initialize_map() {
     });
     CSTATE.pathListener[pathListener] = pathListener;
     
-    google.maps.event.addListener(CSTATE.map,"rightclick",function(event) {
-        var lat = event.latLng.lat();
-        var lng = event.latLng.lng();
-        modalPaneCopyClipboard(lat.toFixed(5) + ', ' + lng.toFixed(5));
-    });
-    
-    if (CSTATE.marker) {
-        CSTATE.marker.setMap(null);
+    switch(CNSNT.provider) {
+        case "google":
+            if (CSTATE.marker) {
+                CSTATE.marker.setMap(null);
+            }
+            break;
+        case "baidu":
+            break;
     }
     CSTATE.marker = newAnzLocationMarker(CSTATE.map);
     
@@ -1213,6 +1750,17 @@ function initialize_map() {
         showTifCb();
     }
     CSTATE.firstData = true; 
+}
+
+function preserveLastCenter(where) {
+    var whlat = getLatFromLoc(where);
+    var whlng = getLngFromLoc(where);
+    CSTATE.center_lat = whlat;
+    CSTATE.center_lon = whlng;
+    setCookie(COOKIE_NAMES.center_latitude, CSTATE.center_lat, CNSNT.cookie_duration);
+    setCookie(COOKIE_NAMES.center_longitude, CSTATE.center_lon, CNSNT.cookie_duration);
+    $("#center_latitude").val(whlat);
+    $("#center_longitude").val(whlng);
 }
 
 function resize_map() {
@@ -1264,8 +1812,19 @@ function resize_map() {
 
     if (CSTATE.map) {
         cen = CSTATE.map.getCenter();
-        google.maps.event.trigger(CSTATE.map, 'resize');
-        CSTATE.map.setCenter(cen);
+        if (CNSNT.provider === 'google') {
+            google.maps.event.trigger(CSTATE.map, 'resize');
+        }
+        centerTheMap(cen);
+    }
+
+    switch(CNSNT.provider) {
+        case "google":
+            break;
+
+        case "baidu":
+            positionMapControlDiv();
+            break;
     }
 
     CSTATE.resize_map_inprocess = false;
@@ -1300,49 +1859,6 @@ function setModalChrome(hdr, msg, click) {
     return modalChrome;
 }
 
-$(document).ready(function(){
-
-    var capOrCan, i, modalChrome, hdr, body, footer, c1array, c2array;
-
-    c1array = [];
-    c2array = [];
-    
-    c1array.push('style="border-style: none; width: 50%; text-align: center;"');
-    c2array.push('style="border-style: none; width: 50%;"');
-    
-    c2array.push('');
-    
-    body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
-
-    c1array = [];
-    c2array = [];
-    c1array.push('style="border-style: none; width: 50%; text-aligh: center`;"');
-    c2array.push('style="border-style: none; width: 50%; text-align: center;"');
-    c1array.push('<h3>' + TXT.driver_warning + '</h3>');
-    // c2array.push(HBTN.agreeToDriverWarningBtn);
-    c2array.push('<div></div>');
-    hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
-
-
-    c1array = [];
-    c2array = [];
-    c1array.push('style="border-style: none; width: 50%; text-aligh: center;"');
-    c2array.push('style="border-style: none; width: 50%; text-align: center;"');
-    c1array.push(HBTN.agreeToDriverWarningBtn);
-    c2array.push('');
-    footer = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
-    
-    modalChrome = setModalChrome(
-        hdr,
-        body,
-        footer
-        );
-
-    $("#id_mod_change").html(modalChrome);
-    $("#id_restartBtn").focus();
-});
-
-
 function modalPanePrimeControls() {
     var capOrCan, i, modalChrome, hdr, body, footer, c1array, c2array;
 
@@ -1355,8 +1871,8 @@ function modalPanePrimeControls() {
     c1array.push(HBTN.restartBtn);
     c2array.push(HBTN.calibrateBtn);
     
-    c1array.push(HBTN.completeSurveyBtn);
-    c2array.push('');
+    //c1array.push(HBTN.completeSurveyBtn);
+    //c2array.push('');
     
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -1364,7 +1880,7 @@ function modalPanePrimeControls() {
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.anz_cntls + '</h3>');
+    c1array.push('<h3>' + P3TXT.anz_cntls + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -1384,6 +1900,7 @@ function modalPanePrimeControls() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_restartBtn").focus();
 }
 
@@ -1397,19 +1914,30 @@ function modalPaneExportControls() {
     c2array.push('style="border-style: none; width: 50%;"');
     c1array.push(exportClassCntl('style="width: 100%;"'));
     c2array.push(HBTN.exptLogBtn);
+
     c1array.push('');
-    c2array.push(HBTN.exptPeakBtn);
+    if (CSTATE.peaksDownload === true) {
+        c2array.push(HBTN.exptPeakBtn);
+    } else {
+        c2array.push(HBTN.exptPeakBtnDis);
+    }
+
     c1array.push('');
-    c2array.push(HBTN.exptAnalysisBtn);
-    c1array.push('');
-    c2array.push(HBTN.exptNoteBtn);
+    if (CSTATE.analysisDownload === true) {
+        c2array.push(HBTN.exptAnalysisBtn);
+    } else {
+        c2array.push(HBTN.exptAnalysisBtnDis);
+    }
+
+    //c1array.push('');
+    //c2array.push(HBTN.exptNoteBtn);
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
     c1array = [];
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.download_files + '</h3>');
+    c1array.push('<h3>' + P3TXT.download_files + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
     footer = '';
@@ -1421,6 +1949,7 @@ function modalPaneExportControls() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_restartBtn").focus();
 }
 
@@ -1437,7 +1966,7 @@ function modalPaneCopyClipboard(string) {
     c1array.push(textinput);
     c2array.push(HBTN.copyClipboardOkBtn);
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
-    hdr = '<h3>' + TXT.copyClipboard + '</h3>';
+    hdr = '<h3>' + P3TXT.copyClipboard + '</h3>';
 
     footer = '';
     
@@ -1448,6 +1977,7 @@ function modalPaneCopyClipboard(string) {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_copystr").select();
     $("#id_copystr").focus();
 }
@@ -1494,7 +2024,7 @@ function doExport(alog) {
                 , "logtype": ltype
                 , "startPos": 0
                 , "limit": "all"
-                , "rtnFmt": "file"
+                , "rtnFmt": CSTATE.exportClass
         };
     
         restFn = CSTATE.AnzLog;
@@ -1513,25 +2043,26 @@ function doExport(alog) {
             
             switch(ltype) {
             case "dat":
-                $('#id_exptLogBtn').html(TXT.download_concs);
+                $('#id_exptLogBtn').html(P3TXT.download_concs);
                 $('#id_exptLogBtn').redraw;
                 break;
                 
             case "peaks":
-                $('#id_exptPeakBtn').html(TXT.download_peaks);
+                $('#id_exptPeakBtn').html(P3TXT.download_peaks);
                 $('#id_exptPeakBtn').redraw;
                 break;
                 
             case "analysis":
-                $('#id_exptAnalysisBtn').html(TXT.download_analysis);
+                $('#id_exptAnalysisBtn').html(P3TXT.download_analysis);
                 $('#id_exptAnalysisBtn').redraw;
                 break;
                 
             case "notes":
-                $('#id_exptNoteBtn').html(TXT.download_notes);
+                $('#id_exptNoteBtn').html(P3TXT.download_notes);
                 $('#id_exptNoteBtn').redraw;
                 break;
             }
+            //alert("expturl at 1628:" + expturl);
             window.location = expturl;
     });
 }
@@ -1539,7 +2070,7 @@ function doExport(alog) {
 function exportLog() {
     var url = CNSNT.svcurl + '/sendLog?alog=' + CSTATE.alog;
     
-    $('#id_exptLogBtn').html(TXT.working + "...");
+    $('#id_exptLogBtn').html(P3TXT.working + "...");
     $('#id_exptLogBtn').redraw;
     
     doExport(CSTATE.alog);
@@ -1548,7 +2079,7 @@ function exportLog() {
 function exportPeaks() {
     var apath, url;
 
-    $('#id_exptPeakBtn').html(TXT.working + "...");
+    $('#id_exptPeakBtn').html(P3TXT.working + "...");
     $('#id_exptPeakBtn').redraw;
     
     apath = CSTATE.alog.replace(".dat", ".peaks");
@@ -1558,7 +2089,7 @@ function exportPeaks() {
 function exportAnalysis() {
     var apath, url;
 
-    $('#id_exptAnalysisBtn').html(TXT.working + "...");
+    $('#id_exptAnalysisBtn').html(P3TXT.working + "...");
     $('#id_exptAnalysisBtn').redraw;
     
     apath = CSTATE.alog.replace(".dat", ".analysis");
@@ -1568,7 +2099,7 @@ function exportAnalysis() {
 function exportNotes() {
     var apath, url;
 
-    $('#id_exptNoteBtn').html(TXT.working + "...");
+    $('#id_exptNoteBtn').html(P3TXT.working + "...");
     $('#id_exptNoteBtn').redraw;
     
     apath = CSTATE.alog.replace(".dat", ".notes");
@@ -1610,7 +2141,7 @@ function modalPaneSelectLog() {
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.select_log + '</h3>');
+    c1array.push('<h3>' + P3TXT.select_log + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
     footer = '';
@@ -1620,8 +2151,9 @@ function modalPaneSelectLog() {
         body,
         footer
         );
-    
+
     $("#id_mod_change").html(modalChangeMinAmp);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_amplitude").focus();
 }
 
@@ -1662,23 +2194,94 @@ function switchLog() {
             if (newtitle === "Live") {
                 $("#id_exportButton_span").html("");
             } else {
-                $("#id_exportButton_span").html(LBTNS.downloadBtns + '<br/>');
+                if (TEMPLATE_PARAMS.allow_download === true) {
+                    $("#id_exportButton_span").html(LBTNS.downloadBtns + '<br/>');
+                } else {
+                    $("#id_exportButton_span").html("");
+                }
             }
         }
     }
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
 }
 
 function switchToPrime() {
     var baseurl, url;
 
-    if (confirm(TXT.prime_conf_msg)) {
+    if (confirm(P3TXT.prime_conf_msg)) {
         baseurl = CNSNT.svcurl.replace("rest", "gduprime");
         url = baseurl + '/' + CNSNT.analyzer_name;
         window.location = url;
         restoreModChangeDiv();
     }
 }
+
+function dateFromLogName(LogName) {
+    //AnzLogLogger.log("LogName: " + LogName)
+    var tmp, yyyy, mm, dd, hh, mn, ss;
+    tmp = LogName.split("-");
+    yyyy = parseInt(tmp[1].substring(0,4),10);
+    mm = parseInt(tmp[1].substring(4,6),10);
+    dd = parseInt(tmp[1].substring(6,8),10);
+
+    hh = parseInt(tmp[2].substring(0,2),10);
+    mn = parseInt(tmp[2].substring(2,4),10);
+    ss = parseInt(tmp[2].substring(4,6),10);
+
+    return new Date(yyyy, mm - 1, dd, hh, mn, ss);
+}
+
+function anzFromLogname(logname) {
+    var tmp = logname.split("-");
+    var anz = tmp[0];
+    var aymd = tmp[1];
+    var ahms = tmp[2];
+
+    var nameDte = dateFromLogName(logname);
+    //logger.log("nameDte", nameDte);
+    var etmname = (nameDte.getTime() / 1000);
+
+    return {"anz": anz
+        , "ymd": aymd
+        , "hms": ahms
+        , "etmname": etmname
+        , "nameDte": nameDte
+    };
+}; //anzFromLogname
+
+
+function getPrimeIp() {
+    var anz;
+    if (CSTATE.alog.indexOf("@@Live:") >= 0) {
+        anz = CSTATE.alog.substring(7);
+    } else {
+        var name_obj = anzFromLogname(CSTATE.alog);
+        anz = name_obj.anz;
+    }
+
+    if (!CSTATE.hasOwnProperty("AnzMeta")) {
+        init_anzmeta_rest();
+    }
+    CSTATE.AnzMeta.resource("/" + anz
+        // error CB
+        , function(err) {
+            CSTATE.prime_available = false;
+            TIMER.prime = setTimeout(getPrimeIp, 5000);
+        }
+
+        // successCB
+        , function(rtn_code, rtnobj) {
+            rt = rtnobj[0];
+            if (rt.hasOwnProperty('PRIVATE_IP')) {
+                CSTATE.callbacktest_url = 'http://' + rt["PRIVATE_IP"];
+                testPrime();
+            } else {
+                CSTATE.prime_available = false;
+                TIMER.prime = setTimeout(getPrimeIp, 10000);
+            }
+        });
+};
 
 function testPrime() {
     var params, url;
@@ -1689,11 +2292,10 @@ function testPrime() {
         if (CNSNT.prime_view) {
             TIMER.prime = null;
         } else {
-            params = {'startPos': 'null', 'alog': CSTATE.alog, 'gmtOffset': CNSNT.gmt_offset};
-            url = CNSNT.callbacktest_url + '/' + 'getData';
+            params = {};
+            url = CSTATE.callbacktest_url + '/rest/' + 'getDateTime';
 
-            $.ajax({contentType: "application/json",
-                data: $.param(params),
+            $.ajax({
                 dataType: "jsonp",
                 url: url,
                 type: "get",
@@ -1723,6 +2325,7 @@ function restoreModChangeDiv() {
         CSTATE.end_warming_status = true;
     }
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
 }
 
 function restoreModalDiv() {
@@ -1736,6 +2339,7 @@ function changeMinAmpVal(reqbool) {
         changeMinAmp();
     }
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
     CSTATE.ignoreTimer = false;
 }
 
@@ -1745,15 +2349,17 @@ function changeStabClassVal(reqbool) {
         changeStabClass();
     }
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
     CSTATE.ignoreTimer = false;
 }
 
 function copyCliboard() {
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
 }
 
 function workingBtnPassThrough(btnBase) {
-    $('#id_' + btnBase).html(TXT.working + "...");
+    $('#id_' + btnBase).html(P3TXT.working + "...");
     $('#id_' + btnBase).redraw;
     setTimeout(btnBase + '()', 2);
 }
@@ -1769,11 +2375,11 @@ function showDnoteCb() {
     }
     setCookie(COOKIE_NAMES.dnote, (CSTATE.showDnote) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showDnote) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.dnote;
+    btxt += " " + P3TXT.dnote;
     $('#id_showDnoteCb').html(btxt);
 }
 
@@ -1788,11 +2394,11 @@ function showPnoteCb() {
     }
     setCookie(COOKIE_NAMES.pnote, (CSTATE.showPnote) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showPnote) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.pnote;
+    btxt += " " + P3TXT.pnote;
     $('#id_showPnoteCb').html(btxt);
 }
 
@@ -1807,11 +2413,11 @@ function showAnoteCb() {
     }
     setCookie(COOKIE_NAMES.anote, (CSTATE.showAnote) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showAnote) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.anote;
+    btxt += " " + P3TXT.anote;
     $('#id_showAnoteCb').html(btxt);
 }
 
@@ -1827,11 +2433,11 @@ function showPbubbleCb() {
     clearWindMarkerArray();
     setCookie(COOKIE_NAMES.pbubble, (CSTATE.showPbubble) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showPbubble) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.pbubble;
+    btxt += " " + P3TXT.pbubble;
     $('#id_showPbubbleCb').html(btxt);
 }
 
@@ -1846,11 +2452,11 @@ function showPlatCb() {
     }
     setCookie(COOKIE_NAMES.platOutlines, (CSTATE.showPlatOutlines) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showPlatOutlines) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.plat_outline;
+    btxt += " " + P3TXT.plat_outline;
     $('#id_showPlatCb').html(btxt);
 }
 
@@ -1865,11 +2471,11 @@ function showAbubbleCb() {
     }
     setCookie(COOKIE_NAMES.abubble, (CSTATE.showAbubble) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showAbubble) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.abubble;
+    btxt += " " + P3TXT.abubble;
     $('#id_showAbubbleCb').html(btxt);
 }
 
@@ -1885,11 +2491,11 @@ function showWbubbleCb() {
     clearWindMarkerArray();
     setCookie(COOKIE_NAMES.wbubble, (CSTATE.showWbubble) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showWbubble) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.wbubble;
+    btxt += " " + P3TXT.wbubble;
     $('#id_showWbubbleCb').html(btxt);
 }
 
@@ -1905,11 +2511,11 @@ function showSwathCb() {
     }
     setCookie(COOKIE_NAMES.swath, (CSTATE.showSwath) ? "1" : "0", CNSNT.cookie_duration);
 
-    btxt = TXT.show_txt;
+    btxt = P3TXT.show_txt;
     if (CSTATE.showSwath) {
-        btxt = TXT.hide_txt;
+        btxt = P3TXT.hide_txt;
     }
-    btxt += " " + TXT.swath;
+    btxt += " " + P3TXT.swath;
     $('#id_showSwathCb').html(btxt);
 }
 
@@ -1931,7 +2537,7 @@ function requestMinAmpChange() {
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.change_min_amp + '</h3>');
+    c1array.push('<h3>' + P3TXT.change_min_amp + '</h3>');
     c2array.push(HBTN.changeMinAmpCancelBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -1944,6 +2550,7 @@ function requestMinAmpChange() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_amplitude").focus();
 }
 
@@ -1962,7 +2569,7 @@ function requestStabClassChange() {
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.change_stab_class + '</h3>');
+    c1array.push('<h3>' + P3TXT.change_stab_class + '</h3>');
     c2array.push(HBTN.changeStabClassCancelBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -1975,6 +2582,7 @@ function requestStabClassChange() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_amplitude").focus();
 }
 
@@ -2198,7 +2806,7 @@ function notePane(etm, cat) {
         if (CSTATE.noteSortSel[i].cat === cat && CSTATE.noteSortSel[i].etm === etm.toString()) {
             selected = ' selected="selected" ';
         }
-        dsp = TXT[CSTATE.noteSortSel[i].cat] + ": " + CSTATE.noteSortSel[i].timeStrings;
+        dsp = P3TXT[CSTATE.noteSortSel[i].cat] + ": " + CSTATE.noteSortSel[i].timeStrings;
         options += '<option value="' + CSTATE.noteSortSel[i].cat + ":" + CSTATE.noteSortSel[i].etm + '"' + selected + '>' + dsp + '</option>';
     }
     logseldiv = "";
@@ -2207,7 +2815,7 @@ function notePane(etm, cat) {
     vlu += options;
     vlu += '</select>';
     logseldiv += '<div class="clearfix">';
-    logseldiv += '<label for="id_' + k + '">' + TXT[k]  +  '</label>';
+    logseldiv += '<label for="id_' + k + '">' + P3TXT[k]  +  '</label>';
     logseldiv += '<div class="input">';
     logseldiv += '<span id="id_' + k + '" class="input large">' + vlu + '</span>';
     logseldiv += '</div>';
@@ -2228,7 +2836,7 @@ function notePane(etm, cat) {
         }
     }
 
-    hdr = '<h3>' + TXT[cat]  +  ':&nbsp;' + timeStringFromEtm(etm) + '</h3>';
+    hdr = '<h3>' + P3TXT[cat]  +  ':&nbsp;' + timeStringFromEtm(etm) + '</h3>';
     proplist = '';
 
     $.each(lst, function (ky) {
@@ -2244,7 +2852,7 @@ function notePane(etm, cat) {
                 }
             }
             proplist += '<div class="clearfix">';
-            proplist += '<label for="id_' + k + '">' + TXT[k]  +  '</label>';
+            proplist += '<label for="id_' + k + '">' + P3TXT[k]  +  '</label>';
             proplist += '<div class="input">';
             proplist += '<span id="id_' + k + '" class="uneditable-input">' + vlu + '</span>';
             proplist += '</div>';
@@ -2259,7 +2867,7 @@ function notePane(etm, cat) {
 
     if (CNSNT.annotation_url) {
         proplist += '<div class="clearfix">';
-        proplist += '<label for="id_note">' + TXT.note + '</label>';
+        proplist += '<label for="id_note">' + P3TXT.note + '</label>';
         proplist += '<div class="input">';
 
         if (datadict.lock === true) {
@@ -2291,16 +2899,19 @@ function notePane(etm, cat) {
     if (CNSNT.annotation_url) {
         buttons += '<div style="display: hidden;"><button onclick="noteUpdate(true, ' + etm + ',' + catstr + ');"/></div>';
     }
-    buttons += '<div><button onclick="noteUpdate(false, ' + etm + ',' + catstr + ');" class="btn large">' + TXT.close + '</button></div>';
+    buttons += '<div><button onclick="noteUpdate(false, ' + etm + ',' + catstr + ');" class="btn large">' + P3TXT.close + '</button></div>';
 
     if (CNSNT.annotation_url) {
-        buttons += '<div><button onclick="noteUpdate(true, ' + etm + ', ' + catstr + ');" class="btn large">' + TXT.save_note + '</button></div>';
+        buttons += '<div><button onclick="noteUpdate(true, ' + etm + ', ' + catstr + ');" class="btn large">' + P3TXT.save_note + '</button></div>';
     }
 
     modalPinNote = setModalChrome(hdr, body, buttons);
 
     $("#id_smodal").html(modalPinNote);
+    $("#id_smodal").css("z-index", 9999);
+    $("#id_side_modal_span").css("z-index", 9999);
     $("#id_note").focus();
+
 }
 
 function modalPaneMapControls() {
@@ -2310,53 +2921,53 @@ function modalPaneMapControls() {
         , changeStabClassCntl;
     var dchkd, pchkd, achkd, pbchkd, abchkd, wbchkd, platchkd, swchkd, hdr, body, footer, c1array, c2array;
 
-    dchkd = TXT.show_txt;
+    dchkd = P3TXT.show_txt;
     if (CSTATE.showDnote) {
-        dchkd = TXT.hide_txt;
+        dchkd = P3TXT.hide_txt;
     }
-    dchkd += " " + TXT.dnote;
+    dchkd += " " + P3TXT.dnote;
     
-    pchkd = TXT.show_txt;
+    pchkd = P3TXT.show_txt;
     if (CSTATE.showPnote) {
-        pchkd = TXT.hide_txt;
+        pchkd = P3TXT.hide_txt;
     }
-    pchkd += " " + TXT.pnote;
+    pchkd += " " + P3TXT.pnote;
     
-    achkd = TXT.show_txt;
+    achkd = P3TXT.show_txt;
     if (CSTATE.showAnote) {
-        achkd = TXT.hide_txt;
+        achkd = P3TXT.hide_txt;
     }
-    achkd += " " + TXT.anote;
+    achkd += " " + P3TXT.anote;
     
-    pbchkd = TXT.show_txt;
+    pbchkd = P3TXT.show_txt;
     if (CSTATE.showPbubble) {
-        pbchkd = TXT.hide_txt;
+        pbchkd = P3TXT.hide_txt;
     }
-    pbchkd += " " + TXT.pbubble;
+    pbchkd += " " + P3TXT.pbubble;
     
-    abchkd = TXT.show_txt;
+    abchkd = P3TXT.show_txt;
     if (CSTATE.showAbubble) {
-        abchkd = TXT.hide_txt;
+        abchkd = P3TXT.hide_txt;
     }
-    abchkd += " " + TXT.abubble;
+    abchkd += " " + P3TXT.abubble;
 
-    platchkd = TXT.show_txt;
+    platchkd = P3TXT.show_txt;
     if (CSTATE.showPlatOutlines) {
-        platchkd = TXT.hide_txt;
+        platchkd = P3TXT.hide_txt;
     }
-    platchkd += " " + TXT.plat_outline;
+    platchkd += " " + P3TXT.plat_outline;
 
-    wbchkd = TXT.show_txt;
+    wbchkd = P3TXT.show_txt;
     if (CSTATE.showWbubble) {
-        wbchkd = TXT.hide_txt;
+        wbchkd = P3TXT.hide_txt;
     }
-    wbchkd += " " + TXT.wbubble;
+    wbchkd += " " + P3TXT.wbubble;
 
-    swchkd = TXT.show_txt;
+    swchkd = P3TXT.show_txt;
     if (CSTATE.showSwath) {
-        swchkd = TXT.hide_txt;
+        swchkd = P3TXT.hide_txt;
     }
-    swchkd += " " + TXT.swath;
+    swchkd += " " + P3TXT.swath;
     
     showDnoteCntl = '<div><button id="id_showDnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showDnoteCb") + ');" class="btn btn-fullwidth">' + dchkd + '</button></div>';
     showPnoteCntl = '<div><button id="id_showPnoteCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPnoteCb") + ');" class="btn btn-fullwidth">' + pchkd + '</button></div>';
@@ -2368,8 +2979,8 @@ function modalPaneMapControls() {
     showPlatCntl = '<div><button id="id_showPlatCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showPlatCb") + ');" class="btn btn-fullwidth">' + platchkd + '</button></div>';
     showWbubbleCntl = '<div><button id="id_showWbubbleCb" type="button" onclick="workingBtnPassThrough(' + single_quote("showWbubbleCb") + ');" class="btn btn-fullwidth">' + wbchkd + '</button></div>';
     showSwathCntl   = '<div><button id="id_showSwathCb"   type="button" onclick="workingBtnPassThrough(' + single_quote("showSwathCb") + ');"   class="btn btn-fullwidth">' + swchkd + '</button></div>';
-    changeMinAmpCntl = '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn btn-fullwidth">' + TXT.change_min_amp + ': ' + CSTATE.minAmp + '</button></div>';
-    changeStabClassCntl = '<div><button id="id_changeStabClass"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestStabClassChange") + ');"   class="btn btn-fullwidth">' + TXT.change_stab_class + ': ' + CSTATE.stabClass + '</button></div>';
+    changeMinAmpCntl = '<div><button id="id_changeMinAmp"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestMinAmpChange") + ');"   class="btn btn-fullwidth">' + P3TXT.change_min_amp + ': ' + CSTATE.minAmp + '</button></div>';
+    changeStabClassCntl = '<div><button id="id_changeStabClass"  type="button" onclick="workingBtnPassThrough(' + single_quote("requestStabClassChange") + ');"   class="btn btn-fullwidth">' + P3TXT.change_stab_class + ': ' + CSTATE.stabClass + '</button></div>';
     
     body = "";
     c1array = [];
@@ -2418,7 +3029,7 @@ function modalPaneMapControls() {
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.map_controls + '</h3>');
+    c1array.push('<h3>' + P3TXT.map_controls + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
     footer = '';
@@ -2430,6 +3041,7 @@ function modalPaneMapControls() {
         );
 
     $("#id_mod_change").html(modalPane);
+    $("#id_modal_span").css("z-index", 9999);
     $("#id_showDnoteCb").focus();
 }
 
@@ -2437,15 +3049,15 @@ function modalPanePlatControls(plname) {
     var activeCntl, acntl, modalPane, plobj, hcntl, hliteCntl, showTifCntl, hdr, body, footer, c1array, c2array;
     plobj = PLATOBJS[plname];
 
-    hcntl = TXT.hlite_plat;
+    hcntl = P3TXT.hlite_plat;
     if (plobj.hlite === true) {
-        hcntl = TXT.remove_plat_hlite;
+        hcntl = P3TXT.remove_plat_hlite;
     }
     hliteCntl = '<div><button id="id_hliteCntl" type="button" onclick="hlitePlat(' + single_quote(plname) + ');" class="btn btn-fullwidth">' + hcntl + '</button></div>';
 
-    acntl = TXT.select_active_plat;
+    acntl = P3TXT.select_active_plat;
     if (plobj.active === true) {
-        acntl = TXT.remove_active_plat;
+        acntl = P3TXT.remove_active_plat;
     } 
     activeCntl = '<div><button id="id_activeCntl" type="button" onclick="setActivePlat(' + single_quote(plname) + ');" class="btn btn-fullwidth">' + acntl + '</button></div>';
     
@@ -2466,7 +3078,7 @@ function modalPanePlatControls(plname) {
     c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push("<h3>" + TXT.plat + " " + plname.replace('.tif', '') + "</h3>");
+    c1array.push("<h3>" + P3TXT.plat + " " + plname.replace('.tif', '') + "</h3>");
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
     footer = "";
@@ -2476,7 +3088,9 @@ function modalPanePlatControls(plname) {
     body,
     footer
     );
+
     $("#id_mod_change").html(modalPane);
+    $("#id_modal_span").css("z-index", 9999);
 }
 
 function removeAllHlites() {
@@ -2492,7 +3106,8 @@ function removeAllHlites() {
     }
     $("#allHliteCntlSpan").html(HBTN.allHliteCntl);
     $("#id_mod_change").html("");
-    
+    $("#id_modal_span").css("z-index", 0);
+
 }
 
 function hlitePlat(plname) {
@@ -2500,7 +3115,7 @@ function hlitePlat(plname) {
     plobj = PLATOBJS[plname];
 
     if (plobj.hlite === true) {
-        hcntl = TXT.hlite_plat;
+        hcntl = P3TXT.hlite_plat;
         plobj.hlite = false;
         if (!plobj.active) {
             plobj.rect.setOptions({
@@ -2511,7 +3126,7 @@ function hlitePlat(plname) {
             });
         }
     } else {
-        hcntl = TXT.remove_plat_hlite;
+        hcntl = P3TXT.remove_plat_hlite;
         plobj.hlite = true;
         if (!plobj.active) {
             plobj.rect.setOptions({
@@ -2527,6 +3142,7 @@ function hlitePlat(plname) {
     
     $("#id_hliteCntl").html(hcntl);
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
 }
 
 function restoreHlitePlat(plobj) {
@@ -2573,12 +3189,12 @@ function setActivePlat(plname) {
             hideTifCb();
         }
         CSTATE.activePlatName = "";
-        acntl = TXT.select_active_plat;
+        acntl = P3TXT.select_active_plat;
         plobj.active = false;
         restoreHlitePlat(plobj);
     } else {
         CSTATE.activePlatName = plname;
-        acntl = TXT.remove_active_plat;
+        acntl = P3TXT.remove_active_plat;
         plobj.active = true;
         plobj.rect.setOptions({
             strokeColor: CNSNT.active_plat_outline_color,
@@ -2595,6 +3211,7 @@ function setActivePlat(plname) {
     plobj.rect.setMap(CSTATE.map);
     $("#id_activeCntl").html(acntl);
     $("#id_mod_change").html("");
+    $("#id_modal_span").css("z-index", 0);
 }
 
 function colorPathFromValveMask(value) {
@@ -2619,13 +3236,13 @@ function colorPathFromValveMask(value) {
     return clr;
 }
 
-function colorPathFromInstrumentStatus(clr) {
+function colorPathFromInstrumentStatus(clr, instStatus) {
     // Modify color to CNSNT.inactive_path_color if instrument status is not good
     var good = CNSNT.INSTMGR_STATUS_READY | CNSNT.INSTMGR_STATUS_MEAS_ACTIVE |
     CNSNT.INSTMGR_STATUS_GAS_FLOWING | CNSNT.INSTMGR_STATUS_PRESSURE_LOCKED |
     CNSNT.INSTMGR_STATUS_CAVITY_TEMP_LOCKED | CNSNT.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED;
     
-    if ((CSTATE.lastInst & CNSNT.INSTMGR_STATUS_MASK) !== good) {
+    if ((instStatus & CNSNT.INSTMGR_STATUS_MASK) !== good) {
         clr = CNSNT.inactive_path_color;
         CSTATE.lastPathColor = clr;        
     }
@@ -2638,7 +3255,8 @@ function widthFunc(windspeed,windDirSdev) {
     return w0*Math.exp(1.0)*(windspeed/v0)*Math.exp(-windspeed/v0);
 }
 
-function updatePath(pdata, clr, etm) {
+function updatePath(pdata, clr, etm, setThePath_flag) {
+    //alert("updatePath");
     var where, lastPoint, pathLen, npdata;
     lastPoint = null;
     where = newLatLng(pdata.lat, pdata.lon);
@@ -2649,17 +3267,21 @@ function updatePath(pdata, clr, etm) {
     // when path color needs to change, we instatiate a new path
     // this is because strokeColor changes the entire Polyline, not just
     // new points
-    if (CSTATE.startNewPath || clr !== CSTATE.path.strokeColor) {
-        pathLen = CSTATE.path.getPath().getLength();
+    var pscolor = getPathStrokeColor(CSTATE.path);
+    if (CSTATE.startNewPath || clr !== pscolor) {
+        pathLen = getPathLength(CSTATE.path);
         if (pathLen > 0) {
-            lastPoint = CSTATE.path.getPath().getAt(pathLen - 1);
+            lastPoint = getLastPathPoint(CSTATE.path);
         }
         CSTATE.path = newPolyline(CSTATE.map, clr);
+
         clearPathListener();
-        
-        var pathListener = google.maps.event.addListener(CSTATE.path, 'click', function (event) {
+        CSTATE.cpoints = [];
+
+        var pathListener = newEventListener(CSTATE.path, 'click', function (event) {
             var newhash, closepobjs, i, pobj;
-            newhash = encodeGeoHash(event.latLng.lat(), event.latLng.lng());
+            newhash = encodeGeoHash(getLatFromLoc(event.latLng)
+                , getLngFromLoc(event.latLng));
             closepobjs = getNearest(newhash, 1);
             for (i = 0; i < closepobjs.length; i += 1) {
                 pobj = closepobjs[i];
@@ -2678,42 +3300,27 @@ function updatePath(pdata, clr, etm) {
 
         if (lastPoint && !CSTATE.startNewPath) {
             pushToPath(CSTATE.path, lastPoint);
+            if (setThePath_flag === true) {
+                if (CNSNT.provider === 'baidu') {
+                    CSTATE.path.setPath(CSTATE.cpoints)
+                }
+
+            }
         }
     }
     pushToPath(CSTATE.path, where);
-    /*
-    if ('windN' in pdata) { 
-        if (clr === CNSNT.normal_path_color) {
-            var dir = Math.atan2(pdata.windE,pdata.windN);
-            var windspeed = Math.sqrt(pdata.windN*pdata.windN + pdata.windE*pdata.windE);
-            var width = widthFunc(windspeed,pdata.windDirSdev); // Width of band in meters in direction of mean wind
-            var deltaLat = CNSNT.rtd*width*Math.cos(dir)/CNSNT.earthRadius;
-            var deltaLon = CNSNT.rtd*width*Math.sin(dir)/(CNSNT.earthRadius*Math.cos(where.lat()*CNSNT.dtr));
-            
-            if (CSTATE.lastMeasPathLoc) {
-                if (!CSTATE.startNewPath) {
-                    // Draw the polygon
-                    var coords = [newLatLng(CSTATE.lastMeasPathLoc.lat()+CSTATE.lastMeasPathDeltaLat,CSTATE.lastMeasPathLoc.lng()+CSTATE.lastMeasPathDeltaLon),
-                        CSTATE.lastMeasPathLoc,
-                        where,
-                        newLatLng(where.lat()+deltaLat, where.lng()+deltaLon)];
-                    CSTATE.swathPolys.push(newPolygonWithoutOutline(CSTATE.map,CNSNT.swath_color,CNSNT.swath_opacity,coords,CSTATE.showSwath));
-                }    
-            }
-            CSTATE.lastMeasPathLoc = where;
-            CSTATE.lastMeasPathDeltaLat = deltaLat;
-            CSTATE.lastMeasPathDeltaLon = deltaLon;
+    if (setThePath_flag === true) {
+        if (CNSNT.provider === 'baidu') {
+            CSTATE.path.setPath(CSTATE.cpoints)
         }
-        else {
-            CSTATE.lastMeasPathLoc = null;
-            CSTATE.lastMeasPathDeltaLat = null;
-            CSTATE.lastMeasPathDeltaLon = null;
-        }
+
     }
-    */
+    //console.log("updatePath where:", where);
     CSTATE.startNewPath = false;
     npdata = pdata;
-    npdata.geohash = encodeGeoHash(where.lat(), where.lng());
+    var whlat = getLatFromLoc(where);
+    var whlng = getLngFromLoc(where);
+    npdata.geohash = encodeGeoHash(whlat, whlng);
     CSTATE.pathGeoObjs.push(npdata);
 }
 
@@ -2840,6 +3447,50 @@ function makeWindWedge(radius,meanBearing,halfWidth) {
     return {radius:radius,url:canvas.toDataURL("image/png")};
 }
 
+function makeAnalysisMarker(txtlenpx, fillColor, strokeColor, msg, font, textColor) {
+    var canvas, ch, cw, cntrx, startx, stopx, ctx;
+    canvas = document.createElement("canvas");
+
+    ch = 2*(txtlenpx + 10);
+    cw = ch;
+    cntrx = ch/2;
+    startx = cntrx+10;
+    stopx = cntrx+txtlenpx-1;
+    
+// canvas is square, pointer is exact center of the square.
+// this allows the image to be positioned directly on the map
+// without an offset when map provider is baidu (baidu does strange things with offsets and zooming and gps conversion)
+    canvas.height = ch;
+    canvas.width = cw;
+    ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.strokeStyle=strokeColor;
+    ctx.lineWidth="1";
+
+    ctx.moveTo(startx, 110);
+    ctx.lineTo(cntrx, 100);
+    ctx.lineTo(startx+10, 110);
+    ctx.lineTo(stopx, 110);
+    ctx.quadraticCurveTo(stopx+10, 110, stopx+10, 120);
+    ctx.lineTo(stopx+10, 125);
+    ctx.quadraticCurveTo(stopx+10, 135, stopx, 135);
+    ctx.lineTo(startx+10, 135);
+    ctx.quadraticCurveTo(startx, 135, startx, 125);
+    ctx.lineTo(startx, 110);
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+
+    ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg,startx+50,125);
+
+    return {url: canvas.toDataURL("image/png"), height: ch, width: cw};
+}
+
 function getNearest(currentHash, maxNeighbors) {
     var matching, accuracy, matchCount, i, tmp;
     matching = {};
@@ -2877,15 +3528,34 @@ function initialize_gdu(winH, winW) {
 
     initialize_btns();
     resize_map();
-    
-    if (CNSNT.prime_view) {
-        CSTATE.current_mapTypeId = google.maps.MapTypeId.ROADMAP;
-    } else {
-        CSTATE.current_mapTypeId = google.maps.MapTypeId.ROADMAP;
-        mapTypeCookie = getCookie(COOKIE_NAMES.mapTypeId);
-        if (mapTypeCookie) {
-            CSTATE.current_mapTypeId = mapTypeCookie;
-        }
+
+    switch(CNSNT.provider) {
+        case "google":
+            if (CNSNT.prime_view) {
+                CSTATE.current_mapTypeId = google.maps.MapTypeId.ROADMAP;
+            } else {
+                CSTATE.current_mapTypeId = google.maps.MapTypeId.ROADMAP;
+                mapTypeCookie = getCookie(COOKIE_NAMES.mapTypeId);
+                if (mapTypeCookie) {
+                    if (mapTypeCookie in CNSNT.google_maptype_name) {
+                        CSTATE.current_mapTypeId = mapTypeCookie;
+                    }
+                }
+            }
+            break;
+
+        case "baidu":
+            if (CNSNT.prime_view) {
+                CSTATE.current_mapTypeId = "BMAP_NORMAL_MAP";
+            } else {
+                CSTATE.current_mapTypeId = "BMAP_NORMAL_MAP";
+                mapTypeCookie = getCookie(COOKIE_NAMES.mapTypeId);
+                if (mapTypeCookie) {
+                    CSTATE.current_mapTypeId = mapTypeCookie;
+                    //console.log('initial maptype', CSTATE.current_mapTypeId);
+                }
+            }
+            break;
     }
 
     dnoteCookie = getCookie(COOKIE_NAMES.dnote);
@@ -2907,6 +3577,7 @@ function initialize_gdu(winH, winW) {
     if (pbubbleCookie) {
         CSTATE.showPbubble = parseInt(pbubbleCookie, 2);
     }
+    //console.log("CSTATE.showPbubble: " + CSTATE.showPbubble);
 
     abubbleCookie = getCookie(COOKIE_NAMES.abubble);
     if (abubbleCookie) {
@@ -2988,21 +3659,31 @@ function initialize_gdu(winH, winW) {
     }
 
     latlng = newLatLng(CSTATE.center_lat, CSTATE.center_lon);
-    CSTATE.gglOptions = {
-        zoom: CSTATE.current_zoom,
-        center: latlng,
-        mapTypeId: CSTATE.current_mapTypeId,
-        rotateControl: false,
-        scaleControl: true,
-        zoomControl: true,
-        zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL}
-    };
+    switch(CNSNT.provider) {
+        case "google":
+            CSTATE.gglOptions = {
+                zoom: CSTATE.current_zoom,
+                center: latlng,
+                mapTypeId: CSTATE.current_mapTypeId,
+                rotateControl: false,
+                scaleControl: true,
+                zoomControl: true,
+                zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL}
+            };
+            break;
+
+        case "baidu":
+            CSTATE.baiduOptions = {
+                mapType: baiduMapTypeFromName(CSTATE.current_mapTypeId)
+            }
+            break;
+    }
 
     if (!CNSNT.local_view) {
-        //initialize rest API
-        init_anzlrt_rest();
-        init_anzlog_rest();
-        init_anzlognote_rest();        
+            //initialize rest API
+            init_anzlrt_rest();
+            init_anzlog_rest();
+            init_anzlognote_rest();
     }
     
     initialize_map();
@@ -3069,6 +3750,26 @@ function init_anzlognote_rest() {
     CSTATE.AnzLogNote = new p3RestApi(anzlognote_defn_obj);
 }
 
+function init_anzmeta_rest() {
+    // anzmeta_defn_obj
+    var anzmeta_defn_obj = {};
+    anzmeta_defn_obj.host = CNSNT.host;
+    anzmeta_defn_obj.port = CNSNT.port;
+    anzmeta_defn_obj.site = CNSNT.site;
+    anzmeta_defn_obj.identity = CNSNT.identity;
+    anzmeta_defn_obj.psys = CNSNT.sys;
+    anzmeta_defn_obj.svc = CNSNT.svc;
+    anzmeta_defn_obj.version = CNSNT.version;
+    anzmeta_defn_obj.resource = "AnzMeta";
+    anzmeta_defn_obj.rprocs = ["AnzMeta:resource"];
+    anzmeta_defn_obj.jsonp = true;
+    anzmeta_defn_obj.api_timeout = 60.0;
+
+    anzmeta_defn_obj.debug = GDUDEBUG;
+
+    CSTATE.AnzMeta = new p3RestApi(anzmeta_defn_obj);
+}
+
 function initialize_btns() {
     var type;
     $('#cancel').hide();
@@ -3080,14 +3781,19 @@ function initialize_btns() {
     if (CNSNT.prime_view) {
         $("#id_primeControlButton_span").html(LBTNS.analyzerCntlBtns);
     } else {
-        testPrime();
+        getPrimeIp();
+        //testPrime();
         $("#id_primeControlButton_span").html("");
         $("#id_exportButton_span").html("");
         type = $("#id_selectLogBtn").html();
         if (type === "Live") {
             $("#id_exportButton_span").html("");
         } else {
-            $("#id_exportButton_span").html(LBTNS.downloadBtns + '<br/>');
+            if (TEMPLATE_PARAMS.allow_download === true) {
+                $("#id_exportButton_span").html(LBTNS.downloadBtns + '<br/>');
+            } else {
+                $("#id_exportButton_span").html("");
+            }
         }
     }
 }
@@ -3123,13 +3829,13 @@ function weather_dialog() {
 
 function restart_datalog() {
     var init;
-    if (confirm(TXT.restart_datalog_msg)) {
+    if (confirm(P3TXT.restart_datalog_msg)) {
         weather_dialog(); 
     }
 }
 
 function shutdown_analyzer() {
-    if (confirm(TXT.shutdown_anz_msg)) {
+    if (confirm(P3TXT.shutdown_anz_msg)) {
         var dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
@@ -3239,27 +3945,27 @@ function get_ticket(initialFn, expt) {
 
                 switch(ltype) {
                 case "dat":
-                    $('#id_exptLogBtn').html(TXT.download_concs);
+                    $('#id_exptLogBtn').html(P3TXT.download_concs);
                     $('#id_exptLogBtn').redraw;
                     break;
                     
                 case "peaks":
-                    $('#id_exptPeakBtn').html(TXT.download_peaks);
+                    $('#id_exptPeakBtn').html(P3TXT.download_peaks);
                     $('#id_exptPeakBtn').redraw;
                     break;
                     
                 case "analysis":
-                    $('#id_exptAnalysisBtn').html(TXT.download_analysis);
+                    $('#id_exptAnalysisBtn').html(P3TXT.download_analysis);
                     $('#id_exptAnalysisBtn').redraw;
                     break;
                     
                 case "notes":
-                    $('#id_exptNoteBtn').html(TXT.download_notes);
+                    $('#id_exptNoteBtn').html(P3TXT.download_notes);
                     $('#id_exptNoteBtn').redraw;
                     break;
                 }
+                alert("expturl: " + expturl);
                 window.location = expturl;
-                //alert("expturl: " + expturl);
             }
         }; //successTicketExport
         var errorTicket = function(xOptions, textStatus) {
@@ -3325,7 +4031,7 @@ function changeFollow() {
     var checked = $("#id_follow").attr("data-checked");
     if (checked == 'true') {
         if (CSTATE.lastwhere && CSTATE.map) {
-            CSTATE.map.setCenter(CSTATE.lastwhere);
+            centerTheMap(CSTATE.lastwhere);
         }
         $("#id_follow").attr("class","follow-checked").attr("data-checked",'false');
         CSTATE.follow = true;
@@ -3392,7 +4098,7 @@ function changeMinAmp() {
     }
     if (CSTATE.minAmp < CSTATE.fovMinAmp) CSTATE.minAmp = CSTATE.fovMinAmp;
     
-    CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
+    CNSNT.mapControl.changeControlText(P3TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + CSTATE.stabClass);
     $("#id_amplitude_btn").html(CSTATE.minAmp);
     setCookie("pcubed_minAmp", CSTATE.minAmp, CNSNT.cookie_duration);
     //resetLeakPosition();
@@ -3429,7 +4135,7 @@ function _changeStabClass(value) {
         CSTATE.prevInferredStabClass = CSTATE.inferredStabClass;
         setCookie(COOKIE_NAMES.dspStabClass, CSTATE.stabClass, CNSNT.cookie_duration);
         if (value === "*") isc = CSTATE.inferredStabClass;
-        CNSNT.mapControl.changeControlText(TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + isc + CSTATE.stabClass);
+        CNSNT.mapControl.changeControlText(P3TXT.map_controls  + "<br/>" + CSTATE.minAmp + "&nbsp; &nbsp;" + isc + CSTATE.stabClass);
         clearSwathPolys();
     }
 }
@@ -3734,96 +4440,124 @@ function getData() {
 
                 var n = data.result.CH4.length;
                 if (n > 0) {
-                    var where = newLatLng(data.result.GPS_ABS_LAT[n - 1], data.result.GPS_ABS_LONG[n - 1]);
-                    if (data.result.GPS_FIT) {
-//                        if (data.result.GPS_FIT[n - 1] !== 0) {
-//                            CSTATE.lastwhere = where;
-//                            CSTATE.marker.setPosition(where);
-//                            CSTATE.marker.setVisible(true);
-//                            if (CSTATE.follow) {
-//                                CSTATE.map.setCenter(where);
-//                            }
-//                        } else {
-//                            CSTATE.marker.setVisible(false);
-//                        }
-                        if (data.result.GPS_FIT[n - 1] !== 0) {
-                            CSTATE.marker.setVisible(true);
-                        } else {
-                            CSTATE.marker.setVisible(false);
-                        }
-                        CSTATE.lastwhere = where;
-                        CSTATE.marker.setPosition(where);
-                        if (CSTATE.follow) {
-                            CSTATE.map.setCenter(where);
-                        }
-                    } else {
-                        CSTATE.lastwhere = where;
-                        if (CSTATE.follow) {
-                            CSTATE.map.setCenter(where);
-                        }
-                        CSTATE.marker.setPosition(where);
-                        CSTATE.marker.setVisible(true);
-                        CSTATE.marker.setZIndex(9999999);
-                    }
-                    if (n > 1) {
-                        CSTATE.methaneHistory = CSTATE.methaneHistory.concat(data.result.CH4.slice(1));
-                        if (CSTATE.methaneHistory.length >= CNSNT.histMax) {
-                            CSTATE.methaneHistory.splice(0, CSTATE.methaneHistory.length - CNSNT.histMax);
-                        }
-                        if (CNSNT.prime_view) {
-                            $('#concentrationSparkline').sparkline(CSTATE.methaneHistory, {"chartRangeMin": 1.8, "width": "130px", "height": "50px"});
-                            if ('WIND_DIR_SDEV' in data.result) {
-                                var speed = Math.sqrt(data.result.WIND_E[n-1]*data.result.WIND_E[n-1]+
-                                    data.result.WIND_N[n-1]*data.result.WIND_N[n-1]);
-                                var speed_mph = speed * 2.236936;
-                                var direction = CNSNT.rtd*Math.atan2(data.result.WIND_E[n-1],data.result.WIND_N[n-1]);
-                                var stddev = data.result.WIND_DIR_SDEV[n-1];
-                                var vCar = 0.0;
-                                if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[n-1];
-                                stddev = totSdev(speed,stddev,vCar);
-                                if (stddev>90.0) stddev = 90.0;
-                                $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed_mph.toFixed(2) + " mph" + "</b>");
-                                makeWindRose(70,27,direction,2*stddev,5.0*speed,15.0,60.0);
-                            }
-                        } else {
-                            $('#concentrationSparkline').html("");
-                            $("#windData").html("");
-                        }
-                        $("#concData").html("<b style='font-size:12px; color:#404040;'>" + "CH4: " + data.result.CH4[n - 1].toFixed(3) + " ppm" + "</b>");
-                        for (i = 1; i < n; i += 1) {
-                            clr = data.result.ValveMask ? colorPathFromValveMask(data.result.ValveMask[i]) : CNSNT.normal_path_color;
-                            clr = colorPathFromInstrumentStatus(clr);
-                            pdata = {
-                                lat: data.result.GPS_ABS_LAT[i],
-                                lon: data.result.GPS_ABS_LONG[i],
-                                etm: data.result.EPOCH_TIME[i],
-                                ch4: data.result.CH4[i]
-                            };
-                            
-                            // only show FOV (swath) for normal_path_color
-                            var swath_flag = true;
-                            if (clr !== CNSNT.normal_path_color) {
-                                swath_flag = false;
-                            }
-                            CSTATE.swathPathShowArray.push(swath_flag);
-                            
-                            if ('WIND_E' in data.result) pdata['windE'] = data.result.WIND_E[i];
-                            if ('WIND_N' in data.result) pdata['windN'] = data.result.WIND_N[i];
-                            if ('WIND_DIR_SDEV' in data.result) pdata['windDirSdev'] = data.result.WIND_DIR_SDEV[i];
-                            if (data.result.GPS_FIT) {
-                                if (data.result.GPS_FIT[i] !== 0) {
-                                    updatePath(pdata, clr, data.result.EPOCH_TIME[i]);
+                    var processTheData = function() {
+                        var where = newLatLng(data.result.GPS_ABS_LAT[n - 1], data.result.GPS_ABS_LONG[n - 1]);
+                        if (data.result.GPS_FIT) {
+                            if (CNSNT.provider === 'google') {
+                                if (data.result.GPS_FIT[n - 1] !== 0) {
+                                    CSTATE.marker.setVisible(true);
                                 } else {
-                                    CSTATE.startNewPath = true;
+                                    CSTATE.marker.setVisible(false);
+                                }
+                            }
+                            CSTATE.lastwhere = where;
+                            CSTATE.marker.setPosition(where);
+                            CSTATE.marker.setZIndex(9999);
+
+                            if (CSTATE.alog.indexOf("@@Live:") < 0) {
+                                if (TIMER.centerTimer === null) {
+                                    TIMER.centerTimer = setTimeout(centerTheMapLastTimed, 2000);
                                 }
                             } else {
-                                updatePath(pdata, clr, data.result.EPOCH_TIME[i]);
+                                if (CSTATE.follow) {
+                                    centerTheMap(where);
+                                }
+                            }
+                        } else {
+                            CSTATE.lastwhere = where;
+                            if (CSTATE.alog.indexOf("@@Live:") < 0) {
+                                if (TIMER.centerTimer === null) {
+                                    TIMER.centerTimer = setTimeout(centerTheMapLastTimed, 2000);
+                                }
+                            } else {
+                                if (CSTATE.follow) {
+                                    centerTheMap(where);
+                                }
+                            }
+                            CSTATE.marker.setPosition(where);
+                            CSTATE.marker.setZIndex(9999);
+                            if (CNSNT.provider === 'google') {
+                                CSTATE.marker.setVisible(true);
                             }
                         }
-                    }
+                        if (n > 1) {
+                            CSTATE.methaneHistory = CSTATE.methaneHistory.concat(data.result.CH4.slice(1));
+                            if (CSTATE.methaneHistory.length >= CNSNT.histMax) {
+                                CSTATE.methaneHistory.splice(0, CSTATE.methaneHistory.length - CNSNT.histMax);
+                            }
+                            if (CNSNT.prime_view) {
+                                $('#concentrationSparkline').sparkline(CSTATE.methaneHistory, {"chartRangeMin": 1.8, "width": "130px", "height": "50px"});
+                                if ('WIND_DIR_SDEV' in data.result) {
+                                    var speed = Math.sqrt(data.result.WIND_E[n-1]*data.result.WIND_E[n-1]+
+                                        data.result.WIND_N[n-1]*data.result.WIND_N[n-1]);
+                                    var speed_mph = speed * 2.236936;
+                                    var direction = CNSNT.rtd*Math.atan2(data.result.WIND_E[n-1],data.result.WIND_N[n-1]);
+                                    var stddev = data.result.WIND_DIR_SDEV[n-1];
+                                    var vCar = 0.0;
+                                    if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[n-1];
+                                    stddev = totSdev(speed,stddev,vCar);
+                                    if (stddev>90.0) stddev = 90.0;
+                                    $("#windData").html("<b style='font-size:12px; color:#404040;'>" + "Wind: " + speed_mph.toFixed(2) + " mph" + "</b>");
+                                    makeWindRose(70,27,direction,2*stddev,5.0*speed,15.0,60.0);
+                                }
+                            } else {
+                                $('#concentrationSparkline').html("");
+                                $("#windData").html("");
+                            }
+                            $("#concData").html("<b style='font-size:12px; color:#404040;'>" + "CH4: " + data.result.CH4[n - 1].toFixed(3) + " ppm" + "</b>");
+                            for (i = 1; i < n; i += 1) {
+                                var last_i = n - 1;
+                                clr = data.result.ValveMask ? colorPathFromValveMask(data.result.ValveMask[i]) : CNSNT.normal_path_color;
+
+                                // Assume the default value is "okay" if the data does not have this column.
+                                var instStatus = CNSNT.INSTMGR_STATUS_READY | CNSNT.INSTMGR_STATUS_MEAS_ACTIVE |
+                                    CNSNT.INSTMGR_STATUS_GAS_FLOWING | CNSNT.INSTMGR_STATUS_PRESSURE_LOCKED |
+                                    CNSNT.INSTMGR_STATUS_CAVITY_TEMP_LOCKED | CNSNT.INSTMGR_WARM_CHAMBER_TEMP_LOCKED;
+
+                                if (data.result.hasOwnProperty("INST_STATUS")) {
+                                    instStatus = data.result.INST_STATUS[i] & CNSNT.INSTMGR_STATUS_MASK;
+                                }
+
+                                clr = colorPathFromInstrumentStatus(clr, instStatus);
+                                pdata = {
+                                    lat: data.result.GPS_ABS_LAT[i],
+                                    lon: data.result.GPS_ABS_LONG[i],
+                                    etm: data.result.EPOCH_TIME[i],
+                                    ch4: data.result.CH4[i]
+                                };
+
+                                // only show FOV (swath) for normal_path_color
+                                var swath_flag = true;
+                                if (clr !== CNSNT.normal_path_color) {
+                                    swath_flag = false;
+                                }
+                                CSTATE.swathPathShowArray.push(swath_flag);
+
+                                if ('WIND_E' in data.result) pdata['windE'] = data.result.WIND_E[i];
+                                if ('WIND_N' in data.result) pdata['windN'] = data.result.WIND_N[i];
+                                if ('WIND_DIR_SDEV' in data.result) pdata['windDirSdev'] = data.result.WIND_DIR_SDEV[i];
+                                if (data.result.GPS_FIT) {
+                                    if (data.result.GPS_FIT[i] !== 0) {
+                                        updatePath(pdata, clr, data.result.EPOCH_TIME[i], true);
+                                    } else {
+                                        CSTATE.startNewPath = true;
+                                    }
+                                } else {
+                                    updatePath(pdata, clr, data.result.EPOCH_TIME[i]);
+                                }
+                            }
+                        }
+                    }; // processTheData
+
+                    doConvertThenProcess(data, processTheData);
                 }
             }
+        } else {
+            if (TIMER.centerTimer === null) {
+                setTimeout(centerTheMapLastTimed, 2000);
+            }
         }
+        //alert("here");
         statCheck();
         
         if (resultWasReturned === true) {
@@ -3950,42 +4684,42 @@ function getMode() {
                     var mode = data.result.value;
                     setModePane(mode);
                     if (mode === 0) {
-                        $("#id_captureBtn").html(TXT.switch_to_cptr).attr("onclick","captureSwitch();").removeAttr("disabled");
-                        $("#id_surveyOnOffBtn").removeAttr("disabled").html(TXT.stop_survey).attr("onclick", "stopSurvey();");
+                        $("#id_captureBtn").html(P3TXT.switch_to_cptr).attr("onclick","captureSwitch();").removeAttr("disabled");
+                        $("#id_surveyOnOffBtn").removeAttr("disabled").html(P3TXT.stop_survey).attr("onclick", "stopSurvey();");
                         $("#id_calibrateBtn").removeAttr("disabled");
                     } else if (mode==1) {
-                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();").removeAttr("disabled");
+                        $("#id_captureBtn").html(P3TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();").removeAttr("disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").removeAttr("disabled");
                     } else if (mode==2) {
-                        $("#id_captureBtn").html(TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();").removeAttr("disabled");
+                        $("#id_captureBtn").html(P3TXT.cancl_cptr).attr("onclick", "cancelCapSwitch();").removeAttr("disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==3) {
                         call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "rdDasReg", "args": "['PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER']"},
                             function (data) { 
                                 if (data.result.hasOwnProperty('value'))
-                                    $("#id_captureBtn").html((0.2*data.result.value).toFixed(0) + TXT.cancl_ana_time).attr("onclick", "cancelAnaSwitch();");
+                                    $("#id_captureBtn").html((0.2*data.result.value).toFixed(0) + P3TXT.cancl_ana_time).attr("onclick", "cancelAnaSwitch();");
                                 else     
-                                    $("#id_captureBtn").html(TXT.cancl_ana).attr("onclick", "cancelAnaSwitch();");
+                                    $("#id_captureBtn").html(P3TXT.cancl_ana).attr("onclick", "cancelAnaSwitch();");
                             }
                         );
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==4) {
                         $("#id_captureBtn").attr("disabled", "disabled");
-                        $("#id_surveyOnOffBtn").html(TXT.start_survey).attr("onclick","startSurvey();");
+                        $("#id_surveyOnOffBtn").html(P3TXT.start_survey).attr("onclick","startSurvey();");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==5) {
                         $("#id_captureBtn").attr("disabled", "disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==6) {
-                        $("#id_captureBtn").html(TXT.cancl_ref).attr("onclick", "cancelRefSwitch();").removeAttr("disabled");
+                        $("#id_captureBtn").html(P3TXT.cancl_ref).attr("onclick", "cancelRefSwitch();").removeAttr("disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==7) {
-                        $("#id_captureBtn").html(TXT.cancl_ref).attr("onclick", "cancelRefSwitch();").removeAttr("disabled");
+                        $("#id_captureBtn").html(P3TXT.cancl_ref).attr("onclick", "cancelRefSwitch();").removeAttr("disabled");
                         $("#id_surveyOnOffBtn").attr("disabled", "disabled");
                         $("#id_calibrateBtn").attr("disabled", "disabled");
                     } else if (mode==8) {
@@ -4060,6 +4794,9 @@ function showAnalysis() {
                             resultWasReturned = true;
                         }
                     }
+                    CSTATE.analysisDownload = true;
+                } else {
+                    CSTATE.analysisDownload = false;
                 }
             }
         } else {
@@ -4074,27 +4811,36 @@ function showAnalysis() {
                 if (CSTATE.clearAnalyses) {
                     CSTATE.clearAnalyses = false;
                 } else {
-                    CSTATE.analysisLine = data.result.nextRow;
-                    for (i = 0; i < data.result.CONC.length; i += 1) {
-                        var analysisCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                        result = data.result.DELTA[i].toFixed(1) + " +/- " + data.result.UNCERTAINTY[i].toFixed(1);
-                        $("#analysis").html(TXT.delta + ": " + result);
-                        var analysisMarker = newAnalysisMarker(CSTATE.map, analysisCoords, data.result.DELTA[i], data.result.UNCERTAINTY[i]);
-                        CSTATE.analysisMarkers[CSTATE.analysisMarkers.length] = analysisMarker;
+                    var processTheAnalysis = function() {
+                        CSTATE.analysisLine = data.result.nextRow;
+                        for (i = 0; i < data.result.CONC.length; i += 1) {
+                            var analysisCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                            result = data.result.DELTA[i].toFixed(1) + " +/- " + data.result.UNCERTAINTY[i].toFixed(1);
+                            $("#analysis").html(P3TXT.delta + ": " + result);
+                            var dcoldata = 0.0;
+                            if (data.result.hasOwnProperty("DISPOSITION")) {
+                                dcoldata = data.result.DISPOSITION[i];
+                            }
+                            var analysisMarker = newAnalysisMarker(CSTATE.map, analysisCoords, data.result.DELTA[i], data.result.UNCERTAINTY[i], dcoldata);
+                            CSTATE.analysisMarkers[CSTATE.analysisMarkers.length] = analysisMarker;
 
-                        var datadict = CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]];
-                        if (!datadict) {
-                            datadict = {};
+                            var datadict = CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]];
+                            if (!datadict) {
+                                datadict = {};
+                            }
+                            datadict.lat = data.result.GPS_ABS_LAT[i];
+                            datadict.lon = data.result.GPS_ABS_LONG[i];
+                            datadict.conc = data.result.CONC[i];
+                            datadict.delta = data.result.DELTA[i];
+                            datadict.uncertainty = data.result.UNCERTAINTY[i];
+
+                            CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]] = datadict;
+                            attachMarkerListener(analysisMarker, data.result.EPOCH_TIME[i], "analysis", true);
                         }
-                        datadict.lat = data.result.GPS_ABS_LAT[i];
-                        datadict.lon = data.result.GPS_ABS_LONG[i];
-                        datadict.conc = data.result.CONC[i];
-                        datadict.delta = data.result.DELTA[i];
-                        datadict.uncertainty = data.result.UNCERTAINTY[i];
+                    }; //processTheAnalysis
 
-                        CSTATE.analysisNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                        attachMarkerListener(analysisMarker, data.result.EPOCH_TIME[i], "analysis", true);
-                    }
+                    doConvertThenProcess(data, processTheAnalysis);
+
                 }
             }
         }
@@ -4198,7 +4944,7 @@ function refreshFov(errLrtFn, goodLrtFn) {
                         && rtnobj.hasOwnProperty("lrt_start_ts") 
                         && rtnobj.hasOwnProperty("status")) {
 
-            console.log('new swath status ' + rtnobj.status + ' count: ' + rtnobj.count);
+            //console.log('new swath status ' + rtnobj.status + ' count: ' + rtnobj.count);
             CSTATE.fov_lrt_parms_hash = rtnobj.lrt_parms_hash;
             CSTATE.fov_lrt_start_ts = rtnobj.lrt_start_ts;
             CSTATE.fov_status = rtnobj.status;
@@ -4298,13 +5044,13 @@ function refreshFov(errLrtFn, goodLrtFn) {
                 refreshFovLrtStatus(
                     // errFn
                     function(err) {
-                        console.log("errFn from refreshFovLrtStatus");
+                        //console.log("errFn from refreshFovLrtStatus");
                         errLrtFn();
                     }
                     
                     // goodFn
                     , function() {
-                        console.log("goodFn from refreshFovLrtStatus");
+                        //console.log("goodFn from refreshFovLrtStatus");
                         goodLrtFn();
                     });
                 
@@ -4320,13 +5066,13 @@ function refreshFov(errLrtFn, goodLrtFn) {
                 refreshFovLrtStatus(
                     // errFn
                     function(err) {
-                        console.log("EQ errFn from refreshFovLrtStatus");
+                        //console.log("EQ errFn from refreshFovLrtStatus");
                         errLrtFn();
                     }
                     
                     // goodFn
                     , function() {
-                        console.log("EQ goodFn from refreshFovLrtStatus");
+                        //console.log("EQ goodFn from refreshFovLrtStatus");
                         goodLrtFn();
                     });
                 
@@ -4375,57 +5121,70 @@ function fetchSwath() {
                 if (CSTATE.clearSwath) {
                     CSTATE.clearSwath = false;
                 } else {
-                    for (i=0;i<data.result.GPS_ABS_LAT.length;i+=1) {
-                        var where = newLatLng(data.result.GPS_ABS_LAT[i],data.result.GPS_ABS_LONG[i]);
-                        var deltaLat = data.result.DELTA_LAT[i];
-                        var deltaLon = data.result.DELTA_LONG[i];
+                    var processTheSwath = function() {
+                        for (i=0;i<data.result.GPS_ABS_LAT.length;i+=1) {
+                            var where = newLatLng(data.result.GPS_ABS_LAT[i],data.result.GPS_ABS_LONG[i]);
+                            var deltaLat = data.result.DELTA_LAT[i];
+                            var deltaLon = data.result.DELTA_LONG[i];
 
-                        var show_the_swath = true;
-                        if (CNSNT.prime_view !== true) {
-                            CSTATE.fov_lrtrow = data.result.lrtrow[i];
-                            
-                            if (CSTATE.fov_lrtrow >= CSTATE.fov_count) {
-                                CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriodSlow                                
-                            } else {
-                                CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriod                                
-                            }
-                            
-                            var pthidx = CSTATE.fov_lrtrow + (2*CNSNT.swathWindow) - 1;
-                            
-                            if ((CSTATE.swathPathShowArray.length >= pthidx)
-                                && (CSTATE.swathPathShowArray[pthidx] !== true)) {
+                            var show_the_swath = true;
+                            if (CNSNT.prime_view !== true) {
+                                CSTATE.fov_lrtrow = data.result.lrtrow[i];
 
-                                show_the_swath = false;
-                            }
-                        }
-                        
-                        if (CSTATE.lastMeasPathLoc && (show_the_swath === true)) {
-                            var noLastView = (Math.abs(CSTATE.lastMeasPathDeltaLat) < 1.0e-6) && 
-                                             (Math.abs(CSTATE.lastMeasPathDeltaLon) < 1.0e-6);
-                            if (!noLastView) {
-                                var noView = (Math.abs(deltaLat) < 1.0e-6) && 
-                                             (Math.abs(deltaLon) < 1.0e-6); 
-                                if (!noView) {
-                                    // Draw the polygon
-                                    var coords = [newLatLng(CSTATE.lastMeasPathLoc.lat()+CSTATE.lastMeasPathDeltaLat,
-                                                            CSTATE.lastMeasPathLoc.lng()+CSTATE.lastMeasPathDeltaLon),
-                                                  CSTATE.lastMeasPathLoc,
-                                                  where,
-                                                  newLatLng(where.lat()+deltaLat, where.lng()+deltaLon)];
-                                    CSTATE.swathPolys.push(newPolygonWithoutOutline(CSTATE.map,CNSNT.swath_color,CNSNT.swath_opacity,coords,CSTATE.showSwath));
+                                if (CSTATE.fov_lrtrow >= CSTATE.fov_count) {
+                                    CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriodSlow
+                                } else {
+                                    CSTATE.swathUpdatePeriod = CNSNT.swathUpdatePeriod
                                 }
-                            }    
+
+                                var pthidx = CSTATE.fov_lrtrow + (2*CNSNT.swathWindow) - 1;
+
+                                if ((CSTATE.swathPathShowArray.length >= pthidx)
+                                    && (CSTATE.swathPathShowArray[pthidx] !== true)) {
+
+                                    show_the_swath = false;
+                                }
+                            }
+
+                            if (CSTATE.lastMeasPathLoc && (show_the_swath === true)) {
+                                var noLastView = (Math.abs(CSTATE.lastMeasPathDeltaLat) < 1.0e-6) &&
+                                    (Math.abs(CSTATE.lastMeasPathDeltaLon) < 1.0e-6);
+                                if (!noLastView) {
+                                    var noView = (Math.abs(deltaLat) < 1.0e-6) &&
+                                        (Math.abs(deltaLon) < 1.0e-6);
+                                    if (!noView) {
+                                        // Draw the polygon
+                                        //console.log("CSTATE.lastMeasPathLoc", CSTATE.lastMeasPathLoc);
+
+                                        var lmlat = getLatFromLoc(CSTATE.lastMeasPathLoc);
+                                        var lmlng = getLngFromLoc(CSTATE.lastMeasPathLoc);
+                                        var whlat = getLatFromLoc(where);
+                                        var whlng = getLngFromLoc(where);
+
+
+                                        var coords = [
+                                            newLatLng(lmlat+CSTATE.lastMeasPathDeltaLat,
+                                                lmlng+CSTATE.lastMeasPathDeltaLon),
+                                            CSTATE.lastMeasPathLoc,
+                                            where,
+                                            newLatLng(whlat+deltaLat, whlng+deltaLon)];
+                                        CSTATE.swathPolys.push(newPolygonWithoutOutline(CSTATE.map,CNSNT.swath_color,CNSNT.swath_opacity,coords,CSTATE.showSwath));
+                                    }
+                                }
+                            }
+
+                            CSTATE.lastMeasPathLoc = where;
+                            CSTATE.lastMeasPathDeltaLat = deltaLat;
+                            CSTATE.lastMeasPathDeltaLon = deltaLon;
                         }
-                        
-                        CSTATE.lastMeasPathLoc = where;
-                        CSTATE.lastMeasPathDeltaLat = deltaLat;
-                        CSTATE.lastMeasPathDeltaLon = deltaLon;
-                    }
-                    
-                    if (CNSNT.prime_view === true) {
-                        CSTATE.swathLine = data.result.nextRow;
-                    }
-                    
+
+                        if (CNSNT.prime_view === true) {
+                            CSTATE.swathLine = data.result.nextRow;
+                        }
+                    }; //processTheSwath
+
+                    doConvertThenProcess(data, processTheSwath);
+
                 }
             }
         }
@@ -4476,13 +5235,13 @@ function fetchSwath() {
         CSTATE.AnzLrt.byRowFov(lrtparams
             // error callback
             , function(err) {
-                console.log('AnzLrt err')
+                //console.log('AnzLrt err')
                 errorSwath(null, "nextFovFromLrt AnzLrt.byRowFov error");
             }
             
             // success callback
             , function(stat_code, rtnobj) {
-                console.log('AnzLrt success')
+                //console.log('AnzLrt success')
                 successSwath(rtnobj);
                 
         });
@@ -4532,7 +5291,7 @@ function fetchSwath() {
                 
                 // good fn
                 , function() {
-                    console.log('calling nextFovFromLrt limit: ' + lmt + ' start: ' + CSTATE.fov_lrtrow + ' status: ' + CSTATE.fov_status);
+                    //console.log('calling nextFovFromLrt limit: ' + lmt + ' start: ' + CSTATE.fov_lrtrow + ' status: ' + CSTATE.fov_status);
                     nextFovFromLrt(lmt);
                 });
                 
@@ -4613,6 +5372,9 @@ function showLeaksAndWind() {
                     }
                 }
                 //CSTATE.lastPeakFilename = data.result.filename;
+                CSTATE.peaksDownload = true;
+            } else {
+                CSTATE.peaksDownload = false;
             }
         } else {
             if (data && (data.indexOf("ERROR: invalid ticket") !== -1)) {
@@ -4634,60 +5396,65 @@ function showLeaksAndWind() {
             }
             if (resetClear) {
                 CSTATE.peakLine = 1;
-                } else {
+            } else {
                 var showPeaks = (data.result.CH4 && CSTATE.showPbubble);
+                //console.log("showPeaks: " + showPeaks, "CSTATE.minAmp: " + CSTATE.minAmp);
                 var showWind = (data.result.WIND_DIR_SDEV && CSTATE.showWbubble);
                 if (showPeaks || showWind){
-                    for (i = 0; i < data.result.CH4.length; i += 1) {
-                        var amp = data.result.AMPLITUDE[i];
-                        var peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                        if (showPeaks) {
-                            if (amp >= CSTATE.minAmp) {
-                                var peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
-                                CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
+                    var processTheLeaks = function() {
+                        for (i = 0; i < data.result.CH4.length; i += 1) {
+                            var amp = data.result.AMPLITUDE[i];
+                            var peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                            if (showPeaks) {
+                                if (amp >= CSTATE.minAmp) {
+                                    var peakMarker = newPeakMarker(CSTATE.map, peakCoords, data.result.AMPLITUDE[i], data.result.SIGMA[i], data.result.CH4[i]);
+                                    CSTATE.peakMarkers[CSTATE.peakMarkers.length] = peakMarker;
 
-                                if (CNSNT.turnOnAudio) {
-                                    // Play warning sound
-                                    var myAudio = document.getElementById("plume");
-                                    myAudio.play();
+                                    if (CNSNT.turnOnAudio) {
+                                        // Play warning sound
+                                        var myAudio = document.getElementById("plume");
+                                        myAudio.play();
+                                    }
+                                    var datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
+                                    if (!datadict) {
+                                        datadict = {};
+                                    }
+                                    datadict.lat = data.result.GPS_ABS_LAT[i];
+                                    datadict.lon = data.result.GPS_ABS_LONG[i];
+                                    datadict.ch4 = data.result.CH4[i];
+                                    datadict.amp = data.result.AMPLITUDE[i];
+                                    datadict.sigma = data.result.SIGMA[i];
+
+                                    CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
+                                    attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
                                 }
-                                var datadict = CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]];
-                                if (!datadict) {
-                                    datadict = {};
+                                else {
+                                    var token = newToken(CSTATE.map, peakCoords);
+                                    CSTATE.peakMarkers[CSTATE.peakMarkers.length] = token;
                                 }
-                                datadict.lat = data.result.GPS_ABS_LAT[i];
-                                datadict.lon = data.result.GPS_ABS_LONG[i];
-                                datadict.ch4 = data.result.CH4[i];
-                                datadict.amp = data.result.AMPLITUDE[i];
-                                datadict.sigma = data.result.SIGMA[i];
-            
-                                CSTATE.peakNoteDict[data.result.EPOCH_TIME[i]] = datadict;
-                                attachMarkerListener(peakMarker, data.result.EPOCH_TIME[i], "peak", true);
                             }
-                            else {
-                                var token = newToken(CSTATE.map, peakCoords);
-                                CSTATE.peakMarkers[CSTATE.peakMarkers.length] = token;
+
+                            if (showWind && amp>=CSTATE.minAmp) {
+                                var windDirection = CNSNT.rtd*Math.atan2(data.result.WIND_E[i],data.result.WIND_N[i]);
+                                var windSpeed = Math.sqrt(data.result.WIND_N[i]*data.result.WIND_N[i]+data.result.WIND_E[i]*data.result.WIND_E[i]);
+                                var vCar = 0;
+                                var windStddev = data.result.WIND_DIR_SDEV[i];
+                                if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[i];
+                                windStddev = totSdev(windSpeed,windStddev,vCar);
+                                peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
+                                if (isNaN(windStddev)) {
+                                    windStddev = 90;
+                                    windDirection = 180;
+                                }
+                                var windMarker = newWindMarker(CSTATE.map, peakCoords, 50, windDirection, windStddev, data.result.AMPLITUDE[i], data.result.SIGMA[i]);
+                                CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
                             }
                         }
-
-                        if (showWind && amp>=CSTATE.minAmp) {
-                            var windDirection = CNSNT.rtd*Math.atan2(data.result.WIND_E[i],data.result.WIND_N[i]);
-                            var windSpeed = Math.sqrt(data.result.WIND_N[i]*data.result.WIND_N[i]+data.result.WIND_E[i]*data.result.WIND_E[i]);
-                            var vCar = 0;
-                            var windStddev = data.result.WIND_DIR_SDEV[i];
-                            if ("CAR_SPEED" in data.result) vCar = data.result.CAR_SPEED[i];
-                            windStddev = totSdev(windSpeed,windStddev,vCar);
-                            peakCoords = newLatLng(data.result.GPS_ABS_LAT[i], data.result.GPS_ABS_LONG[i]);
-                            if (isNaN(windStddev)) {
-                                windStddev = 90;
-                                windDirection = 180;
-                            }
-                            var windMarker = newWindMarker(CSTATE.map, peakCoords, 50, windDirection, windStddev);
-                            CSTATE.windMarkers[CSTATE.windMarkers.length] = windMarker;
-                        }
+                        CSTATE.peakLine = data.result.nextRow;
                     }
-                    CSTATE.peakLine = data.result.nextRow;
-                }
+                }; //processTheLeaks
+
+                doConvertThenProcess(data, processTheLeaks);
             }
         }
         if (resultWasReturned === true) {
@@ -4939,7 +5706,7 @@ function getNotes(cat) {
 
 
 function attachMarkerListener(marker, etm, cat, bubble) {
-    var markerListener = new google.maps.event.addListener(marker, 'click', function () {
+    var markerListener = newEventListener(marker, 'click', function () {
         notePane(etm, cat);
     });
     if (cat === "peak") {
@@ -5065,7 +5832,7 @@ function captureSwitch() {
 }
 
 function cancelCapSwitch() {
-    if (confirm(TXT.cancel_cap_msg)) {
+    if (confirm(P3TXT.cancel_cap_msg)) {
         var dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
@@ -5076,7 +5843,7 @@ function cancelCapSwitch() {
 }
 
 function cancelRefSwitch() {
-    if (confirm(TXT.cancel_ref_msg)) {
+    if (confirm(P3TXT.cancel_ref_msg)) {
         var dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
@@ -5087,7 +5854,7 @@ function cancelRefSwitch() {
 }
 
 function cancelAnaSwitch() {
-    if (confirm(TXT.cancel_ana_msg)) {
+    if (confirm(P3TXT.cancel_ana_msg)) {
         var dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
@@ -5117,7 +5884,7 @@ function referenceGas() {
     call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "interfaceValue", "args": "['PEAK_DETECT_CNTRL_PrimingState']"},
         function (data) {
             if (data.result.value == 6) {
-                if (confirm(TXT.start_ref_msg)) {
+                if (confirm(P3TXT.start_ref_msg)) {
                     setTimeout(primingSwitch, 100);
                 }
             }
@@ -5138,7 +5905,7 @@ function callInject() {
     if (CNSNT.prime_view === true) {
         dtype = "jsonp";
     }
-    call_rest(CNSNT.svcurl, "injectCal", dtype, {"valve": 3, "flagValve": 4, "samples": 1});
+    call_rest(CNSNT.svcurl, "injectCal", dtype, {"valve": 3, "flagValve": 4, "samples": 5});
     restoreModChangeDiv();
 }
 
@@ -5152,7 +5919,7 @@ function startSurvey() {
 }
 
 function stopSurvey() {
-    if (confirm(TXT.stop_survey_msg)) {
+    if (confirm(P3TXT.stop_survey_msg)) {
         var dtype = "json";
         if (CNSNT.prime_view === true) {
             dtype = "jsonp";
@@ -5190,28 +5957,14 @@ function initialize_cookienames() {
     };
 }
 
-function attachPlatListener(plat, plname) {
-    var platClickListener;
-    platClickListener = new google.maps.event.addListener(plat, 'click', function() {
-        modalPanePlatControls(plname);
-    });
-    PLATOBJS[plname].listener = platClickListener;
-}
-
-function attachGoListener(plat, plname) {
-    var goClickListener;
-    goClickListener = new google.maps.event.addListener(plat, 'click', function() {
-        modalPanePlatControls(plname);
-    });
-    PLATOBJS[plname].go_listener = goClickListener;
-}
-
-function removeGoListener(plobj) {
-    google.maps.event.removeListener(plobj.go_listener);
-    plobj.go_listener = null;
-}
-
 function initialize_plats() {
+    if (!CNSNT.hasOwnProperty("provider")) {
+        CNSNT.provider = "google"
+    }
+    if (!CNSNT.hasOwnProperty("provider_gpsconvert")) {
+        CNSNT.provider_gpsconvert = false;
+    }
+
     try {
         var plname, plobj, rect;
         if (PLATOBJS) {
@@ -5246,7 +5999,13 @@ function hide_plat_outlines() {
     if (PLATOBJS) {
         for (plname in PLATOBJS) {
             plobj = PLATOBJS[plname];
-            plobj.rect.setMap(null);
+            switch(CNSNT.provider) {
+                case "google":
+                    plobj.rect.setMap(null);
+                    break;
+                case "baidu":
+                    break;
+            }
             if (plobj.go_listener !== null) {
                 removeGoListener(plobj);
             }
@@ -5258,15 +6017,22 @@ function initialize(winH, winW) {
     if (init_vars) {
         init_vars();
     }
-    
+    if (!CNSNT.hasOwnProperty("provider")) {
+        CNSNT.provider = "google";
+    }
+    if (!CNSNT.hasOwnProperty("provider_gpsconvert")) {
+        CNSNT.provider_gpsconvert = false;
+    }
     //secure ping (to assure browsers can see secure site)
     $("#id_content_spacer").html('<img src="' + CNSNT.resturl + '/pimg' + '"/>');
     
     //CNSNT.prime_view = true;
     
     initialize_cookienames();
-    initialize_plats();
-    
+    if (CNSNT.provider === "google") {
+        initialize_plats();
+    }
+
     initialize_gdu();
     //get_ticket(initialize_gdu);
 }
@@ -5278,18 +6044,18 @@ function showStream() {
     c1array.push('style="border-style: none; width: 30%; text-align: right;"');
     c2array.push('style="border-style: none; width: 70%;"');
     c1array.push('<img class="stream-ok" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.stream_ok + '</h4>');
+    c2array.push('<h4>' + P3TXT.stream_ok + '</h4>');
     c1array.push('<img class="stream-warning" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.stream_warning + '</h4>');
+    c2array.push('<h4>' + P3TXT.stream_warning + '</h4>');
     c1array.push('<img class="stream-failed" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.stream_failed + '</h4>');
+    c2array.push('<h4>' + P3TXT.stream_failed + '</h4>');
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
     c1array = [];
     c2array = [];
     c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 30%; text-align: right;"');
-    c1array.push('<h3>' + TXT.stream_title + '</h3>');
+    c1array.push('<h3>' + P3TXT.stream_title + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -5302,6 +6068,7 @@ function showStream() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
 }
 
 function showGps() {
@@ -5311,20 +6078,20 @@ function showGps() {
     c1array.push('style="border-style: none; width: 30%; text-align: right;"');
     c2array.push('style="border-style: none; width: 70%;"');
     c1array.push('<img class="gps-ok" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.gps_ok + '</h4>');
+    c2array.push('<h4>' + P3TXT.gps_ok + '</h4>');
     c1array.push('<img class="gps-warning" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.gps_warning + '</h4>');
+    c2array.push('<h4>' + P3TXT.gps_warning + '</h4>');
     c1array.push('<img class="gps-failed" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.gps_failed + '</h4>');
+    c2array.push('<h4>' + P3TXT.gps_failed + '</h4>');
     c1array.push('<img class="gps-uninstalled" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.gps_uninstalled + '</h4>');
+    c2array.push('<h4>' + P3TXT.gps_uninstalled + '</h4>');
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
     c1array = [];
     c2array = [];
     c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 30%; text-align: right;"');
-    c1array.push('<h3>' + TXT.gps_title + '</h3>');
+    c1array.push('<h3>' + P3TXT.gps_title + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -5337,6 +6104,7 @@ function showGps() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
 }
 
 function showWs() {
@@ -5346,18 +6114,18 @@ function showWs() {
     c1array.push('style="border-style: none; width: 30%; text-align: right;"');
     c2array.push('style="border-style: none; width: 70%;"');
     c1array.push('<img class="ws-ok" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.ws_ok + '</h4>');
+    c2array.push('<h4>' + P3TXT.ws_ok + '</h4>');
     c1array.push('<img class="ws-failed" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.ws_failed + '</h4>');
+    c2array.push('<h4>' + P3TXT.ws_failed + '</h4>');
     c1array.push('<img class="ws-uninstalled" src="' + CNSNT.spacer_gif + '" />');
-    c2array.push('<h4>' + TXT.ws_uninstalled + '</h4>');
+    c2array.push('<h4>' + P3TXT.ws_uninstalled + '</h4>');
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
     c1array = [];
     c2array = [];
     c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 30%; text-align: right;"');
-    c1array.push('<h3>' + TXT.ws_title + '</h3>');
+    c1array.push('<h3>' + P3TXT.ws_title + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -5370,6 +6138,7 @@ function showWs() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
 }
 
 var bar = ['<div id="id_cavity_p_bar" class="progress progress-danger" style="position:relative; top:9px">' +
@@ -5420,7 +6189,7 @@ function updateProgress() {
             dtype = "jsonp";
         }
         call_rest(CNSNT.svcurl, "driverRpc", dtype, {"func": "getWarmingState", "args": "[]"},
-                function (data, ts, jqXHR) {
+            function (data, ts, jqXHR) {
                 if (data.result.value !== undefined) {
                     cavity_p_val = data.result.value['CavityPressure'][0];
                     cavity_p_sp = data.result.value['CavityPressure'][1];
@@ -5462,15 +6231,15 @@ function showAnalyzer() {
     c2array.push('style="border-style: none; width: 40%; "');
     c3array.push('style="border-style: none; width: 20%; text-align: left;"');
 
-    c1array.push('<h4>' + TXT.cavity_p + '</h4>');
+    c1array.push('<h4>' + P3TXT.cavity_p + '</h4>');
     c2array.push(bar[0]);
     c3array.push('<span id="id_cavity_p_sp"><h5></h5></span>');
 
-    c1array.push('<h4>' + TXT.cavity_t + '</h4>');
+    c1array.push('<h4>' + P3TXT.cavity_t + '</h4>');
     c2array.push(bar[1]);
     c3array.push('<span id="id_cavity_t_sp"><h5></h5></span>');
 
-    c1array.push('<h4>' + TXT.wb_t + '</h4>');
+    c1array.push('<h4>' + P3TXT.wb_t + '</h4>');
     c2array.push(bar[2]);
     c3array.push('<span id="id_wb_t_sp"><h5></h5></span>');
     body = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array, c3array);
@@ -5479,7 +6248,7 @@ function showAnalyzer() {
     c2array = [];
     c1array.push('style="border-style: none; width: 70%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 30%; text-align: right;"');
-    c1array.push('<h3>' + TXT.analyzer_title + '</h3>');
+    c1array.push('<h3>' + P3TXT.analyzer_title + '</h3>');
     c2array.push(HBTN.modChangeCloseBtn);
     hdr = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
 
@@ -5492,6 +6261,7 @@ function showAnalyzer() {
         );
 
     $("#id_mod_change").html(modalChrome);
+    $("#id_modal_span").css("z-index", 9999);
 
     if (TIMER.progress === null || TIMER.progress === undefined) {
         CSTATE.end_warming_status = false;
@@ -5533,28 +6303,28 @@ function makeWeatherForm(resultFunc, init) {
      * After a successful selection has been made, the function "resultFunc" is called. This function has a
      * single parameter which is the 3-element array of the selections. 
      *  */
-    var weatherFormTemplate = [{label: "<h4>" + TXT.survey_time + "</h4>",
+    var weatherFormTemplate = [{label: "<h4>" + P3TXT.survey_time + "</h4>",
         control_div_id: "id_day_night", 
         control_group_id: "id_day_night_group",
-        buttons: [{id: "id_day", caption: TXT.day},
-                  {id: "id_night", caption: TXT.night}]},
-       {label: "<h4>" + TXT.sunlight + "</h4>",
+        buttons: [{id: "id_day", caption: P3TXT.day},
+                  {id: "id_night", caption: P3TXT.night}]},
+       {label: "<h4>" + P3TXT.sunlight + "</h4>",
         control_div_id: "id_sunlight",
         control_group_id: "id_sunlight_group",
-        buttons: [{id: "id_overcast_sunlight", caption: TXT.overcast_sunlight },
-                  {id: "id_moderate_sunlight", caption: TXT.moderate_sunlight },
-                  {id: "id_strong_sunlight", caption: TXT.strong_sunlight }]},
-       {label: "<h4>" + TXT.cloud + "</h4>",
+        buttons: [{id: "id_overcast_sunlight", caption: P3TXT.overcast_sunlight },
+                  {id: "id_moderate_sunlight", caption: P3TXT.moderate_sunlight },
+                  {id: "id_strong_sunlight", caption: P3TXT.strong_sunlight }]},
+       {label: "<h4>" + P3TXT.cloud + "</h4>",
         control_div_id: "id_cloud",
         control_group_id: "id_cloud_group",
-        buttons: [{id: "id_less50_cloud", caption: TXT.less50_cloud },
-                  {id: "id_more50_cloud", caption: TXT.more50_cloud }]},
+        buttons: [{id: "id_less50_cloud", caption: P3TXT.less50_cloud },
+                  {id: "id_more50_cloud", caption: P3TXT.more50_cloud }]},
        {label: "<h4>Wind</h4>",
         control_div_id: "id_wind",
         control_group_id: "id_wind_group",
-        buttons: [{id: "id_calm_wind", caption: TXT.calm_wind },
-                  {id: "id_light_wind", caption: TXT.light_wind },
-                  {id: "id_strong_wind", caption: TXT.strong_wind }]}];                              
+        buttons: [{id: "id_calm_wind", caption: P3TXT.calm_wind },
+                  {id: "id_light_wind", caption: P3TXT.light_wind },
+                  {id: "id_strong_wind", caption: P3TXT.strong_wind }]}];                              
 
     function addError(field_id, message) {
         var id = "#" + field_id;
@@ -5577,7 +6347,7 @@ function makeWeatherForm(resultFunc, init) {
             if ($(this).hasClass("active")) selection.push(i);
         });
         if (selection.length === 0) {
-            addError(field_id,TXT.choose);
+            addError(field_id,P3TXT.choose);
         }
         return selection;
     }
@@ -5586,7 +6356,7 @@ function makeWeatherForm(resultFunc, init) {
     c1array = []; c2array = [];
     c1array.push('style="border-style: none; width: 50%; text-aligh: left;"');
     c2array.push('style="border-style: none; width: 50%; text-align: right;"');
-    c1array.push('<h3>' + TXT.select_weather + '</h3>');
+    c1array.push('<h3>' + P3TXT.select_weather + '</h3>');
     c2array.push(HBTN.weatherFormOkBtn);
     header = tableChrome('style="width: 100%; border-spacing: 0px;"', '', c1array, c2array);
     body = '<form id="id_weather_form" class="form-horizontal"><fieldset>';

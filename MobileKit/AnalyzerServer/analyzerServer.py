@@ -1,3 +1,21 @@
+#!/usr/bin/python
+"""
+FILE:
+  analyzerServer.py
+
+DESCRIPTION:
+  Flask based REST/web server running on analyzer
+
+SEE ALSO:
+  Specify any related information.
+
+HISTORY:
+   3-Nov-2011  sze  Initial version
+   3-Dec-2013  sze  Added /utility route for anemometer calibration (calUtility)
+   9-Dec-2013  sze  Added /rest/spectrumCollectorRpc route to access Spectrum Collector
+
+ Copyright (c) 2013 Picarro, Inc. All rights reserved
+"""
 from flask import Flask
 from flask import make_response, render_template, request
 try:
@@ -16,7 +34,8 @@ import traceback
 import optparse
 import CmdFIFO
 from timestamp import getTimestamp
-from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DATA_MANAGER
+from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER
+from SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SPECTRUM_COLLECTOR
 import math
 
 import Host.Common.SwathProcessor as sp
@@ -508,6 +527,37 @@ def driverRpcEx(params):
     else:
         if time.clock() - lastDriverCheck > 60: driverAvailable = True
         return(dict(error="No Driver"))
+
+@app.route('/rest/spectrumCollectorRpc')
+def rest_spectrumCollectorRpc():
+    result = spectrumCollectorRpcEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+spectrumCollectorAvailable = True
+lastSpectrumCollectorCheck = None
+
+def spectrumCollectorRpcEx(params):
+    # Call any RPC function on the spectrum collector by passing
+    #  params['func'] = name of spectrum collector RPC function to call (as a string)
+    #  params['args'] = string which evaluates to a list of positional arguments for the RPC function
+    #  params['kwargs'] = string which evaluates to a dictionary of keyword arguments for the RPC function
+    global spectrumCollectorAvailable, lastSpectrumCollectorCheck
+
+    if spectrumCollectorAvailable:
+        SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, ClientName = "AnalyzerServer")
+        try:
+            return dict(value=getattr(SpectrumCollector,params['func'])(*eval(params.get('args','()'),{}),**eval(params.get('kwargs','{}'))))
+        except Exception,e:
+            if 'connection failed' in str(e):
+                spectrumCollectorAvailable = False
+                lastSpectrumCollectorCheck = time.clock()
+            return dict(error=traceback.format_exc())
+    else:
+        if time.clock() - lastSpectrumCollectorCheck > 60: spectrumCollector = True
+        return(dict(error="No Spectrum Collector"))
 
 @app.route('/rest/getCurrentInlet')
 def rest_getCurrentInlet():
