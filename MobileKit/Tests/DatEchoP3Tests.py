@@ -181,7 +181,7 @@ class TestDatEchoP3(object):
             stats = json.load(f)
 
         assert int(stats['ticketReqs']) >= 1
-        assert int(stats['localIpReqs']) == 2
+        assert int(stats['localIpReqs']) >= 2
         assert int(stats['pushDataReqs']) == 0
         assert stats['lastRangeReq'] is not None
         begin, end = stats['lastRangeReq']
