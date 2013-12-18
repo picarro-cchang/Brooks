@@ -169,12 +169,20 @@ class PlotControlPanel(PlotControlPanelGui):
         else:
             panelNum = -1
 
+        # get settings for autoscale Y and show points
+        fAutoscaleY = False     # defaults
+        fShowPoints = True
+
+        if "fAutoscaleY" in kwds:
+            fAutoscaleY = kwds["fAutoscaleY"]
+            del kwds["fAutoscaleY"]
+
+        if "fShowPoints" in kwds:
+            fShowPoints = kwds["fShowPoints"]
+            del kwds["fShowPoints"]
+
         PlotControlPanelGui.__init__(self, *a, **kwds)
         self.model = Subject(name=panelName)
-
-        # TODO: Use settings for autoscale Y and show points from prefs
-        fAutoscaleY = False
-        fShowPoints = True
 
         self.model.settings = {"fAutoscaleY": fAutoscaleY,
                                "fShowPoints": fShowPoints,

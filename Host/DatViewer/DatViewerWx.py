@@ -179,6 +179,10 @@ class SeriesFrame(wx.Frame):
         self.panels = []
         self.plots = []
 
+        # use settings from prefs
+        fAutoscaleY = self.parent.prefs.config["UISettings"]["fAutoscaleY"]
+        fShowPoints = self.parent.prefs.config["UISettings"]["fShowPoints"]
+
         # whatever color is set here doesn't seem to matter
         #self.SetBackgroundColour(wx.NamedColour("white"))
 
@@ -195,7 +199,10 @@ class SeriesFrame(wx.Frame):
             panel = PlotControlPanel(self, wx.ID_ANY,
                                      style=wx.SUNKEN_BORDER,
                                      panelNum=ix,
-                                     panelName=panelName)
+                                     panelName=panelName,
+                                     fAutoscaleY=fAutoscaleY,
+                                     fShowPoints=fShowPoints)
+            
             self.panels.append(panel)
 
             # wrap a sizer around the panel with a margin
@@ -539,10 +546,10 @@ class AppFrame(wx.Frame):
                                   "New Time Series Plot (&1 Frame)...\t1",
                                   "Open a window with one frame to plot the current H5 data.")
         series2Item = menu.Append(ID_MENU_PLOTFRAMES_2,
-                                  "New Time Series Plot (&2 Frames)...\t1",
+                                  "New Time Series Plot (&2 Frames)...\t2",
                                   "Open a window with two frames to plot the current H5 data.")
         series3Item = menu.Append(ID_MENU_PLOTFRAMES_3,
-                                  "New Time Series Plot (&3 Frames)...\t1",
+                                  "New Time Series Plot (&3 Frames)...\t3",
                                   "Open a window with three viewerFramePos to plot the current H5 data.")
 
         menu.AppendSeparator()
