@@ -65,8 +65,12 @@ from pylab import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "2.0.0"
+APPVERSION = "2.0.1"
 
+
+# definitions for filtering by spectrum ID
+SPECTRUM_ID_NAME = "SpectrumID"
+SPECTRUM_ID_INIT = "-1"
 
 class Bunch(object):
 
@@ -930,11 +934,8 @@ class DatViewer(HasTraits):
     varName = CStr
     spectrumIdList = ListStr
     spectrumId = CStr
-    #spectrumIdList = ListInt
-    #spectrumId = CInt
     transform = Str(editor=TextEditor(enter_set=False, auto_set=False))
     commands = Button1
-    #filterSpectrumId = CBool
     autoscaleY = CBool
     showPoints = CBool
     mean = CFloat
@@ -945,7 +946,7 @@ class DatViewer(HasTraits):
     parent = Instance(object)
     nLines = CInt(3)
 
-    # what does this code do? is it populating the controls?
+    # what does this do?
     traits_view = View(Group(Item("plot",
                                   style="custom",
                                   show_label=False),
@@ -969,7 +970,7 @@ class DatViewer(HasTraits):
         self.transform = "lambda(x):x"
 
     def notify(self, ax):
-        print "DatViewer::notify"
+        #print "DatViewer::notify"
         self.xLim = ax.get_xlim()
         self.xData = [h.get_xdata() for h in self.dataHandles]
         self.yData = [h.get_ydata() for h in self.dataHandles]
@@ -1005,7 +1006,6 @@ class DatViewer(HasTraits):
             wx.CallAfter(self.parent.notify, self, self.xLim, self.yLim)
 
     def _dataFile_changed(self):
-        print "DatViewer::_dataFile_changed"
         # Figure out the tree of tables and arrays
         if self.ip is not None:
             self.ip.close()
@@ -1013,47 +1013,31 @@ class DatViewer(HasTraits):
         self.dataSetNameList = []
         self.dataSetName = ""
         self.varName = ""
+
         if self.dataFile:
             self.ip = tables.openFile(self.dataFile)
             for n in self.ip.walkNodes("/"):
                 if isinstance(n, tables.Table):
                     self.dataSetNameList.append(n._v_pathname)
-                    print "  appending '%s'" % n._v_pathname
-            print "DatViewer::_dataFile_changed (done appending)"
 
             if 1 == len(self.dataSetNameList):
                 # this triggers DatViewer::_dataSetName_changed()
+                # which populates the var name dropdown
                 self.dataSetName = self.dataSetNameList[0]
-        print "DatViewer::_dataFile_changed (done)"
 
     def _dataSetName_changed(self):
-        print "DatViewer::_dataSetName_changed"
         if self.dataSetName:
             self.table = self.ip.getNode(self.dataSetName)
             self.varNameList = [""] + self.table.colnames
         else:
             self.varNameList = []
-        #print "  varNameList=", self.varNameList
-        #print ""
+
         self.varName = ""
 
-        """
-        if self.spectrumIdList:
-            print "has spectrumIdList"
-        else:
-            print "no spectrumIdList"
-
-        if self.spectrumId:
-            print "has spectrumId"
-        else:
-            print "no spectrumId"
-        """
-
     def _varName_changed(self):
-        print "DatViewer::_varName_changed"
-        print "  self.varName=", self.varName
-        print "  self.spectrumId='%s'" % self.spectrumId
+        self.updatePlot()
 
+    def updatePlot(self):
         self.plot.autoscaleOnUpdate = not self.parent.xlimSet
         for h in self.dataHandles:
             self.plot.updateTimeSeries(h, [], [])
@@ -1067,52 +1051,50 @@ class DatViewer(HasTraits):
             else:
                 if not self.spectrumId:
                     # no filtering
-                    print "not filtering spectrumId rows only"
-
+                    #print "not filtering spectrumId rows only"
                     try:
                         dateTime = self.table.col("DATE_TIME")
-                        print "using DATE_TIME"
+                        #print "using DATE_TIME"
                     except:
                         try:
                             dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
-                            print "using timestamp"
+                            #print "using timestamp"
                         except:
                             dateTime = array([unixTime(int(t)) for t in self.table.col("time")])
-                            print "using time"
+                            #print "using time"
 
                     values = self.table.col(self.varName)
 
                 else:
                     # use only rows with the selected spectrum id
-                    print "use only rows with spectrumId=%s" % self.spectrumId
+                    #print "use only rows with spectrumId=%s" % self.spectrumId
                     spectrumId = float(self.spectrumId)
-                    print "  spectrumId=", spectrumId
 
-                    # my test h5 file has timestamp
-                    dateTime = [x["timestamp"] for x in self.table.iterrows() if x["SpectrumID"] == spectrumId]
-                    print "len(dateTime)=", len(dateTime)
+                    dateTime = [x["timestamp"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId]
+                    #print "len(dateTime)=", len(dateTime)
 
                     try:
                         dateTime = self.table.col("DATE_TIME")
-                        dateTime = [x["DATE_TIME"] for x in self.table.iterrows() if x["SpectrumID"] == spectrumId]
-                        print "using DATE_TIME"
+                        dateTime = [x["DATE_TIME"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId]
+                        #print "using DATE_TIME"
                     except:
                         try:
                             #dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
-                            dateTime = array([unixTime(int(x["timestamp"])) for x in self.table.iterrows() if x["SpectrumID"] == spectrumId])
-                            print "using timestamp"
+                            dateTime = array([unixTime(int(x["timestamp"])) for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
+                            #print "using timestamp"
                         except:
                             dateTime = array([unixTime(int(t)) for t in self.table.col("time")])
-                            dateTime = [x["timestamp"] for x in self.table.iterrows() if x["SpectrumID"] == spectrumId]
-                            print "using time"
+                            dateTime = [x["timestamp"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId]
+                            #print "using time"
 
-                    values = array([x[self.varName] for x in self.table.iterrows() if x["SpectrumID"] == spectrumId])
+                    values = array([x[self.varName] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
 
-
+                """
                 print "len(dateTime)=", len(dateTime)
                 print "type(dateTime)=", type(dateTime)
                 print "len(values)=", len(values)
                 print "type(values)=", type(values)
+                """
 
                 values = eval(self.transform)(values)
                 p = argsort(dateTime)
@@ -1130,16 +1112,14 @@ class DatViewer(HasTraits):
         self.parent.xlimSet = True
 
     def _spectrumId_changed(self):
-        print "DatViewer::_spectrumId_changed"
-        print "  self.spectrumId='%s'" % self.spectrumId
-        print "  self.spectrumIdList=", self.spectrumIdList
+        #print "DatViewer::_spectrumId_changed"
+        #print "  self.spectrumId='%s'" % self.spectrumId
+        #print "  self.spectrumIdList=", self.spectrumIdList
 
-        if self.table and self.spectrumId == "0":
+        if self.table and self.spectrumId == SPECTRUM_ID_INIT:
             # spectrum id of "0" means init the dropdown with a list of unique spectrum ID values
-            print "  init spectrumId dropdown"
-
             try:
-                idArray = self.table.col("SpectrumID")
+                idArray = self.table.col(SPECTRUM_ID_NAME)
                 idList = []
                 for val in idArray:
                     iVal = int(val)
@@ -1155,36 +1135,20 @@ class DatViewer(HasTraits):
                 idList.insert(0, "")
 
                 self.spectrumIdList = idList
-                print "  idList=", idList
+                #print "  idList=", idList
 
-                # now init selection to no filtering (empty string)
+                # now init selection to no filtering
                 self.spectrumId = ""
 
             except KeyError:
                 print "DatViewer::_spectrumId_changed: KeyError exception"
+                wx.MessageBox("Data does not contain a SpectrumID column.")
                 self.spectrumIdList = []
                 self.spectrumId = ""
         else:
-            # user probably selected a spectrum ID from the dropdown, do nothing
-            print "refresh?"
+            # user probably selected a spectrum ID from the dropdown, update the plot
             if self.varName:
-                # force a refresh (but this isn't working...)
-                print "force refresh"
-                self.set(varName=self.varName)
-            pass
-
-        """
-    def _filterSpectrumId_changed(self):
-        print "DatViewer::_filterSpectrumId_changed"
-        if self.spectrumId:
-            print "  spectrumId=", self.spectrumId
-        else:
-            print "no spectrumId"
-
-        # refresh
-        if self.varName:
-            self._varName_changed()
-    """
+                self.updatePlot()
 
     def _transform_changed(self):
         if self.varName:
@@ -1619,13 +1583,9 @@ class AllanWindow(Window):
     plotAllan = Button1
     xlimSet = CBool(False)
 
-    print "AllanWindow"
-    #print "  viewers=", viewers
-    #print "  dir(viewers)=", dir(viewers)
+    #print "AllanWindow"
 
     def __init__(self, *a, **k):
-        print "AllanWindow::__init__"
-
         Window.__init__(self, *a, **k)
         self.nViewers = 1
         self.tz = k.get("tz", pytz.timezone("UTC"))
@@ -1642,10 +1602,7 @@ class AllanWindow(Window):
                     VGroup(
                         Item("dataSetName", object="h%d" % i, editor=EnumEditor(name="dataSetNameList"), width=w),
                         Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
-                        Item("spectrumId", object="h%d" % i, editor=EnumEditor(name="spectrumIdList"), width=w),
-                        #Item("filterSpectrumId", object="h%d" % i),
-                        #HGroup(Item("filterSpectrumId", object="h%d" % i),
-                        #       Item("spectrumId", object="h%d" % i, editor=EnumEditor(name="spectrumIdList"))),
+                        Item("spectrumId", object="h%d" % i, label="Spectrum ID:", editor=EnumEditor(name="spectrumIdList"), width=w),
                         HGroup(Item("autoscaleY", object="h%d" % i), Item("showPoints", object="h%d" % i)),
                         Item("transform", object="h%d" % i, width=w),
                         Item("mean", object="h%d" % i, width=w),
@@ -1660,10 +1617,8 @@ class AllanWindow(Window):
                                 buttons=NoButtons, title="Allan Standard Deviation Viewer",
                                 width=800, height=600, resizable=True, handler=SeriesWindowHandler())
 
-        print "AllanWindow::__init__ (done)"
-
     def notify(self, child, xlim, ylim):
-        print "AllanWindow::notify"
+        #print "AllanWindow::notify"
         self.listening = False
         for v in self.viewers:
             v.plot.axes.set_xlim(xlim)
@@ -1671,18 +1626,12 @@ class AllanWindow(Window):
         self.listening = True
 
     def _dataFile_changed(self):
-        print "AllanWindow::_dataFile_changed"
         for v in self.viewers:
-            # this triggers DatViewer::_dataFile_changed
-            v.set(dataFile=self.dataFile, spectrumId="0")
-
-            # this triggers DatViewer::_spectrumId_changed
-            #v.set(spectrumId="0")
-
-        print "AllanWindow::_dataFile_changed (done)"
+            # this triggers DatViewer::_dataFile_changed and _spectrumId_changed
+            v.set(dataFile=self.dataFile, spectrumId=SPECTRUM_ID_INIT)
 
     def _plotAllan_fired(self):
-        print "AllanWindow::_plotAllan_fired"
+        # Allan std. dev. button pressed
         viewer = XyViewer(parent=self.parent, mode=2)
         xV = self.viewers[0]
         try:
@@ -1698,7 +1647,14 @@ class AllanWindow(Window):
                 av.processDatum(y)
             v = av.getVariances()
             sdev = sqrt(asarray(v[1]))
-            viewer.set(xArray=2 ** arange(npts) * slope * 24 * 3600, yArray=sdev, xLabel='Time (s)', yLabel='Allan Std Dev',
+
+            # include spectrum ID in the X axis label if filtered
+            if not xV.spectrumId:
+                xLabel = "Time (s)"
+            else:
+                xLabel = "Time (s) [Spectrum ID = %s]" % xV.spectrumId
+
+            viewer.set(xArray=2 ** arange(npts) * slope * 24 * 3600, yArray=sdev, xLabel=xLabel, yLabel='Allan Std Dev',
                        xMin=1, xMax=2 ** npts, yMin=sdev.min(), yMax=sdev.max(), xScale='log', yScale='log')
             viewer.update()
             viewer.trait_view().set(title=self.dataFile)
@@ -1728,7 +1684,7 @@ class NotebookHandler(Handler):
         d = wx.FileDialog(None, "Open HDF5 file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="h5 files (*.h5)|*.h5")
         if d.ShowModal() == wx.ID_OK:
             info.object.dataFile = d.GetPath()
-            info.ui.title = "Viewing [" + info.object.dataFile + "]"
+            #info.ui.title = "Viewing [" + info.object.dataFile + "]"
         d.Destroy()
 
     def onOpenZip(self, info):
@@ -1843,7 +1799,7 @@ class NotebookHandler(Handler):
                         info.object.dataFile = fname
 
                         # Title for main DatViewer window
-                        info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                        #info.ui.title = "Viewing [" + info.object.dataFile + "]"
                         pd.Update(100, newmsg="Done. Close box to view results")
 
                     finally:
@@ -1855,7 +1811,7 @@ class NotebookHandler(Handler):
 
                     # remove these lines? already set above...
                     info.object.dataFile = fname
-                    info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                    #info.ui.title = "Viewing [" + info.object.dataFile + "]"
 
                 # destroy the file save dialog
                 fd.Destroy()
@@ -1977,7 +1933,7 @@ class NotebookHandler(Handler):
                             table.flush()
 
                     info.object.dataFile = fname
-                    info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                    #info.ui.title = "Viewing [" + info.object.dataFile + "]"
                     pd.Update(100, newmsg="Done. Close box to view results")
             finally:
                 op.close()
@@ -2230,7 +2186,7 @@ class NotebookHandler(Handler):
                 table.flush()
 
         info.object.dataFile = fname
-        info.ui.title = "Viewing [" + info.object.dataFile + "]"
+        #info.ui.title = "Viewing [" + info.object.dataFile + "]"
 
         # TODO: show a message dialog box here instead
         #       Would be nice to have a Don't show me this again checkbox.
@@ -2285,11 +2241,11 @@ class NotebookHandler(Handler):
             try:
                 c.convert()
                 info.object.dataFile = c.h5FileName
-                info.ui.title = "Viewing [" + info.object.dataFile + "]"
+                #info.ui.title = "Viewing [" + info.object.dataFile + "]"
             except Exception, e:
                 d = wx.MessageDialog(None, "%r" % e, "Error in conversion", style=wx.OK | wx.ICON_ERROR)
                 d.ShowModal()
-                info.ui.title = "HDF5 File Viewer"
+                #info.ui.title = "HDF5 File Viewer"
         else:
             d.Destroy()
 
@@ -2389,8 +2345,11 @@ class ViewNotebook(HasTraits):
 
         # Curiously, when incorporating separators in the menu the last menu item group must
         # be put in first so it ends up at the bottom of the menu.
+        #title = "HDF5 File Viewer"
+        title = "%s %s" % (FULLAPPNAME, APPVERSION)
+
         self.traits_view = View(Item("dataFile", style="readonly", label="H5 file:", padding=10),
-                                buttons=NoButtons, title="HDF5 File Viewer",
+                                buttons=NoButtons, title=title,
                                 menubar=MenuBar(Menu(exitAction,
                                                      Separator(),
                                                      openAction,
