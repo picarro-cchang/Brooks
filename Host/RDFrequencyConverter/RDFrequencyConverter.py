@@ -408,6 +408,9 @@ class RDFrequencyConverter(Singleton):
             if min(angleError,2*pi-angleError) < self.dthetaMax and abs(tempError) < self.dtempMax:
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)
+            else:
+                Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %  
+                    (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
         return entry
 
     def run(self):
@@ -661,17 +664,17 @@ class RDFrequencyConverter(Singleton):
             self.laserCurrentTunerAdjuster = TunerAdjuster("LASER_CURRENT_TUNING")
         else:
             self.laserCurrentTunerAdjuster = None
-        self.dthetaMax = self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"]
-        self.dtempMax  = self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"]
+        self.dthetaMax = float(self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"])
+        self.dtempMax  = float(self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"])
         # Set up the PZT scaling register
         if "PZT_SCALE_FACTOR" in self.hotBoxCal["CAVITY_LENGTH_TUNING"]:
-            pztScale = self.hotBoxCal["CAVITY_LENGTH_TUNING"]["PZT_SCALE_FACTOR"]
+            pztScale = int(self.hotBoxCal["CAVITY_LENGTH_TUNING"]["PZT_SCALE_FACTOR"])
         else:
             pztScale = 0xFFFF
         Driver.wrFPGA("FPGA_SCALER","SCALER_SCALE1",int(pztScale))
         # Set up the PZT_INCR_PER_CAVITY_FSR register
-        fsr = self.hotBoxCal["CAVITY_LENGTH_TUNING"]["FREE_SPECTRAL_RANGE"]
-        Driver.wrDasReg("PZT_INCR_PER_CAVITY_FSR",float(fsr))
+        fsr = float(self.hotBoxCal["CAVITY_LENGTH_TUNING"]["FREE_SPECTRAL_RANGE"])
+        Driver.wrDasReg("PZT_INCR_PER_CAVITY_FSR", fsr)
 
         return "OK"
 
