@@ -20,6 +20,7 @@ import threading
 
 import simplejson as json
 import psutil
+from Pyro import errors
 
 from Host.Common import SharedTypes
 from Host.Common.Win32 import Kernel32
@@ -53,8 +54,19 @@ class TestDatEchoP3(object):
 
         self.datRoot = os.path.join(baseDir, 'data')
         self.emptyDatDir = os.path.join(baseDir, 'data', 'empty')
+        
+        retryCount = 0
+        self.evts = None
 
-        self.evts = EventSinkServer.EventSinkServer()
+        while retryCount < 5 and self.evts is None:
+            try:
+                self.evts = EventSinkServer.EventSinkServer()
+            except errors.DaemonError:
+                retryCount += 1
+                time.sleep(2.0)
+
+        assert retryCount != 5
+
         self.evtsThread = threading.Thread(target=self.evts.run)
         self.evtsThread.start()
 
