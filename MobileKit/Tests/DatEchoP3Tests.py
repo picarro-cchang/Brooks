@@ -180,7 +180,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) == 2
         assert int(stats['pushDataReqs']) == 0
         assert stats['lastRangeReq'] is not None
@@ -258,7 +258,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         # Target .dat file has 16207 rows. We push in chunks of 200.
         assert int(stats['pushDataReqs']) == 82
@@ -434,7 +434,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
 
         # Should be 207 remaining lines to push. With N = 200, the last push
@@ -544,7 +544,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         # Target .dat file has 16207 rows. We push in chunks of 200.
         assert int(stats['pushDataReqs']) == 164
@@ -630,7 +630,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         # Target .dat file has 16207 rows. We push in chunks of 200.
         assert int(stats['pushDataReqs']) == 82
@@ -824,7 +824,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         assert int(stats['pushDataReqs']) == 0
 
@@ -999,7 +999,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
 
         # Target .dat file has 16207 rows. We push in chunks of 200.
@@ -1086,7 +1086,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         # Target .dat file has 16207 rows. We push in chunks of 200.
         assert int(stats['pushDataReqs']) == 82
@@ -1200,7 +1200,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         assert int(stats['pushDataReqs']) == 82
 
@@ -1303,7 +1303,7 @@ class TestDatEchoP3(object):
         with open('stats.json', 'rb') as f:
             stats = json.load(f)
 
-        assert int(stats['ticketReqs']) == 1
+        assert int(stats['ticketReqs']) >= 1
         assert int(stats['localIpReqs']) > 1
         # Target .dat file has 16207 rows. We push in chunks of 200.
         assert int(stats['pushDataReqs']) == 82
