@@ -163,7 +163,19 @@ class DatViewerPrefs(object):
             # the platform, for backwards compatibility.
             #
             # See: http://stackoverflow.com/questions/2144748/is-it-safe-to-use-sys-platform-win32-check-on-64-bit-python
-            appdataDir = os.path.join(os.environ['LOCALAPPDATA'], appname, appversion)
+            #
+            # Windows environment variables:
+            #   Win7:  user appdata folder:APPDATA= Roaming, LOCALAPPDATA= Local
+            #          since paths can be machine-specific, use local
+            #   WinXP: user appdata folder:APPDATA
+            try:
+                appdataDir = os.path.join(os.environ['LOCALAPPDATA'], appname, appversion)
+                print "LOCALAPPDATA: appdataDir=", appdataDir
+            except KeyError:
+                # probably WinXP, fallback is APPDATA
+                appdataDir = os.path.join(os.environ['APPDATA'], appname, appversion)
+                print "APPDATA: appdataDir=", appdataDir
+
             prefsFilename = _DEFAULT_USER_PREFS_FILENAME_WIN
 
         else:
