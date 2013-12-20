@@ -14,6 +14,9 @@
 # 2013-10-25 sze Used scaled x-axis for calculation of line of best fit in correlation plot to avoid roundoff
 #                errors giving incorrect fits when the number of data points is large
 # 2013-10-27 sze Fixes for matplotlib-1.3. Correct handling of double-click for Windows 7
+# 2013-12-18 tw  Added spectrum ID dropdown to Allan std. dev. window (empty first choice=no filtering),
+#                display appname and version in main window frame title
+# 2013-12-20 tw  Bumped to version 2.0.2, removed prefs file code (unneeded experimental code, crashed WinXP)
 
 oldSum = sum
 import wx
@@ -65,7 +68,7 @@ from pylab import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "2.0.1"
+APPVERSION = "2.0.2"
 
 
 # definitions for filtering by spectrum ID
@@ -2378,39 +2381,8 @@ class ViewNotebook(HasTraits):
                                 # height=100,
                                 resizable=True)
 
+
 _DEFAULT_CONFIG_NAME = "DatViewer.ini"
-_DEFAULT_PREFS_FILENAME = "DatViewerPrefs.ini"
-
-
-def getAppPrefsPath():
-    """
-    Construct a path for user prefs. Examples of useful things we may wish to store:
-        last dir used (for file and folder open/save dialogs)
-        menu shortcuts
-        window size and location
-        don't show me this again checkbox settings
-    """
-    appdata = None
-
-    #appData = shell.SHGetFolderPath(0, shellcon.CSIDL_LOCAL_APPDATA, 0, 0)
-
-    if os.sys.platform == 'darwin':
-        from AppKit import NSSearchPathForDirectoriesInDomains
-        # http://developer.apple.com/DOCUMENTATION/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Functions/Reference/reference.html#//apple_ref/c/func/NSSearchPathForDirectoriesInDomains
-        # NSApplicationSupportDirectory = 14
-        # NSUserDomainMask = 1
-        # True for expanding the tilde into a fully qualified path
-        appdata = os.path.join(NSSearchPathForDirectoriesInDomains(14, 1, True)[0], APPNAME, APPVERSION)
-    elif sys.platform == 'win32':
-        # user appdata folder: APPDATA= Roaming, LOCALAPPDATA= Local
-        # since paths can be machine-specific, use local
-        appdata = os.path.join(os.environ['LOCALAPPDATA'], APPNAME, APPVERSION)
-    else:
-        appdata = os.path.expanduser(os.path.join("~", APPNAME, APPVERSION))
-
-    appPrefsPath = os.path.join(appdata, _DEFAULT_PREFS_FILENAME)
-
-    return appPrefsPath
 
 
 HELP_STRING = """\
@@ -2466,22 +2438,17 @@ def handleCommandSwitches():
 
     # Start with option defaults...
     configFile = _DEFAULT_CONFIG_NAME
-    prefsFile = getAppPrefsPath()
 
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
 
-    if "-p" in options:
-        prefsFile = options["-p"]
-        print "User prefs file specified at command line: %s" % prefsFile
-    return configFile, prefsFile
+    return configFile
 
 if __name__ == "__main__":
-    configFile, prefsFile = handleCommandSwitches()
+    configFile = handleCommandSwitches()
 
     print "configFile=", configFile
-    print "prefsFile=", prefsFile
 
     config = ConfigObj(configFile)
     viewNotebook = ViewNotebook(config=config)
