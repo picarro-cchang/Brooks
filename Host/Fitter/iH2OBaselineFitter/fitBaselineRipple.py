@@ -73,6 +73,6 @@ RESULT = {'amp_ripp_1':amp_ripp_1, 'amp_ripp_2':amp_ripp_2, 'amp_ripp_3':amp_rip
           'splinemax':splinemax, 'h2o_ppmv':h2o_ppmv, 'stddevres':r["std_dev_res"]}
 op = file(oname,"ab")
 s = cPickle.dumps(RESULT)
-op.write(pack('i',len(s)))
+op.write(pack('=i',len(s)))
 op.write(s)
 op.close()

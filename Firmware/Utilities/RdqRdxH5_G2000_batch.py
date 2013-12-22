@@ -147,8 +147,8 @@ class RdqFile(object):
             comps = [comp.strip() for comp in line.split("=",1)]
             if len(comps)<2: break
             self.coltype[int(comps[0])] = comps[1]
-            # Make the format string for reading the binary data
-            fmt = ""
+        # Make the format string for reading the binary data
+        fmt = "="
         self.ncols = len(self.coltype)
         for i in range(self.ncols):
             if self.coltype[i]=="float": fmt += "f"
@@ -241,8 +241,8 @@ class RdxFile(object):
             comps = [comp.strip() for comp in line.split("=",1)]
             if len(comps)<2: break
             self.coltype[int(comps[0])] = comps[1]
-            # Make the format string for reading the binary data
-            fmt = ""
+        # Make the format string for reading the binary data
+        fmt = "="
         self.ncols = len(self.coltype)
         for i in range(self.ncols):
             if self.coltype[i]=="float": fmt += "f"
