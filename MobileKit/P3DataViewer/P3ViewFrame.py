@@ -9,16 +9,18 @@ File History:
 Copyright (c) 2013 Picarro, Inc. All rights reserved
 """
 import wx
+from configobj import ConfigObj
 import gettext
 from math import isnan
 import numpy as np
+from optparse import OptionParser
 from Queue import Queue, Empty
 import sys
 import time
 import threading
 import traceback
 
-from Host.Common.GraphPanel import Series
+from Host.Common.GraphPanel import Series, GraphPanel
 
 from P3RestApi import P3RestApi
 from P3ViewFrameGui import P3ViewFrameGui
@@ -26,13 +28,13 @@ from P3ViewFrameGui import P3ViewFrameGui
 SERIES_POINTS = 10000
 
 class P3Access(object):
-    def __init__(self):
+    def __init__(self, authentication):
         restP = {}
-        restP['host'] = "p3.picarro.com"
-        restP['port'] = 443
-        restP['site'] = 'stage'
-        restP['identity'] = 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth'
-        restP['psys'] = 'stage'
+        restP['host'] = authentication["Host"]
+        restP['port'] = authentication["Port"]
+        restP['site'] = authentication["Site"]
+        restP['identity'] = authentication["Identity"]
+        restP['psys'] = authentication["Sys"]
         restP['svc'] = 'gdu'
         restP['debug'] = False
         restP['version'] = '1.0'
@@ -71,7 +73,6 @@ class P3Access(object):
         """
         assert isinstance(self.inputQueue, Queue)
         while True:
-            print "Worker looping"
             func, args, kwargs, ident, onSuccess, onFail = self.inputQueue.get()
             try:
                 result = func(*args, **kwargs)
@@ -336,9 +337,7 @@ class DataModel(Subject):
             return
         alog, metadata = result
         logFileId = metadata["FILENAME_nint"][0]
-        print self.logFileId, logFileId
         if self.logFileId != logFileId:
-            print "Log restart detected during slow poll"            
             # This is a new log file
             docmap = metadata['docmap'][0]
             self.set("logMetaData", metadata)
@@ -388,9 +387,7 @@ class DataModel(Subject):
                 self.logData[var] = []
             self.logData[var].extend(logData[var])
         newStartPos = self.logData["row"][-1] + 1
-        print self.startPos
         if self.startPos == newStartPos:
-            print "Waiting awhile before getting more data"
             wx.FutureCall(5000, self.getLogMore, alog=alog, index=index)
         else:
             self.set("logData", self.logData, force=True)
@@ -411,6 +408,7 @@ class DisplayModel(Subject):
         self.ySeries = Series(SERIES_POINTS)
         self.xySeries = Series(SERIES_POINTS)
         self.nextPlotPoint = 0
+        self.timeRange = None
         self.dataModel.addListener(self.dataListener)
         self.addListener(self.displayListener)
         
@@ -418,33 +416,37 @@ class DisplayModel(Subject):
         self.set('xvar', xvar)
         self.set('yvar', yvar)
 
+    def setTimeRange(self, timeRange):
+        self.set('timeRange', timeRange)
+        
     def fillSeries(self):
         if self.dataModel.logData is not None and self.xvar and self.yvar:
-            rows = self.dataModel.logData['row']
+            epochTimes = self.dataModel.logData['EPOCH_TIME']
             xValues = self.dataModel.logData[self.xvar]
             yValues = self.dataModel.logData[self.yvar]
             while self.nextPlotPoint < len(xValues):
-                row = rows[self.nextPlotPoint]
+                epochTime = epochTimes[self.nextPlotPoint]
                 xValue = xValues[self.nextPlotPoint]
                 yValue = yValues[self.nextPlotPoint]
-                rowGood = (row is not None) and row > 0
                 xGood = (xValue is not None) and np.isfinite(xValue)
                 yGood = (yValue is not None) and np.isfinite(yValue)
                 
-                if rowGood and xGood:
-                    self.xSeries.Add(row, xValue)
+                if xGood:
+                    self.xSeries.Add(epochTime, xValue)
                 else:    
-                    self.xSeries.Add(row, np.NaN)
-                if rowGood and yGood:
-                    self.ySeries.Add(row, yValue)
+                    self.xSeries.Add(epochTime, np.NaN)
+                if yGood:
+                    self.ySeries.Add(epochTime, yValue)
                 else:    
-                    self.xSeries.Add(row, np.NaN)
-                if rowGood and xGood and yGood:
-                    self.xySeries.Add(xValue, yValue)
-                else:    
-                    self.xySeries.Add(np.NaN, np.NaN)
+                    self.xSeries.Add(epochTime, np.NaN)
                 self.nextPlotPoint += 1
-            pass
+                
+            if self.timeRange is not None:
+                tMin, tMax = self.timeRange
+                self.xySeries.Clear()
+                for tvalue, xvalue, yvalue in zip(self.xSeries.GetX(), self.xSeries.GetY(), self.ySeries.GetY()):
+                    if tMin <= tvalue <= tMax:
+                        self.xySeries.Add(xvalue, yvalue)
         
     def displayListener(self, displayModel):
         changed = self.changed
@@ -454,6 +456,14 @@ class DisplayModel(Subject):
             self.xySeries.Clear()
             self.nextPlotPoint = 0
             self.fillSeries()
+        if changed == 'timeRange':
+            if self.timeRange is not None:
+                tMin, tMax = self.timeRange
+                self.xySeries.Clear()
+                for tvalue, xvalue, yvalue in zip(self.xSeries.GetX(), self.xSeries.GetY(), self.ySeries.GetY()):
+                    if tMin <= tvalue <= tMax:
+                        self.xySeries.Add(xvalue, yvalue)
+                
         
     def dataListener(self, dataModel):
         changed = dataModel.changed
@@ -462,7 +472,7 @@ class DisplayModel(Subject):
             self.ySeries.Clear()
             self.xySeries.Clear()
             self.nextPlotPoint = 0
-        elif changed in ["logData"]:
+        if changed in ["logData"]:
             self.fillSeries()
         
                         
@@ -473,76 +483,153 @@ class P3ViewFrame(P3ViewFrameGui):
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             logScale=(False,False))
-        self.graphPanelXVar.SetGraphProperties(xlabel='row',timeAxes=(False,False),ylabel='X',grid=True,
+        self.graphPanelXVar.SetGraphProperties(xlabel='Time',timeAxes=(True,False),ylabel='X',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             logScale=(False,False))
-        self.graphPanelYVar.SetGraphProperties(xlabel='row',timeAxes=(False,False),ylabel='Y',grid=True,
+        self.graphPanelYVar.SetGraphProperties(xlabel='Time',timeAxes=(True,False),ylabel='Y',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             logScale=(False,False))
 
-        self.p3Access = P3Access()
+        self.p3Access = None
+        self.dataModel = None
+        self.displayModel = None
+        self.config = None
+        self.allTimeLocked = False
+        
+    def startup(self, options, args):
+        self.config = ConfigObj(options.config)
+        assert 'Authentication' in self.config, "Authentication section missing in %s" % options.config
+        self.p3Access = P3Access(self.config['Authentication'])
+        
         self.dataModel = DataModel(self.p3Access)
         self.displayModel = DisplayModel(self.dataModel)
+        self.dataModel.addListener(self.dataListener)
+        self.displayModel.addListener(self.displayListener)
 
         self.graphPanelXVar.AddSeriesAsLine(self.displayModel.xSeries, colour='blue', width=2)
         self.graphPanelYVar.AddSeriesAsLine(self.displayModel.ySeries, colour='blue', width=2)
-
         self.graphPanelXY.AddSeriesAsLine(self.displayModel.xySeries, colour='blue', width=2)
         self.graphPanelXY.AddSeriesAsPoints(self.displayModel.xySeries, colour='red', fillcolour='red', 
                                            marker='square', size=1,width=1)
-        self.dataModel.addListener(self.viewListener)
-        
+
         self.Bind(wx.EVT_TIMER, self.onTimer)
         self.updateTimer = wx.Timer(self)
         self.updateTimer.Start(milliseconds=500)
         
+        self.dataModel.getAnalyzers()
+        
+    def handleLockedAxes(self):
+        graphPanels = [self.graphPanelXVar, self.graphPanelYVar]
+        axisChanged = False
+        for idx in range(len(graphPanels)):
+            refPanel = graphPanels[idx]
+            assert isinstance(refPanel, GraphPanel)
+            if refPanel.GetIsNewXAxis():
+                axisChanged = True
+                actIndices = range(len(graphPanels))
+                actIndices.remove(idx)
+                currXAxis = tuple(graphPanels[idx].GetLastDraw()[1])
+                self.displayModel.setTimeRange(currXAxis)
+                if not refPanel.GetUnzoomed():
+                    #print "Graph %d zooming others in time-locked mode" % idx
+                    for i in actIndices:
+                        panel = graphPanels[i]
+                        panel.SetUnzoomed(False)
+                        panel.SetForcedXAxis(currXAxis)
+                        panel.Update(forcedRedraw=True)
+                        panel.ClearForcedXAxis()
+                    self.allTimeLocked = True  
+                    break
+                elif self.allTimeLocked:
+                    #print "Graph %d unzooming others in time-locked mode" % idx
+                    # Unzoom other plots
+                    for i in actIndices:
+                        panel = graphPanels[i]
+                        panel.SetUnzoomed(True)
+                        panel.Update(forcedRedraw=True)
+                    self.allTimeLocked = False
+                    break
+        return axisChanged
+    
     def onTimer(self,evt):
         self.dataModel.outputQueueHandler()
-        self.graphPanelXVar.Update(delay=0)
-        self.graphPanelYVar.Update(delay=0)
-        self.graphPanelXY.Update(delay=0)
-        if evt: evt.Skip()
-        
-    def startup(self):
-        self.dataModel.getAnalyzers()
+        axisChanged = self.handleLockedAxes()
     
-    def viewListener(self, model):
-        changed = model.changed
-        print model.changed
+        self.graphPanelXVar.Update(delay=0, forcedRedraw=axisChanged)
+        self.graphPanelYVar.Update(delay=0, forcedRedraw=axisChanged)
+        self.graphPanelXY.Update(delay=0, forcedRedraw=axisChanged)
+
+        if evt: evt.Skip()
+    
+    def dataListener(self, dataModel):
+        changed = dataModel.changed
         if changed == "analyzers":
-            self.cbAnalyzerName.SetItems(model.analyzers)
-            self.cbAnalyzerName.SetSelection(0)
+            self.cbAnalyzerName.SetItems(dataModel.analyzers)
+            if 'Analyzer' in self.config['Settings']:
+                analyzer = self.config['Settings']['Analyzer']
+                assert analyzer in dataModel.analyzers, "Cannot find analyzer %s in environment" % analyzer
+                self.cbAnalyzerName.SetStringSelection(analyzer)
+            else:
+                self.cbAnalyzerName.SetSelection(0)
             self.onSelectAnalyzer(None)
         elif changed == "analyzerLogs":
-            if model.analyzerLogs is None:
+            if dataModel.analyzerLogs is None:
                 self.cbLogName.Clear()
             else:
-                logs = ["Live"] + model.analyzerLogs
+                logs = ["Live"] + dataModel.analyzerLogs
                 self.cbLogName.SetItems(logs)
-                self.cbLogName.SetSelection(0)
+                if 'Log' in self.config['Settings']:
+                    logName = self.config['Settings']['Log']
+                    assert logName in logs, "Cannot find log %s for analyzer" % logName
+                    self.cbLogName.SetStringSelection(logName)
+                else:
+                    self.cbLogName.SetSelection(0)
                 self.onSelectLog(None)
         elif changed == "logVars":
-            if model.logVars is None:
-                pass
-            else:
-                logVars = [var for var in model.logVars if var not in ["ANALYZER"]]
-                self.cbXVariable.SetItems(logVars)
-                if self.displayModel.xvar not in logVars:
-                    self.cbXVariable.SetSelection(0)
-                else:
-                    self.cbXVariable.SetStringSelection(self.displayModel.xvar)
-                self.cbYVariable.SetItems(logVars)
-                if self.displayModel.yvar not in logVars:
-                    self.cbYVariable.SetSelection(0)
-                else:
-                    self.cbYVariable.SetStringSelection(self.displayModel.yvar)
-                self.onSelectVariables()
+            if dataModel.logVars is not None:
+                self.selectDisplayVariables(dataModel)
         elif changed == "logData":
-            self.updateDashboard(model.logData)
+            self.updateDashboard(dataModel.logData)
         elif changed == "logFileId":
             self.clearDashboard()
+
+    def selectDisplayVariables(self, dataModel):
+        logVars = [var for var in dataModel.logVars if var not in ["ANALYZER"]]
+        self.cbXVariable.SetItems(logVars)
+        if self.displayModel.xvar in logVars:
+            self.cbXVariable.SetStringSelection(self.displayModel.xvar)
+        else:
+            if 'X' in self.config['Settings']:
+                xvar = self.config['Settings']['X']
+                if xvar in logVars:
+                    self.cbXVariable.SetStringSelection(xvar)
+                else:
+                    self.cbXVariable.SetSelection(0)
+            else:
+                self.cbXVariable.SetSelection(0)
+                
+        self.cbYVariable.SetItems(logVars)
+        if self.displayModel.yvar in logVars:
+            self.cbYVariable.SetStringSelection(self.displayModel.yvar)
+        else:
+            if 'Y' in self.config['Settings']:
+                yvar = self.config['Settings']['Y']
+                if yvar in logVars:
+                    self.cbYVariable.SetStringSelection(yvar)
+                else:
+                    self.cbYVariable.SetSelection(0)
+            else:
+                self.cbYVariable.SetSelection(0)
+        self.onSelectVariables()
+        
+    def displayListener(self, displayModel):
+        self.graphPanelXVar.ylabel = displayModel.xvar
+        self.graphPanelYVar.ylabel = displayModel.yvar
+        self.graphPanelXY.xlabel = displayModel.xvar
+        self.graphPanelXY.ylabel = displayModel.yvar
+            
             
     def clearDashboard(self):
         self.textCtrlLastPointTime.SetValue("")
@@ -630,15 +717,18 @@ class MyApp(wx.App):
         # Handle exceptions by showing a modal dialog
         def _excepthook(etype, value, tb):
             dlg = wx.MessageDialog(None,
-                                   "%s\nTraceback:\n%s" % (
+                                   "%s: %s\nTraceback:\n%s" % ( etype,
                                        value, '\n'.join(traceback.format_tb(tb))),
                                    'Unhandled Exception', wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
             dlg.Destroy()
-        # sys.excepthook = _excepthook
+        sys.excepthook = _excepthook
         wx.InitAllImageHandlers()
+        parser = OptionParser()
+        parser.add_option("-c", "--config", dest="config", help="Configuration file", default="P3Monitor.ini")
+        options, args = parser.parse_args()
         frame_1 = P3ViewFrame(None, wx.ID_ANY, "")
-        frame_1.startup()
+        frame_1.startup(options, args)
         self.SetTopWindow(frame_1)
         frame_1.Show()
         return 1
