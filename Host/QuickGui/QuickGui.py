@@ -2061,16 +2061,12 @@ class QuickGui(wx.Frame):
                                 self.keyChoice[idx].SetSelection(0)
                     self.keyChoices[idx] = keyChoices
                     self.dataKeyUpdateAction(idx)
-            if self.lockTime:
-                self.graphPanel[idx].Update(forcedRedraw=True)
-            else:
-                self.graphPanel[idx].Update(forcedRedraw=False)
         
+        axisChanged = False
         if self.lockTime:
             for idx in range(self.numGraphs):
-                if not self.graphPanel[idx].GetIsNewXAxis():
-                    pass
-                else:
+                if self.graphPanel[idx].GetIsNewXAxis():
+                    axisChanged = True
                     actIndices = range(self.numGraphs)
                     actIndices.remove(idx)
                     currXAxis = tuple(self.graphPanel[idx].GetLastDraw()[1])
@@ -2091,6 +2087,8 @@ class QuickGui(wx.Frame):
                             self.graphPanel[i].Update(forcedRedraw=True)
                         self.allTimeLocked = False
                         break
+        for idx in range(self.numGraphs):
+            self.graphPanel[idx].Update(forcedRedraw=axisChanged)
  
         gaugeValue = []
         for idx in range(self.numGraphs):

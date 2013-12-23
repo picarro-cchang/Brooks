@@ -135,14 +135,14 @@ class AnalogInterface(object):
             At each time, we send the 10ms timestamp, a channel bitmask, and then the actual
             channel data."""
         sendStr = []
-        sendStr.append(struct.pack("H",clk & 0xFFFF))
+        sendStr.append(struct.pack("=H",clk & 0xFFFF))
         chanMask = 0
         dacCounts = []
         for c in sorted(samplesToSend.keys()):
             chanMask += (1<<c)
             dacCounts.append(samplesToSend[c])
-        sendStr.append(struct.pack("B",chanMask))
-        sendStr.append(struct.pack("%dH" % len(dacCounts),*dacCounts))
+        sendStr.append(struct.pack("=B",chanMask))
+        sendStr.append(struct.pack("=%dH" % len(dacCounts),*dacCounts))
         sendStr = "".join(sendStr)
         if self.dacStrLen + len(sendStr) >= 64:
             self.driver.rpcHandler.enqueueDacSamples("".join(self.dacStr))

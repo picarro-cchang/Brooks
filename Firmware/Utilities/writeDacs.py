@@ -56,7 +56,7 @@ if __name__ == "__main__":
         if nReqd>0:
             sendStr = ["\x03"]
             for i in range(nReqd):
-                sendStr.append(struct.pack("HH",int(32768+32767*cos(x)),int(32768+32767*sin(x))))
+                sendStr.append(struct.pack("=HH",int(32768+32767*cos(x)),int(32768+32767*sin(x))))
                 x += dx
             Driver.wrAuxiliary("".join(sendStr))
             if not started:
