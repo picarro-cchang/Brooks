@@ -16,7 +16,8 @@
 # 2013-10-27 sze Fixes for matplotlib-1.3. Correct handling of double-click for Windows 7
 # 2013-12-18 tw  Added spectrum ID dropdown to Allan std. dev. window (empty first choice=no filtering),
 #                display appname and version in main window frame title
-# 2013-12-20 tw  Bumped to version 2.0.2, removed prefs file code (unneeded experimental code, crashed WinXP)
+# 2013-12-20 tw  v2.0.2: Removed prefs file code (unneeded experimental code, crashed WinXP)
+# 2013-12-23 tw  v2.0.3: Fixed bugs in spectrum ID filtering for Allan std. dev.
 
 oldSum = sum
 import wx
@@ -68,7 +69,7 @@ from pylab import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "2.0.2"
+APPVERSION = "2.0.3"
 
 
 # definitions for filtering by spectrum ID
@@ -1057,14 +1058,14 @@ class DatViewer(HasTraits):
                     #print "not filtering spectrumId rows only"
                     try:
                         dateTime = self.table.col("DATE_TIME")
-                        #print "using DATE_TIME"
+                        #print "using DATE_TIME (no SpectrumID filtering)"
                     except:
                         try:
                             dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
-                            #print "using timestamp"
+                            #print "using timestamp (no SpectrumID filtering)"
                         except:
                             dateTime = array([unixTime(int(t)) for t in self.table.col("time")])
-                            #print "using time"
+                            #print "using time (no SpectrumID filtering)"
 
                     values = self.table.col(self.varName)
 
@@ -1072,23 +1073,18 @@ class DatViewer(HasTraits):
                     # use only rows with the selected spectrum id
                     #print "use only rows with spectrumId=%s" % self.spectrumId
                     spectrumId = float(self.spectrumId)
-
-                    dateTime = [x["timestamp"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId]
-                    #print "len(dateTime)=", len(dateTime)
+                    #print "  type(spectrumId)=", type(spectrumId)
 
                     try:
-                        dateTime = self.table.col("DATE_TIME")
-                        dateTime = [x["DATE_TIME"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId]
-                        #print "using DATE_TIME"
+                        dateTime = array([x["DATE_TIME"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
+                        #print "using DATE_TIME (SpectrumID=%.1f)" % spectrumId
                     except:
                         try:
-                            #dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
                             dateTime = array([unixTime(int(x["timestamp"])) for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
-                            #print "using timestamp"
+                            #print "using timestamp (SpectrumID=%.1f)" % spectrumId
                         except:
-                            dateTime = array([unixTime(int(t)) for t in self.table.col("time")])
-                            dateTime = [x["timestamp"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId]
-                            #print "using time"
+                            dateTime = array([x["time"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
+                            #print "using time (SpectrumID=%.1f)" % spectrumId
 
                     values = array([x[self.varName] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
 
@@ -1109,6 +1105,7 @@ class DatViewer(HasTraits):
 
             self.autoscaleY = True
             self.notify(self.plot.axes)
+
         except Exception, e:
             d = wx.MessageDialog(None, "%s" % e, "Error while displaying", style=wx.OK | wx.ICON_ERROR)
             d.ShowModal()
@@ -1635,6 +1632,7 @@ class AllanWindow(Window):
 
     def _plotAllan_fired(self):
         # Allan std. dev. button pressed
+        #print "AllanWindow::_plotAllan_fired()"
         viewer = XyViewer(parent=self.parent, mode=2)
         xV = self.viewers[0]
         try:
