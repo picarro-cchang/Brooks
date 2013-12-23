@@ -16,7 +16,8 @@
 # 2013-10-27 sze Fixes for matplotlib-1.3. Correct handling of double-click for Windows 7
 # 2013-12-18 tw  Added spectrum ID dropdown to Allan std. dev. window (empty first choice=no filtering),
 #                display appname and version in main window frame title
-# 2013-12-20 tw  Bumped to version 2.0.2, removed prefs file code (unneeded experimental code, crashed WinXP)
+# 2013-12-20 tw  v2.0.2: Removed prefs file code (unneeded experimental code, crashed WinXP)
+# 2013-12-23 tw  v2.0.3: Fixed bugs in spectrum ID filtering for Allan std. dev.
 
 oldSum = sum
 import wx
