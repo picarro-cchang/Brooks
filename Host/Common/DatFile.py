@@ -10,6 +10,10 @@ from __future__ import with_statement
 import csv
 
 
+class ColumnExistsError(Exception):
+    pass
+
+
 class DatFile(object):
 
     @staticmethod
@@ -62,10 +66,24 @@ class DatFile(object):
 
         return self.__getattr__(stream)
 
+    def addNewColumn(self, name):
+        """
+        Extend the .dat with a new column of the same length, set to 0.0.
+        """
+        
+        if name in self.data:
+            raise ColumnExistsError
+
+        self.data[name] = [0.0] * len(self.data[self.columnNames()[0]])
+
     def columnNames(self):
         return self.data.keys()
 
     def toCSV(self, outName):
+        """
+        Save in .csv format.
+        """
+
         with open(outName, 'wb') as fp:
             writer = csv.writer(fp)
             names = self.columnNames()
@@ -75,3 +93,20 @@ class DatFile(object):
                 for n in names:
                     row.append(self.data[n][i])
                 writer.writerow(row)
+
+    def toDat(self, outName, columnWidth=26):
+        """
+        Save in .dat format.
+        """
+        
+        with open(outName, 'w') as fp:
+            # Write header
+            for k in self.data:
+                fp.write((k[:columnWidth-1]).ljust(columnWidth))
+            fp.write("\n")
+
+            for i in xrange(len(self.data[self.columnNames()[0]])):
+                for k in self.data:
+                    fp.write((str(self.data[k][i])[:columnWidth-1]).ljust(columnWidth))
+                fp.write("\n")
+            
