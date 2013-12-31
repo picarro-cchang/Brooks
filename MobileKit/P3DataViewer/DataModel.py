@@ -61,7 +61,7 @@ class DataModel(Subject):
             exc: Exception object returned from P3Access method call
         """
         self.set("lastException", "Error fetching data from PCubed", True)
-        self.p3Failures = self.p3Access.numFails
+        self.set("p3Failures", self.p3Access.numFails)
         Timer(10.0, self.recoverFromP3Error, (), {}).start()
     
     def recoverFromP3Error(self):
@@ -76,7 +76,7 @@ class DataModel(Subject):
         Args:
             analyzerList: List of analyzers in the environment
         """
-        self.p3Failures = self.p3Access.numFails
+        set("p3Failures", self.p3Access.numFails)
         self.set("analyzer", None)
         self.set("logName", None)
         self.set("logFileId", None)
