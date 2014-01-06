@@ -39,7 +39,8 @@ ANALYSIS_POINTS = 50
 INTERVAL_THRESHOLD = 2.0
 MAX_P3FAILURES = 10
 
-assertAnemometerGood = UTILS.assertMaskedValueEqual(checkVal=0,mask=0x1)
+def assertAnemometerGood(systemStatus, carSpeed):
+    return UTILS.assertMaskedValueEqual(checkVal=0,mask=0x1)(systemStatus) or abs(carSpeed)<0.5
 
 if DATA["type"] == "update":
     if DATA["changed"] == "logData":
@@ -63,7 +64,7 @@ if DATA["type"] == "update":
             UTILS.show(UTILS.fetch(data, ["SYSTEM_STATUS"]), 
                         "System status", "%08x",
                         warningAsserts=UTILS.assertAvailable,
-                        errorAsserts=assertAnemometerGood)
+                        errorAsserts=UTILS.assertMaskedValueEqual(checkVal=0,mask=0x1))
             UTILS.show(UTILS.fetch(data, ["WIND_N", "WIND_E"], mapFunc=compToSpeed), 
                         "Wind speed", speedAsString,
                         warningAsserts=UTILS.assertAvailable)
@@ -119,7 +120,7 @@ elif DATA["type"] == "time":
             sinceLastEpoch =  DATA["time"] - savedLastEpochTime
             if sinceLastEpoch < EMAIL_THRESHOLD:
                 # Analyze data over last ANALYSIS_POINTS
-                nAnemBad = UTILS.fetch(data, ["SYSTEM_STATUS"], mapFunc=assertAnemometerGood,
+                nAnemBad = UTILS.fetch(data, ["SYSTEM_STATUS", "CAR_SPEED"], mapFunc=assertAnemometerGood,
                           reduceFunc=UTILS.countFalse, numPoints=ANALYSIS_POINTS)
                 interval = UTILS.fetch(data, ["EPOCH_TIME"], reduceFunc=durationReduce, numPoints=ANALYSIS_POINTS)
                 

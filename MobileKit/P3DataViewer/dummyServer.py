@@ -26,6 +26,7 @@ PARAMS = {
     "histTime": 1200,
     "startTime": None,
     "systemStatus": 0,
+    "carSpeed": "10.0 + 7.0*sin(0.001*t)",
     "windN": 3.0,
     "windE": 4.0,
     "eTimeByRow": [],
@@ -112,7 +113,7 @@ def fillLog():
     while startTime < now:
         PARAMS["eTimeByRow"].append(startTime)
         t = startTime - PARAMS["startTime"]
-        carSpeed = 10.0 + 7.0*sin(2*pi*t/3600.0)
+        carSpeed = eval(PARAMS["carSpeed"])
         PARAMS["carSpeedByRow"].append(carSpeed)
         PARAMS["WLonByRow"].append(carSpeed + random())
         PARAMS["WLatByRow"].append(random())
@@ -155,6 +156,11 @@ def wind(windN, windE):
     PARAMS["windN"] = float(windN)
     PARAMS["windE"] = float(windE)
     return "New wind velocity = %s, %s" % (PARAMS["windN"], PARAMS["windE"])
+
+@app.route('/carSpeed/<expr>')
+def carSpeed(expr):
+    PARAMS["carSpeed"] = expr
+    return "New car speed = %s" % PARAMS["carSpeed"]
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=8003,debug=True)
