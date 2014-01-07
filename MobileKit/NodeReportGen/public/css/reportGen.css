@@ -54,12 +54,15 @@ div.reportTable {
   margin-right: 25px;
   margin-top: 5px;  
   margin-bottom: 0px;  
+  font-family: "Open Sans Condensed", sans;
 }
 
 .reportTableHeading {
   margin-left: 25px ;
+  margin-right: 25px;
   margin-top: 10px;  
-  margin-bottom: 0px;  
+  margin-bottom: 0px;
+  font-family: "Open Sans Condensed", sans;
 }
 
 div.dataTables_length select {

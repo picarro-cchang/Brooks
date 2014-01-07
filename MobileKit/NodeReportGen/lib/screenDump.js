@@ -66,7 +66,7 @@ if (system.args.length < 3 || system.args.length > 7) {
                     });
 
                     paperSize.header = {
-                        height: "2cm",
+                        height: "1cm",
                         contents: phantom.callback(function(pageNum, numPages) {
                             var txt = ua.leftHead;
                             pdfPages = numPages;
