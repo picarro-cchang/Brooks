@@ -21,6 +21,9 @@ import math
 
 import Host.Common.SwathProcessor as sp
 from Host.autogen import interface
+from Host.Common import Win32
+
+import SSLCertManager
 
 
 from ConfigParser import SafeConfigParser
@@ -903,10 +906,30 @@ def utility():
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
-    parser.add_option('--no-analyzer', dest='onAnalyzer', action='store_false',
-                      default=True)
+    parser.add_option('--no-analyzer', dest='onAnalyzer', action='store_false', default=True)
+    parser.add_option('--no-ssl', dest='useSSL', action='store_false', default=True)
 
     options, _ = parser.parse_args()
     app.config['onAnalyzer'] = options.onAnalyzer
 
-    app.run(host='0.0.0.0', port=5000, debug=DEBUG)
+    if options.useSSL:
+        # Get IP address
+        ipAddr = None
+        adapters = Win32.Iphlpapi.getAdaptersInfo()
+        for adapter in adapters:
+            ipList = adapter.ipAddressList
+            while ipList:
+                if ipList.ipAddress != '':
+                    ipAddr = ipList.ipAddress
+                    break
+
+                ipList = ipList.next
+
+        assert ipAddr is not None
+
+        sslContext = SSLCertManager.SSLCertManager.getContextByIP(ipAddr)
+
+        app.run(host='0.0.0.0', port=5000, debug=DEBUG, ssl_context=sslContext)
+
+    else:
+        app.run(host='0.0.0.0', port=5000, debug=DEBUG)
