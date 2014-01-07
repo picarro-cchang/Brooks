@@ -76,7 +76,7 @@ class DataModel(Subject):
         Args:
             analyzerList: List of analyzers in the environment
         """
-        set("p3Failures", self.p3Access.numFails)
+        self.set("p3Failures", self.p3Access.numFails)
         self.set("analyzer", None)
         self.set("logName", None)
         self.set("logFileId", None)

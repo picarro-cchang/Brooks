@@ -122,6 +122,8 @@ elif DATA["type"] == "time":
                 # Analyze data over last ANALYSIS_POINTS
                 nAnemBad = UTILS.fetch(data, ["SYSTEM_STATUS", "CAR_SPEED"], mapFunc=assertAnemometerGood,
                           reduceFunc=UTILS.countFalse, numPoints=ANALYSIS_POINTS)
+                if isinstance(nAnemBad, Exception):
+                    nAnemBad = 0 # No anemometer status information
                 interval = UTILS.fetch(data, ["EPOCH_TIME"], reduceFunc=durationReduce, numPoints=ANALYSIS_POINTS)
                 
                 if (nAnemBad > 0) or (interval > INTERVAL_THRESHOLD):
