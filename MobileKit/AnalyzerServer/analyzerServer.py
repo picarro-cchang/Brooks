@@ -929,7 +929,7 @@ if __name__ == '__main__':
 
         sslContext = SSLCertManager.SSLCertManager.getContextByIP(ipAddr)
 
-        app.run(host='0.0.0.0', port=5000, debug=DEBUG, ssl_context=sslContext)
+        app.run(host='0.0.0.0', port=443, debug=DEBUG, ssl_context=sslContext)
 
     else:
         app.run(host='0.0.0.0', port=5000, debug=DEBUG)
