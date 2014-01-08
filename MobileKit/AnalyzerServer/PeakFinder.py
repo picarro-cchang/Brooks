@@ -89,7 +89,7 @@ def distVincenty(lat1, lng1, lat2, lng2):
         C = f/16*cosSqAlpha*(4+f*(4-3*cosSqAlpha))
         lambdaP = Lambda;
         Lambda = L + (1-C) * f * sinAlpha * \
-          (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
+                 (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
         if abs(Lambda-lambdaP)<=1.e-12: break
     else:
         raise ValueError("Failed to converge")
@@ -98,7 +98,7 @@ def distVincenty(lat1, lng1, lat2, lng2):
     A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
     B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
     deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)-
-                 B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
+                                             B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
     return b*A*(sigma-deltaSigma)
 
 def toXY(lat,lng,lat_ref,lng_ref):
@@ -200,7 +200,7 @@ class PeakFinder(object):
         self.ticket_url = None
         if 'ticket_url' in kwargs:
             self.ticket_url = kwargs['ticket_url']
-        #if not self.ticket_url:
+            #if not self.ticket_url:
         #    self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
 
         self.identity = None
@@ -215,6 +215,10 @@ class PeakFinder(object):
             self.usedb = kwargs['usedb']
         else:
             self.usedb = None
+
+        self.newlog_wait = None
+        if 'newlog_wait' in kwargs:
+            self.newlog_wait = kwargs['newlog_wait']
 
         self.ticket = "NONE"
         self.startTime = datetime.datetime.now()
@@ -291,7 +295,7 @@ class PeakFinder(object):
         self.logtype = "peaks"
         self.last_peakname = None
         self.sockettimeout = 10
-    #######################################################################
+        #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
 
@@ -380,15 +384,16 @@ class PeakFinder(object):
 
                     else:
                         if "Log not found" in err_str:
-                            if self.logname == lastlog:
-                                print "\r\nLog complete. Closing log stream\r\n"
-                                return
+                            if self.newlog_wait != True:
+                                if self.logname == lastlog:
+                                    print "\r\nNew Log found. Closing log stream\r\n"
+                                    return
 
                         # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
-                            print "\r\nClosing log stream\r\n"
+                            print "\r\nLog complete. Closing log stream\r\n"
                             return
 
                         if self.debug == True:
@@ -728,7 +733,7 @@ class PeakFinder(object):
             if dist is None:
                 initBuff = True
                 continue
-            # Initialize the buffer
+                # Initialize the buffer
 
             if initBuff:
                 ssbuff = zeros((nlevels, npoints), float)
@@ -825,7 +830,7 @@ class PeakFinder(object):
                     time.sleep(self.sleep_seconds)
                     print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
-                ##sys.exit()
+                    ##sys.exit()
             else:
                 try:
                     if self.file_path:
@@ -966,6 +971,8 @@ def main(argv=None):
                       help="Default calc value for minAmpl.", metavar="<CALC_minAmpl>")
     parser.add_option("--calc-factor", dest="factor",
                       help="Default calc value for factor.", metavar="<CALC_factor>")
+    parser.add_option("--newlog-wait", dest="newlog_wait",  action="store_true",
+                      help="Wait for new log to appear before exiting (when processing single logname).")
 
     (options, args) = parser.parse_args()
 
@@ -998,26 +1005,27 @@ def main(argv=None):
     class_opts = {}
 
     for copt in [
-                 "pid_path"         #path for PID file
-                 , "analyzerId"     #Analyzer ID
-                 , "anzlog_url"     #URL for AnzLog resource
-                 , "meta_url"       #URL for AnzLogMeta resource
-                 , "ticket_url"     #URL for Admin (issueTicket) resource
-                 , "logname"        #logname (when processing single log)
-                 , "identity"       #identity (authentication)
-                 , "psys"           #picarro sys (authentication)
-                 , "usedb"          #True/False use REST DB calls (instead of file system)
-                 , "listen_path"    #listen path (when processing file system)
-                 , "file_path"      #file path (when procesing single log from file system)
-                 , "dx"             #override default dx value
-                 , "sigmaMinFactor" #override default sigmaMinFactor value
-                 , "sigmaMaxFactor" #override default sigmaMaxFactor value
-                 , "factor"         #override default factor value
-                 , "minAmpl"        #override default minAmpl value
-                 , "sleep_seconds"  #override default sleep_seconds value
-                 , "timeout"        #override default REST timeout value
-                 , "debug"          #True/False show debug print (in stdout)
-                 ]:
+        "pid_path"         #path for PID file
+        , "analyzerId"     #Analyzer ID
+        , "anzlog_url"     #URL for AnzLog resource
+        , "meta_url"       #URL for AnzLogMeta resource
+        , "ticket_url"     #URL for Admin (issueTicket) resource
+        , "logname"        #logname (when processing single log)
+        , "identity"       #identity (authentication)
+        , "psys"           #picarro sys (authentication)
+        , "usedb"          #True/False use REST DB calls (instead of file system)
+        , "listen_path"    #listen path (when processing file system)
+        , "file_path"      #file path (when procesing single log from file system)
+        , "dx"             #override default dx value
+        , "sigmaMinFactor" #override default sigmaMinFactor value
+        , "sigmaMaxFactor" #override default sigmaMaxFactor value
+        , "factor"         #override default factor value
+        , "minAmpl"        #override default minAmpl value
+        , "sleep_seconds"  #override default sleep_seconds value
+        , "timeout"        #override default REST timeout value
+        , "debug"          #True/False show debug print (in stdout)
+        , "newlog_wait"    #True/False wait for new lastlog (when processing single log SERVER ONLY)
+    ]:
         if copt in dir(options):
             class_opts[copt] = getattr(options, copt)
         else:

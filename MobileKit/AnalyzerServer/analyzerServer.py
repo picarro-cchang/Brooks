@@ -33,7 +33,7 @@ parser = SafeConfigParser(defaults={
             'ANALYSISFILES':'C:/UserData/AnalyzerServer/*.analysis',
             'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath',
               })
-parser.read('configAnalyzerServerPrime.ini')
+parser.read('configAnalyzerServer.ini')
 
 VALVE_INLET_MASK = 0x20
 VALVE_CALIBRATION_MASK = 0x10
@@ -929,7 +929,7 @@ if __name__ == '__main__':
 
         sslContext = SSLCertManager.SSLCertManager.getContextByIP(ipAddr)
 
-        app.run(host='0.0.0.0', port=5000, debug=DEBUG, ssl_context=sslContext)
+        app.run(host='0.0.0.0', port=443, debug=DEBUG, ssl_context=sslContext)
 
     else:
         app.run(host='0.0.0.0', port=5000, debug=DEBUG)

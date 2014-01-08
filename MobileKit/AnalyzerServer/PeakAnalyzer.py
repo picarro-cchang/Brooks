@@ -257,6 +257,10 @@ class PeakAnalyzer(object):
         else:
             self.usedb = None
 
+        self.newlog_wait = None
+        if 'newlog_wait' in kwargs:
+            self.newlog_wait = kwargs['newlog_wait']
+
         self.ticket = "NONE"
         self.startTime = datetime.datetime.now()
         self.lastEtm = 0.0
@@ -390,15 +394,16 @@ class PeakAnalyzer(object):
 
                     else:
                         if "Log not found" in err_str:
-                            if self.logname == lastlog:
-                                print "\r\nLog complete. Closing log stream\r\n"
-                                return
+                            if self.newlog_wait != True:
+                                if self.logname == lastlog:
+                                    print "\r\nNew Log found. Closing log stream\r\n"
+                                    return
 
                         # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
-                            print "\r\nClosing log stream\r\n"
+                            print "\r\nLog complete. Closing log stream\r\n"
                             return
 
                         if self.debug == True:
@@ -1001,6 +1006,8 @@ def main(argv=None):
                       help=('The time at which to start interpreting the valve '
                             'masks and values as supporting the user '
                             'cancellation bit.'))
+    parser.add_option("--newlog-wait", dest="newlog_wait",  action="store_true",
+                      help="Wait for new log to appear before exiting (when processing single logname).")
 
     (options, args) = parser.parse_args()
 
@@ -1049,6 +1056,7 @@ def main(argv=None):
                  , "timeout"        #override default REST timeout value
                  , "debug"          #True/False show debug print (in stdout)
                  , 'legacyValveStop'
+                 , "newlog_wait"    #True/False wait for new lastlog (when processing single log SERVER ONLY)
                  ]:
         if copt in dir(options):
             class_opts[copt] = getattr(options, copt)
