@@ -33,7 +33,7 @@ parser = SafeConfigParser(defaults={
             'ANALYSISFILES':'C:/UserData/AnalyzerServer/*.analysis',
             'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath',
               })
-parser.read('configAnalyzerServerPrime.ini')
+parser.read('configAnalyzerServer.ini')
 
 VALVE_INLET_MASK = 0x20
 VALVE_CALIBRATION_MASK = 0x10
