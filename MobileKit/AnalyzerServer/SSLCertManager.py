@@ -18,22 +18,20 @@ import Models
 
 class SSLCertManager(object):
 
-    DB = None
-
     SSL_CONF = path.join(path.dirname(__file__), 'openssl.cnf')
     CERT_DIR = path.join(path.dirname(__file__), 'certs')
 
     @staticmethod
     def getContextByIP(ipAddr):
-        if not SSLCertManager.DB:
-            engine = sqlalchemy.create_engine('sqlite:///certs.db')
-            Models.Base.metadata.create_all(engine)
-            SSLCertManager.DB = orm.sessionmaker(bind=engine)()
+        engine = sqlalchemy.create_engine('sqlite:///certs.db')
+        Models.Base.metadata.create_all(engine)
+        db = orm.sessionmaker(bind=engine)()
+        certMgr = SSLCertManager(db)
 
-
-        certMgr = SSLCertManager(SSLCertManager.DB)
         if not certMgr.certExists(ipAddr) or certMgr.certExpired(ipAddr):
-            self._generateCert(ipAddr)
+            certMgr._generateCert(ipAddr)
+
+        db.close()
 
         return certMgr.getContext(ipAddr)
 
