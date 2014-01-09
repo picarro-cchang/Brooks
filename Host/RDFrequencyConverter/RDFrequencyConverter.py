@@ -18,6 +18,8 @@ File History:
     24-Oct-2010  sze       Put scheme version number in high order bits of schemeVersionAndTable in ProcessedRingdownEntry type
     09-Mar-2012  sze       Use 7th (1-origin) column of scheme file to specify laser temperature offset from the nominal temperature
     15-Feb-2013  sze       Always center tuner about 32768, rather than around value passed in as argument
+    13-Dec-2013  sze       Corrected bug which was ignoring values of MAX_ANGLE_TARGETTING_ERROR and 
+                            MAX_TEMP_TARGETTING_ERROR from hot box calibration file.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -158,7 +160,7 @@ class SchemeBasedCalibrator(object):
         calDone = False
         for vLaserNum in range(1,interface.NUM_VIRTUAL_LASERS+1):
             rows = [k for k in d if (d[k].vLaserNum == vLaserNum)] # Rows involving this virtual laser
-            if rows:
+            if len(rows) >= 2:
                 laserTemp = array([d[k].laserTempMed for k in rows])
                 thetaCal  = array([d[k].thetaCalMed  for k in rows]) # These angles may not be on the correct revolution
                 thetaHat  = self.rdFreqConv.RPC_laserTemperatureToAngle(vLaserNum,laserTemp)
@@ -198,50 +200,47 @@ class SchemeBasedCalibrator(object):
                 # Ensure that the differences between the WLM angles at the calibration rows are close to multiples of the
                 #  FSR before we do the calibration. This prevents calibrations from occurring if the pressure is changing, etc.
                 m = round_(dtheta / float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","APPROX_WLM_ANGLE_PER_FSR")))
-                anglePerFsr = mean(dtheta[m == 1])
-                m = round_(dtheta/anglePerFsr) # Quantize m to indicate multiples of the FSR
-                devs = abs(dtheta/anglePerFsr - m)
-                offGrid = devs.max()
-                if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_OFFGRID")):
-                    Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (std(pztDev),offGrid,sum(devs>0.25)/float(len(devs))))
-                    if scs: self.calFailed(vLaserNum)
-                else:
-                    #Update the live copy of the polar<->freq coefficients...
-                    waveNumberSetpoints = zeros(len(rows),dtype=float) #pre-allocate space
-                    for i,calRow in enumerate(rows):
-                        waveNumberSetpoints[i] = self.rdFreqConv.freqScheme[self.schemeNum].setpoint[calRow]
-                    waveNumberSetpoints = waveNumberSetpoints[perm] #sorts in the same way that thetaShifted was
-                    #Calculate number of calibration points at each FSR, so they may be weighted properly
-                    weights = self.calcWeights(cumsum(concatenate(([0],m))))
-                    #Now do the actual updating of the conversion coefficients...
-                    try:
-                        maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_WAVENUM_DIFF"))
-                    except:
-                        maxDiff = 0.4
-                    self.rdFreqConv.RPC_updateWlmCal(vLaserNum,thetaShifted,waveNumberSetpoints,weights,
-                                                     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX")),True,
-                                                     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_DEFAULT")),
-                                                     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO")),
-                                                     maxDiff)
-                    self.calibrationDone[vLaserNum-1] = True
-                    stdTuner = std(tunerDev)
-                    stdPzt = std(pztDev)
-                    if scs:
-                        if stdTuner>float(scs['maxTunerStandardDeviation']): self.calFailed(vLaserNum)
-                        else: self.calSucceeded(vLaserNum)
-                    Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,stdPzt))
-
-                    # Check if it's time to update and archive the warmbox calibration file
-                    if self.rdFreqConv.timeToUpdateWarmBoxCal():
-                        Log("Time to update warm box calibration file")
-                        #  we'll do it in a separate thread in case it takes too long to write the new calibration file to disk
-                        updateWarmBoxCalThread = threading.Thread(target = self.updateWarmBoxCal, args=(self.rdFreqConv.warmBoxCalFilePathActive,))
-                        updateWarmBoxCalThread.setDaemon(True)
-                        updateWarmBoxCalThread.start()
-
-    def updateWarmBoxCal(self,warmBoxCalFilePathActive):
-        self.rdFreqConv.resetWarmBoxCalTime()
-        self.rdFreqConv.RPC_updateWarmBoxCal(warmBoxCalFilePathActive)
+                
+                dthetaSel = dtheta[m == 1]
+                if len(dthetaSel) >= 1:
+                    anglePerFsr = mean(dthetaSel)
+                    m = round_(dtheta/anglePerFsr) # Quantize m to indicate multiples of the FSR
+                    devs = abs(dtheta/anglePerFsr - m)
+                    offGrid = devs.max()
+                    if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_OFFGRID")):
+                        Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % (std(pztDev),offGrid,sum(devs>0.25)/float(len(devs))))
+                        if scs: self.calFailed(vLaserNum)
+                    else:
+                        #Update the live copy of the polar<->freq coefficients...
+                        waveNumberSetpoints = zeros(len(rows),dtype=float) #pre-allocate space
+                        for i,calRow in enumerate(rows):
+                            waveNumberSetpoints[i] = self.rdFreqConv.freqScheme[self.schemeNum].setpoint[calRow]
+                        waveNumberSetpoints = waveNumberSetpoints[perm] #sorts in the same way that thetaShifted was
+                        #Calculate number of calibration points at each FSR, so they may be weighted properly
+                        weights = self.calcWeights(cumsum(concatenate(([0],m))))
+                        #Now do the actual updating of the conversion coefficients...
+                        try:
+                            maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_WAVENUM_DIFF"))
+                        except:
+                            maxDiff = 0.4
+                        #
+                        fileName = "file_%d_vl_%d.npz" % (SchemeBasedCalibrator.fileNum, vLaserNum)
+                        print fileName
+                        savez(fileName, thetaShifted=thetaShifted, waveNumberSetpoints=waveNumberSetpoints, 
+                                        weights=weights, thetaCal=thetaCal[perm], pztDev=pztDev[perm])
+                        #
+                        self.rdFreqConv.RPC_updateWlmCal(vLaserNum,thetaShifted,waveNumberSetpoints,weights,
+                                                         float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX")),True,
+                                                         float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_DEFAULT")),
+                                                         float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","RELAX_ZERO")),
+                                                         maxDiff)
+                        self.calibrationDone[vLaserNum-1] = True
+                        stdTuner = std(tunerDev)
+                        stdPzt = std(pztDev)
+                        if scs:
+                            if stdTuner>float(scs['maxTunerStandardDeviation']): self.calFailed(vLaserNum)
+                            else: self.calSucceeded(vLaserNum)
+                        Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % (vLaserNum,anglePerFsr,stdPzt))
 
     def centerTuner(self,tunerCenter):
         self.rdFreqConv.RPC_centerTuner(tunerCenter)
@@ -405,9 +404,13 @@ class RDFrequencyConverter(Singleton):
             schemeTable = entry.schemeVersionAndTable
             angleError = mod(entry.wlmAngle - self.angleScheme[schemeTable].setpoint[rowNum],2*pi)
             tempError  = entry.laserTemperature - self.angleScheme[schemeTable].laserTemp[rowNum]
-            if min(angleError,2*pi-angleError) < self.dthetaMax and abs(tempError) < self.dtempMax:
+            if (min(angleError,2*pi-angleError) < self.dthetaMax) and (abs(tempError) < self.dtempMax):
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)
+            else:
+                Log("WLM Calibration point cannot be used", Data=dict(rowNum=rowNum, 
+                                                                      angleError=min(angleError, 2*pi-angleError),
+                                                                      tempError=abs(tempError)))
         return entry
 
     def run(self):
@@ -420,17 +423,25 @@ class RDFrequencyConverter(Singleton):
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
         startTime = time.time()
-        timeout = 0.1
+        timeout = 0.5
+        self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
         while not self._shutdownRequested:
+            # Check if it's time to update and archive the warmbox calibration file
+            if self.timeToUpdateWarmBoxCal():
+                Log("Time to update warm box calibration file")
+                #  we'll do it in a separate thread in case it takes too long to write the new calibration file to disk
+                updateWarmBoxCalThread = threading.Thread(target = self.updateWarmBoxCal, args=(self.warmBoxCalFilePathActive,))
+                updateWarmBoxCalThread.setDaemon(True)
+                updateWarmBoxCalThread.start()
             try:
                 rdQueueSize = self.rdQueue.qsize()
                 if rdQueueSize > self.rdQueueMaxLevel:
                     self.rdQueueMaxLevel = rdQueueSize
                     Log("rdQueueSize reaches new peak level %d" % self.rdQueueMaxLevel)
-                self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
                 if rdQueueSize > MIN_SIZE or time.time()-startTime > timeout:
                     self._batchConvert()
                     startTime = time.time()
+                    self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
                 else:
                     time.sleep(0.02)
                     continue
@@ -503,6 +514,10 @@ class RDFrequencyConverter(Singleton):
         if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
             raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
 
+    def updateWarmBoxCal(self, warmBoxCalFilePathActive):
+        self.resetWarmBoxCalTime()
+        self.RPC_updateWarmBoxCal(warmBoxCalFilePathActive)
+
     def runSaveWlmHistory(self):
         while True:
             self._saveWlmHistory()
@@ -545,10 +560,6 @@ class RDFrequencyConverter(Singleton):
         sequences start with the spectrum collector in SchemeMultipleNoRepeatMode, rather than in
         SchemeMultipleMode"""
         return len(self.shortCircuitSchemes)>0
-
-    def RPC_configSchemeManager(self, schemeDict, schemeSeq):
-        self.schemeMgr = SchemeManager(schemeDict, schemeSeq)
-        self.schemeMgr.startup()
 
     def RPC_setSchemeSequence(self, schemeSequence, restart = True):
         self.schemeMgr.setSchemeSequence(schemeSequence, restart)
@@ -661,17 +672,17 @@ class RDFrequencyConverter(Singleton):
             self.laserCurrentTunerAdjuster = TunerAdjuster("LASER_CURRENT_TUNING")
         else:
             self.laserCurrentTunerAdjuster = None
-        self.dthetaMax = self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"]
-        self.dtempMax  = self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"]
+        self.dthetaMax = float(self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"])
+        self.dtempMax  = float(self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"])
         # Set up the PZT scaling register
         if "PZT_SCALE_FACTOR" in self.hotBoxCal["CAVITY_LENGTH_TUNING"]:
-            pztScale = self.hotBoxCal["CAVITY_LENGTH_TUNING"]["PZT_SCALE_FACTOR"]
+            pztScale = int(self.hotBoxCal["CAVITY_LENGTH_TUNING"]["PZT_SCALE_FACTOR"])
         else:
             pztScale = 0xFFFF
         Driver.wrFPGA("FPGA_SCALER","SCALER_SCALE1",int(pztScale))
         # Set up the PZT_INCR_PER_CAVITY_FSR register
-        fsr = self.hotBoxCal["CAVITY_LENGTH_TUNING"]["FREE_SPECTRAL_RANGE"]
-        Driver.wrDasReg("PZT_INCR_PER_CAVITY_FSR",float(fsr))
+        fsr = float(self.hotBoxCal["CAVITY_LENGTH_TUNING"]["FREE_SPECTRAL_RANGE"])
+        Driver.wrDasReg("PZT_INCR_PER_CAVITY_FSR", fsr)
 
         return "OK"
 
@@ -834,6 +845,14 @@ class RDFrequencyConverter(Singleton):
             calStrIO.close()
             if fp is not None: fp.close()
 
+    def RPC_getWarmBoxConfig(self):
+        cp = CustomConfigObj(self.warmBoxCalFilePath)
+        for i in self.freqConverter.keys():
+            ac = self.freqConverter[i]
+            if ac is not None:
+                ac.updateIni(cp, i+1) # Note: In Autocal1, laser indices are 1 based
+        return cp        
+    
     def RPC_updateWarmBoxCal(self,fileName=None):
         """
         Write calibration back to the file with a new checksum.
