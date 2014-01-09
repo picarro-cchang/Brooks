@@ -10,6 +10,7 @@ def etimeAsString(value):
     return time.strftime('%Y-%m-%d  %H:%M:%S', time.localtime(value))
 
 def compToSpeed(x,y):
+    if x is None or y is None: return None
     return math.sqrt(x*x + y*y)
 
 def durationReduce(etimeList):
@@ -40,6 +41,8 @@ INTERVAL_THRESHOLD = 2.0
 MAX_P3FAILURES = 10
 
 def assertAnemometerGood(systemStatus, carSpeed):
+    if carSpeed is None: carSpeed = 0
+    if systemStatus is None: systemStatus = 0
     return UTILS.assertMaskedValueEqual(checkVal=0,mask=0x1)(systemStatus) or abs(carSpeed)<0.5
 
 if DATA["type"] == "update":
@@ -89,6 +92,10 @@ elif DATA["type"] == "time":
         subject = "PCubed data access error"
     data = DATA["model"].logData
     if data:
+        
+        UTILS.show(UTILS.fetch(data, ["EPOCH_TIME"]), 
+                    "Time of last point", etimeAsString, 
+                    warningAsserts=(UTILS.assertAvailable, UTILS.assertLimits(minVal=now-EMAIL_THRESHOLD)))
 
         lastEpochTime = UTILS.fetch(data, ["EPOCH_TIME"])
         if not isinstance(lastEpochTime, Exception):

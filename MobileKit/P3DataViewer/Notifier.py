@@ -158,9 +158,7 @@ class Notifier(Subject):
         for k in range(-numPoints,0):
             try:
                 args = [data[v][k] for v in varList]
-                if None in args:
-                    result.append(None)
-                elif mapFunc is None:
+                if mapFunc is None:
                     result.append(data[varList[0]][k])
                 else:
                     result.append(mapFunc(*[data[v][k] for v in varList]))

@@ -41,7 +41,7 @@ class DisplayModel(Subject):
             epochTimes = self.dataModel.logData['EPOCH_TIME']
             xValues = self.dataModel.logData[self.xvar]
             yValues = self.dataModel.logData[self.yvar]
-            while self.nextPlotPoint < len(xValues):
+            while self.nextPlotPoint < len(epochTimes):
                 epochTime = epochTimes[self.nextPlotPoint]
                 xValue = xValues[self.nextPlotPoint]
                 yValue = yValues[self.nextPlotPoint]

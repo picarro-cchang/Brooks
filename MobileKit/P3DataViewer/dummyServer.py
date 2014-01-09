@@ -116,6 +116,8 @@ def fillLog():
         carSpeed = eval(PARAMS["carSpeed"])
         PARAMS["carSpeedByRow"].append(carSpeed)
         PARAMS["WLonByRow"].append(carSpeed + random())
+        #PARAMS["carSpeedByRow"].append(None)
+        #PARAMS["WLonByRow"].append(None)
         PARAMS["WLatByRow"].append(random())
         PARAMS["fnmByRow"].append(PARAMS["fnm"])
         PARAMS["windNByRow"].append(PARAMS["windN"])
