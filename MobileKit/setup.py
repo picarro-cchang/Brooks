@@ -70,7 +70,7 @@ RemoteMobileKitSetup = Target(description = "RemoteMobileKitSetup", # used for t
 
 exclusionList = ["Tkconstants","Tkinter","tcl"]
 inclusionList = []
-packageList = ["simplejson", "werkzeug", "jinja2", "email"]
+packageList = ["simplejson", "werkzeug", "jinja2", "email", 'sqlalchemy.dialects.sqlite']
 data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDred2.ico", "MobileKitSetupNew/MobileKitSetup.ini",
                     "MobileKitSetupNew/MobileKit_inactive.ini", "ViewServer/view.kml", "ReportGen/platBoundaries.json", "msvcp71.dll"]),
               (r'static\css', glob.glob(r'ReportGen\static\css\*.*')),
