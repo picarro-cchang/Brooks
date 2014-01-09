@@ -856,7 +856,10 @@ class RDFrequencyConverter(Singleton):
         """
         Write calibration back to the file with a new checksum.
         """
-        # Archive the current WarmBoxCal firstadd timestamp to the filename too)
+        # Archive the current WarmBoxCal file if this is not null, first adding timestamp to the filename)
+        if not self.warmBoxCalFilePath:
+            return
+
         timeStamp = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
         warmBoxCalFilePathWithTime = self.warmBoxCalFilePath.replace(".ini", "_%s.ini" % timeStamp)
         shutil.copy2(self.warmBoxCalFilePath, warmBoxCalFilePathWithTime)
