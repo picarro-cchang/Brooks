@@ -4,8 +4,10 @@ Copyright 2014 Picarro Inc.
 
 from __future__ import with_statement
 
+import sys
 import os
 import subprocess
+import tempfile
 from os import path
 
 import sqlalchemy
@@ -16,10 +18,23 @@ from OpenSSL import crypto
 import Models
 
 
+if hasattr(sys, 'frozen'):
+    # py2exe
+    BASE_PATH = path.dirname(sys.executable)
+    FILE_PATH = sys.executable
+else:
+    # raw source
+    BASE_PATH = tempfile.tempdir
+    FILE_PATH = __file__
+
+BASE_PATH = path.abspath(BASE_PATH)
+FILE_PATH = path.dirname(FILE_PATH)
+
+
 class SSLCertManager(object):
 
-    SSL_CONF = path.join(path.dirname(__file__), 'openssl.cnf')
-    CERT_DIR = path.join(path.dirname(__file__), 'certs')
+    SSL_CONF = path.join(FILE_PATH, 'openssl.cnf')
+    CERT_DIR = path.join(BASE_PATH, 'certs')
 
     @staticmethod
     def getContextByIP(ipAddr):
