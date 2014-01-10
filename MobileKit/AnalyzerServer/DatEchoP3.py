@@ -591,7 +591,7 @@ class DataEchoP3(object):
             print "\nOpening source stream: %s\n" % fname
             print "lastRow = %s" % lastRow
 
-            if lastRow is None:
+            if lastRow is None or lastRow == 0:
                 if fname not in self.resendCounts:
                     self.resendCounts[fname] = 0
 
