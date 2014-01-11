@@ -91,6 +91,11 @@ class DataEchoP3(object):
         self.historyRangeDays = kwargs['historyRangeDays']
         self.driverPort = kwargs['driverPort']
         self.analyzerName = kwargs['analyzerName']
+        
+        if kwargs['useSSL']:
+            self.port = 443
+        else:
+            self.port = 5000
 
         self.useEvents = kwargs['useEvents']
         self.useEventsOnCache = kwargs['useEventsOnCache']
@@ -350,7 +355,7 @@ class DataEchoP3(object):
 
             for addr in self._getIPAddresses():
                 if addr != '0.0.0.0':
-                    datarow['PRIVATE_IP'] = "%s:5000" % addr
+                    datarow['PRIVATE_IP'] = "%s:%s" % (addr, self.port)
                     break
 
             if 'PRIVATE_IP' not in datarow:
@@ -877,6 +882,8 @@ Runs an echo server that sends data to P3.
                       help='For testing; Use Win32 events to signal when cache generated for a file.')
     parser.add_option('--use-events-resend', dest='useEventsResend', default=False, action='store_true',
                       help='For testing; Use Win32 events to signal when a resend exception occurs.')
+    parser.add_option('--no-ssl', dest='useSSL', default=True, action='store_false', help='Disable pushing the SSL '
+                      'port. This setting must match analyzerServer.')
 
     options, _ = parser.parse_args()
 
