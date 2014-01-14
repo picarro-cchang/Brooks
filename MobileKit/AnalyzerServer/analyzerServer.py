@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import make_response, render_template, request
+from flask import make_response, render_template, request, abort
 try:
     import simplejson as json
 except:
@@ -24,6 +24,7 @@ from Host.autogen import interface
 from Host.Common import Win32
 
 import SSLCertManager
+import Heartbeat
 
 
 from ConfigParser import SafeConfigParser
@@ -904,6 +905,14 @@ def test():
 def utility():
     return render_template('calUtility.html')
 
+@app.route('/rest/verify')
+def verify():
+    if 'next' not in request.values:
+        abort(400)
+
+    return render_template('verify.html', nextUrl=request.values['next'])
+    
+
 if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('--no-analyzer', dest='onAnalyzer', action='store_false', default=True)
@@ -911,6 +920,11 @@ if __name__ == '__main__':
 
     options, _ = parser.parse_args()
     app.config['onAnalyzer'] = options.onAnalyzer
+
+    heartbeatThread = Thread(target=Heartbeat.Heartbeat.createFlaskApp().run, kwargs={'port': 5001,
+                                                                                      'host': '0.0.0.0'})
+    heartbeatThread.setDaemon(True)
+    heartbeatThread.start()
 
     if options.useSSL:
         # Get IP address
