@@ -353,9 +353,9 @@ class MyPlotCanvas(plot.PlotCanvas):
         #ptx,pty,rectWidth,rectHeight= self._point2ClientCoord(p1, p2)
         dc.SetClippingRegion(ptx,pty,rectWidth,rectHeight)
         # Draw the lines and markers
-        #start = _time.clock()
+        #start = _time.time()
         graphics.draw(dc)
-        # print "entire graphics drawing took: %f second"%(_time.clock() - start)
+        # print "entire graphics drawing took: %f second"%(_time.time() - start)
         # remove the clipping region
         dc.DestroyClippingRegion()
         dc.EndDrawing()

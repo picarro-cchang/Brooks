@@ -51,8 +51,8 @@ if __name__ == "__main__":
         duration = float(sys.argv[1])
         fp = open("dmInput.pic","wb",0)
         dm = DummyDataManager()
-        start = time.clock()
-        while time.clock() < start+duration:
+        start = time.time()
+        while time.time() < start+duration:
             if not dm.sensorQueue.empty():
                 cPickle.dump(("S",ctypesToDict(dm.sensorQueue.get())),fp,-1)
             for fitterIndex in range(interface.MAX_FITTERS):

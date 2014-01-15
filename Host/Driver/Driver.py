@@ -1260,13 +1260,13 @@ class Driver(SharedTypes.Singleton):
                         if rpcTime < 0.01: 
                             rpcTime = 0.01
                     requestTimeout = rpcTime
-                    now = time.clock()
+                    now = time.time()
                     doneTime = now + rpcTime
                     rpcLoops = 0
                     while now < doneTime: 
                         rpcLoops += 1
                         daemon.handleRequests(requestTimeout)
-                        now = time.clock()
+                        now = time.time()
                         requestTimeout = doneTime - now
                     # The following logs statistics for the main loop, including the times taken and number of entries processed for each of the
                     #  sensor, ringdown and message queues

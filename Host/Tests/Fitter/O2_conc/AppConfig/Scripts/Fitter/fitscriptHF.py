@@ -62,7 +62,7 @@ def initialize_Baseline():
     init[1001,2] = Per1
     init[1001,3] = Phi1
 
-tstart = time.clock()
+tstart = time.time()
 
 if INIT:
     fname = os.path.join(BASEPATH,r"./MADS/spectral library v2_1_AADS4_MA_20110601.ini")
@@ -153,7 +153,7 @@ tunerMean = mean(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
 
-tstart = time.clock()
+tstart = time.time()
 if d["spectrumId"]==60 and d["ngroups"]>7:
 #   Fit water at 7824.07 wvn, VC
     initialize_Baseline()
@@ -256,7 +256,7 @@ if (ignore_count == 0):
           "ntopper":ntopper,"tiptop":tiptop,"tipstd":tipstd,"tip_base":tip_base,
           "ngroups":d["ngroups"],"numRDs":d["datapoints"],          
           "pzt_mean":pzt_mean,"pzt_stdev":pzt_stdev}
-    RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
+    RESULT.update({"species":d["spectrumId"],"fittime":time.time()-tstart,
                "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
                "das_temp":dasTemp})
     RESULT.update(d.sensorDict)

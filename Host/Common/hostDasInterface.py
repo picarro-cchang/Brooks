@@ -20,11 +20,10 @@ APP_NAME = "hostDasInterface"
 import sys
 import logging
 import threading
-import time
 from ctypes import addressof
 from ctypes import c_char, c_float, c_int, c_longlong
 from ctypes import c_short, c_uint, sizeof
-from time import sleep, clock
+from time import sleep, clock, time
 import sqlite3
 import Queue
 import copy
@@ -157,7 +156,7 @@ class DasInterface(Singleton):
         if f<0:
             raise ValueError("Invalid FPGA bit file")
         s = s[f:]
-        tStart = clock()
+        tStart = time()
         lTot = 0
         while len(s)>0:
             lTot += len(s)
@@ -170,7 +169,7 @@ class DasInterface(Singleton):
         elif 0 == (1 & self.analyzerUsb.getFpgaStatus()):
             logging.error(
                 "CRC error during FPGA load, bytes sent: %d" % (lTot,))
-        logging.info("Time to load: %.1fs" % (clock() - tStart,))
+        logging.info("Time to load: %.1fs" % (time() - tStart,))
         sleep(0.2)
     def initEmif(self):
         """Initializes EMIF on DSP using HPI interface"""
@@ -288,7 +287,7 @@ class DasInterface(Singleton):
         #raw_input("DSP code downloaded. Press <Enter> to send DSPINT")
         self.analyzerUsb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.analyzerUsb.hpicRead()
-        time.sleep(0.5)
+        sleep(0.5)
         logging.info("Starting DSP code...")
         #raw_input("DSPINT sent. Press <Enter> to continue")
         self.analyzerUsb.hpicWrite(0x00010001)
@@ -501,7 +500,7 @@ class HostToDspSender(Singleton):
         #    if 0 != self.initStatus & interface.COMM_STATUS_CompleteMask:
         #        break
         #    print "Waiting for COMM_STATUS complete before USB communication"
-        #    time.sleep(0.1)            
+        #    sleep(0.1)            
         self.initStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
         if self.seqNum == None:
             self.seqNum = (self.getSequenceNumber() + 1) & 0xFF
@@ -546,8 +545,8 @@ class HostToDspSender(Singleton):
         # Get the sequence number from the COMM_STATUS_REGISTER
         ntries = 0
         retVal = 0
-        startTime = clock()
-        while self.timeout==None or clock()<startTime+self.timeout:
+        startTime = time()
+        while self.timeout==None or time()<startTime+self.timeout:
             self.status = self.rdRegUint(interface.COMM_STATUS_REGISTER)
             ntries += 1
             if self.oldStatus & interface.COMM_STATUS_SequenceNumberMask == \
@@ -565,7 +564,7 @@ class HostToDspSender(Singleton):
                     return seqNum
             # If not done, sleep and try again
             sleep(0.1)
-            now = clock()
+            now = time()
         seqNum = self.seqNum
         self.seqNum = None
         raise RuntimeError,("Timeout getting status after %s tries." +

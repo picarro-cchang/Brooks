@@ -33,12 +33,12 @@ if __name__ == "__main__":
     print sizeof(buf1)
     for i in range(sizeof(buf1)): buf1[i] = i
     niter = 1000
-    tStart = clock()
+    tStart = time()
     for i in range(niter):
         usb.usbBulkWrite(handle,epOut,buf1,sizeof(buf1),1000)
         usb.usbBulkRead(handle,epIn,buf2,sizeof(buf2),1000)
         # for j in range(sizeof(buf1)): assert(buf1[j] == buf2[j])
-    tStop = clock()
+    tStop = time()
     usb.usbReleaseInterface(handle,0)
     usb.usbClose(handle)
     print "Time per iteration: %s" % ((tStop-tStart)/niter,)

@@ -157,10 +157,10 @@ class makeHandler(object):
         #  processFunc returns the number of entries successfully processed. For backwards compatibility
         #  if processFunc returns None this actually means that one entry was processed.
         # We return the time taken during this 
-        start = time.clock()
+        start = time.time()
         nprocessed = 0
         finished = False
-        while time.clock()-start < timeLimit:
+        while time.time()-start < timeLimit:
             d = self.reader()
             if d is not None:
                 n = self.processFunc(d)
@@ -171,7 +171,7 @@ class makeHandler(object):
                 finished = True
                 break
 
-        duration = time.clock()-start
+        duration = time.time()-start
         return HandlerTuple (duration = duration, nprocessed=nprocessed, finished=finished)
 
 schemeTableClassMemo = {}

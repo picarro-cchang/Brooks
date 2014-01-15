@@ -5,7 +5,7 @@ from numpy import mean, std, sqrt
 import os.path
 import time
 
-tstart = time.clock()
+tstart = time.time()
 
 if INIT:
     fname = os.path.join(BASEPATH,r"./MADS/spectral library v2_1_AADS4_MA_20110601.ini")
@@ -39,7 +39,7 @@ d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrec
 P = d["cavitypressure"]
 T = d["cavitytemperature"]
 
-tstart = time.clock()
+tstart = time.time()
 if d["spectrumId"] == 0:
     r = anO2[0](d,init,deps)
     ANALYSIS.append(r)
@@ -63,7 +63,7 @@ if d["spectrumId"] == 0:
         "baseline":base,"baseline_slope":slope,"h2o_peak":peak_82,"z_parameter":abs(z_81),
         "hf_shift":hf_shift,"freq_offset":hf_adjust}
          
-    RESULT.update({"species":0,"fittime":time.clock()-tstart,
+    RESULT.update({"species":0,"fittime":time.time()-tstart,
                    "cavity_pressure":P,"cavity_temperature":T})
     RESULT.update(d.sensorDict)
 

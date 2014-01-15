@@ -18,6 +18,8 @@
 import select
 import socket
 import threading
+import time
+import traceback
 import sets
 import Queue
 import array
@@ -86,7 +88,7 @@ class Broadcaster(threading.Thread):
         self.sockListen = None
         # Message queue stores strings to be sent before these are transferred to the circular buffer
         self.messageQueue = Queue.Queue(0)
-
+        self.peerName = {}
         self._stopevent = threading.Event()
         self.logFunc = logFunc
         self.setDaemon(True)
@@ -94,7 +96,7 @@ class Broadcaster(threading.Thread):
         
     def setupSockListen(self):
         self.sockListen = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        # self.sockListen.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.sockListen.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.sockListen.bind(('',self.port))
         self.sockListen.listen(5)
         
@@ -127,7 +129,8 @@ class Broadcaster(threading.Thread):
         # Kill bad clients
         for client in self.badClients:
             sock = client.socket
-            self.safeLog("%s: Forced disconnection of client at %s" % (self.name,sock.getpeername(),))
+            self.safeLog("%s: Forced disconnection of client %s" % (self.name,self.peerName.get(sock, "Unknown"),))
+            # self.safeLog("%s: Forced disconnection of client." % (self.name,))
             self.__killClient(sock)
         self.badClients = []
         
@@ -153,6 +156,8 @@ class Broadcaster(threading.Thread):
                     self.mainLoop()
                 except Exception,e:
                     self.safeLog("Exception in broadcaster: %s" % (e,))
+                    self.safeLog(traceback.format_exc())
+                    time.sleep(1.0)
         finally:
             if self.sockListen != None:
                 self.sockListen.close()
@@ -166,6 +171,7 @@ class Broadcaster(threading.Thread):
                 c = Client(self,sock)
                 self.safeLog("%s: Connection from %s" % (self.name,c.address))
                 self.clients[c.socket] = c
+                self.peerName[c.socket] = c.socket.getpeername()
 
     def mainLoop(self):
         self.killBadClients()

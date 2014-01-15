@@ -684,13 +684,13 @@ class TransportTest(unittest.TestCase):
         #niter = 10
         #regNum = NOOP_REGISTER
         #reply = c_uint(0)
-        #start = time.clock()
+        #start = time.time()
         #for i in range(niter):
             #value = randrange(1<<32)
             #self.dasUSB.TRANSPORT_writeRegister(regNum,c_uint(value))
             #self.dasUSB.TRANSPORT_readRegister(regNum,reply)
             #self.assertEqual(reply.value,value)
-        #print "Time per register read/write: %.4f" % ((time.clock()-start)/(2*niter),)
+        #print "Time per register read/write: %.4f" % ((time.time()-start)/(2*niter),)
     #def testReadRegisterWithPayload(self):
         #regNum = VERSION_REGISTER
         #reply = c_float(0)

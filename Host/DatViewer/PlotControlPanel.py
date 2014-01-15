@@ -405,7 +405,7 @@ class TestFrame(wx.Frame):
     def OnIdle(self, event):
         import time
         timestr = time.strftime("%Y%m%d-%H:%M:%S")
-        print "OnIdle  ", timestr, "  ", time.clock()
+        print "OnIdle  ", timestr, "  ", time.time()
 
 
 class App(wx.App):

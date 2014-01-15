@@ -580,7 +580,7 @@ class ActiveFileManager(object):
             self.gen = gen(*a,**k)
             startTime = None
         else:
-            startTime = time.clock()
+            startTime = time.time()
         try:
             self.gen.send(startTime)
             return True
@@ -589,7 +589,7 @@ class ActiveFileManager(object):
             
     def genRdData(self,tstart,tstop,varList):
         results = []
-        t = time.clock()
+        t = time.time()
         for baseTime in sorted(self.activeFiles.keys()):
             # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
             if tstop <= baseTime: continue
@@ -599,7 +599,7 @@ class ActiveFileManager(object):
             if d is not None:
                 results.append(d)
             # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
-            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+            if time.time()-t > 0.5: t = yield True # Indicate not yet done
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
         else:
@@ -614,7 +614,7 @@ class ActiveFileManager(object):
             
     def genSensorData(self,tstart,tstop,streamName):
         results = []
-        t = time.clock()
+        t = time.time()
         for baseTime in sorted(self.activeFiles.keys()):
             # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
             if tstop <= baseTime: continue
@@ -624,7 +624,7 @@ class ActiveFileManager(object):
             if d is not None: 
                 results.append(d)
             # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
-            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+            if time.time()-t > 0.5: t = yield True # Indicate not yet done
         if results:
             self.rpcResultQueue.put(numpy.concatenate(results))
         else:
@@ -639,7 +639,7 @@ class ActiveFileManager(object):
         
     def genDmData(self,mode,source,tstart,tstop,varList):
         results = []
-        t = time.clock()
+        t = time.time()
         latestException = None
         for baseTime in sorted(self.activeFiles.keys()):
             # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
@@ -656,7 +656,7 @@ class ActiveFileManager(object):
                 if d is not None:
                     results.append(d)
                 # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
-                if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+                if time.time()-t > 0.5: t = yield True # Indicate not yet done
             except AttributeError,e:
                 latestException = e
         if results:
@@ -673,14 +673,14 @@ class ActiveFileManager(object):
         
     def genRdDataStruct(self,tstart,tstop):
         dataDict = {}
-        t = time.clock()
+        t = time.time()
         for baseTime in sorted(self.activeFiles.keys(),reverse=True):
             # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
             if tstop <= baseTime: continue
             af = self.activeFiles[baseTime]
             if tstart >= af.stopTime: continue
             # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
-            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+            if time.time()-t > 0.5: t = yield True # Indicate not yet done
             # We now have an active file which overlaps with [tstart,tstop)
             rdDataTable = af.handle.getNode(af.baseGroup,"rdData")
             colnames = rdDataTable.colnames
@@ -695,14 +695,14 @@ class ActiveFileManager(object):
              
     def genDmDataStruct(self,tstart,tstop):
         dataDict = {}
-        t = time.clock()
+        t = time.time()
         for baseTime in sorted(self.activeFiles.keys(),reverse=True):
             # Determine if [tstart,tstop) and [baseTime,stopTime) are disjoint
             if tstop <= baseTime: continue
             af = self.activeFiles[baseTime]
             if tstart >= af.stopTime: continue
             # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
-            if time.clock()-t > 0.5: t = yield True # Indicate not yet done
+            if time.time()-t > 0.5: t = yield True # Indicate not yet done
             # We now have an active file which overlaps with [tstart,tstop)
             modes = af.handle.getNode(af.baseGroup,"dataManager")._v_children
             for m in modes:

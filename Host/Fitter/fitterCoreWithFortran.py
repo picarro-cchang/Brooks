@@ -118,11 +118,11 @@ def loadSplineLibrary(fnameOrConfig):
 ################################################################################
 deprecateMessageTimes = {}
 def deprecate(msg):
-    now = clock()
+    now = time()
     if not((msg in deprecateMessageTimes) and (now-deprecateMessageTimes[msg] < 60)):
         print msg
         Log(msg,Level=2)
-        deprecateMessageTimes[msg] = clock()
+        deprecateMessageTimes[msg] = time()
 
 ################################################################################
 # Spectral lineshape functions

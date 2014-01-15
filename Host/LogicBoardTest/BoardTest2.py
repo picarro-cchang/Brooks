@@ -127,7 +127,7 @@ class BoardTest2(object):
         if f<0:
             raise ValueError("Invalid FPGA bit file")
         s = s[f:]
-        tStart = time.clock()
+        tStart = time.time()
         lTot = 0
         while len(s)>0:
             lTot += len(s)
@@ -139,7 +139,7 @@ class BoardTest2(object):
             print "Bytes sent: %d" % lTot
         elif 0 == (1 & self.analyzerUsb.getFpgaStatus()):
             print "CRC error during FPGA load, bytes sent: %d" % (lTot,)
-        print "Time to load FPGA: %.1fs" % (time.clock() - tStart,)
+        print "Time to load FPGA: %.1fs" % (time.time() - tStart,)
         time.sleep(0.2)
         
     def initEmif(self):
@@ -305,7 +305,7 @@ class BoardTest2(object):
         UBlock = c_uint * nint
         nIter = 64
         for rep in xrange(10000):
-            start = time.clock()
+            start = time.time()
             for i in range(nIter):
                 orig = np.random.bytes(nbytes)
                 bdata = Block(*orig)
@@ -314,7 +314,7 @@ class BoardTest2(object):
                 d.sender.wrBlock(offset,*data)
                 result = d.sender.rdBlock(offset,nint)
                 assert list(data) == result
-            stop = time.clock()
+            stop = time.time()
             print "Repeat %d: Processing time per byte: %.1f us" % (rep,1e6*(stop-start)/(nIter*nbytes))
         
 
