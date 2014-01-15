@@ -1,10 +1,24 @@
 """
-Copyright 2006-2012 Picarro Inc.
+Copyright 2006-2014 Picarro Inc.
 
 A disutils script that uses py2exe to build Win32 executables for the
 Host platform.
 
+Bails if PYTHONPATH is unset, to ensure Picarro.pth is being overridden
+so Picarro libs are pulled from the proper dir (primitive check, could
+be smarter)
+
 Usage: python PicarroExeSetup py2exe
+
+Notes: Use python buildHost.py from the command line, which sets up
+       the environment for this script.
+#
+# File History:
+# 2013-10-30 sze  Remove bundle=1, and write files to lib subdirectory
+# 2014-01-14 tw   Support builds in both Python 2.5 and 2.7 so can bring
+#                 this file into older release branches. Primitive check
+#                 for PYTHONPATH to help ensure local libs pulled from
+#                 current tree.
 """
 
 from __future__ import with_statement
@@ -75,7 +89,41 @@ sys.path.append("Utilities/ConfigManager")
 sys.path.append("Utilities/AircraftValveSwitcher")
 sys.path.append("Utilities/ProgramVariableGainRdd")
 sys.path.append("Utilities/RestartSupervisor")
+sys.path.append('Utilities/KillRestartSupervisor')
 sys.path.append("../Firmware/Utilities")
+
+sys.stderr = sys.stdout
+
+def _getPythonVersion():
+    """
+    Returns a string such as "2.5" or 2.7"
+    """
+    pythonVer = sys.version_info
+    return str(pythonVer[0]) + "." + str(pythonVer[1])
+
+
+def _runBatFile(batComponent, batFilename, batDir):
+    """
+    Runs a Windows .bat file to build a component. Arguments:
+      batComponent   name of component being built (e.g., fitutils.pyd)
+      batFilename    Windows .bat filename to execute
+      batDir         folder containing the .bat file (can be relative to current dir)
+    """
+    print "building %s using %s" % (batComponent, batFilename)
+
+    # this saves off current folder and restores it when done
+    with OS.chdir(batDir):
+        if not os.path.isfile(batFilename):
+            print "Batch file '%s' does not exist in folder '%s'!" % (batFilename, batDir)
+            sys.exit(1)
+
+        retCode = subprocess.Popen([batFilename]).wait()
+
+        if retCode != 0:
+            print "Error building %s, retCode=%d, batFilename=%s" % (batComponent, retCode, batFilename)
+            sys.exit(retCode)
+
+
 ################################################################
 # Start of a pile of special setup with the sole purpose
 # of making the wxPython apps look like Windows-native
@@ -216,9 +264,52 @@ supervisorLauncher = Target(description = "SupervisorLauncher", # used for the v
 # End of special controller setup stuff (except to use controller below)
 ################################################################
 
+
+pythonVer = _getPythonVersion()
+
+
+# Build the various Host .pyd modules
+#
+# Fitter: build cluster_analyzer.pyd and fitutils.pyd
+if pythonVer == "2.5":
+    fitutilsBatFilename = "makeFitutils25.bat"
+elif pythonVer == "2.7":
+    fitutilsBatFilename = "makeFitutils27.bat"
+else:
+    print "Unsupported Python version %s!" % pythonVer
+    sys.exit(1)
+
+_runBatFile("fitutils.pyd, cluster_analyzer.pyd", fitutilsBatFilename, "Fitter")
+
+# Common: swathP.pyd
+if pythonVer == "2.5":
+    swathPBatFilename = "makeSwathP25.bat"
+elif pythonVer == "2.7":
+    swathPBatFilename = "makeSwathP27.bat"
+else:
+    print "Unsupported Python version %s!" % pythonVer
+    sys.exit(1)
+
+_runBatFile("swathP.pyd", swathPBatFilename, "Common")
+
+# Utilities\SuperBuildStation: fastLomb.pyd
+_runBatFile("fastLomb.pyd", "setup.bat", os.path.join("Utilities", "SuperBuildStation"))
+
+
+# simple check to save us from potential problems using paths in Picarro.pth
+if "PYTHONPATH" not in os.environ:
+    print "PYTHONPATH is not set in environment, potential exists for pulling local libs from wrong dir."
+    print "Run 'python buildHost.py' instead to build Host apps from the command line."
+    sys.exit(1)
+
+
 # And now to the main setup routine...
-exclusionList = ["Tkconstants","Tkinter","tcl", '_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg',
+#
+# The following lists and tuples are common to both Python 2.5 and 2.7 builds. If any
+# require customization, they must be moved and maintained separately under the if statements below.
+exclusionList = ["Tkconstants", "Tkinter", "tcl", '_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg',
                 '_fltkagg', '_gtk', '_gtkcairo', ]
+
 inclusionList = ["email",
                  "email.iterators",
                  "email.generator",
@@ -239,8 +330,8 @@ inclusionList = ["email",
                  "configobj",
                  "encodings.*",
                  "tables.*"]
+
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
-packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
 hex_images = glob.glob("../Firmware/CypressUSB/Drivers/*.*")
 hex_images = hex_images + [ "../Firmware/CypressUSB/analyzer/analyzerUsb.hex",
@@ -325,6 +416,7 @@ consoleList = [
     "Utilities/BackpackServer/backpackServer.py",
     "Utilities/RestartSupervisor/RestartSupervisor.py",
     "Utilities/ProgramVariableGainRdd/programRdd.py",
+    'Utilities/KillRestartSupervisor/KillRestartSupervisor.py',
     "../Firmware/Utilities/CalibrateSystem.py",
     "../Firmware/Utilities/CalibrateFsr.py",
     "../Firmware/Utilities/AdjustWlmOffset.py",
@@ -393,7 +485,12 @@ with open(os.path.join(os.path.dirname(__file__), 'Common',
          "def versionString():\n",
          "    return '%s'\n" % hostVersion.versionString()])
 
-setup(version = "1.0",
+
+if pythonVer == "2.5":
+    # only packageList differs for Python 2.5 and 2.7
+    packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
+
+    setup(version = "1.0",
       description = "Silverstone Host Core Software",
       name = "Silverstone CRDS",
       options = dict(py2exe = dict(compressed = 1,
@@ -409,3 +506,29 @@ setup(version = "1.0",
       windows = windowsList,
       data_files = data_files
 )
+
+elif pythonVer == "2.7":
+    packageList = ["werkzeug","jinja2","email"]
+
+    # no bundle_files, specify zipfile
+    setup(version = "1.0",
+          description = "Silverstone Host Core Software",
+          name = "Silverstone CRDS",
+          options = dict(py2exe = dict(compressed = 1,
+                                       optimize = 1,
+                                       # bundle_files = 1,
+                                       excludes = exclusionList,
+                                       includes = inclusionList,
+                                       dll_excludes = dllexclusionList,
+                                       packages = packageList)
+                         ),
+          # targets to build...
+          console = consoleList,
+          windows = windowsList,
+          data_files = data_files,
+          zipfile = "lib/share"
+    )
+
+else:
+    print "Unsupported Python version %s" % pythonVer
+    sys.exit(1)

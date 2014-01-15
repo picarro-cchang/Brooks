@@ -37,19 +37,19 @@ File History:
     06-12-22 Al    Check that app is OK before adding it to list which is sent to INSTMGR_ReportRestartRpc
     07-03-16 sze   Allow supervisor to power off windows after terminating applications
     07-09-22 sze   Added AffinityMask attribute to App to allow process to be scheduled on specific CPUs
-    08-02-20 sze   Modified GetDependents so that it computes transitive dependencies. i.e, if A depends on B which depends 
+    08-02-20 sze   Modified GetDependents so that it computes transitive dependencies. i.e, if A depends on B which depends
                    on C, it identifies A as being dependent on C.
     08-04-30 sze   Change default on TerminateApplications so that it does not power off the computer
     08-07-07 sze   Include TerminateProcessByName which uses taskkill (on Windows) to stop processes forcibly. Apps have a
-                   KillByName attribute in the INI file which selects whether existing instances of the app should be terminated 
+                   KillByName attribute in the INI file which selects whether existing instances of the app should be terminated
                    by name before a new copy is started. This is True by default
     08-07-23 sze   Do not use TerminateProcessByName on the backup supervisor, as this prematurely kills the real supervisor
-    08-09-16 alex  Replaced ConfigParser by CustomConfigObj 
-                   Re-formatted supervisor ini file so it doesn't contain application indices and total number of applications -> easier to add or remove applications on the list 
+    08-09-16 alex  Replaced ConfigParser by CustomConfigObj
+                   Re-formatted supervisor ini file so it doesn't contain application indices and total number of applications -> easier to add or remove applications on the list
     08-10-08 alex  Re-ordered applications to be launched
     10-10-07 sze   Start the RPC server at once, so that we can terminate a misbehaving stack while it is loading
     11-06-24 alex  When ShutDownAll() is called, all the app names specified in SpecialKilledByNameList will be killed by name
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -140,7 +140,7 @@ if sys.platform == "linux2":
         "5" : -10,
         "6" : -15
     }
-    
+
 # Protected applications (not shut down on normal termination)
 PROTECTED_APPS = ["Driver"]
 
@@ -148,7 +148,7 @@ PROTECTED_APPS = ["Driver"]
 CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\
     uri = "http://localhost:%d" % RPC_PORT_LOGGER,\
     ClientName = APP_NAME, IsDontCareConnection = True)
-    
+
 def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ONLY, Verbose = "", SourceTime = 0):
     """Short global log function that sends a log to the EventLogger
     """
@@ -156,7 +156,7 @@ def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ON
         if Level >= 2:
             print "*** LOGEVENT (%d) = %s; Data = %r" % (Level, Desc, Data)
     CRDS_EventLogger.LogEvent(Desc, Data, Level, Code, AccessLevel, Verbose, SourceTime)
-    
+
 class AppErr(CrdsException):
     "Exception raised by App object.  Base of all App errors."
 
@@ -177,7 +177,7 @@ class AppOptionErr(AppErr):
 
 class TerminationRequest(CrdsException):
     "Terminate all applications requested"
-    
+
 class IniVerifyErr(CrdsException):
     "There was a problem when iniCoordinator tried to verify .ini configuration files for all applications."
 
@@ -253,7 +253,7 @@ if sys.platform == "win32":
         pass
 
     def read_rawkb():
-        if msvcrt.kbhit(): 
+        if msvcrt.kbhit():
             return msvcrt.getch()
         return ""
 
@@ -391,7 +391,7 @@ elif sys.platform == "linux2":
         else:
             try:
                 retval = os.waitpid(processHandle.pid,os.WNOHANG)
-                return retval[0] == 0   # This means that wait would have blocked            
+                return retval[0] == 0   # This means that wait would have blocked
             except OSError:
                 return False
             except Exception,e:
@@ -546,7 +546,7 @@ class App(object):
         In addition, the function returns a dictionary containing all of the loaded
         options and values.
         """
-        assert isinstance(CO, CustomConfigObj) 
+        assert isinstance(CO, CustomConfigObj)
         #First check if there are any illegal/unrecognized options in the file...
         settableOptions = [o for o in self.__dict__.keys() if not (o.startswith("_") or callable(self.__getattribute__(o)))]
         lcaseSettableOptions = []
@@ -611,7 +611,7 @@ class App(object):
         to be up and running (serving rpc requests) before exiting.
         """
         assert(isinstance(supervisor,Supervisor))
-        
+
         exeArgs = []
         root, ext = os.path.splitext(self.Executable)
 
@@ -662,7 +662,7 @@ class App(object):
                                                Affinity = pAffinity))
         self._Stat_LaunchCount += 1 #we're tracking launch attempts, not successful launches
 
-        
+
         if self.VerifyTimeout_ms > 0 and self.Port > 0: # and self.Mode in [0,1]:
             #mode 1 = normal apps to be monitored
             #mode 0 = a unique mode for the backup supervisor app
@@ -703,10 +703,10 @@ class App(object):
         self._LaunchTime = TimeStamp()
     def IsProcessActive(self):
         return isProcessActive(self._ProcessHandle)
-    def ShutDown(self, StopMethod = _METHOD_STOPFIRST, StopWaitTime_s = -1, KillWaitTime_s = -1, NoKillByName = False, 
+    def ShutDown(self, StopMethod = _METHOD_STOPFIRST, StopWaitTime_s = -1, KillWaitTime_s = -1, NoKillByName = False,
                        NoWait = False):
         """Shuts down the application.  If NoWait is True, return immediately after performing StopMethod.
-           If NoWait is False, keep escalating severity of kill method so that the application WILL be dead by the 
+           If NoWait is False, keep escalating severity of kill method so that the application WILL be dead by the
            end of call.
         """
         #See if our work is already done somehow... if so we just get out...
@@ -810,7 +810,7 @@ class App(object):
         Return value is irrelevant on success (but it is True)
         """
         if self._ServerProxy == None:
-            raise AppErr("No RPC server present - check configuration")        
+            raise AppErr("No RPC server present - check configuration")
         waitTime = self._Parent.PingDispatcherTimeout_ms/1000.
         oldWaitTime = self._ServerProxy.GetTimeout()
         try:
@@ -935,7 +935,7 @@ class Supervisor(object):
     def __init__(self, FileName):
         if not os.path.exists(FileName):
             raise "File " + FileName + " not found."
-        self.FileName = FileName    
+        self.FileName = FileName
         co = CustomConfigObj(FileName)
         self.RPCServer = None
         if 0: assert isinstance(self.RPCServer, CmdFIFO.CmdFIFOServer) #For Wing
@@ -966,7 +966,7 @@ class Supervisor(object):
             self.SpecialKilledByNameList = [c.strip() for c in co.get("SpecialKilledByNameList", "List").split(",")]
         except:
             self.SpecialKilledByNameList = []
-            
+
         #Read any global defaults that are to be applied..
         defaultSettings = None
         if co.has_section("GlobalDefaults"):
@@ -1088,14 +1088,14 @@ class Supervisor(object):
         if self.appList == None:
             # Use the first complete list as the standard list
             self.appList = AppList
-        else:    
+        else:
             # Make sure the applications to be launched are in the original order
             sortedList = []
             for app in self.appList:
                 if app in AppList:
                     sortedList.append(app)
             AppList = sortedList
-        Log("Launch list: %s" % AppList) 
+        Log("Launch list: %s" % AppList)
 
         failedAppDependents = []
 
@@ -1402,7 +1402,7 @@ class Supervisor(object):
             self.BackupApp.ShutDown(_METHOD_KILLFIRST,NoKillByName=True,NoWait=True)
         # Initiate system shutdown
         if self.powerDownAfterTermination:
-            os.system("shutdown -s -t 20")
+            os.system("shutdown -f -s -t 20")
         #Now shut applications down in the reverse order of launching...
         #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
         for severity in [_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
@@ -1420,14 +1420,14 @@ class Supervisor(object):
             for appName in self.AppNameList[::-1]:
                 if appName in PROTECTED_APPS:
                     self.AppDict[appName].ShutDown()
-            
+
         if self.SpecialKilledByNameList:
             # Kill all the processes with the specified name
             namesToBeKilled = [n.lower() for n in self.SpecialKilledByNameList]
             for p in psutil.process_iter():
                 if p.name.lower() in namesToBeKilled:
                     p.kill()
-                
+
         self._ShutdownRequested = True
 
     def GetAppStats(self, PrintStats = False):
@@ -1691,14 +1691,14 @@ def GetConfigFileAndIniLog():
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
         print "%s %r" % (E, E)
-        sys.exit(1)    
+        sys.exit(1)
     switchDict = dict(switches)
     if switchDict.has_key("-c"):
         configFile = switchDict["-c"]
     if switchDict.has_key("--inilog"):
         printIniLog = True
     else:
-        printIniLog = False        
+        printIniLog = False
     return (configFile, printIniLog)
 
 def main():
@@ -1747,9 +1747,9 @@ if __name__ == "__main__":
     configFile, printIniLog = GetConfigFileAndIniLog()
     # try:
         # iniCdr = IniCoordinator(configFile, iniLogEnable = printIniLog)
-        # iniCdr.parseAppIni() 
+        # iniCdr.parseAppIni()
         # iniCdr.verifyConfig()
-    # except Exception, E:    
+    # except Exception, E:
         # raise IniVerifyErr("%s %r" % (E, E))
     try:
         main()

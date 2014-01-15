@@ -333,7 +333,7 @@ class PeakFinder(object):
                             print "\r\nClosing source stream\r\n"
                             return
                     except:
-                        pass
+                        pass ###
                     counter = 0
                 time.sleep(0.1)
                 if self.debug: sys.stderr.write('-')
@@ -954,7 +954,7 @@ def main(argv=None):
                       help="Authentication identity string.", metavar="<IDENTITY>")
     parser.add_option("-s", "--sys", dest="psys",
                       help="Authentication sys.", metavar="<SYS>")
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
+    parser.add_option("-d", "--debug", dest="debug", action="store_false",
                       help="Debug mode")
     parser.add_option("--calc-dx", dest="dx",
                       help="Default calc value for dx.", metavar="<CALC_dx>")

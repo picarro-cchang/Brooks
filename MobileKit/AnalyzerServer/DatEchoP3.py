@@ -35,7 +35,7 @@ from Host.Common import CmdFIFO
 from Host.Common import SharedTypes
 from Host.Common import Win32
 
-
+DEBUG = {'level': 0}
 SECONDS_IN_DAY = 86400.0
 
 
@@ -107,13 +107,13 @@ class DataEchoP3(object):
             data = json.loads(resp.read())
 
             self.ticket = data.get('ticket', 'None')
-            print "New ticket: %s" % self.ticket
+            if DEBUG['level']>0: print "New ticket: %s" % self.ticket
 
         except urllib2.HTTPError, ex:
-            print '\nissueTicket failed \n%s\n' % ex
+            if DEBUG['level']>0: print '\nissueTicket failed \n%s\n' % ex
 
         except Exception, ex:
-            print '\nissueTicket failed \n%s\n' % ex
+            if DEBUG['level']>0: print '\nissueTicket failed \n%s\n' % ex
 
     def run(self):
         """
@@ -134,7 +134,7 @@ class DataEchoP3(object):
             nextFile, lastRow = self._findIncomplete(filesToCheck)
 
             while nextFile is not None:
-                print "Pushing partial file (lastRow = %s) '%s'" % (lastRow,
+                if DEBUG['level']>0: print "Pushing partial file (lastRow = %s) '%s'" % (lastRow,
                                                                      nextFile)
                 path, fname = os.path.split(nextFile)
                 self._processFile(path, fname, lastRow)
@@ -142,7 +142,7 @@ class DataEchoP3(object):
                 filesToCheck = self._getFilesInRange(begin, end)
                 nextFile, lastRow = self._findIncomplete(filesToCheck)
 
-            print 'Partial files complete'
+            if DEBUG['level']>0: print 'Partial files complete'
 
             # Don't use the earliest file on the server since it could
             # still be "later" than the earliest time we are
@@ -156,7 +156,7 @@ class DataEchoP3(object):
             for fullPath in genLatestFiles(*os.path.split(self.listenPath)):
                 path, fname = os.path.split(fullPath)
 
-                print "Next latest file: %s, %s" % (path, fname)
+                if DEBUG['level']>0: print "Next latest file: %s, %s" % (path, fname)
 
                 group = self.DATLOG_RX.search(fname).groupdict()
                 assert 'year' in group
@@ -173,7 +173,7 @@ class DataEchoP3(object):
                                           group['minute'], group['second'])
 
                 if fTime < earlyServerTime:
-                    print "File time (%s) < earliest server time (%s)" % (
+                    if DEBUG['level']>0: print "File time (%s) < earliest server time (%s)" % (
                         fTime, earlyServerTime)
                     break
 
@@ -191,11 +191,11 @@ class DataEchoP3(object):
             nextFile = None
 
             if len(serverUnknowns) == 1:
-                print 'Found a single unknown file; could be live.'
+                if DEBUG['level']>0: print 'Found a single unknown file; could be live.'
                 nextFile = serverUnknowns.pop()
 
             elif len(serverUnknowns) > 1:
-                print("Found %d files locally that are not known to "
+                if DEBUG['level']>0: print("Found %d files locally that are not known to "
                       "the server." % len(serverUnknowns))
                 # We must process the oldest file first. In
                 # previous versions we used whatever the next file
@@ -208,7 +208,7 @@ class DataEchoP3(object):
                 nextFile = sorted(serverUnknowns)[0]
 
             else:
-                print 'No unknown files.'
+                if DEBUG['level']>0: print 'No unknown files.'
 
             if nextFile is not None:
                 self._processFile(localPaths[nextFile], nextFile)
@@ -222,12 +222,12 @@ class DataEchoP3(object):
         fSize = os.stat(os.path.join(path, fname))[6]
 
         if fSize == 0:
-            print "Empty file found: %s." % fname
+            if DEBUG['level']>0: print "Empty file found: %s." % fname
             try:
                 shutil.move(os.path.join(path, fname),
                             os.path.join(path, "%s.empty" % fname))
             except:
-                print "Unable to rename %s. Continuing." % fname
+                if DEBUG['level']>0: print "Unable to rename %s. Continuing." % fname
                 traceback.print_exc()
 
             return
@@ -259,7 +259,7 @@ class DataEchoP3(object):
             assert headers is not None
 
             if len(vals) != len(headers):
-                print "Malformed line: # vals = %s, expected = %s" % (
+                if DEBUG['level']>0: print "Malformed line: # vals = %s, expected = %s" % (
                     len(vals), len(headers))
                 continue
 
@@ -300,7 +300,7 @@ class DataEchoP3(object):
 
             # Throttle how often we push data to P3
             if len(self.docs) == self.lines:
-                print "# rows = %d, rowIdx = %d, pushing to P3." % (
+                if DEBUG['level']>0: print "# rows = %d, rowIdx = %d, pushing to P3." % (
                     len(self.docs), rowIdx)
 
                 self.pushToP3(fname)
@@ -322,7 +322,7 @@ class DataEchoP3(object):
         assert analyzerId is not None
 
         if analyzerId == '':
-            print "No analyzer Id available. Skipping local IP registration"
+            if DEBUG['level']>0: print "No analyzer Id available. Skipping local IP registration"
             return
 
         ipRegistered = False
@@ -339,7 +339,7 @@ class DataEchoP3(object):
                     break
 
             if 'PRIVATE_IP' not in datarow:
-                print ('Unable to find an IP address for this analyzer. '
+                if DEBUG['level']>0: print ('Unable to find an IP address for this analyzer. '
                        'Skipping IP address registration.')
                 return
 
@@ -365,7 +365,7 @@ class DataEchoP3(object):
                     msg = ex.read()
 
                     if 'invalid ticket' in msg:
-                        print "Invalid/expired ticket (code = %s)" % ex.code
+                        if DEBUG['level']>0: print "Invalid/expired ticket (code = %s)" % ex.code
                         ticketAttempts += 1
 
                         if ticketAttempts < 10:
@@ -375,11 +375,11 @@ class DataEchoP3(object):
                     else:
                         # Otherwise swallow this exception and we just won't
                         # have the IP pushed.
-                        print "HTTP exception (code = %s): \n%s\n" % (ex.code,
+                        if DEBUG['level']>0: print "HTTP exception (code = %s): \n%s\n" % (ex.code,
                                                                       msg)
 
                 except Exception:
-                    print "Unknown error:"
+                    if DEBUG['level']>0: print "Unknown error:"
                     traceback.print_exc()
 
         return ipRegistered
@@ -415,7 +415,7 @@ class DataEchoP3(object):
                 msg = ex.read()
 
                 if 'invalid ticket' in msg:
-                    print "Invalid/expired ticket (errno = %s)" % ex.code
+                    if DEBUG['level']>0: print "Invalid/expired ticket (errno = %s)" % ex.code
                     ticketAttempts += 1
 
                     if ticketAttempts < 10:
@@ -424,20 +424,20 @@ class DataEchoP3(object):
                     self._getTicket()
 
                 elif ex.code == 404:
-                    print "Unknown analyzer '%s' (errno = %s)" % (analyzerId,
+                    if DEBUG['level']>0: print "Unknown analyzer '%s' (errno = %s)" % (analyzerId,
                                                                   ex.code)
 
                 else:
-                    print "HTTP exception (errno = %s): \n%s\n" % (ex.code,
+                    if DEBUG['level']>0: print "HTTP exception (errno = %s): \n%s\n" % (ex.code,
                                                                    msg)
 
             except Exception:
                 # Eat this exception
-                print 'Unknown error:'
-                print traceback.format_exc()
+                if DEBUG['level']>0: print 'Unknown error:'
+                if DEBUG['level']>0: print traceback.format_exc()
 
         if recentFiles is None:
-            print ('Unable to retrieve results for time range: '
+            if DEBUG['level']>0: print ('Unable to retrieve results for time range: '
                    "'%s' - '%s'" % (time.asctime(time.gmtime(begin)),
                                     time.asctime(time.gmtime(end))))
             return []
@@ -446,7 +446,7 @@ class DataEchoP3(object):
         for doc in recentFiles:
             if 'lastRow' not in doc:
                 # Assume no rows unfortunately.
-                print "No 'lastRow' field in '%s'" % doc['LOGNAME']
+                if DEBUG['level']>0: print "No 'lastRow' field in '%s'" % doc['LOGNAME']
                 doc.update({'lastRow': '0'})
 
             assert 'lastRow' in doc
@@ -465,7 +465,7 @@ class DataEchoP3(object):
         datRoot, _ = os.path.split(self.listenPath)
 
         for fname, row in files:
-            print "Checking '%s' for rows beyond %s" % (fname, row)
+            if DEBUG['level']>0: print "Checking '%s' for rows beyond %s" % (fname, row)
             group = self.DATLOG_RX.search(fname).groupdict()
             assert 'year' in group
             assert 'month' in group
@@ -478,7 +478,7 @@ class DataEchoP3(object):
                                 fname)
 
             if not os.path.isfile(path):
-                print "Missing local file: %s" % path
+                if DEBUG['level']>0: print "Missing local file: %s" % path
                 continue
 
             rowCache = "%s.row" % path
@@ -486,7 +486,7 @@ class DataEchoP3(object):
             lastRow = 0
 
             if os.path.isfile(rowCache):
-                print 'Found row cache'
+                if DEBUG['level']>0: print 'Found row cache'
                 with open(rowCache, 'rb') as fp:
                     try:
                         lastRow = cPickle.load(fp)
@@ -508,19 +508,19 @@ class DataEchoP3(object):
                 # If the row cache was generated while the file was
                 # incomplete, we need to recalculate it.
                 if lastRow < int(row):
-                    print 'Generate cache (rescan)'
+                    if DEBUG['level']>0: print 'Generate cache (rescan)'
                     lastRow = self._createUpdateRowCache(path, rowCache)
 
             else:
-                print "Generate cache (scan)"
+                if DEBUG['level']>0: print "Generate cache (scan)"
                 lastRow = self._createUpdateRowCache(path, rowCache)
 
             if lastRow != int(row):
-                print ("Incomplete file. Server row: %s, "
+                if DEBUG['level']>0: print ("Incomplete file. Server row: %s, "
                        "local: %s" % (row, lastRow))
                 return path, int(row)
 
-        print 'No incomplete files'
+        if DEBUG['level']>0: print 'No incomplete files'
         return None, 0
 
     def _createUpdateRowCache(self, path, rowCache):
@@ -535,7 +535,7 @@ class DataEchoP3(object):
         assert nRows > 0
 
         with open(rowCache, 'wb') as fp:
-            print "Creating cache '%s' (# rows = %s)" % (rowCache, nRows)
+            if DEBUG['level']>0: print "Creating cache '%s' (# rows = %s)" % (rowCache, nRows)
             cPickle.dump(nRows, fp)
 
         return nRows
@@ -548,8 +548,8 @@ class DataEchoP3(object):
         renameAsBad = False
 
         with open(os.path.join(path, fname), 'rb') as fp:
-            print "\nOpening source stream: %s\n" % fname
-            print "lastRow = %s" % lastRow
+            if DEBUG['level']>0: print "\nOpening source stream: %s\n" % fname
+            if DEBUG['level']>0: print "lastRow = %s" % lastRow
 
             deadLineCount = 0
             lineCount = 1
@@ -573,26 +573,26 @@ class DataEchoP3(object):
 
                 if (isNewFile and len(line) != 0 and not line.endswith("\n")
                     and chunk == ''):
-                    print "Malformed file found: %s." % fname
+                    if DEBUG['level']>0: print "Malformed file found: %s." % fname
                     renameAsBad = True
                     break
 
                 if line == '':
                     # Push any data that we already have.
                     if self.docs:
-                        print "Push %s rows to P3" % len(self.docs)
+                        if DEBUG['level']>0: print "Push %s rows to P3" % len(self.docs)
                         self.pushToP3(fname)
                         self.docs = []
 
                     deadLineCount += 1
 
                     if deadLineCount == 10:
-                        print 'Checking for latest file'
+                        if DEBUG['level']>0: print 'Checking for latest file'
                         latest = genLatestFiles(*os.path.split(
                                 self.listenPath)).next()
 
                         if fname != os.path.split(latest)[1]:
-                            print "New file available: %s" % latest
+                            if DEBUG['level']>0: print "New file available: %s" % latest
                             return
 
                         deadLineCount = 0
@@ -606,12 +606,12 @@ class DataEchoP3(object):
                     lineCount <= (lastRow + 1) and line.endswith("\n")):
                     lineCount += 1
                     line = ''
-                    sys.stdout.write('.')
+                    if DEBUG['level']>0: sys.stdout.write('.')
                     continue
 
                 if line.endswith("\n"):
                     lineCount += 1
-                    sys.stdout.write('+')
+                    if DEBUG['level']>0: sys.stdout.write('+')
                     yield line
                     line = ''
 
@@ -620,7 +620,7 @@ class DataEchoP3(object):
                 shutil.move(os.path.join(path, fname),
                             os.path.join(path, "%s.bad" % fname))
             except:
-                print "Unable to rename %s. Continuing" % fname
+                if DEBUG['level']>0: print "Unable to rename %s. Continuing" % fname
                 traceback.print_exc()
 
     def pushToP3(self, fname):
@@ -661,7 +661,7 @@ class DataEchoP3(object):
                 msg = ex.read()
 
                 if 'invalid ticket' in msg:
-                    print "Invalid/expired ticket (errno = %s)" % ex.code
+                    if DEBUG['level']>0: print "Invalid/expired ticket (errno = %s)" % ex.code
                     waitForRetryCtr += 1
 
                     if waitForRetryCtr < 100:
@@ -670,15 +670,15 @@ class DataEchoP3(object):
                     self._getTicket()
 
                 else:
-                    print "HTTP exception (errno = %s): \n%s\n" % (ex.code,
+                    if DEBUG['level']>0: print "HTTP exception (errno = %s): \n%s\n" % (ex.code,
                                                                    msg)
 
             except Exception:
                 # Eat this exception
-                print 'Unknown error:'
-                print traceback.format_exc()
+                if DEBUG['level']>0: print 'Unknown error:'
+                if DEBUG['level']>0: print traceback.format_exc()
 
-            sys.stderr.write('-')
+            if DEBUG['level']>0: sys.stderr.write('-')
 
             if waitForRetry:
                 time.sleep(self.timeout)
@@ -713,7 +713,7 @@ class DataEchoP3(object):
             analyzerId = self.analyzerName
         else:
             analyzerId = self._getAnalyzerIdFromDriver()
-        print "Found analyzer Id = %s" % analyzerId
+        if DEBUG['level']>0: print "Found analyzer Id = %s" % analyzerId
 
         return analyzerId
 
@@ -815,12 +815,12 @@ Runs an echo server that sends data to P3.
             if not appThread.isAlive():
                 break
 
-        print "Supervised DatEchoP3 thread stopped"
+        if DEBUG['level']>0: print "Supervised DatEchoP3 thread stopped"
         return 1
 
     except Exception:
-        print "CmdFIFO stopped:"
-        print traceback.format_exc()
+        if DEBUG['level']>0: print "CmdFIFO stopped:"
+        if DEBUG['level']>0: print traceback.format_exc()
         return 0
 
 if __name__ == '__main__':

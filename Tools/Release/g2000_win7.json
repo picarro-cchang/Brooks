@@ -1,0 +1,7 @@
+{
+    "CFADS": "CO2_CH4_H2O",
+    "CFFDS": "iCO2_CH4",
+    "CFIDS": "iCO2_iCH4",
+    "CFKADS": "4Species",
+    "HIDS": "iH2O"
+}

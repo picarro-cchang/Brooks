@@ -6,12 +6,14 @@ from PeakFinder import PeakFinder
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_PEAK_FINDER
 from Host.Common import CmdFIFO
 
+DEBUG = {'level': 0}
+
 def getLocalAnalyzerId():
     try:
         CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "RunPeakFinder")
         curValDict = CRDS_Driver.fetchLogicEEPROM()[0]
         localAnalyzerId = curValDict["Analyzer"]+curValDict["AnalyzerNum"]
-        print "Local analyzer id found: %s" % localAnalyzerId 
+        if DEBUG['level']>0: print "Local analyzer id found: %s" % localAnalyzerId 
     except:
         localAnalyzerId = None
     return localAnalyzerId
@@ -73,9 +75,9 @@ def main():
         while True:
             rpcServer.daemon.handleRequests(0.5)
             if not th.isAlive(): break
-        print "Supervised PeakFinder died"
+        if DEBUG['level']>0: print "Supervised PeakFinder died"
     except:
-        print "CmdFIFO stopped"
+        if DEBUG['level']>0: print "CmdFIFO stopped"
         
 if __name__ == '__main__':
     main()

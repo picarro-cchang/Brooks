@@ -10,12 +10,12 @@ File History:
                         are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
                         in which these dictionaries map to tables. For a normal spectrum, sensorData and controlData
                         contain lists with only one element each.
-    19-Oct-2013  sze   Removes use of numpy record arrays, as this was causing a memory leak
+    19-Oct-2013  sze   Remove use of numpy record arrays, as this was causing a memory leak
+    15-Dec-2013  sze   Remove support for saving individual spectra and refactor code for writing out HDF5 files
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
-APP_NAME = "SpectrumCollector"
+from __future__ import with_statement
 
 import sys
 import os
@@ -26,11 +26,10 @@ import Queue
 import shutil
 import threading
 import time
-import traceback
 import ctypes
-import cPickle
-from tables import *
-import cProfile
+from tables import openFile, Filters
+from tables import Float32Col, Float64Col, Int16Col, Int32Col, Int64Col
+from tables import UInt16Col, UInt32Col, UInt64Col
 
 from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
@@ -41,9 +40,11 @@ from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.timestamp import unixTime, getTimestamp
+from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Sequencer import Sequencer
+from Host.SpectrumCollector.Sequencer import Sequencer
+
+APP_NAME = "SpectrumCollector"
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -83,7 +84,7 @@ Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                     APP_NAME,
                                     IsDontCareConnection = False)
 
-class RingdownTimeout(CrdsException):
+class SpectrumCollectionTimeout(CrdsException):
     """Timed out while waiting for a ringdown to arrive."""
 
 class RpcServerThread(threading.Thread):
@@ -166,26 +167,13 @@ class SpectrumCollector(object):
                                             retry = True,
                                             name = "Spectrum collector listener",logFunc = Log)
 
-        #Initialize the sensor averaging...
-        self.sensorAvgCount = 0
-        self.avgSensors = {}
-        self.sumSensors = {}
-        for key in self.latestSensors.keys():
-            self.avgSensors[key] = 0.0
-            self.sumSensors[key] = 0.0
-
-        #Initialize the rdBuffer with the names and types of fields in (Processed)RingdownEntryType
-        self.rdBuffer = {}
-        for fname,ftype in self.rdEntryType._fields_:
-            self.rdBuffer[fname] = ([],ftype)
-
         # Broadcaster for spectra
         self.spectrumBroadcaster = Broadcaster.Broadcaster(
                             port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
                             name="Spectrum Collector broadcaster",logFunc = Log)
 
         # Compression filter for HDF5
-        self.hdf5Filters = Filters(complevel=1,fletcher32=True)
+        self.hdf5Filters = Filters(complevel=1, fletcher32=True)
 
         self.enableSpectrumFiles = True
         self.closeSpectrumWhenDone = False
@@ -204,11 +192,13 @@ class SpectrumCollector(object):
         self.rdQueueGetLastTime = 0
         self.maxRdQueueGetRtt = 0
         self.lastSchemeCount = -1
-        self.newHdf5File = True
-        self.closeHdf5File = False
         self.streamFP = None
         self.tableDict = {}
         self.auxSpectrumFile = ""
+        self.sensorAvgCount = 0
+        self.avgSensors = {}
+        self.sumSensors = {}
+        self.rdBuffer = {}
 
         self.useSequencer = True
         self.sequencer = None
@@ -226,6 +216,12 @@ class SpectrumCollector(object):
         thisCount = -1
         MAXLOOPS = 500
         loops = 0
+
+        endOfSpectrum = False
+        endOfScheme = False
+        spectraInScheme = []
+        self.prepareForNewSpectrum()
+
         while not self._shutdownRequested:
             #Pull a spectral point from the RD queue...
             try:
@@ -245,10 +241,6 @@ class SpectrumCollector(object):
                 self.rdQueueGetLastTime = now
 
                 #localRdTime = Driver.hostGetTicks()
-                self.lastSchemeTable = self.schemeTable
-                self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
-                self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable,None)
-
                 thisSubSchemeID = rdData.subschemeId
                 self.lastSpectrumID = self.spectrumID
                 self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
@@ -256,41 +248,49 @@ class SpectrumCollector(object):
                 self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
                 thisCount = rdData.count
 
-                # The schemeCount is changed when a scheme starts, i.e. it tracks entire schemes, including the
+                # The schemeCount is changed when a SCHEME starts, i.e. it tracks entire schemes, including the
                 #  repeat count. We make an HDF5 file each time a scheme is run
                 schemeStatus = rdData.status
                 schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
 
                 if self.lastSchemeCount != schemeCount:
-                    if self.lastSchemeCount >= 0: self.closeHdf5File = True
+                    if self.lastSchemeCount >= 0:
+                        endOfSpectrum = True 
+                        endOfScheme = True
                     self.lastSchemeCount = schemeCount
+                else:
+                    self.lastSchemeTable = self.schemeTable
+                    self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
+                    self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable, None)
 
-                errDataDict = dict(schemeTable = self.schemeTable,
-                                   schemeRow = rdData.schemeRow,
-                                   ssID = thisSubSchemeID,
-                                   spectrumID = self.spectrumID,
-                                   count = thisCount,
-                                   schemeStatus = schemeStatus)
-
-                # When the "count" is different (set by DSP when bit-15 is set in the scheme file), we know a new spectrum is coming and we have to close whatever we currently have.
+                # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file), 
+                #  we know a new SPECTRUM is coming and we have to process whatever we currently have.
                 if thisCount != lastCount:
-                    #Log("New spectrum found on ringdown (new count = %d)" % thisCount, errDataDict)
-                    #Set aside the point we just read for the next time a spectrum is collected...
+                    # We "push back" the last data point so that it is fetched again next time as part 
+                    #  of the next spectrum
                     self.tempRdDataBuffer = rdData
-                    # Close what we have collected so far
-                    self.closeSpectrumWhenDone = True
+                    endOfSpectrum = True
                 else: #still collecting the same spectrum
                     if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
-                        self.appendPoint(rdData)
-            except RingdownTimeout:
-                if self.numPts > 0:
-                    Log("Closing spectrum due to ringdown timeout (count = %d)" % thisCount, Level = 0)
-                    self.closeSpectrumWhenDone = True
-                    self.closeHdf5File = True
+                        self.appendRingdownToSpectrum(rdData)
 
-            if self.closeSpectrumWhenDone:
-                self.finish()
-                self.schemesUsed = {}
+            except SpectrumCollectionTimeout:
+                if self.numPts > 0:
+                    Log("Closing spectrum and scheme due to data timeout (count = %d)" % thisCount, Level = 0)
+                    endOfSpectrum = True
+                    endOfScheme = True
+
+            if endOfSpectrum:
+                spectrum = self.packageSpectrum()
+                self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))
+                spectraInScheme.append(spectrum)
+                if endOfScheme:
+                    self.writeOut(spectraInScheme)
+                    endOfScheme = False
+                    self.schemesUsed = {}
+                    spectraInScheme = []
+                endOfSpectrum = False
+                self.prepareForNewSpectrum()
 
             lastCount = thisCount
             loops += 1
@@ -302,7 +302,8 @@ class SpectrumCollector(object):
 
     def getSpectralDataPoint(self, timeToRetry, timeout = 10):
         """Pops rdData out of the local ringdown queue and returns it. If there are no ringdowns
-        within the timeToRetry interval, return None. Raise RingdownTimeout
+        within the timeToRetry interval, return None. If we have been trying for duration timeout
+        and there are no ringdowns, raise SpectrumCollectionTimeout.
         """
         if self.emptyCount == 0:
             self.startWaitTime = time.time()
@@ -313,34 +314,44 @@ class SpectrumCollector(object):
             self.emptyCount = 0
         else:
             try:
-                rdData = self.rdQueue.get(True,timeToRetry)
+                rdData = self.rdQueue.get(True, timeToRetry)
                 self.emptyCount = 0
-            except Queue.Empty:
+            except Queue.Empty: 
                 rdData = None
                 self.emptyCount += 1
                 if time.time() - self.startWaitTime > timeout:
                     self.emptyCount = 0
-                    raise RingdownTimeout("No ringdown in %s seconds" % timeout)
+                    raise SpectrumCollectionTimeout("No ringdown in %s seconds" % timeout)
         return rdData
 
-    def reset(self):
-        self.closeSpectrumWhenDone = False
+    def prepareForNewSpectrum(self):
         self.numPts = 0
         #Initialize the sensor averaging...
         self.sensorAvgCount = 0
+        self.avgSensors = {}
+        self.sumSensors = {}
         for key in self.latestSensors.keys():
             self.avgSensors[key] = 0.0
             self.sumSensors[key] = 0.0
-        #
-        # The data are added from ProcessedRingdownEntryType objects, one row at a time from each ringdown.
-        #  We need to store them as columns in the spectrum file. The rdBuffer dictionary is keyed by the
-        #  field (column) name and contains tuples consisting of a list of the column values and the type
-        #  of the data in the column
-        #
-        # Initialize the rdBuffer with the names and types of fields in (Processed)RingdownEntryType
+
+        #Initialize the rdBuffer with the names and types of fields in (Processed)RingdownEntryType
+        # The values in rdBuffer consist of a tuple, the first element is a list of data for that
+        #  field in the spectrum and the second element is the ctypes object indicating the type
+        #  of the data in the list
         self.rdBuffer = {}
-        for fname,ftype in self.rdEntryType._fields_:
-            self.rdBuffer[fname] = ([],ftype)
+        for fname, ftype in self.rdEntryType._fields_:
+            self.rdBuffer[fname] = ([], ftype)
+
+    def appendRingdownToSpectrum(self, rdData):
+        """Adds data from the current RingdownEntryType object to self.rdBuffer.
+        """
+        for fname, ftype in self.rdEntryType._fields_:
+            if fname in self.rdBuffer:
+                self.rdBuffer[fname][0].append(getattr(rdData, fname))
+        self.numPts += 1
+
+        sensorData = self.getLatestSensors()
+        self.doSensorAveraging(sensorData)
 
     def _sensorFilter(self, entry):
         """Updates the latest sensor readings.
@@ -353,141 +364,134 @@ class SpectrumCollector(object):
         self.sensorsUpdated = True
 
     def getLatestSensors(self):
+        """Get a copy of the dictionary of most recent sensor values.
+        """
         if self.sensorsUpdated:
             self.sensorsUpdated = False
             self.cachedSensors = self.latestSensors.copy()
         return self.cachedSensors
 
     def doSensorAveraging(self, sensorData):
+        """Append sensorData into the variables for computing statistics.
+        """
         self.sensorAvgCount += 1.
         for k in self.avgSensors:
             self.sumSensors[k] += sensorData[k]
             newAvg = self.sumSensors[k] / self.sensorAvgCount
             self.avgSensors[k] = newAvg
 
-    def appendPoint(self, rdData):
-        """Adds a single set of Data to the spectrum
-        """
-        for fname,ftype in self.rdEntryType._fields_:
-            if fname in self.rdBuffer:
-                self.rdBuffer[fname][0].append(getattr(rdData,fname))
-        self.numPts += 1
+    def packageSpectrum(self):
+        """Package a spectrum by adjoining sensor, control and tagalong data.
 
-        sensorData = self.getLatestSensors()
-        self.doSensorAveraging(sensorData)
-
-    def finish(self):
-        """Closes off the acquisition of the spectrum and creates an output file
-        with data stored in rdfDict.
+        Returns: Dictionary with keys:
+            rdData: Ring down data
+            sensorData: Sensor data averaged over the collection time of the spectrum
+            tagalongData: Data from external devices that are to tag-along with the spectrum
+            controlData: Indicates number of ringdowns in spectrum and latency from ringdown collection time to
+                spectrum assembly time
         """
-        self.rdfDict = {"rdData":{}, "sensorData":{}, "tagalongData":{}, "controlData":{}}
+        spectrumDict = {"rdData":{}, "sensorData":{}, "tagalongData":{}, "controlData":{}}
         # Convert the contents of self.rdBuffer lists into numpy arrays
         for fname in self.rdBuffer:
-            data,dtype = self.rdBuffer[fname]
-            self.rdfDict["rdData"][fname] = numpy.asarray(data,ctypes2numpy[dtype])
-        self.rdfDict["rdData"]["pztValue"] = numpy.asarray(self.rdfDict["rdData"]["pztValue"], dtype='float32')
-        self.rdfDict["rdData"]["tunerValue"] = numpy.asarray(self.rdfDict["rdData"]["tunerValue"], dtype='float32')
+            data, dtype = self.rdBuffer[fname]
+            spectrumDict["rdData"][fname] = numpy.asarray(data, ctypes2numpy[dtype])
+        spectrumDict["rdData"]["pztValue"] = numpy.asarray(spectrumDict["rdData"]["pztValue"], dtype='float32')
+        spectrumDict["rdData"]["tunerValue"] = numpy.asarray(spectrumDict["rdData"]["tunerValue"], dtype='float32')
 
         # Append averaged sensor data
         for s in self.avgSensors:
-            self.rdfDict["sensorData"][s] = [self.avgSensors[s]]
+            spectrumDict["sensorData"][s] = [self.avgSensors[s]]
 
         # Add more sensor data
-        self.rdfDict["sensorData"]["SchemeTable"] = [self.lastSchemeTable]
-        self.rdfDict["sensorData"]["SpectrumID"] = [self.lastSpectrumID]
-        self.rdfDict["sensorData"]["SchemeVersion"] = [self.lastSchemeVersion]
+        spectrumDict["sensorData"]["SchemeTable"] = [self.lastSchemeTable]
+        spectrumDict["sensorData"]["SpectrumID"] = [self.lastSpectrumID]
+        spectrumDict["sensorData"]["SchemeVersion"] = [self.lastSchemeVersion]
 
         #Write the tagalong data values...
         for t in self.tagalongData:
-            self.rdfDict["tagalongData"][t] = [self.tagalongData[t][0]]
+            spectrumDict["tagalongData"][t] = [self.tagalongData[t][0]]
 
         #Write control data dictionary
         qsize = 0
         # Latency is seconds between the current time and the average time of ringdowns in file
-        ts = self.rdfDict["rdData"]["timestamp"]
+        ts = spectrumDict["rdData"]["timestamp"]
         latency = 0.0
         if len(ts)>0:
             latency = 0.001*(getTimestamp() - float(sum(ts))/len(ts))
-        self.rdfDict["controlData"] = {"RDDataSize":[self.numPts], "SpectrumQueueSize":[qsize], "Latency":[latency]}
+        spectrumDict["controlData"] = {"RDDataSize":[self.numPts], "SpectrumQueueSize":[qsize], "Latency":[latency]}
 
-        # Process spectrum files (HDF5 or RDF). RDF files contain a single spectrum, while HDF5 files
-        #  contain the spectra in a single scheme.
-        if self.enableSpectrumFiles:
-            if self.useHDF5:
-                # Lookup table giving pyTables column generation function keyed
-                # by the numpy dtype.name
-                colByName = dict(float32=Float32Col, float64=Float64Col, 
-                                 int16=Int16Col, int32=Int32Col, int64=Int64Col,
-                                 uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
-                if self.newHdf5File:
-                    # Create HDF5 file
-                    filename = "RD_%013d.h5" % (int(time.time()*1000),)
-                    self.streamPath = os.path.join(self.streamDir, filename)
-                    self.streamFP = openFile(self.streamPath, "w")
-                    # Store the name of the scheme file and the current analyzer mode
-                    #  as user attributes in the new HDF5 file
-                    if len(self.schemesUsed) != 1:
-                        Log("Only one scheme should be in RDF file %s" % (filename,),Data=self.schemesUsed)
-                    else:
-                        schemeUsed = self.schemesUsed.values()[0]
-                        if schemeUsed is not None:
-                            self.streamFP.root._v_attrs.schemeFile = schemeUsed[3]
-                            self.streamFP.root._v_attrs.modeName = schemeUsed[0]
-                    # Indicate that no tables exist yet in this new file
-                    self.tableDict = {}
-                    self.newHdf5File = False
+        return spectrumDict
 
-                # Write out the information into the HDF5 tables
-                for dataKey in self.rdfDict.keys():
-                    subDataDict = self.rdfDict[dataKey]
-                    if len(subDataDict) > 0:
-                        keys,values = zip(*sorted(subDataDict.items()))
-                        if dataKey not in self.tableDict:
-                            # We need to build up the colDict whose keys are the column
-                            #  names and whose values are instances of subclasses of Col
-                            # We find out which subclass of Col to use from the dtype of the 
-                            #  value to be stored in that column
-                            h5 = self.streamFP
-                            values = [numpy.asarray(v) for v in values]
-                            colDict = {}
-                            for k, v in zip(keys, values):
-                                colDict[k] = colByName[v.dtype.name]()
-                            self.tableDict[dataKey] = h5.createTable(h5.root, dataKey, colDict, filters=self.hdf5Filters)
-                        table = self.tableDict[dataKey]
-                        # Go through the arrays in values and fill up each row of the table
-                        #  one element at a time
-                        row = table.row
-                        for r in range(len(values[0])):
-                            for i, k in enumerate(keys):
-                                row[k] = values[i][r]
-                            row.append()
-                        table.flush()
+    def writeOut(self, spectraInScheme):
+        """Write out the spectra collected for a scheme file to an HDF5 file.
 
-                if self.closeHdf5File:
-                    self.closeHdf5File = False
-                    self.newHdf5File = True
-                    self.streamFP.close()
-                    # Archive HDF5 file
-                    archiveThread = threading.Thread(target = self._archiveFile, args = (self.streamPath, self.auxSpectrumFile))
-                    archiveThread.setDaemon(True)
-                    archiveThread.start()
-                    self.auxSpectrumFile = ""
-            else:
-                # Pickle the rdfDict
-                filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
-                self.streamPath = os.path.join(self.streamDir, filename)
-                self.streamFP = file(self.streamPath, "wb")
-                self.streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL))
-                self.streamFP.close()
-                # Archive RDF files
-                try:
-                    Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
-                except Exception:
-                    LogExc("Archiver call error")
+        Args:
+            spectraInScheme: Spectral data collected
+        """
+        if self.enableSpectrumFiles and spectraInScheme:
+            # Create HDF5 file
+            fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
+            numSchemes = len(self.schemesUsed)
+            with openFile(fileName, "w") as hdf5Handle:
+                if numSchemes == 1:
+                    schemeUsed = self.schemesUsed.values()[0]
+                    if schemeUsed is not None:
+                        hdf5Handle.root._v_attrs.schemeFile = schemeUsed[3]
+                        hdf5Handle.root._v_attrs.modeName = schemeUsed[0]
+                else:
+                    Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]), 
+                        Data=self.schemesUsed)
+                self.fillRdfTables(hdf5Handle, spectraInScheme)
 
-        self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(self.rdfDict))
+            # Archive HDF5 file
+            archiveThread = threading.Thread(target = self._archiveFile, args = (fileName, self.auxSpectrumFile))
+            archiveThread.setDaemon(True)
+            archiveThread.start()
+            self.auxSpectrumFile = ""
 
-        self.reset()
+    def fillRdfTables(self, hdf5Handle, spectraInScheme):
+        """Transfer data from spectraInScheme to tables in an HDF5 output file.
+
+        Args:
+            hdf5Handle: Open HDF5 file to receive tables
+            spectraInScheme: This is a list of dictionaries, one for each spectrum. Each spectrum consists
+                of a dictionary with keys "rdData", "sensorData", "tagalongData" and "controlData". The
+                values are tables of data (stored as a dictionary whose keys are the column names and whose
+                values are lists of the column data) which are to be written to the output file.
+        """
+        # Lookup table giving pyTables column generation function keyed
+        # by the numpy dtype.name
+        colByName = dict(float32=Float32Col, float64=Float64Col, 
+                         int16=Int16Col, int32=Int32Col, int64=Int64Col,
+                         uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
+        # We make HDF5 tables and define the columns needed in these tables
+        tableDict = {}
+        for spectrum in spectraInScheme:
+            # Iterate over rdData, sensorData, tagalongData and controlData tables
+            for tableName in spectrum:
+                spectTableData = spectrum[tableName]
+                if len(spectTableData) > 0:
+                    keys, values = zip(*sorted(spectTableData.items()))
+                    if tableName not in tableDict:
+                        # We are encountering this table for the first time, so we 
+                        #  need to build up colDict whose keys are the column names and
+                        #  whose values are the subclasses of Col used by pytables to
+                        #  define the HDF5 column. These are retrieved from colByName.
+                        colDict = {}
+                        # Use numpy to get the dtype names for the various data
+                        values = [numpy.asarray(v) for v in values]
+                        for key, value in zip(keys, values):
+                            colDict[key] = colByName[value.dtype.name]()
+                        tableDict[tableName] = hdf5Handle.createTable(hdf5Handle.root, tableName, colDict, filters=self.hdf5Filters)
+                    table = tableDict[tableName]
+                    # Go through the arrays in values and fill up each row of the table
+                    #  one element at a time
+                    row = table.row
+                    for j in range(len(values[0])):
+                        for i, key in enumerate(keys):
+                            row[key] = values[i][j]
+                        row.append()
+                    table.flush()
 
     def _archiveFile(self, streamPath, auxSpectrumFile):
         time.sleep(1.0)
@@ -496,18 +500,14 @@ class SpectrumCollector(object):
             try:
                 shutil.copyfile(streamPath, auxSpectrumFile)
             except:
-                Log("Error copying to auxiliary spectrum file %s" % auxSpectrumFile,Verbose=traceback.format_exc())
+                LogExc("Error copying to auxiliary spectrum file %s" % auxSpectrumFile)
         time.sleep(1.0)
         try:
             Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
-        except Exception:
-            Log("Archiver call error",Verbose=traceback.format_exc())
+        except:
+            LogExc("Archiver call error")
 
     # RPC functions which are handled by the sequencer
-
-    @CmdFIFO.rpc_wrap
-    def RPC_addSequenceByName(self,name,config):
-        self.sequencer.addSequenceByName(name,config)
 
     @CmdFIFO.rpc_wrap
     def RPC_addNamedSequenceOfSchemeConfigs(self,name,schemeConfigs):
@@ -646,9 +646,12 @@ def handleCommandSwitches():
     return configFile, options
 
 if __name__ == "__main__":
-    configFile, options = handleCommandSwitches()
-    spCollectorApp = SpectrumCollector(configFile)
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    spCollectorApp.run()
-    # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
-    Log("Exiting program")
+    try:
+        configFile, options = handleCommandSwitches()
+        spCollectorApp = SpectrumCollector(configFile)
+        Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+        spCollectorApp.run()
+        # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
+        Log("Exiting program")
+    except Exception:
+        LogExc("Unhandled exception in SpectrumCollector", Level=3)

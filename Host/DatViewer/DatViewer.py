@@ -1405,6 +1405,7 @@ class Window(HasTraits):
 
 
 class SeriesWindowHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1469,6 +1470,7 @@ class SeriesWindow(Window):
 
 
 class CorrelationWindowHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1563,6 +1565,7 @@ class CorrelationWindow(Window):
 
 
 class AllanWindowHandler(Handler):
+
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)

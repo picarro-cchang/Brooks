@@ -41,6 +41,7 @@ import math
 import Host.Common.SwathProcessor as sp
 from Host.autogen import interface
 
+DEBUG = {'level': 0}
 
 from ConfigParser import SafeConfigParser
 parser = SafeConfigParser(defaults={
@@ -162,7 +163,7 @@ def _getPeaks(name,startRow,minAmp):
     result = {}
     for h in header: result[h] = []
     if amplCol<0:
-        print "Cannot find AMPLITUDE column in peak file"
+        if DEBUG['level']>0: print "Cannot find AMPLITUDE column in peak file"
         result['nextRow'] = startRow
         return result
     nresults = 0
@@ -468,7 +469,7 @@ def rest_restartDatalog():
         return make_response(json.dumps({"result":result}))
 
 def restartDatalogEx(params):
-    print "<------------------ Restarting data log ------------------>"
+    if DEBUG['level']>0: print "<------------------ Restarting data log ------------------>"
     dataLogger = DataLoggerInterface()
     dataLogger.startUserLogs(['DataLog_User_Minimal'],restart=True)
     if 'weatherCode' in params:
@@ -492,7 +493,7 @@ def rest_shutdownAnalyzer():
         return make_response(json.dumps({"result":result}))
 
 def shutdownAnalyzerEx(params):
-    print "<------------------ Shut down analyzer in current state ------------------>"
+    if DEBUG['level']>0: print "<------------------ Shut down analyzer in current state ------------------>"
     InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
     InstMgr.INSTMGR_ShutdownRpc(2)
     return {}
@@ -602,7 +603,7 @@ def rest_setCurrentInlet():
         elif inlet == 'BUMPER':
             Driver.closeValves(VALVE_INLET_MASK)
         else:
-            print "Invalid inlet '%s' selected." % inlet
+            if DEBUG['level']>0: print "Invalid inlet '%s' selected." % inlet
 
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' +
@@ -655,7 +656,7 @@ def rest_setCurrentReference():
         elif reference == 'ISOTOPIC':
             Driver.closeValves(VALVE_CALIBRATION_MASK)
         else:
-            print "Invalid reference gas position, '%s', selected." % reference
+            if DEBUG['level']>0: print "Invalid reference gas position, '%s', selected." % reference
 
 
     if 'callback' in request.values:
@@ -863,7 +864,7 @@ def rest_getDateTime():
         return make_response(json.dumps({"result":result}))
 
 def getDateTimeEx(params):
-    print time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+    if DEBUG['level']>0: print time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
     return(dict(dateTime=time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())))
 
 @app.route('/rest/getLastPeriphUpdate')
@@ -896,7 +897,7 @@ def ping():
 
 @app.route('/rest/admin')
 def issueTicket():
-    print "Ticket:", request.values
+    if DEBUG['level']>0: print "Ticket:", request.values
     ticket = 'abcdefghijkl'
     if 'callback' in request.values:
         return make_response(request.values['callback'] + '(' + json.dumps({"ticket":ticket}) + ')')

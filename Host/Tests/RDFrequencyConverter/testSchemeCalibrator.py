@@ -43,10 +43,10 @@ class FirstTestCase(TestCase):
         aLaserNum = 1
         entry.laserUsed = ((vLaserNum-1) << 2) | (aLaserNum-1)
         entry.schemeRow = 23
-        self.sbc.processCalPoint(entry)
-        self.assertTrue(entry.schemeRow in self.sbc.currentCalSpectrum)
-        calPoint = self.sbc.currentCalSpectrum[entry.schemeRow]
-        self.assertTrue(isinstance(calPoint,RDF.CalibrationPoint))
+        self.sbc.processCalRingdownEntry(entry)
+        self.assertTrue(entry.schemeRow in self.sbc.calDataByRow)
+        calPoint = self.sbc.calDataByRow[entry.schemeRow]
+        self.assertTrue(isinstance(calPoint,RDF.CalibrationDataInRow))
         self.assertEqual(calPoint.count,1)
         self.assertEqual(calPoint.vLaserNum,2)
         np.testing.assert_array_almost_equal(calPoint.thetaCalCos,[np.cos(entry.wlmAngle)])

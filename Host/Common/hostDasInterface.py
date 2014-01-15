@@ -34,7 +34,12 @@ from Host.Common.crc import calcCrc32
 from Host.Common.SharedTypes    import Singleton, getSchemeTableClass, DasCommsException
 from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
-from Host.Common.analyzerUsbIf  import AnalyzerUsb
+
+if sys.version_info[:2] == (2, 7):
+    from Host.Common.analyzerUsbIf_libUsb1  import AnalyzerUsb
+else:
+    from Host.Common.analyzerUsbIf_libUsb0  import AnalyzerUsb
+
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 EventManagerProxy_Init(APP_NAME)
 

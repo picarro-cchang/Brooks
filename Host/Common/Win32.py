@@ -87,3 +87,13 @@ class User32(object):
         LockWorkstation.restype = BOOL
 
         return LockWorkstation()
+
+
+class Kernel32(object):
+    """
+    Wrappers for Kernel32.dll routines/structs/etc.
+    """
+
+    @staticmethod
+    def exitProcess(retCode):
+        return ctypes.windll.kernel32.ExitProcess(retCode)

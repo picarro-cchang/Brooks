@@ -1,7 +1,17 @@
+#!/usr/bin/python
+"""
+File Name: PeakAnalyzer.py
+Purpose: Uses a Keeling plot to determine the isotopic ratio of a sample
+
+File History:
+     3-Nov-2011  sze   Initial version
+    17-Dec-2013  sze   Removed usage of scipy
+
+Copyright (c) 2013 Picarro, Inc. All rights reserved
+"""
 from collections import deque
 import fnmatch
 from numpy import *
-import scipy.stats
 import os
 import sys
 from optparse import OptionParser
@@ -22,7 +32,43 @@ try:
 except:
     import json
 
+DEBUG = {"level": 0}
 NaN = 1e1000/1e1000
+
+VALVE_STATE_EPSILON = 1.0e-4
+
+# Permil
+UNCERTAINTY_HIGH_THRESHOLD = 5.0
+DELTA_NEGATIVE_THRESHOLD = -80.0
+DELTA_POSITIVE_THRESHOLD = 0.0
+
+CONCENTRATION_HIGH_THRESHOLD = 20.0
+
+OUTPUT_COLUMNS = [
+    'EPOCH_TIME',
+    'DISTANCE',
+    'GPS_ABS_LONG',
+    'GPS_ABS_LAT',
+    'CONC',
+    'DELTA',
+    'UNCERTAINTY',
+    'REPLAY_MAX',
+    'REPLAY_LMIN',
+    'REPLAY_RMIN',
+    'DISPOSITION']
+
+DISPOSITIONS = [
+    'COMPLETE',
+    'USER_CANCELLATION',
+    'UNCERTAINTY_OOR',
+    'DELTA_OOR',
+    'SAMPLE_SIZE_TOO_SMALL']
+
+
+PeakData = namedtuple('PeakData',
+                      'time dist lng lat conc delta uncertainty replay_max '
+                      'replay_lmin replay_rmin disposition')
+
 
 def genLatestFiles(baseDir,pattern):
     # Generate files in baseDir and its subdirectories which match pattern
@@ -32,6 +78,7 @@ def genLatestFiles(baseDir,pattern):
         for name in fileNames:
             if fnmatch.fnmatch(name,pattern):
                 yield os.path.join(dirPath,name)
+
 
 def fixed_width(text,width):
     start = 0
@@ -44,7 +91,7 @@ def fixed_width(text,width):
 #######################################################################
 # Longitude and latitude handling routines
 #######################################################################
-                
+
 def distVincenty(lat1, lng1, lat2, lng2):
     # WGS-84 ellipsiod. lat and lng in DEGREES
     a = 6378137
@@ -58,15 +105,15 @@ def distVincenty(lat1, lng1, lat2, lng2):
     cosU1 = cos(U1)
     sinU2 = sin(U2)
     cosU2 = cos(U2)
-  
+
     Lambda = L
     iterLimit = 100;
     for iter in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) + 
+        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) +
                         (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
-        if sinSigma==0: 
+        if sinSigma==0:
             return 0  # co-incident points
         cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
         sigma = arctan2(sinSigma, cosSigma)
@@ -97,11 +144,11 @@ def toXY(lat,lng,lat_ref,lng_ref):
     y = distVincenty(lat_ref,lng,lat,lng)
     if lat<lat_ref: y = -y
     return x,y
-    
+
 #######################################################################
 # Protected linear fit with uncertainties in y values
 #######################################################################
-            
+
 def linfit(x,y,sigma):
     # Calculate the linear fit of (x,y) to a line, where sigma are the errors in the y values
     S = sum(1/sigma**2)
@@ -126,22 +173,60 @@ def linfit(x,y,sigma):
     rab = sab/sqrt(sa2*sb2)
     chisq = sum(((y-a-b*x)/sigma)**2)
     df = len(x)-2
-    Q = scipy.stats.chi2.sf(chisq,df)
-    return namedtuple('LinFit','coeffs cov rab chisq df Q')(asarray([b,a]),asarray([[sb2,sab],[sab,sa2]]),rab,chisq,df,Q)
-                
+    return namedtuple('LinFit','coeffs cov rab chisq df')(asarray([b,a]),asarray([[sb2,sab],[sab,sa2]]),rab,chisq,df)
+
 # Peak analyzer carries out Keeling plot analysis of peaks found by the isotopic methane
 #  analyzer
 
 class PeakAnalyzer(object):
+
+    @staticmethod
+    def getDisposition(cancelled, delta, uncertainty, tooFewPoints):
+        disposition = 'COMPLETE'
+
+        if cancelled:
+            disposition = 'USER_CANCELLATION'
+
+        elif tooFewPoints:
+            disposition = 'SAMPLE_SIZE_TOO_SMALL'
+
+        elif uncertainty >= UNCERTAINTY_HIGH_THRESHOLD:
+            disposition = 'UNCERTAINTY_OOR'
+
+        elif delta <= DELTA_NEGATIVE_THRESHOLD or \
+            delta >= DELTA_POSITIVE_THRESHOLD:
+            disposition = 'DELTA_OOR'
+
+        return DISPOSITIONS.index(disposition)
+
+    @staticmethod
+    def valveIsCollecting(state):
+        rounded = round(state)
+        roundedErr = abs(state - rounded)
+
+        return roundedErr < VALVE_STATE_EPSILON and (int(rounded) & 0x01) > 0
+
+    @staticmethod
+    def valveIsCancelling(state):
+        rounded = round(state)
+        roundedErr = abs(state - rounded)
+
+        return roundedErr < VALVE_STATE_EPSILON and (int(rounded) & 0x10) > 0
+
+
     def __init__(self, *args, **kwargs):
-        '''
-        Constructor
-        '''
+
+        if 'legacyValveStop' in kwargs:
+            self.legacyValveStop = kwargs['legacyValveStop']
+        else:
+            self.legacyValveStop = time.mktime(
+                time.strptime('Fri Sep 27 23:59:59 2013'))
+
         if 'analyzerId' in kwargs:
             self.analyzerId = kwargs['analyzerId']
         else:
             self.analyzerId = "ZZZ"
-        
+
         if 'appDir' in kwargs:
             self.appDir = kwargs['appDir']
         else:
@@ -151,7 +236,7 @@ class PeakAnalyzer(object):
                 AppPath = sys.argv[0]
             self.AppDir = os.path.split(AppPath)[0]
 
-        self.anzlog_url = None    
+        self.anzlog_url = None
         if 'anzlog_url' in kwargs:
             self.anzlog_url = kwargs['anzlog_url']
 
@@ -159,16 +244,16 @@ class PeakAnalyzer(object):
         if 'logname' in kwargs:
             self.logname = kwargs['logname']
 
-        self.meta_url = None    
+        self.meta_url = None
         if 'meta_url' in kwargs:
             self.meta_url = kwargs['meta_url']
 
-        self.ticket_url = None    
+        self.ticket_url = None
         if 'ticket_url' in kwargs:
             self.ticket_url = kwargs['ticket_url']
         #if not self.ticket_url:
         #    self.ticket_url = 'https://dev.picarro.com/node/gdu/abcdefg/1/AnzLog/'
-        
+
         self.identity = None
         if 'identity' in kwargs:
             self.identity = kwargs['identity']
@@ -181,7 +266,7 @@ class PeakAnalyzer(object):
             self.usedb = kwargs['usedb']
         else:
             self.usedb = None
-            
+
         self.ticket = "NONE"
         self.startTime = datetime.datetime.now()
         self.lastEtm = 0.0
@@ -200,7 +285,7 @@ class PeakAnalyzer(object):
             if kwargs['sleep_seconds']:
                 self.sleep_seconds = float(kwargs['sleep_seconds'])
         if self.sleep_seconds == None:
-            self.sleep_seconds = 30.0
+            self.sleep_seconds = 10.0
 
         self.timeout = None
         if 'timeout' in kwargs:
@@ -212,8 +297,8 @@ class PeakAnalyzer(object):
         self.debug = None
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
-            
-            
+
+
         self.samples_to_skip = None
         if 'samples_to_skip' in kwargs:
             if kwargs['samples_to_skip']:
@@ -234,14 +319,14 @@ class PeakAnalyzer(object):
             line = fp.readline()
             if line: yield line
             else: break
-            
+
     def followLastUserFile(self,fname):
         # Generate lines from the live (last) user log file. If we reach the end of the file,
-        #  wait for a new line to become available, and periodically check to see if 
+        #  wait for a new line to become available, and periodically check to see if
         #  we are still the latest file. Raise StopIteration if a new file has become
         #  the live file.
         fp = file(fname,'rb')
-        print "\r\nOpening source stream %s\r\n" % fname
+        if DEBUG['level']>0: print "\r\nOpening source stream %s\r\n" % fname
         line = ""
         counter = 0
         while True:
@@ -255,14 +340,14 @@ class PeakAnalyzer(object):
                     try:
                         if fname == os.path.join(self.file_path):
                             fp.close()
-                            print "\r\nClosing source stream %s\r\n" % self.fname
+                            if DEBUG['level']>0: print "\r\nClosing source stream %s\r\n" % self.fname
                             return
-                        
+
                         lastName = genLatestFiles(*os.path.split(self.userlogfiles)).next()
                         # Stop iteration if we are not the last file
-                        if fname != lastName: 
+                        if fname != lastName:
                             fp.close()
-                            print "\r\nClosing source stream\r\n"
+                            if DEBUG['level']>0: print "\r\nClosing source stream\r\n"
                             return
                     except:
                         pass
@@ -282,7 +367,7 @@ class PeakAnalyzer(object):
             lastlog = self.logname
         else:
             lastlog = self.getLastLog()
-            
+
         if lastlog:
             lastPos = 0
             waitForRetryCtr = 0
@@ -293,7 +378,7 @@ class PeakAnalyzer(object):
                 #getAnalyzerDatLogUrl = self.url.replace("getData", "getAnalyzerDatLog")
                 try:
                     rtn_data = None
-            
+
                     qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=2000' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
                     if self.debug == True:
                         print "qry_with_ticket", qry_with_ticket
@@ -312,29 +397,29 @@ class PeakAnalyzer(object):
                         waitForRetryCtr += 1
                         if waitForRetryCtr < 100:
                             waitForRetry = None
-                        
+
                     else:
                         if "Log not found" in err_str:
                             if self.logname == lastlog:
-                                print "\r\nLog complete. Closing log stream\r\n"
+                                if DEBUG['level']>0: print "\r\nLog complete. Closing log stream\r\n"
                                 return
-                        
+
                         # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
-                            print "\r\nClosing log stream\r\n"
+                            if DEBUG['level']>0: print "\r\nClosing log stream\r\n"
                             return
-                        
+
                         if self.debug == True:
                             print 'EXCEPTION in PeakFinder - followLastUserLogDb().\n%s\n' % err_str
                         pass
-                    
+
                 except Exception, e:
-                    print '\nfollowLastUserLogDb failed \n%s\n' % e
+                    if DEBUG['level']>0: print '\nfollowLastUserLogDb failed \n%s\n' % e
                     time.sleep(1)
                     continue
-                
+
                 if (rtn_data):
                     rslt = json.loads(rtn_data)
                     #print "followLastUserLogDb rslt: ", rslt
@@ -343,22 +428,21 @@ class PeakAnalyzer(object):
                         for doc in dbdata:
                             if "row" in doc:
                                 lastPos = int(doc["row"]) + 1
-                                
+
                             if self.debug == True:
                                 print "doc: ", doc
-                                
                             yield doc
                     else:
                         # no dbdata, so wait 5 seconds, then check for new last log
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
-                            print "\r\nClosing log stream\r\n"
+                            if DEBUG['level']>0: print "\r\nClosing log stream\r\n"
                             return
                 else:
                     if waitForRetry:
                         time.sleep(self.timeout)
-                        
+
                     waitForRetry = True
                 time.sleep(.050)
 
@@ -367,7 +451,7 @@ class PeakAnalyzer(object):
         aname = self.analyzerId
         lastlog = None
         rtn_data = None
-        
+
         waitForRetryCtr = 0
         waitForRetry = True
         while True:
@@ -375,11 +459,11 @@ class PeakAnalyzer(object):
                 qry_with_ticket = '%s?qry=byEpoch&anz=%s&startEtm=%s&limit=1&reverse=true' % (self.meta_url.replace("<TICKET>", self.ticket), self.analyzerId, self.lastEtm)
                 if self.debug == True:
                     print "getLastLog() qry_with_ticket", qry_with_ticket
-                
+
                 socket.setdefaulttimeout(self.sockettimeout)
                 resp = urllib2.urlopen(qry_with_ticket)
                 rtn_data = resp.read()
-                
+
             except urllib2.HTTPError, e:
                 err_str = e.read()
                 if "invalid ticket" in err_str:
@@ -389,38 +473,38 @@ class PeakAnalyzer(object):
                     waitForRetryCtr += 1
                     if waitForRetryCtr < 100:
                         waitForRetry = None
-                    
+
                 else:
                     if self.debug == True:
                         print 'EXCEPTION in PeakFinder - getLastLog().\n%s\n' % err_str
                     pass
-                
+
             except Exception, e:
-                print '\ngetLastLog failed \n%s\n' % e
-                
+                if DEBUG['level']>0: print '\ngetLastLog failed \n%s\n' % e
+
                 time.sleep(2)
                 continue
-           
+
             if (rtn_data):
                 rslt = json.loads(rtn_data)
                 if self.debug == True:
                     print "rslt: ", rslt
-                
+
                 for robj in rslt:
                     if robj["LOGNAME"]:
                         lastlog = robj["LOGNAME"]
                         if self.debug == True:
                             print "lastlog found: ", lastlog
                         return lastlog
-                
-                print '\ngetLastLog failed \n%s\n' % "No LOGNAME found"
+
+                if DEBUG['level']>0: print '\ngetLastLog failed \n%s\n' % "No LOGNAME found"
                 time.sleep(2)
             
             if waitForRetry:
                 time.sleep(self.timeout)
-                
+
             waitForRetry = True
-            
+
     #######################################################################
     # Perform REST call to push analysis data to the database
     #######################################################################
@@ -428,13 +512,13 @@ class PeakAnalyzer(object):
     def pushData(self, peakname, doc_data):
         err_rtn_str = 'ERROR: missing data:'
         rtn = "OK"
-        if doc_data: 
+        if doc_data:
             # we want to replace (which removed old data for the log)
             # when we have a new log
             # but only for the very first push
             replace_log = "False"
             if not self.last_peakname == peakname:
-                print "I should be doing a replace now"
+                if DEBUG['level']>0: print "I should be doing a replace now"
                 replace_log = "True"
                 self.last_peakname = peakname
             params = [{"logname": peakname, "replace": replace_log, "logtype": self.logtype, "logdata": doc_data}]
@@ -442,18 +526,17 @@ class PeakAnalyzer(object):
                 print "params: ", params
         else: 
             return   
-            
         postparms = {'data': json.dumps(params)}
-        
+
         # Normally we will wait for a timeout period before retrying the urlopen
         # However, after an expired ticket error, we want to immediately retry
         # BUT, we do not want to skip the timeout forever (even with an invalid ticket)
-        # So we instantiate a retry counter, and only skip timeout when the 
-        # counter is < 100.  After that, we will continue to retry forever, but 
-        # WITH a timeout between retry events.        
+        # So we instantiate a retry counter, and only skip timeout when the
+        # counter is < 100.  After that, we will continue to retry forever, but
+        # WITH a timeout between retry events.
         waitForRetryCtr = 0
         waitForRetry = True
-        
+
         while True:
             try:
                 # NOTE: socket only required to set timeout parameter for the urlopen()
@@ -465,7 +548,7 @@ class PeakAnalyzer(object):
 
                 resp = urllib2.urlopen(push_with_ticket, data=myDat)
                 rtn_data = resp.read()
-                
+
                 if self.debug == True:
                     print rtn_data
                 
@@ -475,7 +558,7 @@ class PeakAnalyzer(object):
                     break
                 else:
                     break
-            
+
             except urllib2.HTTPError, e:
                 err_str = e.read()
                 if "invalid ticket" in err_str:
@@ -485,31 +568,31 @@ class PeakAnalyzer(object):
                     waitForRetryCtr += 1
                     if waitForRetryCtr < 100:
                         waitForRetry = None
-                    
+
                 else:
                     if self.debug == True:
                         print 'Data EXCEPTION in pushData, send data to server.\n%s\n' % err_str
                     pass
-                
+
             except Exception, e:
-                print 'EXCEPTION in pushData\n%s\n' % e
+                if DEBUG['level']>0: print 'EXCEPTION in pushData\n%s\n' % e
                 pass
 
             if waitForRetry:
                 time.sleep(self.timeout)
-                
+
             waitForRetry = True
-            
+
         return
-            
+
     #######################################################################
     # Process data from log into a source consisting of distances between
     #  points followed by a DataTuple with the actual data
     #######################################################################
 
     def analyzerDataDb(self,source):
-        # Generates data from a minimal archive in the database as a stream consisting 
-        #  of tuples (dist,DataTuple(<data from source>)). Yields (None,None) if there is a 
+        # Generates data from a minimal archive in the database as a stream consisting
+        #  of tuples (dist,DataTuple(<data from source>)). Yields (None,None) if there is a
         #  jump of more than JUMP_MAX meters between adjacent points
         JUMP_MAX = 500.0
         dist = None
@@ -528,9 +611,9 @@ class PeakAnalyzer(object):
                         entry[h] = float(line[h])
                     except:
                         entry[h] = NaN
-                            
+
                 lng, lat = entry["GPS_ABS_LONG"], entry["GPS_ABS_LAT"]
-                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1: 
+                if "GPS_FIT" in entry and entry["GPS_FIT"] < 1:
                     if (lng != 0.0) or (lat != 0.0): continue
                 if isnan(lng) or isnan(lat): continue
                 if lat_ref == None or lng_ref == None:
@@ -551,11 +634,11 @@ class PeakAnalyzer(object):
                 else:
                     lat_ref, lng_ref = None, None
             except:
-                print traceback.format_exc()
-            
+                if DEBUG['level']>0: print traceback.format_exc()
+
     def analyzerData(self,source):
-        # Generates data from a minimal log file as a stream consisting 
-        #  of tuples DataTuple(dist,**<data from source>). Yields None if there is a 
+        # Generates data from a minimal log file as a stream consisting
+        #  of tuples DataTuple(dist,**<data from source>). Yields None if there is a
         #  jump of more than JUMP_MAX meters between adjacent points
         JUMP_MAX = 500.0
         dist = None
@@ -596,37 +679,90 @@ class PeakAnalyzer(object):
                     else:
                         lat_ref, lng_ref = None, None
             except:
-                print traceback.format_exc()
+                if DEBUG['level']>0: print traceback.format_exc()
                 raise
-                        
+
     #######################################################################
     # Perform analysis to determine the isotopic ratio
     #######################################################################
 
-    def doKeelingAnalysis(self,source):
-        """Keep a buffer of recent concentrations within a certain time duration of the present. When the valve mask switches to the value
-        indicating that the recorder has been activated, search the buffer for the peak value and the associated time and GPS location.
-        Perform a Keeling analysis of the data during the interval that the recorder is being played back"""
-        
+    def doKeelingAnalysis(self, source):
+        """
+        Keep a buffer of recent concentrations within a certain time
+        duration of the present. When the valve mask switches to the
+        value indicating that the recorder has been activated, search
+        the buffer for the peak value and the associated time and GPS
+        location.  Perform a Keeling analysis of the data during the
+        interval that the recorder is being played back
+        """
+
         MAX_DURATION = 30
-        collecting = lambda v: abs(v - round(v))<1e-4 and (int(round(v)) & 1) == 1
+
         tempStore = deque()
+        delayBuff = deque()
         keelingStore = []
+
+        transportLag = 5
+        notCollectingCount = 0
+        doneAnalysisThreshold = 5
+        endpointBufferOffset = 2
+
+        lastAnalysis = None
         lastPeak = None
         lastCollecting = False
-        
+        cancelled = False
+        tooFewPoints = False
+
         for dtuple in source:
-            if dtuple is None: continue
-            if 'HP_Delta_iCH4_Raw' not in dtuple._fields: continue # Swallow data if there is no delta
-            collectingNow = collecting(dtuple.ValveMask)
+            # Previously it was possible for None tuples to be
+            # returned, but that functionality has been removed.
+            assert dtuple is not None
+
+            # Swallow data if there is no delta.
+            if 'HP_Delta_iCH4_Raw' not in dtuple._fields:
+                continue
+
+            if dtuple.EPOCH_TIME > self.legacyValveStop and \
+                PeakAnalyzer.valveIsCancelling(dtuple.ValveMask):
+                cancelled = True
+
+            collectingNow = PeakAnalyzer.valveIsCollecting(dtuple.ValveMask)
+
+            if collectingNow:
+                cancelled = False
+
+            # Delay collecting now by a number of samples to
+            # compensate for gas transport lag after valve switch.
+            delayBuff.append(collectingNow)
+            if len(delayBuff) >= transportLag:
+                collectingNow = delayBuff.popleft()
+
+            # An analysis is done (cancelled or completed) if we are
+            # not in the collecting state for doneAnalysisThreshold
+            # samples and there is some Keeling data to report.
+            if (notCollectingCount > doneAnalysisThreshold) and \
+                (lastAnalysis is not None):
+                disp = PeakAnalyzer.getDisposition(cancelled,
+                                                   lastAnalysis['delta'],
+                                                   lastAnalysis['uncertainty'],
+                                                   tooFewPoints)
+                yield PeakData(disposition=disp, **lastAnalysis)
+
+                lastAnalysis = None
+                cancelled = False
+                tooFewPoints = False
+
             if not collectingNow:
+                notCollectingCount += 1
                 tempStore.append(dtuple)
-                while tempStore[-1].EPOCH_TIME - tempStore[0].EPOCH_TIME > MAX_DURATION:
+
+                while (tempStore[-1].EPOCH_TIME - tempStore[0].EPOCH_TIME) > MAX_DURATION:
                     tempStore.popleft()
-                if lastCollecting:  # Check to see if there are data for a Keeling plot
-                    if len(keelingStore) > 10+self.samples_to_skip:
-                        conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:]
-                        delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:]
+
+                if lastCollecting:
+                    if len(keelingStore) > 10 + self.samples_to_skip:
+                        conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
+                        delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
                         protInvconc = 1/maximum(conc,0.001)
                         try:
                             replay_max = max(conc)
@@ -647,16 +783,42 @@ class PeakAnalyzer(object):
                         #    print s.sourceData.conc, s.sourceData.delta, s.sourceData.valves
                         #print "-----------------"
                         result = linfit(protInvconc,delta,11.0*protInvconc)
+
                         if lastPeak:
-                            yield namedtuple('PeakData','time dist lng lat conc delta uncertainty replay_max replay_lmin replay_rmin')(delta=result.coeffs[1],
-                                        uncertainty=sqrt(result.cov[1][1]),replay_max=replay_max,replay_lmin=replay_lmin,replay_rmin=replay_rmin,**lastPeak._asdict())
+                            lastAnalysis = dict(
+                                delta=result.coeffs[1],
+                                uncertainty=sqrt(result.cov[1][1]),
+                                replay_max=replay_max,
+                                replay_lmin=replay_lmin,
+                                replay_rmin=replay_rmin,
+                                **lastPeak._asdict())
+                            lastPeak = None
+
+                    else:
+                        tooFewPoints = True
+                        if lastPeak:
+                            lastAnalysis = dict(
+                                delta=0.0,
+                                uncertainty=0.0,
+                                replay_max=0.0,
+                                replay_lmin=0.0,
+                                replay_rmin=0.0,
+                                **lastPeak._asdict())
+                            lastPeak = None
+
                     del keelingStore[:]
             else:
-                keelingStore.append(dtuple)
+                notCollectingCount = 0
+
+                if dtuple.CH4 <= CONCENTRATION_HIGH_THRESHOLD:
+                    # Exclude data points where the concentration is above
+                    # the analyzer specification.
+                    keelingStore.append(dtuple)
+
                 if not lastCollecting:
                     if tempStore:
                         # We have just started collecting
-                        print "Started collecting"
+                        if DEBUG['level']>0: print "Started collecting"
                         conc = asarray([s.CH4 for s in tempStore])
                         dist = asarray([s.DISTANCE for s in tempStore])
                         epoch_time = asarray([s.EPOCH_TIME for s in tempStore])
@@ -666,7 +828,7 @@ class PeakAnalyzer(object):
                         lastPeak = namedtuple('PeakData1','time dist lng lat conc')(epoch_time[pk],dist[pk],lng[pk],lat[pk],conc[pk])
                         tempStore.clear()
             lastCollecting = collectingNow
-                        
+
     def getTicket(self):
         self.ticket = "NONE"
         ticket = None
@@ -674,10 +836,10 @@ class PeakAnalyzer(object):
         sys = self.psys
         identity = self.identity
         rprocs = '["AnzLogMeta:byEpoch", "AnzLog:data", "AnzLog:byPos"]'
-        
+
         params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
         try:
-            print "ticket_url", self.ticket_url
+            if DEBUG['level']>0: print "ticket_url", self.ticket_url
             resp = urllib2.urlopen(self.ticket_url, data=urllib.urlencode(params))
             rtndata_str = resp.read()
             rtndata = json.loads(rtndata_str)
@@ -686,18 +848,20 @@ class PeakAnalyzer(object):
 
         except urllib2.HTTPError, e:
             err_str = e.read()
-            print '\nissueTicket failed \n%s\n' % err_str
-                
+            if DEBUG['level']>0: print '\nissueTicket failed \n%s\n' % err_str
+
         except Exception, e:
-            print '\nissueTicket failed \n%s\n' % e
+            if DEBUG['level']>0: print '\nissueTicket failed \n%s\n' % e
 
         if ticket:
             self.ticket = ticket;
-            print "new ticket: ", self.ticket
-        
+            if DEBUG['level']>0: print "new ticket: ", self.ticket
+
 
     def run(self):
         # Assemble the chain of generators which process the data from the logs in a file or in the database 
+        if DEBUG['level']>0: print "PeakAnalyzer.run()"
+
         handle = None
         while True:
             # Get source
@@ -706,32 +870,33 @@ class PeakAnalyzer(object):
                     lastlog = self.logname
                 else:
                     lastlog = self.getLastLog()
-                      
+
                 if lastlog:
                     fname = lastlog
                 else:
                     fname = None
                     time.sleep(self.sleep_seconds)
-                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
-                    
+                    if DEBUG['level']>0: print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+
                 ##sys.exit()
             else:
                 try:
                     if self.file_path:
                         fname = os.path.join(self.file_path)
                     else:
+                        if DEBUG['level']>0: print "self.userlogfiles = '%s'" % self.userlogfiles
+                        if DEBUG['level']>0: print "self.userlogfiles (abs) = '%s'" % os.path.abspath(self.userlogfiles)
                         fname = genLatestFiles(*os.path.split(self.userlogfiles)).next()
-
                 except:
                     fname = None
                     time.sleep(self.sleep_seconds)
-                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+                    if DEBUG['level']>0: print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
             if fname:
                 # Initialize output structure for writing to database or to analysis file
                 if self.usedb:
                     peakname = fname.replace(".dat", ".%s" % self.logtype)
-                    doc_hdrs = ["EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","REPLAY_MAX","REPLAY_LMIN","REPLAY_RMIN"]
+                    doc_hdrs = OUTPUT_COLUMNS
                     doc_data = []
                     doc_row = 0
                 else:
@@ -741,8 +906,10 @@ class PeakAnalyzer(object):
                     except:
                         raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
                     # Write file header
-                    handle.write("%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s%-14s\r\n" % ("EPOCH_TIME","DISTANCE","GPS_ABS_LONG","GPS_ABS_LAT","CONC","DELTA","UNCERTAINTY","REPLAY_MAX","REPLAY_LMIN","REPLAY_RMIN"))
- 
+                    handle.write("%-14s" * len(OUTPUT_COLUMNS) %
+                                 tuple(OUTPUT_COLUMNS))
+                    handle.write("\n")
+
                 # Make alignedData source from database or specified file
                 if self.usedb:
                     source = self.followLastUserLogDb()
@@ -753,13 +920,26 @@ class PeakAnalyzer(object):
                     else:
                         source = self.followLastUserFile(fname)
                     alignedData = self.analyzerData(source)
-                
+
                 # Process the aligned data and write results to database or to the analysis file
                 for r in self.doKeelingAnalysis(alignedData):
                     if self.usedb:
                         doc = {}
                         #Note: please assure that value list and doc_hdrs are in the same sequence
-                        for col, val in zip(doc_hdrs, [r.time,r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin]):
+                        dataPairs = zip(doc_hdrs,
+                                        [r.time,
+                                         r.dist,
+                                         r.lng,
+                                         r.lat,
+                                         r.conc,
+                                         r.delta,
+                                         r.uncertainty,
+                                         r.replay_max,
+                                         r.replay_lmin,
+                                         r.replay_rmin,
+                                         r.disposition])
+
+                        for col, val in dataPairs:
                             doc[col] = float(val)
 
                             # JSON does not support nan, so change to string "NaN"
@@ -770,30 +950,35 @@ class PeakAnalyzer(object):
                             except:
                                 #just skip on isnan error
                                 skip = 1
-                            
+
                         doc_row += 1
-                        doc["row"] = doc_row 
+                        doc["row"] = doc_row
                         doc["ANALYZER"] = self.analyzerId
                         doc_data.append(doc)
-                            
+
                         self.pushData(peakname, doc_data)
                         doc_data = []
                     else:
-                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f\r\n" % (r.time,
-                                     r.dist,r.lng,r.lat,r.conc,r.delta,r.uncertainty,r.replay_max,r.replay_lmin,r.replay_rmin))
-                    
+                        handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f"
+                                     "%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f"
+                                     "%-14.1f\n" % (r.time, r.dist, r.lng,
+                                                    r.lat, r.conc, r.delta,
+                                                    r.uncertainty, r.replay_max,
+                                                    r.replay_lmin, r.replay_rmin,
+                                                    r.disposition))
+
                 if not self.usedb and handle is not None:
                     handle.close()
 
                 if self.logname:
                     break
-                
+
                 if self.file_path: break
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-        
+
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
     parser.add_option("-p", "--pid-path", dest="pid_path",
@@ -818,15 +1003,21 @@ def main(argv=None):
                       help="Authentication identity string.", metavar="<IDENTITY>")
     parser.add_option("-s", "--sys", dest="psys",
                       help="Authentication sys.", metavar="<SYS>")
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
+    parser.add_option("-d", "--debug", dest="debug", action="store_false",
                       help="Debug mode")
     parser.add_option("--calc-samples_to_skip", dest="samples_to_skip",
                       help="Default calc value for samples_to_skip.", metavar="<CALC_samples_to_skip>")
-    
+    parser.add_option('--legacy-valve-stop', dest='legacyValveStop',
+                      metavar='LEGACY_VALVE_STOP', type='float',
+                      default=time.mktime(time.strptime('Fri Sep 27 23:59:59 2013')),
+                      help=('The time at which to start interpreting the valve '
+                            'masks and values as supporting the user '
+                            'cancellation bit.'))
+
     (options, args) = parser.parse_args()
 
-    if not options.pid_path:
-        parser.error("pid-path is required")
+    # if not options.pid_path:
+    #     parser.error("pid-path is required")
 
     if not options.analyzerId:
         if not options.logname:
@@ -835,9 +1026,9 @@ def main(argv=None):
 
     if options.listen_path and options.file_path:
         parser.error("listen-path and file-path are mutually exclusive.")
-        
+
     if ((options.listen_path or options.file_path) and options.anzlog_url):
-        parser.error("anzlog_url is mutually exclusive to listen-path and/or file-path.")    
+        parser.error("anzlog_url is mutually exclusive to listen-path and/or file-path.")
 
     if (options.logname or options.anzlog_url or options.meta_url or options.ticket_url or options.identity or options.psys):
         if not options.anzlog_url:
@@ -850,9 +1041,9 @@ def main(argv=None):
             parser.error("Authentication identity string is required when other REST url's are provided.")
         if not options.psys:
             parser.error("Authentication sys name is required when other REST url's are provided.")
-        
+
     class_opts = {}
-    
+
     for copt in [
                  "pid_path"         #path for PID file
                  , "analyzerId"     #Analyzer ID
@@ -869,31 +1060,33 @@ def main(argv=None):
                  , "sleep_seconds"  #override default sleep_seconds value
                  , "timeout"        #override default REST timeout value
                  , "debug"          #True/False show debug print (in stdout)
+                 , 'legacyValveStop'
+                 , "debug"          #True/False show debug pass ### (in stdout)
                  ]:
         if copt in dir(options):
             class_opts[copt] = getattr(options, copt)
         else:
             class_opts[copt] = None
-    
+
     if class_opts["anzlog_url"]:
         class_opts["usedb"] = True
     else:
         class_opts["usedb"] = False
-        
+
     if not class_opts["analyzerId"]:
         if class_opts["logname"]:
             fbase = class_opts["logname"]
         else:
             if class_opts["file_path"]:
                 fbase = os.path.basename(class_opts["file_path"])
-        
-        if fbase:         
+
+        if fbase:
             class_opts["analyzerId"], sep, part = fbase.partition('-')
         else:
             parser.error("Analyzer Name not provided, and could not be determined from logname or file-path.")
-    
+
     for copt in class_opts:
-        print copt, class_opts[copt]
+        if DEBUG['level']>0: print copt, class_opts[copt]
             
     try:
         testf = open(class_opts["pid_path"], 'r')
@@ -901,20 +1094,24 @@ def main(argv=None):
         raise RuntimeError('pidfile exists. Verify that there is not another PeakAnalyzer task for the directory. path: %s.' % class_opts["pid_path"])
     except:
         try:
-            pidf = open(class_opts["pid_path"], 'wb+', 0) #open file with NO buffering
+            testf = open(class_opts["pid_path"], 'r')
+            testf.close()
+            raise RuntimeError('pidfile exists. Verify that there is not another PeakAnalyzer task for the directory. path: %s.' % class_opts["pid_path"])
         except:
-            raise RuntimeError('Cannot open pidfile for output. path: %s.' % class_opts["pid_path"])
-    
-    pid = os.getpid()
-    pidf.write("%s" % (pid))
-    pidf.close()
-    
+            try:
+                pidf = open(class_opts["pid_path"], 'wb+', 0) #open file with NO buffering
+            except:
+                raise RuntimeError('Cannot open pidfile for output. path: %s.' % class_opts["pid_path"])
+
+        pid = os.getpid()
+        pidf.write("%s" % (pid))
+        pidf.close()
+
     pf = PeakAnalyzer(**class_opts)
-    
+
     pf.run()
     os.remove(class_opts["pid_path"])
 
 
 if __name__ == "__main__":
     sys.exit(main())
-

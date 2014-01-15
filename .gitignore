@@ -14,10 +14,17 @@ Host/Common/setup_version.py
 Host/build/
 Host/debug.log
 Host/dist/
+Host/Fitter/build/
+Host/Fitter/cluster_analyzermodule.c
+Host/Utilities/SuperBuildStation/build/
+Host/Utilities/SuperBuildStation/fastLombmodule.c
 MobileKit/build/
 MobileKit/dist/
+MobileKit/AnalyzerServer/build/
+MobileKit/AnalyzerServer/dist/
 repoBzrVer.py
 Tools/Release/CHANGELOG.raw*
+Tools/Release/*.log
 Tools/Special/20130925/Output
 Tools/Special/20130925/CFFDS
 Host/DataManager/build/
