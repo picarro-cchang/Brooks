@@ -24,7 +24,7 @@ def appMain():
         # Local
         analyzer = localAnalyzerId
         data_dir = 'C:/UserData/AnalyzerServer' # local Analyzer data location
-        debug = True
+        debug = False
     else:
         # P3
         if 1 < len(sys.argv):

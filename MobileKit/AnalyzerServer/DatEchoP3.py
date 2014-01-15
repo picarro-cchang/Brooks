@@ -186,7 +186,7 @@ class DataEchoP3(object):
 
             serverUnknowns = localFiles - serverFiles
 
-            pprint.pprint(serverUnknowns)
+            if DEBUG['level']>0: pprint.pprint(serverUnknowns)
 
             nextFile = None
 
@@ -227,8 +227,9 @@ class DataEchoP3(object):
                 shutil.move(os.path.join(path, fname),
                             os.path.join(path, "%s.empty" % fname))
             except:
-                if DEBUG['level']>0: print "Unable to rename %s. Continuing." % fname
-                traceback.print_exc()
+                if DEBUG['level']>0: 
+                    print "Unable to rename %s. Continuing." % fname
+                    traceback.print_exc()
 
             return
 
@@ -379,8 +380,9 @@ class DataEchoP3(object):
                                                                       msg)
 
                 except Exception:
-                    if DEBUG['level']>0: print "Unknown error:"
-                    traceback.print_exc()
+                    if DEBUG['level']>0: 
+                        print "Unknown error:"
+                        traceback.print_exc()
 
         return ipRegistered
 
@@ -433,8 +435,9 @@ class DataEchoP3(object):
 
             except Exception:
                 # Eat this exception
-                if DEBUG['level']>0: print 'Unknown error:'
-                if DEBUG['level']>0: print traceback.format_exc()
+                if DEBUG['level']>0: 
+                    print 'Unknown error:'
+                    print traceback.format_exc()
 
         if recentFiles is None:
             if DEBUG['level']>0: print ('Unable to retrieve results for time range: '
@@ -548,8 +551,9 @@ class DataEchoP3(object):
         renameAsBad = False
 
         with open(os.path.join(path, fname), 'rb') as fp:
-            if DEBUG['level']>0: print "\nOpening source stream: %s\n" % fname
-            if DEBUG['level']>0: print "lastRow = %s" % lastRow
+            if DEBUG['level']>0: 
+                print "\nOpening source stream: %s\n" % fname
+                print "lastRow = %s" % lastRow
 
             deadLineCount = 0
             lineCount = 1
@@ -620,8 +624,9 @@ class DataEchoP3(object):
                 shutil.move(os.path.join(path, fname),
                             os.path.join(path, "%s.bad" % fname))
             except:
-                if DEBUG['level']>0: print "Unable to rename %s. Continuing" % fname
-                traceback.print_exc()
+                if DEBUG['level']>0: 
+                    print "Unable to rename %s. Continuing" % fname
+                    traceback.print_exc()
 
     def pushToP3(self, fname):
         """
@@ -652,7 +657,7 @@ class DataEchoP3(object):
                 # An HTTP exception should cause a subsequent
                 # retry. Should only be here on success.
                 if rtnData != '"OK"':
-                    pprint.pprint(rtnData)
+                    if DEBUG['level']>0: pprint.pprint(rtnData)
                     assert False
 
                 return
@@ -675,8 +680,9 @@ class DataEchoP3(object):
 
             except Exception:
                 # Eat this exception
-                if DEBUG['level']>0: print 'Unknown error:'
-                if DEBUG['level']>0: print traceback.format_exc()
+                if DEBUG['level']>0: 
+                    print 'Unknown error:'
+                    print traceback.format_exc()
 
             if DEBUG['level']>0: sys.stderr.write('-')
 
@@ -819,8 +825,9 @@ Runs an echo server that sends data to P3.
         return 1
 
     except Exception:
-        if DEBUG['level']>0: print "CmdFIFO stopped:"
-        if DEBUG['level']>0: print traceback.format_exc()
+        if DEBUG['level']>0: 
+            print "CmdFIFO stopped:"
+            print traceback.format_exc()
         return 0
 
 if __name__ == '__main__':
