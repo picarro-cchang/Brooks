@@ -137,7 +137,7 @@ class AnalyzerUsb(Singleton):
         if not self.interfaceClaimed:
             try:
                 self.handle.claimInterface(0)
-            except Exception as e:
+            except Exception, e:
                 raise ClaimInterfaceError(
                     "Error %s while claiming interface for %s" % (e, func.__name__))
             self.interfaceClaimed = True
@@ -147,7 +147,7 @@ class AnalyzerUsb(Singleton):
             if self.CLAIM_PER_USE:
                 try:
                     self.handle.releaseInterface(0)
-                except Exception as e:
+                except Exception, e:
                     raise ClaimInterfaceError(
                         "Error %s while releasing interface for %s" % (e, func.__name__))
                 self.interfaceClaimed = False
@@ -156,7 +156,7 @@ class AnalyzerUsb(Singleton):
         if self.handle != None:
             try:
                 self.handle.close()
-            except Exception as e:
+            except Exception, e:
                 raise UsbConnectionError("Error %s while closing USB" % (e,))
             self.handle = None
 
@@ -164,7 +164,7 @@ class AnalyzerUsb(Singleton):
         if self.interfaceClaimed:
             try:
                 self.handle.releaseInterface(0)
-            except Exception as e:
+            except Exception, e:
                 raise ClaimInterfaceError(
                     "Error %s while releasing interface" % (e,))
             self.interfaceClaimed = False

@@ -19,6 +19,7 @@ Notes: Use python buildMobileKit.py from the command line, which sets up
                  for PYTHONPATH to help ensure local libs pulled from
                  current tree.
 """
+from __future__ import with_statement
 
 from distutils.core import setup
 import os
