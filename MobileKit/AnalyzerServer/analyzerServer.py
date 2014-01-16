@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import make_response, render_template, request
+from flask import make_response, render_template, request, abort
 try:
     import simplejson as json
 except:
@@ -903,6 +903,14 @@ def test():
 @app.route('/utility')
 def utility():
     return render_template('calUtility.html')
+
+@app.route('/rest/verify')
+def verify():
+    if 'next' not in request.values:
+        abort(400)
+
+    return render_template('verify.html', nextUrl=request.values['next'])
+    
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
