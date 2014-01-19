@@ -9,12 +9,16 @@ import struct
 import traceback
 from numpy import *
 from collections import deque
-from PeriphProcessor import PeriphProcessor
+
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
 from Host.Common.timestamp import getTimestamp, unixTime
 from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
+
+import Errors
+from PeriphProcessor import PeriphProcessor
+
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): # we're running compiled with py2exe
@@ -32,22 +36,18 @@ DEFAULT_SENSOR_QUEUE_SIZE = 2000
 HOST = 'localhost'
 
 from Host.Common.EventManagerProxy import *
+from Host.PeriphIntrf.Interpolators import Interpolators
+
 EventManagerProxy_Init(APP_NAME)
 
-def linInterp(pPair, tPair, t):
-    try:
-        t = float(t)
-        tPair = [float(u) for u in tPair]
-        pPair = [float(p) for p in pPair]
-        dtime = tPair[1] - tPair[0]
-        if dtime == 0:
-            return 0.5*(pPair[0] + pPair[1])
-        else:
-            return ((t-tPair[0])*pPair[1] + (tPair[1]-t)*pPair[0]) / dtime
-    except:
-        return None
         
 class PeriphIntrf(object):
+    
+    INTERPOLATORS = {
+        'linear' : Interpolators.linear,
+        'max'    : Interpolators.max
+    }
+
     def __init__(self, configFile, dmBroadcaster):
         co = CustomConfigObj(configFile)
         iniAbsBasePath = os.path.split(os.path.abspath(configFile))[0]
@@ -59,6 +59,7 @@ class PeriphIntrf(object):
         self.sensorList = []
         self.parserFuncCode = []
         self.dataLabels = []
+        self.dataInterpolators = []
         self.parsers = []
         self.scriptFilenames = []
         self.offsets = []
@@ -96,6 +97,22 @@ class PeriphIntrf(object):
                 self.dataLabels.append(labelList)
             else:
                 self.dataLabels.append([])
+
+            # Load interpolator mappings
+            interpList = [i.strip() for i in co.get("PORT%d" % p, "INTERPOLATORS").split(',')]
+            if len(interpList) != len(labelList):
+                raise Errors.InterpolationListIncomplete("The # of interpolators (%s) does not match the # of "
+                                                         "data labels (%s)" % (len(interpList), len(labelList)))
+
+            interps = {}
+            for i, interp in enumerate(interpList):
+                if interp not in PeriphIntrf.INTERPOLATORS:
+                    raise Errors.InterpolationTypeUnknown("Data label '%s' has an unknown interpolation type "
+                                                          "'%s'." % (labelList[i], interp))
+                interps[labelList[i]] = interp
+
+            self.dataInterpolators.append(interps)
+
             self.parsers.append(parserFunc)
             self.offsets.append(co.getfloat("PORT%d" % p, "OFFSET", 0.0))
             
@@ -271,10 +288,18 @@ class PeriphIntrf(object):
     def getDataByTime(self, requestTime, dataList):
         sensorDataList = self.selectAllDataByTime(requestTime)
         interpDict = {}
+
         for port in range(self.numChannels):
             timeDataLists = sensorDataList[port]
+
             for dataIdx in range(len(timeDataLists[1])):
-                interpDict[self.dataLabels[port][dataIdx]] = linInterp(timeDataLists[1][dataIdx], timeDataLists[0], requestTime)
+                dataLabel = self.dataLabels[port][dataIdx]
+                assert dataLabel in dataList
+                interpType = self.dataInterpolators[port][dataLabel]
+
+                interpDict[dataLabel] = PeriphIntrf.INTERPOLATORS[interpType](timeDataLists[1][dataIdx],
+                                                                              timeDataLists[0], requestTime)
+
         retList = []
         for data in dataList:
             try:
