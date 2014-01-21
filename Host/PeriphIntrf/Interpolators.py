@@ -22,3 +22,8 @@ class Interpolators(object):
     def max(pPair, tPair, t):
         pPair = [float(x) for x in pPair]
         return max(pPair)
+
+    @staticmethod
+    def bitwiseOr(pPair, tPair, t):
+        pPair = [int(x) for x in pPair]
+        return float(pPair[0] | pPair[1])

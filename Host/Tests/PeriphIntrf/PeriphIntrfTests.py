@@ -154,6 +154,30 @@ class TestPeriphIntrf(object):
             pi = PeriphIntrf.PeriphIntrf(path.join(path.dirname(__file__), 'data', 'unknownInterpolator.ini'),
                                          self.broadcaster)
 
+    @mock.patch.object(PeriphIntrf.PeriphIntrf, 'connect')
+    @mock.patch.object(PeriphIntrf.PeriphIntrf, 'getFromSocket')
+    @mock.patch.object(PeriphIntrf.PeriphIntrf, 'selectAllDataByTime')
+    def testBitwiseOrInterpolationSinglePortMultiLabel(self, selectAllDataByTime, getFromSocket, connect):
+        selectAllDataByTime.return_value = [
+            # PORT0
+            [[0.0, 1.0], [
+                # TEST1
+                [1.0, 2.0],
+                # TEST2
+                [4.0, 8.0]]]
+        ]
+
+        pi = PeriphIntrf.PeriphIntrf(path.join(path.dirname(__file__), 'data', 'bitwiseOrSingleConfigMultiLabel.ini'),
+                                     self.broadcaster)
+
+        assert pi.dataInterpolators == [{'TEST1' : 'bitwiseOr', 'TEST2' : 'bitwiseOr'}]
+
+        ret = pi.getDataByTime(0.5, ['TEST1', 'TEST2'])
+        assert ret is not None
+        assert len(ret) == 2
+        assert ret[0] == 3.0
+        assert ret[1] == 12.0
+
 
 
     

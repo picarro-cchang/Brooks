@@ -44,8 +44,9 @@ EventManagerProxy_Init(APP_NAME)
 class PeriphIntrf(object):
     
     INTERPOLATORS = {
-        'linear' : Interpolators.linear,
-        'max'    : Interpolators.max
+        'linear'    : Interpolators.linear,
+        'max'       : Interpolators.max,
+        'bitwiseOr' : Interpolators.bitwiseOr
     }
 
     def __init__(self, configFile, dmBroadcaster):
