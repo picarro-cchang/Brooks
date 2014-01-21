@@ -1528,7 +1528,7 @@ class DataManager(object):
                     (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
                     self.periphIntrfCols = rawDict["data"][:]
                 except Exception, err:
-                    Log("Peripheral Interface not running. Error: %r" % err)
+                    LogExc("Peripheral Interface not running. Error: %r" % err)
                     print "Peripheral Interface not running. Error: %r" % err
             else:
                 Log("Peripheral Interface not running.")
