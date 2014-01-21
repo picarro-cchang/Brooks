@@ -13,12 +13,14 @@ Usage: python PicarroExeSetup py2exe
 Notes: Use python buildMobileKit.py from the command line, which sets up
        the environment for this script.
 
- File History:
- 2014-01-14 tw   Support builds in both Python 2.5 and 2.7 so can bring
-                 this file into older release branches. Primitive check
-                 for PYTHONPATH to help ensure local libs pulled from
-                 current tree.
+File History:
+2014-01-14 tw   Support builds in both Python 2.5 and 2.7 so can bring
+                this file into older release branches. Primitive check
+                for PYTHONPATH to help ensure local libs pulled from
+                current tree.
+2014-01-17 tw   Build swathP.pyd.
 """
+from __future__ import with_statement
 
 from distutils.core import setup
 import os
@@ -47,25 +49,25 @@ def _getPythonVersion():
     return str(pythonVer[0]) + "." + str(pythonVer[1])
 
 
-def _buildPeakF(pythonVer):
-    # Build PeakF.pyd, .bat file to run depends on Python version
-    if pythonVer == "2.5":
-        makeBatFile = "makePeakF25.bat"
-    elif pythonVer == "2.7":
-        makeBatFile = "makePeakF27.bat"
-    else:
-        print "Unsupported Python version."
-        sys.exit(1)
+def _runBatFile(batComponent, batFilename, batDir):
+    """
+    Runs a Windows .bat file to build a component. Arguments:
+      batComponent   name of component being built (e.g., fitutils.pyd)
+      batFilename    Windows .bat filename to execute
+      batDir         folder containing the .bat file (can be relative to current dir)
+    """
+    print "building %s using %s" % (batComponent, batFilename)
 
-    #print "makeBatFile=", makeBatFile
-    #print "********"
-    print "building peakF.pyd using %s" % makeBatFile
+    # this saves off current folder and restores it when done
+    with OS.chdir(batDir):
+        if not os.path.isfile(batFilename):
+            print "Batch file '%s' does not exist in folder '%s'!" % (batFilename, batDir)
+            sys.exit(1)
 
-    with OS.chdir('AnalyzerServer'):
-        retCode = subprocess.Popen([makeBatFile]).wait()
+        retCode = subprocess.Popen([batFilename]).wait()
 
         if retCode != 0:
-            print "Error building peakF.pyd, retCode=%d, makeBatFile=%s" % (retCode, makeBatFile)
+            print "Error building %s, retCode=%d, batFilename=%s" % (batComponent, retCode, batFilename)
             sys.exit(retCode)
 
 
@@ -135,8 +137,20 @@ if "PYTHONPATH" not in os.environ:
     print "Run 'python buildMobileKit.py' instead to build MobileKit apps from the command line."
     sys.exit(1)
 
-# build PeakF.pyd
-_buildPeakF(pythonVer)
+# ../Host/Common: swathP.pyd
+# AnalyzerServer: peakF.pyd
+if pythonVer == "2.5":
+    swathPBatFilename = "makeSwathP25.bat"
+    peakFBatFilename = "makePeakF25.bat"
+elif pythonVer == "2.7":
+    swathPBatFilename = "makeSwathP27.bat"
+    peakFBatFilename = "makePeakF27.bat"
+else:
+    print "Unsupported Python version %s!" % pythonVer
+    sys.exit(1)
+
+_runBatFile("swathP.pyd", swathPBatFilename, os.path.join("..", "Host", "Common"))
+_runBatFile("peakF.pyd", peakFBatFilename, "AnalyzerServer")
 
 if pythonVer == "2.5":
     # Python 2.5
