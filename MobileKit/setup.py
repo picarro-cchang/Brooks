@@ -71,6 +71,19 @@ def _runBatFile(batComponent, batFilename, batDir):
             sys.exit(retCode)
 
 
+def _getBuildVersion():
+    try:
+        from Host.Common import release_version as buildVersion
+        verStr = buildVersion.versionNumString()
+        print "Release version: %s" % verStr
+    except Exception, e:
+        # use default
+        verStr = "1.0"
+        print "Release version not found, using: %s" % verStr
+
+    return verStr
+
+
 ################################################################
 # Start of a pile of special setup with the sole purpose
 # of making the wxPython apps look like Windows-native
@@ -152,6 +165,8 @@ else:
 _runBatFile("swathP.pyd", swathPBatFilename, os.path.join("..", "Host", "Common"))
 _runBatFile("peakF.pyd", peakFBatFilename, "AnalyzerServer")
 
+versionStr = _getBuildVersion()
+
 if pythonVer == "2.5":
     # Python 2.5
     exclusionList = ["Tkconstants", "Tkinter", "tcl"]
@@ -166,7 +181,8 @@ if pythonVer == "2.5":
                   (r'templates', glob.glob(r'ReportGen\templates\*.*')),
                  ]
 
-    setup(console=['AnalyzerServer/RunPeakFinder.py',
+    setup(version=versionStr,
+          console=['AnalyzerServer/RunPeakFinder.py',
                    'AnalyzerServer/RunPeakAnalyzer.py',
                    'AnalyzerServer/DatEchoP3.py',
                    'AnalyzerServer/analyzerServer.py',
@@ -175,14 +191,14 @@ if pythonVer == "2.5":
                    'ReportGen/reportServer.py',
                    'Utilities/createReportBooklet.py'
                    ],
-         windows=[MobileKitSetup, RemoteMobileKitSetup],
-         options = dict(py2exe = dict(compressed = 1,
-                       optimize = 1,
-                       bundle_files = 1,
-                       excludes = exclusionList,
-                       includes = inclusionList,
-                       packages = packageList)),
-         data_files = data_files
+          windows=[MobileKitSetup, RemoteMobileKitSetup],
+          options = dict(py2exe = dict(compressed = 1,
+                         optimize = 1,
+                         bundle_files = 1,
+                         excludes = exclusionList,
+                         includes = inclusionList,
+                         packages = packageList)),
+          data_files = data_files
         )
     shutil.copyfile('dist/DatEchoP3.exe','dist/GPSEchoP3.exe')
     shutil.copyfile('dist/DatEchoP3.exe','dist/WSEchoP3.exe')
@@ -204,7 +220,8 @@ elif pythonVer == "2.7":
                  ]
 
     #  Remove bundle=1, and write files to lib subdirectory
-    setup(console=['AnalyzerServer/RunPeakFinder.py', 
+    setup(version=versionStr,
+          console=['AnalyzerServer/RunPeakFinder.py', 
                    'AnalyzerServer/RunPeakAnalyzer.py', 
                    'AnalyzerServer/DatEchoP3.py', 
                    'AnalyzerServer/analyzerServer.py',
@@ -212,16 +229,16 @@ elif pythonVer == "2.7":
                    'ReportGen/batchReport.py',
                    'ReportGen/reportServer.py',
                    'Utilities/createReportBooklet.py'],
-         windows=[MobileKitSetup, RemoteMobileKitSetup],
-         options = dict(py2exe = dict(compressed = 1,
-                       optimize = 1,
-                       # bundle_files = 1,
-                       excludes = exclusionList,
-                       includes = inclusionList,
-                       packages = packageList)),
-         data_files = data_files,
-         zipfile = "lib/shared"
-         )
+          windows=[MobileKitSetup, RemoteMobileKitSetup],
+          options = dict(py2exe = dict(compressed = 1,
+                         optimize = 1,
+                         # bundle_files = 1,
+                         excludes = exclusionList,
+                         includes = inclusionList,
+                         packages = packageList)),
+          data_files = data_files,
+          zipfile = "lib/shared"
+          )
 
     shutil.copyfile('dist/DatEchoP3.exe','dist/GPSEchoP3.exe')
     shutil.copyfile('dist/DatEchoP3.exe','dist/WSEchoP3.exe')

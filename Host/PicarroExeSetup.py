@@ -123,6 +123,18 @@ def _runBatFile(batComponent, batFilename, batDir):
             print "Error building %s, retCode=%d, batFilename=%s" % (batComponent, retCode, batFilename)
             sys.exit(retCode)
 
+def _getBuildVersion():
+    try:
+        from Host.Common import release_version as buildVersion
+        verStr = buildVersion.versionNumString()
+        print "Release version: %s" % verStr
+    except Exception, e:
+        # use default
+        verStr = "1.0"
+        print "Release version not found, using: %s" % verStr
+
+    return verStr
+
 
 ################################################################
 # Start of a pile of special setup with the sole purpose
@@ -301,6 +313,8 @@ if "PYTHONPATH" not in os.environ:
     print "PYTHONPATH is not set in environment, potential exists for pulling local libs from wrong dir."
     print "Run 'python buildHost.py' instead to build Host apps from the command line."
     sys.exit(1)
+
+versionStr = _getBuildVersion()
 
 
 # And now to the main setup routine...
@@ -490,7 +504,7 @@ if pythonVer == "2.5":
     # only packageList differs for Python 2.5 and 2.7
     packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
-    setup(version = "1.0",
+    setup(version = versionStr,
       description = "Silverstone Host Core Software",
       name = "Silverstone CRDS",
       options = dict(py2exe = dict(compressed = 1,
@@ -511,7 +525,7 @@ elif pythonVer == "2.7":
     packageList = ["werkzeug","jinja2","email"]
 
     # no bundle_files, specify zipfile
-    setup(version = "1.0",
+    setup(version = versionStr,
           description = "Silverstone Host Core Software",
           name = "Silverstone CRDS",
           options = dict(py2exe = dict(compressed = 1,
