@@ -212,6 +212,7 @@ class DataEchoP3(object):
 
             if nextFile is not None:
                 self._processFile(localPaths[nextFile], nextFile)
+            time.sleep(0.1)
 
     def _processFile(self, path, fname, lastRow=None):
         """
@@ -611,6 +612,7 @@ class DataEchoP3(object):
                     lineCount += 1
                     line = ''
                     if DEBUG['level']>0: sys.stdout.write('.')
+                    time.sleep(0.1)
                     continue
 
                 if line.endswith("\n"):
@@ -618,6 +620,7 @@ class DataEchoP3(object):
                     if DEBUG['level']>0: sys.stdout.write('+')
                     yield line
                     line = ''
+                    time.sleep(0.1)
 
         if renameAsBad:
             try:
@@ -690,6 +693,7 @@ class DataEchoP3(object):
                 time.sleep(self.timeout)
 
             waitForRetry = True
+            time.sleep(0.1)
 
     def _getIPAddresses(self):
         """
