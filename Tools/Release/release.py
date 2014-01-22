@@ -57,8 +57,8 @@ TEST_MFG_DISTRIB_BASE = 'c:/temp/tools/release/mfg_distrib_base'
 TEST_DISTRIB_BASE = 'c:/temp/tools/release/distrib_base'
 
 # Where new releases are put for testing.
-STAGING_MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers_Staging'
-STAGING_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging'
+STAGING_MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers_Staging_mobile'
+STAGING_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging_mobile'
 
 
 def makeExe(opts):
