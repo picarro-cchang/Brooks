@@ -133,7 +133,14 @@ define(function(require, exports, module) {
                     REPORT.settings.set({"startPage": +qry.startPage});
                 }
                 else {
-                    REPORT.settings.set({"startPage": 1});                    
+                    REPORT.settings.set({"startPage": 1});
+                }
+                // Deal with magnify query parameter for custom PNG export
+                if ('magnify' in qry) {
+                    REPORT.settings.set({"magnify": parseFloat(qry.magnify)});
+                }
+                else {
+                    REPORT.settings.set({"magnify": null});
                 }
 
                 // Override the corners from the qry parameters if they exist
