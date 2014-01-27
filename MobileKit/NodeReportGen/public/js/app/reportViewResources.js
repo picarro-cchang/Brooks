@@ -97,7 +97,12 @@ define(function(require, exports, module) {
                 fac = (256.0 / 360.0) * Math.pow(2,this.zoom);
                 this.mx = Math.ceil(fac * Xp);
                 this.my = Math.ceil(fac * Yp / cosLat);
-                this.scale = 2;
+                if (REPORT.settings.get("magnify") === null) {
+                    this.scale = 2;
+                }
+                else {
+                    this.scale = 2.0*REPORT.settings.get("magnify");
+                }
                 this.nx = this.scale * this.mx;
                 this.ny = this.scale * this.my;
 
@@ -144,20 +149,22 @@ define(function(require, exports, module) {
                 var that = this;
                 var image = new Image();
                 var params = { center: this.meanLat.toFixed(6) + "," + this.meanLng.toFixed(6),
-                               zoom: this.zoom, size: this.mx + "x" + this.my, scale: this.scale,
+                               zoom: this.zoom, size: this.mx + "x" + this.my, scale: 2,
                                maptype: "map", sensor: false };
                 if (REPORT.apiKey) params.key = REPORT.apiKey;
                 else if (REPORT.clientKey) params.client = REPORT.clientKey;
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
                 that.trigger("init",{"context": "map"});
+                var width = this.mx * this.scale;
+                var height = this.my * this.scale;
                 image.onload = function () {
                     var ctx = document.createElement("canvas").getContext("2d");
-                    ctx.canvas.height = this.height + 2*that.padY;
-                    ctx.canvas.width = this.width + 2*that.padX;
-                    ctx.drawImage(this, that.padX, that.padY);
+                    ctx.canvas.height = height + 2*that.padY;
+                    ctx.canvas.width = width + 2*that.padX;
+                    ctx.drawImage(this, that.padX, that.padY, width, height);
                     ctx.beginPath();
-                    ctx.rect(that.padX, that.padY, this.width, this.height);
+                    ctx.rect(that.padX, that.padY, width, height);
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = 'black';
                     ctx.stroke();
@@ -169,20 +176,22 @@ define(function(require, exports, module) {
                 var that = this;
                 var image = new Image();
                 var params = { center: this.meanLat.toFixed(6) + "," + this.meanLng.toFixed(6),
-                               zoom: this.zoom, size: this.mx + "x" + this.my, scale: this.scale,
+                               zoom: this.zoom, size: this.mx + "x" + this.my, scale: 2,
                                maptype: "satellite", sensor: false };
                 if (REPORT.apiKey) params.key = REPORT.apiKey;
                 else if (REPORT.clientKey) params.client = REPORT.clientKey;
                 var url = 'http://maps.googleapis.com/maps/api/staticmap?' + $.param(params);
                 image.src = url;
                 that.trigger("init",{"context": "satellite"});
+                var width = this.mx * this.scale;
+                var height = this.my * this.scale;
                 image.onload = function () {
                     var ctx = document.createElement("canvas").getContext("2d");
-                    ctx.canvas.height = this.height + 2*that.padY;
-                    ctx.canvas.width = this.width + 2*that.padX;
-                    ctx.drawImage(this, that.padX, that.padY);
+                    ctx.canvas.height = height + 2*that.padY;
+                    ctx.canvas.width = width + 2*that.padX;
+                    ctx.drawImage(this, that.padX, that.padY, width, height);
                     ctx.beginPath();
-                    ctx.rect(that.padX, that.padY, this.width, this.height);
+                    ctx.rect(that.padX, that.padY, width, height);
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = 'black';
                     ctx.stroke();

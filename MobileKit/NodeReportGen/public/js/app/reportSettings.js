@@ -21,6 +21,7 @@ define(function(require, exports, module) {
                     "fovMinAmp": 0.03,
                     "fovMinLeak": 1.0,
                     "fovNWindow": 10,
+                    "magnify": null,
                     "peaksMinAmp": 0.1,
                     "timezone": "GMT",
                     "startPage": 1,

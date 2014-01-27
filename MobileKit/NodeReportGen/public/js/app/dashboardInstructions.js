@@ -712,15 +712,20 @@ define(function(require, exports, module) {
                 }
             },
             onMakeReport: function () {
+                var instrForce = false;
                 if (this.getCurrentInstructions()) {
-                    var contents = DASHBOARD.instructionsFileModel.get("contents");
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
+                    if (instructions.hasOwnProperty('force')) {
+                        instrForce = instructions.force;
+                        instructions.force = false;
+                    }
+                    var contents = cjs(instructions,null,2);
                     var v = instrValidator(instructions);
                     if (!v.valid) {
                         alert(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
                         return;
                     }
-                    DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force},
+                    DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force || instrForce},
                     function (err) {
                         var msg = P3TXT.dashboard.alert_while_submitting_instructions + err;
                         alert(msg);
