@@ -156,6 +156,7 @@ define(function(require, exports, module) {
              {"name": "neCorner", "required": true, "validator": latlngValidator},
              {"name": "submaps", "required": false, "validator": submapsValidator, "default_value": {"nx": 1, "ny": 1}},
              {"name": "exclRadius", "required": false, "validator": "number", "default_value": 0},
+             {"name": "force", "required": false, "validator": "boolean", "default_value": false},
              {"name": "fovMinAmp", "required": false, "validator": "number", "default_value": 0.03},
              {"name": "fovMinLeak", "required": false, "validator": "number", "default_value": 1.0},
              {"name": "fovNWindow", "required": false, "validator": "number", "default_value": 10},

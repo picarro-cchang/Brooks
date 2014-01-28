@@ -50,7 +50,7 @@ parser = SafeConfigParser(defaults={
             'ANALYSISFILES':'C:/UserData/AnalyzerServer/*.analysis',
             'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath',
               })
-parser.read('configAnalyzerServerPrime.ini')
+parser.read('configAnalyzerServer.ini')
 
 VALVE_INLET_MASK = 0x20
 VALVE_CALIBRATION_MASK = 0x10
@@ -88,7 +88,6 @@ else:
 appDir = os.path.split(appPath)[0]
 
 # configuration
-DEBUG = False
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
@@ -956,8 +955,11 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('--no-analyzer', dest='onAnalyzer', action='store_false',
                       default=True)
-
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      default=False)
     options, _ = parser.parse_args()
+    if options.debug:
+        DEBUG['level'] = 1
     app.config['onAnalyzer'] = options.onAnalyzer
 
-    app.run(host='0.0.0.0', port=5000, debug=DEBUG)
+    app.run(host='0.0.0.0', port=5000, debug=(DEBUG['level']>0))

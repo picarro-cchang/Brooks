@@ -149,6 +149,7 @@ define(function(require, exports, module) {
         }
 
         function startNewRun(forceFlag) {
+            // if (forceFlag) console.log("!!! startNewRun: forceFlag is true !!!");
             var dirName = ts.timeStringAsDirName(that.request_ts);
             var workDir = path.join(instrDir, dirName);
             var taskKey = that.ticket + '_' + dirName;

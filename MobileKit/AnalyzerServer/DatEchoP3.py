@@ -611,6 +611,7 @@ class DataEchoP3(object):
                     lineCount += 1
                     line = ''
                     if DEBUG['level']>0: sys.stdout.write('.')
+                    time.sleep(0.001)
                     continue
 
                 if line.endswith("\n"):
@@ -618,6 +619,7 @@ class DataEchoP3(object):
                     if DEBUG['level']>0: sys.stdout.write('+')
                     yield line
                     line = ''
+                    time.sleep(0.001)
 
         if renameAsBad:
             try:
@@ -690,6 +692,7 @@ class DataEchoP3(object):
                 time.sleep(self.timeout)
 
             waitForRetry = True
+            time.sleep(0.001)
 
     def _getIPAddresses(self):
         """
@@ -792,9 +795,13 @@ Runs an echo server that sends data to P3.
                       metavar='ANALYZER_NAME',
                       default='', help='Specify analyzer name explicitly '
                       'so it is not read using the driver from the analyzer EEPROM.')
+    parser.add_option('-g', '--debug', dest='debug',
+                      metavar='DEBUG',
+                      default=False, help='Turn on debugging.')
 
     options, _ = parser.parse_args()
-
+    if options.debug: 
+        DEBUG['level'] = 1
     if (options.cport < SharedTypes.RPC_PORT_ECHO_P3_BASE or
         options.cport > SharedTypes.RPC_PORT_ECHO_P3_MAX):
         parser.error("CmdFIFO port (%s) outside valid range (%s, %s)" % (
