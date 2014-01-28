@@ -1,0 +1,6 @@
+{
+    "LogFileDir": "C:/Picarro/G2000/Log/TransientData",
+    "LogCacheFilename": "C:/temp/EventLogWatcher/.EventLogWatcherCache",
+    "LogResultsFilename": "C:/temp/EventLogWatcher/.EventLogWatcherResults",
+    "LogWhitelistFilename": "C:/temp/EventLogWatcher/.EventLogWatcherWhitelist"
+}
