@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <script type="text/javascript">
+  var init_vars = false;
+  </script>
+  <script type="text/javascript" src="{{ url_for('static',filename='calUtilities.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+  <div id="id_topbar" class="navbar navbar-fixed-top">
+    <div style="height: 45px;" class="navbar-left-inner">
+      <div style="height: 45px;" class="container">
+        <div id="id_p3_icon">
+          <img alt="Picarro" height="40" src="/static/images/pcube_ppp_logo_60.png" class="pull-left">
+        </div>
+        <div id="id_nav_title" style="color:#585858;margin-right: 10px; margin-top: 5px;" class="pull-right">
+          <h3>Picarro Surveyor™ <span style="color: #008000">for Natural Gas Leaks</span></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="id_p3_canvas" class="container-fluid">
+  </div>
+  <br>
+  <div id="real_content" class="row" style="margin-top:30px;">
+    <div id="id_p3_gdumap" class="container-fluid">
+      <div class="row">
+        <div id="id_sidebar" data-no-collapse="true" class="span3">
+          <div style="margin-left:10px">
+            <p>Drive around in several directions relative to the wind.</p>
+            <p>Use Start to acquire data, Clear to discard old data.</p>
+          </div>
+          <div class="btn-group" style="margin-left:10px; margin-right:10px;">
+            <button type="button" id="id_start_button" class="btn btn-default btn-fullwidth" onclick="startClick()">
+              Start
+            </button>
+          </div>
+          <div class="btn-group" style="margin-left:10px; margin-right:10px; margin-top:10px">
+            <button type="button" class="btn btn-default btn-fullwidth" onclick="clearClick()">
+              Clear
+            </button>
+          </div>
+          <div class="btn-group" style="margin-left:10px; margin-right:10px; margin-top:10px">
+            <button type="button" class="btn btn-default btn-fullwidth" onclick="startNewLogClick()">
+              Start New Log
+            </button>
+          </div>
+          <div style="height:50px;">
+          </div>
+          <div style="margin-left:10px; margin-right:10px; margin-top:10px">
+            <label class="checkbox">
+            <input id="id_apply_filter" type="checkbox" onclick="applyFilterClick()"> Apply Lateral Wind Filter
+            </label>
+          </div>
+          <div style="margin-left:10px; margin-right:10px; margin-top:10px">
+            <label>Speed factor</label>
+            <input id="id_speed_factor" type="text" readonly>
+          </div>
+
+          <div style="margin-left:10px; margin-right:10px; margin-top:10px">
+            <label>Anemometer rotation (degrees)</label>
+            <input id="id_rotation" type="text" readonly>
+          </div>
+
+        </div>
+        <div id="top_right" class="span9">
+          <div id="id_feedback" class="row"></div>
+          <div id="map_canvas" style="margin-top: 10px">          
+            <div id="placeholder" style="width:600px;height:300px;font-family:times;font-size:large"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>     
+{% endblock %}

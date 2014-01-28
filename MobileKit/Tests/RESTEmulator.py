@@ -164,6 +164,18 @@ def getMetadata(ticket, testId):
 
         ret = json.dumps([row])
 
+    elif testId == 15.0:
+        # assert LAST_TIMESTAMP is not None
+        # assert len(ANALYZER_IDS) > 0
+
+        # row = BASE_ROW.copy()
+        # row.update({ 'LOGNAME' :
+        #              "TEST23-%s-DataLog_User_Minimal.dat" % LAST_TIMETAMP,
+        #              'name' :
+        #              "TEST23-%s-DataLog_User_Minimal.dat" % LAST_TIMESTAMP,
+        #              'ANALYZER' : ANALYZER_IDS[0] })
+        ret = json.dumps([])
+
     else:
         assert len(ANALYZER_IDS) > 0
 

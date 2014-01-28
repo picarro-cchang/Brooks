@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+  <div id="id_topbar" class="navbar navbar-fixed-top">
+    <div style="height: 45px;" class="navbar-left-inner">
+      <div style="height: 45px;" class="container">
+        <div id="id_p3_icon">
+          <img alt="Picarro" height="40" src="/static/images/pcube_ppp_logo_60.png" class="pull-left">
+        </div>
+        <div id="id_nav_title" style="color:#585858;margin-right: 10px; margin-top: 5px;" class="pull-right">
+          <h3>Picarro Surveyor™ <span style="color: #008000">for Natural Gas Leaks</span></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="id_p3_canvas" class="container">
+    <br>
+    <div class="row"></div>
+    <div id="real_content" class="row" style="margin-top:30px;">
+      <div class="col-md-4"></div>
+      <div class="col-md-4">
+	<a class="btn btn-success btn-lg" href="{{nextUrl}}">Continue</a>
+      </div>
+    </div>
+    <div class="row"></div>
+  </div>
+{% endblock %}

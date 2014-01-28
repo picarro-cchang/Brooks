@@ -34,7 +34,8 @@ except ImportError:
 from Host.Common import CmdFIFO
 from Host.Common import SharedTypes
 from Host.Common import Win32
-
+from Host.Common import EventManagerProxy
+from Host.Common.Win32 import Kernel32
 
 SECONDS_IN_DAY = 86400.0
 
@@ -65,7 +66,15 @@ class DataEchoP3(object):
     # current .dat file is still alive or not.
     DEAD_LINE_MAX = 10
 
+    # The number of consecutive attempts we will make to push a file
+    # to P-Cubed even if we think that there are no rows in P-Cubed.
+    NUM_RESEND_ATTEMPTS = 5
+
+
     def __init__(self, **kwargs):
+        EventManagerProxy.EventManagerProxy_Init('DatEchoP3')
+        EventManagerProxy.Log('DatEchoP3 instantiated. Configuration below.', Verbose="%r" % kwargs)
+
         self.listenPath = kwargs['listenPath']
         self.urls = {
             'ip': kwargs['ipUrl'],
@@ -82,10 +91,21 @@ class DataEchoP3(object):
         self.historyRangeDays = kwargs['historyRangeDays']
         self.driverPort = kwargs['driverPort']
         self.analyzerName = kwargs['analyzerName']
+        
+        if kwargs['useSSL']:
+            self.port = 443
+        else:
+            self.port = 5000
+
+        self.useEvents = kwargs['useEvents']
+        self.useEventsOnCache = kwargs['useEventsOnCache']
+        self.useEventsResend = kwargs['useEventsResend']
 
         self.ticket = 'None'
         self.ipRegistered = False
         self.docs = []
+
+        self.resendCounts = {}
 
     def _getTicket(self):
         """
@@ -335,7 +355,7 @@ class DataEchoP3(object):
 
             for addr in self._getIPAddresses():
                 if addr != '0.0.0.0':
-                    datarow['PRIVATE_IP'] = "%s:5000" % addr
+                    datarow['PRIVATE_IP'] = "%s:%s" % (addr, self.port)
                     break
 
             if 'PRIVATE_IP' not in datarow:
@@ -511,9 +531,27 @@ class DataEchoP3(object):
                     print 'Generate cache (rescan)'
                     lastRow = self._createUpdateRowCache(path, rowCache)
 
+                    if self.useEventsOnCache:
+                        print "Open event name: %s" % os.path.basename(fname)
+                        evt = Kernel32.openEvent(Kernel32.EVENT_MODIFY_STATE, os.path.basename(fname))
+                        if evt is None:
+                            print "Error opening event: GetLastError() = %s" % Kernel32.getLastError()
+                        assert evt is not None
+
+                        Kernel32.setEvent(evt)
+
             else:
                 print "Generate cache (scan)"
                 lastRow = self._createUpdateRowCache(path, rowCache)
+
+                if self.useEventsOnCache:
+                    print "Open event name: %s" % os.path.basename(fname)
+                    evt = Kernel32.openEvent(Kernel32.EVENT_MODIFY_STATE, os.path.basename(fname))
+                    if evt is None:
+                        print "Error opening event: GetLastError() = %s" % Kernel32.getLastError()
+                    assert evt is not None
+                    
+                    Kernel32.setEvent(evt)
 
             if lastRow != int(row):
                 print ("Incomplete file. Server row: %s, "
@@ -547,15 +585,41 @@ class DataEchoP3(object):
         """
         renameAsBad = False
 
+        if self.useEvents or self.useEventsResend:
+            print "Open event name: %s" % os.path.basename(fname)
+            evt = Kernel32.openEvent(Kernel32.EVENT_MODIFY_STATE, os.path.basename(fname))
+            if evt is None:
+                print "Error opening event: GetLastError() = %s" % Kernel32.getLastError()
+            assert evt is not None
+
         with open(os.path.join(path, fname), 'rb') as fp:
             print "\nOpening source stream: %s\n" % fname
             print "lastRow = %s" % lastRow
+
+            if lastRow is None or lastRow == 0:
+                if fname not in self.resendCounts:
+                    self.resendCounts[fname] = 0
+
+                self.resendCounts[fname] += 1
+
+                if self.resendCounts[fname] > self.NUM_RESEND_ATTEMPTS:
+                    EventManagerProxy.Log("%s consecutive attempts have been made to push '%s' to P3. "
+                                          "Flagging file as bad." % (self.NUM_RESEND_ATTEMPTS, fname), Level=2)
+                    del self.resendCounts[fname]
+
+                    renameAsBad = True
+            else:
+                if fname in self.resendCounts:
+                    EventManagerProxy.Log("'%s' successfully sent after %s attempts" % (fname,
+                                                                                        self.resendCounts[fname]))
+                    del self.resendCounts[fname]
+
 
             deadLineCount = 0
             lineCount = 1
             line = ''
 
-            while True:
+            while True and not renameAsBad:
                 # Check to see if a new file is available. There is a
                 # scenario where an incomplete dat file will never
                 # have a trailing newline and we will sit here forever
@@ -575,6 +639,14 @@ class DataEchoP3(object):
                     and chunk == ''):
                     print "Malformed file found: %s." % fname
                     renameAsBad = True
+
+                    if self.useEvents:
+                        assert evt is not None
+                        res = Kernel32.setEvent(evt)
+
+                        if res != 0:
+                            print "SetEvent: GetLastError = %s" % Kernel32.getLastError()
+
                     break
 
                 if line == '':
@@ -587,6 +659,13 @@ class DataEchoP3(object):
                     deadLineCount += 1
 
                     if deadLineCount == 10:
+                        if self.useEvents:
+                            assert evt is not None
+                            res = Kernel32.setEvent(evt)
+
+                            if res != 0:
+                                print "SetEvent: GetLastError = %s" % Kernel32.getLastError()
+
                         print 'Checking for latest file'
                         latest = genLatestFiles(*os.path.split(
                                 self.listenPath)).next()
@@ -617,11 +696,22 @@ class DataEchoP3(object):
 
         if renameAsBad:
             try:
+                EventManagerProxy.Log("Renaming '%s' as a bad .dat file." % fname)
                 shutil.move(os.path.join(path, fname),
                             os.path.join(path, "%s.bad" % fname))
             except:
-                print "Unable to rename %s. Continuing" % fname
-                traceback.print_exc()
+                # This exception is being logged but we are also
+                # continuing since one "bad" file should not hold up
+                # pushing the rest of the files.
+                EventManagerProxy.LogExc()
+
+            if self.useEventsResend:
+                assert evt is not None
+                res = Kernel32.setEvent(evt)
+
+                if res != 0:
+                    print "SetEvent: GetLastError = %s" % Kernel32.getLastError()
+
 
     def pushToP3(self, fname):
         """
@@ -786,6 +876,14 @@ Runs an echo server that sends data to P3.
                       metavar='ANALYZER_NAME',
                       default='', help='Specify analyzer name explicitly '
                       'so it is not read using the driver from the analyzer EEPROM.')
+    parser.add_option('--use-events', dest='useEvents', default=False, action='store_true', help='For testing; '
+                      'Use Win32 events to signal when file push(es) are complete.')
+    parser.add_option('--use-events-cache', dest='useEventsOnCache', default=False, action='store_true',
+                      help='For testing; Use Win32 events to signal when cache generated for a file.')
+    parser.add_option('--use-events-resend', dest='useEventsResend', default=False, action='store_true',
+                      help='For testing; Use Win32 events to signal when a resend exception occurs.')
+    parser.add_option('--no-ssl', dest='useSSL', default=True, action='store_false', help='Disable pushing the SSL '
+                      'port. This setting must match analyzerServer.')
 
     options, _ = parser.parse_args()
 

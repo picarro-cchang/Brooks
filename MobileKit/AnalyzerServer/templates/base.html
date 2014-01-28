@@ -5,7 +5,7 @@
         <meta name="description" content="" />
         <meta name="keywords" content="" />
         <meta name="viewport" id="meta_viewport" content="initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
-        <title>Picarro Methane Detector</title>
+        <title>Picarro Anemometer Calibration</title>
         <script type="text/javascript" src="{{ url_for('static',filename='jquery-1.7.2.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='bootstrap-dropdown.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='bootstrap-button.js') }}"></script>
@@ -13,13 +13,10 @@
         <script type="text/javascript" src="{{ url_for('static',filename='bootstrap-transition.js') }}"></script>
         <link rel=stylesheet type=text/css href="{{ url_for('static',filename='css/picarro_bootstrap.css') }}" />
         <script type="text/javascript" src="{{ url_for('static',filename='jquery.sparkline.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='jquery.tablesorter.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='jquery.jsonp-2.3.0.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static',filename='jquery.flot.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static',filename='geohash.js') }}"></script>
-        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+        <script type="text/javascript" src="{{ url_for('static',filename='jquery.flot.axislabels.js') }}"></script>
         {% block head %}{% endblock %}
-
         <script type="text/javascript" language="javascript">
 
         function pageLoadFunction() {
@@ -36,6 +33,7 @@
         var buffer = 50;
         var margin = 5;
         var gutter = 20;
+        
         function resize_me() {
             winH = window.innerHeight;
             winW = window.innerWidth;
@@ -63,6 +61,7 @@
             }
             resize_inprocess = false;
         };
+
         function resize_time() {
             if (!resize_inprocess) {
                 //setup_viewport();
@@ -70,6 +69,7 @@
                 resize_timer = setTimeout(resize_me,500);
             }
         };
+
         function setup_viewport() {
             var winH = window.innerHeight;
             var winW = window.innerWidth;
@@ -84,12 +84,12 @@
         };
         </script>
     </head>
-    <body onload="pageLoadFunction()" onresize="resize_time()" style="min-width:1024">
+    <body style="min-width:1024" onload="pageLoadFunction()" onresize="resize_time()">
         {% block body %}
         {% endblock %}
         <div class="bottombar-wrapper">
             <div id="id_copyright" class="bottombar" style="float: left; bottom: 5px; left: 5px; width: 100%;">
-                &nbsp; &nbsp; &copy; 2012 <a href="http://www.picarro.com">Picarro Inc.</a>
+                &nbsp; &nbsp; &copy; 2013 <a href="http://www.picarro.com">Picarro Inc.</a>
             </div>	
         </div>
     </body>

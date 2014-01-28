@@ -5,6 +5,8 @@ Copyright 2012-2013 Picarro Inc.
 import ctypes
 
 from ctypes.wintypes import BOOL
+from ctypes.wintypes import DWORD
+from ctypes.wintypes import HANDLE
 
 
 class Iphlpapi(object):
@@ -94,6 +96,56 @@ class Kernel32(object):
     Wrappers for Kernel32.dll routines/structs/etc.
     """
 
+    WAIT_OBJECT_0 = 0x00000000L
+
+    EVENT_MODIFY_STATE = 0x0002
+
+
     @staticmethod
     def exitProcess(retCode):
         return ctypes.windll.kernel32.ExitProcess(retCode)
+
+    @staticmethod
+    def createEvent(manualReset, name):
+        CreateEvent = ctypes.windll.kernel32.CreateEventA
+        CreateEvent.restype = HANDLE
+
+        return CreateEvent(None, manualReset, 0, name)
+
+    @staticmethod
+    def setEvent(handle):
+        SetEvent = ctypes.windll.kernel32.SetEvent
+        SetEvent.restype = BOOL
+
+        return SetEvent(handle)
+
+    @staticmethod
+    def openEvent(access, name):
+        OpenEvent = ctypes.windll.kernel32.OpenEventA
+        OpenEvent.restype = HANDLE
+
+        return OpenEvent(access, 0, name)
+
+    @staticmethod
+    def waitForMultipleObjects(handles, waitAll, milliSeconds):
+        WaitForMultipleObjects = ctypes.windll.kernel32.WaitForMultipleObjects
+        WaitForMultipleObjects.restype = DWORD
+
+        arrayType = ctypes.c_void_p * len(handles)
+        arrayHandles = arrayType(*handles)
+
+        return WaitForMultipleObjects(len(arrayHandles), arrayHandles, waitAll, DWORD(int(milliSeconds)))
+
+    @staticmethod
+    def waitForSingleObject(h, milliSeconds):
+        WaitForSingleObject = ctypes.windll.kernel32.WaitForSingleObject
+        WaitForSingleObject.restype = DWORD
+
+        return WaitForSingleObject(h, DWORD(int(milliSeconds)))
+
+    @staticmethod
+    def getLastError():
+        GetLastError = ctypes.windll.kernel32.GetLastError
+        GetLastError.restype = DWORD
+
+        return GetLastError()

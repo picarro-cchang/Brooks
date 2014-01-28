@@ -8,7 +8,7 @@ sys.path.append("ViewServer")
 
 exclusionList = ["Tkconstants","Tkinter","tcl"]
 inclusionList = []
-packageList = ["simplejson", "werkzeug", "jinja2", "email"]
+packageList = ["simplejson", "werkzeug", "jinja2", "email", 'sqlalchemy.dialects.sqlite']
 data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico", "MobileKitSetupNew/LEDred2.ico"])]
 setup(console=['AnalyzerServer/RunPeakFinder.py', 
                'AnalyzerServer/RunPeakAnalyzer.py', 
