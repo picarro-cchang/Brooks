@@ -123,7 +123,10 @@ define(function(require, exports, module) {
                     console.log('Fetching metadata for ' + s);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
-                        if (err) done(err);
+                        if (err) {
+                            err.message += "Cannot fetch metadata for " + s;
+                            done(err);
+                        }
                         else {
                             meta.push(_.omit(result[0],'docmap'));
                             process.nextTick(next);

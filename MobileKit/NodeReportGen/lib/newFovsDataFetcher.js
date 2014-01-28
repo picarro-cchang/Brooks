@@ -124,7 +124,10 @@ define(function(require, exports, module) {
                     // console.log('Computed stability class', indx, s, stabClass);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
-                        if (err) done(err);
+                        if (err) {
+                            err.message += "Cannot fetch metadata for " + s;
+                            done(err);
+                        }
                         else {
                             result[0]['stabClass'] = stabClass;
                             // console.log(JSON.stringify(result[0]));
