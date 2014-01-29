@@ -43,10 +43,18 @@ sys.stderr = sys.stdout
 
 def _getPythonVersion():
     """
-    Returns a string such as "2.5" or 2.7"
+    Returns a string such as "2.5" or "2.7"
     """
     pythonVer = sys.version_info
     return str(pythonVer[0]) + "." + str(pythonVer[1])
+
+
+def _getPythonSubVersion():
+    """
+    Returns a string such as "2.7.3"
+    """
+    pythonVer = sys.version_info
+    return str(pythonVer[0]) + "." + str(pythonVer[1]) + "." + str(pythonVer[2])
 
 
 def _runBatFile(batComponent, batFilename, batDir):
@@ -143,6 +151,7 @@ RemoteMobileKitSetup = Target(description = "RemoteMobileKitSetup", # used for t
 
 
 pythonVer = _getPythonVersion()
+pythonSubVer = _getPythonSubVersion()
 
 # simple check to save us from potential problems using paths in Picarro.pth
 if "PYTHONPATH" not in os.environ:
@@ -206,6 +215,11 @@ if pythonVer == "2.5":
 elif pythonVer == "2.7":
     # Python 2.7
     print "**** setup for Python 2.7 ****"
+
+    if pythonSubVer == "2.7.3":
+        import zmq
+        os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
+
     exclusionList = ["Tkconstants", "Tkinter", "tcl"]
     inclusionList = []
     packageList = ["werkzeug", "jinja2", "email"]
