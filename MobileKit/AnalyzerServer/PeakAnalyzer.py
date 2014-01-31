@@ -697,6 +697,7 @@ class PeakAnalyzer(object):
         transportLag = 5
         notCollectingCount = 0
         doneAnalysisThreshold = 5
+        endpointBufferOffset = 2
 
         lastAnalysis = None
         lastPeak = None
@@ -752,8 +753,8 @@ class PeakAnalyzer(object):
 
                 if lastCollecting:
                     if len(keelingStore) > 10 + self.samples_to_skip:
-                        conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:]
-                        delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:]
+                        conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
+                        delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
                         protInvconc = 1/maximum(conc,0.001)
                         try:
                             replay_max = max(conc)
