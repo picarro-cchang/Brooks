@@ -44,8 +44,9 @@ EventManagerProxy_Init(APP_NAME)
 class PeriphIntrf(object):
     
     INTERPOLATORS = {
-        'linear' : Interpolators.linear,
-        'max'    : Interpolators.max
+        'linear'    : Interpolators.linear,
+        'max'       : Interpolators.max,
+        'bitwiseOr' : Interpolators.bitwiseOr
     }
 
     def __init__(self, configFile, dmBroadcaster):
@@ -77,7 +78,7 @@ class PeriphIntrf(object):
             if parserFunc.startswith("parse"):
                 scriptCodeObj = compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
                 try:
-                    exec scriptCodeObj
+                    exec scriptCodeObj in globals()
                     if not self.parserVersion:
                         self.parserVersion = PARSER_VERSION
                     if self.parserVersion > 0.0:
