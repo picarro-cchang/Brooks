@@ -102,6 +102,14 @@ def _getPythonVersion():
     return str(pythonVer[0]) + "." + str(pythonVer[1])
 
 
+def _getPythonSubVersion():
+    """
+    Returns a string such as "2.7.3"
+    """
+    pythonVer = sys.version_info
+    return str(pythonVer[0]) + "." + str(pythonVer[1]) + "." + str(pythonVer[2])
+
+
 def _runBatFile(batComponent, batFilename, batDir):
     """
     Runs a Windows .bat file to build a component. Arguments:
@@ -278,6 +286,7 @@ supervisorLauncher = Target(description = "SupervisorLauncher", # used for the v
 
 
 pythonVer = _getPythonVersion()
+pythonSubVer = _getPythonSubVersion()
 
 
 # Build the various Host .pyd modules
@@ -522,6 +531,10 @@ if pythonVer == "2.5":
 )
 
 elif pythonVer == "2.7":
+    if pythonSubVer == "2.7.3":
+        import zmq
+        os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
+
     packageList = ["werkzeug","jinja2","email"]
 
     # no bundle_files, specify zipfile
