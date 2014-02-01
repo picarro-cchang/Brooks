@@ -21,6 +21,6 @@
     "register": true,
     "registerCycle": 5000,
     "hubPort": 4444,
-    "hubHost": "zlu-e8460w"
+    "hubHost": "10.100.1.81"
   }
 }
