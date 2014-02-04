@@ -65,6 +65,10 @@ def runCommand(command):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
 
+    # I think we need to use this to get the output:
+    # stdout_value = p.communicate()
+    # or this? stdout_value, stderr_value = p.communicate()
+    # print "stdout:", repr(stdout_value)
     return iter(p.stdout.readline, b'')
 
 
@@ -106,10 +110,48 @@ def setVolumeName(driveLetter, volumeName):
     return ret
 
 
+def validateWindowsVersion(debug=False):
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Validating Windows version.")
+
+    # Expect this script to be running on Windows XP
+    if sys.getwindowsversion().major != int(5):
+        if debug is False:
+            logger.error("Current operating system is not Windows XP!")
+            validWinVersion = False
+        else:
+            logger.info("Current operating system is not Windows XP, ignoring (debug enabled)")
+            validWinVersion = True
+    else:
+        logger.info("Validated operating system, running Windows XP")
+        validWinVersion = True
+
+    return validWinVersion
+
+
+def validatePythonVersion(debug=False):
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Validating Python version.")
+
+    pythonVer = str(sys.version_info.major) + "." + str(sys.version_info.minor)
+
+    if pythonVer != "2.5":
+        if debug is False:
+            logger.error("Current Python version is %s, expected 2.5!" % pythonVer)
+            validPythonVersion = False
+        else:
+            logger.error("Current Python version is %s, expected 2.5, ignoring (debug enabled)" % pythonVer)
+            validPythonVersion = True
+    else:
+        logger.info("Validated Python, current version is 2.5")
+        validPythonVersion = True
+
+    return validPythonVersion
+
 
 def findAndValidateDrives(debug=False):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
-    logger.debug("Finding and validating drives.")
+    logger.info("Finding and validating drives.")
 
     # main drive is C:\; get the drive this program is running from (which should be partition 1)
     instDrive = "C:"
@@ -168,7 +210,7 @@ def findAndValidateDrives(debug=False):
     fSuccess = True
     if instDrive is None or migMainDrive is None or migBackupDrive is None:
         fSuccess = False
-    logger.debug("Drive validation done, fSuccess=%s." % fSuccess)
+    logger.info("Drive validation done, fSuccess=%s." % fSuccess)
 
     return instDrive, migMainDrive, migBackupDrive
 
@@ -193,6 +235,10 @@ class UIMigration(object):
 
         # set default new volume name as same as the instrument
         self.newVolumeName = self.instDriveName
+
+        # if it is an empty string, set the default to the analyzer name
+        if self.newVolumeName == "":
+            self.newVolumeName = self.analyzerName
 
         self.logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
 
@@ -506,6 +552,24 @@ Win7 migration utility part 1.
         #showErrorDialog(errMsg)
         sys.exit(1)
 
+    # Windows validation (should be WinXP)
+    ret = validateWindowsVersion(options.debug)
+
+    if not ret:
+        errMsg = "Windows OS validation failed. See log results in '%s'" % logFilename
+        root.error(errMsg)
+        #showErrorDialog(errMsg)
+        sys.exit(1)
+
+    # Python validation (should be Python 2.5)
+    ret = validateWindowsVersion(options.debug)
+
+    if not ret:
+        errMsg = "Python validation failed. See log results in '%s'" % logFilename
+        root.error(errMsg)
+        #showErrorDialog(errMsg)
+        sys.exit(1)
+
     anInfo = mutils.AnalyzerInfo()
 
     # Confirm the Analyzer software is running, get the analyzer name, etc.
@@ -546,9 +610,11 @@ Win7 migration utility part 1.
 
     # ==== Backup ====
     #
-
     # Backup files from XP drive to Win7 drive partition 2.
     ret = backupFiles(instDrive, migBackupDrive)
+
+    # TODO: Back up autosampler (.exe, config files, etc.)
+    root.warning("Autosampler backup needs to be implemented!")
 
     # Get the volume name the user wants to use for the Win7 boot drive
     # and set it
@@ -562,11 +628,13 @@ Win7 migration utility part 1.
     isRunning = stopSoftwareAndDriver(anInfo)
 
 
-    # TODO: Show instructions for what to do next (remove the WinXP drive and
-    #       install the Win7 drive).
-
     # TODO: Save off analyzerType in a file so can prompt user which installer to run
     #       after the drive is switched.
+    root.warning("Save off analyzer type for install step needs to be implemented!")
+
+    # TODO: Show instructions for what to do next (remove the WinXP drive and
+    #       install the Win7 drive).
+    root.warning("Instructions for install step need to be implemented!")
 
     msg = "Part 1 of migration from WinXP to Win7 completed successfully!"
     root.info(msg)
