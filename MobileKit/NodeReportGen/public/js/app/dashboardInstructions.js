@@ -714,12 +714,16 @@ define(function(require, exports, module) {
             onMakeReport: function () {
                 var instrForce = false;
                 if (this.getCurrentInstructions()) {
+                    var contents;
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
                     if (instructions.hasOwnProperty('force')) {
                         instrForce = instructions.force;
                         instructions.force = false;
+                        contents = cjs(instructions,null,2);
                     }
-                    var contents = cjs(instructions,null,2);
+                    else {
+                        contents = DASHBOARD.instructionsFileModel.get("contents");
+                    }
                     var v = instrValidator(instructions);
                     if (!v.valid) {
                         alert(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
