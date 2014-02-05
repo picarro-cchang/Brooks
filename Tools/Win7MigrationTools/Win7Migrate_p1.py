@@ -15,6 +15,7 @@
 # History
 #
 # 2014-01-30  tw  Initial version.
+from __future__ import with_statement
 
 import os
 import sys
@@ -23,7 +24,8 @@ import subprocess
 import time
 import win32api
 import logging
-import wx
+import ConfigParser
+#import wx
 
 from optparse import OptionParser
 
@@ -59,7 +61,8 @@ def runCommand(command):
     # Code is from here:
     #   http://stackoverflow.com/questions/4760215/running-shell-command-from-python-and-capturing-the-output
     """
-    print "runCommand: '%s'" % command
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Executing command: '%s'" % command)
 
     p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
@@ -120,10 +123,10 @@ def validateWindowsVersion(debug=False):
             logger.error("Current operating system is not Windows XP!")
             validWinVersion = False
         else:
-            logger.info("Current operating system is not Windows XP, ignoring (debug enabled)")
+            logger.info("(debug) Current operating system is not Windows XP, ignoring.")
             validWinVersion = True
     else:
-        logger.info("Validated operating system, running Windows XP")
+        logger.info("Validated operating system, running Windows XP.")
         validWinVersion = True
 
     return validWinVersion
@@ -140,7 +143,7 @@ def validatePythonVersion(debug=False):
             logger.error("Current Python version is %s, expected 2.5!" % pythonVer)
             validPythonVersion = False
         else:
-            logger.error("Current Python version is %s, expected 2.5, ignoring (debug enabled)" % pythonVer)
+            logger.error("(debug) Running Python version %s, expected 2.5, ignoring" % pythonVer)
             validPythonVersion = True
     else:
         logger.info("Validated Python, current version is 2.5")
@@ -156,73 +159,41 @@ def findAndValidateDrives(debug=False):
     # main drive is C:\; get the drive this program is running from (which should be partition 1)
     instDrive = "C:"
     hostExeDir = os.path.normpath("C:/Picarro/g2000/HostExe")
-    migMainDrive = os.path.splitdrive(os.getcwd())[0]      # returns something like F:
-
-    # get drive this app is running from (should be running from the 1st partition of the migration drive)
-    drives = win32api.GetLogicalDriveStrings()
-    drives = drives.split('\000')[:-1]
-
-    migBackupDrive = None
-    foundNamedDrive = []
-
-    for drive in drives:
-        try:
-            # example: drive = "C:\\" (requires backslash)
-            # returns tuple with file system info, volume name is the first value in the tuple
-            driveInfo = win32api.GetVolumeInformation(drive)
-
-            if driveInfo[0] == mdefs.PARTITION_2_VOLUME_NAME:
-                # save this drive letter and colon (strip off the ending backslash)
-                foundNamedDrive.append(drive[:2])
-
-        except Exception, e:
-            # Ignore all exceptions. I know we will get some (e.g., a DVD drive that doesn't have any media, etc.)
-            # Not very useful to even bother reporting these.
-            #logger.debug("An exception occurred getting info for drive '%s' (ignored). Exception=%r, e=%r" % (drive, Exception, e))
-            pass
-
-    if len(foundNamedDrive) == 1:
-        # there should only be 1 drive with the required volume name
-        migBackupDrive = foundNamedDrive[0]
-        logger.debug("Found migration drive used as backup destination (%s)" % migBackupDrive)
-    else:
-        # log this as an error
-        if len(foundNamedDrive) == 0:
-            logger.error("No drives found with the volume name '%s'" % mdefs.PARTITION_2_VOLUME_NAME)
-        else:
-            logger.error("Multiple drives found with the volume name '%s', drives = %r" % (mdefs.PARTITION_2_VOLUME_NAME, foundNamedDrive))
 
     # validate the instrument drive, there should be a HostExe folder in the expected Picarro path
     if not os.path.isdir(hostExeDir):
         instDrive = None
         logger.error("Picarro analyzer software does not appear to be installed, dir does not exist (%s)." % hostExeDir)
 
+    # this program is running from the backup drive
+    # returns something like F:
+    migBackupDrive = os.path.splitdrive(os.getcwd())[0]
+
+    """
+    # This is unnecessary, we should be able to run from wherever this is installed.
     # validate the current drive by looking for the Win7MigrationTools folder on the drive
     # splitdrive() left us with just the drive letter and colon so put the separator back in
-    migMainToolsDir = os.path.join(migMainDrive, os.sep, mdefs.MIGRATION_TOOLS_FOLDER_NAME)
+    migToolsDir = os.path.join(migBackupDrive, os.sep, mdefs.MIGRATION_TOOLS_FOLDER_NAME)
 
-    if not os.path.isdir(migMainToolsDir):
-        migMainDrive = None
-        logger.error("Failed to validate migration drive, expected dir does not exist! (%s)" % migMainToolsDir)
-
-    # TODO: validate 2nd partition by looking for some known folders/files that should be installed
+    if not os.path.isdir(migToolsDir):
+        migBackupDrive = None
+        logger.error("Failed to validate migration drive, expected dir does not exist! (%s)" % migToolsDir)
+    """
 
     fSuccess = True
-    if instDrive is None or migMainDrive is None or migBackupDrive is None:
+    if instDrive is None or migBackupDrive is None:
         fSuccess = False
     logger.info("Drive validation done, fSuccess=%s." % fSuccess)
 
-    return instDrive, migMainDrive, migBackupDrive
+    return instDrive, migBackupDrive
 
 
 class UIMigration(object):
     def __init__(self, instDrive=None,
-                 migMainDrive=None,
                  migBackupDrive=None,
                  instDriveName=None,
                  analyzerName=None):
         self.instDrive = instDrive
-        self.migMainDrive = migMainDrive
         self.migBackupDrive = migBackupDrive
         self.instDriveName = instDriveName
         self.analyzerName = analyzerName
@@ -244,14 +215,13 @@ class UIMigration(object):
 
     def confirmToProceed(self):
         assert self.instDrive
-        assert self.migMainDrive
         assert self.migBackupDrive
         assert self.instDriveName
 
         # TODO: add wx UI for this, for now just use the command line
         print ""
         print "Instrument drive:       %s" % self.instDrive
-        print "Migration main drive:   %s" % self.migMainDrive
+        #print "Migration main drive:   %s" % self.migMainDrive
         print "Migration backup drive: %s" % self.migBackupDrive
 
         if self.analyzerName != "":
@@ -268,19 +238,14 @@ class UIMigration(object):
         # Prompt for new Win7 volume name
         haveWin7DriveName = False
         while not haveWin7DriveName:
-            print "in outer while loop"
+            #print "in outer while loop"
             while True:
                 print ""
                 print "New Win7 boot drive name:  %s" % self.newVolumeName
-                inputStr = raw_input("Is the new Win7 drive name correct? Y (yes) / N (no)/ A (abort): ")
+                inputStr = raw_input("Is the new Win7 drive name correct? Y (yes) / N (no): ")
                 inputStr = inputStr.upper()
 
-                if inputStr == "A":
-                    # Abort
-                    self.logger.info("Win7 migration aborted by user (configuring Win7 drive name)!")
-                    return False
-
-                elif inputStr == "N":
+                if inputStr == "N":
                     # Allow user to enter a different name for the drive
                     inputStr = raw_input("Enter the name for your new Windows 7 boot drive: ")
                     print "inputStr='%s'" % inputStr
@@ -303,7 +268,6 @@ class UIMigration(object):
             return self.newVolumeName
 
 
-
 def validatePicarroSystem(anInfo, debug=False):
     # Confirm the Analyzer software is running.
     assert anInfo
@@ -312,58 +276,62 @@ def validatePicarroSystem(anInfo, debug=False):
 
     ret = anInfo.isInstrumentRunning()
     if ret is False:
-        logger.info("Instrument is not running!")
+        logger.info("Analyzer software is not running!")
+
+        if debug is True:
+            logger.info("(debug) Skipped analyzer software running check")
+            ret = True
     else:
         logger.info("Validated instrument, software is running.")
 
     return ret
 
 
-def stopSoftwareAndDriver(anInfo):
+def stopSoftwareAndDriver(anInfo, debug=False):
     assert anInfo
 
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Stopping the software and driver.")
 
-    isRunning = True
-    if anInfo.isInstrumentRunning():
-        response = raw_input("Instrument is running, stop the software and driver? Y or N: ")
+    if not debug:
+        anInfo.stopAnalyzerAndDriver(debug)
+    else:
+        logger.info("(debug) Skipped stopping software and driver.")
+
+
+def shutdownWindows(debug=False):
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+
+    logger.info("Shutting down Windows.")
+    # more shutdown options we may want to use
+    # /c "message" can be used to show a message, max 127 chars
+    # /t xx  sets timer for shutdown in xx seconds, default is 20 seconds
+
+    if debug is False:
+        command = "shutdown /s /f -t 30"
+        logger.info("Windows shutdown with command = '%s'" % command)
+        runCommand(command)
+        return True
+
+    else:
+        # for debug give the user a chance to bail out
+        print ""
+        response = raw_input("(debug) Do you really want to shut down Windows? Y or N: ")
         response = response.upper()
 
         if response == "Y":
-            logger.info("Stopping the software and driver, please wait.")
-            anInfo.stopAnalyzerAndDriver()
-            logger.info("Software and driver has been stopped.")
-            isRunning = False
+            # set the shutdown timer to 2 minutes
+            command = "shutdown /s /f -t 120"
+            logger.info("(debug) Shutting down Windows with command = '%s'" % command)
+            logger.info("(debug) You can abort the shutdown using 'shutdown -a'")
+            runCommand(command)
+            return True
         else:
-            logger.info("Software and driver is still running, was not stopped.")
-
-            print ""
-            print "You must manually stop the instrument and shut down the system."
-    else:
-        logger.info("Instrument is not running.")
-        isRunning = False
-
-    return isRunning
+            logger.info("(debug) Windows shutdown skipped.")
+            return False
 
 
-def shutdownWindows():
-    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
-
-    response = raw_input("Shut down Windows? Y or N: ")
-    response = response.upper()
-
-    if response == "Y":
-        logger.info("Shutting down Windows.")
-        # more shutdown options we may want to use
-        # /c "message" can be used to show a message, max 127 chars
-        # /t xx  sets timer for shutdown in xx seconds, default is 20 seconds
-        command = "shutdown /s /f -t 30"
-        runCommand(command)
-        return True
-    else:
-        return False
-
-
+"""
 def promptToRemoveMigrationDrives(migMainDrive=None,
                                   migBackupDrive=None):
     assert migMainDrive
@@ -371,12 +339,10 @@ def promptToRemoveMigrationDrives(migMainDrive=None,
 
     print ""
     print "You must use Safely Remove Hardware in the System Tray to unmount the"
-    print "migration drive partitions."
     print ""
     print "IMPORTANT: Be sure to remove both partitions: %s and %s" % (migMainDrive, migBackupDrive)
     print ""
-
-
+"""
 
 
 def backupFiles(fromDrive, toDrive):
@@ -410,13 +376,12 @@ def backupFiles(fromDrive, toDrive):
             if not os.path.isdir(targetDir):
                 os.makedirs(targetDir)
 
-            try:
-                # copy2 retains the last access and modification times as well as permissions
-                shutil.copy2(fromFilename, toFilename)
-                logger.info("Copy '%s' to '%s'" % (fromFilename, toFilename))
-
-            except Exception, e:
-                logger.error("Copy failed, '%r' during copy '%s' to '%s'" % (e, fromFilename, toFilename))
+            # We intentionally do not catch any file copy exceptions. The
+            # last copy message in the log should indicate which file it
+            # barfed on, if this fails.
+            # copy2 retains the last access and modification times as well as permissions
+            logger.info("Copying '%s' to '%s'" % (fromFilename, toFilename))
+            shutil.copy2(fromFilename, toFilename)
 
     logger.debug("Done backing up configuration files, data, and software.")
 
@@ -442,7 +407,7 @@ def main():
     usage = """
 %prog [options]
 
-Win7 migration utility part 1.
+Win7 migration utility part 1 (back up).
 """
 
     parser = OptionParser(usage=usage)
@@ -534,17 +499,17 @@ Win7 migration utility part 1.
     handlerFile.setFormatter(fmt)
     root.addHandler(handlerFile)
 
-    root.info("***** Win7 migration part 1 started. *****")
+    root.info("***** Win7 migration part 1 (back up) started. *****")
 
     # ==== Validation ====
     #
     # Find and validate the instrument main drive and both migration drive partitions
-    instDrive, migMainDrive, migBackupDrive = findAndValidateDrives(options.debug)
+    instDrive, migBackupDrive = findAndValidateDrives(options.debug)
 
-    root.info("instrument drive='%s', migration drive partition 1='%s', migration drive partition 2='%s'" %
-              (instDrive, migMainDrive, migBackupDrive))
+    root.info("instrument drive='%s', migration backup partition ='%s'" %
+              (instDrive, migBackupDrive))
 
-    if instDrive is None or migMainDrive is None or migBackupDrive is None:
+    if instDrive is None or migBackupDrive is None:
         # error should already have been logged, bail out
         # TODO: pop an error dialog and direct user to the error log
         errMsg = "Drive validation failed. See log results in '%s'" % logFilename
@@ -562,7 +527,7 @@ Win7 migration utility part 1.
         sys.exit(1)
 
     # Python validation (should be Python 2.5)
-    ret = validateWindowsVersion(options.debug)
+    ret = validatePythonVersion(options.debug)
 
     if not ret:
         errMsg = "Python validation failed. See log results in '%s'" % logFilename
@@ -584,6 +549,13 @@ Win7 migration utility part 1.
     analyzerName = anInfo.getAnalyzerNameAndNum()
     analyzerType = anInfo.getAnalyzerName()
 
+    if options.debug is True:
+        if analyzerType == "Unknown":
+            # hack for my testing without an instrument
+            analyzerType = "CFKADS"
+            analyzerName = "CFKADS9999"
+            root.info("(debug) Using pseudo instrument name '%s'" % analyzerName)
+
     # Report drive letters and other info to user, and ask for confirmation
     # to proceed.
     #
@@ -591,10 +563,9 @@ Win7 migration utility part 1.
     #       same volume name as XP drive.
     instDriveName = getVolumeName(instDrive)
 
-    root.info("instrument drive volume name = '%s" % instDriveName)
+    root.info("Instrument drive volume name = '%s'" % instDriveName)
 
     uiMig = UIMigration(instDrive=instDrive,
-                        migMainDrive=migMainDrive,
                         migBackupDrive=migBackupDrive,
                         instDriveName=instDriveName,
                         analyzerName=analyzerName)
@@ -605,8 +576,10 @@ Win7 migration utility part 1.
         errMsg = "Migration aborted. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
-        sys.exit(1)
+        sys.exit(1) 
 
+    # Must shutdown the software and driver before backing up
+    isRunning = stopSoftwareAndDriver(anInfo, options.debug)
 
     # ==== Backup ====
     #
@@ -616,43 +589,46 @@ Win7 migration utility part 1.
     # TODO: Back up autosampler (.exe, config files, etc.)
     root.warning("Autosampler backup needs to be implemented!")
 
+    # TODO: Back up other modules config files that aren't part of configs
+    root.warning("Backup of other config files for misc. modules needs to be implemented!")
+
     # Get the volume name the user wants to use for the Win7 boot drive
-    # and set it
     win7DriveName = uiMig.getNewVolumeName()
-    ret = setVolumeName(migMainDrive, win7DriveName)    # this logs the results
+
+    #ret = setVolumeName(migMainDrive, win7DriveName)    # this logs the results
+
+    # use win7DriveName and analyzerType to save off new volume name
+    # and analyzer type for running the installer
+    #
+    # Write a simple config file with key/value entries for win7DriveName
+    # and analyzerType to be used in migration part 2.
+    # Could generate a .py script that gets loaded and compiled at run-time
+    # (as this will be a compiled script) but writing a config file works too.
+    defaults = {}
+    cp = ConfigParser.ConfigParser(defaults)
+    cp.add_section(mdefs.CONFIG_SECTION)
+    cp.set(mdefs.CONFIG_SECTION, mdefs.VOLUME_NAME, win7DriveName)
+    cp.set(mdefs.CONFIG_SECTION, mdefs.ANALYZER_TYPE, analyzerType)
+    cp.set(mdefs.CONFIG_SECTION, mdefs.ANALYZER_NAME, analyzerName)
+
+    filename = os.path.join(os.getcwd(), mdefs.CONFIG_FILENAME)
+    with open(filename, "w") as f:
+        cp.write(f)
 
     # ==== Shut down ====
-
-    # stop the software and driver, returns whether it is still running (user did
-    # not want to stop it yet)
-    isRunning = stopSoftwareAndDriver(anInfo)
-
-
-    # TODO: Save off analyzerType in a file so can prompt user which installer to run
-    #       after the drive is switched.
-    root.warning("Save off analyzer type for install step needs to be implemented!")
+    msg = "Part 1 of migration from WinXP to Win7 completed successfully!"
+    root.info(msg)
 
     # TODO: Show instructions for what to do next (remove the WinXP drive and
     #       install the Win7 drive).
-    root.warning("Instructions for install step need to be implemented!")
-
-    msg = "Part 1 of migration from WinXP to Win7 completed successfully!"
-    root.info(msg)
+    #root.warning("Instructions for install step need to be implemented!")
 
     print ""
     print "%s" % msg
     #showSuccessDialog(msg)
 
-    # Shut down Windows, or inform the user the drive letters that
-    #       MUST be selected in Safely Remove Hardware before disconnecting
-    #       the migration drive.
-    if isRunning is False:
-        isShutdown = shutdownWindows()
-
-        if isShutdown is False:
-            # inform user to use Safely Remove Hardware
-            promptToRemoveMigrationDrives(migMainDrive=migMainDrive,
-                                          migBackupDrive=migBackupDrive)
+    # Shut down Windows.
+    shutdownWindows(options.debug)
 
 
 if __name__ == "__main__":

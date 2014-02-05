@@ -1,6 +1,6 @@
 # RunTool.py
 #
-# For running a Win7 migration tool from the command line. Useful for developing code
+# For running a Win7 migration tool script from the command line. Useful for developing code
 # to run from sources on an instrument.
 #
 # Usage: python RunTool.py <toolname>.py
@@ -26,7 +26,7 @@ def runPythonScript(scriptName):
     if curDir.lower() != "win7migrationtools":
         print "Not running in expected folder 'Win7MigrationTools'!"
         sys.exit(1)
-    
+
     # Set the PYTHONPATH environment variable so the current folder tree is used to
     # pull local libraries from.
     parentDir = os.path.normpath(os.path.join(curDirPath, "..", ".."))

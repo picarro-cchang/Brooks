@@ -49,3 +49,10 @@ FOLDERS_TO_BACKUP_LIST = ["C:/UserData",
 # Destination folder (relative to drive root) on partition 2 where above folders are backed up
 BACKUP_FOLDER_ROOT_NAME = "WinXPBackup"
 
+# Config filename, section and keys for stashing the analyzer type and volume name to use
+CONFIG_FILENAME = "Win7Config.ini"
+CONFIG_SECTION = "Win7Migration"
+ANALYZER_TYPE = "AnalyzerType"
+ANALYZER_NAME = "AnalyzerName"
+VOLUME_NAME = "VolumeName"
+
