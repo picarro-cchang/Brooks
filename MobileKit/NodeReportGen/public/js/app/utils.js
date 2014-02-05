@@ -131,6 +131,9 @@ define(function(require, exports, module) {
             };
             next2();
         }
+        else {
+            successCbFn(200, {"tz": qry_obj.tz, "posixTimes": [], "timeStrings": []});
+        }
     }
 
     // Get the leading part of the resource URL associated with the MD5 hash of the instructions
