@@ -97,20 +97,7 @@ define(function(require, exports, module) {
             },
             analyzeStatus: function (err, result, msg)  {
                 var that = this;
-                var status = result.status;
-                var flag = result.flag;
-                if (!flag) flag = '';
-                if (!err) DASHBOARD.connectionErrors = 0;
-                if (status === rptGenStatus.TASK_NOT_FOUND) {
-                    this.set({'msg': P3TXT.dashboard.report_expired, 'status': status, 'flag': flag});
-                }
-                else if (status < 0) {
-                    this.set({'msg': msg, 'status': status, 'flag': flag});
-                }
-                else if (status >= rptGenStatus.DONE) {
-                    this.set({'status': status, 'flag':flag});
-                }
-                else if (err) {
+                if (err) {
                     DASHBOARD.connectionErrors += 1;
                     if (DASHBOARD.connectionErrors > 5) {
                         msg = 'Connection problem: Please reload page or retry in a few minutes';
@@ -121,7 +108,22 @@ define(function(require, exports, module) {
                         setTimeout(function () { that.updateStatus(); }, 5000);
                     }
                 }
-                else setTimeout(function () { that.updateStatus(); }, 5000);
+                else if (result) {
+                    var status = result.status;
+                    var flag = result.flag;
+                    if (!flag) flag = '';
+                    if (!err) DASHBOARD.connectionErrors = 0;
+                    if (status === rptGenStatus.TASK_NOT_FOUND) {
+                        this.set({'msg': P3TXT.dashboard.report_expired, 'status': status, 'flag': flag});
+                    }
+                    else if (status < 0) {
+                        this.set({'msg': msg, 'status': status, 'flag': flag});
+                    }
+                    else if (status >= rptGenStatus.DONE) {
+                        this.set({'status': status, 'flag':flag});
+                    }
+                    else setTimeout(function () { that.updateStatus(); }, 5000);
+                }
             },
             updateStatus: function () {
                 var that = this;
@@ -374,6 +376,7 @@ define(function(require, exports, module) {
                 },
                 function (status, data) {
                     console.log('While retrieving instructions from ' + url + ': ' + status);
+                    if (job.get("flag") !== '') data["force"] = true;
                     that.instrFileView.loadContents(cjs(data,null,2));
                     that.highLightJob(job);
                 });

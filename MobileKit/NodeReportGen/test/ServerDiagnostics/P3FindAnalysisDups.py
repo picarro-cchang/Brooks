@@ -27,6 +27,7 @@ class DatabaseInterface(object):
         # Get the various collections of interest
 
         self.dbase = self.client["main_pge"]
+        self.dbase = self.client["main_metrisis"]
         self.counters = self.dbase["counters"]
         self.immutable_names = self.dbase["immutable_names"]
         self.analyzer = self.dbase["analyzer"]
@@ -65,6 +66,7 @@ class DatabaseInterface(object):
                     machineId.append(int(objectId[8:14],base=16))
                     processId.append(int(objectId[14:18],base=16))
                 logname = l['logname']
+                rowList.sort()
                 # Extract date and time associated with this file
                 fields = logname.split('-')
                 if etime and analysisTime:
@@ -72,8 +74,9 @@ class DatabaseInterface(object):
                     # len(rows) is number of unique row indices, len(rowlist) is number of rows for this log
                     # etime contains times of the records in the database derived from Mongo ObjectIds
                     # analysisTime contains times associated with the analysiss from the analysiss file
-                    msg = "%s, %s, %s, %d, %d, %d, %d, %d" % (logname, fields[1], fields[2], len(set(processId)), 
-                                              len(rows), len(rowList), max(etime)-min(etime), max(analysisTime)-min(analysisTime))
+                    msg = "%s, %s, %s, %d, %d, %d, %d, %d, %s" % (logname, fields[1], fields[2], len(set(processId)), 
+                                              len(rows), len(rowList), max(etime)-min(etime), max(analysisTime)-min(analysisTime),
+                                              rowList == range(1,len(rowList)+1))
                     print msg
                     print >> op, msg
 

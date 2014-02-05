@@ -714,12 +714,16 @@ define(function(require, exports, module) {
             onMakeReport: function () {
                 var instrForce = false;
                 if (this.getCurrentInstructions()) {
+                    var contents;
                     var instructions = DASHBOARD.instructionsFileModel.get("instructions");
                     if (instructions.hasOwnProperty('force')) {
                         instrForce = instructions.force;
                         instructions.force = false;
+                        contents = cjs(instructions,null,2);
                     }
-                    var contents = cjs(instructions,null,2);
+                    else {
+                        contents = DASHBOARD.instructionsFileModel.get("contents");
+                    }
                     var v = instrValidator(instructions);
                     if (!v.valid) {
                         alert(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
@@ -731,61 +735,68 @@ define(function(require, exports, module) {
                         alert(msg);
                     },
                     function (s, result) {
-                        console.log('While submitting instructions: ' + s);
-                        var request_ts = result.request_ts;
-                        var start_ts = result.rpt_start_ts;
-                        var rpt_start_ts_date = new Date(start_ts);
-                        var posixTime = rpt_start_ts_date.valueOf();
-                        var hash = result.rpt_contents_hash;
-                        var dirName = formatNumberLength(rpt_start_ts_date.getTime(),13);
-                        var status = result.status;
-                        var msg = result.msg;
-                        var timezone = instructions.timezone;
-
-                        var job = new DASHBOARD.SubmittedJob({
-                                  directory: dirName,
-                                  hash: hash,
-                                  msg: msg,
-                                  rpt_start_ts: result.rpt_start_ts,
-                                  shown: true,
-                                  startPosixTime: posixTime,
-                                  status: status,
-                                  timezone: timezone,
-                                  title: instructions.title,
-                                  user: DASHBOARD.user
-                                  });
-                        // Check if this has been previously submitted
-                        if (request_ts !== start_ts) {
-                            alert(P3TXT.dashboard.alert_duplicate_instructions);
-                            var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
-                            if (prev.length > 0) {
-                                DASHBOARD.jobsView.highLightJob(prev[0]);
-                            }
-                            else {
-                                // This is a pre-existing job, but not on the current user's dashboard
-                                //  Find out who originally submitted it 
-                                var keyFile = instrResource(hash) + '/' + dirName + '/key.json';
-                                DASHBOARD.SurveyorRpt.resource(keyFile,
-                                function (err) {
-                                    console.log(P3TXT.dashboard.alert_while_getting_key_file_data + keyFile + ': ' + err);
-                                },
-                                function (status, data) {
-                                    console.log('While getting key file data from ' + keyFile + ': ' + status);
-                                    job.set({user: data.SUBMIT_KEY.user});
-                                    job.addLocalTime(function (err) {
-                                        DASHBOARD.submittedJobs.add(job);
-                                        // job.save();
-                                        job.analyzeStatus(err, status, msg);
-                                    }, timezone);
-                                });
-                            }
+                        // Note that errors from submitting a job can arrive with the "error" attribute of "result" set
+                        if (result.hasOwnProperty("error")) {
+                            var msg = P3TXT.dashboard.alert_while_submitting_instructions + result.error;
+                            alert(msg);
                         }
                         else {
-                            job.addLocalTime(function (err) {
-                                DASHBOARD.submittedJobs.add(job);
-                                // job.save();
-                                job.analyzeStatus(err, status, msg);
-                            });
+                            console.log('While submitting instructions: ' + s);
+                            var request_ts = result.request_ts;
+                            var start_ts = result.rpt_start_ts;
+                            var rpt_start_ts_date = new Date(start_ts);
+                            var posixTime = rpt_start_ts_date.valueOf();
+                            var hash = result.rpt_contents_hash;
+                            var dirName = formatNumberLength(rpt_start_ts_date.getTime(),13);
+                            var status = result.status;
+                            var msg = result.msg;
+                            var timezone = instructions.timezone;
+
+                            var job = new DASHBOARD.SubmittedJob({
+                                      directory: dirName,
+                                      hash: hash,
+                                      msg: msg,
+                                      rpt_start_ts: result.rpt_start_ts,
+                                      shown: true,
+                                      startPosixTime: posixTime,
+                                      status: status,
+                                      timezone: timezone,
+                                      title: instructions.title,
+                                      user: DASHBOARD.user
+                                      });
+                            // Check if this has been previously submitted
+                            if (request_ts !== start_ts) {
+                                alert(P3TXT.dashboard.alert_duplicate_instructions);
+                                var prev = DASHBOARD.submittedJobs.where({hash: hash, directory: dirName});
+                                if (prev.length > 0) {
+                                    DASHBOARD.jobsView.highLightJob(prev[0]);
+                                }
+                                else {
+                                    // This is a pre-existing job, but not on the current user's dashboard
+                                    //  Find out who originally submitted it 
+                                    var keyFile = instrResource(hash) + '/' + dirName + '/key.json';
+                                    DASHBOARD.SurveyorRpt.resource(keyFile,
+                                    function (err) {
+                                        console.log(P3TXT.dashboard.alert_while_getting_key_file_data + keyFile + ': ' + err);
+                                    },
+                                    function (status, data) {
+                                        console.log('While getting key file data from ' + keyFile + ': ' + status);
+                                        job.set({user: data.SUBMIT_KEY.user});
+                                        job.addLocalTime(function (err) {
+                                            DASHBOARD.submittedJobs.add(job);
+                                            // job.save();
+                                            job.analyzeStatus(err, status, msg);
+                                        }, timezone);
+                                    });
+                                }
+                            }
+                            else {
+                                job.addLocalTime(function (err) {
+                                    DASHBOARD.submittedJobs.add(job);
+                                    // job.save();
+                                    job.analyzeStatus(err, status, msg);
+                                });
+                            }
                         }
                     });
                 }

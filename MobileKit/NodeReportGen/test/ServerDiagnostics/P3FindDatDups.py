@@ -32,6 +32,8 @@ class DatabaseInterface(object):
         self.counters = self.dbase["counters"]
         self.immutable_names = self.dbase["immutable_names"]
         self.analyzer = self.dbase["analyzer"]
+        self.analyzer_dat_logs_list = self.dbase["analyzer_dat_logs_list"]
+        self.analyzer_dat_logs = self.dbase["analyzer_dat_logs"]
         self.analyzer_peak_logs_list = self.dbase["analyzer_peak_logs_list"]
         self.analyzer_peak_logs = self.dbase["analyzer_peak_logs"]
         #print self.analyzer.find().count()
@@ -39,15 +41,15 @@ class DatabaseInterface(object):
         #print self.analyzer_peak_logs.find().count()
 
     def findDuplicates(self):
-        with file('peak_Duplicates.csv','w') as op:
+        with file('dat_Duplicates.csv','w') as op:
             result = {}
-            log_meta = self.analyzer_peak_logs_list.find()
+            log_meta = self.analyzer_dat_logs_list.find()
             nMatches = log_meta.count()
             print "Number of matches in log_list", nMatches
             for l in log_meta:
                 fileIndex = l['fnm']
                 docmap = l['docmap']
-                log = self.analyzer_peak_logs.find({'fnm': fileIndex})
+                log = self.analyzer_dat_logs.find({'fnm': fileIndex})
                 # See if there are any duplicates
                 rows = set()
                 i = 0

@@ -3,9 +3,15 @@ import json
 import os
 import csv
 
-dupPeaksFile = r'C:\temp\PGEDups\pge.dups.peak.log'
-dupAnalysesFile = r'C:\temp\PGEDups\pge.dups.analysis.log'
-dirName = r'c:\temp\Pge'
+dupDatFile = r'dups.dat.log'
+dupPeaksFile = r'dups.peak.log'
+dupAnalysesFile = r'dups.analysis.log'
+dirName = r'/usr/local/picarro/p3SurveyorRpt/ReportGen/metrisis'
+
+dupDatSet = set()
+with open(dupDatFile, 'r') as fp:
+    for line in fp:
+        dupDatSet.add(line.split(" ")[-1].strip())
 
 dupPeaksSet = set()
 with open(dupPeaksFile, 'r') as fp:
@@ -42,7 +48,8 @@ with open("badReports.csv", "wb") as csvp:
             jobdir = os.path.join(dirName, md5[:2], md5, etm)
             try:
                 with open(os.path.join(jobdir,"key.json"), "r") as kp:
-                    keyData = json.loads(kp.read())
+                    keyText = kp.read()
+                    keyData = json.loads(keyText)
                     try:
                         peaksFiles = keyData["SUBTASKS"]["getPeaksData"]["OUTPUTS"]["SURVEYS"]
                         peaksSet = set(map(str, peaksFiles.values()))
@@ -50,7 +57,7 @@ with open("badReports.csv", "wb") as csvp:
                         badPeaks = []
                         if intersection:
                             badPeaks = [pk for pk in intersection]
-                    except IndexError:
+                    except KeyError:
                         # print "No peaks files for %s" % key
                         pass
                     try:
@@ -60,12 +67,23 @@ with open("badReports.csv", "wb") as csvp:
                         intersection = analysesSet & dupAnalysesSet
                         if intersection:
                             badAnalyses = [an for an in intersection]
-                    except IndexError:
+                    except KeyError:
                         # print "No analyses files for %s" % key
                         pass
-                    if badPeaks or badAnalyses:        
+                    try:
+                        datFiles = keyData["SUBTASKS"]["getFovsData"]["OUTPUTS"]["SURVEYS"]
+                        datSet = set(map(str, datFiles.values()))
+                        badDat = []
+                        intersection = datSet & dupDatSet
+                        if intersection:
+                            badDat = [dat for dat in intersection]
+                    except KeyError:
+                        # print "No dat files for %s" % key
+                        pass
+                    
+                    if badPeaks or badAnalyses or badDat:        
                         # print md5, etm, user, job["val"]["startLocalTime"], job["val"]["title"]
-                        csv.writer(csvp).writerow([md5, etm, user, job["val"]["startLocalTime"], job["val"]["title"]] + badPeaks + badAnalyses)
+                        csv.writer(csvp).writerow([md5, etm, user, job["val"]["startLocalTime"], job["val"]["title"]] + badPeaks + badAnalyses + badDat)
                         badJobs += 1
                         
             except IOError:
