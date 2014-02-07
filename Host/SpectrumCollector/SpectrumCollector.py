@@ -21,6 +21,7 @@ import sys
 import os
 import getopt
 import inspect
+import multiprocessing
 import numpy
 import Queue
 import shutil
@@ -606,6 +607,7 @@ def handleCommandSwitches():
     return configFile, options
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     try:
         configFile, options = handleCommandSwitches()
         spCollectorApp = SpectrumCollector(configFile)
