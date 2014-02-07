@@ -18,6 +18,7 @@ from Host.Common import EventManagerProxy
 APP_NAME = 'KillRestartSupervisor'
 TIMEOUT_SECS = 30.0 * 60.0
 SAFE_DAS_TEMP = 20.0
+MSG_THROTTLE_COUNT = 60
 
 
 if __name__ == '__main__':
@@ -34,9 +35,13 @@ if __name__ == '__main__':
                                         IsDontCareConnection=False)
 
     start = datetime.now()
+    i = 0
 
     while (datetime.now() - start).seconds < TIMEOUT_SECS:
-        EventManagerProxy.Log('Waiting for DAS temperature to stabilize')
+        if (i % MSG_THROTTLE_COUNT) == 0:
+            EventManagerProxy.Log('Waiting for DAS temperature to stabilize')
+
+        i += 1
 
         dasTemp = driver.rdDasReg("DAS_TEMPERATURE_REGISTER")
         if dasTemp >= SAFE_DAS_TEMP:
