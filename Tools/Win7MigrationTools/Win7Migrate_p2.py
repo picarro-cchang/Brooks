@@ -31,9 +31,10 @@ def findAndValidateDrives(debug=False):
     hostExeDir = os.path.normpath("C:/Picarro/g2000/HostExe")
 
     # validate the instrument drive, there should not yet be a HostExe folder in the expected Picarro path
+    # TODO: should we require that the software not be installed yet?
     if os.path.isdir(hostExeDir):
-        instDrive = None
-        logger.error("Picarro analyzer software is already installed, dir exists (%s)." % hostExeDir)
+        #instDrive = None
+        logger.warning("Picarro analyzer software is already installed, dir exists (%s)." % hostExeDir)
 
     # this program is running from the backup drive
     # returns something like F:
@@ -84,7 +85,7 @@ def findInstaller(analyzerType):
     logger.info("Preparing to run installer for analyzer type '%s'." % analyzerType)
 
     curDir = os.getcwd()
-    installerDir = os.path.join(curDir, mdefs.INSTALLER_FOLDER_ROOT_NAME)
+    installerDir = os.path.join(curDir, mdefs.INSTALLER_FOLDER_ROOT_NAME, analyzerType)
 
     if not os.path.isdir(installerDir):
         logger.error("Installer folder for analyzer type '%s' does not exist, aborting. Please contact Picarro for further assistance." % analyzerType)
@@ -192,27 +193,23 @@ def restoreXPFolders(fromDrive, toDrive):
     excludeDirs = [".bzr"]
     excludeFiles = [".bzrignore"]
 
-    # list of folders to restore
-    foldersToRestoreList = []
-
     # config folders in the list are relative to the backup drive folder and C: (dest)
-    for folder in mdefs.CONFIG_FOLDERS_TO_RESTORE_LIST:
-        folder = os.path.join(fromDrive, mdefs.BACKUP_XP_FOLDER_ROOT_NAME, folder)
-        foldersToRestoreList.append(folder)
+    rootFolder = os.path.normpath(os.path.join(fromDrive, os.path.sep, mdefs.BACKUP_XP_FOLDER_ROOT_NAME))
+    skipCount = len(rootFolder)
 
-    # Restore the folders to the C: drive
-    for folder in foldersToRestoreList:
-        srcFolder = os.path.normpath(os.path.join(fromDrive, mdefs.BACKUP_XP_FOLDER_ROOT_NAME, folder))
-        dstFolder = os.path.normpath(os.path.join(toDrive, folder))
+    for folder in mdefs.CONFIG_FOLDERS_TO_RESTORE_LIST:
+        srcFolder = os.path.normpath(os.path.join(fromDrive, os.path.sep, mdefs.BACKUP_XP_FOLDER_ROOT_NAME, folder))
 
         for dirpath, fromFilename in mutils.osWalkSkip(srcFolder, excludeDirs, excludeFiles):
             # construct the destination file path for the copy
-            toFilename = os.path.join(toDrive,
-                                      os.path.sep,
-                                      os.path.splitdrive(fromFilename)[1])
+            # leave off the root part of the filepath and append it to the dest drive
+            assert fromFilename.find(rootFolder) != -1
+
+            toFilename = os.path.join(toDrive, os.path.sep, fromFilename[skipCount+1:])
 
             # create the destination dir if it doesn't already exist
             targetDir = os.path.split(toFilename)[0]
+
             if not os.path.isdir(targetDir):
                 logger.warning("Creating '%s' on new Win7 boot drive since it does not exist." % targetDir)
                 os.makedirs(targetDir)
@@ -222,9 +219,9 @@ def restoreXPFolders(fromDrive, toDrive):
             # barfed on, if this fails.
             # copy2 retains the last access and modification times as well as permissions
             logger.info("Copying '%s' to '%s'" % (fromFilename, toFilename))
-            #shutil.copy2(fromFilename, toFilename)
+            shutil.copy2(fromFilename, toFilename)
 
-    logger.info("Successfully backed up Win7 configuration files.")
+    logger.info("Successfully restored WinXP configuration files.")
 
 
 def doMigrate(options):
@@ -328,18 +325,17 @@ def doMigrate(options):
         #showErrorDialog(errMsg)
         sys.exit(1)
 
-    """
+
     # Python validation (should be Python 2.7)
     # Skipping this, irrelevant check when running this
     # as a compiled script.
-    ret = mutils.validatePythonVersion("2.7", options.debug)
+    #ret = mutils.validatePythonVersion("2.7", options.debug)
+    #if not ret:
+    #    errMsg = "Python validation failed. See log results in '%s'" % logFilename
+    #    root.error(errMsg)
+    #    #showErrorDialog(errMsg)
+    #    sys.exit(1)
 
-    if not ret:
-        errMsg = "Python validation failed. See log results in '%s'" % logFilename
-        root.error(errMsg)
-        #showErrorDialog(errMsg)
-        sys.exit(1)
-    """
 
     # we're running from the backup partition
     # the C: drive is the Windows and main partition
@@ -362,6 +358,10 @@ def doMigrate(options):
     analyzerType = cp.get(mdefs.CONFIG_SECTION, mdefs.ANALYZER_TYPE)
     volumeName = cp.get(mdefs.CONFIG_SECTION, mdefs.VOLUME_NAME)
 
+    print "analyzerName=", analyzerName
+    print "analyzerType=", analyzerType
+    print "volumeName=", volumeName
+
     # TODO: get mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME so we can set them below
 
     # TODO: warn user if installing over existing software?
@@ -376,6 +376,9 @@ def doMigrate(options):
     else:
         root.info("Not a clean analyzer software install on Win7 boot drive, one or more config folders already exist. Config files will not be backed up.")
 
+    # TODO: put the install back in (don't want to mess with my hard drive)
+
+
     # run the installer (use analyzer type to determine which one)
     # installers are in subfolders in the PicarroInstallers folder
     installerName = findInstaller(analyzerType)
@@ -384,11 +387,17 @@ def doMigrate(options):
         # no installer found, already logged an error so bail out now
         sys.exit(1)
 
-    ret = runInstaller(installerName)
+    root.info("Running installer '%s'." % installerName)
 
-    if not ret:
-        root.error("Installer failed or was canceled, aborting.")
-        sys.exit(1)
+    if not options.skipInstall:
+        ret = runInstaller(installerName)
+
+        if not ret:
+            root.error("Installer failed or was canceled, aborting remainder of migration.")
+            sys.exit(1)
+    else:
+        root.warning("Skipping software installation, --skipInstall option was set.")
+
 
     # if this was a virgin install (config folders did not exist), backup
     # the config folders so they can be compared later in case there is
@@ -402,10 +411,12 @@ def doMigrate(options):
         root.info("Setting C: drive name to '%s'" % volumeName)
         ret = mutils.setVolumeName("C:", volumeName)
 
-        if not ret:
-            root.error("Setting C: drive name to '%s' failed! It will need to be set manually, continuing with migration." % volumeName)
-        else:
-            root.info("C: drive name successfully set to '%s'" % volumeName)
+        # TODO: there already is an error logged, don't need to do it again
+        #       but maybe we need to keep track of this so user can be directed to look in the log file?
+        #if not ret:
+        #    root.error("Setting C: drive name to '%s' failed! It will need to be set manually, continuing with migration." % volumeName)
+        #else:
+        #    root.info("C: drive name successfully set to '%s'" % volumeName)
 
     # TODO: set the computer name and My Computer icon name
 
@@ -442,7 +453,11 @@ Win7 migration utility part 2 (install).
 
     parser.add_option('--restoreConfigsOnly', dest="restoreConfigsOnly",
                       action='store_true', default=False,
-                      help=('Restore the config files only, no user data files or logs.'))
+                      help=('Restore the config files only, not user data files or logs.'))
+
+    parser.add_option('--skipInstall', dest="skipInstall",
+                      action='store_true', default=False,
+                      help=('Skip installing the software (useful for devs).'))
 
     parser.add_option('--logLevel', dest='logLevel',
                       default=None, help=('Set logging level.\n',

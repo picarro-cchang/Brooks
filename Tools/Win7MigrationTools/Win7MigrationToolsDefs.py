@@ -100,4 +100,4 @@ MY_COMPUTER_ICON_NAME = "MyComputerIconName"
 # Folder name containing installers. Each installer is in a subdirectory
 # named by analyzer type (e.g., CFADS, CFKADS, etc.) just like they are
 # on the network staging and release areas.
-INSTALLER_FOLDER_ROOT_NAME = "PicarroInstallers"
+INSTALLER_FOLDER_ROOT_NAME = "Picarro Installers"
