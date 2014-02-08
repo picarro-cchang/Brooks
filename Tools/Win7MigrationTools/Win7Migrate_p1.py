@@ -31,27 +31,6 @@ import Win7MigrationToolsDefs as mdefs
 import Win7MigrationUtils as mutils
 
 
-def osWalkSkip(root, excludeDirs, excludeFiles):
-    """
-    Enumerator that walks through files under a root folder, skipping any dirs
-     and filenames that passed in. Returns full dir path and filename path.
-
-    excludeDirs     list of directory names to exclude (pass an empty list if none to exclude)
-    excludeFiles    list of file names to exclude (pass an empty list if none to exclude)
-    """
-    for dirpath, dirnames, filenames in os.walk(root):
-        for edir in excludeDirs:
-            if edir in dirnames:
-                dirnames.remove(edir)
-
-        for efile in excludeFiles:
-            if efile in filenames:
-                filenames.remove(efile)
-
-        # return the full directory and full filename paths
-        for filename in filenames:
-            yield dirpath, os.path.join(dirpath, filename)
-
 
 def findAndValidateDrives(debug=False):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
@@ -285,11 +264,11 @@ def backupFiles(fromDrive, toDrive, backupConfigsOnly):
             logger.warning("Cannot backup '%s' as it does not exist on WinXP instrument drive!" % folder)
             continue
 
-        for dirpath, fromFilename in osWalkSkip(folder, excludeDirs, excludeFiles):
+        for dirpath, fromFilename in mutils.osWalkSkip(folder, excludeDirs, excludeFiles):
             # construct the destination file path for the copy
             toFilename = os.path.join(toDrive,
                                       os.path.sep,
-                                      mdefs.BACKUP_FOLDER_ROOT_NAME) + os.path.splitdrive(fromFilename)[1]
+                                      mdefs.BACKUP_XP_FOLDER_ROOT_NAME) + os.path.splitdrive(fromFilename)[1]
 
             # create the destination dir if it doesn't already exist
             targetDir = os.path.split(toFilename)[0]
@@ -323,49 +302,7 @@ def showSuccessDialog(msg):
 """
 
 
-def main():
-    usage = """
-%prog [options]
-
-Win7 migration utility part 1 (back up).
-"""
-
-    parser = OptionParser(usage=usage)
-
-    parser.add_option('-v', '--version', dest='version', action='store_true',
-                      default=False, help=('Report the version number.'))
-
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      default=False, help=('Enables debugging.'))
-
-    parser.add_option('--backupConfigsOnly', dest="backupConfigsOnly",
-                      action='store_true', default=False,
-                      help=('Backup the config files only, no user data files or logs.'))
-
-    parser.add_option('--noShutdownWindows', dest="noShutdownWindows",
-                      action='store_true', default=False,
-                      help=("Don't shutdown windows after this script finishes (default is to shut down Windows)."))
-
-    parser.add_option('--logLevel', dest='logLevel',
-                      default=None, help=('Set logging level.\n',
-                                          '0  = NOTSET',
-                                          '10 = DEBUG',
-                                          '20 = INFO'
-                                          '30 = WARNING',
-                                          '40 = ERROR',
-                                          '50 = CRITICAL'))
-
-    parser.add_option('--logFilename', '--logFile', dest='logFilename',
-                      default=None, help=('Output logging information to the specified filename in addition to stdout.'))
-
-    parser.add_option('--logToNewFile', dest='logToNewFile', action='store_true',
-                      default=False, help=('Resets the log file if it exists. Default is to append to the existing file.'))
-
-    parser.add_option('--localTime', dest='localTime', action='store_true',
-                      default=False, help=('Log timestamps in local time (default is GMT).'))
-
-    options, _ = parser.parse_args()
-
+def doMigrate(options):
     if options.version is True:
         print mdefs.MIGRATION_TOOLS_VERSION
         sys.exit(0)
@@ -538,7 +475,7 @@ Win7 migration utility part 1 (back up).
     # ==== Backup ====
     #
     # Backup files from XP drive to Win7 drive partition 2.
-    ret = backupFiles(instDrive, migBackupDrive, options.backupConfigsOnly)
+    backupFiles(instDrive, migBackupDrive, options.backupConfigsOnly)
 
     # TODO: Back up autosampler (.exe, config files, etc.)
     root.warning("Autosampler backup needs to be implemented!")
@@ -565,6 +502,51 @@ Win7 migration utility part 1 (back up).
         root.info("Windows not getting shutdown due to --noShutdownWindows command line option.")
     else:
         shutdownWindows(options.debug)
+
+def main():
+    usage = """
+%prog [options]
+
+Win7 migration utility part 1 (back up).
+"""
+
+    parser = OptionParser(usage=usage)
+
+    parser.add_option('-v', '--version', dest='version', action='store_true',
+                      default=False, help=('Report the version number.'))
+
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      default=False, help=('Enables debugging.'))
+
+    parser.add_option('--backupConfigsOnly', dest="backupConfigsOnly",
+                      action='store_true', default=False,
+                      help=('Backup the config files only, no user data files or logs.'))
+
+    parser.add_option('--noShutdownWindows', dest="noShutdownWindows",
+                      action='store_true', default=False,
+                      help=("Don't shutdown windows after this script finishes (default is to shut down Windows)."))
+
+    parser.add_option('--logLevel', dest='logLevel',
+                      default=None, help=('Set logging level.\n',
+                                          '0  = NOTSET',
+                                          '10 = DEBUG',
+                                          '20 = INFO'
+                                          '30 = WARNING',
+                                          '40 = ERROR',
+                                          '50 = CRITICAL'))
+
+    parser.add_option('--logFilename', '--logFile', dest='logFilename',
+                      default=None, help=('Output logging information to the specified filename in addition to stdout.'))
+
+    parser.add_option('--logToNewFile', dest='logToNewFile', action='store_true',
+                      default=False, help=('Resets the log file if it exists. Default is to append to the existing file.'))
+
+    parser.add_option('--localTime', dest='localTime', action='store_true',
+                      default=False, help=('Log timestamps in local time (default is GMT).'))
+
+    options, _ = parser.parse_args()
+
+    doMigrate(options)
 
 
 if __name__ == "__main__":

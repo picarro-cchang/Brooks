@@ -30,6 +30,28 @@ INSTMGR_SHUTDOWN_HOST_AND_DAS  = 1 # shutdown host and DAS
 INSTMGR_SHUTDOWN_HOST          = 2 # shutdown host and leave DAS in current state
 
 
+def osWalkSkip(root, excludeDirs, excludeFiles):
+    """
+    Enumerator that walks through files under a root folder, skipping any dirs
+     and filenames that passed in. Returns full dir path and filename path.
+
+    excludeDirs     list of directory names to exclude (pass an empty list if none to exclude)
+    excludeFiles    list of file names to exclude (pass an empty list if none to exclude)
+    """
+    for dirpath, dirnames, filenames in os.walk(root):
+        for edir in excludeDirs:
+            if edir in dirnames:
+                dirnames.remove(edir)
+
+        for efile in excludeFiles:
+            if efile in filenames:
+                filenames.remove(efile)
+
+        # return the full directory and full filename paths
+        for filename in filenames:
+            yield dirpath, os.path.join(dirpath, filename)
+
+
 def validateWindowsVersion(verNeeded, debug=False):
     """
     verNeeded       5 for WinXP, 6 for Win7
@@ -92,11 +114,10 @@ def runCommand(command):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
 
-    # I think we need to use this to get the output:
-    # stdout_value = p.communicate()
-    # or this? stdout_value, stderr_value = p.communicate()
+    stdout_value, stderr_value = p.communicate()
     # print "stdout:", repr(stdout_value)
-    return iter(p.stdout.readline, 'b')
+    #return iter(p.stdout.readline, 'b')
+    return stdout_value, stderr_value
 
 
 def getVolumeName(driveLetter):
@@ -118,8 +139,7 @@ def setVolumeName(driveLetter, volumeName):
     logger.info("Setting volume name for %s to '%s'" % (drive, volumeName))
 
     # Windows command syntax is "label C: name"
-    # Not clear what is returned
-    ret = runCommand("label %s %s" % (drive, volumeName))
+    stdout_value, stderr_value = runCommand("label %s %s" % (drive, volumeName))
 
     #print "setVolumeName: ret='%s'" % ret
     #print "ret=%r" % ret
