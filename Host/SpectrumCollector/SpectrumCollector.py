@@ -21,15 +21,13 @@ import sys
 import os
 import getopt
 import inspect
+import multiprocessing
 import numpy
 import Queue
 import shutil
 import threading
 import time
 import ctypes
-from tables import openFile, Filters
-from tables import Float32Col, Float64Col, Int16Col, Int32Col, Int64Col
-from tables import UInt16Col, UInt32Col, UInt64Col
 
 from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
@@ -43,6 +41,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.SpectrumCollector.Sequencer import Sequencer
+from Host.SpectrumCollector.RdfFileOutput import writeSpectrumFile
 
 APP_NAME = "SpectrumCollector"
 
@@ -172,9 +171,6 @@ class SpectrumCollector(object):
                             port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
                             name="Spectrum Collector broadcaster",logFunc = Log)
 
-        # Compression filter for HDF5
-        self.hdf5Filters = Filters(complevel=1, fletcher32=True)
-
         self.enableSpectrumFiles = True
         self.closeSpectrumWhenDone = False
         self.tempRdDataBuffer = None
@@ -285,7 +281,9 @@ class SpectrumCollector(object):
                 self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))
                 spectraInScheme.append(spectrum)
                 if endOfScheme:
-                    self.writeOut(spectraInScheme)
+                    if self.enableSpectrumFiles and spectraInScheme:
+                        fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
+                        self.writeOut(fileName, spectraInScheme)
                     endOfScheme = False
                     self.schemesUsed = {}
                     spectraInScheme = []
@@ -422,77 +420,36 @@ class SpectrumCollector(object):
 
         return spectrumDict
 
-    def writeOut(self, spectraInScheme):
+    def writeOut(self, fileName, spectraInScheme):
         """Write out the spectra collected for a scheme file to an HDF5 file.
 
         Args:
+            fileName: Name of HDF5 to receive spectrum
             spectraInScheme: Spectral data collected
         """
-        if self.enableSpectrumFiles and spectraInScheme:
-            # Create HDF5 file
-            fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
-            numSchemes = len(self.schemesUsed)
-            with openFile(fileName, "w") as hdf5Handle:
-                if numSchemes == 1:
-                    schemeUsed = self.schemesUsed.values()[0]
-                    if schemeUsed is not None:
-                        hdf5Handle.root._v_attrs.schemeFile = schemeUsed[3]
-                        hdf5Handle.root._v_attrs.modeName = schemeUsed[0]
-                else:
-                    Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]), 
-                        Data=self.schemesUsed)
-                self.fillRdfTables(hdf5Handle, spectraInScheme)
+        # Create HDF5 file
+        numSchemes = len(self.schemesUsed)
+        attrs = {}
+        
+        if numSchemes == 1:
+            scheme = self.schemesUsed.values()[0]
+            if scheme is not None:
+                attrs["schemeFile"] = scheme[3]
+                attrs["modeName"] = scheme[0]
+        else:
+            Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]), 
+                Data=self.schemesUsed)
+            
+        writeSpectrumFile(fileName, spectraInScheme, attrs, self.auxSpectrumFile)
+        self.auxSpectrumFile = None
+            
 
-            # Archive HDF5 file
-            archiveThread = threading.Thread(target = self._archiveFile, args = (fileName, self.auxSpectrumFile))
-            archiveThread.setDaemon(True)
-            archiveThread.start()
-            self.auxSpectrumFile = ""
-
-    def fillRdfTables(self, hdf5Handle, spectraInScheme):
-        """Transfer data from spectraInScheme to tables in an HDF5 output file.
-
-        Args:
-            hdf5Handle: Open HDF5 file to receive tables
-            spectraInScheme: This is a list of dictionaries, one for each spectrum. Each spectrum consists
-                of a dictionary with keys "rdData", "sensorData", "tagalongData" and "controlData". The
-                values are tables of data (stored as a dictionary whose keys are the column names and whose
-                values are lists of the column data) which are to be written to the output file.
-        """
-        # Lookup table giving pyTables column generation function keyed
-        # by the numpy dtype.name
-        colByName = dict(float32=Float32Col, float64=Float64Col, 
-                         int16=Int16Col, int32=Int32Col, int64=Int64Col,
-                         uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
-        # We make HDF5 tables and define the columns needed in these tables
-        tableDict = {}
-        for spectrum in spectraInScheme:
-            # Iterate over rdData, sensorData, tagalongData and controlData tables
-            for tableName in spectrum:
-                spectTableData = spectrum[tableName]
-                if len(spectTableData) > 0:
-                    keys, values = zip(*sorted(spectTableData.items()))
-                    if tableName not in tableDict:
-                        # We are encountering this table for the first time, so we 
-                        #  need to build up colDict whose keys are the column names and
-                        #  whose values are the subclasses of Col used by pytables to
-                        #  define the HDF5 column. These are retrieved from colByName.
-                        colDict = {}
-                        # Use numpy to get the dtype names for the various data
-                        values = [numpy.asarray(v) for v in values]
-                        for key, value in zip(keys, values):
-                            colDict[key] = colByName[value.dtype.name]()
-                        tableDict[tableName] = hdf5Handle.createTable(hdf5Handle.root, tableName, colDict, filters=self.hdf5Filters)
-                    table = tableDict[tableName]
-                    # Go through the arrays in values and fill up each row of the table
-                    #  one element at a time
-                    row = table.row
-                    for j in range(len(values[0])):
-                        for i, key in enumerate(keys):
-                            row[key] = values[i][j]
-                        row.append()
-                    table.flush()
-
+    def archiveSpectrumFile(self, fileName, auxSpectrumFile):
+        # Archive HDF5 file
+        archiveThread = threading.Thread(target = self._archiveFile, args = (fileName, auxSpectrumFile))
+        archiveThread.setDaemon(True)
+        archiveThread.start()
+            
     def _archiveFile(self, streamPath, auxSpectrumFile):
         time.sleep(1.0)
         # Copy to auxiliary spectrum file and reset filename to empty
@@ -609,6 +566,10 @@ class SpectrumCollector(object):
     def RPC_setAuxiliarySpectrumFile(self,fileName):
         self.auxSpectrumFile = fileName
 
+    @CmdFIFO.rpc_wrap
+    def RPC_archiveSpectrumFile(self, fileName, auxSpectrumFile):
+        self.archiveSpectrumFile(fileName, auxSpectrumFile)
+
 
 HELP_STRING = """SpectrumCollector.py [-c<FILENAME>] [-h|--help]
 
@@ -646,6 +607,7 @@ def handleCommandSwitches():
     return configFile, options
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     try:
         configFile, options = handleCommandSwitches()
         spCollectorApp = SpectrumCollector(configFile)
