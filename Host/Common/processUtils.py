@@ -1,27 +1,41 @@
-#!/usr/bin/python
-#
-# FILE:  
-#   processUtils.py
-#
-# DESCRIPTION:                                                
-#   Utilities to launch and terminate processes
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
-# HISTORY:
-#   07-Jan-2009  sze  Initial version.
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved 
-#                                                            
+"""
+Copyright 2009-2014 Picarro Inc.
+"""
+
 import ctypes
 import os
 import sys
 import time
+from os import path
+
+import psutil
+
 
 CONSOLE_MODE_OWN_WINDOW    = 1
 CONSOLE_MODE_NO_WINDOW     = 2
 CONSOLE_MODE_SHARED_WINDOW = 3
+
+
+def findHandle(name):
+    """
+    From: https://stackoverflow.com/questions/11114492/check-if-a-file-is-not-open-not-used-by-other-process-in-python
+    """
+    
+    procsWithHandle = []
+
+    for proc in psutil.process_iter():
+        try:
+            files = proc.get_open_files()
+            if files:
+                for f in files:
+                    if path.basename(f.path) == name:
+                        procsWithHandle.append(proc.pid)
+
+        except psutil.NoSuchProcess:
+            # Process was terminated between process_iter() and get_open_files()
+            pass
+
+    return procsWithHandle
 
 if sys.platform == "win32":
     import win32process

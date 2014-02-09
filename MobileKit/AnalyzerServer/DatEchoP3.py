@@ -1,5 +1,5 @@
 """
-Copyright 2012-2013 Picarro Inc
+Copyright 2012-2014 Picarro Inc
 
 Listen to a path of .dat (type) files on the local system, and echo
 new rows to the P3 archive
@@ -36,6 +36,7 @@ from Host.Common import SharedTypes
 from Host.Common import Win32
 from Host.Common import EventManagerProxy
 from Host.Common.Win32 import Kernel32
+from Host.Common import processUtils
 
 SECONDS_IN_DAY = 86400.0
 
@@ -547,11 +548,15 @@ class DataEchoP3(object):
                 if self.useEventsOnCache:
                     print "Open event name: %s" % os.path.basename(fname)
                     evt = Kernel32.openEvent(Kernel32.EVENT_MODIFY_STATE, os.path.basename(fname))
-                    if evt is None:
+                    import pprint
+                    pprint.pprint(evt)
+                    if not evt or evt == 0L:
                         print "Error opening event: GetLastError() = %s" % Kernel32.getLastError()
-                    assert evt is not None
-                    
+                    assert evt
+                    assert evt != 0L
+                    print "pre-setEvent"
                     Kernel32.setEvent(evt)
+                    print "post-setEvent"
 
             if lastRow != int(row):
                 print ("Incomplete file. Server row: %s, "
@@ -695,6 +700,18 @@ class DataEchoP3(object):
                     line = ''
 
         if renameAsBad:
+            procs = processUtils.findHandle(fname)
+
+            openHandleWaitCount = 0
+            while procs and openHandleWaitCount < 10:
+                openHandleWaitCount += 1
+                EventManagerProxy.Log("Waiting for '%s' to release '%s'" % (procs, fname))
+                time.sleep(1.0)
+                procs = processUtils.findHandle(fname)
+
+            if procs:
+                EventManagerProxy.Log("'%s' still held open by '%s'. File move may fail." % (fname, procs))
+
             try:
                 EventManagerProxy.Log("Renaming '%s' as a bad .dat file." % fname)
                 shutil.move(os.path.join(path, fname),
