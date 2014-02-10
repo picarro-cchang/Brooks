@@ -548,15 +548,14 @@ class DataEchoP3(object):
                 if self.useEventsOnCache:
                     print "Open event name: %s" % os.path.basename(fname)
                     evt = Kernel32.openEvent(Kernel32.EVENT_MODIFY_STATE, os.path.basename(fname))
-                    import pprint
-                    pprint.pprint(evt)
+
                     if not evt or evt == 0L:
                         print "Error opening event: GetLastError() = %s" % Kernel32.getLastError()
+
                     assert evt
                     assert evt != 0L
-                    print "pre-setEvent"
+
                     Kernel32.setEvent(evt)
-                    print "post-setEvent"
 
             if lastRow != int(row):
                 print ("Incomplete file. Server row: %s, "
