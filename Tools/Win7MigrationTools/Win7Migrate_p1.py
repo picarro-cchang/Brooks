@@ -242,7 +242,8 @@ def backupFiles(fromDrive, toDrive, backupConfigsOnly):
         logger.info("Backing up configuration files only, from '%s' to '%s'." % (fromDrive, toDrive))
 
     # skip bzr files and folders
-    # TODO: Any chance of ending up with unins000.dat or unins000.exe? Exclude them too.
+    # TODO: Any chance of ending up with unins000.dat or unins000.exe? If so, exclude them too.
+    #       Need to use regular expressions to find them since can end up with several.
     excludeDirs = [".bzr"]
     excludeFiles = [".bzrignore"]
 
@@ -456,14 +457,15 @@ def doMigrate(options):
     # Save some config info in a file for migration part 2.
     defaults = {}
     cp = ConfigParser.ConfigParser(defaults)
-    cp.add_section(mdefs.CONFIG_SECTION)
-    cp.set(mdefs.CONFIG_SECTION, mdefs.VOLUME_NAME, win7DriveName)
-    cp.set(mdefs.CONFIG_SECTION, mdefs.ANALYZER_TYPE, analyzerType)
-    cp.set(mdefs.CONFIG_SECTION, mdefs.ANALYZER_NAME, analyzerName)
+    cp.add_section(mdefs.MIGRATION_CONFIG_SECTION)
+    cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME, win7DriveName)
+    cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_TYPE, analyzerType)
+    cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME, analyzerName)
 
     # TODO: save off mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME
+    root.warning("Saving off computer name and name from My Computer needs to be implemented!")
 
-    filename = os.path.join(os.getcwd(), mdefs.CONFIG_FILENAME)
+    filename = os.path.join(os.getcwd(), mdefs.MIGRATION_CONFIG_FILENAME)
     with open(filename, "w") as f:
         cp.write(f)
 
@@ -481,7 +483,7 @@ def doMigrate(options):
     root.warning("Autosampler backup needs to be implemented!")
 
     # TODO: Back up other modules config files that aren't part of configs
-    root.warning("Backup of other config files for misc. modules needs to be implemented!")
+    root.warning("Backup of config files for peripherals not using standard config folders needs to be implemented!")
 
     # ==== Shut down ====
     msg = "Part 1 of migration from WinXP to Win7 completed successfully!"
@@ -489,7 +491,7 @@ def doMigrate(options):
 
     # TODO: Show instructions for what to do next (remove the WinXP drive and
     #       install the Win7 drive).
-    #root.warning("Instructions for install step need to be implemented!")
+    root.warning("Instructions directing user to swap drives needs to be implemented!")
 
     print ""
     print "%s" % msg
@@ -502,6 +504,7 @@ def doMigrate(options):
         root.info("Windows not getting shutdown due to --noShutdownWindows command line option.")
     else:
         shutdownWindows(options.debug)
+
 
 def main():
     usage = """

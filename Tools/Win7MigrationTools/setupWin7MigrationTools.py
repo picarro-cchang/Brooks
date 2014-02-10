@@ -92,7 +92,7 @@ data_files = []
 
 windowsList = []
 
-consoleList = ["Win7Migrate_p1.py"]
+consoleList = ["Win7Migrate_p1.py", "Win7Migrate_p2.py"]
 
 if pythonVer == "2.5":
     packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
@@ -115,9 +115,10 @@ if pythonVer == "2.5":
     )
 
 elif pythonVer == "2.7":
-    if pythonSubVer == "2.7.3":
-        import zmq
-        os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
+    # shouldn't need ZMQ for Win 7 migration tools
+    #if pythonSubVer == "2.7.3":
+    #    import zmq
+    #    os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
 
     packageList = ["werkzeug", "jinja2", "email"]
     packageList = []

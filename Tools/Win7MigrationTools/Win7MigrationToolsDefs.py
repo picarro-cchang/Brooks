@@ -5,7 +5,7 @@
 # History:
 # 2014-01-30:  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0"
+MIGRATION_TOOLS_VERSION = "1.0.0.1"
 MIGRATION_TOOLS_LOGNAME = "MigrationTools"
 
 # This isn't working the way I want it to...
@@ -56,23 +56,23 @@ CONFIG_FOLDERS_TO_BACKUP_LIST = ["C:/Picarro/g2000"]
 
 
 # Restore folder and file paths are relative to C: and the backup folder on the migration drive.
-# List of whole folders to restore from after the Win7 software is installed
+# List of specific folders to restore from after the Win7 software is installed
 #
 # TODO: Restore only specific autosampler files. Exes and Dlls are specific to WinXP.
-CONFIG_FOLDERS_TO_RESTORE_LIST = ["Picarro/g2000/InstrConfig"]
+CONFIG_FOLDERS_TO_RESTORE_LIST = ["C:/Picarro/g2000/InstrConfig"]
 
-# List of files to restore.
+# List of specific files to restore.
 #
-# TODO: Bad idea to update all Coordinator .ini files, PF made changes to them for 1.3.9,
+# Note: It's a poor idea to update all Coordinator .ini files, PF made changes to them for 1.3.9,
 #       and the dual Coordinator file was fixed for 1.4.1. These changes should be picked up.
-#       So I'm leaving them out.
+#       So they aren't restored, Service/users can do this manually if required.
 #
-#       Add Autosampler files from Picarro/g2000/AutosamplerExe.
+# TODO: Add specific Autosampler files from Picarro/g2000/AutosamplerExe.
 
-CONFIG_FILES_TO_RESTORE_LIST = ["Picarro/g2000/AppConfig/Config/Utilities/SupervisorLauncher.ini",
-                                "Picarro/g2000/AppConfig/Config/Utilities/CoordinatorLauncher.ini",
-                                #"Picarro/g2000/AppConfig/Supervisor/*.ini",
-                                #"Picarro/g2000/AppConfig/Coordinator/*.ini",
+CONFIG_FILES_TO_RESTORE_LIST = ["C:/Picarro/g2000/AppConfig/Config/Utilities/SupervisorLauncher.ini",
+                                "C:/Picarro/g2000/AppConfig/Config/Utilities/CoordinatorLauncher.ini",
+                                #"C:/Picarro/g2000/AppConfig/Supervisor/*.ini",
+                                #"C:/Picarro/g2000/AppConfig/Coordinator/*.ini",
                                ]
 
 
@@ -89,8 +89,8 @@ CONFIG_WIN7_FOLDERS_TO_BACKUP_LIST = ["C:/Picarro/g2000/AppConfig",
                                       "C:/Picarro/g2000/CommonConfig"]
 
 # Config filename, section and keys for stashing the analyzer type and volume name to use
-CONFIG_FILENAME = "Win7Config.ini"
-CONFIG_SECTION = "Win7Migration"
+MIGRATION_CONFIG_FILENAME = "Win7Config.ini"
+MIGRATION_CONFIG_SECTION = "Win7Migration"
 ANALYZER_TYPE = "AnalyzerType"
 ANALYZER_NAME = "AnalyzerName"
 VOLUME_NAME = "VolumeName"
