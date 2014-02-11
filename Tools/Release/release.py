@@ -37,6 +37,7 @@ REPO_BASE = 'https://github.com/picarro/host.git'
 
 ISCC = 'c:/program files/Inno Setup 5/ISCC.exe'
 ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
+INSTALLER_SCRIPTS_DIR = 'InstallerScripts'
 
 RESOURCE_DIR = ('s:/CRDS/SoftwareReleases/G2000Projects/G2000_PrepareInstaller/'
                 'Resources')
@@ -370,8 +371,22 @@ def makeExe(opts):
         LogErr("%s is missing!" % versionConfig)
         sys.exit(1)
 
+    configInfo = {}
+
     with open(productConfigs, 'r') as prods:
-        CONFIGS.update(json.load(prods))
+        configInfo.update(json.load(prods))
+
+    # win7 g2000 builds have categories in the JSON file but winxp g2000 and mobile don't currently.
+    # override the hard-coded dir
+    global INSTALLER_SCRIPTS_DIR
+
+    if "installerScriptsDir" in configInfo:
+        INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
+
+    if "buildTypes" in configInfo:
+        CONFIGS = configInfo["buildTypes"]
+    else:
+        CONFIGS = configInfo
 
     # -------- prepare build options --------
 
@@ -995,6 +1010,8 @@ def _compileInstallers(product, osType, ver):
         if osType == 'win7':
             isccApp = ISCC_WIN7
 
+        setupFilePath = "%s\\setup_%s_%s.iss" % (INSTALLER_SCRIPTS_DIR, c, CONFIGS[c])
+
         args = [isccApp, "/dinstallerType=%s" % c,
                 "/dhostVersion=%s" % _verAsString(product, ver),
                 "/dresourceDir=%s" % RESOURCE_DIR,
@@ -1003,7 +1020,7 @@ def _compileInstallers(product, osType, ver):
                 "/v9",
                 "/O%s" % os.path.abspath(os.path.join(SANDBOX_DIR,
                                                         'Installers')),
-                "InstallerScripts\\setup_%s_%s.iss" % (c, CONFIGS[c])]
+                setupFilePath]
 
         print subprocess.list2cmdline(args)
 
