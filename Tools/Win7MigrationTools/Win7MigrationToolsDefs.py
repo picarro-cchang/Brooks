@@ -5,7 +5,7 @@
 # History:
 # 2014-01-30:  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.1"
+MIGRATION_TOOLS_VERSION = "1.0.0.2"
 MIGRATION_TOOLS_LOGNAME = "MigrationTools"
 
 # This isn't working the way I want it to...

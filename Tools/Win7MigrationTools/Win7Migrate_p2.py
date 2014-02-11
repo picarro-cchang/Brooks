@@ -74,7 +74,7 @@ def osGetInstallers(root, filenamePrefix):
             yield dirpath, os.path.join(dirpath, filename)
 
 
-def findInstaller(analyzerType):
+def findInstaller(migBackupDrive, analyzerType):
     """
     Returns the installer filename (full path) for the analyzer type, or None
     on error (none or more than one found)
@@ -84,8 +84,8 @@ def findInstaller(analyzerType):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
     logger.info("Preparing to run installer for analyzer type '%s'." % analyzerType)
 
-    curDir = os.getcwd()
-    installerDir = os.path.join(curDir, mdefs.INSTALLER_FOLDER_ROOT_NAME, analyzerType)
+    installerDir = os.path.join(migBackupDrive, os.path.sep, mdefs.MIGRATION_TOOLS_FOLDER_NAME, mdefs.INSTALLER_FOLDER_ROOT_NAME, analyzerType)
+    logger.debug("Installer folder for analyzer type '%s' is '%s'" % (analyzerType, installerDir))
 
     if not os.path.isdir(installerDir):
         logger.error("Installer folder for analyzer type '%s' does not exist, aborting. Please contact Picarro for further assistance." % analyzerType)
@@ -427,7 +427,7 @@ def doMigrate(options):
 
     # run the installer (use analyzer type to determine which one)
     # installers are in subfolders in the PicarroInstallers folder
-    installerName = findInstaller(analyzerType)
+    installerName = findInstaller(migBackupDrive, analyzerType)
 
     if installerName is None:
         # no installer found, already logged an error so bail out now

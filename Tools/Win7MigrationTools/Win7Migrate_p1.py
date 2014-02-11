@@ -372,7 +372,7 @@ def doMigrate(options):
     # Find and validate the instrument main drive and the migration drive backup partition
     instDrive, migBackupDrive = findAndValidateDrives(options.debug)
 
-    root.info("instrument drive='%s', migration backup partition ='%s'" %
+    root.info("instrument drive='%s', migration backup drive ='%s'" %
               (instDrive, migBackupDrive))
 
     if instDrive is None or migBackupDrive is None:
@@ -501,7 +501,7 @@ def doMigrate(options):
     # Debug will shut it down, but with a longer timeout to give a chance to
     # enter a 'shutdown -a' command.
     if options.noShutdownWindows:
-        root.info("Windows not getting shutdown due to --noShutdownWindows command line option.")
+        root.info("Windows not getting shut down due to --noShutdownWindows command line option.")
     else:
         shutdownWindows(options.debug)
 
