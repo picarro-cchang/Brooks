@@ -379,6 +379,7 @@ def makeExe(opts):
     # win7 g2000 builds have categories in the JSON file but winxp g2000 and mobile don't currently.
     # override the hard-coded dir
     global INSTALLER_SCRIPTS_DIR
+    global CONFIGS
 
     if "installerScriptsDir" in configInfo:
         INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
