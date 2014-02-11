@@ -169,11 +169,12 @@ def _buildDoneMsg(message, startSec, logfile):
     print "******** %s COMPLETE ********" % message
 
 
-def _printSummary(opts, osType, logfile, productConfigs, versionConfig):
+def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig):
     print ""
     print "product           =", opts.product
     print "branch            =", opts.branch
     print "OS type           =", osType
+    print "productFamily     =", productFamily
     print "productConfigs    =", productConfigs
     print "versionConfig     =", versionConfig
 
@@ -307,33 +308,24 @@ def makeExe(opts):
     Make a HostExe release from a clean checkout.
     """
 
-    # for timing builds and default log filename 
-    startSec = time.time()
-    startTime = time.localtime()
+    # get OS type so we can construct a filename for the JSON config file (e.g., g2000_win7.json)
+    # and the log file
+    # returns 'XP' (WinXP) or '7' (Win7)
+    osType = platform.uname()[2]
 
-    # construct a logging filename
-    if opts.logfile is not None:
-        logfile = opts.logfile
+    if osType == '7':
+        osType = 'win7'
+    elif osType == 'XP':
+        osType = 'winxp'
     else:
-        if opts.product is None:
-            logfile = "log_%s" % time.strftime("%Y%m%d_%H%M%S.log", startTime)
-        else:
-            logfile = "%s_log_%s" % (opts.product, time.strftime("%Y%m%d_%H%M%S.log", startTime))
+        osType = 'unknown'
+        print "Unexpected OS type!"
+        sys.exit(1)
 
-    # -------- validate arguments --------
+    # -------- validate some of the arguments --------
+    # product argument is required
     if opts.product is None:
         LogErr("--product option is required!")
-        sys.exit(1)
-
-    productConfigs = "%s.json" % opts.product
-    versionConfig = "%s_version.json" % opts.product
-
-    if not os.path.isfile(productConfigs):
-        LogErr("%s is missing!" % productConfigs)
-        sys.exit(1)
-
-    if not os.path.isfile(versionConfig):
-        LogErr("%s is missing!" % versionConfig)
         sys.exit(1)
 
     if opts.local and opts.dryRun:
@@ -352,21 +344,36 @@ def makeExe(opts):
         LogErr("current git branch must be same as build target branch!")
         sys.exit(1)
 
+    # productFamily incorporates the product and OS type ('g2000_win7' for example)
+    productFamily = "%s_%s" % (opts.product, osType)
+
+    # for timing builds and default log filename 
+    startSec = time.time()
+    startTime = time.localtime()
+
+    # construct a logging filename
+    if opts.logfile is not None:
+        logfile = opts.logfile
+    else:
+        logfile = "%s_log_%s" % (productFamily, time.strftime("%Y%m%d_%H%M%S.log", startTime))
+
+    # -------- validate JSON files --------
+
+    productConfigs = "%s_%s.json" % (opts.product, osType)
+    versionConfig = "%s_version.json" % opts.product
+
+    if not os.path.isfile(productConfigs):
+        LogErr("%s is missing!" % productConfigs)
+        sys.exit(1)
+
+    if not os.path.isfile(versionConfig):
+        LogErr("%s is missing!" % versionConfig)
+        sys.exit(1)
+
     with open(productConfigs, 'r') as prods:
         CONFIGS.update(json.load(prods))
 
     # -------- prepare build options --------
-    # returns 'XP' (WinXP) or '7' (Win7)
-    osType = platform.uname()[2]
-
-    if osType == '7':
-        osType = 'Win7'
-    elif osType == 'XP':
-        osType = 'WinXP'
-    else:
-        osType = 'unknown'
-        print "Unexpected OS type!"
-        sys.exit(1)
 
     # version to be built
     changedVersion = True
@@ -403,14 +410,14 @@ def makeExe(opts):
             STAGING_MFG_DISTRIB_BASE = 'C' + STAGING_MFG_DISTRIB_BASE[1:]
             STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
 
-        # append product to paths
-        MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, opts.product])
-        DISTRIB_BASE = "/".join([DISTRIB_BASE, opts.product])
-        STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, opts.product])
-        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, opts.product])
+        # append productFamily to paths (it's something like "g2000_win7")
+        MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, productFamily])
+        DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
+        STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, productFamily])
+        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
 
-        TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, opts.product])
-        TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, opts.product])
+        TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, productFamily])
+        TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, productFamily])
 
     else:
         if opts.local:
@@ -419,11 +426,11 @@ def makeExe(opts):
             STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
 
         # append product to paths used for make-official option
-        DISTRIB_BASE = "/".join([DISTRIB_BASE, opts.product])
-        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, opts.product])
+        DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
+        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
 
     # print summary of build info so user can review it
-    _printSummary(opts, osType, logfile, productConfigs, versionConfig)
+    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig)
 
     # ask user for build confirmation before proceeding
     if not opts.skipConfirm:
@@ -445,7 +452,7 @@ def makeExe(opts):
     print "Build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
 
     # reiterate the build summary so it is saved in the log
-    _printSummary(opts, osType, logfile, productConfigs, versionConfig)
+    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig)
 
     # set the quiet flag if option set
     logger.set_quiet(opts.debugQuiet)
@@ -490,7 +497,7 @@ def makeExe(opts):
                               mfgDistribBase=targetMfgDistribBase,
                               distribBase=targetDistribBase,
                               versionConfig=versionConfig,
-                              product=opts.product,
+                              product=productFamily,
                               osType=osType)
 
         _buildDoneMsg("MAKE-OFFICIAL", startSec, logfile)
@@ -512,7 +519,7 @@ def makeExe(opts):
         retCode = subprocess.call(['git.exe',
                                    'commit',
                                    '-m',
-                                   "release.py version update (%s)." % opts.product])
+                                   "release.py version update (%s)." % productFamily])
 
         if retCode != 0:
             LogErr('Error committing new version metadata to local repo, retCode=%d.' % retCode)
@@ -537,7 +544,7 @@ def makeExe(opts):
             LogErr("Sandbox directory containing repos does not exist!")
             sys.exit(1)
 
-    _generateReleaseVersion(opts.product, VERSION)
+    _generateReleaseVersion(productFamily, VERSION)
     _buildExes()
 
     # XXX This is likely superfluous once the configuration files have
@@ -546,24 +553,24 @@ def makeExe(opts):
         _makeLocalConfig()
 
     if opts.createInstallers:
-        _compileInstallers(opts.product, osType, VERSION)
+        _compileInstallers(productFamily, osType, VERSION)
     else:
         print "Skipping creating the installers."
 
     if opts.createTag:
-        _tagRepository(opts.product, VERSION)
+        _tagRepository(productFamily, VERSION)
 
         # XXX These should be removed when we finish merging the
         # configuration file directories into the repository.
-        _tagCommonConfig(opts.product, VERSION)
-        _tagAppInstrConfigs(opts.product, VERSION)
+        _tagCommonConfig(productFamily, VERSION)
+        _tagAppInstrConfigs(productFamily, VERSION)
 
     else:
         print "Skipping tagging of the repository."
 
     if opts.createInstallers:
         # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-        _copyBuildAndInstallers(versionConfig, opts.product, osType, VERSION)
+        _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION)
 
     _buildDoneMsg("BUILD", startSec, logfile)
 
@@ -615,10 +622,18 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
         if not doCopy:
             continue
 
+        # Installer filenames will be something like:
+        #    setup_CFADS_CO2_CH4_H2O_g2000_win7-1.5.0-10.exe
+        #
+        # where
+        #     c = CFADS
+        #     CONFIGS[c] = CO2_CH4_H2O
+        #     _verAsString(product, ver) = g2000_win7-1.5.0-10
         installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c],
                                             _verAsString(product, ver))
 
-        installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
+        # Poor practice to use a different filename in the Current folder, removing this.
+        #installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
         targetDir = os.path.join(distribBase, c)
 
         print "%-8s: %s" % (c, installer)
@@ -635,8 +650,12 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
         if not os.path.exists(destDir):
             os.makedirs(destDir)
 
+        # Installers in Current folder now include the version number in their
+        # filenames.
+        #shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
+        #                os.path.join(targetDir, 'Current', installerCurrent))
         shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
-                        os.path.join(targetDir, 'Current', installerCurrent))
+                        os.path.join(targetDir, 'Current', installer))
 
 
 def _copyBuildAndInstallers(versionConfig, product, osType, ver):
@@ -973,7 +992,7 @@ def _compileInstallers(product, osType, ver):
 
         isccApp = ISCC
 
-        if osType == 'Win7':
+        if osType == 'win7':
             isccApp = ISCC_WIN7
 
         args = [isccApp, "/dinstallerType=%s" % c,
