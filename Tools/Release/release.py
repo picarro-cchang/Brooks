@@ -210,6 +210,11 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
             else:
                 print "clone repos       =", "NO"
 
+            if opts.buildExes:
+                print "build exes        =", "YES"
+            else:
+                print "build exes        =", "NO"
+
         else:
             print ""
             print "local build       =", "NO"
@@ -334,7 +339,11 @@ def makeExe(opts):
         sys.exit(1)
 
     if not opts.cloneRepo and not opts.local:
-        LogErr("--skip-clone is allowed only with --local option!")
+        LogErr("--debug-skip-clone is allowed only with --local option!")
+        sys.exit(1)
+
+    if not opts.buildExes and not opts.local:
+        LogErr("--debug-skip-exe is allowed only with --local option!")
         sys.exit(1)
 
     # get the branch for this script that is executing
@@ -561,7 +570,26 @@ def makeExe(opts):
             sys.exit(1)
 
     _generateReleaseVersion(productFamily, VERSION)
-    _buildExes()
+
+    if opts.buildExes:
+        _buildExes()
+    else:
+        print "Skipping building executables"
+
+        # quick test for existence of sandbox dir and dist folders
+        if not os.path.exists(SANDBOX_DIR):
+            LogErr("Sandbox directory containing repos does not exist!")
+            sys.exit(1)
+
+        exeDir = os.path.join(SANDBOX_DIR, "host", "Host", "dist")
+        if not os.path.exists(exeDir):
+            LogErr("'%s' does not exist!" % exeDir)
+            sys.exit(1)
+
+        exeDir = os.path.join(SANDBOX_DIR, "host", "MobileKit", "dist")
+        if not os.path.exists(exeDir):
+            LogErr("'%s' does not exist!" % exeDir)
+            sys.exit(1)
 
     # XXX This is likely superfluous once the configuration files have
     # been merged into the main repository.
@@ -1024,6 +1052,7 @@ def _compileInstallers(product, osType, ver):
                 setupFilePath]
 
         print subprocess.list2cmdline(args)
+        print "current dir='%s'" % os.getcwd()
 
         retCode = subprocess.call(args)
 
@@ -1106,6 +1135,11 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                             'script. This option cannot be used in combination with --dry-run.'))
     parser.add_option('--debug-skip-clone', dest='cloneRepo', action='store_false',
                       default=True, help=('Skip cloning the repositories. The sandbox '
+                                          'must already exist from a prior build. Allowed '
+                                          'only when combined with --local. Useful for quick '
+                                          'testing of minor changes or debugging this build script.'))
+    parser.add_option('--debug-skip-exe', dest='buildExes', action='store_false',
+                      default=True, help=('Skip building the executables. The sandbox and executables'
                                           'must already exist from a prior build. Allowed '
                                           'only when combined with --local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
