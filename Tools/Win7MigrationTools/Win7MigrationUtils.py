@@ -228,6 +228,7 @@ class AnalyzerInfo(object):
             self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, 
                                                         ClientName = appName)
         except:
+            self.logger.warn("Failed to connect to the driver!")
             self.driverRpc = None
 
         if self.driverRpc is None:
@@ -252,13 +253,15 @@ class AnalyzerInfo(object):
     def _fetchAnalyzerNameAndSerial(self):
         try:
             analyzerId = self.driverRpc.fetchObject("LOGIC_EEPROM")[0]
+            self.logger.info("fetchObject[LOGIC_EEPROM] returned '%r'" % analyzerId)
             self.analyzerName = analyzerId["Analyzer"]
             self.analyzerNum = analyzerId["AnalyzerNum"]
             self.chassis = analyzerId["Chassis"]
-        except:
-            self.analyzerName = "Unknown"
+        except Exception, e:
+            self.logger.warn("Exception occurred calling fetchObject[LOGIC_EEPROM]: %r, %r" % (Exception, e))
+            self.analyzerName = mdefs.MIGRATION_UNKNOWN_ANALYZER_TYPE
             self.analyzerNum = ""
-            self.chassis = "Unknown"
+            self.chassis = mdefs.MIGRATION_UNKNOWN_CHASSIS_TYPE
 
         self.analyzerId = self.analyzerName + self.analyzerNum
 
@@ -367,16 +370,23 @@ class AnalyzerInfo(object):
         if self.crdsSupervisor is not None:
             # kill off all of the apps
             # Kill the startup splash screen as well (if it exists)
+            self.logger.debug("Executing 'taskkill.exe /IM HostStartup.exe /F'")
             os.system(r'taskkill.exe /IM HostStartup.exe /F')
+
             # Kill QuickGui if it isn't under Supervisor's supervision
+            self.logger.debug("Executing 'taskkill.exe /IM QuickGui.exe /F'")
             os.system(r'taskkill.exe /IM QuickGui.exe /F')
+
             # Kill Controller if it isn't under Supervisor's supervision
+            self.logger.debug("Executing 'taskkill.exe /IM Controller.exe /F'")
             os.system(r'taskkill.exe /IM Controller.exe /F')
 
             # kill the driver (powerDown=False,stopProtected=True)
+            self.logger.debug("Terminating applications from the Supervisor")
             self.crdsSupervisor.TerminateApplications(False, True)
 
             # wait for everything to shut down
+            self.logger.debug("Waiting for Picarro processes to end")
             ret = self.waitForPicarroProcessesToEnd()
         else:
             self.logger.info("Analyzer is not running.")
