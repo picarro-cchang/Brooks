@@ -1,10 +1,34 @@
 {
     "buildTypes": {
-           "CFADS": "CO2_CH4_H2O",
-           "CFFDS": "iCO2_CH4",
-           "CFIDS": "iCO2_iCH4",
-           "CFKADS": "4Species",
-           "HIDS": "iH2O"
+        "CFADS": {
+            "species": "CO2_CH4_H2O",
+            "installerSignature": "CFADS"
+        },
+
+        "CFFDS": {
+            "species": "iCO2_CH4",
+            "installerSignature": "CFFDS"
+        },
+
+        "CFIDS": {
+            "species": "iCO2_iCH4",
+            "installerSignature": "CIFDS"
+        },
+
+        "CFKADS": {
+            "species": "4Species",
+            "installerSignature": "CFKADS"
+        },
+
+        "HIDS": {
+            "species": "HIDS",
+            "installerSignature": "HIDS"
+        },
+
+        "HBDS": {
+            "species": "HBDS",
+            "installerSignature": "HBDS"
+        }
     },
 
     "installerScriptsDir": "InstallerScriptsWin7"
