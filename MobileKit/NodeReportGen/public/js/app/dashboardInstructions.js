@@ -711,6 +711,54 @@ define(function(require, exports, module) {
                     }
                 }
             },
+            checkEmptyTemplate: function (template) {
+                if (!_.isEmpty(template.figures)) return false;
+                for (var t in template.tables) {
+                    if (template.tables.hasOwnProperty(t)) {
+                        if (template.tables[t]) return false;
+                    }
+                }
+                return true;
+            },
+            checkForInstructionErrors: function (instructions) {
+                // Alerts user to unexpected instructions and
+                // Returns true if there are any errors
+
+                // The following conditions are errors:
+                //  a) Empty summary template
+                //  b) Empty submap but grid is turned on in at least one summary figure
+                //  c) Non-empty submap but grid is turned off in all summary figures
+
+                // The following condition triggers a warning:
+                //  a) No runs are specified
+                var i;
+                if (this.checkEmptyTemplate(instructions.template.summary)) {
+                    alert(P3TXT.dashboard.alert_empty_summary);
+                    return true;
+                }
+                var summaryFigures = instructions.template.summary.figures;
+                if (this.checkEmptyTemplate(instructions.template.submaps)) {
+                    for (i=0; i<summaryFigures.length; i++) {
+                        if (summaryFigures[i].submapGrid) {
+                            alert(P3TXT.dashboard.alert_ref_to_empty_submap);
+                            return true;
+                        }
+                    }
+                }
+                else {
+                    for (i=0; i<summaryFigures.length; i++) {
+                        if (summaryFigures[i].submapGrid) break;
+                    }
+                    if (i===summaryFigures.length) {
+                        alert(P3TXT.dashboard.alert_unreachable_submap);
+                        return true;
+                    }
+                }
+                if (_.isEmpty(instructions.runs)) {
+                    var r = confirm(P3TXT.dashboard.alert_no_runs);
+                    return !r;
+                }
+            },
             onMakeReport: function () {
                 var instrForce = false;
                 if (this.getCurrentInstructions()) {
@@ -729,6 +777,10 @@ define(function(require, exports, module) {
                         alert(P3TXT.dashboard.validator_instructions_failed_validation + '\n' + v.errorList.join("\n"));
                         return;
                     }
+                    // Check for empty reports and alert the user to problems
+
+                    if (this.checkForInstructionErrors(v.normValues)) return;  
+
                     DASHBOARD.SurveyorRpt.submit({'contents': contents, 'user': DASHBOARD.user, 'force': DASHBOARD.force || instrForce},
                     function (err) {
                         var msg = P3TXT.dashboard.alert_while_submitting_instructions + err;
