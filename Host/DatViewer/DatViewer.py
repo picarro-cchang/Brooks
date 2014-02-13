@@ -69,7 +69,7 @@ from pylab import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "2.0.3"
+APPVERSION = "2.0.4"
 
 
 # definitions for filtering by spectrum ID
@@ -2030,13 +2030,11 @@ class NotebookHandler(Handler):
         # get output filename
         # initially use the default filename generated from the selected folder (from above)
         fname = os.path.split(defaultOutputFilename)[1]
-
-        print "fname=", fname
+        #print "fname=", fname
 
         # initially use the parent folder of the selected folder
         defaultOutputPath = os.path.split(self.datDirName)[0]
-
-        print "defaultOutputPath=", defaultOutputPath
+        #print "defaultOutputPath=", defaultOutputPath
 
         fValidFilename = False
         fPromptForFilename = True
@@ -2052,12 +2050,12 @@ class NotebookHandler(Handler):
 
             if fd.ShowModal() == wx.ID_OK:
                 fname = fd.GetPath()
-                print "output fname=", fname
+                #print "output fname=", fname
 
                 # TODO: assert that self.datDirName is set and folder exists
                 # if not self.datDirName:
                 #    self.datDirName = os.path.split(fname)[0]
-                print "self.datDirName=", self.datDirName
+                #print "self.datDirName=", self.datDirName
 
                 # test whether we can open and write to the output file
                 try:
@@ -2329,8 +2327,11 @@ class ViewNotebook(HasTraits):
         # File menu
         openAction = Action(name="&Open H5...\tCtrl+O", action="onOpen")
         openZipAction = Action(name="Concatenate &ZIP to H5...\tZ", action="onOpenZip")
-        concatenateAction = Action(name="Concatenate &Folder to H5...\tF", action="onConcatenate")
-        concatenateActionNew = Action(name="Concatenate Folder to H5 (NEW)...", action="onConcatenateNew")
+
+        # replaced old concatenate folder function with new (asks for folder first so it can
+        # create an output filename from the first file in the folder)
+        #concatenateAction = Action(name="Concatenate &Folder to H5...\tF", action="onConcatenate")
+        concatenateActionNew = Action(name="Concatenate Folder to H5...\tF", action="onConcatenateNew")
         convertDatAction = Action(name="Convert &DAT to H5...\tAlt+Shift+C", action="onConvertDatToH5")
         convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+C", action="onConvertH5ToDat")
         batchConvertDatAction = Action(name="&BatchConvert DAT to H5...\tB", action="onBatchConvertDatToH5")
