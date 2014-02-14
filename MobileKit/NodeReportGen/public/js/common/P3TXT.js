@@ -51,7 +51,6 @@ P3TXT = {
     , change: "Change"
     , click_map_select_timezone: "Click on map to select time zone"
     , cancel: "Cancel"
-    , ok: "OK"
     , save_changes: "Save changes"
     , click_to_select_anz: "Click here to  select Surveyor"
     , first: "First"
@@ -88,6 +87,11 @@ P3TXT = {
     , none: "None" // to show when nothing has been selected or displayed!
     , session_will_expire: "This login session will expire in three minutes."
 
+    , start: "Start" // example Start: 12:05PM
+    , end: "End" // example End: 12:25PM
+    , user_logs: "User logs" // count of User_logs example  User Logs: 5
+    , durration: "Durration"  // example Durration: (3h 5m)
+
 // gdu text    
     , amp: 'Amp' 
     , sigma: 'HalfWidth' 
@@ -98,10 +102,8 @@ P3TXT = {
     , delta: 'Delta' 
     , uncertainty: 'Uncertainty' 
     , note: 'Annotation' 
-    , cancel: 'Cancel' 
     , ok: 'OK'
     , save_note: 'Save Annotation'
-    , close: 'Close' 
     , download_files: 'Download Files'
     , download_concs: 'Download Concentration' 
     , download_peaks: 'Download Peaks' 
@@ -171,7 +173,11 @@ P3TXT = {
     , remove_plat: 'Remove plat' 
     , working: 'Working' 
     , plat: 'Plat' 
-    , calibration_pulse_injected: 'Reference gas injected' 
+    , calibration_pulse_injected: 'Reference gas injected'
+    , concentration_sparkline: 'Concentration Plot'
+    , wind_direction: 'Wind direction'
+    , collapse_side_pane: '<<'
+    , expand_side_pane: '>>'
 
     , stream_title: 'Data Transfer Status Indicators' 
     , stream_ok: 'Data Transfer OK' 
@@ -220,6 +226,8 @@ P3TXT = {
     , strong_wind: "Strong" 
     , choose: "Please select an option" 
     , select_weather: "Weather Conditions"
+
+    , prime_not_avail_msg: "Prime View is not currently available for the requested Surveyor. Switching to standard Live view."
 
     
 // datatables text
@@ -316,7 +324,9 @@ P3TXT = {
     , allowadmin_legend: "Allow Administration"
     , allowactive_legend: "Activate the userid"
     , date_legend: "Date"
-            
+    , minamp_legend: 'Min Amplitude'  //'Minimum Amplitude'
+    , stabclass_legend: 'Stability Class'
+
 // Placeholder text
     , ANALYZER_NAME_placeholder: "Surveyor Name Group"
     , PRIVATE_IP_placeholder: "nnn.nnn.nnn.nnn:nnnn"
@@ -357,13 +367,13 @@ P3TXT = {
 // COMPOUND Definitions
 P3TXT.weekdayNms = [ P3TXT.sun, P3TXT.mon, P3TXT.tue, P3TXT.wed, P3TXT.thu, P3TXT.fri, P3TXT.sat ];
 P3TXT.weekdayNames = [ P3TXT.sunday, P3TXT.monday, P3TXT.tuesday, P3TXT.wednesday,
-                P3TXT.thursday, P3TXT.friday, P3TXT.saturday ];
+    P3TXT.thursday, P3TXT.friday, P3TXT.saturday ];
 P3TXT.monthNms = [ P3TXT.abv_jan, P3TXT.abv_feb, P3TXT.abv_mar, P3TXT.abv_apr,
-                P3TXT.abv_may, P3TXT.abv_jun, P3TXT.abv_jul, P3TXT.abv_aug,
-                P3TXT.abv_sep, P3TXT.abv_oct, P3TXT.abv_nov, P3TXT.abv_dec ];
+    P3TXT.abv_may, P3TXT.abv_jun, P3TXT.abv_jul, P3TXT.abv_aug,
+    P3TXT.abv_sep, P3TXT.abv_oct, P3TXT.abv_nov, P3TXT.abv_dec ];
 P3TXT.monthNames = [ P3TXT.january, P3TXT.february, P3TXT.march, P3TXT.april, P3TXT.may,
-                P3TXT.june, P3TXT.july, P3TXT.august, P3TXT.september, P3TXT.october,
-                P3TXT.november, P3TXT.december ];
+    P3TXT.june, P3TXT.july, P3TXT.august, P3TXT.september, P3TXT.october,
+    P3TXT.november, P3TXT.december ];
 
 // DASHBOARD strings
 P3TXT.dashboard = {};
@@ -405,6 +415,10 @@ P3TXT.dashboard.alert_multiple_files = "Cannot process more than one file";
 P3TXT.dashboard.alert_while_submitting_instructions = "While submitting instructions: ";
 P3TXT.dashboard.alert_duplicate_instructions = "This is a duplicate of a previously submitted report";
 P3TXT.dashboard.alert_while_getting_key_file_data = "While getting key file data from: ";
+P3TXT.dashboard.alert_empty_summary = "Empty report - Use Edit Template to define a non-empty summary report.";
+P3TXT.dashboard.alert_ref_to_empty_submap = "Summary report refers to empty submap report - Edit Template to resolve grid reference.";
+P3TXT.dashboard.alert_unreachable_submap = "Submap report is unreachable from summary - Edit Template to resolve grid reference.";
+P3TXT.dashboard.alert_no_runs ="No runs have been specified - do you want to make the report?";
 
 // Table Headings
 P3TXT.dashboard.th_analyzer = "Analyzer";
@@ -543,4 +557,3 @@ P3TXT.colors.white = "white";
 P3TXT.colors.yelow = "yellow";
 
 //);
-
