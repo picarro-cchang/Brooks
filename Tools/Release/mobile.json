@@ -1,3 +1,10 @@
 {
-    "FDDS": "Surveyor"
+    "buildTypes": {
+        "FDDS": {
+            "species": "Surveyor",
+            "installerSignature": "FDDS"
+        }
+    },
+
+    "installerScriptsDir": "InstallerScripts"
 }

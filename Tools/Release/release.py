@@ -43,6 +43,8 @@ RESOURCE_DIR = ('s:/CRDS/SoftwareReleases/G2000Projects/G2000_PrepareInstaller/'
                 'Resources')
 
 CONFIGS = {}
+INSTALLER_SIGNATURES = {}
+
 CONFIG_BASE = 's:/CrdsRepositoryNew/trunk/G2000/Config'
 COMMON_CONFIG = os.path.join(CONFIG_BASE, 'CommonConfig')
 
@@ -390,13 +392,21 @@ def makeExe(opts):
     global INSTALLER_SCRIPTS_DIR
     global CONFIGS
 
-    if "installerScriptsDir" in configInfo:
-        INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
+    # updated JSON file format is required ()
+    INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
+    buildInfo = configInfo["buildTypes"]
 
-    if "buildTypes" in configInfo:
-        CONFIGS = configInfo["buildTypes"]
-    else:
-        CONFIGS = configInfo
+    # CONFIGS is a dict containing analyzer types and species
+    # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
+    for item in buildInfo:
+        itemDict = buildInfo[item]
+        CONFIGS[item] = itemDict["species"]
+        INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
+
+    print "CONFIGS=", CONFIGS
+    print ""
+    print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
+
 
     # -------- prepare build options --------
 
@@ -1041,6 +1051,19 @@ def _compileInstallers(product, osType, ver):
 
         setupFilePath = "%s\\setup_%s_%s.iss" % (INSTALLER_SCRIPTS_DIR, c, CONFIGS[c])
 
+        # TODO: write out the installerSignature.txt file so it can be used by the .iss script
+        #       write it somewhere the installer can find it in the sandbox
+        """
+        # test writing out an installer signature file for CFADS
+        sigLine = INSTALLER_SIGNATURES["CFADS"]
+
+        f = open("installerSignature.txt", "w")
+        f.write(sigLine)
+        f.close()
+        """
+        #
+        # TODO: add an argument for platform and maybe Python version?
+
         args = [isccApp, "/dinstallerType=%s" % c,
                 "/dhostVersion=%s" % _verAsString(product, ver),
                 "/dresourceDir=%s" % RESOURCE_DIR,
@@ -1059,6 +1082,10 @@ def _compileInstallers(product, osType, ver):
         if retCode != 0:
             LogErr("Error building '%s' installer, retCode=%d." % (c, retCode))
             sys.exit(retCode)
+
+        # to bail out after the first installer for my testing
+        #print "Bailing out of _compileInstallers - TAKE THIS CODE OUT!"
+        # sys.exit(0)
 
 
 def _verAsString(product, ver, osType=None):

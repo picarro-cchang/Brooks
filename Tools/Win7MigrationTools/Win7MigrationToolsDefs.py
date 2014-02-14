@@ -5,13 +5,19 @@
 # History:
 # 2014-01-30:  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.2"
+MIGRATION_TOOLS_VERSION = "1.0.0.5"
 MIGRATION_TOOLS_LOGNAME = "MigrationTools"
+
+MIGRATION_UNKNOWN_ANALYZER_TYPE = "Unknown"
+MIGRATION_UNKNOWN_ANALYZER_NAME = "Unknown"
+MIGRATION_UNKNOWN_CHASSIS_TYPE = "Unknown"
+
 
 # This isn't working the way I want it to...
 MIGRATION_DIALOG_CAPTION = "WinXP migration to Win7: Part %s"
 
-MIGRATION_TOOLS_LOGFILENAME_BASE = "MigrationPart1_%Y_%m_%d_%H_%M_%S"
+MIGRATION_TOOLS_LOGFILENAME_BASE_1 = "MigrationPart1_%Y_%m_%d_%H_%M_%S"
+MIGRATION_TOOLS_LOGFILENAME_BASE_2 = "MigrationPart2_%Y_%m_%d_%H_%M_%S"
 
 PARTITION_2_VOLUME_NAME = "MIGRATE"
 
@@ -100,4 +106,4 @@ MY_COMPUTER_ICON_NAME = "MyComputerIconName"
 # Folder name containing installers. Each installer is in a subdirectory
 # named by analyzer type (e.g., CFADS, CFKADS, etc.) just like they are
 # on the network staging and release areas.
-INSTALLER_FOLDER_ROOT_NAME = "Picarro Installers"
+INSTALLER_FOLDER_ROOT_NAME = "PicarroInstallers"

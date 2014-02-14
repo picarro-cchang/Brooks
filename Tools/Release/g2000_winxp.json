@@ -1,21 +1,100 @@
 {
-    "AEDS": "NH3",
-    "BFADS": "H2S_CH4",
-    "CBDS": "iCO2",
-    "CFADS": "CO2_CH4_H2O",
-    "CFBDS": "Flux",
-    "CFDDS": "CO2_CH4_Flight",
-    "CFEDS": "iCO2_iCH4",
-    "CFFDS": "iCO2_CH4",
-    "CFHADS": "SuperFlux",
-    "CFIDS": "iCO2_iCH4",
-    "CFJDS": "High_Conc_iCH4_DCH3_i13CH4",
-    "CFKADS": "4Species",
-    "CFKBDS": "4Species_Flight",
-    "CHADS": "i13CO2_iHDO",
-    "CKADS": "CO2_CO_H2O",
-    "FCDS": "iCH4",
-    "HBDS": "iH2O",
-    "HIDS": "iH2O",
-    "MADS": "HF"
+    "buildTypes": {
+        "AEDS": {
+            "species": "NH3",
+            "installerSignature": "AEDS"
+        },
+
+        "BFADS": {
+            "species": "H2S_CH4",
+            "installerSignature": "BFADS"
+        },
+
+        "CBDS":  {
+            "species": "iCO2",
+            "installerSignature": "CBDS"
+        },
+
+        "CFADS":  {
+            "species": "CO2_CH4_H2O",
+            "installerSignature": "CFADS"
+        },
+
+        "CFBDS":  {
+            "species": "Flux",
+            "installerSignature": "CFBDS"
+        },
+
+        "CFDDS": {
+            "species": "CO2_CH4_Flight",
+            "installerSignature": "CFDDS"
+        },
+
+        "CFEDS": {
+            "species": "iCO2_iCH4",
+            "installerSignature": "CFEDS"
+        },
+
+        "CFFDS": {
+            "species": "iCO2_CH4",
+            "installerSignature": "CFFDS"
+        },
+
+        "CFHADS": {
+            "species": "SuperFlux",
+            "installerSignature": "CFHADS"
+        },
+
+        "CFIDS": {
+            "species": "iCO2_iCH4",
+            "installerSignature": "CFIDS"
+        },
+
+        "CFJDS": {
+            "species": "High_Conc_iCH4_DCH3_i13CH4",
+            "installerSignature": "CFJDS"
+        },
+
+        "CFKADS": {
+            "species": "4Species",
+            "installerSignature": "CFKADS"
+        },
+
+        "CFKBDS": {
+            "species": "4Species_Flight",
+            "installerSignature": "CFKBDS"
+        },
+
+        "CHADS": {
+            "species": "i13CO2_iHDO",
+            "installerSignature": "CHADS"
+        },
+
+        "CKADS": {
+            "species": "CO2_CO_H2O",
+            "installerSignature": "CKADS"
+        },
+
+        "FCDS": {
+            "species": "iCH4",
+            "installerSignature": "FCDS"
+        },
+
+        "HBDS": {
+            "species": "iH2O",
+            "installerSignature": "HBDS"
+        },
+
+        "HIDS": {
+            "species": "iH2O",
+            "installerSignature": "HIDS"
+        },
+
+        "MADS": {
+            "species": "HF",
+            "installerSignature": "MADS"
+        }
+    },
+
+    "installerScriptsDir": "InstallerScripts"
 }

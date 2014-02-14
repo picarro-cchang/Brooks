@@ -68,21 +68,48 @@ def findAndValidateDrives(debug=False):
     return instDrive, migBackupDrive
 
 
+def getSupportedAnalyzerTypes(drive):
+    # Returns a list of supported analyzer types, using the folder names
+    # for all of the installers on the migration drive
+    supportedTypes = []
+    installerParentDir = os.path.join(drive,
+                                      os.path.sep,
+                                      mdefs.MIGRATION_TOOLS_FOLDER_NAME,
+                                      mdefs.INSTALLER_FOLDER_ROOT_NAME)
+
+    # this returns a list of just the filenames (not the full paths)
+    fileList = os.listdir(installerParentDir)
+
+    for item in fileList:
+        filename = os.path.join(installerParentDir, item)
+
+        if os.path.isdir(filename):
+            supportedTypes.append(item)
+
+    return fileList
+
+
+
 class UIMigration(object):
     def __init__(self, instDrive=None,
                  migBackupDrive=None,
                  instDriveName=None,
-                 analyzerName=None):
+                 analyzerName=None,
+                 analyzerType=None):
         self.instDrive = instDrive
         self.migBackupDrive = migBackupDrive
         self.instDriveName = instDriveName
         self.analyzerName = analyzerName
+        self.analyzerType = analyzerType
 
         if self.instDriveName is None:
             self.instDriveName = ""
 
         if self.analyzerName is None:
-            self.analyzerName = ""
+            self.analyzerName = mdefs.MIGRATION_UNKNOWN_ANALYZER_NAME
+
+        if self.analyzerType is None:
+            self.analyzerType = mdefs.MIGRATION_UNKNOWN_ANALYZER_TYPE
 
         # set default new volume name as same as the instrument
         self.newVolumeName = self.instDriveName
@@ -93,27 +120,78 @@ class UIMigration(object):
 
         self.logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
 
+    def printInfo(self):
+        print ""
+        print "Instrument drive:       %s" % self.instDrive
+        #print "Migration main drive:   %s" % self.migMainDrive
+        print "Migration backup drive: %s" % self.migBackupDrive
+        print "Analyzer type:          %s" % self.analyzerType
+
+        # TODO: For now, analyzer name doesn't really matter because
+        #       we aren't doing anything with it. But if we need it
+        #       for naming My Computer then we'll need to display
+        #       it and prompt for it if unknown.
+        #print "Analyzer name:          %s" % self.analyzerName
+        print ""
+
     def confirmToProceed(self):
         assert self.instDrive
         assert self.migBackupDrive
         assert self.instDriveName
 
         # TODO: add wx UI for this, for now just use the command line
-        print ""
-        print "Instrument drive:       %s" % self.instDrive
-        #print "Migration main drive:   %s" % self.migMainDrive
-        print "Migration backup drive: %s" % self.migBackupDrive
+        self.printInfo()
 
-        if self.analyzerName != "":
-            print "Analyzer name:          %s" % self.analyzerName
-        print ""
+        # Prompt for an analyzer type if don't have one
+        # Build a list of supported types from the folder names containing the installers
+        # e.g., folders are: 
+        #     F:\Win7MigrationTools\PicarroInstallers\CFADS
+        #     F:\Win7MigrationTools\PicarroInstallers\CFFDS
+        #     etc.
+        supportedTypes = getSupportedAnalyzerTypes(self.migBackupDrive)
+        haveAnalyzerType = False
+        userUpdatedType = False
 
+        if self.analyzerType in supportedTypes:
+            haveAnalyzerType = True
+
+        # This forces the user to enter a valid analyzer type
+        while not haveAnalyzerType:
+            print ""
+            print "Supported analyzer types for migration:"
+            print "    %s" % supportedTypes
+            print ""
+
+            inputStr = raw_input("Please enter your analyzer type, or Q to quit: ")
+            inputStr = inputStr.upper()
+
+            if inputStr in supportedTypes:
+                haveAnalyzerType = True
+                userUpdatedType = True
+                self.analyzerType = inputStr
+                print ""
+            elif inputStr == "Q":
+                print ""
+                self.logger.info("Win7 migration aborted by user (no valid analyzer type was entered).")
+                return False
+            else:
+                print "Unsupported analyzer type '%s'!" % inputStr
+
+        # prompt for an analyzer name if not set
+        #if self.analyzerName == mdefs.MIGRATION_UNKNOWN_ANALYZER_NAME:
+        #    pass
+
+        # print a summary of instrument info one more time
+        self.printInfo()
         inputStr = raw_input("Continue with migration to Windows 7? Y to continue, N to abort: ")
         inputStr = inputStr.upper()
 
         if inputStr != "Y":
             self.logger.info("Win7 migration aborted by user (backup)!")
             return False
+
+        if userUpdatedType is True:
+            self.logger.info("User entered analyzer type = '%s'" % self.analyzerType)
 
         # Prompt for new Win7 volume name
         haveWin7DriveName = False
@@ -140,6 +218,12 @@ class UIMigration(object):
 
         # Done, user has confirmed to continue with backup
         return True
+
+    def getAnalyzerType(self):
+        return self.analyzerType
+
+    def getAnalyzerName(self):
+        return self.analyzerName
 
     def getNewVolumeName(self):
         if self.newVolumeName is None:
@@ -176,7 +260,7 @@ def stopSoftwareAndDriver(anInfo, debug=False):
     if not debug:
         done = False
         while done is False:
-            runningProcessesList = anInfo.stopAnalyzerAndDriver(debug)
+            runningProcessesList = anInfo.stopAnalyzerAndDriver()
             if runningProcessesList is None:
                 done = True
             else:
@@ -185,6 +269,21 @@ def stopSoftwareAndDriver(anInfo, debug=False):
 
     else:
         logger.info("(debug) Skipped stopping software and driver.")
+
+
+def promptUserToStopSoftwareAndDriver():
+    print ""
+    print "Please stop the software and driver if it is running."
+    print ""
+    print "Double-click the Diagnostics folder on the desktop, then"
+    print "run the Stop Instrument application in that folder."
+    print "Choose the second selection, 'Stop software and driver',"
+    print "then click the Stop button."
+    print ""
+    print ""
+
+    raw_input("After everything has shutdown, type Y to continue: ")
+
 
 
 def shutdownWindows(debug=False):
@@ -341,10 +440,10 @@ def doMigrate(options):
     # Always log to a file as well as stdout
     if options.logFilename is None:
         if options.localTime is True:
-            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE)
+            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_1)
             logFilename = logFilename + ".log"
         else:
-            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE, time.gmtime())
+            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_1, time.gmtime())
             logFilename = logFilename + "Z.log"
 
         # TODO: append this base filename to a drive and folder
@@ -423,12 +522,17 @@ def doMigrate(options):
     analyzerName = anInfo.getAnalyzerNameAndNum()
     analyzerType = anInfo.getAnalyzerName()
 
-    if options.debug is True:
-        if analyzerType == "Unknown":
-            # hack for my testing without an instrument
-            analyzerType = "CFKADS"
-            analyzerName = "CFKADS9999"
-            root.info("(debug) Using pseudo instrument name '%s'" % analyzerName)
+    unknownAnalyzer = False
+
+    if analyzerType == mdefs.MIGRATION_UNKNOWN_ANALYZER_TYPE:
+        # analyzerType should be something like CFKADS
+        # used in part 2 to find an installer
+        # log it -- most likely there is a Pyro version mismatch so
+        # we can't actually communicate with the instrument
+        #
+        # we'll prompt the user below for analyzer type, software version, etc.
+        unknownAnalyzer = True
+        root.info("Analyzer type unknown, prompting user to enter it")
 
     # Report drive letters and other info to user, and ask for confirmation
     # to proceed.
@@ -440,9 +544,11 @@ def doMigrate(options):
     uiMig = UIMigration(instDrive=instDrive,
                         migBackupDrive=migBackupDrive,
                         instDriveName=instDriveName,
-                        analyzerName=analyzerName)
+                        analyzerName=analyzerName,
+                        analyzerType=analyzerType)
 
-    # Ask for user confirmation to continue.
+    # Ask for user confirmation to continue. This also prompts for analyzer type
+    # (CFKADS, etc.) [future: prompt for name (CFKADS2133)]
     ret = uiMig.confirmToProceed()
 
     if not ret:
@@ -453,6 +559,10 @@ def doMigrate(options):
 
      # Get the volume name the user wants to use for the Win7 boot drive
     win7DriveName = uiMig.getNewVolumeName()
+
+    # Get the analyzer type and name, we may have needed to prompt the user for it
+    analyzerType = uiMig.getAnalyzerType()
+    analyzerName = uiMig.getAnalyzerName()
 
     # Save some config info in a file for migration part 2.
     defaults = {}
@@ -472,7 +582,12 @@ def doMigrate(options):
     # Must shutdown the software and driver before backing up.
     # Will not return until nothing is running (prompts user to
     # kill from the TaskManager if times out waiting)
-    stopSoftwareAndDriver(anInfo, options.debug)
+    # The user will need to do this if this is an unknown analyzer
+    # (likely because Pyro versions don't match, the following WILL crash)
+    if unknownAnalyzer is False:
+        stopSoftwareAndDriver(anInfo, options.debug)
+    else:
+        promptUserToStopSoftwareAndDriver()
 
     # ==== Backup ====
     #
