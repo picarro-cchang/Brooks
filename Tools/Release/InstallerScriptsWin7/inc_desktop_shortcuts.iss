@@ -9,6 +9,9 @@
 ;           supervisorLauncherIntegIni
 ;           diagDataCollectorIni
 ;           setupToolIni
+;
+;   3.  Shortcut for ConfigTool.py is created in inc_configtool.iss (not here).
+
 
 [Icons]
 
@@ -29,14 +32,16 @@ Name: {userdesktop}\Diagnostics\Diag Data Collector; Filename: {app}\HostExe\Dia
 
 ; Integration folder
 ;
-; TODO: some of these reference R: which needs to be changed!
 
 Name: {userdesktop}\Integration\Integration Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\Integration Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\CoordinatorLauncher_Integration.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+
+; This references a specific INI file, but all installers
+; use the same one so no define for it
 Name: {userdesktop}\Integration\EEPROM Access; Filename: {app}\HostExe\InstrEEPROMAccess.exe; Parameters: -c ..\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+
 Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+
 Name: {userdesktop}\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\Configuration Tool; Filename: R:\crd\TestSoftware\Configuration\ConfigTool.py; WorkingDir: R:\crd\TestSoftware\Configuration; IconFilename: {app}\HostExe\{#integrationIcon}
 
 
 ; Picarro Utilities folder
@@ -58,3 +63,21 @@ Name: {group}\Stop Instrument; Filename: {app}\HostExe\StopSupervisor.exe; Worki
 ; Executed when system is started
 
 Name: {userstartup}\Start Instrument; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -a -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+
+; Workaround so apps with UI display an icon in the taskbar as the
+; Win7 default icon looks tacky
+
+Name: {app}\HostExe\ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+Name: {app}\HostExe\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+Name: {app}\HostExe\QuickGui; Filename: {app}\HostExe\QuickGui.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+; TODO: after ensuring the above works, add the following shortcuts:
+;
+; Coordinator, Controller,deltaCorrProcessor, dilutionCorrProcessor
+; StopSupervisor, IPV, IPVLicense, DiagDataCollector, supervisorLauncher,
+; HostStartup, CoordinatorLauncher, FluxScheduler,FluxSwitcherGui,
+; ValveDisplay, InstrEEPROMAccess, DataRecal, SetupTool,PicarroKML,
+; ReadGPSWS, PeriphModeSwitcher, RecipeEdito, AircraftValveSwitcher

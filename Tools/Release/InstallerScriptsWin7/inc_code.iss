@@ -12,6 +12,7 @@ var
     app : String;
     ResultCode : Integer;
 begin
+    {MsgBox('MyBeforeInstall', mbInformation, MB_OK)}
     dateTime := GetDateTimeString('_yyyymmdd_hhnnss',#0,#0);
     app := ExpandConstant('{app}');
     savedInstrConfig := app+'\InstrConfig'+dateTime;
@@ -28,6 +29,7 @@ procedure MyAfterInstall();
 var
     ResultCode : Integer;
 begin
+    {MsgBox('MyAfterInstall', mbInformation, MB_OK)}
     {MsgBox('Running xcopy:', mbInformation, MB_OK);}
     Exec(ExpandConstant('{sys}\xcopy.exe'), '/E /Y /I '+savedInstrConfig+' '+instrConfig, '', SW_SHOW,
     ewWaitUntilTerminated, ResultCode);
@@ -36,6 +38,5 @@ end;
 
 
 [Files]
-; Had to put this in the same file as the code since it references MyAfterInstall
-Source: {#resourceDir}\MSVCP71.DLL; DestDir: {sys}; Flags: replacesameversion; AfterInstall: MyAfterInstall
 
+; Files section is needed so ISCC knows where the Code section ends

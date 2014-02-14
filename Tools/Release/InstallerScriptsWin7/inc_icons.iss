@@ -5,3 +5,8 @@
 #define diagnosticsIcon = "Diagnostics_icon.ico"
 #define integrationIcon = "Integration_icon.ico"
 #define utilitiesIcon = "Utilities_icon.ico"
+
+[Files]
+
+; icon files
+Source: {#sandboxDir}\host\Assets\icons\*.ico; DestDir: {app}\HostExe; Flags: replacesameversion

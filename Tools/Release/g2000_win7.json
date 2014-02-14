@@ -21,12 +21,12 @@
         },
 
         "HIDS": {
-            "species": "HIDS",
+            "species": "iH2O",
             "installerSignature": "HIDS"
         },
 
         "HBDS": {
-            "species": "HBDS",
+            "species": "iH2O",
             "installerSignature": "HBDS"
         }
     },

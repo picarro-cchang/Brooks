@@ -683,6 +683,7 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
         #     c = CFADS
         #     CONFIGS[c] = CO2_CH4_H2O
         #     _verAsString(product, ver) = g2000_win7-1.5.0-10
+
         installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c],
                                             _verAsString(product, ver))
 
@@ -1041,6 +1042,9 @@ def _compileInstallers(product, osType, ver):
         configTypes.append(c)
     configTypes.sort()
 
+    # save off the current dir to build a path to the installer dir
+    currentDir = os.getcwd()
+
     for c in configTypes:
         print "Compiling '%s'..." % c
 
@@ -1049,18 +1053,24 @@ def _compileInstallers(product, osType, ver):
         if osType == 'win7':
             isccApp = ISCC_WIN7
 
-        setupFilePath = "%s\\setup_%s_%s.iss" % (INSTALLER_SCRIPTS_DIR, c, CONFIGS[c])
+        # Note: .iss files are coming from a subfolder under this release.py dir,
+        #        NOT the sandbox tree.
+        #
+        # Build a fully qualified path for the scripts folder, so ISCC can find
+        # the include files (can't find them using a relative path here).
+        installScriptDir = os.path.join(currentDir, INSTALLER_SCRIPTS_DIR)
+        setupFilePath = "%s\\setup_%s_%s.iss" % (installScriptDir, c, CONFIGS[c])
 
-        # TODO: write out the installerSignature.txt file so it can be used by the .iss script
-        #       write it somewhere the installer can find it in the sandbox
-        """
-        # test writing out an installer signature file for CFADS
-        sigLine = INSTALLER_SIGNATURES["CFADS"]
+        print "building from '%s'" % setupFilePath
 
-        f = open("installerSignature.txt", "w")
+        # Write the installerSignature.txt file into the sandbox config folder for this
+        # analyzer type.
+        sigLine = INSTALLER_SIGNATURES[c]
+        sigFilePath = os.path.normpath(os.path.join(SANDBOX_DIR, c, "installerSignature.txt"))
+        f = open(sigFilePath, "w")
         f.write(sigLine)
         f.close()
-        """
+
         #
         # TODO: add an argument for platform and maybe Python version?
 
@@ -1082,10 +1092,6 @@ def _compileInstallers(product, osType, ver):
         if retCode != 0:
             LogErr("Error building '%s' installer, retCode=%d." % (c, retCode))
             sys.exit(retCode)
-
-        # to bail out after the first installer for my testing
-        #print "Bailing out of _compileInstallers - TAKE THIS CODE OUT!"
-        # sys.exit(0)
 
 
 def _verAsString(product, ver, osType=None):
