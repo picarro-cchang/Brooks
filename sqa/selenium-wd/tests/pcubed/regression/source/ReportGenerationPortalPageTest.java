@@ -88,8 +88,8 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		testSetup.slowdownInSeconds(15);
 		
-		pageReportGeneration.makeReport(testSetup.getSurveyor(), testSetup.getHTReportData());
-		testSetup.slowdownInSeconds(3);
+//		pageReportGeneration.makeReport(testSetup.getSurveyor(), testSetup.getHTReportData());
+//		testSetup.slowdownInSeconds(3);
 		
 		ImagingUtility.takeScreenShot(driver, screenShotsDir, "ReportGenerationPortalPage_TC0001");
 	}
@@ -105,9 +105,8 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		testSetup.slowdownInSeconds(15);
 		
-		pageReportGeneration.viewReport(testSetup.getHTReportData().get("Title"));
-		
-		testSetup.slowdownInSeconds(5);
+//		pageReportGeneration.viewReport(testSetup.getHTReportData().get("Title"));
+//		testSetup.slowdownInSeconds(5);
 		
 		ImagingUtility.takeScreenShot(driver, screenShotsDir, "ReportGenerationPortalPage_TC0002_02");
 	}
