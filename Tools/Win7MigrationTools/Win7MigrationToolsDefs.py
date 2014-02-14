@@ -5,7 +5,7 @@
 # History:
 # 2014-01-30:  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.4"
+MIGRATION_TOOLS_VERSION = "1.0.0.5"
 MIGRATION_TOOLS_LOGNAME = "MigrationTools"
 
 MIGRATION_UNKNOWN_ANALYZER_TYPE = "Unknown"
@@ -16,7 +16,8 @@ MIGRATION_UNKNOWN_CHASSIS_TYPE = "Unknown"
 # This isn't working the way I want it to...
 MIGRATION_DIALOG_CAPTION = "WinXP migration to Win7: Part %s"
 
-MIGRATION_TOOLS_LOGFILENAME_BASE = "MigrationPart1_%Y_%m_%d_%H_%M_%S"
+MIGRATION_TOOLS_LOGFILENAME_BASE_1 = "MigrationPart1_%Y_%m_%d_%H_%M_%S"
+MIGRATION_TOOLS_LOGFILENAME_BASE_2 = "MigrationPart2_%Y_%m_%d_%H_%M_%S"
 
 PARTITION_2_VOLUME_NAME = "MIGRATE"
 

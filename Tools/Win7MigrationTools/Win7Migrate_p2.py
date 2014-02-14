@@ -312,10 +312,10 @@ def doMigrate(options):
     # Always log to a file as well as stdout
     if options.logFilename is None:
         if options.localTime is True:
-            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE)
+            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2)
             logFilename = logFilename + ".log"
         else:
-            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE, time.gmtime())
+            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2, time.gmtime())
             logFilename = logFilename + "Z.log"
 
         # TODO: append this base filename to a drive and folder

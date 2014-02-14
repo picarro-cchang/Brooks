@@ -27,9 +27,15 @@ def _getBuildVersion():
         verStr = buildVersion.versionNumString()
         print "Release version: %s" % verStr
     except Exception, e:
-        # use default
-        verStr = "1.0"
-        print "Release version not found, using: %s" % verStr
+        try:
+            # this script uses the version defined in Win7MigrationToolsDefs.py
+            import build_version as buildVersion
+            verStr = buildVersion.versionNumString()
+            print "Build version: %s" % verStr
+        except Exception, e:
+            # use default
+            verStr = "1.0"
+            print "Release or build version not found, defaulting to: %s" % verStr
 
     return verStr
 
