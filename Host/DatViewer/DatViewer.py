@@ -18,6 +18,7 @@
 #                display appname and version in main window frame title
 # 2013-12-20 tw  v2.0.2: Removed prefs file code (unneeded experimental code, crashed WinXP)
 # 2013-12-23 tw  v2.0.3: Fixed bugs in spectrum ID filtering for Allan std. dev.
+# 2014-02-13 tw  v2.0.4: Concatenate Folder to H5 menu option uses new function (asks user for folder first then filename).
 
 oldSum = sum
 import wx
@@ -2360,7 +2361,7 @@ class ViewNotebook(HasTraits):
                                                      openAction,
                                                      Separator(),
                                                      openZipAction,
-                                                     concatenateAction,
+                                                     #concatenateAction,
                                                      concatenateActionNew,
                                                      Separator(),
                                                      convertDatAction,
