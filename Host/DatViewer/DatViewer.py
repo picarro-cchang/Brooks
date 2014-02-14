@@ -1681,7 +1681,7 @@ class NotebookHandler(Handler):
                        "Technical support:\t408-962-3900\n" \
                        "Email:\t\ttechsupport@picarro.com\n" \
                        "\n" \
-                       "Copyright (c) 2005 - 2013, Picarro Inc.\n"
+                       "Copyright (c) 2005 - 2014, Picarro Inc.\n"
         verMsg = verFormatStr % (FULLAPPNAME, APPVERSION)
         wx.MessageBox(verMsg, APPNAME, wx.OK)
 
