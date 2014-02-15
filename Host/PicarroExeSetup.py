@@ -30,6 +30,7 @@ import glob
 import time
 import subprocess
 import os.path
+import platform
 
 from Host.Common import OS
 from Host.Common import version as hostVersion
@@ -108,6 +109,20 @@ def _getPythonSubVersion():
     """
     pythonVer = sys.version_info
     return str(pythonVer[0]) + "." + str(pythonVer[1]) + "." + str(pythonVer[2])
+
+
+def _getOsType():
+    osType = platform.uname()[2]
+
+    if osType == '7':
+        osType = 'win7'
+    elif osType == 'XP':
+        osType = 'winxp'
+    else:
+        osType = 'unknown'
+        print "Unexpected OS type!"
+
+    return osType
 
 
 def _runBatFile(batComponent, batFilename, batDir):
@@ -284,9 +299,16 @@ supervisorLauncher = Target(description = "SupervisorLauncher", # used for the v
 # End of special controller setup stuff (except to use controller below)
 ################################################################
 
+# simple check to save us from potential problems using paths in Picarro.pth
+if "PYTHONPATH" not in os.environ:
+    print "PYTHONPATH is not set in environment, potential exists for pulling local libs from wrong dir."
+    print "Run 'python buildHost.py' instead to build Host apps from the command line."
+    sys.exit(1)
+
 
 pythonVer = _getPythonVersion()
 pythonSubVer = _getPythonSubVersion()
+osType = _getOsType()
 
 
 # Build the various Host .pyd modules
@@ -315,13 +337,6 @@ _runBatFile("swathP.pyd", swathPBatFilename, "Common")
 
 # Utilities\SuperBuildStation: fastLomb.pyd
 _runBatFile("fastLomb.pyd", "setup.bat", os.path.join("Utilities", "SuperBuildStation"))
-
-
-# simple check to save us from potential problems using paths in Picarro.pth
-if "PYTHONPATH" not in os.environ:
-    print "PYTHONPATH is not set in environment, potential exists for pulling local libs from wrong dir."
-    print "Run 'python buildHost.py' instead to build Host apps from the command line."
-    sys.exit(1)
 
 versionStr = _getBuildVersion()
 
@@ -383,7 +398,6 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                    "Utilities/SupervisorLauncher/Integration_icon.ico",
                    "Utilities/SupervisorLauncher/Picarro_icon.ico",
                    "Utilities/SupervisorLauncher/Utilities_icon.ico",
-                   "Utilities/Restart/inpout32.dll",
                    "PeriphIntrf/Serial2Socket.exe",
                    "../MobileKit/AnalyzerServer/configAnalyzerServer.ini",
                    "../repoBzrVer.py"]),
@@ -405,6 +419,15 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             ]
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))
+
+if osType == "winxp":
+    data_files.append("Utilities/Restart/inpout/winxp/inpout32.dll")
+elif osType == "win7":
+    data_files.append("Utilities/Restart/inpout/win7/Win32/inpout32.dll")
+else:
+    print "Failed to include inpout32.dll in build, OS is not supported! (osType='%s')" % osType
+    sys.exit(1)
+
 
 consoleList = [
     "ActiveFileManager/ActiveFileManager.py",
