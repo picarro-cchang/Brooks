@@ -1,0 +1,151 @@
+
+
+
+Running AnzLog get_byPos_alog_startPos0(self, limit = 10)...
+
+res:  {'resource': 'AnzLog', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLog:byPos', 'AnzLog:byEpoch', 'AnzLog:resource']}
+qryobj:  {'qry': 'byPos', 'startPos': 0, 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}
+params:  {'qryobj': {'qry': 'byPos', 'startPos': 0, 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}, 'existing_tkt': True}
+
+doclist is False
+
+rtnData for AnzLog get_byPos_alog_startPos0(self, limit = 10):  (200, [{'EPOCH_TIME': 1339333999.913, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -49.098125136, 'WIND_E': None, 'HC_C2H6_conc': -0.80398804318, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 1, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.600532566, 'CH4dt': 0.93825, 'CH4': 2.1660017214, 'CH4up': 2.2530561187, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.8, 'HR_Delta_iCH4_Raw': -60.490016264, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494445, 'GPS_FIT': 0.14, 'WIND_DIR_SDEV': None, 'CH4down': 2.256234262, 'CAR_SPEED': None, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334001.119, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -55.035143029, 'WIND_E': None, 'HC_C2H6_conc': -0.14150903025, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 2, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.600536688, 'CH4dt': 0.9526640625, 'CH4': 2.1661834415, 'CH4up': 2.2298272419, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.8675, 'HR_Delta_iCH4_Raw': -63.691643604, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494231, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2754396564, 'CAR_SPEED': None, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334002.334, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -50.92308422, 'WIND_E': None, 'HC_C2H6_conc': -0.49371838829, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 3, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.600539856, 'CH4dt': 0.9706640625, 'CH4': 2.1691084394, 'CH4up': 2.234171893, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.9, 'HR_Delta_iCH4_Raw': -57.259540985, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494065, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2442934873, 'CAR_SPEED': None, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334003.519, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -43.114578169, 'WIND_E': None, 'HC_C2H6_conc': -0.47561859117, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 4, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.60054132, 'CH4dt': 0.981, 'CH4': 2.1642120201, 'CH4up': 2.2044973218, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.885, 'HR_Delta_iCH4_Raw': -46.943688455, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494019, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2311014569, 'CAR_SPEED': None, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334004.671, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -51.051138283, 'WIND_E': None, 'HC_C2H6_conc': -0.81147906914, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 5, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.60053837, 'CH4dt': 0.919, 'CH4': 2.1582030522, 'CH4up': 2.250381412, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.7454, 'HR_Delta_iCH4_Raw': -61.502469446, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494274, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2199607089, 'CAR_SPEED': None, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334005.606, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -51.051138283, 'WIND_E': None, 'HC_C2H6_conc': -0.81147906914, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 153, 'row': 6, 'WS_WIND_LAT': -0.1162, 'GPS_ABS_LAT': 36.600534466, 'CH4dt': 0.919, 'CH4': 2.1582030522, 'CH4up': 2.250381412, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.9324, 'HR_Delta_iCH4_Raw': -61.502469446, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494473, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2199607089, 'CAR_SPEED': None, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334006.202, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -46.513021399, 'WIND_E': -0.2507819598, 'HC_C2H6_conc': -0.41964317402, 'FILENAME_nint': 96, 'WIND_N': -0.66901907913, 'species': 150, 'row': 7, 'WS_WIND_LAT': -0.1758, 'GPS_ABS_LAT': 36.600532175, 'CH4dt': 0.9755, 'CH4': 2.1518005014, 'CH4up': 2.1984696877, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.0516, 'HR_Delta_iCH4_Raw': -48.473998135, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494512, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 0.43143577756, 'CH4down': 2.2060748635, 'CAR_SPEED': 0.42721525115, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334007.247, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -42.185994022, 'WIND_E': -0.24390161918, 'HC_C2H6_conc': -0.54729038993, 'FILENAME_nint': 96, 'WIND_N': -0.59129569207, 'species': 150, 'row': 8, 'WS_WIND_LAT': -0.2803, 'GPS_ABS_LAT': 36.600528104, 'CH4dt': 0.98, 'CH4': 2.147671872, 'CH4up': 2.2186269953, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.1803, 'HR_Delta_iCH4_Raw': -48.52757074, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494432, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 2.4174584612, 'CH4down': 2.1806011164, 'CAR_SPEED': 0.46354609172, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334008.523, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -44.001358403, 'WIND_E': -0.19931029265, 'HC_C2H6_conc': -0.62460917557, 'FILENAME_nint': 96, 'WIND_N': -0.48614114527, 'species': 150, 'row': 9, 'WS_WIND_LAT': -0.1842, 'GPS_ABS_LAT': 36.600522718, 'CH4dt': 0.943, 'CH4': 2.1450331469, 'CH4up': 2.1901406313, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.1921, 'HR_Delta_iCH4_Raw': -47.981110777, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494193, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 6.4010733459, 'CH4down': 2.2351425813, 'CAR_SPEED': 0.51325006121, 'ALARM_STATUS': 0}, {'EPOCH_TIME': 1339334009.705, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -52.941412686, 'WIND_E': -0.11099476764, 'HC_C2H6_conc': -0.58288068229, 'FILENAME_nint': 96, 'WIND_N': -0.41176144767, 'species': 150, 'row': 10, 'WS_WIND_LAT': 0, 'GPS_ABS_LAT': 36.600518176, 'CH4dt': 0.9245, 'CH4': 2.1469674068, 'CH4up': 2.1758888885, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.0739, 'HR_Delta_iCH4_Raw': -54.852061344, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89493798, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 25.698382987, 'CH4down': 2.2100981994, 'CAR_SPEED': 0.56372328035, 'ALARM_STATUS': 0}])
+
+{'EPOCH_TIME': 1339333999.913, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -49.098125136, 'WIND_E': None, 'HC_C2H6_conc': -0.80398804318, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 1, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.600532566, 'CH4dt': 0.93825, 'CH4': 2.1660017214, 'CH4up': 2.2530561187, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.8, 'HR_Delta_iCH4_Raw': -60.490016264, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494445, 'GPS_FIT': 0.14, 'WIND_DIR_SDEV': None, 'CH4down': 2.256234262, 'CAR_SPEED': None, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334001.119, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -55.035143029, 'WIND_E': None, 'HC_C2H6_conc': -0.14150903025, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 2, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.600536688, 'CH4dt': 0.9526640625, 'CH4': 2.1661834415, 'CH4up': 2.2298272419, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.8675, 'HR_Delta_iCH4_Raw': -63.691643604, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494231, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2754396564, 'CAR_SPEED': None, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334002.334, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -50.92308422, 'WIND_E': None, 'HC_C2H6_conc': -0.49371838829, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 3, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.600539856, 'CH4dt': 0.9706640625, 'CH4': 2.1691084394, 'CH4up': 2.234171893, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.9, 'HR_Delta_iCH4_Raw': -57.259540985, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494065, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2442934873, 'CAR_SPEED': None, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334003.519, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -43.114578169, 'WIND_E': None, 'HC_C2H6_conc': -0.47561859117, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 4, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.60054132, 'CH4dt': 0.981, 'CH4': 2.1642120201, 'CH4up': 2.2044973218, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.885, 'HR_Delta_iCH4_Raw': -46.943688455, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494019, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2311014569, 'CAR_SPEED': None, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334004.671, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -51.051138283, 'WIND_E': None, 'HC_C2H6_conc': -0.81147906914, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 150, 'row': 5, 'WS_WIND_LAT': -0.1, 'GPS_ABS_LAT': 36.60053837, 'CH4dt': 0.919, 'CH4': 2.1582030522, 'CH4up': 2.250381412, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.7454, 'HR_Delta_iCH4_Raw': -61.502469446, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494274, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2199607089, 'CAR_SPEED': None, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334005.606, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -51.051138283, 'WIND_E': None, 'HC_C2H6_conc': -0.81147906914, 'FILENAME_nint': 96, 'WIND_N': None, 'species': 153, 'row': 6, 'WS_WIND_LAT': -0.1162, 'GPS_ABS_LAT': 36.600534466, 'CH4dt': 0.919, 'CH4': 2.1582030522, 'CH4up': 2.250381412, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 0.9324, 'HR_Delta_iCH4_Raw': -61.502469446, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494473, 'GPS_FIT': 2, 'WIND_DIR_SDEV': None, 'CH4down': 2.2199607089, 'CAR_SPEED': None, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334006.202, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -46.513021399, 'WIND_E': -0.2507819598, 'HC_C2H6_conc': -0.41964317402, 'FILENAME_nint': 96, 'WIND_N': -0.66901907913, 'species': 150, 'row': 7, 'WS_WIND_LAT': -0.1758, 'GPS_ABS_LAT': 36.600532175, 'CH4dt': 0.9755, 'CH4': 2.1518005014, 'CH4up': 2.1984696877, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.0516, 'HR_Delta_iCH4_Raw': -48.473998135, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494512, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 0.43143577756, 'CH4down': 2.2060748635, 'CAR_SPEED': 0.42721525115, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334007.247, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -42.185994022, 'WIND_E': -0.24390161918, 'HC_C2H6_conc': -0.54729038993, 'FILENAME_nint': 96, 'WIND_N': -0.59129569207, 'species': 150, 'row': 8, 'WS_WIND_LAT': -0.2803, 'GPS_ABS_LAT': 36.600528104, 'CH4dt': 0.98, 'CH4': 2.147671872, 'CH4up': 2.2186269953, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.1803, 'HR_Delta_iCH4_Raw': -48.52757074, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494432, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 2.4174584612, 'CH4down': 2.1806011164, 'CAR_SPEED': 0.46354609172, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334008.523, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -44.001358403, 'WIND_E': -0.19931029265, 'HC_C2H6_conc': -0.62460917557, 'FILENAME_nint': 96, 'WIND_N': -0.48614114527, 'species': 150, 'row': 9, 'WS_WIND_LAT': -0.1842, 'GPS_ABS_LAT': 36.600522718, 'CH4dt': 0.943, 'CH4': 2.1450331469, 'CH4up': 2.1901406313, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.1921, 'HR_Delta_iCH4_Raw': -47.981110777, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89494193, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 6.4010733459, 'CH4down': 2.2351425813, 'CAR_SPEED': 0.51325006121, 'ALARM_STATUS': 0}
+{'EPOCH_TIME': 1339334009.705, 'WS_ROTATION': 2.5817123561, 'HP_Delta_iCH4_Raw': -52.941412686, 'WIND_E': -0.11099476764, 'HC_C2H6_conc': -0.58288068229, 'FILENAME_nint': 96, 'WIND_N': -0.41176144767, 'species': 150, 'row': 10, 'WS_WIND_LAT': 0, 'GPS_ABS_LAT': 36.600518176, 'CH4dt': 0.9245, 'CH4': 2.1469674068, 'CH4up': 2.1758888885, 'ANALYZER': 'DEMO2000', 'ValveMask': 0, 'WS_WIND_LON': 1.0739, 'HR_Delta_iCH4_Raw': -54.852061344, 'INST_STATUS': 721859, 'GPS_ABS_LONG': -121.89493798, 'GPS_FIT': 2, 'WIND_DIR_SDEV': 25.698382987, 'CH4down': 2.2100981994, 'CAR_SPEED': 0.56372328035, 'ALARM_STATUS': 0}
+
+
+
+Running AnzLog get_resource(self, limit = 10)...
+
+res:  {'resource': 'AnzLog', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLog:byPos', 'AnzLog:byEpoch', 'AnzLog:resource']}
+qryobj:  {'qry': 'resource', 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}
+params:  {'existing_tka': True, 'qryobj': {'qry': 'resource', 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}}
+
+Known issue and similar to the bug #589, P3 Rest API, 'AnzMeta:resource' returns 'request failed'
+
+
+
+Running AnzLogMeta get_byEpoch_anz_startEtm0(self, limit = 10)...
+
+res:  {'resource': 'AnzLogMeta', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLogMeta:byEpoch', 'AnzLogMeta:resource']}
+qryobj:  {'startEtm': 0, 'qry': 'byEpoch', 'limit': 10, 'anz': 'DEMO2000', 'doclist': False}
+params:  {'qryobj': {'startEtm': 0, 'qry': 'byEpoch', 'limit': 10, 'anz': 'DEMO2000', 'doclist': False}, 'existing_tkt': True}
+
+doclist is False
+
+rtnData for AnzLogMeta get_byEpoch_anz_startEtm0(self, limit = 10):  (200, [{'durrstr': '(4h:49m)', 'etmname': 1339334006, 'maxetm': 1339351382.89, 'name': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'minetm': 1339333999.913, 'geobox': [[-121.92891916, 36.589229052], [-121.88737835, 36.628576365]], 'ANALYZER': 'DEMO2000', 'durr': 17382.976999998093, 'LOGNAME': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'FILENAME_nint': 96, 'UPDATE_TIMESTAMP': '2014-01-14T21:25:50.121Z', 'children': ['fov_adf8e00c8f8cedfdf9638f88a2a25483_1380855745765', 'fov_36c26a57db03783dd7aa6117dea59381_1382487667764', 'fov_02f1fed36585200b2cea96c4135e1d20_1383705592989', 'fov_7d2bd3b5225e63a2579e34d94b290087_1383783624889'], 'docmap': {'EPOCH_TIME': 'etm', 'WS_ROTATION': 4, 'HP_Delta_iCH4_Raw': 5, 'WIND_E': 2, 'HC_C2H6_conc': 3, 'FILENAME_nint': 'fnm', 'WIND_N': 6, 'species': 8, 'row': 'row', 'WS_WIND_LAT': 7, 'GPS_ABS_LAT': 'lat', 'CH4dt': 9, 'CH4': 11, 'CH4up': 10, 'ANALYZER': 'anz', 'ValveMask': 13, 'WS_WIND_LON': 12, 'HR_Delta_iCH4_Raw': 16, 'INST_STATUS': 14, 'GPS_ABS_LONG': 'lng', 'GPS_FIT': 'fit', 'WIND_DIR_SDEV': 15, 'CH4down': 17, 'CAR_SPEED': 18, 'ALARM_STATUS': 19}}])
+
+DEMO2000 DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat 96
+
+
+
+Running AnzLogMeta get_byEpoch_alog_startEtm0(self, limit = 10)...
+
+res:  {'resource': 'AnzLogMeta', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLogMeta:byEpoch', 'AnzLogMeta:resource']}
+qryobj:  {'startEtm': 0, 'qry': 'byEpoch', 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}
+params:  {'qryobj': {'startEtm': 0, 'qry': 'byEpoch', 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}, 'existing_tkt': True}
+
+doclist is False
+
+rtnData for AnzLogMeta get_byEpoch_alog_startEtm0(self, limit = 10):  (200, [{'durrstr': '(4h:49m)', 'etmname': 1339334006, 'maxetm': 1339351382.89, 'name': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'minetm': 1339333999.913, 'geobox': [[-121.92891916, 36.589229052], [-121.88737835, 36.628576365]], 'ANALYZER': 'DEMO2000', 'durr': 17382.976999998093, 'LOGNAME': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'FILENAME_nint': 96, 'UPDATE_TIMESTAMP': '2014-01-14T21:25:50.121Z', 'children': ['fov_adf8e00c8f8cedfdf9638f88a2a25483_1380855745765', 'fov_36c26a57db03783dd7aa6117dea59381_1382487667764', 'fov_02f1fed36585200b2cea96c4135e1d20_1383705592989', 'fov_7d2bd3b5225e63a2579e34d94b290087_1383783624889'], 'docmap': {'EPOCH_TIME': 'etm', 'WS_ROTATION': 4, 'HP_Delta_iCH4_Raw': 5, 'WIND_E': 2, 'HC_C2H6_conc': 3, 'FILENAME_nint': 'fnm', 'WIND_N': 6, 'species': 8, 'row': 'row', 'WS_WIND_LAT': 7, 'GPS_ABS_LAT': 'lat', 'CH4dt': 9, 'CH4': 11, 'CH4up': 10, 'ANALYZER': 'anz', 'ValveMask': 13, 'WS_WIND_LON': 12, 'HR_Delta_iCH4_Raw': 16, 'INST_STATUS': 14, 'GPS_ABS_LONG': 'lng', 'GPS_FIT': 'fit', 'WIND_DIR_SDEV': 15, 'CH4down': 17, 'CAR_SPEED': 18, 'ALARM_STATUS': 19}}])
+
+DEMO2000 DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat 96
+
+
+
+Running AnzLogMeta get_byEpoch_nint_startEtm0(self, limit = 10):...
+Working on...
+
+
+
+Running AnzLogMeta get_resource(self, limit = 10)...
+
+res:  {'resource': 'AnzLogMeta', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLogMeta:byEpoch', 'AnzLogMeta:resource']}
+qryobj:  {'startEtm': 0, 'qry': 'resource', 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}
+params:  {'qryobj': {'startEtm': 0, 'qry': 'resource', 'limit': 10, 'alog': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'doclist': False}, 'existing_tkt': True}
+
+Known issue and similar to the bug #589, P3 Rest API, 'AnzMeta:resource' returns 'request failed'
+
+
+
+Running AnzMeta get_byAnz(self, limit = 10)...
+
+res:  {'resource': 'AnzMeta', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzMeta:byAnz', 'AnzMeta:resource']}
+qryobj:  {'qry': 'byAnz', 'limit': 10, 'doclist': False}
+params:  {'qryobj': {'qry': 'byAnz', 'limit': 10, 'doclist': False}, 'existing_tkt': True}
+
+doclist is False
+
+rtnData for AnzMeta get_byAnz(self, limit = 10):  (200, [{'ANALYZER_NAME': 'CFADS2206', 'UPDATE_TIME': 1391823059386, 'name': 'CFADS2206', 'ANALYZER': 'CFADS2206', 'LAST_EPOCH_TIME': 1367006646.629, 'FIRST_EPOCH_TIME': 0, 'INSERT_TIME': 1368736938984, 'LAST_LOG': 'CFADS2206-20130426-192624Z-DataLog_User_Minimal.dat', 'LAST_LOC': [-71.1410763, 42.338588833]}, {'ANALYZER_NAME': 'CFADS2274', 'LAST_LOG': 'CFADS2274-20121207-194328Z-DataLog_User_Minimal.dat', 'name': 'CFADS2274', 'ANALYZER': 'CFADS2274', 'LAST_LOC': [-105.0943089, 40.582382315]}, {'ANALYZER_NAME': 'CFADS2276', 'LAST_LOG': 'CFADS2276-20130418-134259Z-DataLog_User_Minimal.dat', 'name': 'CFADS2276', 'ANALYZER': 'CFADS2276', 'LAST_LOC': [-70.9977825, 42.38341037]}, {'ANALYZER_NAME': 'DEMO2000', 'name': 'DEMO2000', 'ANALYZER': 'DEMO2000', 'PRIVATE_IP': '10.200.2.79:5000', 'LAST_LOG': 'DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat', 'LAST_LOC': [-121.89378457, 36.595149225]}, {'ANALYZER_NAME': 'FCDS2008', 'LAST_LOG': 'FCDS2008-20120610-234834Z-DataLog_User_Minimal.dat', 'name': 'FCDS2008', 'ANALYZER': 'FCDS2008', 'LAST_LOC': [-122.10500235, 37.404463147]}, {'ANALYZER_NAME': 'FDDS2004', 'LAST_LOG': 'FDDS2004-20130511-222852Z-DataLog_User_Minimal.dat', 'name': 'FDDS2004', 'ANALYZER': 'FDDS2004', 'LAST_LOC': [0, 0]}, {'ANALYZER_NAME': 'FDDS2008', 'name': 'FDDS2008', 'ANALYZER': 'FDDS2008', 'PRIVATE_IP': '10.0.0.7:5000', 'LAST_LOG': 'FDDS2008-20130508-023600Z-DataLog_User_Minimal.dat', 'LAST_LOC': [116.7272029, 39.539656356]}, {'ANALYZER_NAME': 'FDDS2010', 'name': 'FDDS2010', 'ANALYZER': 'FDDS2010', 'PRIVATE_IP': '10.200.2.106:5000', 'LAST_LOG': 'FDDS2010-20130903-171525Z-DataLog_Sensor_Minimal.dat', 'LAST_LOC': [0, 0]}, {'ANALYZER_NAME': 'FDDS2013', 'LAST_LOG': 'FDDS2013-20120914-183556Z-DataLog_User_Minimal.dat', 'name': 'FDDS2013', 'ANALYZER': 'FDDS2013', 'LAST_LOC': [-121.98422859, 37.396970833]}, {'ANALYZER_NAME': 'FDDS2021', 'LAST_LOG': 'FDDS2021-20130527-030110Z-DataLog_User_Minimal.dat', 'name': 'FDDS2021', 'ANALYZER': 'FDDS2021', 'LAST_LOC': [-95.275998667, 29.932136354]}])
+
+The Analyzer list is:  ['CFADS2206', 'CFADS2274', 'CFADS2276', 'DEMO2000', 'FCDS2008', 'FDDS2004', 'FDDS2008', 'FDDS2010', 'FDDS2013', 'FDDS2021']
+
+Finished running anzMeta.get_byAnz():
+
+
+
+
+Running AnzLrt get_getStatus(self, limit = 10)...
+
+res:  {'resource': 'AnzLrt', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLrt:getStatus', 'AnzLrt:byRow', 'AnzLrt:byRowFov']}
+qryobj:  {'qry': 'getStatus', 'startTs': '2013-09-24T04:10:14.262Z', 'limit': 10, 'prmsHash': '3e4aa928dbe4ef58f54906e9f6ee8d9d', 'doclist': False}
+params:  {'qryobj': {'qry': 'getStatus', 'startTs': '2013-09-24T04:10:14.262Z', 'limit': 10, 'prmsHash': '3e4aa928dbe4ef58f54906e9f6ee8d9d', 'doclist': False}, 'existing_tkt': True}
+
+rtnData for get_getStatus(self, limit = 10 ):  (200, {'count': 1414, 'status': 16, 'requestor_uid': 'stage', 'lrt_prms_str': '{"LRT":true,"alog":"FCDS2008-20120610-220332Z-DataLog_User_Minimal.dat","asFile":"lrtfov","astd_a":0.47123889803846897,"astd_b":0.25,"astd_c":0,"do_next_step":true,"forceClose":true,"limit":"all","log_type":"dat","lrtSortList":["GPS_ABS_LONG","GPS_ABS_LAT"],"minAmp":0.03,"minLeak":1,"nWindow":10,"qry":"makeFov","resource":"AnzLog","rtnFmt":"lrtfov","stabClass":"D","startPos":0}', 'proc_durr': 9147, 'lrt_type': 'lrtfov', 'lrt_collection': 'fov_3e4aa928dbe4ef58f54906e9f6ee8d9d_1379995814262', 'request_ts': '2014-02-08T01:34:27.022Z', 'lrt_parms_hash': '3e4aa928dbe4ef58f54906e9f6ee8d9d', 'lrt_start_ts': '2013-09-24T04:10:14.262Z'})
+
+
+
+Running AnzLrt get_byRow(self, limit = 10)...
+
+res:  {'resource': 'AnzLrt', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLrt:getStatus', 'AnzLrt:byRow', 'AnzLrt:byRowFov']}
+qryobj:  {'prmsHash': '255ed6e97ce1991ef7214fce222e9e41', 'startTs': '2014-02-29T03:01:01.210', 'startRow': 0, 'limit': 10, 'doclist': False, 'qry': 'byRow'}
+params:  {'qryobj': {'prmsHash': '255ed6e97ce1991ef7214fce222e9e41', 'startTs': '2014-02-29T03:01:01.210', 'startRow': 0, 'limit': 10, 'doclist': False, 'qry': 'byRow'}, 'existing_tkt': True}
+
+rtnData for get_byRow(self, limit = 10):  (404, '"404 resource error. Sat Feb 08 2014 01:34:28 GMT+0000 (UTC)\\n 9999: ERROR: Log not found. \\n   "')
+
+
+
+Running AnzLrt get_byRowFov(self, limit = 10)...
+
+res:  {'resource': 'AnzLrt', 'psys': 'stage', 'svc': 'gdu', 'site': 'stage', 'host': 'p3.picarro.com', 'version': '1.0', 'debug': False, 'port': '443', 'identity': 'zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth', 'rprocs': ['AnzLrt:getStatus', 'AnzLrt:byRow', 'AnzLrt:byRowFov']}
+qryobj:  {'prmsHash': '255ed6e97ce1991ef7214fce222e9e41', 'startTs': '2014-02-29T03:01:01.210', 'startRow': 0, 'limit': 10, 'doclist': False, 'qry': 'byRowFov'}
+params:  {'qryobj': {'prmsHash': '255ed6e97ce1991ef7214fce222e9e41', 'startTs': '2014-02-29T03:01:01.210', 'startRow': 0, 'limit': 10, 'doclist': False, 'qry': 'byRowFov'}, 'existing_tkt': True}
+
+rtnData for get_byRowFov(self, limit = 10):  (404, '"404 resource error. Sat Feb 08 2014 01:34:29 GMT+0000 (UTC)\\n 9999: ERROR: Log not found. \\n   "')
+
+Running AnzLogTest...
+
+
+Finished running AnzLogTest with zero return code
+
+
+Running AnzLogMetaTest...
+
+
+Finished running AnzLogMetaTest with return code 0
+
+
+Running AnzMetaTest...
+
+
+Finished running AnzMetaTest with return code 0
+
+
+Running AnzLrtTest...
+
+
+Finished running AnzLrtTest with return code 0
+
+
+
+
+Finished running P3RestAPITests
