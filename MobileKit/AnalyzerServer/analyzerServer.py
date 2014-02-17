@@ -478,7 +478,7 @@ def rest_shutdownAnalyzer():
 def shutdownAnalyzerEx(params):
     print "<------------------ Shut down analyzer in current state ------------------>"
     InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
-    InstMgr.INSTMGR_ShutdownRpc(2)
+    InstMgr.INSTMGR_ShutdownRpc(0)
     return {}
 
 @app.route('/rest/driverRpc')
