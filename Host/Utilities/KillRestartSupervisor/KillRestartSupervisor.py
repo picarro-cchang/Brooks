@@ -16,7 +16,7 @@ from Host.Common import EventManagerProxy
 
 
 APP_NAME = 'KillRestartSupervisor'
-TIMEOUT_SECS = 30.0 * 60.0
+TIMEOUT_SECS = 60.0 * 60.0
 SAFE_DAS_TEMP = 20.0
 MSG_THROTTLE_COUNT = 60
 
@@ -45,6 +45,8 @@ if __name__ == '__main__':
 
         dasTemp = driver.rdDasReg("DAS_TEMPERATURE_REGISTER")
         if dasTemp >= SAFE_DAS_TEMP:
+            EventManagerProxy.Log('Attempting restart supervisor shutdown.')
+
             try:
                 restartSupervisor.Terminate()
 
@@ -54,10 +56,14 @@ if __name__ == '__main__':
                 # RestartSupervisor.
                 pass
 
+            except:
+                EventManagerProxy.LogExc('Unknown exception raised when terminating restart supervisor.')
+                raise
+
             EventManagerProxy.Log('Restart supervisor stopped.')
             sys.exit(1)
 
         time.sleep(1.0)
 
     EventManagerProxy.Log("DAS temperature did not stabilize after %s minutes. "
-                          "Abandoing RestartSupervisor kill." % TIMEOUT_SECS)
+                          "Abandoing RestartSupervisor kill." % (TIMEOUT_SECS / 60.0))
