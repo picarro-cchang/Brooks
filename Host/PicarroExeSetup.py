@@ -421,9 +421,9 @@ for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))
 
 if osType == "winxp":
-    data_files.append("Utilities/Restart/inpout/winxp/inpout32.dll")
+    data_files.append("../Vendor/inpout/winxp/inpout32.dll")
 elif osType == "win7":
-    data_files.append("Utilities/Restart/inpout/win7/Win32/inpout32.dll")
+    data_files.append("../Vendor/inpout/win7/Win32/inpout32.dll")
 else:
     print "Failed to include inpout32.dll in build, OS is not supported! (osType='%s')" % osType
     sys.exit(1)
