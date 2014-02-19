@@ -259,7 +259,7 @@ class AnalyzerInfo(object):
             self.chassis = analyzerId["Chassis"]
         except Exception, e:
             self.logger.warn("Exception occurred calling fetchObject[LOGIC_EEPROM]: %r, %r" % (Exception, e))
-            self.analyzerName = mdefs.MIGRATION_UNKNOWN_ANALYZER_TYPE
+            self.analyzerName = mdefs.MIGRATION_UNKNOWN_ANALYZER_NAME
             self.analyzerNum = ""
             self.chassis = mdefs.MIGRATION_UNKNOWN_CHASSIS_TYPE
 

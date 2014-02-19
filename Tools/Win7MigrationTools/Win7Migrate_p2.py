@@ -21,6 +21,11 @@ from optparse import OptionParser
 import Win7MigrationToolsDefs as mdefs
 import Win7MigrationUtils as mutils
 
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+
 
 def findAndValidateDrives(debug=False):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
@@ -337,6 +342,7 @@ def doMigrate(options):
     root.addHandler(handlerFile)
 
     root.info("***** Win7 migration part 2 (install) started. *****")
+    root.info("Running %s version %s" % (AppPath, mdefs.MIGRATION_TOOLS_VERSION))
 
 
     # ==== Validation =====
@@ -517,7 +523,7 @@ Win7 migration utility part 2 (install).
 
     parser.add_option('--skipInstall', dest="skipInstall",
                       action='store_true', default=False,
-                      help=('Skip installing the software (useful for devs only).'))
+                      help=('Skip installing the Win7 analyzer software.'))
 
     parser.add_option('--logLevel', dest='logLevel',
                       default=None, help=('Set logging level.\n',
