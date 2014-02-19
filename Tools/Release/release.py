@@ -207,10 +207,20 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
             print ""
             print "local build       =", "YES"
 
-            if opts.cloneRepo:
-                print "clone repos       =", "YES"
+            if opts.cloneAllRepos:
+                print "clone all repos   =", "YES"
             else:
-                print "clone repos       =", "NO"
+                print "clone all repos   =", "NO"
+
+                if opts.cloneHostRepo:
+                    print "  clone host repo (git)     =", "YES"
+                else:
+                    print "  clone host repo (git)     =", "NO"
+
+                if opts.cloneConfigRepo:
+                    print "  clone config repos (bzr)  =", "YES"
+                else:
+                    print "  clone config repos (bzr)  =", "NO"
 
             if opts.buildExes:
                 print "build exes        =", "YES"
@@ -340,8 +350,9 @@ def makeExe(opts):
         LogErr("--local and --dry-run options cannot be used together!")
         sys.exit(1)
 
-    if not opts.cloneRepo and not opts.local:
-        LogErr("--debug-skip-clone is allowed only with --local option!")
+    # Note: opts.cloneAllRepos gets set to False if skipping either host or config clones
+    if not opts.cloneAllRepos and not opts.local:
+        LogErr("--debug-skip-all-clone, --debug-skip-host-clone, and --debug-skip-config-clone options are allowed only with --debug-local option!")
         sys.exit(1)
 
     if not opts.buildExes and not opts.local:
@@ -569,10 +580,10 @@ def makeExe(opts):
     else:
         print "Version number was not changed, skipping update version metadata in local repo."
 
-    if opts.cloneRepo:
+    if opts.cloneAllRepos or opts.cloneHostRepo:
         _branchFromRepo(opts.branch)
     else:
-        print "Skipping cloning of repos."
+        print "Skipping cloning of Git repo."
 
         # do a quick test for existence of the sandbox dir (won't ensure build integrity though)
         if not os.path.exists(SANDBOX_DIR):
@@ -603,8 +614,10 @@ def makeExe(opts):
 
     # XXX This is likely superfluous once the configuration files have
     # been merged into the main repository.
-    if opts.cloneRepo:
+    if opts.cloneAllRepos or opts.cloneConfigRepo:
         _makeLocalConfig()
+    else:
+        print "Skipping cloning of Bzr config repos"
 
     if opts.createInstallers:
         _compileInstallers(productFamily, osType, VERSION)
@@ -936,7 +949,13 @@ def _tagAppInstrConfigs(product, ver):
     """
 
     with OS.chdir(SANDBOX_DIR):
+        # tag configs alphabetically by instrument type (nicety for monitoring build progress)
+        configTypes = []
         for c in CONFIGS:
+            configTypes.append(c)
+        configTypes.sort()
+
+        for c in configTypes:
             configBase = os.path.join(CONFIG_BASE, "%sTemplates" % c)
 
             retCode = subprocess.call(['bzr.exe', 'tag',
@@ -967,6 +986,8 @@ def _makeLocalConfig():
     """
 
     with OS.chdir(SANDBOX_DIR):
+        print "_makeLocalConfig: current dir='%s'" % os.getcwd()
+        print "subprocess.call([bzr.exe, branch, %s])" % COMMON_CONFIG
         retCode = subprocess.call(['bzr.exe', 'branch', COMMON_CONFIG])
 
         if retCode != 0:
@@ -974,6 +995,7 @@ def _makeLocalConfig():
             sys.exit(retCode)
 
         with open(os.path.join('CommonConfig', 'version.ini'), 'w') as fp:
+            print "subprocess.call([bzr.exe, version-info, CommonConfig, --custom --template=%s])" % VERSION_TEMPLATE
             retCode = subprocess.call(['bzr.exe', 'version-info',
                                        'CommonConfig', '--custom',
                                        "--template=%s" % VERSION_TEMPLATE],
@@ -983,10 +1005,20 @@ def _makeLocalConfig():
                 LogErr("Error generating version.ini for CommonConfig. retCode=%d" % retCode)
                 sys.exit(retCode)
 
+        # get configs alphabetically by instrument type (nicety for monitoring build progress)
+        configTypes = []
         for c in CONFIGS:
+            configTypes.append(c)
+        configTypes.sort()
+
+        for c in configTypes:
             print "Getting configs for '%s'" % c
             os.mkdir(c)
             with OS.chdir(c):
+                # clone AppConfig branch
+                templatesPath = os.path.join(CONFIG_BASE, "%sTemplates" % c,'AppConfig')
+                print "subprocess.call([bzr.exe, branch, %s, AppConfig])" % templatesPath
+
                 retCode = subprocess.call(['bzr.exe', 'branch',
                                            os.path.join(CONFIG_BASE,
                                                         "%sTemplates" % c,
@@ -996,7 +1028,10 @@ def _makeLocalConfig():
                     LogErr("Error cloning '%s' AppConfig. retCode=%d" % (c, retCode))
                     sys.exit(retCode)
 
+                # get AppConfig version
                 with open(os.path.join('AppConfig', 'version.ini'), 'w') as fp:
+                    print "subprocess.call([bzr.exe, version-info, AppConfig, --custom --template=%s])" % VERSION_TEMPLATE
+
                     retCode = subprocess.call(['bzr.exe', 'version-info',
                                                'AppConfig', '--custom',
                                                "--template=%s" %
@@ -1007,6 +1042,10 @@ def _makeLocalConfig():
                         LogErr("Error generating '%s' AppConfig version.ini. retCode=%d" % (c, retCode))
                         sys.exit(retCode)
 
+                # clone InstrConfig branch
+                templatesPath = os.path.join(CONFIG_BASE, "%sTemplates" % c,'InstrConfig')
+                print "subprocess.call([bzr.exe, branch, %s, InstrConfig])" % templatesPath
+
                 retCode = subprocess.call(['bzr.exe', 'branch',
                                            os.path.join(CONFIG_BASE,
                                                         "%sTemplates" % c,
@@ -1016,8 +1055,10 @@ def _makeLocalConfig():
                     LogErr("Error cloning '%s' InstrConfig. retCode=%d" % (c, retCode))
                     sys.exit(retCode)
 
-                with open(os.path.join('InstrConfig',
-                                       'version.ini'), 'w') as fp:
+                # get InstrConfig version
+                with open(os.path.join('InstrConfig', 'version.ini'), 'w') as fp:
+                    print "subprocess.call([bzr.exe, version-info, InstrConfig, --custom --template=%s])" % VERSION_TEMPLATE
+
                     retCode = subprocess.call(['bzr.exe', 'version-info',
                                                'InstrConfig', '--custom',
                                                "--template=%s" %
@@ -1166,11 +1207,25 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                       help=('Use local C: drive in place of R: or S: for '
                             'build destination paths. Useful for debugging this build '
                             'script. This option cannot be used in combination with --dry-run.'))
-    parser.add_option('--debug-skip-clone', dest='cloneRepo', action='store_false',
-                      default=True, help=('Skip cloning the repositories. The sandbox '
+
+    parser.add_option('--debug-skip-all-clone', dest='cloneAllRepos', action='store_false',
+                      default=True, help=('Skip cloning all repositories. The sandbox '
                                           'must already exist from a prior build. Allowed '
                                           'only when combined with --local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
+
+    parser.add_option('--debug-skip-host-clone', dest='cloneHostRepo', action='store_false',
+                      default=True, help=('Skip cloning the git host repository. The sandbox git repo'
+                                          'must already exist from a prior build. Allowed '
+                                          'only when combined with --local. Useful for quick '
+                                          'testing of minor changes or debugging this build script.'))
+
+    parser.add_option('--debug-skip-config-clone', dest='cloneConfigRepo', action='store_false',
+                      default=True, help=('Skip cloning the bzr config repositories. The sandbox repos'
+                                          'must already exist from a prior build. Allowed '
+                                          'only when combined with --local. Useful for quick '
+                                          'testing of minor changes or debugging this build script.'))
+
     parser.add_option('--debug-skip-exe', dest='buildExes', action='store_false',
                       default=True, help=('Skip building the executables. The sandbox and executables'
                                           'must already exist from a prior build. Allowed '
@@ -1188,6 +1243,15 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                             'stdout and stderr.'))
 
     options, _ = parser.parse_args()
+
+    if not options.cloneAllRepos:
+        # turn off cloning host and configs repos if cloning all is turned off
+        options.cloneHostRepo = False
+        options.cloneConfigRepo = False
+
+    elif not options.cloneHostRepo or not options.cloneConfigRepo:
+        # if cloning either (or both) host or configs repos is off, not cloning all repos
+        options.cloneAllRepos = False
 
     makeExe(options)
 

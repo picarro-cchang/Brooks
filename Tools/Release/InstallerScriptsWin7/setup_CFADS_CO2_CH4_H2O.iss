@@ -3,6 +3,7 @@
 ; definitions referenced by inc_desktop_shortcuts.iss
 #define quickGuiIni = "QuickGui_CFADS.ini"
 #define dataRecalIni = "UserCal_CFADS.ini"
+
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
 #define diagDataCollectorIni = "DiagDataCollector.ini"

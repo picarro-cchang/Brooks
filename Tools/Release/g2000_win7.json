@@ -5,14 +5,24 @@
             "installerSignature": "CFADS"
         },
 
+        "CFBDS":  {
+            "species": "Flux",
+            "installerSignature": "CFBDS"
+        },
+
         "CFFDS": {
             "species": "iCO2_CH4",
             "installerSignature": "CFFDS"
         },
 
+        "CFHADS": {
+            "species": "SuperFlux",
+            "installerSignature": "CFHADS"
+        },
+
         "CFIDS": {
             "species": "iCO2_iCH4",
-            "installerSignature": "CIFDS"
+            "installerSignature": "CFIDS"
         },
 
         "CFKADS": {
