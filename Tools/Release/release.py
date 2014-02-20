@@ -270,15 +270,16 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
 
 def runCommand(command):
     """
-    # Run a command line command so we can capture its output.
-    # Code is from here:
-    #   http://stackoverflow.com/questions/4760215/running-shell-command-from-python-and-capturing-the-output
+    Run a command line command so we can capture its output.
     """
     #print "runCommand: '%s'" % command
     p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
-    return iter(p.stdout.readline, b'')
+
+    stdout_value, stderr_value = p.communicate()
+    # print "stdout:", repr(stdout_value)
+    return stdout_value, stderr_value
 
 
 def getGitBranch(gitDir):
@@ -301,20 +302,22 @@ def getGitBranch(gitDir):
     os.chdir(gitDir)
     #print "current dir is now '%s'" % os.getcwd()
 
-    # run "git branch"
+    # run "git branch" and parse stdout for it -- the current branch name begins with a "* "
     command = "git branch"
-    for line in runCommand(command):
-        #print line
-        if line[0] == "*":
-            curBranch = line[2:].rstrip("\r\n")
+    stdout_value, stderr_value = runCommand(command)
+
+    branches = stdout_value.splitlines()
+    for branch in branches:
+        #print branch
+        if branch[0] == "*" and branch[1] == " ":
+            curBranch = branch[2:].rstrip("\r\n")
             #print "curBranch='%s'" % curBranch
+            break
 
     #print "currentDir='%s'" % os.getcwd()
 
     # reset to the original dir
-    #print "restore original cwd"
     os.chdir(saveDir)
-    #print "currentDir='%s'" % os.getcwd()
 
     return curBranch
 
