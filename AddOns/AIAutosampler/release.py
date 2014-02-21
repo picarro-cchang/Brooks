@@ -211,7 +211,8 @@ def makeInstaller(opts):
     DISTRIB_BASE = os.path.normpath(os.path.join(DISTRIB_BASE, productFamily))
 
     # use C:\ for local build destination folder paths
-    DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
+    if opts.local:
+        DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
 
     # Set dir containing the installer scripts
     global INSTALLER_SCRIPTS_DIR
