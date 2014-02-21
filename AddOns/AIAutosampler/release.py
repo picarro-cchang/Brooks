@@ -1,5 +1,5 @@
 """
-Copyright 2012 Picarro Inc.
+Copyright 2014 Picarro Inc.
 
 Driver for building the Autosampler installer package.
 """
@@ -14,6 +14,7 @@ import subprocess
 import re
 import shutil
 import os.path
+import stat
 import platform
 import time
 
@@ -25,8 +26,8 @@ from Host.Common import OS
 
 SANDBOX_DIR = 'c:/temp/sandbox'
 
-COORDINATOR_FILE_FORMAT = 'Coordinator_SSIM_%s.ini'
-COORDINATOR_METADATA = 'meta.json'
+#COORDINATOR_FILE_FORMAT = 'Coordinator_SSIM_%s.ini'
+#COORDINATOR_METADATA = 'meta.json'
 
 if 'ProgramFiles(x86)' in os.environ:
     ISCC = os.environ['ProgramFiles(x86)']
@@ -146,9 +147,11 @@ def _printSummary(opts, osType):
         print "local build       =", "YES"
 
         if opts.cloneHostRepo:
-            print "  clone host repo (git)     =", "YES"
+            print "clone host repo   =", "YES"
         else:
-            print "  clone host repo (git)     =", "NO"
+            print "clone host repo   =", "NO"
+
+        print ""
 
         if opts.buildExes:
             print "build exes        =", "YES"
@@ -159,7 +162,8 @@ def _printSummary(opts, osType):
         print ""
         print "local build       =", "NO"
 
-    print "  DISTRIB_BASE             =", DISTRIB_BASE
+    print ""
+    print "DISTRIB_BASE      =", DISTRIB_BASE
 
 ###############################################################################
 
@@ -199,12 +203,15 @@ def makeInstaller(opts):
         sys.exit(1)
 
 
-    # productFamily incorporates the OS type ('autosampler_win7' for example)
+    # productFamily incorporates the OS type (e.g., 'autosampler_win7')
     productFamily = "autosampler_%s" % osType
 
-    # Tweak output folder path for installer
+    # Set the output folder path for product and OS type
     global DISTRIB_BASE
-    DISTRIB_BASE = os.path.normalize(os.path.join(DISTRIB_BASE, productFamily))
+    DISTRIB_BASE = os.path.normpath(os.path.join(DISTRIB_BASE, productFamily))
+
+    # use C:\ for local build destination folder paths
+    DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
 
     # Set dir containing the installer scripts
     global INSTALLER_SCRIPTS_DIR
@@ -213,13 +220,15 @@ def makeInstaller(opts):
     elif osType == "winxp":
         INSTALLER_SCRIPTS_DIR = INSTALLER_SCRIPTS_DIR + "WinXP"
 
-
     # Load version metadata from version.json
     if not os.path.isfile(VERSION_METADATA):
         print "%s is missing!" % VERSION_METADATA
 
     with open(VERSION_METADATA, 'r') as verFp:
         VERSION.update(json.load(verFp))
+
+    # assume changing the version number
+    changedVersion = True
 
     if opts.version:
         m = re.compile(r'(\d+)\.(\d+)\.(\d+)').search(opts.version)
@@ -239,8 +248,6 @@ def makeInstaller(opts):
 
     #pprint.pprint(version)
 
-    #with open(VERSION_METADATA, 'w') as verFp:
-    #    json.dump(version, verFp)
 
     # print summary of build info so user can review it
     _printSummary(opts, osType)
@@ -260,10 +267,15 @@ def makeInstaller(opts):
     startSec = time.time()
     startTime = time.localtime()
 
-    print "Build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
+    print "Autosampler build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
 
     # Commit and push new version number if it was changed
     if changedVersion is True:
+        # save the updated version number to the JSON file
+        with open(VERSION_METADATA, 'w') as verFp:
+            json.dump(VERSION, verFp)
+
+        # update it in git
         retCode = subprocess.call(['git.exe',
                                    'add',
                                    VERSION_METADATA])
@@ -277,61 +289,125 @@ def makeInstaller(opts):
             print 'Error committing new version metadata to local repo.'
             sys.exit(retCode)
 
+        # shouldn't this git push origin <branch>? (was git push)
         retCode = subprocess.call(['git.exe',
-                                   'push'])
+                                   'push',
+                                   'origin',
+                                   opts.branch])
 
         if retCode != 0:
             print 'Error pushing new version metadata to repo.'
 
-    time.sleep(1.0)
+    else:
+        print "Version number was not changed, skipping update version metadata in local repo."
 
-    _branchFromRepo(REPO)
+    # TODO: why is this delay here? does it work around a problem? or just for watching progress?
+    #time.sleep(1.0)
 
-    # TODO: build the executables in the dist folder
+    if opts.cloneHostRepo:
+        _branchFromRepo(opts.branch)
+    else:
+        print "Skipping cloning of Git repo."
+
+        # do a quick test for existence of the sandbox dir (won't ensure build integrity though)
+        if not os.path.exists(SANDBOX_DIR):
+            print "Sandbox directory containing repos does not exist!"
+            sys.exit(1)
+
+    _generateReleaseVersion(productFamily, VERSION)
+
+    if opts.buildExes:
+        _buildExes()
+    else:
+        print "Skipping building executables"
+
+        # quick test for existence of sandbox dir and dist folder
+        if not os.path.exists(SANDBOX_DIR):
+            print "Sandbox directory containing repos does not exist!"
+            sys.exit(1)
+
+        exeDir = os.path.join(SANDBOX_DIR, "host", "AddOns", "AIAutosampler", "dist")
+        if not os.path.exists(exeDir):
+            print "'%s' does not exist!" % exeDir
+            sys.exit(1)
 
     # TODO: would be cool to autobuild Autosampler Coordinators but no
     # time to develop right now...
     #_generateCoordinators(REPO, meta)
 
 
-    _compileInstaller(REPO, VERSION, osType, productFamily)
+    _compileInstaller(productFamily, osType, VERSION)
 
     if opts.createTag:
-        _tagRepository(REPO, VERSION)
-        _copyInstaller(VERSION, productFamily)
+        _tagRepository(productFamily, VERSION)
+
+    _copyInstaller(productFamily, VERSION)
 
     _buildDoneMsg("BUILD", startSec)
 
 
-def _branchFromRepo(name):
+def _branchFromRepo(branch):
     """
     Branch the named repository into the sandbox.
     """
 
     if os.path.exists(SANDBOX_DIR):
         print "Removing previous sandbox at '%s'." % SANDBOX_DIR
-        shutil.rmtree(SANDBOX_DIR)
 
+        # First fix up the permissions on some pesky .idx and .pack files
+        # If they exist, they are read-only and shutil.rmtree() will bail
+        packFolder = os.path.join(SANDBOX_DIR, 'host', '.git', 'objects', 'pack')
+
+        if os.path.isdir(packFolder):
+            packFiles = os.listdir(packFolder)
+
+            for f in packFiles:
+                # fix up permissions
+                print "chmod(%s)" % os.path.join(packFolder, f)
+                os.chmod(os.path.join(packFolder, f),
+                         stat.S_IREAD | stat.S_IWRITE)
+
+        # now remove the sandbox tree
+        print "Removing sandbox tree '%s'." % SANDBOX_DIR
+
+        # sometimes this fails with the following error:
+        #    WindowsError: [Error 145] The directory is not empty: 'c:/temp/sandbox'
+        # I think it takes a little time for things to settle after the chmod above
+        # so make a second attempt after a short wait
+        try:
+            shutil.rmtree(SANDBOX_DIR)
+        except:
+            print "rmtree failed! sleep(5) and attempt shutil.rmtree one more time"
+            time.sleep(5)
+            shutil.rmtree(SANDBOX_DIR)
+
+        print "Sandbox tree removed."
+
+    print "Creating sandbox tree '%s'." % SANDBOX_DIR
     os.makedirs(SANDBOX_DIR)
+    print "Sandbox tree creation done."
     os.makedirs(os.path.join(SANDBOX_DIR, 'Installers'))
 
+    print "Clone git repo '%s'" % REPO_BASE
     with OS.chdir(SANDBOX_DIR):
         retCode = subprocess.call(['git.exe',
                                    'clone',
                                    REPO_BASE])
 
         if retCode != 0:
-            print "Error cloning '%s'" % REPO_BASE
+            print "Error cloning '%s', retCode=%d" % (REPO_BASE, retCode)
             sys.exit(retCode)
 
+        print "Check out git branch '%s'." % branch
         with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
             retCode = subprocess.call(['git.exe',
                                        'checkout',
-                                       'master'])
+                                       branch])
 
             if retCode != 0:
-                print 'Error checking out "master".'
+                print "Error checking out 'origin/%s', retCode=%d." % (branch, retCode)
                 sys.exit(retCode)
+
 
 
 """
@@ -353,7 +429,7 @@ def _generateCoordinators(name, meta):
                                        standards=standards))
 """
 
-def _compileInstaller(name, ver, osType, productFamily):
+def _compileInstaller(product, osType, ver):
     """
     Builds the installer and stores it in the 'Installer' subdirectory.
     """
@@ -374,18 +450,19 @@ def _compileInstaller(name, ver, osType, productFamily):
     print "building from '%s'" % setupFilePath
 
     args = [ISCC,
-            "/dversion=%s" % _verAsString(ver),
+            "/dautosamplerVersion=%s" % _verAsString(product, ver),
             "/dsandboxDir=%s" % SANDBOX_DIR,
             '/v9',
             "/O%s" % os.path.abspath(os.path.join(SANDBOX_DIR, 'Installers')),
-            'setup_Autosampler.iss']
+            setupFilePath]
 
     print subprocess.list2cmdline(args)
 
     # TODO: put this chdir back in
     # For now I'm using files out of the current dir
-    #with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'Autosampler')):
+    #with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'AIAutosampler')):
     #    retCode = subprocess.call(args)
+
     if True:
         retCode = subprocess.call(args)
 
@@ -394,12 +471,41 @@ def _compileInstaller(name, ver, osType, productFamily):
             sys.exit(retCode)
 
 
-def _verAsString(ver):
+def _generateReleaseVersion(product, ver):
+    """
+    Create the version metadata used by the executables and update the
+    pretty version string. Since this is a release build, the build type
+    is an empty string.
+    """
+
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host')):
+        filename = os.path.normpath(os.path.join(os.getcwd(), 'AddOns', 'AIAutosampler',
+                                                 'release_version.py'))
+
+        with open(filename, 'w') as fp:
+            fp.writelines(
+                ["# autogenerated by Autosampler release.py, %s\n" % time.asctime(),
+                 "\n",
+                 "def versionString():\n",
+                 "    return '%s'\n" % _verAsString(product, ver),
+                 "\n",
+                 "def versionNumString():\n",
+                 "    return '%s'\n" % _verAsNumString(ver),
+                 "\n",
+                 "def buildType():\n",
+                 "    return ''\n",
+                 "\n"
+                ])
+
+
+
+def _verAsString(product, ver):
     """
     Convert a version dict into a human-readable string.
     """
 
-    return "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
+    number = "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
+    return "%s-%s" % (product, number)
 
 
 def _verAsNumString(ver):
@@ -412,33 +518,53 @@ def _verAsNumString(ver):
     return number
 
 
-def _tagRepository(name, ver):
+def _buildExes():
+    """
+    Build Autosampler executables.
+    """
+
+    buildEnv = os.environ.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
+
+    with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'AIAutosampler')):
+        retCode = subprocess.call(['python.exe', 'autosamplerSetup.py',
+                                   'py2exe'],
+                                   env=buildEnv)
+
+        if retCode != 0:
+            print "Error building Autosampler. retCode=%d" % retCode
+            sys.exit(retCode)
+
+
+def _tagRepository(product, ver):
     """
     Tags the repository
     """
+    tagName = _verAsString(product, ver)
+    print "  git tag -a %s -m \"Version %s\"" % (tagName, tagName)
 
     retCode = subprocess.call(['git.exe',
                                'tag',
                                '-a',
-                               "ssim-%s" % _verAsString(ver),
+                               tagName,
                                '-m',
-                               "'SSIM version %s'" % _verAsString(ver)])
+                               "'Version %s'" % tagName])
 
     if retCode != 0:
-        print 'Error tagging repository'
+        print "Error tagging repository. retCode=%d  tagName='%s'" % (retCode, tagName)
         sys.exit(retCode)
 
+    print "  git push origin %s" % tagName
     retCode = subprocess.call(['git.exe',
                                'push',
                                'origin',
-                               "ssim-%s" % _verAsString(ver)])
+                               tagName])
 
     if retCode != 0:
         print 'Error pushing tag to repository'
         sys.exit(retCode)
 
 
-def _copyInstaller(ver, productFamily):
+def _copyInstaller(product, ver):
     """
     Move the installer to its distribution location where manufacturing can
     find it.
@@ -447,13 +573,21 @@ def _copyInstaller(ver, productFamily):
     # TODO: Push to the Mfg. folder(s). For now, just copy to the staging area
     #       (path is already set in DISTRIB_BASE)
     targetDir = DISTRIB_BASE
-    os.makedirs(targetDir)
+    if not os.path.exists(targetDir):
+        os.makedirs(targetDir)
 
-    installer = "setup_%s_%s.exe" % (productFamily, _verAsString(ver))
+    installer = "setup_%s.exe" % _verAsString(product, ver)
+
+    print "installer=%s" % installer
+    print "targetDir='%s'" % targetDir
+
+    # TODO: Copy to Current and Archive dirs. Maybe we need a command line
+    #       option for this?
+    #shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
+    #                os.path.join(targetDir, 'Archive', installer))
 
     shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
-                    os.path.join(targetDir, 'Archive', installer))
-
+                    os.path.join(targetDir, installer))
 
 
     """
