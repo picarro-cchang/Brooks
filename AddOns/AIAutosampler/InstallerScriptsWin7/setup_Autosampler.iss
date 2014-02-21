@@ -37,6 +37,12 @@ Name: "coord\HIDS"; Description: "HIDS Coordinator Files"; Flags: exclusive
 ; Program
 Source: {#sandboxDir}\host\AddOns\AIAutosampler\dist\*; DestDir: {app}\AutosamplerExe; Components: program; Flags: recursesubdirs replacesameversion
 
+; Training module
+Source: {#sandboxDir}\host\Vendor\Applied Instruments\ALS-G\x86\Picarro_Training_Utility.exe; DestDir: {app}\AutosamplerExe; Components: program; Flags: replacesameversion
+
+; USB-COM Port Driver installer
+Source: {#sandboxDir}\host\Vendor\Applied Instruments\ALS-G\x86\CDM20824_Setup.exe; DestDir: {app}\AutosamplerExe; Components: program; Flags: replacesameversion
+
 ; icon files
 Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
@@ -53,4 +59,5 @@ Source: {#sandboxDir}\host\AddOns\AIAutosampler\HIDS\CoordinatorLauncher.ini; De
 
 ; Desktop shortcuts
 Name: {userdesktop}\Autosampler Control; Filename: {app}\AutosamplerExe\Autosampler.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\{#utilitiesIcon}
+
 Name: {userdesktop}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training_Utility.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training_Utility.exe
