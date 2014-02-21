@@ -29,9 +29,8 @@ Name: "custom"; Description: "Custom installation"; Flags: iscustom
 [Components]
 Name: "program"; Description: "Program Files"; Types: full custom; Flags: fixed
 Name: "coord"; Description: "Coordinator Files"; Types: full
-Name: "coord\HBDS"; Description: "HBDS Coordinator Files"; Flags: exclusive
 Name: "coord\HIDS"; Description: "HIDS Coordinator Files"; Flags: exclusive
-
+Name: "coord\HBDS"; Description: "HBDS Coordinator Files"; Flags: exclusive
 [Files]
 
 ; Program
