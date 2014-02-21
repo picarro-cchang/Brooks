@@ -5,7 +5,9 @@
 
 [Icons]
 
+#ifdef coordinatorLauncherIni
 Name: {userdesktop}\Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#coordinatorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+#endif
 
 
 ; Integration
