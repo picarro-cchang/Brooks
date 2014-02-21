@@ -30,6 +30,10 @@ from optparse import OptionParser
 import Win7MigrationToolsDefs as mdefs
 import Win7MigrationUtils as mutils
 
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
 
 
 def findAndValidateDrives(debug=False):
@@ -465,6 +469,7 @@ def doMigrate(options):
     root.addHandler(handlerFile)
 
     root.info("***** Win7 migration part 1 (back up) started. *****")
+    root.info("Running %s version %s" % (AppPath, mdefs.MIGRATION_TOOLS_VERSION))
 
     # ==== Validation ====
     #

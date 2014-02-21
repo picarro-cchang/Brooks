@@ -5,7 +5,7 @@
 # History:
 # 2014-01-30:  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.5"
+MIGRATION_TOOLS_VERSION = "1.0.0.6"
 MIGRATION_TOOLS_LOGNAME = "MigrationTools"
 
 MIGRATION_UNKNOWN_ANALYZER_TYPE = "Unknown"
@@ -77,6 +77,7 @@ CONFIG_FOLDERS_TO_RESTORE_LIST = ["C:/Picarro/g2000/InstrConfig"]
 
 CONFIG_FILES_TO_RESTORE_LIST = ["C:/Picarro/g2000/AppConfig/Config/Utilities/SupervisorLauncher.ini",
                                 "C:/Picarro/g2000/AppConfig/Config/Utilities/CoordinatorLauncher.ini",
+                                "C:/Picarro/g2000/AppConfig/Supervisor/StartupExeConfig.ini"
                                 #"C:/Picarro/g2000/AppConfig/Supervisor/*.ini",
                                 #"C:/Picarro/g2000/AppConfig/Coordinator/*.ini",
                                ]
