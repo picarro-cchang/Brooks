@@ -32,3 +32,5 @@ Host/DataManager/dist/
 AddOns/SoilPostProcessor/output/
 AddOns/SoilPostProcessor/build/
 AddOns/SoilPostProcessor/dist/
+AddOns/AIAutosampler/build/
+AddOns/AIAutosampler/dist/
