@@ -141,29 +141,31 @@ def _printSummary(opts, osType):
     print "OS type           =", osType
 
     print "version           = %s.%s.%s.%s" % (VERSION['major'], VERSION['minor'], VERSION['revision'], VERSION['build'])
+    print ""
+
+    if opts.createTag:
+        print "create tags       =", "YES"
+    else:
+        print "create tags       =", "NO"
 
     if opts.local:
-        print ""
         print "local build       =", "YES"
-
-        if opts.cloneHostRepo:
-            print "clone host repo   =", "YES"
-        else:
-            print "clone host repo   =", "NO"
-
-        print ""
-
-        if opts.buildExes:
-            print "build exes        =", "YES"
-        else:
-            print "build exes        =", "NO"
-
     else:
-        print ""
         print "local build       =", "NO"
+
+    if opts.cloneHostRepo:
+        print "clone host repo   =", "YES"
+    else:
+        print "clone host repo   =", "NO"
+
+    if opts.buildExes:
+        print "build exes        =", "YES"
+    else:
+        print "build exes        =", "NO"
 
     print ""
     print "DISTRIB_BASE      =", DISTRIB_BASE
+
 
 ###############################################################################
 
@@ -574,8 +576,20 @@ def _copyInstaller(product, ver):
     # TODO: Push to the Mfg. folder(s). For now, just copy to the staging area
     #       (path is already set in DISTRIB_BASE)
     targetDir = DISTRIB_BASE
-    if not os.path.exists(targetDir):
-        os.makedirs(targetDir)
+
+    print "Cleaning '%s'" % targetDir
+
+    # clean the target dir
+    try:
+        shutil.rmtree(targetDir)
+    except OSError:
+        # Okay if dir doesn't already exist.
+        pass
+
+    print "Creating '%s'" % targetDir
+
+    # create the target dir
+    os.makedirs(targetDir)
 
     installer = "setup_%s.exe" % _verAsString(product, ver)
 
