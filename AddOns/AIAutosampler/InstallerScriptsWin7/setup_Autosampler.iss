@@ -21,7 +21,7 @@ AppName=Picarro G2000 Autosampler
 AppVerName=Picarro G2000 Win7 Autosampler {#autosamplerVersion}
 Password=
 DefaultDirName=C:\Picarro\G2000
-DefaultGroupName=Picarro Autosampler Software
+DefaultGroupName=Picarro Autosampler
 OutputBaseFileName=setup_{#autosamplerVersion}
 DirExistsWarning=no
 
@@ -65,3 +65,10 @@ Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\Autosam
 Name: {userdesktop}\Autosampler Control; Filename: {app}\AutosamplerExe\Autosampler.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\{#utilitiesIcon}
 
 Name: {userdesktop}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training_Utility.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training_Utility.exe
+
+; Start menu
+
+Name: {group}\Autosampler Control; Filename: {app}\AutosamplerExe\Autosampler.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\{#utilitiesIcon}
+
+Name: {group}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training_Utility.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training_Utility.exe
+
