@@ -10,6 +10,9 @@
 #define diagDataCollectorIni = "DiagDataCollector.ini"
 #define setupToolIni = "SetupTool.ini"
 
+; only create the Integration Coordinator (coordinatorLauncherIni not defined)
+#define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
+
 
 ; Note: Order of items in [Files] sections (which spans these
 ;       files) is the install order. Be careful about changing
@@ -26,3 +29,5 @@
 #include "inc_datviewer.iss"
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
+
+#include "inc_coordinator.iss"

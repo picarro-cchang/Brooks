@@ -10,7 +10,7 @@
 #define diagDataCollectorIni = "DiagDataCollector.ini"
 #define setupToolIni = "SetupTool.ini"
 
-; definitions referenced by inc_coordinator.iss
+; create Coordinator Launcher shortcut as well as Integration Coordinator Launcher
 #define coordinatorLauncherIni = "CoordinatorLauncher.ini"
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
 
@@ -31,7 +31,4 @@
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
 
-; Extras
-;
-; Coordinator
 #include "inc_coordinator.iss"

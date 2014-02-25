@@ -1,8 +1,9 @@
-; CFADS setup
+; CKADS setup
 
 ; definitions referenced by inc_desktop_shortcuts.iss
-#define quickGuiIni = "QuickGui_CFADS.ini"
-#define dataRecalIni = "UserCal_CFADS.ini"
+#define quickGuiIni = "QuickGui_CKADS.ini"
+
+#define dataRecalIni = "UserCal_CKADS.ini"
 
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"

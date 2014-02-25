@@ -1,4 +1,7 @@
-; CFADS setup
+; CFDDS setup
+
+; use -v option for launching Mode Switcher
+#define closeValves = 1
 
 ; definitions referenced by inc_desktop_shortcuts.iss
 #define quickGuiIni = "QuickGui_CFADS.ini"

@@ -1,9 +1,10 @@
-; CFADS setup
+; AEDS setup
 
 ; definitions referenced by inc_desktop_shortcuts.iss
-#define quickGuiIni = "QuickGui_CFADS.ini"
-#define dataRecalIni = "UserCal_CFADS.ini"
+#define quickGuiIni = "QuickGui.ini"
+#define dataRecalIni = "UserCal.ini"
 
+; 
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
 #define diagDataCollectorIni = "DiagDataCollector.ini"
@@ -28,5 +29,6 @@
 #include "inc_datviewer.iss"
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
+
 
 #include "inc_coordinator.iss"

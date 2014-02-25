@@ -1,10 +1,14 @@
 ; CFBDS Flux setup
 
 ; definitions referenced by inc_desktop_shortcuts.iss
+
+; use -v option for launching Mode Switcher
+#define closeValves = 1
+
 #define quickGuiTitle1 = "User Interface (CO2_CH4)"
 #define quickGuiIni1 = "QuickGui.ini"
 
-#define quickGuiTitle2 = "User Interface (CO2_H2O))"
+#define quickGuiTitle2 = "User Interface (CO2_H2O)"
 #define quickGuiIni2 = "QuickGui_CO2_H2O.ini"
 
 #define quickGuiTitle3 = "User Interface (H2O_CH4)"
@@ -25,11 +29,8 @@
 #define diagDataCollectorIni = "DiagDataCollector.ini"
 #define setupToolIni = "SetupTool.ini"
 
-
-; definitions referenced by inc_coordinator.iss
-#define coordinatorLauncherIni = "CoordinatorLauncher.ini"
+; only create the Integration Coordinator (coordinatorLauncherIni not defined)
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
-
 
 
 ; Note: Order of items in [Files] sections (which spans these
@@ -49,16 +50,12 @@
 #include "inc_configtool.iss"
 
 
-; Extras
-;
-
-; Not including Coordinator, only an integration shortcut gets installed
-;#include "inc_coordinator.iss"
+#include "inc_coordinator.iss"
 
 
 [Icons]
 
-; Additional Flux shortcuts
+; Create some additional Flux shortcuts
 
 ; Flux Mode Scheduler (desktop and Start menu)
 
@@ -67,6 +64,4 @@ Name: {userdesktop}\Flux Mode Scheduler; Filename: {app}\HostExe\FluxScheduler.e
 Name: {group}\Flux Mode Scheduler; Filename: {app}\HostExe\FluxScheduler.exe; Parameters: -c ..\AppConfig\Config\Utilities\FluxSwitcher.ini -s ..\AppConfig\Config\Utilities\SupervisorLauncher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 
-; TODO: This is the only Coordinator shortcut, is this correct? No other Coordinator stuff?
-Name: {userdesktop}\Integration\Integration Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\CoordinatorLauncher_Integration.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 

@@ -31,9 +31,4 @@
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
 
-
-; Extras
-;
-; Coordinator
 #include "inc_coordinator.iss"
-

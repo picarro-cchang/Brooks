@@ -15,10 +15,19 @@
 ;           diagDataCollectorIni (required)         DiagDataCollecter.exe ini filename
 ;           setupToolIni (required)                 SetupTool.exe ini filename
 ;
+;           closeValves (optional)                  if set, -v option used for Mode Switcher (running
+;                                                   SupervisorLauncher)
+;
+;           noStartInst (optional)                  if set, startup shortcut for Start Instrument is
+;                                                   NOT created (only FDDS sets this def)
+;
+;           integToolIni (optional)                 IntegrationTool.exe ini filename (use -c option if
+;                                                   defined, else option not used)
+;
 ;   3.  To support Flux instruments, which require unique shortcut names,
-;       there are variables you can use to create shortcuts for QuickGui
-;       and DataRecal (in which case don't define quickGuiIni or dataRecalIni). These
-;       variables specify the shortcut title and the ini filename.
+;       there are variables you can use to create shortcuts for QuickGui and DataRecal
+;       (then don't define quickGuiIni and dataRecalIni). These variables specify
+;       the shortcut title and the ini filename.
 ;
 ;           variable name                           description
 ;           =============                           ===========
@@ -32,16 +41,25 @@
 ;           dataRecalIni1 (optional)                DataRecal.exe ini filename
 ;           dataRecalTitle1                         shortcut title (required if dataRecalIni1 is set)
 ;
-;           dataRecalIni2, dataRecalTitle2          additonal optional shortcut ini filename/title
+;           dataRecalIni2, dataRecalTitle2          additional optional shortcut ini filename/title
 ;
 ;   4.  The shortcut for ConfigTool.py is created in inc_configtool.iss (not here).
+
+
+#ifdef closeValves
+#define closeValvesOpt = "-v"
+#else
+#define closeValvesOpt = ""
+#endif
 
 
 [Icons]
 
 ; Shortcuts on the desktop
 Name: {userdesktop}\Start Instrument; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -a -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
-Name: {userdesktop}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+Name: {userdesktop}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: {#closeValvesOpt} -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
 Name: {userdesktop}\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#controllerIcon}
 
 
@@ -79,12 +97,18 @@ Name: {userdesktop}\Diagnostics\Diag Data Collector; Filename: {app}\HostExe\Dia
 
 Name: {userdesktop}\Integration\Integration Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
-; This references a specific INI file, but all installers
-; use the same one so no define for it
+
+
+; All installers reference the same INI file
 Name: {userdesktop}\Integration\EEPROM Access; Filename: {app}\HostExe\InstrEEPROMAccess.exe; Parameters: -c ..\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
 
+; Shortcut uses -c option if the integration tool ini filename is defined
+#ifdef integToolIni
+Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+#else
 Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+#endif
 
 
 Name: {userdesktop}\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
@@ -114,15 +138,19 @@ Name: {userdesktop}\Picarro Utilities\{#dataRecalTitle3}; Filename: {app}\HostEx
 
 ; Start menu
 
-Name: {group}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+Name: {group}\Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: {#closeValvesOpt} -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
 Name: {group}\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#controllerIcon}
+
 Name: {group}\Stop Instrument; Filename: {app}\HostExe\StopSupervisor.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Cancel.ico
 
 ; Startup
 ;
-; Executed when system is started
+; Executed when system is started - only FDDS defines noStartInst so everything else includes this
 
+#ifndef noStartInst
 Name: {userstartup}\Start Instrument; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -a -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+#endif
 
 
 ; Workaround so apps with UI display an icon in the taskbar as the

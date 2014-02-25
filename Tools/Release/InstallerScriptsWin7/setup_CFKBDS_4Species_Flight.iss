@@ -1,8 +1,13 @@
-; CFADS setup
+; CFKBDS setup
+
+; use -v option for launching Mode Switcher
+#define closeValves = 1
+
 
 ; definitions referenced by inc_desktop_shortcuts.iss
-#define quickGuiIni = "QuickGui_CFADS.ini"
-#define dataRecalIni = "UserCal_CFADS.ini"
+#define quickGuiIni = "QuickGui.ini"
+
+#define dataRecalIni = "UserCal_CFKADS.ini"
 
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
@@ -11,6 +16,7 @@
 
 ; only create the Integration Coordinator (coordinatorLauncherIni not defined)
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
+
 
 
 ; Note: Order of items in [Files] sections (which spans these

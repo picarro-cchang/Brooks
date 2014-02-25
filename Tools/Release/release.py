@@ -990,8 +990,10 @@ def _makeLocalConfig():
 
     with OS.chdir(SANDBOX_DIR):
         print "_makeLocalConfig: current dir='%s'" % os.getcwd()
-        print "subprocess.call([bzr.exe, branch, %s])" % COMMON_CONFIG
-        retCode = subprocess.call(['bzr.exe', 'branch', COMMON_CONFIG])
+
+        configDir = os.path.normpath(COMMON_CONFIG)
+        print "subprocess.call([bzr.exe, branch, %s, CommonConfig])" % configDir
+        retCode = subprocess.call(['bzr.exe', 'branch', configDir, "CommonConfig"])
 
         if retCode != 0:
             LogErr("Error cloning CommonConfig. retCode=%d" % retCode)
@@ -1019,14 +1021,13 @@ def _makeLocalConfig():
             os.mkdir(c)
             with OS.chdir(c):
                 # clone AppConfig branch
-                templatesPath = os.path.join(CONFIG_BASE, "%sTemplates" % c,'AppConfig')
+                templatesPath = os.path.normpath(os.path.join(CONFIG_BASE, "%sTemplates" % c,'AppConfig'))
                 print "subprocess.call([bzr.exe, branch, %s, AppConfig])" % templatesPath
 
                 retCode = subprocess.call(['bzr.exe', 'branch',
-                                           os.path.join(CONFIG_BASE,
-                                                        "%sTemplates" % c,
-                                                        'AppConfig'),
-                                                        'AppConfig'])
+                                           templatesPath,
+                                           'AppConfig'])
+
                 if retCode != 0:
                     LogErr("Error cloning '%s' AppConfig. retCode=%d" % (c, retCode))
                     sys.exit(retCode)
