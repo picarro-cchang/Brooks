@@ -537,8 +537,8 @@ if pythonVer == "2.5":
     packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
     setup(version = versionStr,
-      description = "Silverstone Host Core Software",
-      name = "Silverstone CRDS",
+      description = "Picarro Host Core Analyzer Software",
+      name = "Picarro CRDS",
       options = dict(py2exe = dict(compressed = 1,
                                    optimize = 1,
                                    bundle_files = 1,
@@ -562,8 +562,8 @@ elif pythonVer == "2.7":
 
     # no bundle_files, specify zipfile
     setup(version = versionStr,
-          description = "Silverstone Host Core Software",
-          name = "Silverstone CRDS",
+          description = "Picarro Host Core Analyzer Software",
+          name = "Picarro CRDS",
           options = dict(py2exe = dict(compressed = 1,
                                        optimize = 1,
                                        # bundle_files = 1,
