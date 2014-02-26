@@ -205,8 +205,8 @@ def makeInstaller(opts):
         sys.exit(1)
 
 
-    # productFamily incorporates the OS type (e.g., 'autosampler_win7')
-    productFamily = "autosampler_%s" % osType
+    # productFamily incorporates the OS type (e.g., 'AIAutosampler_win7')
+    productFamily = "AIAutosampler_%s" % osType
 
     # Set the output folder path for product and OS type
     global DISTRIB_BASE
@@ -448,7 +448,7 @@ def _compileInstaller(product, osType, ver):
     # Build a fully qualified path for the scripts folder, so ISCC can find
     # the include files (can't find them using a relative path here).
     installScriptDir = os.path.join(currentDir, INSTALLER_SCRIPTS_DIR)
-    setupFilePath = "%s\\setup_Autosampler.iss" % installScriptDir
+    setupFilePath = "%s\\setup_AIAutosampler.iss" % installScriptDir
 
     print "building from '%s'" % setupFilePath
 

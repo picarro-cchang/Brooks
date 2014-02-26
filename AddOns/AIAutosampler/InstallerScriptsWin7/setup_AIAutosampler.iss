@@ -2,15 +2,13 @@
 ;
 ; This could go in the AIAutosampler folder if there is only one (or two, one for win7 and another winxp)
 ;
-; Notes: Installing Coordinator files for HIDS and HBDS is commented out.
-;        Best to let the Analyzer installers handle this.
 ;
 ; TODO:
 ;   1. Is there a way to add custom text to the Welcome page? It should instruct the user to disconnect the USB cable
 ;      before starting the installation.
 ;
 ;   2. May need a WinXP version. It probably needs to include MSVCRT71.DLL (though really is a system file not local).
-;      Currently MSVCRT71.DLL is included in the DLL list in autosamplerSetup.py
+;      Currently MSVCRT71.DLL is included in the DLL list in autosamplerSetup.py so don't need to include it below.
 
 
 #define utilitiesIcon = "Utilities_icon.ico"
@@ -49,14 +47,6 @@ Source: {#sandboxDir}\host\Vendor\Applied Instruments\ALS-G\x86\CDM20824_Setup.e
 
 ; icon files
 Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
-
-; HBDS Coordinators and launcher
-;Source: {#sandboxDir}\host\AddOns\AIAutosampler\HBDS\Coordinator\*; DestDir: {app}\AppConfig\Config\Coordinator; Components: coord\HBDS; Flags: replacesameversion
-;Source: {#sandboxDir}\host\AddOns\AIAutosampler\HBDS\CoordinatorLauncher.ini; DestDir: {app}\AppConfig\Config\Utilities; Components: coord\HBDS; Flags: replacesameversion
-
-; HIDS Coordinators and launcher
-;Source: {#sandboxDir}\host\AddOns\AIAutosampler\HIDS\Coordinator\*; DestDir: {app}\AppConfig\Config\Coordinator; Components: coord\HIDS; Flags: replacesameversion
-;Source: {#sandboxDir}\host\AddOns\AIAutosampler\HIDS\CoordinatorLauncher.ini; DestDir: {app}\AppConfig\Config\Utilities; Components: coord\HIDS; Flags: replacesameversion
 
 
 [Icons]

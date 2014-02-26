@@ -6,7 +6,7 @@
 
                       Author: Tracy Walder
 
-                      Last updated: 2/20/2014
+                      Last updated: 2/25/2014
 
 
 
@@ -41,14 +41,48 @@ Use the .td files in the source folder (AddOns\AutosamplerExe) for releases. The
 for historical purposes. I believe AI included these files in an SDK, which we later modified for distributing
 to our customers.
 
-Picarro_Training_Utility.exe - how did we build this? was it custom created for us?
 
-ALS-G_Control.exe - what is this for?
+Files:
+======
 
-CDM20824_Setup.exe - What does this do? Part of the install procedure for Manufacturing is to run this program.
-                     There is also an older version named CDM20814_Setup.exe in the ship folder.
+filename                description
+--------                -----------
+ALS-G_Control.exe       What is this for?
+
+alsgDLL.py              Looks like a program for testing ALSG_API.DLL. Did we write this?
+
+ALSG_API.DLL            Win32 DLL needed by the autosampler code. Needs to be in the same folder as the
+                        built Autosampler.exe. File provided by AI.
+
+Autosampler.ini
+AutosamplerState.ini
 
 
+CDM20824_Setup.exe      This is the USB -> Virtual COM Port driver for the autosampler (FTDI USB-Serial converter).
+                        FTDI= Future Technology Devices International Ltd.; website is http://www.ftdichip.com
+                        
+                        Virtual COM Port (VCP) drivers cause the USB device to appear as an additional COM port to
+                        the PC. Application software can access the USB device in the same way as it would access
+                        a standard COM port.
+                        
+                        Drivers here: http://www.ftdichip.com/Drivers/VCP.htm
+                        
+                        Part of the install procedure for Manufacturing is to run this program.
+
+                        There is also an older version named CDM20814_Setup.exe in the ship folder.
+
+
+Default.td
+
+Method.td
+
+Parameter.ini
+
+Parameter.td
+
+Picarro_Training_Utility.exe    Customized utility program for training the autosampler.
+
+Sequence.td
 
 
 
