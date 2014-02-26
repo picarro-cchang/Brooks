@@ -23,19 +23,9 @@ DefaultGroupName=Picarro Autosampler
 OutputBaseFileName=setup_{#autosamplerVersion}
 DirExistsWarning=no
 
-;[Types]
-;Name: "full"; Description: "Full installation"
-;Name: "custom"; Description: "Custom installation"; Flags: iscustom
-
-;[Components]
-;Name: "program"; Description: "Program Files"; Types: full custom; Flags: fixed
-;Name: "coord"; Description: "Coordinator Files"; Types: full
-;Name: "coord\HIDS"; Description: "HIDS Coordinator Files"; Flags: exclusive
-;Name: "coord\HBDS"; Description: "HBDS Coordinator Files"; Flags: exclusive
 
 [Files]
 
-; add this back to the modules below to support component installs: Components: program;
 ; Program
 Source: {#sandboxDir}\host\AddOns\AIAutosampler\dist\*; DestDir: {app}\AutosamplerExe; Flags: recursesubdirs replacesameversion
 
