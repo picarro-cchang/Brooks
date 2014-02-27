@@ -98,7 +98,7 @@ data_files = []
 
 windowsList = []
 
-consoleList = ["Win7Migrate_p1.py", "Win7Migrate_p2.py"]
+consoleList = ["Win7Migrate_Part1.py", "Win7Migrate_Part2.py"]
 
 if pythonVer == "2.5":
     packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
