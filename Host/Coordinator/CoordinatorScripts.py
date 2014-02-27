@@ -23,20 +23,17 @@
 #   FREQCONV and LOGFUNC are set from outside
 
 from time import sleep, mktime, localtime, strptime, strftime, time, clock, ctime
-#from datetime import datetime, timedelta, MINYEAR
-from datetime import datetime, MINYEAR
+from datetime import datetime, timedelta, MINYEAR
 from numpy import *
 from configobj import ConfigObj
-#import traceback
+import traceback
 import socket
 import sys
-#import os
-#from os.path import abspath, exists, join, split
-from os.path import abspath, join, split
+import os
+from os.path import abspath, exists, join, split
 import matplotlib
 matplotlib.use('Agg')
-#from matplotlib import pyplot, dates
-from matplotlib import dates
+from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
 import urllib2
 from xml.dom import minidom
