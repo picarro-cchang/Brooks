@@ -84,7 +84,11 @@ copy ..\..\Host\Common\CmdFIFO.py %NETWORK_DIR_SRC%\
 rem copy RunTool.py %NETWORK_DIR_SRC%\
 
 :network_exes
-rem robocopy dist %NETWORK_DIR_EXE% /S
+:: remove the dir if it exists
+if exist %NETWORK_DIR_EXE% rm -r %NETWORK_DIR_EXE%
+mkdir %NETWORK_DIR_EXE%
+echo robocopy dist %NETWORK_DIR_EXE% /S
+robocopy dist %NETWORK_DIR_EXE% /S
 
 :: copy RunPart1Exe.bat %NETWORK_DIR%\
 :: copy RunPart2Exe.bat %NETWORK_DIR%\
