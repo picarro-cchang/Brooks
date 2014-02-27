@@ -98,6 +98,11 @@
 	"NBDS": {
 	    "species": "H2O2",
 	    "installerSignature": "NBDS"
+	},
+
+	"CFGDS": {
+	    "species": "iCO2",
+	    "installerSignature": "CFGDS"
 	}
     },
 
