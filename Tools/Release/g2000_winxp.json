@@ -93,7 +93,17 @@
         "MADS": {
             "species": "HF",
             "installerSignature": "MADS"
-        }
+        },
+
+	"NBDS": {
+	    "species": "H2O2",
+	    "installerSignature": "NBDS"
+	},
+
+	"CFGDS": {
+	    "species": "iCO2",
+	    "installerSignature": "CFGDS"
+	}
     },
 
     "installerScriptsDir": "InstallerScripts"

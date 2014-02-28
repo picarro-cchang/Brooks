@@ -17,7 +17,7 @@ from optparse import OptionParser
 import Win7MigrationToolsDefs as mdefs
 
 
-MIGRATION_TOOLS_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Win7MigrationTools_Staging'
+MIGRATION_TOOLS_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging/MigrationTools_win7'
 
 
 def _buildExes():
@@ -60,8 +60,7 @@ def _buildExes():
 
 
 def _copyBuild():
-    # Destination folder is named with the version number (for now)
-    destDir = os.path.join(MIGRATION_TOOLS_DISTRIB_BASE, mdefs.MIGRATION_TOOLS_VERSION)
+    destDir = MIGRATION_TOOLS_DISTRIB_BASE
 
     # Clean the folder if it exists, and make sure the folder tree exists
     if os.path.isdir(destDir):
@@ -72,8 +71,8 @@ def _copyBuild():
     # source folder path is the dist folder under this folder
     sourceDir = os.path.join(os.getcwd(), 'dist')
 
-    print "sourceDir = '%s'" % sourceDir
-    print "destDir   = '%s'" % destDir
+    #print "sourceDir = '%s'" % sourceDir
+    #print "destDir   = '%s'" % destDir
 
     # do the copy
     dir_util.copy_tree(sourceDir, destDir)
