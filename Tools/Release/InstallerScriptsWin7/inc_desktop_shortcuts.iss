@@ -24,6 +24,8 @@
 ;           integToolIni (optional)                 IntegrationTool.exe ini filename (use -c option if
 ;                                                   defined, else option not used)
 ;
+;           valveDisplayIni (optional)              ValveDisplay.exe ini filename
+;
 ;   3.  To support Flux instruments, which require unique shortcut names,
 ;       there are variables you can use to create shortcuts for QuickGui and DataRecal
 ;       (then don't define quickGuiIni and dataRecalIni). These variables specify
@@ -91,6 +93,9 @@ Name: {userdesktop}\Diagnostics\{#quickGuiTitle4}; Filename: {app}\HostExe\Quick
 
 Name: {userdesktop}\Diagnostics\Diag Data Collector; Filename: {app}\HostExe\DiagDataCollector.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#diagDataCollectorIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
 
+#ifdef valveDisplayIni
+Name: {userdesktop}\Diagnostics\Valve Display; Filename: {app}\HostExe\ValveDisplay.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#valveDisplayIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
+#endif
 
 ; Integration folder
 ;
