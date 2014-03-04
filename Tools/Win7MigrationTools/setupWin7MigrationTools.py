@@ -51,6 +51,16 @@ if "PYTHONPATH" not in os.environ:
 
 # And now to the main setup routine...
 #
+# list of console apps to build is in the environment
+if "TOOLSBUILDLIST" not in os.environ:
+    print "TOOLSBUILDLIST is not set in environment, needs to be set to specify tools to build."
+    sys.exit(1)
+
+consoleList = os.environ["TOOLSBUILDLIST"]
+consoleList = consoleList.split(';')
+
+print "building consoleList=", consoleList
+
 # The following lists and tuples are common to both Python 2.5 and 2.7 builds. If any
 # require customization, they must be moved and maintained separately under the if statements below.
 exclusionList = ["Tkconstants",
@@ -97,8 +107,6 @@ packageList = []
 data_files = []
 
 windowsList = []
-
-consoleList = ["Win7Migrate_Part1.py", "Win7Migrate_Part2.py"]
 
 if pythonVer == "2.5":
     packageList = ["simplejson", "werkzeug","flask","jinja2","email"]

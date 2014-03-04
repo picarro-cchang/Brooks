@@ -10,6 +10,8 @@
 import os
 import sys
 import subprocess
+import platform
+import shutil
 
 from distutils import dir_util
 from optparse import OptionParser
@@ -17,10 +19,10 @@ from optparse import OptionParser
 import Win7MigrationToolsDefs as mdefs
 
 
-MIGRATION_TOOLS_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging/MigrationTools_win7'
+MIGRATION_TOOLS_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging'
 
 
-def _buildExes():
+def _buildExes(scriptName, toolsList):
     # Get the current dir. Expect that we are in the Host folder.
     curDirPath = os.getcwd()
     curDir = os.path.split(curDirPath)[1]
@@ -51,11 +53,25 @@ def _buildExes():
 
     buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
 
-    # run "python setupWin7MigrationTools.py py2exe"
-    retCode = subprocess.call(['python.exe', 'setupWin7MigrationTools.py', 'py2exe'], env=buildEnv)
+    # pass a semicolon-separated list of the tools to build in the environment
+    # I don't the setup script can have command line arguments because py2exe will try to interpret them
+    isFirst = True
+    toolsStr = ""
+
+    for tool in toolsList:
+        if not isFirst:
+            toolsStr = toolsStr + ";" + tool
+        else:
+            toolsStr = tool
+            isFirst = False
+
+    buildEnv = os.environ.update({'TOOLSBUILDLIST' : toolsStr})
+
+    # run "python <scriptName> py2exe"
+    retCode = subprocess.call(['python.exe', scriptName, 'py2exe'], env=buildEnv)
 
     if retCode != 0:
-            print "Error building Host. retCode=%d" % retCode
+            print "Error running %s. retCode=%d" % (scriptName, retCode)
             sys.exit(retCode)
 
 
@@ -78,6 +94,42 @@ def _copyBuild():
     dir_util.copy_tree(sourceDir, destDir)
 
 
+def _printSummary(options, toolsList):
+    print ""
+    if options.local:
+        print "local build:      YES"
+    else:
+        print "local build:      NO"
+
+    if options.product is not None:
+        print "build product:    %s" % options.product
+    else:
+        print "build product:    both"
+
+    print ""
+    print "building tools:  %s" % toolsList
+    print ""
+    print "MIGRATION_TOOLS_DISTRIB_BASE: %s" % MIGRATION_TOOLS_DISTRIB_BASE
+
+    print ""
+
+
+def _getOSType():
+    # this is either 'XP' (WinXP) or '7' (Win7)
+    osType = platform.uname()[2]
+
+    if osType == '7':
+        osType = 'win7'
+    elif osType == 'XP':
+        osType = 'winxp'
+    else:
+        osType = 'unknown'
+        print "Unsupported OS type!"
+        sys.exit(1)
+
+    return osType
+
+
 def main():
     usage = """
 %prog [options]
@@ -95,6 +147,18 @@ Builds the Win7 migration tools.
                       action='store_true', default=False,
                       help=('Report the current version number that will be used building the migration tools.'))
 
+    parser.add_option('--product', dest='product',
+                      default='both', choices=['part1', 'part2', 'both'],
+                      help=('The migration tool to build on this platform. Valid arguments are: '
+                            'part1, part2, both. '
+                            'Default is to build both Part 1 and Part 2 tools.'))
+
+    parser.add_option('--no-confirm', dest='skipConfirm',
+                      action='store_true', default=False,
+                      help=('Don\'t ask for confirmation of build settings before '
+                            'proceeding with the build.'))
+
+
     options, _ = parser.parse_args()
 
 
@@ -102,7 +166,45 @@ Builds the Win7 migration tools.
         print mdefs.MIGRATION_TOOLS_VERSION
         sys.exit(0)
 
-    _buildExes()
+    # use the current OS to set the destination folder for copy to staging area
+    # MigrationTools_win7
+    osType = _getOSType()
+
+    global MIGRATION_TOOLS_DISTRIB_BASE
+    MIGRATION_TOOLS_DISTRIB_BASE = os.path.normpath(os.path.join(MIGRATION_TOOLS_DISTRIB_BASE, osType))
+
+    if options.local:
+        # replace S: with C: for local builds
+        MIGRATION_TOOLS_DISTRIB_BASE = 'C' + MIGRATION_TOOLS_DISTRIB_BASE[1:]
+
+    # list of apps to build, to be passed in the environment
+    toolsList = ["Win7Migrate_Part1.py", "Win7Migrate_Part2.py"]
+
+    if options.product is not None:
+        if options.product == "part1":
+            toolsList = ["Win7Migrate_Part1.py"]
+        elif options.product == "part2":
+            toolsList = ["Win7Migrate_Part2.py"]
+
+    _printSummary(options, toolsList)
+
+    # ask user for build confirmation before proceeding
+    if not options.skipConfirm:
+        print ""
+        response = raw_input("OK to continue? Y or N: ")
+
+        if response == "Y" or response == "y":
+            print "Y typed, continuing"
+        else:
+            print "Win7 Migration Tools build canceled"
+            sys.exit(0)
+
+    # delete the dist folder
+    distDir = os.path.join(os.getcwd(), "dist")
+    if os.path.isdir(distDir):
+            shutil.rmtree(distDir)
+
+    _buildExes("setupWin7MigrationTools.py", toolsList)
 
     if not options.local:
         _copyBuild()
