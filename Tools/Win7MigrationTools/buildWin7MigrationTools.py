@@ -12,6 +12,7 @@ import sys
 import subprocess
 import platform
 import shutil
+import time
 
 from distutils import dir_util
 from optparse import OptionParser
@@ -77,6 +78,8 @@ def _buildExes(scriptName, toolsList):
 
 def _copyBuild():
     destDir = MIGRATION_TOOLS_DISTRIB_BASE
+
+    print "copying build to ", destDir
 
     # Clean the folder if it exists, and make sure the folder tree exists
     if os.path.isdir(destDir):
@@ -171,7 +174,6 @@ Builds the Win7 migration tools.
     osType = _getOSType()
 
     global MIGRATION_TOOLS_DISTRIB_BASE
-    MIGRATION_TOOLS_DISTRIB_BASE = os.path.normpath(os.path.join(MIGRATION_TOOLS_DISTRIB_BASE, osType))
 
     if options.local:
         # replace S: with C: for local builds
@@ -179,12 +181,19 @@ Builds the Win7 migration tools.
 
     # list of apps to build, to be passed in the environment
     toolsList = ["Win7Migrate_Part1.py", "Win7Migrate_Part2.py"]
+    toolsFolder = "MigrationTools"
 
     if options.product is not None:
         if options.product == "part1":
             toolsList = ["Win7Migrate_Part1.py"]
+            toolsFolder = "MigrationPart1"
+
         elif options.product == "part2":
             toolsList = ["Win7Migrate_Part2.py"]
+            toolsFolder = "MigrationPart2"
+
+    toolsFolder = "%s_%s" % (toolsFolder, osType)
+    MIGRATION_TOOLS_DISTRIB_BASE = os.path.normpath(os.path.join(MIGRATION_TOOLS_DISTRIB_BASE, toolsFolder))
 
     _printSummary(options, toolsList)
 
@@ -206,8 +215,7 @@ Builds the Win7 migration tools.
 
     _buildExes("setupWin7MigrationTools.py", toolsList)
 
-    if not options.local:
-        _copyBuild()
+    _copyBuild()
 
 
 if __name__ == "__main__":
