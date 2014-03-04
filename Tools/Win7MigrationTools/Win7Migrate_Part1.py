@@ -290,8 +290,16 @@ def promptUserToStopSoftwareAndDriver():
     print ""
     print ""
 
-    raw_input("After everything has shutdown, type Y to continue: ")
+    raw_input("After everything has shutdown, hit Enter to continue: ")
 
+
+def promptUserToStopSoftware():
+    print ""
+    print "Please follow the written instructions for stopping the instrument."
+    print ""
+    print ""
+
+    raw_input("After everything has shutdown, hit Enter to continue: ")
 
 
 def shutdownWindows(debug=False):
@@ -585,9 +593,6 @@ def doMigrate(options):
     cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME, analyzerName)
     cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.COMPUTER_NAME, computerName)
 
-    # TODO: save off mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME
-    root.warning("Saving off computer name and name from My Computer needs to be implemented!")
-
     filename = os.path.join(os.getcwd(), mdefs.MIGRATION_CONFIG_FILENAME)
     with open(filename, "w") as f:
         cp.write(f)
@@ -597,10 +602,19 @@ def doMigrate(options):
     # kill from the TaskManager if times out waiting)
     # The user will need to do this if this is an unknown analyzer
     # (likely because Pyro versions don't match, the following WILL crash)
+    """
     if unknownAnalyzer is False:
         stopSoftwareAndDriver(anInfo, options.debug)
     else:
         promptUserToStopSoftwareAndDriver()
+    """
+
+    # Prompt the user to shutdown the system for shipping. Refer the user
+    # to the written instructions (while waiting for the cavity to come up
+    # to atmospheric pressure, open Run with a "shutdown -a" command, wait until
+    # get the Windows shutdown prompt, have 20 to click OK in the Run window to
+    # stop it)
+    promptUserToStopSoftware()
 
     # ==== Backup ====
     #
