@@ -118,6 +118,11 @@ Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\Integr
 
 Name: {userdesktop}\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
+; ConfigManager shortcuts for user launcher and integration launcher
+Name: {userdesktop}\Integration\ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; Parameters: -l ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+
+Name: {userdesktop}\Integration\Integration ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; Parameters: -l ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+
 
 ; Picarro Utilities folder
 ;
@@ -167,12 +172,12 @@ Name: {app}\HostExe\Controller; Filename: {app}\HostExe\Controller.exe; WorkingD
 
 Name: {app}\HostExe\QuickGui; Filename: {app}\HostExe\QuickGui.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
-; TODO: after ensuring the above works, add the following shortcuts:
+; TODO: after ensuring the above works, add the following shortcuts as needed for the apps:
 ;       (these are all apps with Windows UI, according to PicarroExeSetup.py)
 ;
-; Coordinator, Controller,deltaCorrProcessor, dilutionCorrProcessor
-; StopSupervisor, IPV, IPVLicense, DiagDataCollector, supervisorLauncher,
+; deltaCorrProcessor, dilutionCorrProcessor
+; IPV, IPVLicense,
 ; HostStartup, CoordinatorLauncher, FluxScheduler, FluxSwitcherGui,
-; ValveDisplay, InstrEEPROMAccess, DataRecal, SetupTool,PicarroKML,
+; PicarroKML,
 ; ReadGPSWS, PeriphModeSwitcher, RecipeEditor, AircraftValveSwitcher
 
