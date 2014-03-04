@@ -15,6 +15,7 @@ import time
 import logging
 import ConfigParser
 #import wx
+import filecmp
 
 from optparse import OptionParser
 
@@ -189,6 +190,98 @@ def backupWin7ConfigFiles(fromDrive, toDrive):
     logger.info("Successfully backed up Win7 configuration files.")
 
 
+def print_diff_files(dcmp):
+    for name in dcmp.diff_files:
+        print "diff_file %s found in %s and %s" % (name, dcmp.left, dcmp.right)
+
+    # recurse
+    for sub_dcmp in dcmp.subdirs.values():
+        print_diff_files(sub_dcmp)
+
+
+def computeDiffs(origDir, newDir, logFilename):
+    """
+    Log the diffs between dirs.
+    """
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+
+    assert origDir is not None
+    assert newDir is not None
+
+    logger.info("Comparing '%s' and '%s', results in '%s'" % (origDir,
+                 newDir, logFilename))
+
+    # 3rd arg is list of names to ignore (unclear if dirs or filenames)
+    dirCmp = filecmp.dircmp(origDir, newDir)
+
+    origStdout = sys.stdout
+    sys.stdout = open(logFilename, 'wb')
+
+    # reports filenames of same, missing, and different files
+    dirCmp.report_full_closure()
+
+    #logger.info("Calling print_diff_files")
+    #logger.info("Difference list: %r" % dirCmp.diff_files)
+    #print_diff_files(dirCmp)
+
+    sys.stdout.close()
+    sys.stdout = origStdout
+
+
+def compareXPandWin7Configs(backupDrive, logfileSuffix):
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Comparing backed up WinXP and Win7 config files")
+
+    # treat empty suffix string as no suffix
+    if logfileSuffix == "":
+        logfileSuffix = None
+
+    # root folder of the backup drive for XP
+    rootXPFolder = os.path.normpath(os.path.join(backupDrive, os.path.sep, mdefs.BACKUP_XP_FOLDER_ROOT_NAME))
+
+    # root folder of the backup drive for Win7 config files
+    rootWin7Folder = os.path.normpath(os.path.join(backupDrive, os.path.sep, mdefs.BACKUP_WIN7_CONFIG_FOLDER_ROOT_NAME))
+
+
+    # list of folders to compare is what we backed up
+    foldersToCompareList = mdefs.CONFIG_WIN7_FOLDERS_TO_BACKUP_LIST
+
+    for win7folder in foldersToCompareList:
+        win7folder = os.path.normpath(win7folder)
+
+        print "win7folder=", win7folder
+
+        """
+        if not os.path.isdir(win7folder):
+            # folder doesn't exist on Win7 host drive (really it should)
+            # for now just skip it (don't create the folder on the backup drive)
+            logger.warning("Cannot compare '%s' as it does not exist on the Win7 drive!" % win7folder)
+            continue
+        """
+
+        # Strip off the C: from the current win7folder, and append this path to
+        # the backup root folder to form the winXPfolder to compare
+        winXPfolder = os.path.normpath(rootXPFolder + win7folder[2:])
+
+        # Similar for the Win7 folder to compare with
+        win7folderCompare = os.path.normpath(rootWin7Folder + win7folder[2:])
+
+        # generate a filename to output the differences to
+        # use logfileSuffix in part of the name if it is not None
+        folderName = os.path.split(winXPfolder)[1]
+
+        if logfileSuffix is not None:
+            logFilename = os.path.join(os.getcwd(), "Compare_%s_%s.log" % (folderName, logfileSuffix))
+
+        else:
+            logFilename = os.path.join(os.getcwd(), "Compare_%s.log" % folderName)
+
+        logFilename = os.path.normpath(logFilename)
+
+        # do the comparison
+        computeDiffs(winXPfolder, win7folderCompare, logFilename)
+
+
 def restoreXPFolders(fromDrive, toDrive, folderList):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
     logger.info("Restoring WinXP folders, from '%s' to '%s'." % (fromDrive, toDrive))
@@ -315,18 +408,24 @@ def doMigrate(options):
     root.addHandler(handler)
 
     # Always log to a file as well as stdout
+    timeStr = ""
     if options.logFilename is None:
         if options.localTime is True:
-            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2)
+            timeBase = time.localtime()
+            timeStr = time.strftime("%Y_%m_%d_%H_%M_%S", timeBase)
+            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2, timeBase)
             logFilename = logFilename + ".log"
         else:
-            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2, time.gmtime())
+            timeBase = time.gmtime()
+            timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ", timeBase)
+            logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2, timeBase)
             logFilename = logFilename + "Z.log"
 
         # TODO: append this base filename to a drive and folder
         #       should this go on the new drive partition 1? or partition 2?
     else:
         # Filename specified on the command line, we still run it through strftime
+        # but leave timeStr empty
         if options.localTime is True:
             logFilename = time.strftime(options.logFilename)
         else:
@@ -410,11 +509,12 @@ def doMigrate(options):
 
     analyzerName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME)
     analyzerType = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_TYPE)
-    volumeName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME)
+    #volumeName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME)
+    computerName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.COMPUTER_NAME)
 
     #print "analyzerName=", analyzerName
     #print "analyzerType=", analyzerType
-    #print "volumeName=", volumeName
+    #print "computerName=", computerName
 
     # TODO: get mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME so we can set them below
     root.warning("Set computer name and name for My Computer from saved configuration needs to be implemented!")
@@ -460,7 +560,13 @@ def doMigrate(options):
         # back up the installed config folders
         backupWin7ConfigFiles(instDrive, migBackupDrive)
 
+        # compare the config files
+        compareXPandWin7Configs(migBackupDrive, timeStr)
+
+
     # set the volume name (use saved volume name)
+    # #695: remove handling of Win7 boot drive name
+    """
     if volumeName != "":
         root.info("Setting C: drive name to '%s'" % volumeName)
         ret = mutils.setVolumeName("C:", volumeName)
@@ -471,8 +577,13 @@ def doMigrate(options):
             root.error("Setting C: drive name to '%s' failed! It will need to be set manually, ignoring error and continuing with migration." % volumeName)
         #else:
         #    root.info("C: drive name successfully set to '%s'" % volumeName)
+    """
 
-    # TODO: set the computer name and My Computer icon name
+    # set the computer name
+    if computerName != "":
+        mutils.setComputerName(computerName)
+
+    # TODO: show the My Computer icon on the desktop (how do I do this?)
 
     # ==== Restore Configs ====
     # restore files in config folders
@@ -549,4 +660,30 @@ Win7 migration utility part 2 (install).
 
 
 if __name__ == "__main__":
+
     main()
+
+    # test code
+    """
+    # basic logger
+    logLevel = logging.INFO
+
+    #logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2)
+    #logFilename = logFilename + ".log"
+    logFilename = "TestLog.log"
+    mode = "w"
+
+    root = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    root.setLevel(logLevel)
+    handlerFile = logging.FileHandler(logFilename, mode)
+    #handlerFile.setFormatter(fmt)
+    root.addHandler(handlerFile)
+
+    root.info("***** Win7 migration test compare started. *****")
+
+    backupDrive = "K:"
+    #timeBase = time.gmtime()
+    #timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ", timeBase)
+    logfileSuffix = None
+    compareXPandWin7Configs(backupDrive, logfileSuffix)
+    """
