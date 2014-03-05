@@ -16,6 +16,7 @@ import logging
 import ConfigParser
 #import wx
 import filecmp
+import difflib
 
 from optparse import OptionParser
 
@@ -190,16 +191,33 @@ def backupWin7ConfigFiles(fromDrive, toDrive):
     logger.info("Successfully backed up Win7 configuration files.")
 
 
-def print_diff_files(dcmp):
+def diffFiles(dcmp, fp):
     for name in dcmp.diff_files:
-        print "diff_file %s found in %s and %s" % (name, dcmp.left, dcmp.right)
+        # do a comparison between the files
+        """
+        print "*******"
+        print "name: ", name
+        print "dir1: ", dcmp.left
+        print "dir2: ", dcmp.right
+        """
+        
+        file1 = os.path.join(dcmp.left, name)
+        file2 = os.path.join(dcmp.right, name)
+
+        with open(file1, 'r') as f1:
+            with open(file2, 'r') as f2:
+                diff = difflib.unified_diff(f1.readlines(), f2.readlines(), fromfile=file1, tofile=file2)
+                    
+                for line in diff:
+                    fp.write(line)
+                    #sys.stdout.write(line)
 
     # recurse
     for sub_dcmp in dcmp.subdirs.values():
-        print_diff_files(sub_dcmp)
+        diffFiles(sub_dcmp, fp)
 
 
-def computeDiffs(origDir, newDir, logFilename):
+def computeDiffs(origDir, newDir, logFilename, diffFilename, diffMode):
     """
     Log the diffs between dirs.
     """
@@ -208,8 +226,8 @@ def computeDiffs(origDir, newDir, logFilename):
     assert origDir is not None
     assert newDir is not None
 
-    logger.info("Comparing '%s' and '%s', results in '%s'" % (origDir,
-                 newDir, logFilename))
+    logger.info("Comparing '%s' and '%s', results in '%s' and diffs in '%s'" % (origDir,
+                 newDir, logFilename, diffFilename))
 
     # 3rd arg is list of names to ignore (unclear if dirs or filenames)
     dirCmp = filecmp.dircmp(origDir, newDir)
@@ -226,6 +244,11 @@ def computeDiffs(origDir, newDir, logFilename):
 
     sys.stdout.close()
     sys.stdout = origStdout
+
+    # Log the file differences. Append to the existing file, in case
+    # the same filename is passed.
+    with open(diffFilename, diffMode) as fp:
+        diffFiles(dirCmp, fp)
 
 
 def compareXPandWin7Configs(backupDrive, logfileSuffix):
@@ -272,14 +295,18 @@ def compareXPandWin7Configs(backupDrive, logfileSuffix):
 
         if logfileSuffix is not None:
             logFilename = os.path.join(os.getcwd(), "Compare_%s_%s.log" % (folderName, logfileSuffix))
+            diffFilename = os.path.join(os.getcwd(), "Diff_%s_%s.log" % (folderName, logfileSuffix))
 
         else:
             logFilename = os.path.join(os.getcwd(), "Compare_%s.log" % folderName)
+            diffFilename = os.path.join(os.getcwd(), "Diff_%s.log" % folderName)
 
         logFilename = os.path.normpath(logFilename)
+        diffFilename = os.path.normpath(diffFilename)
 
-        # do the comparison
-        computeDiffs(winXPfolder, win7folderCompare, logFilename)
+        # do the comparison, don't append to an existing diff file
+        diffMode = "w"
+        computeDiffs(winXPfolder, win7folderCompare, logFilename, diffFilename, diffMode)
 
 
 def restoreXPFolders(fromDrive, toDrive, folderList):
@@ -663,8 +690,9 @@ if __name__ == "__main__":
 
     main()
 
-    # test code
     """
+    # test code for compare
+
     # basic logger
     logLevel = logging.INFO
 
@@ -682,8 +710,8 @@ if __name__ == "__main__":
     root.info("***** Win7 migration test compare started. *****")
 
     backupDrive = "K:"
-    #timeBase = time.gmtime()
-    #timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ", timeBase)
+    timeBase = time.gmtime()
+    timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ", timeBase)
     logfileSuffix = None
     compareXPandWin7Configs(backupDrive, logfileSuffix)
     """
