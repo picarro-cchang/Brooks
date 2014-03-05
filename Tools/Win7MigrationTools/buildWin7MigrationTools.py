@@ -83,7 +83,8 @@ def _copyBuild():
 
     # Clean the folder if it exists, and make sure the folder tree exists
     if os.path.isdir(destDir):
-        os.rmdir(destDir)
+        shutil.rmtree(destDir)
+
     assert not os.path.isdir(destDir)
     os.makedirs(destDir)
 
