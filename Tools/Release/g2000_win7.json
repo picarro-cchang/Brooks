@@ -90,6 +90,11 @@
             "installerSignature": "HIDS"
         },
 
+        "HKDS": {
+            "species": "iH2O",
+            "installerSignature": "HKDS"
+        },
+
         "JFAADS": {
             "species": "5Species",
             "installerSignature": "JFAADS",

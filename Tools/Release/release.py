@@ -1215,25 +1215,25 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
     parser.add_option('--debug-skip-all-clone', dest='cloneAllRepos', action='store_false',
                       default=True, help=('Skip cloning all repositories. The sandbox '
                                           'must already exist from a prior build. Allowed '
-                                          'only when combined with --local. Useful for quick '
+                                          'only when combined with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
 
     parser.add_option('--debug-skip-host-clone', dest='cloneHostRepo', action='store_false',
                       default=True, help=('Skip cloning the git host repository. The sandbox git repo'
                                           'must already exist from a prior build. Allowed '
-                                          'only when combined with --local. Useful for quick '
+                                          'only when combined with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
 
     parser.add_option('--debug-skip-config-clone', dest='cloneConfigRepo', action='store_false',
                       default=True, help=('Skip cloning the bzr config repositories. The sandbox repos'
                                           'must already exist from a prior build. Allowed '
-                                          'only when combined with --local. Useful for quick '
+                                          'only when combined with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
 
     parser.add_option('--debug-skip-exe', dest='buildExes', action='store_false',
                       default=True, help=('Skip building the executables. The sandbox and executables'
                                           'must already exist from a prior build. Allowed '
-                                          'only when combined with --local. Useful for quick '
+                                          'only when combined with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
     parser.add_option('--logfile', dest='logfile', default=None,
                       help=('Use this option to specify a filename for logging '

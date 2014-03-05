@@ -157,6 +157,33 @@ def setVolumeName(driveLetter, volumeName):
     return ret
 
 
+def getComputerName():
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    computerName, stderr_value = runCommand("hostname")
+    logger.info("Computer name: %s" % computerName)
+    return computerName
+
+
+def setComputerName(newComputerName):
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Setting computer name to '%s'" % newComputerName)
+
+    # first need to get the old computer name
+    oldComputerName = getComputerName()
+
+    # create command string to set the new name
+    renameCmd = "wmic computersystem where caption='%s' rename '%s'" % (oldComputerName, newComputerName)
+    stdout_value, stderr_value = runCommand(renameCmd)
+
+    ret = True
+    if stderr_value is not None:
+        if stderr_value != "":
+            logger.info("Setting computer name returned error='%s'" % stderr_value)
+            ret = False
+
+    return ret
+
+
 def isProcessRunning(procname):
     p = subprocess.Popen(["cmd", "/c", "tasklist"],
                          stdout=subprocess.PIPE,

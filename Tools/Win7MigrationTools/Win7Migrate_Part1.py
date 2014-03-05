@@ -116,11 +116,13 @@ class UIMigration(object):
             self.analyzerType = mdefs.MIGRATION_UNKNOWN_ANALYZER_TYPE
 
         # set default new volume name as same as the instrument
+        """
         self.newVolumeName = self.instDriveName
 
         # if it is an empty string, set the default to the analyzer name
         if self.newVolumeName == "":
             self.newVolumeName = self.analyzerName
+        """
 
         self.logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
 
@@ -197,28 +199,28 @@ class UIMigration(object):
         if userUpdatedType is True:
             self.logger.info("User entered analyzer type = '%s'" % self.analyzerType)
 
-        # Prompt for new Win7 volume name
-        haveWin7DriveName = False
-        while not haveWin7DriveName:
-            #print "in outer while loop"
-            while True:
-                print ""
-                print "New Win7 boot drive name:  %s" % self.newVolumeName
-                inputStr = raw_input("Is the new Win7 drive name correct? Y (yes) / N (no): ")
-                inputStr = inputStr.upper()
-
-                if inputStr == "N":
-                    # Allow user to enter a different name for the drive
-                    inputStr = raw_input("Enter the name for your new Windows 7 boot drive: ")
-                    print "inputStr='%s'" % inputStr
-                    self.newVolumeName = inputStr
-
-                elif inputStr == "Y":
-                    # User approved the new drive name, done
-                    haveWin7DriveName = True
-                    break
-
-        self.logger.info("New Win7 boot drive volume name: '%s'" % self.newVolumeName)
+        ## Prompt for new Win7 volume name
+        #haveWin7DriveName = False
+        #while not haveWin7DriveName:
+        #    #print "in outer while loop"
+        #    while True:
+        #        print ""
+        #        print "New Win7 boot drive name:  %s" % self.newVolumeName
+        #        inputStr = raw_input("Is the new Win7 drive name correct? Y (yes) / N (no): ")
+        #        inputStr = inputStr.upper()
+        #
+        #        if inputStr == "N":
+        #            # Allow user to enter a different name for the drive
+        #            inputStr = raw_input("Enter the name for your new Windows 7 boot drive: ")
+        #            print "inputStr='%s'" % inputStr
+        #            self.newVolumeName = inputStr
+        #
+        #        elif inputStr == "Y":
+        #            # User approved the new drive name, done
+        #            haveWin7DriveName = True
+        #            break
+        #
+        #self.logger.info("New Win7 boot drive volume name: '%s'" % self.newVolumeName)
 
         # Done, user has confirmed to continue with backup
         return True
@@ -229,11 +231,13 @@ class UIMigration(object):
     def getAnalyzerName(self):
         return self.analyzerName
 
+    """
     def getNewVolumeName(self):
         if self.newVolumeName is None:
             return ""
         else:
             return self.newVolumeName
+    """
 
 
 def validatePicarroSystem(anInfo, debug=False):
@@ -286,8 +290,16 @@ def promptUserToStopSoftwareAndDriver():
     print ""
     print ""
 
-    raw_input("After everything has shutdown, type Y to continue: ")
+    raw_input("After everything has shutdown, hit Enter to continue: ")
 
+
+def promptUserToStopSoftware():
+    print ""
+    print "Please follow the written instructions for stopping the instrument."
+    print ""
+    print ""
+
+    raw_input("After everything has shutdown, hit Enter to continue: ")
 
 
 def shutdownWindows(debug=False):
@@ -543,8 +555,10 @@ def doMigrate(options):
     # to proceed.
     #
     instDriveName = mutils.getVolumeName(instDrive)
-
     root.info("Instrument drive volume name = '%s'" % instDriveName)
+
+    # Get the computer name we're running on
+    computerName = mutils.getComputerName()
 
     uiMig = UIMigration(instDrive=instDrive,
                         migBackupDrive=migBackupDrive,
@@ -562,8 +576,9 @@ def doMigrate(options):
         #showErrorDialog(errMsg)
         sys.exit(1)
 
-     # Get the volume name the user wants to use for the Win7 boot drive
-    win7DriveName = uiMig.getNewVolumeName()
+    # Get the volume name the user wants to use for the Win7 boot drive
+    # #695: we don't need this so don't ask user for it
+    #win7DriveName = uiMig.getNewVolumeName()
 
     # Get the analyzer type and name, we may have needed to prompt the user for it
     analyzerType = uiMig.getAnalyzerType()
@@ -573,12 +588,10 @@ def doMigrate(options):
     defaults = {}
     cp = ConfigParser.ConfigParser(defaults)
     cp.add_section(mdefs.MIGRATION_CONFIG_SECTION)
-    cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME, win7DriveName)
+    #cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME, win7DriveName)
     cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_TYPE, analyzerType)
     cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME, analyzerName)
-
-    # TODO: save off mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME
-    root.warning("Saving off computer name and name from My Computer needs to be implemented!")
+    cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.COMPUTER_NAME, computerName)
 
     filename = os.path.join(os.getcwd(), mdefs.MIGRATION_CONFIG_FILENAME)
     with open(filename, "w") as f:
@@ -589,10 +602,19 @@ def doMigrate(options):
     # kill from the TaskManager if times out waiting)
     # The user will need to do this if this is an unknown analyzer
     # (likely because Pyro versions don't match, the following WILL crash)
+    """
     if unknownAnalyzer is False:
         stopSoftwareAndDriver(anInfo, options.debug)
     else:
         promptUserToStopSoftwareAndDriver()
+    """
+
+    # Prompt the user to shutdown the system for shipping. Refer the user
+    # to the written instructions (while waiting for the cavity to come up
+    # to atmospheric pressure, open Run with a "shutdown -a" command, wait until
+    # get the Windows shutdown prompt, have 20 to click OK in the Run window to
+    # stop it)
+    promptUserToStopSoftware()
 
     # ==== Backup ====
     #
