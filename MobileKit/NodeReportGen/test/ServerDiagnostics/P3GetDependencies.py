@@ -11,6 +11,8 @@ import pymongo
 import re
 import time
 
+DRY_RUN = True
+
 class DbaseError(Exception):
     pass
 
@@ -57,6 +59,7 @@ class DatabaseInterface(object):
         for logName in logNames:
             regx = re.compile(logName, re.IGNORECASE)
             print logName
+            print "LRT and FOV collections to modify:"
             for lrt in self.lrt_meta.find({"lrt_prms_str":regx}):
                 print lrt["lrt_collection"]
 
@@ -71,14 +74,22 @@ class DatabaseInterface(object):
                                     for line in sp:
                                         statusDict.update(json.loads(line))
                                 if "flag" not in statusDict:
-                                    with open(sFile,"ab") as sp:
+                                    if DRY_RUN:
+                                        print "Flag will be added to %s" % sFile
+                                    else:
                                         print "Adding flag to %s" % sFile
-                                        print >>sp, '{"flag":"*"}'
-                                if statusDict["instructions_type"] != "makeReport":
-                                    with open(sFile,"ab") as sp:
-                                        print "Setting status -16 in %s" % sFile
-                                        print >>sp, '{"status":-16}'
-                                    
+                                        with open(sFile,"ab") as sp:
+                                            print >>sp, '{"flag":"*"}'
+                                if "instructions_type" in statusDict:
+                                    if statusDict["instructions_type"] != "makeReport":
+                                        if DRY_RUN:
+                                            print "Status will be set to -16 for %s" % sFile
+                                        else:
+                                            print "Setting status -16 in %s" % sFile
+                                            with open(sFile,"ab") as sp:
+                                                print >>sp, '{"status":-16}'
+                                else:
+                                    print "File %s contains status %s" % (sFile, statusDict)
 
     def close(self):
         self.client.close()

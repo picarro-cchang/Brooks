@@ -4203,7 +4203,7 @@ function setGduTimer(tcat) {
         return;
     }
     if (tcat === "mode") {
-        TIMER.mode = setTimeout(modeTimer, CSTATE.modeUpdatePeriod);
+        TIMER.mode = setTimeout(modeTimer, CNSNT.modeUpdatePeriod);
         return;
     }
     if (tcat === "periph") {
