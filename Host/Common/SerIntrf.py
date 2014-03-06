@@ -11,10 +11,15 @@ class SerIntrf(object):
         self.ser = serial.Serial(port=port,baudrate=baudrate,timeout=timeout,xonxoff=xonxoff)
 
     def open(self):
-        self.ser.open()
+        # Win7 throws an exception if try to open port that is already open
+        # or close an already closed port, so must check the state first.
+        # Same logic also works on WinXP.
+        if not self.ser.isOpen():
+            self.ser.open()
 
     def close(self):
-        self.ser.close()
+        if self.ser.isOpen():
+            self.ser.close()
 
     def flush(self):
         self.ser.flushInput()
