@@ -1,9 +1,11 @@
-; CKADS setup
+; JFAADS setup (5Species= N2O_CH4_CO2_NH3_H2O)
 
 ; definitions referenced by inc_desktop_shortcuts.iss
-#define quickGuiIni = "QuickGui_CKADS.ini"
+#define quickGuiIni = "QuickGui.ini"
 
-#define dataRecalIni = "UserCal_CKADS.ini"
+#define dataRecalIni = "UserCal.ini"
+
+#define integToolIni = "IntegrationTool.ini"
 
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
@@ -30,4 +32,7 @@
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
 
+; Extras
+;
+; Coordinator
 #include "inc_coordinator.iss"

@@ -1,92 +1,58 @@
-#define picarroIcon = "Picarro_icon.ico"
-#define controllerIcon = "Controller_icon.ico"
-#define diagnosticsIcon = "Diagnostics_icon.ico"
-#define integrationIcon = "Integration_icon.ico"
-#define utilitiesIcon = "Utilities_icon.ico"
+; CFHADS setup
 
-[Setup]
-AppCopyright=Picarro Inc.
-AppName=Picarro G2000 {#installerType} Host
-AppVerName=Picarro G2000 {#installerType} Host {#hostVersion}
-Password=
-DefaultDirName=C:\Picarro\G2000
-DefaultGroupName=Picarro Analyzer Software
-OutputBaseFileName=setup_{#installerType}_{#commonName}_{#hostVersion}
-DirExistsWarning=no
+; definitions referenced by inc_desktop_shortcuts.iss
 
-[Code]
-var
-    savedInstrConfig : String;
-    instrConfig : String;
+; use -v option for launching Mode Switcher
+#define closeValves = 1
 
-procedure MyBeforeInstall();
-var
-    dateTime : String;
-    app : String;
-    ResultCode : Integer;
-begin
-    dateTime := GetDateTimeString('_yyyymmdd_hhnnss',#0,#0);
-    app := ExpandConstant('{app}');
-    savedInstrConfig := app+'\InstrConfig'+dateTime;
-    instrConfig := app+'\InstrConfig';
-    Exec(ExpandConstant('{sys}\xcopy.exe'), '/E /Y /I '+instrConfig+' '+savedInstrConfig, '', SW_SHOW,
-    ewWaitUntilTerminated, ResultCode);
-    {Don't use RenameFile because it will fail if the instrConfig is open in Windows Explorer when installer is running}
-    {MsgBox('Renaming:' + instrConfig + ' to ' + savedInstrConfig, mbInformation, MB_OK);}
-    {RenameFile(instrConfig,savedInstrConfig);}
-    {MsgBox('Renaming Done', mbInformation, MB_OK);}
-end;
+#define quickGuiTitle1 = "User Interface (Flux)"
+#define quickGuiIni1 = "QuickGui.ini"
 
-procedure MyAfterInstall();
-var
-    ResultCode : Integer;
-begin
-    {MsgBox('Running xcopy:', mbInformation, MB_OK);}
-    Exec(ExpandConstant('{sys}\xcopy.exe'), '/E /Y /I '+savedInstrConfig+' '+instrConfig, '', SW_SHOW,
-    ewWaitUntilTerminated, ResultCode);
-    {MsgBox('xcopy Done', mbInformation, MB_OK);}
-end;
+#define quickGuiTitle2 = "User Interface (CFADS)"
+#define quickGuiIni2 = "QuickGui_CFADS.ini"
 
-[Files]
-Source: {#resourceDir}\Picarro.pth; DestDir: C:\Python25\Lib\site-packages; Flags: replacesameversion
-Source: {#resourceDir}\libusb0.dll; DestDir: {sys}; Tasks: LibUSB; Flags: replacesameversion
-Source: {#resourceDir}\libusb0.sys; DestDir: {sys}\Drivers; Tasks: LibUSB; Flags: replacesameversion
-Source: {#resourceDir}\PicarroUninitialized.inf; DestDir: {win}\inf; Flags: replacesameversion; BeforeInstall: MyBeforeInstall
-Source: {#resourceDir}\PicarroUSB.inf; DestDir: {win}\inf; Flags: replacesameversion
-Source: {#resourceDir}\Cypress.inf; DestDir: {win}\inf; Flags: replacesameversion
-Source: {#resourceDir}\IB_WDT.dll; DestDir: {sys}; Flags: replacesameversion
-Source: {#resourceDir}\IBEM_WD.sys; DestDir: {sys}\Drivers; Flags: replacesameversion
-Source: {#sandboxDir}\{#installerType}\*; DestDir: {app}; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\host\Host\dist\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
-Source: {#resourceDir}\*.ico; DestDir: {app}\HostExe; Flags: replacesameversion
-Source: {#resourceDir}\MSVCP71.DLL; DestDir: {sys}; Flags: replacesameversion; AfterInstall: MyAfterInstall
-Source: {#resourceDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: recursesubdirs replacesameversion
-Source: {#resourceDir}\DatViewer\*; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+#define dataRecalTitle1 = "Data Recal (Flux)"
+#define dataRecalIni1 = "UserCal.ini"
 
-[Tasks]
-Name: LibUSB; Description: Install USB driver
+#define dataRecalTitle2 = "Data Recal (High-Precision 3-Gas)"
+#define dataRecalIni2 = "UserCal_CFADS.ini"
+
+#define supervisorLauncherIni = "SupervisorLauncher.ini"
+#define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
+
+#define diagDataCollectorIni = "DiagDataCollector.ini"
+#define setupToolIni = "SetupTool.ini"
+
+; only create the Integration Coordinator (coordinatorLauncherIni not defined)
+#define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
+
+
+; Note: Order of items in [Files] sections (which spans these
+;       files) is the install order. Be careful about changing
+;       the ordering of the include files below.
+;
+#include "inc_icons.iss"
+#include "inc_setup.iss"
+#include "inc_code.iss"
+#include "inc_usb.iss"
+#include "inc_python.iss"
+#include "inc_digio.iss"
+#include "inc_ms.iss"
+#include "inc_exe_configs.iss"
+#include "inc_datviewer.iss"
+#include "inc_desktop_shortcuts.iss"
+#include "inc_configtool.iss"
+
+
+#include "inc_coordinator.iss"
+
 
 [Icons]
-Name: {userdesktop}\Start Instrument; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -a -c ..\AppConfig\Config\Utilities\SupervisorLauncher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
-Name: {userdesktop}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -v -c ..\AppConfig\Config\Utilities\SupervisorLauncher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+; Create some additional custom shortcuts for Peripheral Mode Switcher
+
+; Desktop
 Name: {userdesktop}\Peripheral Mode Switcher; Filename: {app}\HostExe\PeriphModeSwitcher.exe; Parameters: -c ..\AppConfig\Config\Utilities\PeriphModeSwitcher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
-Name: {userdesktop}\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#controllerIcon}
-Name: {userdesktop}\Diagnostics\Stop Instrument; Filename: {app}\HostExe\StopSupervisor.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Cancel.ico
-Name: {userdesktop}\Diagnostics\User Interface (Flux); Filename: {app}\HostExe\QuickGui.exe; Parameters: -c ..\AppConfig\Config\QuickGui\QuickGui.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
-Name: {userdesktop}\Diagnostics\User Interface (CFADS); Filename: {app}\HostExe\QuickGui.exe; Parameters: -c ..\AppConfig\Config\QuickGui\QuickGui_CFADS.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
-Name: {userdesktop}\Diagnostics\Diag Data Collector; Filename: {app}\HostExe\DiagDataCollector.exe; Parameters: -c ..\AppConfig\Config\Utilities\DiagDataCollector.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
-Name: {userdesktop}\Integration\Integration Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\SupervisorLauncher_Integration.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\Integration Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\CoordinatorLauncher_Integration.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\EEPROM Access; Filename: {app}\HostExe\InstrEEPROMAccess.exe; Parameters: -c ..\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Integration\Configuration Tool; Filename: R:\crd\TestSoftware\Configuration\ConfigTool.py; WorkingDir: R:\crd\TestSoftware\Configuration; IconFilename: {app}\HostExe\{#integrationIcon}
-Name: {userdesktop}\Picarro Utilities\Setup Tool; Filename: {app}\HostExe\SetupTool.exe; Parameters: -c ..\AppConfig\Config\Utilities\SetupTool.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#utilitiesIcon}
-Name: {userdesktop}\Picarro Utilities\Data Recal (Flux); Filename: {app}\HostExe\DataRecal.exe; Parameters: -c ..\InstrConfig\Calibration\InstrCal\UserCal.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#utilitiesIcon}
-Name: {userdesktop}\Picarro Utilities\Data Recal (High-Precision 3-Gas); Filename: {app}\HostExe\DataRecal.exe; Parameters: -c ..\InstrConfig\Calibration\InstrCal\UserCal_CFADS.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#utilitiesIcon}
-Name: {userdesktop}\Picarro Utilities\Data File Viewer; Filename: C:\Python25\python.exe; Parameters: DatViewer.py -c DatViewer.ini; WorkingDir: {app}\DatViewer; IconFilename: {app}\HostExe\{#utilitiesIcon}
-Name: {group}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -v -c ..\AppConfig\Config\Utilities\SupervisorLauncher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
-Name: {group}\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#controllerIcon}
-Name: {group}\Stop Instrument; Filename: {app}\HostExe\StopSupervisor.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\Cancel.ico
-Name: {userstartup}\Start Instrument; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -a -c ..\AppConfig\Config\Utilities\SupervisorLauncher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+
+; Start menu
+Name: {group}\Peripheral Mode Switcher; Filename: {app}\HostExe\PeriphModeSwitcher.exe; Parameters: -c ..\AppConfig\Config\Utilities\PeriphModeSwitcher.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}

@@ -1,16 +1,17 @@
-; CKADS setup
+; HKDS setup
 
 ; definitions referenced by inc_desktop_shortcuts.iss
-#define quickGuiIni = "QuickGui_CKADS.ini"
+#define quickGuiIni = "QuickGui.ini"
 
-#define dataRecalIni = "UserCal_CKADS.ini"
+#define dataRecalIni = "UserCal.ini"
 
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
 #define diagDataCollectorIni = "DiagDataCollector.ini"
 #define setupToolIni = "SetupTool.ini"
 
-; only create the Integration Coordinator (coordinatorLauncherIni not defined)
+; definitions referenced by inc_coordinator.iss
+#define coordinatorLauncherIni = "CoordinatorLauncher.ini"
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
 
 
@@ -30,4 +31,8 @@
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
 
+; future
+;#include "inc_chemcorrect.iss"
+
 #include "inc_coordinator.iss"
+
