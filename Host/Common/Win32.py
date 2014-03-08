@@ -149,3 +149,7 @@ class Kernel32(object):
         GetLastError.restype = DWORD
 
         return GetLastError()
+
+    @staticmethod
+    def exitProcess(retCode):
+        return ctypes.windll.kernel32.ExitProcess(retCode)

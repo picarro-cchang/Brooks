@@ -238,6 +238,11 @@ class MyPlotCanvas(plot.PlotCanvas):
             if yAxis[0] == yAxis[1]:
                 self.Reset()
                 return
+            
+        p1, p2 = graphics.boundingBox()
+        if numpy.isnan(p1).any() or numpy.isnan(p2).any():
+            return
+            
         if self._hasDragged: return
         if dc == None:
             # sets new dc and clears it
@@ -268,16 +273,17 @@ class MyPlotCanvas(plot.PlotCanvas):
             # Both axis specified in Draw
             p1= numpy.array([xAxis[0], yAxis[0]])    # lower left corner user scale (xmin,ymin)
             p2= numpy.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
+            
 
         self.last_draw = (graphics, numpy.array(xAxis), numpy.array(yAxis))       # saves most recient values
         # Get ticks and textExtents for axis if required
-        if self._xSpec is not 'none':
+        if numpy.isfinite(xAxis[0]) and numpy.isfinite(xAxis[1]) and self._xSpec is not 'none':
             xticks = self._xticks(xAxis[0], xAxis[1])
             xTextExtent = self._getTextExtent(dc,xticks[-1][1])# w h of x axis text last number on axis
         else:
             xticks = None
             xTextExtent= (0,0) # No text for ticks
-        if self._ySpec is not 'none':
+        if numpy.isfinite(yAxis[0]) and numpy.isfinite(yAxis[1]) and self._ySpec is not 'none':
             yticks = self._yticks(yAxis[0], yAxis[1])
             if self.getLogScale()[1]:
                 yTextExtent = self._getTextExtent(dc,'-2e-2')
@@ -347,9 +353,9 @@ class MyPlotCanvas(plot.PlotCanvas):
         #ptx,pty,rectWidth,rectHeight= self._point2ClientCoord(p1, p2)
         dc.SetClippingRegion(ptx,pty,rectWidth,rectHeight)
         # Draw the lines and markers
-        #start = _time.clock()
+        #start = _time.time()
         graphics.draw(dc)
-        # print "entire graphics drawing took: %f second"%(_time.clock() - start)
+        # print "entire graphics drawing took: %f second"%(_time.time() - start)
         # remove the clipping region
         dc.DestroyClippingRegion()
         dc.EndDrawing()

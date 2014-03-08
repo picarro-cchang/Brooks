@@ -1,11 +1,11 @@
 extends layout_require
 
 block scripts
-    script(type='text/javascript')
+    script(type='text/javascript').
         ASSETS = '#{assets}';
         
     script(type='text/javascript', data-main='#{assets}js/app/getReportMain.js', src='#{assets}js/require-jquery.js')
-    script(type='text/javascript')
+    script(type='text/javascript').
         var TEMPLATE_PARAMS = {
             apiKey: "#{apiKey}",
             clientKey: "#{clientKey}",
@@ -18,7 +18,7 @@ block scripts
             ticket: "#{hash}",
             ts: #{ts}
         };
-    style
+    style.
         table.table-fmt1 td {text-align:center; vertical-align:middle; }
         table.table-fmt1 th {text-align:center; border: #000 solid; border-width: 0px 0px 1px 0px; }
 
@@ -26,9 +26,10 @@ block content
     body(style="min-width:1100px")
         div.head(style="height:100px")
             div#leftHead.leftHead
-                | Picarro Surveyor For Natural Gas Leak Detection
+                | #{P3TXT.getReport.leftHeading}
             div#rightHead.rightHead
         div#reportTitle(style="display:none")
+        div#startPage(style="display:none")
         div#getReportApp
         div(style="height:50px")
             div#leftFoot.leftFoot

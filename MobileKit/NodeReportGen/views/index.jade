@@ -1,11 +1,11 @@
 extends layout_require
 
 block scripts
-    script(type='text/javascript')
+    script(type='text/javascript').
         ASSETS = '#{assets}';
         
     script(type='text/javascript', data-main='#{assets}js/app/indexMain.js', src='#{assets}js/require-jquery.js')
-    script(type='text/javascript')
+    script(type='text/javascript').
         var TEMPLATE_PARAMS = {
             force: !{JSON.stringify(force)},
             identity: "#{identity}",
@@ -22,150 +22,163 @@ block content
         div.container-fluid
             div.row-fluid(style="margin-bottom:40px;")
                 div.span12
-                    h2 Dashboard
+                    h2 #{P3TXT.dashboard.heading_dashboard}
                     div#id_submittedJobs
+                        div#id_jobTableLoading
+                            span
+                                img(src="#{assets}images/ajax-loader.gif", alt="Loading...")
                         div#id_jobTableDiv
 
-            h2 Job Preparation
+            h2 #{P3TXT.dashboard.heading_job_preparation}
             div#id_instructionsfiles.row-fluid
                 div.span6
-                    h3 Instructions
+                    h3 #{P3TXT.dashboard.heading_instructions}
                     div.custom_file_upload
                         input#id_instr_upload_name.file(type="text", name="file_info", readonly)
-                        div.btn-primary.file_upload
+                        div.btn-inverse.file_upload
                             input#id_instr_upload.fileinput(type="file", name="files[]")
-                    p Browse for an instructions file, drag a file onto here or reload from dashboard.
+                    p #{P3TXT.dashboard.get_instructions}
                 div.span6
-                    h3 Actions
+                    h3 #{P3TXT.dashboard.heading_actions}
                     div
                         button#id_make_report.btn.btn-large.btn-primary(type="button", style="float:left")
-                            | Make Report
+                            | #{P3TXT.dashboard.make_report}
                     div
                         button#id_save_instructions.btn.btn-inverse(type="button", style="float:left; margin:5px; margin-left:20px")
-                            | Save Instructions
+                            | #{P3TXT.dashboard.save_instructions}
             div#id_instructions.row-fluid
                 div.span12
                     div.row-fluid
                         div.span11
                             label(for="id_title")
-                                | Title
-                            input#id_title(type="text", placeholder="Title", style="width:100%")
+                                | #{P3TXT.dashboard.fieldname_title}
+                            input#id_title(type="text", placeholder="#{P3TXT.dashboard.placeholder_title}", style="width:100%")
                         div.span1
                             label(for="id_make_pdf")
-                                | Make PDF
+                                | #{P3TXT.dashboard.fieldname_make_pdf}
                             input#id_make_pdf(type="checkbox")
                     div.row-fluid
                         div.span2
                             label(for="id_swCorner")
-                                | SW Corner
-                            input#id_swCorner(type="text", placeholder="Latitude, Longitude", style="width:100%")
+                                | #{P3TXT.dashboard.fieldname_sw_corner}
+                            input#id_swCorner(type="text", placeholder="#{P3TXT.dashboard.placeholder_latlng}", style="width:100%")
                         div.span2
                             label(for="id_neCorner")
-                                | NE Corner
-                            input#id_neCorner(type="text", placeholder="Latitude, Longitude", style="width:100%")
+                                | #{P3TXT.dashboard.fieldname_ne_corner}
+                            input#id_neCorner(type="text", placeholder="#{P3TXT.dashboard.placeholder_latlng}", style="width:100%")
                         div.span3
                             label(for="id_reportTimezone")
-                                | Report time zone
+                                | #{P3TXT.dashboard.fieldname_report_time_zone}
                             input#id_reportTimezone(type="text", style="width:67%", readonly)
                             a.btn.btn-inverse(href="#id_timezoneModal",role="button",data-toggle="modal",style="margin-top:-9px")
-                                | Change
+                                | #{P3TXT.change}
                             div#id_timezoneModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_timezoneModalLabel",
                                 aria-hidden="true")
                                 div.modal-header
                                     button.close(type="button", data-dismiss="modal", aria-hidden="true") x
-                                    h3#id_timezoneModalLabel Click on map to select time zone
+                                    h3#id_timezoneModalLabel #{P3TXT.click_map_select_timezone}
                                 div.modal-body
                                     include timezone_picker
                                 div.modal-footer
                                     button#id_save_timezone.btn.btn-primary(data-dismiss="modal", aria-hidden="true")
-                                        | Save changes
+                                        | #{P3TXT.save_changes}
                                     button.btn(data-dismiss="modal", aria-hidden="true")
-                                        | Cancel
+                                        | #{P3TXT.cancel}
                         div.span3
                             div(style="float:left")
                                 label(for="id_peaksMinAmp")
-                                    | Peaks Min Amp
+                                    | #{P3TXT.dashboard.fieldname_peaks_min_amp}
                                 input#id_peaksMinAmp(type="text")
                             div(style="float:left; margin-left:15px;")
                                 label(for="id_exclRadius")
-                                    | Exclusion Radius
+                                    | #{P3TXT.dashboard.fieldname_peaks_exclusion_radius}
                                 input#id_exclRadius(type="text")
                         div.span2
                             div(style="float:left")
                                 label(for="id_submapsRows")
-                                    | Rows
+                                    | #{P3TXT.dashboard.fieldname_rows}
                                 input#id_submapsRows(type="text")
                             div(style="float:left; margin-left:15px;")
                                 label(for="id_submapsColumns")
-                                    | Columns
+                                    | #{P3TXT.dashboard.fieldname_columns}
                                 input#id_submapsColumns(type="text")
                     div.row-fluid(style="margin-top:20px;")
                         div.span12
-                            h2 Runs
+                            h2 #{P3TXT.dashboard.heading_runs}
                             div#id_runs_table_div
+                    
+
+                    if 0
+                        // Hide facilities and markers tables
+                        div.row-fluid(style="margin-top:20px;")
+                            div.span12
+                                h2 #{P3TXT.dashboard.heading_user_marker_files}
+                                div#id_markers_files_table_div
+                        div.row-fluid(style="margin-top:20px;")
+                            div.span12
+                                h2 #{P3TXT.dashboard.heading_facilities_files}
+                                div#id_facilities_table_div
+
                     div.row-fluid
                         div.span12
                         button#id_edit_template.btn.btn-inverse(type="button")
-                            | Edit Template
-
+                            | #{P3TXT.dashboard.edit_template}
 
                     div#id_editTemplateModal.modal.hide.fade(tabindex="-1", role="dialog", aria-labelledby="id_editTemplateModalLabel",
                         aria-hidden="true")
                         div.modal-header
                             button.close(type="button", data-dismiss="modal", aria-hidden="true") x
-                            h3#id_editTemplateModalLabel Edit Template
+                            h3#id_editTemplateModalLabel #{P3TXT.dashboard.edit_template}
                         div.modal-body
                             div.row-fluid
                                 div.span12
+                                    h3 #{P3TXT.dashboard.heading_summary_pages}
                                     div.row-fluid
-                                        div.span6
-                                            h3 Summary Pages
-                                            div.row-fluid
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_summary_peaksTable(type="checkbox")
-                                                        | Peaks Table
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_summary_analysesTable(type="checkbox")
-                                                        | Isotopic Table
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_summary_runsTable(type="checkbox")
-                                                        | Runs Table
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_summary_surveysTable(type="checkbox")
-                                                        | Surveys Table
-                                            div.row-fluid
-                                                div#id_summary_table_div
-
-                                        div.span6
-                                            h3 Submap Pages
-                                            div.row-fluid
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_submaps_peaksTable(type="checkbox")
-                                                        | Peaks Table
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_submaps_analysesTable(type="checkbox")
-                                                        | Isotopic Table
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_submaps_runsTable(type="checkbox")
-                                                        | Runs Table
-                                                div.span3
-                                                    label.checkbox
-                                                        input#id_submaps_surveysTable(type="checkbox")
-                                                        | Surveys Table
-                                            div.row-fluid
-                                                div#id_submaps_table_div
+                                        div.span3
+                                            label.checkbox
+                                                input#id_summary_peaksTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_peaks_table}
+                                        div.span3
+                                            label.checkbox
+                                                input#id_summary_analysesTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_isotopic_table}
+                                        div.span3
+                                            label.checkbox
+                                                input#id_summary_runsTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_runs_table}
+                                        div.span3
+                                            label.checkbox
+                                                input#id_summary_surveysTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_surveys_table}
+                                    div.row-fluid
+                                        div#id_summary_table_div
+                            div.row-fluid
+                                div.span12
+                                    h3 #{P3TXT.dashboard.heading_submap_pages}
+                                    div.row-fluid
+                                        div.span3
+                                            label.checkbox
+                                                input#id_submaps_peaksTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_peaks_table}
+                                        div.span3
+                                            label.checkbox
+                                                input#id_submaps_analysesTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_isotopic_table}
+                                        div.span3
+                                            label.checkbox
+                                                input#id_submaps_runsTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_runs_table}
+                                        div.span3
+                                            label.checkbox
+                                                input#id_submaps_surveysTable(type="checkbox")
+                                                | #{P3TXT.dashboard.option_surveys_table}
+                                    div.row-fluid
+                                        div#id_submaps_table_div
 
                         div.modal-footer
                             button#id_save_template.btn.btn-primary(data-dismiss="modal", aria-hidden="true")
-                                | Save changes
+                                | #{P3TXT.save_changes}
                             button.btn(data-dismiss="modal", aria-hidden="true")
-                                | Cancel
+                                | #{P3TXT.cancel}
 
                     div#id_modal.modal.hide.fade(data-backdrop="static")

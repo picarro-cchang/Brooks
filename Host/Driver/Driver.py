@@ -27,8 +27,8 @@ import types
 import traceback
 from numpy import array, transpose
 
-from DasConfigure import DasConfigure
-from DriverAnalogInterface import AnalogInterface
+from Host.Driver.DasConfigure import DasConfigure
+from Host.Driver.DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
@@ -38,7 +38,7 @@ from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDat
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.hostDasInterface import Operation
-from Host.Common.InstErrors import *
+from Host.Common.InstErrors import INST_ERROR_OKAY
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
@@ -819,7 +819,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         object and the address of the next object."""
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
-        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
 
@@ -855,7 +855,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
         s = cPickle.dumps(object,-1)
-        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
         if nBytes != len(s): return False
         r = "".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])
         return r == s
@@ -868,7 +868,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise ValueError("%s is not available" % whichEeprom)
         s = cPickle.dumps(object,-1)
         nBytes = len(s)
-        self.wrEeprom(whichEeprom,startAddress,[ord(c) for c in struct.pack("I",nBytes)+s])
+        self.wrEeprom(whichEeprom,startAddress,[ord(c) for c in struct.pack("=I",nBytes)+s])
         return startAddress + 4*((nBytes+7)//4)
 
     def fetchLogicEEPROM(self):
@@ -878,7 +878,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """
         if not DasConfigure().i2cConfig["LOGIC_EEPROM"]:
             raise ValueError("LOGIC_EEPROM is not available")
-        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",0,4)]))
+        nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",0,4)]))
         # Try to avoid EEPROM error
         if nBytes > 100:
             raise ValueError("LOGIC_EEPROM returns wrong size (%d bytes)" % nBytes)
@@ -908,7 +908,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def shelveWlmCal(self,wlmCalDict):
         """Save the WLM calibration data as a dictionary to the WLM_EEPROM"""
         if not DasConfigure().i2cConfig["WLM_EEPROM"]:
-            raise ValueError("WLM_EEPROM is not available" % whichEeprom)
+            raise ValueError("WLM_EEPROM is not available")
         wlmCal = interface.WLMCalibrationType()
         dictToCtypes(wlmCalDict,wlmCal)
         if ctypes.sizeof(wlmCal) != 4096:
@@ -1162,15 +1162,35 @@ class Driver(SharedTypes.Singleton):
                 Log("%s" % (msg[2:],),Level=level)
             else:
                 Log("%s" % (msg,))
+
         def sensorProcessor(data):
             self.streamCast.send(StringPickler.ObjAsString(data))
             self.streamSaver._writeData(data)
+
+        def sensorBlockProcessor(blockDict):
+            validEntries = blockDict['validEntries']
+            block = blockDict['block']
+            for i in range(validEntries):
+                data = block[i]
+                self.streamCast.send(StringPickler.ObjAsString(data))
+                self.streamSaver._writeData(data)
+            return validEntries
+
         def ringdownProcessor(data):
             # TODO: Normalize the data format here
             self.resultsCast.send(StringPickler.ObjAsString(data))
+
+        def ringdownBlockProcessor(blockDict):
+            validEntries = blockDict['validEntries']
+            block = blockDict['block']
+            for i in range(validEntries):
+                data = block[i]
+                self.resultsCast.send(StringPickler.ObjAsString(data))
+            return validEntries
+
         messageHandler  = SharedTypes.makeHandler(self.dasInterface.getMessage,    messageProcessor)
-        sensorHandler   = SharedTypes.makeHandler(self.dasInterface.getSensorData,  sensorProcessor)
-        ringdownHandler = SharedTypes.makeHandler(self.dasInterface.getRingdownData,ringdownProcessor)
+        sensorHandler   = SharedTypes.makeHandler(self.dasInterface.getSensorDataBlock,  sensorBlockProcessor)
+        ringdownHandler = SharedTypes.makeHandler(self.dasInterface.getRingdownDataBlock, ringdownBlockProcessor)
         try:
             try:
                 usbSpeed = self.dasInterface.startUsb()
@@ -1215,30 +1235,60 @@ class Driver(SharedTypes.Singleton):
                     else:
                         Log("EEPROM ID matches Software Installer ID (%s)" % (self.analyzerType,),Level=1)
 
-            # Here follows the main loop.
-            Log("Starting main driver loop",Level=1)
+            # Here follows the main loop. Note that we handle messages, sensor data and ring-down data from the DSP.
+            #  The routine makeHandler in SharedTypes repeatedly calls a function which either retrieves a datum from 
+            #  the DSP or returns None. Once None is returned or if the maximum time is exceeded, we break out of the 
+            #  loop to poll the next handler.
+            Log("Starting main driver loop", Level=1)
+            maxRpcTime = 0.5
+            rpcTime = 0.0
             try:
                 while not daemon.mustShutdown:
-                    startPoll = time.time()
                     timeSoFar = 0
-                    timeSoFar += messageHandler.process(0.02)
-                    timeSoFar += sensorHandler.process(max(0.02,0.2-timeSoFar))
-                    timeSoFar += ringdownHandler.process(max(0.02,0.5-timeSoFar))
-                    daemon.handleRequests(0.02)
-                    self.rpcHandler.wrDasReg("KEEP_ALIVE_REGISTER",0)
-                    #timeSoFar += messageHandler.process(0.01)
-                    #timeSoFar += sensorHandler.process(max(0.01,0.04-timeSoFar))
-                    #timeSoFar += ringdownHandler.process(max(0.01,0.1-timeSoFar))
-                    #daemon.handleRequests(max(0.005,0.1-timeSoFar))
-                    # Periodically save the state of the DAS and nudge the DAS timestamp
+                    messages = messageHandler.process(0.02)
+                    timeSoFar += messages.duration
+                    sensors = sensorHandler.process(max(0.02, 0.2 - timeSoFar))
+                    timeSoFar += sensors.duration
+                    ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))
+                    timeSoFar += ringdowns.duration
+                    if sensors.finished and ringdowns.finished and messages.finished:
+                        rpcTime += 0.01
+                        if rpcTime > maxRpcTime:
+                            rpcTime = maxRpcTime
+                    else:
+                        rpcTime = 0.9 * rpcTime
+                        if rpcTime < 0.01: 
+                            rpcTime = 0.01
+                    requestTimeout = rpcTime
+                    now = time.time()
+                    doneTime = now + rpcTime
+                    rpcLoops = 0
+                    while now < doneTime: 
+                        rpcLoops += 1
+                        daemon.handleRequests(requestTimeout)
+                        now = time.time()
+                        requestTimeout = doneTime - now
+                    # The following logs statistics for the main loop, including the times taken and number of entries processed for each of the
+                    #  sensor, ringdown and message queues
+                    if False:
+                        Log("Driver", Data = {'rpcTime':'%.3f'%rpcTime, 
+                            'messages': '(%d, %.3f, %d)' % (messages.nprocessed,  messages.duration, messages.finished),
+                            'sensors': '(%d, %.3f, %d)' % (sensors.nprocessed,  sensors.duration, sensors.finished),
+                            'ringdowns': '(%d, %.3f, %d)' % (ringdowns.nprocessed,  ringdowns.duration, ringdowns.finished),
+                            'rpcLoops': rpcLoops
+                            })
+                    # The following indicates to the DSP that the host is still alive
+                    self.rpcHandler.wrDasReg("KEEP_ALIVE_REGISTER", 0)
+
                     if analogInterfacePresent:
                         self.analogInterface.serve()
                     now = time.time()
-                    #print "Poll Time", now-startPoll
+
                     if now > self.lastSaveDasState + 30.0:
                         self.nudgeDasTimestamp()
                         self.dasInterface.saveDasState()
                         self.lastSaveDasState = now
+                        
                 Log("Driver RPC handler shut down")
             except:
                 type,value,trace = sys.exc_info()
@@ -1252,6 +1302,7 @@ class Driver(SharedTypes.Singleton):
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
             self.streamSaver.closeStreamFile()
+            self.dasInterface.stateDatabase.close()
 
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""

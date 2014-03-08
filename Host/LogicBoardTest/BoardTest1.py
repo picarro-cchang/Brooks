@@ -193,7 +193,7 @@ class BoardTest1(object):
         if f<0:
             raise ValueError("Invalid FPGA bit file")
         s = s[f:]
-        tStart = time.clock()
+        tStart = time.time()
         lTot = 0
         while len(s)>0:
             lTot += len(s)
@@ -205,7 +205,7 @@ class BoardTest1(object):
             print "Bytes sent: %d" % lTot
         elif 0 == (1 & self.analyzerUsb.getFpgaStatus()):
             print "CRC error during FPGA load, bytes sent: %d" % (lTot,)
-        print "Time to load FPGA: %.1fs" % (time.clock() - tStart,)
+        print "Time to load FPGA: %.1fs" % (time.time() - tStart,)
         time.sleep(0.2)
         
     def initEmif(self):
@@ -365,11 +365,11 @@ class BoardTest1(object):
         print "Writing and reading blocks via USB"
         numBytes = 65536
         numIter = 16
-        start = time.clock()
+        start = time.time()
         for iter in range(numIter):
             d.testBlockUsb(numBytes,SDRAM_BASE)
             sys.stderr.write(".")
-        stop = time.clock()
+        stop = time.time()
         print
         print "%.1f us per byte" % (1e6*(stop-start)/(numIter*numBytes),)
             

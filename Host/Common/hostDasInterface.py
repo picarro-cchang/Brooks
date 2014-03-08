@@ -19,15 +19,11 @@ APP_NAME = "hostDasInterface"
 
 import sys
 import logging
-import thread
 import threading
-import time
 from ctypes import addressof
-from ctypes import c_char, c_byte, c_float, c_int, c_longlong
-from ctypes import c_short, c_uint, c_ushort, sizeof, Structure
-from configobj import ConfigObj
-from time import sleep, clock
-from numpy import *
+from ctypes import c_char, c_float, c_int, c_longlong
+from ctypes import c_short, c_uint, sizeof
+from time import sleep, clock, time
 import sqlite3
 import Queue
 import copy
@@ -37,8 +33,13 @@ from Host.Common.crc import calcCrc32
 from Host.Common.SharedTypes    import Singleton, getSchemeTableClass, DasCommsException
 from Host.Common.simulatorUsbIf import SimulatorUsb
 from Host.Common.DspSimulator   import DspSimulator
-from Host.Common.analyzerUsbIf  import AnalyzerUsb
-from Host.Common.EventManagerProxy import *
+
+if sys.version_info[:2] == (2, 7):
+    from Host.Common.analyzerUsbIf_libUsb1  import AnalyzerUsb
+else:
+    from Host.Common.analyzerUsbIf_libUsb0  import AnalyzerUsb
+
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 EventManagerProxy_Init(APP_NAME)
 
 # The 6713 has 192KB of internal memory from 0 through 0x2FFFF
@@ -66,10 +67,10 @@ RINGDOWN_BASE    = interface.DSP_DATA_ADDRESS
 ValveSequenceType = (interface.ValveSequenceEntryType * interface.NUM_VALVE_SEQUENCE_ENTRIES)
 
 class Operation(object):
-    def __init__(self,opcode,operandList=[],env=0):
+    def __init__(self,opcode,operandList=None,env=0):
         self.opcode = lookup(opcode)
         self.env = lookup(env)
-        self.operandList = [lookup(opr) for opr in operandList]
+        self.operandList = [] if operandList is None else [lookup(opr) for opr in operandList]
 
 class OperationGroup(object):
     def __init__(self,priority,period,operationList=None):
@@ -155,7 +156,7 @@ class DasInterface(Singleton):
         if f<0:
             raise ValueError("Invalid FPGA bit file")
         s = s[f:]
-        tStart = clock()
+        tStart = time()
         lTot = 0
         while len(s)>0:
             lTot += len(s)
@@ -168,7 +169,7 @@ class DasInterface(Singleton):
         elif 0 == (1 & self.analyzerUsb.getFpgaStatus()):
             logging.error(
                 "CRC error during FPGA load, bytes sent: %d" % (lTot,))
-        logging.info("Time to load: %.1fs" % (clock() - tStart,))
+        logging.info("Time to load: %.1fs" % (time() - tStart,))
         sleep(0.2)
     def initEmif(self):
         """Initializes EMIF on DSP using HPI interface"""
@@ -286,7 +287,7 @@ class DasInterface(Singleton):
         #raw_input("DSP code downloaded. Press <Enter> to send DSPINT")
         self.analyzerUsb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.analyzerUsb.hpicRead()
-        time.sleep(0.5)
+        sleep(0.5)
         logging.info("Starting DSP code...")
         #raw_input("DSPINT sent. Press <Enter> to continue")
         self.analyzerUsb.hpicWrite(0x00010001)
@@ -307,24 +308,58 @@ class DasInterface(Singleton):
     def getSensorData(self):
         """Retrieves sensor data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdSensorData(self.sensorIndex)
-        if data.timestamp!=0 and data.timestamp>=self.lastSensorTime:
+        if data.timestamp != 0 and data.timestamp >= self.lastSensorTime:
             self.lastSensorTime = data.timestamp
             self.sensorIndex += 1
             if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
                 self.sensorIndex = 0
             self.sensorHistory.record(data)
             return data
+
+    def getSensorDataBlock(self):
+        """Retrieves a block of sensor data from the analyzer. If there are valid entries in the block, the number  is 
+        computed and returned together with the block itself. If there are no valid entries, return None."""
+        block = self.hostToDspSender.rdSensorDataBlock(self.sensorIndex)
+        validEntries = 0
+        for data in block:
+            if data.timestamp != 0 and data.timestamp >= self.lastSensorTime:
+                self.lastSensorTime = data.timestamp
+                validEntries += 1
+                self.sensorIndex += 1
+                if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
+                    self.sensorIndex = 0
+                self.sensorHistory.record(data)
+            else:
+                break
+        return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
                 
     def getRingdownData(self):
         """Retrieves ringdown data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdRingdownData(
               self.ringdownIndex)
-        if data.timestamp!=0 and data.timestamp>=self.lastRingdownTime:
+        if data.timestamp != 0 and data.timestamp >= self.lastRingdownTime:
             self.lastRingdownTime = data.timestamp
             self.ringdownIndex += 1
             if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
                 self.ringdownIndex = 0
             return data
+
+    def getRingdownDataBlock(self):
+        """Retrieves a block of ringdown data from the analyzer. If there are valid entries in the block, the number  is 
+        computed and returned together with the block itself. If there are no valid entries, return None."""
+        block = self.hostToDspSender.rdRingdownDataBlock(
+              self.ringdownIndex)
+        validEntries = 0
+        for data in block:
+            if data.timestamp != 0 and data.timestamp >= self.lastRingdownTime:
+                self.lastRingdownTime = data.timestamp
+                validEntries += 1
+                self.ringdownIndex += 1
+                if self.ringdownIndex >= interface.NUM_RINGDOWN_ENTRIES:
+                    self.ringdownIndex = 0
+            else:
+                break
+        return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
 
     def uploadSchedule(self,operationGroups):
         """Upload all operation groups to the instrument"""
@@ -465,7 +500,7 @@ class HostToDspSender(Singleton):
         #    if 0 != self.initStatus & interface.COMM_STATUS_CompleteMask:
         #        break
         #    print "Waiting for COMM_STATUS complete before USB communication"
-        #    time.sleep(0.1)            
+        #    sleep(0.1)            
         self.initStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
         if self.seqNum == None:
             self.seqNum = (self.getSequenceNumber() + 1) & 0xFF
@@ -510,8 +545,8 @@ class HostToDspSender(Singleton):
         # Get the sequence number from the COMM_STATUS_REGISTER
         ntries = 0
         retVal = 0
-        startTime = clock()
-        while self.timeout==None or clock()<startTime+self.timeout:
+        startTime = time()
+        while self.timeout==None or time()<startTime+self.timeout:
             self.status = self.rdRegUint(interface.COMM_STATUS_REGISTER)
             ntries += 1
             if self.oldStatus & interface.COMM_STATUS_SequenceNumberMask == \
@@ -529,7 +564,7 @@ class HostToDspSender(Singleton):
                     return seqNum
             # If not done, sleep and try again
             sleep(0.1)
-            now = clock()
+            now = time()
         seqNum = self.seqNum
         self.seqNum = None
         raise RuntimeError,("Timeout getting status after %s tries." +
@@ -634,6 +669,7 @@ class HostToDspSender(Singleton):
         """Reads single uint value to ringdown memory"""
         result = c_uint(value)
         self.usb.hpiWrite(interface.RDMEM_ADDRESS+4*offset,result)
+
     @usbLockProtect
     def rdSensorData(self,index):
         # Performs a host read of the data in the specified sensor stream
@@ -643,14 +679,42 @@ class HostToDspSender(Singleton):
         data = interface.SensorEntryType()
         self.usb.hpiRead(SENSOR_BASE + 16*index,data)
         return data
+
+    maxSensorBlockSize = 512/16
+    @usbLockProtect
+    def rdSensorDataBlock(self,index):
+        # Performs a host read of the data starting at the specified sensor stream
+        #  entry "index". Note that each entry is of size 16 bytes
+        # We fetch a block of data, which is an array of SensorEntryType of optimal size 512 bytes,
+        #  since this is the USB block size. However, we do not read past the end of the sensor entry
+        #  buffer. which is of size interface.NUM_SENSOR_ENTRIES
+        numEntries = min(self.maxSensorBlockSize, interface.NUM_SENSOR_ENTRIES - index )
+        block = (interface.SensorEntryType *  numEntries)()
+        self.usb.hpiRead(SENSOR_BASE + 16*index, block)
+        return block
+
     @usbLockProtect
     def rdRingdownData(self,index):
         # Performs a host read of the data in the specified ringdown
         #  entry. Note that the index is the entry number, and each entry
         #  is of size 4*RINGDOWN_ENTRY_SIZE bytes
         data = interface.RingdownEntryType()
-        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index,data)
+        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index, data)
         return data
+
+    maxRingdownBlockSize = 512/(4*interface.RINGDOWN_ENTRY_SIZE)
+    @usbLockProtect
+    def rdRingdownDataBlock(self, index):
+        # Performs a host read of the data starting at the specified ringdown
+        #  entry "index". Note that each entry is of size 4*RINGDOWN_ENTRY_SIZE bytes
+        # We fetch a block of ringdowns, which is an array of RingdownEntryType of optimal size 512 bytes,
+        #  since this is the USB block size. However, we do not read past the end of the ringdown entry
+        #  buffer. which is of size interface.NUM_RINGDOWN_ENTRIES
+        numEntries = min(self.maxRingdownBlockSize, interface.NUM_RINGDOWN_ENTRIES - index )
+        block = (interface.RingdownEntryType *  numEntries)()
+        self.usb.hpiRead(RINGDOWN_BASE + 4*interface.RINGDOWN_ENTRY_SIZE*index, block)
+        return block
+
     @usbLockProtect
     def rdMessageTimestamp(self,index):
         # Performs a host read of the timestamp associated with
@@ -927,15 +991,17 @@ def protectedRead(func):
         while True:
             rxId, exc, result = self.rxQueue.get()
             self.dbLock.release()
+            if exc: # This may be from current read of from some previous writes
+                raise exc
             if rxId == txId:
                 break
-        if exc:
-            raise exc
+            else:
+                Log("Unexpected ID when fetching from database", Level = 2)
         return result
     return wrapper
 
 class StateDatabase(Singleton):
-    periodByLevel = [1.0,10.0,100.0,1000.0,10000.0]
+    periodByLevel = [10.0,100.0,1000.0,10000.0]
     initialized = False
     txId = 0
     def __init__(self,fileName=None):
@@ -960,6 +1026,16 @@ class StateDatabase(Singleton):
             self.wlmHistCheckPeriod_s = 1800
         elif fileName is not None:
             raise ValueError("StateDatabase has already been initialized")
+
+    def checkInitialized(self):
+        if not self.initialized:
+            raise ValueError("Cannot execute when database is closed")
+
+    def close(self):
+        self.stopThread.set()
+        self.hThread.join()
+        self.initialized = False
+
     def getId(self):
         StateDatabase.txId += 1
         return StateDatabase.txId
@@ -1107,38 +1183,47 @@ class StateDatabase(Singleton):
         return values
         
     def txQueueHandler(self):
-        print "txQueueHandler thread id = ", thread.get_ident()
         """Creates the connection to the database and services the queue of requests"""
         self.con = sqlite3.connect(self.fileName)
-        tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
-        if not tableNames:
-            self.con.execute("pragma auto_vacuum=FULL")
-        if "dasRegInt" not in tableNames:
-            self.con.execute("create table dasRegInt (name text primary key,value integer)")
-        if "dasRegFloat" not in tableNames:
-            self.con.execute("create table dasRegFloat (name text primary key,value real)")
-        if "wlmHistory" not in tableNames:
-            self.con.execute("create table wlmHistory (timestamp integer," +
-                             "vLaserNum integer, wlmOffset real," +
-                             "freqMin real, valMin real, freqMax real, valMax real)")
-        if "history" not in tableNames:
-            self.con.execute(
-                "create table history (level integer," +
-                "time integer,streamNum integer,value real," +
-                "minVal real,maxVal real,idx integer)")
-        self.con.commit()
-        while not self.stopThread.isSet():
-            txId,func,args = self.txQueue.get()
-            # Place a response on rxQueue if there is a return value or if an error occurs
-            #  N.B. If a tx request does not return a value but throws an exception, this will
-            #  be sent back. It is up to the rxQueue handler to check that the id of the response
-            #  matches that of the request, and to ignore exceptions from tx requests without
-            #  responses. This is done for speed, so that tx requests can return without waiting
-            #  for the database commit.
-            try:
-                r = func(*args)
-                e = None
+        try:
+            tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
+            if not tableNames:
+                if sys.version_info < (2,7):
+                    self.con.execute("pragma auto_vacuum=FULL")
+                else:
+                    self.con.execute("pragma journal_mode=WAL")
+            if "dasRegInt" not in tableNames:
+                self.con.execute("create table dasRegInt (name text primary key,value integer)")
+            if "dasRegFloat" not in tableNames:
+                self.con.execute("create table dasRegFloat (name text primary key,value real)")
+            if "wlmHistory" not in tableNames:
+                self.con.execute("create table wlmHistory (timestamp integer," +
+                                 "vLaserNum integer, wlmOffset real," +
+                                 "freqMin real, valMin real, freqMax real, valMax real)")
+            if "history" not in tableNames:
+                self.con.execute(
+                    "create table history (level integer," +
+                    "time integer,streamNum integer,value real," +
+                    "minVal real,maxVal real,idx integer)")
+            self.con.commit()
+            while not self.stopThread.isSet():
+                try:
+                    txId,func,args = self.txQueue.get(timeout=0.5)
+                except Queue.Empty: # See if we need to stop
+                    continue
+                # Place a response on rxQueue if there is a return value or if an error occurs
+                #  N.B. If a tx request does not return a value but throws an exception, this will
+                #  be sent back. It is up to the rxQueue handler to check that the id of the response
+                #  matches that of the request, and to ignore exceptions from tx requests without
+                #  responses. This is done for speed, so that tx requests can return without waiting
+                #  for the database commit.
+                try:
+                    r = func(*args)
+                    e = None
+                except Exception, e:
+                    pass
                 if (r is not None) or (e is not None):
                     self._safeRxQueuePut((txId,e,r))
-            except Exception,e:
-                pass
+        finally:
+            self.con.commit()
+            self.con.close()

@@ -31,13 +31,13 @@ class KeithleyReply(object):
             if ch == "": break
             if ch == "\r": continue
             self.string = self.string + ch
-            self.tlast = time.clock()
+            self.tlast = time.time()
             if ch == "\n":
                 result = self.string
                 self.string = ""
                 self.tlast = None
                 return result
-        if self.tlast!=None and time.clock()-self.tlast > self.interchar_timeout:
+        if self.tlast!=None and time.time()-self.tlast > self.interchar_timeout:
             result = self.string
             self.string = ""
             self.tlast = None
@@ -107,13 +107,13 @@ class OphirPowermeter(object):
             if ch == "": break
             if ch == "\r": continue
             self.string = self.string + ch
-            self.tlast = time.clock()
+            self.tlast = time.time()
             if ch == "\n":
                 result = self.string
                 self.string = ""
                 self.tlast = None
                 return result
-        if self.tlast != None and time.clock()-self.tlast > self.interchar_timeout:
+        if self.tlast != None and time.time()-self.tlast > self.interchar_timeout:
             result = self.string
             self.string = ""
             self.tlast = None

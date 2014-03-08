@@ -10,7 +10,7 @@ fp = file(fname,'rb')
 results = []
 while True:
     try:
-        l, = unpack('i',fp.read(4))
+        l, = unpack('=i',fp.read(4))
         results.append(cPickle.loads(fp.read(l)))
     except:
         break

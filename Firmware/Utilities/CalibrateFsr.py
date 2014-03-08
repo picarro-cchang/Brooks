@@ -414,11 +414,11 @@ class CalibrateFsr(object):
             
             SpectrumCollector.setAuxiliarySpectrumFile(self.spectrumFile)
             print "Starting to acquire data in FSR hopping mode"
-            start = time.clock()
+            start = time.time()
             totTime = 0.2*2*(maxLaserTemp-minLaserTemp)/sweepIncr
             complete = 0
             while complete < 100:
-                now = time.clock()
+                now = time.time()
                 complete = round(100*(now-start)/totTime)
                 sys.stdout.write("\r%d%% complete" % complete)
                 time.sleep(2.0)

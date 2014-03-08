@@ -34,7 +34,8 @@ define(function(require, exports, module) {
         this.forceFlag = forceFlag;
         this.norm_instr = null;
         this.analyses = {};
-        this.dataKeys = ['CONC', 'DELTA', 'UNCERTAINTY', 'EPOCH_TIME'];
+        this.dataKeys = ['CONC', 'DELTA', 'UNCERTAINTY', 'EPOCH_TIME', 'DISPOSITION'];
+        this.dataDefaults = {'DISPOSITION': 0}; // Defaults for missing keys
         this.extraKeys = ['POSITION', 'RUN', 'SURVEY'];
         this.runIndex = 0;
         this.surveys = newN2i();
@@ -76,22 +77,19 @@ define(function(require, exports, module) {
             processRuns(function (err) {
                 if (err) {
                     sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED,"msg": err.message },
-                        function () { callback(err); });
+                        {"status": rptGenStatus.FAILED,"msg": err.message });
+                    callback(err);
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
-                        if (err) callback(err);
-                        else callback(null);
-                    });
+                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE});
+                    callback(null);
                 }
             });
         }
         else {
             sf.writeStatus(that.statusFile, {"status": rptGenStatus.BAD_PARAMETERS,
-                "msg": ipv.errors() }, function (err) {
-                callback(new Error(ipv.errors()));
-            });
+                "msg": ipv.errors() });
+            callback(new Error(ipv.errors()));
         }
 
         function getMetadata(surveys,done) {
@@ -106,7 +104,10 @@ define(function(require, exports, module) {
                     console.log('Fetching metadata for ' + s);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
-                        if (err) done(err);
+                        if (err) {
+                            err.message += "Cannot fetch metadata for " + s;
+                            done(err);
+                        }
                         else {
                             meta.push(_.omit(result[0],'docmap'));
                             process.nextTick(next);
@@ -146,6 +147,7 @@ define(function(require, exports, module) {
                                                                   "C": "CONC",
                                                                   "T": "EPOCH_TIME",
                                                                   "P": "POSITION",
+                                                                  "Q": "DIPOSITION",
                                                                   "R": "RUN",
                                                                   "S": "SURVEY",
                                                                   "U": "UNCERTAINTY"}
@@ -205,6 +207,13 @@ define(function(require, exports, module) {
                              'limit':'all', 'logtype': 'analysis', 'rtnFmt':'lrt'};
             var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
             var ser = newSerializer(p3LrtFetcher);
+
+            p3LrtFetcher.on('submit', function (data) {
+                var submission = {};
+                submission['start_run_' + runIndex] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
+                sf.writeStatus(that.statusFile, submission);
+            });
+
             ser.on('data', function (data) {
                 onRunData(data, function (err) {
                     if (err) done(err);
@@ -213,12 +222,24 @@ define(function(require, exports, module) {
             });
             ser.on('end', function() {
                 onRunEnd(function (err) {
-                    if (err) done(err);
-                    else done(null);
+                    var submission = {};
+                    if (err) {
+                        submission['error_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error:err.message};
+                        sf.writeStatus(that.statusFile, submission);
+                        done(err);
+                    }
+                    else {
+                        submission['end_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())};
+                        sf.writeStatus(that.statusFile, submission);
+                        done(null);
+                    }
                 });
             });
             ser.on('error', function (err) {
                 onRunError(err, function (e) {
+                    var submission = {};
+                    submission['error_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error:e.message};
+                    sf.writeStatus(that.statusFile, submission);
                     done(e);
                 });
             });
@@ -247,7 +268,12 @@ define(function(require, exports, module) {
                     var runIndex = that.runIndex;
                     for (var j=0; j<that.dataKeys.length; j++) {
                         var key = that.dataKeys[j];
-                        that.analyses[key].push(n2nan(m[key]));
+                        if (m.hasOwnProperty(key) || !that.dataDefaults.hasOwnProperty(key)) {
+                            that.analyses[key].push(n2nan(m[key]));
+                        }
+                        else {
+                            that.analyses[key].push(that.dataDefaults[key]);                          
+                        }
                     }
                     that.analyses['POSITION'].push(gh.encodeGeoHash(m.GPS_ABS_LAT, m.GPS_ABS_LONG));
                     that.analyses['SURVEY'].push(surveyIndex);
@@ -282,6 +308,7 @@ define(function(require, exports, module) {
                 var nLoops = (perm.length > maxLoops) ? maxLoops : perm.length;
                 for (var i=0; i<nLoops; i++) {
                     var p = perm.shift();
+                    var disposition = +(that.analyses['DISPOSITION'][p].toFixed(0));
                     var delta = +(that.analyses['DELTA'][p].toFixed(2));
                     var conc = +(that.analyses['CONC'][p].toFixed(2));
                     var uncertainty = +(that.analyses['UNCERTAINTY'][p].toFixed(2));
@@ -290,7 +317,7 @@ define(function(require, exports, module) {
                     var survey = that.analyses['SURVEY'][p];
                     var run = that.analyses['RUN'][p];
                     var row = JSON.stringify({"D": delta,"C": conc,"T": epochTime,"P": pos,
-                        "R": run,"S": survey, "U": uncertainty});
+                        "Q": disposition, "R": run, "S": survey, "U": uncertainty});
                     result.push(row);
                 }
                 if (!_.isEmpty(result)) {

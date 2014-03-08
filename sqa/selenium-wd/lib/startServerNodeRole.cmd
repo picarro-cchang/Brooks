@@ -1,0 +1,1 @@
+java -jar selenium-server-standalone-2.35.0.jar -Dwebdriver.chrome.driver="chromedriver.exe" -Dwebdriver.ie.driver="IEDriverServer.exe" -log nodeLogFile -role node -hub http://zlu-e8460w:4444/grid/register -nodeConfig nodeConfig.json

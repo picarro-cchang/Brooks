@@ -584,16 +584,20 @@ class CommandInterface(object):
 
     def _EIF_ANALOGOUT_GETINFO(self, channel):
         self.Print(self._EIFRpc.AO_GetInfo( int(channel), getStr=True ))
-        
+
+    ##########################
     # Pulse Analyzer functions
+    ##########################
     def _PULSE_GETBUFFERFIRST(self):
-        dataRecord = self._DataMgrRpc.PulseAnalyzer_GetBufferFirst()
-        if dataRecord == "Pulse buffer empty":
+        try:
+            self._DataMgrRpc.PulseAnalyzer_GetBufferFirst()
+        except PulseAnalyzerBufferEmptyError:
             self.PrintError( ERROR_PULSE_BUFFER_EMPTY )
             return
-        elif dataRecord == "No Pulse Analyzer":
+        except PulseAnalyzerNoneError:
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
+
         timeString = _TimeToString(self.maketimetuple(dataRecord[0]))
         retString = "%s;" % timeString
         for data in dataRecord[1:]:
@@ -601,13 +605,15 @@ class CommandInterface(object):
         self.Print( retString )
 
     def _PULSE_GETBUFFER(self):
-        dataList = self._DataMgrRpc.PulseAnalyzer_GetBuffer()
-        if dataList == "Pulse buffer empty":
+        try:
+            self._DataMgrRpc.PulseAnalyzer_GetBuffer()
+        except PulseAnalyzerBufferEmptyError:
             self.PrintError( ERROR_PULSE_BUFFER_EMPTY )
             return
-        elif dataList == "No Pulse Analyzer":
+        except PulseAnalyzerNoneError:
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
+
         count = len(dataList)
         self.Print("%d;" % count)
         for dataRecord in dataList:
@@ -618,22 +624,27 @@ class CommandInterface(object):
             self.Print( retString )
 
     def _PULSE_CLEARBUFFER(self):
-        ret = self._DataMgrRpc.PulseAnalyzer_ClearBuffer()
-        if ret == "No Pulse Analyzer":
+        try:
+            self._DataMgrRpc.PulseAnalyzer_ClearBuffer()
+        except PulseAnalyzerNoneError:
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
-        else:
-            self.Print("OK")
+
+        self.Print("OK")
 
     def _PULSE_GETSTATUS(self):
-        status = self._DataMgrRpc.PulseAnalyzer_GetStatus()
-        if status == "No Pulse Analyzer":
+        try:
+            self._DataMgrRpc.PulseAnalyzer_GetStatus()
+        except PulseAnalyzerNoneError:
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
+
         retString = PULSE_ANALYZER_STATUS_TABLE[status]
         self.Print( retString )
-            
+
+    ###########################
     # Valve Sequencer functions
+    ###########################
     def _VALVES_SEQ_START(self):
         self._ValveSeqRpc.startValveSeq()
         self.Print("OK")

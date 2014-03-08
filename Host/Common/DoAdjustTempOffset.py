@@ -24,7 +24,7 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 EventManagerProxy_Init(APP_NAME)
 
 
-def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
+def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printInfo=False):
     allLasersDict = {}
 
     # All arguments are required.
@@ -65,8 +65,9 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
             fineCurrent = data.get("fineLaserCurrent_%d_mean" % vLaserNum, target)
             dev = fineCurrent - target
 
-            #print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f maxFineCurrent=%f" %
-            #     (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
+            if printInfo:
+                print "vLaserNum=%d fineCurrent=%f target=%f  minFineCurrent=%f maxFineCurrent=%f" % \
+                    (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
 
             curValue = freqConv.getLaserTempOffset(vLaserNum)
             
@@ -89,7 +90,8 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
                 laserDict["controlOn"] = True
                 
                 if fineCurrent > minFineCurrent and fineCurrent < maxFineCurrent:
-                    #print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
+                    if printInfo:
+                        print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
                     
                     # compute adjustment needed
                     delta = gain * dev
@@ -141,6 +143,40 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None):
         allControlOn = False
     elif not allControlOn:
         Log("Problem detected for at least one laser, turned off temperature control loop for all lasers", Level=2)
+        
+    # if there are any virtual laser groupings, average the computed offsets for all virtual lasers in the group
+    laserGroups = "la_fineLaserCurrent_laserGroups"
+    
+    if laIsEnabled > 0 and allControlOn:
+        if laserGroups in instr:
+            groups = instr[laserGroups]
+
+            if printInfo:
+                print "groups =", groups
+            
+            for g in groups:
+                adjValue = 0.0
+
+                for v in g:
+                    if v in allLasersDict:
+                        laserDict = allLasersDict[v]
+                        newValue = laserDict["newValue"]
+                        adjValue += newValue
+
+                        if printInfo:
+                            print "    v=%d  offset=%f" % (v, newValue)
+
+                # compute offset average across all lasers in the group
+                adjValue = float(adjValue) / len(g)
+                
+                if printInfo:
+                    print "    adjValue=", adjValue
+                
+                # apply this offset to all lasers in the group
+                for v in g:
+                    if v in allLasersDict:
+                        laserDict = allLasersDict[v]
+                        laserDict["newValue"] = adjValue
 
     # save off info in the report and set the laser offset if all is good
     #

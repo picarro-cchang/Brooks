@@ -45,6 +45,7 @@ define(function(require, exports, module) {
 
         function makeRequest() {
             that.rptGenService.get(that.rsc, that.params, function (err, result) {
+                // console.log("!!!!!!" + that.rsc + JSON.stringify(that.params));
                 if (err) that.emit("error", err);
                 else {
                     if (result["rpt_start_ts"] === result["request_ts"]) {
@@ -54,9 +55,9 @@ define(function(require, exports, module) {
                         console.log("This is a duplicate of a request made at " + result["rpt_start_ts"]);
                     }
                     that.rpt_status = result["status"];
-                    console.log("RptGen status: " + that.rpt_status);
                     that.rpt_contents_hash = result["rpt_contents_hash"];
                     that.rpt_start_ts = result["rpt_start_ts"];
+                    console.log("RptGen status: " + that.rpt_status + " " + that.rpt_contents_hash + '/' + that.rpt_start_ts);
                     that.submit_key = {"hash": that.rpt_contents_hash,
                                        "time_stamp": that.rpt_start_ts,
                                        "request_ts": result["request_ts"],
@@ -74,7 +75,7 @@ define(function(require, exports, module) {
                 if (err) that.emit("error", err);
                 else {
                     that.rpt_status = result["status"];
-                    console.log("RptGen status: " + that.rpt_status);
+                    console.log("RptGen status: " + that.rpt_status + " " + that.rpt_contents_hash + '/' + that.rpt_start_ts);
                     if (that.rpt_status >= rptGenStatus.DONE) {
                         // Get the information from the key file for the request
                         var hash = that.submit_key["hash"];

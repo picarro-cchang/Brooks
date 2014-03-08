@@ -104,9 +104,8 @@ define(function(require, exports, module) {
         }
         else {
             sf.writeStatus(that.statusFile,
-                {"status": rptGenStatus.FAILED, "msg": ipv.errors() }, function () {
-                    callback(new Error(ipv.errors()));
-            });
+                {"status": rptGenStatus.FAILED, "msg": ipv.errors() });
+            callback(new Error(ipv.errors()));
         }
 
         function onTaskSubmit(name) {
@@ -123,9 +122,8 @@ define(function(require, exports, module) {
                     if (!that.errorOccured) {
                         sf.writeStatus(that.statusFile,
                             {"status": rptGenStatus.FAILED, "msg": "Subtask " +
-                                n + ": " +err.message }, function () {
-                                callback(err);
-                        });
+                                n + ": " +err.message });
+                        callback(err);
                         that.errorOccured = true;
                     }
                 };
@@ -145,14 +143,12 @@ define(function(require, exports, module) {
                             processSurveys(surveys, function (err) {
                                 if (err) {
                                     sf.writeStatus(that.statusFile,
-                                        {"status": rptGenStatus.FAILED,"msg": err.message },
-                                        function () { callback(err); });
+                                        {"status": rptGenStatus.FAILED,"msg": err.message });
+                                    callback(err);
                                 }
                                 else {
-                                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
-                                        if (err) callback(err);
-                                        else callback(null);
-                                    });
+                                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE});
+                                    callback(null);
                                 }
                             });
                         }
@@ -189,22 +185,19 @@ define(function(require, exports, module) {
             processRuns(function (err) {
                 if (err) {
                     sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED,"msg": err.message },
-                        function () { callback(err); });
+                        {"status": rptGenStatus.FAILED,"msg": err.message });
+                    callback(err);
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
-                        if (err) callback(err);
-                        else callback(null);
-                    });
+                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE});
+                    else callback(null);
                 }
             });
         }
         else {
             sf.writeStatus(that.statusFile, {"status": rptGenStatus.BAD_PARAMETERS,
-                "msg": ipv.errors() }, function (err) {
-                callback(new Error(ipv.errors()));
-            });
+                "msg": ipv.errors() });
+            callback(new Error(ipv.errors()));
         }
 
         function getMetadata(surveys,done) {

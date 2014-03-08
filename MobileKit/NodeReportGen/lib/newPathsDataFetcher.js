@@ -70,22 +70,19 @@ define(function(require, exports, module) {
             processRuns(function (err) {
                 if (err) {
                     sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED,"msg": err.message },
-                        function () { callback(err); });
+                        {"status": rptGenStatus.FAILED,"msg": err.message });
+                    callback(err);
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
-                        if (err) callback(err);
-                        else callback(null);
-                    });
+                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE});
+                    callback(null);
                 }
             });
         }
         else {
             sf.writeStatus(that.statusFile, {"status": rptGenStatus.BAD_PARAMETERS,
-                "msg": ipv.errors() }, function (err) {
-                callback(new Error(ipv.errors()));
-            });
+                "msg": ipv.errors() });
+            callback(new Error(ipv.errors()));
         }
 
         function getMetadata(surveys,done) {
@@ -100,7 +97,10 @@ define(function(require, exports, module) {
                     console.log('Fetching metadata for ' + s);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
-                        if (err) done(err);
+                        if (err) {
+                            err.message += "Cannot fetch metadata for " + s;
+                            done(err);
+                        }
                         else {
                             meta.push(_.omit(result[0],'docmap'));
                             process.nextTick(next);
@@ -210,20 +210,40 @@ define(function(require, exports, module) {
                              'limit':'all', 'rtnFmt':'lrt'};
             var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
             var ser = newSerializer(p3LrtFetcher);
+
+            p3LrtFetcher.on('submit', function (data) {
+                var submission = {};
+                submission['start_run_' + runIndex] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
+                sf.writeStatus(that.statusFile, submission);
+            });
+
             ser.on('data', function (data) {
                 onRunData(data, function (err) {
                     if (err) done(err);
                     else ser.acknowledge();
                 });
             });
+            
             ser.on('end', function() {
                 onRunEnd(function (err) {
-                    if (err) done(err);
-                    else done(null);
+                    var submission = {};
+                    if (err) {
+                        submission['error_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error:err.message};
+                        sf.writeStatus(that.statusFile, submission);
+                        done(err);
+                    }
+                    else {
+                        submission['end_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())};
+                        sf.writeStatus(that.statusFile, submission);
+                        done(null);
+                    }
                 });
             });
             ser.on('error', function (err) {
                 onRunError(err, function (e) {
+                    var submission = {};
+                    submission['error_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error:e.message};
+                    sf.writeStatus(that.statusFile, submission);
                     done(e);
                 });
             });

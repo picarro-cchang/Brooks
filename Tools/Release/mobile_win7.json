@@ -1,0 +1,10 @@
+{
+    "buildTypes": {
+        "FDDS": {
+            "species": "Surveyor",
+            "installerSignature": "FDDS"
+        }
+    },
+
+    "installerScriptsDir": "InstallerScriptsWin7"
+}

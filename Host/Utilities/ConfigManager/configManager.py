@@ -7,6 +7,9 @@ import tokenize
 from configobj import ConfigObj
 from ConfigManagerGui import ConfigManagerGui
 import compiler
+import optparse
+import sys
+
 
 def evalStringLit(s):
     return compiler.parse(s,mode='eval').node.value
@@ -675,19 +678,131 @@ class ConfigManager(ConfigManagerGui):
                     self.notebookEditorFileMtimes[w] = mtime
         self.updateTimer.Start(self.updateTimer.Interval)
 
-       
+
+def getConfigFromSupervisorLauncherIni(launcherFilename):
+    dname = ""
+    fname = ""
+
+    co = ConfigObj(launcherFilename)
+    typeChoices = co.keys()
+    typeChoices.remove("Main")
+
+    # show a dialog with a dropdown containing all of the choices
+    dlg = wx.SingleChoiceDialog(None,
+                                "Choose a mode to view the Supervisor configuration files.",
+                                "Picarro Configuration Manager",
+                                typeChoices)
+
+    if dlg.ShowModal() == wx.ID_OK:
+        mode = dlg.GetStringSelection()
+
+        # get the corresponding filename
+        fname = co[mode]["SupervisorIniFile"]
+
+        # if it isn't a full path, use C:\Picarro\G2000\AppConfig\Config\Supervisor
+        # for the dir
+        dname = os.path.dirname(fname)
+
+        if dname == "":
+            dname = "C:/Picarro/G2000/AppConfig/Config/Supervisor"
+    dlg.Destroy()
+
+    return dname, fname
+
+
+def parseOptions():
+    usage = """
+%prog [options]
+
+Shows a configuration file tree.
+
+Displays the file open dialog to prompt for a filename by default.
+"""
+
+    parser = optparse.OptionParser(usage=usage)
+
+    """
+    parser.add_option('-v', '--version', dest='showVersion',
+                      action='store_true', default=False,
+                      help=('Display the version number for the application.'))
+    """
+
+    parser.add_option('-c', dest='configFilename',
+                      default=None,
+                      help=('Load the specified configuration file.'))
+
+    parser.add_option('-l', dest='launcherFilename',
+                      default=None,
+                      help=('Open the specified Supervisor Launcher file to display a list of configurations to choose from.'))
+
+    options, _ = parser.parse_args()
+
+    return options
+
+
 if __name__ == "__main__":
+    options = parseOptions()
+
+    fname = ""
+    dname = ""
+    fSelectFromLauncher = False
+    fOpenFileDialog = False
+
+    print options.launcherFilename
+
+    if options.configFilename is not None:
+        if not os.path.isfile(options.configFilename):
+            print "File '%s' does not exist!" % options.configFilename
+            sys.exit(1)
+
+        fname = os.path.split(options.configFilename)
+        dname = os.path.dirname(options.configFilename)
+        if dname == "":
+            dname = os.getcwd()
+
+    elif options.launcherFilename is not None:
+        if not os.path.isfile(options.launcherFilename):
+            print "File '%s' does not exist!" % options.launcherFilename
+            sys.exit(1)
+
+        fSelectFromLauncher = True
+
+    else:
+        fOpenFileDialog = True
+
     appConfigManager = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
     frameMain = ConfigManager(None, -1, "")
     appConfigManager.SetTopWindow(frameMain)
-    dlg = wx.FileDialog(None,"Select Supervisor Configuration File","C:/Picarro/G2000/AppConfig/Config/Supervisor","","*.ini",wx.OPEN)
-    if dlg.ShowModal() == wx.ID_OK:
-        fname = dlg.GetFilename()
-        dname = dlg.GetDirectory()
-        superConfig = os.path.join(dname,fname)
+
+    if fOpenFileDialog is True:
+        dlg = wx.FileDialog(None,
+                            "Select Supervisor Configuration File",
+                            "C:/Picarro/G2000/AppConfig/Config/Supervisor",
+                            "",
+                            "*.ini",
+                            wx.OPEN)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            fname = dlg.GetFilename()
+            dname = dlg.GetDirectory()
+        else:
+            fname = ""
+            dname = ""
+
+        dlg.Destroy()
+
+    elif fSelectFromLauncher is True:
+        # prompt user to select a configuration, returns the dir and filename
+        dname, fname = getConfigFromSupervisorLauncherIni(options.launcherFilename)
+
+    superConfig = os.path.join(dname, fname)
+
+    # superConfig will be an empty string if the user canceled out
+    # of selecting a mode (-l option) so proceed only if the file exists
+    if os.path.isfile(superConfig):
         # Use heuristic to determine directory of supervisor
-        ini = ConfigObj(superConfig,list_values=False)
+        ini = ConfigObj(superConfig, list_values=False)
         npy, nexe = 0, 0
         for s in ini:
             try:
@@ -697,11 +812,10 @@ if __name__ == "__main__":
                     if e.lower() == ".exe": nexe += 1
             except:
                 continue
-        rootDir = os.path.join(dname,"../../..")        
+        rootDir = os.path.join(dname,"../../..")
         childBasePath = os.path.join(rootDir,"HostExe") if nexe>npy else os.path.join(rootDir,"Host/Supervisor")
         r = SupervisorConfigNode(os.path.join(dname,fname),childBasePath=childBasePath)
         frameMain.run(r)
         frameMain.Show()
         appConfigManager.MainLoop()
-    dlg.Destroy()
     

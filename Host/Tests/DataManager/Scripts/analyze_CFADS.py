@@ -198,5 +198,3 @@ if _DATA_["SpectrumID"] != 10:
         _REPORT_["wlm4_offset"] = _PERSISTENT_["wlm4_offset"]
 
 _PERSISTENT_["sync"].dispatch(_MEAS_TIMESTAMP_,_ANALYZE_)
-
-_REPORT_["ALARM_STATUS"] = 128 + 64

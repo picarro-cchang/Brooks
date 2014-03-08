@@ -1703,6 +1703,7 @@ def GetConfigFileAndIniLog():
 
 def main():
     try:
+        performDuties = False
         #Get and handle the command line options...
         configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs = HandleCommandSwitches()
 

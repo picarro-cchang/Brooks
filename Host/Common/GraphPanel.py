@@ -450,7 +450,14 @@ class GraphPanel(wx.Panel):
         
         if skipDrawing:
             del plot_objects
-            self.isNewXAxis = False
+            (graphics, xAxis, yAxis) = canvas.last_draw
+            xAxis = tuple(xAxis)
+            if xAxis != self.lastXAxis:
+                self.isNewXAxis = True
+            else:
+                self.isNewXAxis = False
+            self.lastXAxis = xAxis
+            # self.isNewXAxis = False
             return
             
         if len(plot_objects) > 0:
@@ -468,14 +475,16 @@ class GraphPanel(wx.Panel):
             
             if isinstance(self.forcedXAxis,tuple):
                 xAxis = self.forcedXAxis
-               
+
+            canvas.Draw(plot.PlotGraphics(plot_objects,self.title,self.xlabel,self.ylabel),
+                        xAxis = xAxis, yAxis = yAxis)
+            (graphics, xAxis, yAxis) = canvas.last_draw
+            xAxis = tuple(xAxis)
             if xAxis != self.lastXAxis:
                 self.isNewXAxis = True
             else:
                 self.isNewXAxis = False
 
-            canvas.Draw(plot.PlotGraphics(plot_objects,self.title,self.xlabel,self.ylabel),
-                        xAxis = xAxis, yAxis = yAxis)
             self.lastXAxis = xAxis
         else:
             dummy = [plot.PolyMarker([(0,0),(1,1)])]

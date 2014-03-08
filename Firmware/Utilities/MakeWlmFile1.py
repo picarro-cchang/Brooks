@@ -72,7 +72,8 @@ class Averager(object):
 class WlmFileMaker(object):
     freqQuery = {"WA-7000":"READ:SCAL:FREQ?\n",
                  "WA-7600":"READ:SCAL:FREQ?\n",
-                 "228A":"READ:FREQ?\n"}
+                 "228A":"READ:FREQ?\n",
+                 "328A":"READ:FREQ?\n"}
 
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
@@ -291,6 +292,8 @@ class WlmFileMaker(object):
                 self.model = "WA-7600"
             elif "228A" in reply:
                 self.model = "228A"
+            elif "328A" in reply:
+                self.model = "328A"
             else:
                 raise ValueError,"Unrecognized wavemeter model"
         else:

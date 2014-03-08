@@ -91,7 +91,7 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
                     debug: false};
     var p3AnzMeta = new p3nodeapi.p3NodeApi(initArgs);
 
-    var proxy = new httpProxy.RoutingProxy();
+    var proxy = new httpProxy.createProxyServer();
     var app = express();
 
     var logger = function() {
@@ -122,9 +122,11 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
         logger("forwardTheRequest", "debug");
         logger("forwardTheRequest req.url", req.url, "debug");
 
-        proxy.proxyRequest(req, res, {
-            port: SITECONFIG.reportport,
-            host: SITECONFIG.reporthost
+        proxy.web(req, res, {
+            target: {
+                port: SITECONFIG.reportport,
+                host: SITECONFIG.reporthost
+            }
         });
     }; // forwardTheRequest
 
@@ -163,6 +165,7 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
                 new_path = "/rest/RptGen";
                 new_path += "?" + querystring.stringify(req.query);
                 req.url = new_path;
+                // console.log("SurveyorRpt: " + new_path);
                 forwardTheRequest(req, res);
                 logger("queryGet forward to /rest/RptGen succeeded", "debug");
             }
@@ -227,7 +230,7 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
                     }
                 }
             }
-            req.url = new_path;
+            req.url = encodeURI(new_path);
 
             forwardTheRequest(req, res);
             logger("resourceGet forward succeeded", "debug");
@@ -272,6 +275,8 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
             resourceGet);
 
     app.post('/rest/download', forwardTheRequest);
+
+    app.post('/fileUpload', forwardTheRequest);
 
     app.get(/^(\/|\/force|\/getReport\/.*|\/css.*|\/js.*|\/images.*)$/, forwardTheRequest);
 

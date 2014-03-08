@@ -334,7 +334,7 @@ class EifMgr(object):
         
     def measFilter( self, dataDict ):
         """Filter for data broadcasts"""
-        tStart = time.clock()
+        tStart = time.time()
         try:
             self._measData.ImportPickleDict( dataDict )
             # if __debug__: print("\nSource (%s), Data (%s) %r" % (self._measData.Source, self._measData.Data, self._measData.MeasGood))
@@ -354,7 +354,7 @@ class EifMgr(object):
             msg = "measFilter: %s %s" % ( sys.exc_info()[0], sys.exc_info()[1])
             print msg
             Log(msg)
-        duration = time.clock() - tStart
+        duration = time.time() - tStart
         self.tSum += duration
         self.tSumSq += duration**2
         self.tNum += 1

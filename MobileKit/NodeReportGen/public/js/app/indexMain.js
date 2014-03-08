@@ -17,7 +17,7 @@ requirejs.config({
         'jquery-migrate': assets + 'js/lib/jquery-migrate-1.1.1.min',
         'underscore': assets + 'js/lib/underscore-min',
         'backbone': assets + 'js/lib/backbone-min',
-        'localStorage': assets + 'js/lib/backbone.localStorage-min',
+        // 'localStorage': assets + 'js/lib/backbone.localStorage-min',
         'jquery.dataTables': assets + 'js/lib/jquery.dataTables.min',
         'jquery.generateFile': assets + 'js/lib/jquery.generateFile',
         'jquery.timezone-picker': assets + 'js/lib/jquery.timezone-picker.min',
@@ -26,7 +26,8 @@ requirejs.config({
         'jquery-ui': assets + 'js/lib/jquery-ui-1.10.2.custom.min',
         'jquery.datetimeentry': assets + 'js/lib/jquery.datetimeentry',
         'jquery.mousewheel': assets + 'js/lib/jquery.mousewheel.min',
-        'jquery.jsonp': assets + 'js/lib/jquery.jsonp-2.4.0.min'
+        'jquery.jsonp': assets + 'js/lib/jquery.jsonp-2.4.0.min',
+        'jquery.form': assets + 'js/lib/jquery.form.min'
     },
     shim: {
         'jquery-migrate': {
@@ -38,7 +39,7 @@ requirejs.config({
         'bootstrap-dropdown': {
             deps: ['jquery']
         },
-        'bootstrap-spinedit': {
+        'bootstrap-spinedit-modified': {
             deps: ['jquery', 'jquery-migrate']
         },
         'bootstrap-transition': {
@@ -66,6 +67,9 @@ requirejs.config({
             deps: ['jquery', 'jquery-ui']
         },
         'jquery.jsonp': {
+            deps: ['jquery']
+        },
+        'jquery.form': {
             deps: ['jquery']
         },
         'jstz': {

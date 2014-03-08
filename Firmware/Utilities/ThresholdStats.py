@@ -114,7 +114,7 @@ class ThresholdStats(object):
         self.nRingdowns = nRingdowns
         while not self.queue.empty():
             self.queue.get()    # Flush the queue to start
-        tBegin = time.clock()
+        tBegin = time.time()
         try:
             e = self.queue.get(timeout=tMax)
         except Queue.Empty:
@@ -125,7 +125,7 @@ class ThresholdStats(object):
         nRd = 0
         while True:
             try:
-                e = self.queue.get(time.clock()-tBegin-tMax)
+                e = self.queue.get(time.time()-tBegin-tMax)
                 t = 0.001*e.timestamp
                 loss = float(e.uncorrectedAbsorbance)
                 waveNumber = e.waveNumber

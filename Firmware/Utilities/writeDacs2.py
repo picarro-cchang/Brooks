@@ -60,9 +60,9 @@ if __name__ == "__main__":
         while tLast < timestamp + 1500:
             sendStr = []
             sendStr.append("\xD2")
-            sendStr.append(struct.pack("H",(tLast//10) & 0xFFFF))
+            sendStr.append(struct.pack("=H",(tLast//10) & 0xFFFF))
             sendStr.append("\x03")
-            sendStr.append(struct.pack("HH",int(32768+32767*cos(x)),int(32768+32767*sin(x))))
+            sendStr.append(struct.pack("=HH",int(32768+32767*cos(x)),int(32768+32767*sin(x))))
             sendStr = "".join(sendStr)
             if usbLen + len(sendStr) >= 512:
                 Driver.wrAuxiliary("".join(usbStr))

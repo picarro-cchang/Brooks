@@ -6,7 +6,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module); }
 define(function(require, exports, module) {
     'use strict';
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
     var instrResource = require('app/utils').instrResource;
     var REPORT  = require('app/reportGlobals');
     require('jquery.dataTables');
@@ -51,10 +51,10 @@ define(function(require, exports, module) {
                         var url = that.workDir + '/' + names.shift();
                         REPORT.SurveyorRpt.resource(url,
                         function (err) {
-                            alert('While getting analyses data from ' + url + ': ' + err);
+                            console.log('While getting analyses data from ' + url + ': ' + err);
                         },
                         function (status, data) {
-                            console.log('While getting analyses data from ' + url + ': ' + status);
+                            // console.log('While getting analyses data from ' + url + ': ' + status);
                             data.forEach(function (d) { // Can filter by lat-lng limits here
                                 that.push(d, {silent:true});    // All peaks are pushed to the collection
                             });
@@ -67,6 +67,7 @@ define(function(require, exports, module) {
 
         REPORT.AnalysesTableView = Backbone.View.extend({
             initialize: function () {
+                this.name = "reportAnalyses";
                 this.listenTo(REPORT.reportViewResources,"init",this.repositoryInit);
                 this.listenTo(REPORT.reportViewResources,"change",this.repositoryChanged);
             },

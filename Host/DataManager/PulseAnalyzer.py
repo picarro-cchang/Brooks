@@ -255,11 +255,11 @@ class PulseAnalyzer(object):
             pass
 
         return statDict.copy()
-        
+
     def getPulseStartEndTime(self):
         outBuffer = self.selectBuffer()
         timeArray = array(outBuffer["timestamp"])
         return (timeArray[0], timeArray[-1])
-        
+
     def getConcNameList(self):
         return self.concNameList

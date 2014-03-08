@@ -122,7 +122,7 @@ def SetSystemFileTime(ft):
     return r
 
 def _L2U32(L):
-    return unpack('l',pack('L',L))[0]
+    return unpack('=l',pack('=L',L))[0]
 
 _UTIME1970 = _L2U32(_TIME1970)
 def _time2ntp(t):

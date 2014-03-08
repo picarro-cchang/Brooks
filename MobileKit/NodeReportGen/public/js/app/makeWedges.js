@@ -1,15 +1,24 @@
-/* makePeaks.js renders peaks using markers */
+/* makeWedges.js renders LISAs */
+/*global module, require */
+/* jshint undef:true, unused:true */
 
-define (['app/cnsnt', 'app/geohash', 'app/utils', 'app/reportGlobals'],
-function (CNSNT,       gh,            utils,       REPORT) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
+    var CNSNT = require('common/cnsnt');
+    var gh = require('app/geohash');
+    var utils = require('app/utils');
+    var REPORT = require('app/reportGlobals');
+
     function wedgeColorByRun(run) {
         return REPORT.settings.get("runs").at(run).get("wedges");
     }
 
     function makeWedges(report) {
         var i, x, xy, y;
-        var color, ctxWedges, data, lat, lng, peaks, run, where;
+        var color, ctxWedges,lat, lng, peaks, run, where;
+        var wedgeRadius = REPORT.settings.get("wedgeRadius");
 
         peaks = report.peaksData;
         // Draw the wind wedges on a canvas
@@ -31,7 +40,7 @@ function (CNSNT,       gh,            utils,       REPORT) {
                 x = xy[0], y = xy[1];
                 ctxWedges.fillStyle = "rgba(" + wedgeColor[0] + "," + wedgeColor[1] + "," + wedgeColor[2] + ",0.5)";
                 if (report.inView(xy)) {
-                    var radius = 50.0 / report.mpp;
+                    var radius = wedgeRadius / report.mpp;
                     var minBearing, maxBearing;
                     if (typeof(windMean) === "number" && typeof(windSdev) === "number") {
                         if (windSdev < 90.0) {
@@ -57,5 +66,5 @@ function (CNSNT,       gh,            utils,       REPORT) {
         }
         return ctxWedges;
     }
-    return makeWedges;
+    module.exports = makeWedges;
 });

@@ -84,9 +84,9 @@ def PackArbitraryObject(Obj):
     #print "checkSum = %r  data = %r" % (dataChecksum, data)
     dataLen = 4 + 4 + len(data) + 4 #including cookie & len prefixes and crc suffix
     packetStr = "%s%s%s%s" % (ID_COOKIE,
-                              struct.pack("l", dataLen),
+                              struct.pack("=l", dataLen),
                               data,
-                              struct.pack("l", dataChecksum))
+                              struct.pack("=l", dataChecksum))
     return packetStr
 
 def UnPackArbitraryObject(String):
@@ -121,7 +121,7 @@ def UnPackArbitraryObject(String):
             #Don't have the length yet
             raise IncompletePacket
     else:
-        packetLen = struct.unpack("l", String[4:8])[0]
+        packetLen = struct.unpack("=l", String[4:8])[0]
         #print "packetLen = %r" % packetLen
         if length < packetLen:
             raise IncompletePacket
@@ -132,7 +132,7 @@ def UnPackArbitraryObject(String):
             raise InvalidHeader
         data = packet[8:-4]
         #print "data = %r" % data
-        checksum = struct.unpack("l", packet[-4:])[0]
+        checksum = struct.unpack("=l", packet[-4:])[0]
         #print "checksum = %r" % checksum
         if binascii.crc32(data) != checksum:
             raise ChecksumErr

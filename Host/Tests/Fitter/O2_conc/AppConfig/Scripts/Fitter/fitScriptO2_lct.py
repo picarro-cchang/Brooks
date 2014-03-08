@@ -92,7 +92,7 @@ pzt = mean(d.pztValue)
 
 species = (d.subschemeId & 0x3FF)[0]
 
-tstart = time.clock()
+tstart = time.time()
 RESULT = {}
 r = None
 
@@ -155,7 +155,7 @@ if species == 61:
     o2_conc_cfs = 268.3*corrected_fsr_strength
     o2_dry_cfs = o2_conc_cfs/(1.0 - 1e-6*h2o_conc)
 
-now = time.clock()
+now = time.time()
 fit_time = now-tstart
 if r != None:
     IgnoreThis = False

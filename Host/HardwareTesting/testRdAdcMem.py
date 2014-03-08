@@ -4,7 +4,7 @@ import sys
 from Host.autogen import usbdefs, interface
 from Host.Common.analyzerUsbIf import AnalyzerUsb
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
-from time import sleep, clock
+from time import sleep, time
 from random import randrange
 from numpy import *
 from pylab import *
@@ -68,7 +68,7 @@ def programFPGA():
     if f<0:
         raise ValueError("Invalid FPGA bit file")
     s = s[f:]
-    tStart = clock()
+    tStart = time()
     lTot = 0
     while len(s)>0:
         lTot += len(s)
@@ -81,7 +81,7 @@ def programFPGA():
     elif 0 == (1 & analyzerUsb.getFpgaStatus()):
         logging.error(
             "CRC error during FPGA load, bytes sent: %d" % (lTot,))
-    logging.info("Time to load: %.1fs" % (clock() - tStart,))
+    logging.info("Time to load: %.1fs" % (time() - tStart,))
     sleep(0.2)
 
 def initEmif():

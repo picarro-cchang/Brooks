@@ -17,7 +17,10 @@ define(function(require, exports, module) {
     slice of a to be searched. */
         if (lo === undefined) lo = 0;
         if (hi === undefined) hi = a.length;
-        if (lo < 0) throw new Error('lo must be non-negative');
+        if (lo < 0) {
+            console.log('In bisect: lo must be non-negative');
+            return null;
+        }
         while (lo < hi) {
             var mid = (lo + hi)>>1;
             if (x < a[mid]) hi = mid;
@@ -49,7 +52,10 @@ define(function(require, exports, module) {
     slice of a to be searched. */
         if (lo === undefined) lo = 0;
         if (hi === undefined) hi = a.length;
-        if (lo < 0) throw new Error('lo must be non-negative');
+        if (lo < 0) {
+            console.log('In bisect_left: lo must be non-negative');
+            return null;
+        }
         while (lo < hi) {
             var mid = (lo + hi)>>1;
             if (a[mid] < x) lo = mid + 1;

@@ -85,22 +85,19 @@ define(function(require, exports, module) {
             processRuns(function (err) {
                 if (err) {
                     sf.writeStatus(that.statusFile,
-                        {"status": rptGenStatus.FAILED,"msg": err.message },
-                        function () { callback(err); });
+                        {"status": rptGenStatus.FAILED,"msg": err.message });
+                    callback(err);
                 }
                 else {
-                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE}, function(err) {
-                        if (err) callback(err);
-                        else callback(null);
-                    });
+                    sf.writeStatus(that.statusFile, {"status": rptGenStatus.DONE});
+                    callback(null);
                 }
             });
         }
         else {
             sf.writeStatus(that.statusFile, {"status": rptGenStatus.BAD_PARAMETERS,
-                "msg": ipv.errors() }, function (err) {
-                callback(new Error(ipv.errors()));
-            });
+                "msg": ipv.errors() });
+            callback(new Error(ipv.errors()));
         }
 
         function getMetadata(surveys,done) {
@@ -124,13 +121,16 @@ define(function(require, exports, module) {
                             }
                         }
                     }
-                    console.log('Computed stability class', indx, s, stabClass);
+                    // console.log('Computed stability class', indx, s, stabClass);
                     var p3Params = {'alog': s, 'logtype': 'dat', 'qry': 'byEpoch', 'limit':1};
                     that.p3ApiService.get("gdu", "1.0", "AnzLogMeta", p3Params, function (err, result) {
-                        if (err) done(err);
+                        if (err) {
+                            err.message += "Cannot fetch metadata for " + s;
+                            done(err);
+                        }
                         else {
                             result[0]['stabClass'] = stabClass;
-                            console.log(JSON.stringify(result[0]));
+                            // console.log(JSON.stringify(result[0]));
                             meta.push(_.omit(result[0],'docmap'));
                             process.nextTick(next);
                         }
@@ -243,6 +243,13 @@ define(function(require, exports, module) {
                                  'limit':'all', 'rtnFmt':'lrt'};
                 var p3LrtFetcher = newP3LrtFetcher(that.p3ApiService, "gdu", "1.0", "AnzLog", lrtParams);
                 var ser = newSerializer(p3LrtFetcher);
+
+                p3LrtFetcher.on('submit', function (data) {
+                    var submission = {};
+                    submission['start_path_run_' + runIndex] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
+                    sf.writeStatus(that.statusFile, submission);
+                });
+
                 // The data event is triggered as data show up on the paths
                 ser.on('data', function (data) {
                     onRunData(runIndex, data, function (err) {
@@ -252,12 +259,24 @@ define(function(require, exports, module) {
                 });
                 ser.on('end', function() {
                     onRunEnd(runIndex, function (err) {
-                        if (err) done(err);
-                        else done(null);
+                        var submission = {};
+                        if (err) {
+                            submission['error_path_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error:err.message};
+                            sf.writeStatus(that.statusFile, submission);
+                            done(err);
+                        }
+                        else {
+                            submission['end_path_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())};
+                            sf.writeStatus(that.statusFile, submission);
+                            done(null);
+                        }
                     });
                 });
                 ser.on('error', function (err) {
                     onRunError(err, function (e) {
+                        var submission = {};
+                        submission['error_path_run_' + runIndex] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime()), error:e.message};
+                        sf.writeStatus(that.statusFile, submission);
                         done(e);
                     });
                 });
@@ -349,6 +368,13 @@ define(function(require, exports, module) {
                                     runIndex,params,params.runs[runIndex].stabClass,that.workDir,that.forceFlag),
                                   "rows":[] };
                             that.fovProcessorQueue.push(p.processor);
+                            
+                            p.processor.on('submit', function (data) {
+                                var submission = {};
+                                submission['start_fov_run_' + data.run_index + '_survey_' + data.survey_index] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
+                                sf.writeStatus(that.statusFile, submission);
+                            });
+
                             if (that.fovInProgress < that.maxFovInProgress) {
                                 console.log("Starting FOV processing immediately, length: " + that.fovProcessorQueue.length);
                                 var proc = that.fovProcessorQueue.shift();
@@ -425,8 +451,9 @@ define(function(require, exports, module) {
             done(err);
         }
 
-        function onFovError(err) {
-            that.fovError = err;
+        function onFovError(data) {
+            that.fovError = data.error;
+            data.error = data.error.message;
             that.fovPending -= 1;
             that.fovInProgress -= 1;
             /*
@@ -436,15 +463,24 @@ define(function(require, exports, module) {
                 proc.start();
             }
             */
+            var submission = {};
+            submission['error_fov_run_' + data.run_index + '_survey_' + data.survey_index] = _.extend({time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())},data);
+            sf.writeStatus(that.statusFile, submission);
+
             console.log("FOV error, length: " + that.fovProcessorQueue.length + " inProgress: " + that.fovInProgress);
         }
 
-        function onFovEnd(fname, records) {
-            if (fname) {
-                that.filenames[fname] = records;
+        function onFovEnd(data) {
+            if (data.filename) {
+                that.filenames[data.filename] = data.length;
             }
             that.fovPending -= 1;
             that.fovInProgress -= 1;
+
+            var submission = {};
+            submission['end_fov_run_' + data.run_index + '_survey_' + data.survey_index] = {time_stamp: ts.msUnixTimeToTimeString(ts.getMsUnixTime())};
+            sf.writeStatus(that.statusFile, submission);
+
             if (that.fovProcessorQueue.length>0 && that.fovInProgress < that.maxFovInProgress) {
                 var proc = that.fovProcessorQueue.shift();
                 that.fovInProgress += 1;
@@ -477,6 +513,9 @@ define(function(require, exports, module) {
         this.lrt_count = null;
         this.workDir = workDir;
         this.forceFlag = forceFlag;
+        this.lastPollResults = {};
+        this.maxPollRepeats = 48; // Error out if we get same status and count for four minutes
+        this.pollRepeats = 0;
     }
 
     util.inherits(FovProcessor, events.EventEmitter);
@@ -487,13 +526,15 @@ define(function(require, exports, module) {
                          'minAmp':self.fovMinAmp, 'minLeak': self.fovMinLeak, 'forceLrt':self.forceFlag,
                          'nWindow':self.fovNWindow, 'forceClose':true } ;
         self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
-            if (err) self.emit("error", err);
+            if (err) self.emit("error", {error: err, survey_index: self.surveyIndex, run_index: self.runIndex});
             else {
                 self.lrt_status = result["status"];
                 if (result["lrt_start_ts"] === result["request_ts"]) {
                     console.log("This is a new request, made at " + result["request_ts"]);
                     self.lrt_parms_hash = result["lrt_parms_hash"];
                     self.lrt_start_ts = result["lrt_start_ts"];
+                    self.emit("submit",{lrt_parms_hash: self.lrt_parms_hash, lrt_start_ts: self.lrt_start_ts,
+                        survey_index: self.surveyIndex, run_index: self.runIndex });
                     console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
                 }
                 else {
@@ -501,13 +542,14 @@ define(function(require, exports, module) {
                     if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
                         lrtParams.forceLrt = true;
                         self.p3Service.get("gdu", "1.0", "AnzLog", lrtParams, function (err, result) {
-                            if (err) self.emit("error", err);
+                            if (err) self.emit("error", {error: err, survey_index: self.surveyIndex, run_index: self.runIndex});
                             else {
                                 self.lrt_status = result["status"];
                                 console.log("Since previous request failed, it is being resubmitted at " + result["request_ts"]);
-                                console.log("P3Lrt Status: " + self.lrt_status);
                                 self.lrt_parms_hash = result["lrt_parms_hash"];
                                 self.lrt_start_ts = result["lrt_start_ts"];
+                                self.emit("submit",{lrt_parms_hash: self.lrt_parms_hash, lrt_start_ts: self.lrt_start_ts,
+                                    survey_index: self.surveyIndex, run_index: self.runIndex });
                                 console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
                             }
                         });
@@ -515,6 +557,8 @@ define(function(require, exports, module) {
                     else {
                         self.lrt_parms_hash = result["lrt_parms_hash"];
                         self.lrt_start_ts = result["lrt_start_ts"];
+                        self.emit("submit",{lrt_parms_hash: self.lrt_parms_hash, lrt_start_ts: self.lrt_start_ts,
+                            survey_index: self.surveyIndex, run_index: self.runIndex });
                         console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
                     }
                 }
@@ -538,17 +582,36 @@ define(function(require, exports, module) {
                 // Always make at least one call to getStatus so we know the number of rows in the result
                 var params = {'prmsHash': self.lrt_parms_hash, 'startTs':self.lrt_start_ts, 'qry': 'getStatus'};
                 self.p3Service.get("gdu", "1.0", "AnzLrt", params, function (err, result) {
-                    if (err) self.emit("error", err);
+                    if (err) self.emit("error", {error: err, survey_index: self.surveyIndex, run_index: self.runIndex});
                     else {
                         self.lrt_status = result["status"];
                         self.lrt_count = result["count"];
-                        console.log("P3Lrt Status: " + self.lrt_status);
-                        if (self.lrt_status === rptGenStatus.DONE) fetchData();
-                        else if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
-                            console.log('FOVPROCESSOR: self.lrt_status', self.lrt_status);
-                            self.emit("error", new Error("Failure status: " + self.lrt_status));
+                        if ((self.lastPollResults.status === self.lrt_status) &&
+                            (self.lastPollResults.count === self.lrt_count) &&
+                            (self.lastPollResults.parms_hash === self.lrt_parms_hash)) {
+                            self.pollRepeats += 1;
                         }
-                        else setTimeout(pollUntilDone,5000);
+                        else {
+                            self.pollRepeats = 0;
+                        }
+                        self.lastPollResults.status = self.lrt_status;
+                        self.lastPollResults.count = self.lrt_count;
+                        self.lastPollResults.parms_hash = self.lrt_parms_hash;
+                        if (self.pollRepeats <= self.maxPollRepeats) {
+                            var messages = result["err_msgs"];
+                            console.log("MAKEFOV P3Lrt Status: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+                            if (self.lrt_status === rptGenStatus.DONE) fetchData();
+                            else if (self.lrt_status < 0 || self.lrt_status > rptGenStatus.DONE) {
+                                console.log('FOVPROCESSOR: self.lrt_status', self.lrt_status);
+                                self.emit("error", {error: new Error("FOV status: " + self.lrt_status + " Messages: " + JSON.stringify(messages)),
+                                    survey_index: self.surveyIndex, run_index: self.runIndex});
+                            }
+                            else setTimeout(pollUntilDone,5000);
+                        }
+                        else {
+                            err = new Error("P3 FOV status stuck: " + self.lrt_status + " " + self.lrt_parms_hash + '/' + self.lrt_start_ts);
+                            self.emit("error", {error:err , survey_index: self.surveyIndex, run_index: self.runIndex});
+                        }
                     }
                 });
             }
@@ -577,7 +640,7 @@ define(function(require, exports, module) {
                             }
                             else {
                                 console.log("FOV processor emits: ERROR");
-                                self.emit("error", err);
+                                self.emit("error", {error: err, survey_index: self.surveyIndex, run_index: self.runIndex});
                             }
                         }
                         else {
@@ -594,6 +657,7 @@ define(function(require, exports, module) {
                                     results.push(JSON.stringify({"R": row, "P": pos, "E": edge}));
                                 }
                             }
+                            console.log("Processed SWATH rows: " + results.length);
                             // console.log("SWATH: " + JSON.stringify(results[results.length-1]));
                             process.nextTick(next);
                         }
@@ -601,17 +665,18 @@ define(function(require, exports, module) {
                 }
                 else {
                     // Data are in results. Write out a fov file and emit "end"
-                    console.log("Number of SWATH rows: " + results.length);
+                    console.log("Total SWATH rows: " + results.length);
                     var fname = 'fov_' + formatNumberLength(self.surveyIndex,5) + "_" +
                                          formatNumberLength(self.runIndex,5) + '.json';
                     jf.appendJson(path.join(self.workDir,fname), results, function (err) {
                         if (err) {
                             console.log("FOV processor emits: ERROR");
-                            self.emit("error",err);
+                            self.emit("error", {error: err, survey_index: self.surveyIndex, run_index: self.runIndex});
                         }
                         else {
                             console.log("FOV processor emits: END");
-                            self.emit("end", fname, results.length);
+                            self.emit("end", {filename: fname, length: results.length,
+                                run_index: self.runIndex, survey_index: self.surveyIndex});
                         }
                     });
                 }

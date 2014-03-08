@@ -14,7 +14,8 @@ define(function(require, exports, module) {
     var DASHBOARD = require('app/dashboardGlobals');
     var instrResource = require('app/utils').instrResource;
     var rptGenStatus = require('common/rptGenStatus');
-    require('localStorage');
+    
+    require('common/P3TXT');
     require('jquery.dataTables');
 
     $.fn.dataTableExt.oApi.fnDisplayRow = function ( oSettings, nRow )
@@ -67,6 +68,7 @@ define(function(require, exports, module) {
 
         DASHBOARD.SubmittedJob = Backbone.Model.extend({
             defaults: {
+                flag: '',
                 hash: null,
                 directory: null,
                 title:"",
@@ -84,30 +86,44 @@ define(function(require, exports, module) {
                 bufferedTimezone(DASHBOARD.Utilities.timezone,{tz:tz, posixTimes:[this.get("startPosixTime")]},
                 function (err) {
                     var msg = 'While converting timezone: ' + err;
-                    alert(msg);
+                    console.log(msg);
                     done(msg);
                 },
                 function (s, result) {
-                    console.log('While converting timezone: ' + s);
+                    // console.log('While converting timezone: ' + s);
                     that.set({"startLocalTime": result.timeStrings[0]});
                     done(null);
                 });
             },
-            analyzeStatus: function (err, status, msg)  {
+            analyzeStatus: function (err, result, msg)  {
                 var that = this;
-                if (status === rptGenStatus.TASK_NOT_FOUND) {
-                    this.set({'msg': 'Report not found or expired - resubmit', 'status': status});
+                if (err) {
+                    DASHBOARD.connectionErrors += 1;
+                    if (DASHBOARD.connectionErrors > 5) {
+                        msg = 'Connection problem: Please reload page or retry in a few minutes';
+                        // this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
+                        this.set({'msg': msg, 'status': rptGenStatus.OTHER_ERROR, 'flag':flag});
+                    }
+                    else {
+                        setTimeout(function () { that.updateStatus(); }, 5000);
+                    }
                 }
-                else if (status < 0) {
-                    this.set({'msg': msg, 'status': status});
+                else if (result) {
+                    var status = result.status;
+                    var flag = result.flag;
+                    if (!flag) flag = '';
+                    if (!err) DASHBOARD.connectionErrors = 0;
+                    if (status === rptGenStatus.TASK_NOT_FOUND) {
+                        this.set({'msg': P3TXT.dashboard.report_expired, 'status': status, 'flag': flag});
+                    }
+                    else if (status < 0) {
+                        this.set({'msg': msg, 'status': status, 'flag': flag});
+                    }
+                    else if (status >= rptGenStatus.DONE) {
+                        this.set({'status': status, 'flag':flag});
+                    }
+                    else setTimeout(function () { that.updateStatus(); }, 5000);
                 }
-                else if (err) {
-                    this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
-                }
-                else if (status >= rptGenStatus.DONE) {
-                    this.set({'status': status});
-                }
-                else setTimeout(function () { that.updateStatus(); }, 5000);
             },
             updateStatus: function () {
                 var that = this;
@@ -118,8 +134,16 @@ define(function(require, exports, module) {
                     that.analyzeStatus(err);
                 },
                 function (s, result) {
-                    console.log('While getting status: ' + s);
-                    that.analyzeStatus(null, result.status, result.msg);
+                    var code, msg;
+                    if (result.status === rptGenStatus.EMPTY_PDF) {
+                        msg = P3TXT.dashboard.empty_report;
+                    }
+                    else {
+                        code = that.get('hash').substr(0,8) + 'T' + that.get('directory').substr(-6);
+                        msg = P3TXT.dashboard.send_code + code;
+                    }
+                    //that.analyzeStatus(null, result.status, result.msg);
+                    that.analyzeStatus(null, result, msg);
                 });
             }
         });
@@ -127,7 +151,6 @@ define(function(require, exports, module) {
         DASHBOARD.SubmittedJobs = Backbone.Collection.extend({
             initialize: function ()  {
             },
-            localStorage: new Backbone.LocalStorage("JobCollection"),
             model: DASHBOARD.SubmittedJob
         });
 
@@ -163,6 +186,7 @@ define(function(require, exports, module) {
                 };
                 this.showAll = false;
                 this.jobTable = $("#id_jobTable").dataTable({
+                    "bDeferRender": true,
                     "aoColumns": [
                         { "sWidth": "5%", "sTitle": "Reload", "mData": "link", "sClass": "center"},
                         { "sWidth": "15%", "sTitle": "First submitted at", "mData": "startLocalTime", "sClass": "center", "sType":'time-with-offset'},
@@ -173,9 +197,21 @@ define(function(require, exports, module) {
                         { "sWidth": "5%", "sTitle": '<button type="button" class="btn btn-mini btn-inverse showAll">Show All</button>',
                           "sClass": "center", "mData": "selected", "bSortable": false}
                     ],
+                    "fnDrawCallback": function ( oSettings ) {
+                        if (that.jobTableLoading) {
+                            that.jobTableLoading = false;
+                            $("#id_jobTableLoading").css("display","none");
+                        }
+                    },
                     "sDom":'<"top"lf>rt<"bottom"ip>'
                 });
+                this.jobTableLoading = true;
                 this.jobTable.fnSort([[1,'desc']]);
+                this.jobTable.bind('sort', function() { that.jobTableEvent('Sort'); })
+                             .bind('page', function() { that.jobTableEvent('Page'); })
+                             .bind('filter', function() { that.jobTableEvent('Filter'); });
+                this.visibleJobCids = [];
+                this.activeStatusCids = {}; // Contains cids of jobs which have had updateStatus requests made
                 $.fn.dataTableExt.afnFiltering.push(
                 function( oSettings, aData ) {
                     return that.showAll || $(aData[6]).is(':checked');
@@ -197,6 +233,36 @@ define(function(require, exports, module) {
                     clearTimeout(window.refresh_size);
                     window.refresh_size = setTimeout(function () { update_size(); }, 250);
                 });
+            },
+            jobTableEvent: function (type) {
+                // When the dashboard is changed in any way, we need to go through the visible
+                //  rows and start calling updateStatus for any jobs not previously updated
+                var that = this;
+                // We need to defer determination of visible rows until the table has been refreshed
+                setTimeout(function () { that.findVisible(); }, 200);
+            },
+            findVisible: function () {
+                var that = this;
+                // Get filtered jobs on current page. We need the rows to update cidToRow lookup
+                //  table and the data within the rows to get the cid, which can be used to find
+                //  the job within the submittedJobs collection.
+                var visibleRows = this.jobTable.$('tr', {"filter":"applied", "page":"current"});
+                var visibleData = this.jobTable._('tr', {"filter":"applied", "page":"current"});
+                this.visibleJobCids = [];
+                for (var i=0; i<visibleRows.length; i++) {
+                    var row = visibleRows[i];
+                    var data = visibleData[i];
+                    that.visibleJobCids.push(data.cid);
+                    that.cidToRow[data.cid] = row;
+                    // Maintain a set of "active" status requests, and only start updateStatus for jobs
+                    //  whose status have not previously been requested
+                    if (!(data.cid in that.activeStatusCids)) {
+                        that.activeStatusCids[data.cid] = true;
+                        // Get the job for the given cid and start updateStatus requests
+                        var job = _.findWhere(DASHBOARD.submittedJobs.models, {cid: data.cid});
+                        job.updateStatus();
+                    }
+                }
             },
             onShowAll: function (e) {
                 var el = $(e.currentTarget);
@@ -223,7 +289,7 @@ define(function(require, exports, module) {
             addJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'add'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);
@@ -238,7 +304,7 @@ define(function(require, exports, module) {
             changeJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'update'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);
@@ -254,17 +320,18 @@ define(function(require, exports, module) {
                 var statusDisplay;
                 var status = model.get('status');
                 if (status < 0) {
-                    statusDisplay = '<span>Error: ' + model.get('msg') + '</span>';
+                    statusDisplay = '<span>' + model.get('msg') + '</span>';
                 }
                 else if (status >= rptGenStatus.DONE) {
                     if (status === rptGenStatus.DONE_WITH_PDF) {
                         statusDisplay = '<a class="pdfLink btn btn-mini btn-inverse" href="#" data-hash="' + model.get('hash') +
-                                        '" data-directory="' + model.get('directory') + '">Download PDF</a>' +
-                                        '</b>';
+                                        '" data-directory="' + model.get('directory') + '">Download PDF</a><b>' + 
+                                        model.get('flag') + '</b>';
                     }
                     else if (status === rptGenStatus.DONE_NO_PDF) {
                         statusDisplay = '<b><a class="viewLink" href="#" data-hash="' + model.get('hash') +
-                                        '" data-directory="' + model.get('directory') + '">View</a></b>';
+                                        '" data-directory="' + model.get('directory') + '">View</a>' +
+                                        model.get('flag') + '</b>';
                     }
                 }
                 else {
@@ -273,7 +340,7 @@ define(function(require, exports, module) {
                 var sel = model.get('shown') ?
                             '<input class="rowCheck" type="checkbox" data-cid="' + model.cid + '" checked>' :
                             '<input class="rowCheck" type="checkbox" data-cid="' + model.cid + '">';
-                return $.extend({link: link, statusDisplay: statusDisplay, selected: sel}, model.attributes);
+                return $.extend({link: link, statusDisplay: statusDisplay, selected: sel, cid: model.cid}, model.attributes);
             },
             highLightJob: function (model) {
                 var row = this.cidToRow[model.cid];
@@ -305,10 +372,11 @@ define(function(require, exports, module) {
                 var url = instrResource(job.get("hash")) + '/instructions.json';
                 DASHBOARD.SurveyorRpt.resource(url,
                 function (err) {
-                    alert('While retrieving instructions from ' + url + ': ' + err);
+                    console.log('While retrieving instructions from ' + url + ': ' + err);
                 },
                 function (status, data) {
                     console.log('While retrieving instructions from ' + url + ': ' + status);
+                    if (job.get("flag") !== '') data["force"] = true;
                     that.instrFileView.loadContents(cjs(data,null,2));
                     that.highLightJob(job);
                 });
@@ -320,7 +388,7 @@ define(function(require, exports, module) {
             removeJob: function (model) {
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(model), action:'delete'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);
@@ -332,9 +400,15 @@ define(function(require, exports, module) {
                 var that = this;
                 this.cidToRow = [];
                 this.jobTable.fnClearTable();
+                var start = performance.now();
+                var aaData = [];
                 _.forEach(DASHBOARD.submittedJobs.models, function (model) {
-                    that.cidToRow[model.cid] = that.jobTable.fnGetNodes(that.jobTable.fnAddData(that.formatSpecials(model))[0]);
+                    var row = that.formatSpecials(model);
+                    aaData.push(row);
                 });
+                var rows = that.jobTable.fnAddData(aaData);
+                console.log("Time to load datatable: " + (performance.now()-start) + " ms");
+
                 $(this.jobTable).css({width: $(this.jobTable).parent().width()});
                 this.jobTable.fnAdjustColumnSizing();
                 return this;
@@ -343,7 +417,7 @@ define(function(require, exports, module) {
                 var models = DASHBOARD.submittedJobs.models;
                 DASHBOARD.SurveyorRpt.updateDashboard({user: DASHBOARD.user, object: JSON.stringify(models), action:'reset'},
                     function (err) {
-                        alert('While updating dashboard: ' + err);
+                        console.log('While updating dashboard: ' + err);
                     },
                     function (s) {
                         console.log('While updating dashboard: ' + s);

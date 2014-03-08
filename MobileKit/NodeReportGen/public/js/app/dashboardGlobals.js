@@ -2,6 +2,7 @@
 
 define ({
 	AnzMeta: null,
+	connectionErrors: 0,
 	force: null,
 	InstructionsFileModel: null,
 	instructionsFileModel: null,

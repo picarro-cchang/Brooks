@@ -34,7 +34,7 @@ def encode(pickleString):
     pad = 0
     if n % 4:
         pad = 4 - (n%4)
-    fmt = "%dI" % ((n+pad)//4,)
+    fmt = "=%dI" % ((n+pad)//4,)
     return [n] + [i for i in struct.unpack(fmt,pickleString + (pad*" "))]
 
 def decode(wordArray):
@@ -42,7 +42,7 @@ def decode(wordArray):
     array of 32-bit words. The first word is the length in bytes of the 
     pickled string"""
     n = wordArray[0]
-    s = struct.pack("%dI"%((n+3)//4,),*wordArray[1:])
+    s = struct.pack("=%dI"%((n+3)//4,),*wordArray[1:])
     return cPickle.loads(s)
 
 def eepromWrite(whichEeprom,wordArray,startAddress,pageSize):

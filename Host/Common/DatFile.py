@@ -83,7 +83,6 @@ class DatFile(object):
         """
         Save in .csv format.
         """
-
         with open(outName, 'wb') as fp:
             writer = csv.writer(fp)
             names = self.columnNames()
@@ -109,4 +108,3 @@ class DatFile(object):
                 for k in self.data:
                     fp.write((str(self.data[k][i])[:columnWidth-1]).ljust(columnWidth))
                 fp.write("\n")
-            

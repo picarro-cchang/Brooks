@@ -820,7 +820,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         object and the address of the next object."""
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
-        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
 
@@ -856,7 +856,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
         s = cPickle.dumps(object,-1)
-        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
         if nBytes != len(s): return False
         r = "".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])
         return r == s
@@ -869,7 +869,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise ValueError("%s is not available" % whichEeprom)
         s = cPickle.dumps(object,-1)
         nBytes = len(s)
-        self.wrEeprom(whichEeprom,startAddress,[ord(c) for c in struct.pack("I",nBytes)+s])
+        self.wrEeprom(whichEeprom,startAddress,[ord(c) for c in struct.pack("=I",nBytes)+s])
         return startAddress + 4*((nBytes+7)//4)
 
     def fetchLogicEEPROM(self):
@@ -879,7 +879,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """
         if not DasConfigure().i2cConfig["LOGIC_EEPROM"]:
             raise ValueError("LOGIC_EEPROM is not available")
-        nBytes, = struct.unpack("I","".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",0,4)]))
+        nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom("LOGIC_EEPROM",0,4)]))
         # Try to avoid EEPROM error
         if nBytes > 100:
             raise ValueError("LOGIC_EEPROM returns wrong size (%d bytes)" % nBytes)

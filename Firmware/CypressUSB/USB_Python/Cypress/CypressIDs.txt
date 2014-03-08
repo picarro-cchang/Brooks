@@ -1,0 +1,7 @@
+Bare Cypress chip: 0x4B4 0x8613
+Cypress + monitor: 0x4B4 0x0081
+
+In descr.a51
+0x547 0x1002 
+Cypress 
+EZ-USB FX2

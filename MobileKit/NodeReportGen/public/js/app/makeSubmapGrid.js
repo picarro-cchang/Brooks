@@ -1,11 +1,17 @@
 /* makeSubmapGrid.js renders submap grid lines */
+/*global module, require */
+/* jshint undef:true, unused:true */
 
-define (['app/utils', 'app/geohash'],
-function (utils, gh) {
+if (typeof define !== 'function') { var define = require('amdefine')(module); }
+
+define(function(require, exports, module) {
     'use strict';
+    var gh = require('app/geohash');
+    var utils = require('app/utils');
+
     function makeSubmapGrid(report) {
         var ctxGrid, dx, dy, height, linkHeight, linkWidth, maxLat, maxLng, minLat;
-        var minLng, mx, my, name, neCorner, rect, row, swCorner, url, width, x, xy, y;
+        var minLng, mx, my, name, neCorner, rect, row, swCorner, width, x, xy, y;
         var links = {}, submaps = [], rowList;
         ctxGrid = document.createElement("canvas").getContext("2d");
         ctxGrid.canvas.height = report.ny + 2 * report.padY;
@@ -43,7 +49,7 @@ function (utils, gh) {
                 width = xy[0] - x;
                 height = xy[1] - y;
                 ctxGrid.strokeRect(x + report.padX, y + report.padY, width, height);
-                name = String.fromCharCode(65+my) + (mx + 1);
+                name = utils.submapGridString(my, mx);
                 ctxGrid.fillText(name, x + report.padX + width / 2, y + report.padY + height / 2);
                 swCorner = gh.encodeGeoHash(rect.minLat, rect.minLng);
                 neCorner = gh.encodeGeoHash(rect.maxLat, rect.maxLng);
@@ -58,5 +64,5 @@ function (utils, gh) {
         }
         return {"context": ctxGrid, "links": links};
     }
-    return makeSubmapGrid;
+    module.exports = makeSubmapGrid;
 });

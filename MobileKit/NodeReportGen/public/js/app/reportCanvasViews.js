@@ -1,5 +1,5 @@
 // reportCanvasViews.js
-/*global module, require */
+/*global console, module, require */
 /* jshint undef:true, unused:true */
 if (typeof define !== 'function') { var define = require('amdefine')(module); }
 
@@ -8,7 +8,8 @@ define(function(require, exports, module) {
     var $ = require('jquery');
     var _ = require('underscore');
     var Backbone = require('backbone');
-    var CNSNT = require('app/cnsnt');
+    var CNSNT = require('common/cnsnt');
+    var newIdTracker = require('app/newIdTracker');
     var newMultiCanvas = require('app/newMultiCanvas');
     var REPORT  = require('app/reportGlobals');
 
@@ -83,23 +84,29 @@ define(function(require, exports, module) {
                     case 'submapGrid':
                         this.addLayer(REPORT.reportViewResources.contexts['submapGrid'],[0,0],4,'submapGrid');
                         break;
+                    case 'facilities':
+                        this.addLayer(REPORT.reportViewResources.contexts['facilities'],[0,0],5,'facilities');
+                        break;
                     case 'paths':
-                        this.addLayer(REPORT.reportViewResources.contexts['paths'],[0,0],5,'paths');
+                        this.addLayer(REPORT.reportViewResources.contexts['paths'],[0,0],6,'paths');
+                        break;
+                    case 'markers':
+                        this.addLayer(REPORT.reportViewResources.contexts['markers'],[0,0],7,'markers');
                         break;
                     case 'fovs':
-                        this.addLayer(REPORT.reportViewResources.contexts['fovs'],[0,0],6,'fovs');
+                        this.addLayer(REPORT.reportViewResources.contexts['fovs'],[0,0],8,'fovs');
                         break;
                     case 'wedges':
-                        this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],7,'wedges');
+                        this.addLayer(REPORT.reportViewResources.contexts['wedges'],[0,0],9,'wedges');
                         break;
                     case 'tokens':
-                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],8,'tokens');
+                        this.addLayer(REPORT.reportViewResources.contexts['tokens'],[0,0],10,'tokens');
                         break;
                     case 'analyses':
-                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],9,'analyses');
+                        this.addLayer(REPORT.reportViewResources.contexts['analyses'],[0,0],11,'analyses');
                         break;
                     case 'peaks':
-                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],10,'peaks');
+                        this.addLayer(REPORT.reportViewResources.contexts['peaks'],[0,0],12,'peaks');
                         break;
                 }
             }
@@ -112,6 +119,7 @@ define(function(require, exports, module) {
                 this.docWidth = $(document).width();
                 this.docHeight = $(document).height();
                 this.scaleFac = 1.0;
+                this.name = "reportCompositeView";
                 REPORT.usageTracker.use(this, CNSNT.clearStatusLine);
                 this.canvasId = "id_" + this.options.name;
                 // this.$el.append('<input type="button" value="Click me">');
@@ -126,7 +134,7 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
+                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'facilities', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
@@ -135,7 +143,7 @@ define(function(require, exports, module) {
                             var aspect = 1.2;
                             var actualWidth = s.canvas.width  + 2 * padding[0];
                             var actualHeight = s.canvas.height + 2 * padding[1];
-                            this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth, 
+                            this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth,
                                 0.95*aspect*this.docWidth/actualHeight]);
                             this.context.canvas.width  = this.scaleFac * actualWidth;
                             this.context.canvas.height = this.scaleFac * actualHeight;
@@ -171,6 +179,7 @@ define(function(require, exports, module) {
                 this.docWidth = $(document).width();
                 this.docHeight = $(document).height();
                 this.scaleFac = 1.0;
+                this.name = "reportCompositeViewWithLinks";
                 REPORT.usageTracker.use(this, CNSNT.clearStatusLine);
                 this.canvasId = "id_" + this.options.name;
                 // this.$el.append('<input type="button" value="Click me">');
@@ -186,24 +195,31 @@ define(function(require, exports, module) {
             },
             render: function(padding) {
                 var init = false;
-                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'paths', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
+                var allLayers = ['none', 'map', 'satellite', 'submapGrid', 'facilities', 'paths', 'markers', 'fovs', 'wedges', 'tokens', 'analyses', 'peaks'];
                 for (var i=0; i<allLayers.length; i++) {
                     var layerName = allLayers[i], s;
                     if (layerName in this.available) {
                         s = REPORT.reportViewResources.contexts[layerName];
-                        if (!init) {
-                            var aspect = 1.2;
-                            var actualWidth = s.canvas.width  + 2 * padding[0];
-                            var actualHeight = s.canvas.height + 2 * padding[1];
-                            this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth, 
-                                0.95*aspect*this.docWidth/actualHeight]);
-                            this.context.canvas.width  = this.scaleFac * actualWidth;
-                            this.context.canvas.height = this.scaleFac * actualHeight;
-                            init = true;
-                            this.$el.width(this.context.canvas.width);
-                            this.$el.height(this.context.canvas.height);
+                        if (s) {
+                            if (!init) {
+                                var aspect = 1.2;
+                                var actualWidth = s.canvas.width  + 2 * padding[0];
+                                var actualHeight = s.canvas.height + 2 * padding[1];
+                                if (REPORT.settings.get("magnify") === null) {
+                                    this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth,
+                                        0.95*aspect*this.docWidth/actualHeight]);
+                                }
+                                else {
+                                    this.scaleFac = 1
+                                }
+                                this.context.canvas.width  = this.scaleFac * actualWidth;
+                                this.context.canvas.height = this.scaleFac * actualHeight;
+                                init = true;
+                                this.$el.width(this.context.canvas.width);
+                                this.$el.height(this.context.canvas.height);
+                            }
+                            this.context.drawImage(s.canvas, padding[0], padding[1], this.context.canvas.width, this.context.canvas.height);
                         }
-                        this.context.drawImage(s.canvas, padding[0], padding[1], this.context.canvas.width, this.context.canvas.height);
                     }
                 }
             },
@@ -237,8 +253,10 @@ define(function(require, exports, module) {
             repositoryChanged: function(e) {
                 if (this.done) return;
                 var allAvailable = true;
+                var id = newIdTracker().objectId(this);
                 if (e.context in this.available) this.available[e.context] = true;
                 for (var l in this.available) allAvailable = allAvailable && this.available[l];
+                console.log("id: " + id + " " + JSON.stringify(this.available));
                 if (allAvailable) {
                     this.render([0,0]);
                     this.done = true;
@@ -249,4 +267,3 @@ define(function(require, exports, module) {
     }
     module.exports.init = reportCanvasViewsInit;
 });
-

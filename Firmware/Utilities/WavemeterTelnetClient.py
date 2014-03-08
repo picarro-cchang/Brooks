@@ -31,7 +31,7 @@ class WavemeterTelnetClient(object):
                 data = self.sock.recv(1024)
                 if not len(data): break
                 self.string += data
-                self.tlast = time.clock()
+                self.tlast = time.time()
                 if "\n" in self.string:
                     result = self.string.replace("\r","")
                     self.string = ""

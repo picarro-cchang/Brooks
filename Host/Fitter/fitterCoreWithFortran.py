@@ -21,6 +21,7 @@ File History:
     10-12-07 sze   Allow scripts to use different spectral and spline libraries instead
                     of making these libraries global 
     13-01-29 sze   Add per virtual laser offset for use with FSR hopping or laser current tuning
+    13-10-19 sze   Calculate spectral duration for each spectrum
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -47,19 +48,11 @@ from tables import *
 from Host.Common.timestamp import unixTime
 import traceback
 
-"""
-if sys.platform == "win32":
-    if sys.version_info[:2] == (2, 5):
-        import fitutils_2_5 as fitutils
-        from cluster_analyzer_2_5 import find_clusters
-    elif sys.version_info[:2] == (2, 6):
-        import fitutils_2_6 as fitutils
-        from cluster_analyzer_2_6 import find_clusters
-    elif sys.version_info[:2] == (2, 7):
-        import fitutils_2_7 as fitutils
-        from cluster_analyzer_2_7 import find_clusters
-else:
-"""
+if sys.version_info[:2] == (2, 7):
+    # Get around import problem for py2exe in Python 2.7
+    def dependencies_for_myprogram():
+        from scipy.sparse.csgraph import _validation
+
 import fitutils
 from cluster_analyzer import find_clusters
 
@@ -125,11 +118,11 @@ def loadSplineLibrary(fnameOrConfig):
 ################################################################################
 deprecateMessageTimes = {}
 def deprecate(msg):
-    now = clock()
+    now = time()
     if not((msg in deprecateMessageTimes) and (now-deprecateMessageTimes[msg] < 60)):
         print msg
         Log(msg,Level=2)
-        deprecateMessageTimes[msg] = clock()
+        deprecateMessageTimes[msg] = time()
 
 ################################################################################
 # Spectral lineshape functions
@@ -1282,6 +1275,7 @@ class RdfData(object):
                 rdfData.startRow = low
                 rdfData.endRow = high
                 rdfData.spectLatency = latency
+                rdfData.spectDuration = 0.001*(max(rdfData.timestamp) - min(rdfData.timestamp))
                 return rdfData
 
             pace = max(0.1,min(1.0,float(RED_DISCARD_ALL-qSizes[i])/(RED_DISCARD_ALL-RED_THRESHOLD)))

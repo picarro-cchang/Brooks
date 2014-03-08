@@ -90,7 +90,7 @@ pzt = mean(d.pztValue)
 
 species = (d.subschemeId & 0x3FF)[0]
 
-tstart = time.clock()
+tstart = time.time()
 RESULT = {}
 r = None
 #deps.setDep(("base",17),("base",16),0.35,0.0)

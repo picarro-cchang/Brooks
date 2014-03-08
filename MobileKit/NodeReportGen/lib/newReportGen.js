@@ -10,7 +10,9 @@ define(function(require, exports, module) {
     var getTicket = require('./md5hex');
     var mkdirp = require('mkdirp');
     var newAnalysesDataFetcher = require('./newAnalysesDataFetcher');
+    var newFacilitiesDataFetcher = require('./newFacilitiesDataFetcher');
     var newFovsDataFetcher = require('./newFovsDataFetcher');
+    var newMarkersDataFetcher = require('./newMarkersDataFetcher');
     var newPathsDataFetcher = require('./newPathsDataFetcher');
     var newPeaksDataFetcher = require('./newPeaksDataFetcher');
     var newRptGenService = require('./newRptGenService');
@@ -46,6 +48,7 @@ define(function(require, exports, module) {
         // Parse the contents into an object to verify it is syntactically valid JSON
         var instrDir, instrFname;
         var that = this;
+        that.resuming = false;
         try {
             this.instructions = JSON.parse(this.contents);
         }
@@ -53,8 +56,18 @@ define(function(require, exports, module) {
             callback(new Error("Instructions are not in valid JSON notation"));
             return;
         }
+        this.instrType = 'unknown';
+        if (this.instructions.hasOwnProperty("instructions_type")) {
+            this.instrType = this.instructions["instructions_type"];
+        }
         this.ticket = getTicket(this.contents);
-        this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
+        if (params.hasOwnProperty('resume') && params['resume']) {
+            this.request_ts = params['start_ts'];
+            that.resuming = true;
+        }
+        else {
+            this.request_ts = ts.msUnixTimeToTimeString(ts.getMsUnixTime());
+        }
         instrDir = path.join(this.reportDir, this.ticket.substr(0,2), this.ticket);
         instrFname = path.join(instrDir, "instructions.json");
 
@@ -71,6 +84,11 @@ define(function(require, exports, module) {
                     fs.readFile(instrFname, "ascii", function (err, data) {
                         if (err) callback(err);
                         else if (data !== contents) callback(new Error("MD5 hash collision in instructions"));
+                        else if (params.hasOwnProperty('resume') && params['resume']) {
+                            // Restart the run
+                            that.emit("resume", {"taskKey": params['taskKey']});
+                            startNewRun(params["force"]);
+                        }
                         else {
                             if (params["force"]) startNewRun(true);
                             else checkForPreviousRuns();
@@ -84,7 +102,7 @@ define(function(require, exports, module) {
                         else {
                             fs.writeFile(instrFname, contents, "ascii", function (err) {
                                 if (err) callback(err);
-                                else startNewRun(false);
+                                else startNewRun(params["force"]);
                             });
                         }
                     });
@@ -118,10 +136,8 @@ define(function(require, exports, module) {
                                 if (bad) startNewRun(false);
                                 else {
                                     sf.writeStatus(statusFile,
-                                    {status: rptGenStatus.FAILED, msg:'Server failed during job'}, function (err) {
-                                        if (err) callback(err);
-                                        else startNewRun(false);
-                                    });
+                                        {status: rptGenStatus.FAILED, msg:'Server failed during job'});
+                                    startNewRun(false);
                                 }
                             }
                             else callback(null, result);
@@ -133,6 +149,7 @@ define(function(require, exports, module) {
         }
 
         function startNewRun(forceFlag) {
+            // if (forceFlag) console.log("!!! startNewRun: forceFlag is true !!!");
             var dirName = ts.timeStringAsDirName(that.request_ts);
             var workDir = path.join(instrDir, dirName);
             var taskKey = that.ticket + '_' + dirName;
@@ -152,18 +169,18 @@ define(function(require, exports, module) {
                     status = {"status": rptGenStatus.IN_PROGRESS,
                               "rpt_contents_hash": that.ticket,
                               "rpt_start_ts": that.request_ts,
-                              "request_ts": that.request_ts};
-                    sf.writeStatus(statusFile, status, function (err) {
+                              "request_ts": that.request_ts,
+                              "instructions_type": that.instrType,
+                              "user": that.user,
+                              "force": forceFlag,
+                              "resume": that.resuming };
+                    sf.writeStatus(statusFile, status);
+                    sf.readStatus(statusFile, function (err, result) {
                         if (err) callback(err);
                         else {
-                            sf.readStatus(statusFile, function (err, result) {
-                                if (err) callback(err);
-                                else {
-                                    // Indicate that run has started
-                                    callback(null, result);
-                                    obeyInstructions(taskKey, workDir, statusFile, forceFlag);
-                                }
-                            });
+                            // Indicate that run has started
+                            callback(null, result);
+                            obeyInstructions(taskKey, workDir, statusFile, forceFlag, that.user);
                         }
                     });
                 }
@@ -172,7 +189,7 @@ define(function(require, exports, module) {
         handleInstructions(instrDir, instrFname, this.contents);
 
 
-        function obeyInstructions(taskKey, workDir, statusFile, forceFlag) {
+        function obeyInstructions(taskKey, workDir, statusFile, forceFlag, user) {
             var instructions = that.instructions;
             var p3ApiService = that.p3ApiService;
             var rptGenService = that.rptGenService;
@@ -186,20 +203,27 @@ define(function(require, exports, module) {
                 else that.emit('success', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "stop_ts": now_ts, "duration": duration});
             }
 
-            that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts});
+            that.emit('start', {"taskKey": taskKey, "workDir": workDir, "instructions_type": type, "start_ts": that.request_ts, "user": user});
             console.log("obeyInstructions type: " + type + " force: " + forceFlag);
             switch (type) {
                 case "ignore":
-                    sf.writeStatus(statusFile, {"status": rptGenStatus.DONE}, logCompletion);
+                    sf.writeStatus(statusFile, {"status": rptGenStatus.DONE});
+                    logCompletion();
                     break;
                 case "getAnalysesData":
                     newAnalysesDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
-                case "getPathsData":
-                    newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                case "getFacilitiesData":
+                    newFacilitiesDataFetcher(p3ApiService, instructions, that.reportDir, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getFovsData":
                     newFovsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                    break;
+                case "getMarkersData":
+                    newMarkersDataFetcher(p3ApiService, instructions, that.reportDir, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
+                    break;
+                case "getPathsData":
+                    newPathsDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 case "getPeaksData":
                     newPeaksDataFetcher(p3ApiService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
@@ -208,9 +232,8 @@ define(function(require, exports, module) {
                     newReportMaker(rptGenService, instructions, workDir, statusFile, that.submit_key, forceFlag).run(logCompletion);
                     break;
                 default:
-                    sf.writeStatus(statusFile,{"status": rptGenStatus.FAILED, "msg": "Bad instructions_type"},function (err){
-                        logCompletion(new Error("Bad instructions_type"));
-                    });
+                    sf.writeStatus(statusFile,{"status": rptGenStatus.FAILED, "msg": "Bad instructions_type"});
+                    logCompletion(new Error("Bad instructions_type"));
                     break;
             }
         }

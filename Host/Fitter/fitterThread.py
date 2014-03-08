@@ -27,6 +27,7 @@ File History:
                     affect the others
     11-06-04 sze   Use a Listener to get spectra from the spectrum collector instead of getting spectra from
                     the measurement system
+    13-10-19 sze   Add spectral duration for each spectrum to RESULTS dictionary
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -358,6 +359,7 @@ class Fitter(object):
             try:
                 if RESULTS:
                     RESULTS["spect_latency"] = getattr(self.spectrum,"spectLatency")
+                    RESULTS["spect_duration"] = getattr(self.spectrum,"spectDuration")
             except:
                 pass
         self.fitViewer([DATA,ANALYSES,RESULTS])

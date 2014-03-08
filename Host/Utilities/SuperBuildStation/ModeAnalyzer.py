@@ -344,8 +344,8 @@ class ModeAnalyzer(object):
                 setDirectTune(True) 
             setTunerOffset(0)
             setSpectCntrlDiagnostic()
-            self.slope = 200
-            self.pztPk2pk = 1600
+            self.slope = 90
+            self.pztPk2pk = 900
             self.divisor = 256
         self.setupSweep()
         laserNum = 1 + self.frame.combo_box_laser.GetCurrentSelection()
@@ -403,6 +403,7 @@ class ModeAnalyzer(object):
         scale = (pkpos/self.mainSep)**0.05
         self.slope *= scale
         self.pztPk2pk *= scale
+        print self.slope, self.pztPk2pk
         if self.pztPk2pk > 65000:
             self.pztPk2pk = 65000
             self.slope /= scale

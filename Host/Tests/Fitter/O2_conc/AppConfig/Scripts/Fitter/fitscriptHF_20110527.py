@@ -26,7 +26,7 @@ def initExpAverage(xavg,x,hi,dxMax,count):
 def fitQuality(sdFit,maxPeak,normPeak,sdTau):
     return sqrt(sdFit**2/((maxPeak/normPeak)**2 + sdTau**2))
 
-tstart = time.clock()
+tstart = time.time()
 
 if INIT:
     fname = os.path.join(BASEPATH,r"./MADS/spectral library v2_1_AADS4_MA_20110527.ini")
@@ -104,7 +104,7 @@ tunerMean = mean(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
 
-tstart = time.clock()
+tstart = time.time()
 if d["spectrumId"]==60 and d["numgroups"]>8:
 #   Fit water at 7824.07 wvn, VC
     r = anHF[0](d,init,deps)
@@ -188,7 +188,7 @@ if (ignore_count == 0):
           "hf_ppbv":hf_ppbv,"hf_ppbv_ave":hf_ppbv_ave,
           "numgroups":d["numgroups"],"numRDs":d["datapoints"],          
           "pzt_mean":pzt_mean,"pzt_stdev":pzt_stdev}
-    RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
+    RESULT.update({"species":d["spectrumId"],"fittime":time.time()-tstart,
                "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
                "das_temp":dasTemp})
     RESULT.update(d.sensorDict)

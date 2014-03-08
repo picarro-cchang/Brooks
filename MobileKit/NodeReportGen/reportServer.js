@@ -1,4 +1,4 @@
-/*global console, __dirname, require */
+/*global console, __dirname, P3TXT, require */
 /* jshint undef:true, unused:true */
 /*
 reportServer.js is the node program which:
@@ -7,6 +7,7 @@ reportServer.js is the node program which:
     b) /getReport and /getReportLocal: Produce a page with a report. /getReport is
        used by the browser which accesses the report server via the authenticating proxy server whereas /getReportLocal
        is used internally by the reportServer to produce a PDF file via a headless browser.
+    c) /getTableOfContentsLocal: Produce a page with the table of contents for a report.
     
 2) Provides rest calls:
     a) /rest/RptGen/submit: submit a report generation instructions file
@@ -27,8 +28,11 @@ the authenticating proxy server.
 (function () {
     var argv = require('optimist').argv;
     var cjs = require("./public/js/common/canonical_stringify");
+    var csv = require('csv');
+    var et = require('elementtree');
     var express = require('express');
     var fs = require('fs');
+    var md5hex = require('./lib/md5hex');
     var mkdirp = require('mkdirp');
     var newP3ApiService = require('./lib/newP3ApiService');
     var newRptGenService = require('./lib/newRptGenService');
@@ -37,6 +41,7 @@ the authenticating proxy server.
     var newRunningTasks = require('./lib/newRunningTasks');
     var newUserJobDatabase = require('./lib/newUserJobDatabase');
     var p3nodeapi = require("./lib/p3nodeapi");
+    require("./public/js/common/P3TXT");
     var path = require('path');
     var pv = require('./public/js/common/paramsValidator');
     var REPORTROOT = argv.r ? argv.r : path.join(__dirname, 'ReportGen');
@@ -139,10 +144,11 @@ the authenticating proxy server.
     var newParamsValidator = pv.newParamsValidator;
 
     var app = express();
+    var uploadDir = path.join(REPORTROOT,"uploads");
     app.set('view engine', 'jade');
     app.set('view options', { layout: true });
     app.set('views', path.join(__dirname, 'views'));
-    app.use(express.bodyParser());
+    app.use(express.bodyParser({uploadDir: uploadDir}));
 
     var csp_url = scheme + SITECONFIG.p3host + p3port + '/' + SITECONFIG.p3site; //"https://dev.picarro.com/dev";
     var psys = SITECONFIG.psys;
@@ -214,7 +220,7 @@ the authenticating proxy server.
     }
 
     function handleRptGen(req, res) {
-        var pv, reportGen, result = {}, statusFile, user, workDir;
+        var hash, pv, reportGen, result = {}, statusFile, user, workDir;
         result = _.extend(result, req.query);
         // console.log("req.query: " + JSON.stringify(req.query));
         // Handle submission of instructions file, requests for status, and retrieval of results
@@ -231,9 +237,53 @@ the authenticating proxy server.
                     pv.get("user"), pv.get("contents"), runningTasks);
                 rptGenMonitor.monitor(reportGen);
                 runningTasks.monitor(reportGen);
-                reportGen.run({"force": pv.get("force")}, function (err, r) {
+                reportGen.run({"force": pv.get("force"), "resume": false}, function (err, r) {
                     if (err) res.send(_.extend(result,{"error": err.message}));
                     else res.send(_.extend(result,r));
+                });
+            }
+            else res.send(_.extend(result,{"error": pv.errors()}));
+            break;
+        case "resume":
+            // This is used to resume a makeReport request which was terminated prematurely by the
+            //  server going down
+            pv = newParamsValidator(req.query,
+                [{"name": "taskKey", "required": true, "validator": "string"}]);
+            if (pv.ok()) {
+                console.log("Resume called for " + pv.get("taskKey"));
+                // Get status and instructions
+                var taskKey = pv.get("taskKey").split("_");
+                var ticket = taskKey[0];
+                var request_ts = taskKey[1];
+                // Directory name is sharded by first byte of the ticket
+                var instrDir = path.join(REPORTROOT, ticket.substr(0,2), ticket); // Instructions
+                var instrFile = path.join(instrDir,'instructions.json');
+                workDir = path.join(instrDir, request_ts); // Status
+                statusFile = path.join(workDir,'status.dat');
+                sf.readStatus(statusFile, function (err, status) {
+                    if (!err) {
+                        if (status.status >= rptGenStatus.DONE) {
+                            res.send(_.extend(result,{"error": "Cannot resume a task that has already completed successfully."}));
+                        }
+                        else {
+                            fs.readFile(instrFile, "ascii", function (err, data) {
+                                if (!err) {
+                                    reportGen = newReportGen(REPORTROOT, p3ApiService, rptGenService,
+                                        status.user, data, runningTasks);
+                                    rptGenMonitor.monitor(reportGen);
+                                    runningTasks.monitor(reportGen);
+                                    reportGen.run({"force": status.force, "resume": true,
+                                        "taskKey":(taskKey[0] + "_" + taskKey[1]),
+                                        "start_ts": status.rpt_start_ts}, function (err, r) {
+                                        if (err) res.send(_.extend(result,{"error": err.message}));
+                                        else res.send(_.extend(result,r));
+                                    });
+                                }
+                                else res.send(_.extend(result,{"error": "Error reading instructions file"}));
+                            });                            
+                        }
+                    }
+                    else res.send(_.extend(result,{"error": "Error reading status file"}));
                 });
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
@@ -245,7 +295,7 @@ the authenticating proxy server.
                  {"name": "start_ts", "required": true, "validator": /\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/}]);
             if (pv.ok()) {
                 // Try to get status from the working directory
-                var hash = pv.get("contents_hash");
+                hash = pv.get("contents_hash");
                 workDir = path.join(REPORTROOT, hash.substr(0,2), hash,
                     ts.timeStringAsDirName(pv.get("start_ts")));
                 statusFile = path.join(workDir, "status.dat");
@@ -287,7 +337,8 @@ the authenticating proxy server.
             if (pv.ok()) {
                 user = req.query.user;
                 userJobDatabase.compressDatabaseAndGetAllData(user, function(err,data) {
-                    res.send(_.extend(result, {error:err, dashboard: data}));
+                    if (err) res.send(_.extend(result, {error:err.message, dashboard: data}));
+                    else res.send(_.extend(result, {error:null, dashboard: data}))
                 });
             }
             else res.send(_.extend(result,{"error": pv.errors()}));
@@ -306,6 +357,7 @@ the authenticating proxy server.
              hash: req.params.hash,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
+             P3TXT: P3TXT,
              port: SITECONFIG.proxyport,
              psys: SITECONFIG.psys,
              qry: req.query,
@@ -322,6 +374,24 @@ the authenticating proxy server.
              hash: req.params.hash,
              host: "",
              identity: "",
+             P3TXT: P3TXT,
+             port: "",
+             psys: "",
+             qry: req.query,
+             site: "",
+             ts:req.params.ts
+        });
+    }
+
+    function handleGetTableOfContentsLocal(req, res) {
+        res.render("getTableOfContents",
+            {apiKey: SITECONFIG.apiKey,
+             assets: "/",
+             clientKey: SITECONFIG.clientKey,
+             hash: req.params.hash,
+             host: "",
+             identity: "",
+             P3TXT: P3TXT,
              port: "",
              psys: "",
              qry: req.query,
@@ -333,9 +403,10 @@ the authenticating proxy server.
     function _index(req, res, force) {
         res.render("index",
             {assets: SITECONFIG.assets,
-             force: false,
+             force: force,
              host: SITECONFIG.proxyhost,
              identity: SITECONFIG.identity,
+             P3TXT: P3TXT,
              port: SITECONFIG.proxyport,
              psys: SITECONFIG.psys,
              qry: req.query,
@@ -392,6 +463,8 @@ the authenticating proxy server.
 
     app.get("/getReportLocal/:hash/:ts", handleGetReportLocal);
 
+    app.get("/getTableOfContentsLocal/:hash/:ts", handleGetTableOfContentsLocal);
+
     app.get("/rest/RptGen", handleRptGen);
 
     app.get("/rest/tz", handleTz);
@@ -400,6 +473,130 @@ the authenticating proxy server.
 
     app.get("/test/:testName", function(req, res) {
         res.end(req.params.testName);
+    });
+
+    app.post("/fileUpload", function(req, res, next) {
+        // console.log(req.body);
+        // console.log(req.files);
+        if (!_.isEmpty(req.files)) {
+            if ("kmlUpload" in req.files) {            
+                fs.readFile(req.files.kmlUpload.path,"ascii",function (err,data) {
+                    if (err) res.send({name: req.body.file_info, error: err.message});
+                    else {
+                        fs.unlink(req.files.kmlUpload.path);
+                        data = data.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+                        try {
+                            var start = data.indexOf("<");
+                            if (start > 10 || start < 0) {
+                                throw new Error("Cannot find starting element of KML file");
+                            }
+                            else {
+                                data = data.substr(start);
+                                var hash = md5hex(data);
+                                var dirName = path.join(REPORTROOT, "kml", hash.substr(0,2), hash);
+                                var fname = path.join(dirName, hash + ".kml");
+                                console.log("MD5 Hash: " + hash + ", dirName: " + dirName);
+                                // Check to see if the file has already been uploaded
+                                fs.readFile(fname, "ascii", function (err,oldData) {
+                                    if (err) {
+                                        console.log("File does not exist");
+                                        // Simple check for validity
+                                        et.parse(data);
+                                        // Copy the file into a directory with the specified hash
+                                        mkdirp(dirName, null, function (err) {
+                                            if (err) res.send({name: req.body.file_info, error: err.message});
+                                            else {
+                                                fs.writeFile(fname, data, "ascii", function (err) {
+                                                    if (err) res.send({name: req.body.file_info, error: err.message});
+                                                    else {
+                                                        res.send({name: req.body.file_info, hash:hash});
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        console.log("File has been found");
+                                        if (data !== oldData) throw new Error("Hash collision - should never occur");
+                                        else res.send({name: req.body.file_info, hash:hash});
+                                    }
+                                });
+                            }
+                        }
+                        catch (err) {
+                            console.log("Error in KML file upload" + err.message);
+                            res.send({name: req.body.file_info, error: err.message});
+                        }
+                    }
+                });
+            }
+            else if ("csvUpload" in req.files) {
+                fs.readFile(req.files.csvUpload.path,"ascii",function (err,data) {
+                    if (err) res.send({name: req.body.file_info, error: err.message});
+                    else {
+                        fs.unlink(req.files.csvUpload.path);
+                        data = data.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+                        try {
+                            var hash = md5hex(data);
+                            var dirName = path.join(REPORTROOT, "csv", hash.substr(0,2), hash);
+                            var fname = path.join(dirName, hash + ".csv");
+                            console.log("MD5 Hash: " + hash + ", dirName: " + dirName);
+                            // Check to see if the file has already been uploaded
+                            fs.readFile(fname, "ascii", function (err,oldData) {
+                                var errorCount = 0;
+                                if (err) {
+                                    console.log("File does not exist");
+                                    // Validate the CSV
+                                    csv().from.string(data,{columns:['latitude','longitude','text','color']})
+                                    .on('error', function() {
+                                        res.send({name: req.body.file_info, error:"Bad CSV file"});
+                                    })
+                                    .on('record', function(row, index) {
+                                        var lat = Number(row['latitude']);
+                                        if (isNaN(lat) || lat<-90.0 || lat>90.0) errorCount += 1;
+                                        var lng = Number(row['longitude']);
+                                        if (isNaN(lng)  || lat<-180.0 || lat>180.0) errorCount += 1;
+                                        var color = parseInt(row['color'],16);
+                                        if (isNaN(color)) errorCount += 1;
+                                        // console.log('#' + index + ' ' + JSON.stringify(row));
+                                        if (errorCount > 0) {
+                                            this.removeAllListeners('record').removeAllListeners('end');
+                                            res.send({name: req.body.file_info, error: "Bad CSV at line " + (index+1)});
+                                        }
+                                    })
+                                    .on('end', function() {
+                                        if (errorCount === 0) {
+                                            // Copy the file into a directory with the specified hash
+                                            mkdirp(dirName, null, function (err) {
+                                                if (err) res.send({name: req.body.file_info, error: err.message});
+                                                else {
+                                                    fs.writeFile(fname, data, "ascii", function (err) {
+                                                        if (err) res.send({name: req.body.file_info, error: err.message});
+                                                        else {
+                                                            res.send({name: req.body.file_info, hash:hash});
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                                else {
+                                    console.log("File has been found");
+                                    if (data !== oldData) throw new Error("Hash collision - should never occur");
+                                    else res.send({name: req.body.file_info, hash:hash});
+                                }
+                            });
+                        }
+                        catch (err) {
+                            console.log("Error in CSV file upload" + err.message);
+                            res.send({name: req.body.file_info, error: err.message});
+                        }
+                    }
+                });
+            }
+        }
+        else res.send({name: req.body.file_info});
     });
 
     /*
@@ -441,18 +638,63 @@ the authenticating proxy server.
         });
     });
 
+    // The following is to retrieve KML and CSV files previously uploaded. Note that the name of the file on
+    //  the filesystem is hash + '.' + type, whereas it is downloaded with the given filename. This allows for the same
+    //  file to be called different names by the user, although only one copy is stored on the filesystem
+    function getUploadedFile(req, res, type) {
+        var hash = req.params.hash;
+        var filename = path.join(REPORTROOT,type,req.params.prefix,hash,hash + '.' + type);
+        fs.exists(filename, function (exists) {
+            if (exists) {
+                var readStream = fs.createReadStream(filename);
+                res.contentType('application/octet-stream');
+                res.attachment(req.params.filename);
+                util.pump(readStream, res);
+            }
+            else {
+                res.send("Oops! Couldn't find that file.");
+            }
+        });
+    }
+
+    app.get("/rest/data/kml/:prefix/:hash/:filename", function(req, res) {
+        getUploadedFile(req,res,"kml");
+    });
+
+    app.get("/rest/data/csv/:prefix/:hash/:filename", function(req, res) {
+        getUploadedFile(req,res,"csv");
+    });
+
     app.use("/", express.static(__dirname + '/public'));
 
     mkdirp(REPORTROOT, null, function (err) {
         if (err) console.log(err);
-        // else console.log('Directory ' + REPORTROOT + ' created.');
-        rptGenMonitor = newRptGenMonitor(REPORTROOT);
-        app.use("/rest/data", express.static(REPORTROOT));
-        runningTasks.handleIncompleteTasksOnStartup( function () {
-            var port = SITECONFIG.reportport;
-            app.listen(port);
-            console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
-        });
+        else {
+            mkdirp(uploadDir, null, function (err) {
+                if (err) console.log(err);
+                else {
+                    rptGenMonitor = newRptGenMonitor(REPORTROOT);
+                    app.use("/rest/data", express.static(REPORTROOT));
+                    runningTasks.handleIncompleteTasksOnStartup( function (err) {
+                        var port = SITECONFIG.reportport;
+                        if (err) {
+                            console.log("Report Server cannot start: " + err);
+                        }
+                        else {
+                            app.listen(port);
+                            runningTasks.resumeJobsOnStartup(rptGenService, function (err) {
+                                if (err) {
+                                    console.log("Problem resuming jobs on startup: " + err);
+                                }
+                                else {
+                                    console.log("Report Server listening on port " + port + ". Root directory " + REPORTROOT);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
     });
     /*
     var http = require('http');
