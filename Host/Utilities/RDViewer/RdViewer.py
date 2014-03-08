@@ -23,9 +23,16 @@ import socket
 import time
 from ctypes import *
 from tables import *
-from Host.autogen.interface import *
-from Host.Common import CmdFIFO, SharedTypes
-from Host.Common.SharedTypes import RPC_PORT_DRIVER
+
+# Host takes precedence over local, if the first fails it's likely the others will too
+try:
+    from Host.autogen.interface import *
+    from Host.Common import CmdFIFO, SharedTypes
+    from Host.Common.SharedTypes import RPC_PORT_DRIVER
+except:
+    from interface import *
+    import CmdFIFO
+    from SharedTypes import RPC_PORT_DRIVER
 
 import threading
 from numpy import *
