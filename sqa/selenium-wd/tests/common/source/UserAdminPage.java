@@ -55,12 +55,10 @@ public class UserAdminPage extends BasePage {
 		this.strPageURL = this.strBaseURL + STRURLPath;
 		
 		System.out.println("\nThe UserAdminPage URL is: " + this.strPageURL);
-		
-		this.listTDUserIDs = new ArrayList<String>();
-		this.listTDSystems = new ArrayList<String>();
 	}	
 	
 	public List<String> getUserList() {
+		this.listTDUserIDs = new ArrayList<String>();
 		if (this.btnAdminUserList.equals(STRShowUserList)) {
 			this.btnAdminUserList.click();
 		}
@@ -77,6 +75,7 @@ public class UserAdminPage extends BasePage {
 	}
 	
 	public List<String> getSystemList() {
+		this.listTDSystems = new ArrayList<String>();
 		if (this.btnAdminSystemList.getText().equals(STRShowSystemsList)) {
 			this.btnAdminSystemList.click();
 			

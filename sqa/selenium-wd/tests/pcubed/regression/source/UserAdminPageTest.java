@@ -66,7 +66,7 @@ public class UserAdminPageTest {
 	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		driver.quit();
+//		driver.quit();
 	}
 
 	/**
@@ -127,12 +127,14 @@ public class UserAdminPageTest {
 	}	
 	
 	/**
-	 * Test Case: UserAdminPage_TC0003
-	 * 1. login as non-admin user
-	 * 2. The admin page is not accessiable
-	 *  
+	 * Test Case: UserAdminPage_ADM001 Verify Admin is able to create new user,
+	 * valid user details are displayed in 'Users List' table and new user is
+	 * able to login the application
+	 * 
 	 */
 	@Test
-	public void UserAdminPage_TC0003() {
+	public void UserAdminPage_ADM001() {
+		userAdminPage.open();
+		
 	}
 }

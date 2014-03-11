@@ -40,6 +40,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
  * 
  */
 public class TestSetup {
+
 	private static final String testPropFileName = "test.properties";
 	private Properties testProp;
 
@@ -80,6 +81,19 @@ public class TestSetup {
 
 	private String slowdownInSeconds; // For debugging the code and not
 										// recommended to use in real test case
+	
+	
+	
+	/**
+	 * @author pmahajan
+	 */
+	private String timezone;
+	private String timezoneToSelect;
+	private String show10Entries;
+	private String show25Entries;
+	private String surveyor2;
+	private String logFile2;
+	
 	/**
 	 * 
 	 */
@@ -118,6 +132,20 @@ public class TestSetup {
 			this.surveyor = this.testProp.getProperty("surveyor");
 			this.logFile = this.testProp.getProperty("logFile");
 
+			
+			
+			/**
+			 * @author pmahajan
+			 */
+			this.surveyor2 = this.testProp.getProperty("surveyor2");
+			this.logFile2 = this.testProp.getProperty("logFile2");
+			this.timezone = this.testProp.getProperty("Timezone");
+			this.timezoneToSelect = this.testProp.getProperty("TimezoneToSelect");
+			this.show10Entries = this.testProp.getProperty("show10Entries");
+			this.show25Entries = this.testProp.getProperty("show25Entries");
+			
+			
+			
 			this.browser = this.testProp.getProperty("browser");
 			System.out.println("The browser is: " + this.browser + "\n");
 
@@ -272,6 +300,43 @@ public class TestSetup {
 		return this.logFile;
 	}
 	
+	public String getSurveyor2() {
+		return this.surveyor2;
+	}
+	
+	public String getLogFile2() {
+		return this.logFile2;
+	}
+	
+	/**
+	 * @author pmahajan
+	 */
+	public String getTimezoneToSelect() {
+		return this.timezoneToSelect;
+	}
+	/**
+	 * @author pmahajan
+	 */
+	public String getTimezone() {
+		return this.timezone;
+	}
+	/**
+	 * @author pmahajan
+	 */
+	public String getShow10Entries() {
+		return this.show10Entries;
+	}
+
+	/**
+	 * @author pmahajan
+	 */
+	public String getShow25Entries() {
+		return this.show25Entries;
+	}
+	
+	
+	
+	
 	public void htReportDataSetup() {
 		//***Refactoring this part of the code later, should have object class...***//
 		
@@ -281,6 +346,8 @@ public class TestSetup {
 		this.htReportData.put("SWCornerLong", this.testProp.getProperty("SWCornerLong"));
 		this.htReportData.put("NECornerLat", this.testProp.getProperty("NECornerLat"));
 		this.htReportData.put("NECornerLong", this.testProp.getProperty("NECornerLong"));
+		this.htReportData.put("peaksMinAmp", this.testProp.getProperty("peaksMinAmp"));
+		this.htReportData.put("noOfRowsCols", this.testProp.getProperty("noOfRowsCols"));
 		this.htReportData.put("StartTime", this.testProp.getProperty("StartTime"));
 		this.htReportData.put("EndTime", this.testProp.getProperty("EndTime"));
 	}
