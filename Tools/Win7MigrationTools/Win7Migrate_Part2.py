@@ -484,6 +484,7 @@ def doMigrate(options):
         errMsg = "Drive validation failed. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     # TODO: software should not be running
@@ -494,6 +495,7 @@ def doMigrate(options):
 
         if ret is not None:
             root.error("Instrument is still running, failed to stop software and driver!")
+            mutils.pauseForUserResponse("exit")
             sys.exit(1)
 
     # Windows validation (6= Win7)
@@ -503,6 +505,7 @@ def doMigrate(options):
         errMsg = "Windows OS validation failed. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
 
@@ -514,6 +517,7 @@ def doMigrate(options):
     #    errMsg = "Python validation failed. See log results in '%s'" % logFilename
     #    root.error(errMsg)
     #    #showErrorDialog(errMsg)
+    #    mutils.pauseForUserResponse("exit")
     #    sys.exit(1)
 
 
@@ -525,6 +529,7 @@ def doMigrate(options):
     # the config file is expected to be in the same folder as we are running
     if not os.path.isfile(mdefs.MIGRATION_CONFIG_FILENAME):
         root.error("Generated file '%s' is missing, aborting." % mdefs.MIGRATION_CONFIG_FILENAME)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     defaults = {}
@@ -564,6 +569,7 @@ def doMigrate(options):
 
     if installerName is None:
         # no installer found, already logged an error so bail out now
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     root.info("Running installer '%s'." % installerName)
@@ -573,6 +579,7 @@ def doMigrate(options):
 
         if not ret:
             root.error("Installer failed or was canceled, aborting remainder of migration.")
+            mutils.pauseForUserResponse("exit")
             sys.exit(1)
     else:
         root.warning("Skipping software installation, --skipInstall option was set.")
@@ -584,6 +591,20 @@ def doMigrate(options):
     # TODO: Should we back up the files unconditionally? What if they were backed up before?
     #       Should we back up to a unique folder name?
     if isClean is True:
+        # The Win7 config backup folder should not yet exist on the migration drive, it's an
+        # error if it does.
+        backupFolder = os.path.join(migBackupDrive,
+                                    os.path.sep,
+                                    mdefs.BACKUP_WIN7_CONFIG_FOLDER_ROOT_NAME)
+
+        root.info("Checking whether Win7 config backup folder exists: '%s'" % backupFolder)
+
+        if os.path.isdir(backupFolder):
+            errMsg = "Win7 config backup folder '%s' exists! Either rename or delete it and run this program again."
+            root.error(errMsg)
+            mutils.pauseForUserResponse("exit")
+            sys.exit(1)
+
         # back up the installed config folders
         backupWin7ConfigFiles(instDrive, migBackupDrive)
 
