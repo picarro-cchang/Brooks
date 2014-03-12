@@ -22,7 +22,7 @@
 import ctypes
 import os
 import time
-from Host.autogen import interface
+#from Host.autogen import interface
 
 # Constants...
 ACCESS_PUBLIC = 0
