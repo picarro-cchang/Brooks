@@ -32,8 +32,8 @@ Source: {#sandboxDir}\host\AddOns\AIAutosampler\dist\*; DestDir: {app}\Autosampl
 ; Training module
 Source: {#sandboxDir}\host\Vendor\Applied Instruments\ALS-G\x86\Picarro_Training_Utility.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
-; USB-COM Port Driver installer
-Source: {#sandboxDir}\host\Vendor\Applied Instruments\ALS-G\x86\CDM20824_Setup.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
+; USB-COM to Serial Port Driver installer
+Source: {#sandboxDir}\host\Vendor\FTDI\CDM 2.08.30 WHQL Certified\CDM v2.08.30 WHQL Certified.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
 ; icon files
 Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
