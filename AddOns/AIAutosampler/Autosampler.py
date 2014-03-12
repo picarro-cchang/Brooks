@@ -383,7 +383,7 @@ class AutosamplerFrame(AutosamplerGUI):
 
         # get the version number and initialize the title
         self.appVer = _getAppVersion()
-        self.SetTitle("Autosampler GUI %s" % appVer)
+        self.SetTitle("Autosampler GUI %s" % self.appVer)
 
         self.ComPorts=[]
         for portname in enumerate_serial_ports():
