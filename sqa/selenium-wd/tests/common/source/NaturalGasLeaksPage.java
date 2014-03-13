@@ -28,6 +28,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public static final int timeoutInSeconds = 20;
 	public static final String STRTableEmpty = "No matching records found";
 	public static final String STRRefreshing = "Working";
+	public static final String STRRefresh = "Refresh";
 	public static final String STRDateToSelect = "2014-02-18";
 	public static final String STRShow100Entries = "100";
 	public static final String STRChangedTimezoneTime = "First: 2012-06-10 09:13:19-0400 (EDT)" + "\n" +
@@ -188,6 +189,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	@FindBy(how = How.XPATH, using = "//table[@id='id_logListTbl']/tbody/tr[1]/td[1]")
 	private WebElement firstLogTimeClndrVw;
 	
+	private String strRefreshButton = "//button[@id='id_getLogBtn' and contains(text(),'Refresh')]";
 	private String strSurveyorLink = "//div[@id='id_anzTitle']/a";
 	private String strCloseButton = "//button[@id='id_p3gduclose_btn']";
 	private String strLiveMapButton = "//button[contains(text(),'Live Map')]";
@@ -240,7 +242,6 @@ public class NaturalGasLeaksPage extends BasePage {
 			else
 				System.out.println(strSurveyor + " Surveyor not found!!"); 
 		}
-		TestSetup.slowdownInSeconds(2);
 	}
 	
 	public List<String> getSurveyorLogList(String strSurveyor) {
@@ -389,6 +390,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @return
 	 */
 	public boolean refreshSurveyorLogList(String strSurveyor, String strView) {
+		this.isRefreshButtonPresent();
 		this.selectSurveyor(strSurveyor);
 		if (strView.contains("List")) {
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
@@ -403,6 +405,11 @@ public class NaturalGasLeaksPage extends BasePage {
 			return true;
 		else
 			return false;
+	}
+	
+	public boolean isRefreshButtonPresent() {
+		return isElementPresent(driver, By.xpath(strRefreshButton),
+				timeoutInSeconds);
 	}
 
 	/**
