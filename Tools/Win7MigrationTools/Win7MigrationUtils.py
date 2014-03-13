@@ -244,6 +244,12 @@ def waitForRunningProcessesToEnd(processNameList, waitTimeoutSec):
     return timedOut
 
 
+def pauseForUserResponse(strState):
+    # strState should be a string such as 'continue' or 'exit'
+    print ""
+    raw_input("Hit Enter to %s: " % strState)
+
+
 class AnalyzerInfo(object):
     def __init__(self, appName = None):
         if appName is None:

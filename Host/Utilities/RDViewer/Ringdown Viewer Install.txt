@@ -1,0 +1,9 @@
+Run:
+C:\Picarro\G2000>bzr branch s:\CrdsRepositoryNew\Releases\G2000\1.3\Host
+C:\Picarro\G2000>bzr branch s:\CrdsRepositoryNew\Releases\G2000\1.3\SrcCode
+
+Change C:\Python25\Lib\site-packages\python.pth to:
+C:\Picarro\G2000\
+C:\Picarro\G2000\SrcCode
+
+C:\Picarro\G2000\SrcCode\Utilities>viewRdWaveforms.py

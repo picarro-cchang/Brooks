@@ -1,3 +1,10 @@
+# Autosampler.py
+#
+# Notes:
+#
+# 1. AutosamplerFrame::SetUITitle() does more than set the frame title. Beware.
+# 
+
 APP_NAME = "Autosampler"
 APP_DESCRIPTION = "CRDS Autosampler"
 __version__ = 1.0
@@ -374,7 +381,9 @@ class AutosamplerFrame(AutosamplerGUI):
         self.tdFile = tdFile
         AutosamplerGUI.__init__(self,*a,**k)
 
+        # get the version number and initialize the title
         self.appVer = _getAppVersion()
+        self.SetTitle("Autosampler GUI %s" % self.appVer)
 
         self.ComPorts=[]
         for portname in enumerate_serial_ports():
@@ -453,9 +462,6 @@ class AutosamplerFrame(AutosamplerGUI):
         self.status=[0,0,0,0,0,0,"defaultMethod"]
         self.statusbar.SetFieldsCount(5)
         self.statusbar.SetStatusWidths([-6,-1,-1,-1,-1])
-
-        # init the frame title with the default method that was set above
-        self.SetUITitle(self.method)
 
         # look for the DLL
         dllPath = "ALSG_API.dll"
@@ -2027,7 +2033,7 @@ class AutosamplerFrame(AutosamplerGUI):
             #self.ASSetInstallMotorSpeed(180,150)#self.ASSetInstallMotorSpeed(160,130)
             self.ASSetInstallMotorSpeed(260,150)
             #self.ASSetConfigTrayMetrics(0,9,3,3,59,59)
-            self.ASSetInstallTraySampleDepth(0,29)
+            #self.ASSetInstallTraySampleDepth(0,29)
             self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             self.ASSetMethodInjPointNo(0)
             self.ASSetMethodSimpleInjection((float)(cfg[self.method]['SampleVol']), (int)(cfg[self.method]['FillStrokes']), 0.0)
@@ -2200,13 +2206,11 @@ class AutosamplerFrame(AutosamplerGUI):
             self.SetUITitle(method)
 
     def SetUITitle(self, method):
+        # save off the active method
         self.ActiveMethod = method
 
-        if method != "":
-            title = "Autosampler UI %s - %s" % (self.appVer, method)
-        else:
-            title = "Autosampler UI %s" % self.appVer
-
+        # update the frame title
+        title = "Autosampler UI %s | %s" % (self.appVer, method)
         self.SetTitle(title)
 
     def OnSlot1Choice(self, event): 
@@ -2490,7 +2494,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.ASSetInstallMotorSpeed(260,150)#self.ASSetInstallMotorSpeed(160,130)
                 #self.ASSetConfigSyringeSpeed(130,130)
                 #self.ASSetConfigTrayMetrics(0,9,3,3,59,59)
-                self.ASSetInstallTraySampleDepth(0,29)
+                #self.ASSetInstallTraySampleDepth(0,29)
                 self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPreInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']) )      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPostInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

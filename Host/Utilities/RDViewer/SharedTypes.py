@@ -22,7 +22,7 @@
 import ctypes
 import os
 import time
-#from Host.autogen import interface
+import interface
 
 # Constants...
 ACCESS_PUBLIC = 0
@@ -61,7 +61,6 @@ RPC_PORT_IPV                = 50400
 RPC_PORT_READ_GPSWS         = 50071
 RPC_PORT_PERIPH_INTRF       = 50072
 RPC_PORT_CONFIG_MONITOR     = 50073
-RPC_PORT_AUTOSAMPLER        = 50074
 
 #TCP_PORT... are the port numbers used by "normal" TCP servers
 TCP_PORT_INTERFACE          = 51000
@@ -79,7 +78,6 @@ BROADCAST_PORT_RCB               = 40040
 BROADCAST_PORT_SPECTRUM_COLLECTOR = 40045
 BROADCAST_PORT_MEAS_SYSTEM       = 40050
 BROADCAST_PORT_DATA_MANAGER      = 40060
-BROADCAST_PORT_PERIPH_INTRF      = 40065
 BROADCAST_PORT_INSTMGR_DISPLAY   = 40070
 BROADCAST_PORT_FITTER_BASE       = 40080 # Fitters use consecutive ports starting from this one 
 BROADCAST_PORT_PROCESSED_RESULTS = 40100

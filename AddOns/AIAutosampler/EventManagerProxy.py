@@ -17,12 +17,18 @@
 # 06-12-04 russ  Added PrintEverything debug option
 # 07-09-03 sze   Commented out better traceback call to reduce length of messages
 
-from Host.Common import SharedTypes #to get the right TCP port to use
-from Host.Common import CmdFIFO
-from SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
+#from Host.Common import SharedTypes #to get the right TCP port to use
+#from Host.Common import CmdFIFO
 
 import traceback
 import sys
+
+# this file is only for running from sources!
+if not hasattr(sys, "frozen"):
+    import SharedTypes
+    import CmdFIFO
+    from SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
+
 
 __EventManagerProxy = None
 _PrintEverything = False

@@ -360,7 +360,7 @@ def backupFiles(fromDrive, toDrive, backupConfigsOnly):
     # TODO: Any chance of ending up with unins000.dat or unins000.exe? If so, exclude them too.
     #       Need to use regular expressions to find them since can end up with several.
     excludeDirs = [".bzr"]
-    excludeFiles = [".bzrignore"]
+    excludeFiles = [".bzrignore", "analyzerState.db", "analyzerState.db-journal"]
 
     # construct list of folders to backup
     foldersToBackupList = mdefs.CONFIG_FOLDERS_TO_BACKUP_LIST
@@ -497,6 +497,7 @@ def doMigrate(options):
         errMsg = "Drive validation failed. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     # Windows validation (5= WinXP)
@@ -506,6 +507,21 @@ def doMigrate(options):
         errMsg = "Windows OS validation failed. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
+        sys.exit(1)
+
+    # The WinXP backup folder should not yet exist on the migration drive, it's an
+    # error if it does.
+    backupFolder = os.path.join(migBackupDrive,
+                                os.path.sep,
+                                mdefs.BACKUP_XP_FOLDER_ROOT_NAME)
+
+    root.info("Checking whether WinXP backup folder exists: '%s'" % backupFolder)
+
+    if os.path.isdir(backupFolder):
+        errMsg = "WinXP backup folder '%s' exists! Either rename or delete it and run this program again."
+        root.error(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     """
@@ -522,6 +538,7 @@ def doMigrate(options):
         errMsg = "Python validation failed. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
     """
 
@@ -534,6 +551,7 @@ def doMigrate(options):
         errMsg = "System validation failed. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     analyzerName = anInfo.getAnalyzerNameAndNum()
@@ -574,6 +592,7 @@ def doMigrate(options):
         errMsg = "Migration aborted. See log results in '%s'" % logFilename
         root.error(errMsg)
         #showErrorDialog(errMsg)
+        mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
     # Get the volume name the user wants to use for the Win7 boot drive
