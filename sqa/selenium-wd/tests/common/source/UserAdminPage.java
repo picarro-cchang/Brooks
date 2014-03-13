@@ -25,6 +25,14 @@ public class UserAdminPage extends BasePage {
 	private List<String> listTDUserIDs = null;
 	private List<String> listTDSystems = null;
 	
+	private static final int timeoutSeconds = 20;
+	private static TestSetup testSetup;
+    private static final String STRNewUserId = "SQA" + testSetup.getRandomNumber();
+    private static final String STRFirstName = "SQA";
+    private static final String STRLastName = "Picarro";
+    private static final String STRDisplayName = "SQA Picarro user";
+    private static final String STRPwd = "sqa#Picarro%0";
+    
 	@FindBy(how = How.ID, using = "id_p3adminlist_usrBtn")
 	private WebElement btnAdminUserList;
 	
@@ -34,7 +42,7 @@ public class UserAdminPage extends BasePage {
 	@FindBy(how = How.ID_OR_NAME, using ="id_useridTable_length")
 	private WebElement selectShowUsersList;
 	
-	@FindBy(how = How.XPATH, using = "//*[@id='id_useridTable_filter']/label/input")
+	@FindBy(how = How.XPATH, using = "//div[@id='id_useridTable_filter']/label/input")
 	private WebElement inputSearchBox;
 	
 	@FindBy(how = How.ID, using = "id_useridTable")
@@ -45,9 +53,62 @@ public class UserAdminPage extends BasePage {
 	
 	@FindBy(how = How.CLASS_NAME, using = "paginate_disabled_previous")
 	private WebElement btnPagePrevious;
+
+	@FindBy(how = How.ID, using = "id_p3adminlist_addid")
+	private WebElement btnAddUser;
 	
-	private String strXpathUserTableRows = "//*[@id='id_useridTable']/tbody/tr";
-	private String strXpathSystemTableRows = "//*[@id='id_psysTable']/tbody/tr";
+	@FindBy(how = How.XPATH, using = "//label[contains(text(),'User ID')]/../div[@class='input']/input")
+	private WebElement inputUserId;
+	
+	@FindBy(how = How.XPATH, using = "//label[contains(text(),'First Name')]/../div[@class='input']/input")
+	private WebElement inputFirstName;
+	
+	@FindBy(how = How.XPATH, using = "//label[contains(text(),'Last Name')]/../div[@class='input']/input")
+	private WebElement inputLastName;
+	
+	@FindBy(how = How.XPATH, using = "//label[contains(text(),'Display Name')]/../div[@class='input']/input")
+	private WebElement inputDisplayName;
+	
+	@FindBy(how = How.XPATH, using = "//label[contains(text(),'Password')]/../div[@class='input']/input[@placeholder='Password']")
+	private WebElement inputPassword;
+	
+	@FindBy(how = How.XPATH, using = "//label[contains(text(),'Confirm Password')]/../div[@class='input']/input")
+	private WebElement inputConfirmPassword;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][1]")
+	private WebElement inputAllowNGL;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][2]")
+	private WebElement inputAllowNGLPrimeView;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][3]")
+	private WebElement inputAllowRPT;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][4]")
+	private WebElement inputAddForce;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][5]")
+	private WebElement inputAllowUsrProfile;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][6]")
+	private WebElement inputAllowUsrAdmn;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='checkbox'][7]")
+	private WebElement inputActivateUsr;
+	
+	@FindBy(how = How.XPATH, using = "//a[@class='btn']")
+	private WebElement btnRturnToUsrLst;
+	
+	@FindBy(how = How.XPATH, using = "//input[@type='submit' and @value='Save']")
+	private WebElement btnSave;
+	
+	
+	private By byAddButton = By.xpath("//button[@id='id_p3adminlist_addid']");
+	private By bySaveButton = By.xpath("//input[@type='submit' and @value='Save']");
+	private By bySearchBox = By.xpath("//div[@id='id_useridTable_filter']/label/input");
+	
+	private String strXpathUserTableRows = "//table[@id='id_useridTable']/tbody/tr";
+	private String strXpathSystemTableRows = "//table[@id='id_psysTable']/tbody/tr";
 	
 	public UserAdminPage(WebDriver driver, String baseURL) {
 		super(driver, STRPageTitle);
@@ -89,7 +150,36 @@ public class UserAdminPage extends BasePage {
 			tdSystem = driver.findElement(By.xpath(this.strXpathSystemTableRows + "[" + i + "]" + "/td[1]"));
 			listTDSystems.add(tdSystem.getText());
 		}
-		
 		return listTDSystems;
+	}
+	
+	public boolean createNewUser() {
+		findElement(driver, byAddButton, timeoutSeconds);
+		this.btnAddUser.click();
+		findElement(driver, bySaveButton, timeoutSeconds);
+		
+		this.inputUserId.sendKeys(STRNewUserId);
+		this.inputFirstName.sendKeys(STRFirstName);
+		this.inputLastName.sendKeys(STRLastName);
+		this.inputDisplayName.sendKeys(STRDisplayName);
+		this.inputPassword.sendKeys(STRPwd);
+		this.inputConfirmPassword.sendKeys(STRPwd);
+		
+		this.inputAllowNGL.click();
+		this.inputAllowNGLPrimeView.click();
+		this.inputAllowRPT.click();
+		this.inputAddForce.click();
+		this.inputAllowUsrProfile.click();
+		this.inputAllowUsrAdmn.click();
+		this.inputActivateUsr.click();
+		
+		this.btnSave.click();
+		this.btnRturnToUsrLst.click();
+		
+		findElement(driver, bySearchBox, timeoutSeconds);
+		this.inputSearchBox.sendKeys(STRNewUserId);
+		
+		
+		return false;
 	}
 }

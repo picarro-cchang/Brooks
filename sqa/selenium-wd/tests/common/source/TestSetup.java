@@ -334,7 +334,12 @@ public class TestSetup {
 		return this.show25Entries;
 	}
 	
-	
+	/**
+	 * @author pmahajan
+	 */
+	public String getRandomNumber() {
+		return this.randomNumber;
+	}
 	
 	
 	public void htReportDataSetup() {

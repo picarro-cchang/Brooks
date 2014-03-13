@@ -174,8 +174,6 @@ public class ReportGenerationPortalPage extends BasePage {
 	@FindBy(how = How.ID, using = "id_make_pdf")
 	private WebElement btnMakePDF;
 
-	private By btnNextEnabled = By.xpath("//a[@class='paginate_enabled_next']");
-
 	@FindBy(how = How.XPATH, using = "//div[@id='id_jobTable_filter']/label/input")
 	private WebElement inputSearchReport;
 
@@ -218,6 +216,9 @@ public class ReportGenerationPortalPage extends BasePage {
 	private String btnAddRuns = "//table[@id='runTable']/thead/tr/th[1]/button";
 	private String formAnalyzerLoaded = "//div[@class='modal hide fade in']";
 	private String linkView = "//table[@id='id_jobTable']/tbody/tr[1]/td[5]/b/a[@class='viewLink']";
+	private By btnNextEnabled = By.xpath("//a[@class='paginate_enabled_next']");
+	private By btnSaveChanges = By.xpath("//button[@id='id_save_template']");
+	private By btnMakeRprt = By.xpath("//button[@id='id_save_template']");
 
 	public ReportGenerationPortalPage(WebDriver driver, String baseURL) {
 		super(driver, STRPageTitle);
@@ -247,8 +248,8 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.inputStartTime.sendKeys(reportData.get("StartTime"));
 		this.inputEndTime.sendKeys(reportData.get("EndTime"));
 
-		ImagingUtility.takeScreenShot(driver, ".\\screenshots\\",
-				"Add Run Settings");
+//		ImagingUtility.takeScreenShot(driver, ".\\screenshots\\",
+//				"Add Run Settings");
 
 		this.btnOKForAddNewRun.click();
 		TestSetup.slowdownInSeconds(1);
@@ -414,6 +415,36 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.inputSWCorner.sendKeys(strSWCorner);
 		this.inputNECorner.sendKeys(strNECorner);
 	}
+	
+	/**
+	 * Method to provide title, SW Corner, NE Corner, no. of rows and columns
+	 * 
+	 * @param title
+	 * @param swCorner
+	 * @param neCorner
+	 * @param rowsColumnsSize
+	 */
+	public void provideTitleCorner(String strReportTitle,
+			Hashtable<String, String> reportData, int timeoutSeconds) {
+		// Wait till page is loaded
+		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+
+		this.reportTitle.sendKeys(strReportTitle);
+
+		// select the text present
+		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+		// deletes the selected text
+		this.inputSWCorner.sendKeys(Keys.BACK_SPACE);
+		// select the text present
+		this.inputNECorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+		// deletes the selected text
+		this.inputNECorner.sendKeys(Keys.BACK_SPACE);
+
+		this.inputSWCorner.sendKeys(reportData.get("SWCornerLat") + ", "
+				+ reportData.get("SWCornerLong"));
+		this.inputNECorner.sendKeys(reportData.get("NECornerLat") + ", "
+				+ reportData.get("NECornerLong"));
+	}
 
 	/**
 	 * Method to provide blank SW corner
@@ -462,10 +493,6 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectAnalyzer.sendKeys(strAnalyzer);
 		this.inputStartTime.sendKeys(reportData.get("StartTime"));
 		this.inputEndTime.sendKeys(reportData.get("EndTime"));
-		
-		ImagingUtility.takeScreenShot(driver, ".\\screenshots\\",
-		"Add Run Settings");
-		
 		this.btnOKForAddNewRun.click();
 	}
 
@@ -571,7 +598,6 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * @param timeoutSeconds
 	 */
 	public void selectSummaryTables(String strFigureValue, int timeoutSeconds) {
-
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
@@ -593,7 +619,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * 
 	 * @param figureValue
 	 */
-	public void provideSubmapFigureDetailsWithNoTables(String strFigureValue) {
+	public void provideSubmapFigureDetailsWithNoTables(String strFigureValue, int timeoutSeconds) {
 		this.btnAddNewSubmapFigure.click();
 
 		this.selectSubmapPaths.sendKeys(strFigureValue);
@@ -602,6 +628,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSubmapIsotopic.sendKeys(strFigureValue);
 		this.selectSubmapFOV.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
+		findElement(driver, btnSaveChanges, timeoutSeconds);
 	}
 
 	/**
@@ -650,10 +677,11 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * 
 	 * @param timeoutSeconds
 	 */
-	public void clickSaveChangesMakeReport() {
+	public void clickSaveChangesMakeReport(int timeoutSeconds) {
 		this.btnSaveEditTemplate.click();
+		findElement(driver, btnMakeRprt, timeoutSeconds);
 		this.btnMakeReport.click();
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -663,7 +691,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void clickOnMakeReport() {
 		this.btnMakeReport.click();
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -763,7 +791,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 		if (strSummaryFigureValue.contains("No")){
 			String actualMessage = acceptAlert();
 			return actualMessage.contains(STRNoSubmapGrid);
@@ -875,7 +903,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptySubmapTemplate);
 	}
@@ -889,7 +917,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideOnlySubmapGridSummaryFigure(timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
 	public void makeReportWithoutSummaryTables(String strAnalyzer,
@@ -902,7 +930,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideSummaryFigureDetailsNoTablesSelected(strFigureValue,
 				timeoutSeconds);
 		this.provideSubmapFigureDetails(strFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
 	public void makeReportWithoutSumarryFiguresSettings(String strAnalyzer,
@@ -914,7 +942,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.selectSummaryTables(strFigureValue, timeoutSeconds);
 		this.provideSubmapFigureDetails(strFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
 	public void makeReportWithoutSubmapTables(String strAnalyzer,
@@ -925,8 +953,8 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
-		this.provideSubmapFigureDetailsWithNoTables(strFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.provideSubmapFigureDetailsWithNoTables(strFigureValue, timeoutSeconds);
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
 	public void makeReportWithoutSubmapFiguresSettings(String strAnalyzer,
@@ -938,7 +966,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
 		this.selectSubmapTables();
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
 	public boolean makeReportWithoutSummary(String strAnalyzer,
@@ -950,13 +978,27 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.clickOnEditTemplate(timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptySummaryTemplate);
 	}
 
 	
-	public boolean makeDuplicateReport(String strReportTitle, int timeoutSeconds) {
+	public void makeDuplicateReport(String strReportTitle, int timeoutSeconds) {
+		// closing child window
+		driver.close();
+
+		// switch control to parent window
+		driver.switchTo().window(parentWindow);
+		driver.switchTo().frame("id_iframe");
+
+		// Wait till page is loaded
+		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+
+		this.clickOnEditReport(strReportTitle, timeoutSeconds);
+	}
+	
+	public boolean makeDuplicateReportNotAllowed(String strReportTitle, int timeoutSeconds) {
 		// closing child window
 		driver.close();
 
@@ -976,20 +1018,20 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean makeReportWithNoAnalyzerDetails() {
 		this.clickOnMakeReport();
 		String actualMessage = acceptAlert();
-		TestSetup.slowdownInSeconds(2);
 		return actualMessage.contains(STREmptySurveyorTemplate);
 	}
 
 	public boolean cancelReportGenerationWhenNoAnalyzerProvided(
-			Hashtable<String, String> reportData, String reportType,
-			String strSummaryFigureValue, String strSubmapFigureValue,
-			int timeoutSeconds) {
-		this.provideTitleCornerDetails(reportData, timeoutSeconds);
+			String strReportTitle, Hashtable<String, String> reportData,
+			String reportType, String strSummaryFigureValue,
+			String strSubmapFigureValue, int timeoutSeconds) {
+		driver.switchTo().frame("id_iframe");
+		this.provideTitleCorner(strReportTitle, reportData, timeoutSeconds);
 		if (reportType.contains(STRPDFReport))
 			this.btnMakePDF.click();
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 		String actualMessage = cancelAlert();
 		return actualMessage.contains(STREmptySurveyorTemplate);
 	}
@@ -1149,7 +1191,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.reportTitle.sendKeys(" New");
 		String strNewTitle = strReportTitle + " New";
 		this.unselectSummaryTables(timeoutSeconds);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 		return strNewTitle;
 	}
 	
@@ -1164,7 +1206,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue);
-		this.clickSaveChangesMakeReport();
+		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 	
 	/**
@@ -1213,7 +1255,6 @@ public class ReportGenerationPortalPage extends BasePage {
 			int timeoutSeconds) {
 		String newReportTitle = this.editAndMakeReport(strReportTitle,
 				timeoutSeconds);
-		this.isViewLinkPresent(newReportTitle, timeoutSeconds);
 		this.unCheckReport(newReportTitle, timeoutSeconds);
 		return newReportTitle;
 	}
@@ -1306,11 +1347,13 @@ public class ReportGenerationPortalPage extends BasePage {
 	return true;
 	}
 	
-	public boolean showNReportEntries(String numberOfEntries, int timeoutSeconds) {
+	public void waitForReportPageLoading(int timeoutSeconds){
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
-		
+	}
+	
+	public boolean showNReportEntries(String numberOfEntries) {
 		Select selectNoOfReportEntries = new Select(this.selectShowNReportEntries);
 		selectNoOfReportEntries.selectByValue(numberOfEntries);
 

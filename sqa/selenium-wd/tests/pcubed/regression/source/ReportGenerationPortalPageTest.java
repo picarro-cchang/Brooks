@@ -35,7 +35,8 @@ public class ReportGenerationPortalPageTest {
 	private static LoginPage loginPage;
 	private static ReportGenerationPortalPage pageReportGeneration;
 
-	private static int timeoutSeconds = 60;
+	private static int timeoutSecondsToViewReport = 180;
+	private static int timeoutSecondsElePresent = 20;
 	private static String strPDFReport = "PDF";
 	private static String strViewReport = "View";
 	private static String strFigureValueYes = "Yes";
@@ -95,15 +96,13 @@ public class ReportGenerationPortalPageTest {
 	 * Make a report for a specific surveyor
 	 *  
 	 */
-//	@Test
+	@Test
 	public void ReportGenerationPortalPage_TC0001() {
 		pageReportGeneration.open();
-		testSetup.slowdownInSeconds(15);
-		
 		pageReportGeneration.makeReport(testSetup.getSurveyor(), testSetup.getHTReportData());
 //		testSetup.slowdownInSeconds(3);
 		
-		ImagingUtility.takeScreenShot(driver, screenShotsDir, "ReportGenerationPortalPage_TC0001");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir, "ReportGenerationPortalPage_TC0001");
 	}
 	
 	/**
@@ -112,15 +111,15 @@ public class ReportGenerationPortalPageTest {
 	 * More scenarios and variations should be added ...
 	 *  
 	 */
-//	@Test
+	@Test
 	public void ReportGenerationPortalPage_TC0002() {
 		pageReportGeneration.open();
 		testSetup.slowdownInSeconds(15);
 		
-//		pageReportGeneration.viewReport(testSetup.getHTReportData().get("Title"));
+		pageReportGeneration.viewReport(testSetup.getHTReportData().get("Title"));
 //		testSetup.slowdownInSeconds(5);
 		
-		ImagingUtility.takeScreenShot(driver, screenShotsDir, "ReportGenerationPortalPage_TC0002_02");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir, "ReportGenerationPortalPage_TC0002_02");
 	}
 
 	/**
@@ -133,16 +132,16 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT001_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT001_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT001_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT001_ViewReport");
 	}
 
 	/**
@@ -155,13 +154,13 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strPDFReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 
 		assertTrue(pageReportGeneration.isDownloadPDFButtonPresent(testSetup
-				.getHTReportData().get("Title"), 150));
+				.getHTReportData().get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT002");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT002");
 	}
 
 	/**
@@ -173,10 +172,9 @@ public class ReportGenerationPortalPageTest {
 	 @Test
 	public void reportGenerationPortalPage_RPT003() {
 		pageReportGeneration.open();
-
 		assertTrue(pageReportGeneration.makeReportWithoutSubmapFigures(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds));
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -190,7 +188,7 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		assertTrue(pageReportGeneration.makeReportWithoutSubmapFigures(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strPDFReport, strFigureValueYes, timeoutSeconds));
+				strPDFReport, strFigureValueYes, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -204,7 +202,7 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		assertTrue(pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueNo,
-				strFigureValueYes, timeoutSeconds));
+				strFigureValueYes, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -218,16 +216,16 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReportWithSubmapGridOnlyNoSummary(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds);
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT006_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT006_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT006_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT006_ViewReport");
 	}
 
 	/**
@@ -241,16 +239,16 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReportWithoutSummaryTables(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds);
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT007_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT007_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT007_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT007_ViewReport");
 	}
 
 	/**
@@ -264,16 +262,16 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReportWithoutSumarryFiguresSettings(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds);
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT008_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT008_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-		.get("Title"), timeoutSeconds));
+		.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT008_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT008_ViewReport");
 	}
 	
 	/**
@@ -282,21 +280,21 @@ public class ReportGenerationPortalPageTest {
 	 * are not selected in template for 'Submap Pages'
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT009() {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReportWithoutSubmapTables(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds);
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT009_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT009_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT009_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT009_ViewReport");
 
 		// click on Cell - e.g. C5
 	}
@@ -312,16 +310,16 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReportWithoutSubmapFiguresSettings(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds);
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT010_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT010_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT010_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT010_ViewReport");
 
 		// click on Cell - e.g. C5 - remaining
 	}
@@ -332,12 +330,12 @@ public class ReportGenerationPortalPageTest {
 	 * details are not provided
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT011() {
 		pageReportGeneration.open();
 		assertTrue(pageReportGeneration.makeReportWithoutSummary(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, strFigureValueYes, timeoutSeconds));
+				strViewReport, strFigureValueYes, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -346,23 +344,26 @@ public class ReportGenerationPortalPageTest {
 	 * the report
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT012() {
 		pageReportGeneration.open();
-		assertTrue(pageReportGeneration
-				.cancelReportGenerationWhenNoAnalyzerProvided(
-						testSetup.getHTReportData(), strViewReport,
-						strFigureValueYes, strFigureValueYes, timeoutSeconds));
+		String strReportTitle = testSetup.getHTReportData().get("Title")
+				+ "RPT012";
 
-		assertFalse(pageReportGeneration.isViewLinkPresent(testSetup
-				.getHTReportData().get("Title"), timeoutSeconds));
+		assertTrue(pageReportGeneration
+				.cancelReportGenerationWhenNoAnalyzerProvided(strReportTitle,
+						testSetup.getHTReportData(), strViewReport,
+						strFigureValueYes, strFigureValueYes,
+						timeoutSecondsElePresent));
+		assertFalse(pageReportGeneration.isViewLinkPresent(strReportTitle,
+				timeoutSecondsElePresent));
 
 		assertTrue(pageReportGeneration.makeReportWithNoAnalyzerDetails());
-		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+		assertTrue(pageReportGeneration.viewReport(strReportTitle,
+				timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT012");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT012");
 	}
 
 	/**
@@ -370,7 +371,7 @@ public class ReportGenerationPortalPageTest {
 	 * "FORCE" ' permission can generate duplicate reports
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT013() {
 		/**
 		 * Need to add code to check ADD FORCE permission
@@ -378,28 +379,28 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT013_Report1_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT013_Report1_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT013_Report1_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT013_Report1_ViewReport");
 
 		pageReportGeneration.makeDuplicateReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds);
+				.get("Title"), timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT013_Report2_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT013_Report2_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT013_Report2_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT013_Report2_ViewReport");
 	}
 
 	/**
@@ -407,7 +408,7 @@ public class ReportGenerationPortalPageTest {
 	 * "FORCE" ' permission cannot generate duplicate reports
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT014() {
 		/**
 		 * Need to add code to check ADD FORCE permission
@@ -415,19 +416,19 @@ public class ReportGenerationPortalPageTest {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT014_Report1_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT014_Report1_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT014_Report1_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT014_Report1_ViewReport");
 
-		assertTrue(pageReportGeneration.makeDuplicateReport(testSetup
-				.getHTReportData().get("Title"), timeoutSeconds));
+		assertTrue(pageReportGeneration.makeDuplicateReportNotAllowed(testSetup
+				.getHTReportData().get("Title"), timeoutSecondsElePresent));
 	}
 
 	/**
@@ -437,21 +438,21 @@ public class ReportGenerationPortalPageTest {
 	 * @author pmahajan
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT016() {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT016_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT016_Dashboard");
 
 		assertTrue(pageReportGeneration.isViewLinkPresent(testSetup
-				.getHTReportData().get("Title"), timeoutSeconds));
+				.getHTReportData().get("Title"), timeoutSecondsToViewReport));
 
 		assertTrue(pageReportGeneration.searchLogFile(testSetup
-				.getHTReportData().get("Title"), strValidSearch, timeoutSeconds));
+				.getHTReportData().get("Title"), strValidSearch, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -461,15 +462,15 @@ public class ReportGenerationPortalPageTest {
 	 * @author pmahajan
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT017() {
 		pageReportGeneration.open();
 
 		assertTrue(pageReportGeneration.makeReportWithInvalidLatitudeCorner(
-				testSetup.getHTReportData().get("Title"), timeoutSeconds));
+				testSetup.getHTReportData().get("Title"), timeoutSecondsElePresent));
 
 		assertTrue(pageReportGeneration.makeReportWithInvalidLongitudeCorner(
-				testSetup.getHTReportData().get("Title"), timeoutSeconds));
+				testSetup.getHTReportData().get("Title"), timeoutSecondsElePresent));
 
 		assertTrue(pageReportGeneration
 				.makeReportWithBlankSWNECorners(strSWCorner));
@@ -483,11 +484,11 @@ public class ReportGenerationPortalPageTest {
 	 * displayed when blank title report is generated
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT018() {
 		pageReportGeneration.open();
 		assertTrue(pageReportGeneration.makeReportWithNoTitle(
-				testSetup.getHTReportData(), timeoutSeconds));
+				testSetup.getHTReportData(), timeoutSecondsElePresent));
 	}
 
 	/**
@@ -495,11 +496,11 @@ public class ReportGenerationPortalPageTest {
 	 * displayed when start and end time is not provided
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT019() {
 		pageReportGeneration.open();
 		pageReportGeneration.provideBlankStartEndTime(testSetup.getSurveyor(),
-				timeoutSeconds);
+				timeoutSecondsElePresent);
 
 		assertTrue(pageReportGeneration.isStartTimeBlank());
 		assertTrue(pageReportGeneration.isEndTimeBlank());
@@ -510,12 +511,12 @@ public class ReportGenerationPortalPageTest {
 	 * delete analyzer details
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT020() {
 		pageReportGeneration.open();
 		assertFalse(pageReportGeneration.deleteAnalyzerDetails(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				timeoutSeconds));
+				timeoutSecondsElePresent));
 	}
 
 	/**
@@ -523,11 +524,11 @@ public class ReportGenerationPortalPageTest {
 	 * delete summary pages figure details
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT021() {
 		pageReportGeneration.open();
 		assertFalse(pageReportGeneration.deleteSummaryFigureDetails(
-				testSetup.getSurveyor(), timeoutSeconds));
+				testSetup.getSurveyor(), timeoutSecondsElePresent));
 	}
 
 	/**
@@ -535,11 +536,11 @@ public class ReportGenerationPortalPageTest {
 	 * delete submap pages figure details
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT022() {
 		pageReportGeneration.open();
 		assertFalse(pageReportGeneration.deleteSubmapFigureDetails(
-				testSetup.getSurveyor(), timeoutSeconds));
+				testSetup.getSurveyor(), timeoutSecondsElePresent));
 	}
 
 	/**
@@ -547,34 +548,34 @@ public class ReportGenerationPortalPageTest {
 	 * reload the report and edit it
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT023() {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT023_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT023_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT023_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT023_ViewReport");
 
-		pageReportGeneration.closeChildWindow(timeoutSeconds);
+		pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		String newReportTitle = pageReportGeneration.editAndMakeReport(
-				testSetup.getHTReportData().get("Title"), timeoutSeconds);
+				testSetup.getHTReportData().get("Title"), timeoutSecondsElePresent);
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT023_NewReport_Dashboard");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT023_NewReport_Dashboard");
 
 		assertTrue(pageReportGeneration.viewReport(newReportTitle,
-				timeoutSeconds));
+				timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT023_NewReport_ViewReport");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT023_NewReport_ViewReport");
 	}
 	
 	/**
@@ -582,18 +583,18 @@ public class ReportGenerationPortalPageTest {
 	 * peaks with min and greater than min ampl are shown
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT024() {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReportPeaksMinAmpProvided(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
 				strViewReport, strFigureValueYes, strFigureValueYes,
-				timeoutSeconds);
+				timeoutSecondsElePresent);
 
 		assertTrue(pageReportGeneration.viewReport(testSetup.getHTReportData()
-				.get("Title"), timeoutSeconds));
+				.get("Title"), timeoutSecondsToViewReport));
 		assertTrue(pageReportGeneration
-				.isPeaksAmpPresentGreaterThanMinAmp(timeoutSeconds));
+				.isPeaksAmpPresentGreaterThanMinAmp(timeoutSecondsElePresent));
 	}
 	
 	/**
@@ -601,10 +602,11 @@ public class ReportGenerationPortalPageTest {
 	 * Selected' buttons are displaying the list of reports accordingly
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT025_ShowSelectedReports() {
 		pageReportGeneration.open();
-		assertTrue(pageReportGeneration.showSelectedReports(timeoutSeconds));
+		pageReportGeneration.waitForReportPageLoading(timeoutSecondsElePresent);
+		assertTrue(pageReportGeneration.showSelectedReports(timeoutSecondsElePresent));
 	}
 
 	/**
@@ -612,17 +614,17 @@ public class ReportGenerationPortalPageTest {
 	 * Selected' buttons are displaying the list of reports accordingly
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT025_ShowAllReports() {
 		pageReportGeneration.open();
 		pageReportGeneration.makeReport(testSetup.getSurveyor(),
 				testSetup.getHTReportData(), strViewReport, strFigureValueYes,
-				strFigureValueYes, timeoutSeconds);
+				strFigureValueYes, timeoutSecondsElePresent);
 		String strNewReportTitle = pageReportGeneration.makeAndUncheckReport(
-				testSetup.getHTReportData().get("Title"), timeoutSeconds);
+				testSetup.getHTReportData().get("Title"), timeoutSecondsToViewReport);
 		assertTrue(pageReportGeneration.showAllReports(testSetup
 				.getHTReportData().get("Title"), strNewReportTitle,
-				timeoutSeconds));
+				timeoutSecondsElePresent));
 	}
 
 	/**
@@ -630,15 +632,15 @@ public class ReportGenerationPortalPageTest {
 	 * 'n' entries', the report list shows n entries on the dashboard
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT026() {
 		pageReportGeneration.open();
 
+		pageReportGeneration.waitForReportPageLoading(timeoutSecondsElePresent);
 		assertTrue(pageReportGeneration.showNReportEntries(
-				testSetup.getShow10Entries(), timeoutSeconds));
-
+				testSetup.getShow10Entries()));
 		assertTrue(pageReportGeneration.showNReportEntries(
-				testSetup.getShow25Entries(), timeoutSeconds));
+				testSetup.getShow25Entries()));
 	}
 
 	/**
@@ -646,22 +648,25 @@ public class ReportGenerationPortalPageTest {
 	 * not generated when analyzer details are not provided
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT029() {
 		pageReportGeneration.open();
+		String strReportTitle = testSetup.getHTReportData().get("Title")
+				+ "RPT029";
+
 		assertTrue(pageReportGeneration
-				.cancelReportGenerationWhenNoAnalyzerProvided(
+				.cancelReportGenerationWhenNoAnalyzerProvided(strReportTitle,
 						testSetup.getHTReportData(), strPDFReport,
-						strFigureValueYes, strFigureValueYes, timeoutSeconds));
-		assertFalse(pageReportGeneration.isDownloadPDFButtonPresent(testSetup
-				.getHTReportData().get("Title"), timeoutSeconds));
+						strFigureValueYes, strFigureValueYes,
+						timeoutSecondsElePresent));
+		assertFalse(pageReportGeneration.isDownloadPDFButtonPresent(
+				strReportTitle, timeoutSecondsElePresent));
 
 		assertTrue(pageReportGeneration.makeReportWithNoAnalyzerDetails());
-		assertTrue(pageReportGeneration.isDownloadPDFButtonPresent(testSetup
-				.getHTReportData().get("Title"), 150));
+		assertTrue(pageReportGeneration.isDownloadPDFButtonPresent(strReportTitle, timeoutSecondsToViewReport));
 
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"ReportGenerationPortalPage_RPT029");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"ReportGenerationPortalPage_RPT029");
 	}
 
 	/**
@@ -669,12 +674,12 @@ public class ReportGenerationPortalPageTest {
 	 * generated when 'Summary and Submap Pages' template is empty
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT030() {
 		pageReportGeneration.open();
 		assertTrue(pageReportGeneration.makeReportWithNoSummarySubmapDetails(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strViewReport, timeoutSeconds));
+				strViewReport, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -684,11 +689,12 @@ public class ReportGenerationPortalPageTest {
 	 * @author pmahajan
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT031() {
 		pageReportGeneration.open();
+		pageReportGeneration.waitForReportPageLoading(timeoutSecondsElePresent);
 		assertTrue(pageReportGeneration.searchLogFile(testSetup.getLogFile(),
-				strInvalidSearch, timeoutSeconds));
+				strInvalidSearch, timeoutSecondsElePresent));
 	}
 
 	/**
@@ -696,11 +702,11 @@ public class ReportGenerationPortalPageTest {
 	 * not generated when 'Summary and Submap Pages' template is empty
 	 * 
 	 */
-	 @Test
+	@Test
 	public void reportGenerationPortalPage_RPT032() {
 		pageReportGeneration.open();
 		assertTrue(pageReportGeneration.makeReportWithNoSummarySubmapDetails(
 				testSetup.getSurveyor(), testSetup.getHTReportData(),
-				strPDFReport, timeoutSeconds));
+				strPDFReport, timeoutSecondsElePresent));
 	}
 }

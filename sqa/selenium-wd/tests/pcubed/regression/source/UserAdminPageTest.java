@@ -13,6 +13,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.How;
 import org.openqa.selenium.support.PageFactory;
 
 import common.source.ImagingUtility;
@@ -91,7 +94,7 @@ public class UserAdminPageTest {
 	 * 4. Compare the list with the pre-built sample users and they should be consistent
 	 *  
 	 */
-	@Test
+//	@Test
 	public void UserAdminPage_TC0001() {
 		userAdminPage.open();
 		userList = userAdminPage.getUserList();
@@ -112,7 +115,7 @@ public class UserAdminPageTest {
 	 * 4. Compare the list with the pre-built sample systems and they should be consistent
 	 *  
 	 */
-	@Test
+//	@Test
 	public void UserAdminPage_TC0002() {
 		userAdminPage.open();
 		TestSetup.slowdownInSeconds(3);
@@ -135,6 +138,7 @@ public class UserAdminPageTest {
 	@Test
 	public void UserAdminPage_ADM001() {
 		userAdminPage.open();
+		
 		
 	}
 }

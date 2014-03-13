@@ -70,7 +70,7 @@ public class NaturalGasLeaksPageTest {
 	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-//		driver.quit();
+		driver.quit();
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class NaturalGasLeaksPageTest {
 	 * Fail the case if can't find one specific surveyor 
 	 * 
 	 */
-//	@Test
+	@Test
 	public void naturalGasLeaksPage_TC0001() {
 		naturalGasLeaksPage.open();
 		
@@ -119,7 +119,7 @@ public class NaturalGasLeaksPageTest {
 			fail("Didn't find the surveyor: " + testSetup.getSurveyor());
 		}
 		
-		ImagingUtility.takeScreenShot(driver, screenShotsDir, "naturalGasLeaksPage_TC0001");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir, "naturalGasLeaksPage_TC0001");
 	}
 	
 	/**
@@ -127,7 +127,7 @@ public class NaturalGasLeaksPageTest {
 	 * Get the log file list for a specific surveyor
 	 * 
 	 */
-//	@Test
+	@Test
 	public void naturalGasLeaksPage_TC0002() {
 		naturalGasLeaksPage.open();
 	
@@ -140,7 +140,7 @@ public class NaturalGasLeaksPageTest {
 			System.out.println(strLogName);
 		}
 		
-		ImagingUtility.takeScreenShot(driver, screenShotsDir, "naturalGasLeaksPage_TC0002");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir, "naturalGasLeaksPage_TC0002");
 	}
 	
 	/**
@@ -148,15 +148,14 @@ public class NaturalGasLeaksPageTest {
 	 * Show the map log for a specific surveyor
 	 * 
 	 */
-//	@Test
+	@Test
 	public void naturalGasLeaksPage_TC0003() {
 		naturalGasLeaksPage.open();
 		
 		naturalGasLeaksPage.showSurveyorLogMap(testSetup.getSurveyor(), testSetup.getLogFile());
 		
 		TestSetup.slowdownInSeconds(15);
-		
-		ImagingUtility.takeScreenShot(driver, screenShotsDir, "naturalGasLeaksPage_TC0003");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir, "naturalGasLeaksPage_TC0003");
 	}
 	
 	/**
@@ -190,14 +189,12 @@ public class NaturalGasLeaksPageTest {
 				.getLogFile()));
 
 		naturalGasLeaksPage.clickCloseMetadataButton();
-
 		naturalGasLeaksPage.showSurveyorLogMap(testSetup.getSurveyor(),
 				testSetup.getLogFile());
 
-		TestSetup.slowdownInSeconds(15);
-
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"naturalGasLeaksPage_GDU001");
+//		TestSetup.slowdownInSeconds(15);
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"naturalGasLeaksPage_GDU001");
 	}
 	
 	/**
@@ -212,16 +209,15 @@ public class NaturalGasLeaksPageTest {
 		naturalGasLeaksPage.open();
 		naturalGasLeaksPage.showSurveyorLiveMap(testSetup.getSurveyor(), strListView);
 
-		TestSetup.slowdownInSeconds(15);
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"naturalGasLeaksPage_GDU002_ListView");
+//		TestSetup.slowdownInSeconds(15);
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"naturalGasLeaksPage_GDU002_ListView");
 		
 		naturalGasLeaksPage.clickSelectSurveyorButton();
 		naturalGasLeaksPage.showSurveyorLiveMap(testSetup.getSurveyor(), strCalView);
 
-		TestSetup.slowdownInSeconds(15);
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"naturalGasLeaksPage_GDU002_CalendarView");
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"naturalGasLeaksPage_GDU002_CalendarView");
 	}
 
 	/**
@@ -235,9 +231,6 @@ public class NaturalGasLeaksPageTest {
 	public void naturalGasLeaksPage_GDU003() {
 		naturalGasLeaksPage.open();
 		assertFalse(naturalGasLeaksPage.closeSurveyorWindow());
-
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"naturalGasLeaksPage_GDU003");
 	}
 
 	/**
@@ -251,12 +244,9 @@ public class NaturalGasLeaksPageTest {
 	public void naturalGasLeaksPage_GDU004() {
 		naturalGasLeaksPage.open();
 		assertTrue(naturalGasLeaksPage.refreshSurveyorLogList(
-				testSetup.getSurveyor2(), strListView));
+				testSetup.getSurveyor(), strListView));
 		assertTrue(naturalGasLeaksPage.refreshSurveyorLogList(
-				testSetup.getSurveyor2(), strCalView));
-		/*
-		 * need to add few more verifications if required
-		 */
+				testSetup.getSurveyor(), strCalView));
 	}
 
 	/**
@@ -311,7 +301,7 @@ public class NaturalGasLeaksPageTest {
 	 * @author pmahajan
 	 * 
 	 */
-//	@Test
+	@Test
 	public void naturalGasLeaksPage_GDU008() {
 		naturalGasLeaksPage.open();
 
@@ -367,9 +357,9 @@ public class NaturalGasLeaksPageTest {
 		naturalGasLeaksPage.open();
 		naturalGasLeaksPage.showSurveyorWindowLiveMap(testSetup.getSurveyor());
 
-		TestSetup.slowdownInSeconds(15);
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"naturalGasLeaksPage_GDU012");
+//		TestSetup.slowdownInSeconds(15);
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"naturalGasLeaksPage_GDU012");
 	}
 
 	/**
@@ -429,9 +419,9 @@ public class NaturalGasLeaksPageTest {
 		naturalGasLeaksPage.showSurveyorMapLogFromCalendarView(
 				testSetup.getSurveyor(), testSetup.getLogFile());
 
-		TestSetup.slowdownInSeconds(15);
-		ImagingUtility.takeScreenShot(driver, screenShotsDir,
-				"naturalGasLeaksPage_GDU016");
+//		TestSetup.slowdownInSeconds(15);
+//		ImagingUtility.takeScreenShot(driver, screenShotsDir,
+//				"naturalGasLeaksPage_GDU016");
 	}
 
 	/**
@@ -524,15 +514,15 @@ public class NaturalGasLeaksPageTest {
 
 		assertTrue(naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
 				testSetup.getSurveyor(), strListView));
-
 		assertTrue(naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
 				testSetup.getSurveyor(), strCalView));
 
-		naturalGasLeaksPage.surveyorLinkPresentBackFromMapLogListView(
-				testSetup.getSurveyor(), testSetup.getLogFile());
-
-		naturalGasLeaksPage.surveyorLinkPresentBackFromMapLogCalendarView(
-				testSetup.getSurveyor(), testSetup.getLogFile());
+		assertTrue(naturalGasLeaksPage
+				.surveyorLinkPresentBackFromMapLogListView(
+						testSetup.getSurveyor(), testSetup.getLogFile()));
+		assertTrue(naturalGasLeaksPage
+				.surveyorLinkPresentBackFromMapLogCalendarView(
+						testSetup.getSurveyor(), testSetup.getLogFile()));
 	}
 	
 	/**
@@ -549,14 +539,12 @@ public class NaturalGasLeaksPageTest {
 
 		assertTrue(naturalGasLeaksPage.surveyorLinkPresentForLiveMap(
 				testSetup.getSurveyor(), strListView));
-
 		assertTrue(naturalGasLeaksPage.surveyorLinkPresentForLiveMap(
 				testSetup.getSurveyor(), strCalView));
 
-		naturalGasLeaksPage.surveyorLinkPresentForMapLogInListView(
-				testSetup.getSurveyor(), testSetup.getLogFile());
-
-		naturalGasLeaksPage.surveyorLinkPresentForMapLogInCalendarView(
-				testSetup.getSurveyor(), testSetup.getLogFile());
+		assertTrue(naturalGasLeaksPage.surveyorLinkPresentForMapLogInListView(
+				testSetup.getSurveyor(), testSetup.getLogFile()));
+		assertTrue(naturalGasLeaksPage.surveyorLinkPresentForMapLogInCalendarView(
+				testSetup.getSurveyor(), testSetup.getLogFile()));
 	}
 }
