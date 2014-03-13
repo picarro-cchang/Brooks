@@ -19,12 +19,16 @@
 
 #from Host.Common import SharedTypes #to get the right TCP port to use
 #from Host.Common import CmdFIFO
-import SharedTypes
-import CmdFIFO
-from SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
 
 import traceback
 import sys
+
+# this file is only for running from sources!
+if not hasattr(sys, "frozen"):
+    import SharedTypes
+    import CmdFIFO
+    from SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
+
 
 __EventManagerProxy = None
 _PrintEverything = False

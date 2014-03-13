@@ -2039,7 +2039,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.ASSetMethodSimpleInjection((float)(cfg[self.method]['SampleVol']), (int)(cfg[self.method]['FillStrokes']), 0.0)
             self.ASSetMethodPreInjWashes((int)(cfg[self.method]['PreRinse1']),(int)(cfg[self.method]['PreRinse2']),0,(int)(cfg[self.method]['PreSampleRinse']))   #ASSetMethodPreInjWashes(self, nSolvent1, nSolvent2, nSolvent3, nSample ):
             self.ASSetMethodPostInjWashes((int)(cfg[self.method]['PostRinse1']),(int)(cfg[self.method]['PostRinse2']),0)    #ASSetMethodPostInjWashes(self, nSolvent1, nSolvent2, nSolvent3):
-            self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),1)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
+            self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),99)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
             self.ASSetMethodDelay((float)(cfg[self.method]['PreInjDly']),(float)(cfg[self.method]['PostInjDly']),(int)((float)(cfg[self.method]['ViscosityDly'])),(int)((float)(cfg[self.method]['SolventViscosityDelay'])))          #ASSetMethodDelay(self, dPreInjDelay, dPostInjDelay, nViscDelay, nSolvDelay):
             self.PauseBtn.Enable(True)
             self.EndBtn.Enable(True)
@@ -2506,7 +2506,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 else:  #don't do rinses in this case
                     self.ASSetMethodPreInjWashes(0,0,0,0)   
                     self.ASSetMethodPostInjWashes(0,0,0)    
-                self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),1)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
+                self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),99)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
                 self.ASSetMethodDelay((float)(cfg[self.method]['PreInjDly']),(float)(cfg[self.method]['PostInjDly']),(int)((float)(cfg[self.method]['ViscosityDly'])),(int)((float)(cfg[self.method]['SolventViscosityDelay'])))          #ASSetMethodDelay(self, dPreInjDelay, dPostInjDelay, nViscDelay, nSolvDelay):
                 self.ASSetMethodInjDepth((double)(cfg[self.method]['InjectionPointOffset']))
                 self.ASRunMethod(self.tray,self.v,1)
@@ -2532,7 +2532,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 else:   #don't do rinses in this case
                     self.ASSetMethodPreInjWashes(0,0,0,0)
                     self.ASSetMethodPostInjWashes(0,0,0)
-                self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),1)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
+                self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),99)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
                 self.ASSetMethodDelay((float)(cfg[self.method]['PreInjDly']),(float)(cfg[self.method]['PostInjDly']),(int)((float)(cfg[self.method]['ViscosityDly'])),(int)((float)(cfg[self.method]['SolventViscosityDelay'])))          #ASSetMethodDelay(self, dPreInjDelay, dPostInjDelay, nViscDelay, nSolvDelay):
                 self.ASSetMethodInjDepth(float(cfg[self.method]['InjectionPointOffset']))
                 self.numInjDone=0
