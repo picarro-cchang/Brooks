@@ -23,6 +23,8 @@ DefaultGroupName=Picarro Autosampler
 OutputBaseFileName=setup_{#autosamplerVersion}
 DirExistsWarning=no
 
+; Windows 7 SP 1 or higher is required
+MinVersion=6.1.7601
 
 [Files]
 
