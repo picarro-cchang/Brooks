@@ -69,6 +69,8 @@ from postprocessdefn import *
 from postprocesscontrol import PostProcessController, ThreadedWorker
 from configdiffmodel import ConfigDiffModel
 
+from Utilities import AppInfo
+
 
 class ConfigDiffViewer(PostProcessController):
     '''
@@ -83,16 +85,16 @@ class ConfigDiffViewer(PostProcessController):
 
         PostProcessController.__init__(self, *args, **kwargs)
 
-        # About Info
-        self.about_name = "Configuration Difference Viewer"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "Configuration Difference Viewer"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
         descr = "Find and display differences between two Picarro "
-        descr += "Configuration directories."
-        self.about_description = descr
-        self.about_website = "http://www.picarro.com"
+        descr += "configuration directories."
+        self.about_description = descr  # about.getDescription()
+        self.about_website = about.getWebSite()
 
-        
         msg = "Searching for configuration differences."
         msg += "\nThis may take some time..."
         self._busy_msg = msg                

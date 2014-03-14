@@ -29,6 +29,9 @@ from Host.Common import CmdFIFO, SharedTypes, timestamp
 
 from Host.autogen import interface
 
+from Utilities import AppInfo
+
+
 #from Host.Common.SharedTypes import RPC_PORT_COORDINATOR, \
 #                                    RPC_PORT_DRIVER,  \
 #                                    RPC_PORT_SPECTRUM_COLLECTOR
@@ -51,12 +54,13 @@ class SensorPlotModel(object):
         Constructor
         '''
 
-        # About Info
-        self.about_name = "Sensor Plot (Test Station)"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
-        self.about_description = "Graphic plot of live analyzer output."
-        self.about_website = "http://www.picarro.com"
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "Sensor Plot (Test Station)"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = "Graphic plot of live analyzer output."  # about.getDescription()
+        self.about_website = about.getWebSite()
 
         if "cntls_obj" in kwargs:
             self.cntls_obj = kwargs["cntls_obj"]

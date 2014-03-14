@@ -62,6 +62,8 @@ from postprocessdefn import *
 from postprocesscontrol import PostProcessController, EntryControls
 from ringdownplotmodel import RingdownPlotModel
 
+from Utilities import AppInfo
+
 
 class RingdownPlotController(PostProcessController):
     '''
@@ -76,13 +78,14 @@ class RingdownPlotController(PostProcessController):
 
         PostProcessController.__init__(self, *args, **kwargs)
 
-        # About Info
-        self.about_name = "RingdownPlot Controller"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
-        self.about_description = "Graphic plot of analyzer output."
-        self.about_website = "http://www.picarro.com"
-        
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "RingdownPlot Controller"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = "Graphic plot of analyzer output." #about.getDescription()
+        self.about_website = about.getWebSite()
+
         self.allow_fi = True
         
         msg = "Processing the parameters."

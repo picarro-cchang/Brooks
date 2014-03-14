@@ -62,6 +62,9 @@ from sensorplotmodel import SensorPlotModel
 
 from Host.autogen import interface
 
+from Utilities import AppInfo
+
+
 class SensorPlotController(PostProcessController):
     '''
     SensorPlot Controller Class
@@ -75,13 +78,14 @@ class SensorPlotController(PostProcessController):
 
         PostProcessController.__init__(self, *args, **kwargs)
 
-        # About Info
-        self.about_name = "SensorPlot Controller"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
-        self.about_description = "Graphic plot of analyzer output."
-        self.about_website = "http://www.picarro.com"
-        
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "SensorPlot Controller"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = "Graphic plot of analyzer output."  # about.getDescription()
+        self.about_website = about.getWebSite()
+
         msg = "Processing the parameters."
         msg += "\nThis may take some time..."
         self._busy_msg = msg  

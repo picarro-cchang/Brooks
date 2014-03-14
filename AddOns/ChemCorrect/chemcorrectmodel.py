@@ -24,7 +24,8 @@ import matplotlib.font_manager as font_manager
 from scipy import stats
 from numpy import *
 
-CCVER = '1.2.0'
+from Utilities import AppInfo
+
 
 class ChemcorrectModel(object):
     '''
@@ -35,18 +36,19 @@ class ChemcorrectModel(object):
         '''
         Constructor
         '''
-        # About Info
-        self.about_name = "Chemcorrect"
-        
-        if not 'ccver' in kwargs:
-            self.about_version = CCVER
-        else:
-            self.about_version = kwargs['ccver']
+
+        # eat ccver if it is in kwargs
+        if  'ccver' in kwargs:
             del kwargs['ccver']
 
-        self.about_copyright = "(c) 2011 Picarro Inc."
-        self.about_description = "Graphic display of ChemCorrect(tm) output."
-        self.about_website = "http://www.picarro.com"
+        # version and about info
+        about = AppInfo()
+
+        self.about_version = about.getAppVer()
+        self.about_name = about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = about.getDescription()
+        self.about_website = about.getWebSite()
 
         if "cntls_obj" in kwargs:
             self.cntls_obj = kwargs["cntls_obj"]
@@ -728,7 +730,7 @@ class ChemcorrectModel(object):
         try:
             self.InstProc._evaluate_instruction_variables(self._inst_parms)
         except:
-            return 'Error: Cannot load instruction set.'
+            return 'Error: Cannot load instruction set (evaluate variables).'
             
 
         self.html_summary = self._build_summary_html()

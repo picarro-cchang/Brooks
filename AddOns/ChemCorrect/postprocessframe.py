@@ -24,12 +24,13 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 #from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 
 from postprocessdefn import *
-from Utilities.FigureInteraction import FigureInteraction
+from Utilities import FigureInteraction
 
 import wx.lib.inspection
 #from matplotlib.widgets import Button
 
-DSPVER = '1.2.0'
+from Utilities import AppInfo
+
 
 class PostProcessFrame(wx.Frame):
     """ 
@@ -64,18 +65,19 @@ class PostProcessFrame(wx.Frame):
             del kwargs["allow_fi"]
         else:
             self.allow_fi = None
-            
-        # About Info
-        self.about_name = "Picarro Post Processing"
-        if not 'dspver' in kwargs:
-            self.about_version = DSPVER
-        else:
-            self.about_version = kwargs['dspver']
+
+        # eat dspver, use global info
+        if 'dspver' in kwargs:
             del kwargs['dspver']
-        self.about_copyright = "(c) 2011 Picarro Inc."
-        self.about_description = "PostProcess Frame"
-        self.about_website = "http://www.picarro.com"
-        
+
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "Picarro Post Processing"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = "PostProcess Frame"    #about.getDescription()
+        self.about_website = about.getWebSite()
+
         wx.Frame.__init__(self, *args, **kwargs)
 
         self.rlock = threading.RLock()
@@ -1250,7 +1252,11 @@ class PostProcessFrame(wx.Frame):
         #wx.MessageBox("Picarro PostProcess version: %s\nCopyright 2010 Picarro, Inc." % ("beta_v01"))
         info = wx.AboutDialogInfo()
         info.Name = "%s (%s)" %(self.about_name, self._pclass.about_name)
-        info.Version = "%s (%s)" %(self.about_version, self._pclass.about_version)
+
+        # version is global so only need to report it once
+        #info.Version = "%s (%s)" %(self.about_version, self._pclass.about_version)
+        info.Version = "%s" % self.about_version
+
         info.Copyright = self._pclass.about_copyright
         info.Description = self._pclass.about_description
         info.WebSite = self._pclass.about_website
@@ -1756,4 +1762,3 @@ class PostProcessFrame(wx.Frame):
 
 if __name__ == '__main__':
     raise RuntimeError, "postprocessframe.py defines a class which cannot be run as a stand-alone process."
- 

@@ -16,7 +16,8 @@ from postprocessdefn import *
 from scipy import stats
 from numpy import *
 
-CCVER = '1.2.0'
+from Utilities import AppInfo
+
 
 class InstructionProcess(object):
     '''
@@ -32,20 +33,20 @@ class InstructionProcess(object):
             del kwargs["ctl_file"]
         else:
             self._ctl_file = None
-            
-        # About Info
-        self.about_name = "InstructionProcess"
 
-        if not 'ccver' in kwargs:
-            self.about_version = CCVER
-        else:
-            self.about_version = kwargs['ccver']
+        # eat version number if passed in arguments
+        if 'ccver' in kwargs:
             del kwargs['ccver']
 
-        self.about_copyright = "(c) 2011 Picarro Inc."
-        self.about_description = "Post process the analyzer output using \
-        ChemCorrect(tm) procedural instruction set."
-        self.about_website = "http://www.picarro.com"
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "InstructionProcess"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        descr = "Post process the analyzer output using "
+        descr += "ChemCorrect(tm) procedural instruction set."
+        self.about_description = descr  #about.getDescription()
+        self.about_website = about.getWebSite()
 
         self._unix_picarro_home = "/usr/local/picarro"
         self._win_picarro_home = "C:/Picarro"

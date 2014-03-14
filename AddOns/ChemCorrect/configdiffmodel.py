@@ -12,8 +12,10 @@ import xlwt
 
 
 from postprocessdefn import *
+from Utilities import AppInfo
 
 from config2h5 import ConfigToH5, DiffTwoTables
+
 
 class ConfigDiffModel(object):
     '''
@@ -25,14 +27,15 @@ class ConfigDiffModel(object):
         Constructor
         '''
 
-        # About Info
-        self.about_name = "ConfigDiff"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "ConfigDiff"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
         self.about_description = "List of differences between two config \
-                                 locations."
-        self.about_website = "http://www.picarro.com"
-        
+                                 locations."    # about.getDescription()
+        self.about_website = about.getWebSite()
+
         self._title = "Configuration Difference Viewer"
         self._max_source_lines = 100
         

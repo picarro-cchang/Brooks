@@ -17,7 +17,8 @@ import wx
 from postprocessdefn import *
 from postprocessframe import PostProcessFrame
 
-DSPVER = '1.2.0'
+from Utilities import AppInfo
+
 
 class PostProcessController(object):
     '''
@@ -33,19 +34,18 @@ class PostProcessController(object):
             del kwargs["ctl_file"]
 
         self._gui_created = None
- 
-        # About Info
-        self.about_name = "PostProcess Controller"
-        
-        if not 'dspver' in kwargs:
-            self.about_version = DSPVER
-        else:
-            self.about_version = kwargs['dspver']
+
+        # eat version in kwargs, getting from one place
+        if 'dspver' in kwargs:
             del kwargs['dspver']
-            
-        self.about_copyright = "(c) 2011 Picarro Inc."
-        self.about_description = "PostProcess Viewer Controller."
-        self.about_website = "http://www.picarro.com"
+
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "PostProcess Controller"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = "PostProcess Viewer Controller."  #about.getDescription()
+        self.about_website = about.getWebSite()
 
         self._dt = datetime.datetime.now()
         self.cntls_obj = EntryControls()

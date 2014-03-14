@@ -51,6 +51,9 @@ from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_SPEC
 
 import xmlrpclib
 
+from Utilities import AppInfo
+
+
 Driver = CmdFIFO.CmdFIFOServerProxy(
                         "http://localhost:%d" % RPC_PORT_DRIVER, 
                         APP_NAME, IsDontCareConnection = False
@@ -179,16 +182,16 @@ class RingdownPlotModel(object):
 
         #Temporary code
         self.count_of_rows = []
-        self.debug_fig = None        
+        self.debug_fig = None
         self._debug_plt = None
 
-
-        # About Info
-        self.about_name = "Ringdown Plot (Test Station)"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
-        self.about_description = "Graphic plot of live analyzer output."
-        self.about_website = "http://www.picarro.com"
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "Ringdown Plot (Test Station)"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = "Graphic plot of live analyzer output."  # about.getDescription()
+        self.about_website = about.getWebSite()
 
         if "cntls_obj" in kwargs:
             self.cntls_obj = kwargs["cntls_obj"]

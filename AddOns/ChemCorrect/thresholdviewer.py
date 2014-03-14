@@ -128,6 +128,8 @@ from postprocessdefn import *
 from postprocesscontrol import PostProcessController, ThreadedWorker
 from thresholdviewermodel import ThresholdViewerModel
 
+from Utilities import AppInfo
+
 
 class ThresholdViewerController(PostProcessController):
     '''
@@ -142,16 +144,16 @@ class ThresholdViewerController(PostProcessController):
 
         PostProcessController.__init__(self, *args, **kwargs)
 
-        # About Info
-        self.about_name = "Threshold Viewer"
-        self.about_version = "1.0.0"
-        self.about_copyright = "(c) 2010 Picarro Inc."
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "Threshold Viewer"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
         descr = "Display Threshold Viewer from selected columns in Picarro Threshold "
         descr += "data files."
-        self.about_description = descr
-        self.about_website = "http://www.picarro.com"
+        self.about_description = descr  # about.getDescription()
+        self.about_website = about.getWebSite()
 
-        
         msg = "Processing the parameters."
         msg += "\nThis may take some time..."
         self._busy_msg = msg                

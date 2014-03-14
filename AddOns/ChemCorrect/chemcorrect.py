@@ -118,8 +118,8 @@ import wx
 from postprocessdefn import *
 from postprocesscontrol import PostProcessController, ThreadedWorker
 from chemcorrectmodel import ChemcorrectModel
+from Utilities import AppInfo
 
-CCVER = '1.2.0'
 
 class ChemcorrectController(PostProcessController):
     '''
@@ -132,25 +132,25 @@ class ChemcorrectController(PostProcessController):
         if not "ctl_file" in kwargs:
             kwargs["ctl_file"] = "chemcorrect.ctl"
 
-        if not 'ccver' in kwargs:
-            self.about_version = CCVER
-        else:
-            self.about_version = kwargs['ccver']
+        # eat version in kwargs
+        if 'ccver' in kwargs:
             del kwargs['ccver']
 
         PostProcessController.__init__(self, *args, **kwargs)
 
-        # About Info
-        self.about_name = "ChemCorrect(tm) Viewer"
-        self.about_copyright = "(c) 2011 Picarro Inc."
-        self.about_description = "Graphic display of ChemCorrect(tm) output."
-        self.about_website = "http://www.picarro.com"
+        # version and about info
+        about = AppInfo()
+        self.about_version = about.getAppVer()
+        self.about_name = "ChemCorrect(tm) Viewer"  #about.getAppName()
+        self.about_copyright = about.getCopyright()
+        self.about_description = about.getDescription()
+        self.about_website = about.getWebSite()
 
         
         msg = "Processing the parameters."
         msg += "\nThis may take some time..."
         self._busy_msg = msg 
-        self.dlg = None               
+        self.dlg = None
 
     def _do_control_configuration(self):
         '''
