@@ -55,6 +55,10 @@ public class TestSetup {
 	private String loginPwd0001;
 	private String loginUserDisplayName;
 	
+	private String loginUserA;
+	private String loginPwdA;
+	private String loginUserADisplayName;
+	
 	private String surveyor;
 	private String logFile;
 
@@ -128,6 +132,12 @@ public class TestSetup {
 			this.loginUser0001 = this.testProp.getProperty("loginUser0001");
 			this.loginPwd0001 = this.testProp.getProperty("loginPwd0001");
 			this.loginUserDisplayName = this.testProp.getProperty("loginUserDisplayName");
+			
+			
+			this.loginUserA = this.testProp.getProperty("loginUserA");
+			this.loginPwdA = this.testProp.getProperty("loginPwdA");
+			this.loginUserADisplayName = this.testProp.getProperty("loginUserADisplayName");
+			
 			
 			this.surveyor = this.testProp.getProperty("surveyor");
 			this.logFile = this.testProp.getProperty("logFile");
@@ -274,6 +284,18 @@ public class TestSetup {
 	
 	public String getLoginUserDisplayName() {
 		return this.loginUserDisplayName;
+	}
+	
+	public String getLoginUserA() {
+		return this.loginUserA;
+	}
+	
+	public String getLoginPwdA() {
+		return this.loginPwdA;
+	}
+	
+	public String getLoginUserADisplayName() {
+		return this.loginUserADisplayName;
 	}
 
 	// for testing code debug only
