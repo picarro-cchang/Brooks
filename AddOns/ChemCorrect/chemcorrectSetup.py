@@ -218,6 +218,7 @@ inclusionList = ["email",
                  "email.mime.base",
                  "scipy.interpolate",
                  "scipy.misc",
+                 "scipy.sparse.csgraph._validation",
                  "sip",
                  "matplotlib.backends",
                  "matplotlib.backends.backend_wxagg",
@@ -229,9 +230,6 @@ inclusionList = ["email",
                  "encodings.*",
                  "tables.*"]
 
-# redefine this, I don't think everything above is needed
-inclusionList = ["configobj"]
-
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 
 
@@ -241,7 +239,13 @@ data_files = [(".", ["../../Assets/icons/ChemCorrect.ico",
                      "chemcorrect_inst avg_mem_01.csv",
                      "chemcorrect_inst avg_orgeval_06.csv",
                      "HBDS01_IsoWater_20100604_180843.csv",
-                     "L2130 chemcorrect_inst avg_orgeval_10.csv"])]
+                     "L2130 chemcorrect_inst avg_orgeval_10.csv"]),
+              (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
+              # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
+              # So add it manually here:
+              (r'mpl-data', [r'C:\%s\Lib\site-packages\matplotlib\mpl-data\matplotlibrc' % pyDirname]),
+              (r'mpl-data\images',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\images\*.*' % pyDirname)),
+              (r'mpl-data\fonts',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\fonts\*.*' % pyDirname))]
 
 # Python2.5 (WinXP) needs to include MSVCR71.dll
 if pythonVer == "2.5":
