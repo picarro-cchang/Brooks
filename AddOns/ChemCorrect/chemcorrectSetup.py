@@ -238,8 +238,9 @@ data_files = [(".", ["../../Assets/icons/ChemCorrect.ico",
                      "chemcorrect_inst avg_01.csv",
                      "chemcorrect_inst avg_mem_01.csv",
                      "chemcorrect_inst avg_orgeval_06.csv",
-                     "HBDS01_IsoWater_20100604_180843.csv",
-                     "L2130 chemcorrect_inst avg_orgeval_10.csv"]),
+                     "chemcorrect_inst avg_orgeval_10.csv",
+                     "standards file.csv",
+                     "HBDS01_IsoWater_20100604_180843.csv"]),
               (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
               # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
               # So add it manually here:
