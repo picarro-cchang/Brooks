@@ -3,14 +3,13 @@
  */
 package common.source;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.CacheLookup;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
 import org.openqa.selenium.support.ui.Select;
@@ -25,7 +24,6 @@ public class NaturalGasLeaksPage extends BasePage {
 	public static final String STRShowList = "Show List";
 	public static final String STRShowCalendar = "Show Calendar";
 
-	// pmahajan
 	public static String screenShotsDir;
 	public static final int timeoutInSeconds = 30;
 	public static final String STRTableEmpty = "No matching records found";
@@ -37,6 +35,15 @@ public class NaturalGasLeaksPage extends BasePage {
 			+ "\n" + "Last: 2012-06-10 14:03:02-0400 (EDT)";
 	public static final String STRNoTimezoneSelectedTime = "First: 2012-06-10 13:13:19+0000 (UTC)"
 			+ "\n" + "Last: 2012-06-10 18:03:02+0000 (UTC)";
+	public static final String STRSurveyorTableEmpty = "No data available in table";
+
+	@FindBy(how = How.ID, using = "id_userid_site")
+	@CacheLookup
+	private WebElement userIDSite;
+
+	@FindBy(how = How.XPATH, using = "//span[@id='id_menu_util_list']/li[4]/a")
+	@CacheLookup
+	private WebElement linkSignOff;
 
 	@FindBy(how = How.ID, using = "id_calListBtn")
 	private WebElement btnShowCalOrList;
@@ -94,7 +101,8 @@ public class NaturalGasLeaksPage extends BasePage {
 	// pmahajan
 	// @FindBy(how = How.XPATH, using =
 	// "//div[@id='id_logModal' and @class='modal hide fade in']")
-	private String surveyorPanel = "//div[@id='id_logModal' and @class='modal hide fade in']";
+	private By bySurveyorPanel = By
+			.xpath("//div[@id='id_logModal' and @class='modal hide fade in']");
 
 	// pmahajan
 	@FindBy(how = How.XPATH, using = "//button[@class='btn btn-inverse']")
@@ -188,19 +196,32 @@ public class NaturalGasLeaksPage extends BasePage {
 	@FindBy(how = How.ID, using = "id_side_show_btn")
 	private WebElement btnShowSide;
 
+	@FindBy(how = How.ID, using = "id_anzListTbl_info")
+	private WebElement surveyorTableInfo;
+
 	// pmahajan
 	@FindBy(how = How.XPATH, using = "//table[@id='id_logListTbl']/tbody/tr[1]/td[1]")
 	private WebElement firstLogTimeClndrVw;
 
-	private String strRefreshButton = "//button[@id='id_getLogBtn' and contains(text(),'Refresh')]";
-	private String strSurveyorLink = "//div[@id='id_anzTitle']/a";
-	private String strCloseButton = "//button[@id='id_p3gduclose_btn']";
-	private String strLiveMapButton = "//button[contains(text(),'Live Map')]";
-	private String strCloseViewMetadataButton = "//button[@id='id_p3gdulist_Close_log_log']";
-	private By byShowSideButton = By.xpath("//btn[@id='id_side_show_btn']");
-	private By byShowCalListButton = By.xpath("//button[@id='id_calListBtn']");
-	private By byFirstLogButton = By.xpath("//button[contains(text(),'First Log')]");
-	
+	// pmahajan
+	@FindBy(how = How.XPATH, using = "//table[@id='id_anzListTbl']/tbody/tr/td")
+	private WebElement surveyorTable;
+
+	private By byRefreshButton = By
+			.xpath("//button[@id='id_getLogBtn' and contains(text(),'Refresh')]");
+	private By bySurveyorLink = By.xpath("//div[@id='id_anzTitle']/a");
+	private By byCloseButton = By.id("id_p3gduclose_btn");
+	private By byCloseViewMetadataButton = By.id("id_p3gdulist_Close_log_log");
+	private By byShowSideButton = By.id("id_side_show_btn");
+	private By byShowCalListButton = By.id("id_calListBtn");
+	private By byFirstLogButton = By
+			.xpath("//button[contains(text(),'First Log')]");
+	private By bySearchBox = By
+			.xpath("//div[@id='id_logTable_filter']/label/input");
+	private By byLiveMapBtn = By.xpath("//button[contains(text(),'Live Map')]");
+	private By bySaveTimezoneBtn = By
+			.xpath("//div[@class='modal-footer']/button[@id='id_save_timezone']");
+
 	public NaturalGasLeaksPage(WebDriver driver, String baseURL) {
 		super(driver, STRPageTitle);
 		this.strBaseURL = baseURL;
@@ -211,9 +232,21 @@ public class NaturalGasLeaksPage extends BasePage {
 	}
 
 	public List<String> getSurveyorList() throws Exception {
-		findElement(driver, By.xpath(strSurveyorLink), timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
-		findElement(driver, By.xpath(strCloseButton), timeoutInSeconds);
+		findElement(driver, byCloseButton, timeoutInSeconds);
+
+		// *********** Chrome browser needs below code***********
+		TestSetup.slowdownInSeconds(1);
+		System.out.println(this.surveyorTable.getText());
+
+		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
+			this.btnClose.click();
+			TestSetup.slowdownInSeconds(1);
+			this.linkSelectSurveyor.click();
+			findElement(driver, byCloseButton, timeoutInSeconds);
+		}
+		// *************************
 
 		List<WebElement> trList = driver.findElements(By
 				.xpath("//*[@id='id_anzListTbl']/tbody/tr"));
@@ -230,33 +263,41 @@ public class NaturalGasLeaksPage extends BasePage {
 	}
 
 	public void selectSurveyor(String strSurveyor) throws Exception {
-		try {
-			findElement(driver, By.xpath(strSurveyorLink), timeoutInSeconds);
-			this.linkSelectSurveyor.click();
-			findElement(driver, By.xpath(strCloseButton), timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
+		this.linkSelectSurveyor.click();
+		findElement(driver, byCloseButton, timeoutInSeconds);
 
-			Select selectNoOfAnalyzerEntries = new Select(
-					this.showNAnalyzerEntries);
-			selectNoOfAnalyzerEntries.selectByValue("100");
-			for (int i = 1; i <= this.analyzersList.size(); i++) {
-				if (isElementPresent(By.linkText(strSurveyor)))
-					driver.findElement(By.linkText(strSurveyor)).click();
-				else if (this.linkNextSurveyorList.isEnabled())
-					this.linkNextSurveyorList.click();
-				else
-					System.out.println(strSurveyor + " Surveyor not found!!");
-			}
-		} catch (Exception e) {
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+		// *********** Chrome browser needs below code***********
+		TestSetup.slowdownInSeconds(1);
+		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
+			this.btnClose.click();
+			TestSetup.slowdownInSeconds(1);
+			this.linkSelectSurveyor.click();
+			findElement(driver, byCloseButton, timeoutInSeconds);
+		}
+		// *************************
+
+		Select selectNoOfAnalyzerEntries = new Select(this.showNAnalyzerEntries);
+		selectNoOfAnalyzerEntries.selectByValue("100");
+		for (int i = 1; i <= this.analyzersList.size(); i++) {
+			if (isElementPresent(By.linkText(strSurveyor)))
+				driver.findElement(By.linkText(strSurveyor)).click();
+			else if (this.linkNextSurveyorList.isEnabled())
+				this.linkNextSurveyorList.click();
+			else
+				System.out.println(strSurveyor + " Surveyor not found!!");
 		}
 		TestSetup.slowdownInSeconds(1);
 	}
 
 	public List<String> getSurveyorLogList(String strSurveyor) throws Exception {
 		this.selectSurveyor(strSurveyor);
+
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (btnShowCalOrList.getText().contains(STRShowList))
 			btnShowCalOrList.click();
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		List<WebElement> trList = driver.findElements(By
 				.xpath("//*[@id='id_logTable']/tbody/tr"));
 		List<String> strLogList = new ArrayList<String>();
@@ -273,9 +314,11 @@ public class NaturalGasLeaksPage extends BasePage {
 			throws Exception {
 		this.selectSurveyor(strSurveyor);
 
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (btnShowCalOrList.getText().contains(STRShowList))
 			btnShowCalOrList.click();
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		List<WebElement> trList = driver.findElements(By
 				.xpath("//*[@id='id_logTable']/tbody/tr"));
 		String strXpath = "";
@@ -309,6 +352,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		String duration = "";
 		String strXpath = "";
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		for (int i = 1; i <= this.logList.size(); i++) {
 			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
 					+ "/" + "td[2]";
@@ -329,9 +373,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @author pmahajan
 	 */
 	public void showViewMetadata(String strLogName) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (btnShowCalOrList.getText().contains(STRShowList))
 			btnShowCalOrList.click();
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		String strXpath = "";
 		for (int i = 1; i <= this.logList.size(); i++) {
 			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
@@ -345,8 +391,7 @@ public class NaturalGasLeaksPage extends BasePage {
 				break;
 			}
 		}
-		findElement(driver, By.xpath(strCloseViewMetadataButton),
-				timeoutInSeconds);
+		findElement(driver, byCloseViewMetadataButton, timeoutInSeconds);
 	}
 
 	/**
@@ -381,8 +426,9 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @return
 	 */
 	public void clickCloseMetadataButton() throws Exception {
+		findElement(driver, byCloseViewMetadataButton, timeoutInSeconds);
 		this.btnCloseViewMetadata.click();
-		findElement(driver, By.xpath(strSurveyorLink), timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -392,13 +438,16 @@ public class NaturalGasLeaksPage extends BasePage {
 	public void showSurveyorLiveMap(String strSurveyor, String strView)
 			throws Exception {
 		if (strView.contains("List")) {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();
 		} else {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 				this.btnShowCalOrList.click();
 		}
 		this.selectSurveyor(strSurveyor);
+		findElement(driver, byLiveMapBtn, timeoutInSeconds);
 		this.btnLiveMap.click();
 	}
 
@@ -411,13 +460,16 @@ public class NaturalGasLeaksPage extends BasePage {
 		this.isRefreshButtonPresent();
 		this.selectSurveyor(strSurveyor);
 		if (strView.contains("List")) {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();
 		} else {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 				this.btnShowCalOrList.click();
 		}
 
+		findElement(driver, byRefreshButton, timeoutInSeconds);
 		this.btnRefresh.click();
 		if (this.btnRefresh.getText().contains(STRRefreshing))
 			return true;
@@ -426,8 +478,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	}
 
 	public boolean isRefreshButtonPresent() throws Exception {
-		return isElementPresent(driver, By.xpath(strRefreshButton),
-				timeoutInSeconds);
+		return isElementPresent(driver, byRefreshButton, timeoutInSeconds);
 	}
 
 	/**
@@ -435,11 +486,23 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @return
 	 */
 	public boolean closeSurveyorWindow() throws Exception {
+
+		// *********** Chrome browser needs below code***********
 		this.linkSelectSurveyor.click();
-		findElement(driver, By.xpath(strCloseButton), timeoutInSeconds);
+		findElement(driver, byCloseButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(1);
+		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
+			this.btnClose.click();
+			TestSetup.slowdownInSeconds(1);
+		}
+		// *************************
+
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
+		this.linkSelectSurveyor.click();
+		findElement(driver, byCloseButton, timeoutInSeconds);
 		this.btnClose.click();
-		return isElementPresent(driver, By.xpath(this.surveyorPanel),
-				timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorPanel, timeoutInSeconds);
 	}
 
 	/**
@@ -450,21 +513,28 @@ public class NaturalGasLeaksPage extends BasePage {
 			String strTimezoneToSelect, String strView) throws Exception {
 		this.selectSurveyor(strSurveyor);
 		if (strView.contains("List")) {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();
 		} else {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 				this.btnShowCalOrList.click();
 		}
+
 		this.btnChangeTimezone.click();
+		findElement(driver, bySaveTimezoneBtn, timeoutInSeconds);
 		Select selectTimezoneValue = new Select(this.selectTimezone);
 		selectTimezoneValue.selectByValue(strTimezoneToSelect);
 		this.btnSaveTimezone.click();
-		if (strView.contains("List"))
+		if (strView.contains("List")) {
+			findElement(driver, bySearchBox, timeoutInSeconds);
 			return this.getFirstLogDateTime().contains(STRChangedTimezoneTime);
-		else
+		} else {
+			findElement(driver, byFirstLogButton, timeoutInSeconds);
 			return this.getFirstLogDateTimeInCalendarView().contains(
 					STRChangedTimezoneTime);
+		}
 	}
 
 	/**
@@ -475,22 +545,29 @@ public class NaturalGasLeaksPage extends BasePage {
 			String strView) throws Exception {
 		this.selectSurveyor(strSurveyor);
 		if (strView.contains("List")) {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();
 		} else {
+			findElement(driver, byShowCalListButton, timeoutInSeconds);
 			if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 				this.btnShowCalOrList.click();
 		}
+
 		this.btnChangeTimezone.click();
+		findElement(driver, bySaveTimezoneBtn, timeoutInSeconds);
 		Select selectTimezoneValue = new Select(this.selectTimezone);
 		selectTimezoneValue.selectByValue("");
 		this.btnSaveTimezone.click();
-		if (strView.contains("List"))
+		if (strView.contains("List")) {
+			findElement(driver, bySearchBox, timeoutInSeconds);
 			return this.getFirstLogDateTime().contains(
 					STRNoTimezoneSelectedTime);
-		else
+		} else {
+			findElement(driver, byFirstLogButton, timeoutInSeconds);
 			return this.getFirstLogDateTimeInCalendarView().contains(
 					STRNoTimezoneSelectedTime);
+		}
 	}
 
 	/**
@@ -498,9 +575,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @author pmahajan
 	 */
 	public String getFirstLogDateTime() throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contentEquals(STRShowList))
 			this.btnShowCalOrList.click();
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		return this.firstLogDate.getText();
 	}
 
@@ -512,9 +591,11 @@ public class NaturalGasLeaksPage extends BasePage {
 			String validInvalidLog) throws Exception {
 		this.selectSurveyor(strSurveyor);
 
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowList))
 			this.btnShowCalOrList.click();
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		this.inputSearchLog.sendKeys(strLogName);
 		if (validInvalidLog.contentEquals("valid")) {
 			if (this.firstCellLogFile.getText().contains(strLogName))
@@ -533,9 +614,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @author pmahajan
 	 */
 	public boolean showNLogEntries(String numberOfEntries) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowList))
 			this.btnShowCalOrList.click();
 
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		Select selectNoOfLogEntries = new Select(this.btnShowNLogEntries);
 		selectNoOfLogEntries.selectByValue(numberOfEntries);
 
@@ -550,9 +633,19 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean searchSurveyor(String strSurveyor,
 			String validInvalidSurveyor) throws Exception {
 		String strXpath = "";
-		findElement(driver, By.xpath(strSurveyorLink), timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
-		findElement(driver, By.xpath(strCloseButton), timeoutInSeconds);
+		findElement(driver, byCloseButton, timeoutInSeconds);
+
+		// *********** Chrome browser needs below code***********
+		TestSetup.slowdownInSeconds(1);
+		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
+			this.btnClose.click();
+			TestSetup.slowdownInSeconds(1);
+			this.linkSelectSurveyor.click();
+			findElement(driver, byCloseButton, timeoutInSeconds);
+		}
+		// *************************
 
 		this.inputSearchSurveyor.sendKeys(strSurveyor);
 		if (validInvalidSurveyor.contentEquals("valid")) {
@@ -579,16 +672,30 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public boolean showNSurveyorEntries(String numberOfEntries)
 			throws Exception {
-		findElement(driver, By.xpath(strSurveyorLink), timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
-		findElement(driver, By.xpath(strCloseButton), timeoutInSeconds);
+		findElement(driver, byCloseButton, timeoutInSeconds);
+
+		// *********** Chrome browser needs below code***********
+		TestSetup.slowdownInSeconds(1);
+		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
+			this.btnClose.click();
+			TestSetup.slowdownInSeconds(1);
+			this.linkSelectSurveyor.click();
+			findElement(driver, byCloseButton, timeoutInSeconds);
+		}
+		// *************************
 
 		Select selectNoOfAnalyzerEntries = new Select(this.showNAnalyzerEntries);
 		selectNoOfAnalyzerEntries.selectByValue(numberOfEntries);
-		TestSetup.slowdownInSeconds(1);
-		System.out.println(Integer.toString(this.analyzersList.size()));
-		return (Integer.toString(this.analyzersList.size())
-				.contentEquals(numberOfEntries));
+
+		System.out.println(driver.findElement(By.id("id_anzListTbl_info"))
+				.getText());
+		System.out.println(driver.findElement(By.id("id_anzListTbl_info"))
+				.getText().contains("Showing 1 to " + numberOfEntries));
+
+		return (surveyorTableInfo.getText().contains("Showing 1 to "
+				+ numberOfEntries));
 	}
 
 	/**
@@ -598,10 +705,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean searchLogFileInCalendarView(String strSurveyor,
 			String strLogName, String validInvalidLog) throws Exception {
 		this.selectSurveyor(strSurveyor);
-
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 
 		// time being tested to click on 15th Jan 2014 - FDDS2037
@@ -632,10 +740,11 @@ public class NaturalGasLeaksPage extends BasePage {
 			String strTimezoneToChange) throws Exception {
 		this.selectSurveyor(strSurveyor);
 		this.btnChangeTimezone.click();
-
+		findElement(driver, bySaveTimezoneBtn, timeoutInSeconds);
 		Select selectTimezoneValue = new Select(this.selectTimezone);
 		selectTimezoneValue.selectByValue(strTimezoneToChange);
 		this.btnCancelTimezone.click();
+		findElement(driver, byRefreshButton, timeoutInSeconds);
 		return (this.strTimezone.getAttribute("Value")
 				.contains(strTimezoneToChange));
 	}
@@ -646,7 +755,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public void clickSelectSurveyorButton() throws Exception {
 		this.btnSelectSurveyor.click();
-		findElement(driver, By.xpath(strLiveMapButton), timeoutInSeconds);
+		findElement(driver, byLiveMapBtn, timeoutInSeconds);
 	}
 
 	/**
@@ -655,9 +764,19 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public void showSurveyorWindowLiveMap(String strSurveyor) throws Exception {
 		String strXpath = "";
-		findElement(driver, By.xpath(strSurveyorLink), timeoutInSeconds);
+		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
-		findElement(driver, By.xpath(strCloseButton), timeoutInSeconds);
+		findElement(driver, byCloseButton, timeoutInSeconds);
+
+		// *********** Chrome browser needs below code***********
+		TestSetup.slowdownInSeconds(1);
+		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
+			this.btnClose.click();
+			TestSetup.slowdownInSeconds(1);
+			this.linkSelectSurveyor.click();
+			findElement(driver, byCloseButton, timeoutInSeconds);
+		}
+		// *************************
 
 		this.inputSearchSurveyor.sendKeys(strSurveyor);
 		for (int i = 1; i <= this.analyzersList.size();) {
@@ -680,10 +799,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean compareUsersLogForSpecifiedDateInListCalendarView(
 			String strSurveyor, String numberOfEntries) throws Exception {
 		this.selectSurveyor(strSurveyor);
-
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowList))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		this.inputSearchLog.sendKeys(STRDateToSelect);
 
 		Select selectNoOfLogEntries = new Select(this.btnShowNLogEntries);
@@ -696,9 +815,10 @@ public class NaturalGasLeaksPage extends BasePage {
 					By.xpath("//table[@id='id_logTable']/tbody/tr" + "[" + i
 							+ "]" + "/" + "td[2]")).getText());
 		}
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 		this.btnNextMonth.click();
 
@@ -735,10 +855,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	public void showSurveyorMapLogFromCalendarView(String strSurveyor,
 			String strLogName) throws Exception {
 		this.selectSurveyor(strSurveyor);
-
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 
 		// time being tested - click on 10th June 2012 - DEMO2000
@@ -758,10 +878,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean closeSurveysWindowInCalendarView(String strSurveyor)
 			throws Exception {
 		this.selectSurveyor(strSurveyor);
-
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 
 		// time being tested - click on 10th June 2012 - DEMO2000
@@ -778,9 +898,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @author pmahajan
 	 */
 	public boolean showNLogListEntries(String numberOfEntries) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 		this.btnNextMonth.click();
 
@@ -791,7 +912,6 @@ public class NaturalGasLeaksPage extends BasePage {
 
 		Select selectNoOfLogEntries = new Select(this.btnShowNLogListEntries);
 		selectNoOfLogEntries.selectByValue(numberOfEntries);
-
 		return (Integer.toString(this.surveysListCalendarView.size())
 				.contentEquals(numberOfEntries));
 	}
@@ -803,6 +923,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean surveyorLinkPresentForLiveMap(String strSurveyor,
 			String strView) throws Exception {
 		this.selectSurveyor(strSurveyor);
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (strView.contains("List")) {
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();
@@ -810,14 +931,14 @@ public class NaturalGasLeaksPage extends BasePage {
 			if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 				this.btnShowCalOrList.click();
 		}
+		findElement(driver, byLiveMapBtn, timeoutInSeconds);
 		this.btnLiveMap.click();
 		findElement(driver, byShowSideButton, timeoutInSeconds);
 		if (this.btnShowSide.getText().contains(">>"))
 			this.btnShowSide.click();
 		this.clickSelectSurveyorButton();
 
-		return isElementPresent(driver, By.xpath(strSurveyorLink),
-				timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -827,9 +948,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean surveyorLinkPresentForMapLogInListView(String strSurveyor,
 			String strLogName) throws Exception {
 		this.selectSurveyor(strSurveyor);
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (btnShowCalOrList.getText().contains(STRShowList))
 			btnShowCalOrList.click();
-
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		String strXpath = "";
 		for (int i = 1; i <= this.logList.size(); i++) {
 			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
@@ -846,8 +968,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowSide.getText().contains(">>"))
 			this.btnShowSide.click();
 		this.clickSelectSurveyorButton();
-		return isElementPresent(driver, By.xpath(strSurveyorLink),
-				timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -857,6 +978,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean surveyorLinkPresentForMapLogInCalendarView(
 			String strSurveyor, String strLogName) throws Exception {
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		System.out.println(this.btnShowCalOrList.getText());
+		if (this.btnShowCalOrList.getText().contains(STRShowList))
+			findElement(driver, bySearchBox, timeoutInSeconds);
+
+		System.out.println(this.btnShowCalOrList.getText());
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 
@@ -875,8 +1001,7 @@ public class NaturalGasLeaksPage extends BasePage {
 			this.btnShowSide.click();
 		this.clickSelectSurveyorButton();
 
-		return isElementPresent(driver, By.xpath(strSurveyorLink),
-				timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -885,6 +1010,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public boolean surveyorLinkPresentBackFromLiveMap(String strSurveyor,
 			String strView) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (strView.contains("List")) {
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();
@@ -894,8 +1020,8 @@ public class NaturalGasLeaksPage extends BasePage {
 		}
 		this.btnLiveMap.click();
 		driver.navigate().back();
-		return isElementPresent(driver, By.xpath(strSurveyorLink),
-				timeoutInSeconds);
+		findElement(driver, byLiveMapBtn, timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -904,9 +1030,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public boolean surveyorLinkPresentBackFromMapLogListView(
 			String strSurveyor, String strLogName) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (btnShowCalOrList.getText().contains(STRShowList))
 			btnShowCalOrList.click();
-
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		String strXpath = "";
 		for (int i = 1; i <= this.logList.size(); i++) {
 			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
@@ -920,8 +1047,7 @@ public class NaturalGasLeaksPage extends BasePage {
 			}
 		}
 		driver.navigate().back();
-		return isElementPresent(driver, By.xpath(strSurveyorLink),
-				timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -930,9 +1056,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public boolean surveyorLinkPresentBackFromMapLogCalendarView(
 			String strSurveyor, String strLogName) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 		// time being tested - click on 10th June 2012 - DEMO2000
 		driver.findElement(
@@ -943,9 +1070,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.surveysListCalendarView.get(0).getText().contains(strLogName))
 			this.btnFirstMapLogCalendarView.click();
 		driver.navigate().back();
-
-		return isElementPresent(driver, By.xpath(strSurveyorLink),
-				timeoutInSeconds);
+		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
 	/**
@@ -953,8 +1078,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @author pmahajan
 	 */
 	public String getFirstLogDateTimeInCalendarView() throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contentEquals(STRShowCalendar))
 			this.btnShowCalOrList.click();
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 		// time being tested - click on 10th June 2012 - DEMO2000
 		driver.findElement(
@@ -971,10 +1098,10 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean compareUserLogsInListCalendarView(String strSurveyor)
 			throws Exception {
 		this.selectSurveyor(strSurveyor);
-
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowList))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, bySearchBox, timeoutInSeconds);
 		Select selectNoOfLogEntries = new Select(this.btnShowNLogEntries);
 		selectNoOfLogEntries.selectByValue(STRShow100Entries);
 		List<String> strLogList = new ArrayList<String>();
@@ -984,9 +1111,10 @@ public class NaturalGasLeaksPage extends BasePage {
 					By.xpath("//table[@id='id_logTable']/tbody/tr" + "[" + i
 							+ "]" + "/" + "td[2]")).getText());
 		}
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
-
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
 		this.btnFirstLog.click();
 
 		/**
@@ -1013,5 +1141,12 @@ public class NaturalGasLeaksPage extends BasePage {
 		 * 1).contains(strLogList.get(i - 1))) { i++; } else return false; } }
 		 */
 		return true;
+	}
+
+	public LoginPage logout() throws Exception {
+		this.userIDSite.click();
+		TestSetup.slowdownInSeconds(1);
+		this.linkSignOff.click();
+		return (new LoginPage(driver, strBaseURL));
 	}
 }

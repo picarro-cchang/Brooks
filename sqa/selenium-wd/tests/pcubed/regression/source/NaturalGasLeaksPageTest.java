@@ -48,7 +48,6 @@ public class NaturalGasLeaksPageTest {
 		testSetup = new TestSetup();
 		driver = testSetup.getDriver();
 		baseURL = testSetup.getBaseUrl();
-		// screenShotsDir = ".\\screenshots\\";
 		screenShotsDir = "./screenshots/";
 		debug = testSetup.isRunningDebug();
 		driver.manage().deleteAllCookies();
@@ -62,6 +61,7 @@ public class NaturalGasLeaksPageTest {
 
 		naturalGasLeaksPage = new NaturalGasLeaksPage(driver, baseURL);
 		PageFactory.initElements(driver, naturalGasLeaksPage);
+
 	}
 
 	/**
@@ -84,6 +84,7 @@ public class NaturalGasLeaksPageTest {
 	 */
 	@After
 	public void tearDown() throws Exception {
+		naturalGasLeaksPage.logout();
 	}
 
 	/**
@@ -94,8 +95,9 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_TC0001() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-
 			List<String> strSurveyorList = naturalGasLeaksPage
 					.getSurveyorList();
 
@@ -135,8 +137,9 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_TC0002() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-
 			System.out.println("\nThe selected surveyor is: "
 					+ testSetup.getSurveyor());
 
@@ -165,8 +168,9 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_TC0003() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-
 			naturalGasLeaksPage.showSurveyorLogMap(testSetup.getSurveyor(),
 					testSetup.getLogFile());
 
@@ -190,26 +194,38 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU001() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 
-			assertTrue(naturalGasLeaksPage.getSelectedSurveyorName(testSetup
-					.getSurveyor()));
+			assertTrue(testSetup.getSurveyor() + " not found!",
+					naturalGasLeaksPage.getSelectedSurveyorName(testSetup
+							.getSurveyor()));
 
 			List<String> strLogList = naturalGasLeaksPage
 					.getSurveyorLogList(testSetup.getSurveyor());
 
 			for (String strLogName : strLogList) {
-				assertTrue(strLogName.contains(testSetup.getLogFile()));
+				assertTrue(
+						testSetup.getLogFile()
+								+ " log not found for surveyor : "
+								+ testSetup.getSurveyor(),
+						strLogName.contains(testSetup.getLogFile()));
 			}
 
 			naturalGasLeaksPage.showViewMetadata(testSetup.getLogFile());
 
-			assertTrue(naturalGasLeaksPage
-					.getSurveyorNameFromMetadata(testSetup.getSurveyor()));
-			assertTrue(naturalGasLeaksPage.getLogNameFromMetadata(testSetup
-					.getLogFile()));
-			assertTrue(naturalGasLeaksPage.getDurationFromMetadata(testSetup
-					.getLogFile()));
+			assertTrue(testSetup.getSurveyor()
+					+ " not present in Metadata details!",
+					naturalGasLeaksPage.getSurveyorNameFromMetadata(testSetup
+							.getSurveyor()));
+			assertTrue(testSetup.getLogFile()
+					+ " log not present in Metadata details!",
+					naturalGasLeaksPage.getLogNameFromMetadata(testSetup
+							.getLogFile()));
+			assertTrue("Duration details not present in Metadata view!",
+					naturalGasLeaksPage.getDurationFromMetadata(testSetup
+							.getLogFile()));
 
 			naturalGasLeaksPage.clickCloseMetadataButton();
 			naturalGasLeaksPage.showSurveyorLogMap(testSetup.getSurveyor(),
@@ -235,6 +251,8 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU002() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			naturalGasLeaksPage.showSurveyorLiveMap(testSetup.getSurveyor(),
 					strListView);
@@ -266,8 +284,11 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU003() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertFalse(naturalGasLeaksPage.closeSurveyorWindow());
+			assertFalse("Surveyors list window is not closed!",
+					naturalGasLeaksPage.closeSurveyorWindow());
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU003");
@@ -285,10 +306,12 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU004() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.searchLogFile(
-					testSetup.getSurveyor2(), testSetup.getLogFile2(),
-					strValidSearch));
+			assertTrue("Refresh button not refreshing the page!",
+					naturalGasLeaksPage.searchLogFile(testSetup.getSurveyor2(),
+							testSetup.getLogFile2(), strValidSearch));
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"naturalGasLeaksPage_GDU004");
 		} catch (Exception e) {
@@ -308,13 +331,19 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU005() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.changeTimezoneOfSurveyor(
-					testSetup.getSurveyor(), testSetup.getTimezoneToSelect(),
-					strListView));
-			assertTrue(naturalGasLeaksPage.changeTimezoneOfSurveyor(
-					testSetup.getSurveyor(), testSetup.getTimezoneToSelect(),
-					strCalView));
+			assertTrue(
+					"Log's time in List view not changed according to timezone!",
+					naturalGasLeaksPage.changeTimezoneOfSurveyor(
+							testSetup.getSurveyor(),
+							testSetup.getTimezoneToSelect(), strListView));
+			assertTrue(
+					"Log's time in Calendar view not changed according to timezone!",
+					naturalGasLeaksPage.changeTimezoneOfSurveyor(
+							testSetup.getSurveyor(),
+							testSetup.getTimezoneToSelect(), strCalView));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU005");
@@ -332,10 +361,13 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU006() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.searchLogFile(
-					testSetup.getSurveyor(), testSetup.getLogFile2(),
-					strInvalidSearch));
+			assertTrue(
+					"Searched Invalid log file : " + testSetup.getLogFile2(),
+					naturalGasLeaksPage.searchLogFile(testSetup.getSurveyor(),
+							testSetup.getLogFile2(), strInvalidSearch));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU006");
@@ -353,10 +385,13 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU007() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.searchLogFile(
-					testSetup.getSurveyor2(), testSetup.getLogFile2(),
-					strValidSearch));
+			assertTrue(
+					"Not able to search log file : " + testSetup.getLogFile2(),
+					naturalGasLeaksPage.searchLogFile(testSetup.getSurveyor2(),
+							testSetup.getLogFile2(), strValidSearch));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU007");
@@ -374,6 +409,8 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU008() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 
 			/*
@@ -398,13 +435,17 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU010() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor2());
-			assertTrue(naturalGasLeaksPage.showNLogEntries(testSetup
-					.getShow10Entries()));
+			assertTrue("10 logs should be present in logs table!",
+					naturalGasLeaksPage.showNLogEntries(testSetup
+							.getShow10Entries()));
 
-			assertTrue(naturalGasLeaksPage.showNLogEntries(testSetup
-					.getShow25Entries()));
+			assertTrue("25 logs should be present in logs table!",
+					naturalGasLeaksPage.showNLogEntries(testSetup
+							.getShow25Entries()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU010");
@@ -422,11 +463,17 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU011() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.searchSurveyor(
-					testSetup.getSurveyor(), strValidSearch));
-			assertTrue(naturalGasLeaksPage.searchSurveyor(
-					testSetup.getLogFile(), strInvalidSearch));
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor not found in list!",
+					naturalGasLeaksPage.searchSurveyor(testSetup.getSurveyor(),
+							strValidSearch));
+			assertTrue(testSetup.getLogFile()
+					+ " : invalid surveyor was present in list!",
+					naturalGasLeaksPage.searchSurveyor(testSetup.getLogFile(),
+							strInvalidSearch));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU011");
@@ -444,6 +491,8 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU012() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			naturalGasLeaksPage.showSurveyorWindowLiveMap(testSetup
 					.getSurveyor());
@@ -468,11 +517,15 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU013() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.showNSurveyorEntries(testSetup
-					.getShow10Entries()));
-			assertTrue(naturalGasLeaksPage.showNSurveyorEntries(testSetup
-					.getShow25Entries()));
+			assertTrue("10 surveyors should be present in logs table!",
+					naturalGasLeaksPage.showNSurveyorEntries(testSetup
+							.getShow10Entries()));
+			assertTrue("25 surveyors should be present in logs table!",
+					naturalGasLeaksPage.showNSurveyorEntries(testSetup
+							.getShow25Entries()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU013");
@@ -489,9 +542,15 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU014() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.cancelTimezoneWindow(
-					testSetup.getSurveyor(), testSetup.getTimezoneToSelect()));
+			assertTrue(
+					"Timezone modified to " + testSetup.getTimezoneToSelect()
+							+ " - Not Expected!",
+					naturalGasLeaksPage.cancelTimezoneWindow(
+							testSetup.getSurveyor(),
+							testSetup.getTimezoneToSelect()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU014");
@@ -509,11 +568,15 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU015() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage
-					.compareUsersLogForSpecifiedDateInListCalendarView(
-							testSetup.getSurveyor2(),
-							testSetup.getShow25Entries()));
+			assertTrue("All logs are not present on 18th Feb 2014 for "
+					+ testSetup.getSurveyor2(),
+					naturalGasLeaksPage
+							.compareUsersLogForSpecifiedDateInListCalendarView(
+									testSetup.getSurveyor2(),
+									testSetup.getShow25Entries()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU015");
@@ -531,6 +594,8 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU016() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			naturalGasLeaksPage.showSurveyorMapLogFromCalendarView(
 					testSetup.getSurveyor(), testSetup.getLogFile());
@@ -555,10 +620,13 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU017() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.searchLogFileInCalendarView(
-					testSetup.getSurveyor2(), testSetup.getLogFile2(),
-					strValidSearch));
+			assertTrue(testSetup.getLogFile2() + " log file not searched!",
+					naturalGasLeaksPage.searchLogFileInCalendarView(
+							testSetup.getSurveyor2(), testSetup.getLogFile2(),
+							strValidSearch));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU017");
@@ -576,10 +644,13 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU018() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.searchLogFileInCalendarView(
-					testSetup.getSurveyor2(), testSetup.getLogFile(),
-					strInvalidSearch));
+			assertTrue(testSetup.getLogFile2()
+					+ " invalid log file got searched!", naturalGasLeaksPage
+					.searchLogFileInCalendarView(testSetup.getSurveyor2(),
+							testSetup.getLogFile(), strInvalidSearch));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU018");
@@ -597,9 +668,13 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU019() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage
-					.closeSurveysWindowInCalendarView(testSetup.getSurveyor()));
+			assertTrue("Surveyor list window present in Calendar view!",
+					naturalGasLeaksPage
+							.closeSurveysWindowInCalendarView(testSetup
+									.getSurveyor()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU019");
@@ -617,10 +692,14 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU020() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor2());
-			assertTrue(naturalGasLeaksPage.showNLogListEntries(testSetup
-					.getShow10Entries()));
+			assertTrue(
+					"10 logs should be present in logs table for Calendar view!",
+					naturalGasLeaksPage.showNLogListEntries(testSetup
+							.getShow10Entries()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU020");
@@ -638,11 +717,17 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU022() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.selectNoTimezoneForSurveyor(
-					testSetup.getSurveyor(), strListView));
-			assertTrue(naturalGasLeaksPage.selectNoTimezoneForSurveyor(
-					testSetup.getSurveyor(), strCalView));
+			assertTrue(
+					"Log's time in List view not changed according to timezone!",
+					naturalGasLeaksPage.selectNoTimezoneForSurveyor(
+							testSetup.getSurveyor(), strListView));
+			assertTrue(
+					"Log's time in Calendar view not changed according to timezone!",
+					naturalGasLeaksPage.selectNoTimezoneForSurveyor(
+							testSetup.getSurveyor(), strCalView));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU022");
@@ -660,20 +745,32 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU023() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor());
 
-			assertTrue(naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
-					testSetup.getSurveyor(), strListView));
-			assertTrue(naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
-					testSetup.getSurveyor(), strCalView));
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor link not present!",
+					naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
+							testSetup.getSurveyor(), strListView));
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor link not present!",
+					naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
+							testSetup.getSurveyor(), strCalView));
 
-			assertTrue(naturalGasLeaksPage
-					.surveyorLinkPresentBackFromMapLogListView(
-							testSetup.getSurveyor(), testSetup.getLogFile()));
-			assertTrue(naturalGasLeaksPage
-					.surveyorLinkPresentBackFromMapLogCalendarView(
-							testSetup.getSurveyor(), testSetup.getLogFile()));
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor link not present!",
+					naturalGasLeaksPage
+							.surveyorLinkPresentBackFromMapLogListView(
+									testSetup.getSurveyor(),
+									testSetup.getLogFile()));
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor link not present!",
+					naturalGasLeaksPage
+							.surveyorLinkPresentBackFromMapLogCalendarView(
+									testSetup.getSurveyor(),
+									testSetup.getLogFile()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU023");
@@ -691,18 +788,28 @@ public class NaturalGasLeaksPageTest {
 	@Test
 	public void naturalGasLeaksPage_GDU024() {
 		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			assertTrue(naturalGasLeaksPage.surveyorLinkPresentForLiveMap(
-					testSetup.getSurveyor(), strListView));
-			assertTrue(naturalGasLeaksPage.surveyorLinkPresentForLiveMap(
-					testSetup.getSurveyor(), strCalView));
+			assertTrue(
+					testSetup.getSurveyor() + " : surveyor link not present!",
+					naturalGasLeaksPage.surveyorLinkPresentForLiveMap(
+							testSetup.getSurveyor(), strListView));
+			assertTrue(
+					testSetup.getSurveyor() + " : surveyor link not present!",
+					naturalGasLeaksPage.surveyorLinkPresentForLiveMap(
+							testSetup.getSurveyor(), strCalView));
 
-			assertTrue(naturalGasLeaksPage
-					.surveyorLinkPresentForMapLogInListView(
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor link not present!",
+					naturalGasLeaksPage.surveyorLinkPresentForMapLogInListView(
 							testSetup.getSurveyor(), testSetup.getLogFile()));
-			assertTrue(naturalGasLeaksPage
-					.surveyorLinkPresentForMapLogInCalendarView(
-							testSetup.getSurveyor(), testSetup.getLogFile()));
+			assertTrue(testSetup.getSurveyor()
+					+ " : surveyor link not present!",
+					naturalGasLeaksPage
+							.surveyorLinkPresentForMapLogInCalendarView(
+									testSetup.getSurveyor(),
+									testSetup.getLogFile()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU024");
