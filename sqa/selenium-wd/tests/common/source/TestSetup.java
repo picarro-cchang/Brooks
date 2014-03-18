@@ -93,6 +93,7 @@ public class TestSetup {
 	 */
 	private String timezone;
 	private String timezoneToSelect;
+	private String timezoneNotToSelect;
 	private String show10Entries;
 	private String show25Entries;
 	private String surveyor2;
@@ -151,6 +152,7 @@ public class TestSetup {
 			this.logFile2 = this.testProp.getProperty("logFile2");
 			this.timezone = this.testProp.getProperty("Timezone");
 			this.timezoneToSelect = this.testProp.getProperty("TimezoneToSelect");
+			this.timezoneNotToSelect = this.testProp.getProperty("TimezoneNotToSelect");
 			this.show10Entries = this.testProp.getProperty("show10Entries");
 			this.show25Entries = this.testProp.getProperty("show25Entries");
 			
@@ -342,6 +344,14 @@ public class TestSetup {
 	public String getTimezone() {
 		return this.timezone;
 	}
+	
+	/**
+	 * @author pmahajan
+	 */
+	public String getTimezoneNotToSelect() {
+		return this.timezoneNotToSelect;
+	}
+	
 	/**
 	 * @author pmahajan
 	 */
