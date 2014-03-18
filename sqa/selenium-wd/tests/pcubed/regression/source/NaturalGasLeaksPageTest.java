@@ -127,7 +127,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_TC0001");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -159,7 +159,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_TC0002");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -183,7 +183,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_TC0003");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -238,7 +238,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU001");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -271,7 +271,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU002");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -294,7 +294,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU003");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -320,7 +320,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU004");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -352,7 +352,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU005");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -377,7 +377,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU006");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -402,7 +402,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU007");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -428,7 +428,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU008");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -457,7 +457,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU010");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -487,7 +487,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU011");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -513,7 +513,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU012");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -540,7 +540,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU013");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -563,7 +563,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU014");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -590,7 +590,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU015");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -616,7 +616,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU016");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -642,7 +642,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU017");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -668,7 +668,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU018");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -693,7 +693,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU019");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -723,7 +723,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU020");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -753,7 +753,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU022");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -797,7 +797,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU023");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -837,7 +837,7 @@ public class NaturalGasLeaksPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU024");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 }

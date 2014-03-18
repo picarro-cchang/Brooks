@@ -654,11 +654,19 @@ public class NaturalGasLeaksPage extends BasePage {
 		return result;
 	}
 
+	/**
+	 * @author pmahajan
+	 * @return
+	 */
 	public void closeSurveyorListWindow() {
 		this.btnClose.click();
 		TestSetup.slowdownInSeconds(1);
 	}
 
+	/**
+	 * @author pmahajan
+	 * @return
+	 */
 	public void closeSurveysWindow() {
 		this.btnCloseSurveysWindow.click();
 		TestSetup.slowdownInSeconds(1);
@@ -713,7 +721,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		this.btnCancelTimezone.click();
 		TestSetup.slowdownInSeconds(1);
 		findElement(driver, byRefreshButton, timeoutInSeconds);
-		
+
 		System.out.println(this.inputTimezone.getAttribute("Value"));
 		System.out.println(this.inputTimezone.getAttribute("Value").contains(
 				strTimezoneToChange));
