@@ -236,18 +236,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		this.linkSelectSurveyor.click();
 		findElement(driver, byCloseButton, timeoutInSeconds);
 
-		// *********** Chrome browser needs below code***********
-		TestSetup.slowdownInSeconds(1);
-		System.out.println(this.surveyorTable.getText());
-
-		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
-			this.btnClose.click();
-			TestSetup.slowdownInSeconds(1);
-			this.linkSelectSurveyor.click();
-			findElement(driver, byCloseButton, timeoutInSeconds);
-		}
-		// *************************
-
 		List<WebElement> trList = driver.findElements(By
 				.xpath("//*[@id='id_anzListTbl']/tbody/tr"));
 		List<String> strSurveyorList = new ArrayList<String>();
@@ -266,16 +254,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
 		findElement(driver, byCloseButton, timeoutInSeconds);
-
-		// *********** Chrome browser needs below code***********
-		TestSetup.slowdownInSeconds(1);
-		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
-			this.btnClose.click();
-			TestSetup.slowdownInSeconds(1);
-			this.linkSelectSurveyor.click();
-			findElement(driver, byCloseButton, timeoutInSeconds);
-		}
-		// *************************
 
 		Select selectNoOfAnalyzerEntries = new Select(this.showNAnalyzerEntries);
 		selectNoOfAnalyzerEntries.selectByValue("100");
@@ -486,17 +464,6 @@ public class NaturalGasLeaksPage extends BasePage {
 	 * @return
 	 */
 	public boolean closeSurveyorWindow() throws Exception {
-
-		// *********** Chrome browser needs below code***********
-		this.linkSelectSurveyor.click();
-		findElement(driver, byCloseButton, timeoutInSeconds);
-		TestSetup.slowdownInSeconds(1);
-		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
-			this.btnClose.click();
-			TestSetup.slowdownInSeconds(1);
-		}
-		// *************************
-
 		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
 		findElement(driver, byCloseButton, timeoutInSeconds);
@@ -637,16 +604,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		this.linkSelectSurveyor.click();
 		findElement(driver, byCloseButton, timeoutInSeconds);
 
-		// *********** Chrome browser needs below code***********
-		TestSetup.slowdownInSeconds(1);
-		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
-			this.btnClose.click();
-			TestSetup.slowdownInSeconds(1);
-			this.linkSelectSurveyor.click();
-			findElement(driver, byCloseButton, timeoutInSeconds);
-		}
-		// *************************
-
 		this.inputSearchSurveyor.sendKeys(strSurveyor);
 		if (validInvalidSurveyor.contentEquals("valid")) {
 			for (int i = 1; i <= this.analyzersList.size();) {
@@ -675,16 +632,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
 		findElement(driver, byCloseButton, timeoutInSeconds);
-
-		// *********** Chrome browser needs below code***********
-		TestSetup.slowdownInSeconds(1);
-		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
-			this.btnClose.click();
-			TestSetup.slowdownInSeconds(1);
-			this.linkSelectSurveyor.click();
-			findElement(driver, byCloseButton, timeoutInSeconds);
-		}
-		// *************************
 
 		Select selectNoOfAnalyzerEntries = new Select(this.showNAnalyzerEntries);
 		selectNoOfAnalyzerEntries.selectByValue(numberOfEntries);
@@ -767,16 +714,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
 		findElement(driver, byCloseButton, timeoutInSeconds);
-
-		// *********** Chrome browser needs below code***********
-		TestSetup.slowdownInSeconds(1);
-		if (this.surveyorTable.getText().contains(STRSurveyorTableEmpty)) {
-			this.btnClose.click();
-			TestSetup.slowdownInSeconds(1);
-			this.linkSelectSurveyor.click();
-			findElement(driver, byCloseButton, timeoutInSeconds);
-		}
-		// *************************
 
 		this.inputSearchSurveyor.sendKeys(strSurveyor);
 		for (int i = 1; i <= this.analyzersList.size();) {
