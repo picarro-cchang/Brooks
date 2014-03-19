@@ -10,6 +10,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.CacheLookup;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
 import org.openqa.selenium.support.ui.Select;
@@ -44,6 +45,14 @@ public class ReportGenerationPortalPage extends BasePage {
 	public static final String STRPeaksMinAmp = "0.10";
 	public static final String STRShowSelected = "Show Selected";
 	public static final String STRShowAll = "Show All";
+
+	@FindBy(how = How.ID, using = "id_userid_site")
+	@CacheLookup
+	private WebElement userIDSite;
+
+	@FindBy(how = How.XPATH, using = "//span[@id='id_menu_util_list']/li[4]/a")
+	@CacheLookup
+	private WebElement linkSignOff;
 
 	@FindBy(how = How.ID, using = "id_title")
 	private WebElement reportTitle;
@@ -210,15 +219,23 @@ public class ReportGenerationPortalPage extends BasePage {
 	@FindBy(how = How.XPATH, using = "//select[@name='id_jobTable_length']")
 	private WebElement selectShowNReportEntries;
 
-	private String strSurveyorDetails = "//table[@id='runTable']/tbody/tr/td[2]";
-	private String strSumarryDetails = "//table[@id='summarytable']/tbody/tr/td[2]";
-	private String strSubmapDetails = "//table[@id='submapstable']/tbody/tr/td[2]";
-	private String btnAddRuns = "//table[@id='runTable']/thead/tr/th[1]/button";
-	private String formAnalyzerLoaded = "//div[@class='modal hide fade in']";
-	private String linkView = "//table[@id='id_jobTable']/tbody/tr[1]/td[5]/b/a[@class='viewLink']";
+	private By bySurveyorDetails = By
+			.xpath("//table[@id='runTable']/tbody/tr/td[2]");
+	private By bySumarryDetails = By
+			.xpath("//table[@id='summarytable']/tbody/tr/td[2]");
+	private By bySubmapDetails = By
+			.xpath("//table[@id='submapstable']/tbody/tr/td[2]");
+	private By byAddRuns = By
+			.xpath("//table[@id='runTable']/thead/tr/th[1]/button");
+	private By byFormAnalyzerLoaded = By
+			.xpath("//div[@class='modal hide fade in']");
+	private By byViewLink = By
+			.xpath("//table[@id='id_jobTable']/tbody/tr[1]/td[5]/b/a[@class='viewLink']");
 	private By btnNextEnabled = By.xpath("//a[@class='paginate_enabled_next']");
-	private By btnSaveChanges = By.xpath("//button[@id='id_save_template']");
-	private By btnMakeRprt = By.xpath("//button[@id='id_save_template']");
+	private By btnSaveChanges = By.id("id_save_template");
+	private By byAnalyzerTemplateLoaded = By
+			.xpath("//div[@class='control-group error']/div/div/span/span");
+	private By byOkAddFigureBtn = By.xpath("//button[contains(text(),'OK')]");
 
 	public ReportGenerationPortalPage(WebDriver driver, String baseURL) {
 		super(driver, STRPageTitle);
@@ -248,8 +265,8 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.inputStartTime.sendKeys(reportData.get("StartTime"));
 		this.inputEndTime.sendKeys(reportData.get("EndTime"));
 
-		// ImagingUtility.takeScreenShot(driver, ".\\screenshots\\",
-		// "Add Run Settings");
+		ImagingUtility.takeScreenShot(driver, ".\\screenshots\\",
+				"Add Run Settings");
 
 		this.btnOKForAddNewRun.click();
 		TestSetup.slowdownInSeconds(1);
@@ -319,13 +336,12 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideTitleCornerDetails(Hashtable<String, String> reportData,
 			int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
-
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.reportTitle.sendKeys(reportData.get("Title"));
-
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 		// deletes the selected text
@@ -356,6 +372,28 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.inputPeaksMinAmp.sendKeys(reportData.get("peaksMinAmp"));
 	}
 
+	public void provideTitleCornerDetailsNORowsCols(Hashtable<String, String> reportData, int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
+		driver.switchTo().frame("id_iframe");
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
+
+		this.reportTitle.sendKeys(reportData.get("Title"));
+		// select the text present
+		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+		// deletes the selected text
+		this.inputSWCorner.sendKeys(Keys.BACK_SPACE);
+		// select the text present
+		this.inputNECorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+		// deletes the selected text
+		this.inputNECorner.sendKeys(Keys.BACK_SPACE);
+
+		this.inputSWCorner.sendKeys(reportData.get("SWCornerLat") + ", "
+				+ reportData.get("SWCornerLong"));
+		this.inputNECorner.sendKeys(reportData.get("NECornerLat") + ", "
+				+ reportData.get("NECornerLong"));
+	}
+
 	/**
 	 * Method to provide title, SW Corner, NE Corner, no. of rows and columns
 	 */
@@ -375,10 +413,10 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideBlankTitle(Hashtable<String, String> reportData,
 			int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
-
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.reportTitle.sendKeys("");
 
@@ -400,7 +438,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			String strSWCorner, String strNECorner, int timeoutSeconds)
 			throws Exception {
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.reportTitle.sendKeys(strReportTitle);
 
@@ -429,10 +467,9 @@ public class ReportGenerationPortalPage extends BasePage {
 			Hashtable<String, String> reportData, int timeoutSeconds)
 			throws Exception {
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.reportTitle.sendKeys(strReportTitle);
-
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 		// deletes the selected text
@@ -489,13 +526,17 @@ public class ReportGenerationPortalPage extends BasePage {
 	public void provideAnalyzerDetails(String strAnalyzer,
 			Hashtable<String, String> reportData, int timeoutSeconds)
 			throws Exception {
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnAddRun.click();
 		// Wait till form is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
 		this.selectAnalyzer.sendKeys(strAnalyzer);
 		this.inputStartTime.sendKeys(reportData.get("StartTime"));
 		this.inputEndTime.sendKeys(reportData.get("EndTime"));
 		this.btnOKForAddNewRun.click();
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -508,20 +549,21 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideBlankStartEndTime(String strAnalyzer, int timeoutSeconds)
 			throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnAddRun.click();
 		// Wait till form is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
 		this.selectAnalyzer.sendKeys(strAnalyzer);
 		this.inputStartTime.sendKeys(Keys.DELETE);
 		this.inputEndTime.sendKeys(Keys.DELETE);
 
 		this.btnOKForAddNewRun.click();
 		// Wait till form is loaded
-		findElement(
-				driver,
-				By.xpath("//div[@class='control-group error']/div/div/span/span"),
-				timeoutSeconds);
+		findElement(driver, byAnalyzerTemplateLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -534,16 +576,20 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideSummaryFigureDetails(String strFigureValue,
 			int timeoutSeconds) throws Exception {
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.cbSummaryPeaksTable.click();
 		this.cbSummaryIsotopicTable.click();
 		this.cbSummaryRunsTable.click();
 		this.cbSummarySurveysTable.click();
 
 		this.btnAddNewSummaryFigure.click();
-
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectSummaryPaths.sendKeys(strFigureValue);
 		this.selectSummaryPeaks.sendKeys(strFigureValue);
 		this.selectSummaryLISA.sendKeys(strFigureValue);
@@ -561,11 +607,17 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideOnlySubmapGridSummaryFigure(int timeoutSeconds)
 			throws Exception {
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnAddNewSummaryFigure.click();
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnOKForAddNewFigure.click();
+		findElement(driver, btnSaveChanges, timeoutSeconds);
 	}
 
 	/**
@@ -577,11 +629,15 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideSummaryFigureDetailsNoTablesSelected(
 			String strFigureValue, int timeoutSeconds) throws Exception {
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnAddNewSummaryFigure.click();
-
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectSummaryPaths.sendKeys(strFigureValue);
 		this.selectSummaryPeaks.sendKeys(strFigureValue);
 		this.selectSummaryLISA.sendKeys(strFigureValue);
@@ -589,6 +645,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSummaryFOV.sendKeys(strFigureValue);
 		this.selectSummaryGrid.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
+		findElement(driver, btnSaveChanges, timeoutSeconds);
 	}
 
 	/**
@@ -600,18 +657,23 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void selectSummaryTables(String strFigureValue, int timeoutSeconds)
 			throws Exception {
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.cbSummaryPeaksTable.click();
 		this.cbSummaryIsotopicTable.click();
 		this.cbSummaryRunsTable.click();
 		this.cbSummarySurveysTable.click();
 
 		this.btnAddNewSummaryFigure.click();
-
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectSummaryGrid.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
+		findElement(driver, btnSaveChanges, timeoutSeconds);
 	}
 
 	/**
@@ -623,8 +685,10 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideSubmapFigureDetailsWithNoTables(String strFigureValue,
 			int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(1);
 		this.btnAddNewSubmapFigure.click();
-
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectSubmapPaths.sendKeys(strFigureValue);
 		this.selectSubmapPeaks.sendKeys(strFigureValue);
 		this.selectSubmapLISA.sendKeys(strFigureValue);
@@ -641,14 +705,17 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * 
 	 * @param figureValue
 	 */
-	public void selectSubmapTables() throws Exception {
+	public void selectSubmapTables(int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(1);
 		this.cbSubmapsPeaksTable.click();
 		this.cbSubmapsIsotopicTable.click();
 		this.cbSubmapsRunsTable.click();
 		this.cbSubmapsSurveysTable.click();
-
 		this.btnAddNewSubmapFigure.click();
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnOKForAddNewFigure.click();
+		findElement(driver, btnSaveChanges, timeoutSeconds);
 	}
 
 	/**
@@ -658,21 +725,24 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * 
 	 * @param figureValue
 	 */
-	public void provideSubmapFigureDetails(String strFigureValue)
-			throws Exception {
+	public void provideSubmapFigureDetails(String strFigureValue,
+			int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(1);
 		this.cbSubmapsPeaksTable.click();
 		this.cbSubmapsIsotopicTable.click();
 		this.cbSubmapsRunsTable.click();
 		this.cbSubmapsSurveysTable.click();
 
 		this.btnAddNewSubmapFigure.click();
-
+		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectSubmapPaths.sendKeys(strFigureValue);
 		this.selectSubmapPeaks.sendKeys(strFigureValue);
 		this.selectSubmapLISA.sendKeys(strFigureValue);
 		this.selectSubmapIsotopic.sendKeys(strFigureValue);
 		this.selectSubmapFOV.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
+		findElement(driver, btnSaveChanges, timeoutSeconds);
 	}
 
 	/**
@@ -682,10 +752,13 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * @param timeoutSeconds
 	 */
 	public void clickSaveChangesMakeReport(int timeoutSeconds) throws Exception {
-		this.btnSaveEditTemplate.click();
-		findElement(driver, btnMakeRprt, timeoutSeconds);
-		this.btnMakeReport.click();
 		TestSetup.slowdownInSeconds(1);
+		findElement(driver, btnSaveChanges, timeoutSeconds);
+		this.btnSaveEditTemplate.click();
+		TestSetup.slowdownInSeconds(1);
+		findElement(driver, byAddRuns, timeoutSeconds);
+		System.out.println("Click on Make Report");
+		this.btnMakeReport.click();
 	}
 
 	/**
@@ -693,9 +766,10 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * 
 	 * @param timeoutSeconds
 	 */
-	public void clickOnMakeReport() throws Exception {
-		this.btnMakeReport.click();
+	public void clickOnMakeReport(int timeoutSeconds) throws Exception {
 		TestSetup.slowdownInSeconds(1);
+		findElement(driver, byAddRuns, timeoutSeconds);
+		this.btnMakeReport.click();
 	}
 
 	/**
@@ -704,9 +778,12 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * @param timeoutSeconds
 	 */
 	public void clickOnEditTemplate(int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
 	}
 
 	/**
@@ -716,6 +793,8 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public boolean isViewLinkPresent(String strReportTitle, int timeoutSeconds)
 			throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		findElement(driver, byAddRuns, timeoutSeconds);
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -725,8 +804,7 @@ public class ReportGenerationPortalPage extends BasePage {
 								+ "]/td[4]"));
 
 				if (targetWebElement.getText().equals(strReportTitle)) {
-					return isElementPresent(driver, By.xpath(linkView),
-							timeoutSeconds);
+					return isElementPresent(driver, byViewLink, timeoutSeconds);
 				} else {
 					continue;
 				}
@@ -752,6 +830,9 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void clickOnViewLink(String strReportTitle, int timeoutSeconds)
 			throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -764,6 +845,11 @@ public class ReportGenerationPortalPage extends BasePage {
 							driver,
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]/b/a"), timeoutSeconds);
+					System.out
+							.println("View link text : "
+									+ driver.findElement(
+											By.xpath("//table[@id='id_jobTable']/tbody/tr["
+													+ i + "]/td[5]")).getText());
 					driver.findElement(
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]/b/a")).click();
@@ -796,9 +882,29 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
-		this.provideSubmapFigureDetails(strSubmapFigureValue);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 		if (strSummaryFigureValue.contains("No")) {
+			TestSetup.slowdownInSeconds(1);
+			String actualMessage = acceptAlert();
+			return actualMessage.contains(STRNoSubmapGrid);
+		}
+		return false;
+	}
+	
+	public boolean makeReportOfSingleRowCol(String strAnalyzer,
+			Hashtable<String, String> reportData, String reportType,
+			String strSummaryFigureValue, String strSubmapFigureValue,
+			int timeoutSeconds) throws Exception {
+		this.provideTitleCornerDetailsNORowsCols(reportData, timeoutSeconds);
+		if (reportType.contains(STRPDFReport))
+			this.btnMakePDF.click();
+		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
+		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
+		this.clickSaveChangesMakeReport(timeoutSeconds);
+		if (strSummaryFigureValue.contains("No")) {
+			TestSetup.slowdownInSeconds(1);
 			String actualMessage = acceptAlert();
 			return actualMessage.contains(STRNoSubmapGrid);
 		}
@@ -809,15 +915,15 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		TestSetup.slowdownInSeconds(1);
 		this.clickOnViewLink(strReportTitle, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		findElement(driver,
 				By.xpath("//div[contains(text(),'" + strReportTitle + "')]"),
 				timeoutSeconds);
-
 		return this.strReportTitle.getText().equals(strReportTitle);
 	}
 
 	public boolean isPeaksAmpPresentGreaterThanMinAmp(int timeoutSeconds) {
+		TestSetup.slowdownInSeconds(1);
 		WebElement targetWebElement;
 		for (int i = 1; i <= this.listPeaksAmp.size(); i++) {
 			targetWebElement = driver.findElement(By
@@ -835,6 +941,8 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean isDownloadPDFButtonPresent(String strReportTitle,
 			int timeoutSeconds) throws Exception {
 		TestSetup.slowdownInSeconds(1);
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -871,6 +979,9 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void clickOnEditReport(String strReportTitle, int timeoutSeconds)
 			throws Exception {
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -878,15 +989,17 @@ public class ReportGenerationPortalPage extends BasePage {
 				targetWebElement = driver.findElement(By
 						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 								+ "]/td[4]"));
-
 				if (targetWebElement.getText().equals(strReportTitle)) {
 					isElementPresent(
 							driver,
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[5]/b/a"), timeoutSeconds);
+									+ "]/td[5]"), timeoutSeconds);
+					System.out.println("Click on edit report");
+					TestSetup.slowdownInSeconds(1);
 					driver.findElement(
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[1]/button")).click();
+					System.out.println("Clicked edit report");
 					flagForWhileLoop = false;
 					break;
 				} else {
@@ -914,6 +1027,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptySubmapTemplate);
 	}
@@ -926,7 +1040,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideOnlySubmapGridSummaryFigure(timeoutSeconds);
-		this.provideSubmapFigureDetails(strSubmapFigureValue);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
@@ -939,7 +1053,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetailsNoTablesSelected(strFigureValue,
 				timeoutSeconds);
-		this.provideSubmapFigureDetails(strFigureValue);
+		this.provideSubmapFigureDetails(strFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
@@ -951,7 +1065,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.selectSummaryTables(strFigureValue, timeoutSeconds);
-		this.provideSubmapFigureDetails(strFigureValue);
+		this.provideSubmapFigureDetails(strFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
@@ -976,7 +1090,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
-		this.selectSubmapTables();
+		this.selectSubmapTables(timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
@@ -988,47 +1102,35 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.clickOnEditTemplate(timeoutSeconds);
-		this.provideSubmapFigureDetails(strSubmapFigureValue);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptySummaryTemplate);
 	}
 
 	public void makeDuplicateReport(String strReportTitle, int timeoutSeconds)
 			throws Exception {
-		// closing child window
-		driver.close();
-
-		// switch control to parent window
-		driver.switchTo().window(parentWindow);
-		driver.switchTo().frame("id_iframe");
-
-		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
-
 		this.clickOnEditReport(strReportTitle, timeoutSeconds);
+		this.clickOnMakeReport(timeoutSeconds);
 	}
 
 	public boolean makeDuplicateReportNotAllowed(String strReportTitle,
 			int timeoutSeconds) throws Exception {
-		// closing child window
-		driver.close();
-
-		// switch control to parent window
-		driver.switchTo().window(parentWindow);
-		driver.switchTo().frame("id_iframe");
-
-		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
-
 		this.clickOnEditReport(strReportTitle, timeoutSeconds);
-		this.clickOnMakeReport();
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STRDuplicateReport);
 	}
 
-	public boolean makeReportWithNoAnalyzerDetails() throws Exception {
-		this.clickOnMakeReport();
+	public boolean makeReportWithNoAnalyzerDetails(int timeoutSeconds)
+			throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptySurveyorTemplate);
 	}
@@ -1037,12 +1139,13 @@ public class ReportGenerationPortalPage extends BasePage {
 			String strReportTitle, Hashtable<String, String> reportData,
 			String reportType, String strSummaryFigureValue,
 			String strSubmapFigureValue, int timeoutSeconds) throws Exception {
-		driver.switchTo().frame("id_iframe1");
+		String currentWH = driver.getWindowHandle();
+		driver.switchTo().frame("id_iframe");
 		this.provideTitleCorner(strReportTitle, reportData, timeoutSeconds);
 		if (reportType.contains(STRPDFReport))
 			this.btnMakePDF.click();
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
-		this.provideSubmapFigureDetails(strSubmapFigureValue);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 		String actualMessage = cancelAlert();
 		return actualMessage.contains(STREmptySurveyorTemplate);
@@ -1052,7 +1155,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * @author pmahajan
 	 * @return
 	 */
-	public boolean searchLogFile(String strReportTitle,
+	public boolean searchReport(String strReportTitle,
 			String validInvalidReport, int timeoutSeconds) throws Exception {
 		this.inputSearchReport.sendKeys(strReportTitle);
 
@@ -1076,37 +1179,43 @@ public class ReportGenerationPortalPage extends BasePage {
 		if (reportType.contains(STRPDFReport))
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
-		this.clickOnMakeReport();
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptySummaryTemplate);
 	}
 
 	public boolean makeReportWithInvalidLatitudeCorner(String strReportTitle,
 			int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		this.provideTitleCornerDetails(strReportTitle, invalidSwCorner[0],
 				invalidNeCorner[0], timeoutSeconds);
-		this.clickOnMakeReport();
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STRInvalidCorners[0]);
 	}
 
 	public boolean makeReportWithInvalidLongitudeCorner(String strReportTitle,
 			int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		this.provideTitleCornerDetails(strReportTitle, invalidSwCorner[1],
 				invalidNeCorner[1], timeoutSeconds);
-		this.clickOnMakeReport();
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STRInvalidCorners[1]);
 	}
 
-	public boolean makeReportWithBlankSWNECorners(String blankCorner)
-			throws Exception {
+	public boolean makeReportWithBlankSWNECorners(String blankCorner,
+			int timeoutSeconds) throws Exception {
 		if (blankCorner.contentEquals(STRSWCorner))
 			this.provideBlankSwCorner();
 		else
 			this.provideBlankNeCorner();
-		this.clickOnMakeReport();
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STRBlankCorners);
 	}
@@ -1114,17 +1223,20 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean makeReportWithNoTitle(Hashtable<String, String> reportData,
 			int timeoutSeconds) throws Exception {
 		this.provideBlankTitle(reportData, timeoutSeconds);
-		this.clickOnMakeReport();
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
 		return actualMessage.contains(STREmptyReportTitle);
 	}
 
 	public boolean isStartTimeBlank() throws Exception {
+		TestSetup.slowdownInSeconds(1);
 		return this.invalidStartTime.getText().contentEquals(
 				STRBlankStartEndTime[0]);
 	}
 
 	public boolean isEndTimeBlank() throws Exception {
+		TestSetup.slowdownInSeconds(1);
 		return this.invalidEndTime.getText().contentEquals(
 				STRBlankStartEndTime[1]);
 	}
@@ -1132,39 +1244,43 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean deleteAnalyzerDetails(String strAnalyzer,
 			Hashtable<String, String> reportData, int timeoutSeconds)
 			throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.btnDeleteAnalyzerDetails.click();
-		return isElementPresent(driver, By.xpath(strSurveyorDetails),
-				timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
+		return isElementPresent(driver, bySurveyorDetails, timeoutSeconds);
 	}
 
 	public boolean deleteSummaryFigureDetails(String strFigureValue,
 			int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
 		this.btnDeleteSummaryFigureDetails.click();
-		return isElementPresent(driver, By.xpath(strSumarryDetails),
-				timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
+		return isElementPresent(driver, bySumarryDetails, timeoutSeconds);
 	}
 
 	public boolean deleteSubmapFigureDetails(String strFigureValue,
 			int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 
-		this.provideSubmapFigureDetails(strFigureValue);
+		this.provideSubmapFigureDetails(strFigureValue, timeoutSeconds);
 		this.btnDeleteSubmapFigureDetails.click();
-		return isElementPresent(driver, By.xpath(strSubmapDetails),
-				timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
+		return isElementPresent(driver, bySubmapDetails, timeoutSeconds);
 	}
 
 	/**
@@ -1173,10 +1289,15 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * @param timeoutSeconds
 	 */
 	public void unselectSummaryTables(int timeoutSeconds) throws Exception {
-
+		TestSetup.slowdownInSeconds(1);
+		System.out.println("click on edit template");
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
-		findElement(driver, By.xpath(formAnalyzerLoaded), timeoutSeconds);
+		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
+		System.out.println("Peaks table : "
+				+ this.cbSummaryPeaksTable.isSelected());
+		TestSetup.slowdownInSeconds(1);
 		if (this.cbSummaryPeaksTable.isSelected())
 			this.cbSummaryPeaksTable.click();
 		if (this.cbSummaryIsotopicTable.isSelected())
@@ -1193,20 +1314,24 @@ public class ReportGenerationPortalPage extends BasePage {
 
 		// switch control to parent window
 		driver.switchTo().window(parentWindow);
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(2);
 	}
 
 	public String editAndMakeReport(String strReportTitle, int timeoutSeconds)
 			throws Exception {
-		this.clickOnEditReport(strReportTitle, timeoutSeconds);
 		TestSetup.slowdownInSeconds(2);
+		this.clickOnEditReport(strReportTitle, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys(" New");
 		String strNewTitle = strReportTitle + " New";
 		this.unselectSummaryTables(timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		return strNewTitle;
 	}
 
@@ -1220,7 +1345,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			this.btnMakePDF.click();
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
-		this.provideSubmapFigureDetails(strSubmapFigureValue);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
 	}
 
@@ -1231,6 +1356,8 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void unCheckReport(String strReportTitle, int timeoutSeconds)
 			throws Exception {
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -1239,12 +1366,24 @@ public class ReportGenerationPortalPage extends BasePage {
 						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 								+ "]/td[4]"));
 
+				System.out.println(targetWebElement.getText());
+				System.out.println(targetWebElement.getText().equals(
+						strReportTitle));
+
 				if (targetWebElement.getText().equals(strReportTitle)) {
 					if (driver
 							.findElement(
 									By.xpath("//table[@id='id_jobTable']/tbody/tr["
 											+ i + "]/td[7]/input"))
 							.getAttribute("checked").compareTo("true") == 0) {
+
+						System.out
+								.println("Report checked : "
+										+ driver.findElement(
+												By.xpath("//table[@id='id_jobTable']/tbody/tr["
+														+ i + "]/td[7]/input"))
+												.getAttribute("checked"));
+
 						driver.findElement(
 								By.xpath("//table[@id='id_jobTable']/tbody/tr["
 										+ i + "]/td[7]/input")).click();
@@ -1281,11 +1420,13 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * @param timeoutSeconds
 	 */
 	public boolean showSelectedReports(int timeoutSeconds) throws Exception {
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		boolean flagForWhileLoop = true;
 		String strCheckAttribute;
 		if (btnShowSelectedOrAll.getText().contains(STRShowSelected))
 			btnShowSelectedOrAll.click();
-
+		TestSetup.slowdownInSeconds(1);
 		while (flagForWhileLoop) {
 			for (int i = 1; i <= this.listReports.size(); i++) {
 				strCheckAttribute = driver.findElement(
@@ -1317,12 +1458,13 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public boolean showAllReports(String strReportTitle,
 			String strNewReportTitle, int timeoutSeconds) throws Exception {
-		// boolean flagForWhileLoop = true;
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		WebElement targetWebElement;
 		String strCheckAttribute;
 		if (btnShowSelectedOrAll.getText().contains(STRShowAll))
 			btnShowSelectedOrAll.click();
-
+		TestSetup.slowdownInSeconds(1);
 		for (int i = 1; i <= 2; i++) {
 			targetWebElement = driver.findElement(By
 					.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
@@ -1343,17 +1485,28 @@ public class ReportGenerationPortalPage extends BasePage {
 	}
 
 	public void waitForReportPageLoading(int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
-		findElement(driver, By.xpath(btnAddRuns), timeoutSeconds);
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(3);
 	}
 
 	public boolean showNReportEntries(String numberOfEntries) throws Exception {
 		Select selectNoOfReportEntries = new Select(
 				this.selectShowNReportEntries);
 		selectNoOfReportEntries.selectByValue(numberOfEntries);
-
+		TestSetup.slowdownInSeconds(1);
 		return (Integer.toString(this.listReports.size())
 				.contentEquals(numberOfEntries));
+	}
+
+	public LoginPage logout() throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		driver.switchTo().defaultContent();
+		this.userIDSite.click();
+		TestSetup.slowdownInSeconds(1);
+		this.linkSignOff.click();
+		return (new LoginPage(driver, strBaseURL));
 	}
 }

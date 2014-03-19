@@ -5,6 +5,7 @@ package pcubed.regression.source;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -34,7 +35,7 @@ public class ReportGenerationPortalPageTest {
 	private static ReportGenerationPortalPage pageReportGeneration;
 
 	private static int timeoutSecondsToViewReport = 180;
-	private static int timeoutSecondsElePresent = 20;
+	private static int timeoutSecondsElePresent = 30;
 	private static String strPDFReport = "PDF";
 	private static String strViewReport = "View";
 	private static String strFigureValueYes = "Yes";
@@ -52,7 +53,6 @@ public class ReportGenerationPortalPageTest {
 		testSetup = new TestSetup();
 		driver = testSetup.getDriver();
 		baseURL = testSetup.getBaseUrl();
-		// screenShotsDir = ".\\screenshots\\";
 		screenShotsDir = "./screenshots/";
 		debug = testSetup.isRunningDebug();
 		driver.manage().deleteAllCookies();
@@ -88,6 +88,7 @@ public class ReportGenerationPortalPageTest {
 	 */
 	@After
 	public void tearDown() throws Exception {
+		pageReportGeneration.logout();
 	}
 
 	/**
@@ -101,14 +102,14 @@ public class ReportGenerationPortalPageTest {
 			pageReportGeneration.open();
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData());
-			testSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(5);
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_TC0001");
 		} catch (Exception e) {
-			assertTrue("Exception Caught : " + e.getMessage(), false);
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_TC0001");
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -130,9 +131,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_TC0002");
 		} catch (Exception e) {
-			assertTrue("Exception Caught : " + e.getMessage(), false);
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_TC0002");
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -144,7 +145,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT001() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -153,16 +158,23 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT001_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated successfully!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT001_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT001");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -174,22 +186,28 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT002() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strPDFReport,
 					strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
 
-			assertTrue(pageReportGeneration.isDownloadPDFButtonPresent(
-					testSetup.getHTReportData().get("Title"),
-					timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated successfully!",
+					pageReportGeneration.isDownloadPDFButtonPresent(testSetup
+							.getHTReportData().get("Title"),
+							timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT002");
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT002");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -202,14 +220,21 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT003() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration.makeReportWithoutSubmapFigures(
-					testSetup.getSurveyor(), testSetup.getHTReportData(),
-					strViewReport, strFigureValueYes, timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertTrue(
+					"Report should not be generated when submap details were not provided!",
+					pageReportGeneration.makeReportWithoutSubmapFigures(
+							testSetup.getSurveyor(),
+							testSetup.getHTReportData(), strViewReport,
+							strFigureValueYes, timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT003");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -222,14 +247,21 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT004() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration.makeReportWithoutSubmapFigures(
-					testSetup.getSurveyor(), testSetup.getHTReportData(),
-					strPDFReport, strFigureValueYes, timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertTrue(
+					"PDF report should not be generated when submap details were not provided!",
+					pageReportGeneration.makeReportWithoutSubmapFigures(
+							testSetup.getSurveyor(),
+							testSetup.getHTReportData(), strPDFReport,
+							strFigureValueYes, timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT004");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -242,15 +274,21 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT005() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration.makeReport(testSetup.getSurveyor(),
-					testSetup.getHTReportData(), strViewReport,
-					strFigureValueNo, strFigureValueYes,
-					timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertTrue(
+					"Report should not be generated as submap pages are not reachable!",
+					pageReportGeneration.makeReport(testSetup.getSurveyor(),
+							testSetup.getHTReportData(), strViewReport,
+							strFigureValueNo, strFigureValueYes,
+							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT005");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -263,7 +301,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT006() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReportWithSubmapGridOnlyNoSummary(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -271,16 +313,23 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT006_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT006_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT006");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -293,7 +342,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT007() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReportWithoutSummaryTables(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -301,16 +354,23 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT007_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT007_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT007");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -323,7 +383,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT008() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReportWithoutSumarryFiguresSettings(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -331,16 +395,23 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT008_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT008_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT008");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -353,7 +424,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT009() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReportWithoutSubmapTables(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -361,18 +436,26 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT009_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT009_ViewReport");
 
 			// click on Cell - e.g. C5
+
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT009");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -385,7 +468,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT010() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReportWithoutSubmapFiguresSettings(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -393,18 +480,26 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT010_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT010_ViewReport");
 
 			// click on Cell - e.g. C5 - remaining
+
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT010");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -417,63 +512,88 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT011() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration.makeReportWithoutSummary(
-					testSetup.getSurveyor(), testSetup.getHTReportData(),
-					strViewReport, strFigureValueYes, timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertTrue(
+					"Report should not be generated for empty summary figure and tables template!",
+					pageReportGeneration.makeReportWithoutSummary(
+							testSetup.getSurveyor(),
+							testSetup.getHTReportData(), strViewReport,
+							strFigureValueYes, timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT011");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
 	/**
 	 * Test Case: ReportGenerationPortalPage_RPT012 Verify report is generated
-	 * when analyzer details are not provided, if user confirms 'OK' to generate
-	 * the report
+	 * when analyzer details are not provided, if user confirms to generate the
+	 * report
 	 * 
 	 */
 	@Test
 	public void reportGenerationPortalPage_RPT012() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			String strReportTitle = testSetup.getHTReportData().get("Title")
 					+ "RPT012";
 
-			assertTrue(pageReportGeneration
-					.cancelReportGenerationWhenNoAnalyzerProvided(
-							strReportTitle, testSetup.getHTReportData(),
-							strViewReport, strFigureValueYes,
-							strFigureValueYes, timeoutSecondsElePresent));
-			assertFalse(pageReportGeneration.isViewLinkPresent(strReportTitle,
-					timeoutSecondsElePresent));
+			assertTrue("Alert not present for empty analyzer details!",
+					pageReportGeneration
+							.cancelReportGenerationWhenNoAnalyzerProvided(
+									strReportTitle,
+									testSetup.getHTReportData(), strViewReport,
+									strFigureValueYes, strFigureValueYes,
+									timeoutSecondsElePresent));
+			assertFalse(
+					"Report should not be generated if alert is dismissed!",
+					pageReportGeneration.isViewLinkPresent(strReportTitle,
+							timeoutSecondsElePresent));
 
-			assertTrue(pageReportGeneration.makeReportWithNoAnalyzerDetails());
-			assertTrue(pageReportGeneration.viewReport(strReportTitle,
-					timeoutSecondsToViewReport));
+			assertTrue(
+					"Alert not present for empty analyzer details!",
+					pageReportGeneration
+							.makeReportWithNoAnalyzerDetails(timeoutSecondsElePresent));
+			assertTrue(strReportTitle + " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(strReportTitle,
+							timeoutSecondsToViewReport));
+			assertTrue(strReportTitle
+					+ " report should be generated if alert is accepted!",
+					pageReportGeneration.viewReport(strReportTitle,
+							timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT012");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT012");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
 	/**
 	 * Test Case: ReportGenerationPortalPage_RPT013 Verify user having 'Add
-	 * "FORCE" ' permission can generate duplicate reports
+	 * "FORCE"' permission can generate duplicate reports
 	 * 
 	 */
 	@Test
 	public void reportGenerationPortalPage_RPT013() {
 		try {
-			/**
-			 * Need to add code to check ADD FORCE permission
-			 */
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -482,12 +602,19 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report1_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report1_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 
 			pageReportGeneration.makeDuplicateReport(testSetup
 					.getHTReportData().get("Title"), timeoutSecondsElePresent);
@@ -495,16 +622,23 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report2_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report2_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT013");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -516,32 +650,33 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT014() {
 		try {
-			/**
-			 * Need to add code to check ADD FORCE permission
-			 */
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUserA(),
+					testSetup.getLoginPwdA());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
 
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"ReportGenerationPortalPage_RPT014_Report1_Dashboard");
-
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
-
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"ReportGenerationPortalPage_RPT014_Report1_ViewReport");
+					"ReportGenerationPortalPage_RPT014_Report_Dashboard");
 
-			assertTrue(pageReportGeneration.makeDuplicateReportNotAllowed(
-					testSetup.getHTReportData().get("Title"),
-					timeoutSecondsElePresent));
+			assertTrue(
+					"Alert not present when user not allowed to generate duplicate reports!",
+					pageReportGeneration.makeDuplicateReportNotAllowed(
+							testSetup.getHTReportData().get("Title"),
+							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT014");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -555,7 +690,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT016() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -564,18 +703,20 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT016_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.isViewLinkPresent(
-							testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
-
-			assertTrue(pageReportGeneration.searchLogFile(testSetup
-					.getHTReportData().get("Title"), strValidSearch,
-					timeoutSecondsElePresent));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not present!",
+					pageReportGeneration.searchReport(testSetup
+							.getHTReportData().get("Title"), strValidSearch,
+							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT016");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -589,27 +730,29 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT017() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-
-			assertTrue(pageReportGeneration
-					.makeReportWithInvalidLatitudeCorner(testSetup
-							.getHTReportData().get("Title"),
+			TestSetup.slowdownInSeconds(5);
+			assertTrue("Alert not present for invlaid latitude corners!",
+					pageReportGeneration.makeReportWithInvalidLatitudeCorner(
+							testSetup.getHTReportData().get("Title"),
 							timeoutSecondsElePresent));
-
-			assertTrue(pageReportGeneration
-					.makeReportWithInvalidLongitudeCorner(testSetup
-							.getHTReportData().get("Title"),
+			assertTrue("Alert not present for invlaid longitude corners!",
+					pageReportGeneration.makeReportWithInvalidLongitudeCorner(
+							testSetup.getHTReportData().get("Title"),
 							timeoutSecondsElePresent));
-
-			assertTrue(pageReportGeneration
-					.makeReportWithBlankSWNECorners(strSWCorner));
-
-			assertTrue(pageReportGeneration
-					.makeReportWithBlankSWNECorners(strNeCorner));
+			assertTrue("Alert not present for blank SW corners!",
+					pageReportGeneration.makeReportWithBlankSWNECorners(
+							strSWCorner, timeoutSecondsElePresent));
+			assertTrue("Alert not present for blank NE corners!",
+					pageReportGeneration.makeReportWithBlankSWNECorners(
+							strNeCorner, timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT017");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -621,13 +764,19 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT018() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration.makeReportWithNoTitle(
-					testSetup.getHTReportData(), timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertTrue("Alert not present for blank report title!",
+					pageReportGeneration.makeReportWithNoTitle(
+							testSetup.getHTReportData(),
+							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT018");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -639,16 +788,22 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT019() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.provideBlankStartEndTime(
 					testSetup.getSurveyor(), timeoutSecondsElePresent);
 
-			assertTrue(pageReportGeneration.isStartTimeBlank());
-			assertTrue(pageReportGeneration.isEndTimeBlank());
+			assertTrue("Error message not present for blank start time!",
+					pageReportGeneration.isStartTimeBlank());
+			assertTrue("Error message not present for blank end time!",
+					pageReportGeneration.isEndTimeBlank());
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT019");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -660,14 +815,20 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT020() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertFalse(pageReportGeneration.deleteAnalyzerDetails(
-					testSetup.getSurveyor(), testSetup.getHTReportData(),
-					timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertFalse("Analyzer details not get deleted!",
+					pageReportGeneration.deleteAnalyzerDetails(
+							testSetup.getSurveyor(),
+							testSetup.getHTReportData(),
+							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT020");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -679,14 +840,19 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT021() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertFalse(pageReportGeneration.deleteSummaryFigureDetails(
-					testSetup.getSurveyor(), timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertFalse(
+					"Summary Figure details not get deleted!",
+					pageReportGeneration.deleteSummaryFigureDetails(
+							testSetup.getSurveyor(), timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT021");
-
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -698,13 +864,19 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT022() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertFalse(pageReportGeneration.deleteSubmapFigureDetails(
-					testSetup.getSurveyor(), timeoutSecondsElePresent));
+			TestSetup.slowdownInSeconds(5);
+			assertFalse(
+					"Submap figure details not get deleted!",
+					pageReportGeneration.deleteSubmapFigureDetails(
+							testSetup.getSurveyor(), timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT022");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -716,7 +888,11 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT023() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -725,9 +901,15 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_Dashboard");
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_ViewReport");
@@ -740,15 +922,20 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_NewReport_Dashboard");
 
-			assertTrue(pageReportGeneration.viewReport(newReportTitle,
-					timeoutSecondsToViewReport));
+			assertTrue(newReportTitle + " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(newReportTitle,
+							timeoutSecondsToViewReport));
+			assertTrue(newReportTitle + " report not generated!",
+					pageReportGeneration.viewReport(newReportTitle,
+							timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_NewReport_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT023");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -760,43 +947,34 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT024() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration.makeReportPeaksMinAmpProvided(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
 
-			assertTrue(pageReportGeneration
-					.viewReport(testSetup.getHTReportData().get("Title"),
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
 							timeoutSecondsToViewReport));
-			assertTrue(pageReportGeneration
-					.isPeaksAmpPresentGreaterThanMinAmp(timeoutSecondsElePresent));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report not generated!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
+			assertTrue(
+					"Peaks present in report have Ampl lesses than specified Min Ampl!",
+					pageReportGeneration
+							.isPeaksAmpPresentGreaterThanMinAmp(timeoutSecondsElePresent));
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT024");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
-		}
-	}
-
-	/**
-	 * Test Case: ReportGenerationPortalPage_RPT025 Verify 'Show All' and 'Show
-	 * Selected' buttons are displaying the list of reports accordingly
-	 * 
-	 */
-	@Test
-	public void reportGenerationPortalPage_RPT025_ShowSelectedReports() {
-		try {
-			pageReportGeneration.open();
-			pageReportGeneration
-					.waitForReportPageLoading(timeoutSecondsElePresent);
-			assertTrue(pageReportGeneration
-					.showSelectedReports(timeoutSecondsElePresent));
-		} catch (Exception e) {
-			ImagingUtility
-					.takeScreenShot(driver, screenShotsDir,
-							"Exception_ReportGenerationPortalPage_RPT025_ShowSelectedReports");
-
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -808,11 +986,17 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT025_ShowAllReports() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
+
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
+
 			String strNewReportTitle = pageReportGeneration
 					.makeAndUncheckReport(
 							testSetup.getHTReportData().get("Title"),
@@ -824,7 +1008,32 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility
 					.takeScreenShot(driver, screenShotsDir,
 							"Exception_ReportGenerationPortalPage_RPT025_ShowAllReports");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Test Case: ReportGenerationPortalPage_RPT025 Verify 'Show All' and 'Show
+	 * Selected' buttons are displaying the list of reports accordingly
+	 * 
+	 */
+	@Test
+	public void reportGenerationPortalPage_RPT025_ShowSelectedReports() {
+		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
+			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
+			pageReportGeneration
+					.waitForReportPageLoading(timeoutSecondsElePresent);
+			assertTrue(pageReportGeneration
+					.showSelectedReports(timeoutSecondsElePresent));
+		} catch (Exception e) {
+			ImagingUtility
+					.takeScreenShot(driver, screenShotsDir,
+							"Exception_ReportGenerationPortalPage_RPT025_ShowSelectedReports");
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -836,18 +1045,65 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT026() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration
 					.waitForReportPageLoading(timeoutSecondsElePresent);
-			assertTrue(pageReportGeneration.showNReportEntries(testSetup
-					.getShow10Entries()));
-			assertTrue(pageReportGeneration.showNReportEntries(testSetup
-					.getShow25Entries()));
+			assertTrue("10 report entries should be present on Dashboard!",
+					pageReportGeneration.showNReportEntries(testSetup
+							.getShow10Entries()));
+			assertTrue("25 report entries should be present on Dashboard!",
+					pageReportGeneration.showNReportEntries(testSetup
+							.getShow25Entries()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT026");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Test Case: ReportGenerationPortalPage_RPT027 Verify report is generated
+	 * for 1*1 grid, when user provides rows and columns value as '1' and Submap
+	 * page settings
+	 * 
+	 */
+	@Test
+	public void reportGenerationPortalPage_RPT027() {
+		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
+			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
+			pageReportGeneration.makeReportOfSingleRowCol(
+					testSetup.getSurveyor(), testSetup.getHTReportData(),
+					strViewReport, strFigureValueYes, strFigureValueYes,
+					timeoutSecondsElePresent);
+
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"ReportGenerationPortalPage_RPT027_Dashboard");
+
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(testSetup
+							.getHTReportData().get("Title"),
+							timeoutSecondsToViewReport));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " : report not generated successfully!",
+					pageReportGeneration.viewReport(testSetup.getHTReportData()
+							.get("Title"), timeoutSecondsToViewReport));
+
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"ReportGenerationPortalPage_RPT027_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
+		} catch (Exception e) {
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"Exception_ReportGenerationPortalPage_RPT001");
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -859,28 +1115,41 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT029() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			String strReportTitle = testSetup.getHTReportData().get("Title")
 					+ "RPT029";
 
-			assertTrue(pageReportGeneration
-					.cancelReportGenerationWhenNoAnalyzerProvided(
-							strReportTitle, testSetup.getHTReportData(),
-							strPDFReport, strFigureValueYes, strFigureValueYes,
-							timeoutSecondsElePresent));
-			assertFalse(pageReportGeneration.isDownloadPDFButtonPresent(
-					strReportTitle, timeoutSecondsElePresent));
+			assertTrue("Alert not present for empty analyzer details!",
+					pageReportGeneration
+							.cancelReportGenerationWhenNoAnalyzerProvided(
+									strReportTitle,
+									testSetup.getHTReportData(), strPDFReport,
+									strFigureValueYes, strFigureValueYes,
+									timeoutSecondsElePresent));
+			assertFalse(
+					"Report should not be generated if alert is dismissed!",
+					pageReportGeneration.isDownloadPDFButtonPresent(
+							strReportTitle, timeoutSecondsElePresent));
 
-			assertTrue(pageReportGeneration.makeReportWithNoAnalyzerDetails());
-			assertTrue(pageReportGeneration.isDownloadPDFButtonPresent(
-					strReportTitle, timeoutSecondsToViewReport));
+			assertTrue(
+					"Alert not present for empty analyzer details!",
+					pageReportGeneration
+							.makeReportWithNoAnalyzerDetails(timeoutSecondsElePresent));
+			assertTrue(strReportTitle
+					+ " PDF report should be generated if alert is accepted!",
+					pageReportGeneration.isDownloadPDFButtonPresent(
+							strReportTitle, timeoutSecondsToViewReport));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT029");
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT029");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -892,16 +1161,21 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT030() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration
-					.makeReportWithNoSummarySubmapDetails(
+			TestSetup.slowdownInSeconds(5);
+			assertTrue(
+					"Report should not be generated when Summary nad submap template is empty!",
+					pageReportGeneration.makeReportWithNoSummarySubmapDetails(
 							testSetup.getSurveyor(),
 							testSetup.getHTReportData(), strViewReport,
 							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT030");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -915,16 +1189,21 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT031() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(5);
 			pageReportGeneration
 					.waitForReportPageLoading(timeoutSecondsElePresent);
-			assertTrue(pageReportGeneration.searchLogFile(
-					testSetup.getLogFile(), strInvalidSearch,
-					timeoutSecondsElePresent));
+			assertTrue(testSetup.getHTReportData().get("Title")
+					+ " report should not be present!",
+					pageReportGeneration.searchReport(testSetup.getLogFile(),
+							strInvalidSearch, timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT031");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
@@ -936,16 +1215,21 @@ public class ReportGenerationPortalPageTest {
 	@Test
 	public void reportGenerationPortalPage_RPT032() {
 		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			assertTrue(pageReportGeneration
-					.makeReportWithNoSummarySubmapDetails(
+			TestSetup.slowdownInSeconds(5);
+			assertTrue(
+					"PDF report should not be generated when Summary nad submap template is empty!",
+					pageReportGeneration.makeReportWithNoSummarySubmapDetails(
 							testSetup.getSurveyor(),
 							testSetup.getHTReportData(), strPDFReport,
 							timeoutSecondsElePresent));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT032");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 }
