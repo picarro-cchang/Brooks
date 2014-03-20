@@ -93,4 +93,16 @@ public class LoginPage extends BasePage {
 		PageFactory.initElements(driver, pageReportGeneration);
 		return pageReportGeneration;
 	}
+	
+	public UserAdminPage loginAndNavigateToUserAdministration(String baseURL, String user, String pwd)
+			throws Exception {
+		loginPage = new LoginPage(driver, baseURL);
+		PageFactory.initElements(driver, loginPage);
+		loginPage.open();
+		loginPage.loginNormalAs(user, pwd);
+
+		UserAdminPage userAdminPage = new UserAdminPage(driver, baseURL);
+		PageFactory.initElements(driver, userAdminPage);
+		return userAdminPage;
+	}
 }

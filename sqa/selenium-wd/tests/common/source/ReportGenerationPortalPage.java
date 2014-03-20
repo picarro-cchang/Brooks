@@ -869,6 +869,7 @@ public class ReportGenerationPortalPage extends BasePage {
 				}
 			}
 		}
+		TestSetup.slowdownInSeconds(1);
 		// get the focus on new window
 		switchWindow();
 	}
@@ -1247,6 +1248,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnDeleteAnalyzerDetails.click();
 		TestSetup.slowdownInSeconds(1);
 		return isElementPresent(driver, bySurveyorDetails, timeoutSeconds);
@@ -1260,6 +1262,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		findElement(driver, byAddRuns, timeoutSeconds);
 
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnDeleteSummaryFigureDetails.click();
 		TestSetup.slowdownInSeconds(1);
 		return isElementPresent(driver, bySumarryDetails, timeoutSeconds);
@@ -1278,6 +1281,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		TestSetup.slowdownInSeconds(1);
 
 		this.provideSubmapFigureDetails(strFigureValue, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnDeleteSubmapFigureDetails.click();
 		TestSetup.slowdownInSeconds(1);
 		return isElementPresent(driver, bySubmapDetails, timeoutSeconds);
@@ -1319,7 +1323,7 @@ public class ReportGenerationPortalPage extends BasePage {
 
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(4);
 	}
 
 	public String editAndMakeReport(String strReportTitle, int timeoutSeconds)
@@ -1502,7 +1506,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	}
 
 	public LoginPage logout() throws Exception {
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(2);
 		driver.switchTo().defaultContent();
 		this.userIDSite.click();
 		TestSetup.slowdownInSeconds(1);
