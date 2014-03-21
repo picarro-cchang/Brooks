@@ -9,9 +9,13 @@ DefaultDirName=C:\Picarro\G2000
 DefaultGroupName=Picarro Analyzer Software
 OutputBaseFileName=setup_{#installerType}_{#commonName}_{#hostVersion}
 DirExistsWarning=no
+VersionInfoCompany=Picarro Inc.
+VersionInfoVersion={#installerVersion}
+VersionInfoProductName=Picarro G2000 {#installerType} Host
+VersionInfoProductTextVersion={#productVersion}
+VersionInfoCopyright=Copyright (C) {#productYear} Picarro Inc.
 
-; We could limit installs to WinXP but since earlier installers never had
-; any restrictions leaving this out.
-;
-; WinXP is 5.1.2600
-; OnlyBelowVersion=5.2
+
+; Limit installs to WinXP
+;   WinXP is 5.1.2600
+OnlyBelowVersion=5.2
