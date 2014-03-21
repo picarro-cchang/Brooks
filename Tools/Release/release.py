@@ -54,15 +54,15 @@ VERSION_TEMPLATE = ("[Version]\\nrevno = {revno}\\ndate = {date}\\n"
 
 # Where Manufacturing looks for installers and
 # HostExe/AnalyzerServerExe upgrades.
-MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers'
+#MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers'
 DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer'
 
 # For dry-run testing
-TEST_MFG_DISTRIB_BASE = 'c:/temp/tools/release/mfg_distrib_base'
-TEST_DISTRIB_BASE = 'c:/temp/tools/release/distrib_base'
+#TEST_MFG_DISTRIB_BASE = 'c:/temp/tools/release/mfg_distrib_base'
+#TEST_DISTRIB_BASE = 'c:/temp/tools/release/distrib_base'
 
 # Where new releases are put for testing.
-STAGING_MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers_Staging'
+#STAGING_MFG_DISTRIB_BASE = 'r:/G2000_HostSoftwareInstallers_Staging'
 STAGING_DISTRIB_BASE = 's:/CRDS/CRD Engineering/Software/G2000/Installer_Staging'
 
 
@@ -181,9 +181,9 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
     print "productConfigs    =", productConfigs
     print "versionConfig     =", versionConfig
 
-    print "version           = %s.%s.%s.%s" % (VERSION['major'], VERSION['minor'], VERSION['revision'], VERSION['build'])
-
     if not opts.makeOfficial:
+        print "version           = %s.%s.%s.%s" % (VERSION['major'], VERSION['minor'], VERSION['revision'], VERSION['build'])
+
         if opts.createTag:
             print "create tags       =", "YES"
         else:
@@ -231,23 +231,25 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
             print ""
             print "local build       =", "NO"
 
-        print "  MFG_DISTRIB_BASE         =", MFG_DISTRIB_BASE
+        #print "  MFG_DISTRIB_BASE         =", MFG_DISTRIB_BASE
         print "  DISTRIB_BASE             =", DISTRIB_BASE
-        print "  STAGING_MFG_DISTRIB_BASE =", STAGING_MFG_DISTRIB_BASE
+        #print "  STAGING_MFG_DISTRIB_BASE =", STAGING_MFG_DISTRIB_BASE
         print "  STAGING_DISTRIB_BASE     =", STAGING_DISTRIB_BASE
         print ""
 
         # Note: local and dryRun cannot be used together, already bailed above if they were
         if opts.dryRun:
             print "dry run           =", "YES"
-            print "  targetMfgDistribBase =", TEST_MFG_DISTRIB_BASE
-            print "  targetDistribBase    =", TEST_DISTRIB_BASE
+            #print "  targetMfgDistribBase =", TEST_MFG_DISTRIB_BASE
+            #print "  targetDistribBase    =", TEST_DISTRIB_BASE
         else:
             print "dry run           =", "NO"
-            print "  targetMfgDistribBase =", MFG_DISTRIB_BASE
+            #print "  targetMfgDistribBase =", MFG_DISTRIB_BASE
             print "  targetDistribBase    =", DISTRIB_BASE
 
     else:
+        # no version for promoting to release, it picks up whatever installer versions
+        # are in the staging area and copies them to the release area
         print ""
         print "make-official     =", "YES"
 
@@ -256,10 +258,19 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
         else:
             print "local build       =", "NO"
 
-        if opts.officialTypes is None:
+        if opts.buildTypes is None:
             print "build types       = all"
         else:
-            print "build types       =", opts.officialTypes
+            print "build types       =", opts.buildTypes
+
+        tmpConfigs = []
+        for c in CONFIGS:
+            tmpConfigs.append(c)
+        tmpConfigs.sort()
+
+        print "configs           =", tmpConfigs[0]
+        for c in tmpConfigs[1:]:
+            print "                   ", c
 
         print "  STAGING_DISTRIB_BASE     =", STAGING_DISTRIB_BASE
         print "   DISTRIB_BASE            =", DISTRIB_BASE
@@ -349,6 +360,14 @@ def makeExe(opts):
         LogErr("--product option is required!")
         sys.exit(1)
 
+    # --dry-run has been replaced with --debug-local
+    # (maybe change --debug-local to --dry-run? main difference is that
+    # output folder paths are more closely replicated by --debug-local
+    # by just replacing the drive letter with C for the local drive)
+    if opts.dryRun:
+        print "--dry-run not supported, use --debug-local instead!"
+        sys.exit(1)
+
     if opts.local and opts.dryRun:
         LogErr("--local and --dry-run options cannot be used together!")
         sys.exit(1)
@@ -412,24 +431,61 @@ def makeExe(opts):
 
     # CONFIGS is a dict containing analyzer types and species
     # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
-    for item in buildInfo:
-        itemDict = buildInfo[item]
-        CONFIGS[item] = itemDict["species"]
-        INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
+    #
+    # if --types option was used, buildInfo will include only the wanted build types
+    buildTypesSpecific = False     # default to all build types from JSON file
 
-    print "CONFIGS=", CONFIGS
-    print ""
-    print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
+    if opts.buildTypes is not None:
+        # only building specific types
+        buildTypesSpecific = True
+        negate = False
+        typesList = None
+        types = opts.buildTypes
 
+        if types[0] == '!':
+            negate = True
+            typesList = types[1:].split(',')
+        else:
+            typesList = types.split(',')
+
+        #print "typesList=", typesList
+
+        for item in buildInfo:
+            addItem = False
+
+            # negate=True: ignore item if in typesList
+            if negate is True and item not in typesList:
+                addItem = True
+
+            # negate=False: include item only if in typesList
+            elif negate is False and item in typesList:
+                addItem = True
+
+            if addItem is True:
+                itemDict = buildInfo[item]
+                CONFIGS[item] = itemDict["species"]
+                INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
+
+    else:
+        # building all types
+        for item in buildInfo:
+            itemDict = buildInfo[item]
+            CONFIGS[item] = itemDict["species"]
+            INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
+
+    #print "CONFIGS=", CONFIGS
+    #print ""
+    #print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
 
     # -------- prepare build options --------
 
     # version to be built
     changedVersion = True
 
-    global MFG_DISTRIB_BASE, DISTRIB_BASE
-    global STAGING_MFG_DISTRIB_BASE, STAGING_DISTRIB_BASE
-    global TEST_MFG_DISTRIB_BASE, TEST_DISTRIB_BASE
+    #global MFG_DISTRIB_BASE, STAGING_MFG_DISTRIB_BASE
+    global DISTRIB_BASE, STAGING_DISTRIB_BASE
+    global STAGING_DISTRIB_BASE
+    #global TEST_MFG_DISTRIB_BASE, TEST_DISTRIB_BASE
 
     if not opts.makeOfficial:
         # version
@@ -454,19 +510,19 @@ def makeExe(opts):
 
         if opts.local:
             # use C:\ for local build destination folder paths
-            MFG_DISTRIB_BASE = 'C' + MFG_DISTRIB_BASE[1:]
+            #MFG_DISTRIB_BASE = 'C' + MFG_DISTRIB_BASE[1:]
             DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-            STAGING_MFG_DISTRIB_BASE = 'C' + STAGING_MFG_DISTRIB_BASE[1:]
+            #STAGING_MFG_DISTRIB_BASE = 'C' + STAGING_MFG_DISTRIB_BASE[1:]
             STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
 
         # append productFamily to paths (it's something like "g2000_win7")
-        MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, productFamily])
+        #MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, productFamily])
         DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-        STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, productFamily])
+        #STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, productFamily])
         STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
 
-        TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, productFamily])
-        TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, productFamily])
+        #TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, productFamily])
+        #TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, productFamily])
 
     else:
         if opts.local:
@@ -507,18 +563,31 @@ def makeExe(opts):
     logger.set_quiet(opts.debugQuiet)
 
     # --local: modify base paths for testing on local C: drive
+    #
+    # we're no longer writing anything to the following R drive folders:
+    #   MFG_DISTRIB_BASE            R:/G2000_HostSoftwareInstallers
+    #   STAGING_MFG_DISTRIB_BASE    R:/G2000_HostSoftwareInstallers_Staging
+    #
     if opts.local:
         # make sure dirs exist on the local drive
-        if not os.path.exists(MFG_DISTRIB_BASE):
-            os.makedirs(MFG_DISTRIB_BASE)
+        #if not os.path.exists(MFG_DISTRIB_BASE):
+        #    os.makedirs(MFG_DISTRIB_BASE)
+
         if not os.path.exists(DISTRIB_BASE):
             os.makedirs(DISTRIB_BASE)
-        if not os.path.exists(STAGING_MFG_DISTRIB_BASE):
-            os.makedirs(STAGING_MFG_DISTRIB_BASE)
+
+        #if not os.path.exists(STAGING_MFG_DISTRIB_BASE):
+            #os.makedirs(STAGING_MFG_DISTRIB_BASE)
+
         if not os.path.exists(STAGING_DISTRIB_BASE):
             os.makedirs(STAGING_DISTRIB_BASE)
 
     if opts.dryRun:
+        print "--dry-run feature not implemented, aborting!"
+        sys.exit(1)
+
+
+        """
         targetMfgDistribBase = TEST_MFG_DISTRIB_BASE
         targetDistribBase = TEST_DISTRIB_BASE
 
@@ -536,14 +605,17 @@ def makeExe(opts):
         for c in CONFIGS:
             os.makedirs(os.path.join(targetDistribBase, c, 'Archive'))
             os.makedirs(os.path.join(targetDistribBase, c, 'Current'))
+        """
 
     else:
-        targetMfgDistribBase = MFG_DISTRIB_BASE
+        #targetMfgDistribBase = MFG_DISTRIB_BASE
+        #targetMfgDistribBase = None
         targetDistribBase = DISTRIB_BASE
 
     if opts.makeOfficial:
-        _promoteStagedRelease(types=opts.officialTypes,
-                              mfgDistribBase=targetMfgDistribBase,
+        # promote the release installers and return
+        _promoteStagedRelease(types=opts.buildTypes,
+                              #mfgDistribBase=targetMfgDistribBase,
                               distribBase=targetDistribBase,
                               versionConfig=versionConfig,
                               product=productFamily,
@@ -634,25 +706,99 @@ def makeExe(opts):
         # configuration file directories into the repository.
         _tagCommonConfig(productFamily, VERSION)
         _tagAppInstrConfigs(productFamily, VERSION)
-
     else:
         print "Skipping tagging of the repository."
 
-    if opts.createInstallers:
-        # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-        _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION)
+    # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
+    _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBuild=buildTypesSpecific)
 
     _buildDoneMsg("BUILD", startSec, logfile)
 
 
-def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
-                          versionConfig=None, product=None, osType=None):
+def _promoteStagedRelease(types=None,
+                          #mfgDistribBase=None,
+                          distribBase=None,
+                          versionConfig=None,
+                          product=None,
+                          osType=None):
     """
     Move the existing staged release to an official directory.
+    CONFIGS already contains the types to promote.
     """
 
-    assert versionConfig
+    # build a sorted list to handle alphabetically
+    configTypes = []
+    for c in CONFIGS:
+        configTypes.append(c)
+    configTypes.sort()
 
+    """
+    print "_promoteStagedRelease:"
+    print "  types=", types
+    #print "  mfgDistribBase=", mfgDistribBase
+    print "  distribBase=", distribBase
+    print "  versionConfig=", versionConfig
+    print "  product=", product
+    print "  osType=", osType
+    print ""
+    print "CONFIGS=", CONFIGS
+    print "configTypes=", configTypes
+    print "STAGING_DISTRIB_BASE=", STAGING_DISTRIB_BASE
+    print ""
+    """
+
+    print "promoting staged software to release:"
+
+    for c in configTypes:
+        # target parent dir for the installer, e.g.:
+        #   S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\CFADS
+        targetDir = os.path.join(distribBase, c)
+
+        # staging dir (source dir for installer)
+        stagingDir = os.path.join(STAGING_DISTRIB_BASE, c)
+
+        # delete the existing Current folder since its contents will be
+        # replaced with the new installer
+        currentDir = os.path.join(targetDir, 'Current')
+        archiveDir = os.path.join(targetDir, 'Archive')
+
+        if os.path.isdir(currentDir):
+            shutil.rmtree(currentDir)
+
+        # create the Current folder, and the Archive folder if it doesn't exist
+        os.makedirs(currentDir)
+
+        if not os.path.isdir(archiveDir):
+            os.makedirs(archiveDir)
+
+        # get a list of all the files in the staging dir (doesn't include . or ..)
+        # only one file is expected to be in the folder
+        fileList = os.listdir(stagingDir)
+        assert len(fileList) == 1
+
+        # validation: filename must begin with 'setup_', has .exe extension
+        installer = fileList[0]
+        assert installer.lower().find('setup_') == 0
+        assert installer.lower().endswith('.exe')
+
+        # copy the installer from the staging folder to both Archive and Current
+        print "  staged from: '%s'" % os.path.join(stagingDir, installer)
+        print "   to Archive: '%s'" % os.path.join(archiveDir, installer)
+        print "   to Current: '%s'" % os.path.join(currentDir, installer)
+        print ""
+
+        shutil.copyfile(os.path.join(stagingDir, installer),
+                        os.path.join(archiveDir, installer))
+
+        shutil.copyfile(os.path.join(stagingDir, installer),
+                        os.path.join(currentDir, installer))
+
+    """
+    # we really can't do this now with an option to build only specific types
+    # a g2000_version.json file should be getting dropped inside each type folder
+    # along with the setup_xxx.exe if we want to do this
+    # 
+    # all this code needs to go away anyway...
     stagingVer = os.path.join(STAGING_DISTRIB_BASE, versionConfig)
 
     if not os.path.isfile(stagingVer):
@@ -675,6 +821,7 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
         else:
             typesList = types.split(',')
 
+    # At this point CONFIGS should already contain the types to promote...
     configTypes = []
     for c in CONFIGS:
         configTypes.append(c)
@@ -727,26 +874,49 @@ def _promoteStagedRelease(types=None, mfgDistribBase=None, distribBase=None,
         #                os.path.join(targetDir, 'Current', installerCurrent))
         shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
                         os.path.join(targetDir, 'Current', installer))
+    """
 
 
-def _copyBuildAndInstallers(versionConfig, product, osType, ver):
+def _copyBuildAndInstallers(versionConfig, product, osType, ver, customBuild=False):
     """
     Move the installers and the two compiled exe directories to their
     staging location so other people can find them.
     """
 
+    # For handling things alphabetically
+    configTypes = []
+    for c in CONFIGS:
+        configTypes.append(c)
+    configTypes.sort()
+
     # Clean the previously staged version.
     #
-    # TODO: Eliminate copying to the base dirs. We need to wean Mfg from
-    #       copying HostExe and AnalyzerServerExe folders. They need to
-    #       use the installers.
-    try:
-        shutil.rmtree(STAGING_MFG_DISTRIB_BASE)
-        shutil.rmtree(STAGING_DISTRIB_BASE)
-    except OSError:
-        # Okay if these directories don't already exist.
-        pass
 
+    # If this a custom build (only specific installers not everything), then
+    # we cannot wipe out the entire staging area
+    if customBuild is False:
+        try:
+            #shutil.rmtree(STAGING_MFG_DISTRIB_BASE)
+            shutil.rmtree(STAGING_DISTRIB_BASE)
+        except OSError:
+            # Okay if these directories don't already exist.
+            pass
+    else:
+        # remove only trees for the specific instrument types that were built
+        for c in configTypes:
+            treeBase = os.path.normpath(os.path.join(STAGING_DISTRIB_BASE, c))
+            print "treeBase=", treeBase
+
+            try:
+                shutil.rmtree(treeBase)
+            except OSError:
+                # Okay if these directories don't already exist.
+                pass
+
+    """
+    # Not copying the build exes to the R: drive anymore...
+    # Too easy for Mfg. to abuse this by copying over the exe dirs and
+    # config files without running an installer.
     # HostExe
     hostExeDir = os.path.join(STAGING_MFG_DISTRIB_BASE, 'HostExe')
 
@@ -769,10 +939,11 @@ def _copyBuildAndInstallers(versionConfig, product, osType, ver):
 
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, 'host', 'MobileKit', 'dist'),
                        analyzerServerExe)
+    """
 
     # Copy the individual installers and update the shortcuts that are
     # used by manufacturing.
-    for c in CONFIGS:
+    for c in configTypes:
         installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c],
                                             _verAsString(product, ver))
         targetDir = os.path.join(STAGING_DISTRIB_BASE, c)
@@ -783,8 +954,18 @@ def _copyBuildAndInstallers(versionConfig, product, osType, ver):
         shutil.copyfile(os.path.join(SANDBOX_DIR, 'Installers', installer),
                         os.path.join(targetDir, installer))
 
-    shutil.copyfile(versionConfig,
-                    os.path.join(STAGING_DISTRIB_BASE, versionConfig))
+        # put a copy of the version file in the installer staging folder
+        # (do we really need it? we're no longer dropping the version # from
+        # the installer filename, could be a sanity check for the promote
+        # to official)
+        #shutil.copyfile(versionConfig, os.path.join(targetDir, versionConfig))
+
+    # no longer saving the JSON file with the build number as
+    # the installer filenames always contain the version (not renamed anymore),
+    # version is baked into the installer exe as well as the
+    # individual host app executables previously built
+    #shutil.copyfile(versionConfig,
+    #                os.path.join(STAGING_DISTRIB_BASE, versionConfig))
 
 
 def _branchFromRepo(branch):
@@ -1116,11 +1297,19 @@ def _compileInstallers(product, osType, ver):
         f.write(sigLine)
         f.close()
 
+        # Notes:
         #
-        # TODO: add an argument for platform and maybe Python version?
+        # installerVersion: must be of the form x.x.x.x, for baking version number
+        #                   into setup_xxx.exe metadata (for Explorer properties)
+        # hostVersion:      e.g., g2000_win7-x.x.x-x, displayed in the installer UI
+        # productVersion:   used for displaying Product version in Explorer properties
+        currentYear = time.strftime("%Y")
 
         args = [isccApp, "/dinstallerType=%s" % c,
                 "/dhostVersion=%s" % _verAsString(product, ver),
+                "/dinstallerVersion=%s" % _verAsNumString(ver),
+                "/dproductVersion=%s" % _verAsUINumString(ver),
+                "/dproductYear=%s" % currentYear,
                 "/dresourceDir=%s" % RESOURCE_DIR,
                 "/dsandboxDir=%s" % SANDBOX_DIR,
                 "/dcommonName=%s" % CONFIGS[c],
@@ -1162,6 +1351,17 @@ def _verAsNumString(ver):
     return number
 
 
+def _verAsUINumString(ver):
+    """
+    Convert a version dict into a string of numbers in this format
+    for user-facing info:
+        <major>.<minor>.<revision>-<build>
+    """
+
+    number = "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
+    return number
+
+
 def main():
     usage = """
 %prog [options]
@@ -1184,18 +1384,18 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                       action='store_true', default=False,
                       help=('Promote the current release in staging to the '
                             'official distribution channels.'))
-    parser.add_option('--types', dest='officialTypes',
-                      default=None, help=('Comma-delimited list of analyzer '
-                                          'types that should be moved from '
-                                          'staging to the official release '
-                                          'area. If the list starts with a "!" '
-                                          'every type but those in the list '
-                                          'will be moved.'))
+    parser.add_option('--types', dest='buildTypes',
+                      default=None, help=('Comma-delimited list of analyzer types to build or'
+                                          'types to move from staging to the official release '
+                                          'area. If the list starts with a "!" every type but those'
+                                          'in the list will be built or moved.'))
+
     parser.add_option('--dry-run', dest='dryRun', default=False,
                       action='store_true',
                       help=('Only works with --make-official. Tests the move '
                             'to staging by using a temporary directory as the '
                             'target.'))
+
     parser.add_option('--product', dest='product', metavar='PRODUCT',
                       default=None, help=('The product line to generate the '
                                           'release for. This option is required.'))
