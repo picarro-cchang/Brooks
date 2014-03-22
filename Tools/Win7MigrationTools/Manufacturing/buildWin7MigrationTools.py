@@ -32,14 +32,14 @@ def _buildExes(scriptName, toolsList):
 
     # Windows dirs are not case-sensitive. 
     # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
-    if curDir.lower() != "win7migrationtools":
-        print "Not running in expected folder 'Win7MigrationTools'!"
+    if curDir.lower() != "manufacturing":
+        print "Not running in expected folder 'Manufacturing'!"
         sys.exit(1)
     
     # Set the PYTHONPATH environment variable so the current folder tree is used to
     # pull local libraries from.
-    parentDir = os.path.normpath(os.path.join(curDirPath, "..", ".."))
-    firmwareDir = os.path.normpath(os.path.join(curDirPath, "..", "..", "Firmware"))
+    parentDir = os.path.normpath(os.path.join(curDirPath, "..", "..", ".."))
+    firmwareDir = os.path.normpath(os.path.join(curDirPath, "..", "..", "..", "Firmware"))
     
     # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
     commonDir = os.path.join(parentDir, "Host", "Common")
