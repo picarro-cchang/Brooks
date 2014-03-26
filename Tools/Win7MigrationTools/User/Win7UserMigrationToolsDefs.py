@@ -3,9 +3,9 @@
 # Definitions for Win7 migration.
 #
 # History:
-# 2014-01-30:  tw  Initial version.
+# 2014-03-21  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.0"
+MIGRATION_TOOLS_VERSION = "1.0.0.1"
 MIGRATION_TOOLS_LOGNAME = "UserMigrationTools"
 
 MIGRATION_UNKNOWN_ANALYZER_TYPE = "Unknown"
@@ -49,6 +49,12 @@ DATA_FOLDERS_TO_BACKUP_LIST = ["C:/Picarro/g2000/Log/Archive",
                                "C:/UserData",
                                "C:/IsotopeData"]
 
+DATA_FOLDERS_TO_RESTORE_LIST = ["C:/Picarro/g2000/Log/Archive",
+                                "C:/UserData",
+                                "C:/IsotopeData"]
+
+
+
 """
 CONFIG_FOLDERS_TO_BACKUP_LIST = ["C:/Picarro/g2000/AppConfig",
                                  "C:/Picarro/g2000/InstrConfig",
@@ -64,8 +70,9 @@ CONFIG_FOLDERS_TO_BACKUP_LIST = ["C:/Picarro/g2000"]
 # Restore folder and file paths are relative to C: and the backup folder on the migration drive.
 # List of specific folders to restore from after the Win7 software is installed
 #
-# TODO: Restore only specific autosampler files. Exes and Dlls are specific to WinXP.
-CONFIG_FOLDERS_TO_RESTORE_LIST = ["C:/Picarro/g2000/InstrConfig"]
+CONFIG_FOLDERS_TO_RESTORE_LIST = ["C:/Picarro/g2000/AppConfig",
+                                  "C:/Picarro/g2000/InstrConfig",
+                                  "C:/Picarro/g2000/CommonConfig"]
 
 # List of specific files to restore.
 #

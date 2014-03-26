@@ -1,6 +1,9 @@
 # Win7UserMigrationUtils.py
 #
-# Instrument utility functions for the Win7 migration scripts
+# Instrument utility functions for the Win7 user migration scripts
+# 2014-03-21  tw  Initial version.
+
+from __future__ import with_statement
 
 import os
 import sys
@@ -244,10 +247,74 @@ def waitForRunningProcessesToEnd(processNameList, waitTimeoutSec):
     return timedOut
 
 
-def pauseForUserResponse(strState):
+def pauseForUserResponse(strState, strMsg=None):
     # strState should be a string such as 'continue' or 'exit'
+    if strMsg is not None:
+        print strMsg
     print ""
     raw_input("Hit Enter to %s: " % strState)
+
+
+def getSupportedAnalyzerTypes(drive):
+    # Returns a list of supported analyzer types, using the folder names
+    # for all of the installers on the drive
+    #
+    # Example parent dir is F:/Win7UserMigrationTools/PicarroInstallers
+    supportedTypes = []
+    installerParentDir = os.path.join(drive,
+                                      os.path.sep,
+                                      mdefs.MIGRATION_TOOLS_FOLDER_NAME,
+                                      mdefs.INSTALLER_FOLDER_ROOT_NAME)
+
+    # this returns a list of just the filenames (not the full paths)
+    fileList = os.listdir(installerParentDir)
+
+    for item in fileList:
+        filename = os.path.join(installerParentDir, item)
+
+        if os.path.isdir(filename):
+            supportedTypes.append(item)
+
+    return fileList
+
+
+def DeleteBadLine(strTopDirPath, badSubstr, fileExt):
+    modifiedList = []
+    for root, dirs, files in os.walk(strTopDirPath):
+        #print "\n\t I am in directory : %s\n\t" % strTopDirPath
+
+        for fname in files:
+            if fname.endswith(fileExt):
+                filepath = os.path.join(root, fname)
+                tmpDelLineFilePath = os.path.join(root, "tmpDelLineFile.~py~")
+
+                with open(tmpDelLineFilePath, mode="w") as tmpDelLineFile:
+                    bMod = False
+
+                    with open(filepath, mode="r") as objFile:
+                        for oneline in objFile:
+                            # look for the problem string
+                            if badSubstr in oneline:
+                                bMod = True
+                            else:
+                                tmpDelLineFile.write(oneline)
+
+                if bMod:
+                    # add this file to the list of changed files
+                    modifiedList.append(filepath)
+
+                    # rename the original file, new file gets the original filename
+                    backupFilepath = filepath + "~"
+                    if os.path.isfile(backupFilepath):
+                        # delete backup if exists (happens if run this twice)
+                        os.remove(backupFilepath)
+
+                    os.rename(filepath, backupFilepath)
+                    os.rename(tmpDelLineFilePath, filepath)
+                else:
+                    os.remove(tmpDelLineFilePath)
+
+    return modifiedList
 
 
 class AnalyzerInfo(object):

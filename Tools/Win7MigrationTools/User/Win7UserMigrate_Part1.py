@@ -1,11 +1,11 @@
-# Win7Migrate_p1.py
+# Win7UserMigrate_p1.py
 #
-# Part 1 of the Win7 migration. Backs up config files, data, and Analyzer host software
+# Part 1 of the Win7 user migration. Backs up config files, data, and Analyzer host software
 # onto the 2nd partition, then preps the system for part 2 (install software and
 # restore specific config files).
 # 
 # If you change this utility, don't forget to bump the common version number in
-# Win7MigrationToolsDefs.py
+# Win7UserMigrationToolsDefs.py
 #
 # Notes:
 #
@@ -14,7 +14,7 @@
 #
 # History
 #
-# 2014-01-30  tw  Initial version.
+# 2014-03-21  tw  Initial version.
 from __future__ import with_statement
 
 import os
@@ -27,8 +27,8 @@ import ConfigParser
 
 from optparse import OptionParser
 
-import Win7MigrationToolsDefs as mdefs
-import Win7MigrationUtils as mutils
+import Win7UserMigrationToolsDefs as mdefs
+import Win7UserMigrationUtils as mutils
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -70,28 +70,6 @@ def findAndValidateDrives(debug=False):
     logger.info("Drive validation done, fSuccess=%s." % fSuccess)
 
     return instDrive, migBackupDrive
-
-
-def getSupportedAnalyzerTypes(drive):
-    # Returns a list of supported analyzer types, using the folder names
-    # for all of the installers on the migration drive
-    supportedTypes = []
-    installerParentDir = os.path.join(drive,
-                                      os.path.sep,
-                                      mdefs.MIGRATION_TOOLS_FOLDER_NAME,
-                                      mdefs.INSTALLER_FOLDER_ROOT_NAME)
-
-    # this returns a list of just the filenames (not the full paths)
-    fileList = os.listdir(installerParentDir)
-
-    for item in fileList:
-        filename = os.path.join(installerParentDir, item)
-
-        if os.path.isdir(filename):
-            supportedTypes.append(item)
-
-    return fileList
-
 
 
 class UIMigration(object):
@@ -154,7 +132,7 @@ class UIMigration(object):
         #     F:\Win7MigrationTools\PicarroInstallers\CFADS
         #     F:\Win7MigrationTools\PicarroInstallers\CFFDS
         #     etc.
-        supportedTypes = getSupportedAnalyzerTypes(self.migBackupDrive)
+        supportedTypes = mutils.getSupportedAnalyzerTypes(self.migBackupDrive)
         haveAnalyzerType = False
         userUpdatedType = False
 
@@ -480,7 +458,7 @@ def doMigrate(options):
     handlerFile.setFormatter(fmt)
     root.addHandler(handlerFile)
 
-    root.info("***** Win7 migration part 1 (back up) started. *****")
+    root.info("***** Win7 field migration part 1 (collect system information) started. *****")
     root.info("Running %s version %s" % (AppPath, mdefs.MIGRATION_TOOLS_VERSION))
 
     # ==== Validation ====
@@ -510,6 +488,8 @@ def doMigrate(options):
         mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
+    # There is no WinXP backup folder on the Win7 partition of the migration drive
+    """
     # The WinXP backup folder should not yet exist on the migration drive, it's an
     # error if it does.
     backupFolder = os.path.join(migBackupDrive,
@@ -523,6 +503,7 @@ def doMigrate(options):
         root.error(errMsg)
         mutils.pauseForUserResponse("exit")
         sys.exit(1)
+    """
 
     """
     # Python validation (should be Python 2.5). Can't do it this
@@ -542,6 +523,7 @@ def doMigrate(options):
         sys.exit(1)
     """
 
+    # Collect information about the analyzer
     anInfo = mutils.AnalyzerInfo()
 
     # Confirm the Analyzer software is running, get the analyzer name, etc.
@@ -578,6 +560,14 @@ def doMigrate(options):
     # Get the computer name we're running on
     computerName = mutils.getComputerName()
 
+    # Future: Look for installed AddOns:
+    #           AI Autosampler
+    #           Leap (CTC) Autosampler
+    #           ChemCorrect (may not be necessary, could always include with water instruments)
+    #           SSIM, SSIM2
+    #           SDM
+    #           CM
+
     uiMig = UIMigration(instDrive=instDrive,
                         migBackupDrive=migBackupDrive,
                         instDriveName=instDriveName,
@@ -612,22 +602,27 @@ def doMigrate(options):
     cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME, analyzerName)
     cp.set(mdefs.MIGRATION_CONFIG_SECTION, mdefs.COMPUTER_NAME, computerName)
 
+    # Write Win7UserConfig.ini to dir we're running from
     filename = os.path.join(os.getcwd(), mdefs.MIGRATION_CONFIG_FILENAME)
     with open(filename, "w") as f:
         cp.write(f)
 
+    # Done collecting system information
+
+    """
     # Must shutdown the software and driver before backing up.
     # Will not return until nothing is running (prompts user to
     # kill from the TaskManager if times out waiting)
     # The user will need to do this if this is an unknown analyzer
     # (likely because Pyro versions don't match, the following WILL crash)
-    """
+
     if unknownAnalyzer is False:
         stopSoftwareAndDriver(anInfo, options.debug)
     else:
         promptUserToStopSoftwareAndDriver()
     """
 
+    """
     # Prompt the user to shutdown the system for shipping. Refer the user
     # to the written instructions (while waiting for the cavity to come up
     # to atmospheric pressure, open Run with a "shutdown -a" command, wait until
@@ -665,6 +660,10 @@ def doMigrate(options):
         root.info("Windows not getting shut down due to --noShutdownWindows command line option.")
     else:
         shutdownWindows(options.debug)
+    """
+
+    # Completed collection of system info successfully
+    root.info("***** Win7 field migration part 1 (collect system information) done! *****")
 
 
 def main():
@@ -682,6 +681,7 @@ Win7 migration utility part 1 (back up).
     parser.add_option('--debug', dest='debug', action='store_true',
                       default=False, help=('Enables debugging.'))
 
+    """
     parser.add_option('--backupConfigsOnly', dest="backupConfigsOnly",
                       action='store_true', default=False,
                       help=('Backup the config files only, no user data files or logs.'))
@@ -689,6 +689,7 @@ Win7 migration utility part 1 (back up).
     parser.add_option('--noShutdownWindows', dest="noShutdownWindows",
                       action='store_true', default=False,
                       help=("Don't shutdown windows after this script finishes (default is to shut down Windows)."))
+    """
 
     parser.add_option('--logLevel', dest='logLevel',
                       default=None, help=('Set logging level.\n',

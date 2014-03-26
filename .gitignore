@@ -31,8 +31,10 @@ Tools/Release/CHANGELOG.raw*
 Tools/Release/*.log
 Tools/Special/20130925/Output
 Tools/Special/20130925/CFFDS
-Tools/Win7MigrationTools/build/
-Tools/Win7MigrationTools/dist/
+Tools/Win7MigrationTools/Manufacturing/build/
+Tools/Win7MigrationTools/Manufacturing/dist/
+Tools/Win7MigrationTools/User/build/
+Tools/Win7MigrationTools/User/dist/
 Host/DataManager/build/
 Host/DataManager/dist/
 AddOns/SoilPostProcessor/output/

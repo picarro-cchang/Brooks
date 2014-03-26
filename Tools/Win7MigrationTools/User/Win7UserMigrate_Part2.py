@@ -1,27 +1,33 @@
-# Win7Migrate_p2.py
+# Win7UserMigrate_p2.py
 #
-# Part 2 of migration tools for WinXP to Win7
+# Part 2 of user migration tools for WinXP to Win7
 #
-# Runs the installer (or at least suggests one?)
-# Part 1 needs to save off the instrument type so this script
-# can find the recommended installer.
+# Runs the analyzer installer.
+# Part 1 can optionally save off the instrument type so this script
+# can find the recommended analyzer installer.
+#
+# History
+#
+# 2014-03-21  tw  Initial version.
+from __future__ import with_statement
 
 import os
 import sys
 import shutil
 import subprocess
 import time
-#import win32api
+import win32api
 import logging
 import ConfigParser
 #import wx
 import filecmp
 import difflib
+import re
 
 from optparse import OptionParser
 
-import Win7MigrationToolsDefs as mdefs
-import Win7MigrationUtils as mutils
+import Win7UserMigrationToolsDefs as mdefs
+import Win7UserMigrationUtils as mutils
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -29,12 +35,55 @@ else:
     AppPath = sys.argv[0]
 
 
-def findAndValidateDrives(debug=False):
+def findDrivesByName(driveName):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
-    logger.info("Finding and validating drives for Windows 7 migration backup.")
+    logger.info("Finding drives named '%s'." % driveName)
 
-    # main drive is C:\; get the drive this program is running from (which is the backup partition)
-    instDrive = "C:"
+    # Enumerate the drives and build a list with drive letters
+    # that match the name exactly (case-insensitive). Returned
+    # list will contain entries like ['C:', 'E:']
+    driveName = driveName.lower()
+    drives = win32api.GetLogicalDriveStrings()
+    drives = drives.split('\000')[:-1]
+
+    matches = []
+
+    # drive letter string will look like C:\ etc
+    for drive in drives:
+        try:
+            # returns tuple with file system info
+            driveInfo = win32api.GetVolumeInformation(drive)
+
+            # volume name is the first value in the tuple
+            curDriveName = driveInfo[0].lower()
+
+            #print "curDriveName=", curDriveName
+
+            logger.debug("drive=%s  curDriveName='%s'" % (drive, curDriveName))
+
+            if curDriveName == driveName:
+                # return the drive letter and colon, whack the backslash
+                matches.append(drive[0:2])
+
+        except Exception, e:
+            # ignore exceptions, we will get them for the DVD drive
+            # if there is no DVD in the drive, etc.
+            pass
+
+    #print "found matches=", matches
+    logger.debug("found matches='%s'" % matches)
+    return matches
+
+
+def findAndValidateDrives():
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Finding and validating drives for Windows 7 migration.")
+
+    # C: should be the same as the current drive (booted to Win7 partition of migration drive)
+    # skip ourself (should be C:)
+    curDrive = os.path.splitdrive(os.getcwd())[0]
+
+    instDrive = curDrive
     hostExeDir = os.path.normpath("C:/Picarro/g2000/HostExe")
 
     # validate the instrument drive, there should not yet be a HostExe folder in the expected Picarro path
@@ -43,16 +92,55 @@ def findAndValidateDrives(debug=False):
         #instDrive = None
         logger.warning("Picarro analyzer software is already installed, dir exists (%s)." % hostExeDir)
 
-    # this program is running from the backup drive
-    # returns something like F:
-    migBackupDrive = os.path.splitdrive(os.getcwd())[0]
+    # look for another drive that is also named picarro, it should be the WinXP image partition
+    drives = findDrivesByName("picarro")
+
+    # ignore the current drive
+    if curDrive in drives:
+        drives.remove(curDrive)
+
+    logger.debug("drives='%s'" % drives)
+
+    # init to no WinXP drive found
+    winXPDrive = None
+
+    if len(drives) == 0:
+        # found no other drives named picarro
+        winXPDrive = None
+
+    else:
+        # sanity check: look for installed Picarro config folders, use the first drive
+        # that has all the config folders
+        configDirs = ["AppConfig", "InstrConfig", "CommonConfig"]
+
+        for drive in drives:
+            configBase = os.path.normpath(os.path.join(drive, os.path.sep, "Picarro/g2000"))
+
+            logger.debug("configBase='%s'" % configBase)
+
+            # Assume found a drive that has all the folders
+            found = True
+
+            for configDir in configDirs:
+                configPath = os.path.normpath(os.path.join(configBase, configDir))
+
+                logger.debug("configPath='%s'" % configPath)
+
+                if not os.path.isdir(configPath):
+                    logger.error("Expected folder '%s' not found!" % configPath)
+                    found = False
+                    break
+
+            if found is True:
+                winXPDrive = drive
+                break
 
     fSuccess = True
-    if instDrive is None or migBackupDrive is None:
+    if instDrive is None or winXPDrive is None:
         fSuccess = False
     logger.info("Drive validation done, fSuccess=%s." % fSuccess)
 
-    return instDrive, migBackupDrive
+    return instDrive, winXPDrive
 
 
 def osGetInstallers(root, filenamePrefix):
@@ -135,7 +223,8 @@ def runInstaller(installerName):
 def isCleanInstall():
     installerFolders = ["C:/Picarro/g2000/AppConfig",
                         "C:/Picarro/g2000/CommonConfig",
-                        "C:/Picarro/g2000/InstrConfig"]
+                        "C:/Picarro/g2000/InstrConfig",
+                        "C:/Picarro/g2000/HostExe"]
 
     # it's not a clean install unless *none* of the above config folders already exist
     isClean = True
@@ -155,12 +244,28 @@ def backupWin7ConfigFiles(fromDrive, toDrive):
     # skip bzr files and folders
     # TODO: Any chance of ending up with unins000.dat or unins000.exe? Exclude them too.
     excludeDirs = [".bzr"]
-    excludeFiles = [".bzrignore"]
+    excludeFiles = [".bzrignore", "analyzerState.db", "analyzerState.db-journal"]
 
     # list of folders to backup
     foldersToBackupList = mdefs.CONFIG_WIN7_FOLDERS_TO_BACKUP_LIST
 
-    # Back up the folders to the 2nd partition
+    # if the Win7 backup folder exists, remove it so it doesn't contain
+    # orphan files from the last backup
+    backupDir = os.path.join(toDrive,
+                             os.path.sep,
+                             mdefs.BACKUP_WIN7_CONFIG_FOLDER_ROOT_NAME)
+
+    if os.path.isdir(backupDir):
+        logger.info("Win7 backup folder '%s' exists, removing it prior to config file backup." % backupDir)
+
+        # An exception shouldn't happen, but could happen if Windows Explorer
+        # has the folder open so continue.
+        try:
+            shutil.rmtree(backupDir)
+        except Exception, e:
+            logger.warning("Failed to remove Win7 backup folder, proceeding anyway. Exception=%r, %r" % (Exception, e))
+
+    # Back up the folders
     for folder in foldersToBackupList:
         folder = os.path.normpath(folder)
 
@@ -251,20 +356,20 @@ def computeDiffs(origDir, newDir, logFilename, diffFilename, diffMode):
         diffFiles(dirCmp, fp)
 
 
-def compareXPandWin7Configs(backupDrive, logfileSuffix):
+def compareXPandWin7Configs(win7BackupDrive, winXPDrive, logfileSuffix):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
-    logger.info("Comparing backed up WinXP and Win7 config files")
+    logger.info("Comparing backed up Win7 and WinXP config files")
 
     # treat empty suffix string as no suffix
     if logfileSuffix == "":
         logfileSuffix = None
 
-    # root folder of the backup drive for XP
-    rootXPFolder = os.path.normpath(os.path.join(backupDrive, os.path.sep, mdefs.BACKUP_XP_FOLDER_ROOT_NAME))
+    # root folder of the WinXP image partition (analyzer software installed)
+    #rootXPFolder = os.path.normpath(os.path.join(winXPDrive, os.path.sep, mdefs.BACKUP_XP_FOLDER_ROOT_NAME))
+    rootXPFolder = winXPDrive
 
     # root folder of the backup drive for Win7 config files
-    rootWin7Folder = os.path.normpath(os.path.join(backupDrive, os.path.sep, mdefs.BACKUP_WIN7_CONFIG_FOLDER_ROOT_NAME))
-
+    rootWin7Folder = os.path.normpath(os.path.join(win7BackupDrive, os.path.sep, mdefs.BACKUP_WIN7_CONFIG_FOLDER_ROOT_NAME))
 
     # list of folders to compare is what we backed up
     foldersToCompareList = mdefs.CONFIG_WIN7_FOLDERS_TO_BACKUP_LIST
@@ -272,7 +377,7 @@ def compareXPandWin7Configs(backupDrive, logfileSuffix):
     for win7folder in foldersToCompareList:
         win7folder = os.path.normpath(win7folder)
 
-        print "win7folder=", win7folder
+        logger.debug("win7folder='%s'" % win7folder)
 
         """
         if not os.path.isdir(win7folder):
@@ -309,7 +414,9 @@ def compareXPandWin7Configs(backupDrive, logfileSuffix):
         computeDiffs(winXPfolder, win7folderCompare, logFilename, diffFilename, diffMode)
 
 
-def restoreXPFolders(fromDrive, toDrive, folderList):
+"""
+# This restores folders from a backup dir
+def restoreXPFoldersFromBackupDir(fromDrive, toDrive, folderList):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
     logger.info("Restoring WinXP folders, from '%s' to '%s'." % (fromDrive, toDrive))
     logger.debug("restoreXPFolders: folderList = '%r'" % folderList)
@@ -357,7 +464,7 @@ def restoreXPFolders(fromDrive, toDrive, folderList):
             shutil.copy2(fromFilename, toFilename)
 
     logger.info("Successfully restored WinXP configuration files.")
-
+"""
 
 def restoreXPFiles(fromDrive, toDrive, fileList):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
@@ -397,6 +504,133 @@ def restoreXPFiles(fromDrive, toDrive, fileList):
         logger.info("Successfully restored specific WinXP files")
     else:
         logger.error("Some problems encountered copying files, be sure to examine the log file!")
+
+
+def restoreXPFolders(fromDrive, toDrive, folderList):
+    # Restore files in a folder list from one partition to another
+    # Expect the paths to be the same except for the drive letter
+    # folderList is a list containing items like "C:/Picarro/g2000/InstrConfig"
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Restoring WinXP folders, from '%s' to '%s'." % (fromDrive, toDrive))
+    logger.info("restoreXPFolders: folderList = '%r'" % folderList)
+
+    # skip bzr files and folders
+    # TODO: Any chance of ending up with unins000.dat or unins000.exe? Exclude them too.
+    excludeDirs = [".bzr"]
+    excludeFiles = [".bzrignore", "analyzerState.db", "analyzerState.db-journal"]
+
+    for folder in folderList:
+        # remove the drive letter so we can construct the source folder path on the migration drive
+        # splitdrive on "C:/Picarro/g2000/InstrConfig" returns this tuple:
+        #   ('C:', '/Picarro/g2000/InstrConfig')
+        # replace the drive letter with the WinXP drive letter
+        baseFolder = os.path.splitdrive(folder)[1]
+        srcFolder = fromDrive + baseFolder
+        srcFolder = os.path.normpath(srcFolder)
+
+        logger.debug("srcFolder='%s'" % srcFolder)
+
+        # if source folder doesn't exist, log it but continue
+        if not os.path.isdir(srcFolder):
+            logger.warn("Source folder '%s' does not exist." % srcFolder)
+            continue
+
+        for dirpath, fromFilename in mutils.osWalkSkip(srcFolder, excludeDirs, excludeFiles):
+            # construct the destination file path for the copy
+            # leave off the root part of the filepath and append it to the dest drive
+            #assert fromFilename.find(rootFolder) != -1
+
+            toFilename = os.path.join(toDrive, os.path.sep, fromFilename[2:])
+
+            logger.debug("fromFilename='%s'" % fromFilename)
+            logger.debug("toFilename='%s'" % toFilename)
+
+            # create the destination dir if it doesn't already exist
+            # (it may not if we are restoring user data, but should exist if restoring config files)
+            targetDir = os.path.split(toFilename)[0]
+            logger.debug("targetDir='%s'" % targetDir)
+
+            if not os.path.isdir(targetDir):
+                logger.warning("Creating '%s' on new Win7 boot drive since it does not exist." % targetDir)
+                os.makedirs(targetDir)
+
+            # We intentionally do not catch any file copy exceptions. The
+            # last copy message in the log will indicate which file it
+            # barfed on if the copy fails.
+            # copy2 retains the last access and modification times as well as permissions
+            logger.info("Copying '%s' to '%s'" % (fromFilename, toFilename))
+            shutil.copy2(fromFilename, toFilename)
+
+    logger.info("Successfully restored WinXP configuration files.")
+
+
+def repairConfigFiles(instDrive):
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Repairing known issues in config files restored from WinXP, drive='%s'." % instDrive)
+
+    # Repair Coordinators (min and max calls from numpy lib require square
+    # brackets around arguments if there is more than one)
+    # C:\Picarro\g2000\AppConfig\Config\Coordinator
+
+    # Repair DataManager scripts
+    # 
+    # Exact debug line in analyze_CFKADS.py that creates a file in C:
+    # that Win7 won't allow
+    badSubstr = 'file("C:/logfile.txt","w",0)'
+
+    logger.info("Repairing DataManager scripts that contain '%s'" % badSubstr)
+    repairList = mutils.DeleteBadLine("C:\Picarro\g2000\AppConfig\Scripts\DataManager",
+                                      badSubstr, ".py")
+
+    if len(repairList) > 0:
+        logger.info("DataManager scripts repaired: %r" % repairList)
+
+    logger.info("Repair config files done.")
+
+
+def getAnalyzerInfo():
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Getting analyzer information from user.")
+    haveAnalyzerType = False
+    analyzerType = None
+    analyzerSerial = None
+
+    re_type = re.compile("[A-Z]*")
+    re_serial = re.compile("[0-9]*")
+
+    while not haveAnalyzerType:
+        print "Please enter your analyzer name and serial, such as CFKADS2001 or cfkads2001,"
+        inputStr = raw_input("or enter Q to quit: ")
+        inputStr = inputStr.upper()
+
+        analyzerType = None
+        analyzerSerial = None
+
+        if inputStr == "Q":
+            logger.info("Win7 migration aborted by user (analyzer name and serial not entered).")
+            break
+
+        # separate out the analyzer name and the serial
+        m = re_type.match(inputStr)
+        analyzerType = m.group()
+
+        if analyzerType == "":
+            analyzerType = None
+
+        # hmmm, I can't seem to figure out how to get the first
+        # occurrence of digits in a string without iterating
+        for p in re_serial.findall(inputStr):
+            if p != "":
+                analyzerSerial = p
+                break
+
+        if analyzerType is not None and analyzerSerial is not None:
+            haveAnalyzerType = True
+        else:
+            # prompt again
+            print ""
+
+    return analyzerType, analyzerSerial
 
 
 def doMigrate(options):
@@ -467,18 +701,20 @@ def doMigrate(options):
     handlerFile.setFormatter(fmt)
     root.addHandler(handlerFile)
 
-    root.info("***** Win7 migration part 2 (install) started. *****")
+    root.info("***** Win7 field migration part 2 (install software and restore configurations and data) started. *****")
     root.info("Running %s version %s" % (AppPath, mdefs.MIGRATION_TOOLS_VERSION))
 
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue")
 
     # ==== Validation =====
-    # Find and validate the instrument main drive and the migration drive backup partition
-    instDrive, migBackupDrive = findAndValidateDrives(options.debug)
+    # Find and validate the instrument main drive and the WinXP image partition
+    instDrive, winXPDrive = findAndValidateDrives()
 
-    root.info("instrument drive='%s', migration backup partition ='%s'" %
-              (instDrive, migBackupDrive))
+    root.info("Drive validation: instrument drive='%s', WinXP drive ='%s'" %
+              (instDrive, winXPDrive))
 
-    if instDrive is None or migBackupDrive is None:
+    if instDrive is None or winXPDrive is None:
         # error should already have been logged, bail out
         # TODO: pop an error dialog and direct user to the error log
         errMsg = "Drive validation failed. See log results in '%s'" % logFilename
@@ -486,6 +722,9 @@ def doMigrate(options):
         #showErrorDialog(errMsg)
         mutils.pauseForUserResponse("exit")
         sys.exit(1)
+
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue")
 
     # TODO: software should not be running
     anInfo = mutils.AnalyzerInfo()
@@ -508,6 +747,8 @@ def doMigrate(options):
         mutils.pauseForUserResponse("exit")
         sys.exit(1)
 
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue")
 
     # Python validation (should be Python 2.7)
     # Skipping this, irrelevant check when running this
@@ -520,38 +761,72 @@ def doMigrate(options):
     #    mutils.pauseForUserResponse("exit")
     #    sys.exit(1)
 
-
     # this script is running from the backup partition, so we can use its drive letter as the source drive
     # the C: drive is the Windows and main partition
 
 
-    # get the volume name, analyzer name, and analyzer type from the config file
-    # the config file is expected to be in the same folder as we are running
-    if not os.path.isfile(mdefs.MIGRATION_CONFIG_FILENAME):
-        root.error("Generated file '%s' is missing, aborting." % mdefs.MIGRATION_CONFIG_FILENAME)
-        mutils.pauseForUserResponse("exit")
-        sys.exit(1)
+    # Get the volume name, analyzer name, and analyzer type from the config file
+    # if it's there.
+    # The config file is currently expected to be in the same folder as we are running
+    # but this may change if the part1 tool is built on WinXP/Python 2.5 and this
+    # part2 tool is built on Win7/Python 2.7.
+    # If no config file then prompt the user for the instrument type and ID
 
-    defaults = {}
-    cp = ConfigParser.ConfigParser(defaults)
-    cp.read(mdefs.MIGRATION_CONFIG_FILENAME)
+    # look for the config file in the main migration tools folder
+    configFilepath = os.path.join(instDrive,
+                                  os.path.sep,
+                                  mdefs.MIGRATION_TOOLS_FOLDER_NAME,
+                                  mdefs.MIGRATION_CONFIG_FILENAME)
 
-    if not cp.has_section(mdefs.MIGRATION_CONFIG_SECTION):
-        root.error("Format problem with generated file '%s', aborting." % mdefs.MIGRATION_CONFIG_FILENAME)
+    if not os.path.isfile(configFilepath):
+        root.info("Migration part 1 instrument config file '%s' not found." % configFilepath)
+        #mutils.pauseForUserResponse("exit")
+        #sys.exit(1)
 
-    analyzerName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME)
-    analyzerType = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_TYPE)
-    #volumeName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME)
-    computerName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.COMPUTER_NAME)
+        # prompt for instrument type and ID
+        analyzerType, analyzerId = getAnalyzerInfo()
 
-    #print "analyzerName=", analyzerName
-    #print "analyzerType=", analyzerType
-    #print "computerName=", computerName
+        if analyzerType is None or analyzerId is None:
+            # either/both are None if user quit so log this and exit
+            root.info("User quit migration script during entry of analyzer type and serial.")
+            sys.exit(0)
 
-    # TODO: get mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME so we can set them below
-    root.warning("Set computer name and name for My Computer from saved configuration needs to be implemented!")
+        # construct names
+        analyzerName = analyzerType + analyzerId
 
-    # ==== Install Software ====
+        # for now don't set the computer name
+        #computerName = "Picarro - %s" % analyzerName
+        computerName = ""
+
+    else:
+        defaults = {}
+        cp = ConfigParser.ConfigParser(defaults)
+        cp.read(configFilepath)
+
+        if not cp.has_section(mdefs.MIGRATION_CONFIG_SECTION):
+            root.error("Format problem with generated file '%s', aborting." % mdefs.MIGRATION_CONFIG_FILENAME)
+
+        analyzerName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_NAME)
+        analyzerType = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.ANALYZER_TYPE)
+        #volumeName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.VOLUME_NAME)
+        computerName = cp.get(mdefs.MIGRATION_CONFIG_SECTION, mdefs.COMPUTER_NAME)
+
+        #print "analyzerName=", analyzerName
+        #print "analyzerType=", analyzerType
+        #print "computerName=", computerName
+
+        # TODO: get mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME so we can set them below
+        #root.warning("Set computer name and name for My Computer from saved configuration needs to be implemented!")
+
+    root.info("Instrument info: analyzerType='%s'  analyzerName='%s' computerName='%s'" %
+              (analyzerType, analyzerName, computerName))
+
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue")
+
+    # Prompt for AddOns to install?
+
+    # ==== Install Analyzer Software ====
 
     # it's a virgin install if no config folders or HostExe on the Win7 drive
     isClean = isCleanInstall()
@@ -560,40 +835,45 @@ def doMigrate(options):
     if isClean is True:
         root.info("Clean analyzer software install on Win7 boot drive, newly installed config files will be backed up.")
     else:
-        root.info("Not a clean analyzer software install on Win7 boot drive, one or more config folders already exist. Config files will not be backed up.")
-
+        root.info("Not a clean analyzer software install on Win7 boot drive, "
+                  "one or more config folders already exist. Config files will "
+                  "not be backed up without --forceBackup option.")
 
     # run the installer (use analyzer type to determine which one)
-    # installers are in subfolders in the PicarroInstallers folder
-    installerName = findInstaller(migBackupDrive, analyzerType)
+    # installers are in subfolders in the PicarroInstallers folder on this drive
+    # (instDrive)
+    installerName = findInstaller(instDrive, analyzerType)
+    root.debug("Installer is '%r'." % installerName)
 
-    if installerName is None:
-        # no installer found, already logged an error so bail out now
-        mutils.pauseForUserResponse("exit")
-        sys.exit(1)
-
-    root.info("Running installer '%s'." % installerName)
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue")
 
     if not options.skipInstall:
+        if installerName is None:
+            # no installer found, already logged an error so bail out now
+            mutils.pauseForUserResponse("exit")
+            sys.exit(1)
+
+        root.info("Running analyzer installer '%s'." % installerName)
         ret = runInstaller(installerName)
 
         if not ret:
             root.error("Installer failed or was canceled, aborting remainder of migration.")
             mutils.pauseForUserResponse("exit")
             sys.exit(1)
+
     else:
         root.warning("Skipping software installation, --skipInstall option was set.")
 
 
     # if this was a virgin install (config folders did not exist), backup
     # the config folders so they can be compared later in case there is
-    # a problem getting the system running so Service can compare them
-    # TODO: Should we back up the files unconditionally? What if they were backed up before?
-    #       Should we back up to a unique folder name?
+    # a problem getting the system running so Customer Support can compare them
     if isClean is True:
-        # The Win7 config backup folder should not yet exist on the migration drive, it's an
-        # error if it does.
-        backupFolder = os.path.join(migBackupDrive,
+        """
+        # The Win7ConfigBackup folder should not yet exist on the current instrument
+        # migration drive, it's an error if it does.
+        backupFolder = os.path.join(instDrive,
                                     os.path.sep,
                                     mdefs.BACKUP_WIN7_CONFIG_FOLDER_ROOT_NAME)
 
@@ -604,13 +884,35 @@ def doMigrate(options):
             root.error(errMsg)
             mutils.pauseForUserResponse("exit")
             sys.exit(1)
+        """
 
-        # back up the installed config folders
-        backupWin7ConfigFiles(instDrive, migBackupDrive)
+        # back up the installed config folders to this drive
+        # this will attempt to delete the backup folder if it exists
+        # before backing up the configs
+        #
+        # timeStr is the log filename date/time suffix to append to the diff filenames
+        if options.debug is True:
+            mutils.pauseForUserResponse("continue", "next: backupWin7ConfigFiles")
+        backupWin7ConfigFiles(instDrive, instDrive)
 
-        # compare the config files
-        compareXPandWin7Configs(migBackupDrive, timeStr)
+        if options.skipCompare is False or options.forceCompare is True:
+            if options.debug is True:
+                mutils.pauseForUserResponse("continue", "next: compareXPandWin7Configs")
 
+            root.info("--forceCompare set, comparing Win7 and WinXP configuration files.")
+            compareXPandWin7Configs(instDrive, winXPDrive, timeStr)
+
+    else:
+        # backup Win7 configs if forceBackup option set (useful for debugging)
+        if options.forceBackup is True:
+            # this will delete the backup folder first if it exists
+            root.info("--forceBackup set, backing up Win7 configuration files.")
+            backupWin7ConfigFiles(instDrive, instDrive)
+
+        # do a compare if forceCompare option set (useful for debugging)
+        if options.forceCompare is True:
+            root.info("--forceCompare set, comparing Win7 and WinXP configuration files.")
+            compareXPandWin7Configs(instDrive, winXPDrive, timeStr)
 
     # set the volume name (use saved volume name)
     # #695: remove handling of Win7 boot drive name
@@ -629,36 +931,52 @@ def doMigrate(options):
 
     # set the computer name
     if computerName != "":
+        if options.debug is True:
+            mutils.pauseForUserResponse("continue", "next: setComputerName to '%s'" % computerName)
         mutils.setComputerName(computerName)
 
     # TODO: show the My Computer icon on the desktop (how do I do this?)
 
     # ==== Restore Configs ====
-    # restore files in config folders
-    root.info("Restoring configuration files from backed up WinXP folders.")
-    restoreXPFolders(migBackupDrive, instDrive, mdefs.CONFIG_FOLDERS_TO_RESTORE_LIST)
+    # restore config folders
+    root.info("Restoring configuration files from WinXP folders.")
 
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue")
+    restoreXPFolders(winXPDrive, instDrive, mdefs.CONFIG_FOLDERS_TO_RESTORE_LIST)
+
+    # ==== Repair known issues in config files ====
+    if options.debug is True:
+        mutils.pauseForUserResponse("continue", "next: repairConfigFiles")
+    repairConfigFiles(instDrive)
+
+    """
     # restore specific named config files
     root.info("Restoring specific WinXP configuration files.")
     restoreXPFiles(migBackupDrive, instDrive, mdefs.CONFIG_FILES_TO_RESTORE_LIST)
+    """
 
+    """
     # TODO: restore specific autosampler config files (only configs not DLLs or EXEs)
     root.warning("Restoring specific autosampler files needs to be implemented")
+    """
 
-    # restore user data from all backed up folders
+    # restore user data
     if options.skipRestoreUserData is False:
-        root.info("Restoring user data from backed up WinXP folders.")
-        restoreXPFolders(migBackupDrive, instDrive, mdefs.DATA_FOLDERS_TO_BACKUP_LIST)
+        root.info("Restoring user data from WinXP.")
+        restoreXPFolders(winXPDrive, instDrive, mdefs.DATA_FOLDERS_TO_RESTORE_LIST)
 
     else:
         root.warning("Skipping restore of backed up user data, --skipRestoreUserData option was set.")
 
-    # TODO: fix up config files that have known issues
     # HIDS needs a manual upgrade to InstrConfig\Calibration\InstrCal\FitterConfig.ini:
     #   http://redmine.blueleaf.com/projects/software/wiki/140-22InternalChangelog
 
     # ==== Start the instrument ====
     # TODO: start up the instrument? reboot so it is started? or give instructions?
+
+    # Done!
+    root.info("***** Win7 field migration part 2 (install software and restore configurations and data) DONE! *****")
 
 
 def main():
@@ -683,6 +1001,19 @@ Win7 migration utility part 2 (install).
     parser.add_option('--skipInstall', dest="skipInstall",
                       action='store_true', default=False,
                       help=('Skip installing the Win7 analyzer software.'))
+
+    parser.add_option('--skipCompare', dest="skipCompare",
+                      action='store_true', default=False,
+                      help=('Skip comparison of Win7 config files vs. WinXP.'))
+
+    parser.add_option('--forceCompare', dest="forceCompare",
+                      action='store_true', default=False,
+                      help=('Force comparison of backed up Win7 config files vs. WinXP. '
+                            'This flag overrides --skipCompare.'))
+
+    parser.add_option('--forceBackup', dest="forceBackup",
+                      action='store_true', default=False,
+                      help=('Forces backup of Win7 config files.'))
 
     parser.add_option('--logLevel', dest='logLevel',
                       default=None, help=('Set logging level.\n',
@@ -710,6 +1041,43 @@ Win7 migration utility part 2 (install).
 if __name__ == "__main__":
 
     main()
+
+    """
+    # test code to validate and restore config files
+    # basic logger
+    logLevel = logging.INFO
+    #logLevel = logging.DEBUG
+
+    #logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2)
+    #logFilename = logFilename + ".log"
+    logFilename = "TestLog.log"
+    mode = "w"
+
+    root = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    root.setLevel(logLevel)
+    handlerFile = logging.FileHandler(logFilename, mode)
+    #handlerFile.setFormatter(fmt)
+    root.addHandler(handlerFile)
+
+    instDrive, winXPDrive = findAndValidateDrives()
+
+    print "new instrument drive='%s', WinXP partition ='%s'" % (instDrive, winXPDrive)
+    if instDrive is None:
+        print "error: instDrive is None"
+        sys.exit(1)
+    if  winXPDrive is None:
+        print "winXPDrive is None"
+        sys.exit(1)
+
+    # restore config files from the WinXP drive to instrument drive
+    restoreXPFolders(winXPDrive, instDrive, mdefs.CONFIG_FOLDERS_TO_RESTORE_LIST)
+
+    repairConfigFiles(instDrive)
+
+    # restore data files from the WinXP drive to the instrument drive
+    restoreXPFolders(winXPDrive, instDrive, mdefs.DATA_FOLDERS_TO_RESTORE_LIST)
+    """
+
 
     """
     # test code for compare

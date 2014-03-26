@@ -7,6 +7,9 @@ set TEST_DIR="%TEST_DRIVE%\Win7UserMigrationTools"
 set TEST_DIR_EXE="%TEST_DIR%\Win7UserMigrationExe"
 set TEST_DIR_SRC="%TEST_DIR%\Win7UserMigrationSource"
 
+:: Skipping the test drive for now since I'm not building on Win 7
+goto network
+
 
 if exist %TEST_DRIVE% goto check_test_dir
 echo Test drive %TEST_DRIVE% not found, skipping copy to test drive!
@@ -43,27 +46,14 @@ echo Copying executable files to %TEST_DIR_EXE%
 robocopy dist %TEST_DIR_EXE% /S
 REM ***** ^^^ NOT USED ^^^ ****
 
-REM copy them to the network
+REM copy sources to the network (for testing builds from a VirtualBox WinXP build image)
 :network
 
 :: set NETWORK_DIR="S:\For TracyW\Projects\Win7\Win7UserMigrationTools"
 :: set NETWORK_DIR_EXE="S:\For TracyW\Projects\Win7\Win7UserMigrationTools\Win7UserMigrationExe"
-:: set NETWORK_DIR_SRC="S:\For TracyW\Projects\Win7\Win7UserMigrationTools\Win7UserMigrationSource"
+set NETWORK_DIR_SRC="S:\For TracyW\Projects\Win7\Win7UserMigrationTools\Win7UserMigrationSource"
 
-:: just copy exes to the staging area and quit
-set NETWORK_DIR_EXE="S:\CRDS\CRD Engineering\Software\G2000\Installer_Staging\UserMigrationTools_win7"
-goto network_exes
-
-if exist %NETWORK_DIR% goto check_net_exe
-echo Network folder %NETWORK_DIR% does not exist, skipping copy to network!
-echo.
-pause
-goto egress
-
-:check_net_exe
-if exist %NETWORK_DIR_EXE% goto copy_to_network
-echo Creating network folder %NETWORK_DIR_EXE%
-mkdir %NETWORK_DIR_EXE%
+if exist %NETWORK_DIR_SRC% goto copy_to_network
 
 :copy_to_network
 if exist %NETWORK_DIR_SRC% goto copy_to_network2
@@ -71,26 +61,20 @@ echo Creating network folder %NETWORK_DIR_SRC%
 mkdir %NETWORK_DIR_SRC%
 
 :copy_to_network2
-echo Copying files to %NETWORK_DIR_SRC% and %NETWORK_DIR_EXE%
-
-rem Uncomment the following to skip copying sources
-rem goto network_exes
+echo Copying files to %NETWORK_DIR_SRC%
 
 rem Sources
+
+copy buildWin7UserMigrationTools.py %NETWORK_DIR_SRC%\
+copy build_version.py %NETWORK_DIR_SRC%\
+copy setupWin7UserMigrationTools.py %NETWORK_DIR_SRC%\
 copy Win7UserMigrate_Part1.py %NETWORK_DIR_SRC%\
 copy Win7UserMigrate_Part1.py %NETWORK_DIR_SRC%\
 copy Win7UserMigrationToolsDefs.py %NETWORK_DIR_SRC%\
 copy Win7UserMigrationUtils.py %NETWORK_DIR_SRC%\
-copy ..\..\Host\Common\CmdFIFO.py %NETWORK_DIR_SRC%\
+copy ..\..\..\Host\Common\CmdFIFO.py %NETWORK_DIR_SRC%\
 
 rem copy RunTool.py %NETWORK_DIR_SRC%\
-
-:network_exes
-:: remove the dir if it exists
-if exist %NETWORK_DIR_EXE% rm -r %NETWORK_DIR_EXE%
-mkdir %NETWORK_DIR_EXE%
-echo robocopy dist %NETWORK_DIR_EXE% /S
-robocopy dist %NETWORK_DIR_EXE% /S
 
 :: copy RunPart1Exe.bat %NETWORK_DIR%\
 :: copy RunPart2Exe.bat %NETWORK_DIR%\
