@@ -4,6 +4,7 @@
 package common.source;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.openqa.selenium.By;
@@ -37,6 +38,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public static final String STRNoTimezoneSelectedTime = "First: 2012-06-10 13:13:19+0000 (UTC)"
 			+ "\n" + "Last: 2012-06-10 18:03:02+0000 (UTC)";
 	public static final String STRSurveyorTableEmpty = "No data available in table";
+	private Hashtable<String, String> htLogDate = null;
 
 	@FindBy(how = How.XPATH, using = "//h3")
 	@CacheLookup
@@ -133,6 +135,9 @@ public class NaturalGasLeaksPage extends BasePage {
 	@FindBy(how = How.XPATH, using = "//table[@id='id_logTable']/tbody/tr[1]/td[1]")
 	private WebElement firstLogDate;
 
+	@FindBy(how = How.XPATH, using = "//table[@id='id_logTable']/tbody/tr[1]/td[1]")
+	private WebElement firstLogName;
+
 	// pmahajan
 	@FindBy(how = How.XPATH, using = "//select[@name='id_logTable_length']")
 	private WebElement btnShowNLogEntries;
@@ -185,7 +190,6 @@ public class NaturalGasLeaksPage extends BasePage {
 	@FindBy(how = How.ID, using = "id_p3gdulist_Close_DaySelector")
 	private WebElement btnCloseSurveysWindow;
 
-	// pmahajan
 	@FindBy(how = How.XPATH, using = "//select[@name='id_logListTbl_length']")
 	private WebElement btnShowNLogListEntries;
 
@@ -193,25 +197,29 @@ public class NaturalGasLeaksPage extends BasePage {
 	// @FindBy(how = How.ID, using = "id_logModal")
 	private String daySurveyWindow = "//div[@id='id_logModal' and @class='modal hide fade']";
 
-	// pmahajan
 	@FindBy(how = How.XPATH, using = "//button[contains(text(),'Next Month')]")
 	private WebElement btnNextMonth;
 
-	// pmahajan
 	@FindBy(how = How.ID, using = "id_side_show_btn")
 	private WebElement btnShowSide;
 
 	@FindBy(how = How.ID, using = "id_anzListTbl_info")
 	private WebElement surveyorTableInfo;
 
-	// pmahajan
 	@FindBy(how = How.XPATH, using = "//table[@id='id_logListTbl']/tbody/tr[1]/td[1]")
 	private WebElement firstLogTimeClndrVw;
 
-	// pmahajan
 	@FindBy(how = How.XPATH, using = "//table[@id='id_anzListTbl']/tbody/tr/td")
 	private WebElement surveyorTable;
 
+	@FindBy(how = How.XPATH, using = "//th[@class='sorting_asc']")
+	private WebElement ascLogList;
+
+	@FindBy(how = How.XPATH, using = "//th[@class='sorting_desc']")
+	private WebElement descLogList;
+
+	private By byLogListAsc = By.xpath("//th[@class='sorting_asc']");
+	private By byLogListDesc = By.xpath("//th[@class='sorting_desc']");
 	private By byRefreshButton = By
 			.xpath("//button[@id='id_getLogBtn' and contains(text(),'Refresh')]");
 	private By bySurveyorLink = By.xpath("//div[@id='id_anzTitle']/a");
@@ -558,7 +566,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contentEquals(STRShowList))
 			this.btnShowCalOrList.click();
-
 		findElement(driver, bySearchBox, timeoutInSeconds);
 		return this.firstLogDate.getText();
 	}
@@ -1142,5 +1149,58 @@ public class NaturalGasLeaksPage extends BasePage {
 		HomePage homePage = new HomePage(this.driver, this.strBaseURL);
 		PageFactory.initElements(this.driver, homePage);
 		return homePage;
+	}
+
+	public Hashtable<String, String> getFirstLogDate(String strSurveyor)
+			throws Exception {
+		this.selectSurveyor(strSurveyor);
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		if (this.btnShowCalOrList.getText().contains(STRShowList))
+			this.btnShowCalOrList.click();
+		findElement(driver, bySearchBox, timeoutInSeconds);
+
+		if (!(isElementPresent(driver, byLogListAsc, timeoutInSeconds))) {
+			this.ascLogList.click();
+		}
+
+		String dateTime = this.firstLogDate.getText();
+		System.out.println("dateTime : " + dateTime);
+		String year = dateTime.substring(7, 11);
+		System.out.println("Year : " + year);
+		String month = dateTime.substring(7, 11);
+		System.out.println("Year : " + year);
+		String day = dateTime.substring(7, 11);
+		System.out.println("Year : " + year);
+
+		this.htLogDate.put("Year", year);
+		this.htLogDate.put("Month", month);
+		this.htLogDate.put("Day", day);
+
+		return this.htLogDate;
+	}
+
+	public String getFirstLogName(String strSurveyor) throws Exception {
+		this.selectSurveyor(strSurveyor);
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		if (this.btnShowCalOrList.getText().contains(STRShowList))
+			this.btnShowCalOrList.click();
+		findElement(driver, bySearchBox, timeoutInSeconds);
+
+		if (!(isElementPresent(driver, byLogListAsc, timeoutInSeconds))) {
+			this.ascLogList.click();
+		}
+
+		System.out.println(this.firstLogName.getText());
+
+		return this.firstLogName.getText();
+	}
+
+	public void getLogForSpecifiedDate(String strYear, String strMonth,
+			String strDay) throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
+			this.btnShowCalOrList.click();
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
+
 	}
 }

@@ -333,9 +333,9 @@ public class UserAdminPageTest {
 	}
 
 	/**
-	 * Test Case: UserAdminPage_ADM006 Verify 'Picarro Surveyor™ Report
+	 * Test Case: UserAdminPage_ADM006 Verify 'Picarro Surveyor Report
 	 * Generation Portal' link is not present when user don't have 'Allow
-	 * Picarro Surveyor™ Report Generation Portal' permission
+	 * Picarro Surveyor Report Generation Portal' permission
 	 * 
 	 */
 	@Test

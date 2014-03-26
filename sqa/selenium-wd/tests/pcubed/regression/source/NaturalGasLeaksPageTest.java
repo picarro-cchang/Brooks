@@ -693,7 +693,7 @@ public class NaturalGasLeaksPageTest {
 	}
 
 	/**
-	 * Test Case: GDU020 - Verfiy on selecting 'Show 'n' entries', n logs are
+	 * Test Case: GDU020 - Verify on selecting 'Show 'n' entries', n logs are
 	 * displayed in Calendar View for specified date window
 	 * 
 	 * @author pmahajan
@@ -797,7 +797,7 @@ public class NaturalGasLeaksPageTest {
 	}
 
 	/**
-	 * Test Case: GDU024 - Verfiy on selecting 'Show 'n' entries', n logs are
+	 * Test Case: GDU024 - Verify on selecting 'Show 'n' entries', n logs are
 	 * displayed in Calendar View for specified date window
 	 * 
 	 * @author pmahajan

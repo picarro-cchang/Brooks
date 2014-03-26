@@ -1033,8 +1033,7 @@ public class ReportGenerationPortalPage extends BasePage {
 					String currentWH = driver.getWindowHandle();
 					driver.switchTo().frame("id_iframe");
 					// Wait till page is loaded
-					findElement(driver, byAddRuns, timeoutSeconds);
-
+					TestSetup.slowdownInSeconds(5);
 					driver.findElement(
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[1]/button")).click();
@@ -1562,5 +1561,44 @@ public class ReportGenerationPortalPage extends BasePage {
 		HomePage homePage = new HomePage(this.driver, this.strBaseURL);
 		PageFactory.initElements(this.driver, homePage);
 		return homePage;
+	}
+
+	/**
+	 * Method to check whether View link is present
+	 * 
+	 * @param timeoutSeconds
+	 */
+	public boolean isErrorCodePresent(String strReportTitle, int timeoutSeconds)
+			throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		findElement(driver, byAddRuns, timeoutSeconds);
+		WebElement targetWebElement;
+		boolean flagForWhileLoop = true;
+		while (flagForWhileLoop) {
+			for (int i = 1; i <= this.listReports.size(); i++) {
+				targetWebElement = driver.findElement(By
+						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
+								+ "]/td[4]"));
+				if (targetWebElement.getText().equals(strReportTitle)) {
+					String viewText = driver.findElement(
+							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
+									+ "]/td[5]")).getText();
+					isElementPresent(driver, byViewLink, timeoutSeconds);
+					if (!(viewText.contains("View")))
+						return true;
+					else
+						return false;
+				}
+			}
+			if (flagForWhileLoop) {
+				if (isElementPresent(this.btnNextEnabled)) {
+					this.btnPageNext.click();
+				} else {
+					flagForWhileLoop = false;
+					return false;
+				}
+			}
+		}
+		return false;
 	}
 }
