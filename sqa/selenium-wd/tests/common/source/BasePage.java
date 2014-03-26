@@ -17,7 +17,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 /**
  * @author zlu
  * 
- * Add more general code later for pages
+ *         Add more general code later for pages
  * 
  */
 public class BasePage {
@@ -28,7 +28,7 @@ public class BasePage {
 	protected String pageTitle;
 	protected String parentWindow;
 
-	public BasePage (WebDriver driver, String pageTitle) {
+	public BasePage(WebDriver driver, String pageTitle) {
 		this.driver = driver;
 		this.pageTitle = pageTitle;
 	}
@@ -82,7 +82,7 @@ public class BasePage {
 	public WebElement getWebElement(By by) {
 		return driver.findElement(by);
 	}
-	
+
 	/**
 	 * Method to find the element for provided time span
 	 * 
@@ -100,7 +100,7 @@ public class BasePage {
 		wait.until(ExpectedConditions.presenceOfElementLocated(by));
 		return driver.findElement(by);
 	}
-	
+
 	/**
 	 * Method to verify element is present
 	 * 
@@ -122,10 +122,12 @@ public class BasePage {
 			return false;
 		} catch (TimeoutException e) {
 			return false;
+		} catch (Exception e) {
+			return false;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Method to switch the window focus on new window
 	 * 
@@ -141,7 +143,7 @@ public class BasePage {
 			}
 		}
 	}
-	
+
 	/**
 	 * Method to accept the alert generated
 	 * 

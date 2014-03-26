@@ -55,13 +55,6 @@ public class NaturalGasLeaksPageTest {
 
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
-		loginPage.open();
-		loginPage.loginNormalAs(testSetup.getLoginUser0000(),
-				testSetup.getLoginPwd0000());
-
-		naturalGasLeaksPage = new NaturalGasLeaksPage(driver, baseURL);
-		PageFactory.initElements(driver, naturalGasLeaksPage);
-
 	}
 
 	/**
@@ -557,9 +550,11 @@ public class NaturalGasLeaksPageTest {
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			TestSetup.slowdownInSeconds(3);
-			assertFalse("Timezone modified - Not Expected!",
-					naturalGasLeaksPage.cancelTimezoneWindow(testSetup
-							.getSurveyor(), testSetup.getTimezoneNotToSelect()));
+			assertFalse(
+					"Timezone modified - Not Expected!",
+					naturalGasLeaksPage.cancelTimezoneWindow(
+							testSetup.getSurveyor(),
+							testSetup.getTimezoneNotToSelect()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU014");

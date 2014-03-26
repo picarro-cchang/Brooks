@@ -12,6 +12,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.CacheLookup;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
+import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.Select;
 
 /**
@@ -23,7 +24,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public static final String STRURLPath = "/gdulist/";
 	public static final String STRShowList = "Show List";
 	public static final String STRShowCalendar = "Show Calendar";
-
+	public static final String STRHeadNGL = "Natural Gas Leaks";
 	public static String screenShotsDir;
 	public static final int timeoutInSeconds = 30;
 	public static final String STRTableEmpty = "No matching records found";
@@ -37,11 +38,15 @@ public class NaturalGasLeaksPage extends BasePage {
 			+ "\n" + "Last: 2012-06-10 18:03:02+0000 (UTC)";
 	public static final String STRSurveyorTableEmpty = "No data available in table";
 
+	@FindBy(how = How.XPATH, using = "//h3")
+	@CacheLookup
+	private WebElement headNGL;
+
 	@FindBy(how = How.ID, using = "id_userid_site")
 	@CacheLookup
 	private WebElement userIDSite;
 
-	@FindBy(how = How.XPATH, using = "//span[@id='id_menu_util_list']/li[4]/a")
+	@FindBy(how = How.XPATH, using = "//a[@href='/stage/plogin']")
 	@CacheLookup
 	private WebElement linkSignOff;
 
@@ -1113,26 +1118,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		/**
 		 * how to get all logs from calendar view
 		 */
-
-		// time being tested to click on 18th Feb 2014 - FDDS2037
-		/*
-		 * driver.findElement( By.xpath(
-		 * "//span[@id='id_right_content']/div/div/table/tbody/tr[4]/td/table/tbody/tr[4]/td[3]/button"
-		 * )) .click();
-		 * 
-		 * selectNoOfLogEntries = new Select(this.btnShowNLogListEntries);
-		 * selectNoOfLogEntries.selectByValue(numberOfEntries); List<String>
-		 * strCalLog = new ArrayList<String>();
-		 * 
-		 * for (int i = 1; i <= this.surveysListCalendarView.size(); i++) {
-		 * strCalLog.add(driver.findElement(
-		 * By.xpath("//table[@id='id_logListTbl']/tbody/tr" + "[" + i + "]" +
-		 * "/" + "td[2]")).getText()); } if
-		 * (Integer.toString(this.surveysListCalendarView.size())
-		 * .equalsIgnoreCase(strLogListSize)) { for (int i = 1; i <=
-		 * this.surveysListCalendarView.size();) { if (strCalLog.get(i -
-		 * 1).contains(strLogList.get(i - 1))) { i++; } else return false; } }
-		 */
 		return true;
 	}
 
@@ -1140,6 +1125,22 @@ public class NaturalGasLeaksPage extends BasePage {
 		this.userIDSite.click();
 		TestSetup.slowdownInSeconds(1);
 		this.linkSignOff.click();
-		return (new LoginPage(driver, strBaseURL));
+		LoginPage loginPage = new LoginPage(this.driver, this.strBaseURL);
+		PageFactory.initElements(this.driver, loginPage);
+		return loginPage;
+	}
+
+	public boolean isNGLPageOpen() throws Exception {
+		TestSetup.slowdownInSeconds(3);
+		return (this.headNGL.getText().contains(STRHeadNGL));
+	}
+
+	public HomePage goBackToHomePage() throws Exception {
+		this.menuProcess.click();
+		TestSetup.slowdownInSeconds(1);
+		this.linkHome.click();
+		HomePage homePage = new HomePage(this.driver, this.strBaseURL);
+		PageFactory.initElements(this.driver, homePage);
+		return homePage;
 	}
 }

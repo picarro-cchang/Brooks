@@ -24,7 +24,7 @@ public class LoginPage extends BasePage {
 	public static final String STRLoginInValid = "The User/Password combination entered is not valid";
 	public static final String STRURLPath = "/plogin/";
 	private static LoginPage loginPage;
-	
+
 	@FindBy(how = How.XPATH, using = "//div/input")
 	@CacheLookup
 	private WebElement inputUserID;
@@ -59,43 +59,47 @@ public class LoginPage extends BasePage {
 		if (driver.getCurrentUrl().contains("/eula/")) {
 			driver.findElement(By.xpath("//td[2]/input")).click();
 		}
-		return (new HomePage(this.driver, this.strBaseURL));
+		HomePage homePage = new HomePage(this.driver, this.strBaseURL);
+		PageFactory.initElements(driver, homePage);
+		return homePage;
 	}
 
-	public boolean loginAsWrongPassword(String userName, String password)
+	public boolean loginUnsuccessfull(String userName, String password)
 			throws Exception {
 		this.inputUserID.sendKeys(userName);
 		this.inputPassword.sendKeys(password);
 		this.btnSignin.click();
 		return this.loginInValid.getText().contains(STRLoginInValid);
 	}
-	
-	public NaturalGasLeaksPage loginAndNavigateToNGL(String baseURL, String user, String pwd)
-			throws Exception {
+
+	public NaturalGasLeaksPage loginAndNavigateToNGL(String baseURL,
+			String user, String pwd) throws Exception {
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
 		loginPage.open();
 		loginPage.loginNormalAs(user, pwd);
 
-		NaturalGasLeaksPage naturalGasLeaksPage = new NaturalGasLeaksPage(driver, baseURL);
+		NaturalGasLeaksPage naturalGasLeaksPage = new NaturalGasLeaksPage(
+				driver, baseURL);
 		PageFactory.initElements(driver, naturalGasLeaksPage);
 		return naturalGasLeaksPage;
 	}
-	
-	public ReportGenerationPortalPage loginAndNavigateToReportPortal(String baseURL, String user, String pwd)
-			throws Exception {
+
+	public ReportGenerationPortalPage loginAndNavigateToReportPortal(
+			String baseURL, String user, String pwd) throws Exception {
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
 		loginPage.open();
 		loginPage.loginNormalAs(user, pwd);
 
-		ReportGenerationPortalPage pageReportGeneration = new ReportGenerationPortalPage(driver, baseURL);
+		ReportGenerationPortalPage pageReportGeneration = new ReportGenerationPortalPage(
+				driver, baseURL);
 		PageFactory.initElements(driver, pageReportGeneration);
 		return pageReportGeneration;
 	}
-	
-	public UserAdminPage loginAndNavigateToUserAdministration(String baseURL, String user, String pwd)
-			throws Exception {
+
+	public UserAdminPage loginAndNavigateToUserAdmin(String baseURL,
+			String user, String pwd) throws Exception {
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
 		loginPage.open();
@@ -104,5 +108,26 @@ public class LoginPage extends BasePage {
 		UserAdminPage userAdminPage = new UserAdminPage(driver, baseURL);
 		PageFactory.initElements(driver, userAdminPage);
 		return userAdminPage;
+	}
+
+	public UserProfilePage loginAndNavigateToUserProfile(String baseURL,
+			String user, String pwd) throws Exception {
+		loginPage = new LoginPage(driver, baseURL);
+		PageFactory.initElements(driver, loginPage);
+		loginPage.open();
+		loginPage.loginNormalAs(user, pwd);
+
+		UserProfilePage userProfilePage = new UserProfilePage(driver, baseURL);
+		PageFactory.initElements(driver, userProfilePage);
+		return userProfilePage;
+	}
+
+	public HomePage login(String baseURL, String userName, String password)
+			throws Exception {
+		loginPage = new LoginPage(driver, baseURL);
+		PageFactory.initElements(driver, loginPage);
+		loginPage.open();
+		HomePage homePage = loginPage.loginNormalAs(userName, password);
+		return homePage;
 	}
 }

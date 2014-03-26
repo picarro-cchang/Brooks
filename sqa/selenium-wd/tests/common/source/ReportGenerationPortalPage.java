@@ -7,13 +7,17 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.CacheLookup;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
  * @author zlu
@@ -22,6 +26,7 @@ import org.openqa.selenium.support.ui.Select;
 public class ReportGenerationPortalPage extends BasePage {
 	public static final String STRPageTitle = "Picarro P-Cubed";
 	public static final String STRURLPath = "/gdurpt/";
+	public static final String STRHeadRPT = "Report Generation Portal";
 	public static final String STRPDFReport = "PDF";
 	public static final String STRInvalid = "invalid";
 	public static final String STRSWCorner = "swCorner";
@@ -46,13 +51,25 @@ public class ReportGenerationPortalPage extends BasePage {
 	public static final String STRShowSelected = "Show Selected";
 	public static final String STRShowAll = "Show All";
 
+	@FindBy(how = How.XPATH, using = "//h3")
+	@CacheLookup
+	private WebElement headRPT;
+
 	@FindBy(how = How.ID, using = "id_userid_site")
 	@CacheLookup
 	private WebElement userIDSite;
 
-	@FindBy(how = How.XPATH, using = "//span[@id='id_menu_util_list']/li[4]/a")
+	@FindBy(how = How.XPATH, using = "//a[@href='/stage/plogin']")
 	@CacheLookup
 	private WebElement linkSignOff;
+
+	@FindBy(how = How.ID, using = "id_menu_drop")
+	@CacheLookup
+	private WebElement menuProcess;
+
+	@FindBy(how = How.LINK_TEXT, using = "Home")
+	@CacheLookup
+	private WebElement linkHome;
 
 	@FindBy(how = How.ID, using = "id_title")
 	private WebElement reportTitle;
@@ -340,7 +357,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys(reportData.get("Title"));
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -372,12 +389,14 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.inputPeaksMinAmp.sendKeys(reportData.get("peaksMinAmp"));
 	}
 
-	public void provideTitleCornerDetailsNORowsCols(Hashtable<String, String> reportData, int timeoutSeconds) throws Exception {
+	public void provideTitleCornerDetailsNORowsCols(
+			Hashtable<String, String> reportData, int timeoutSeconds)
+			throws Exception {
 		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys(reportData.get("Title"));
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -417,7 +436,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys("");
 
 		this.inputSWCorner.sendKeys(reportData.get("SWCornerLat") + ", "
@@ -439,7 +458,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys(strReportTitle);
 
 		// select the text present
@@ -468,7 +487,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys(strReportTitle);
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -531,6 +550,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.btnAddRun.click();
 		// Wait till form is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectAnalyzer.sendKeys(strAnalyzer);
 		this.inputStartTime.sendKeys(reportData.get("StartTime"));
 		this.inputEndTime.sendKeys(reportData.get("EndTime"));
@@ -553,9 +573,11 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnAddRun.click();
 		// Wait till form is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.selectAnalyzer.sendKeys(strAnalyzer);
 		this.inputStartTime.sendKeys(Keys.DELETE);
 		this.inputEndTime.sendKeys(Keys.DELETE);
@@ -578,6 +600,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			int timeoutSeconds) throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -597,6 +620,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSummaryFOV.sendKeys(strFigureValue);
 		this.selectSummaryGrid.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -609,6 +633,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -618,6 +643,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		TestSetup.slowdownInSeconds(1);
 		this.btnOKForAddNewFigure.click();
 		findElement(driver, btnSaveChanges, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -631,6 +657,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			String strFigureValue, int timeoutSeconds) throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -646,6 +673,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSummaryGrid.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
 		findElement(driver, btnSaveChanges, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -659,6 +687,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -674,6 +703,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSummaryGrid.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
 		findElement(driver, btnSaveChanges, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -696,6 +726,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSubmapFOV.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
 		findElement(driver, btnSaveChanges, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -716,6 +747,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		TestSetup.slowdownInSeconds(1);
 		this.btnOKForAddNewFigure.click();
 		findElement(driver, btnSaveChanges, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -743,6 +775,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.selectSubmapFOV.sendKeys(strFigureValue);
 		this.btnOKForAddNewFigure.click();
 		findElement(driver, btnSaveChanges, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -757,8 +790,8 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.btnSaveEditTemplate.click();
 		TestSetup.slowdownInSeconds(1);
 		findElement(driver, byAddRuns, timeoutSeconds);
-		System.out.println("Click on Make Report");
 		this.btnMakeReport.click();
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -770,6 +803,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		TestSetup.slowdownInSeconds(1);
 		findElement(driver, byAddRuns, timeoutSeconds);
 		this.btnMakeReport.click();
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -784,6 +818,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
 	}
 
 	/**
@@ -809,7 +844,6 @@ public class ReportGenerationPortalPage extends BasePage {
 					continue;
 				}
 			}
-
 			if (flagForWhileLoop) {
 				if (isElementPresent(this.btnNextEnabled)) {
 					this.btnPageNext.click();
@@ -841,18 +875,17 @@ public class ReportGenerationPortalPage extends BasePage {
 						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 								+ "]/td[4]"));
 				if (targetWebElement.getText().equals(strReportTitle)) {
-					isElementPresent(
-							driver,
-							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[5]/b/a"), timeoutSeconds);
-					System.out
-							.println("View link text : "
-									+ driver.findElement(
-											By.xpath("//table[@id='id_jobTable']/tbody/tr["
-													+ i + "]/td[5]")).getText());
-					driver.findElement(
-							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[5]/b/a")).click();
+					driver.navigate().refresh();
+					TestSetup.slowdownInSeconds(5);
+					String currentWH = driver.getWindowHandle();
+					driver.switchTo().frame("id_iframe");
+					// Wait till page is loaded
+					findElement(driver, byAddRuns, timeoutSeconds);
+					WebElement eleViewLink = driver.findElement(By
+							.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
+									+ "]/td[5]/b/a"));
+					eleViewLink.click();
+					TestSetup.slowdownInSeconds(1);
 					flagForWhileLoop = false;
 					break;
 				} else {
@@ -892,7 +925,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		}
 		return false;
 	}
-	
+
 	public boolean makeReportOfSingleRowCol(String strAnalyzer,
 			Hashtable<String, String> reportData, String reportType,
 			String strSummaryFigureValue, String strSubmapFigureValue,
@@ -995,19 +1028,23 @@ public class ReportGenerationPortalPage extends BasePage {
 							driver,
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]"), timeoutSeconds);
-					System.out.println("Click on edit report");
-					TestSetup.slowdownInSeconds(1);
+					driver.navigate().refresh();
+					TestSetup.slowdownInSeconds(5);
+					String currentWH = driver.getWindowHandle();
+					driver.switchTo().frame("id_iframe");
+					// Wait till page is loaded
+					findElement(driver, byAddRuns, timeoutSeconds);
+
 					driver.findElement(
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[1]/button")).click();
-					System.out.println("Clicked edit report");
+					TestSetup.slowdownInSeconds(1);
 					flagForWhileLoop = false;
 					break;
 				} else {
 					continue;
 				}
 			}
-
 			if (flagForWhileLoop) {
 				if (isElementPresent(this.btnNextEnabled)) {
 					this.btnPageNext.click();
@@ -1101,6 +1138,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideTitleCornerDetails(reportData, timeoutSeconds);
 		if (reportType.contains(STRPDFReport))
 			this.btnMakePDF.click();
+		TestSetup.slowdownInSeconds(1);
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.clickOnEditTemplate(timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
@@ -1145,6 +1183,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideTitleCorner(strReportTitle, reportData, timeoutSeconds);
 		if (reportType.contains(STRPDFReport))
 			this.btnMakePDF.click();
+		TestSetup.slowdownInSeconds(1);
 		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
 		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
 		this.clickSaveChangesMakeReport(timeoutSeconds);
@@ -1159,7 +1198,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean searchReport(String strReportTitle,
 			String validInvalidReport, int timeoutSeconds) throws Exception {
 		this.inputSearchReport.sendKeys(strReportTitle);
-
+		TestSetup.slowdownInSeconds(1);
 		if (validInvalidReport.contentEquals(STRInvalid)) {
 			if (this.emptyTable.getText().contains(STRTableEmpty))
 				return true;
@@ -1179,6 +1218,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.provideTitleCornerDetails(reportData, timeoutSeconds);
 		if (reportType.contains(STRPDFReport))
 			this.btnMakePDF.click();
+		TestSetup.slowdownInSeconds(1);
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		this.clickOnMakeReport(timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
@@ -1190,6 +1230,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			int timeoutSeconds) throws Exception {
 		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
+		TestSetup.slowdownInSeconds(1);
 		this.provideTitleCornerDetails(strReportTitle, invalidSwCorner[0],
 				invalidNeCorner[0], timeoutSeconds);
 		this.clickOnMakeReport(timeoutSeconds);
@@ -1200,7 +1241,7 @@ public class ReportGenerationPortalPage extends BasePage {
 
 	public boolean makeReportWithInvalidLongitudeCorner(String strReportTitle,
 			int timeoutSeconds) throws Exception {
-		String currentWH = driver.getWindowHandle();
+		TestSetup.slowdownInSeconds(1);
 		this.provideTitleCornerDetails(strReportTitle, invalidSwCorner[1],
 				invalidNeCorner[1], timeoutSeconds);
 		this.clickOnMakeReport(timeoutSeconds);
@@ -1247,6 +1288,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
+		TestSetup.slowdownInSeconds(1);
 		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
 		this.btnDeleteAnalyzerDetails.click();
@@ -1260,7 +1302,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.provideSummaryFigureDetails(strFigureValue, timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
 		this.btnDeleteSummaryFigureDetails.click();
@@ -1274,7 +1316,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-
+		TestSetup.slowdownInSeconds(1);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -1333,8 +1375,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		TestSetup.slowdownInSeconds(1);
 		this.reportTitle.sendKeys(" New");
 		String strNewTitle = strReportTitle + " New";
-		this.unselectSummaryTables(timeoutSeconds);
-		this.clickSaveChangesMakeReport(timeoutSeconds);
+		this.clickOnMakeReport(timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
 		return strNewTitle;
 	}
@@ -1370,10 +1411,6 @@ public class ReportGenerationPortalPage extends BasePage {
 						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 								+ "]/td[4]"));
 
-				System.out.println(targetWebElement.getText());
-				System.out.println(targetWebElement.getText().equals(
-						strReportTitle));
-
 				if (targetWebElement.getText().equals(strReportTitle)) {
 					if (driver
 							.findElement(
@@ -1381,13 +1418,12 @@ public class ReportGenerationPortalPage extends BasePage {
 											+ i + "]/td[7]/input"))
 							.getAttribute("checked").compareTo("true") == 0) {
 
-						System.out
-								.println("Report checked : "
-										+ driver.findElement(
-												By.xpath("//table[@id='id_jobTable']/tbody/tr["
-														+ i + "]/td[7]/input"))
-												.getAttribute("checked"));
-
+						driver.navigate().refresh();
+						TestSetup.slowdownInSeconds(5);
+						String currentWH = driver.getWindowHandle();
+						driver.switchTo().frame("id_iframe");
+						// Wait till page is loaded
+						findElement(driver, byAddRuns, timeoutSeconds);
 						driver.findElement(
 								By.xpath("//table[@id='id_jobTable']/tbody/tr["
 										+ i + "]/td[7]/input")).click();
@@ -1398,7 +1434,6 @@ public class ReportGenerationPortalPage extends BasePage {
 					continue;
 				}
 			}
-
 			if (flagForWhileLoop) {
 				if (isElementPresent(this.btnNextEnabled)) {
 					this.btnPageNext.click();
@@ -1442,7 +1477,6 @@ public class ReportGenerationPortalPage extends BasePage {
 				else
 					return false;
 			}
-
 			if (flagForWhileLoop) {
 				if (isElementPresent(this.btnNextEnabled)) {
 					this.btnPageNext.click();
@@ -1511,6 +1545,22 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.userIDSite.click();
 		TestSetup.slowdownInSeconds(1);
 		this.linkSignOff.click();
-		return (new LoginPage(driver, strBaseURL));
+		LoginPage loginPage = new LoginPage(this.driver, this.strBaseURL);
+		PageFactory.initElements(this.driver, loginPage);
+		return loginPage;
+	}
+
+	public boolean isRGPPageOpen() throws Exception {
+		TestSetup.slowdownInSeconds(3);
+		return (this.headRPT.getText().contains(STRHeadRPT));
+	}
+
+	public HomePage goBackToHomePage() throws Exception {
+		this.menuProcess.click();
+		TestSetup.slowdownInSeconds(1);
+		this.linkHome.click();
+		HomePage homePage = new HomePage(this.driver, this.strBaseURL);
+		PageFactory.initElements(this.driver, homePage);
+		return homePage;
 	}
 }

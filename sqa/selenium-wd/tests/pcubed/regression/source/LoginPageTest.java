@@ -113,14 +113,14 @@ public class LoginPageTest {
 	 */
 	@Test
 	public void loginPage_TC0002() {
-		PageFactory.initElements(driver, loginPage);
 		try {
+			PageFactory.initElements(driver, loginPage);
 			loginPage.open();
 			if (debug) {
 				testSetup.slowdownInSeconds(3);
 			}
 
-			assertTrue(loginPage.loginAsWrongPassword(
+			assertTrue(loginPage.loginUnsuccessfull(
 					testSetup.getLoginUser0000(), ""));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
@@ -148,7 +148,7 @@ public class LoginPageTest {
 				testSetup.slowdownInSeconds(3);
 			}
 
-			assertTrue(loginPage.loginAsWrongPassword(
+			assertTrue(loginPage.loginUnsuccessfull(
 					testSetup.getLoginUser0000(), "wrongPwd"));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,

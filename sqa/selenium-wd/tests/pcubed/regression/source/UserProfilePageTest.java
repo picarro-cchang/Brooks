@@ -4,6 +4,7 @@
 package pcubed.regression.source;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Hashtable;
 
@@ -18,6 +19,7 @@ import org.openqa.selenium.support.PageFactory;
 import common.source.ImagingUtility;
 import common.source.LoginPage;
 import common.source.TestSetup;
+import common.source.UserAdminPage;
 import common.source.UserProfilePage;
 
 /**
@@ -32,7 +34,7 @@ public class UserProfilePageTest {
 	private static boolean debug;
 	private static LoginPage loginPage;
 	private static UserProfilePage userProfilePage;
-
+	private static UserAdminPage userAdminPage;
 	private Hashtable<String, String> userProfileHT;
 
 	/**
@@ -43,7 +45,6 @@ public class UserProfilePageTest {
 		testSetup = new TestSetup();
 		driver = testSetup.getDriver();
 		baseURL = testSetup.getBaseUrl();
-		// screenShotsDir = ".\\screenshots\\";
 		screenShotsDir = "./screenshots/";
 		debug = testSetup.isRunningDebug();
 		driver.manage().deleteAllCookies();
@@ -51,12 +52,6 @@ public class UserProfilePageTest {
 
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
-		loginPage.open();
-		loginPage.loginNormalAs(testSetup.getLoginUser0000(),
-				testSetup.getLoginPwd0000());
-
-		userProfilePage = new UserProfilePage(driver, baseURL);
-		PageFactory.initElements(driver, userProfilePage);
 	}
 
 	/**
@@ -79,6 +74,19 @@ public class UserProfilePageTest {
 	 */
 	@After
 	public void tearDown() throws Exception {
+		userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
+				testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
+		userAdminPage.open();
+		TestSetup.slowdownInSeconds(1);
+
+		// Revert back the password
+		userAdminPage.providePasswordConfirmPassword(
+				testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+		assertTrue(testSetup.getLoginUser00A()
+				+ " : user profile not modified!",
+				userAdminPage.isUserProfileModifiedSuccesfull(testSetup
+						.getLoginUser00A()));
+		loginPage = userAdminPage.logout();
 	}
 
 	/**
@@ -89,7 +97,10 @@ public class UserProfilePageTest {
 	@Test
 	public void UserProfilePage_TC0001() {
 		try {
+			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
+					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
 			userProfilePage.open();
+			TestSetup.slowdownInSeconds(3);
 			userProfileHT = userProfilePage.getUserProfile();
 
 			System.out.println("\nLogin User Profile:");
@@ -99,11 +110,106 @@ public class UserProfilePageTest {
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"UserProfilePage_TC0001");
+			userProfilePage.logout();
 		} catch (Exception e) {
-			assertTrue("Exception Caught : " + e.getMessage(), false);
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"Exception_UserProfilePage_TC0001");
+					"Exception_UserAdminPage_TC0001");
+			fail("Exception Caught : " + e.getMessage());
 		}
 	}
 
+	/**
+	 * Test Case: UserProfilePage_UPF001 Verify modified user details are
+	 * displayed on 'User Profile' page
+	 * 
+	 */
+	@Test
+	public void UserProfilePage_UPF001() {
+		try {
+			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
+					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+			userProfilePage.open();
+			TestSetup.slowdownInSeconds(3);
+
+			userProfilePage.modifyUserDetails(testSetup.getRandomNumber());
+			assertTrue(testSetup.getLoginUser00A()
+					+ " : user profile not modified!",
+					userProfilePage.isUserProfileModifiedSuccesfull(testSetup
+							.getLoginUser00A()));
+
+			Hashtable<String, String> userNewProfile = userProfilePage
+					.getUserProfile();
+			userAdminPage = userProfilePage.goToUserAdminPage();
+			assertTrue(
+					testSetup.getLoginUser00A()
+							+ " : user modified profile not present in Users List!",
+					userAdminPage.isUserDetailsModified(
+							testSetup.getLoginUser00A(), userNewProfile));
+
+			userProfilePage.logout();
+		} catch (Exception e) {
+
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"Exception_UserAdminPage_UPF001");
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Test Case: UserProfilePage_UPF002 Verify error message is displayed when
+	 * password and confirm password does not match
+	 * 
+	 */
+	@Test
+	public void UserProfilePage_UPF002() {
+		try {
+			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
+					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+			userProfilePage.open();
+			TestSetup.slowdownInSeconds(3);
+			userProfilePage.providePasswordConfirmPassword(testSetup
+					.getLoginUser00A());
+			assertTrue(testSetup.getLoginUser00A()
+					+ " : user profile not modified!",
+					userProfilePage.isUserProfileModifiedSuccesfull(testSetup
+							.getLoginUser00A()));
+			loginPage = userProfilePage.logout();
+
+			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
+					testSetup.getLoginUser00A(), testSetup.getLoginUser00A());
+			userProfilePage.open();
+			TestSetup.slowdownInSeconds(3);
+			assertTrue("Login Successful!",
+					userProfilePage.isUserProfilePageOpen());
+			loginPage = userProfilePage.logout();
+		} catch (Exception e) {
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"Exception_UserAdminPage_UPF002");
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Test Case: UserProfilePage_UPF003 Verify error message is displayed when
+	 * password and confirm password does not match
+	 * 
+	 */
+	@Test
+	public void UserProfilePage_UPF003() {
+		try {
+			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
+					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+			userProfilePage.open();
+			TestSetup.slowdownInSeconds(3);
+
+			assertTrue(
+					"Error message not displayed when different password and confirm password was provided!",
+					userProfilePage.providePassword(testSetup.getLoginPwd00A()));
+			userProfilePage.logout();
+		} catch (Exception e) {
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"Exception_UserAdminPage_UPF003");
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
 }

@@ -12,6 +12,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.PageFactory;
 
@@ -33,7 +34,6 @@ public class ReportGenerationPortalPageTest {
 
 	private static LoginPage loginPage;
 	private static ReportGenerationPortalPage pageReportGeneration;
-
 	private static int timeoutSecondsToViewReport = 180;
 	private static int timeoutSecondsElePresent = 30;
 	private static String strPDFReport = "PDF";
@@ -60,12 +60,6 @@ public class ReportGenerationPortalPageTest {
 
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
-		loginPage.open();
-		loginPage.loginNormalAs(testSetup.getLoginUser0000(),
-				testSetup.getLoginPwd0000());
-
-		pageReportGeneration = new ReportGenerationPortalPage(driver, baseURL);
-		PageFactory.initElements(driver, pageReportGeneration);
 	}
 
 	/**
