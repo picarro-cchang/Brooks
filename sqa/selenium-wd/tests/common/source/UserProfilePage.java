@@ -86,7 +86,8 @@ public class UserProfilePage extends BasePage {
 		String currentWH = driver.getWindowHandle();
 		WebElement iFrame = driver.findElement(By.id("id_iframe"));
 		driver.switchTo().frame(iFrame);
-
+		findElement(driver, bySaveButton, timeoutSeconds);
+		
 		this.htUserProfile.put("User ID",
 				this.inputUserID.getAttribute("value"));
 		this.htUserProfile.put("First Name",
@@ -172,6 +173,8 @@ public class UserProfilePage extends BasePage {
 		String currentWH = driver.getWindowHandle();
 		WebElement iFrame = driver.findElement(By.id("id_iframe"));
 		driver.switchTo().frame(iFrame);
+		findElement(driver, bySaveButton, timeoutSeconds);
+		
 		String userProfileSuccess = "User Profile changes for " + userId
 				+ " successful.";
 		boolean result = this.msgUserProfileSaved.getText().contains(

@@ -39,6 +39,8 @@ public class NaturalGasLeaksPageTest {
 	private static String strCalView = "Calendar";
 	private static String strValidSearch = "valid";
 	private static String strInvalidSearch = "invalid";
+	private static String strFirstLog = "first";
+	private static String strLastLog = "last";
 
 	/**
 	 * @throws java.lang.Exception
@@ -413,14 +415,42 @@ public class NaturalGasLeaksPageTest {
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			TestSetup.slowdownInSeconds(3);
-			/*
-			 * ---- Working not yet completed -----
-			 */
-			assertTrue(naturalGasLeaksPage
-					.compareUserLogsInListCalendarView(testSetup.getSurveyor2()));
+
+			assertTrue(naturalGasLeaksPage.compareUserLogsInListCalendarView(
+					testSetup.getSurveyor2(), strFirstLog));
+			assertTrue(naturalGasLeaksPage.compareUserLogsInListCalendarView(
+					testSetup.getSurveyor2(), strLastLog));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_naturalGasLeaksPage_GDU008");
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Test Case: GDU009 - Verify 'First log', 'Last log' and 'Today' buttons
+	 * are displaying correct data on Calendar View page view
+	 * 
+	 * @author pmahajan
+	 * 
+	 */
+	@Test
+	public void naturalGasLeaksPage_GDU009() {
+		try {
+			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
+					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
+			naturalGasLeaksPage.open();
+			TestSetup.slowdownInSeconds(3);
+
+			assertTrue(naturalGasLeaksPage
+					.compareUserFirstLastLogsInListCalendarView(
+							testSetup.getSurveyor2(), strFirstLog));
+			assertTrue(naturalGasLeaksPage
+					.compareUserFirstLastLogsInListCalendarView(
+							testSetup.getSurveyor2(), strLastLog));
+		} catch (Exception e) {
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"Exception_naturalGasLeaksPage_GDU009");
 			fail("Exception Caught : " + e.getMessage());
 		}
 	}

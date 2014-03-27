@@ -4,6 +4,7 @@
 package common.source;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -38,7 +39,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	public static final String STRNoTimezoneSelectedTime = "First: 2012-06-10 13:13:19+0000 (UTC)"
 			+ "\n" + "Last: 2012-06-10 18:03:02+0000 (UTC)";
 	public static final String STRSurveyorTableEmpty = "No data available in table";
-	private Hashtable<String, String> htLogDate = null;
+	private Hashtable<String, String> htLogDate = new Hashtable<>();
+	private String[] month = { "", "January", "February", "March", "April",
+			"May", "June", "July", "August", "September", "October",
+			"November", "December" };
+	public static final String STRShowFirst = "first";
 
 	@FindBy(how = How.XPATH, using = "//h3")
 	@CacheLookup
@@ -135,7 +140,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	@FindBy(how = How.XPATH, using = "//table[@id='id_logTable']/tbody/tr[1]/td[1]")
 	private WebElement firstLogDate;
 
-	@FindBy(how = How.XPATH, using = "//table[@id='id_logTable']/tbody/tr[1]/td[1]")
+	@FindBy(how = How.XPATH, using = "//table[@id='id_logTable']/tbody/tr[1]/td[2]")
 	private WebElement firstLogName;
 
 	// pmahajan
@@ -218,8 +223,28 @@ public class NaturalGasLeaksPage extends BasePage {
 	@FindBy(how = How.XPATH, using = "//th[@class='sorting_desc']")
 	private WebElement descLogList;
 
+	@FindBy(how = How.XPATH, using = "//span[@id='id_right_content']/div/div/table/tbody/tr[1]/td/table/tbody/tr/td[2]/h3")
+	private WebElement txtMonthYear;
+
+	@FindBy(how = How.XPATH, using = "//button[contains(text(),'Last Log')]")
+	private WebElement btnLastLog;
+
+	@FindBy(how = How.XPATH, using = "//button[contains(text(),'Prev Month')]")
+	private WebElement btnPrevMonth;
+
+	@FindBy(how = How.XPATH, using = "//button[contains(text(),'Prev Year')]")
+	private WebElement btnPrevYear;
+
+	@FindBy(how = How.XPATH, using = "//button[contains(text(),'Next Year')]")
+	private WebElement btnNextYear;
+
+	@FindBy(how = How.XPATH, using = "//span[@id='id_right_content']/div/div/table/tbody/tr[4]/td/table/tbody/tr")
+	private List<WebElement> rowsInCal;
+
+	@FindBy(how = How.XPATH, using = "//span[@id='id_right_content']/div/div/table/tbody/tr[4]/td/table/tbody/tr[1]/td")
+	private List<WebElement> colsInCal;
+
 	private By byLogListAsc = By.xpath("//th[@class='sorting_asc']");
-	private By byLogListDesc = By.xpath("//th[@class='sorting_desc']");
 	private By byRefreshButton = By
 			.xpath("//button[@id='id_getLogBtn' and contains(text(),'Refresh')]");
 	private By bySurveyorLink = By.xpath("//div[@id='id_anzTitle']/a");
@@ -913,8 +938,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (Integer.toString(this.surveysListCalendarView.size()).compareTo(
 				numberOfEntries) == -1)
 			result = true;
-		this.btnCloseSurveysWindow.click();
-		TestSetup.slowdownInSeconds(1);
+		this.closeSurveysWindow();
 		return result;
 	}
 
@@ -1096,38 +1120,6 @@ public class NaturalGasLeaksPage extends BasePage {
 		return this.firstLogTimeClndrVw.getText();
 	}
 
-	/**
-	 * @author pmahajan
-	 * @return
-	 */
-	public boolean compareUserLogsInListCalendarView(String strSurveyor)
-			throws Exception {
-		this.selectSurveyor(strSurveyor);
-		findElement(driver, byShowCalListButton, timeoutInSeconds);
-		if (this.btnShowCalOrList.getText().contains(STRShowList))
-			this.btnShowCalOrList.click();
-		findElement(driver, bySearchBox, timeoutInSeconds);
-		Select selectNoOfLogEntries = new Select(this.btnShowNLogEntries);
-		selectNoOfLogEntries.selectByValue(STRShow100Entries);
-		List<String> strLogList = new ArrayList<String>();
-
-		for (int i = 1; i <= this.logList.size(); i++) {
-			strLogList.add(driver.findElement(
-					By.xpath("//table[@id='id_logTable']/tbody/tr" + "[" + i
-							+ "]" + "/" + "td[2]")).getText());
-		}
-		findElement(driver, byShowCalListButton, timeoutInSeconds);
-		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
-			this.btnShowCalOrList.click();
-		findElement(driver, byFirstLogButton, timeoutInSeconds);
-		this.btnFirstLog.click();
-
-		/**
-		 * how to get all logs from calendar view
-		 */
-		return true;
-	}
-
 	public LoginPage logout() throws Exception {
 		this.userIDSite.click();
 		TestSetup.slowdownInSeconds(1);
@@ -1151,56 +1143,179 @@ public class NaturalGasLeaksPage extends BasePage {
 		return homePage;
 	}
 
-	public Hashtable<String, String> getFirstLogDate(String strSurveyor)
-			throws Exception {
+	public Hashtable<String, String> getLogDate(String strSurveyor,
+			String strFirstLast) throws Exception {
 		this.selectSurveyor(strSurveyor);
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowList))
 			this.btnShowCalOrList.click();
 		findElement(driver, bySearchBox, timeoutInSeconds);
 
-		if (!(isElementPresent(driver, byLogListAsc, timeoutInSeconds))) {
-			this.ascLogList.click();
+		if (strFirstLast.contains("first")) {
+			if (!(isElementPresent(driver, byLogListAsc, timeoutInSeconds)))
+				this.descLogList.click();
+		} else {
+			if (isElementPresent(driver, byLogListAsc, timeoutInSeconds))
+				this.ascLogList.click();
 		}
-
+		TestSetup.slowdownInSeconds(1);
 		String dateTime = this.firstLogDate.getText();
-		System.out.println("dateTime : " + dateTime);
 		String year = dateTime.substring(7, 11);
-		System.out.println("Year : " + year);
-		String month = dateTime.substring(7, 11);
-		System.out.println("Year : " + year);
-		String day = dateTime.substring(7, 11);
-		System.out.println("Year : " + year);
+		String month = dateTime.substring(12, 14);
+		String day = dateTime.substring(15, 17);
 
 		this.htLogDate.put("Year", year);
 		this.htLogDate.put("Month", month);
 		this.htLogDate.put("Day", day);
-
 		return this.htLogDate;
 	}
 
-	public String getFirstLogName(String strSurveyor) throws Exception {
-		this.selectSurveyor(strSurveyor);
-		findElement(driver, byShowCalListButton, timeoutInSeconds);
-		if (this.btnShowCalOrList.getText().contains(STRShowList))
-			this.btnShowCalOrList.click();
-		findElement(driver, bySearchBox, timeoutInSeconds);
-
-		if (!(isElementPresent(driver, byLogListAsc, timeoutInSeconds))) {
-			this.ascLogList.click();
-		}
-
-		System.out.println(this.firstLogName.getText());
-
+	public String getLogName(String strSurveyor) throws Exception {
+		TestSetup.slowdownInSeconds(1);
 		return this.firstLogName.getText();
 	}
 
-	public void getLogForSpecifiedDate(String strYear, String strMonth,
-			String strDay) throws Exception {
+	public boolean checkLogPresentInCalVw(String strYear, String strMonth,
+			String strDay, String strLogName) throws Exception {
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
 
+		String monthName = this.month[Integer.parseInt(strMonth)];
+		System.out.println(monthName);
+		String monthYear = monthName + " " + strYear;
+		System.out.println(monthYear);
+		boolean flagForWhileLoop = true;
+
+		while (flagForWhileLoop) {
+			if (!(this.txtMonthYear.getText().contains(monthYear))) {
+				if (!(this.txtMonthYear.getText().contains(monthName))) {
+					this.btnPrevMonth.click();
+					continue;
+				} else {
+					if (this.txtMonthYear.getText().contains(strYear)) {
+						flagForWhileLoop = false;
+						break;
+					} else {
+						String year = this.txtMonthYear.getText().trim();
+						year = year.substring(monthName.length() + 1);
+						System.out.println(year);
+						if (year.compareTo(strYear) <= -1) {
+							this.btnNextYear.click();
+							continue;
+						}
+						if (year.compareTo(strYear) >= 1) {
+							this.btnPrevYear.click();
+							continue;
+						}
+					}
+				}
+			} else {
+				flagForWhileLoop = false;
+				break;
+			}
+		}
+
+		flagForWhileLoop = true;
+		for (int rows = 1; rows <= this.rowsInCal.size(); rows++) {
+			for (int cols = 1; cols <= this.colsInCal.size(); cols++) {
+				WebElement eleDay = driver
+						.findElement(By
+								.xpath("// span[@id='id_right_content']/div/div/table/tbody/tr[4]/td/table/tbody/tr[ "
+										+ rows
+										+ "]/td["
+										+ cols
+										+ "]/div/button"));
+				String day = eleDay.getText();
+				if (day.length() == 1)
+					day = "0" + day;
+				System.out.println(day);
+				if (day.contentEquals(strDay)) {
+					eleDay.click();
+					flagForWhileLoop = false;
+					break;
+				}
+			}
+			if (!flagForWhileLoop)
+				break;
+		}
+		TestSetup.slowdownInSeconds(1);
+		this.inputSearchLogCalendarView.sendKeys(strLogName);
+		String logName = this.surveysListCalendarView.get(0).getText();
+		System.out.println(logName);
+		return logName.contains(strLogName);
+	}
+
+	public boolean compareUserLogsInListCalendarView(String strSurveyor,
+			String strFirstLast) throws Exception {
+		htLogDate = this.getLogDate(strSurveyor, strFirstLast);
+		System.out.println(htLogDate.size());
+		System.out.println(htLogDate.get("Day"));
+		String logNameList = this.getLogName(strSurveyor);
+		System.out.println(logNameList);
+		boolean result = this.checkLogPresentInCalVw(htLogDate.get("Year"),
+				htLogDate.get("Month"), htLogDate.get("Day"), logNameList);
+		this.closeSurveysWindow();
+
+		return result;
+	}
+
+	public boolean checkLogPresentInCalVw(String strYear, String strMonth,
+			String strDay, String strFirstLast, String strLogName)
+			throws Exception {
+		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
+			this.btnShowCalOrList.click();
+		findElement(driver, byFirstLogButton, timeoutInSeconds);
+
+		if (strFirstLast.contains(STRShowFirst))
+			this.btnFirstLog.click();
+		else
+			this.btnLastLog.click();
+
+		boolean flagForWhileLoop = true;
+		for (int rows = 1; rows <= this.rowsInCal.size(); rows++) {
+			for (int cols = 1; cols <= this.colsInCal.size(); cols++) {
+				WebElement eleDay = driver
+						.findElement(By
+								.xpath("// span[@id='id_right_content']/div/div/table/tbody/tr[4]/td/table/tbody/tr[ "
+										+ rows
+										+ "]/td["
+										+ cols
+										+ "]/div/button"));
+				String day = eleDay.getText();
+				if (day.length() == 1)
+					day = "0" + day;
+				System.out.println(day);
+				if (day.contentEquals(strDay)) {
+					eleDay.click();
+					flagForWhileLoop = false;
+					break;
+				}
+			}
+			if (!flagForWhileLoop)
+				break;
+		}
+		TestSetup.slowdownInSeconds(1);
+		this.inputSearchLogCalendarView.sendKeys(strLogName);
+		String logName = this.surveysListCalendarView.get(0).getText();
+		System.out.println(logName);
+		return logName.contains(strLogName);
+	}
+
+	public boolean compareUserFirstLastLogsInListCalendarView(
+			String strSurveyor, String strFirstLast) throws Exception {
+		htLogDate = this.getLogDate(strSurveyor, strFirstLast);
+		System.out.println(htLogDate.size());
+		System.out.println(htLogDate.get("Day"));
+		String logNameList = this.getLogName(strSurveyor);
+		System.out.println(logNameList);
+		boolean result = this.checkLogPresentInCalVw(htLogDate.get("Year"),
+				htLogDate.get("Month"), htLogDate.get("Day"), strFirstLast,
+				logNameList);
+		this.closeSurveysWindow();
+
+		return result;
 	}
 }

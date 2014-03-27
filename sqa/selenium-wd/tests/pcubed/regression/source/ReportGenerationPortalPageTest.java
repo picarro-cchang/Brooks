@@ -35,7 +35,7 @@ public class ReportGenerationPortalPageTest {
 	private static LoginPage loginPage;
 	private static ReportGenerationPortalPage pageReportGeneration;
 	private static int timeoutSecondsToViewReport = 180;
-	private static int timeoutSecondsElePresent = 30;
+	private static int timeoutSecondsElePresent = 40;
 	private static String strPDFReport = "PDF";
 	private static String strViewReport = "View";
 	private static String strFigureValueYes = "Yes";
@@ -152,9 +152,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT001_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT001_ErrorCode");
@@ -198,9 +198,9 @@ public class ReportGenerationPortalPageTest {
 					strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strPDFReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT002_ErrorCode");
@@ -323,9 +323,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT006_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT006_ErrorCode");
@@ -372,9 +372,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT007_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT007_ErrorCode");
@@ -421,9 +421,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT008_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT008_ErrorCode");
@@ -470,9 +470,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT009_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT009_ErrorCode");
@@ -522,9 +522,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT010_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT0010_ErrorCode");
@@ -614,9 +614,9 @@ public class ReportGenerationPortalPageTest {
 					pageReportGeneration
 							.makeReportWithNoAnalyzerDetails(timeoutSecondsElePresent));
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT012_ErrorCode");
@@ -661,9 +661,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report1_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT013_Report1_ErrorCode");
@@ -689,9 +689,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report2_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT013_Report2_ErrorCode");
@@ -735,9 +735,9 @@ public class ReportGenerationPortalPageTest {
 					strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT014_ErrorCode");
@@ -786,9 +786,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT016_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT016_ErrorCode");
@@ -992,9 +992,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT023_ErrorCode");
@@ -1021,9 +1021,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_NewReport_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility
 						.takeScreenShot(driver, screenShotsDir,
@@ -1065,9 +1065,9 @@ public class ReportGenerationPortalPageTest {
 					strViewReport, strFigureValueYes, strFigureValueYes,
 					timeoutSecondsElePresent);
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT024_ErrorCode");
@@ -1154,7 +1154,7 @@ public class ReportGenerationPortalPageTest {
 	}
 
 	/**
-	 * Test Case: ReportGenerationPortalPage_RPT026 Verfiy on selecting 'Show
+	 * Test Case: ReportGenerationPortalPage_RPT026 Verify on selecting 'Show
 	 * 'n' entries', the report list shows n entries on the dashboard
 	 * 
 	 */
@@ -1203,9 +1203,9 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT027_Dashboard");
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strViewReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT027_ErrorCode");
@@ -1264,9 +1264,9 @@ public class ReportGenerationPortalPageTest {
 					pageReportGeneration
 							.makeReportWithNoAnalyzerDetails(timeoutSecondsElePresent));
 
-			if (pageReportGeneration
-					.isErrorCodePresent(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(testSetup
+					.getHTReportData().get("Title"), strPDFReport,
+					timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility.takeScreenShot(driver, screenShotsDir,
 						"ReportGenerationPortalPage_RPT029_ErrorCode");

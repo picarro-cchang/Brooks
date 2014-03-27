@@ -100,7 +100,7 @@ public class UserProfilePageTest {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
 					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
 			userProfilePage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(5);
 			userProfileHT = userProfilePage.getUserProfile();
 
 			System.out.println("\nLogin User Profile:");
@@ -129,7 +129,7 @@ public class UserProfilePageTest {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
 					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
 			userProfilePage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(5);
 
 			userProfilePage.modifyUserDetails(testSetup.getRandomNumber());
 			assertTrue(testSetup.getLoginUser00A()
@@ -166,7 +166,7 @@ public class UserProfilePageTest {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
 					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
 			userProfilePage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(5);
 			userProfilePage.providePasswordConfirmPassword(testSetup
 					.getLoginUser00A());
 			assertTrue(testSetup.getLoginUser00A()
@@ -200,7 +200,7 @@ public class UserProfilePageTest {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
 					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
 			userProfilePage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(5);
 
 			assertTrue(
 					"Error message not displayed when different password and confirm password was provided!",

@@ -881,6 +881,7 @@ public class ReportGenerationPortalPage extends BasePage {
 					driver.switchTo().frame("id_iframe");
 					// Wait till page is loaded
 					findElement(driver, byAddRuns, timeoutSeconds);
+					TestSetup.slowdownInSeconds(5);
 					WebElement eleViewLink = driver.findElement(By
 							.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]/b/a"));
@@ -1033,6 +1034,7 @@ public class ReportGenerationPortalPage extends BasePage {
 					String currentWH = driver.getWindowHandle();
 					driver.switchTo().frame("id_iframe");
 					// Wait till page is loaded
+					findElement(driver, byAddRuns, timeoutSeconds);
 					TestSetup.slowdownInSeconds(5);
 					driver.findElement(
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
@@ -1423,9 +1425,11 @@ public class ReportGenerationPortalPage extends BasePage {
 						driver.switchTo().frame("id_iframe");
 						// Wait till page is loaded
 						findElement(driver, byAddRuns, timeoutSeconds);
+						TestSetup.slowdownInSeconds(5);
 						driver.findElement(
 								By.xpath("//table[@id='id_jobTable']/tbody/tr["
 										+ i + "]/td[7]/input")).click();
+						TestSetup.slowdownInSeconds(1);
 						flagForWhileLoop = false;
 						break;
 					}
@@ -1568,8 +1572,8 @@ public class ReportGenerationPortalPage extends BasePage {
 	 * 
 	 * @param timeoutSeconds
 	 */
-	public boolean isErrorCodePresent(String strReportTitle, int timeoutSeconds)
-			throws Exception {
+	public boolean isErrorCodePresent(String strReportTitle, String reportType,
+			int timeoutSeconds) throws Exception {
 		TestSetup.slowdownInSeconds(1);
 		findElement(driver, byAddRuns, timeoutSeconds);
 		WebElement targetWebElement;
@@ -1580,14 +1584,27 @@ public class ReportGenerationPortalPage extends BasePage {
 						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 								+ "]/td[4]"));
 				if (targetWebElement.getText().equals(strReportTitle)) {
-					String viewText = driver.findElement(
-							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[5]")).getText();
-					isElementPresent(driver, byViewLink, timeoutSeconds);
-					if (!(viewText.contains("View")))
-						return true;
-					else
-						return false;
+					if (reportType.contentEquals(STRPDFReport)) {
+						String xpath = "//table[@id='id_jobTable']/tbody/tr["
+								+ i + "]/td[contains(text(),'" + strReportTitle
+								+ "')]/../td[5]/a";
+						By byPDF = By.xpath(xpath);
+
+						if (!(isElementPresent(driver, byPDF, timeoutSeconds)))
+							return true;
+						else
+							return false;
+					} else {
+						String xpath = "//table[@id='id_jobTable']/tbody/tr["
+								+ i + "]/td[contains(text(),'" + strReportTitle
+								+ "')]/../td[5]/b/a";
+						By byView = By.xpath(xpath);
+
+						if (!(isElementPresent(driver, byView, timeoutSeconds)))
+							return true;
+						else
+							return false;
+					}
 				}
 			}
 			if (flagForWhileLoop) {
@@ -1595,10 +1612,10 @@ public class ReportGenerationPortalPage extends BasePage {
 					this.btnPageNext.click();
 				} else {
 					flagForWhileLoop = false;
-					return false;
+					return true;
 				}
 			}
 		}
-		return false;
+		return true;
 	}
 }
