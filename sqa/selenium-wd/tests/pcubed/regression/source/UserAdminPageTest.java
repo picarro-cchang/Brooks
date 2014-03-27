@@ -42,6 +42,7 @@ public class UserAdminPageTest {
 	private static UserProfilePage userProfilePage;
 	private List<String> userList = null;
 	private List<String> systemList = null;
+	private static String newUserId;
 
 	/**
 	 * @throws java.lang.Exception
@@ -58,6 +59,15 @@ public class UserAdminPageTest {
 
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
+		userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
+				testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
+		userAdminPage.open();
+
+		newUserId = userAdminPage.createNewUserAndReturnToUser(
+				testSetup.getRandomNumber(), testSetup.getLoginPwd0000());
+		assertTrue(newUserId + " : new user creation unsuccessfully!",
+				userAdminPage.isUserCreatedSuccessfully(newUserId));
+		loginPage = userAdminPage.logout();
 	}
 
 	/**
@@ -84,11 +94,10 @@ public class UserAdminPageTest {
 		userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 				testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 		userAdminPage.open();
-		userAdminPage.provideAllPermission(testSetup.getLoginUser00A());
-		assertTrue(testSetup.getLoginUser00A()
+		userAdminPage.provideAllPermission(newUserId);
+		assertTrue(newUserId
 				+ " : user profile changes not saved successfully!",
-				userAdminPage.isUserProfileModifiedSuccesfull(testSetup
-						.getLoginUser00A()));
+				userAdminPage.isUserProfileModifiedSuccesfull(newUserId));
 		userAdminPage.logout();
 	}
 
@@ -133,7 +142,6 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage.open();
 			TestSetup.slowdownInSeconds(3);
 			systemList = userAdminPage.getSystemList();
 
@@ -161,20 +169,7 @@ public class UserAdminPageTest {
 	@Test
 	public void UserAdminPage_ADM001() {
 		try {
-			String userId;
-
-			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
-					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
-			userAdminPage.open();
-
-			userId = userAdminPage.createNewUserAndReturnToUser(
-					testSetup.getRandomNumber(), testSetup.getLoginPwd0000());
-			assertTrue(userId + " : user creation unsuccessfully!",
-					userAdminPage.isUserCreatedSuccessfully(userId));
-
-			loginPage = userAdminPage.logout();
-
-			homePage = loginPage.loginNormalAs(userId,
+			homePage = loginPage.loginNormalAs(newUserId,
 					testSetup.getLoginPwd0000());
 			assertTrue("Login was unsuccessfull!", homePage.isHomePageOpen());
 
@@ -216,15 +211,15 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage.deactivateUser(testSetup.getLoginUser00A());
-			assertFalse(testSetup.getLoginUser00A()
-					+ " : user not deactivated!",
-					userAdminPage.isUserActive(testSetup.getLoginUser00A()));
+			userAdminPage.deactivateUser(newUserId);
+			assertFalse(newUserId + " : user not deactivated!",
+					userAdminPage.isUserActive(newUserId));
 			loginPage = userAdminPage.logout();
 
-			assertTrue("Deactive user " + testSetup.getLoginUser00A()
-					+ " logged in successfully!", loginPage.loginUnsuccessfull(
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A()));
+			assertTrue(
+					"Deactive user " + newUserId + " logged in successfully!",
+					loginPage.loginUnsuccessfull(newUserId,
+							testSetup.getLoginPwd0000()));
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_UserAdminPage_ADM002");
@@ -243,27 +238,23 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage.removeUserProfilePermission(testSetup
-					.getLoginUser00A());
-			assertTrue(testSetup.getLoginUser00A()
+			userAdminPage.removeUserProfilePermission(newUserId);
+			assertTrue(newUserId
 					+ " : user profile changes not saved successfully!",
-					userAdminPage.isUserProfileModifiedSuccesfull(testSetup
-							.getLoginUser00A()));
+					userAdminPage.isUserProfileModifiedSuccesfull(newUserId));
 			loginPage = userAdminPage.logout();
 
-			homePage = loginPage.loginNormalAs(testSetup.getLoginUser00A(),
-					testSetup.getLoginPwd00A());
+			homePage = loginPage.loginNormalAs(newUserId,
+					testSetup.getLoginPwd0000());
 			assertFalse("User Profile link is present!",
 					homePage.isUserProfileLinkPresent());
 			loginPage = homePage.clickOnSignOffLink();
 
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+					newUserId, testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage.provideUserProfilePermission(testSetup
-					.getLoginUser00A());
-			assertFalse(testSetup.getLoginUser00A()
-					+ " : was able to modify user profile!",
+			userAdminPage.provideUserProfilePermission(newUserId);
+			assertFalse(newUserId + " : was able to modify user profile!",
 					userAdminPage.isModifyUserProfilePage());
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
@@ -283,16 +274,14 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage
-					.removeUserAdminPermission(testSetup.getLoginUser00A());
-			assertTrue(testSetup.getLoginUser00A()
+			userAdminPage.removeUserAdminPermission(newUserId);
+			assertTrue(newUserId
 					+ " : user profile changes not saved successfully!",
-					userAdminPage.isUserProfileModifiedSuccesfull(testSetup
-							.getLoginUser00A()));
+					userAdminPage.isUserProfileModifiedSuccesfull(newUserId));
 			loginPage = userAdminPage.logout();
 
-			homePage = loginPage.loginNormalAs(testSetup.getLoginUser00A(),
-					testSetup.getLoginPwd00A());
+			homePage = loginPage.loginNormalAs(newUserId,
+					testSetup.getLoginPwd0000());
 			assertFalse("User Administration link is present!",
 					homePage.isUserAdministrationLinkPresent());
 			loginPage = homePage.clickOnSignOffLink();
@@ -315,15 +304,14 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage.removeNGLPermission(testSetup.getLoginUser00A());
-			assertTrue(testSetup.getLoginUser00A()
+			userAdminPage.removeNGLPermission(newUserId);
+			assertTrue(newUserId
 					+ " : user profile changes not saved successfully!",
-					userAdminPage.isUserProfileModifiedSuccesfull(testSetup
-							.getLoginUser00A()));
+					userAdminPage.isUserProfileModifiedSuccesfull(newUserId));
 			loginPage = userAdminPage.logout();
 
-			homePage = loginPage.loginNormalAs(testSetup.getLoginUser00A(),
-					testSetup.getLoginPwd00A());
+			homePage = loginPage.loginNormalAs(newUserId,
+					testSetup.getLoginPwd0000());
 			assertFalse("NGL link is present!", homePage.isNGLLinkPresent());
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
@@ -344,15 +332,14 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			userAdminPage.removeRGPPermission(testSetup.getLoginUser00A());
-			assertTrue(testSetup.getLoginUser00A()
+			userAdminPage.removeRGPPermission(newUserId);
+			assertTrue(newUserId
 					+ " : user profile changes not saved successfully!",
-					userAdminPage.isUserProfileModifiedSuccesfull(testSetup
-							.getLoginUser00A()));
+					userAdminPage.isUserProfileModifiedSuccesfull(newUserId));
 			loginPage = userAdminPage.logout();
 
-			homePage = loginPage.loginNormalAs(testSetup.getLoginUser00A(),
-					testSetup.getLoginPwd00A());
+			homePage = loginPage.loginNormalAs(newUserId,
+					testSetup.getLoginPwd0000());
 			assertFalse("NGL link is present!", homePage.isRGPLinkPresent());
 			loginPage = homePage.logout();
 		} catch (Exception e) {
@@ -371,11 +358,10 @@ public class UserAdminPageTest {
 	public void UserAdminPage_ADM007() {
 		try {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+					newUserId, testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			assertFalse(testSetup.getLoginUser00A()
-					+ " : user deactivated himself!",
-					userAdminPage.deactivateUser(testSetup.getLoginUser00A()));
+			assertFalse(newUserId + " : user deactivated himself!",
+					userAdminPage.deactivateUser(newUserId));
 			loginPage = userAdminPage.logout();
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
@@ -439,9 +425,8 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			assertTrue(
-					"Not able to search user : " + testSetup.getLoginUser00A(),
-					userAdminPage.searchUser(testSetup.getLoginUser00A()));
+			assertTrue("Not able to search user : " + newUserId,
+					userAdminPage.searchUser(newUserId));
 			loginPage = userAdminPage.logout();
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
@@ -560,10 +545,9 @@ public class UserAdminPageTest {
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
 			TestSetup.slowdownInSeconds(3);
-			assertFalse(
-					"Search invalid system : " + testSetup.getLoginUser00A()
-							+ " was successfull!",
-					userAdminPage.searchAnalyzer(testSetup.getLoginUser00A()));
+			assertFalse("Search invalid system : " + newUserId
+					+ " was successfull!",
+					userAdminPage.searchAnalyzer(newUserId));
 			loginPage = userAdminPage.logout();
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
@@ -583,8 +567,10 @@ public class UserAdminPageTest {
 			userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			userAdminPage.open();
-			assertTrue("", userAdminPage.providePassword(
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd0000()));
+			assertTrue(
+					"",
+					userAdminPage.providePassword(newUserId,
+							testSetup.getLoginPwd0000()));
 			loginPage = userAdminPage.logout();
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,

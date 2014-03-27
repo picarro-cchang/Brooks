@@ -36,6 +36,7 @@ public class UserProfilePageTest {
 	private static UserProfilePage userProfilePage;
 	private static UserAdminPage userAdminPage;
 	private Hashtable<String, String> userProfileHT;
+	private static String newUserId;
 
 	/**
 	 * @throws java.lang.Exception
@@ -52,6 +53,16 @@ public class UserProfilePageTest {
 
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
+
+		userAdminPage = loginPage.loginAndNavigateToUserAdmin(baseURL,
+				testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
+		userAdminPage.open();
+
+		newUserId = userAdminPage.createNewUserAndReturnToUser(
+				testSetup.getRandomNumber(), testSetup.getLoginPwd0000());
+		assertTrue(newUserId + " : new user creation unsuccessfully!",
+				userAdminPage.isUserCreatedSuccessfully(newUserId));
+		loginPage = userAdminPage.logout();
 	}
 
 	/**
@@ -80,12 +91,10 @@ public class UserProfilePageTest {
 		TestSetup.slowdownInSeconds(1);
 
 		// Revert back the password
-		userAdminPage.providePasswordConfirmPassword(
-				testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
-		assertTrue(testSetup.getLoginUser00A()
-				+ " : user profile not modified!",
-				userAdminPage.isUserProfileModifiedSuccesfull(testSetup
-						.getLoginUser00A()));
+		userAdminPage.providePasswordConfirmPassword(newUserId,
+				testSetup.getLoginPwd0000());
+		assertTrue(newUserId + " : user profile not modified!",
+				userAdminPage.isUserProfileModifiedSuccesfull(newUserId));
 		loginPage = userAdminPage.logout();
 	}
 
@@ -98,7 +107,7 @@ public class UserProfilePageTest {
 	public void UserProfilePage_TC0001() {
 		try {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+					newUserId, testSetup.getLoginPwd0000());
 			userProfilePage.open();
 			TestSetup.slowdownInSeconds(5);
 			userProfileHT = userProfilePage.getUserProfile();
@@ -127,28 +136,24 @@ public class UserProfilePageTest {
 	public void UserProfilePage_UPF001() {
 		try {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+					newUserId, testSetup.getLoginPwd0000());
 			userProfilePage.open();
 			TestSetup.slowdownInSeconds(5);
 
 			userProfilePage.modifyUserDetails(testSetup.getRandomNumber());
-			assertTrue(testSetup.getLoginUser00A()
-					+ " : user profile not modified!",
-					userProfilePage.isUserProfileModifiedSuccesfull(testSetup
-							.getLoginUser00A()));
+			assertTrue(newUserId + " : user profile not modified!",
+					userProfilePage.isUserProfileModifiedSuccesfull(newUserId));
 
 			Hashtable<String, String> userNewProfile = userProfilePage
 					.getUserProfile();
 			userAdminPage = userProfilePage.goToUserAdminPage();
-			assertTrue(
-					testSetup.getLoginUser00A()
-							+ " : user modified profile not present in Users List!",
-					userAdminPage.isUserDetailsModified(
-							testSetup.getLoginUser00A(), userNewProfile));
+			assertTrue(newUserId
+					+ " : user modified profile not present in Users List!",
+					userAdminPage.isUserDetailsModified(newUserId,
+							userNewProfile));
 
 			userProfilePage.logout();
 		} catch (Exception e) {
-
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_UserAdminPage_UPF001");
 			fail("Exception Caught : " + e.getMessage());
@@ -156,27 +161,23 @@ public class UserProfilePageTest {
 	}
 
 	/**
-	 * Test Case: UserProfilePage_UPF002 Verify error message is displayed when
-	 * password and confirm password does not match
-	 * 
+	 * Test Case: UserProfilePage_UPF002 Verify user is able to change the
+	 * password and able to login with new password
 	 */
 	@Test
 	public void UserProfilePage_UPF002() {
 		try {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+					newUserId, testSetup.getLoginPwd0000());
 			userProfilePage.open();
 			TestSetup.slowdownInSeconds(5);
-			userProfilePage.providePasswordConfirmPassword(testSetup
-					.getLoginUser00A());
-			assertTrue(testSetup.getLoginUser00A()
-					+ " : user profile not modified!",
-					userProfilePage.isUserProfileModifiedSuccesfull(testSetup
-							.getLoginUser00A()));
+			userProfilePage.providePasswordConfirmPassword(newUserId);
+			assertTrue(newUserId + " : user profile not modified!",
+					userProfilePage.isUserProfileModifiedSuccesfull(newUserId));
 			loginPage = userProfilePage.logout();
 
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginUser00A());
+					newUserId, newUserId);
 			userProfilePage.open();
 			TestSetup.slowdownInSeconds(3);
 			assertTrue("Login Successful!",
@@ -198,13 +199,13 @@ public class UserProfilePageTest {
 	public void UserProfilePage_UPF003() {
 		try {
 			userProfilePage = loginPage.loginAndNavigateToUserProfile(baseURL,
-					testSetup.getLoginUser00A(), testSetup.getLoginPwd00A());
+					newUserId, testSetup.getLoginPwd0000());
 			userProfilePage.open();
 			TestSetup.slowdownInSeconds(5);
 
 			assertTrue(
 					"Error message not displayed when different password and confirm password was provided!",
-					userProfilePage.providePassword(testSetup.getLoginPwd00A()));
+					userProfilePage.providePassword(testSetup.getLoginPwd0000()));
 			userProfilePage.logout();
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,

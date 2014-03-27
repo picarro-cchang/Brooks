@@ -87,7 +87,7 @@ public class UserProfilePage extends BasePage {
 		WebElement iFrame = driver.findElement(By.id("id_iframe"));
 		driver.switchTo().frame(iFrame);
 		findElement(driver, bySaveButton, timeoutSeconds);
-		
+
 		this.htUserProfile.put("User ID",
 				this.inputUserID.getAttribute("value"));
 		this.htUserProfile.put("First Name",
@@ -139,7 +139,7 @@ public class UserProfilePage extends BasePage {
 		return loginPage;
 	}
 
-	public void modifyUserDetails(String randomNo) throws Exception {
+	public void modifyUserDetails(String strModify) throws Exception {
 		String currentWH = driver.getWindowHandle();
 		WebElement iFrame = driver.findElement(By.id("id_iframe"));
 		driver.switchTo().frame(iFrame);
@@ -149,19 +149,19 @@ public class UserProfilePage extends BasePage {
 		this.inputFirstName.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 		// deletes the selected text
 		this.inputFirstName.sendKeys(Keys.BACK_SPACE);
-		this.inputFirstName.sendKeys(STRFirstName + randomNo);
+		this.inputFirstName.sendKeys(STRFirstName + strModify);
 
 		// select the text present
 		this.inputLastName.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 		// deletes the selected text
 		this.inputLastName.sendKeys(Keys.BACK_SPACE);
-		this.inputLastName.sendKeys(STRLastName + randomNo);
+		this.inputLastName.sendKeys(STRLastName + strModify);
 
 		// select the text present
 		this.inputDisplayName.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 		// deletes the selected text
 		this.inputDisplayName.sendKeys(Keys.BACK_SPACE);
-		this.inputDisplayName.sendKeys(STRDisplayName + randomNo);
+		this.inputDisplayName.sendKeys(STRDisplayName + strModify);
 
 		this.btnSave.click();
 		driver.switchTo().window(currentWH);
@@ -174,7 +174,7 @@ public class UserProfilePage extends BasePage {
 		WebElement iFrame = driver.findElement(By.id("id_iframe"));
 		driver.switchTo().frame(iFrame);
 		findElement(driver, bySaveButton, timeoutSeconds);
-		
+
 		String userProfileSuccess = "User Profile changes for " + userId
 				+ " successful.";
 		boolean result = this.msgUserProfileSaved.getText().contains(
