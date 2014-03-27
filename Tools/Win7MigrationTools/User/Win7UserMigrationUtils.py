@@ -321,6 +321,102 @@ def DeleteBadLine(strTopDirPath, badSubstr, fileExt):
     return modifiedList
 
 
+
+def fixMinMaxSyntax(strTopDirPath, fileExt):
+    # This doesn't work right when min/max have args that are function calls. Ending bracket
+    # is in the wrong place (needs to count parentheses for proper placement).
+    modifiedList = []
+
+    for root, dirs, files in os.walk(strTopDirPath):
+        for file in files:
+            if file.endswith(fileExt):
+                filepath = os.path.join(root, file)
+                tmpMigFilePath = os.path.join(root, "tmpMigFile.ini")
+                tmpMigFile = open(tmpMigFilePath,mode="w")
+                bMod = False
+                objFile = open(filepath, mode="r")
+
+                for oneline in objFile:
+                    try:
+                        iLocMin = oneline.find("min")
+                        if iLocMin == -1:
+                            pass
+                        else:
+                            iLocRndBrOpen = oneline.find("(",(iLocMin+2)) 
+                            iLocRndBrClose = oneline.find(")", iLocRndBrOpen)
+                            iLocDelim = oneline.find(",", iLocRndBrOpen, iLocRndBrClose)
+
+                            if iLocDelim == -1:
+                                pass
+                            else:
+                                tempLine1, tempLine2, tempLine3 = oneline.partition("min")
+                                iLocRndBrOpen = tempLine3.find("(")
+                                iLocSqBrOpen = tempLine3.find("[",iLocRndBrOpen)
+
+                                if iLocSqBrOpen == -1:
+                                    tempLine3 = tempLine3.replace("(", "([",1)
+                                    oneline = tempLine1 + tempLine2 + tempLine3
+                                    bMod = True
+                                iLocSqBrOpen = tempLine3.find("[",iLocRndBrOpen) 
+
+                                iLocRndBrClose = tempLine3.find(")", iLocSqBrOpen)
+                                iLocSqBrClose = tempLine3.find("]",iLocSqBrOpen,iLocRndBrClose)
+
+                                if iLocSqBrClose == -1:
+                                    tempLine3 = tempLine3.replace(")", "])",1)
+                                    oneline = tempLine1 + tempLine2 + tempLine3
+                                    bMod = True
+                                iLocSqBrClose = tempLine3.find("]",iLocSqBrClose)
+                    except:
+                        pass
+                    finally:
+                        tmpMigFile.write(oneline)
+                        tmpMigFile.flush()
+
+                objFile.close()
+                tmpMigFile.close()
+
+                if bMod is True:
+                    # add this file to the list of changed files
+                    modifiedList.append(filepath)
+
+                    # rename the original file, new file gets the original filename
+                    backupFilepath = filepath + "~"
+
+                    # delete backup if exists
+                    if os.path.isfile(backupFilepath):
+                        os.remove(backupFilepath)
+
+                    # rename original, fixed file gets original filename
+                    os.rename(filepath, backupFilepath)
+                    os.rename(tmpMigFilePath, filepath)
+
+                else:
+                    os.remove(tmpMigFilePath)
+
+    return modifiedList
+
+
+def fixNumpyImportLine(strTopDirPath, fileExt):
+    modifiedList = []
+
+    # search for:   "from numpy import min, max, polyfit, polyval"
+    # replace with: "from numpy import polyfit, polyval"
+    #
+    # This works around an issue with Python 2.7 where the
+    # min and max functions in numpy require an argument with
+    # an iterator (such as a list). This wasn't a requirement
+    # in Python 2.5. The Python built-in min and max
+    # functions still work correctly so omitting them from the
+    # numpy imports will use the built-in functions instead.
+    #
+    # The search string above is the only way we've created it
+    # 
+
+
+    return modifiedList
+
+
 class AnalyzerInfo(object):
     def __init__(self, appName = None):
         if appName is None:

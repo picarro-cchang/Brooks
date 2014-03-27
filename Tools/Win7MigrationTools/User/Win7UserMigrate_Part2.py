@@ -568,9 +568,19 @@ def repairConfigFiles(instDrive):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
     logger.info("Repairing known issues in config files restored from WinXP, drive='%s'." % instDrive)
 
+    """
     # Repair Coordinators (min and max calls from numpy lib require square
     # brackets around arguments if there is more than one)
     # C:\Picarro\g2000\AppConfig\Config\Coordinator
+    #
+    # Warning: this function currently doesn't work correctly so commenting it out.
+    logger.info("Repairing Coordinators")
+    repairList = mutils.fixMinMaxSyntax("C:\Picarro\g2000\AppConfig\Config\Coordinator",
+                                        ".ini")
+
+    if len(repairList) > 0:
+        logger.info("Coordinators repaired: %r" % repairList)
+    """
 
     # Repair DataManager scripts
     # 
@@ -599,9 +609,14 @@ def getAnalyzerInfo():
     re_serial = re.compile("[0-9]*")
 
     while not haveAnalyzerType:
-        print "Please enter your analyzer name and serial, such as CFKADS2001 or cfkads2001,"
-        inputStr = raw_input("or enter Q to quit: ")
+        print ""
+        print ""
+        print "Please type your analyzer name and serial, then hit the Return key."
+        print "Examples: CFKADS2001  hids2007"
+        print ""
+        inputStr = raw_input("Or type Q to quit: ")
         inputStr = inputStr.upper()
+        print ""
 
         analyzerType = None
         analyzerSerial = None

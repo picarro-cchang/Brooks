@@ -5,7 +5,7 @@
 # History:
 # 2014-03-21  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.1"
+MIGRATION_TOOLS_VERSION = "1.0.0.2"
 MIGRATION_TOOLS_LOGNAME = "UserMigrationTools"
 
 MIGRATION_UNKNOWN_ANALYZER_TYPE = "Unknown"
