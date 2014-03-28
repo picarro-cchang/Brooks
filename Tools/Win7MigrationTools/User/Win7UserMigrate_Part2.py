@@ -453,7 +453,7 @@ def restoreXPFoldersFromBackupDir(fromDrive, toDrive, folderList):
             targetDir = os.path.split(toFilename)[0]
 
             if not os.path.isdir(targetDir):
-                logger.warning("Creating '%s' on new Win7 boot drive since it does not exist." % targetDir)
+                logger.info("Creating '%s' on new Win7 boot drive since it does not exist." % targetDir)
                 os.makedirs(targetDir)
 
             # We intentionally do not catch any file copy exceptions. The
@@ -551,7 +551,7 @@ def restoreXPFolders(fromDrive, toDrive, folderList):
             logger.debug("targetDir='%s'" % targetDir)
 
             if not os.path.isdir(targetDir):
-                logger.warning("Creating '%s' on new Win7 boot drive since it does not exist." % targetDir)
+                logger.info("Creating '%s' on new Win7 boot drive since it does not exist." % targetDir)
                 os.makedirs(targetDir)
 
             # We intentionally do not catch any file copy exceptions. The
@@ -619,7 +619,7 @@ def getAnalyzerInfo(winXPDrive, instDrive):
         installerDir = os.path.join(instDrive, os.path.sep,
                                     mdefs.MIGRATION_TOOLS_FOLDER_NAME,
                                     mdefs.INSTALLER_FOLDER_ROOT_NAME,
-                                    analyzerType)
+                                    anTypeTmp)
 
         if os.path.isdir(installerDir):
             analyzerType = anTypeTmp
@@ -741,7 +741,7 @@ def doMigrate(options):
     handlerFile.setFormatter(fmt)
     root.addHandler(handlerFile)
 
-    root.info("***** Win7 field migration part 2 (install software and restore configurations and data) started. *****")
+    root.info("***** Win7 field migration (install software and restore configurations and data) started. *****")
     root.info("Running %s version %s" % (AppPath, mdefs.MIGRATION_TOOLS_VERSION))
 
     if options.debug is True:
@@ -1020,7 +1020,16 @@ def doMigrate(options):
     # TODO: start up the instrument? reboot so it is started? or give instructions?
 
     # Done!
-    root.info("***** Win7 field migration part 2 (install software and restore configurations and data) DONE! *****")
+    root.info("***** Win7 field migration (install software and restore configurations and data) DONE! *****")
+
+    # Print a message since this is being run from a cmd /K shortcut
+    print ""
+    print ""
+    print "*****************************************************"
+    print "  Windows 7 user migration completed successfully!"
+    print "*****************************************************"
+    print ""
+    print ""
 
 
 def main():
