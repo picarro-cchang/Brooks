@@ -598,52 +598,77 @@ def repairConfigFiles(instDrive):
     logger.info("Repair config files done.")
 
 
-def getAnalyzerInfo():
+def getAnalyzerInfo(winXPDrive, instDrive):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
-    logger.info("Getting analyzer information from user.")
+    logger.info("Getting analyzer information.")
     haveAnalyzerType = False
     analyzerType = None
     analyzerSerial = None
 
-    re_type = re.compile("[A-Z]*")
-    re_serial = re.compile("[0-9]*")
+    # first look on the WinXP drive for installerSignature.txt which contains the analyzer type
+    # then we won't have to prompt the user for it
+    installerSigFilepath = winXPDrive[:1] + ":/Picarro/g2000/installerSignature.txt"
 
-    while not haveAnalyzerType:
-        print ""
-        print ""
-        print "Please type your analyzer name and serial, then hit the Return key."
-        print "Examples: CFKADS2001  hids2007"
-        print ""
-        inputStr = raw_input("Or type Q to quit: ")
-        inputStr = inputStr.upper()
-        print ""
+    if os.path.isfile(installerSigFilepath):
+        with open(installerSigFilepath, "r") as f:
+            anTypeTmp = f.readline()
 
-        analyzerType = None
-        analyzerSerial = None
+        logger.info("Analyzer type read from '%s': '%r'" % (installerSigFilepath, anTypeTmp))
 
-        if inputStr == "Q":
-            logger.info("Win7 migration aborted by user (analyzer name and serial not entered).")
-            break
+        # if there is an installer dir with the same name then we have the analyzer type
+        installerDir = os.path.join(instDrive, os.path.sep,
+                                    mdefs.MIGRATION_TOOLS_FOLDER_NAME,
+                                    mdefs.INSTALLER_FOLDER_ROOT_NAME,
+                                    analyzerType)
 
-        # separate out the analyzer name and the serial
-        m = re_type.match(inputStr)
-        analyzerType = m.group()
+        if os.path.isdir(installerDir):
+            analyzerType = anTypeTmp
+            haveAnalyzerType = True
 
-        if analyzerType == "":
+            # set the serial to an empty string, it's not used for anything right now anyway
+            analyzerSerial = ""
+
+    if not haveAnalyzerType:
+        logger.info("Prompting user for analyzer information.")
+        re_type = re.compile("[A-Z]*")
+        re_serial = re.compile("[0-9]*")
+
+        while not haveAnalyzerType:
+            print ""
+            print ""
+            print "Please type your analyzer name and serial, then hit the Return key."
+            print "Examples: CFKADS2001  hids2007"
+            print ""
+            inputStr = raw_input("Or type Q to quit: ")
+            inputStr = inputStr.upper()
+            print ""
+
             analyzerType = None
+            analyzerSerial = None
 
-        # hmmm, I can't seem to figure out how to get the first
-        # occurrence of digits in a string without iterating
-        for p in re_serial.findall(inputStr):
-            if p != "":
-                analyzerSerial = p
+            if inputStr == "Q":
+                logger.info("Win7 migration aborted by user (analyzer name and serial not entered).")
                 break
 
-        if analyzerType is not None and analyzerSerial is not None:
-            haveAnalyzerType = True
-        else:
-            # prompt again
-            print ""
+            # separate out the analyzer name and the serial
+            m = re_type.match(inputStr)
+            analyzerType = m.group()
+
+            if analyzerType == "":
+                analyzerType = None
+
+            # hmmm, I can't seem to figure out how to get the first
+            # occurrence of digits in a string without iterating
+            for p in re_serial.findall(inputStr):
+                if p != "":
+                    analyzerSerial = p
+                    break
+
+            if analyzerType is not None and analyzerSerial is not None:
+                haveAnalyzerType = True
+            else:
+                # prompt again
+                print ""
 
     return analyzerType, analyzerSerial
 
@@ -799,7 +824,7 @@ def doMigrate(options):
         #sys.exit(1)
 
         # prompt for instrument type and ID
-        analyzerType, analyzerId = getAnalyzerInfo()
+        analyzerType, analyzerId = getAnalyzerInfo(winXPDrive, instDrive)
 
         if analyzerType is None or analyzerId is None:
             # either/both are None if user quit so log this and exit
@@ -807,7 +832,8 @@ def doMigrate(options):
             sys.exit(0)
 
         # construct names
-        analyzerName = analyzerType + analyzerId
+        #analyzerName = analyzerType + analyzerId
+        analyzerName = analyzerType
 
         # for now don't set the computer name
         #computerName = "Picarro - %s" % analyzerName
@@ -830,11 +856,12 @@ def doMigrate(options):
         #print "analyzerType=", analyzerType
         #print "computerName=", computerName
 
+        analyzerName = analyzerType
+
         # TODO: get mdefs.COMPUTER_NAME, mdefs.MY_COMPUTER_ICON_NAME so we can set them below
         #root.warning("Set computer name and name for My Computer from saved configuration needs to be implemented!")
 
-    root.info("Instrument info: analyzerType='%s'  analyzerName='%s' computerName='%s'" %
-              (analyzerType, analyzerName, computerName))
+    root.info("Instrument info: analyzerType='%s'" % analyzerType)
 
     if options.debug is True:
         mutils.pauseForUserResponse("continue")
@@ -945,10 +972,12 @@ def doMigrate(options):
     """
 
     # set the computer name
+    """
     if computerName != "":
         if options.debug is True:
             mutils.pauseForUserResponse("continue", "next: setComputerName to '%s'" % computerName)
         mutils.setComputerName(computerName)
+    """
 
     # TODO: show the My Computer icon on the desktop (how do I do this?)
 
