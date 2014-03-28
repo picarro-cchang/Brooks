@@ -41,6 +41,8 @@ public class LoginPage extends BasePage {
 	@CacheLookup
 	private WebElement loginInValid;
 
+	private By bySignInBtn = By.xpath("//td/input");
+
 	public LoginPage(WebDriver driver, String baseURL) {
 		super(driver, STRPageTitle);
 		this.strBaseURL = baseURL;
@@ -51,6 +53,8 @@ public class LoginPage extends BasePage {
 
 	public HomePage loginNormalAs(String userName, String password)
 			throws Exception {
+		TestSetup.slowdownInSeconds(5);
+		findElement(driver, bySignInBtn, 30);
 		inputUserID.sendKeys(userName);
 		inputPassword.sendKeys(password);
 		btnSignin.click();
@@ -69,6 +73,7 @@ public class LoginPage extends BasePage {
 		this.inputUserID.sendKeys(userName);
 		this.inputPassword.sendKeys(password);
 		this.btnSignin.click();
+		TestSetup.slowdownInSeconds(2);
 		return this.loginInValid.getText().contains(STRLoginInValid);
 	}
 

@@ -93,7 +93,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			List<String> strSurveyorList = naturalGasLeaksPage
 					.getSurveyorList();
 
@@ -137,7 +137,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			System.out.println("\nThe selected surveyor is: "
 					+ testSetup.getSurveyor());
 
@@ -169,7 +169,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.showSurveyorLogMap(testSetup.getSurveyor(),
 					testSetup.getLogFile());
 
@@ -195,7 +195,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(testSetup.getSurveyor() + " not found!",
 					naturalGasLeaksPage.getSelectedSurveyorName(testSetup
 							.getSurveyor()));
@@ -250,7 +250,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.showSurveyorLiveMap(testSetup.getSurveyor(),
 					strListView);
 
@@ -283,7 +283,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertFalse("Surveyors list window is not closed!",
 					naturalGasLeaksPage.closeSurveyorWindow());
 		} catch (Exception e) {
@@ -306,7 +306,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue("Refresh button not refreshing the page!",
 					naturalGasLeaksPage.searchLogFile(testSetup.getSurveyor2(),
 							testSetup.getLogFile2(), strValidSearch));
@@ -332,7 +332,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(
 					"Log's time in List view not changed according to timezone!",
 					naturalGasLeaksPage.changeTimezoneOfSurveyor(
@@ -364,7 +364,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(
 					"Searched Invalid log file : " + testSetup.getLogFile2(),
 					naturalGasLeaksPage.searchLogFile(testSetup.getSurveyor(),
@@ -389,7 +389,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(
 					"Not able to search log file : " + testSetup.getLogFile2(),
 					naturalGasLeaksPage.searchLogFile(testSetup.getSurveyor2(),
@@ -414,7 +414,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 
 			assertTrue(naturalGasLeaksPage.compareUserLogsInListCalendarView(
 					testSetup.getSurveyor2(), strFirstLog));
@@ -440,7 +440,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 
 			assertTrue(naturalGasLeaksPage
 					.compareUserFirstLastLogsInListCalendarView(
@@ -468,7 +468,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor2());
 			assertTrue("10 logs should be present in logs table!",
 					naturalGasLeaksPage.showNLogEntries(testSetup
@@ -497,7 +497,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(testSetup.getSurveyor()
 					+ " : surveyor not found in list!",
 					naturalGasLeaksPage.searchSurveyor(testSetup.getSurveyor(),
@@ -527,7 +527,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.showSurveyorWindowLiveMap(testSetup
 					.getSurveyor());
 
@@ -553,7 +553,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue("10 surveyors should be present in logs table!",
 					naturalGasLeaksPage.showNSurveyorEntries(testSetup
 							.getShow10Entries()));
@@ -579,7 +579,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertFalse(
 					"Timezone modified - Not Expected!",
 					naturalGasLeaksPage.cancelTimezoneWindow(
@@ -605,7 +605,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue("All logs are not present on 18th Feb 2014 for "
 					+ testSetup.getSurveyor2(),
 					naturalGasLeaksPage
@@ -632,7 +632,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.showSurveyorMapLogFromCalendarView(
 					testSetup.getSurveyor(), testSetup.getLogFile());
 
@@ -658,7 +658,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(testSetup.getLogFile2() + " log file not searched!",
 					naturalGasLeaksPage.searchLogFileInCalendarView(
 							testSetup.getSurveyor2(), testSetup.getLogFile2(),
@@ -684,7 +684,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(testSetup.getLogFile2()
 					+ " invalid log file got searched!", naturalGasLeaksPage
 					.searchLogFileInCalendarView(testSetup.getSurveyor2(),
@@ -710,7 +710,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue("Surveyor list window present in Calendar view!",
 					naturalGasLeaksPage
 							.closeSurveysWindowInCalendarView(testSetup
@@ -735,7 +735,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor2());
 			assertTrue(
 					"10 or less than 10 logs should be present in logs table for Calendar view!",
@@ -765,7 +765,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(
 					"Log's time in List view not changed according to timezone!",
 					naturalGasLeaksPage.selectNoTimezoneForSurveyor(
@@ -795,7 +795,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor());
 
 			assertTrue(testSetup.getSurveyor()
@@ -839,7 +839,7 @@ public class NaturalGasLeaksPageTest {
 			naturalGasLeaksPage = loginPage.loginAndNavigateToNGL(baseURL,
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
-			TestSetup.slowdownInSeconds(3);
+			TestSetup.slowdownInSeconds(10);
 			assertTrue(
 					testSetup.getSurveyor() + " : surveyor link not present!",
 					naturalGasLeaksPage.surveyorLinkPresentForLiveMap(

@@ -300,7 +300,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.cbSubmapsSurveysTable.click();
 		this.btnSaveEditTemplate.click();
 
-		TestSetup.slowdownInSeconds(5);
+		TestSetup.slowdownInSeconds(8);
 
 		this.btnMakeReport.click();
 
@@ -357,7 +357,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		this.reportTitle.sendKeys(reportData.get("Title"));
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -396,7 +396,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		this.reportTitle.sendKeys(reportData.get("Title"));
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -436,7 +436,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		this.reportTitle.sendKeys("");
 
 		this.inputSWCorner.sendKeys(reportData.get("SWCornerLat") + ", "
@@ -458,7 +458,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		this.reportTitle.sendKeys(strReportTitle);
 
 		// select the text present
@@ -487,7 +487,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		this.reportTitle.sendKeys(strReportTitle);
 		// select the text present
 		this.inputSWCorner.sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -550,7 +550,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		this.btnAddRun.click();
 		// Wait till form is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(2);
 		this.selectAnalyzer.sendKeys(strAnalyzer);
 		this.inputStartTime.sendKeys(reportData.get("StartTime"));
 		this.inputEndTime.sendKeys(reportData.get("EndTime"));
@@ -573,7 +573,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		this.btnAddRun.click();
 		// Wait till form is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -600,7 +600,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			int timeoutSeconds) throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(3);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -633,7 +633,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(3);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -657,7 +657,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			String strFigureValue, int timeoutSeconds) throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(3);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -687,7 +687,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(3);
 		this.btnEditTemplate.click();
 		// Wait till template is loaded
 		findElement(driver, byFormAnalyzerLoaded, timeoutSeconds);
@@ -715,7 +715,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void provideSubmapFigureDetailsWithNoTables(String strFigureValue,
 			int timeoutSeconds) throws Exception {
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(3);
 		this.btnAddNewSubmapFigure.click();
 		findElement(driver, byOkAddFigureBtn, timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
@@ -828,7 +828,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public boolean isViewLinkPresent(String strReportTitle, int timeoutSeconds)
 			throws Exception {
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		findElement(driver, byAddRuns, timeoutSeconds);
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
@@ -864,7 +864,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void clickOnViewLink(String strReportTitle, int timeoutSeconds)
 			throws Exception {
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
 		WebElement targetWebElement;
@@ -876,12 +876,12 @@ public class ReportGenerationPortalPage extends BasePage {
 								+ "]/td[4]"));
 				if (targetWebElement.getText().equals(strReportTitle)) {
 					driver.navigate().refresh();
-					TestSetup.slowdownInSeconds(5);
+					TestSetup.slowdownInSeconds(15);
 					String currentWH = driver.getWindowHandle();
 					driver.switchTo().frame("id_iframe");
 					// Wait till page is loaded
 					findElement(driver, byAddRuns, timeoutSeconds);
-					TestSetup.slowdownInSeconds(5);
+					TestSetup.slowdownInSeconds(10);
 					WebElement eleViewLink = driver.findElement(By
 							.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]/b/a"));
@@ -950,7 +950,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		TestSetup.slowdownInSeconds(1);
 		this.clickOnViewLink(strReportTitle, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		findElement(driver,
 				By.xpath("//div[contains(text(),'" + strReportTitle + "')]"),
 				timeoutSeconds);
@@ -1030,12 +1030,12 @@ public class ReportGenerationPortalPage extends BasePage {
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]"), timeoutSeconds);
 					driver.navigate().refresh();
-					TestSetup.slowdownInSeconds(5);
+					TestSetup.slowdownInSeconds(15);
 					String currentWH = driver.getWindowHandle();
 					driver.switchTo().frame("id_iframe");
 					// Wait till page is loaded
 					findElement(driver, byAddRuns, timeoutSeconds);
-					TestSetup.slowdownInSeconds(5);
+					TestSetup.slowdownInSeconds(15);
 					driver.findElement(
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[1]/button")).click();
@@ -1199,8 +1199,8 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean searchReport(String strReportTitle,
 			String validInvalidReport, int timeoutSeconds) throws Exception {
 		this.inputSearchReport.sendKeys(strReportTitle);
-		TestSetup.slowdownInSeconds(1);
-		if (validInvalidReport.contentEquals(STRInvalid)) {
+		TestSetup.slowdownInSeconds(3);
+		if (validInvalidReport.compareToIgnoreCase(STRInvalid) == 0) {
 			if (this.emptyTable.getText().contains(STRTableEmpty))
 				return true;
 			else
@@ -1356,6 +1356,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	}
 
 	public void closeChildWindow(int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(10);
 		// closing child window
 		driver.close();
 
@@ -1366,7 +1367,7 @@ public class ReportGenerationPortalPage extends BasePage {
 
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(4);
+		TestSetup.slowdownInSeconds(10);
 	}
 
 	public String editAndMakeReport(String strReportTitle, int timeoutSeconds)
@@ -1420,12 +1421,12 @@ public class ReportGenerationPortalPage extends BasePage {
 							.getAttribute("checked").compareTo("true") == 0) {
 
 						driver.navigate().refresh();
-						TestSetup.slowdownInSeconds(5);
+						TestSetup.slowdownInSeconds(15);
 						String currentWH = driver.getWindowHandle();
 						driver.switchTo().frame("id_iframe");
 						// Wait till page is loaded
 						findElement(driver, byAddRuns, timeoutSeconds);
-						TestSetup.slowdownInSeconds(5);
+						TestSetup.slowdownInSeconds(15);
 						driver.findElement(
 								By.xpath("//table[@id='id_jobTable']/tbody/tr["
 										+ i + "]/td[7]/input")).click();

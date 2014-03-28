@@ -20,7 +20,7 @@ public class HomePage extends BasePage {
 	public static final String STRPageTitle = "Picarro P-Cubed";
 	public static final String STRHeadHome = "Home";
 	public static final String STRURLPath = "/index/";
-	private static final int timeoutSeconds = 30;
+	private static final int timeoutSeconds = 40;
 
 	@FindBy(how = How.XPATH, using = "//h3")
 	@CacheLookup

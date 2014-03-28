@@ -34,8 +34,8 @@ public class ReportGenerationPortalPageTest {
 
 	private static LoginPage loginPage;
 	private static ReportGenerationPortalPage pageReportGeneration;
-	private static int timeoutSecondsToViewReport = 180;
-	private static int timeoutSecondsElePresent = 40;
+	private static int timeoutSecondsToViewReport = 210;
+	private static int timeoutSecondsElePresent = 60;
 	private static String strPDFReport = "PDF";
 	private static String strViewReport = "View";
 	private static String strFigureValueYes = "Yes";
@@ -96,7 +96,7 @@ public class ReportGenerationPortalPageTest {
 			pageReportGeneration.open();
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData());
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_TC0001");
@@ -116,11 +116,11 @@ public class ReportGenerationPortalPageTest {
 	public void ReportGenerationPortalPage_TC0002() {
 		try {
 			pageReportGeneration.open();
-			testSetup.slowdownInSeconds(15);
+			TestSetup.slowdownInSeconds(15);
 
 			pageReportGeneration.viewReport(testSetup.getHTReportData().get(
 					"Title"));
-			testSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_TC0002");
@@ -143,7 +143,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -164,11 +164,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " : report not generated successfully!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT001_ViewReport");
@@ -192,7 +192,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strPDFReport,
 					strFigureValueYes, strFigureValueYes,
@@ -210,7 +210,7 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated successfully!",
 					pageReportGeneration.isDownloadPDFButtonPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT002");
@@ -234,7 +234,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue(
 					"Report should not be generated when submap details were not provided!",
 					pageReportGeneration.makeReportWithoutSubmapFigures(
@@ -261,7 +261,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue(
 					"PDF report should not be generated when submap details were not provided!",
 					pageReportGeneration.makeReportWithoutSubmapFigures(
@@ -288,7 +288,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue(
 					"Report should not be generated as submap pages are not reachable!",
 					pageReportGeneration.makeReport(testSetup.getSurveyor(),
@@ -315,7 +315,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportWithSubmapGridOnlyNoSummary(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -335,11 +335,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT006_ViewReport");
@@ -364,7 +364,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportWithoutSummaryTables(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -384,11 +384,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT007_ViewReport");
@@ -413,7 +413,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportWithoutSumarryFiguresSettings(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -433,11 +433,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT008_ViewReport");
@@ -462,7 +462,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportWithoutSubmapTables(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -482,11 +482,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT009_ViewReport");
@@ -514,7 +514,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportWithoutSubmapFiguresSettings(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, timeoutSecondsElePresent);
@@ -534,11 +534,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT010_ViewReport");
@@ -566,7 +566,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue(
 					"Report should not be generated for empty summary figure and tables template!",
 					pageReportGeneration.makeReportWithoutSummary(
@@ -593,7 +593,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			String strReportTitle = testSetup.getHTReportData().get("Title")
 					+ "RPT012";
 
@@ -624,11 +624,11 @@ public class ReportGenerationPortalPageTest {
 
 			assertTrue(strReportTitle + " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(strReportTitle,
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(strReportTitle
 					+ " report should be generated if alert is accepted!",
 					pageReportGeneration.viewReport(strReportTitle,
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT012");
@@ -652,7 +652,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -673,11 +673,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report1_ViewReport");
@@ -701,11 +701,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT013_Report2_ViewReport");
@@ -729,7 +729,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUserA(),
 					testSetup.getLoginPwdA());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -747,7 +747,7 @@ public class ReportGenerationPortalPageTest {
 					+ " report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT014_Report_Dashboard");
 
@@ -777,7 +777,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -798,7 +798,7 @@ public class ReportGenerationPortalPageTest {
 					+ " report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not present!",
 					pageReportGeneration.searchReport(testSetup
@@ -825,7 +825,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue("Alert not present for invlaid latitude corners!",
 					pageReportGeneration.makeReportWithInvalidLatitudeCorner(
 							testSetup.getHTReportData().get("Title"),
@@ -859,7 +859,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue("Alert not present for blank report title!",
 					pageReportGeneration.makeReportWithNoTitle(
 							testSetup.getHTReportData(),
@@ -883,7 +883,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.provideBlankStartEndTime(
 					testSetup.getSurveyor(), timeoutSecondsElePresent);
 
@@ -910,7 +910,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertFalse("Analyzer details not get deleted!",
 					pageReportGeneration.deleteAnalyzerDetails(
 							testSetup.getSurveyor(),
@@ -935,7 +935,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertFalse(
 					"Summary Figure details not get deleted!",
 					pageReportGeneration.deleteSummaryFigureDetails(
@@ -959,7 +959,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertFalse(
 					"Submap figure details not get deleted!",
 					pageReportGeneration.deleteSubmapFigureDetails(
@@ -983,7 +983,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
 					strFigureValueYes, strFigureValueYes,
@@ -1004,11 +1004,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_ViewReport");
@@ -1021,9 +1021,8 @@ public class ReportGenerationPortalPageTest {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_NewReport_Dashboard");
 
-			if (pageReportGeneration.isErrorCodePresent(testSetup
-					.getHTReportData().get("Title"), strViewReport,
-					timeoutSecondsToViewReport)) {
+			if (pageReportGeneration.isErrorCodePresent(newReportTitle,
+					strViewReport, timeoutSecondsToViewReport)) {
 				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
 				ImagingUtility
 						.takeScreenShot(driver, screenShotsDir,
@@ -1032,10 +1031,10 @@ public class ReportGenerationPortalPageTest {
 
 			assertTrue(newReportTitle + " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(newReportTitle,
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(newReportTitle + " report not generated!",
 					pageReportGeneration.viewReport(newReportTitle,
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT023_NewReport_ViewReport");
@@ -1059,7 +1058,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportPeaksMinAmpProvided(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, strFigureValueYes,
@@ -1077,11 +1076,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " report not generated!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 			assertTrue(
 					"Peaks present in report have Ampl lesses than specified Min Ampl!",
 					pageReportGeneration
@@ -1106,7 +1105,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 
 			pageReportGeneration.makeReport(testSetup.getSurveyor(),
 					testSetup.getHTReportData(), strViewReport,
@@ -1116,7 +1115,7 @@ public class ReportGenerationPortalPageTest {
 			String strNewReportTitle = pageReportGeneration
 					.makeAndUncheckReport(
 							testSetup.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport);
+							timeoutSecondsElePresent);
 			assertTrue(pageReportGeneration.showAllReports(testSetup
 					.getHTReportData().get("Title"), strNewReportTitle,
 					timeoutSecondsElePresent));
@@ -1140,7 +1139,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration
 					.waitForReportPageLoading(timeoutSecondsElePresent);
 			assertTrue(pageReportGeneration
@@ -1165,7 +1164,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration
 					.waitForReportPageLoading(timeoutSecondsElePresent);
 			assertTrue("10 report entries should be present on Dashboard!",
@@ -1194,7 +1193,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration.makeReportOfSingleRowCol(
 					testSetup.getSurveyor(), testSetup.getHTReportData(),
 					strViewReport, strFigureValueYes, strFigureValueYes,
@@ -1215,11 +1214,11 @@ public class ReportGenerationPortalPageTest {
 					+ " : report not generated!",
 					pageReportGeneration.isViewLinkPresent(testSetup
 							.getHTReportData().get("Title"),
-							timeoutSecondsToViewReport));
+							timeoutSecondsElePresent));
 			assertTrue(testSetup.getHTReportData().get("Title")
 					+ " : report not generated successfully!",
 					pageReportGeneration.viewReport(testSetup.getHTReportData()
-							.get("Title"), timeoutSecondsToViewReport));
+							.get("Title"), timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT027_ViewReport");
@@ -1243,7 +1242,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			String strReportTitle = testSetup.getHTReportData().get("Title")
 					+ "RPT029";
 
@@ -1275,7 +1274,7 @@ public class ReportGenerationPortalPageTest {
 			assertTrue(strReportTitle
 					+ " PDF report should be generated if alert is accepted!",
 					pageReportGeneration.isDownloadPDFButtonPresent(
-							strReportTitle, timeoutSecondsToViewReport));
+							strReportTitle, timeoutSecondsElePresent));
 
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"ReportGenerationPortalPage_RPT029");
@@ -1298,7 +1297,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue(
 					"Report should not be generated when Summary nad submap template is empty!",
 					pageReportGeneration.makeReportWithNoSummarySubmapDetails(
@@ -1326,7 +1325,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			pageReportGeneration
 					.waitForReportPageLoading(timeoutSecondsElePresent);
 			assertTrue(testSetup.getHTReportData().get("Title")
@@ -1352,7 +1351,7 @@ public class ReportGenerationPortalPageTest {
 					baseURL, testSetup.getLoginUser0000(),
 					testSetup.getLoginPwd0000());
 			pageReportGeneration.open();
-			TestSetup.slowdownInSeconds(5);
+			TestSetup.slowdownInSeconds(15);
 			assertTrue(
 					"PDF report should not be generated when Summary nad submap template is empty!",
 					pageReportGeneration.makeReportWithNoSummarySubmapDetails(

@@ -80,6 +80,7 @@ public class UserProfilePage extends BasePage {
 		this.strPageURL = this.strBaseURL + STRURLPath;
 
 		this.htUserProfile = new Hashtable<String, String>();
+		System.out.println("\nThe UserProfilePage URL is: " + this.strPageURL);
 	}
 
 	public Hashtable<String, String> getUserProfile() throws Exception {

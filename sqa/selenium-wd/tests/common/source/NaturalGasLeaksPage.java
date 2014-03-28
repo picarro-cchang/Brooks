@@ -28,7 +28,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public static final String STRShowCalendar = "Show Calendar";
 	public static final String STRHeadNGL = "Natural Gas Leaks";
 	public static String screenShotsDir;
-	public static final int timeoutInSeconds = 30;
+	public static final int timeoutInSeconds = 40;
 	public static final String STRTableEmpty = "No matching records found";
 	public static final String STRRefreshing = "Working";
 	public static final String STRRefresh = "Refresh";
@@ -291,7 +291,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public void selectSurveyor(String strSurveyor) throws Exception {
 		findElement(driver, bySurveyorLink, timeoutInSeconds);
 		this.linkSelectSurveyor.click();
-		TestSetup.slowdownInSeconds(3);
+		TestSetup.slowdownInSeconds(5);
 		findElement(driver, byCloseButton, timeoutInSeconds);
 
 		Select selectNoOfAnalyzerEntries = new Select(this.showNAnalyzerEntries);
@@ -721,6 +721,7 @@ public class NaturalGasLeaksPage extends BasePage {
 			this.btnShowCalOrList.click();
 
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 
 		// time being tested to click on 15th Jan 2014 - FDDS2037
@@ -756,7 +757,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		Select selectTimezoneValue = new Select(this.selectTimezone);
 		selectTimezoneValue.selectByValue(strTimezoneToChange);
 		this.btnCancelTimezone.click();
-		TestSetup.slowdownInSeconds(1);
+		TestSetup.slowdownInSeconds(5);
 		findElement(driver, byRefreshButton, timeoutInSeconds);
 
 		System.out.println(this.inputTimezone.getAttribute("Value"));
@@ -830,6 +831,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 		this.btnNextMonth.click();
 
@@ -875,6 +877,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 
 		// time being tested - click on 10th June 2012 - DEMO2000
@@ -898,6 +901,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 
 		// time being tested - click on 10th June 2012 - DEMO2000
@@ -921,6 +925,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 		this.btnNextMonth.click();
 
@@ -1005,6 +1010,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean surveyorLinkPresentForMapLogInCalendarView(
 			String strSurveyor, String strLogName) throws Exception {
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		if (this.btnShowCalOrList.getText().contains(STRShowList))
 			findElement(driver, bySearchBox, timeoutInSeconds);
 
@@ -1012,6 +1018,7 @@ public class NaturalGasLeaksPage extends BasePage {
 			this.btnShowCalOrList.click();
 
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 		// time being tested - click on 10th June 2012 - DEMO2000
 		driver.findElement(
@@ -1084,9 +1091,11 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean surveyorLinkPresentBackFromMapLogCalendarView(
 			String strSurveyor, String strLogName) throws Exception {
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 		// time being tested - click on 10th June 2012 - DEMO2000
 		driver.findElement(
@@ -1110,6 +1119,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowCalOrList.getText().contentEquals(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		this.btnFirstLog.click();
 		// time being tested - click on 10th June 2012 - DEMO2000
 		driver.findElement(
@@ -1130,7 +1140,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	}
 
 	public boolean isNGLPageOpen() throws Exception {
-		TestSetup.slowdownInSeconds(3);
+		TestSetup.slowdownInSeconds(10);
 		return (this.headNGL.getText().contains(STRHeadNGL));
 	}
 
@@ -1268,7 +1278,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
 			this.btnShowCalOrList.click();
 		findElement(driver, byFirstLogButton, timeoutInSeconds);
-
+		TestSetup.slowdownInSeconds(2);
 		if (strFirstLast.contains(STRShowFirst))
 			this.btnFirstLog.click();
 		else
