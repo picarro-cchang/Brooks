@@ -21,14 +21,12 @@ import sys
 import shutil
 import time
 import logging
-import ConfigParser
-#import wx
 
 from distutils import dir_util
 from optparse import OptionParser
 
-import Win7UserMigrationToolsDefs as mdefs
-import Win7UserMigrationUtils as mutils
+#import Win7UserMigrationToolsDefs as mdefs
+
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -36,11 +34,14 @@ else:
     AppPath = sys.argv[0]
 
 
-APP_VERSION = "1.0.0.1"
+APP_VERSION = "1.0.0.2"
 
 STAGED_INSTALLERS_BASE = 'S:/CRDS/CRD Engineering/Software/G2000/Installer_Staging/g2000_win7'
 RELEASED_INSTALLERS_BASE = 'S:/CRDS/CRD Engineering/Software/G2000/Installer/g2000_win7'
 
+# defined here so this script can run standalone
+MIGRATION_TOOLS_FOLDER_NAME = "Win7UserMigrationTools"
+INSTALLER_FOLDER_ROOT_NAME = "PicarroInstallers"
 
 
 def doCopyInstallers(options):
@@ -51,20 +52,24 @@ def doCopyInstallers(options):
     if options.stagedInstallers is True:
         bRelease = False
         srcBaseDir = STAGED_INSTALLERS_BASE
+        
+    srcBaseDir = os.path.normpath(srcBaseDir)
 
     # destination dir for copying them to
-    # default is the current drive (result looks like 'C:')
-    destDrive = os.path.splitdrive(os.getcwd())[0]
+    # default to the C drive
+    destDrive = "C:"
 
     if options.destDrive is not None:
         destDrive = options.destDrive[:1] + ':'
 
     installerBaseDir = os.path.join(destDrive, os.path.sep,
-                                    mdefs.MIGRATION_TOOLS_FOLDER_NAME,
-                                    mdefs.INSTALLER_FOLDER_ROOT_NAME)
+                                    MIGRATION_TOOLS_FOLDER_NAME,
+                                    INSTALLER_FOLDER_ROOT_NAME)
     installerBaseDir = os.path.normpath(installerBaseDir)
 
     # report settings before continuing
+    print ""
+    print "**** Win7Migrate_GetHostInstallers %s ****" % APP_VERSION
     print "Copying installers"
     print "Release:", bRelease
     print "  Debug:", options.debug
@@ -72,6 +77,7 @@ def doCopyInstallers(options):
     print "     To: %s" % installerBaseDir
     print ""
     inputStr = raw_input("Hit Return to continue, or Q to quit: ")
+    print ""
     inputStr = inputStr.upper()
 
     # bail if user wants to exit now
@@ -87,57 +93,53 @@ def doCopyInstallers(options):
         if os.path.isdir(installerBaseDir):
             shutil.rmtree(installerBaseDir)
         os.makedirs(installerBaseDir)
-
-    # folder structure of the release installers is different than staged
-    if bRelease is True:
-        # release installers - copy the installer setup_xxx.exe file that is in
-        # the Current folder for the instrument; need to put it under the
-        # instrument type folder
-        #
-        # returns a list of files and folders (just the name, not a full path)
-        installerFiles = os.listdir(srcBaseDir)
-
-        print "installerFiles=", installerFiles
-
-        for fn in installerFiles:
-            path = os.path.join(srcBaseDir, fn)
-            if os.path.isdir(path):
-                srcDir = os.path.join(path, "Current")
-                destDir = os.path.join(installerBaseDir, fn)
-
-                if options.debug is False:
-                    os.mkdir(destDir)
-                else:
-                    "print mkdir(%s)" % destDir
-
-                setupFiles = os.listdir(srcDir)
-                assert len(setupFiles) == 1
-                setupFile = setupFiles[0]
-
-                # validate the filename
-                # example is setup_AEDS_NH3_g2000_win7-1.5.0-23.exe
-                assert setupFile.find("setup_%s" % fn) == 0
-                assert setupFile.find("g2000_win7") > 0
-
-                fromFilename = os.path.join(srcDir, setupFile)
-                toFilename = os.path.join(destDir, setupFile)
-
-                # copy the setup file
-                print ""
-                print "Copying '%s'" % fromFilename
-                print "     to '%s'" % toFilename
-
-                if options.debug is False:
-                    shutil.copy2(fromFilename, toFilename)
-
     else:
-        # staged installers - just copy the folder because each instrument folder
-        # contains its installer setup_xxx.exe file
-        print "Copy folder '%s'" % srcBaseDir
-        print "         to '%s'" % installerBaseDir
+        print "rmtree and makedirs '%s'" % installerBaseDir
+        print ""
 
-        if options.debug is False:
-            dir_util.copy_tree(srcBaseDir, installerBaseDir)
+
+    # folder names in dir expected to be analyzer type names
+    installerFiles = os.listdir(srcBaseDir)
+
+    if options.debug is True:
+        print "installerFiles=", installerFiles
+        print ""
+
+    for fn in installerFiles:
+        path = os.path.join(srcBaseDir, fn)
+        if os.path.isdir(path):
+
+            # latest released installer is in the Current folder
+            if bRelease is True:
+                srcDir = os.path.join(path, "Current")
+            else:
+                srcDir = path
+            destDir = os.path.join(installerBaseDir, fn)
+
+            if options.debug is False:
+                os.mkdir(destDir)
+            else:
+                print "mkdir(%s)" % destDir
+
+            setupFiles = os.listdir(srcDir)
+            assert len(setupFiles) == 1
+            setupFile = setupFiles[0]
+
+            # validate the filename
+            # example is setup_AEDS_NH3_g2000_win7-1.5.0-23.exe
+            assert setupFile.find("setup_%s" % fn) == 0
+            assert setupFile.find("g2000_win7") > 0
+
+            fromFilename = os.path.join(srcDir, setupFile)
+            toFilename = os.path.join(destDir, setupFile)
+
+            # copy the setup file
+            print "Copying '%s'" % fromFilename
+            print "     to '%s'" % toFilename
+            print ""
+
+            if options.debug is False:
+                shutil.copy2(fromFilename, toFilename)
 
 
     # Reiterate paths (may have scrolled off the top of any output)
