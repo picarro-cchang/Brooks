@@ -73,6 +73,7 @@ copy Win7UserMigrate_Part1.py %NETWORK_DIR_SRC%\
 copy Win7UserMigrationToolsDefs.py %NETWORK_DIR_SRC%\
 copy Win7UserMigrationUtils.py %NETWORK_DIR_SRC%\
 copy ..\..\..\Host\Common\CmdFIFO.py %NETWORK_DIR_SRC%\
+copy Win7Migrate_GetHostInstallers.py %NETWORK_DIR_SRC%\
 
 rem copy RunTool.py %NETWORK_DIR_SRC%\
 
