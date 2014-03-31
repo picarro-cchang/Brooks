@@ -1043,6 +1043,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	public boolean surveyorLinkPresentBackFromLiveMap(String strSurveyor,
 			String strView) throws Exception {
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
+		TestSetup.slowdownInSeconds(2);
 		if (strView.contains("List")) {
 			if (this.btnShowCalOrList.getText().contains(STRShowList))
 				this.btnShowCalOrList.click();

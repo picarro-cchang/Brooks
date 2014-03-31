@@ -50,6 +50,15 @@ public class ReportGenerationPortalPage extends BasePage {
 	public static final String STRPeaksMinAmp = "0.10";
 	public static final String STRShowSelected = "Show Selected";
 	public static final String STRShowAll = "Show All";
+	public static final String STRValidInstructionFile = "valid_instructions.json";
+	public static final String STRCorruptFile = "corrupt-instructions.json";
+	public static final String STRBlankFile = "blank-instructions.json";
+	public static final String STROtherFile = "report1.pdf";
+	public static final String STRReportTitle = "Report generated using valid Instructions.JSON file";
+	public static final String[] STRInvalidInstructionsFile = {
+			"Invalid instructions file: JSON.parse: expected ',' or '}' after property value in object",
+			"Invalid instructions file: JSON.parse: unexpected end of data",
+			"Invalid instructions file: JSON.parse: unexpected character" };
 
 	@FindBy(how = How.XPATH, using = "//h3")
 	@CacheLookup
@@ -236,6 +245,15 @@ public class ReportGenerationPortalPage extends BasePage {
 	@FindBy(how = How.XPATH, using = "//select[@name='id_jobTable_length']")
 	private WebElement selectShowNReportEntries;
 
+	@FindBy(how = How.ID, using = "id_save_instructions")
+	private WebElement btnSaveInstructions;
+
+	@FindBy(how = How.XPATH, using = "//input[@type='file']")
+	private WebElement inputFile;
+
+	@FindBy(how = How.ID, using = "id_instr_upload")
+	private WebElement btnBrowse;
+
 	private By bySurveyorDetails = By
 			.xpath("//table[@id='runTable']/tbody/tr/td[2]");
 	private By bySumarryDetails = By
@@ -246,8 +264,11 @@ public class ReportGenerationPortalPage extends BasePage {
 			.xpath("//table[@id='runTable']/thead/tr/th[1]/button");
 	private By byFormAnalyzerLoaded = By
 			.xpath("//div[@class='modal hide fade in']");
-	private By byViewLink = By
-			.xpath("//table[@id='id_jobTable']/tbody/tr[1]/td[5]/b/a[@class='viewLink']");
+	/*
+	 * private By byViewLink = By
+	 * .xpath("//table[@id='id_jobTable']/tbody/tr[1]/td[5]/b/a[@class='viewLink']"
+	 * );
+	 */
 	private By btnNextEnabled = By.xpath("//a[@class='paginate_enabled_next']");
 	private By btnSaveChanges = By.id("id_save_template");
 	private By byAnalyzerTemplateLoaded = By
@@ -355,6 +376,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			int timeoutSeconds) throws Exception {
 		String currentWH = driver.getWindowHandle();
 		driver.switchTo().frame("id_iframe");
+		TestSetup.slowdownInSeconds(1);
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
 		TestSetup.slowdownInSeconds(5);
@@ -830,6 +852,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		TestSetup.slowdownInSeconds(5);
 		findElement(driver, byAddRuns, timeoutSeconds);
+
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -839,6 +862,10 @@ public class ReportGenerationPortalPage extends BasePage {
 								+ "]/td[4]"));
 
 				if (targetWebElement.getText().equals(strReportTitle)) {
+					String xpath = "//table[@id='id_jobTable']/tbody/tr[" + i
+							+ "]/td[contains(text(),'" + strReportTitle
+							+ "')]/../td[5]/b/a";
+					By byViewLink = By.xpath(xpath);
 					return isElementPresent(driver, byViewLink, timeoutSeconds);
 				} else {
 					continue;
@@ -867,6 +894,15 @@ public class ReportGenerationPortalPage extends BasePage {
 		TestSetup.slowdownInSeconds(5);
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
+
+		driver.navigate().refresh();
+		TestSetup.slowdownInSeconds(15);
+		String currentWH = driver.getWindowHandle();
+		driver.switchTo().frame("id_iframe");
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(5);
+
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -875,16 +911,12 @@ public class ReportGenerationPortalPage extends BasePage {
 						.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 								+ "]/td[4]"));
 				if (targetWebElement.getText().equals(strReportTitle)) {
-					driver.navigate().refresh();
-					TestSetup.slowdownInSeconds(15);
-					String currentWH = driver.getWindowHandle();
-					driver.switchTo().frame("id_iframe");
-					// Wait till page is loaded
-					findElement(driver, byAddRuns, timeoutSeconds);
-					TestSetup.slowdownInSeconds(10);
-					WebElement eleViewLink = driver.findElement(By
-							.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[5]/b/a"));
+					String xpath = "//table[@id='id_jobTable']/tbody/tr[" + i
+							+ "]/td[contains(text(),'" + strReportTitle
+							+ "')]/../td[5]/b/a";
+					By byViewLink = By.xpath(xpath);
+					WebElement eleViewLink = driver.findElement(byViewLink);
+
 					eleViewLink.click();
 					TestSetup.slowdownInSeconds(1);
 					flagForWhileLoop = false;
@@ -976,8 +1008,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean isDownloadPDFButtonPresent(String strReportTitle,
 			int timeoutSeconds) throws Exception {
 		TestSetup.slowdownInSeconds(1);
-		// Wait till page is loaded
-		findElement(driver, byAddRuns, timeoutSeconds);
+
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -987,10 +1018,11 @@ public class ReportGenerationPortalPage extends BasePage {
 								+ "]/td[4]"));
 
 				if (targetWebElement.getText().equals(strReportTitle)) {
-					return isElementPresent(
-							driver,
-							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[5]/a"), timeoutSeconds);
+					String xpath = "//table[@id='id_jobTable']/tbody/tr[" + i
+							+ "]/td[contains(text(),'" + strReportTitle
+							+ "')]/../td[5]/a";
+					By byPDF = By.xpath(xpath);
+					return isElementPresent(driver, byPDF, timeoutSeconds);
 				} else {
 					continue;
 				}
@@ -1017,6 +1049,15 @@ public class ReportGenerationPortalPage extends BasePage {
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
+
+		driver.navigate().refresh();
+		TestSetup.slowdownInSeconds(15);
+		String currentWH = driver.getWindowHandle();
+		driver.switchTo().frame("id_iframe");
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(15);
+
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -1029,16 +1070,13 @@ public class ReportGenerationPortalPage extends BasePage {
 							driver,
 							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
 									+ "]/td[5]"), timeoutSeconds);
-					driver.navigate().refresh();
-					TestSetup.slowdownInSeconds(15);
-					String currentWH = driver.getWindowHandle();
-					driver.switchTo().frame("id_iframe");
-					// Wait till page is loaded
-					findElement(driver, byAddRuns, timeoutSeconds);
-					TestSetup.slowdownInSeconds(15);
-					driver.findElement(
-							By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-									+ "]/td[1]/button")).click();
+					String xpath = "//table[@id='id_jobTable']/tbody/tr[" + i
+							+ "]/td[contains(text(),'" + strReportTitle
+							+ "')]/../td[1]/button";
+					By byEditReport = By.xpath(xpath);
+					WebElement eleEditReportBtn = driver
+							.findElement(byEditReport);
+					eleEditReportBtn.click();
 					TestSetup.slowdownInSeconds(1);
 					flagForWhileLoop = false;
 					break;
@@ -1164,11 +1202,8 @@ public class ReportGenerationPortalPage extends BasePage {
 		return actualMessage.contains(STRDuplicateReport);
 	}
 
-	public boolean makeReportWithNoAnalyzerDetails(int timeoutSeconds)
-			throws Exception {
+	public boolean makeReportWithNoAnalyzerDetails(int timeoutSeconds) throws Exception {
 		TestSetup.slowdownInSeconds(1);
-		// Wait till page is loaded
-		findElement(driver, byAddRuns, timeoutSeconds);
 		this.clickOnMakeReport(timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
 		String actualMessage = acceptAlert();
@@ -1199,7 +1234,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	public boolean searchReport(String strReportTitle,
 			String validInvalidReport, int timeoutSeconds) throws Exception {
 		this.inputSearchReport.sendKeys(strReportTitle);
-		TestSetup.slowdownInSeconds(3);
+		TestSetup.slowdownInSeconds(5);
 		if (validInvalidReport.compareToIgnoreCase(STRInvalid) == 0) {
 			if (this.emptyTable.getText().contains(STRTableEmpty))
 				return true;
@@ -1405,6 +1440,15 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		findElement(driver, byAddRuns, timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
+
+		driver.navigate().refresh();
+		TestSetup.slowdownInSeconds(15);
+		String currentWH = driver.getWindowHandle();
+		driver.switchTo().frame("id_iframe");
+		// Wait till page is loaded
+		findElement(driver, byAddRuns, timeoutSeconds);
+		TestSetup.slowdownInSeconds(15);
+
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -1414,22 +1458,16 @@ public class ReportGenerationPortalPage extends BasePage {
 								+ "]/td[4]"));
 
 				if (targetWebElement.getText().equals(strReportTitle)) {
-					if (driver
-							.findElement(
-									By.xpath("//table[@id='id_jobTable']/tbody/tr["
-											+ i + "]/td[7]/input"))
-							.getAttribute("checked").compareTo("true") == 0) {
+					String xpath = "//table[@id='id_jobTable']/tbody/tr[" + i
+							+ "]/td[contains(text(),'" + strReportTitle
+							+ "')]/../td[7]/input";
+					By byUncheckReport = By.xpath(xpath);
+					WebElement eleUncheckReport = driver
+							.findElement(byUncheckReport);
 
-						driver.navigate().refresh();
-						TestSetup.slowdownInSeconds(15);
-						String currentWH = driver.getWindowHandle();
-						driver.switchTo().frame("id_iframe");
-						// Wait till page is loaded
-						findElement(driver, byAddRuns, timeoutSeconds);
-						TestSetup.slowdownInSeconds(15);
-						driver.findElement(
-								By.xpath("//table[@id='id_jobTable']/tbody/tr["
-										+ i + "]/td[7]/input")).click();
+					if (eleUncheckReport.getAttribute("checked").compareTo(
+							"true") == 0) {
+						eleUncheckReport.click();
 						TestSetup.slowdownInSeconds(1);
 						flagForWhileLoop = false;
 						break;
@@ -1513,7 +1551,8 @@ public class ReportGenerationPortalPage extends BasePage {
 							+ "]/td[4]"));
 			strCheckAttribute = driver.findElement(
 					By.xpath("//table[@id='id_jobTable']/tbody/tr[" + i
-							+ "]/td[7]/input")).getAttribute("checked");
+							+ "]/td[contains(text(),'" + strReportTitle
+							+ "')]/../td[7]/input")).getAttribute("checked");
 			if (targetWebElement.getText().equals(strReportTitle)
 					&& strCheckAttribute.compareTo("true") == 0)
 				continue;
@@ -1531,7 +1570,7 @@ public class ReportGenerationPortalPage extends BasePage {
 		driver.switchTo().frame("id_iframe");
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(3);
+		TestSetup.slowdownInSeconds(5);
 	}
 
 	public boolean showNReportEntries(String numberOfEntries) throws Exception {
@@ -1577,6 +1616,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			int timeoutSeconds) throws Exception {
 		TestSetup.slowdownInSeconds(1);
 		findElement(driver, byAddRuns, timeoutSeconds);
+
 		WebElement targetWebElement;
 		boolean flagForWhileLoop = true;
 		while (flagForWhileLoop) {
@@ -1618,5 +1658,75 @@ public class ReportGenerationPortalPage extends BasePage {
 			}
 		}
 		return true;
+	}
+
+	public void editAndSaveInstructionsFile(String strReportTitle,
+			int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(2);
+		this.clickOnEditReport(strReportTitle, timeoutSeconds);
+		TestSetup.slowdownInSeconds(2);
+		this.btnSaveInstructions.click();
+		TestSetup.slowdownInSeconds(1);
+	}
+
+	public void browseValidInstructionsFile(String filePath, int timeoutSeconds)
+			throws Exception {
+		driver.switchTo().frame("id_iframe");
+		TestSetup.slowdownInSeconds(5);
+		this.inputFile.sendKeys(filePath + STRValidInstructionFile);
+		TestSetup.slowdownInSeconds(1);
+		this.clickOnMakeReport(timeoutSeconds);
+		TestSetup.slowdownInSeconds(1);
+	}
+
+	public boolean browseCorruptedInstructionsFile(String filepath,
+			int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		this.inputFile.sendKeys(filepath + STRCorruptFile);
+		TestSetup.slowdownInSeconds(1);
+		String actualMessage = acceptAlert();
+		System.out.println("Corrupt - actual Message : " + actualMessage);
+		return actualMessage.contains(STRInvalidInstructionsFile[0]);
+	}
+
+	public boolean browseBlankInstructionsFile(String filepath,
+			int timeoutSeconds) throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		this.inputFile.sendKeys(filepath + STRBlankFile);
+		TestSetup.slowdownInSeconds(1);
+		String actualMessage = acceptAlert();
+		System.out.println("Blank - actual Message : " + actualMessage);
+		return actualMessage.contains(STRInvalidInstructionsFile[1]);
+	}
+
+	public boolean browseOtherFile(String filepath, int timeoutSeconds)
+			throws Exception {
+		TestSetup.slowdownInSeconds(1);
+		this.inputFile.sendKeys(filepath + STROtherFile);
+		TestSetup.slowdownInSeconds(1);
+		String actualMessage = acceptAlert();
+		System.out.println("Other - actual Message : " + actualMessage);
+		return actualMessage.contains(STRInvalidInstructionsFile[2]);
+	}
+
+	public boolean makeReport(String strReportTitle,
+			Hashtable<String, String> reportData, String strAnalyzer,
+			String reportType, String strSummaryFigureValue,
+			String strSubmapFigureValue, int timeoutSeconds) throws Exception {
+		String currentWH = driver.getWindowHandle();
+		driver.switchTo().frame("id_iframe");
+		this.provideTitleCorner(strReportTitle, reportData, timeoutSeconds);
+		if (reportType.contains(STRPDFReport))
+			this.btnMakePDF.click();
+		this.provideAnalyzerDetails(strAnalyzer, reportData, timeoutSeconds);
+		this.provideSummaryFigureDetails(strSummaryFigureValue, timeoutSeconds);
+		this.provideSubmapFigureDetails(strSubmapFigureValue, timeoutSeconds);
+		this.clickSaveChangesMakeReport(timeoutSeconds);
+		if (strSummaryFigureValue.contains("No")) {
+			TestSetup.slowdownInSeconds(1);
+			String actualMessage = acceptAlert();
+			return actualMessage.contains(STRNoSubmapGrid);
+		}
+		return false;
 	}
 }

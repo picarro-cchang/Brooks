@@ -119,10 +119,13 @@ public class BasePage {
 					i++;
 			}
 		} catch (NoSuchElementException e) {
+			System.out.println("Element not found : " + by);
 			return false;
 		} catch (TimeoutException e) {
+			System.out.println("Element not found : " + by);
 			return false;
 		} catch (Exception e) {
+			System.out.println("Element not found : " + by);
 			return false;
 		}
 		return false;

@@ -798,22 +798,22 @@ public class NaturalGasLeaksPageTest {
 			TestSetup.slowdownInSeconds(10);
 			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor());
 
-			assertTrue(testSetup.getSurveyor()
+			assertTrue("Bug #671 : " + testSetup.getSurveyor()
 					+ " : surveyor link not present!",
 					naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
 							testSetup.getSurveyor(), strListView));
-			assertTrue(testSetup.getSurveyor()
+			assertTrue("Bug #671 : " + testSetup.getSurveyor()
 					+ " : surveyor link not present!",
 					naturalGasLeaksPage.surveyorLinkPresentBackFromLiveMap(
 							testSetup.getSurveyor(), strCalView));
 
-			assertTrue(testSetup.getSurveyor()
+			assertTrue("Bug #671 : " + testSetup.getSurveyor()
 					+ " : surveyor link not present!",
 					naturalGasLeaksPage
 							.surveyorLinkPresentBackFromMapLogListView(
 									testSetup.getSurveyor(),
 									testSetup.getLogFile()));
-			assertTrue(testSetup.getSurveyor()
+			assertTrue("Bug #671 : " + testSetup.getSurveyor()
 					+ " : surveyor link not present!",
 					naturalGasLeaksPage
 							.surveyorLinkPresentBackFromMapLogCalendarView(

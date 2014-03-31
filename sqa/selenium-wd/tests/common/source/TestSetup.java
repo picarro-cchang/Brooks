@@ -21,6 +21,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -93,6 +94,7 @@ public class TestSetup {
 	/**
 	 * @author pmahajan
 	 */
+	FirefoxProfile firefoxProfile = null;
 	private String timezone;
 	private String timezoneToSelect;
 	private String timezoneNotToSelect;
@@ -268,7 +270,14 @@ public class TestSetup {
 					driver = new InternetExplorerDriver();
 					break;
 				case "ff":
-					driver = new FirefoxDriver();
+					firefoxProfile = new FirefoxProfile();
+					firefoxProfile.setPreference("browser.download.folderList", 2);
+					firefoxProfile.setPreference(
+							"browser.download.manager.showWhenStarting", false);
+					firefoxProfile.setPreference("browser.download.dir", "c:\\downloads");
+					firefoxProfile.setPreference("browser.helperApps.neverAsk.saveToDisk",
+							"application/pdf, application/json");
+					driver = new FirefoxDriver(firefoxProfile);
 					break;
 				}
 
