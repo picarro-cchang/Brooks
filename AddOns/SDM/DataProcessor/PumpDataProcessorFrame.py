@@ -1,11 +1,12 @@
-# Embedded file name: PumpDataProcessorFrame.pyo
 """
 File name: PumpDataProcessorFrame.py
 Purpose: The GUI frame for PumpDataProcessor.py
 
 File History:
     2010-03-12 alex  Remove the "remove spikes" function
+    2014-03-31 tw    Extracted from WinXP release
 """
+
 import wx
 import wx.grid
 

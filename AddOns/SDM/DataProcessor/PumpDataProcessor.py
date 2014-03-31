@@ -1,4 +1,3 @@
-# Embedded file name: PumpDataProcessor.py
 """
 File name: PumpDataProcessor.py
 Purpose: Post-process output data from syringe pump system
@@ -6,7 +5,9 @@ Purpose: Post-process output data from syringe pump system
 File History:
     2010-03-12 alex  Remove the "remove spikes" function
                      Make default starting time as 5 minutes regardless of the flow rate
+    2014-03-31 tw    Extracted from WinXP release
 """
+
 import os
 import sys
 import wx
@@ -17,23 +18,28 @@ from matplotlib import pyplot
 import getopt
 import threading
 import copy
+
 ROLL_WIN_SIZE = 30.0
 TIME_FORMAT1 = '%Y/%m/%d %H:%M:%S'
 TIME_FORMAT2 = '%m/%d/%Y %H:%M:%S'
 CONC_LABELS = ['H2O', 'D_1816', 'D_DH']
+
 SRC_TO_IDX = {'pump1-conc1': (0, 0),
  'pump1-conc2': (1, 0),
  'pump1-conc3': (2, 0),
  'pump2-conc1': (0, 1),
  'pump2-conc2': (1, 1),
  'pump2-conc3': (2, 1)}
+
 IDX_TO_SRC = ['pump1-conc1',
  'pump1-conc2',
  'pump1-conc3',
  'pump2-conc1',
  'pump2-conc2',
  'pump2-conc3']
+
 DEFAULT_LIQUID_START_TIME_MINUTES = 6
+
 
 def filterData(dataList, liquid):
     if not liquid:

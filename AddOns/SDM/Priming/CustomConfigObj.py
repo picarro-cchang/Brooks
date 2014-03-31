@@ -1,4 +1,10 @@
-# Embedded file name: CustomConfigObj.pyo
+# CustomConfigObj.py
+#
+# File History:
+#    2014-03-31 tw    Extracted from WinXP release. This version used
+#                     only if version in Host.Common not found when
+#                     running from source.
+
 """Customized configuration file parser using ConfigObj.
 
 Based on the enhanced configuration parser ConfigObj, which supports 
@@ -89,8 +95,8 @@ CustomConfigObj -- responsible for parsing a list of
     Additional methods:
     ignore_option_case_on (or off)
         Turn on/off the ignore_option_case flag.
-
 """
+
 import configobj
 import types
 

@@ -1,11 +1,28 @@
-# Embedded file name: CentrisPumpPriming.py
+"""
+File name: CentrisPumpPriming.py
+
+File History:
+   2014-03-31 tw    Extracted from WinXP release, serial port open/close fix for Win7
+"""
+
 from ctypes import windll, c_int
 import serial
 import time
 import wx
 import sys
 import os
-from CustomConfigObj import CustomConfigObj
+
+# use latest version unless running from source code
+if hasattr(sys, "frozen"):
+    # running from compiled py2exe
+    from Host.Common.CustomConfigObj import CustomConfigObj
+else:
+    # running from source, use from Common if available
+    try:
+        print "using Host.Common.CustomConfigObj"
+        from Host.Common.CustomConfigObj import CustomConfigObj
+    except:
+        from CustomConfigObj import CustomConfigObj
 
 class TimeoutError(Exception):
     pass
@@ -14,14 +31,20 @@ class TimeoutError(Exception):
 class SerIntrf(object):
 
     def __init__(self, port, baudrate = 9600, timeout = 5, xonxoff = 0):
+        # port = 0 means port = "COM1"
         self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout, xonxoff=xonxoff)
-        print self.ser
+        #print self.ser
 
     def open(self):
-        self.ser.open()
+        # Win7 throws an exception if try to open port that is already open
+        # or close an already closed port, so must check the state first.
+        # Same logic also works on WinXP.
+        if not self.ser.isOpen():
+            self.ser.open()
 
     def close(self):
-        self.ser.close()
+        if self.ser.isOpen():
+            self.ser.close()
 
     def flush(self):
         self.ser.flushInput()

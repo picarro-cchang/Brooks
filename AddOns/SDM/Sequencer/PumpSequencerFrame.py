@@ -1,4 +1,8 @@
-# Embedded file name: PumpSequencerFrame.pyo
+# PumpSequencer.py
+#
+# File History:
+#    2014-03-31 tw    Extracted from WinXP release
+
 import wx
 DEFAULT_NUM_STEPS = 10
 NUM_OPTS = 8

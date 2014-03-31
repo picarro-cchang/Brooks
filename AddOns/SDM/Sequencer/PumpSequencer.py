@@ -1,4 +1,8 @@
-# Embedded file name: PumpSequencer.py
+# PumpSequencer.py
+#
+# File History:
+#    2014-03-31 tw    Extracted from WinXP release
+
 import sys
 import os
 import wx
