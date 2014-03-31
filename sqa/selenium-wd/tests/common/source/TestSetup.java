@@ -3,6 +3,7 @@
  */
 package common.source;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -102,7 +103,9 @@ public class TestSetup {
 	private String show25Entries;
 	private String surveyor2;
 	private String logFile2;
-
+	private String tmpDirName = "InstructionsFile";
+	private File tmpDirPath;
+	
 	/**
 	 * 
 	 */
@@ -188,7 +191,10 @@ public class TestSetup {
 			this.randomNumber = Long.toString((new Random()).nextInt(1000000));
 			System.out.println("The random number is: " + this.randomNumber
 					+ "\n");
-
+			
+			tmpDirPath = createTempDir(tmpDirName);
+			System.out.println("Temp Dir Path : " + tmpDirPath.getPath());
+			
 			driverSetup();
 
 			htReportDataSetup();
@@ -274,7 +280,7 @@ public class TestSetup {
 					firefoxProfile.setPreference("browser.download.folderList", 2);
 					firefoxProfile.setPreference(
 							"browser.download.manager.showWhenStarting", false);
-					firefoxProfile.setPreference("browser.download.dir", "c:\\downloads");
+					firefoxProfile.setPreference("browser.download.dir", tmpDirPath.getPath());
 					firefoxProfile.setPreference("browser.helperApps.neverAsk.saveToDisk",
 							"application/pdf, application/json");
 					driver = new FirefoxDriver(firefoxProfile);
@@ -456,6 +462,48 @@ public class TestSetup {
 
 	public Hashtable<String, String> getHTReportData() {
 		return this.htReportData;
+	}
+	
+	public static File createTempDir(String directoryName) throws IOException {
+		String tmpDirStr = System.getProperty("java.io.tmpdir");
+		if (tmpDirStr == null) {
+			throw new IOException(
+					"System property 'java.io.tmpdir' does not specify a tmp dir");
+		}
+
+		File tmpDir = new File(tmpDirStr);
+		if (!tmpDir.exists()) {
+			boolean created = tmpDir.mkdirs();
+			if (!created) {
+				throw new IOException("Unable to create tmp dir " + tmpDir);
+			}
+		}
+
+		File resultDir = null;
+		int failureCount = 0;
+		do {
+			resultDir = new File(tmpDir, directoryName);
+			failureCount++;
+		} while (resultDir.exists() && failureCount < 50);
+
+		if (resultDir.exists()) {
+			resultDir.delete();
+		}
+
+		boolean created = resultDir.mkdir();
+		if (!created) {
+			throw new IOException("Failed to create tmp directory");
+		}
+
+		return resultDir;
+	}
+	
+	public boolean deleteTempDir(){
+		return tmpDirPath.delete();
+	}
+	
+	public String getFilePath(){
+		return tmpDirPath.getPath();
 	}
 
 	/**
