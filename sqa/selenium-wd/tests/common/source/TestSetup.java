@@ -11,8 +11,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Random;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -105,7 +108,7 @@ public class TestSetup {
 	private String logFile2;
 	private String tmpDirName = "InstructionsFile";
 	private File tmpDirPath;
-	
+
 	/**
 	 * 
 	 */
@@ -191,10 +194,10 @@ public class TestSetup {
 			this.randomNumber = Long.toString((new Random()).nextInt(1000000));
 			System.out.println("The random number is: " + this.randomNumber
 					+ "\n");
-			
+
 			tmpDirPath = createTempDir(tmpDirName);
 			System.out.println("Temp Dir Path : " + tmpDirPath.getPath());
-			
+
 			driverSetup();
 
 			htReportDataSetup();
@@ -224,29 +227,49 @@ public class TestSetup {
 				switch (this.browser.trim()) {
 				case "chrome":
 
-					DesiredCapabilities capabilities = DesiredCapabilities
-							.chrome();
+					HashMap<String, Object> prefs = new HashMap<String, Object>();
+					prefs.put("download.default_directory",
+							tmpDirPath.getPath());
+
 					ChromeOptions options = new ChromeOptions();
 					options.addArguments(Arrays.asList(
 							"allow-running-insecure-content",
 							"ignore-certificate-errors"));
+					options.setExperimentalOptions("prefs", prefs);
+
+					DesiredCapabilities capabilities = DesiredCapabilities
+							.chrome();
 					capabilities.setCapability(ChromeOptions.CAPABILITY,
 							options);
 					driver = new RemoteWebDriver(new URL("http://"
 							+ this.remoteServerHost + ":4444/wd/hub/"),
 							capabilities);
 					break;
+
 				case "ie":
 					driver = new RemoteWebDriver(new URL("http://"
 							+ this.remoteServerHost + ":4444/wd/hub/"),
 							DesiredCapabilities.internetExplorer());
 					break;
+
 				case "ff":
+					firefoxProfile = new FirefoxProfile();
+					firefoxProfile.setPreference("browser.download.folderList",
+							2);
+					firefoxProfile.setPreference(
+							"browser.download.manager.showWhenStarting", false);
+					firefoxProfile.setPreference("browser.download.dir",
+							tmpDirPath.getPath());
+					firefoxProfile.setPreference(
+							"browser.helperApps.neverAsk.saveToDisk",
+							"application/pdf, application/json");
 
 					DesiredCapabilities capabilitiesFF = DesiredCapabilities
 							.firefox();
 					capabilitiesFF.setCapability(
 							CapabilityType.ACCEPT_SSL_CERTS, true);
+					capabilitiesFF.setCapability(FirefoxDriver.PROFILE,
+							firefoxProfile);
 					driver = new RemoteWebDriver(new URL("http://"
 							+ this.remoteServerHost + ":4444/wd/hub/"),
 							capabilitiesFF);
@@ -258,6 +281,22 @@ public class TestSetup {
 			} else {
 				switch (this.browser.trim()) {
 				case "chrome":
+
+					HashMap<String, Object> prefs = new HashMap<String, Object>();
+					prefs.put("download.default_directory",
+							tmpDirPath.getPath());
+
+					ChromeOptions options = new ChromeOptions();
+					options.addArguments(Arrays.asList(
+							"allow-running-insecure-content",
+							"ignore-certificate-errors"));
+					options.setExperimentalOptions("prefs", prefs);
+
+					DesiredCapabilities capabilities = DesiredCapabilities
+							.chrome();
+					capabilities.setCapability(ChromeOptions.CAPABILITY,
+							options);
+
 					System.setProperty("webdriver.chrome.driver",
 							this.chromeDriverPath);
 					System.out
@@ -265,8 +304,10 @@ public class TestSetup {
 									+ System.getProperty(
 											"webdriver.chrome.driver")
 											.toString() + "\n");
-					driver = new ChromeDriver();
+
+					driver = new ChromeDriver(capabilities);
 					break;
+
 				case "ie":
 					System.setProperty("webdriver.ie.driver", this.ieDriverPath);
 					System.out
@@ -275,13 +316,17 @@ public class TestSetup {
 											.toString() + "\n");
 					driver = new InternetExplorerDriver();
 					break;
+
 				case "ff":
 					firefoxProfile = new FirefoxProfile();
-					firefoxProfile.setPreference("browser.download.folderList", 2);
+					firefoxProfile.setPreference("browser.download.folderList",
+							2);
 					firefoxProfile.setPreference(
 							"browser.download.manager.showWhenStarting", false);
-					firefoxProfile.setPreference("browser.download.dir", tmpDirPath.getPath());
-					firefoxProfile.setPreference("browser.helperApps.neverAsk.saveToDisk",
+					firefoxProfile.setPreference("browser.download.dir",
+							tmpDirPath.getPath());
+					firefoxProfile.setPreference(
+							"browser.helperApps.neverAsk.saveToDisk",
 							"application/pdf, application/json");
 					driver = new FirefoxDriver(firefoxProfile);
 					break;
@@ -356,6 +401,10 @@ public class TestSetup {
 
 	public String getLoginUser00ADisplayName() {
 		return this.loginUserADisplayName;
+	}
+	
+	public String getRunningOnRemoteServer() {
+		return this.runningOnRemoteServer;
 	}
 
 	// for testing code debug only
@@ -463,8 +512,8 @@ public class TestSetup {
 	public Hashtable<String, String> getHTReportData() {
 		return this.htReportData;
 	}
-	
-	public static File createTempDir(String directoryName) throws IOException {
+
+	public File createTempDir(String directoryName) throws IOException {
 		String tmpDirStr = System.getProperty("java.io.tmpdir");
 		if (tmpDirStr == null) {
 			throw new IOException(
@@ -487,23 +536,47 @@ public class TestSetup {
 		} while (resultDir.exists() && failureCount < 50);
 
 		if (resultDir.exists()) {
+			File[] files = new File(resultDir.getPath()).listFiles();
+			for (File file : files) {
+				if (file.isFile()) {
+					file.delete();
+				}
+			}
 			resultDir.delete();
 		}
-
+		TestSetup.slowdownInSeconds(3);
 		boolean created = resultDir.mkdir();
+		TestSetup.slowdownInSeconds(3);
 		if (!created) {
 			throw new IOException("Failed to create tmp directory");
 		}
-
 		return resultDir;
 	}
-	
-	public boolean deleteTempDir(){
-		return tmpDirPath.delete();
+
+	public boolean deleteTempDir() {
+		if (tmpDirPath.exists()) {
+			File[] files = new File(tmpDirPath.getPath()).listFiles();
+			for (File file : files) {
+				if (file.isFile()) {
+					file.delete();
+				}
+			}
+			return tmpDirPath.delete();
+		}
+		return false;
 	}
-	
-	public String getFilePath(){
-		return tmpDirPath.getPath();
+
+	public String getFilePath() {
+		File[] files = new File(this.tmpDirPath.getPath()).listFiles();
+
+		for (File file : files) {
+			if (file.isFile()) {
+				String filepath = this.tmpDirPath.getPath() + "\\"
+						+ file.getName();
+				return filepath;
+			}
+		}
+		return "File not downloaded.";
 	}
 
 	/**

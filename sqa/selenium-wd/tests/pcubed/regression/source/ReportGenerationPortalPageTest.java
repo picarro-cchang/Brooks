@@ -43,6 +43,7 @@ public class ReportGenerationPortalPageTest {
 	private static String strNeCorner = "neCorner";
 	private static String strValidSearch = "valid";
 	private static String strInvalidSearch = "invalid";
+	private static String filePath;
 
 	/**
 	 * @throws java.lang.Exception
@@ -66,6 +67,8 @@ public class ReportGenerationPortalPageTest {
 	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
+		assertTrue("Unable to delete the created temp directory!",
+				testSetup.deleteTempDir());
 		driver.quit();
 	}
 
@@ -757,6 +760,65 @@ public class ReportGenerationPortalPageTest {
 		} catch (Exception e) {
 			ImagingUtility.takeScreenShot(driver, screenShotsDir,
 					"Exception_ReportGenerationPortalPage_RPT014");
+			fail("Exception Caught : " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Test Case: ReportGenerationPortalPage_RPT015 Verify report is getting
+	 * generated when user provides Instructions using valid .json file
+	 */
+	@Test
+	public void reportGenerationPortalPage_RPT015() {
+		try {
+			pageReportGeneration = loginPage.loginAndNavigateToReportPortal(
+					baseURL, testSetup.getLoginUser0000(),
+					testSetup.getLoginPwd0000());
+			pageReportGeneration.open();
+			TestSetup.slowdownInSeconds(15);
+
+			String strReportTitle = testSetup.getHTReportData().get("Title")
+					+ "RPT015";
+
+			pageReportGeneration.makeReport(strReportTitle,
+					testSetup.getHTReportData(), testSetup.getSurveyor(),
+					strViewReport, strFigureValueYes, strFigureValueYes,
+					timeoutSecondsElePresent);
+
+			pageReportGeneration.editAndSaveInstructionsFile(strReportTitle,
+					timeoutSecondsElePresent);
+
+			filePath = testSetup.getFilePath();
+			assertTrue("Instructions file not downloaded!",
+					pageReportGeneration.isFileSaved(filePath));
+
+			pageReportGeneration.browseValidInstructionsFile(filePath,
+					timeoutSecondsElePresent);
+
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"ReportGenerationPortalPage_RPT015_Dashboard");
+
+			if (pageReportGeneration.isErrorCodePresent(strReportTitle,
+					strViewReport, timeoutSecondsToViewReport)) {
+				ImagingUtility.takeScreenShot(driver, screenShotsDir,
+						"ReportGenerationPortalPage_RPT015_ErrorCode");
+				fail("Bug -> 632 : Intermittently error code is displayed when user tries to generate the report");
+			}
+
+			assertTrue(strReportTitle + " : report not generated!",
+					pageReportGeneration.isViewLinkPresent(strReportTitle,
+							timeoutSecondsElePresent));
+			assertTrue(strReportTitle
+					+ " report should be generated if alert is accepted!",
+					pageReportGeneration.viewReport(strReportTitle,
+							timeoutSecondsElePresent));
+
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"ReportGenerationPortalPage_RPT015_ViewReport");
+			pageReportGeneration.closeChildWindow(timeoutSecondsElePresent);
+		} catch (Exception e) {
+			ImagingUtility.takeScreenShot(driver, screenShotsDir,
+					"Exception_ReportGenerationPortalPage_RPT015");
 			fail("Exception Caught : " + e.getMessage());
 		}
 	}

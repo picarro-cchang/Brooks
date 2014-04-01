@@ -280,8 +280,8 @@ public class NaturalGasLeaksPage extends BasePage {
 
 		for (int i = 1; i <= trList.size(); i++) {
 			strSurveyorList.add(driver.findElement(
-					By.xpath("//*[@id='id_anzListTbl']/tbody/tr" + "[" + i
-							+ "]" + "/" + "td[1]")).getText());
+					By.xpath("//*[@id='id_anzListTbl']/tbody/tr[" + i
+							+ "]/td[1]")).getText());
 		}
 
 		this.btnClose.click();
@@ -319,9 +319,10 @@ public class NaturalGasLeaksPage extends BasePage {
 		List<String> strLogList = new ArrayList<String>();
 
 		for (int i = 1; i <= trList.size(); i++) {
-			strLogList.add(driver.findElement(
-					By.xpath("//*[@id='id_logTable']/tbody/tr" + "[" + i + "]"
-							+ "/" + "td[2]")).getText());
+			strLogList.add(driver
+					.findElement(
+							By.xpath("//*[@id='id_logTable']/tbody/tr[" + i
+									+ "]/td[2]")).getText());
 		}
 		return strLogList;
 	}
@@ -339,13 +340,12 @@ public class NaturalGasLeaksPage extends BasePage {
 				.xpath("//*[@id='id_logTable']/tbody/tr"));
 		String strXpath = "";
 		for (int i = 1; i <= trList.size(); i++) {
-			strXpath = "//*[@id='id_logTable']/tbody/tr" + "[" + i + "]" + "/"
-					+ "td[2]";
+			strXpath = "//*[@id='id_logTable']/tbody/tr[" + i + "]/td[2]";
 			if (driver.findElement(By.xpath(strXpath)).getText()
 					.equals(strLogName)) {
 				driver.findElement(
-						By.xpath("//*[@id='id_logTable']/tbody/tr" + "[" + i
-								+ "]" + "/" + "td[5]/button")).click();
+						By.xpath("//*[@id='id_logTable']/tbody/tr[" + i
+								+ "]/td[5]/button")).click();
 				break;
 			}
 		}
@@ -371,13 +371,12 @@ public class NaturalGasLeaksPage extends BasePage {
 
 		findElement(driver, bySearchBox, timeoutInSeconds);
 		for (int i = 1; i <= this.logList.size(); i++) {
-			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
-					+ "/" + "td[2]";
+			strXpath = "//table[@id='id_logTable']/tbody/tr[" + i + "]/td[2]";
 			if (driver.findElement(By.xpath(strXpath)).getText()
 					.equals(strLogName)) {
 				duration = driver.findElement(
-						By.xpath("//table[@id='id_logTable']/tbody/tr" + "["
-								+ i + "]" + "/" + "td[3]")).getText();
+						By.xpath("//table[@id='id_logTable']/tbody/tr[" + i
+								+ "]/td[3]")).getText();
 				break;
 			}
 		}
@@ -397,14 +396,13 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, bySearchBox, timeoutInSeconds);
 		String strXpath = "";
 		for (int i = 1; i <= this.logList.size(); i++) {
-			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
-					+ "/" + "td[2]";
+			strXpath = "//table[@id='id_logTable']/tbody/tr[" + i + "]/td[2]";
 			if (driver.findElement(By.xpath(strXpath)).getText()
 					.equals(strLogName)) {
 
 				driver.findElement(
-						By.xpath("//table[@id='id_logTable']/tbody/tr" + "["
-								+ i + "]" + "/" + "td[4]/button")).click();
+						By.xpath("//table[@id='id_logTable']/tbody/tr[" + i
+								+ "]/td[4]/button")).click();
 				break;
 			}
 		}
@@ -824,8 +822,8 @@ public class NaturalGasLeaksPage extends BasePage {
 
 		for (int i = 1; i <= this.logList.size(); i++) {
 			strLogList.add(driver.findElement(
-					By.xpath("//table[@id='id_logTable']/tbody/tr" + "[" + i
-							+ "]" + "/" + "td[2]")).getText());
+					By.xpath("//table[@id='id_logTable']/tbody/tr[" + i
+							+ "]/td[2]")).getText());
 		}
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		if (this.btnShowCalOrList.getText().contains(STRShowCalendar))
@@ -846,8 +844,8 @@ public class NaturalGasLeaksPage extends BasePage {
 
 		for (int i = 1; i <= this.surveysListCalendarView.size(); i++) {
 			strCalLog.add(driver.findElement(
-					By.xpath("//table[@id='id_logListTbl']/tbody/tr" + "[" + i
-							+ "]" + "/" + "td[2]")).getText());
+					By.xpath("//table[@id='id_logListTbl']/tbody/tr[" + i
+							+ "]/td[2]")).getText());
 		}
 		if (Integer.toString(this.surveysListCalendarView.size())
 				.equalsIgnoreCase(strLogListSize)) {
@@ -985,13 +983,12 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, bySearchBox, timeoutInSeconds);
 		String strXpath = "";
 		for (int i = 1; i <= this.logList.size(); i++) {
-			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
-					+ "/" + "td[2]";
+			strXpath = "//table[@id='id_logTable']/tbody/tr[" + i + "]/td[2]";
 			if (driver.findElement(By.xpath(strXpath)).getText()
 					.equals(strLogName)) {
 				driver.findElement(
-						By.xpath("//table[@id='id_logTable']/tbody/tr" + "["
-								+ i + "]" + "/" + "td[5]/button")).click();
+						By.xpath("//table[@id='id_logTable']/tbody/tr[" + i
+								+ "]/td[5]/button")).click();
 				break;
 			}
 		}
@@ -1042,6 +1039,7 @@ public class NaturalGasLeaksPage extends BasePage {
 	 */
 	public boolean surveyorLinkPresentBackFromLiveMap(String strSurveyor,
 			String strView) throws Exception {
+		this.selectSurveyor(strSurveyor);
 		findElement(driver, byShowCalListButton, timeoutInSeconds);
 		TestSetup.slowdownInSeconds(2);
 		if (strView.contains("List")) {
@@ -1053,8 +1051,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		}
 		this.btnLiveMap.click();
 		driver.navigate().back();
-		findElement(driver, byLiveMapBtn, timeoutInSeconds);
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(5);
 		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
@@ -1070,18 +1067,17 @@ public class NaturalGasLeaksPage extends BasePage {
 		findElement(driver, bySearchBox, timeoutInSeconds);
 		String strXpath = "";
 		for (int i = 1; i <= this.logList.size(); i++) {
-			strXpath = "//table[@id='id_logTable']/tbody/tr" + "[" + i + "]"
-					+ "/" + "td[2]";
+			strXpath = "//table[@id='id_logTable']/tbody/tr[" + i + "]/td[2]";
 			if (driver.findElement(By.xpath(strXpath)).getText()
 					.equals(strLogName)) {
 				driver.findElement(
-						By.xpath("//table[@id='id_logTable']/tbody/tr" + "["
-								+ i + "]" + "/" + "td[5]/button")).click();
+						By.xpath("//table[@id='id_logTable']/tbody/tr[" + i
+								+ "]/td[5]/button")).click();
 				break;
 			}
 		}
 		driver.navigate().back();
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(5);
 		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 
@@ -1107,7 +1103,7 @@ public class NaturalGasLeaksPage extends BasePage {
 		if (this.surveysListCalendarView.get(0).getText().contains(strLogName))
 			this.btnFirstMapLogCalendarView.click();
 		driver.navigate().back();
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(5);
 		return isElementPresent(driver, bySurveyorLink, timeoutInSeconds);
 	}
 

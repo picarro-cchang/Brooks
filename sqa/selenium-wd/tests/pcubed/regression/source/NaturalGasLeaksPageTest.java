@@ -796,7 +796,6 @@ public class NaturalGasLeaksPageTest {
 					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
 			naturalGasLeaksPage.open();
 			TestSetup.slowdownInSeconds(10);
-			naturalGasLeaksPage.selectSurveyor(testSetup.getSurveyor());
 
 			assertTrue("Bug #671 : " + testSetup.getSurveyor()
 					+ " : surveyor link not present!",

@@ -3,6 +3,7 @@
  */
 package common.source;
 
+import java.io.File;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -50,11 +51,9 @@ public class ReportGenerationPortalPage extends BasePage {
 	public static final String STRPeaksMinAmp = "0.10";
 	public static final String STRShowSelected = "Show Selected";
 	public static final String STRShowAll = "Show All";
-	public static final String STRValidInstructionFile = "valid_instructions.json";
 	public static final String STRCorruptFile = "corrupt-instructions.json";
 	public static final String STRBlankFile = "blank-instructions.json";
 	public static final String STROtherFile = "report1.pdf";
-	public static final String STRReportTitle = "Report generated using valid Instructions.JSON file";
 	public static final String[] STRInvalidInstructionsFile = {
 			"Invalid instructions file: JSON.parse: expected ',' or '}' after property value in object",
 			"Invalid instructions file: JSON.parse: unexpected end of data",
@@ -982,7 +981,7 @@ public class ReportGenerationPortalPage extends BasePage {
 			throws Exception {
 		TestSetup.slowdownInSeconds(1);
 		this.clickOnViewLink(strReportTitle, timeoutSeconds);
-		TestSetup.slowdownInSeconds(5);
+		TestSetup.slowdownInSeconds(2);
 		findElement(driver,
 				By.xpath("//div[contains(text(),'" + strReportTitle + "')]"),
 				timeoutSeconds);
@@ -1046,10 +1045,6 @@ public class ReportGenerationPortalPage extends BasePage {
 	 */
 	public void clickOnEditReport(String strReportTitle, int timeoutSeconds)
 			throws Exception {
-		// Wait till page is loaded
-		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(1);
-
 		driver.navigate().refresh();
 		TestSetup.slowdownInSeconds(15);
 		String currentWH = driver.getWindowHandle();
@@ -1391,7 +1386,6 @@ public class ReportGenerationPortalPage extends BasePage {
 	}
 
 	public void closeChildWindow(int timeoutSeconds) throws Exception {
-		TestSetup.slowdownInSeconds(10);
 		// closing child window
 		driver.close();
 
@@ -1402,7 +1396,7 @@ public class ReportGenerationPortalPage extends BasePage {
 
 		// Wait till page is loaded
 		findElement(driver, byAddRuns, timeoutSeconds);
-		TestSetup.slowdownInSeconds(10);
+		TestSetup.slowdownInSeconds(3);
 	}
 
 	public String editAndMakeReport(String strReportTitle, int timeoutSeconds)
@@ -1583,7 +1577,7 @@ public class ReportGenerationPortalPage extends BasePage {
 	}
 
 	public LoginPage logout() throws Exception {
-		TestSetup.slowdownInSeconds(2);
+		TestSetup.slowdownInSeconds(1);
 		driver.switchTo().defaultContent();
 		this.userIDSite.click();
 		TestSetup.slowdownInSeconds(1);
@@ -1662,18 +1656,16 @@ public class ReportGenerationPortalPage extends BasePage {
 
 	public void editAndSaveInstructionsFile(String strReportTitle,
 			int timeoutSeconds) throws Exception {
-		TestSetup.slowdownInSeconds(2);
-		this.clickOnEditReport(strReportTitle, timeoutSeconds);
-		TestSetup.slowdownInSeconds(2);
-		this.btnSaveInstructions.click();
 		TestSetup.slowdownInSeconds(1);
+		this.clickOnEditReport(strReportTitle, timeoutSeconds);
+		this.btnSaveInstructions.click();
+		TestSetup.slowdownInSeconds(5);
 	}
 
 	public void browseValidInstructionsFile(String filePath, int timeoutSeconds)
 			throws Exception {
-		driver.switchTo().frame("id_iframe");
-		TestSetup.slowdownInSeconds(5);
-		this.inputFile.sendKeys(filePath + STRValidInstructionFile);
+		TestSetup.slowdownInSeconds(2);
+		this.inputFile.sendKeys(filePath);
 		TestSetup.slowdownInSeconds(1);
 		this.clickOnMakeReport(timeoutSeconds);
 		TestSetup.slowdownInSeconds(1);
@@ -1728,5 +1720,9 @@ public class ReportGenerationPortalPage extends BasePage {
 			return actualMessage.contains(STRNoSubmapGrid);
 		}
 		return false;
+	}
+	
+	public boolean isFileSaved(String filePath){
+		return (filePath.contains("instructions"));
 	}
 }
