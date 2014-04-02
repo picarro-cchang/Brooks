@@ -273,7 +273,7 @@ def makeInstaller(opts):
         retCode = subprocess.call(['git.exe',
                                    'commit',
                                    '-m',
-                                   'release.py version update (%s).' % productFamily])
+                                   'release.py version update (%s).' % _verAsString(productFamily, VERSION)])
 
         if retCode != 0:
             print 'Error committing new version metadata to local repo.'
