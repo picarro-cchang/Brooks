@@ -104,6 +104,9 @@ def _generateBuildVersion(product, osType, ver):
              "def versionNumString():\n",
              "    return '%s'\n" % _verAsNumString(ver),
              "\n",
+             "def versionNumStringUI():\n",
+             "    return '%s'\n" % _verAsNumStringUI(ver),
+             "\n",
              "def buildType():\n",
              "    return 'INTERNAL'\n",
              "\n"
@@ -130,6 +133,16 @@ def _verAsNumString(ver):
     """
 
     number = "%(major)s.%(minor)s.%(revision)s.%(build)s" % ver
+    return number
+
+
+def _verAsNumStringUI(ver):
+    """
+    Convert a version dict into a string of numbers in this format:
+        <major>.<minor>.<revision>-<build>
+    """
+
+    number = "%(major)s.%(minor)s.%(revision)s-%(build)s" % ver
     return number
 
 
