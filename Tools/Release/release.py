@@ -640,7 +640,7 @@ def makeExe(opts):
         retCode = subprocess.call(['git.exe',
                                    'commit',
                                    '-m',
-                                   "release.py version update (%s)." % productFamily])
+                                   "release.py version update (%s)." % _verAsString(productFamily, VERSION)])
 
         if retCode != 0:
             LogErr('Error committing new version metadata to local repo, retCode=%d.' % retCode)
