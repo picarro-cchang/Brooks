@@ -4,6 +4,12 @@ AddOns/AIAutosampler/build/
 AddOns/AIAutosampler/dist/
 AddOns/ChemCorrect/build/
 AddOns/ChemCorrect/dist/
+AddOns/SDM/DataProcessor/build/
+AddOns/SDM/DataProcessor/dist/
+AddOns/SDM/Priming/build/
+AddOns/SDM/Priming/dist/
+AddOns/SDM/Sequencer/build/
+AddOns/SDM/Sequencer/dist/
 AddOns/SSIM/Coordinator_SSIM_CBDS.ini
 AddOns/SSIM/Coordinator_SSIM_CFFDS.ini
 AddOns/SSIM/Coordinator_SSIM_CFIDS.ini
