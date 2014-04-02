@@ -6,6 +6,7 @@ File History:
     2010-03-12 alex  Remove the "remove spikes" function
                      Make default starting time as 5 minutes regardless of the flow rate
     2014-03-31 tw    Extracted from WinXP release
+    2014-04-02 tw    Fixed About dialog (copyright year and version).
 """
 
 import os
@@ -335,7 +336,10 @@ class PumpDataProcessor(PumpDataProcessorFrame):
         self.iClosePlots.Enable(True)
 
     def onAboutMenu(self, evt):
-        d = wx.MessageDialog(None, 'Copyright 1999-2010 Picarro Inc. All rights reserved.\n\nVersion: 0.01\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.', 'About Syringe Pump Data Processor', wx.OK)
+        d = wx.MessageDialog(None, 'Copyright 1999-2014 Picarro Inc. All rights reserved.\n\n'
+                             'Version: %s\n\nThe copyright of this computer program belongs to Picarro Inc.\n'
+                             'Any reproduction or distribution of this program requires permission '
+                             'from Picarro Inc.' % _getAppVersion(), 'About Syringe Pump Data Processor', wx.OK)
         d.ShowModal()
         d.Destroy()
         return

@@ -2,6 +2,7 @@
 #
 # File History:
 #    2014-03-31 tw    Extracted from WinXP release
+#    2014-04-02 tw    Fixed background colors, added menu accelerators and shortcuts.
 
 import wx
 DEFAULT_NUM_STEPS = 10
@@ -21,9 +22,9 @@ class PumpSequencerFrame(wx.Frame):
         menuItem = wx.Menu()
         self.idLoadFile = wx.NewId()
         self.idSaveFile = wx.NewId()
-        menuItem.Append(self.idLoadFile, 'Load Pump Sequence File', '', wx.ITEM_NORMAL)
-        menuItem.Append(self.idSaveFile, 'Save Pump Sequence File', '', wx.ITEM_NORMAL)
-        self.frameMenubar.Append(menuItem, 'File')
+        menuItem.Append(self.idLoadFile, '&Load Pump Sequence File\tCtrl+O', '', wx.ITEM_NORMAL)
+        menuItem.Append(self.idSaveFile, '&Save Pump Sequence File\tCtrl+S', '', wx.ITEM_NORMAL)
+        self.frameMenubar.Append(menuItem, '&File')
         self.SetMenuBar(self.frameMenubar)
         self.labelTitle = wx.StaticText(self, -1, 'Syringe Pump Sequence Setup', style=wx.ALIGN_CENTRE)
         self.labelTotSteps = wx.StaticText(self, -1, 'Total Steps', style=wx.ALIGN_CENTRE)
@@ -53,8 +54,12 @@ class PumpSequencerFrame(wx.Frame):
         self.buttonClose = wx.Button(self, -1, 'Close', style=wx.BU_EXACTFIT)
         self.staticLine = wx.StaticLine(self, -1)
         self.SetTitle('Syringe Pump Sequence Setup')
+
+        # background pale gray easier on the eyes (Win7 COLOR_BTNFACE)
         self.SetBackgroundColour(wx.Colour(240, 240, 240))
         self.labelTitle.SetFont(wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ''))
+
+        self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))
         self.panel.SetScrollRate(10, 10)
         self.buttonEnRot.SetMinSize((100, 20))
         self.buttonEnRot.SetBackgroundColour(wx.Colour(237, 228, 199))

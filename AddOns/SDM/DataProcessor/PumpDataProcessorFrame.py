@@ -51,7 +51,7 @@ class PumpDataProcessorFrame(wx.Frame):
         self.labelVaporStartTime = wx.StaticText(self.panel2, -1, 'Start Time (minutes after the beginning of measurement)')
         self.labelVaporEndTime = wx.StaticText(self.panel2, -1, 'End Time (minutes before the end of measurement)')
         self.labelVaporWinSize = wx.StaticText(self.panel2, -1, 'Averaging Window Size (minutes)')
-        self.labelFooter = wx.StaticText(self.panel3, -1, 'Copyright Picarro, Inc. 1999-2010', style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel3, -1, 'Copyright Picarro, Inc. 1999-2014', style=wx.ALIGN_CENTER)
         self.gridLiquidStartTime = wx.grid.Grid(self.panel1, -1)
         self.gridLiquidStartTime.CreateGrid(3, 2)
         self.gridLiquidStartTime.SetRowLabelSize(90)
