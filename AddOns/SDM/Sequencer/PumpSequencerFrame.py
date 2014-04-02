@@ -53,7 +53,7 @@ class PumpSequencerFrame(wx.Frame):
         self.buttonClose = wx.Button(self, -1, 'Close', style=wx.BU_EXACTFIT)
         self.staticLine = wx.StaticLine(self, -1)
         self.SetTitle('Syringe Pump Sequence Setup')
-        self.SetBackgroundColour(wx.Colour(255, 255, 255))
+        self.SetBackgroundColour(wx.Colour(240, 240, 240))
         self.labelTitle.SetFont(wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ''))
         self.panel.SetScrollRate(10, 10)
         self.buttonEnRot.SetMinSize((100, 20))
