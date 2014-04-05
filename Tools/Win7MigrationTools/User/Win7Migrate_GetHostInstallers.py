@@ -34,7 +34,7 @@ else:
     AppPath = sys.argv[0]
 
 
-APP_VERSION = "1.0.0.2"
+APP_VERSION = "1.0.0.3"
 
 STAGED_INSTALLERS_BASE = 'S:/CRDS/CRD Engineering/Software/G2000/Installer_Staging/g2000_win7'
 RELEASED_INSTALLERS_BASE = 'S:/CRDS/CRD Engineering/Software/G2000/Installer/g2000_win7'
@@ -106,6 +106,10 @@ def doCopyInstallers(options):
         print ""
 
     for fn in installerFiles:
+        # skip AddOns dir
+        if fn.lower() == "addons":
+            continue
+
         path = os.path.join(srcBaseDir, fn)
         if os.path.isdir(path):
 

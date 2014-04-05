@@ -1,0 +1,88 @@
+User Migration Tools Info
+
+Version: 1.0
+Author:  T. Walder
+Data:    April 4, 2014
+
+
+This document was written to accompany the BOM for the Windows 7 Field Migration Kit software.
+
+Listed below is the additional software that is copied to the migration drive (either a hard drive or SSD)
+so that users can migrate their WinXP-based analyzers to Windows 7.
+
+
+------------------------------
+Windows 7 field migration tool
+------------------------------
+
+Description:    Software for migration to Windows 7. Runs Analyzer host software installer and migrates
+                configuration files from the imaged WinXP drive.
+
+Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer_Staging\UserMigrationPart2_win7 (folder and its contents)
+
+
+---------------------------------
+Analyzer installers for Windows 7
+---------------------------------
+
+Description:    Current shipping version of Analyzer host software installers for all instruments except Mobile (FDDS):
+                AEDS, BFADS, CBDS, CFADS, CFBDS, CFDDS, CFEDS, CFFDS, CFGDS, CFHADS, CFIDS, CFJDS, CFKADS, CFKBDS, CHADS,
+                CKADS, FCDS, HBDS, HIDS, HKDS, JFAADS, MADS, NBDS
+             
+Network folder: Installer exe is in the Current folder under the instrument type folder; e.g. for AEDS it is:
+                  S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\AEDS\Current
+                
+                for BFADS this folder is
+                  S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\BFDS\Current
+                
+                and so on.
+
+
+-------------------------------------
+AI Autosampler software for Windows 7
+-------------------------------------
+
+Description:    Autosampler software for the Picarro AI Autosampler A0325. Software includes training module and USB/COM
+                serial port driver.
+             
+Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\AddOns\AIAutosampler\Current
+
+
+--------------------------------------
+CTC Autosampler software for Windows 7
+--------------------------------------
+
+Description:    Autosampler software for the CTC Leap. Includes PAL Loader software (PALloader.msi dated 5/28/2010) and
+                Object Manager software (ObjectManagerSetup.msi dated 11/18/2009).
+             
+Network folders: R:\crd_G2000\_Water\_Leap XT\Software\Object Manager
+                 R:\crd_G2000\_Water\_Leap XT\Software\PAL Loader
+
+
+----------------------------------
+ChemCorrect software for Windows 7
+----------------------------------
+
+Description:    ChemCorrect software for water instruments
+
+Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\AddOns\ChemCorrect\Current
+
+
+--------------------------
+SDM software for Windows 7
+--------------------------
+
+Description:    SDM software for the Picarro Sample Delivery Module
+
+Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\AddOns\SDM\Current
+
+
+---------------------------
+SSIM software for Windows 7
+---------------------------
+
+Description:    SSIM software (Note: software is same for both Windows XP and Windows 7 but
+                there is a separate copy of it under g2000_win7)
+
+Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7\AddOns\SSIM\Current
+
