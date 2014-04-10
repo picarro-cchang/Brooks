@@ -1,6 +1,15 @@
 # InputListener.py
 #
-# Takes DataLogger inputs and logs them to a file.
+# Takes DataLogger inputs and logs them to a file. Filename is hard-coded
+# when running as "__main__". It must match the filename in
+# BroadcastToDataLogger.py.
+#
+# Execute this script on a running instrument to capture the data to the file.
+#
+# Use Ctrl+Break to interrupt the script, as the Queue::get() method is blocking.
+# You'll then have a file that can be broadcast to the following apps on a
+# workstation without requiring an analyzer. Run BroadcastToDataLogger.py
+# to handle broadcasting the data.
 
 import time
 import cPickle
