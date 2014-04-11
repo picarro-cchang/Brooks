@@ -13,7 +13,11 @@ import time
 import win32api
 import subprocess
 
+from cStringIO import StringIO
+from binascii import crc32
+
 import Win7UserMigrationToolsDefs as mdefs
+from Host.Common.CustomConfigObj import CustomConfigObj
 
 try:
     from Host.Common import CmdFIFO
@@ -417,6 +421,83 @@ def fixNumpyImportLine(strTopDirPath, fileExt):
     return modifiedList
 
 
+def fixHotBoxCalIni():
+    """
+    Repair the hot box cal ini file. [AUTOCAL] should contain these settings, fix them if different/not present:
+        ADJUST_FACTOR = 2E-006
+        MAX_ANGLE_TARGETTING_ERROR = 0.02
+        MAX_TEMP_TARGETTING_ERROR = 2.1
+    """
+
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+
+    filepath = r"C:\Picarro\g2000\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini"
+    fChanged = False
+
+    # assume no failures
+    fRet = True
+
+    if os.path.isfile(filepath):
+        logger.info("Updating hot box cal file '%s' ATF parameters if needed." % filepath)
+
+        hotBoxCal = CustomConfigObj(filepath)
+
+        # Required hot box cal parameter values (as strings since that is how they are in the file)
+        params = dict(ADJUST_FACTOR="2E-006",
+                      MAX_ANGLE_TARGETTING_ERROR="0.02",
+                      MAX_TEMP_TARGETTING_ERROR="2.1")
+
+        section = "AUTOCAL"
+
+        for key in params:
+            try:
+                # see if the key-value pair is already there
+                # generates a KeyError exception if not
+                val = hotBoxCal.get(section, key)
+
+                # compare with current value
+                if val != params[key]:
+                    hotBoxCal.set(section, key, params[key])
+                    fChanged = True
+                    logger.info("Changing '%s' from %s to %s" % (key, val, params[key]))
+                else:
+                    logger.info("Validated '%s = '%s'" %  (key, val))
+
+            except KeyError:
+                # not present, add it and set the update flag
+                logger.info("'%s' not found, adding '%s = %s'" % (key, key, params[key]))
+
+                hotBoxCal.set(section, key, params[key])
+                fChanged = True
+
+        # write out the INI file only if something changed and update the CRC
+        if fChanged is True:
+            logger.info("Updated ATF parameters in '%s'" % filepath)
+
+            try:
+                calStrIO = StringIO()
+                hotBoxCal.write(calStrIO)
+                calStr = calStrIO.getvalue()
+                calStr = calStr[:calStr.find("#checksum=")]
+                checksum = crc32(calStr, 0)
+                calStr += "#checksum=%d" % checksum
+
+                logger.info("Updating checksum in '%s'" % filepath)
+                fp = file(filepath, "wb")
+                fp.write(calStr)
+
+            finally:
+                calStrIO.close()
+                fp.close()
+
+    else:
+        # hot box cal file should always be found, returns False if not present
+        logger.error("Hot box cal file not found: '%s" % filepath)
+        fRet = False
+
+    return fRet
+
+
 class AnalyzerInfo(object):
     def __init__(self, appName = None):
         if appName is None:
@@ -638,6 +719,9 @@ def main():
 
         time.sleep(interval)
     """
+
+    # test fixing up hot box cal file
+    fixHotBoxCalIni()
 
 
 

@@ -595,6 +595,13 @@ def repairConfigFiles(instDrive):
     if len(repairList) > 0:
         logger.info("DataManager scripts repaired: %r" % repairList)
 
+    # Fix the ATF parameters in the hot box cal file. False is returned on error,
+    # True indicates either no change required or successful update.
+    fRet = mutils.fixHotBoxCalIni()
+
+    if fRet is False:
+        logger.error("Hot box cal file update failed!")
+
     logger.info("Repair config files done.")
 
 
@@ -1156,4 +1163,29 @@ if __name__ == "__main__":
     timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ", timeBase)
     logfileSuffix = None
     compareXPandWin7Configs(backupDrive, logfileSuffix)
+    """
+
+    """
+    # test code for hot box cal file fix
+    print "testing fixHotBoxCalIni"
+
+    # basic logger
+    logLevel = logging.INFO
+
+    #logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2)
+    #logFilename = logFilename + ".log"
+    logFilename = "TestLog.log"
+    mode = "w"
+
+    root = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    root.setLevel(logLevel)
+    handlerFile = logging.FileHandler(logFilename, mode)
+    #handlerFile.setFormatter(fmt)
+    root.addHandler(handlerFile)
+
+    root.info("***** Win7 migration test hot box cal started. *****")
+
+    fRet = mutils.fixHotBoxCalIni()
+
+    print "fixHotBoxCalIni returned %s" % fRet
     """
