@@ -482,7 +482,7 @@ void rdFitting(void)
     volatile VirtualLaserParamsType *vLaserParams;
     double *metaDoublePtr = (double*) &metaDouble;
     int metaSigned[8] = {0,0,0,0,0,1};
-    int x, m, N;
+    int x, m, N, cltmode;
     double s1, sx;
     // double si, si2, six;
     int wrapped;
@@ -622,8 +622,10 @@ void rdFitting(void)
             ringdownEntry->fitAmplitude = 4.0*amplitude;
             ringdownEntry->fitBackground = 4.0*background;
             ringdownEntry->fitRmsResidual = 400.0*rmsResidual;
-            // Next line is used to recenter the PZT values per virtual laser
-            if (0 != (ringdownEntry->subschemeId & SUBSCHEME_ID_RecenterMask)) {
+
+            // Next line is used to recenter the tuner values per virtual laser in cavity length tuning mode
+            cltmode = *(int*)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_CavityLengthTuningMode;
+            if (cltmode && 0 != (ringdownEntry->subschemeId & SUBSCHEME_ID_RecenterMask)) {
                 *(s->pztOffsetByVirtualLaser_[virtLaserNum]) += *(s->pztOffsetUpdateFactor_) * (ringdownEntry->tunerValue - 32768);
                 if (*(s->pztOffsetByVirtualLaser_[virtLaserNum]) > 0.6*(*(s->pztIncrPerFsr_)))  *(s->pztOffsetByVirtualLaser_[virtLaserNum])  -= *(s->pztIncrPerFsr_);
                 if (*(s->pztOffsetByVirtualLaser_[virtLaserNum]) < -0.6*(*(s->pztIncrPerFsr_))) *(s->pztOffsetByVirtualLaser_[virtLaserNum])  += *(s->pztIncrPerFsr_);

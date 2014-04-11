@@ -38,7 +38,7 @@ import threading
 import time
 import datetime
 import traceback
-from numpy import arctan2, array, argsort, concatenate, cos, cumsum, diff, floor, int_, mean, median, mod
+from numpy import arctan2, array, argsort, asarray, concatenate, cos, cumsum, diff, floor, int_, mean, median, mod
 from numpy import pi, round_, sin, std, zeros
 from cStringIO import StringIO
 from binascii import crc32
@@ -299,8 +299,12 @@ class SchemeBasedCalibrator(object):
                     anglePerFsr = mean(dthetaSel)
                     fsrJumpRevised = round_(dtheta/anglePerFsr) # Quantize fsrJump to indicate multiples of the FSR
                     if (fsrJump != fsrJumpRevised).any():
-                        Log("During WLM calibration, counting of FSRs may have been inaccurate. vLaserNum: %d" % vLaserNum)
+                        Log("During WLM calibration, counting of FSRs may have been inaccurate. vLaserNum: %d" % vLaserNum,
+                            Verbose="%s" % ({"fsrJump":fsrJump, "fsrJumpRevised":fsrJumpRevised, "rows":asarray(rows)[perm]},))
                     fsrJump = fsrJumpRevised
+                    if (abs(fsrJump) > 3).any():
+                        Log("Cannot perform FSR calibration for virtual laser %d: jumps between scheme points are too large" % vLaserNum, Level=2)
+                        return
                     # Ensure that the differences between the WLM angles at the calibration rows are close 
                     #  to multiples of the FSR before we do the calibration. This prevents calibrations from 
                     #  occurring if the pressure is changing, etc.

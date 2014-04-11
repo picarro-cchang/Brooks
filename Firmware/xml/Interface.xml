@@ -34,6 +34,7 @@
         <constant ident="VENDOR_DAC_QUEUE_CONTROL">0xCA</constant>
         <constant ident="VENDOR_DAC_QUEUE_STATUS">0xCB</constant>
         <constant ident="VENDOR_DAC_ENQUEUE_DATA">0xCC</constant>
+        <constant ident="VENDOR_PING_WATCHDOG">0xCD</constant>
         <!--  >Value field for VENDOR_FPGA_CONFIGURE</!-->
         <constant ident="FPGA_START_PROGRAM">0x01</constant>
         <constant ident="FPGA_SEND_DATA">0x02</constant>
