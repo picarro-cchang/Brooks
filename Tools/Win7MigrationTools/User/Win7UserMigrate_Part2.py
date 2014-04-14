@@ -25,9 +25,12 @@ import difflib
 import re
 
 from optparse import OptionParser
+from distutils import dir_util
 
 import Win7UserMigrationToolsDefs as mdefs
 import Win7UserMigrationUtils as mutils
+import AnalyzerTypeDlg
+
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -210,7 +213,16 @@ def findInstaller(migBackupDrive, analyzerType):
 def runInstaller(installerName):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
     logger.info("Running installer '%s'." % installerName)
-    retCode = subprocess.call([installerName])
+
+    # Silent install so no prompt for install folder (use default) or
+    # whether to install the USB driver (default is unchecked). Still
+    # shows the progress dialog while copying files. Also
+    # don't show the "This will install... Do you wish to continue?" prompt
+    # (this doesn't seem to make a difference, maybe there is a bug
+    # in Inno Setup, or doc is wrong? harmless anyway)
+    retCode = subprocess.call([installerName,
+                               "/SILENT",
+                               "/SP-"])
 
     # retCode is 2 on Cancel, 0 on success
     if retCode != 0:
@@ -564,7 +576,87 @@ def restoreXPFolders(fromDrive, toDrive, folderList):
     logger.info("Successfully restored WinXP configuration files.")
 
 
-def repairConfigFiles(instDrive):
+def restoreDocsFolder(winXPDrive, instDrive):
+    # Restore the Documents folder on the WinXP desktop
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Restoring WinXP user desktop Documents folder, from '%s' to '%s'." % (winXPDrive, instDrive))
+
+    # Check for the existence of the Documents folder
+    docsName = "Documents"
+    winXPDesktop = winXPDrive[:1] + mdefs.WINXP_PICARRO_DESKTOP_FOLDER[1:]
+    docsXPFolder = os.path.normpath(os.path.join(winXPDesktop, docsName))
+
+    if os.path.isdir(docsXPFolder):
+        win7Desktop = instDrive[:1] + mdefs.WIN7_PICARRO_DESKTOP_FOLDER[1:]
+        docsWin7Folder = os.path.normpath(os.path.join(win7Desktop, docsName))
+
+        # copy the folder andits contents
+        logger.info("Copying Documents folder, from '%s' to '%s'." % (docsXPFolder, docsWin7Folder))
+        dir_util.copy_tree(docsXPFolder, docsWin7Folder)
+        logger.info("Successfully copied WinXP desktop Documents folder")
+
+    else:
+        logger.info("WinXP Documents folder '%s' does not exist." % docsXPFolder)
+
+
+
+def restoreDesktopShortcuts(winXPDrive, instDrive):
+    # Restore some of the Picarro shortcuts on the WinXP desktop
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Restoring WinXP user desktop shortcuts, from '%s' to '%s'." % (winXPDrive, instDrive))
+
+    shortcutPartialNames = ["Coordinator", "Supervisor", "Peripheral Mode"]
+
+    winXPDesktop = winXPDrive[:1] + mdefs.WINXP_PICARRO_DESKTOP_FOLDER[1:]
+    win7Desktop = instDrive[:1] + mdefs.WIN7_PICARRO_DESKTOP_FOLDER[1:]
+
+    # get a list of all of the files in the picarro user WinXP desktop
+    desktopFiles = os.listdir(winXPDesktop)
+    nShortcuts = 0
+
+    # look for .lnk files with Coordinator in their filename
+    for filename in desktopFiles:
+        if os.path.splitext(filename)[1].lower() == ".lnk":
+            for partName in shortcutPartialNames:
+                if filename.find(partName) != -1:
+                    # found a shortcut, copy it to Win7
+                    # since paths are the same, we don't have to modify it
+                    fromFilename = os.path.normpath(os.path.join(winXPDesktop, filename))
+                    toFilename = os.path.normpath(os.path.join(win7Desktop, filename))
+
+                    logger.info("Copying %s shortcut: '%s' to '%s'" % (partName, fromFilename, toFilename))
+                    shutil.copy2(fromFilename, toFilename)
+                    nShortcuts += 1
+
+    if nShortcuts == 0:
+        logger.info("No WinXP Coordinator shortcuts found to migrate to Win7.")
+
+
+def moveIntegrationFolderToDiagnostics(instDrive):
+    # Move the Integration folder if it is on the desktop into the Diagnostics folder
+    # Mfg always did this by hand. For 1.5.1, installers will be updated to put it there but
+    # for the Win7 migration this script needs to do it.
+    logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    logger.info("Moving desktop Integration folder if necessary, instDrive='%s'." % instDrive)
+
+    win7Desktop = instDrive[:1] + mdefs.WIN7_PICARRO_DESKTOP_FOLDER[1:]
+    integFolder = os.path.normpath(os.path.join(win7Desktop, "Integration"))
+
+    if os.path.isdir(integFolder):
+        diagFolder = os.path.normpath(os.path.join(win7Desktop, "Diagnostics"))
+
+        # The Diagnostics folder should exist but check it anyway
+        if os.path.isdir(diagFolder):
+            logger.info("Moving '%s' to '%s'" % (integFolder, diagFolder))
+            shutil.move(integFolder, diagFolder)
+        else:
+            logger.warn("Desktop folder 'Diagnostics' does not exist, cannot move Integration folder!")
+
+    else:
+        logger.info("Desktop Integration folder '%s' does not exist" % integFolder)
+
+
+def repairConfigFiles(instDrive, fFixDataMgrScriptFileInCDrive=True, fFixHotBoxCalIni=True):
     logger = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
     logger.info("Repairing known issues in config files restored from WinXP, drive='%s'." % instDrive)
 
@@ -636,6 +728,25 @@ def getAnalyzerInfo(winXPDrive, instDrive):
             analyzerSerial = ""
 
     if not haveAnalyzerType:
+        logger.info("UI prompt for analyzer information.")
+
+        installersDir = os.path.join(instDrive, os.path.sep,
+                                     mdefs.MIGRATION_TOOLS_FOLDER_NAME,
+                                     mdefs.INSTALLER_FOLDER_ROOT_NAME)
+
+        assert os.path.isdir(installersDir)
+        anTypeTmp = AnalyzerTypeDlg.analyzerTypeDlg(installersDir)
+
+        if anTypeTmp == "":
+            # empty string means user canceled
+            analyzerType = None
+            analyzerSerial = None
+
+        else:
+            analyzerType = anTypeTmp
+            analyzerSerial = ""
+
+        """
         logger.info("Prompting user for analyzer information.")
         re_type = re.compile("[A-Z]*")
         re_serial = re.compile("[0-9]*")
@@ -643,10 +754,15 @@ def getAnalyzerInfo(winXPDrive, instDrive):
         while not haveAnalyzerType:
             print ""
             print ""
-            print "Please type your analyzer name and serial, then hit the Return key."
+            print "Please type your analyzer name and serial, then hit the Enter key."
+            print "Name and serial is on the rear of the analyzer"
+            print ""
+            print "Type the analyzer name in either upper or lowercase letters."
             print "Examples: CFKADS2001  hids2007"
             print ""
-            inputStr = raw_input("Or type Q to quit: ")
+            print "Or type Q to quit"
+            print ""
+            inputStr = raw_input("Analyzer name and serial: ")
             inputStr = inputStr.upper()
             print ""
 
@@ -676,6 +792,7 @@ def getAnalyzerInfo(winXPDrive, instDrive):
             else:
                 # prompt again
                 print ""
+        """
 
     return analyzerType, analyzerSerial
 
@@ -907,9 +1024,15 @@ def doMigrate(options):
         ret = runInstaller(installerName)
 
         if not ret:
-            root.error("Installer failed or was canceled, aborting remainder of migration.")
+            root.error("Installer failed or was canceled, aborting remainder of migration to Win7.")
             mutils.pauseForUserResponse("exit")
             sys.exit(1)
+
+        # move the Integration folder the installer puts on the desktop into the Diagnostics folder
+        if not options.skipMoveIntegFolder:
+            if options.debug is True:
+                mutils.pauseForUserResponse("continue", "next: moveIntegrationFolderToDiagnostics")
+            moveIntegrationFolderToDiagnostics(instDrive)
 
     else:
         root.warning("Skipping software installation, --skipInstall option was set.")
@@ -993,13 +1116,42 @@ def doMigrate(options):
     root.info("Restoring configuration files from WinXP folders.")
 
     if options.debug is True:
-        mutils.pauseForUserResponse("continue")
+        mutils.pauseForUserResponse("continue", "next: restoreXPFolders")
     restoreXPFolders(winXPDrive, instDrive, mdefs.CONFIG_FOLDERS_TO_RESTORE_LIST)
+
+    # restore desktop documents folder
+    if options.skipRestoreDocs is False:
+        if options.debug is True:
+            mutils.pauseForUserResponse("continue", "next: restoreDocsFolder")
+        restoreDocsFolder(winXPDrive, instDrive)
+    else:
+        root.info("Skipping migration of WinXP desktop Documents, --skipRestoreDocs option was set.")
+
+    # restore desktop shortcuts
+    if options.skipRestoreShortcuts is False:
+        if options.debug is True:
+            mutils.pauseForUserResponse("continue", "next: restoreDesktopShortcuts")
+        restoreDesktopShortcuts(winXPDrive, instDrive)
+    else:
+        root.info("Skipping migration of WinXP Coordinator shortcuts, --skipRestoreShortcuts option was set.")
 
     # ==== Repair known issues in config files ====
     if options.debug is True:
         mutils.pauseForUserResponse("continue", "next: repairConfigFiles")
-    repairConfigFiles(instDrive)
+
+    # Always fix data manager script that creates a file on the C drive (was for debugging only)
+    fFixDataMgrScriptFileInCDrive = True
+
+    # Check whether to correct the ATF parameters in the hot box cal ini file
+    # (fixing them was Redmine #806)
+    fFixHotBoxCalIni = True
+
+    if options.skipFixHotBoxCalIni is True:
+        fFixHotBoxCalIni = False
+
+    repairConfigFiles(instDrive,
+                      fFixDataMgrScriptFileInCDrive=fFixDataMgrScriptFileInCDrive,
+                      fFixHotBoxCalIni=fFixHotBoxCalIni)
 
     """
     # restore specific named config files
@@ -1015,6 +1167,10 @@ def doMigrate(options):
     # restore user data
     if options.skipRestoreUserData is False:
         root.info("Restoring user data from WinXP.")
+
+        if options.debug is True:
+            mutils.pauseForUserResponse("continue")
+
         restoreXPFolders(winXPDrive, instDrive, mdefs.DATA_FOLDERS_TO_RESTORE_LIST)
 
     else:
@@ -1036,6 +1192,7 @@ def doMigrate(options):
     print "  Windows 7 user migration completed successfully!"
     print "*****************************************************"
     print ""
+    print "Logfile: %s" % logFilename
     print ""
 
 
@@ -1062,6 +1219,11 @@ Win7 migration utility part 2 (install).
                       action='store_true', default=False,
                       help=('Skip installing the Win7 analyzer software.'))
 
+    parser.add_option('--skipMoveIntegFolder', dest="skipMoveIntegFolder",
+                      action='store_true', default=False,
+                      help=("Skip moving the desktop Integration folder into Diagnostics. "
+                            "Applies only if Win7 analyzer software was installed."))
+
     parser.add_option('--skipCompare', dest="skipCompare",
                       action='store_true', default=False,
                       help=('Skip comparison of Win7 config files vs. WinXP.'))
@@ -1070,6 +1232,18 @@ Win7 migration utility part 2 (install).
                       action='store_true', default=False,
                       help=('Force comparison of backed up Win7 config files vs. WinXP. '
                             'This flag overrides --skipCompare.'))
+
+    parser.add_option('--skipFixHotBoxCalIni', dest="skipFixHotBoxCalIni",
+                      action='store_true', default=False,
+                      help=("Don't add/change the ATF parameters in the hot box calibration ini file."))
+
+    parser.add_option('--skipRestoreDocs', dest="skipRestoreDocs",
+                      action='store_true', default=False,
+                      help=("Don't migrate the WinXP desktop Documents folder to Win7."))
+
+    parser.add_option('--skipRestoreShortcuts', dest="skipRestoreShortcuts",
+                      action='store_true', default=False,
+                      help=("Don't migrate the WinXP desktop Coordinator shortcuts to Win7."))
 
     parser.add_option('--forceBackup', dest="forceBackup",
                       action='store_true', default=False,
@@ -1188,4 +1362,28 @@ if __name__ == "__main__":
     fRet = mutils.fixHotBoxCalIni()
 
     print "fixHotBoxCalIni returned %s" % fRet
+    """
+
+    """
+    # test code for select analyzer type dialog
+    print "testing analyzerTypeDlg"
+
+    # basic logger
+    logLevel = logging.INFO
+
+    #logFilename = time.strftime(mdefs.MIGRATION_TOOLS_LOGFILENAME_BASE_2)
+    #logFilename = logFilename + ".log"
+    logFilename = "TestLog.log"
+    mode = "w"
+
+    root = logging.getLogger(mdefs.MIGRATION_TOOLS_LOGNAME)
+    root.setLevel(logLevel)
+    handlerFile = logging.FileHandler(logFilename, mode)
+    #handlerFile.setFormatter(fmt)
+    root.addHandler(handlerFile)
+
+    installerPath = r"S:\CRDS\CRD Engineering\Software\G2000\Installer\g2000_win7"
+    anType = AnalyzerTypeDlg.analyzerTypeDlg(installerPath)
+    print "anType=", anType
+    print "done"
     """

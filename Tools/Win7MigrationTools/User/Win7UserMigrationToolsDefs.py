@@ -5,7 +5,7 @@
 # History:
 # 2014-03-21  tw  Initial version.
 
-MIGRATION_TOOLS_VERSION = "1.0.0.3"
+MIGRATION_TOOLS_VERSION = "1.0.0.4"
 MIGRATION_TOOLS_LOGNAME = "UserMigrationTools"
 
 MIGRATION_UNKNOWN_ANALYZER_TYPE = "Unknown"
@@ -115,3 +115,7 @@ MY_COMPUTER_ICON_NAME = "MyComputerIconName"
 # named by analyzer type (e.g., CFADS, CFKADS, etc.) just like they are
 # on the network staging and release areas.
 INSTALLER_FOLDER_ROOT_NAME = "PicarroInstallers"
+
+# WinXP and Win7 paths to the picarro user desktop folder
+WINXP_PICARRO_DESKTOP_FOLDER = "C:/Documents and Settings/picarro/Desktop"
+WIN7_PICARRO_DESKTOP_FOLDER = "C:/Users/picarro/Desktop"
