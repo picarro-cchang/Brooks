@@ -69,6 +69,7 @@ RPC_PORT_PEAK_FINDER        = 50501
 RPC_PORT_PEAK_ANALYZER      = 50502
 RPC_PORT_ECHO_P3_BASE       = 50600
 RPC_PORT_ECHO_P3_MAX        = 50699
+RPC_PORT_SURVEYOR_ZMQ       = 50700
 
 #TCP_PORT... are the port numbers used by "normal" TCP servers
 TCP_PORT_INTERFACE          = 51000
@@ -76,6 +77,9 @@ TCP_PORT_FITTER             = 51010
 TCP_PORT_COMMAND_HANDLER    = 51020
 TCP_PORT_SUPERVISOR         = 23456
 TCP_PORT_PERIPH_INTRF       = 5193
+
+#ZMQ_PORT... are the port numbers used by ZMQ sockets
+ZMQ_PORT_SURVEYOR_CMD       = 52701
 
 #BROADCAST_PORT... are the port numbers used by broadcasters
 BROADCAST_PORT_EVENTLOG          = 40010
