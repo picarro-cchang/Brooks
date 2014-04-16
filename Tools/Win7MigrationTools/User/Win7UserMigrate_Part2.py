@@ -647,6 +647,15 @@ def moveIntegrationFolderToDiagnostics(instDrive):
 
         # The Diagnostics folder should exist but check it anyway
         if os.path.isdir(diagFolder):
+
+            # if there already is an Integration folder under Diagnostics, delete it first
+            newIntegFolder = os.path.normpath(os.path.join(diagFolder, "Integration"))
+
+            if os.path.isdir(newIntegFolder):
+                logger.info("Integration folder already exists in Diagnostics, removing it first.")
+                shutil.rmtree(newIntegFolder)
+
+            # now we can move the Integration folder into Diagnostics
             logger.info("Moving '%s' to '%s'" % (integFolder, diagFolder))
             shutil.move(integFolder, diagFolder)
         else:
@@ -1268,6 +1277,12 @@ Win7 migration utility part 2 (install).
                       default=False, help=('Log timestamps in local time (default is GMT).'))
 
     options, _ = parser.parse_args()
+
+    # For logging to work properly if set up to run as administrator, must cd to the folder this tool is
+    # installed in (otherwise running in c:\windows\system32 which is protected).
+    #print "current dir='%s'" % os.getcwd()
+    os.chdir(r"C:\Win7UserMigrationTools\UserMigrationPart2_win7")
+    #print "current dir='%s'" % os.getcwd()
 
     doMigrate(options)
 
