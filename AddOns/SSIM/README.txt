@@ -35,7 +35,8 @@ _1_05\
                  use this tool version to compile/upload software to the R3 board, had to change
                  Wire.receive() -> Wire.read(); also bumped version number to 1.05 (uf command).
 
-To load the firmware on the Arduino board:
+                 
+To load and test firmware on the Arduino board:
 
 1. Install the driver and tools on the host Win7 (or WinXP) box
         M:\LV8_Development\Instrument Install Software\arduino-1.0   (for R2 boards)
@@ -69,3 +70,12 @@ To load the firmware on the Arduino board:
       
    d. read the pressure, in Torr
       u8     (reports a value, like 745.450927)
+
+After confirming the firmware is functioning properly, save it to a new folder (best to follow the
+existing naming convention), add it to git, and copy it to the network where Mfg. uses it. Currently
+this is located here: S:\Projects\SSIM2\Firmware
+
+
+
+
+
