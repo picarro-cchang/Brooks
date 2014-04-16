@@ -45,8 +45,12 @@ To load and test firmware on the Arduino board:
         
    Can unpack the zip and run dpinst-x86.exe in arduino-1.0.5-r2\drivers folder to install the driver.
 
-2. Run arduino.exe in the arduino-1.0.5-r2 folder. Tools > Serial Port, select the serial port it is
-   operating on (typically COM10).
+2. Run arduino.exe in the arduino-1.0.5-r2 folder. 
+
+   a. Select the Arduino Uno board (this is the default): Tools > Board > Arduino Uno
+   
+   b. Select the serial port: Tools > Serial Port, choose the serial port it is
+      operating on (typically COM10).
 
 3. File > Open, select _1_05\_1_05.ino
 
