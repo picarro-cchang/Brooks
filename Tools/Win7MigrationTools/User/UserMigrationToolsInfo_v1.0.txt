@@ -1,8 +1,8 @@
 User Migration Tools Info
 
-Version: 1.0
+Version: 1.0.0.5
 Author:  T. Walder
-Data:    April 4, 2014
+Data:    April 21, 2014
 
 
 This document was written to accompany the BOM for the Windows 7 Field Migration Kit software.
@@ -18,7 +18,7 @@ Windows 7 field migration tool
 Description:    Software for migration to Windows 7. Runs Analyzer host software installer and migrates
                 configuration files from the imaged WinXP drive.
 
-Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer_Staging\UserMigrationPart2_win7 (folder and its contents)
+Network folder: S:\CRDS\CRD Engineering\Software\G2000\Installer\UserMigrationPart2_win7 (folder and its contents)
 
 
 ---------------------------------
