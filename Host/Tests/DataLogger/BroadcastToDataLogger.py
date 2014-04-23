@@ -37,32 +37,73 @@ EventManagerProxy_Init(APP_NAME)
 
 
 class BroadcastToDataLogger(object):
-    def __init__(self, filename, delay):
+    def __init__(self, filename, delay, dataMgrUseCurTime=True, fileWrap=True):
         self.DataBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_DATA_MANAGER, APP_NAME, logFunc=Log)
         self.AlarmBroadcaster = Broadcaster.Broadcaster(STATUS_PORT_ALARM_SYSTEM, APP_NAME, logFunc=Log)
         self.InstrBroadcaster = Broadcaster.Broadcaster(STATUS_PORT_INST_MANAGER, APP_NAME, logFunc=Log)
         self.filename = filename
         self.delay = delay
+        self.dataMgrUseCurTime = dataMgrUseCurTime
+        self.fileWrap = fileWrap 
         
     def playback(self):
         with open(self.filename, "rb") as f:
+            timeDiff = 0.0
+
             while True:
                 if self.delay > 0:
                     time.sleep(self.delay)
                 try:
                     app, data = cPickle.load(f)
-                    print app
+                    #print app
+
                     if app == "DataMgr":
+                        if self.dataMgrUseCurTime is True:
+                            # adjust the timestamp to the current time
+                            curTime = time.time()
+                            dataTime = data["time"]
+
+                            # compute difference to use
+                            if timeDiff == 0.0:
+                                timeDiff = curTime - dataTime
+
+                            newDataTime = dataTime + timeDiff
+
+                            # clamp the timestamp so not later than the current time
+                            if newDataTime > curTime:
+                                #print "clamping to current time, computed=", newDataTime, "current=", curTime
+                                newDataTime = curTime
+
+                            data["time"] = newDataTime
+
+                        # broadcast the data
                         self.DataBroadcaster.send(StringPickler.PackArbitraryObject(data))
+
                     elif app == "AlarmSys":
+                        print "AlarmSys"
+                        print data
+                        print "********"
                         self.AlarmBroadcaster.send(StringPickler.ObjAsString(data))
+
                     elif app == "InstrMgr":
                         self.InstrBroadcaster.send(StringPickler.ObjAsString(data))
+
                 except EOFError:
                     print "reached EOF"
-                    break
+
+                    if self.fileWrap is True:
+                        # wrapping file flag set, reset file pointer to beginning of the file
+                        print "resetting to beginning of file"
+                        f.seek(0)
+
+                        # must reset so associated time is correct
+                        timeDiff = 0.0
+                    else:
+                        # not wrapping, done
+                        break
 
 if __name__ == "__main__":
-    bl = BroadcastToDataLogger("C:/temp/CFIDS2085_20140409.dat", .25)
+    delay = 0.25
+    bl = BroadcastToDataLogger("C:/temp/CFIDS2085_20140409.dat", delay)
     bl.playback()
 
