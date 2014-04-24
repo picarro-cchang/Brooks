@@ -14,16 +14,16 @@
 Source: {#sandboxDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall
 
 ; InstrConfig
-Source: {#sandboxDir}\{#installerType}\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion
+Source: {#configDir}\{#installerType}\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion
 
 ; AppConfig
-Source: {#sandboxDir}\{#installerType}\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion
+Source: {#configDir}\{#installerType}\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion
 
 ; install the signature file a second time in order to call MyAfterInstall
 Source: {#sandboxDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall
 
 ; CommonConfig
-Source: {#sandboxDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
+Source: {#configDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
 
 ; HostExe executables (icons handled by inc_icons.iss)
 Source: {#sandboxDir}\host\Host\dist\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
