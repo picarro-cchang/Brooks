@@ -682,11 +682,6 @@ def makeExe(opts):
             LogErr("'%s' does not exist!" % exeDir)
             sys.exit(1)
 
-        exeDir = os.path.join(SANDBOX_DIR, "host", "MobileKit", "dist")
-        if not os.path.exists(exeDir):
-            LogErr("'%s' does not exist!" % exeDir)
-            sys.exit(1)
-
     # XXX This is likely superfluous once the configuration files have
     # been merged into the main repository.
     if opts.cloneAllRepos or opts.cloneConfigRepo:
@@ -709,7 +704,7 @@ def makeExe(opts):
     else:
         print "Skipping tagging of the repository."
 
-    # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
+    # Copy HostExe for non-installer upgrades.
     _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBuild=buildTypesSpecific)
 
     _buildDoneMsg("BUILD", startSec, logfile)
@@ -927,18 +922,6 @@ def _copyBuildAndInstallers(versionConfig, product, osType, ver, customBuild=Fal
 
     dir_util.copy_tree(os.path.join(SANDBOX_DIR, 'host', 'Host', 'dist'),
                        hostExeDir)
-
-    # AnalyzerServerExe
-    analyzerServerExe = os.path.join(STAGING_MFG_DISTRIB_BASE,
-                                     'AnalyzerServerExe')
-
-    if os.path.isdir(analyzerServerExe):
-        os.rmdir(analyzerServerExe)
-    assert not os.path.isdir(analyzerServerExe)
-    os.makedirs(analyzerServerExe)
-
-    dir_util.copy_tree(os.path.join(SANDBOX_DIR, 'host', 'MobileKit', 'dist'),
-                       analyzerServerExe)
     """
 
     # Copy the individual installers and update the shortcuts that are
@@ -1059,15 +1042,6 @@ def _buildExes():
                                   (os.path.join(SANDBOX_DIR, 'host'),
                                    os.path.join(SANDBOX_DIR, 'host', 'Firmware')
                                    )})
-
-    # MobileKit must be built first since the HostExe build will copy
-    with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'MobileKit')):
-        retCode = subprocess.call(['python.exe', 'setup.py', 'py2exe'],
-                                  env=buildEnv)
-
-        if retCode != 0:
-            LogErr("Error building MobileKit. retCode=%d" % retCode)
-            sys.exit(retCode)
 
     with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'Host')):
         retCode = subprocess.call(['python.exe', 'PicarroExeSetup.py',
@@ -1366,7 +1340,7 @@ def main():
     usage = """
 %prog [options]
 
-Builds a new release of HostExe, AnalyzerServerExe and all installers.
+Builds a new release of HostExe and all installers.
 """
 
     parser = OptionParser(usage=usage)
