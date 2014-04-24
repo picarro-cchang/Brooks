@@ -45,6 +45,7 @@ RESOURCE_DIR = ('s:/CRDS/SoftwareReleases/G2000Projects/G2000_PrepareInstaller/'
 
 CONFIGS = {}
 INSTALLER_SIGNATURES = {}
+CONFIG_REPOS = {}
 
 CONFIG_BASE = 's:/CrdsRepositoryNew/trunk/G2000/Config'
 COMMON_CONFIG = os.path.join(CONFIG_BASE, 'CommonConfig')
@@ -173,7 +174,11 @@ def _buildDoneMsg(message, startSec, logfile):
     print "******** %s COMPLETE ********" % message
 
 
-def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig):
+def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
+                  cloneAllRepos=True,
+                  cloneConfigRepo=True,
+                  bzrConfigsNeeded=True,
+                  cloneHostRepo=True):
     print ""
     print "product           =", opts.product
     print "branch            =", opts.branch
@@ -200,28 +205,36 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
             tmpConfigs.append(c)
         tmpConfigs.sort()
 
-        print "configs           =", tmpConfigs[0]
-        for c in tmpConfigs[1:]:
-            print "                   ", c
+        fFirst = True
+        for c in tmpConfigs:
+            if fFirst is True:
+                print "configs           = %-6s  repo = %s" % (c, CONFIG_REPOS[c])
+                fFirst = False
+            else:
+                print "                    %-6s  repo = %s" % (c, CONFIG_REPOS[c])
 
         if opts.local:
             print ""
             print "local build       =", "YES"
 
-            if opts.cloneAllRepos:
+            if cloneAllRepos:
                 print "clone all repos   =", "YES"
             else:
                 print "clone all repos   =", "NO"
 
-                if opts.cloneHostRepo:
-                    print "  clone host repo (git)     =", "YES"
-                else:
-                    print "  clone host repo (git)     =", "NO"
+            if cloneHostRepo:
+                print "  clone host repo (git)    =", "YES"
+            else:
+                print "  clone host repo (git)    =", "NO"
 
-                if opts.cloneConfigRepo:
-                    print "  clone config repos (bzr)  =", "YES"
+            if cloneConfigRepo:
+                if bzrConfigsNeeded is True:
+                    print "  clone config repos (bzr) =", "YES"
                 else:
-                    print "  clone config repos (bzr)  =", "NO"
+                    # will override cloning bzr since not needed
+                    print "  clone config repos (bzr) =", "NO (not used)"
+            else:
+                print "  clone config repos (bzr) =", "NO"
 
             if opts.buildExes:
                 print "build exes        =", "YES"
@@ -425,10 +438,15 @@ def makeExe(opts):
         LogErr("--local and --dry-run options cannot be used together!")
         sys.exit(1)
 
-    # Note: opts.cloneAllRepos gets set to False if skipping either host or config clones
+    # Note: opts.cloneAllRepos was set to False if skipping either host or config clones
     if not opts.cloneAllRepos and not opts.local:
         LogErr("--debug-skip-all-clone, --debug-skip-host-clone, and --debug-skip-config-clone options are allowed only with --debug-local option!")
         sys.exit(1)
+
+    # save off clone options
+    cloneAllRepos = opts.cloneAllRepos
+    cloneConfigRepo = opts.cloneConfigRepo
+    cloneHostRepo = opts.cloneHostRepo
 
     if not opts.buildExes and not opts.local:
         LogErr("--debug-skip-exe is allowed only with --local option!")
@@ -493,14 +511,16 @@ def makeExe(opts):
     # override the hard-coded dir
     global INSTALLER_SCRIPTS_DIR
     global CONFIGS
+    global CONFIG_REPOS
 
     # updated JSON file format is required ()
     INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
     buildInfo = configInfo["buildTypes"]
 
     # CONFIGS is a dict containing analyzer types and species
+    # CONFIG_REPOS is a dict containing analyzer types and repo for configs (either
+    #   "bzr" or "git", default is "bzr")
     # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
-    #
     # if --types option was used, buildInfo will include only the wanted build types
     buildTypesSpecific = False     # default to all build types from JSON file
 
@@ -534,6 +554,7 @@ def makeExe(opts):
                 itemDict = buildInfo[item]
                 CONFIGS[item] = itemDict["species"]
                 INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
+                CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
 
     else:
         # building all types
@@ -541,10 +562,17 @@ def makeExe(opts):
             itemDict = buildInfo[item]
             CONFIGS[item] = itemDict["species"]
             INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
+            CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
 
     #print "CONFIGS=", CONFIGS
     #print ""
     #print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
+
+    # check if bzr repos are even needed
+    bzrConfigsNeeded = False
+    for c in CONFIG_REPOS:
+        if CONFIG_REPOS[c] == "bzr":
+            bzrConfigsNeeded = True
 
     # -------- prepare build options --------
 
@@ -604,7 +632,11 @@ def makeExe(opts):
         STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
 
     # print summary of build info so user can review it
-    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig)
+    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
+                  cloneAllRepos=cloneAllRepos,
+                  cloneConfigRepo=cloneConfigRepo,
+                  bzrConfigsNeeded=bzrConfigsNeeded,
+                  cloneHostRepo=cloneHostRepo)
 
     # ask user for build confirmation before proceeding
     if not opts.skipConfirm:
@@ -626,7 +658,16 @@ def makeExe(opts):
     print "Build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
 
     # reiterate the build summary so it is saved in the log
-    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig)
+    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
+                  cloneAllRepos=cloneAllRepos,
+                  cloneConfigRepo=cloneConfigRepo,
+                  bzrConfigsNeeded=bzrConfigsNeeded,
+                  cloneHostRepo=cloneHostRepo)
+
+    # if bzr repos not needed, fix up clone repo settings
+    if bzrConfigsNeeded is False:
+        cloneAllRepos = False
+        cloneConfigRepo = False
 
     # set the quiet flag if option set
     logger.set_quiet(opts.debugQuiet)
@@ -725,7 +766,7 @@ def makeExe(opts):
     else:
         print "Version number was not changed, skipping update version metadata in local repo."
 
-    if opts.cloneAllRepos or opts.cloneHostRepo:
+    if cloneAllRepos or cloneHostRepo:
         _branchFromRepo(opts.branch)
     else:
         print "Skipping cloning of Git repo."
@@ -759,10 +800,15 @@ def makeExe(opts):
 
     # XXX This is likely superfluous once the configuration files have
     # been merged into the main repository.
-    if opts.cloneAllRepos or opts.cloneConfigRepo:
-        _makeLocalConfig()
+    if cloneAllRepos or cloneConfigRepo:
+        if bzrConfigsNeeded is True:
+            _makeLocalConfig()
+        else:
+            print "Bzr configs not used by installers, skipping cloning of Bzr repos"
     else:
         print "Skipping cloning of Bzr config repos"
+
+    sys.exit(1)
 
     if opts.createInstallers:
         _compileInstallers(productFamily, osType, VERSION)
@@ -1281,6 +1327,17 @@ def _compileInstallers(product, osType, ver):
         installScriptDir = os.path.join(currentDir, INSTALLER_SCRIPTS_DIR)
         setupFilePath = "%s\\setup_%s_%s.iss" % (installScriptDir, c, CONFIGS[c])
 
+        repo = CONFIG_REPOS[c]
+        if repo == "git":
+            # config files in git are in host\Config under the sandbox folder
+            configDir = os.path.normpath(os.path.join(SANDBOX_DIR, "host", "Config"))
+        elif repo == "bzr":
+            # bzr configs are under the sandbox folder
+            configDir = SANDBOX_DIR
+        else:
+            LogErr("Invalid repo '%s' for %s" % (repo, c))
+            sys.exit(1)
+
         print "building from '%s'" % setupFilePath
 
         # Write the installerSignature.txt file into the sandbox config folder for this
@@ -1306,6 +1363,7 @@ def _compileInstallers(product, osType, ver):
                 "/dproductYear=%s" % currentYear,
                 "/dresourceDir=%s" % RESOURCE_DIR,
                 "/dsandboxDir=%s" % SANDBOX_DIR,
+                "/dconfigDir=%s" % configDir,
                 "/dcommonName=%s" % CONFIGS[c],
                 "/v9",
                 "/O%s" % os.path.abspath(os.path.join(SANDBOX_DIR,
