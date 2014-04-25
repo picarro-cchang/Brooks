@@ -808,8 +808,6 @@ def makeExe(opts):
     else:
         print "Skipping cloning of Bzr config repos"
 
-    sys.exit(1)
-
     if opts.createInstallers:
         _compileInstallers(productFamily, osType, VERSION)
     else:
@@ -1086,7 +1084,11 @@ def _generateReleaseVersion(product, ver):
                  "    return '%s'\n" % _verAsString(product, ver),
                  "\n",
                  "def versionNumString():\n",
-                 "    return '%s'\n" % _verAsNumString(ver)])
+                 "    return '%s'\n" % _verAsNumString(ver),
+                 "\n",
+                 "def buildType():\n",
+                 "    return ''\n",
+                 "\n"])
 
 
 def _buildExes():
