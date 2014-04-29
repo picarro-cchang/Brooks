@@ -47,7 +47,8 @@ public class UserAdminPage extends BasePage {
 	@CacheLookup
 	private WebElement userIDSite;
 
-	@FindBy(how = How.XPATH, using = "//a[@href='/stage/plogin']")
+	//@FindBy(how = How.XPATH, using = "//a[@href='/pgestage/plogin']")
+	@FindBy(how = How.XPATH, using = "//li[4]/a")
 	@CacheLookup
 	private WebElement linkSignOff;
 

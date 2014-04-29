@@ -62,7 +62,8 @@ public class UserProfilePage extends BasePage {
 	@FindBy(how = How.ID, using = "id_userid_site")
 	private WebElement userIDSite;
 
-	@FindBy(how = How.XPATH, using = "//a[@href='/stage/plogin']")
+	//@FindBy(how = How.XPATH, using = "//a[@href='/pgestage/plogin']")
+	@FindBy(how = How.XPATH, using = "//li[4]/a")
 	private WebElement linkSignOff;
 
 	@FindBy(how = How.CLASS_NAME, using = "help-inline")
