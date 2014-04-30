@@ -360,7 +360,7 @@ def backupFiles(fromDrive, toDrive, backupConfigsOnly):
     # TODO: Any chance of ending up with unins000.dat or unins000.exe? If so, exclude them too.
     #       Need to use regular expressions to find them since can end up with several.
     excludeDirs = [".bzr"]
-    excludeFiles = [".bzrignore"]
+    excludeFiles = [".bzrignore", "analyzerState.db", "analyzerState.db-journal"]
 
     # construct list of folders to backup
     foldersToBackupList = mdefs.CONFIG_FOLDERS_TO_BACKUP_LIST

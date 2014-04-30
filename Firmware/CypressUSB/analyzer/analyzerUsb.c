@@ -14,6 +14,7 @@
  *   07-May-2008  sze  Initial version. Vendor command to read 2-byte version number.
  *   30-Apr-2009  sze  Modification to LED flashing routines for alpha prototype hardware.
  *   22-Apr-2010  sze  Routines for analog interface board using timestamp based approach.
+ *   10-Feb-2014  sze  Added VENDOR_PING_WATCHDOG to support automatic reset on logic board.
  *
  *  Copyright (c) 2008 Picarro, Inc. All rights reserved
  */
@@ -45,6 +46,8 @@
 #define bmHPI_RESETz  0x80 // Port PA7 Low resets HPI
 #define bmHPI_HINTz   0x01 // Port PA0 Low issues host interrupt
 #define bmHPIHW       0x02 // Port PA1, used to control half-word in single mode
+#define bmHPI_MASK    0x8F // Bits involved with HPI commmunications in IOA
+#define bmWATCHDOG    0x40 // PA6 is used to (re-)trigger watchdog monostable
 
 static WORD xdata LED_Count = 0;
 static BYTE xdata LED_Status = 0;
@@ -70,7 +73,7 @@ static WORD xFIFOBC_IN = 0x0000;  // variable that contains EP6FIFOBCH/L value
 //-----------------------------------------------------------------------------
 // Variables for DAC resynchronizer
 //-----------------------------------------------------------------------------
-#define QSIZE   (1300)
+#define QSIZE   (1100)
 #define NCHANNELS (8)
 #define MAGIC_CODE 'S'
 #define MAKEWORD( h, l ) \ 
@@ -289,8 +292,8 @@ void TD_Init(void) {           // Called once at startup
 
     // Configure PORTA
     PORTACFG = bmBIT0; // PA0 takes on INT0/ alternate function
-    OEA  |= 0x9E;      // initialize PA7,c PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA6, PA5, PA0 as inputs
-    IOA = bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
+    OEA  = 0xDE;      // initialize PA7, PA6, PA4, PA3 PA2 and PA1 port i/o pins as outputs, PA5, PA0 as inputs
+    IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz;   // Deassert interrupt and reset
 
     EZUSB_InitI2C();              // Initialize EZ-USB I2C controller
     I2CTL = bm400KHZ;		      // Use 400kHz I2C speed
@@ -388,7 +391,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
             //  At this point, nTransfers are measured in 16-bit words
             nTransfers-=2;
             if (nTransfers>0) {
-                IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_AUTO; // select HPID register with address auto-increment
+                IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPID_AUTO; // select HPID register with address auto-increment
             GPIFTCB1 = nTransfers>>8;      // setup transaction count with number of bytes in the EP2 FIFO
             SYNCDELAY;
             GPIFTCB0 = nTransfers & 0xFF;
@@ -422,7 +425,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 //  At this point, Tcount is measured in 16-bit words
                 Tcount -=2;
                 if (Tcount > 0) {
-                    IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_AUTO;          // select HPID register with address auto-increment
+                    IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPID_AUTO;          // select HPID register with address auto-increment
                     GPIFTCB3 = 0;
                     SYNCDELAY;
                     GPIFTCB2 = 0;
@@ -460,7 +463,7 @@ void TD_Poll(void) {           // Called repeatedly while the device is idle
                 }
 
                 Tcount = 0;                       // set Tcount to zero to cease reading from DSP HPI RAM
-                IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPID_MANUAL; // Turn off address auto-increment
+                IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPID_MANUAL; // Turn off address auto-increment
                 if (!wait_HPI_ready()) return;
                 SYNCDELAY;
             }
@@ -653,12 +656,12 @@ BOOL DR_VendorCmnd(void) {
         if (!wait_HPI_ready()) return TRUE;
         SYNCDELAY;
         Destination = (WORD *)(&EP0BUF);
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC;       // Select HPIC register with HHWIL low
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIC;       // Select HPIC register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
         if (!wait_GPIF_done()) return TRUE;
         Destination++;
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC | bmHPIHW;     // Set HHWIL high
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIC | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
         if (!wait_GPIF_done()) return TRUE;
@@ -673,11 +676,11 @@ BOOL DR_VendorCmnd(void) {
         // TODO: Enable this when h/w becomes available
         if (!wait_HPI_ready()) return TRUE;
 
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC;       // Select HPIC register with HHWIL low
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIC;       // Select HPIC register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[1]<<8) | EP0BUF[0]);
         if (!wait_GPIF_done()) return TRUE;
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIC | bmHPIHW;     // Set HHWIL high
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIC | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[3]<<8) | EP0BUF[2]);
         if (!wait_GPIF_done()) return TRUE;
@@ -689,12 +692,12 @@ BOOL DR_VendorCmnd(void) {
         if (!wait_HPI_ready()) return TRUE;
 
         Destination = (WORD *)(&EP0BUF);
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA;       // Select HPIC register with HHWIL low
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIA;       // Select HPIC register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
         if (!wait_GPIF_done()) return TRUE;
         Destination++;
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA | bmHPIHW;     // Set HHWIL high
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIA | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordRead(Destination);
         if (!wait_GPIF_done()) return TRUE;
@@ -709,11 +712,11 @@ BOOL DR_VendorCmnd(void) {
         // TODO: Enable this when h/w becomes available
         if (!wait_HPI_ready()) return TRUE;
 
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA;       // Select HPIA register with HHWIL low
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIA;       // Select HPIA register with HHWIL low
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[1]<<8) | EP0BUF[0]);
         if (!wait_GPIF_done()) return TRUE;
-        IOA = bmHPI_RESETz | bmHPI_HINTz | bmHPIA | bmHPIHW;     // Set HHWIL high
+        IOA = (IOA & ~bmHPI_MASK) | bmHPI_RESETz | bmHPI_HINTz | bmHPIA | bmHPIHW;     // Set HHWIL high
         SYNCDELAY;
         GPIF_SingleWordWrite(((WORD)EP0BUF[3]<<8) | EP0BUF[2]);
         if (!wait_GPIF_done()) return TRUE;
@@ -740,7 +743,7 @@ BOOL DR_VendorCmnd(void) {
         EP0BCH = 0;
         EP0BCL = 1;
         // Acknowledge handshake phase of device request
-        // EP0CS |= bmHSNAK;
+        EP0CS |= bmHSNAK;
         break;
     case VENDOR_DSP_CONTROL:
         if (0 != (value & VENDOR_DSP_CONTROL_RESET)) IOA &= ~bmHPI_RESETz;
@@ -749,6 +752,16 @@ BOOL DR_VendorCmnd(void) {
         else IOA |= bmHPI_HINTz;
         // Return value to host
         EP0BUF[0] = value;
+        EP0BCH = 0;
+        EP0BCL = 1;
+        // Acknowledge handshake phase of device request
+        EP0CS |= bmHSNAK;
+        break;
+    case VENDOR_PING_WATCHDOG:
+        // Toggle the bit indicating that host is communicating
+        IOA ^= bmWATCHDOG;
+        // Return 1 to host
+        EP0BUF[0] = 1;
         EP0BCH = 0;
         EP0BCL = 1;
         // Acknowledge handshake phase of device request

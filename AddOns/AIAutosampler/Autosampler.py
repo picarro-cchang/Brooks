@@ -2027,7 +2027,7 @@ class AutosamplerFrame(AutosamplerGUI):
             #self.ASSetInstallMotorSpeed(180,150)#self.ASSetInstallMotorSpeed(160,130)
             self.ASSetInstallMotorSpeed(260,150)
             #self.ASSetConfigTrayMetrics(0,9,3,3,59,59)
-            self.ASSetInstallTraySampleDepth(0,29)
+            #self.ASSetInstallTraySampleDepth(0,29)
             self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             self.ASSetMethodInjPointNo(0)
             self.ASSetMethodSimpleInjection((float)(cfg[self.method]['SampleVol']), (int)(cfg[self.method]['FillStrokes']), 0.0)
@@ -2490,7 +2490,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.ASSetInstallMotorSpeed(260,150)#self.ASSetInstallMotorSpeed(160,130)
                 #self.ASSetConfigSyringeSpeed(130,130)
                 #self.ASSetConfigTrayMetrics(0,9,3,3,59,59)
-                self.ASSetInstallTraySampleDepth(0,29)
+                #self.ASSetInstallTraySampleDepth(0,29)
                 self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPreInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']) )      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPostInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

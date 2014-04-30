@@ -44,11 +44,6 @@
 
 ; Setup items unique to FDDS Surveyor are below:
 
-[Files]
-
-; Surveyor also includes MobileKit exes
-Source: {#sandboxDir}\host\MobileKit\dist\*; DestDir: {app}\AnalyzerServerExe; Flags: recursesubdirs replacesameversion
-
 
 [Icons]
 

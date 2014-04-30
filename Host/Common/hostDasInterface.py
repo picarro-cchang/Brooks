@@ -134,7 +134,7 @@ class DasInterface(Singleton):
         analyzerUsb.loadHexFile(file(usbCodeFilename,"r"))
         analyzerUsb.disconnect()
         # Wait for renumeration
-        while True:
+        for i in range(5):
             analyzerUsb = AnalyzerUsb(
                 usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
             try:
@@ -142,6 +142,8 @@ class DasInterface(Singleton):
                 break
             except:
                 sleep(1.0)
+        else:
+            raise RuntimeError("Cannot renumerate")
         analyzerUsb.disconnect()
     def programFPGA(self,fileName):
         logging.info(
@@ -293,7 +295,10 @@ class DasInterface(Singleton):
         self.analyzerUsb.hpicWrite(0x00010001)
         #
         self.hostToDspSender = HostToDspSender(self.analyzerUsb,5.0)
-        
+    
+    def pingWatchdog(self):
+        self.analyzerUsb.pingWatchdog()
+    
     def getMessage(self):
         """Retrieves message from the analyzer or None if nothing is available"""
         ts = self.hostToDspSender.rdMessageTimestamp(self.messageIndex)

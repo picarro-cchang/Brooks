@@ -22,8 +22,12 @@ import shutil
 import sys
 import glob
 import subprocess
+import zmq
 
 from Host.Common import OS
+
+os.environ["PATH"] = os.environ["PATH"] + os.path.pathsep + \
+    os.path.split(zmq.__file__)[0]
 
 sys.path.append("AnalyzerServer")
 sys.path.append("MobileKitSetupNew")
@@ -145,11 +149,13 @@ RemoteMobileKitSetup = Target(description = "RemoteMobileKitSetup", # used for t
 pythonVer = _getPythonVersion()
 pythonSubVer = _getPythonSubVersion()
 
+"""
 # simple check to save us from potential problems using paths in Picarro.pth
 if "PYTHONPATH" not in os.environ:
     print "PYTHONPATH is not set in environment, potential exists for pulling local libs from wrong dir."
     print "Run 'python buildMobileKit.py' instead to build MobileKit apps from the command line."
     sys.exit(1)
+"""
 
 # ../Host/Common: swathP.pyd
 # AnalyzerServer: peakF.pyd
@@ -215,7 +221,7 @@ elif pythonVer == "2.7":
     print "**** setup for Python 2.7 ****"
 
     exclusionList = ["Tkconstants", "Tkinter", "tcl"]
-    inclusionList = []
+    inclusionList = ["zmq.core.*", "zmq.utils", "zmq.utils.jsonapi", "zmq.utils.strtypes"]
     packageList = ["simplejson", "werkzeug", "jinja2", "email", 'sqlalchemy.dialects.sqlite']
 
     data_files = [(".", ["MobileKitSetupNew/LEDgreen2.ico",
