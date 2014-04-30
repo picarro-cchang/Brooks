@@ -40,3 +40,5 @@ AddOns/SoilPostProcessor/dist/
 AddOns/AIAutosampler/build/
 AddOns/AIAutosampler/dist/
 
+*.ini~
+*.py~
