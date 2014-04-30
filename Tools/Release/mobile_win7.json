@@ -2,7 +2,8 @@
     "buildTypes": {
         "FDDS": {
             "species": "Surveyor",
-            "installerSignature": "FDDS"
+            "installerSignature": "FDDS",
+            "configRepo": "bzr"
         }
     },
 
