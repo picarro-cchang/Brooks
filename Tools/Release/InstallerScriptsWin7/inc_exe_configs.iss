@@ -11,7 +11,7 @@
 ;        called for *every* file installed.
 
 ; installerSignature.txt
-Source: {#sandboxDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall
+Source: {#configDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall
 
 ; InstrConfig
 Source: {#configDir}\{#installerType}\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion
@@ -20,7 +20,7 @@ Source: {#configDir}\{#installerType}\InstrConfig\*; DestDir: {app}\InstrConfig;
 Source: {#configDir}\{#installerType}\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion
 
 ; install the signature file a second time in order to call MyAfterInstall
-Source: {#sandboxDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall
+Source: {#configDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall
 
 ; CommonConfig
 Source: {#configDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
