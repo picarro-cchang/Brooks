@@ -1,9 +1,9 @@
 {
     "buildTypes": {
-        "FDDS": {
+        "FEDS": {
             "species": "Surveyor",
-            "installerSignature": "FDDS",
-            "configRepo": "bzr"
+            "installerSignature": "FEDS",
+            "configRepo": "git"
         }
     },
 

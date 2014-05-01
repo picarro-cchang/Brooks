@@ -1485,7 +1485,7 @@ def _compileInstallers(product, osType, ver):
         # Write the installerSignature.txt file into the sandbox config folder for this
         # analyzer type.
         sigLine = INSTALLER_SIGNATURES[c]
-        sigFilePath = os.path.normpath(os.path.join(SANDBOX_DIR, c, "installerSignature.txt"))
+        sigFilePath = os.path.normpath(os.path.join(configDir, c, "installerSignature.txt"))
         f = open(sigFilePath, "w")
         f.write(sigLine)
         f.close()
