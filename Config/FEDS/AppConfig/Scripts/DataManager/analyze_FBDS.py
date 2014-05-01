@@ -200,7 +200,6 @@ try:
     temp = applyLinear(_12_ch4_raw,C12_iCH4)
     _NEW_DATA_["12CH4_high_range"] = temp
     _NEW_DATA_["HR_12CH4"] = temp
-    if _PERSISTENT_["state"] == "high_conc": _DATA_["CH4"] = temp
 except:
     pass
 
@@ -233,7 +232,7 @@ try:
         elif not _PERSISTENT_["plot_iCH4"]:
             _PERSISTENT_["plot_iCH4"] = True
 except Exception,e:
-    print "Error %s (%r)" % (e,e)
+    pass
 
 _NEW_DATA_["HR_Delta_iCH4_Raw"] = _PERSISTENT_["delta_high_conc_iCH4"]
 _NEW_DATA_["HR_Delta_iCH4_30s"] = _PERSISTENT_["delta_high_conc_iCH4_30s"]
@@ -248,7 +247,6 @@ try:
         peak5_spec_low_conc += P5_A1_low_conc*_DATA_["peak24_spec"] + P5_H1_low_conc*_DATA_["peak30_spec"]+ P5_H1M1_low_conc*_DATA_["peak30_spec"]*_DATA_["peakheight_5"]
         temp = protDivide(peak5_spec_low_conc, _DATA_["ch4_splinemax"])
         delta_iCH4 = applyLinear(temp,DELTA_iCH4)
-        #print "delta_iCH4", delta_iCH4
         _NEW_DATA_["HP_Delta_iCH4_Raw"] = delta_iCH4
         now = _OLD_DATA_["peak5_spec"][-1].time
         _NEW_DATA_["HP_Delta_iCH4_30s"] = boxAverage(_PERSISTENT_["buffer30_iCH4"],delta_iCH4,now,30)
@@ -425,16 +423,14 @@ else:
     if _DATA_["species"] == 105: # Update the offset for virtual laser 1
         try:
             co2_adjust = _DATA_["adjust_87"]
-            #print 'co2_adjust', co2_adjust
             co2_adjust = min(max_adjust,max(-max_adjust,co2_adjust))
             newOffset0 = _FREQ_CONV_.getWlmOffset(1) + co2_adjust
             _PERSISTENT_["wlm1_offset"] = newOffset0
             _NEW_DATA_["wlm1_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(1,float(newOffset0))
-            #print "New C12 (virtual laser 1) offset: %.5f" % newOffset0
         except:
             pass
-            #print "No new C12 (virtual laser 1) offset"
+
     elif _DATA_["species"] == 106: # Update the offset for virtual laser 2
         try:
             co2_adjust = _DATA_["adjust_88"]
@@ -443,10 +439,8 @@ else:
             _NEW_DATA_["wlm2_offset"] = newOffset0
             _PERSISTENT_["wlm2_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(2,float(newOffset0))
-            #print "New C13 (virtual laser 2) offset: %.5f" % newOffset0
         except:
             pass
-            #print "No new C13 (virtual laser 2) offset"
 
     elif _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
         try:
@@ -456,10 +450,8 @@ else:
             _NEW_DATA_["wlm3_offset"] = newOffset0
             _PERSISTENT_["wlm3_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(3,float(newOffset0))
-            #print "New (13)CH4(virtual laser 3) offset: %.5f" % newOffset0
         except:
             pass
-            #print "No new (13)CH4 (virtual laser 3) offset"
 
         try:
             ch4_adjust = _DATA_["adjust_0"]
@@ -468,10 +460,8 @@ else:
             _NEW_DATA_["wlm4_offset"] = newOffset0
             _PERSISTENT_["wlm4_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(4,float(newOffset0))
-            #print "New (12)CH4(virtual laser 4) offset: %.5f" % newOffset0
         except:
             pass
-            #print "No new (12)CH4 (virtual laser 4) offset"
 
         try:
             h2o_adjust = _DATA_["adjust_30"]
@@ -480,28 +470,18 @@ else:
             _NEW_DATA_["wlm5_offset"] = newOffset0
             _PERSISTENT_["wlm5_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(5,float(newOffset0))
-            #print "New H2O (virtual laser 5) offset: %.5f" % newOffset0
         except:
             pass
-            #print "No new H2O (virtual laser 5) offset"
 
-    #print _PERSISTENT_["plot_iCH4"]
-    #elif _DATA_["species"] == 25: # Update the offset for virtual laser 8
-        #print "species", _DATA_["species"]
-        #print "ch4_high_adjust", _DATA_["ch4_high_adjust"]
         try:
-            #print "species", "species", _DATA_["species"]
             ch4_high_adjust = _DATA_["ch4_high_adjust"]
             ch4_high_adjust = min(max_adjust,max(-max_adjust,damp*ch4_high_adjust))
             newOffset0 = _FREQ_CONV_.getWlmOffset(8) + ch4_high_adjust
             _NEW_DATA_["wlm8_offset"] = newOffset0
             _PERSISTENT_["wlm8_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(8,float(newOffset0))
-            #print "New CH4 high precision(virtual laser 8) offset: %.5f" % newOffset0
         except:
             pass
-            print "No new CH4 high precision(virtual laser 8) offset"
-
 
     elif _DATA_["species"] == 11: # Update the offset for virtual laser 7
         try:
@@ -511,10 +491,8 @@ else:
             _NEW_DATA_["wlm7_offset"] = newOffset0
             _PERSISTENT_["wlm7_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(7,float(newOffset0))
-            #print "New H2O (virtual laser 7) offset: %.5f" % newOffset0
         except:
             pass
-            print "No new H2O (virtual laser 7) offset"
 
     elif _DATA_["species"] == 153: # Update the offset for virtual laser 6
         try:
@@ -524,7 +502,6 @@ else:
             _NEW_DATA_["wlm6_offset"] = newOffset0
             _PERSISTENT_["wlm6_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(6,float(newOffset0))
-            #print "New CO2 (virtual laser 6) offset: %.5f" % newOffset0
         except:
             pass
 
@@ -542,38 +519,38 @@ if _DATA_["species"] in TARGET_SPECIES and (_PERSISTENT_["plot_iCH4"] or _PERSIS
 
 # Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
 # _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
-for colname in _OLD_DATA_:    #  new ChemDetect section
-    _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _OLD_DATA_[colname][-1].value
+# for colname in _OLD_DATA_:    #  new ChemDetect section
+#     _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _OLD_DATA_[colname][-1].value
 
-for colname in _NEW_DATA_:
-    _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _NEW_DATA_[colname]
+# for colname in _NEW_DATA_:
+#     _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _NEW_DATA_[colname]
 
-if _OLD_DATA_["species"][-1].value == 150:
-    _PERSISTENT_["chemdetect_inst"].process_set()
+# if _OLD_DATA_["species"][-1].value == 150:
+#     _PERSISTENT_["chemdetect_inst"].process_set()
 
-    if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
-        pass
-        #print "WARNING: ChemDetect Status is RED"
+#     if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
+#         pass
+#         #print "WARNING: ChemDetect Status is RED"
 
 if _DATA_["species"] in TARGET_SPECIES and (_PERSISTENT_["plot_iCH4"] or _PERSISTENT_["plot_iCO2"]) and not suppressReporting:
-    if _OLD_DATA_["species"][-1].value == 150:
-        if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
-            _REPORT_["ChemDetect"] = 1.0  # BAD data
-        else:
-            _REPORT_["ChemDetect"] = 0.0  # Good data
-    else:
-        #_REPORT_["ChemDetect"] = -1.0  ## N/A due to non-ch4 data
-        _REPORT_["ChemDetect"] = _PERSISTENT_["ChemDetect_previous"]
+    # if _OLD_DATA_["species"][-1].value == 150:
+    #     if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
+    #         _REPORT_["ChemDetect"] = 1.0  # BAD data
+    #     else:
+    #         _REPORT_["ChemDetect"] = 0.0  # Good data
+    # else:
+    #     #_REPORT_["ChemDetect"] = -1.0  ## N/A due to non-ch4 data
+    #     _REPORT_["ChemDetect"] = _PERSISTENT_["ChemDetect_previous"]
 
-    #print "_REPORT_[ChemDetect] = ", _REPORT_["ChemDetect"]
-    _PERSISTENT_["ChemDetect_previous"] = _REPORT_["ChemDetect"]
+    # #print "_REPORT_[ChemDetect] = ", _REPORT_["ChemDetect"]
+    # _PERSISTENT_["ChemDetect_previous"] = _REPORT_["ChemDetect"]
 
     # Update the upper alarm status bits with some additional instrument status
     # flags.
     _REPORT_['ALARM_STATUS'] = 0x0000
 
-    if _REPORT_['ChemDetect'] == 1.0:
-        _REPORT_['ALARM_STATUS'] |= ALARM_CHEMDETECT_MASK
+    # if _REPORT_['ChemDetect'] == 1.0:
+    #     _REPORT_['ALARM_STATUS'] |= ALARM_CHEMDETECT_MASK
 
     pztNames = ['13CH4', '12CH4', 'H2O']
     for name in pztNames:
