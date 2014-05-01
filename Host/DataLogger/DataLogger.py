@@ -1036,6 +1036,10 @@ def main():
 if __name__ == "__main__":
     DEBUG = __debug__
     try:
+        # workaround for exception: AttributeError: _strptime_time
+        # time.strptime() is not thread-safe
+        # details: http://code-trick.com/python-bug-attribute-error-_strptime/
+        time.strptime(time.ctime())
         main()
     except:
         tbMsg = traceback.format_exc()
