@@ -1055,10 +1055,11 @@ def _buildExes():
     Build host executables.
     """
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %
-                                  (os.path.join(SANDBOX_DIR, 'host'),
-                                   os.path.join(SANDBOX_DIR, 'host', 'Firmware')
-                                   )})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s;%s" %
+                    (os.path.join(SANDBOX_DIR, 'host'),
+                    os.path.join(SANDBOX_DIR, 'host', 'Firmware')
+                    )})
 
     # MobileKit must be built first since the HostExe build will copy
     with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'MobileKit')):

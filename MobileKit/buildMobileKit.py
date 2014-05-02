@@ -44,7 +44,8 @@ def buildExes():
             print "Expected folder '%s' does not exist!", folder
             sys.exit(1)
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
 
     # run "python setup.py py2exe"
     retCode = subprocess.call(['python.exe', 'setup.py', 'py2exe'], env=buildEnv)
