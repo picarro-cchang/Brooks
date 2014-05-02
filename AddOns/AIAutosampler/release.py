@@ -526,7 +526,8 @@ def _buildExes():
     Build Autosampler executables.
     """
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
 
     with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'AIAutosampler')):
         retCode = subprocess.call(['python.exe', 'autosamplerSetup.py',
