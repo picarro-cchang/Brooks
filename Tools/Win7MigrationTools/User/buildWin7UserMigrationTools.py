@@ -52,7 +52,8 @@ def _buildExes(scriptName, toolsList):
             print "Expected folder '%s' does not exist!", folder
             sys.exit(1)
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
 
     # pass a semicolon-separated list of the tools to build in the environment
     # I don't the setup script can have command line arguments because py2exe will try to interpret them
@@ -66,7 +67,7 @@ def _buildExes(scriptName, toolsList):
             toolsStr = tool
             isFirst = False
 
-    buildEnv = os.environ.update({'TOOLSBUILDLIST' : toolsStr})
+    buildEnv.update({'TOOLSBUILDLIST' : toolsStr})
 
     # run "python <scriptName> py2exe"
     retCode = subprocess.call(['python.exe', scriptName, 'py2exe'], env=buildEnv)

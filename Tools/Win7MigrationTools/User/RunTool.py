@@ -47,7 +47,8 @@ def runPythonScript(scriptName):
             print "Expected folder '%s' does not exist!", folder
             sys.exit(1)
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s;%s" %(parentDir, firmwareDir)})
 
     #print "PYTHONPATH=", os.environ["PYTHONPATH"]
     #sys.exit(1)
