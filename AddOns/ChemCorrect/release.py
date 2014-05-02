@@ -522,7 +522,8 @@ def _buildExes():
     Build ChemCorrect executables.
     """
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
 
     with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'AddOns', 'ChemCorrect')):
         retCode = subprocess.call(['python.exe', 'chemcorrectSetup.py',
