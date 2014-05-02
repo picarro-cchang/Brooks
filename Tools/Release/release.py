@@ -1094,10 +1094,11 @@ def _buildExes():
     Build host executables.
     """
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s;%s" %
-                                  (os.path.join(SANDBOX_DIR, 'host'),
-                                   os.path.join(SANDBOX_DIR, 'host', 'Firmware')
-                                   )})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s;%s" %
+                    (os.path.join(SANDBOX_DIR, 'host'),
+                    os.path.join(SANDBOX_DIR, 'host', 'Firmware')
+                    )})
 
     with OS.chdir(os.path.join(SANDBOX_DIR, 'host', 'Host')):
         retCode = subprocess.call(['python.exe', 'PicarroExeSetup.py',
