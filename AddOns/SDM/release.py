@@ -512,7 +512,8 @@ def _buildExes():
     Build SDM executables.
     """
 
-    buildEnv = os.environ.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
+    buildEnv = dict(os.environ)
+    buildEnv.update({'PYTHONPATH' : "%s" % os.path.join(SANDBOX_DIR, 'host')})
 
     # dict with folder names and setup scripts to run
     setups = {"DataProcessor" : "dataProcessorSetup.py",
