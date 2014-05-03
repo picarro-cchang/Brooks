@@ -1381,6 +1381,9 @@ def _createGitConfigVersionFile(configDir, ver, branchName):
             fp.writelines(
                 ["branch_nick = %s\n" % branchName])
 
+    # return with no errors
+    return 0
+
 
 def _setGitConfigVer(createTag, product, ver):
     """
@@ -1410,16 +1413,28 @@ def _setGitConfigVer(createTag, product, ver):
         configParentDir = os.path.normpath(os.path.join(SANDBOX_DIR, "host", "Config"))
 
         # version.ini for CommonConfig
-        _createGitConfigVersionFile(os.path.join(configParentDir, 'CommonConfig'),
-                                    ver, branchName)
+        ret = _createGitConfigVersionFile(os.path.join(configParentDir, 'CommonConfig'),
+                                          ver, branchName)
+
+        if ret != 0:
+            LogErr("Error creating version.ini for CommonConfig")
+            sys.exit(1)
 
         for c in configTypes:
             # version.ini for analyzer types using git repo for configs
-            _createGitConfigVersionFile(os.path.join(configParentDir, c, "AppConfig"),
-                                        ver, branchName)
+            ret = _createGitConfigVersionFile(os.path.join(configParentDir, c, "AppConfig"),
+                                              ver, branchName)
 
-            _createGitConfigVersionFile(os.path.join(configParentDir, c, "InstrConfig"),
-                                        ver, branchName)
+            if ret != 0:
+                LogErr("Error creating version.ini for AppConfig for %s" % c)
+                sys.exit(1)
+
+            ret = _createGitConfigVersionFile(os.path.join(configParentDir, c, "InstrConfig"),
+                                              ver, branchName)
+
+            if ret != 0:
+                LogErr("Error creating version.ini for InstrConfig for %s" % c)
+                sys.exit(1)
 
 
 def _compileInstallers(product, osType, ver):
