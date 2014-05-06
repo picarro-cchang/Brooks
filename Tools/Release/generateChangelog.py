@@ -289,7 +289,7 @@ Generates a raw changelog for the specified tags.
         fp.write("  git branch = %s\n" % gitBranchName)
         fp.write("  bzrConfigs = %s\n" % str(bzrConfigs))
         fp.write("  startTag   = %s\n" % options.startTag)
-        fp.write("  endTag     = %s\n" % options.startTag)
+        fp.write("  endTag     = %s\n" % options.endTag)
 
         if len(bzrReposToQuery) > 0:
             fp.write("\n*************************************\n")
