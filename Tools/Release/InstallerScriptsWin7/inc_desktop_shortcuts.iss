@@ -99,29 +99,30 @@ Name: {userdesktop}\Diagnostics\Valve Display; Filename: {app}\HostExe\ValveDisp
 
 ; Integration folder
 ;
+; Integration shortcuts are installed under the desktop Diagnostics folder
 
-Name: {userdesktop}\Integration\Integration Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Integration Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
 
 
 ; All installers reference the same INI file
-Name: {userdesktop}\Integration\EEPROM Access; Filename: {app}\HostExe\InstrEEPROMAccess.exe; Parameters: -c ..\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\EEPROM Access; Filename: {app}\HostExe\InstrEEPROMAccess.exe; Parameters: -c ..\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
 
 ; Shortcut uses -c option if the integration tool ini filename is defined
 #ifdef integToolIni
-Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 #else
-Name: {userdesktop}\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 #endif
 
 
-Name: {userdesktop}\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
 ; ConfigManager shortcuts for user launcher and integration launcher
-Name: {userdesktop}\Integration\ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; Parameters: -l ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; Parameters: -l ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
-Name: {userdesktop}\Integration\Integration ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; Parameters: -l ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Integration ConfigManager; Filename: {app}\HostExe\ConfigManager.exe; Parameters: -l ..\AppConfig\Config\Utilities\{#supervisorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
 
 ; Picarro Utilities folder
