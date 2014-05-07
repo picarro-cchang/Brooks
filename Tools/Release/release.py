@@ -16,6 +16,7 @@ import time
 import os.path
 import stat
 import platform
+import errno
 
 from distutils import dir_util
 from optparse import OptionParser
@@ -346,6 +347,33 @@ def getGitBranch(gitDir):
     return curBranch
 
 
+def handleRemoveReadonly(func, path, exc):
+    """
+    Error handler for shutil.rmtree().
+
+    If the error is due to an access error (read-only file),
+    it attempts to add write permission and then retries.
+
+    If the error is for another reason it re-raises the error.
+
+    Reference: http://stackoverflow.com/questions/1213706/what-user-do-python-scripts-run-as-in-windows/1214935#1214935
+
+    On Unix, will also need to ensure the parent dir is writeable, see the above web page.
+
+    Usage : shutil.rmtree(path, ignore_errors=False, onerror=handleRemoveReadonly)
+    """
+    excvalue = exc[1]
+
+    if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
+        print "File '%s' is read-only, making it writeable so it can be deleted." % path
+        os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO) # 0777
+        func(path)
+    else:
+        # some other error, bubble it up
+        print "handleRemoveReadonly: path=%s  errno=%s" % (path, str(excvalue.errno))
+        raise
+
+
 ###############################################################################
 
 def makeExe(opts):
@@ -639,10 +667,10 @@ def makeExe(opts):
         # TODO: only remove the dir itself so we don't lose everything
         #       I haven't been using --dry-run so ignoring for now. tw
         if os.path.isdir(targetMfgDistribBase):
-            shutil.rmtree(targetMfgDistribBase)
+            shutil.rmtree(targetMfgDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
 
         if os.path.isdir(targetDistribBase):
-            shutil.rmtree(targetDistribBase)
+            shutil.rmtree(targetDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
 
         os.makedirs(targetMfgDistribBase)
         os.makedirs(targetDistribBase)
@@ -810,7 +838,7 @@ def _promoteStagedRelease(types=None,
         archiveDir = os.path.join(targetDir, 'Archive')
 
         if os.path.isdir(currentDir):
-            shutil.rmtree(currentDir)
+            shutil.rmtree(currentDir, ignore_errors=False, onerror=handleRemoveReadonly)
 
         # create the Current folder, and the Archive folder if it doesn't exist
         os.makedirs(currentDir)
@@ -943,8 +971,8 @@ def _copyBuildAndInstallers(versionConfig, product, osType, ver, customBuild=Fal
     # we cannot wipe out the entire staging area
     if customBuild is False:
         try:
-            #shutil.rmtree(STAGING_MFG_DISTRIB_BASE)
-            shutil.rmtree(STAGING_DISTRIB_BASE)
+            #shutil.rmtree(STAGING_MFG_DISTRIB_BASE, ignore_errors=False, onerror=handleRemoveReadonly)
+            shutil.rmtree(STAGING_DISTRIB_BASE, ignore_errors=False, onerror=handleRemoveReadonly)
         except OSError:
             # Okay if these directories don't already exist.
             pass
@@ -955,7 +983,7 @@ def _copyBuildAndInstallers(versionConfig, product, osType, ver, customBuild=Fal
             print "treeBase=", treeBase
 
             try:
-                shutil.rmtree(treeBase)
+                shutil.rmtree(treeBase, ignore_errors=False, onerror=handleRemoveReadonly)
             except OSError:
                 # Okay if these directories don't already exist.
                 pass
@@ -1032,11 +1060,11 @@ def _branchFromRepo(branch):
         # I think it takes a little time for things to settle after the chmod above
         # so make a second attempt after a short wait
         try:
-            shutil.rmtree(SANDBOX_DIR)
+            shutil.rmtree(SANDBOX_DIR, ignore_errors=False, onerror=handleRemoveReadonly)
         except:
             print "rmtree failed! sleep(5) and attempt shutil.rmtree one more time"
             time.sleep(5)
-            shutil.rmtree(SANDBOX_DIR)
+            shutil.rmtree(SANDBOX_DIR, ignore_errors=False, onerror=handleRemoveReadonly)
 
         print "Sandbox tree removed."
 
