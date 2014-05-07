@@ -143,11 +143,11 @@ Builds a local HostExe.
 
     parser = OptionParser(usage=usage)
 
-    # default is mobile, so fetch version number from mobile_version.json
+    # default is g2000, so fetch version number from g2000_version.json
     parser.add_option('--product', dest='product', metavar='PRODUCT',
-                      default='mobile',
+                      default='g2000',
                       help=('The product to use the JSON version number from '
-                            'for an internal build. Default is "mobile".'))
+                            'for an internal build. Default is "g2000".'))
 
     options, _ = parser.parse_args()
 
