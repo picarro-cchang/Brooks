@@ -42,7 +42,7 @@
 #include "inc_coordinator.iss"
 
 
-; Setup items unique to FDDS Surveyor are below:
+; Setup items unique to FEDS Surveyor are below:
 
 
 [Icons]
