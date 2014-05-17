@@ -10,17 +10,17 @@
             "installerSignature": "BFADS"
         },
 
-        "CBDS":  {
+        "CBDS": {
             "species": "iCO2",
             "installerSignature": "CBDS"
         },
 
-        "CFADS":  {
+        "CFADS": {
             "species": "CO2_CH4_H2O",
             "installerSignature": "CFADS"
         },
 
-        "CFBDS":  {
+        "CFBDS": {
             "species": "Flux",
             "installerSignature": "CFBDS"
         },
@@ -38,6 +38,11 @@
         "CFFDS": {
             "species": "iCO2_CH4",
             "installerSignature": "CFFDS"
+        },
+
+        "CFGDS": {
+            "species": "iCO2",
+            "installerSignature": "CFGDS"
         },
 
         "CFHADS": {
@@ -90,26 +95,22 @@
             "installerSignature": "HIDS"
         },
 
-        "MADS": {
-            "species": "HF",
-            "installerSignature": "MADS"
-        },
-
         "JFAADS": {
             "species": "5Species",
             "installerSignature": "JFAADS",
             "comment": "species are N2O_CH4_CO2_NH3_H2O"
         },
 
-	"NBDS": {
-	    "species": "H2O2",
-	    "installerSignature": "NBDS"
-	},
+        "MADS": {
+            "species": "HF",
+            "installerSignature": "MADS"
+        },
 
-	"CFGDS": {
-	    "species": "iCO2",
-	    "installerSignature": "CFGDS"
-	}
+        "NBDS": {
+            "species": "H2O2",
+            "installerSignature": "NBDS"
+        }
+
     },
 
     "installerScriptsDir": "InstallerScripts"

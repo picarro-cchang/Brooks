@@ -10,7 +10,7 @@
             "installerSignature": "BFADS"
         },
 
-        "CBDS":  {
+        "CBDS": {
             "species": "iCO2",
             "installerSignature": "CBDS"
         },
@@ -20,7 +20,7 @@
             "installerSignature": "CFADS"
         },
 
-        "CFBDS":  {
+        "CFBDS": {
             "species": "Flux",
             "installerSignature": "CFBDS"
         },
@@ -38,6 +38,11 @@
         "CFFDS": {
             "species": "iCO2_CH4",
             "installerSignature": "CFFDS"
+        },
+
+        "CFGDS": {
+            "species": "iCO2",
+            "installerSignature": "CFGDS"
         },
 
         "CFHADS": {
@@ -106,15 +111,11 @@
             "installerSignature": "MADS"
         },
 
-	"NBDS": {
-	    "species": "H2O2",
-	    "installerSignature": "NBDS"
-	},
+        "NBDS": {
+            "species": "H2O2",
+            "installerSignature": "NBDS"
+        }
 
-	"CFGDS": {
-	    "species": "iCO2",
-	    "installerSignature": "CFGDS"
-	}
     },
 
     "installerScriptsDir": "InstallerScriptsWin7"
