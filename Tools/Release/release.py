@@ -412,10 +412,26 @@ def makeExe(opts):
     # get the branch for this script that is executing
     branchScriptCur = getGitBranch(os.getcwd())
 
-    # it must match the branch command line option
-    if opts.branch != branchScriptCur:
-        LogErr("current git branch must be same as build target branch!")
-        sys.exit(1)
+    # If building, current branch _must_ match the branch command line option
+    # If promoting staged to released, not as critical since copying files, so
+    # alert the developer (who may want to bail if script is out of date and
+    # release folder structure has changed)
+    if not opts.makeOfficial:
+        if opts.branch != branchScriptCur:
+            LogErr("current git branch must be same as build target branch!")
+            sys.exit(1)
+    else:
+        if opts.branch != branchScriptCur:
+            print "Current git branch (%s) should be same as build target branch (%s)!" % (branchScriptCur, opts.branch)
+
+            # Prompt developer and all --make-official to continue
+            inStr = raw_input("Proceed with --make-official option (Y or N)? ")
+            inStr = inStr.lower()
+
+            # User typed something other than y or Y, bail
+            if inStr != 'y':
+                sys.exit(1)
+
 
     # productFamily incorporates the product and OS type ('g2000_win7' for example)
     productFamily = "%s_%s" % (opts.product, osType)
