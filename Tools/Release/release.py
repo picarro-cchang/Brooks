@@ -259,6 +259,11 @@ def _printSummary(opts, osType, logfile, productFamily, productConfigs, versionC
         else:
             print "local build       =", "NO"
 
+        if opts.archiveOnly:
+            print "archive only      =", "YES"
+        else:
+            print "archive only      =", "NO"
+
         if opts.buildTypes is None:
             print "build types       = all"
         else:
@@ -387,6 +392,26 @@ def makeExe(opts):
     if opts.product is None:
         LogErr("--product option is required!")
         sys.exit(1)
+
+    # osType argument only allowed with --make-official (promote to release)
+    if opts.osType is not None:
+        if opts.makeOfficial is False:
+            LogErr("--ostype must be used with --make-official!")
+            sys.exit(1)
+
+        # only win7 or winxp are valid
+        if opts.osType == 'win7' or opts.osType == 'winxp':
+            osType = opts.osType
+        else:
+            LogErr("Invalid --ostype argument, must be win7 or winxp!")
+            sys.exit(1)
+
+    if opts.archiveOnly is True:
+        if opts.makeOfficial is False:
+            LogErr("--archive must be used with --make-official!")
+            sys.exit(1)
+
+    archiveOnly = opts.archiveOnly
 
     # --dry-run has been replaced with --debug-local
     # (maybe change --debug-local to --dry-run? main difference is that
@@ -663,7 +688,8 @@ def makeExe(opts):
                               distribBase=targetDistribBase,
                               versionConfig=versionConfig,
                               product=productFamily,
-                              osType=osType)
+                              osType=osType,
+                              archiveOnly=archiveOnly)
 
         _buildDoneMsg("MAKE-OFFICIAL", startSec, logfile)
         return
@@ -764,7 +790,8 @@ def _promoteStagedRelease(types=None,
                           distribBase=None,
                           versionConfig=None,
                           product=None,
-                          osType=None):
+                          osType=None,
+                          archiveOnly=False):
     """
     Move the existing staged release to an official directory.
     CONFIGS already contains the types to promote.
@@ -802,16 +829,18 @@ def _promoteStagedRelease(types=None,
         stagingDir = os.path.join(STAGING_DISTRIB_BASE, c)
 
         # delete the existing Current folder since its contents will be
-        # replaced with the new installer
+        # replaced with the new installer (if not only archiving)
         currentDir = os.path.join(targetDir, 'Current')
         archiveDir = os.path.join(targetDir, 'Archive')
 
-        if os.path.isdir(currentDir):
-            shutil.rmtree(currentDir, ignore_errors=False, onerror=handleRemoveReadonly)
+        if archiveOnly is False:
+            if os.path.isdir(currentDir):
+                shutil.rmtree(currentDir, ignore_errors=False, onerror=handleRemoveReadonly)
 
-        # create the Current folder, and the Archive folder if it doesn't exist
-        os.makedirs(currentDir)
+            # create the Current folder
+            os.makedirs(currentDir)
 
+        # always create the Archive dir if it doesn't exist
         if not os.path.isdir(archiveDir):
             os.makedirs(archiveDir)
 
@@ -828,97 +857,17 @@ def _promoteStagedRelease(types=None,
         # copy the installer from the staging folder to both Archive and Current
         print "  staged from: '%s'" % os.path.join(stagingDir, installer)
         print "   to Archive: '%s'" % os.path.join(archiveDir, installer)
-        print "   to Current: '%s'" % os.path.join(currentDir, installer)
-        print ""
 
         shutil.copyfile(os.path.join(stagingDir, installer),
                         os.path.join(archiveDir, installer))
 
-        shutil.copyfile(os.path.join(stagingDir, installer),
-                        os.path.join(currentDir, installer))
+        if archiveOnly is False:
+            print "   to Current: '%s'" % os.path.join(currentDir, installer)
 
-    """
-    # we really can't do this now with an option to build only specific types
-    # a g2000_version.json file should be getting dropped inside each type folder
-    # along with the setup_xxx.exe if we want to do this
-    # 
-    # all this code needs to go away anyway...
-    stagingVer = os.path.join(STAGING_DISTRIB_BASE, versionConfig)
+            shutil.copyfile(os.path.join(stagingDir, installer),
+                            os.path.join(currentDir, installer))
 
-    if not os.path.isfile(stagingVer):
-        LogErr("Staging %s is missing!" % versionConfig)
-        sys.exit(1)
-
-    print ""
-
-    ver = {}
-    with open(stagingVer, 'r') as version:
-        ver.update(json.load(version))
-
-    negate = False
-    typesList = None
-
-    if types is not None:
-        if types[0] == '!':
-            negate = True
-            typesList = types[1:].split(',')
-        else:
-            typesList = types.split(',')
-
-    # At this point CONFIGS should already contain the types to promote...
-    configTypes = []
-    for c in CONFIGS:
-        configTypes.append(c)
-    configTypes.sort()
-
-    for c in configTypes:
-        doCopy = True
-
-        if typesList is not None:
-            if negate:
-                doCopy = c not in typesList
-            else:
-                doCopy = c in typesList
-
-        if not doCopy:
-            continue
-
-        # Installer filenames will be something like:
-        #    setup_CFADS_CO2_CH4_H2O_g2000_win7-1.5.0-10.exe
-        #
-        # where
-        #     c = CFADS
-        #     CONFIGS[c] = CO2_CH4_H2O
-        #     _verAsString(product, ver) = g2000_win7-1.5.0-10
-
-        installer = "setup_%s_%s_%s.exe" % (c, CONFIGS[c],
-                                            _verAsString(product, ver))
-
-        # Poor practice to use a different filename in the Current folder, removing this.
-        #installerCurrent = "setup_%s_%s.exe" % (c, CONFIGS[c])
-        targetDir = os.path.join(distribBase, c)
-
-        print "%-8s: %s" % (c, installer)
-
-        # create destination folders if they don't already exist
-        destDir = os.path.join(targetDir, 'Archive')
-        if not os.path.exists(destDir):
-            os.makedirs(destDir)
-
-        shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
-                        os.path.join(targetDir, 'Archive', installer))
-
-        destDir = os.path.join(targetDir, 'Current')
-        if not os.path.exists(destDir):
-            os.makedirs(destDir)
-
-        # Installers in Current folder now include the version number in their
-        # filenames.
-        #shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
-        #                os.path.join(targetDir, 'Current', installerCurrent))
-        shutil.copyfile(os.path.join(STAGING_DISTRIB_BASE, c, installer),
-                        os.path.join(targetDir, 'Current', installer))
-    """
+        print ""
 
 
 def _copyBuildAndInstallers(versionConfig, product, osType, ver, customBuild=False):
@@ -1430,10 +1379,22 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
                       help=('Promote the current release in staging to the '
                             'official distribution channels.'))
     parser.add_option('--types', dest='buildTypes',
-                      default=None, help=('Comma-delimited list of analyzer types to build or'
+                      default=None, help=('Comma-delimited list of analyzer types to build or '
                                           'types to move from staging to the official release '
-                                          'area. If the list starts with a "!" every type but those'
+                                          'area. If the list starts with a "!" every type but those '
                                           'in the list will be built or moved.'))
+
+    # options for --make-official only
+    parser.add_option('--ostype', dest='osType',
+                      default=None, help=('OS type for promoting the current release to release.'
+                                          'Valid arguments are win7 or winxp. Only allowed with the '
+                                          '--make-official option.'))
+
+    parser.add_option('--archive', dest='archiveOnly',
+                      action='store_true', default=False,
+                      help=('When promoting staged to release, copy installers to the Archive folder '
+                            'but don\'t copy them to Current. '
+                            'Only allowed with the --make-official option.'))
 
     parser.add_option('--dry-run', dest='dryRun', default=False,
                       action='store_true',
@@ -1447,6 +1408,7 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
     parser.add_option('--branch', dest='branch', metavar='BRANCH',
                       default='master', help=('The remote branch from which the '
                                               'release is built.'))
+
     parser.add_option('--no-confirm', dest='skipConfirm',
                       action='store_true', default=False,
                       help=('Don\'t ask for confirmation of build settings before '
