@@ -890,7 +890,8 @@ def _promoteStagedRelease(types=None,
                 shutil.rmtree(currentDir, ignore_errors=False, onerror=handleRemoveReadonly)
 
             # create the Current folder
-            os.makedirs(currentDir)
+            if not os.path.isdir(currentDir):
+                os.makedirs(currentDir)
 
         # always create the Archive dir if it doesn't exist
         if not os.path.isdir(archiveDir):
@@ -910,14 +911,15 @@ def _promoteStagedRelease(types=None,
         print "  staged from: '%s'" % os.path.join(stagingDir, installer)
         print "   to Archive: '%s'" % os.path.join(archiveDir, installer)
 
-        shutil.copyfile(os.path.join(stagingDir, installer),
-                        os.path.join(archiveDir, installer))
+        # call copy2() to preserve the modify date (copyfile() does not)
+        shutil.copy2(os.path.join(stagingDir, installer),
+                     os.path.join(archiveDir, installer))
 
         if archiveOnly is False:
             print "   to Current: '%s'" % os.path.join(currentDir, installer)
 
-            shutil.copyfile(os.path.join(stagingDir, installer),
-                            os.path.join(currentDir, installer))
+            shutil.copy2(os.path.join(stagingDir, installer),
+                         os.path.join(currentDir, installer))
 
         print ""
 
