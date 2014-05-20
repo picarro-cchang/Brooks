@@ -23,6 +23,7 @@ File History:
     09-08-05  alex Improve time-locking without a master plot
     10-01-22  sze  Changed date format display to ISO standard
     10-07-05  alex Add the function to change line/marker color at a specified time
+    14-05-20  tw   Fixed bug in Win7 alarm box height calc, bumped max alarms in box to 5 before shows scrollbars.
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -1079,7 +1080,7 @@ class InstStatusPanel(wx.Panel):
     def __init__(self, font, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
- 
+
         self.warmBoxTempLabel = wx.StaticText(self, -1, u"Warm Box Temp (\N{DEGREE SIGN}C)".encode("cp1252"))
         setItemFont(self.warmBoxTempLabel,font)
         self.cavityTempLabel = wx.StaticText(self, -1, u"Cavity Temperature (\N{DEGREE SIGN}C)".encode("cp1252"))
@@ -1185,7 +1186,7 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface = DataLoggerInterface(self.config)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
-        self.numAlarms = min(4, self.config.getint("AlarmBox","NumAlarms",4))
+        self.numAlarms = min(5, self.config.getint("AlarmBox","NumAlarms",4))
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
         self.lockTime = False
@@ -1621,7 +1622,9 @@ class QuickGui(wx.Frame):
         if self.platform == "Windows-XP":
             boxHeight = 10 + self.numAlarms * 15
         else:
-            boxHeight = 15 + self.numAlarms * 15
+            # for the height computation we ought to use font height + padding
+            boxHeight = self.numAlarms * 20
+
         size = boxWidth,boxHeight
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
