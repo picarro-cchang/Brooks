@@ -14,9 +14,11 @@
 import time
 import cPickle
 from Queue import Queue
+import os
+import sys
 
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, timestamp
-from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, \
+from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, RPC_PORT_DRIVER, \
                                     STATUS_PORT_ALARM_SYSTEM, STATUS_PORT_INST_MANAGER
 #from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SafeFile import SafeFile, FileExists
@@ -29,6 +31,12 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 APP_NAME = "InputListener"
 
 EventManagerProxy_Init(APP_NAME)
+
+
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                            APP_NAME,
+                                            IsDontCareConnection = False)
+
 
 
 class InputListener(object):
@@ -54,11 +62,46 @@ class InputListener(object):
     def _InstListener(self, data):
         #print "InstrManager: ", data
         self.q.put(("InstrMgr", data))
-        
+
+
 if __name__ == "__main__":
     il = InputListener()
-    
-    with open("C:/temp/CFIDS2085_20140409.dat", "wb") as f:
+
+    # construct a filename
+    TimeStandard = "local"
+    srcDir = "C:/temp"
+
+    try:
+        engineName = CRDS_Driver.fetchInstrInfo("analyzername")
+        if engineName == None:
+            engineName = "UNKNOWN"
+    except Exception, err:
+        print err
+        engineName = "UNKNOWN"
+
+    CreateLogTimestamp = timestamp.getTimestamp()
+    CreateLogTime = timestamp.unixTime(CreateLogTimestamp)
+
+    if TimeStandard == "local":
+        LogHour = time.localtime(CreateLogTime).tm_hour #used to determine when we reached midnight
+        timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(CreateLogTime))
+    else:
+        # Use GMT (UTC)
+        LogHour = time.gmtime(CreateLogTime).tm_hour #used to determine when we reached midnight
+        timeString = time.strftime("%Y%m%d-%H%M%SZ",time.gmtime(CreateLogTime))
+        # Z is for GMT (UTC) according to ISO 8601 format
+
+    LogName = "capture"
+    Fname = "%s-%s-%s.dat" % (engineName, timeString, LogName)
+
+    LogPath = os.path.abspath(os.path.join(srcDir, Fname))
+
+    print ""
+    print "Capturing output to: %s" % LogPath
+    print ""
+
+    # was "C:/temp/CFIDS2085_20140409.dat"
+    with open(LogPath, "wb") as f:
         #time.sleep(1)
         #app, res = il.q.get()
         #print "%s: %s" % (app, res)
@@ -68,6 +111,4 @@ if __name__ == "__main__":
             
             cPickle.dump(res, f, -1)
             print res[0]
-        
-        
-        
+
