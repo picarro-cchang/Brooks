@@ -12,6 +12,7 @@
 #include <string.h>
 #include "CuTest.h"
 #include "ini.h"
+#include <errno.h>
 
 #define MAXPORTS (4)
 #define MAXDELIM (8)
@@ -617,10 +618,13 @@ int main(int argc, char *argv[])
         return 1;
     }
     
-#ifdef WIN32
+    /*#ifdef WIN32*/
     WSADATA wsaData;
-    WSAStartup(0x0101, &wsaData);
-#endif
+    if (WSAStartup(0x0101, &wsaData) == SOCKET_ERROR) {
+      fprintf(stderr, "Error initializing WSA.\n");
+      exit(1);
+    }
+    /*#endif*/
 
     memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
     sad.sin_family = AF_INET;           /* set family to Internet */
@@ -658,9 +662,10 @@ int main(int argc, char *argv[])
 
     /* Bind a local address to the socket */
 
-    if (bind(sd,(struct sockaddr *)&sad,sizeof(sad)) < 0) {
-        fprintf(stderr,"bind failed\n");
-        exit(1);
+    error = bind(sd, (struct sockaddr *)&sad, sizeof(sad));
+    if (error != 0) {
+      fprintf(stderr,"bind failed: %d\n", WSAGetLastError());
+      exit(1);
     }
 
     /* Specify size of the request queue */

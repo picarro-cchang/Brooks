@@ -1,5 +1,5 @@
 import os
-import sys
+nimport sys
 import time
 import serial
 import subprocess
@@ -16,6 +16,9 @@ else:
 AppPath = os.path.abspath(AppPath)
 
 DEFAULT_CONFIG_NAME = "serial2socket.ini"
+
+# Win32 CreateProcess flag
+DETACHED_PROCESS = 8
 
 class RunSerial2Socket(object):
     def __init__(self, configFile):
@@ -41,30 +44,8 @@ class RunSerial2Socket(object):
         self.updateIni(self.findPorts())
         
         # Launch the EXE program
-        affmask = self.appCo.getint("SETUP", "AFFINITYMASK", 1)
-        lpApplicationName = None
-        lpCommandLine = "%s %d %s" % (exeFile, TCP_PORT_PERIPH_INTRF, instrConfigFile)
-        lpProcessAttributes = None
-        lpThreadAttributes = None
-        bInheritHandles = False
-        dwCreationFlags = win32process.HIGH_PRIORITY_CLASS
-        dwCreationFlags += win32process.CREATE_NO_WINDOW
-        lpEnvironment = None
-        lpCurrentDirectory = None
-        lpStartupInfo = win32process.STARTUPINFO()
-        hProcess, hThread, dwProcessId, dwThreadId =  win32process.CreateProcess(
-            lpApplicationName,
-            lpCommandLine,
-            lpProcessAttributes,
-            lpThreadAttributes,
-            bInheritHandles,
-            dwCreationFlags,
-            lpEnvironment,
-            lpCurrentDirectory,
-            lpStartupInfo
-        )
-        win32process.SetProcessAffinityMask(hProcess, affmask)
-        #subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=lpStartupInfo, creationflags = dwCreationFlags)
+        #affmask = self.appCo.getint("SETUP", "AFFINITYMASK", 1)
+        subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], creationflags=DETACHED_PROCESS, close_fds=True)
         
     def _getCleanPortList(self, pList):
         retList = []
