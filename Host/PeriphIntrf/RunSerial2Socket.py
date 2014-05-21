@@ -1,5 +1,5 @@
 import os
-nimport sys
+import sys
 import time
 import serial
 import subprocess
