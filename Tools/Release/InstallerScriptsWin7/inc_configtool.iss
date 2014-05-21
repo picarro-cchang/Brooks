@@ -5,4 +5,4 @@
 
 [Icons]
 
-Name: {userdesktop}\Integration\Configuration Tool; Filename: R:\crd\TestSoftware\Configuration\ConfigTool.py; WorkingDir: R:\crd\TestSoftware\Configuration; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Configuration Tool; Filename: R:\crd\TestSoftware\Configuration\ConfigTool.py; WorkingDir: R:\crd\TestSoftware\Configuration; IconFilename: {app}\HostExe\{#integrationIcon}

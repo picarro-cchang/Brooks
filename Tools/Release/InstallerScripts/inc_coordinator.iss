@@ -17,7 +17,7 @@ Name: {userdesktop}\Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLau
 ; Integration
 
 #ifdef coordinatorLauncherIntegIni
-Name: {userdesktop}\Integration\Integration Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#coordinatorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+Name: {userdesktop}\Diagnostics\Integration\Integration Coordinator Launcher; Filename: {app}\HostExe\CoordinatorLauncher.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#coordinatorLauncherIntegIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 #endif
 
 
