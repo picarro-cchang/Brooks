@@ -434,7 +434,10 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self._DataSource = DataSource
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
-        self.InsertColumn(1,"Name",width=sx-40)
+
+        # must subtract off width needed for scrollbars (17)
+        self.InsertColumn(1, "Name", width=sx-40-17)
+
         self.alarmNames = []
         for i in range(numAlarms):
             self.alarmNames.append("Alarm %d" % (i+1))
@@ -1186,7 +1189,11 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface = DataLoggerInterface(self.config)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
-        self.numAlarms = min(5, self.config.getint("AlarmBox","NumAlarms",4))
+
+        # clamp # of additional alarms displayed to 5 (shows vert scrollbar if more)
+        self.numAlarms = self.config.getint("AlarmBox", "NumAlarms", 4)
+        self.numAlarmsDisplay = min(5, self.numAlarms)
+
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
         self.lockTime = False
@@ -1618,34 +1625,48 @@ class QuickGui(wx.Frame):
         alarmBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Alarms")
         # Define the box height automatically instead of using INI file
         #size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
+
         boxWidth = self.config.getint("AlarmBox","Width")
         if self.platform == "Windows-XP":
-            boxHeight = 10 + self.numAlarms * 15
+            boxHeight = 10 + self.numAlarmsDisplay * 15
         else:
             # for the height computation we ought to use font height + padding
-            boxHeight = self.numAlarms * 20
+            boxHeight = self.numAlarmsDisplay * 20
 
         size = boxWidth,boxHeight
+
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
         disabled = wx.ListItemAttr(fgColour,bgColour,font)
+
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.alarmInterface,
                                            size=size, numAlarms=self.numAlarms)
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
-        
+
+        # numSysAlarms = 1 will hide IPV Connectivity, default is 2 (show both)
+        numSysAlarms = min(2, self.config.getint("AlarmBox", "NumSysAlarms", 2))
+
         # System Alarm view
+        # Define box height automatically
+        boxWidth = self.config.getint("AlarmBox","Width")
+
         if self.platform == "Windows-XP":
-            size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
+            boxHeight = numSysAlarms * 17
+            #size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
         else:
             # Windows 7
-            size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",40)
+            boxHeight = numSysAlarms * 20
+            #size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",40)
+
+        size = boxWidth,boxHeight
+
         self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.sysAlarmInterface,
-                                           size=size, numAlarms=2)
+                                           size=size, numAlarms=numSysAlarms)
         self.sysAlarmView.SetMainForm(self)
         
         # Combine system alarm with concentration alarms
