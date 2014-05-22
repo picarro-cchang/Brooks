@@ -5,8 +5,11 @@
 
 #define dataRecalIni = "UserCal.ini"
 
+; mode selector kills driver when switching between HKDS and HIDS
+#define killAllApps = 1
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
+
 #define diagDataCollectorIni = "DiagDataCollector.ini"
 #define setupToolIni = "SetupTool.ini"
 

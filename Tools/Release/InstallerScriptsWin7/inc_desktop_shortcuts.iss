@@ -54,13 +54,20 @@
 #define closeValvesOpt = ""
 #endif
 
+; -k option for Supervisor: Kill all applications including Driver when switching modes
+#ifdef killAllApps
+#define killAllAppsOpt = "-k"
+#else
+#define killAllAppsOpt = ""
+#endif
+
 
 [Icons]
 
 ; Shortcuts on the desktop
 Name: {userdesktop}\Start Instrument; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: -a -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
-Name: {userdesktop}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: {#closeValvesOpt} -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+Name: {userdesktop}\Picarro Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: {#closeValvesOpt} {#killAllAppsOpt} -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 Name: {userdesktop}\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#controllerIcon}
 
@@ -148,7 +155,7 @@ Name: {userdesktop}\Picarro Utilities\{#dataRecalTitle3}; Filename: {app}\HostEx
 
 ; Start menu
 
-Name: {group}\Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: {#closeValvesOpt} -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+Name: {group}\Mode Switcher; Filename: {app}\HostExe\SupervisorLauncher.exe; Parameters: {#closeValvesOpt} {#killAllAppsOpt} -c ..\AppConfig\Config\Utilities\{#supervisorLauncherIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 Name: {group}\Controller; Filename: {app}\HostExe\Controller.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#controllerIcon}
 
