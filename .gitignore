@@ -42,3 +42,5 @@ AddOns/AIAutosampler/dist/
 
 *.ini~
 *.py~
+Host/DataManager/sampleJSONPayload.txt
+Host/DataManager/sampleJSONPayload.txt~
