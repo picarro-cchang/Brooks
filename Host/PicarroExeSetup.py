@@ -641,6 +641,7 @@ consoleList = [
     "Common/SchemeProcessor.py",
     "DataLogger/DataLogger.py",
     "DataManager/DataManager.py",
+    "DataManager/DataManagerPublisher.py",
     "Driver/Driver.py",
     "ElectricalInterface/ElectricalInterface.py",
     "EventManager/EventManager.py",
