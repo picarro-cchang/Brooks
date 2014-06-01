@@ -1,24 +1,10 @@
-#!/usr/bin/python
-#
-# FILE:
-#   SharedTypes.py
-#
-# DESCRIPTION:
-#  Class definitions and other information (notably Rpc ports) which need to be shared among the
-#  CRDS applications and drivers
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   07-Jan-2009  sze  Initial version
-#   21-Jul-2009  sze  Added GenHandler
-#   03-Aug-2009  sze  Added getSchemeTableClass
-#   04-Aug-2009  sze  Added ctypesToDict and dictToCtypes
-#   30-Sep-2009  sze  Added Scheme class
+"""
+Class definitions and other information (notably Rpc ports) which need to be shared among the
+CRDS applications and drivers
 
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved
-#
+Copyright (c) 2009-2014 Picarro, Inc. All rights reserved
+"""
+
 import ctypes
 import os
 import time
@@ -72,11 +58,13 @@ RPC_PORT_ECHO_P3_MAX        = 50699
 RPC_PORT_SURVEYOR_ZMQ       = 50700
 
 #TCP_PORT... are the port numbers used by "normal" TCP servers
-TCP_PORT_INTERFACE          = 51000
-TCP_PORT_FITTER             = 51010
-TCP_PORT_COMMAND_HANDLER    = 51020
-TCP_PORT_SUPERVISOR         = 23456
-TCP_PORT_PERIPH_INTRF       = 51030
+TCP_PORT_INTERFACE                = 51000
+TCP_PORT_FITTER                   = 51010
+TCP_PORT_COMMAND_HANDLER          = 51020
+TCP_PORT_SUPERVISOR               = 23456
+TCP_PORT_PERIPH_INTRF             = 51030
+TCP_PORT_DATAMANAGER_ZMQ_PUB      = 5555
+TCP_PORT_DATAMANAGER_ZMQ_SUB_SYNC = 5556
 
 #ZMQ_PORT... are the port numbers used by ZMQ sockets
 ZMQ_PORT_SURVEYOR_CMD       = 52701

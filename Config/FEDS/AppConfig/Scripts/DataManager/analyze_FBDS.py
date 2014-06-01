@@ -326,7 +326,7 @@ except:
 
 suppressReporting = _DATA_['fast_flag'] and _DATA_['species'] != 25
 
-if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not suppressReporting:
+if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"]:
     # Get peripheral data
     try:
         if _PERIPH_INTRF_:
