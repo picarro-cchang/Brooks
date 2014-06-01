@@ -45,3 +45,5 @@ AddOns/AIAutosampler/dist/
 Host/DataManager/sampleJSONPayload.txt
 Host/DataManager/sampleJSONPayload.txt~
 ._*
+Config/FEDS/InstrConfig/Calibration/InstrCal/Spurious_Installer_ini/
+Config/CommonConfig/version.ini
