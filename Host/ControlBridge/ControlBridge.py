@@ -26,17 +26,18 @@ class ControlBridge(object):
         self.context = zmq.Context()
 
         self.controlSocket = self.context.socket(zmq.REP)
-        self.controlSocket.connect("tpc://127.0.0.1:%d" % SharedTypes.TCP_PORT_CONTROL_BRIDGE_ZMQ)
+        self.controlSocket.bind("tcp://127.0.0.1:%d" % SharedTypes.TCP_PORT_CONTROL_BRIDGE_ZMQ)
 
         self.commands = {
             "armIsotopicCapture" : self._armIsotopicCapture,
-            "cancelIsotopicCapture" : self._cancelIsotopicCapture
+            "cancelIsotopicCapture" : self._cancelIsotopicCapture,
+			"shutdown" : self._shutdown
         }
  
     def run(self):
 
-        while True:
-            try:
+        try:
+            while True:
                 cmd = self.controlSocket.recv_string()
 
                 try:
@@ -48,9 +49,9 @@ class ControlBridge(object):
 
                 self.controlSocket.send_string("%d" % response)
 
-            finally:
-                self.controlSocket.close()
-                self.context.term()
+        finally:
+            self.controlSocket.close()
+            self.context.term()
 
     def _armIsotopicCapture(self):
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 1)
@@ -74,3 +75,7 @@ class ControlBridge(object):
 
     def _startReferenceGasInjection(self):
         pass
+        
+if __name__ == '__main__':
+    bridge = ControlBridge()
+    bridge.run()
