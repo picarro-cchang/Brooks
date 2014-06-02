@@ -68,6 +68,7 @@ sys.path.append("PeriphIntrf")
 sys.path.append("Utilities")
 sys.path.append("WebServer")
 sys.path.append("rdReprocessor")
+sys.path.append("ControlBridge")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
@@ -653,6 +654,7 @@ consoleList = [
     "ReadExtSensor/ReadExtSensor.py",
     "WebServer/server.py",
     "rdReprocessor/rdReprocessor.py",
+    "ControlBridge/ControlBridge.py",
     "Utilities/RemoteAccess/RemoteAccess.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
     "Utilities/IntegrationBackup/IntegrationBackup.py",
