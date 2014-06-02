@@ -170,6 +170,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         if self.launchType == "exe":
             subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
         else:
+            print os.getcwd()
             subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
 
         # Launch HostStartup
