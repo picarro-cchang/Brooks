@@ -785,6 +785,8 @@ elif pythonVer == "2.7":
     if pythonSubVer == "2.7.3":
         import zmq
         os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
+        inclusionListZmq = ["zmq.core.*", "zmq.utils", "zmq.utils.jsonapi", "zmq.utils.strtypes"]
+        inclusionList.extend(inclusionListZmq)
 
     packageList = ["werkzeug","jinja2","email"]
 
