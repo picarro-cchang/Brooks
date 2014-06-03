@@ -744,6 +744,7 @@ def makeExe(opts):
 
     # Commit and push new version number if it was changed
     if changedVersion is True:
+        print "git.exe add %s" % versionConfig
         retCode = subprocess.call(['git.exe',
                                    'add',
                                    versionConfig])
@@ -752,6 +753,7 @@ def makeExe(opts):
             LogErr('Error staging new version metadata in local repo, retCode=%d.' % retCode)
             sys.exit(1)
 
+        print "git.exe commit -m release.py version update (%s)." % _verAsString(productFamily, VERSION)
         retCode = subprocess.call(['git.exe',
                                    'commit',
                                    '-m',
@@ -761,6 +763,7 @@ def makeExe(opts):
             LogErr('Error committing new version metadata to local repo, retCode=%d.' % retCode)
             sys.exit(1)
 
+        print "git.exe push"
         retCode = subprocess.call(['git.exe',
                                    'push'])
 
@@ -824,10 +827,12 @@ def makeExe(opts):
     if opts.createTag:
         _tagRepository(productFamily, VERSION)
 
-        # XXX These should be removed when we finish merging the
+        # Only tag bzr repos if they were used.
+        # These should be removed when we finish merging the
         # configuration file directories into the repository.
-        _tagCommonConfig(productFamily, VERSION)
-        _tagAppInstrConfigs(productFamily, VERSION)
+        if bzrConfigsNeeded is True:
+            _tagCommonConfig(productFamily, VERSION)
+            _tagAppInstrConfigs(productFamily, VERSION)
     else:
         print "Skipping tagging of the repository."
 
