@@ -69,6 +69,7 @@ sys.path.append("Utilities")
 sys.path.append("WebServer")
 sys.path.append("rdReprocessor")
 sys.path.append("ControlBridge")
+sys.path.append("Sensors")
 sys.path.append("Utilities/RemoteAccess")
 sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
@@ -655,6 +656,7 @@ consoleList = [
     "WebServer/server.py",
     "rdReprocessor/rdReprocessor.py",
     "ControlBridge/ControlBridge.py",
+    "Sensors/MobileKitMonitor.py",
     "Utilities/RemoteAccess/RemoteAccess.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
     "Utilities/IntegrationBackup/IntegrationBackup.py",
