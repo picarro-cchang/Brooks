@@ -23,7 +23,6 @@ class DataManagerPublisher(object):
         self.context = zmq.Context()
 
         self.broadcastSocket = self.context.socket(zmq.PUB)
-        self.broadcastSocket.set_hwm(100000)
         self.broadcastSocket.bind("tcp://127.0.0.1:%d" % SharedTypes.TCP_PORT_DATAMANAGER_ZMQ_PUB)
 
         self.queue = Queue.Queue()
