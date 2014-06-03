@@ -7,7 +7,7 @@ import traceback
 import serial
 import time
 
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_MOBILE_KIT_ARDUINO
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_MOBILE_KIT_MONITOR
 from Host.Common import CmdFIFO
 from Host.Common.EventManagerProxy import Log, LogExc, EventManagerProxy_Init
 
@@ -92,7 +92,7 @@ def main():
     th.setDaemon(True) # child is killed if parent dies
     th.start()
     # listen on given port
-    rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_MOBILE_KIT_ARDUINO),
+    rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_MOBILE_KIT_MONITOR),
                                        ServerName="MobileKitMonitor",
                                        ServerDescription="MobileKitMonitor",
                                        ServerVersion="1.0",
