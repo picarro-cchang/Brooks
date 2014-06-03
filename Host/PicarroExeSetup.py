@@ -650,6 +650,7 @@ consoleList = [
     "DataManager/DataManager.py",
     "Driver/Driver.py",
     "ElectricalInterface/ElectricalInterface.py",
+    "EventLogWatcher/EventLogWatcher.py",
     "EventManager/EventManager.py",
     "InstMgr/InstMgr.py",
     "FileEraser/FileEraser.py",
