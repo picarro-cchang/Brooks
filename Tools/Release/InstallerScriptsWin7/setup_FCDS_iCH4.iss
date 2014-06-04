@@ -11,7 +11,8 @@
 #define setupToolIni = "SetupTool.ini"
 
 ; create Coordinator Launcher shortcut as well as Integration Coordinator Launcher
-#define coordinatorLauncherIni = "CoordinatorLauncher.ini"
+; removed Coordinator Launcher (issue #721)
+;#define coordinatorLauncherIni = "CoordinatorLauncher.ini"
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
 
 
