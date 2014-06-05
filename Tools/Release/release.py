@@ -415,8 +415,22 @@ def makeExe(opts):
 
     # Note: opts.cloneAllRepos was set to False if skipping either host or config clones
     if not opts.cloneAllRepos and not opts.local:
-        LogErr("--debug-skip-all-clone, --debug-skip-host-clone, and --debug-skip-config-clone options are allowed only with --debug-local option!")
-        sys.exit(1)
+        print ""
+        print "--debug-skip-all-clone, --debug-skip-host-clone, and"
+        print "--debug-skip-config-clone options are intended to be"
+        print "used with --debug-local. Be sure to checkout the appropriate"
+        print "git branch in the sandbox and perform a 'git pull' in it before continuing."
+        print ""
+        response = raw_input("Are you sure you want to continue? Y or N: ")
+
+        if response == "Y" or response == "y":
+            print "Y typed, continuing"
+        else:
+            print "Build canceled"
+            sys.exit(0)
+        
+        #LogErr("--debug-skip-all-clone, --debug-skip-host-clone, and --debug-skip-config-clone options are allowed only with --debug-local option!")
+        #sys.exit(1)
 
     # save off clone options
     cloneAllRepos = opts.cloneAllRepos
@@ -1591,7 +1605,7 @@ Builds a new release of HostExe and all installers.
                       help=('Promote the current release in staging to the '
                             'official distribution channels.'))
     parser.add_option('--types', dest='buildTypes',
-                      default=None, help=('Comma-delimited list of analyzer types to build or'
+                      default=None, help=('Comma-delimited list of analyzer types to build or '
                                           'types to move from staging to the official release '
                                           'area. If the list starts with a "!" every type but those'
                                           'in the list will be built or moved.'))
@@ -1621,26 +1635,26 @@ Builds a new release of HostExe and all installers.
 
     parser.add_option('--debug-skip-all-clone', dest='cloneAllRepos', action='store_false',
                       default=True, help=('Skip cloning all repositories. The sandbox '
-                                          'must already exist from a prior build. Allowed '
-                                          'only when combined with --debug-local. Useful for quick '
+                                          'must already exist from a prior build. Intended '
+                                          'for use with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
 
     parser.add_option('--debug-skip-host-clone', dest='cloneHostRepo', action='store_false',
-                      default=True, help=('Skip cloning the git host repository. The sandbox git repo'
-                                          'must already exist from a prior build. Allowed '
-                                          'only when combined with --debug-local. Useful for quick '
+                      default=True, help=('Skip cloning the git host repository. The sandbox git repo '
+                                          'must already exist from a prior build. Intended '
+                                          'for use with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
 
     parser.add_option('--debug-skip-config-clone', dest='cloneConfigRepo', action='store_false',
-                      default=True, help=('Skip cloning the bzr config repositories. The sandbox repos'
-                                          'must already exist from a prior build. Allowed '
-                                          'only when combined with --debug-local. Useful for quick '
+                      default=True, help=('Skip cloning the bzr config repositories. The sandbox repos '
+                                          'must already exist from a prior build. Intended '
+                                          'for use with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
 
     parser.add_option('--debug-skip-exe', dest='buildExes', action='store_false',
-                      default=True, help=('Skip building the executables. The sandbox and executables'
-                                          'must already exist from a prior build. Allowed '
-                                          'only when combined with --debug-local. Useful for quick '
+                      default=True, help=('Skip building the executables. The sandbox and executables '
+                                          'must already exist from a prior build. Intended '
+                                          'for use with --debug-local. Useful for quick '
                                           'testing of minor changes or debugging this build script.'))
     parser.add_option('--logfile', dest='logfile', default=None,
                       help=('Use this option to specify a filename for logging '
