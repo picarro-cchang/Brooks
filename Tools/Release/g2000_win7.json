@@ -50,6 +50,12 @@
             "installerSignature": "CFHADS"
         },
 
+        "CFHDS": {
+            "species": "iCO2",
+            "installerSignature": "CFGDS",
+            "comment": "for NEON"
+        },
+
         "CFIDS": {
             "species": "iCO2_iCH4",
             "installerSignature": "CFIDS"
