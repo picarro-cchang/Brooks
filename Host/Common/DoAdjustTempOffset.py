@@ -174,6 +174,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
                 
                 # apply this offset to all lasers in the group
                 for v in g:
+                    freqConv.setLaserTempOffset(v, adjValue)
                     if v in allLasersDict:
                         laserDict = allLasersDict[v]
                         laserDict["newValue"] = adjValue
@@ -195,7 +196,8 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
             # set the laser temp offset if controlling all lasers
             if allControlOn:
                 #Log(" setLaserTempOffset vLaserNum=%d oldtempOffset=%f newTempOffset=%f" % (vLaserNum, curValue, newValue))
-                freqConv.setLaserTempOffset(vLaserNum, newValue)
+                #freqConv.setLaserTempOffset(vLaserNum, newValue)
+                pass
             else:
                 # else we're not changing the setting, so the new value must be unchanged
                 newValue = curValue
