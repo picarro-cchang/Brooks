@@ -388,6 +388,8 @@ class AutosamplerFrame(AutosamplerGUI):
         self.ComPorts=[]
         for portname in enumerate_serial_ports():
             self.ComPorts.append(portname)
+
+        # TODO: formats should be pulled from a config file
         self.SampleVolNumEdit.SetDigits(2)
         self.SampleVolNumEdit.SetFormat("%f")
         self.FillSpeedNumEdit.SetDigits(2)
@@ -681,9 +683,18 @@ class AutosamplerFrame(AutosamplerGUI):
         return self.injectionComplete
     
     def updateCfg(self):
+        # update settings
+        #
+        # first, update Methods page settings
+        # get all methods names
         choices=self.Cfg.keys()
         choices.sort()
+
+        # init selected method dropdown on Methods page
         self.LoadMethodChoice.Clear()
+
+        # cache selected method for all job rows on Job Queue page
+        # and clear them all
         saved1=self.Slot1Choice.GetStringSelection()
         saved2=self.Slot2Choice.GetStringSelection()
         saved3=self.Slot3Choice.GetStringSelection()
@@ -704,6 +715,8 @@ class AutosamplerFrame(AutosamplerGUI):
         self.Slot8Choice.Clear()
         self.Slot9Choice.Clear()
         self.Slot10Choice.Clear()
+
+        # set method choice for all job rows to available methods
         for k in choices:
             self.LoadMethodChoice.Append(k)
             self.Slot1Choice.Append(k)
@@ -716,6 +729,9 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Slot8Choice.Append(k)
             self.Slot9Choice.Append(k)
             self.Slot10Choice.Append(k)
+
+        # for each job row, set selected method name to cached
+        # if it exists; otherwise uncheck and disable the checkbox
         lst=self.Slot1Choice.GetItems()
         if not(saved1 in lst):
             self.slot1CB.Value = False
@@ -817,8 +833,12 @@ class AutosamplerFrame(AutosamplerGUI):
         event.Skip()
     
     def outputQueue(self):
+        # read settings from UI and update the config
+
+        # selected method from Methods page (should this really be saved with job queue data?)
         self.StateCfg["MethodChoice"]= self.LoadMethodChoice.GetStringSelection()
 
+        # read settings for each job queue row and update the state config
         self.StateCfg["slot1CB"]=self.slot1CB.GetValue()
         self.StateCfg["Slot1Choice"]=self.Slot1Choice.GetStringSelection()
         self.StateCfg["slot1Inkwell"]=self.slot1Inkwell
@@ -899,13 +919,21 @@ class AutosamplerFrame(AutosamplerGUI):
         self.StateCfg["Slot10EndVialNumEdit"]=self.Slot10EndVialNumEdit.GetValue()
         self.StateCfg["Slot10InjPerVialNumEdit"]=self.Slot10InjPerVialNumEdit.GetValue()
 
+        # write the file to disk
         self.StateCfg.write()
+
+        # update settings in UI
         self.updateCfg()
     
-    def OnRunBtn(self, event): 
+    def OnRunBtn(self, event):
+        # Run button clicked
         self.Log("Run\r\n")
+
+        # don't run if Run button isn't enabled
         if not self.RunBtn.Enabled:
             return
+
+        # don't run if none of the checkboxes are checked
         if(not self.slot1CB.GetValue() and not self.slot2CB.GetValue()
            and not self.slot3CB.GetValue() and not self.slot4CB.GetValue()           
            and not self.slot5CB.GetValue() and not self.slot6CB.GetValue()           
@@ -914,6 +942,8 @@ class AutosamplerFrame(AutosamplerGUI):
             ):
             return
 
+        # For each job row, if checkbox is checked and there is at least 1 vial
+        # to run, append it to the job queue. If using inkwell then tray is -100
         if(self.slot1CB.GetValue()):
             jobName=self.Slot1Choice.GetStringSelection()
             start=self.Slot1StartVialNumEdit.GetValue()
@@ -927,6 +957,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 job= {'JobName':jobName,'startVial':start,'endVial':end,'numInj':inj, 'Tray':tray}
             if VialsToDo>=1:
                 self.jobQueue.append(job)
+
         if(self.slot2CB.GetValue()):
             jobName=self.Slot2Choice.GetStringSelection()
             start=self.Slot2StartVialNumEdit.GetValue()
@@ -1044,6 +1075,8 @@ class AutosamplerFrame(AutosamplerGUI):
                 job= {'JobName':jobName,'startVial':start,'endVial':end,'numInj':inj, 'Tray':tray}
             if VialsToDo>=1:
                 self.jobQueue.append(job)
+
+        # Start the first job if the job queue is not empty
         if len(self.jobQueue) > 0:
             self.jobNum=1 
             j = self.jobQueue[0]  #This is the first one
@@ -1071,6 +1104,9 @@ class AutosamplerFrame(AutosamplerGUI):
             self.running=True
 
     def ClearQueue(self):
+        # resets all job rows: checkbox unchecked and disabled,
+        # method selected is empty, reset tray, start, end,
+        # # injections all to 1 (called only when init to load a queue)
         self.OnClearSlot1Btn(None)
         self.OnClearSlot2Btn(None)
         self.OnClearSlot3Btn(None)
@@ -1112,6 +1148,7 @@ class AutosamplerFrame(AutosamplerGUI):
         dlg.Destroy()
 
     def EnableQueueUIElements(self, tf):
+        # enable/disable all job row items
         self.ClrSlot1Btn.Enable(tf)
         self.slot1CB.Enable(tf)
         self.Slot1Choice.Enable(tf)
@@ -1193,27 +1230,46 @@ class AutosamplerFrame(AutosamplerGUI):
         self.Slot10InjPerVialNumEdit.Enable(tf)
 
     def OnChgSyringeBtn(self, event):
+        # handle changing the syringe
+        #
+        # returns if busy/not idle unless status is no error, abort, or
+        # move to wait position
         if (self.ASGetBusy() or not self.ASGetIdle()):
             s=self.ASGetStatus()
             if (s!="No Error\r\n" and s!="Abort\r\n" and s!="Move to Wait Position\r\n"):
-                return 
+                return
+
+        # Toggled behavior for this button
         if not self.exchangePosition:
+            # not currently changing syringe, move AS to the exchange position and
+            # change the button label to "Swap Done"
             self.exchangePosition=True
+
+            # cache state of Run, End, Stop buttons (Stop button is hidden)
             self.RunWasEnabled = self.RunBtn.Enabled
             self.HaltWasEnabled = self.EndBtn.Enabled
             self.StopWasEnabled = self.StopBtn.Enabled
+
+            # disable Run button
             self.RunBtn.Enable(False)
             self.ChgSyringeBtn.SetLabel("Swap Done")
             self.Log("Chg Syringe\r\n")
+
+            # move AS to exchange position
             self.ASReadInit()
             self.ASStepGoToSyrExchange(0)
             time.sleep(1)
             self.ASStepGoToSyrExchange(1)
             time.sleep(1)
+
         else:
+            # syringe was changed, restore AS positions and
+            # reset button label to "Chg Syringe"
             self.exchangePosition=False
             self.ChgSyringeBtn.SetLabel("Chg Syringe")
             self.Log("Go To Wait\r\n")
+
+            # complete exchange and move AS to wait position
             self.ASStepGoToSyrExchange(2)
             time.sleep(1)
             self.ASStepGoToSyrExchange(3)
@@ -1221,6 +1277,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.ASReadInit()
             self.ASStepGoToWait()
             time.sleep(1)
+
+            # restore Run, End, Stop button from cached state
             self.RunBtn.Enable(self.RunWasEnabled)
             self.StopBtn.Enable(self.StopWasEnabled)
             self.EndBtn.Enable(self.HaltWasEnabled)
@@ -2001,6 +2059,8 @@ class AutosamplerFrame(AutosamplerGUI):
         return self.injectionComplete
 
     def getStatus(self):
+        # this returns a list but where it is called from (OnStopBtn)
+        # does nothing with the list
         status=[]
         status.append("Date")
         status.append("Time")
@@ -2012,7 +2072,9 @@ class AutosamplerFrame(AutosamplerGUI):
         #self.Log(s)
         return status
     
-    def OnPauseBtn(self, event): 
+    def OnPauseBtn(self, event):
+        # if not paused and no more injections, just enable
+        # End, Pause, Chg Syringe, and Run buttons and reset state
         if(not self.paused and self.nInj-self.numInjDone <=0):
             self.Log("Pause\r\n")
             self.EndBtn.Enable(True)
@@ -2022,9 +2084,17 @@ class AutosamplerFrame(AutosamplerGUI):
             self.RunBtn.Enable(True)
             self.paused=False
             self.pausedAndInjStarted=False
+
+        # already paused, Resume was pressed
         if(self.paused):
+            # do nothing yet if syringe change in progress
             if(self.exchangePosition):
                 return
+
+            # resume running current job
+            #
+            # TODO: replicated code here (see OnTimer), move to method
+            #       with fDoRinses flag (here will be True)
             self.Log("Resume\r\n")
             cfg = self.Cfg
             self.Log("Using Vial #%d\r\n"%self.v)
@@ -2041,26 +2111,39 @@ class AutosamplerFrame(AutosamplerGUI):
             self.ASSetMethodPostInjWashes((int)(cfg[self.method]['PostRinse1']),(int)(cfg[self.method]['PostRinse2']),0)    #ASSetMethodPostInjWashes(self, nSolvent1, nSolvent2, nSolvent3):
             self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),99)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
             self.ASSetMethodDelay((float)(cfg[self.method]['PreInjDly']),(float)(cfg[self.method]['PostInjDly']),(int)((float)(cfg[self.method]['ViscosityDly'])),(int)((float)(cfg[self.method]['SolventViscosityDelay'])))          #ASSetMethodDelay(self, dPreInjDelay, dPostInjDelay, nViscDelay, nSolvDelay):
+
+            # enable Pause, End buttons (why enable Pause twice?)
             self.PauseBtn.Enable(True)
             self.EndBtn.Enable(True)
             self.PauseBtn.Enable(True)
+
+            # disable Chg Syringe and Run
             self.ChgSyringeBtn.Enable(False)
             self.PauseBtn.Label = 'Pause'
             self.RunBtn.Enable(False)
             self.paused=False
             self.running=True
+
         else:
+            # not currently paused, so pause the job
+            # enable End, Pause (change label to Resume), Chg Syringe
+            # disable Run
             self.Log("Pause\r\n")
             self.EndBtn.Enable(True)
             self.PauseBtn.Enable(True)
             self.ChgSyringeBtn.Enable(True)
             self.PauseBtn.Label = 'Resume'
             self.RunBtn.Enable(False)
+
+            # update state to paused and not running
             self.paused=True
             self.running=False
             self.pausedAndInjStarted=False
 
-    def OnClearSlot1Btn(self, event): 
+    def OnClearSlot1Btn(self, event):
+        # reset first job row: checkbox unchecked and disabled,
+        # method selected is empty, reset tray, start, end,
+        # # injections all to 1 (called only when init to load a queue)
         print "In Event handler `OnClearSlot1Btn'"
         self.Slot1Choice.SetLabel("")
         self.slot1CB.SetValue(False)
@@ -2181,6 +2264,10 @@ class AutosamplerFrame(AutosamplerGUI):
         self.Slot10InjPerVialNumEdit.SetValue(1)
 
     def OnLoadMethodChoice(self, event): 
+        # set the parameters displayed in the Method page for the selected method
+        # note: does not clear the current parameters if an empty string is
+        #       selected, believe this is to allow user to create a new method
+        #       from existing without having to type in everything
         print "In Event handler `OnLoadMethodChoice'"
         method= self.LoadMethodChoice.GetStringSelection()
         if method!="":
@@ -2214,6 +2301,8 @@ class AutosamplerFrame(AutosamplerGUI):
         self.SetTitle(title)
 
     def OnSlot1Choice(self, event): 
+        # user made selection from the job row 1 method dropdown, enable the
+        # checkbox if it is not an empty string
         print "In Event handler `OnSlot1Choice'"
         method= self.Slot1Choice.GetStringSelection()
         if method!="":
@@ -2273,6 +2362,7 @@ class AutosamplerFrame(AutosamplerGUI):
         if method!="":
             self.slot10CB.Enable(True)
 
+    # TODO: these methods aren't arranged in a logical order, fix
     def OnSlot9CBChanged(self, event):
         print "In Event handler `OnSlot9CBChanged'"
 
@@ -2437,6 +2527,7 @@ class AutosamplerFrame(AutosamplerGUI):
             return
 
         if self.stop and (not self.ASGetBusy() or self.ASGetIdle()):
+            # 
             self.EndBtn.Enable(False)
             self.RunBtn.Enable(True)
             self.ChgSyringeBtn.Enable(True)
@@ -2515,6 +2606,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.PauseBtn.Enable(True)
                 self.lastVial = self.v
             elif(self.assertInj and self.v < (self.endVial)):
+                # TODO: much replicated code here with OnPauseBtn, move to a new method
                 cfg = self.Cfg
                 rinse = (bool(cfg[self.method]['RinseBetweenVials']=="True")) 
                 self.Log("Using Vial #%d\r\n"%self.v)
@@ -2535,15 +2627,21 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),99)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
                 self.ASSetMethodDelay((float)(cfg[self.method]['PreInjDly']),(float)(cfg[self.method]['PostInjDly']),(int)((float)(cfg[self.method]['ViscosityDly'])),(int)((float)(cfg[self.method]['SolventViscosityDelay'])))          #ASSetMethodDelay(self, dPreInjDelay, dPostInjDelay, nViscDelay, nSolvDelay):
                 self.ASSetMethodInjDepth(float(cfg[self.method]['InjectionPointOffset']))
+
+                # init settings to start the job
                 self.numInjDone=0
                 self.assertInj = False
                 self.errCode = 0
                 self.ASRunMethod(self.tray,self.v,1)
                 self.PauseBtn.Enable(True)
                 self.lastVial = self.v
+
             elif self.paused:
-                    return
+                # already paused, do nothing
+                return
+
             elif self.injectionComplete and len(self.jobQueue)<=0 and todo<=0:
+                # finished all jobs
                 self.Log("Done!\r\n")
                 self.RunBtn.Enable(True)
                 self.EndBtn.Enable(False)
@@ -2765,6 +2863,8 @@ class AutosamplerFrame(AutosamplerGUI):
     def OnSlot8InjPerVialNumEdit(self, event):
         print "In Event handler `OnSlot8InjPerVialNumEdit'"
 
+    # inkwell=enabled hides tray, start and end vial spin controls
+    # not enabled makes sure controls are displayed
     def setInkwell1_UIState(self):
         if self.slot1Inkwell:
             self.Slot1TrayNumEdit.Hide()            
@@ -2774,6 +2874,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Slot1TrayNumEdit.Show()            
             self.Slot1StartVialNumEdit.Show()
             self.Slot1EndVialNumEdit.Show()
+
+        # Reset the cached best size value so it will be recalculated the next time it is needed. 
         self.Slot1Choice.InvalidateBestSize()
         self.Slot1Choice.Update()
         self.Slot1TrayNumEdit.Update()
@@ -2915,10 +3017,14 @@ class AutosamplerFrame(AutosamplerGUI):
         self.Slot10StartVialNumEdit.Update()
         self.Slot10EndVialNumEdit.Update()      
 
+    # Handlers for wx.EVT_KEY_DOWN
     def OnSlot1ChoiceKeyPress(self, event):
         keycode = event.GetKeyCode()
         print keycode
         controlDown = event.CmdDown()
+
+        # Ctrl+i toggles inkwell (i=0x49 or 73 decimal)
+        # TODO: should also work with Ctrl+I in case caps lock is on
         if controlDown and (keycode == 73):
             print "Toggle Inkwell on Slot1"
             if not self.slot1Inkwell:
@@ -2926,9 +3032,21 @@ class AutosamplerFrame(AutosamplerGUI):
             else: 
                 self.slot1Inkwell = False
             self.setInkwell1_UIState()
+
+            # change control with focus to num injections widget
             self.Slot1InjPerVialNumEdit.SetFocus()
+
+        # Ctrl+UpArrow or Ctrl- (minus/dash) ('-'=0x2d or 45)
+        # VK_UP=0x26, VK_DOWN=0x28
+        # 0x186=390 (what key is this? UpArrow is 315 on my keyboard)
         if controlDown and (keycode == 390 or keycode == 45):
             print "you pressed the Up Key, Nothing to do"
+
+        # '+'=0x2b or 43
+        # 0x184=388 (what key is this? DownArrow is 317 on my keyboard)
+        # Ctrl+
+        #
+        # Looks like this swaps row 1 and 2 settings
         if controlDown and (keycode == 388 or keycode == 43):
             print "you pressed the Down Key!"
             saved1=self.Slot1Choice.GetStringSelection()
@@ -2974,10 +3092,14 @@ class AutosamplerFrame(AutosamplerGUI):
             self.slot1CB.SetValue(saved2)
             self.Slot2StartVialNumEdit.SetFocus()
 
+    # TODO: shouldn't event.Skip() be called if the event wasn't processed above?
+
     def OnSlot2ChoiceKeyPress(self, event):
         keycode = event.GetKeyCode()
         print keycode
         controlDown = event.CmdDown()
+
+        # toggle inkwell
         if controlDown and (keycode == 73):
             print "Toggle Inkwell on Slot2"
             if not self.slot2Inkwell:
@@ -2986,6 +3108,9 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.slot2Inkwell = False
             self.setInkwell2_UIState()
             self.Slot2InjPerVialNumEdit.SetFocus()
+
+        # Ctrl + '-'
+        # swaps row 1 and 2 (previous row), like a move up
         if controlDown and (keycode == 390 or keycode == 45):
             print "you pressed the Up Key!"
             saved2=self.Slot2Choice.GetStringSelection()
@@ -3030,6 +3155,9 @@ class AutosamplerFrame(AutosamplerGUI):
             self.slot1CB.SetValue(saved2)
             self.slot2CB.SetValue(saved1)
             self.Slot1StartVialNumEdit.SetFocus()
+
+        # Ctrl + '+'
+        # swaps row 2 and 3 (next row), like a move down
         if controlDown and (keycode == 388 or keycode == 43):
             print "you pressed the Down Key!"
             saved2=self.Slot2Choice.GetStringSelection()
@@ -3854,6 +3982,7 @@ Where the options can be a combination of the following:
 -c         : Specify a Autosampler config file.
 -s         : Specify a Autosampler State config file.
 -t         : Specify a TD file after training the autosampler.
+--demo     : Run in demo (emulation) mode.
 """
 
 def PrintUsage():
@@ -3861,7 +3990,7 @@ def PrintUsage():
     
 def HandleCommandSwitches():
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:s:t:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:s:t:", ["help","demo"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -3874,6 +4003,10 @@ def HandleCommandSwitches():
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit()
+
+    if "--demo" in options:
+        global EMULATION
+        EMULATION = True
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
