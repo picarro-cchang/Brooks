@@ -54,6 +54,13 @@
 #define closeValvesOpt = ""
 #endif
 
+[Files]
+
+; bat and json files needed for running EventLogWatcher from desktop shortcuts
+; app folder is C:\Picarro\G2000 but want these files to go into C:\Picarro\Utilities\EventLogWatcher
+Source: {#sandboxDir}\host\Host\EventLogWatcher\*.bat; DestDir: {app}\..\Utilities\EventLogWatcher; Flags: replacesameversion
+Source: {#sandboxDir}\host\Host\EventLogWatcher\EventLogWatcher.json; DestDir: {app}\..\Utilities\EventLogWatcher; Flags: replacesameversion
+
 
 [Icons]
 
@@ -96,6 +103,12 @@ Name: {userdesktop}\Diagnostics\Diag Data Collector; Filename: {app}\HostExe\Dia
 #ifdef valveDisplayIni
 Name: {userdesktop}\Diagnostics\Valve Display; Filename: {app}\HostExe\ValveDisplay.exe; Parameters: -c ..\AppConfig\Config\Utilities\{#valveDisplayIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#diagnosticsIcon}
 #endif
+
+
+; EventLogWatcher shortcuts
+Name: {userdesktop}\Diagnostics\EventLogWatcher - reset logs; Filename: {sys}\cmd.exe; Parameters: /C {app}\..\Utilities\EventLogWatcher\EventLogWatcher_ResetLogs.bat; WorkingDir: {app}\..\Utilities\EventLogWatcher; IconFilename: {app}\HostExe\{#diagnosticsIcon}
+
+Name: {userdesktop}\Diagnostics\EventLogWatcher - results; Filename: {sys}\cmd.exe; Parameters: /C {app}\..\Utilities\EventLogWatcher\EventLogWatcher_LogResults.bat; WorkingDir: {app}\..\Utilities\EventLogWatcher; IconFilename: {app}\HostExe\{#diagnosticsIcon}
 
 ; Integration folder
 ;
