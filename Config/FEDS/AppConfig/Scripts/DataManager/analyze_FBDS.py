@@ -3,6 +3,9 @@
 #              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
 #              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
 #  2011 0727 - modified isotopic methane analysis to use new schemes that report the entire spectrum in one piece
+# 2014 0602 removed unnecessary sections left from CFI
+#           added flag for isotopic capture when WB within .07 degC tolerance
+#           improved reporting structure for Peripheral health monitoring
 
 import os
 import sys
@@ -27,6 +30,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj # new ChemDetect
 from Host.PeriphIntrf.PeripheralStatus import PeripheralStatus
 
 # ALARM_STATUS flags
+ALARM_STATUS = 0x0000
 ALARM_PZT_STD_MASK = 0x8000
 ALARM_SHIFT_MASK = 0x4000
 ALARM_CAVITY_PRESSURE_MASK = 0x2000
@@ -36,6 +40,7 @@ ALARM_OUTLET_VALVE_MASK = 0x400
 ALARM_DELTA_INTERVAL_MASK = 0x200
 ALARM_WLM_OFFSET_MASK = 0x100
 ALARM_CHEMDETECT_MASK = 0x80
+CHEM_DETECT = 0
 
 # Alarm limits
 PZT_STD_DEV_LIMIT = 100.0
@@ -50,6 +55,7 @@ OFFSET_ABS_LIMIT = 0.052
 GPS_GOOD = 2.0
 
 # System status flags
+SYSTEM_STATUS = 0x00000000
 SYSTEM_WIND_ANOMALY = 0x0001
 
 # Valve masks
@@ -93,6 +99,8 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["delta_high_conc_iCH4_5min"] = 0
     _PERSISTENT_["delta_interval"] = 0
     _PERSISTENT_["Delta_iCH4_Raw"] = 0.0
+    _PERSISTENT_["fineLaserCurrent_6_mean"] = 0
+    WBisoTempLocked = False
 
     # For ChemDetect
     _PERSISTENT_["chemdetect_inst"] = InstructionProcess()
@@ -113,6 +121,15 @@ if _PERSISTENT_["init"]:
 
     _PERSISTENT_['inactiveForWind'] = False
 
+    #For Laser Aging
+    script = "adjustTempOffset.py"
+    scriptRelPath = os.path.join(here, '..', '..', '..', 'CommonConfig',
+                                 'Scripts', 'DataManager', script)
+    cp = file(os.path.join(here, scriptRelPath), "rU")
+    codeAsString = cp.read() + "\n"
+    cp.close()
+    _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
+
 try:
     if _DATA_LOGGER_ and _DATA_LOGGER_.DATALOGGER_logEnabledRpc('DataLog_Sensor_Minimal'):
         try:
@@ -124,6 +141,8 @@ except:
 
 REPORT_UPPER_LIMIT = 20000.0
 REPORT_LOWER_LIMIT = -20000.0
+
+WB_TEMP_ISO_THRESHOLD = 0.07
 
 TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
 
@@ -185,6 +204,8 @@ P5_A1_low_conc = _INSTR_["Peak5_CO2_lin_low_conc"]
 P5_H1_low_conc = _INSTR_["Peak5_water_lin_low_conc"]
 P5_H1M1_low_conc = _INSTR_["Peak5_water_bilin_low_conc"]
 
+Warmbox_setpoint = _DRIVER_.rdDasReg('WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER')
+
 try:
     NUM_BLOCKING_DATA = _INSTR_["num_blocking_data"]
 except:
@@ -239,6 +260,7 @@ _NEW_DATA_["HR_Delta_iCH4_30s"] = _PERSISTENT_["delta_high_conc_iCH4_30s"]
 _NEW_DATA_["HR_Delta_iCH4_2min"] = _PERSISTENT_["delta_high_conc_iCH4_2min"]
 _NEW_DATA_["HR_Delta_iCH4_5min"] = _PERSISTENT_["delta_high_conc_iCH4_5min"]
 _NEW_DATA_["delta_interval"] = _PERSISTENT_["delta_interval"]
+_NEW_DATA_["HP_or_HR_mode"] = 1
 
 # Calculate delta with CFADS laser
 try:
@@ -295,18 +317,18 @@ try:
 except:
     pass
 
+for v in ['HC_res2_a1', 'HC_res2_diff', 'HC_res2', 'HC_base_offset2_a1', 'HC_base_offset2_diff', 'HC_base_offset2']:
+    _NEW_DATA_[v] = 0 # so these always exist in slow or fast modes
+    
 try: # new ChemDetect section
-    if not _DATA_['fast_flag']: 
-        _NEW_DATA_["HP_or_HR_mode"] = 2
-        Cor_HR_HCres_CO2 = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_HR_HCres_CO2']
-        Cor_HR_HCres_H2O = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_HR_HCres_H2O']
-        Cor_HR_HCbaseoffset_H2O = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_HR_HCbaseoffset_H2O']
-        _NEW_DATA_["HC_res2"] = _DATA_["HC_res"] - Cor_HR_HCres_CO2*_NEW_DATA_["CO2"] - Cor_HR_HCres_H2O*_NEW_DATA_["H2O"] # CO2 & H2O Cor on HC_res
-        _NEW_DATA_["HC_base_offset2"] = _DATA_["HC_base_offset"] - Cor_HR_HCbaseoffset_H2O*_NEW_DATA_["H2O"] #H2O Cor on HC_base_offset
-        a0_HC_base_offset2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a0_HC_base_offset2_HR']
-        a1_HC_base_offset2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a1_HC_base_offset2_HR']
-        a0_HC_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a0_HC_res2_HR']
-        a1_HC_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a1_HC_res2_HR']
+    Cor_HP_HCres_CO2 = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_HP_HCres_CO2']
+    Cor_HP_HCbaseoffset_H2O = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_HP_HCbaseoffset_H2O']
+    _NEW_DATA_["HC_res2"] = _DATA_["HC_res"] - Cor_HP_HCres_CO2 * _NEW_DATA_["CO2"] # CO2 Correction on HC_res
+    _NEW_DATA_["HC_base_offset2"]= _DATA_["HC_base_offset"] - Cor_HP_HCbaseoffset_H2O * _NEW_DATA_["H2O"] # H2O Cor on HC_base_offset
+    a0_HC_base_offset2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a0_HC_base_offset2_HP']
+    a1_HC_base_offset2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a1_HC_base_offset2_HP']
+    a0_HC_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a0_HC_res2_HP']
+    a1_HC_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a1_HC_res2_HP']
 
     HC_base_offset2_fit = a0_HC_base_offset2 + _NEW_DATA_["12CH4_high_range"] * a1_HC_base_offset2 #fit params obtained from 3D data 2011-09-25
     _NEW_DATA_["HC_base_offset2_diff"]= _NEW_DATA_["HC_base_offset2"] - HC_base_offset2_fit
@@ -316,7 +338,6 @@ try: # new ChemDetect section
     _NEW_DATA_["HC_res2_a1"] = (_NEW_DATA_["HC_res2"] - a0_HC_res2) / _NEW_DATA_["12CH4_high_range"]
 except:
     pass
-
 try:
     _DATA_["CH4up"] = _DATA_["12CH4_up"]
     _DATA_["CH4down"] = _DATA_["12CH4_down"]
@@ -326,30 +347,22 @@ except:
 
 suppressReporting = _DATA_['fast_flag'] and _DATA_['species'] != 25
 
-if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"]:
-    # Get peripheral data
-    try:
-        if _PERIPH_INTRF_:
-            try:
-                interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
-                for i in range(len(_PERIPH_INTRF_COLS_)):
-                    if interpData[i] is not None:
-                        _NEW_DATA_[_PERIPH_INTRF_COLS_[i]] = interpData[i]
-            except Exception, err:
-                print "%r" % err
-    except:
-        pass
 
-    for k in _DATA_.keys():
-        _REPORT_[k] = _DATA_[k]
+# Get peripheral data
+try:
+    if _PERIPH_INTRF_:
+        try:
+            interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
+            for i in range(len(_PERIPH_INTRF_COLS_)):
+                if interpData[i] is not None:
+                    _NEW_DATA_[_PERIPH_INTRF_COLS_[i]] = interpData[i]
+        except Exception, err:
+            print "%r" % err
+except:
+    pass
 
-    for k in _NEW_DATA_.keys():
-        if k.startswith("Delta"):
-            _REPORT_[k] = clipReportData(_NEW_DATA_[k])
-        else:
-            _REPORT_[k] = _NEW_DATA_[k]
 
-_REPORT_['SYSTEM_STATUS'] = 0x00000000
+# _REPORT_['SYSTEM_STATUS'] = 0x00000000
 
 max_adjust = 1.0e-5
 max_adjust_H2O = 1.0e-4
@@ -372,6 +385,13 @@ if delay > max_delay*1000:
         Data=dict(delay='%.1f s' % (0.001*delay,)),Level=2)
     good = False
 
+if _DATA_['WarmBoxTemp'] > Warmbox_setpoint - WB_TEMP_ISO_THRESHOLD and _DATA_['WarmBoxTemp'] < Warmbox_setpoint + WB_TEMP_ISO_THRESHOLD:
+    WBisoTempLocked = True
+
+else:
+    WBisoTempLocked = False
+
+
 # Pass-through status fields from the peripheral interface
 passThrough = [
     PeripheralStatus.WIND_DIRECTION_NOT_AVAILABLE,
@@ -384,9 +404,9 @@ passThrough = [
     PeripheralStatus.WIND_BAD_UNITS
 ]
 
-if 'PERIPHERAL_STATUS' in _REPORT_:
+if 'PERIPHERAL_STATUS' in _NEW_DATA_:
     for f in passThrough:
-        _REPORT_['SYSTEM_STATUS'] |= (int(_REPORT_['PERIPHERAL_STATUS']) & f)
+        SYSTEM_STATUS |= (int(_NEW_DATA_['PERIPHERAL_STATUS']) & f)
 
 if not good:
     print "Updating WLM offset not done because of bad instrument status"
@@ -402,11 +422,11 @@ else:
     windFields = ['PERIPHERAL_STATUS', 'CAR_SPEED', 'GPS_FIT']
     
     for f in windFields:
-        validWindCheck &= (f in _REPORT_)
+        validWindCheck &= (f in _NEW_DATA_)
 
     if validWindCheck:
-        if (int(_REPORT_['PERIPHERAL_STATUS']) & PeripheralStatus.WIND_ANOMALY) > 0:
-            if not isnan(_REPORT_['CAR_SPEED']) and _REPORT_['GPS_FIT'] == GPS_GOOD:
+        if (int(_NEW_DATA_['PERIPHERAL_STATUS']) & PeripheralStatus.WIND_ANOMALY) > 0:
+            if not isnan(_NEW_DATA_['CAR_SPEED']) and _NEW_DATA_['GPS_FIT'] == GPS_GOOD:
                 print "Wind NaN due to anomaly"
                 _PERSISTENT_['inactiveForWind'] = True
             else:
@@ -417,32 +437,11 @@ else:
                 _PERSISTENT_['inactiveForWind'] = False
 
     if _PERSISTENT_['inactiveForWind']:
-        _REPORT_['SYSTEM_STATUS'] |= PeripheralStatus.WIND_ANOMALY
-        _REPORT_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
+        SYSTEM_STATUS |= PeripheralStatus.WIND_ANOMALY
+        _NEW_DATA_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
 
-    if _DATA_["species"] == 105: # Update the offset for virtual laser 1
-        try:
-            co2_adjust = _DATA_["adjust_87"]
-            co2_adjust = min(max_adjust,max(-max_adjust,co2_adjust))
-            newOffset0 = _FREQ_CONV_.getWlmOffset(1) + co2_adjust
-            _PERSISTENT_["wlm1_offset"] = newOffset0
-            _NEW_DATA_["wlm1_offset"] = newOffset0
-            _FREQ_CONV_.setWlmOffset(1,float(newOffset0))
-        except:
-            pass
 
-    elif _DATA_["species"] == 106: # Update the offset for virtual laser 2
-        try:
-            co2_adjust = _DATA_["adjust_88"]
-            co2_adjust = min(max_adjust,max(-max_adjust,co2_adjust))
-            newOffset0 = _FREQ_CONV_.getWlmOffset(2) + co2_adjust
-            _NEW_DATA_["wlm2_offset"] = newOffset0
-            _PERSISTENT_["wlm2_offset"] = newOffset0
-            _FREQ_CONV_.setWlmOffset(2,float(newOffset0))
-        except:
-            pass
-
-    elif _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
+    if _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
         try:
             ch4_adjust = _DATA_["adjust_5"]
             ch4_adjust = min(max_adjust,max(-max_adjust,damp*ch4_adjust))
@@ -505,8 +504,85 @@ else:
         except:
             pass
 
+# Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
+# _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
+for colname in _OLD_DATA_:    #  new ChemDetect section
+    _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _OLD_DATA_[colname][-1].value
 
-if _DATA_["species"] in TARGET_SPECIES and (_PERSISTENT_["plot_iCH4"] or _PERSISTENT_["plot_iCO2"]) and not suppressReporting:
+for colname in _NEW_DATA_:
+    _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _NEW_DATA_[colname]
+
+if _OLD_DATA_["species"][-1].value == 150 and not _DATA_['fast_flag']:
+    _PERSISTENT_["chemdetect_inst"].process_set()
+
+    if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
+        pass
+        #print "WARNING: ChemDetect Status is RED"
+
+if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not suppressReporting:
+    if _OLD_DATA_["species"][-1].value == 150:
+        if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
+            CHEM_DETECT = 1.0  # BAD data
+        else:
+            CHEM_DETECT = 0.0  # Good data
+    else:
+        CHEM_DETECT = _PERSISTENT_["ChemDetect_previous"]
+
+    _PERSISTENT_["ChemDetect_previous"] = CHEM_DETECT
+
+    # Update the upper alarm status bits with some additional instrument status
+    # flags.
+
+    if CHEM_DETECT == 1.0:
+        ALARM_STATUS |= ALARM_CHEMDETECT_MASK
+
+    pztNames = ['13CH4', '12CH4', 'H2O']
+    for name in pztNames:
+        try:
+            if _DATA_["pzt_%s_stdev" % name] > PZT_STD_DEV_LIMIT:
+                ALARM_STATUS |= ALARM_PZT_STD_MASK
+                break
+        except KeyError:
+            pass
+
+    shifts = ['shift_0', 'shift_5', 'shift_24', 'shift_30', 'ch4_high_shift']
+    for s in shifts:
+        if abs(_DATA_[s]) > SHIFT_ABS_LIMIT:
+            ALARM_STATUS |= ALARM_SHIFT_MASK
+            break
+
+    # Maybe use unlocked flag instead?
+    cavityPressure = _DATA_['cavity_pressure']
+    if cavityPressure > CAVITY_PRESSURE_HIGH_LIMIT or \
+        cavityPressure < CAVITY_PRESSURE_LOW_LIMIT:
+        ALARM_STATUS |= ALARM_CAVITY_PRESSURE_MASK
+
+    cavityTemp = _DATA_['cavity_temperature']
+    if cavityTemp > 50.0 or cavityTemp < 40.0:
+        ALARM_STATUS |= ALARM_CAVITY_TEMP_MASK
+
+    warmBoxTemp = _DATA_['WarmBoxTemp']
+    if warmBoxTemp > CAVITY_TEMP_HIGH_LIMIT or \
+        warmBoxTemp < CAVITY_TEMP_LOW_LIMIT:
+        ALARM_STATUS |= ALARM_WARMBOX_TEMP_MASK
+
+    outletValve = _DATA_['OutletValve']
+    if outletValve > _PERSISTENT_['outletValve_max'] or \
+        outletValve < _PERSISTENT_['outletValve_min']:
+        ALARM_STATUS |= ALARM_OUTLET_VALVE_MASK
+
+    if _PERSISTENT_['delta_interval'] > DELTA_INTERVAL_LIMIT:
+        ALARM_STATUS |= ALARM_DELTA_INTERVAL_MASK
+
+    wlmOffsets = ['wlm3_offset', 'wlm4_offset', 'wlm5_offset']
+    for offset in wlmOffsets:
+        # Each FSR is ~0.026 in offset.
+        if abs(_PERSISTENT_[offset]) > OFFSET_ABS_LIMIT:
+            ALARM_STATUS |= ALARM_WLM_OFFSET_MASK
+            break
+
+if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not suppressReporting:
+
     _REPORT_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
     _REPORT_["wlm2_offset"] = _PERSISTENT_["wlm2_offset"]
     _REPORT_["wlm3_offset"] = _PERSISTENT_["wlm3_offset"]
@@ -515,86 +591,21 @@ if _DATA_["species"] in TARGET_SPECIES and (_PERSISTENT_["plot_iCH4"] or _PERSIS
     _REPORT_["wlm6_offset"] = _PERSISTENT_["wlm6_offset"]
     _REPORT_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"]
     _REPORT_["wlm8_offset"] = _PERSISTENT_["wlm8_offset"]
+    _REPORT_["SYSTEM_STATUS"] = SYSTEM_STATUS
+    _REPORT_["ALARM_STATUS"] = ALARM_STATUS
+    _REPORT_["CHEM_DETECT"] = CHEM_DETECT
+    _REPORT_["WBisoTempLocked"] = WBisoTempLocked
+    _REPORT_["fineLaserCurrent_6_mean"] = _PERSISTENT_["fineLaserCurrent_6_mean"]  #report 0 for VL6 made to prevent new Column upon mode switch when WL is on to track CO2
+    
+    exec _PERSISTENT_["adjustOffsetScript"] in globals()
+    
+    for k in _DATA_.keys():
+        _REPORT_[k] = _DATA_[k]
 
-
-# Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
-# _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
-# for colname in _OLD_DATA_:    #  new ChemDetect section
-#     _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _OLD_DATA_[colname][-1].value
-
-# for colname in _NEW_DATA_:
-#     _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _NEW_DATA_[colname]
-
-# if _OLD_DATA_["species"][-1].value == 150:
-#     _PERSISTENT_["chemdetect_inst"].process_set()
-
-#     if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
-#         pass
-#         #print "WARNING: ChemDetect Status is RED"
-
-if _DATA_["species"] in TARGET_SPECIES and (_PERSISTENT_["plot_iCH4"] or _PERSISTENT_["plot_iCO2"]) and not suppressReporting:
-    # if _OLD_DATA_["species"][-1].value == 150:
-    #     if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
-    #         _REPORT_["ChemDetect"] = 1.0  # BAD data
-    #     else:
-    #         _REPORT_["ChemDetect"] = 0.0  # Good data
-    # else:
-    #     #_REPORT_["ChemDetect"] = -1.0  ## N/A due to non-ch4 data
-    #     _REPORT_["ChemDetect"] = _PERSISTENT_["ChemDetect_previous"]
-
-    # #print "_REPORT_[ChemDetect] = ", _REPORT_["ChemDetect"]
-    # _PERSISTENT_["ChemDetect_previous"] = _REPORT_["ChemDetect"]
-
-    # Update the upper alarm status bits with some additional instrument status
-    # flags.
-    _REPORT_['ALARM_STATUS'] = 0x0000
-
-    # if _REPORT_['ChemDetect'] == 1.0:
-    #     _REPORT_['ALARM_STATUS'] |= ALARM_CHEMDETECT_MASK
-
-    pztNames = ['13CH4', '12CH4', 'H2O']
-    for name in pztNames:
-        try:
-            if _DATA_["pzt_%s_stdev" % name] > PZT_STD_DEV_LIMIT:
-                _REPORT_['ALARM_STATUS'] |= ALARM_PZT_STD_MASK
-                break
-        except KeyError:
-            pass
-
-    shifts = ['shift_0', 'shift_5', 'shift_24', 'shift_30', 'ch4_high_shift']
-    for s in shifts:
-        if abs(_DATA_[s]) > SHIFT_ABS_LIMIT:
-            _REPORT_['ALARM_STATUS'] |= ALARM_SHIFT_MASK
-            break
-
-    # Maybe use unlocked flag instead?
-    cavityPressure = _DATA_['cavity_pressure']
-    if cavityPressure > CAVITY_PRESSURE_HIGH_LIMIT or \
-        cavityPressure < CAVITY_PRESSURE_LOW_LIMIT:
-        _REPORT_['ALARM_STATUS'] |= ALARM_CAVITY_PRESSURE_MASK
-
-    cavityTemp = _DATA_['cavity_temperature']
-    if cavityTemp > 50.0 or cavityTemp < 40.0:
-        _REPORT_['ALARM_STATUS'] |= ALARM_CAVITY_TEMP_MASK
-
-    warmBoxTemp = _DATA_['WarmBoxTemp']
-    if warmBoxTemp > CAVITY_TEMP_HIGH_LIMIT or \
-        warmBoxTemp < CAVITY_TEMP_LOW_LIMIT:
-        _REPORT_['ALARM_STATUS'] |= ALARM_WARMBOX_TEMP_MASK
-
-    outletValve = _DATA_['OutletValve']
-    if outletValve > _PERSISTENT_['outletValve_max'] or \
-        outletValve < _PERSISTENT_['outletValve_min']:
-        _REPORT_['ALARM_STATUS'] |= ALARM_OUTLET_VALVE_MASK
-
-    if _PERSISTENT_['delta_interval'] > DELTA_INTERVAL_LIMIT:
-        _REPORT_['ALARM_STATUS'] |= ALARM_DELTA_INTERVAL_MASK
-
-    wlmOffsets = ['wlm3_offset', 'wlm4_offset', 'wlm5_offset']
-    for offset in wlmOffsets:
-        # Each FSR is ~0.026 in offset.
-        if abs(_PERSISTENT_[offset]) > OFFSET_ABS_LIMIT:
-            _REPORT_['ALARM_STATUS'] |= ALARM_WLM_OFFSET_MASK
-            break
+    for k in _NEW_DATA_.keys():
+        if k.startswith("Delta"):
+            _REPORT_[k] = clipReportData(_NEW_DATA_[k])
+        else:
+            _REPORT_[k] = _NEW_DATA_[k]
 
 #=================================================================================
