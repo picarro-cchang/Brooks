@@ -11,9 +11,11 @@ import os
 import sys
 import inspect
 import traceback
+import collections
 
 from math import exp
 
+import numpy
 from numpy import mean, isfinite, isnan
 
 from Host.Common.EventManagerProxy import Log, LogExc
@@ -27,36 +29,48 @@ if here not in sys.path:
 
 from Chemdetect.instructionprocess import InstructionProcess # new ChemDetect
 from Host.Common.CustomConfigObj import CustomConfigObj # new ChemDetect
-from Host.PeriphIntrf.PeripheralStatus import PeripheralStatus
 
-# ALARM_STATUS flags
-ALARM_STATUS = 0x0000
-ALARM_PZT_STD_MASK = 0x8000
-ALARM_SHIFT_MASK = 0x4000
-ALARM_CAVITY_PRESSURE_MASK = 0x2000
-ALARM_CAVITY_TEMP_MASK = 0x1000
-ALARM_WARMBOX_TEMP_MASK = 0x800
-ALARM_OUTLET_VALVE_MASK = 0x400
-ALARM_DELTA_INTERVAL_MASK = 0x200
-ALARM_WLM_OFFSET_MASK = 0x100
-ALARM_CHEMDETECT_MASK = 0x80
 CHEM_DETECT = 0
 
-# Alarm limits
-PZT_STD_DEV_LIMIT = 100.0
-SHIFT_ABS_LIMIT = 0.001
-CAVITY_PRESSURE_LOW_LIMIT = 143.0
-CAVITY_PRESSURE_HIGH_LIMIT = 152.0
-CAVITY_TEMP_LOW_LIMIT = 40.0
-CAVITY_TEMP_HIGH_LIMIT = 50.0
-DELTA_INTERVAL_LIMIT = 5.0
-OFFSET_ABS_LIMIT = 0.052
+SystemStatusPeripheralMask = 0x00000001
+SystemStatusAnalyzerMask = 0x00000002
+
+# Extra Peripheral Status bits that require buffered calculations that can only be done in the DataManager. These
+# must be added to the existing PeripheralStatus word.
+PeripheralStatusWindSpeedStabilityMask = 0x00000200
+PeripheralStatusWindPositionCorrelationMask = 0x00000400
+
+AnalyzerStatusIntakeFlowRateMask = 0x00000001
+AnalyzerStatusCavityBaselineLossMask = 0x00000002
+AnalyzerStatusSamplingIntervalMask = 0x00000004
+AnalyzerStatusRingdownRateMask = 0x00000008
+AnalyzerStatusWlmShiftMask = 0x00000010
+AnalyzerStatusWlmAdjustMask = 0x00000020
+AnalyzerStatusWlmShiftAdjustCorrelationMask = 0x00000040
+AnalyzerStatusWlmTargetFreqMask = 0x00000080
+AnalyzerStatusIntakeFlowDisconnected = 0x00000100
+AnalyzerStatusChemDetectMask = 0x00000200
+
+# Alarm parameters
+IntakeFlowRateMin = 3.0
+IntakeFlowRateDisconnected = -9999.0
+WindSpeedHistoryBufferLen = 1000
+CarSpeedMaximum = 4.47
+CarWindSpeedCorrelation = 0.75
+DeltaIntervalMax = 1.6
+SpectrumLatencyMax = 3.0
+WlmShiftMax = 1.25e-4
+WlmAdjustMax = 1.25e-4
+WlmShiftAdjustRatio = 0.1
+WlmTargetFreqMaxDrift = 0.05
+WlmTargetFreqHistoryBufferLen = 6000
 
 GPS_GOOD = 2.0
 
 # System status flags
-SYSTEM_STATUS = 0x00000000
-SYSTEM_WIND_ANOMALY = 0x0001
+SystemStatus = 0x00000000
+AnalyzerStatus = 0x00000000
+PeripheralStatus = 0x00000000
 
 # Valve masks
 VALVE_MASK_ACTIVE = 0x10
@@ -100,6 +114,8 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["delta_interval"] = 0
     _PERSISTENT_["Delta_iCH4_Raw"] = 0.0
     _PERSISTENT_["fineLaserCurrent_6_mean"] = 0
+    _PERSISTENT_["windSpeedBuffer"] = collections.deque(maxlen=WindSpeedHistoryBufferLen)
+    _PERSISTENT_["wlmOffsetBufer"] = collections.deque(maxlen=WlmTargetFreqHistoryBufferLen)
     WBisoTempLocked = False
 
     # For ChemDetect
@@ -177,6 +193,11 @@ def boxAverage(buffer,x,t,tau):
     while t-buffer[0][1] > tau:
         buffer.pop(0)
     return mean([d for (d,t) in buffer])
+
+def unstableWindSpeed(windSpeed):
+    _PERSISTENT_['windSpeedBuffer'].append(windSpeed)
+    windSpeedHistoryStd = numpy.std(_PERSISTENT_['windSpeedBuffer'], ddof=1)
+    return windSpeed > (2.6 * windSpeedHistoryStd)
 
 # Handle options from command line
 optDict = eval("dict(%s)" % _OPTIONS_)
@@ -361,9 +382,6 @@ try:
 except:
     pass
 
-
-# _REPORT_['SYSTEM_STATUS'] = 0x00000000
-
 max_adjust = 1.0e-5
 max_adjust_H2O = 1.0e-4
 max_delay = 20
@@ -391,23 +409,6 @@ if _DATA_['WarmBoxTemp'] > Warmbox_setpoint - WB_TEMP_ISO_THRESHOLD and _DATA_['
 else:
     WBisoTempLocked = False
 
-
-# Pass-through status fields from the peripheral interface
-passThrough = [
-    PeripheralStatus.WIND_DIRECTION_NOT_AVAILABLE,
-    PeripheralStatus.WIND_MESSAGE_CHECKSUM_ERROR,
-    PeripheralStatus.WIND_AXIS1_FAILED,
-    PeripheralStatus.WIND_AXIS2_FAILED,
-    PeripheralStatus.WIND_NONVOLATILE_CHECKSUM_ERROR,
-    PeripheralStatus.WIND_ROM_CHECKSUM_ERROR,
-    PeripheralStatus.MALFORMED_DATA_STRING,
-    PeripheralStatus.WIND_BAD_UNITS
-]
-
-if 'PERIPHERAL_STATUS' in _NEW_DATA_:
-    for f in passThrough:
-        SYSTEM_STATUS |= (int(_NEW_DATA_['PERIPHERAL_STATUS']) & f)
-
 if not good:
     print "Updating WLM offset not done because of bad instrument status"
 else:
@@ -425,19 +426,19 @@ else:
         validWindCheck &= (f in _NEW_DATA_)
 
     if validWindCheck:
-        if (int(_NEW_DATA_['PERIPHERAL_STATUS']) & PeripheralStatus.WIND_ANOMALY) > 0:
+        if (int(_NEW_DATA_['PERIPHERAL_STATUS']) & Host.PeriphIntrf.PeripheralStatus.WIND_ANOMALY) > 0:
             if not isnan(_NEW_DATA_['CAR_SPEED']) and _NEW_DATA_['GPS_FIT'] == GPS_GOOD:
-                print "Wind NaN due to anomaly"
+                Log("Wind NaN due to anomaly")
                 _PERSISTENT_['inactiveForWind'] = True
+
             else:
-                print "Wind NaN due to GPS"
+                Log("Wind NaN due to GPS")
         else:
             if _PERSISTENT_['inactiveForWind']:
-                print "Survey status back to active after wind anomaly"
+                Log("Survey status back to active after wind anomaly")
                 _PERSISTENT_['inactiveForWind'] = False
 
     if _PERSISTENT_['inactiveForWind']:
-        SYSTEM_STATUS |= PeripheralStatus.WIND_ANOMALY
         _NEW_DATA_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
 
 
@@ -534,52 +535,70 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     # flags.
 
     if CHEM_DETECT == 1.0:
-        ALARM_STATUS |= ALARM_CHEMDETECT_MASK
+        AnalyzerStatus |= AnalyzerStatusChemDetectMask
 
-    pztNames = ['13CH4', '12CH4', 'H2O']
-    for name in pztNames:
-        try:
-            if _DATA_["pzt_%s_stdev" % name] > PZT_STD_DEV_LIMIT:
-                ALARM_STATUS |= ALARM_PZT_STD_MASK
-                break
-        except KeyError:
-            pass
+    if 'MOBILE_FLOW' in _DATA_:
+        if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
+            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateDisconnected
 
-    shifts = ['shift_0', 'shift_5', 'shift_24', 'shift_30', 'ch4_high_shift']
-    for s in shifts:
-        if abs(_DATA_[s]) > SHIFT_ABS_LIMIT:
-            ALARM_STATUS |= ALARM_SHIFT_MASK
-            break
+        elif _DATA_['MOBILE_FLOW'] < IntakeFlow:
+            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
 
-    # Maybe use unlocked flag instead?
-    cavityPressure = _DATA_['cavity_pressure']
-    if cavityPressure > CAVITY_PRESSURE_HIGH_LIMIT or \
-        cavityPressure < CAVITY_PRESSURE_LOW_LIMIT:
-        ALARM_STATUS |= ALARM_CAVITY_PRESSURE_MASK
+    if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
+        windSpeed = 0.0
 
-    cavityTemp = _DATA_['cavity_temperature']
-    if cavityTemp > 50.0 or cavityTemp < 40.0:
-        ALARM_STATUS |= ALARM_CAVITY_TEMP_MASK
+        if (not numpy.isnan(_DATA_['WIND_N'])) and (not numpy.isnan(_DATA_['WIND_E'])):
+            windN = _DATA_['WIND_N']
+            windE = _DATA_['WIND_E']
+            windSpeed = numpy.sqrt(windN * windN + windE * windE)
 
-    warmBoxTemp = _DATA_['WarmBoxTemp']
-    if warmBoxTemp > CAVITY_TEMP_HIGH_LIMIT or \
-        warmBoxTemp < CAVITY_TEMP_LOW_LIMIT:
-        ALARM_STATUS |= ALARM_WARMBOX_TEMP_MASK
+        if unstableWindSpeed(windSpeed):
+            PeripheralStatus |= PeripheralStatusWindSpeedStabilityMask
 
-    outletValve = _DATA_['OutletValve']
-    if outletValve > _PERSISTENT_['outletValve_max'] or \
-        outletValve < _PERSISTENT_['outletValve_min']:
-        ALARM_STATUS |= ALARM_OUTLET_VALVE_MASK
+        if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
+            carSpeed = 0.0
 
-    if _PERSISTENT_['delta_interval'] > DELTA_INTERVAL_LIMIT:
-        ALARM_STATUS |= ALARM_DELTA_INTERVAL_MASK
+            if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
+                carN = _DATA_['CAR_VEL_N']
+                carE = _DATA_['CAR_VEL_E']
+                carSpeed = numpy.sqrt(carN * carN + carE * carE)
 
-    wlmOffsets = ['wlm3_offset', 'wlm4_offset', 'wlm5_offset']
-    for offset in wlmOffsets:
-        # Each FSR is ~0.026 in offset.
-        if abs(_PERSISTENT_[offset]) > OFFSET_ABS_LIMIT:
-            ALARM_STATUS |= ALARM_WLM_OFFSET_MASK
-            break
+            if (carSpeed != 0.0) and (carSpeed > CarSpeedMaximum) and \
+               (numpy.absolute((windSpeed / carSpeed) - 1.0) > CarWindSpeedCorrelation):
+                PeripheralStatus |= PeripheralStatusWindPositionCorrelationMask
+
+    # Baseline cavity loss
+
+    if _DATA_['delta_interval'] > DeltaIntervalMax:
+        AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
+
+    if _DATA_['spect_latency'] > SpectrumLatencyMax:
+        AnalyzerStatus |= AnalyzerStatusRingdownRateMask
+
+    if numpy.absolute(_DATA_['ch4_high_shift']) > WlmShiftMax:
+        AnalyzerStatus |= AnalyzerStatusWlmShiftMask
+
+    if numpy.absolute(_DATA_['ch4_high_adjust']) > WlmAdjustMax:
+        AnalyzerStatus |= AnalyzerStatusWlmAdjustMask
+
+    shiftAdjustRatio = (_DATA_['ch4_high_adjust'] - _DATA_['ch4_high_shift']) / _DATA_['ch4_high_adjust']
+
+    if numpy.absolute(shiftAdjustRatio) > WlmShiftAdjustRatio:
+        AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
+
+    _PERSISTENT_['wlmOffsetBuffer'].append(_NEW_DATA_['wlm6_offset'])
+    wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
+    wlm6OffsetMax = max(_PERSISTENT_['wlmOffsetBuffer'])
+    wlmOffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
+    
+    if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) > WlmTargetFreqMaxDrift:
+        AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
+    
+if ('PERIPHERAL_STATUS' in _NEW_DATA_) and (int(_NEW_DATA_['PERIPHERAL_STATUS'])) > 0:
+    SystemStatus |= SystemStatusPeripheralMask
+
+if AnalyzerStatus > 0:
+    SystemStatus |= SystemStatusAnalyzerMask
 
 if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not suppressReporting:
 
@@ -591,8 +610,9 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     _REPORT_["wlm6_offset"] = _PERSISTENT_["wlm6_offset"]
     _REPORT_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"]
     _REPORT_["wlm8_offset"] = _PERSISTENT_["wlm8_offset"]
-    _REPORT_["SYSTEM_STATUS"] = SYSTEM_STATUS
-    _REPORT_["ALARM_STATUS"] = ALARM_STATUS
+    _REPORT_["SystemStatus"] = SystemStatus
+    _REPORT_['PeripheralStatus'] = PeripheralStatus | _NEW_DATA_['PERIPHERAL_STATUS']
+    _REPORT_['AnalyzerStatus'] = AnalyzerStatus
     _REPORT_["CHEM_DETECT"] = CHEM_DETECT
     _REPORT_["WBisoTempLocked"] = WBisoTempLocked
     _REPORT_["fineLaserCurrent_6_mean"] = _PERSISTENT_["fineLaserCurrent_6_mean"]  #report 0 for VL6 made to prevent new Column upon mode switch when WL is on to track CO2
