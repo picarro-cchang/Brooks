@@ -146,6 +146,15 @@ if _PERSISTENT_["init"]:
     cp.close()
     _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
+    instrCal = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'InstrCal.ini')
+    instrCalConfig = CustomConfigObj(instrCal)
+
+    if instrCalConfig.has_option('Data', 'baseline_cavity_loss'):
+        _PERSISTENT_['baselineCavityLoss'] = instrCalConfig.get('Data', 'baseline_cavity_loss')
+    else:
+        Log('Missing baseline_cavity_loss in InstrCal. Default value will be used.', Level=2)
+        _PERSISTENT_['baselineCavityLoss'] = 0.0
+
 try:
     if _DATA_LOGGER_ and _DATA_LOGGER_.DATALOGGER_logEnabledRpc('DataLog_Sensor_Minimal'):
         try:
@@ -567,7 +576,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
                (numpy.absolute((windSpeed / carSpeed) - 1.0) > CarWindSpeedCorrelation):
                 PeripheralStatus |= PeripheralStatusWindPositionCorrelationMask
 
-    # Baseline cavity loss
+    if _DATA_['CFADS_base'] > _PERSISTENT_['baselineCavityLoss']:
+        AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
 
     if _DATA_['delta_interval'] > DeltaIntervalMax:
         AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
