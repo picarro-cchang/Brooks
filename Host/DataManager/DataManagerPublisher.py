@@ -66,7 +66,6 @@ class DataManagerPublisher(object):
             #print "Skip %s" % entry['source']
             return None
         else:
-            print entry['data']
             if 'species' in entry['data'] and (entry['data']['species'] == 0.0 or entry['data']['species'] == "0.0"):
                 print "Rejected species 0"
                 return None

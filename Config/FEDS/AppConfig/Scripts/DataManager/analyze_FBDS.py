@@ -18,6 +18,7 @@ from math import exp
 import numpy
 from numpy import mean, isfinite, isnan
 
+from Host import PeriphIntrf
 from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
@@ -64,7 +65,7 @@ WlmAdjustMax = 1.25e-4
 WlmShiftAdjustRatio = 0.1
 WlmTargetFreqMaxDrift = 0.05
 WlmTargetFreqHistoryBufferLen = 6000
-CavityBaselineLossScaleFactor = 1.05
+CavityBaselineLossScaleFactor = 1.1
 
 GPS_GOOD = 2.0
 
@@ -75,6 +76,18 @@ PeripheralStatus = 0x00000000
 
 # Valve masks
 VALVE_MASK_ACTIVE = 0x10
+
+# From fitterThread.py -- should be integrated into DM to use the "flat" .ini structure of FitterConfig.ini
+def evalLeaves(d):
+    for k in d:
+        if isinstance(d[k],dict):
+            evalLeaves(d[k])
+        else:
+            try:
+                d[k] = eval(d[k])
+            except:
+                pass
+    return d
 
 
 if _PERSISTENT_["init"]:
@@ -116,7 +129,7 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["Delta_iCH4_Raw"] = 0.0
     _PERSISTENT_["fineLaserCurrent_6_mean"] = 0
     _PERSISTENT_["windSpeedBuffer"] = collections.deque(maxlen=WindSpeedHistoryBufferLen)
-    _PERSISTENT_["wlmOffsetBufer"] = collections.deque(maxlen=WlmTargetFreqHistoryBufferLen)
+    _PERSISTENT_["wlmOffsetBuffer"] = collections.deque(maxlen=WlmTargetFreqHistoryBufferLen)
     WBisoTempLocked = False
 
     # For ChemDetect
@@ -148,7 +161,7 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
-    fitterConfig = CustomConfigObj(fitterConfigFile)
+    fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
     _PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']
 
 try:
@@ -431,7 +444,7 @@ else:
         validWindCheck &= (f in _NEW_DATA_)
 
     if validWindCheck:
-        if (int(_NEW_DATA_['PERIPHERAL_STATUS']) & Host.PeriphIntrf.PeripheralStatus.WIND_ANOMALY) > 0:
+        if (int(_NEW_DATA_['PERIPHERAL_STATUS']) & PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_ANOMALY) > 0:
             if not isnan(_NEW_DATA_['CAR_SPEED']) and _NEW_DATA_['GPS_FIT'] == GPS_GOOD:
                 Log("Wind NaN due to anomaly")
                 _PERSISTENT_['inactiveForWind'] = True
@@ -546,7 +559,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateDisconnected
 
-        elif _DATA_['MOBILE_FLOW'] < IntakeFlow:
+        elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
 
     if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
@@ -575,7 +588,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
         AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
 
-    if _DATA_['delta_interval'] > DeltaIntervalMax:
+    if _NEW_DATA_['delta_interval'] > DeltaIntervalMax:
         AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
 
     if _DATA_['spect_latency'] > SpectrumLatencyMax:
@@ -592,13 +605,14 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     if numpy.absolute(shiftAdjustRatio) > WlmShiftAdjustRatio:
         AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
 
-    _PERSISTENT_['wlmOffsetBuffer'].append(_NEW_DATA_['wlm6_offset'])
+    _PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
     wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
     wlm6OffsetMax = max(_PERSISTENT_['wlmOffsetBuffer'])
-    wlmOffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
+    wlm6OffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
     
-    if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) > WlmTargetFreqMaxDrift:
-        AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
+    if wlm6OffsetMean != 0.0:
+        if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) > WlmTargetFreqMaxDrift:
+            AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
     
 if ('PERIPHERAL_STATUS' in _NEW_DATA_) and (int(_NEW_DATA_['PERIPHERAL_STATUS'])) > 0:
     SystemStatus |= SystemStatusPeripheralMask
@@ -617,7 +631,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     _REPORT_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"]
     _REPORT_["wlm8_offset"] = _PERSISTENT_["wlm8_offset"]
     _REPORT_["SystemStatus"] = SystemStatus
-    _REPORT_['PeripheralStatus'] = PeripheralStatus | _NEW_DATA_['PERIPHERAL_STATUS']
+    _REPORT_['PeripheralStatus'] = PeripheralStatus | int(_NEW_DATA_['PERIPHERAL_STATUS'])
     _REPORT_['AnalyzerStatus'] = AnalyzerStatus
     _REPORT_["CHEM_DETECT"] = CHEM_DETECT
     _REPORT_["WBisoTempLocked"] = WBisoTempLocked
