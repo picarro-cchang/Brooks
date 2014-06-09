@@ -146,14 +146,9 @@ if _PERSISTENT_["init"]:
     cp.close()
     _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
-    instrCal = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'InstrCal.ini')
-    instrCalConfig = CustomConfigObj(instrCal)
-
-    if instrCalConfig.has_option('Data', 'baseline_cavity_loss'):
-        _PERSISTENT_['baselineCavityLoss'] = instrCalConfig.get('Data', 'baseline_cavity_loss')
-    else:
-        Log('Missing baseline_cavity_loss in InstrCal. Default value will be used.', Level=2)
-        _PERSISTENT_['baselineCavityLoss'] = 0.0
+    fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
+    fitterConfig = CustomConfigObj(fitterConfigFile)
+    _PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']
 
 try:
     if _DATA_LOGGER_ and _DATA_LOGGER_.DATALOGGER_logEnabledRpc('DataLog_Sensor_Minimal'):
