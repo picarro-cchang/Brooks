@@ -64,6 +64,7 @@ WlmAdjustMax = 1.25e-4
 WlmShiftAdjustRatio = 0.1
 WlmTargetFreqMaxDrift = 0.05
 WlmTargetFreqHistoryBufferLen = 6000
+CavityBaselineLossScaleFactor = 1.05
 
 GPS_GOOD = 2.0
 
@@ -571,7 +572,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
                (numpy.absolute((windSpeed / carSpeed) - 1.0) > CarWindSpeedCorrelation):
                 PeripheralStatus |= PeripheralStatusWindPositionCorrelationMask
 
-    if _DATA_['CFADS_base'] > _PERSISTENT_['baselineCavityLoss']:
+    if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
         AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
 
     if _DATA_['delta_interval'] > DeltaIntervalMax:
