@@ -94,7 +94,7 @@ class ControlBridge(object):
 
         while True:
             EventManager.Log('Waiting for prime/purge to complete')
-            val = self.driver.readDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER")
+            val = self.driver.rdDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER")
             
             if val == 8:
                 EventManager.Log('Prime/purge complete')
