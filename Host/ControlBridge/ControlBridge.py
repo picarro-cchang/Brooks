@@ -108,7 +108,7 @@ class ControlBridge(object):
             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_BIT, 10],
             [ControlBridge.INJECT_MASK, 0, 1],
-            [0, 0 0]
+            [0, 0, 0]
         ])
 
         EventManager.Log('Injection complete')
