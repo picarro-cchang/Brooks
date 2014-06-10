@@ -103,6 +103,9 @@ class ControlBridge(object):
 
             time.sleep(0.010)
 
+        # Arm the system
+        self._armIsotopicCapture()
+
         # Injection
         self.driver.wrValveSequence([
             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
@@ -110,10 +113,10 @@ class ControlBridge(object):
             [ControlBridge.INJECT_MASK, 0, 1],
             [0, 0, 0]
         ])
-
-        EventManager.Log('Injection complete')
         
         self.driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER", 0)
+
+        EventManager.Log('Injection complete')
 
     def _cancelIsotopicAnalysis(self):
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 5)
