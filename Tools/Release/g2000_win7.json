@@ -52,7 +52,7 @@
 
         "CFHDS": {
             "species": "iCO2",
-            "installerSignature": "CFGDS",
+            "installerSignature": "CFHDS",
             "comment": "for NEON"
         },
 
