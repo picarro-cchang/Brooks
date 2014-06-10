@@ -557,7 +557,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     if 'MOBILE_FLOW' in _DATA_:
         if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
-            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateDisconnected
+            AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
 
         elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
