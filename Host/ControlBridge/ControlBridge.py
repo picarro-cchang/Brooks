@@ -2,6 +2,9 @@
 Copyright 2014, Picarro Inc.
 """
 
+import time
+import threading
+
 import zmq
 
 from Host.Common import SharedTypes
@@ -17,11 +20,19 @@ class ControlBridge(object):
         "unknown" : 1
     }
 
+    # Previously defined in the gdu.js REST call to AnalyzerServer
+    INJECT_VALVE_BIT = 2
+    INJECT_FLAG_VALVE_BIT = 3
+    INJECT_MASK = (1 << INJECT_VALVE_BIT) | (1 << INJECT_FLAG_VALVE_BIT)
+    INJECT_SAMPLES = 5
+
     def __init__(self):
         self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
                                                  ClientName = "ControlBridge")
+        EventManager.Log('Connected to Driver')
         self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER,
                                                   ClientName = "ControlBridge")
+        EventManager.Log('Connected to Instrument Manager')
 
         self.context = zmq.Context()
 
@@ -31,7 +42,9 @@ class ControlBridge(object):
         self.commands = {
             "armIsotopicCapture" : self._armIsotopicCapture,
             "cancelIsotopicCapture" : self._cancelIsotopicCapture,
-			"shutdown" : self._shutdown
+            "shutdown" : self._shutdown,
+            "cancelIsotopicAnalysis" : self._cancelIsotopicAnalysis,
+            "startReferenceGasCapture" : self._startReferenceGasCapture
         }
  
     def run(self):
@@ -39,6 +52,7 @@ class ControlBridge(object):
         try:
             while True:
                 cmd = self.controlSocket.recv_string()
+                EventManager.Log("Command: '%s'" % cmd)
 
                 try:
                     self.commands[cmd]()
@@ -47,6 +61,7 @@ class ControlBridge(object):
                 except KeyError:
                     response = ControlBridge.RESPONSE_STATUS["unknown"]
 
+                EventManager.Log("Command response: '%s'" % response)
                 self.controlSocket.send_string("%d" % response)
 
         finally:
@@ -63,18 +78,45 @@ class ControlBridge(object):
         self.instMgr.INSTMGR_ShutdownRpc(0)
 
     def _startReferenceGasCapture(self):
+        t = threading.Thread(target=self._runReferenceGasCapture)
+        t.start()
+
+    def _runReferenceGasCapture(self):
+        EventManager.Log('Starting reference gas capture command')
         val = self.driver.interfaceValue("PEAK_DETECT_CNTRL_PrimingState")
 
         if val != 6:
-            # TODO What is 6?            
+            EventManager.Log('PEAK_DETECT_CNTRL_PrimingState != 6!')
+            # XXX Ask Sze? Does this mean that reference gas is supported for this instrument? IOW is it old?
             pass
 
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 6)
 
-        # Poll for state 8 / cancellation?
+        while True:
+            EventManager.Log('Waiting for prime/purge to complete')
+            val = self.driver.readDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER")
+            
+            if val == 8:
+                EventManager.Log('Prime/purge complete')
+                # Do injection
+                break
 
-    def _startReferenceGasInjection(self):
-        pass
+            time.sleep(0.010)
+
+        # Injection
+        Driver.wrValveSequence([
+            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
+            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_BIT, 10],
+            [ControlBridge.INJECT_MASK, 0, 1],
+            [0, 0 0]
+        ])
+
+        EventManager.Log('Injection complete')
+        
+        Driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER", 0)
+
+    def _cancelIsotopicAnalysis(self):
+        self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 5)
         
 if __name__ == '__main__':
     bridge = ControlBridge()
