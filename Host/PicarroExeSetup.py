@@ -37,59 +37,38 @@ from Host.Common import version as hostVersion
 
 version = sys.version_info
 pyDirname = "Python%d%d" % (version[0],version[1])
-sys.path.append("ActiveFileManager")
-sys.path.append("Coordinator")
-sys.path.append("ValveSequencer")
 sys.path.append("AlarmSystem")
 sys.path.append("RDFrequencyConverter")
 sys.path.append("SpectrumCollector")
-sys.path.append("CommandInterface")
 sys.path.append("Common")
 sys.path.append("autogen")
 sys.path.append("Controller")
-# sys.path.append("ControllerBuildStation")
 sys.path.append("DataLogger")
 sys.path.append("DataManager")
 sys.path.append("Driver")
-sys.path.append("ElectricalInterface")
 sys.path.append("EventManager")
 sys.path.append("Fitter")
 sys.path.append("InstMgr")
 sys.path.append("Archiver")
-sys.path.append("FileEraser")
 sys.path.append("MeasSystem")
 sys.path.append("QuickGui")
 sys.path.append("SampleManager")
 sys.path.append("Supervisor")
-sys.path.append("ReadExtSensor")
-sys.path.append("IPV")
-sys.path.append("ConfigMonitor")
 sys.path.append("PeriphIntrf")
 sys.path.append("Utilities")
-sys.path.append("WebServer")
-sys.path.append("rdReprocessor")
 sys.path.append("ControlBridge")
 sys.path.append("Sensors")
-sys.path.append("Utilities/RemoteAccess")
-sys.path.append("Utilities/DiagDataCollector")
 sys.path.append("Utilities/SupervisorLauncher")
-sys.path.append("Utilities/CoordinatorLauncher")
-sys.path.append("Utilities/FluxSwitcher")
-sys.path.append("Utilities/ValveDisplay")
 sys.path.append("Utilities/InstrEEPROMAccess")
 sys.path.append("Utilities/DataRecal")
 sys.path.append("Utilities/IntegrationTool")
 sys.path.append("Utilities/SetupTool")
-sys.path.append("Utilities/PicarroKML")
-sys.path.append("Utilities/ReadGPSWS")
 sys.path.append("Utilities/IntegrationBackup")
 sys.path.append("Utilities/FlowController")
 sys.path.append("Utilities/ReadMemUsage")
 sys.path.append("Utilities/PeriphModeSwitcher")
 sys.path.append("Utilities/RecipeEditor")
-sys.path.append("Utilities/BackpackServer")
 sys.path.append("Utilities/ConfigManager")
-sys.path.append("Utilities/AircraftValveSwitcher")
 sys.path.append("Utilities/ProgramVariableGainRdd")
 sys.path.append("Utilities/RestartSupervisor")
 sys.path.append('Utilities/KillRestartSupervisor')
@@ -435,16 +414,6 @@ Controller = Target(description = "Controller", # used for the versioninfo resou
                     dest_base = "Controller"
                     )
 
-#ControllerBuildStation = Target(description = "ControllerBuildStation", # used for the versioninfo resource
-#                    script = "ControllerBuildStation/ControllerBuildStation.py", # what to build
-#                    other_resources = [(RT_MANIFEST,
-#                                        1,
-#                                        manifest_template % dict(prog="ControllerBuildStation")
-#                                        )],
-#                    ##    icon_resources = [(1, "icon.ico")],
-#                    dest_base = "ControllerBuildStation"
-#                    )
-
 QuickGui = Target(description = "QuickGui", # used for the versioninfo resource
                     script = "QuickGui/QuickGui.py", # what to build
                     other_resources = [(RT_MANIFEST,
@@ -463,36 +432,6 @@ Fitter = Target(description = "Fitter", # used for the versioninfo resource
                                         )],
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "Fitter"
-                    )
-
-Coordinator = Target(description = "Coordinator", # used for the versioninfo resource
-                    script = "Coordinator/Coordinator.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="Coordinator")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "Coordinator"
-                    )
-
-deltaCorrProcessor = Target(description = "DeltaCorrProcessor", # used for the versioninfo resource
-                    script = "Coordinator/DeltaCorrProcessor.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="deltaCorrProcessor")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "DeltaCorrProcessor"
-                    )
-
-dilutionCorrProcessor = Target(description = "DilutionCorrProcessor", # used for the versioninfo resource
-                    script = "Coordinator/DilutionCorrProcessor.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="dilutionCorrProcessor")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "DilutionCorrProcessor"
                     )
 
 supervisorLauncher = Target(description = "SupervisorLauncher", # used for the versioninfo resource
@@ -616,9 +555,7 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             (r'mpl-data', [r'C:\%s\Lib\site-packages\matplotlib\mpl-data\matplotlibrc' % pyDirname]),
             (r'mpl-data\images',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\images\*.*' % pyDirname)),
             (r'mpl-data\fonts',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\fonts\*.*' % pyDirname)),
-            ("Images", hex_images),
-            ("static", glob.glob(r'Utilities\BackpackServer\static\*.*')),
-            ("templates", glob.glob(r'Utilities\BackpackServer\templates\*.*')),
+            ("Images", hex_images)
             ]
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))
@@ -633,40 +570,29 @@ else:
 
 
 consoleList = [
-    "ActiveFileManager/ActiveFileManager.py",
     "RDFrequencyConverter/RDFrequencyConverter.py",
     "SpectrumCollector/SpectrumCollector.py",
-    "ValveSequencer/ValveSequencer.py",
     "AlarmSystem/AlarmSystem.py",
     "Archiver/Archiver.py",
-    "CommandInterface/CommandInterface.py",
     "Common/SchemeProcessor.py",
     "DataLogger/DataLogger.py",
     "DataManager/DataManager.py",
     "DataManager/DataManagerPublisher.py",
     "Driver/Driver.py",
-    "ElectricalInterface/ElectricalInterface.py",
     "EventLogWatcher/EventLogWatcher.py",
     "EventManager/EventManager.py",
     "InstMgr/InstMgr.py",
-    "FileEraser/FileEraser.py",
     "MeasSystem/MeasSystem.py",
     "SampleManager/SampleManager.py",
     "Supervisor/Supervisor.py",
     "ReadExtSensor/ReadExtSensor.py",
-    "WebServer/server.py",
-    "rdReprocessor/rdReprocessor.py",
     "ControlBridge/ControlBridge.py",
     "Sensors/MobileKitMonitor.py",
-    "Utilities/RemoteAccess/RemoteAccess.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
     "Utilities/IntegrationBackup/IntegrationBackup.py",
-    "Utilities/FlowController/FlowController.py",
-    "Utilities/Restart/ResetAnalyzer.py",
     "Utilities/Restart/RestoreStartup.py",
     "Utilities/Restart/RtcAlarmOff.py",
     "Utilities/ReadMemUsage/ReadMemUsage.py",
-    "Utilities/BackpackServer/backpackServer.py",
     "Utilities/RestartSupervisor/RestartSupervisor.py",
     "Utilities/ProgramVariableGainRdd/programRdd.py",
     'Utilities/KillRestartSupervisor/KillRestartSupervisor.py',
@@ -692,32 +618,22 @@ consoleList = [
     "../Firmware/Utilities/ThresholdStats.py",
     "../Firmware/Utilities/CheckLaserCal.py",
     Fitter,
-    "ConfigMonitor/ConfigMonitor.py",
     "PeriphIntrf/RunSerial2Socket.py",
     'LockWorkstation/LockWorkstation.py'
 ]
 
 windowsList = [
-    QuickGui, Coordinator,Controller,deltaCorrProcessor, dilutionCorrProcessor,
+    QuickGui,
+    Controller,
     "Common/StopSupervisor.py",
-    "IPV/IPV.py",
-    "IPV/IPVLicense.py",
-    "Utilities/DiagDataCollector/DiagDataCollector.py",
     supervisorLauncher,
     "Utilities/SupervisorLauncher/HostStartup.py",
-    "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
-    "Utilities/FluxSwitcher/FluxScheduler.py",
-    "Utilities/FluxSwitcher/FluxSwitcherGui.py",
-    "Utilities/ValveDisplay/ValveDisplay.py",
     "Utilities/InstrEEPROMAccess/InstrEEPROMAccess.py",
     "Utilities/DataRecal/DataRecal.py",
     "Utilities/SetupTool/SetupTool.py",
-    "Utilities/PicarroKML/PicarroKML.py",
-    "Utilities/ReadGPSWS/ReadGPSWS.py",
     "Utilities/PeriphModeSwitcher/PeriphModeSwitcher.py",
     "Utilities/RecipeEditor/RecipeEditor.py",
-    "Utilities/ConfigManager/ConfigManager.py",
-    "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
+    "Utilities/ConfigManager/ConfigManager.py"
 ]
 
 # Autogenerate required files
