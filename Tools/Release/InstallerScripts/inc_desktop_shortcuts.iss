@@ -21,9 +21,6 @@
 ;           noStartInst (optional)                  if set, startup shortcut for Start Instrument is
 ;                                                   NOT created (only FDDS sets this def)
 ;
-;           integToolIni (optional)                 IntegrationTool.exe ini filename (use -c option if
-;                                                   defined, else option not used)
-;
 ;           valveDisplayIni (optional)              ValveDisplay.exe ini filename
 ;
 ;   3.  To support Flux instruments, which require unique shortcut names,
@@ -46,6 +43,15 @@
 ;           dataRecalIni2, dataRecalTitle2          additional optional shortcut ini filename/title
 ;
 ;   4.  The shortcut for ConfigTool.py is created in inc_configtool.iss (not here).
+;
+;   5.  To support additional IntegrationTool shortcuts, which require unique shortcut names,
+;       use variables to specify the title and ini filename
+;
+;           variable name                           description
+;           =============                           ===========
+;           integToolIni1, integToolTitle1          additional optional IntegrationTool shortcut ini filename/title
+;           integToolIni2, integToolTitle2
+;           integToolIni3, integToolTitle3
 
 
 #ifdef closeValves
@@ -108,12 +114,22 @@ Name: {userdesktop}\Diagnostics\Integration\Integration Mode Switcher; Filename:
 Name: {userdesktop}\Diagnostics\Integration\EEPROM Access; Filename: {app}\HostExe\InstrEEPROMAccess.exe; Parameters: -c ..\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 
 
-; Shortcut uses -c option if the integration tool ini filename is defined
-#ifdef integToolIni
-Name: {userdesktop}\Diagnostics\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
-#else
-Name: {userdesktop}\Diagnostics\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+; Default is to use -c option and reference the same IntegrationTool.ini file
+Name: {userdesktop}\Diagnostics\Integration\Integration Tool; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\IntegrationTool.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+
+; Additional optional IntegrationTool shortcuts
+#ifdef integToolIni1
+Name: {userdesktop}\Diagnostics\Integration\{#integToolTitle1}; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni1}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
 #endif
+
+#ifdef integToolIni2
+Name: {userdesktop}\Diagnostics\Integration\{#integToolTitle2}; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni2}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+#endif
+
+#ifdef integToolIni3
+Name: {userdesktop}\Diagnostics\Integration\{#integToolTitle3}; Filename: {app}\HostExe\IntegrationTool.exe; Parameters: -c ..\CommonConfig\Config\Utilities\{#integToolIni3}; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}
+#endif
+
 
 
 Name: {userdesktop}\Diagnostics\Integration\Integration Backup; Filename: {app}\HostExe\IntegrationBackup.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#integrationIcon}

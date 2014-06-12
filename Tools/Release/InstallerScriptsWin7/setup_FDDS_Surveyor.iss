@@ -15,9 +15,6 @@
 #define diagDataCollectorIni = "DiagDataCollector.ini"
 #define setupToolIni = "SetupTool.ini"
 
-; provide an ini file for the Integration Tool
-#define integToolIni = "IntegrationTool.ini"
-
 ; create Coordinator Launcher shortcut as well as Integration Coordinator Launcher
 #define coordinatorLauncherIni = "CoordinatorLauncher.ini"
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"

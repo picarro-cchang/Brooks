@@ -5,8 +5,6 @@
 
 #define dataRecalIni = "UserCal.ini"
 
-#define integToolIni = "IntegrationTool.ini"
-
 #define supervisorLauncherIni = "SupervisorLauncher.ini"
 #define supervisorLauncherIntegIni = "SupervisorLauncher_Integration.ini"
 #define diagDataCollectorIni = "DiagDataCollector.ini"

@@ -14,6 +14,16 @@
 #define coordinatorLauncherIni = "CoordinatorLauncher.ini"
 #define coordinatorLauncherIntegIni = "CoordinatorLauncher_Integration.ini"
 
+; in addition to the standard IntegrationTool shortcut there are 3 custom shortcuts
+#define integToolTitle1 = "thres1_iCH4 Integration Tool"
+#define integToolIni1 = "iCH4_IntegrationTool.ini"
+
+#define integToolTitle2 = "thres2_iCO2 Integration Tool"
+#define integToolIni2 = "iCO2_IntegrationTool.ini"
+
+#define integToolTitle3 = "thres3_CH4 Integration Tool"
+#define integToolIni3 = "CH4_IntegrationTool.ini"
+
 
 ; Note: Order of items in [Files] sections (which spans these
 ;       files) is the install order. Be careful about changing
