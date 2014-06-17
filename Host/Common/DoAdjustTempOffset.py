@@ -139,7 +139,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
 
     if laIsEnabled <= 0:
         # controlled from ini config file
-        Log("Laser temp offset control is disabled")
+        #Log("Laser temp offset control is disabled")
         allControlOn = False
     elif not allControlOn:
         Log("Problem detected for at least one laser, turned off temperature control loop for all lasers", Level=2)
