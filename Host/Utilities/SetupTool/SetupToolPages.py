@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 import wx
 from datetime import datetime
@@ -457,7 +458,7 @@ class Page2(wx.Panel):
             cp = CustomConfigObj(self.valveIni)
             setVal = cp.get("MAIN", "comPortRotValve")
             try:
-                setVal = "COM%d" % (int(val)+1)
+                setVal = "COM%d" % (int(setVal)+1)
             except:
                 pass
         except Exception, err:
@@ -735,10 +736,25 @@ class Page3(wx.Panel):
         f2=os.popen("echo %username%","r")
         d=f1.read().strip()
         u=f2.read().strip()
+
         # Required for Windows scheduler
         self.user = "%s\%s" % (d,u)
-        self.password = "picarro"
-        
+
+        # Password for OS
+        osType = platform.uname()[2]
+        self.supportedOS = True
+
+        if osType == '7':
+            # Win7
+            self.password = "Extreme_Science!"
+        elif osType == 'XP':
+            # WinXP
+            self.password = "picarro"
+        else:
+            # use a default (may not work so pop a warning dialog on Start/Stop Delivery Scheduler)
+            self.password = "picarro"
+            self.supportedOS = False
+
         self.textCtrlList[6].Enable(False)
         self.bindEvents()
         self.__do_layout()
@@ -821,6 +837,10 @@ class Page3(wx.Panel):
         self.Bind(wx.EVT_COMBOBOX, self.onAuthComboBox, self.comboBoxList[1])
         
     def onSchButton(self, event):
+        # warn user if unsupported OS
+        if self.supportedOS is False:
+            printError("Unsupported operating system.", "Platform error", "Scheduler authentication may fail.")
+
         print self.checkRemoteAccessScheduled()
         if self.checkRemoteAccessScheduled():
             os.system(r'schtasks.exe /delete /tn RemoteAccess /f')
@@ -1558,4 +1578,3 @@ class Page7(wx.Panel):
         
     def setFullInterface(self, full):
         pass
-       
