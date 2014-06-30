@@ -487,7 +487,11 @@ class AutosamplerFrame(AutosamplerGUI):
         self.OnLoadMethodChoice(wx.EVT_CHOICE)
         self.ASReadInit()
         time.sleep(0.35)
-        self.syringeSize=self.ASGetConfigSyringeVol()        
+
+        # This calls an undocumented API function, which returns a syringe size code that gets
+        # converted to a volume (floating point).
+        self.syringeSize=self.ASGetConfigSyringeVol()
+
         self.SampleWashVolNumEdit._max =self.SampleVolNumEdit._max = self.syringeSize
         self.updateQueue()
 
@@ -498,6 +502,8 @@ class AutosamplerFrame(AutosamplerGUI):
         self.lastStatus=''
         self.numInjDone=0
         self.pausedAndInjStarted=False
+
+        # fire a timer every 1/4 sec (250 milliseconds)
         self.timer.Start(250)
         self.RinseBetweenVialsCB
         self.lastVial=0
@@ -1257,8 +1263,16 @@ class AutosamplerFrame(AutosamplerGUI):
 
             # move AS to exchange position
             self.ASReadInit()
+
+            # 0 = SC_GOTO_POS
+            # return: -1.0 = Error
+            #          0.0 = OK
             self.ASStepGoToSyrExchange(0)
             time.sleep(1)
+
+            # 1 = SC_U_NO_CURRENT (Switch off current U-axis stepper motor)
+            # return: -1.0 = Error
+            #          0.0 = OK
             self.ASStepGoToSyrExchange(1)
             time.sleep(1)
 
@@ -1270,11 +1284,19 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Go To Wait\r\n")
 
             # complete exchange and move AS to wait position
+            #
+            # 2 = SC_GET (determine syringe dead volume position)
+            # return: -1.0 = Error
+            #         >0.0 = plunger null position
             self.ASStepGoToSyrExchange(2)
             time.sleep(1)
+
+            # 3 = SC_U_CURRENT (Switch on current U-axis stepper motor)
             self.ASStepGoToSyrExchange(3)
             time.sleep(1)
             self.ASReadInit()
+
+            # move to configured wait position
             self.ASStepGoToWait()
             time.sleep(1)
 
@@ -1282,18 +1304,23 @@ class AutosamplerFrame(AutosamplerGUI):
             self.RunBtn.Enable(self.RunWasEnabled)
             self.StopBtn.Enable(self.StopWasEnabled)
             self.EndBtn.Enable(self.HaltWasEnabled)
-            
+
+    # ============
+    # Methods that communicate with the autosampler
+    # TODO: Handle from a separate class that is instantiated
     def ASWaitIdle(self):
         count=0.0
         maxWait=2.0
         bsy = self.ASGetBusy()
         if not bsy:
             return
+
+        # hmmm, what if the autosampler is busy for more than 2 seconds?
+        # this code returns anyway
         while bsy and count<maxWait:
             time.sleep(0.1)
             bsy = self.ASGetBusy()
             count+=0.1
-
 
     def ASConnect(self):
         ASComNum=0
@@ -1314,6 +1341,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Port=%s, Error =%s\r\n"%(ASComNum,self.ASGetError()))
         return
 
+    # not currently called
     def ASDisconnect(self):
         self.ASWaitIdle()
         rtn=self.lib.alsgDisConnect()
@@ -1326,6 +1354,7 @@ class AutosamplerFrame(AutosamplerGUI):
             return False
     
     def ASReadInit(self):
+        # default tdFile is Parameter.td
         fn = os.path.abspath(self.tdFile)
         self.ASWaitIdle()
         rtn=self.lib.alsgReadInit(c_char_p(fn))
@@ -1336,7 +1365,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASReadInit Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # TODO: call this as part of custom 3x3 tray configuration
     def ASSetInstallTraySampleDepth(self, nTray, dzDepth):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallTraySampleDepth(c_short(nTray), c_double(dzDepth))
@@ -1347,7 +1377,11 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallTraySampleDepth Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
+    #
+    # Set the reference point of the specified tray in x, y, z coordinates (mm).
+    # The zPos is used to specify the height of the vial for missing vial detection.
     def ASSetInstallTrayPos(self, nTray, dxPos, dyPos, dzPos):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallTrayPos(c_short(nTray), c_double(dxPos), c_double(dyPos), c_double(dzPos))
@@ -1358,7 +1392,11 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallTrayPos Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
+    #
+    # Set the reference point of the wash station (think this is actually the waste port since
+    # that is the location set for the wash station in the training app).
     def ASSetInstallWashStationPos(self, dxPos, dyPos):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallWashStationPos(c_double(dxPos), c_double(dyPos))
@@ -1369,7 +1407,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallWashStationPos Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetInstallWashStationSolventDepth(self, dzDepth):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallWashStationSolventDepth(c_double(dzDepth))
@@ -1380,7 +1419,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallWashStationSolventDepth Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetInstallWashStationWasteDepth(self, dzDepth):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallWashStationWasteDepth(c_double(dzDepth))
@@ -1391,7 +1431,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallWashStationWasteDepth Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetInstallWashStationISTDDepth(self, dzDepth):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallWashStationISTDDepth(c_double(dzDepth))
@@ -1402,7 +1443,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallWashStationISTDDepth Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # Set the speed of the X and Y motor, mm/s
     def ASSetInstallMotorSpeed(self, dxSpd, dySpd):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallMotorSpeed(c_short(dxSpd), c_short(dySpd))
@@ -1414,6 +1456,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
 
+    # not currently called
     def ASSetInstallInjPointPos(self, nInjPoint, dxPos, dyPos, dzPos):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetInstallInjPointPos(c_short(nInjPoint), c_double(dxPos), c_double(dyPos), c_double(dzPos))
@@ -1424,7 +1467,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetInstallInjPointPos Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetConfigMode(self, nMode):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigMode(c_short(nMode))
@@ -1435,7 +1479,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigMode Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetConfigStartSignal(self, nContact):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigStartSignal(c_short(nContact))
@@ -1446,7 +1491,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigStartSignal Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetConfigReadyContact(self, nLogic):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigReadyContact(c_short(nLogic))
@@ -1457,7 +1503,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigReadyContact Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetConfigWaitPos(self, nWaitPos):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigWaitPos(c_short(nWaitPos))
@@ -1468,7 +1515,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigWaitPos Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetConfigTray(self, nTray, nTrayTyp):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigTray(c_short(nTray), c_short(nTrayTyp))
@@ -1479,7 +1527,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigTray Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # called for 3x3 tray configuration
     def ASSetConfigTrayMetrics(self, nTray, nVials, nCols, nRows, dColDist, dRowDist):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigTrayMetrics(c_short(nTray), c_short(nVials),  c_short(nCols),  c_short(nRows), c_double(dColDist), c_double(dRowDist))
@@ -1490,7 +1539,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigTrayMetrics Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called
     def ASSetConfigWashStation(self, nType):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigWashStation(c_short(nType))
@@ -1501,7 +1551,10 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigWashStation Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not currently called (set in Parameter.td)
+    #
+    # we
     def ASSetConfigSyringeVol(self, nSyrVol):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigSyringeVol(c_short(nSyrVol))
@@ -1512,7 +1565,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigSyringeVol Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # currently commented out
     def ASSetConfigSyringeSpeed(self, nzUpSpd, nzDwnSpd):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigSyringeSpeed(c_short(nzUpSpd),c_short(nzDwnSpd))
@@ -1523,7 +1577,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetConfigSyringeSpeed Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASSetConfigStartCycleBuzzer(self, nBuzzer):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetConfigStartCycleBuzzer(c_short(nBuzzer))
@@ -1556,7 +1611,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetMethodSimpleInjection Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASSetMethodSandwichInjection(self, nSolvent, dSolventVol, dAirGapVolPre, dSampleVol, dAirGapVolPost):
         self.ASWaitIdle()
         rtn=self.lib.alsgSetMethodSandwichInjection(c_short(nSolvent), c_double(dSolventVol), c_double(dAirGapVolPre), c_double(dSampleVol), c_double(dAirGapVolPost))
@@ -1567,7 +1623,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetMethodSandwichInjection Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASSetMethodISTDInjection(self, dAirGapVolPre, dISTDVol, dAirGapVolPost, dSampleVol, dAirGapVol):
         self.ASWaitIdle()
         rtn= self.lib.alsgSetMethodISTDInjection(c_double(dAirGapVolPre), c_double(dISTDVol), c_double(dAirGapVolPost), c_double(dSampleVol), c_double(dAirGapVol))
@@ -1633,7 +1690,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASSetMethodPostInjWashVol Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASSetMethodValveWashes(self, nSolvent1, nSolvent2):
         self.ASWaitIdle()
         rtn= self.lib.alsgSetMethodValveWashes(c_short(nSolvent1), c_short(nSolvent2))
@@ -1699,7 +1757,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASStepGoToSyrExchange Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASRunSyringeWash(self, nMode, nTray, nVial, nWashes):
         self.ASWaitIdle()
         rtn= self.lib.alsgRunSyringeWash(c_short(nMode), c_short(nTray), c_short(nVial), c_short(nWashes))
@@ -1710,7 +1769,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASRunSyringeWash Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASRunValveWash(self, nMode, nWashes):
         self.ASWaitIdle()
         rtn= self.lib.alsgRunValveWash(c_short(nMode), c_short(nWashes))
@@ -1721,7 +1781,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASRunValveWash Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASRunReference(self, nAxis, nDirection):
         self.ASWaitIdle()
         rtn= self.lib.alsgRunReference(c_short(nAxis), c_short(nDirection))
@@ -1753,12 +1814,16 @@ class AutosamplerFrame(AutosamplerGUI):
     
     def ASGetIdle(self):
         rtn= int(self.lib.alsgGetStatus())
+
+        # TODO: Use a define for this not hard-coded
         if(rtn==5):  #idle
             return True
         else:
             return False
     
     def ASGetConfigSyringeVol(self):
+        # Note: alsgGetConfigSyringeVol() is an undocumented method in the ALS-G DLL API
+        #       
         sze = 0xff & self.lib.alsgGetConfigSyringeVol()
         rtn=5.0
         if(sze==2):
@@ -1768,6 +1833,7 @@ class AutosamplerFrame(AutosamplerGUI):
         return rtn
 
     def ASGetStatus(self):
+        # TODO: need defs for return codes, return a code not a string
         rtn= int(self.lib.alsgGetStatus())
         s=""
         if(rtn==0):
@@ -1782,6 +1848,8 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.Log("Error Code=%s<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\r\n"%self.errCode)
                 self.Log("Error String=%s\r\n"%self.ASGetError())
                 self.ErrorRecoveryMode=True
+
+                # move sampler specified position (0= Waste1) at specified depth in mm in relation to calibrated position
                 self.ASStepGoToWaste(0,20)
                 self.ErrorRecoveryMode=False
                 time.sleep(8.0)
@@ -1791,6 +1859,8 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.injectionComplete= True
             else:
                 s="No Error\r\n"
+
+        # TODO: use a dictionary for status message text
         if(rtn==2):
             s="Abort\r\n"
         if(rtn==5):
@@ -1827,6 +1897,7 @@ class AutosamplerFrame(AutosamplerGUI):
             s="HPLC Valve Clean\r\n"
         return s
     
+    # not used
     def ASBeep(self, nReps):
         self.ASWaitIdle()
         rtn= self.lib.alsgBeep(c_short(nReps))
@@ -1837,31 +1908,36 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASBeep Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # not used
     def ASGetDiagPlungerStrokes(self):
         self.ASWaitIdle()
         rtn= self.lib.alsgGetDiagPlungerStrokes()
         self.Log("ASGetDiagPlungerStrokes = %d Plunger Strokes\r\n"%rtn)
         return rtn
-    
+
+    # not used
     def ASResetDiagPlungerStrokes(self):
         self.ASWaitIdle()
         rtn= 0 #self.lib.alsgResetDiagPlungerStrokes()  #This explodes<<<<<
         self.Log("ASResetDiagPlungerStrokes = %d Plunger Strokes\r\n"%rtn)
         return rtn
-    
+
+    # not used
     def ASGetDiagInjections(self, nInjPoint):
         self.ASWaitIdle()
         rtn= self.lib.alsgGetDiagInjections(c_short(nInjPoint))
         self.Log("ASGetDiagInjections = %d Plunger Strokes\r\n"%rtn)
         return rtn
     
+    # not used
     def ASResetDiagInjections(self, nInjPoint):
         self.ASWaitIdle()
         rtn= 0 #self.lib.alsgResetDiagInjections(nInjPoint)    #This explodes<<<<<
         self.Log("ASResetDiagInjections = %d Injections\r\n"%rtn)
         return rtn
     
+    # not used
     def ASStepGoToVial(self, nTray, nPos, dRelDepth):
         self.ASWaitIdle()
         rtn= 0#self.lib.alsgStepGoToVial(c_short(nTray), c_short(nPos), c_double(dRelDepth))  #This isn't exported from the dll!!    
@@ -1873,6 +1949,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
     
+    # not used
     def ASStepGoToInject(self, nInjPoint, dRelDepth):
         self.ASWaitIdle()
         rtn= self.lib.alsgStepGoToInject(c_short(nInjPoint), c_double(dRelDepth))      
@@ -1883,7 +1960,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASStepGoToInject Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-            
+
+    # not used
     def ASStepGoToSolvent(self, nPos, dRelDepth):
         self.ASWaitIdle()
         rtn= self.lib.alsgStepGoToSolvent(c_short(nPos), c_double(dRelDepth))      
@@ -1894,7 +1972,8 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASStepGoToSolvent Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
-    
+
+    # called on error
     def ASStepGoToWaste(self, nPos, dRelDepth):
         self.ASWaitIdle()
         rtn= self.lib.alsgStepGoToWaste(c_short(nPos), c_double(dRelDepth))  #This isn't exported from the dll!!    
@@ -1918,6 +1997,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
     
+    # not used
     def ASStepDraw(self, dAmount, dSpeed):
         self.ASWaitIdle()
         rtn= 0#self.lib.alsgStepDraw()    #This isn't exported from the dll!!
@@ -1929,6 +2009,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
     
+    # not used
     def ASStepDispense(self, dAmount, dSpeed):
         self.ASWaitIdle()
         rtn= 0#self.lib.alsgStepDispense()    #This isn't exported from the dll!!
@@ -1941,6 +2022,12 @@ class AutosamplerFrame(AutosamplerGUI):
             return False
     
     def ASGetError(self):
+        # TODO: define error code value and return the code
+        #       use dictionary for string lookup
+        #
+        # Missing error codes defined in documentation:
+        #   63 = ERROR_DELAY_RANGE      Delay value out of range
+        #   84 = ERROR_IO_NOT_ENABLED   IO Device bit(s) not enabled for control by SDK
         err=int(self.lib.alsgGetError()) & 0xffff
         if(err==0):
             return "00=No Error"
@@ -2099,11 +2186,21 @@ class AutosamplerFrame(AutosamplerGUI):
             cfg = self.Cfg
             self.Log("Using Vial #%d\r\n"%self.v)
             self.ASReadInit()
-            self.syringeSize=self.ASGetConfigSyringeVol()        
+
+            self.syringeSize=self.ASGetConfigSyringeVol()
+
+            # TODO: These should be values in this app's config file. We are
+            #       overriding the default motor speed in Parameter.td (which is 150, 120)
             #self.ASSetInstallMotorSpeed(180,150)#self.ASSetInstallMotorSpeed(160,130)
             self.ASSetInstallMotorSpeed(260,150)
+
+            # TODO: New code for the 3x3 tray
+            #
+            # call to ASSetInstallTraySampleDepth was commented out to fix #709 as per Louis
+            # made the autosampler believe 
             #self.ASSetConfigTrayMetrics(0,9,3,3,59,59)
             #self.ASSetInstallTraySampleDepth(0,29)
+
             self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             self.ASSetMethodInjPointNo(0)
             self.ASSetMethodSimpleInjection((float)(cfg[self.method]['SampleVol']), (int)(cfg[self.method]['FillStrokes']), 0.0)
@@ -2526,8 +2623,8 @@ class AutosamplerFrame(AutosamplerGUI):
         if EMULATION:
             return
 
+        # self.stop is set to True when Stop button pressed
         if self.stop and (not self.ASGetBusy() or self.ASGetIdle()):
-            # 
             self.EndBtn.Enable(False)
             self.RunBtn.Enable(True)
             self.ChgSyringeBtn.Enable(True)
@@ -2537,19 +2634,47 @@ class AutosamplerFrame(AutosamplerGUI):
             self.jobQueue=[]
             self.stop=False
             self.Log("Stopped\r\n")
+
+        # self.paused set to True when Pause pressed and not already paused
         if self.paused:
             paused="Paused"
             self.running=False
         if self.running:
             running="Running"
+
+        # busy value is assigned but never used
         if self.ASGetBusy():
             busy="Busy"
+
+        # TODO: Should status codes not hard-coded strings (fragile code if we localize or modify status text strings!)
+        #       Code below is comparing these strings, yikes! 
         status=self.ASGetStatus()
+
+
         if status=="Move To Wait Position\r\n":
             self.stalledAtWait=True
         else:
             self.stalledAtWait=False
+
+        # 5 status bar fields:
+        #    1: vial, injection numbers (V# I#)
+        #    2: pause state ("" or "paused")
+        #    3: run state ("" or "Running")
+        #    4: status ("" or text with status from AS)
+        #    5: heartbeat (3 characters)
+        #       char 1:
+        #           A= assert injection
+        #           a= not asserting injection
+        #       char 2:
+        #           I= injection complete
+        #           i= not injection complete
+        #       char 3:
+        #           heartbeat (cycles between "O" and "+")
+
+        # Why don't we do this on init?
         self.statusbar.SetFieldsCount(5)
+
+        # update text in status bar fields
         self.statusbar.SetStatusText("V%d I%d"%(self.v,self.numInjDone),1)
         self.statusbar.SetStatusText("%s"%paused,2)
         self.statusbar.SetStatusText("%s"%running,2)
@@ -2568,35 +2693,52 @@ class AutosamplerFrame(AutosamplerGUI):
         if self.pausedAndInjStarted==True:
             if status=="Move to Wait Position\r\n":
                 self.ASRunAbort()
-                self.pausedAndInjStarted=False            
-        self.lastStatus=status    
+                self.pausedAndInjStarted=False
+        self.lastStatus=status
+
+        # specify width of status fields (why is this done here every 0.25 sec when the timer fires?)
+        #    positive value = fixed width, pixels
+        #    negative value = proportional width
         self.statusbar.SetStatusWidths([-10,-4,-6,-10,-3])
+
+
         if running and ((not self.ASGetBusy() or self.ASGetIdle()) or self.stalledAtWait):
             todo=self.nInj-self.numInjDone
+
             if(todo==0 and self.v < (self.endVial)):
                 self.v+=1
-                self.numInjDone=0                        
+                self.numInjDone=0
+
             elif(self.assertInj and todo>0):
                 cfg = self.Cfg
+
+                # rinse is True if "Rinse only between vials" is checked (Method page)
                 rinse = (bool(cfg[self.method]['RinseBetweenVials']=="True")) 
                 self.Log("Using Vial #%d\r\n"%self.v)
                 self.ASReadInit()
-                self.syringeSize=self.ASGetConfigSyringeVol()        
+                self.syringeSize=self.ASGetConfigSyringeVol()
+
                 self.ASSetInstallMotorSpeed(260,150)#self.ASSetInstallMotorSpeed(160,130)
                 #self.ASSetConfigSyringeSpeed(130,130)
+
+                # TODO: Incorporate code for the 3x3 tray
                 #self.ASSetConfigTrayMetrics(0,9,3,3,59,59)
                 #self.ASSetInstallTraySampleDepth(0,29)
+
                 self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPreInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']) )      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPostInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodInjPointNo(0)
                 self.ASSetMethodSimpleInjection((float)(cfg[self.method]['SampleVol']), (int)(cfg[self.method]['FillStrokes']), 0.0)
+
                 if(not rinse or (rinse and self.lastVial!=self.v)):
                     self.ASSetMethodPreInjWashes((int)(cfg[self.method]['PreRinse1']),(int)(cfg[self.method]['PreRinse2']),0,(int)(cfg[self.method]['PreSampleRinse']))   #ASSetMethodPreInjWashes(self, nSolvent1, nSolvent2, nSolvent3, nSample ):
                     self.ASSetMethodPostInjWashes((int)(cfg[self.method]['PostRinse1']),(int)(cfg[self.method]['PostRinse2']),0)    #ASSetMethodPostInjWashes(self, nSolvent1, nSolvent2, nSolvent3):
+
                 else:  #don't do rinses in this case
-                    self.ASSetMethodPreInjWashes(0,0,0,0)   
-                    self.ASSetMethodPostInjWashes(0,0,0)    
+                    self.ASSetMethodPreInjWashes(0,0,0,0)
+                    self.ASSetMethodPostInjWashes(0,0,0)
+
                 self.ASSetMethodSpeed((float)(cfg[self.method]['FillSpdRinse1']),(float)(cfg[self.method]['FillSpeed']),(float)(cfg[self.method]['InjSpd']),(float)(cfg[self.method]['WasteEject']),(float)(cfg[self.method]['WasteEject']),99)  #ASSetMethodSpeed(self, dSolventDraw, dSampleDraw, dInj, WasteDispenseSpeed20, dSampleDisp, nSyrInsert):
                 self.ASSetMethodDelay((float)(cfg[self.method]['PreInjDly']),(float)(cfg[self.method]['PostInjDly']),(int)((float)(cfg[self.method]['ViscosityDly'])),(int)((float)(cfg[self.method]['SolventViscosityDelay'])))          #ASSetMethodDelay(self, dPreInjDelay, dPostInjDelay, nViscDelay, nSolvDelay):
                 self.ASSetMethodInjDepth((double)(cfg[self.method]['InjectionPointOffset']))
@@ -2605,22 +2747,28 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.errCode = 0
                 self.PauseBtn.Enable(True)
                 self.lastVial = self.v
+
             elif(self.assertInj and self.v < (self.endVial)):
-                # TODO: much replicated code here with OnPauseBtn, move to a new method
+                # TODO: much replicated code here with OnPauseBtn, create a common method for the code
                 cfg = self.Cfg
                 rinse = (bool(cfg[self.method]['RinseBetweenVials']=="True")) 
                 self.Log("Using Vial #%d\r\n"%self.v)
+
                 self.ASReadInit()
-                self.syringeSize=self.ASGetConfigSyringeVol()        
+                self.syringeSize=self.ASGetConfigSyringeVol()
+
                 self.ASSetInstallMotorSpeed(260,150)#self.ASSetInstallMotorSpeed(160,130)
+
                 self.ASSetMethodSampleWashVol((float)(cfg[self.method]['SampleWashVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPreInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodPostInjWashVol((double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']),(double)(cfg[self.method]['RinseVol']))      #ASSetMethodSampleWashVol(self, dWashVol):<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<tbd<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 self.ASSetMethodInjPointNo(0)
                 self.ASSetMethodSimpleInjection((float)(cfg[self.method]['SampleVol']), (int)(cfg[self.method]['FillStrokes']), 0.0)
+
                 if(not rinse or (rinse and self.lastVial!=self.v)):
                     self.ASSetMethodPreInjWashes((int)(cfg[self.method]['PreRinse1']),(int)(cfg[self.method]['PreRinse2']),0,(int)(cfg[self.method]['PreSampleRinse']))   #ASSetMethodPreInjWashes(self, nSolvent1, nSolvent2, nSolvent3, nSample ):
                     self.ASSetMethodPostInjWashes((int)(cfg[self.method]['PostRinse1']),(int)(cfg[self.method]['PostRinse2']),0)    #ASSetMethodPostInjWashes(self, nSolvent1, nSolvent2, nSolvent3):
+
                 else:   #don't do rinses in this case
                     self.ASSetMethodPreInjWashes(0,0,0,0)
                     self.ASSetMethodPostInjWashes(0,0,0)
@@ -2648,15 +2796,17 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.PauseBtn.Enable(False)
                 self.ChgSyringeBtn.Enable(True)
                 self.LoadQueueBtn.Enable(True)
-                self.SaveQueueBtn.Enable(True)                 
+                self.SaveQueueBtn.Enable(True)
                 self.running=False
                 self.paused=False
                 self.PauseBtn.Label = 'Pause'
                 running=False
                 self.EnableQueueUIElements(True)
+
             elif self.injectionComplete and todo>=1:
                 pass
                 #self.injectionComplete=False
+
             else:
                 if(todo<=0):
                     if len(self.jobQueue) > 0:
@@ -2688,15 +2838,21 @@ class AutosamplerFrame(AutosamplerGUI):
         self.PauseBtn.Enable(False)
         self.ChgSyringeBtn.Enable(True)
         self.LoadQueueBtn.Enable(True)
-        self.SaveQueueBtn.Enable(True)         
+        self.SaveQueueBtn.Enable(True)
         self.EnableQueueUIElements(True)
         self.paused=False
         self.ASRunAbort()
         time.sleep(4)
-        self.ASStepGoToSyrExchange(2)        
-        self.ASStepGoToSyrExchange(3)        
+
+        # why are we calling syringe exchange functions if End is pressed?
+        #
+        # 2 = SC_GET (determine syringe dead volume position)
+        self.ASStepGoToSyrExchange(2)
+
+        # 3 = SC_U_CURRENT (switch on current U-axis stepper motor)
+        self.ASStepGoToSyrExchange(3)
         self.abortInProgress = False
-        self.injectionComplete= True        
+        self.injectionComplete= True
 
     def OnStopBtn(self, event):
         if self.exchangePosition:
@@ -2708,7 +2864,7 @@ class AutosamplerFrame(AutosamplerGUI):
         self.ChgSyringeBtn.Enable(True)
         self.EnableQueueUIElements(True)
         self.LoadQueueBtn.Enable(True)
-        self.SaveQueueBtn.Enable(True)         
+        self.SaveQueueBtn.Enable(True)
 
     def OnRinseBetweenVialsCBChanged(self, event):
         print "In Event handler `OnRinseBetweenVialsCBChanged'"
