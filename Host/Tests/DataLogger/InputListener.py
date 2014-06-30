@@ -11,6 +11,8 @@
 # workstation without requiring an analyzer. Run BroadcastToDataLogger.py
 # to handle broadcasting the data.
 
+from __future__ import with_statement
+
 import time
 import cPickle
 from Queue import Queue
