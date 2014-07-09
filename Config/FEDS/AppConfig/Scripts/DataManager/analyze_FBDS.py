@@ -457,7 +457,7 @@ else:
                 _PERSISTENT_['inactiveForWind'] = False
 
     if _PERSISTENT_['inactiveForWind']:
-        _NEW_DATA_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
+        _REPORT_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
 
 
     if _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
