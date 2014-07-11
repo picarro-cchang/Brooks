@@ -60,9 +60,9 @@ CarSpeedMaximum = 4.47
 CarWindSpeedCorrelation = 0.75
 DeltaIntervalMax = 1.6
 SpectrumLatencyMax = 3.0
-WlmShiftMax = 1.25e-4
-WlmAdjustMax = 1.25e-4
-WlmShiftAdjustRatio = 0.1
+WlmShiftMax = 2e-3
+WlmAdjustMax = 2e-3
+WlmShiftAdjustLimit = 5e-5
 WlmTargetFreqMaxDrift = 0.05
 WlmTargetFreqHistoryBufferLen = 6000
 CavityBaselineLossScaleFactor = 1.1
@@ -600,9 +600,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     if numpy.absolute(_DATA_['ch4_high_adjust']) > WlmAdjustMax:
         AnalyzerStatus |= AnalyzerStatusWlmAdjustMask
 
-    shiftAdjustRatio = (_DATA_['ch4_high_adjust'] - _DATA_['ch4_high_shift']) / _DATA_['ch4_high_adjust']
-
-    if numpy.absolute(shiftAdjustRatio) > WlmShiftAdjustRatio:
+	if ( numpy.absolute(ch4_high_shift) >= WlmShiftAdjustLimit ) and ( numpy.absolute(ch4_high_adjust) < WlmShiftAdjustLimit ):
         AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
 
     _PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
