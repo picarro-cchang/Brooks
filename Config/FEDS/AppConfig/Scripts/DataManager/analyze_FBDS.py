@@ -629,7 +629,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     _REPORT_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"]
     _REPORT_["wlm8_offset"] = _PERSISTENT_["wlm8_offset"]
     _REPORT_["SystemStatus"] = SystemStatus
-    _REPORT_['PeripheralStatus'] = PeripheralStatus | int(_NEW_DATA_['PERIPHERAL_STATUS'])
+    if 'PERIPHERAL_STATUS' in _NEW_DATA_:
+        _REPORT_['PeripheralStatus'] = PeripheralStatus | int(_NEW_DATA_['PERIPHERAL_STATUS'])
     _REPORT_['AnalyzerStatus'] = AnalyzerStatus
     _REPORT_["CHEM_DETECT"] = CHEM_DETECT
     _REPORT_["WBisoTempLocked"] = WBisoTempLocked
