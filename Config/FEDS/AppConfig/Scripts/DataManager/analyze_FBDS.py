@@ -600,7 +600,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     if numpy.absolute(_DATA_['ch4_high_adjust']) > WlmAdjustMax:
         AnalyzerStatus |= AnalyzerStatusWlmAdjustMask
 
-    if ( numpy.absolute(ch4_high_shift) >= WlmShiftAdjustLimit ) and ( numpy.absolute(ch4_high_adjust) < WlmShiftAdjustLimit ):
+    if (numpy.absolute(_DATA_['ch4_high_shift']) >= WlmShiftAdjustLimit) and (numpy.absolute(_DATA_['ch4_high_adjust']) < WlmShiftAdjustLimit):
         AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
 
     _PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
