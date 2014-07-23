@@ -19,7 +19,7 @@ EventManager.EventManagerProxy_Init('DataManagerPublisher')
 
 class DataManagerPublisher(object):
 
-    def __init__(self, nExpectedSubs=1):
+    def __init__(self):
         self.context = zmq.Context()
 
         self.broadcastSocket = self.context.socket(zmq.PUB)
@@ -33,21 +33,7 @@ class DataManagerPublisher(object):
         #                                                  AppStatus.STREAM_Status,
         #                                                  streamFilter=self.jsonifyStatus, retry=True)
 
-        self.nExpectedSubs = nExpectedSubs
-        self.subSyncSocket = self.context.socket(zmq.REP)
-        self.subSyncSocket.connect("tcp://127.0.0.1:%d" % SharedTypes.TCP_PORT_DATAMANAGER_ZMQ_SUB_SYNC)
-
-        self.lastInstrumentStatus = 0
-
     def run(self):
-        nSubs = 0
-
-        while nSubs < self.nExpectedSubs:
-            msg = self.subSyncSocket.recv()
-            self.subSyncSocket.send(b'')
-            nSubs += 1
-            EventManager.Log('Subscriber connected')
-
         try:
             while True:
                 msgs = self.queue.get()
@@ -56,7 +42,6 @@ class DataManagerPublisher(object):
                     self.broadcastSocket.send_string("%s" % m)
 
         finally:
-            self.subSyncSocket.close()
             self.broadcastSocket.close()
             self.context.term()
             self.listener.stop()
