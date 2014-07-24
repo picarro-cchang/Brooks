@@ -22,8 +22,10 @@ class ControlBridge(object):
 
     # Previously defined in the gdu.js REST call to AnalyzerServer
     INJECT_VALVE_BIT = 2
+    INJECT_VALVE_MASK = 1 << INJECT_VALVE_BIT
     INJECT_FLAG_VALVE_BIT = 3
-    INJECT_MASK = (1 << INJECT_VALVE_BIT) | (1 << INJECT_FLAG_VALVE_BIT)
+    INJECT_FLAG_VALVE_MASK = 1 << INJECT_FLAG_VALVE_BIT
+    INJECT_MASK = INJECT_VALVE_MASK | INJECT_FLAG_VALVE_MASK
     INJECT_SAMPLES = 5
 
     def __init__(self):
@@ -109,7 +111,7 @@ class ControlBridge(object):
         # Injection
         self.driver.wrValveSequence([
             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
-            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_BIT, 10],
+            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, 10],
             [ControlBridge.INJECT_MASK, 0, 1],
             [0, 0, 0]
         ])
