@@ -105,8 +105,6 @@ class ControlBridge(object):
 
             time.sleep(0.010)
 
-        time.sleep(1.0)
-
         # Arm the system
         self._armIsotopicCapture()
 
@@ -115,7 +113,7 @@ class ControlBridge(object):
         # Injection
         self.driver.wrValveSequence([
             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
-            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, 10],
+            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, 30],
             [ControlBridge.INJECT_MASK, 0, 1],
             [0, 0, 0]
         ])
