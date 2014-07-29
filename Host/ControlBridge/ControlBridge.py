@@ -128,7 +128,7 @@ class ControlBridge(object):
         doneCount = 0
 
         while True:
-            if doneCount == 50:
+            if doneCount == 600:
                 break
 
             val = self.driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
