@@ -125,12 +125,17 @@ class ControlBridge(object):
     def _cancelIsotopicAnalysis(self):
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 5)
 
+        doneCount = 0
+
         while True:
+            if doneCount == 6:
+                break
+
             val = self.driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
             EventManager.Log("Waiting for peak detector to return to Idle: %s" % val)
 
             if val == 0:
-                break
+                doneCount += 1
 
             time.sleep(0.010)
         
