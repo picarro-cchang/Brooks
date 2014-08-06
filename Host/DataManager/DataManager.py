@@ -83,7 +83,7 @@ import serial
 import math
 import time
 import traceback
-#import string
+import string
 from inspect import isclass
 from collections import deque
 import ScriptRunner
@@ -105,8 +105,7 @@ from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
-#from Host.Common.SafeFile import SafeFile, FileExists
-from Host.Common.SafeFile import FileExists
+from Host.Common.SafeFile import SafeFile, FileExists
 from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.Listener import Listener
@@ -329,9 +328,11 @@ class DataManager(object):
             try:
                 self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
             except:
+                LogExc('Looking for Peripheral Interface config')
                 try:
                     self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
                 except:
+                    LogExc('Unable to find Peripheral Interface')
                     self.periphIntrfConfig = None
 
             self.enablePulseAnalyzer = False
@@ -1099,7 +1100,8 @@ class DataManager(object):
         try:
             CRDS_ConfigMonitor.monitor("User calibration changed")
         except Exception, err:
-            print "%r" % err
+            LogExc('Error updating user calibration file')
+
         Log("User calibration file updated.", dict(Sections = self.UserCalibration.keys()))
 
     def _EnqueueSyncScript(self,sai,startTime,iteration):
@@ -1525,6 +1527,7 @@ class DataManager(object):
                         for appMeas in appList:
                             self.UserCalibration[appMeas] = (slope, offset)
                     except:
+                        LogExc('Error getting user calibration app list')
                         self.UserCalAppListDict[measName] = []
             except:
                 #If *any* error occurs reading this file, always revert to factory defaults...
@@ -1568,7 +1571,7 @@ class DataManager(object):
                     (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
                     self.periphIntrfCols = rawDict["data"][:]
                 except Exception, err:
-                    Log("Peripheral Interface not running. Error: %r" % err)
+                    LogExc("Peripheral Interface not running. Error: %r" % err)
                     print "Peripheral Interface not running. Error: %r" % err
             else:
                 Log("Peripheral Interface not running.")
@@ -1579,6 +1582,7 @@ class DataManager(object):
                     self.runPulseAnalyzer = True
                     self.addToPulseAnalyzer = False
                 except Exception, err:
+                    LogExc('Error configuring pulse analyzer')
                     print "%r" % err
 
             self.__SetState(STATE_READY)
@@ -1604,6 +1608,7 @@ class DataManager(object):
         try:
             armCond = [float(t) for t in armCond.split(",")]
         except:
+            LogExc('Error getting pulse analyzer arm conditions')
             armCond = None
         self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
                                            triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
@@ -1775,7 +1780,7 @@ class DataManager(object):
             try:
                 resultAsString = self.Config.serialFormat % tuple(result)
             except:
-                Log("Bad format string for serial output data",
+                LogExc("Bad format string for serial output data",
                     Data={"Format":self.Config.serialFormat,"Data":tuple(result)},Level=2)
                 return
             if self.Config.useSerialPoll:
@@ -1789,7 +1794,7 @@ class DataManager(object):
         try:
             return self.CRDS_PeriphIntrf.getDataByTime(requestTime, dataList)
         except:
-            Log("Peripheral Interface was interrupted")
+            LogExc("Peripheral Interface was interrupted")
             print "Peripheral Interface was interrupted"
             self.CRDS_PeriphIntrf = None
 
@@ -1827,6 +1832,7 @@ class DataManager(object):
         try:
             UserCalDict = self.RPC_Cal_GetUserCalibrations()
         except:
+            LogExc('Error getting user calibrations')
             UserCalDict = {}
 
         if self.CRDS_PeriphIntrf:
@@ -1901,7 +1907,7 @@ class DataManager(object):
                 try:
                     measValue = float(measValue)
                 except:
-                    Log("Data reported from script is not a number",
+                    LogExc("Data reported from script is not a number",
                         Data = {"measName":measName,"measValue":measValue},
                         Level=2)
                 if self.UserCalibration.has_key(measName):
@@ -1954,7 +1960,8 @@ class DataManager(object):
                                 pulseData.append(pulseOutput["%s_std" % concName])
                                 pulseData.append(pulseOutput["%s_slope" % concName])
                             except:
-                                pass
+                                LogExc('Error appending statistics to pulse data')
+
                         self._AddToPulseBuffer(pulseData)
                     except Exception, err:
                         LogExc("Pulse analyzer operation failed. EXCEPTION: %s %r" % (err, err), Level=3)
@@ -2070,9 +2077,6 @@ if __name__ == "__main__":
     try:
         main()
     except:
-        Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = traceback.format_exc())
+        LogExc("Unhandled exception trapped by last chance handler")
     Log("Exiting program")
     sys.stdout.flush()
