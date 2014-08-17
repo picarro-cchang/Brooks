@@ -55,8 +55,6 @@ class ControlBridge(object):
         try:
             while True:
                 cmd = self.controlSocket.recv_string()
-                EventManager.Log("Command: '%s'" % cmd)
-
                 ret = None
 
                 try:
@@ -66,7 +64,6 @@ class ControlBridge(object):
                 except KeyError:
                     response = ControlBridge.RESPONSE_STATUS["unknown"]
 
-                EventManager.Log("Command response: '%s/%s'" % (response, ret))
                 self.controlSocket.send_string("%d,%s" % (response, ret))
 
         finally:
