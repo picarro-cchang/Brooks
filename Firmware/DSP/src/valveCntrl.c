@@ -66,6 +66,11 @@
 #define flowSetpoint    (*(v->flowSetpoint_))
 #define flowControlGain (*(v->flowControlGain_))
 
+// Hard-wired constants for flow control when locked
+#define flowFractionalFlowTol (0.02)
+#define flowPressureTol       (1.0)
+#define flowControlLockedGain (0.4)
+
 ValveCntrl valveCntrl;
 
 void proportionalValveStep()
@@ -104,7 +109,8 @@ void proportionalValveStep()
         else if (flowState == FLOW_CNTRL_EnabledState) {
             // Use the inlet valve to control the flow
             flowGain = flowControlGain;
-            if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
+            if (fabs(flow - flowSetpoint) < flowFractionalFlowTol*flowSetpoint && \
+                fabs(setpoint - cavityPressure) < flowPressureTol) flowGain = flowControlLockedGain;
             delta = flowGain * (flowSetpoint - flow);
             if (delta < -inletMaxChange) delta = -inletMaxChange;
             else if (delta > inletMaxChange) delta = inletMaxChange;
