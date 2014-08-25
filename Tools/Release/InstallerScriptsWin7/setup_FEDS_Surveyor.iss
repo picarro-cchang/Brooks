@@ -47,10 +47,11 @@
 [Icons]
 
 ; Surveyor startup app is RestartSupervisor
-Name: {userstartup}\Start Instrument; Filename: {app}\HostExe\RestartSupervisor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSupervisor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+#Name: {userstartup}\Start Instrument; Filename: {app}\HostExe\RestartSupervisor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSupervisor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+Name: {userstartup}\Start Analyzer Service; Filename: {app}\Picarro.Surveyor.Analyzer\Picarro.Surveyor.Analyzer.exe; WorkingDir: {app}\Picarro.Surveyor.Analyzer; IconFilename: {app}\HostExe\{#picarroIcon}
 
 
 ; Remove any previous startup items that referenced Supervisor.exe since we use
 ; the RestartSupervisor now.
 [InstallDelete]
-Type: files; Name: "{userstartup}\Start Instrument"
+Type: files; Name: "{userstartup}\Start Analyzer Service"
