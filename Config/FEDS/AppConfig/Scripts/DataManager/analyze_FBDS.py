@@ -53,9 +53,10 @@ AnalyzerStatusIntakeFlowDisconnected = 0x00000100
 AnalyzerStatusChemDetectMask = 0x00000200
 
 # Alarm parameters
-IntakeFlowRateMin = 3.0
+IntakeFlowRateMin = 3.5
+IntakeFlowRateMax = 4.5
 IntakeFlowRateDisconnected = -9999.0
-WindSpeedHistoryBufferLen = 1000
+WindSpeedHistoryBufferLen = 100
 CarSpeedMaximum = 4.47
 CarWindSpeedCorrelation = 0.75
 DeltaIntervalMax = 1.6
@@ -76,6 +77,7 @@ PeripheralStatus = 0x00000000
 
 # Valve masks
 VALVE_MASK_ACTIVE = 0x10
+VALVE_MASK_CHECK_ALARM = 0x03
 
 # From fitterThread.py -- should be integrated into DM to use the "flat" .ini structure of FitterConfig.ini
 def evalLeaves(d):
@@ -549,6 +551,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     _PERSISTENT_["ChemDetect_previous"] = CHEM_DETECT
 
+    alarmActive = (_DATA_['ValveMask'] & VALVE_MASK_CHECK_ALARM) == 0
+
     # Update the upper alarm status bits with some additional instrument status
     # flags.
 
@@ -559,7 +563,10 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
 
-        elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin:
+        elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin and alarmActive:
+            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
+
+        elif _DATA_['MOBILE_FLOW'] > IntakeFlowRateMax and alarmActive:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
 
     if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
@@ -588,7 +595,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
         AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
 
-    if _NEW_DATA_['delta_interval'] > DeltaIntervalMax:
+    if _NEW_DATA_['delta_interval'] > DeltaIntervalMax and alarmActive:
         AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
 
     if _DATA_['spect_latency'] > SpectrumLatencyMax:
