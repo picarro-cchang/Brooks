@@ -37,6 +37,11 @@ from Host.Common import version as hostVersion
 
 version = sys.version_info
 pyDirname = "Python%d%d" % (version[0],version[1])
+
+# Manufacturing support
+sys.path.append("Coordinator")
+sys.path.append("Utilities/CoordinatorLauncher")
+
 sys.path.append("AlarmSystem")
 sys.path.append("RDFrequencyConverter")
 sys.path.append("SpectrumCollector")
@@ -404,6 +409,19 @@ manifest_template = '''
 </assembly>
 ''' % (cDep,)
 RT_MANIFEST = 24
+
+# Manufacturing support
+Coordinator = Target(description = "Coordinator", # used for the versioninfo resource
+                    script = "Coordinator/Coordinator.py", # what to build
+                    other_resources = [(RT_MANIFEST,
+                                        1,
+                                        manifest_template % dict(prog="Coordinator")
+                                        )],
+                    ##    icon_resources = [(1, "icon.ico")],
+                    dest_base = "Coordinator"
+                    )
+
+
 Controller = Target(description = "Controller", # used for the versioninfo resource
                     script = "Controller/Controller.py", # what to build
                     other_resources = [(RT_MANIFEST,
@@ -623,6 +641,9 @@ consoleList = [
 ]
 
 windowsList = [
+    # Manufacturing support
+    Coordinator,
+    "Utilities/CoordinatorLauncher/CoordinatorLauncher.py",
     QuickGui,
     Controller,
     "Common/StopSupervisor.py",
