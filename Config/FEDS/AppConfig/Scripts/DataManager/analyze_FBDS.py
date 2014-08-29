@@ -551,7 +551,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     _PERSISTENT_["ChemDetect_previous"] = CHEM_DETECT
 
-    alarmActive = (_DATA_['ValveMask'] & VALVE_MASK_CHECK_ALARM) == 0
+    alarmActive = (int(_DATA_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
 
     # Update the upper alarm status bits with some additional instrument status
     # flags.
