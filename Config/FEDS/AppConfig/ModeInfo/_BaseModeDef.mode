@@ -12,10 +12,11 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 2
+ModeCount = 3
 Mode_1 = FBDS_mode
-#Mode_2 = FBDS_high_CH4_conc_mode
-Mode_2 = warming_mode
+Mode_2 = FBDS_InLab_mode
+Mode_3 = warming_mode
+
 
 ############################################################################
 ###
@@ -52,8 +53,3 @@ f_12CO2_CFADS = 153
 [SYNC_SETUP]
 #Define synchronous executions to be run, regardless of mode.
 NumSyncAnalyzers = 0
-
-#Sync_1_Period_s = 5
-#Sync_1_ReportName = Sensors
-#Sync_1_Script = ../Scripts/DataManager/analyze_warming.py
-

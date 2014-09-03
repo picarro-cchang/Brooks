@@ -1,21 +1,12 @@
 [INSTRUMENT_MODE]
 Tuning = CavityLength
 
-[SCHEME_CONFIG_LOW_CH4]
-# Define what schemes should be loaded and sequenced and in what order
-#   - Never worry about what DAS table index is used - this is automatically taken
-#     care of (primarily for the background load/alternate scheme index stuff)
-SchemeCount = 2
-Scheme_1_Path = ../Schemes/_FB2xxx_cal_v23.sch
-Scheme_2_Path = ../Schemes/_FB2xxx_nocal_v23.sch
-
 [SCHEME_CONFIG]
 # Define what schemes should be loaded and sequenced and in what order
 #   - Never worry about what DAS table index is used - this is automatically taken
 #     care of (primarily for the background load/alternate scheme index stuff)
-SchemeCount = 2
-Scheme_1_Path = ../Schemes/_FB2xxx_high_CH4_conc_cal_v22.sch
-Scheme_2_Path = ../Schemes/_FB2xxx_high_CH4_conc_nocal_v22.sch
+SchemeCount = 1
+Scheme_1_Path = ../Schemes/_FB2xxx_high_CH4_conc_v26.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
@@ -26,31 +17,31 @@ Scheme_2_Path = ../Schemes/_FB2xxx_high_CH4_conc_nocal_v22.sch
 # "Standard" Spectrum Processing and Analysis Instructions...
 ############################################################################
 [12_CO2]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [13_CO2]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [H2O]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [12_CH4]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [13_CH4]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [common]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [CH4_high_precision]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [H2O_CFADS]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 [f_12CO2_CFADS]
-Analyzer= ../Scripts/DataManager/analyze_FBDS.py
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
 
 ############################################################################
 ###
