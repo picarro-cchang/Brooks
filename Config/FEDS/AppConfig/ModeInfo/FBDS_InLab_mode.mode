@@ -1,0 +1,87 @@
+[INSTRUMENT_MODE]
+Tuning = CavityLength
+
+[SCHEME_CONFIG_LOW_CH4]
+# Define what schemes should be loaded and sequenced and in what order
+#   - Never worry about what DAS table index is used - this is automatically taken
+#     care of (primarily for the background load/alternate scheme index stuff)
+SchemeCount = 1
+Scheme_1_Path = ../Schemes/_FB2xxx_mobile_v29.sch
+
+[SCHEME_CONFIG]
+# Define what schemes should be loaded and sequenced and in what order
+#   - Never worry about what DAS table index is used - this is automatically taken
+#     care of (primarily for the background load/alternate scheme index stuff)
+SchemeCount = 1
+Scheme_1_Path = ../Schemes/_FB2xxx_high_CH4_conc_v26.sch
+#Scheme_2_Path = ../Schemes/_FB2xxx_high_CH4_conc_nocal_v26.sch
+
+[SPECTRUM_IDS]
+#Specify logical names for referencing each SubSchemeID...
+#SHOULD USUALLY BE IN _BaseDefinitions.ini - JUST HERE FOR REFERENCE
+
+############################################################################
+###
+# "Standard" Spectrum Processing and Analysis Instructions...
+############################################################################
+[12_CO2]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[13_CO2]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[H2O]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[12_CH4]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[13_CH4]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[common]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[CH4_high_precision]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[H2O_CFADS]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+[f_12CO2_CFADS]
+Analyzer= ../Scripts/DataManager/analyze_FBDS_Lab.py
+
+############################################################################
+###
+# Analysis Instructions for DataManager Generated Data
+# - DataManager can feed itself with data (either synchronously or asynchrounously)
+# - All forwarded data labels automatically get a + prefix for clarity
+# - Specifying a processor here makes no sense.
+# - even if there is to be no analyzer, the label should be here
+#   - either with no options, or with "Analyzer = None"
+###
+############################################################################
+#[+Async_H2S]
+#No analyzer - just accumulating forwarded results in the data history for
+#the periodic analyzer
+#Analyzer = None
+
+############################################################################
+###
+# Synchronous Script Definitions
+#  - These are read and executed by the Data Manager
+###
+############################################################################
+[SYNC_SETUP]
+#Define synchronous executions to be run by the DataManager in this mode
+# - Note that these are in addition to any in _BaseDefinition.ini
+NumSyncAnalyzers = 0
+
+#Sync_1_Period_s = 30
+#Sync_1_ReportName = WLMCal
+#Sync_1_Script = ../Scripts/DataManager/update_cal_iCO2.py
+#Sync_1_ScriptArgs =
+
+#Sync_1_Period_s = 10
+#Sync_1_ReportName = DataRate
+#Sync_1_Script = ../Scripts/DataManager/calDataRate.py

@@ -25,9 +25,6 @@ for r in results:
 for k in arrays:
     x = asarray(arrays[k])
     arrays[k] = dict(data=x,mean=mean(x),std=std(x))
-    
-#good = asarray(arrays['h2o_ppmv']['data'] < 80)
-#print good
  
 figure()
 subplot(2,1,1)
@@ -37,6 +34,9 @@ grid(True)
 title('function 1000 Amplitude, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
 subplot(2,1,2)
 a = arrays['phase_ripp_1']
+x = cos(a['data'])
+y = sin(a['data'])
+p1 = arctan2(mean(y),mean(x))
 plot(a['data'])
 grid(True)
 title('function 1000 Phase, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
@@ -50,6 +50,9 @@ grid(True)
 title('function 1001 Amplitude, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
 subplot(2,1,2)
 a = arrays['phase_ripp_2']
+x = cos(a['data'])
+y = sin(a['data'])
+p2 = arctan2(mean(y),mean(x))
 plot(a['data'])
 grid(True)
 title('function 1001 Phase, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
@@ -87,12 +90,7 @@ a = arrays['h2o_peak']
 plot(a['data'])
 grid(True)
 title('H2O Peak (ppb/cm), Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-#subplot(2,1,2)
-#a = arrays['peak87']
-#plot(a['data'])
-#grid(True)
-#title('CO2 Peak 87 (ppb/cm), Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-#savefig(basename+'_residual_h2o.png')
+savefig(basename+'_residual_h2o.png')
 
 figure()
 subplot(2,1,1)
@@ -115,11 +113,11 @@ output.append("CH4_Baseline_slope = %.6f" % arrays['base1']['mean'])
 output.append("CH4_Sine0_ampl =%.3f" % arrays['amp_ripp_1']['mean'])
 output.append("CH4_Sine0_freq = %.3f" % arrays['center_ripp_1']['mean'])
 output.append("CH4_Sine0_period = %.6f" % arrays['freq_ripp_1']['mean'])
-output.append("CH4_Sine0_phase = %.6f" % arrays['phase_ripp_1']['mean'])
+output.append("CH4_Sine0_phase = %.6f" % p1)
 output.append("CH4_Sine1_ampl = %.3f" % arrays['amp_ripp_2']['mean'])
 output.append("CH4_Sine1_freq = %.3f" % arrays['center_ripp_2']['mean'])
 output.append("CH4_Sine1_period = %.6f" % arrays['freq_ripp_2']['mean'])
-output.append("CH4_Sine1_phase = %.6f" % arrays['phase_ripp_2']['mean'])
+output.append("CH4_Sine1_phase = %.6f" % p2)
 
 print "\n".join(output)
 print>>file(basename+".ini","w"), "\n".join(output)
