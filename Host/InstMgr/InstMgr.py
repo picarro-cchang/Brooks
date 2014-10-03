@@ -68,12 +68,12 @@ import struct #for converting numbers to byte format
 import getopt
 import traceback
 from inspect import isclass
-
+from Pyro import errors
 from Host.autogen import interface
 from Host.SampleManager.SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED, SAMPLEMGR_STATUS_FLOWING
 from Host.Common import CmdFIFO, Listener, Broadcaster
 from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_ALARM_SYSTEM, RPC_PORT_FREQ_CONVERTER, RPC_PORT_PANEL_HANDLER
-from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY, RPC_PORT_SPECTRUM_COLLECTOR
+from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_RESTART_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.AppStatus import AppStatus
 from Host.Common.InstMgrInc import INSTMGR_STATUS_READY, INSTMGR_STATUS_MEAS_ACTIVE, INSTMGR_STATUS_ERROR_IN_BUFFER, INSTMGR_STATUS_GAS_FLOWING, INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_CLEAR_MASK
@@ -1121,12 +1121,29 @@ class InstMgr(object):
             #tbMsg = traceback.format_exc()
             #Log("INSTMGR_ShutdownRpc:Disable keepalive error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
 
+        # Kill the restart supervisor app if it is present
+        restartSupervisor = CmdFIFO.CmdFIFOServerProxy(
+            "http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR,
+            APP_NAME, IsDontCareConnection=False)
+        Log('Attempting to stop restart supervisor')
+
+        try:
+            restartSupervisor.Terminate()
+        except errors.ProtocolError:
+            # This error is expected since the process termination
+            # prevents us from getting a successful response from the
+            # RestartSupervisor.
+            pass
+        except Exception:
+            LogExc('Unknown exception raised when terminating restart supervisor.')
+
         # stop measuring
         if shutdownType == INSTMGR_SHUTDOWN_PREP_SHIPMENT:
             self.diableDataManager = True
         else:
             self.diableDataManager = False
         status = self._StateHandler(EVENT_STOP_MEAS)
+
 
         # TODO ask EventMgr to archive logs.  Functionality doesn't exist in EventMgr yet.
         if shutdownType == INSTMGR_SHUTDOWN_PREP_SHIPMENT:
@@ -1148,6 +1165,7 @@ class InstMgr(object):
         elif shutdownType == INSTMGR_SHUTDOWN_HOST:
             # shutdown Host only
             status = self._StateHandler(EVENT_SHUTDOWN_INST)
+        
 
         # ask supervisor to terminate all applications including INSTMGR
         self.SupervisorRpc.TerminateApplications(True)
