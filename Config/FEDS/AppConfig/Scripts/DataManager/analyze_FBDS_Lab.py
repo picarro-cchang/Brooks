@@ -187,7 +187,7 @@ except:
 #  It is important not to trust _SPEC_COLL_.setSequence works, as there could have been an exception
 try:
     seq = _SPEC_COLL_.getSequence()
-    if seq == "FBDS_mode_LOW_CH4":
+    if seq == "FBDS_InLab_mode_LOW_CH4":
         _PERSISTENT_["state"] = "low_conc"
     elif seq == "FBDS_mode":
         _PERSISTENT_["state"] = "high_conc"
@@ -197,7 +197,7 @@ except:
 if conc == "low":
     if _PERSISTENT_["state"] == "high_conc":
         try:
-            _SPEC_COLL_.setSequence("FBDS_mode_LOW_CH4")
+            _SPEC_COLL_.setSequence("FBDS_InLab_mode_LOW_CH4")
             # _DRIVER_.setMultipleNoRepeatScan()
         except: # For Virtual analyzer
             pass
@@ -218,7 +218,7 @@ elif conc == "auto":
                 # Switch to low  concentration schemes
                 print "Switching to LOW_CONC mode"
                 try:                
-                    _SPEC_COLL_.setSequence("FBDS_mode_LOW_CH4")
+                    _SPEC_COLL_.setSequence("FBDS_InLab_mode_LOW_CH4")
                     # _DRIVER_.setMultipleNoRepeatScan()
                 except: # For Virtual analyzer
                     pass
