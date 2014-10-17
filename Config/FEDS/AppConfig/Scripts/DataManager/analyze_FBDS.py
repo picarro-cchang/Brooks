@@ -53,8 +53,8 @@ AnalyzerStatusIntakeFlowDisconnected = 0x00000100
 AnalyzerStatusChemDetectMask = 0x00000200
 
 # Alarm parameters
-IntakeFlowRateMin = 3.5
-IntakeFlowRateMax = 4.5
+IntakeFlowRateMin = 3.75
+IntakeFlowRateMax = 5.0
 IntakeFlowRateDisconnected = -9999.0
 WindSpeedHistoryBufferLen = 100
 CarSpeedMaximum = 4.47
@@ -132,6 +132,9 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["fineLaserCurrent_6_mean"] = 0
     _PERSISTENT_["windSpeedBuffer"] = collections.deque(maxlen=WindSpeedHistoryBufferLen)
     _PERSISTENT_["wlmOffsetBuffer"] = collections.deque(maxlen=WlmTargetFreqHistoryBufferLen)
+    
+    _PERSISTENT_["peakDetectState"] = collections.deque(maxlen=50)
+    
     WBisoTempLocked = False
 
     # For ChemDetect
@@ -165,6 +168,24 @@ if _PERSISTENT_["init"]:
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
     fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
     _PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']
+
+# read peak detect state register
+# # Enumerated definitions for PEAK_DETECT_CNTRL_StateType
+# PEAK_DETECT_CNTRL_StateType = c_uint
+# PEAK_DETECT_CNTRL_IdleState = 0 # Idle
+# PEAK_DETECT_CNTRL_ArmedState = 1 # Armed
+# PEAK_DETECT_CNTRL_TriggerPendingState = 2 # Trigger Pending
+# PEAK_DETECT_CNTRL_TriggeredState = 3 # Triggered
+# PEAK_DETECT_CNTRL_InactiveState = 4 # Inactive
+# PEAK_DETECT_CNTRL_CancellingState = 5 # Cancelling
+# PEAK_DETECT_CNTRL_PrimingState = 6 # Priming
+# PEAK_DETECT_CNTRL_PurgingState = 7 # Purging
+# PEAK_DETECT_CNTRL_InjectionPendingState = 8 # Injection Pending
+peakDetectState = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER') #integer value, see interface.py
+_PERSISTENT_["peakDetectState"].append(peakDetectState)
+#read peak detect register to get number of remaining samples
+remainingPeakSamples = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER') #number of samples integer, samples are 0.2 seconds
+
 
 try:
     if _DATA_LOGGER_ and _DATA_LOGGER_.DATALOGGER_logEnabledRpc('DataLog_Sensor_Minimal'):
@@ -458,9 +479,6 @@ else:
                 Log("Survey status back to active after wind anomaly")
                 _PERSISTENT_['inactiveForWind'] = False
 
-    if _PERSISTENT_['inactiveForWind']:
-        _REPORT_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
-
 
     if _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
         try:
@@ -551,11 +569,13 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     _PERSISTENT_["ChemDetect_previous"] = CHEM_DETECT
 
-    alarmActive = (int(_DATA_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
-
     # Update the upper alarm status bits with some additional instrument status
     # flags.
+    alarmActive = (int(_DATA_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
 
+    alarmActiveState = numpy.sum( numpy.abs( numpy.diff(_PERSISTENT_["peakDetectState"]) ) ) < 1
+    ###print "alarmActive: " + str(alarmActive) + ", alarmActiveState: " + str(alarmActiveState)
+    
     if CHEM_DETECT == 1.0:
         AnalyzerStatus |= AnalyzerStatusChemDetectMask
 
@@ -563,10 +583,10 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
 
-        elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin and alarmActive:
+        elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin and alarmActive and alarmActiveState:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
 
-        elif _DATA_['MOBILE_FLOW'] > IntakeFlowRateMax and alarmActive:
+        elif _DATA_['MOBILE_FLOW'] > IntakeFlowRateMax and alarmActive and alarmActiveState:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
 
     if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
@@ -595,7 +615,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
         AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
 
-    if _NEW_DATA_['delta_interval'] > DeltaIntervalMax and alarmActive:
+    if (_NEW_DATA_['delta_interval'] > DeltaIntervalMax) and (not alarmActive) and alarmActiveState:
         AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
 
     if _DATA_['spect_latency'] > SpectrumLatencyMax:
@@ -653,5 +673,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
             _REPORT_[k] = clipReportData(_NEW_DATA_[k])
         else:
             _REPORT_[k] = _NEW_DATA_[k]
+    
+    if _PERSISTENT_['inactiveForWind']:
+        _REPORT_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
 
 #=================================================================================
