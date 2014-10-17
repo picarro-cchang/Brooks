@@ -1,286 +1,243 @@
-# Embedded file name: SharedTypes.pyo
-from ctypes import Structure, c_float, c_uint, c_ushort, c_int
-import sys
-if '../Common' not in sys.path:
-    sys.path.append('../Common')
-import ss_autogen as s
+#!/usr/bin/python
+#
+# FILE:
+#   SharedTypes.py
+#
+# DESCRIPTION:
+#  Class definitions and other information (notably Rpc ports) which need to be shared among the
+#  CRDS applications and drivers
+#
+# SEE ALSO:
+#   Specify any related information.
+#
+# HISTORY:
+#   07-Jan-2009  sze  Initial version
+#   21-Jul-2009  sze  Added GenHandler
+#   03-Aug-2009  sze  Added getSchemeTableClass
+#   04-Aug-2009  sze  Added ctypesToDict and dictToCtypes
+#   30-Sep-2009  sze  Added Scheme class
+
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
+#
+import ctypes
+import os
+import time
+#from Host.autogen import interface
+
+# Constants...
 ACCESS_PUBLIC = 0
 ACCESS_PICARRO_ONLY = 100
-STREAM_SIZE = 32
-RESULT_SIZE = 32
-MAX_LASERS = 16
-MAX_SCHEMES = 16
-RDQ_VERSION = 106
-RPC_PORT_LOGGER = 50000
-RPC_PORT_DRIVER = 50010
-RPC_PORT_FILER = 50020
-RPC_PORT_SUPERVISOR = 50030
-RPC_PORT_SUPERVISOR_BACKUP = 50031
-RPC_PORT_INTERFACE = 50040
-RPC_PORT_CONTROLLER = 50050
-RPC_PORT_LIBRARIAN = 50060
-RPC_PORT_MEAS_SYSTEM = 50070
-RPC_PORT_SAMPLE_MGR = 50080
-RPC_PORT_DATALOGGER = 50090
-RPC_PORT_ALARM_SYSTEM = 50100
-RPC_PORT_INSTR_MANAGER = 50110
-RPC_PORT_COMMAND_HANDLER = 50120
-RPC_PORT_EIF_HANDLER = 50130
-RPC_PORT_PANEL_HANDLER = 50140
-RPC_PORT_LOCAL_GUI = 50150
-RPC_PORT_DATA_MANAGER = 50160
-RPC_PORT_CAL_MANAGER = 50170
-RPC_PORT_FILE_ERASER = 50190
-RPC_PORT_VALVE_SEQUENCER = 50200
-RPC_PORT_COORDINATOR = 50210
-RPC_PORT_SER_CONNECTOR = 50220
-TCP_PORT_INTERFACE = 51000
-TCP_PORT_FITTER = 51010
-TCP_PORT_SUPERVISOR = 23456
-BROADCAST_PORT_EVENTLOG = 40010
-BROADCAST_PORT_SENSORSTREAM = 40020
-BROADCAST_PORT_RDRESULTS = 40030
-BROADCAST_PORT_RCB = 40040
-BROADCAST_PORT_MEAS_SYSTEM = 40050
-BROADCAST_PORT_DATA_MANAGER = 40060
+
+#RPC_PORT... are the port numbers used by CmdFIFO XML-RPC servers
+RPC_PORT_LOGGER             = 50000
+RPC_PORT_DRIVER             = 50010
+RPC_PORT_FREQ_CONVERTER     = 50015
+RPC_PORT_FILER              = 50020
+RPC_PORT_SUPERVISOR         = 50030
+RPC_PORT_SUPERVISOR_BACKUP  = 50031
+RPC_PORT_INTERFACE          = 50040
+RPC_PORT_CONTROLLER         = 50050
+RPC_PORT_ARCHIVER           = 50060
+RPC_PORT_MEAS_SYSTEM        = 50070
+RPC_PORT_SPECTRUM_COLLECTOR = 50075
+RPC_PORT_SAMPLE_MGR         = 50080
+RPC_PORT_DATALOGGER         = 50090
+RPC_PORT_ALARM_SYSTEM       = 50100
+RPC_PORT_INSTR_MANAGER      = 50110
+RPC_PORT_COMMAND_HANDLER    = 50120
+RPC_PORT_EIF_HANDLER        = 50130
+RPC_PORT_PANEL_HANDLER      = 50140
+RPC_PORT_LOCAL_GUI          = 50150
+RPC_PORT_DATA_MANAGER       = 50160
+RPC_PORT_CAL_MANAGER        = 50170
+RPC_PORT_FITTER_BASE        = 50180 # Fitters use consecutive ports starting from this one
+RPC_PORT_FILE_ERASER        = 50190
+RPC_PORT_VALVE_SEQUENCER    = 50200
+RPC_PORT_COORDINATOR        = 50210
+RPC_PORT_QUICK_GUI          = 50220
+RPC_PORT_READ_EXT_SENSOR    = 50230
+RPC_PORT_ACTIVE_FILE_MANAGER = 50300
+RPC_PORT_IPV                = 50400
+RPC_PORT_READ_GPSWS         = 50071
+RPC_PORT_PERIPH_INTRF       = 50072
+RPC_PORT_CONFIG_MONITOR     = 50073
+RPC_PORT_AUTOSAMPLER        = 50074
+
+#TCP_PORT... are the port numbers used by "normal" TCP servers
+TCP_PORT_INTERFACE          = 51000
+TCP_PORT_FITTER             = 51010
+TCP_PORT_COMMAND_HANDLER    = 51020
+TCP_PORT_SUPERVISOR         = 23456
+TCP_PORT_PERIPH_INTRF       = 5193
+
+#BROADCAST_PORT... are the port numbers used by broadcasters
+BROADCAST_PORT_EVENTLOG          = 40010
+BROADCAST_PORT_SENSORSTREAM      = 40020 #All sensor data from the driver
+BROADCAST_PORT_RDRESULTS         = 40030 #RD's broadcast straight from the driver
+BROADCAST_PORT_RD_RECALC         = 40031 #The re-calculated ringdowns (angle->freq) from the RDFrequencyConverter
+BROADCAST_PORT_RCB               = 40040
+BROADCAST_PORT_SPECTRUM_COLLECTOR = 40045
+BROADCAST_PORT_MEAS_SYSTEM       = 40050
+BROADCAST_PORT_DATA_MANAGER      = 40060
+BROADCAST_PORT_PERIPH_INTRF      = 40065
+BROADCAST_PORT_INSTMGR_DISPLAY   = 40070
+BROADCAST_PORT_FITTER_BASE       = 40080 # Fitters use consecutive ports starting from this one 
 BROADCAST_PORT_PROCESSED_RESULTS = 40100
+BROADCAST_PORT_IPV               = 40110
+
+# Subscheme ID bit used to indicate this row is part of a WLM calibration
 CALIBRATION_ID = 4096
 
-class RDQ_record(Structure):
-    _fields_ = [('time', c_float),
-     ('wm1_ratio', c_float),
-     ('wm2_ratio', c_float),
-     ('loss_u', c_float),
-     ('loss_c', c_float),
-     ('pzt', c_float),
-     ('waveno', c_uint),
-     ('fitStatus', c_uint),
-     ('schemeStatus', c_uint),
-     ('schemeIdent', c_uint),
-     ('schemeCounter', c_uint),
-     ('schemeTableIndex', c_uint),
-     ('schemeRow', c_uint),
-     ('wavenoSetpoint', c_uint),
-     ('etalonAndLaserSelect', c_uint),
-     ('fineLaserCurrent', c_int)]
+#STATUS_PORT... are the ports used for status register broadcasts
+# - 41xxx series, set to match the RPC port 50xxx series
+# - all blocks will must also have an RPC command of Status_Get()
+STATUS_PORT_MEAS_SYSTEM     = 41050
+STATUS_PORT_SAMPLE_MGR      = 41080
+STATUS_PORT_DATALOGGER      = 41090
+STATUS_PORT_ALARM_SYSTEM    = 41100
+STATUS_PORT_INST_MANAGER    = 41110
+STATUS_PORT_DATA_MANAGER    = 41160
+STATUS_PORT_CAL_MANAGER     = 41170
 
-
-class RDX_record(Structure):
-    _fields_ = [('time', c_float),
-     ('Pcavity', c_float),
-     ('Tcavity', c_float),
-     ('Tlaser', c_float),
-     ('Tetalon', c_float),
-     ('Twarmbox', c_float),
-     ('TEClaser', c_float),
-     ('TECwarmbox', c_float),
-     ('TEChotbox', c_float),
-     ('Heater', c_float),
-     ('Tenvironment', c_float),
-     ('InletPropValve', c_float),
-     ('OutletPropValve', c_float),
-     ('SolenoidValves', c_float),
-     ('Pambient', c_float)]
-
-
-class Monitor(Structure):
-    _fields_ = [('etal1', c_ushort),
-     ('ref1', c_ushort),
-     ('etal2', c_ushort),
-     ('ref2', c_ushort),
-     ('ratio', c_ushort),
-     ('setpoint_error', c_ushort),
-     ('scaled_error', c_ushort),
-     ('tuner_value', c_ushort),
-     ('il_monitor', c_ushort),
-     ('etalon_temp', c_ushort),
-     ('dummy1', c_ushort),
-     ('status', c_ushort),
-     ('dummy2', c_ushort),
-     ('dummy3', c_ushort),
-     ('dummy4', c_ushort),
-     ('dummy5', c_ushort)]
-
-
-class OscilloscopeBuff(Structure):
-    _fields_ = [('descriptor', c_ushort),
-     ('dummy', c_ushort * 7),
-     ('monData', Monitor * 512),
-     ('waveform', c_ushort * 8192)]
-
-
-class CaptureBuff(Structure):
-    _fields_ = [('descriptor', c_ushort),
-     ('dummy', c_ushort * 7),
-     ('monData', Monitor * 512),
-     ('ringdown', c_ushort * 8192)]
-
-
-class TunerBuff(Structure):
-    _fields_ = [('descriptor', c_ushort), ('dummy', c_ushort * 7), ('monData', Monitor * 512)]
-
-
-def getSchemeClass(version, numEntries):
-    if version < 1:
-
-        class RDDATA_RdSchemeEntry(Structure):
-            _fields_ = [('setpoint', c_int), ('dwellCount', c_int)]
-
-        RDDATA_RDSCHEME_MAX_NUM_ENTRIES = 4096
-    elif version < 2:
-
-        class RDDATA_RdSchemeEntry(Structure):
-            _fields_ = [('setpoint', c_int), ('dwellCount', c_ushort), ('subSchemeIdAndIncrFlag', c_ushort)]
-
-        RDDATA_RDSCHEME_MAX_NUM_ENTRIES = 8192
-    elif version < 3:
-
-        class RDDATA_RdSchemeEntry(Structure):
-            _fields_ = [('setpoint', c_int),
-             ('dwellCount', c_ushort),
-             ('subSchemeIdAndIncrFlag', c_ushort),
-             ('laserSelectAndUseThreshold', c_ushort),
-             ('threshold', c_ushort)]
-
-        RDDATA_RDSCHEME_MAX_NUM_ENTRIES = 8192
-    else:
-
-        class RDDATA_RdSchemeEntry(Structure):
-            _fields_ = [('setpoint', s.DataType),
-             ('dwellCount', c_ushort),
-             ('subSchemeIdAndIncrFlag', c_ushort),
-             ('laserSelectAndUseThreshold', c_ushort),
-             ('threshold', c_ushort),
-             ('laserTemp', c_float)]
-
-        RDDATA_RDSCHEME_MAX_NUM_ENTRIES = 8192
-    if numEntries <= 0:
-        raise DasException, 'Number of entries in scheme cannot be negative'
-    if numEntries > RDDATA_RDSCHEME_MAX_NUM_ENTRIES:
-        raise DasException, 'Scheme file has too many entries %d (max: %d)' % (numEntries, RDDATA_RDSCHEME_MAX_NUM_ENTRIES)
-    SCHEME_ENTRY_ARRAY = RDDATA_RdSchemeEntry * numEntries
-
-    class RDDATA_RdScheme(Structure):
-        _fields_ = [('nrepeat', c_int), ('numEntries', c_int), ('schemeEntry', SCHEME_ENTRY_ARRAY)]
-
-    return RDDATA_RdScheme
-
-
-def getRdResultClass(version):
-    if version < 1:
-        return s.RD_ResultsEntryType_V0dotX
-    elif version < 2:
-        return s.RD_ResultsEntryType_V1dotX
-    elif version < 3:
-        return s.RD_ResultsEntryType_V2dotX
-    elif version < 4:
-        return s.RD_ResultsEntryType_V3dotX
-    else:
-        return s.RD_ResultsEntryType
-
-
-def getCalLsrBasedTableType(version):
-    if version < 5:
-        return s.CAL_LsrBasedTableType_upTo4
-    else:
-        return s.CAL_LsrBasedTableType
-
-
-def fmtVer(ver):
-    """Write version number as a formatted string in such a way that string comparisons work reliably"""
-    return '%06.2f' % float(ver)
-
-
-def regAvailableInVersion(registerIndex, interfaceVersion):
-    """Returns True if register of the specified index is available in the specified interface version"""
-    return fmtVer(interfaceVersion) >= fmtVer(s.register_info[registerIndex].firstVersion)
-
-
-def regByVersion(mcuVersion):
-    """Returns for each mcuVersion the index of the highest register available"""
-    info = [(fmtVer(1), s.DASCNTRL_RESET_COUNT_REGISTER),
-     (fmtVer(2.0), s.RD_SCHEME_TABLE_INDEX_REGISTER),
-     (fmtVer(2.1), s.DISPLAY_RESERVED_REGISTER3),
-     (fmtVer(2.3), s.RDCNTRL_WL_LOCK_TIMEOUT_DURATION_REGISTER),
-     (fmtVer(2.4), s.RD_START_SAMPLE_REGISTER),
-     (fmtVer(2.5), s.FPGA_CARD_PRESENT_REGISTER),
-     (fmtVer(3.0), s.DIAG_ENABLE_REGISTER),
-     (fmtVer(3.02), s.RDCNTRL_PZT_CUTOFF_FREQ_REGISTER),
-     (fmtVer(4.0), s.RD_UPPER_TO_LOWER_THRESHOLD_OFFSET),
-     (fmtVer(5.6), s.I2C_BUS0_MCU_BYPASS_REGISTER)]
-    mcuVersion = fmtVer(float(mcuVersion))
-    for v, i in info[::-1]:
-        if mcuVersion >= v:
-            return i
-
-    return s.TEST_STATUS_REGISTER
-
-
-def intStreamByVersion(mcuVersion):
-    """Returns for each mcuVersion the index of the highest integer data stream available"""
-    mcuVersion = fmtVer(float(mcuVersion))
-    info = [(fmtVer(2.0), s.STREAM_HeaterTapeVMonAdc)]
-    mcuVersion = fmtVer(float(mcuVersion))
-    for v, i in info[::-1]:
-        if mcuVersion >= v:
-            return i
-
-    return s.STREAM_SpectWlStd
-
-
-def floatStreamByVersion(mcuVersion):
-    """Returns for each mcuVersion the index of the highest floating point data stream available"""
-    mcuVersion = fmtVer(float(mcuVersion))
-    info = [(fmtVer(2.0), s.STREAM_OutletDacValue), (fmtVer(3.0), s.STREAM_EtalonTempAvg), (fmtVer(9.0), s.STREAM_SolenoidValveStatus)]
-    mcuVersion = fmtVer(float(mcuVersion))
-    for v, i in info[::-1]:
-        if mcuVersion >= v:
-            return i
-
-    return s.STREAM_DasTemp
-
-
+# Exception classes
 class CrdsException(Exception):
     """Base class for all CRDS exceptions."""
-    pass
-
-
 class DasException(CrdsException):
     """Base class for all DAS layer exceptions."""
-    pass
+class DasAccessException(DasException):
+    """Invalid access to DAS registers."""
+class DasCommsException(DasException):
+    """DAS communication exception."""
 
+class Singleton(object):
+    """An inheritable singleton class"""
+    _instance = None
+    def __new__(cls,*a,**k):
+        if not cls._instance:
+            cls._instance=super(Singleton,cls).__new__(cls,*a,**k)
+        return cls._instance
 
-class DasTransportLayerException(DasException):
-    pass
+class Bunch(object):
+    """ This class is used to group together a collection as a single object, 
+        so that they may be accessed as attributes of that object"""
+    def __init__(self,**kwds):
+        """ The namespace of the object may be initialized using keyword arguments """
+        self.__dict__.update(kwds)
+    def __call__(self,*args,**kwargs):
+        return self.call(self,*args,**kwargs)
+    def __str__(self):
+        return "%s(%s)" % (self.__class__.__name__,self.__dict__)
+    def __repr__(self):
+        return self.__str__()
+        
+class makeHandler(object):
+    """This class is used to call a reader function repeatedly and to perform some specified
+    action on the output of that reader, either for a duration which is as close as 
+    possible to a specified value, or until the reader returns None.
 
+    It is useful when handling a number of queues within a single threaded environment
+    so that we do not spend too much time trying to empty out a queue while others 
+    remain unserviced."""
 
-class UsbUnavailable(CrdsException):
-    """The USB layer has failed, but should be restarted soon."""
-    pass
+    def __init__(self,readerFunc,processFunc):
+        self.processFunc = processFunc
+        self.reader = readerFunc
 
+    def process(self,timeLimit):
+        start = time.clock()
+        while time.clock()-start < timeLimit:
+            d = self.reader()
+            if d is not None:
+                self.processFunc(d)
+            else:
+                break
 
-class InterfaceError(CrdsException):
-    pass
+        duration = time.clock()-start
+        return duration
 
+schemeTableClassMemo = {}
+def getSchemeTableClass(numRows):
+    # Generate a scheme table dynamically with numRows rows. These are memoized to avoid
+    #  wasting memory for duplicate classes
 
-class DasVersionError(DasException):
-    """There is a problem with the firmware versions on the DAS."""
-    pass
+    if numRows > interface.NUM_SCHEME_ROWS:
+        raise ValueError, "Maximum number of scheme rows is %d" % interface.NUM_SCHEME_ROWS
+    
+    if numRows not in schemeTableClassMemo:
+        SchemeRowArray = interface.SchemeRowType * numRows
+        
+        class SchemeTableType(ctypes.Structure):
+            _fields_ = [("numRepeats",ctypes.c_uint),
+                        ("numRows",ctypes.c_uint),
+                        ("rows",SchemeRowArray)]
+        schemeTableClassMemo[numRows] = SchemeTableType
+    return schemeTableClassMemo[numRows]
 
+# Utilities for converting between ctypes objects and dictionaries
 
-DriverRpcServerPort = RPC_PORT_DRIVER
-InterfaceServerPort = TCP_PORT_INTERFACE
-InterfaceRpcServerPort = RPC_PORT_INTERFACE
-ControllerCallbackPort = RPC_PORT_CONTROLLER
-FilerRpcServerPort = RPC_PORT_FILER
-LoggerRpcServerPort = RPC_PORT_LOGGER
-MasterRpcServerPort = RPC_PORT_SUPERVISOR
-LoggerBroadcastPort = BROADCAST_PORT_EVENTLOG
-DriverStreamPort = BROADCAST_PORT_SENSORSTREAM
-DriverRdResultsPort = BROADCAST_PORT_RDRESULTS
-DriverRcbPort = BROADCAST_PORT_RCB
-if __name__ == '__main__':
-    mcuVer = raw_input('MCU version number? ')
-    print 'Last register: %d [%s]' % (regByVersion(mcuVer), s.register_info[regByVersion(mcuVer)].name)
-    print 'Last float Stream: %d' % (floatStreamByVersion(mcuVer),)
-    print 'Last integer Stream: %d' % (intStreamByVersion(mcuVer),)
+def ctypesToDict(s):
+    """Create a dictionary from a ctypes structure where the keys are the field names"""
+    if isinstance(s,(float,int,long,str)):
+        return s
+    else:
+        r = {}
+        for f in s._fields_:
+            a = getattr(s,f[0])
+            if hasattr(a,'_length_'):
+                l = []
+                for e in a:
+                    l.append(ctypesToDict(e))
+                r[f[0]] = l
+            else:
+                r[f[0]] = ctypesToDict(a)
+        return r
+
+def dictToCtypes(d,c):
+    """Fill the ctypes object c with data from the dictionary d"""
+    for k in d:
+        if isinstance(d[k],dict):
+            dictToCtypes(d[k],getattr(c,k))
+        elif isinstance(d[k],list):
+            for i,e in enumerate(d[k]):
+                if not isinstance(e,dict):
+                    getattr(c,k)[i] = e
+                else:
+                    dictToCtypes(e,getattr(c,k)[i])
+        else:
+            if hasattr(c,k):
+                setattr(c,k,d[k])
+            else:
+                raise ValueError,"Unknown structure field name %s" % k
+
+# Routines for reading scheme files
+
+def getNextNonNullLine(sp):
+    """ Return next line in a stream which is not blank and which does not
+    start with a # character. Raise an exception if the file ends."""
+    while True:
+        line = sp.readline()
+        if not line:
+            raise ValueError("Premature end of scheme file %s" % sp.name)
+        line = line.strip()
+        if not line or line[0] == "#":
+            continue
+        else:
+            return line
+
+##Misc stuff...
+
+if __debug__:
+    #verify that we have no accidental port overlapping...
+    usedPorts = {}
+    localsNow = {}
+    localsNow.update(locals())
+    for k in localsNow:
+        assert isinstance(k, str)
+        if k.startswith("RPC_PORT_") or k.startswith("TCP_PORT_") or k.startswith("BROADCAST_PORT_"):
+            p = str(locals()[k])
+            if p in usedPorts:
+                raise Exception("An IP port has been duplicated and must be fixed!" + \
+                                "'%s' and '%s' are both %s" % (k,usedPorts[p],p))
+            else:
+                usedPorts[p] = k
+    del localsNow, k, usedPorts

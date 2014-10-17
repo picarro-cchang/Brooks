@@ -3,9 +3,19 @@ import os
 import sys
 import wx
 import time
-import CmdFIFO
+#import CmdFIFO
 import threading
-from SharedTypes import RPC_PORT_DRIVER
+
+#from SharedTypes import RPC_PORT_DRIVER
+
+try:
+    from Host.Common import CmdFIFO
+    from Host.Common.SharedTypes import RPC_PORT_DRIVER
+except:
+    import CmdFIFO
+    from SharedTypes import RPC_PORT_DRIVER
+
+
 from VaporizerCleanerFrame import VaporizerCleanerFrame
 DISP_TIME_PRECISION = 0.01
 EXE_INTERVAL = 60000 * DISP_TIME_PRECISION
