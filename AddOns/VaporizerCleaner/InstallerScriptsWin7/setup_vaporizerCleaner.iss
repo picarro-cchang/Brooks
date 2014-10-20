@@ -43,12 +43,12 @@ Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\Vaporiz
 [Icons]
 
 ; Desktop shortcuts
-Name: {userdesktop}\Picarro Utilities\VaporizerCleaner; Filename: {app}\VaporizerCleanerExe\VaporizerCleaner.exe; WorkingDir: {app}\VaporizerCleanerExe; IconFilename: {app}\VaporizerCleanerExe\{#utilitiesIcon}
+Name: {userdesktop}\Picarro Utilities\Vaporizer Cleaner; Filename: {app}\VaporizerCleanerExe\VaporizerCleaner.exe; WorkingDir: {app}\VaporizerCleanerExe; IconFilename: {app}\VaporizerCleanerExe\{#utilitiesIcon}
+
+Name: {userdesktop}\Picarro Utilities\Vaporizer Cleaning Procedure; Filename: {app}\VaporizerCleanerExe\{#userManual}; WorkingDir: {app}\VaporizerCleanerExe
 
 
 ; Start menu
 Name: {group}\Vaporizer Cleaner; Filename: {app}\VaporizerCleanerExe\VaporizerCleaner.exe; WorkingDir: {app}\VaporizerCleanerExe; IconFilename: {app}\VaporizerCleanerExe\{#utilitiesIcon}
 
 Name: {group}\Vaporizer Cleaning Procedure; Filename: {app}\VaporizerCleanerExe\{#userManual}; WorkingDir: {app}\VaporizerCleanerExe
-
-; TODO
