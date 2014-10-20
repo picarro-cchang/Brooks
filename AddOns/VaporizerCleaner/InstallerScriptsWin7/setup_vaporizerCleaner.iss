@@ -12,14 +12,15 @@
 
 
 #define utilitiesIcon = "Utilities_icon.ico"
+#define userManual = "Vaporizer Cleaning Procedure 2-17-10.pdf"
 
 [Setup]
 AppCopyright=Picarro Inc.
-AppName=Picarro G2000 VaporizerCleaner
-AppVerName=Picarro G2000 Win7 VaporizerCleaner {#vaporizerCleanerVersion}
+AppName=Picarro G2000 Vaporizer Cleaner
+AppVerName=Picarro G2000 Win7 Vaporizer Cleaner {#vaporizerCleanerVersion}
 Password=
 DefaultDirName=C:\Picarro\G2000
-DefaultGroupName=Picarro VaporizerCleaner
+DefaultGroupName=Picarro Vaporizer Cleaner
 OutputBaseFileName=setup_{#vaporizerCleanerVersion}
 DirExistsWarning=no
 
@@ -32,7 +33,7 @@ MinVersion=6.1.7601
 Source: {#sandboxDir}\host\AddOns\VaporizerCleaner\dist\*; DestDir: {app}\VaporizerCleanerExe; Flags: recursesubdirs replacesameversion
 
 ; User manual
-Source: "{#sandboxDir}\host\AddOns\VaporizerCleaner\Vaporizer Cleaning Procedure 2-17-10.pdf"; DestDir: {app}\AddOns\VaporizerCleanerExe; Flags: replacesameversion
+Source: "{#sandboxDir}\host\AddOns\VaporizerCleaner\{#userManual}"; DestDir: {app}\AddOns\VaporizerCleanerExe; Flags: replacesameversion
 
 
 ; icon files
@@ -45,7 +46,9 @@ Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\Vaporiz
 Name: {userdesktop}\Picarro Utilities\VaporizerCleaner; Filename: {app}\VaporizerCleanerExe\VaporizerCleaner.exe; WorkingDir: {app}\VaporizerCleanerExe; IconFilename: {app}\VaporizerCleanerExe\{#utilitiesIcon}
 
 
-; Start menu (COMMENTED OUT FOR NOW)
-;Name: {group}\VaporizerCleaner; Filename: {app}\VaporizerCleanerExe\VaporizerCleaner.exe; WorkingDir: {app}\VaporizerCleanerExe; IconFilename: {app}\VaporizerCleanerExe\{#utilitiesIcon}
+; Start menu
+Name: {group}\Vaporizer Cleaner; Filename: {app}\VaporizerCleanerExe\VaporizerCleaner.exe; WorkingDir: {app}\VaporizerCleanerExe; IconFilename: {app}\VaporizerCleanerExe\{#utilitiesIcon}
+
+Name: {group}\Vaporizer Cleaning Procedure; Filename: {app}\VaporizerCleanerExe\{#userManual}; WorkingDir: {app}\VaporizerCleanerExe
 
 ; TODO

@@ -23,7 +23,10 @@ class VaporizerCleanerFrame(wx.Frame):
         self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, 'About Vaporizer Cleaner', '', wx.ITEM_NORMAL)
         self.iHelp.AppendItem(self.iAbout)
         self.SetMenuBar(self.frameMenubar)
-        self.labelFooter = wx.StaticText(self, -1, 'Copyright Picarro, Inc. 1999-2009', style=wx.ALIGN_CENTER)
+
+        # copyright text updated with year info by main app
+        self.labelFooter = wx.StaticText(self, -1, 'Copyright Picarro, Inc.', style=wx.ALIGN_CENTER)
+
         self.labelElapsedTime = wx.StaticText(self, -1, 'Elapsed Time (minutes)')
         self.textCtrlElapsedTime = wx.TextCtrl(self, -1, '0.00', style=wx.TE_READONLY)
         self.labelValve = []
