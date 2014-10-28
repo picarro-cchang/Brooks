@@ -9,6 +9,9 @@ File History:
     09-07-03 alex  Tested and debugged both serial and socket interfaces
     09-07-22 alex  Supported more command sets. Supported multiple concentration reporting. Used semicolon instead of tab.  
     10-06-07 alex  Added function for flux mode switcher
+    14-10-28 tracy Support decimal places from ini file by adding NumDecPlaces = <n> to
+                   command section. Only for _MEAS_GETCONC, _MEAS_GETCONCEX, _MEAS_GETSCANTIME,
+                   _MEAS_GETBUFFERFIRST, _PULSE_GETBUFFERFIRST, and _PULSE_GETBUFFER.
     
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -336,6 +339,10 @@ class CommandInterface(object):
                 self.PrintError( ERROR_COMMAND_PARAMETERS )
                 continue
 
+            # some commands support specifying number of decimal places in output
+            if 'numdecplaces' in cmddef:
+                pdict['numdecplaces'] = cmddef['numdecplaces']
+
             # Get status from Instrument Manager
             try:
                 status = self._InstMgrRpc.INSTMGR_GetStatusRpc()
@@ -343,6 +350,10 @@ class CommandInterface(object):
                 print "Exception %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
                 self.PrintError( ERROR_COMMUNICATION_FAILED )
                 status=0
+
+                # Note: To hack this to work with BroadcastToDataLogger must
+                #       force status=2 and comment out the continue
+                #status = 2
                 continue
 
             # Check status vs command configuration and return error appropriately
@@ -371,6 +382,7 @@ class CommandInterface(object):
 
             # Execute command
             if self.debug: print ("%s:%r" % (func.__name__,pdict))
+
             try:
                 func(**pdict)
             except:
@@ -428,12 +440,16 @@ class CommandInterface(object):
             return 0
 
     # Measurement System functions
-    def _MEAS_GETCONC(self):
-        format = ("%.3f;" * len(self._cdata))[:-1]
+    def _MEAS_GETCONC(self, numdecplaces=3):
+        # default to 3 decimal places
+        fmtStr = "%%.%df;" % int(numdecplaces)
+        format = (fmtStr * len(self._cdata))[:-1]
         self.Print( format % tuple(self._cdata) )
 
-    def _MEAS_GETCONCEX(self):
-        format = "%s;" + ("%.3f;" * len(self._cdata))[:-1]
+    def _MEAS_GETCONCEX(self, numdecplaces=3):
+        # default to 3 decimal places
+        fmtStr = "%%.%df;" % int(numdecplaces)
+        format = "%s;" + (fmtStr * len(self._cdata))[:-1]
         self.Print( format % tuple([self._ctimeString]+self._cdata) )
 
     def _MEAS_GETBUFFER(self):
@@ -448,20 +464,26 @@ class CommandInterface(object):
             except:
                 break
 
-    def _MEAS_GETBUFFERFIRST(self):
+    def _MEAS_GETBUFFERFIRST(self, numdecplaces=3):
         retString = ""
+        fmtStr = "%%.%df;" % int(numdecplaces)
+
         for idx in range(len(self.meas_label_list)):
             label = self.meas_label_list[idx]
             self._measLockDict[label].acquire()
+
             try:
                 mtime,mdata = self._measQueueDict[label].pop(0)
                 if idx == 0:
-                    retString += ("%s;%0.3f;" % ( mtime,mdata ))
+                    fmtStr2 = "%%s;%s" % fmtStr
+                    retString += (fmtStr2 % ( mtime, mdata))
                 else:
-                    retString += ("%0.3f;" % ( mdata ))
+                    retString += (fmtStr % ( mdata ))
             except:
                 self.PrintError( ERROR_MEAS_BUFFER_EMPTY )
+
             self._measLockDict[label].release()
+
         if retString != "":
             self.Print( retString )
                     
@@ -472,8 +494,9 @@ class CommandInterface(object):
             self._measLockDict[label].release()
         self.Print("OK")
 
-    def _MEAS_GETSCANTIME(self):
-        self.Print ( "%.3f" % self.getAveScantime() )
+    def _MEAS_GETSCANTIME(self, numdecplaces=3):
+        fmtStr = "%%.%df;" % int(numdecplaces)
+        self.Print ( fmtStr % self.getAveScantime() )
 
     def _MEAS_ENABLE(self):
         self._InstMgrRpc.INSTMGR_StartMeasureRpc()
@@ -588,7 +611,8 @@ class CommandInterface(object):
     ##########################
     # Pulse Analyzer functions
     ##########################
-    def _PULSE_GETBUFFERFIRST(self):
+    def _PULSE_GETBUFFERFIRST(self, numdecplaces=3):
+         # default is 3 decimal places
         try:
             self._DataMgrRpc.PulseAnalyzer_GetBufferFirst()
         except PulseAnalyzerBufferEmptyError:
@@ -600,11 +624,13 @@ class CommandInterface(object):
 
         timeString = _TimeToString(self.maketimetuple(dataRecord[0]))
         retString = "%s;" % timeString
+        fmtStr = "%%.%df;" % int(numdecplaces)
+
         for data in dataRecord[1:]:
-            retString += "%.3f;" % (float(data))
+            retString += fmtStr % (float(data))
         self.Print( retString )
 
-    def _PULSE_GETBUFFER(self):
+    def _PULSE_GETBUFFER(self, numdecplaces=3):
         try:
             self._DataMgrRpc.PulseAnalyzer_GetBuffer()
         except PulseAnalyzerBufferEmptyError:
@@ -614,13 +640,15 @@ class CommandInterface(object):
             self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
             return
 
+        fmtStr = "%%.%df;" % int(numdecplaces)
+
         count = len(dataList)
         self.Print("%d;" % count)
         for dataRecord in dataList:
             timeString = _TimeToString(self.maketimetuple(dataRecord[0]))
             retString = "%s;" % timeString
             for data in dataRecord[1:]:
-                retString += "%.3f;" % (float(data))
+                retString += fmtStr % (float(data))
             self.Print( retString )
 
     def _PULSE_CLEARBUFFER(self):
