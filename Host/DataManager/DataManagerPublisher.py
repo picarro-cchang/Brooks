@@ -47,15 +47,19 @@ class DataManagerPublisher(object):
             self.listener.stop()
 
     def jsonifyMeasurements(self, entry):
-        if entry['source'] != 'Sensors' and entry['source'] != 'analyze_FBDS':
-            #print "Skip %s" % entry['source']
-            return None
-        else:
+        source = entry['source']
+        if source == 'Sensors' or source == 'analyze_FBDS':
             if 'species' in entry['data'] and (entry['data']['species'] == 0.0 or entry['data']['species'] == "0.0"):
                 print "Rejected species 0"
                 return None
-                
             return [{'type': 'measurement'}, {'mode': entry['mode']}, json.dumps(entry['data'])]
+        elif source == 'parseGPS':
+            return [{'type': 'gps'}, json.dumps(entry['data'])]
+        elif source == 'parseGillAnemometer':
+            return [{'type': 'anemometer'}, json.dumps(entry['data'])]
+        else:
+            #print "Skip %s" % entry['source']
+            return None
 
     def jsonifyStatus(self, entry):
         # Status messages do not contain timestamps!
