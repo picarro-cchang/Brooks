@@ -54,7 +54,7 @@ class DataManagerPublisher(object):
                 return None
             return [{'type': 'measurement'}, {'mode': entry['mode']}, json.dumps(entry['data'])]
         elif source == 'parseGPS' or source == 'parseGillAnemometer':
-			entry['data']['EPOCH_TIME'] = entry['time']
+            entry['data']['EPOCH_TIME'] = entry['time']
             return [{'type': 'gps' if source == 'parseGPS' else 'anemometer' }, json.dumps(entry['data'])]
         else:
             #print "Skip %s" % entry['source']
