@@ -60,6 +60,7 @@ sys.path.append("MeasSystem")
 sys.path.append("QuickGui")
 sys.path.append("SampleManager")
 sys.path.append("Supervisor")
+sys.path.append("PeakAnalyzer")
 sys.path.append("PeriphIntrf")
 sys.path.append("Utilities")
 sys.path.append("ControlBridge")
@@ -608,6 +609,7 @@ consoleList = [
     "ReadExtSensor/ReadExtSensor.py",
     "ControlBridge/ControlBridge.py",
     "Sensors/MobileKitMonitor.py",
+    "PeakAnalyzer/RunPeakAnalyzer.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
     "Utilities/IntegrationBackup/IntegrationBackup.py",
     "Utilities/Restart/RestoreStartup.py",

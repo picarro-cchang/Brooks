@@ -39,6 +39,8 @@ class ProportionalMode(SampleManagerBaseMode):
         return True
     # Check that cavity is warmed up to within 5 degC of setpoint before starting flow
     cavityTemp,cavityTempSetpoint = self._RPC_ReadCavityTemperatureAndSetpoint()
+    # Turn off flow control
+    self._LPC_SetFlowControl(interface.FLOW_CNTRL_DisabledState)
     
     if abs(cavityTemp-cavityTempSetpoint) > 5:
         print "Cavity temperature is too far from setpoint to start flow. Difference is", abs(cavityTemp-cavityTempSetpoint)
