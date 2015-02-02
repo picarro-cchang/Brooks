@@ -41,6 +41,7 @@ pyDirname = "Python%d%d" % (version[0],version[1])
 # Manufacturing support
 sys.path.append("Coordinator")
 sys.path.append("Utilities/CoordinatorLauncher")
+sys.path.append("ValveSequencer")
 
 sys.path.append("AlarmSystem")
 sys.path.append("RDFrequencyConverter")
@@ -590,6 +591,7 @@ else:
 consoleList = [
     "RDFrequencyConverter/RDFrequencyConverter.py",
     "SpectrumCollector/SpectrumCollector.py",
+    "ValveSequencer/ValveSequencer.py",
     "AlarmSystem/AlarmSystem.py",
     "Archiver/Archiver.py",
     "Common/SchemeProcessor.py",
