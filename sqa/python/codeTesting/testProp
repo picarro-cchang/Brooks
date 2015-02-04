@@ -1,0 +1,30 @@
+host = p3.picarro.com
+port = 443
+svc = gdu
+version = 1.0
+
+existing_tkt = False
+
+doclist = True
+
+row = 3
+
+site = stage
+identity = zYa8P106vCc8IfpYGv4qcy2z8YNeVjHJw1zaBDth
+psys = stage
+fnm = 96
+prmsHash = b0e8ffa76a5ff56246b6e871c2d7d548
+startTs = 2014-02-10T19:29:23.768Z
+
+#site = sqa
+#identity = JyBFc7jMyncFXiiYuTyvyoBFz99yjpG0
+#psys = sqa
+#fnm = 1
+
+anz = DEMO2000 
+alog = DEMO2000-20120610-131326Z-DataLog_User_Minimal.dat
+
+#anz = FDDS2030
+#alog = FDDS2030-20130506-224905Z-DataLog_Sensor_Minimal.dat
+
+debug = False
