@@ -36,11 +36,6 @@ CHEM_DETECT = 0
 SystemStatusPeripheralMask = 0x00000001
 SystemStatusAnalyzerMask = 0x00000002
 
-# Extra Peripheral Status bits that require buffered calculations that can only be done in the DataManager. These
-# must be added to the existing PeripheralStatus word.
-PeripheralStatusWindSpeedStabilityMask = 0x00000200
-PeripheralStatusWindPositionCorrelationMask = 0x00000400
-
 AnalyzerStatusIntakeFlowRateMask = 0x00000001
 AnalyzerStatusCavityBaselineLossMask = 0x00000002
 AnalyzerStatusSamplingIntervalMask = 0x00000004
@@ -598,7 +593,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
             windSpeed = numpy.sqrt(windN * windN + windE * windE)
 
         if unstableWindSpeed(windSpeed):
-            PeripheralStatus |= PeripheralStatusWindSpeedStabilityMask
+            PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_UNSTABLE
 
         if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
             carSpeed = 0.0
@@ -610,7 +605,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
             if (carSpeed != 0.0) and (carSpeed > CarSpeedMaximum) and \
                (numpy.absolute((windSpeed / carSpeed) - 1.0) > CarWindSpeedCorrelation):
-                PeripheralStatus |= PeripheralStatusWindPositionCorrelationMask
+                PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_SPEED_CAR_SPEED_UNCORRELATED
 
     if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
         AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
