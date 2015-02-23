@@ -34,7 +34,7 @@ MinVersion=6.1.7601
 Source: {#sandboxDir}\AddOns\AIAutosampler\dist\*; DestDir: {app}\AutosamplerExe; Flags: recursesubdirs replacesameversion
 
 ; Training module
-Source: {#sandboxDir}\Vendor\Applied Instruments\ALS-G\x86\Picarro_Training_Utility.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
+Source: {#sandboxDir}\Vendor\Applied Instruments\ALS-G\x86\Picarro_Training.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
 ; USB-COM to Serial Port Driver installer
 Source: {#sandboxDir}\Vendor\FTDI\CDM 2.08.30 WHQL Certified\CDM v2.08.30 WHQL Certified.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
@@ -47,11 +47,11 @@ Source: {#sandboxDir}\Assets\icons\{#utilitiesIcon}; DestDir: {app}\AutosamplerE
 ; Desktop shortcuts
 Name: {userdesktop}\Autosampler Control; Filename: {app}\AutosamplerExe\Autosampler.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\{#utilitiesIcon}
 
-Name: {userdesktop}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training_Utility.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training_Utility.exe
+Name: {userdesktop}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training.exe
 
 ; Start menu
 
 Name: {group}\Autosampler Control; Filename: {app}\AutosamplerExe\Autosampler.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\{#utilitiesIcon}
 
-Name: {group}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training_Utility.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training_Utility.exe
+Name: {group}\Autosampler Training; Filename: {app}\AutosamplerExe\Picarro_Training.exe; WorkingDir: {app}\AutosamplerExe; IconFilename: {app}\AutosamplerExe\Picarro_Training.exe
 
