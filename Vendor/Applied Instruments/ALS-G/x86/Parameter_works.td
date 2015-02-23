@@ -1,30 +1,30 @@
 [Version]
-ProductVersion=1.41
-FileVersion=1.41
+ProductVersion=1.4
+FileVersion=1.4
 
 [Sonstiges]
 COMNR=6
-X_AXIS_MAX=389.200
+X_AXIS_MAX=470.000
 =
 
 [Configuration]
 MODE=0
-NIP=1
+NIP=2
 SS=0
 GCRC=1
 WP=0
 TS[0]=1
-TS[1]=0
+TS[1]=6
 TS[2]=0
 TS[3]=0
 WS_ACTIVE=0
 WS_TYP=3
-WS2_TYP=-1
+WS2_TYP=3
 SYR_VOL=1
 PLUNGER_NULLPOS=6.000
 SYR_SPEED_UP=130
 SYR_SPEED_DOWN=130
-BUZZER=1
+BUZZER=0
 MOMENT_START_OUT=0
 =
 
@@ -81,6 +81,7 @@ ISTD2_z=-1.000
 SPECIAL_MOTION_Z=0
 MAGNET_SPACE_Z=0.000
 =
+
 [Status]
 PlungerStrokes=-1
 Injections[1]=0
