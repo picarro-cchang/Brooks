@@ -41,6 +41,7 @@
 
 #include "inc_coordinator.iss"
 
+#include "inc_scripts.iss"
 
 ; Setup items unique to FEDS Surveyor are below:
 
@@ -48,6 +49,8 @@
 ; Surveyor startup app is Picarro.Surveyor.Analyzer service
 Name: {userstartup}\Start Analyzer Service; Filename: {app}\Picarro.Surveyor.Analyzer\Picarro.Surveyor.Analyzer.exe; WorkingDir: {app}\Picarro.Surveyor.Analyzer; IconFilename: {app}\HostExe\{#picarroIcon}
 
+[Run]
+Filename: {app}\HostExe\setvalvemasks.cmd
 
 [InstallDelete]
 Type: files; Name: "{userstartup}\Start Analyzer Service"
