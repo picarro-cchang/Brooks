@@ -859,6 +859,11 @@ def _promoteStagedRelease(types=None,
         if os.path.isdir(currentDir):
             shutil.rmtree(currentDir, ignore_errors=False, onerror=handleRemoveReadonly)
 
+        # rmtree followed by makedirs fails sometimes probably due to rmtree returning
+        # before the directory is fully removed. We just add a reasonable time delay here
+        # to get around it. Arbitrarily picking up 30 seconds
+        time.sleep(30)
+        
         # create the Current folder, and the Archive folder if it doesn't exist
         os.makedirs(currentDir)
 
@@ -1023,6 +1028,11 @@ def _copyBuildAndInstallers(versionConfig, product, osType, ver, customBuild=Fal
                        hostExeDir)
     """
 
+    # rmtree followed by makedirs fails sometimes probably due to rmtree returning
+    # before the directory is fully removed. We just add a reasonable time delay here
+    # to get around it. Arbitrarily picking up 30 seconds
+    time.sleep(30)
+        
     # Copy the individual installers and update the shortcuts that are
     # used by manufacturing.
     for c in configTypes:
