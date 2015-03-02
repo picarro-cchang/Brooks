@@ -668,8 +668,5 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
             _REPORT_[k] = clipReportData(_NEW_DATA_[k])
         else:
             _REPORT_[k] = _NEW_DATA_[k]
-    
-    if _PERSISTENT_['inactiveForWind']:
-        _REPORT_['ValveMask'] = int(_DATA_['ValveMask']) | VALVE_MASK_ACTIVE
 
 #=================================================================================
