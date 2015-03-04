@@ -27,7 +27,7 @@ class ControlBridge(object):
     INJECT_FLAG_VALVE_MASK = 1 << INJECT_FLAG_VALVE_BIT
     INJECT_MASK = INJECT_VALVE_MASK | INJECT_FLAG_VALVE_MASK
     INJECT_SAMPLES = 5
-	EXTRA_FLAG_SAMPLES = 50 # each is 0.2 seconds
+    EXTRA_FLAG_SAMPLES = 50 # each is 0.2 seconds
 
     def __init__(self):
         self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
