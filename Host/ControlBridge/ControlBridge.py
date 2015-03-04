@@ -27,6 +27,7 @@ class ControlBridge(object):
     INJECT_FLAG_VALVE_MASK = 1 << INJECT_FLAG_VALVE_BIT
     INJECT_MASK = INJECT_VALVE_MASK | INJECT_FLAG_VALVE_MASK
     INJECT_SAMPLES = 5
+	EXTRA_FLAG_SAMPLES = 50 # each is 0.2 seconds
 
     def __init__(self):
         self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
@@ -105,7 +106,7 @@ class ControlBridge(object):
     def _referenceGasInjection(self):
         self.driver.wrValveSequence([
             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
-            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, 30],
+            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, ControlBridge.EXTRA_FLAG_SAMPLES],
             [ControlBridge.INJECT_MASK, 0, 1],
             [0, 0, 0]
         ])
