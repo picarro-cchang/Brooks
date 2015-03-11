@@ -31,16 +31,16 @@ MinVersion=6.1.7601
 [Files]
 
 ; Program
-Source: {#sandboxDir}\AddOns\AIAutosampler\dist\*; DestDir: {app}\AutosamplerExe; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\host\AddOns\AIAutosampler\dist\*; DestDir: {app}\AutosamplerExe; Flags: recursesubdirs replacesameversion
 
 ; Training module
-Source: {#sandboxDir}\Vendor\Applied Instruments\ALS-G\x86\Picarro_Training.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
+Source: {#sandboxDir}\host\Vendor\Applied Instruments\ALS-G\x86\Picarro_Training.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
 ; USB-COM to Serial Port Driver installer
-Source: {#sandboxDir}\Vendor\FTDI\CDM 2.08.30 WHQL Certified\CDM v2.08.30 WHQL Certified.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
+Source: {#sandboxDir}\host\Vendor\FTDI\CDM 2.08.30 WHQL Certified\CDM v2.08.30 WHQL Certified.exe; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
 ; icon files
-Source: {#sandboxDir}\Assets\icons\{#utilitiesIcon}; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
+Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\AutosamplerExe; Flags: replacesameversion
 
 [Icons]
 
