@@ -12,8 +12,8 @@
 
 
 #define utilitiesIcon = "Utilities_icon.ico"
-#define autosamplerVersion = "3.0"
-#define sandboxDir = "C:\Picarro\G2000"
+; #define autosamplerVersion = "3.0"
+; #define sandboxDir = "C:\Picarro\G2000"
 
 [Setup]
 AppCopyright=Picarro Inc.
