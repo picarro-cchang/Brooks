@@ -2880,6 +2880,8 @@ class AutosamplerFrame(AutosamplerGUI):
         self.ASStepGoToSyrExchange(3)
         self.abortInProgress = False
         self.injectionComplete= True
+        # clear job queue
+        self.jobQueue=[]
 
     def OnStopBtn(self, event):
         if self.exchangePosition:
