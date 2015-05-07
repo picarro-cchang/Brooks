@@ -29,6 +29,7 @@
 #  29 Jan 2014:  Initialized methane amplitude in water fit (peak8) using peak0 amplitude
 #                Fixed minor bug in logic for adjust_0 = 0 and adjust_5 = 0.
 #   3 Feb 2014:  Added PPF to isotopic (slow) mode.  Removed up/down methane reporting.
+#   4 May 2015:  Changed the definition of "interval" to mean period between successive high-speed CH4 or isotopic measurements
 
 import os.path
 import time
@@ -324,6 +325,7 @@ good25 = sum(in25)
 in150 = (d.fitData["freq"] >= 6028.4) & (d.fitData["freq"] <= 6029.2)
 good150 = sum(in150)
 fast_flag = -1
+interval = 0
 
 if species == 150 and good150 > 35:
     fast_flag = 0
@@ -491,16 +493,25 @@ if species == 150 and good150 > 35:
         pass
     delta_no_bookend = 1723.1*c13toc12 - 1000
     ch4_high_adjust = 0.0
+    
+    if last_time != None:
+        interval = r["time"]-last_time
+    last_time = r["time"]
+    
 
 if species in [25,150] and good25>9:     #high precision CH4 at 6057.09
     if species == 25:
-        fast_flag = 1
+        fast_flag = 1       
     else:
         fast_flag = 0
     init = InitialValues()
     initialize_CFADS_Baseline()
     r = an12CH4[0](d,init,deps)
     ANALYSIS.append(r)
+    if species == 25:
+        if last_time != None:
+            interval = r["time"]-last_time
+        last_time = r["time"]    
     ch4_vy = r[1002,5]
     vch4_conc_ppmv = 10*r[1002,2]
     ch4_high_shift = r["base",3]
@@ -646,11 +657,6 @@ now = time.clock()
 fit_time = now-tstart
 if r != None:
     IgnoreThis = False
-    if last_time != None:
-        interval = r["time"]-last_time
-    else:
-        interval = 0
-    last_time = r["time"]
 else:
     IgnoreThis = True
 
