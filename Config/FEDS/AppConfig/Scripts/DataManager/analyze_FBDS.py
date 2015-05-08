@@ -104,8 +104,7 @@ IntakeFlowRateMin = 3.75
 IntakeFlowRateMax = 5.0
 IntakeFlowRateDisconnected = -9999.0
 WindSpeedHistoryBufferLen = 100
-CarSpeedMaximum = 4.47
-CarWindSpeedCorrelation = 0.75
+CarSpeedMaximum = 35.0
 DeltaIntervalMax = 1.6
 SpectrumLatencyMax = 3.0
 WlmShiftMax = 2e-3
@@ -575,8 +574,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
         elif _DATA_['MOBILE_FLOW'] > IntakeFlowRateMax and alarmActive and alarmActiveState:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
+    windSpeed = 0.0
     if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
-        windSpeed = 0.0
 
         if (not numpy.isnan(_DATA_['WIND_N'])) and (not numpy.isnan(_DATA_['WIND_E'])):
             windN = _DATA_['WIND_N']
@@ -586,17 +585,16 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         if unstableWindSpeed(windSpeed):
             PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_UNSTABLE
 
-        if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
-            carSpeed = 0.0
+    carSpeed = 0.0
+    if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
 
-            if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
-                carN = _DATA_['CAR_VEL_N']
-                carE = _DATA_['CAR_VEL_E']
-                carSpeed = numpy.sqrt(carN * carN + carE * carE)
+        if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
+            carN = _DATA_['CAR_VEL_N']
+            carE = _DATA_['CAR_VEL_E']
+            carSpeed = numpy.sqrt(carN * carN + carE * carE)
 
-            if (carSpeed != 0.0) and (carSpeed > CarSpeedMaximum) and \
-               (numpy.absolute((windSpeed / carSpeed) - 1.0) > CarWindSpeedCorrelation):
-                PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_SPEED_CAR_SPEED_UNCORRELATED
+    if carSpeed > CarSpeedMaximum:
+        PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE
     # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
     #  is too slow
     tooSlow = False

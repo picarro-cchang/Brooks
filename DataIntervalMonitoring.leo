@@ -19,6 +19,38 @@
 <v t="sze.20150506182103.1"><vh>&lt;&lt;Report persistent variables&gt;&gt;</vh></v>
 </v>
 </v>
+<v t="sze.20150507213556.1" a="E"><vh>Reorganizing PeripheralStatus</vh>
+<v t="sze.20150507214535.1" a="E"><vh>Changed code</vh>
+<v t="sze.20150507214410.2"><vh>class PeripheralStatus</vh></v>
+<v t="sze.20150507215103.1"><vh>OLD: class PeripheralStatus</vh></v>
+<v t="sze.20150507213822.15"><vh>trueWindSource</vh></v>
+<v t="sze.20150506164740.1"><vh>&lt;&lt;Check for unstable wind speed and correlation between car speed and wind speed&gt;&gt;</vh></v>
+<v t="sze.20150507215022.1"><vh>&lt;&lt;OLD: Check for unstable wind speed and correlation between car speed and wind speed&gt;&gt;</vh></v>
+</v>
+</v>
+<v t="sze.20150507214331.1"><vh>@clean Host\PeriphIntrf\PeripheralStatus.py</vh>
+<v t="sze.20150507214410.2"></v>
+</v>
+<v t="sze.20150507213649.1" a="E"><vh>@clean Config\FEDS\AppConfig\Scripts\PeriphIntrf\processorFindWindInstNoCompass.py</vh>
+<v t="sze.20150507213822.1"><vh>processorFindWindInstNoCompass declarations</vh></v>
+<v t="sze.20150507213822.2"><vh>class RawSource</vh>
+<v t="sze.20150507213822.3"><vh>__init__</vh></v>
+<v t="sze.20150507213822.4"><vh>getDataTupleType</vh></v>
+<v t="sze.20150507213822.5"><vh>getFromQueue</vh></v>
+<v t="sze.20150507213822.6"><vh>getOldestTimestamp</vh></v>
+<v t="sze.20150507213822.7"><vh>getData</vh></v>
+</v>
+<v t="sze.20150507213822.8"><vh>class GpsSource</vh></v>
+<v t="sze.20150507213822.9"><vh>class WsSource</vh></v>
+<v t="sze.20150507213822.10"><vh>distVincenty</vh></v>
+<v t="sze.20150507213822.11"><vh>toXY</vh></v>
+<v t="sze.20150507213822.12"><vh>syncSources</vh></v>
+<v t="sze.20150507213822.13"><vh>syncCdataSource</vh></v>
+<v t="sze.20150507213822.14"><vh>derivCdataSource</vh></v>
+<v t="sze.20150507213822.15"></v>
+<v t="sze.20150507213822.16"><vh>windStatistics</vh></v>
+<v t="sze.20150507213822.17"><vh>runAsScript</vh></v>
+</v>
 <v t="sze.20150504115900.1"><vh>@clean Config\FEDS\AppConfig\Scripts\Fitter\fitScriptFCDS_fast.py</vh>
 <v t="sze.20150504120336.1"><vh>fitScriptFCDS_fast declarations</vh></v>
 <v t="sze.20150504120336.2"><vh>expAverage</vh></v>
@@ -28,7 +60,7 @@
 <v t="sze.20150504120336.6"><vh>initialize_CFADS_Baseline</vh></v>
 <v t="sze.20150504120336.7"><vh>initialize_CH4_Baseline</vh></v>
 </v>
-<v t="sze.20150506155541.1"><vh>@clean Config\FEDS\AppConfig\Scripts\DataManager\analyze_FBDS.py</vh>
+<v t="sze.20150506155541.1" a="E"><vh>@clean Config\FEDS\AppConfig\Scripts\DataManager\analyze_FBDS.py</vh>
 <v t="sze.20150506155630.1"><vh>&lt;&lt;analyze_FBDS declarations&gt;&gt;</vh></v>
 <v t="sze.20150506155630.2"><vh>evalLeaves</vh></v>
 <v t="sze.20150506155630.3"><vh>clipReportData</vh></v>
@@ -61,14 +93,14 @@
 <v t="sze.20150506181818.1"><vh>&lt;&lt;Handle AnalyzerStatus ChemDetect mask&gt;&gt;</vh></v>
 <v t="sze.20150506181637.1"><vh>&lt;&lt;Set up alarmActive when not in capture mode&gt;&gt;</vh></v>
 <v t="sze.20150506164529.1"><vh>&lt;&lt;Check mobile kit flow sensor reading&gt;&gt;</vh></v>
-<v t="sze.20150506164740.1"><vh>&lt;&lt;Check for unstable wind speed and correlation between car speed and wind speed&gt;&gt;</vh></v>
+<v t="sze.20150506164740.1"></v>
 <v t="sze.20150506164942.1"></v>
 <v t="sze.20150506181904.1"><vh>&lt;&lt;Handle SystemStatus&gt;&gt;</vh></v>
 <v t="sze.20150506182103.1"></v>
 <v t="sze.20150506182201.1"><vh>&lt;&lt;Execute laser ageing script&gt;&gt;</vh></v>
 <v t="sze.20150506182135.1"><vh>&lt;&lt;Report DATA and NEW_DATA&gt;&gt;</vh></v>
 </v>
-<v t="sze.20150507075702.1" a="E"><vh>@clean Host\Tests\AccessSurveyorDatabase\database_queries.py</vh>
+<v t="sze.20150507075702.1"><vh>@clean Host\Tests\AccessSurveyorDatabase\database_queries.py</vh>
 <v t="sze.20150507075745.1"><vh>database_queries declarations</vh></v>
 <v t="sze.20150507075745.2"><vh>getAnalyzerId</vh></v>
 <v t="sze.20150507075745.3"><vh>getSurveysForAnalyzer</vh></v>
@@ -76,8 +108,10 @@
 <v t="sze.20150507075745.5"><vh>get_backtraj_data</vh></v>
 </v>
 <v t="sze.20150507075912.1"><vh>@clean Host\Tests\AccessSurveyorDatabase\example_access.py</vh></v>
-<v t="sze.20150507082344.1"><vh>@clean Host\Tests\AccessSurveyorDatabase\example_survey.py</vh></v>
-<v t="sze.20150506154736.2" a="E"><vh>Recovered Nodes</vh>
+<v t="sze.20150507082344.1"><vh>@clean Host\Tests\AccessSurveyorDatabase\find_max_rel_speed.py</vh></v>
+<v t="sze.20150508000110.1"><vh>@clean Host\Tests\AccessSurveyorDatabase\find_max_wind_speed.py</vh></v>
+<v t="sze.20150508003853.1"><vh>@clean Host\Tests\AccessSurveyorDatabase\max_wind_speed.csv</vh></v>
+<v t="sze.20150506154736.2"><vh>Recovered Nodes</vh>
 <v t="sze.20150506154736.3"><vh>Recovered node "fitScriptFCDS_fast declarations" from fitScriptFCDS_fast.py</vh>
 <v t="sze.20150506154736.4"><vh>old:fitScriptFCDS_fast declarations</vh></v>
 <v t="sze.20150506154736.5"><vh>new:fitScriptFCDS_fast declarations</vh></v>
@@ -1371,8 +1405,8 @@ if _OLD_DATA_["species"][-1].value == 150 and not _DATA_['fast_flag']:
 
     elif _DATA_['MOBILE_FLOW'] &gt; IntakeFlowRateMax and alarmActive and alarmActiveState:
         AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask</t>
-<t tx="sze.20150506164740.1">if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
-    windSpeed = 0.0
+<t tx="sze.20150506164740.1">windSpeed = 0.0
+if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
 
     if (not numpy.isnan(_DATA_['WIND_N'])) and (not numpy.isnan(_DATA_['WIND_E'])):
         windN = _DATA_['WIND_N']
@@ -1382,17 +1416,16 @@ if _OLD_DATA_["species"][-1].value == 150 and not _DATA_['fast_flag']:
     if unstableWindSpeed(windSpeed):
         PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_UNSTABLE
 
-    if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
-        carSpeed = 0.0
+carSpeed = 0.0
+if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
 
-        if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
-            carN = _DATA_['CAR_VEL_N']
-            carE = _DATA_['CAR_VEL_E']
-            carSpeed = numpy.sqrt(carN * carN + carE * carE)
+    if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
+        carN = _DATA_['CAR_VEL_N']
+        carE = _DATA_['CAR_VEL_E']
+        carSpeed = numpy.sqrt(carN * carN + carE * carE)
 
-        if (carSpeed != 0.0) and (carSpeed &gt; CarSpeedMaximum) and \
-           (numpy.absolute((windSpeed / carSpeed) - 1.0) &gt; CarWindSpeedCorrelation):
-            PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_SPEED_CAR_SPEED_UNCORRELATED</t>
+if carSpeed &gt; CarSpeedMaximum:
+    PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE</t>
 <t tx="sze.20150506164942.1"># Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
 #  is too slow
 tooSlow = False
@@ -1458,8 +1491,7 @@ IntakeFlowRateMin = 3.75
 IntakeFlowRateMax = 5.0
 IntakeFlowRateDisconnected = -9999.0
 WindSpeedHistoryBufferLen = 100
-CarSpeedMaximum = 4.47
-CarWindSpeedCorrelation = 0.75
+CarSpeedMaximum = 35.0
 DeltaIntervalMax = 1.6
 SpectrumLatencyMax = 3.0
 WlmShiftMax = 2e-3
@@ -2002,59 +2034,1910 @@ connection = pyodbc.connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s
                         (server, database, uid, password))
 cursor = connection.cursor()
 
-# Get table names
 cursor.execute("""
-    SELECT DISTINCT TABLE_NAME
-        FROM [SurveyorEngineering].INFORMATION_SCHEMA.COLUMNS
+    SELECT Tag, StartEpoch, EndEpoch, AnalyzerId
+        FROM [SurveyorEngineering].[dbo].[Survey]
 """)
-print "\nTables Available"
-for row in cursor:
-    print row
-
-
-# Get analyzer table column names
-cursor.execute("""
-    SELECT COLUMN_NAME
-        FROM [SurveyorEngineering].INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = 'Analyzer'
-""")
-
-print "\nAnalyzer table columns"
-for row in cursor:
-    print row
-
-# Get analyzer names and Id
-cursor.execute("""
-    SELECT SerialNumber, Id
-        FROM [SurveyorEngineering].[dbo].[Analyzer]
-""")
-
-print "\nAnalyzers in database"
-for row in cursor:
-    print row
-
-# Get measurement table column names
-print "\nMeasurement table columns"
-cursor.execute("""
-    SELECT COLUMN_NAME
-        FROM [SurveyorEngineering].INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = 'Measurement'
-""")
-
-for row in cursor:
-    print row
+surveys = cursor.fetchall()
+for survey in surveys:
+    startEpoch = survey[1]
+    endEpoch = survey[2]
+    analyzerId = survey[3]
+    cursor.execute("""
+        SELECT EpochTime, CarSpeedNorth, CarSpeedEast, WindSpeedLongitudinal
+            FROM [SurveyorEngineering].[dbo].[Measurement] WHERE
+            EpochTime &gt; %s AND EpochTime &lt; %s AND AnalyzerId = '%s'
+    """ % (startEpoch, endEpoch, analyzerId))
+    maxSpeed = []
+    for row in cursor:
+        if row[1] is not None:
+            carSpeed = abs(row[1]+1j*row[2])
+            wsLon = row[3]
+            maxSpeed.append(abs(carSpeed - wsLon))
+    if maxSpeed:
+        print "%s, %.2f" % (survey[0], max(maxSpeed))
     
-# Get survey table column names
-print "\nSurvey table columns"
-cursor.execute("""
-    SELECT COLUMN_NAME
-        FROM [SurveyorEngineering].INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = 'Survey'
-""")
+</t>
+<t tx="sze.20150507213556.1">Removed PeripheralStatus.WIND_DIRECTION_NOT_AVAILABLE, since it is not an error but a condition which holds whenever the car speed is too low.
+WIND_SPEED_CAR_SPEED_UNCORRELATED has been changed to CAR_SPEED_TOO_LARGE, since the test for large true wind speeds already signals WIND_ANOMALY.
+The CAR_SPEED_TOO_LARGE test checks if car speed exceeds CarSpeedMaximum.
+</t>
+<t tx="sze.20150507213649.1">@language python
+@tabwidth -4
+@others
+# This script is run by compiling it and executing it within an environment defined by the peripheral processor
+if "DONE" not in locals():
+    DONE = lambda: False
+runAsScript()
+</t>
+<t tx="sze.20150507213822.1">#!/usr/bin/python
+"""
+FILE:
+  processorFindWindInstNoCompass.py
 
-for row in cursor:
-    print row
+DESCRIPTION:
+  Peripheral Interface Processor script for finding true wind speed and direction
+
+SEE ALSO:
+  Specify any related information.
+
+HISTORY:
+   6-Feb-2012  sze  Initial version
+  10-Dec-2013  sze  Added modifications for maximum true wind speed (MAXTRUEWINDSPEED 
+                    parameter in the INI file). Added comments and assertions for type checking.
+   2-Jan-2014  sze  Removed processing of compass for use with Gill anemometer
+
+ Copyright (c) 2013-2014 Picarro, Inc. All rights reserved
+"""
+from Host.Common.namedtuple import namedtuple
+from collections import deque
+from Host.Common.configobj import ConfigObj
+import Queue
+import time
+
+from numpy import angle, arcsin, arctan, arctan2, asarray, column_stack, concatenate, conj
+from numpy import cos, exp, floor, imag, isfinite, isnan, mod, pi, real, sin, sqrt, tan
+
+from Host.PeriphIntrf.PeripheralStatus import PeripheralStatus
+
+
+NOT_A_NUMBER = 1e1000 / 1e1000
+SourceTuple = namedtuple('SourceTuple', ['ts', 'valTuple'])
+
+
+</t>
+<t tx="sze.20150507213822.10">def distVincenty(lat1, lon1, lat2, lon2):
+    """Calculate distance between points on ellipsoidal earth .
     
+    The WGS-84 ellipsiod is used. 
+    
+    Args:
+        lat1: Latitude in degrees of first point
+        long1: Longitude in degrees of first point
+        lat2: Latitude in degrees of second point
+        long2: Longitude in degrees of second point
+        
+    Returns:
+        Distance between points in meters
+    """
+    assert isinstance(lat1, float)
+    assert isinstance(lon1, float)
+    assert isinstance(lat2, float)
+    assert isinstance(lon2, float)
+    a = 6378137
+    b = 6356752.3142
+    f = 1 / 298.257223563
+    toRad = pi / 180.0
+    L = (lon2 - lon1) * toRad
+    U1 = arctan((1 - f) * tan(lat1 * toRad))
+    U2 = arctan((1 - f) * tan(lat2 * toRad))
+    sinU1 = sin(U1)
+    cosU1 = cos(U1)
+    sinU2 = sin(U2)
+    cosU2 = cos(U2)
+  
+    Lambda = L
+    iterLimit = 100
+    for _ in range(iterLimit):
+        sinLambda = sin(Lambda)
+        cosLambda = cos(Lambda)
+        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) +
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
+        if sinSigma == 0:
+            return 0  # co-incident points
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
+        sigma = arctan2(sinSigma, cosSigma)
+        sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
+        cosSqAlpha = 1 - sinAlpha * sinAlpha
+        if cosSqAlpha == 0:
+            cos2SigmaM = 0
+        else:
+            cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
+        C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha))
+        lambdaP = Lambda
+        Lambda = L + (1 - C) * f * sinAlpha * \
+            (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)))
+        if abs(Lambda - lambdaP) &lt;= 1.e-12:
+            break
+    else:
+        raise ValueError("Failed to converge")
+
+    uSq = cosSqAlpha * (a * a - b * b) / (b * b)
+    A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
+    B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
+                 B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    return b * A * (sigma - deltaSigma)
+
+
+</t>
+<t tx="sze.20150507213822.11">def toXY(lat, lon, lat_ref, lon_ref):
+    """Convert points on earth near a reference point to local (x,y) plane
+    
+    Args:
+        lat: Latitude of point in degrees
+        lon: Longitude of point in degrees
+        lat_ref: Latitude of reference point in degrees
+        lon_ref: Longitude of reference point in degrees
+        
+    Returns:
+        Tuple of (x,y) coordinates of point (in meters) releative to reference. x is in the 
+        easterly direction and y is in the northerly direction.
+    """
+    assert isinstance(lat, float)
+    assert isinstance(lon, float)
+    assert isinstance(lat_ref, float)
+    assert isinstance(lon_ref, float)
+    
+    x = distVincenty(lat_ref, lon_ref, lat_ref, lon)
+    if lon &lt; lon_ref:
+        x = -x
+    y = distVincenty(lat_ref, lon, lat, lon)
+    if lat &lt; lat_ref:
+        y = -y
+    return x, y
+
+
+</t>
+<t tx="sze.20150507213822.12">def syncSources(sourceList, msOffsetList, msInterval, sleepTime=0.01):
+    """Synchronize a collection of sources to a common time grid.
+    
+    Linear interpolation is used as needed.
+    
+    Args:
+        sourceList: List of sources which are descendents of RawSource
+        msOffsetList: Per-source timestamp offset to apply before synchronization. The data for the source is
+            sampled at the sum of the common (synchronized) timestamp and the offset for that source
+        msInterval: Timestamps for the synchronized data sources are integer multiples of msInterval
+        sleepTime: Time to sleep (in s) between calling getData for each source.
+    Yields: 
+        A tuple consisiting of a timestamp and a list of tuples of synchronized data, one from each source
+    """
+    assert isinstance(msInterval, (int, long, float))
+    assert isinstance(sleepTime, (int, long, float))
+    # First determine when to start synchronized timestamps
+    oldestTs = []
+    for s in sourceList:
+        assert isinstance(s, RawSource)
+        while True:
+            ts = s.getOldestTimestamp()
+            if ts is not None:
+                oldestTs.append(ts)
+                break
+            time.sleep(sleepTime)
+            
+    oldestAvailableFromAll = max([ts - offset for ts, offset in zip(oldestTs, msOffsetList)])
+    # Round to the grid of times which are multiples of msInterval
+    ts = msInterval * (1 + oldestAvailableFromAll // msInterval)
+    
+    # Get all the valTuples at the specified timestamp
+    while True:
+        valTuples = []
+        for s, offset in zip(sourceList, msOffsetList):
+            assert isinstance(offset, (int, long, float))
+            while True:
+                d = s.getData(ts + offset)
+                if DONE():
+                    return
+                if d is not None:
+                    valTuples.append(d.valTuple)
+                    break
+                time.sleep(sleepTime)
+        yield ts, valTuples
+        ts += msInterval
+        
+
+</t>
+<t tx="sze.20150507213822.13">StatusTuple = namedtuple('StatusTuple', ['status'])
+SyncCdataTuple = namedtuple('SyncCdataTuple', StatusTuple._fields + ('ts', 'lon', 'lat', 'fit', 'zPos', 'rVel'))
+DerivCdataTuple = namedtuple('DerivCdataTuple', SyncCdataTuple._fields + ('zVel', 'kappa'))
+CalibCdataTuple = namedtuple('CalibCdataTuple', DerivCdataTuple._fields + ('tVel', 'wCorr'))
+StatsCdataTuple = namedtuple('StatsCdataTuple', CalibCdataTuple._fields + ('wMean', 'aStdDev'))
+    
+
+def syncCdataSource(syncDataSrc):
+    """Convert GPS lat and lon to Cartesian coordinates.
+    
+    Represent vectors of interest as complex numbers (North)+1j*(East) so that the argument of the 
+    complex number is the bearing.
+    
+    Args:
+        syncDataSrc: Synchronized data source with GPS and anemometer data
+    Yields:
+        SyncCdataTuple objects with fields:
+            ts: millisecond timestamp
+            lon: longitude (degrees)
+            lat: latitude (degrees)
+            fit: GPS fit flag (N.B. may be interpolated)
+            
+    """
+    lon_ref, lat_ref = None, None
+    x, y = 0.0, 0.0
+    gpsOkThreshold = 4  # Need these many good GPS points before using data
+    
+    gpsCount = gpsOkThreshold
+    for ts, [gps, anem] in syncDataSrc:
+        lat, lon, fit = gps.GPS_ABS_LAT, gps.GPS_ABS_LONG, gps.GPS_FIT
+        if gpsCount &gt; 0:
+            gpsCount -= 1
+        if fit &lt; 1.0:
+            gpsCount = gpsOkThreshold  # Indicate bad GPS
+        if lat_ref is None and gpsCount == 0:
+            lat_ref, lon_ref = lat, lon
+        if lat_ref is not None:
+            if gpsCount == 0:
+                x, y = toXY(lat, lon, lat_ref, lon_ref)
+            else:
+                x, y = NOT_A_NUMBER, NOT_A_NUMBER
+        zPos = y + 1j * x
+        rVel = (anem.WS_WIND_LON + 1j * anem.WS_WIND_LAT)
+        yield SyncCdataTuple(anem.WS_STATUS, ts, lon, lat, fit, zPos, rVel)
+
+
+</t>
+<t tx="sze.20150507213822.14">def derivCdataSource(syncCdataSrc):
+    """Compute velocity and curvature of path.
+    
+    Use centered 5-point finite difference to find velocity from position and 
+    finite difference approximation to the curvature of the path.
+    
+    Args:
+        syncCdataSrc: iterable with complex position in property zPos
+    
+    Yields:
+        DerivCdataTuple containing all properties in the source followed by the complex
+            velocity and the curvature of the path.
+    """
+    dBuff = []
+    for d in syncCdataSrc:
+        dBuff.append(d)
+        dBuff[:] = dBuff[-5:]
+        if len(dBuff) == 5:
+            d4 = dBuff[4]
+            d3 = dBuff[3]
+            d2 = dBuff[2]
+            d1 = dBuff[1]
+            d0 = dBuff[0]
+            # Use higher order velocity estimate
+            zVel = (-d4.zPos + 8.0 * d3.zPos - 8.0 * d1.zPos + d0.zPos) / 12.0
+            dz = d3.zPos - d1.zPos
+            d2z = d3.zPos - 2 * d2.zPos + d1.zPos
+            r = abs(dz)
+            r2 = r * r
+            # Calculate curvature of path, with protection for low speeds
+            kappa = 4.0 * imag(conj(dz) * d2z) * r / (r2 * r2 + 4.0)
+            yield DerivCdataTuple(*(d2 + (zVel, kappa)))
+
+        
+</t>
+<t tx="sze.20150507213822.15">def trueWindSource(derivCdataSrc, distFromAxle, speedFactor=1.0, maxTrueWindSpeed=20.0):
+    """Calculates the true wind velocity and updates compass calibration.
+
+    This simply subtracts the vehicle velocity from the anemometer velocity. The calculation is done 
+    in the frame of the anemometer, which is nominally aligned with the vehicle.
+    
+    Args:
+        derivCdataSrc: Iterable containing the following properties:
+            rVel: Apparent complex wind speed along (real) and across (imaginary) vehicle
+            kappa: Inverse of radius of curvature of path
+            zVel: Complex velocity of vehicle
+        distFromAxle: Distance (m) that the GPS is in front of the rear axle of the vehicle
+        speedFactor: Apparent wind velocity is multiplied by this factor before the car velocity is subtracted
+        maxTrueWindSpeed: If the calculated wind speed exceeds this quantity, it is replaced by NOT_A_NUMBER
+        
+    Yields:
+        CalibCdataTuple objects consisting of the properties of derivCdataSrc, the calculated true wind,
+        and a list of correlations between car speed and the apparent wind velocity.
+    """
+    # If the reconstructed wind speed exceeds maxTrueWindSpeed, replace it with NaN since it is likely
+    #  that the anemometer has failed.
+    
+    assert isinstance(distFromAxle, (int, long, float))
+    assert isinstance(speedFactor, (int, long, float))
+    assert isinstance(maxTrueWindSpeed, (int, long, float))
+
+    rCorr = 0.0  # Rotation between axis of anemometer and axis of vehicle
+    iCorr = 0.0
+    optAngle = None    
+        
+    def whichBin(phi, nBins):
+        return int(min(nBins - 1, floor(nBins * (mod(phi, 2 * pi) / (2 * pi)))))
+    
+    for i, d in enumerate(derivCdataSrc):
+        # Rotate the anemometer measured wind to the axes of the vehicle
+
+        sVel = d.rVel
+        # Compute an angular correction based on the curvature of the path
+        #  and the distance between anemometer and the rear axle of the car
+        axleCorr = d.kappa * distFromAxle
+                
+        if isfinite(d.zVel):
+            # Subtract velocity of vehicle
+            cVel = speedFactor * sVel - abs(d.zVel) * exp(1j * axleCorr)
+            #
+            if abs(cVel) &gt; maxTrueWindSpeed:
+                d = d._replace(status=int(d.status) | PeripheralStatus.WIND_ANOMALY)
+                tVel = NOT_A_NUMBER
+            else:
+                # Rotate back to geographic coordinates, using GPS direction if car is travelling
+                #  quickly or the previous direction if the speed falls below 1 m/s
+                if abs(d.zVel) &gt; 1:
+                    optAngle = angle(d.zVel)
+                    
+                if optAngle is not None:
+                    tVel = cVel * exp(1j * optAngle)
+                else:
+                    tVel = NOT_A_NUMBER                    
+        else:
+            tVel = NOT_A_NUMBER
+        
+        # Determine the anemometer rotation
+        if isfinite(d.zVel):      # Reject bad GPS data
+            if abs(d.zVel) &gt; 3.0 and abs(d.zVel) &lt; 2.0 * (5.0 + abs(d.rVel)):  # Car is moving fast if speed &gt; 3m/s.
+                # Also reject points where car speed is too great.
+                rCorr += abs(d.zVel) * real(d.rVel)
+                iCorr += abs(d.zVel) * imag(d.rVel)
+                            
+        yield CalibCdataTuple(*(d + (tVel, [rCorr, iCorr])))
+
+
+</t>
+<t tx="sze.20150507213822.16">def windStatistics(windSource, statsInterval):
+    """Calculate wind statistics within a specified time interval.
+    
+    Args:
+        windSource: iterable with a property .tVel, which, for each sample, is a complex number representing
+            the instantaneous wind velocity. The real part is the component from the north and the imaginary
+            part is the component from the east.
+        statsInterval: number of samples over which to compute the mean and Yamartino standard deviation.
+        
+    Yields:
+        ResultsTuple: all statistics + system status
+    """
+    assert isinstance(statsInterval, (int, long, float))
+    wSum = 0.0
+    aSum = 0.0
+    buff = deque()
+    for w in windSource:
+        if isnan(w.tVel):
+            wSum = 0.0
+            aSum = 0.0
+            buff.clear()
+            wMean = NOT_A_NUMBER + 1j * NOT_A_NUMBER
+            aStdDev = NOT_A_NUMBER
+        else:
+            buff.append(w.tVel)
+            wSum += w.tVel
+            aSum += exp(1j * angle(w.tVel))
+            if len(buff) &gt; statsInterval:
+                oldest = buff.popleft()
+                wSum -= oldest
+                aSum -= exp(1j * angle(oldest))
+            n = len(buff)
+            wMean = wSum / n
+            if n &gt; 0:
+                vmean = abs(aSum / n)
+                eps = sqrt(1 - vmean * vmean)
+                aStdDev = arcsin(eps) * (1 + 0.1547 * eps * eps * eps)
+            else:
+                aStdDev = pi / 2.0
+            aStdDev = 180.0 / pi * aStdDev
+        yield StatsCdataTuple(*(w + (wMean, aStdDev)))
+        
+
+</t>
+<t tx="sze.20150507213822.17">def runAsScript():
+    """Run the processor
+    
+    This needs to be run in an environment in which the following are defined:
+        SENSORLIST: The list of data queues for the input sensors (GPS and Weather Station)
+        PARAMS: Parameters used by the processor script
+        WRITEOUTPUT: Function taking a timestamp and a list of outputs from the processor
+        DONE: Function which when called returns a boolean indicating if there is no more data 
+            to process
+    """
+    gpsSource = GpsSource(SENSORLIST[0])
+    wsSource = WsSource(SENSORLIST[1])
+    gpsDelay_ms = 0
+    anemDelay_ms = round(1000 * float(PARAMS.get("ANEMDELAY", 1.5)))
+    distFromAxle = float(PARAMS.get("DISTFROMAXLE", 1.5))
+    speedFactor = float(PARAMS.get('SPEEDFACTOR', 1.0))
+    maxTrueWindSpeed = float(PARAMS.get('MAXTRUEWINDSPEED', 20.0))
+
+    msOffsets = [gpsDelay_ms, anemDelay_ms]  # ms offsets for GPS and anemometer
+    syncDataSource = syncSources([gpsSource, wsSource], msOffsets, 1000)
+    statsAvg = int(PARAMS.get("STATSAVG", 10))
+    for d in windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)), 
+                                           distFromAxle, speedFactor, maxTrueWindSpeed), statsAvg):
+        rCorr, iCorr = d.wCorr
+        vCar = abs(d.zVel)
+        WRITEOUTPUT(d.ts, [float(real(d.wMean)), float(imag(d.wMean)),    # Mean wind N and E
+                           d.aStdDev,                                     # Wind direction std dev (degrees)
+                           float(real(d.zVel)), float(imag(d.zVel)),      # Car velocity N and E
+                           float(real(d.tVel)), float(imag(d.tVel)),      # Instantaneous wind N and E
+                           (180 / pi) * arctan2(iCorr, rCorr),            # Angle of anemometer from true
+                           vCar,                                          # Speed of car
+                           d.status
+        ])
+        
+
+</t>
+<t tx="sze.20150507213822.2">class RawSource(object):
+    """Interface to data being collected on a queue, allowing for interpolation to arbitrary times.
+    
+    The getData method is used to request the values at a specified timestamp. Linear
+    interpolation is used to calculate the source tuple at the desired time, unless
+    the requested timestamp is in the future of all the data present in the queue, in
+    which case None is returned. Up to maxStore previous queue entries are buffered in
+    a deque for the interpolation. If the requested timestamp is earlier than all the
+    buffered entries, the first entry in the buffer is returned.
+    
+    Args:
+        queue: queue which contains tuples consisting of a timestamp and a dictionary of
+            key-value pairs representing the data at that timestamp
+        maxStore: Maximum number of points to store for linear interpolation    
+    """
+    @others
+</t>
+<t tx="sze.20150507213822.3">def __init__(self, queue, maxStore=20):
+    assert isinstance(queue, Queue.Queue)
+    assert isinstance(maxStore, (int, long))
+    self.queue = queue
+    self.DataTuple = None
+    self.oldData = deque()
+    self.maxStore = maxStore
+    self.latestTimestamp = None
+    
+</t>
+<t tx="sze.20150507213822.4">def getDataTupleType(self, d):
+    """Construct a namedtuple type for data in the queue.
+    
+    Sets self.DataTuple to a tuple whose fields are the keys of the dictionary
+        specifying the data in the queue.
+        
+    Args:
+        d a typical datum from the queue. This should be a tuple with a timestamp as
+            the first element and a dictionary of values as the second element.
+    """
+    assert isinstance(d, tuple)
+    assert isinstance(d[0], (int, long, float))
+    assert isinstance(d[1], dict)
+    self.DataTuple = namedtuple(self.__class__.__name__ + '_tuple', sorted(d[1].keys()))
+    
+</t>
+<t tx="sze.20150507213822.5">def getFromQueue(self):
+    """Gets a datum from the queue (if available) and adds it to the deque.
+    
+    The length of the deque is always kept no greater than self.maxStore. 
+
+    Returns:
+        True if a point was transferred from the queue to the deque
+    """
+    try:
+        d = self.queue.get(block=False)
+        if d is None:
+            return False
+        if self.DataTuple is None:
+            self.getDataTupleType(d)
+        self.oldData.append(SourceTuple(d[0], self.DataTuple(**d[1])))
+        self.latestTimestamp = d[0]
+        if len(self.oldData) &gt; self.maxStore:
+            self.oldData.popleft()
+        # print self.oldData
+        return True
+    except Queue.Empty:
+        return False
+        
+</t>
+<t tx="sze.20150507213822.6">def getOldestTimestamp(self):
+    """Get the timestamp of the oldest data available in the deque.
+    
+    Returns:
+        Timestamp of oldest data available, or None if no data are available
+    """
+    if not self.oldData:
+        self.getFromQueue()
+    return self.oldData[0].ts if self.oldData else None
+
+</t>
+<t tx="sze.20150507213822.7">def getData(self, requestTs):
+    """Get data at specified timestamp using interpolation if needed.
+    
+    Args:
+        requestTs: Time stamp at which data are required.
+    Returns:
+        SourceTuple consisting of requestTs and the interpolated data.
+        None if no data are available.
+    """
+    assert isinstance(requestTs, (int, long, float))
+    while self.latestTimestamp &lt; requestTs:
+        if not self.getFromQueue():
+            return None
+    ts, savedTs = None, None
+    valTuple, savedValTuple = None, None
+    for (ts, valTuple) in reversed(self.oldData):
+        if ts &lt; requestTs:
+            alpha = float(requestTs - ts) / (savedTs - ts)
+            di = tuple([alpha * y + (1 - alpha) * y_p for y, y_p in zip(savedValTuple, valTuple)])
+            return SourceTuple(requestTs, self.DataTuple(*di))
+        else:
+            savedTs = ts
+            savedValTuple = valTuple
+    else:
+        return self.oldData[0]
+        
+
+</t>
+<t tx="sze.20150507213822.8">class GpsSource(RawSource):
+    """Source for GPS data.
+    """
+    pass
+    
+
+</t>
+<t tx="sze.20150507213822.9">class WsSource(RawSource):
+    """Source for weather station data.
+    """
+    pass
+
+
+</t>
+<t tx="sze.20150507214331.1">@language python
+@tabwidth -4
+@others
+</t>
+<t tx="sze.20150507214410.2">"""
+Copyright 2014 Picarro Inc.
+"""
+class PeripheralStatus(object):
+
+    WIND_ANOMALY = 0x0001
+    WIND_MESSAGE_CHECKSUM_ERROR = 0x0004
+    WIND_AXIS1_FAILED = 0x0008
+    WIND_AXIS2_FAILED = 0x0010
+    WIND_NONVOLATILE_CHECKSUM_ERROR = 0x0020
+    WIND_ROM_CHECKSUM_ERROR = 0x0040
+    MALFORMED_DATA_STRING = 0x0080
+    WIND_BAD_UNITS = 0x0100
+    WIND_UNSTABLE = 0x0200
+    CAR_SPEED_TOO_LARGE = 0x0400
+    WIND_SENSOR_DISCONNECTED = 0x8000
+
+    GPS_DISCONNECTED = 0x10000
+    GPS_NOT_UPDATING = 0x20000
+
+</t>
+<t tx="sze.20150507214535.1">@language python</t>
+<t tx="sze.20150507215022.1">if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
+    windSpeed = 0.0
+
+    if (not numpy.isnan(_DATA_['WIND_N'])) and (not numpy.isnan(_DATA_['WIND_E'])):
+        windN = _DATA_['WIND_N']
+        windE = _DATA_['WIND_E']
+        windSpeed = numpy.sqrt(windN * windN + windE * windE)
+
+    if unstableWindSpeed(windSpeed):
+        PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_UNSTABLE
+
+    if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
+        carSpeed = 0.0
+
+        if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
+            carN = _DATA_['CAR_VEL_N']
+            carE = _DATA_['CAR_VEL_E']
+            carSpeed = numpy.sqrt(carN * carN + carE * carE)
+
+        if (carSpeed != 0.0) and (carSpeed &gt; CarSpeedMaximum) and \
+           (numpy.absolute((windSpeed / carSpeed) - 1.0) &gt; CarWindSpeedCorrelation):
+            PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_SPEED_CAR_SPEED_UNCORRELATED</t>
+<t tx="sze.20150507215103.1">"""
+Copyright 2014 Picarro Inc.
+"""
+class PeripheralStatus(object):
+
+    WIND_ANOMALY = 0x0001
+    WIND_DIRECTION_NOT_AVAILABLE = 0x0002
+    WIND_MESSAGE_CHECKSUM_ERROR = 0x0004
+    WIND_AXIS1_FAILED = 0x0008
+    WIND_AXIS2_FAILED = 0x0010
+    WIND_NONVOLATILE_CHECKSUM_ERROR = 0x0020
+    WIND_ROM_CHECKSUM_ERROR = 0x0040
+    MALFORMED_DATA_STRING = 0x0080
+    WIND_BAD_UNITS = 0x0100
+    WIND_UNSTABLE = 0x0200
+    WIND_SPEED_CAR_SPEED_UNCORRELATED = 0x0400
+    WIND_SENSOR_DISCONNECTED = 0x8000
+
+    GPS_DISCONNECTED = 0x10000
+    GPS_NOT_UPDATING = 0x20000
+
+</t>
+<t tx="sze.20150508000110.1">@language python
+@tabwidth -4
+
+import numpy as np
+import pyodbc
+
+# constructing and running query
+server = "b-eng-db01.picarro.int"
+database = "SurveyorEngineering"
+uid = "engineering"
+password = "aDs76WoiJn"
+connection = pyodbc.connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s; PWD=%s' %
+                        (server, database, uid, password))
+cursor = connection.cursor()
+
+cursor.execute("""
+    SELECT Tag, StartEpoch, EndEpoch, AnalyzerId
+        FROM [SurveyorEngineering].[dbo].[Survey]
+""")
+surveys = cursor.fetchall()
+for survey in surveys:
+    startEpoch = survey[1]
+    endEpoch = survey[2]
+    analyzerId = survey[3]
+    cursor.execute("""
+        SELECT EpochTime, WindSpeedNorth, WindSpeedEast
+            FROM [SurveyorEngineering].[dbo].[Measurement] WHERE
+            EpochTime &gt; %s AND EpochTime &lt; %s AND AnalyzerId = '%s'
+    """ % (startEpoch, endEpoch, analyzerId))
+    maxSpeed = []
+    for row in cursor:
+        if row[1] is not None:
+            windSpeed = abs(row[1]+1j*row[2])
+            maxSpeed.append(windSpeed)
+    if maxSpeed:
+        print "%s, %.2f" % (survey[0], max(maxSpeed))
+    
+</t>
+<t tx="sze.20150508003853.1">requal-jw, 4.77
+requal_sg, 2.09
+2014-8-22-surveyareaB, 3.81
+C3D5-areaB, 3.12
+2014-8-22-surveyareaC, 6.04
+C2D15, 3.93
+C2D15, 3.82
+C2D15, 3.35
+C2D15, 3.49
+C2D15, 2.97
+C2D15, 4.67
+C2D15, 2.18
+C2D15-IsoCancel, 2.09
+C2D15-IsoCancel, 1.42
+C2D15-IsoCancel, 1.81
+C2D15-IsoCancel, 1.96
+C2D15-IsoCancel, 1.61
+C2D15-IsoCancel, 2.81
+C2D15-IsoCancel, 3.05
+C2D15-Ref, 2.90
+C2D15-Ref, 2.61
+C2D15-Ref, 2.85
+C2D15-Ref, 2.94
+C2D15-Ref, 3.20
+C2D15-Ref, 3.23
+C2D15-Ref, 3.49
+C2D15-SurveyB, 5.83
+test, 9.27
+C2D16-PositionUncertainty, 3.56
+C2D16-PositionUncertainty, 4.12
+C2D16-PositionUncertainty, 4.45
+C2D16-PositionUncertainty, 3.12
+C2D16-PositionUncertainty, 3.87
+C2D16-PositionUncertainty, 5.21
+C2D16-PositionUncertainty, 3.83
+C2D16-PositionUncertainty, 5.23
+C2D16-OrangeSmoke!, 4.89
+C2D16-OrangeSmoke!, 4.76
+hello, 2.78
+test, 6.23
+C2D17-test1140, 3.04
+C2D17-test1126, 2.67
+C2D17-test1126, 0.74
+survey test, 7.54
+2014-8-27-, 1.40
+2014-8-27-offroad1, 4.67
+off road, 5.24
+None, 10.75
+test, 3.31
+C2D18-CR-50, 4.26
+C2D18-CR-75, 4.14
+C2D18-CR-100, 3.95
+C2D18-CR-125, 4.72
+C2D18-CR-150, 4.66
+C2D18-CR-50, 4.32
+C2D18-CR-75, 3.75
+C2D18-CR-100, 4.89
+C2D18-CR-125, 4.16
+C2D18-CR-150, 4.14
+C2D18-CR-150, 4.89
+C2D18-CR-Direct, 4.96
+C2D18-CR-Direct, 4.51
+2014-8-29-ReferenceBottle, 2.84
+2014-8-27-areaABottle, 3.05
+Ref gas 1, 3.22
+Survey 1 Area A, 3.92
+2014-8-29-surveyrestarttest1, 4.75
+elliptical speed test, 5.77
+AreaC, 4.38
+Area_D, 4.87
+areab, 4.91
+areabreproducefail, 4.10
+090314_rouge_run2, 4.26
+areaA, 4.12
+areaA2, 4.47
+090314_rouge_run1, 7.83
+Alpha 2 rep, 3.30
+RB-TestDrive, 2.52
+RB-Std-TestDrive, 3.38
+test-drive, 3.81
+C3D1-RefGasCap1, 4.49
+c3d1_refbottle, 4.33
+c3d1_areaA, 4.56
+C3D1-AreaA, 5.09
+C3D1-RefGasCap2, 1.78
+C3D1-RefGasCap2, 4.11
+ref gas 1, 4.43
+C3n1-areaA, 3.11
+C3D1night_areaA, 2.33
+C3D1-refrencebottle, 2.42
+C3D1-areaA, 1.10
+C3D1-AreaA2, 1.94
+C3N1-area B, 7.73
+C3D1night_areaB, 2.00
+C3D1-AreaB, 2.21
+ref gas 2, 3.90
+C3D1-refbot, 1.91
+c3d1night_refgas2, 1.79
+Rakesh-TestSurvey-2014-09-05-2116, 2.79
+c3d2_8hr, 5.51
+C3D2-Continuous, 5.10
+C3D2-8hr, 6.91
+test-drive, 4.02
+refgas, 3.21
+RB-SanityTest-2014-09-05, 3.22
+bug930, 1.89
+C3D1-bug930, 2.03
+bug958, 2.02
+C3D2-bug958, 1.37
+C3D2night_refgas1, 2.10
+bug1154, 1.63
+C3D2-refbot, 3.19
+C3D2-areaA, 3.49
+C3D2night_areaA, 1.68
+C3D2-areaA, 1.64
+isocap1, 1.85
+isocap2, 0.62
+C3D2-isocap1, 0.59
+isocap3, 2.36
+C3D2-isocap2, 2.13
+C3D2-isocap3, 2.06
+C3D2night_refgas2, 0.67
+C3D2-areaC, 1.30
+C3D2-refbot2, 2.85
+backtest, 0.54
+C3D3-refgas1, 2.68
+C3D3-AreaA, 3.94
+C3D3-areaA, 5.33
+C3D3-areaC, 4.43
+C3D3-AreaC, 4.23
+C3D3-refgas2, 5.16
+C3D3-RefGasCap2, 4.12
+C3D4-RefGasCap, 2.11
+C3D4-AreaB, 2.92
+C3D4-refgas1, 4.36
+C3D4-areaB, 3.43
+C3D4-AreaC, 4.28
+C3D4-areaC, 4.43
+C3D4-areaA, 4.03
+C3D4-AreaA, 4.63
+C3D4-refgas2, 5.19
+C3D4-RefGasCap2, 5.39
+c3d3_refgas1, 2.35
+c3d4_refgas1, 3.90
+c3d3_areaB, 3.83
+C3D3-wholeday, 5.53
+c3d4_areaB, 3.70
+c3d4_areaC, 4.26
+c3d3_areaC, 4.93
+c3d4_areaA, 6.29
+c3d3_areaA, 4.92
+c3d4_refgas2, 5.80
+c3d3_refgas2, 2.21
+C3D3night_refgas1, 1.54
+ref gas 1, 3.41
+C3D3-Task4-RefGasCap1, 3.89
+C3n3-areaA, 2.15
+C3N3-AreaA, 2.11
+C3D3-Task5-AreaA, 2.82
+isocap1, 4.67
+c3n3_isocap1, 0.65
+c3n3_areaC, 1.56
+isocap1retry, 9.39
+isocap2, 1.84
+areaC, 1.25
+C3D3-Task10-AreaC, 1.45
+isocap3, 1.95
+c3n3_isocap2, 0.67
+C3D3-Task14-RefBotCap2, 1.89
+C3N3-Refgas2, 0.49
+avp sc1, 1.55
+avp sc1, 1.79
+avp sc1, 1.72
+c3d4_restat1, 0.77
+c3d4_restat2, 0.75
+c3d4_restat3, 0.77
+c3d4_restat4, 1.08
+rlt1, 1.02
+c3d4_restat5, 0.92
+rlt2, 1.78
+c3d4_restat6, 1.06
+rlt3, 1.42
+c3d4_restat7, 1.46
+c3d4_restat8, 1.06
+avp sc2, 2.60
+rlt4, 1.80
+c3d4_restat9, 1.68
+rlt5, 1.62
+c3d4_restat10, 1.38
+rlt6, 1.47
+c3d4_restat11, 1.49
+rlt7, 1.54
+avp sc2, 2.22
+rlt8, 1.41
+c3d4_restat12, 2.28
+avp sc3, 2.81
+c3d4_restat13, 1.93
+rlt9, 1.58
+c3d4_restat14, 1.83
+rlt10, 2.12
+avp sc3, 2.70
+rlt11, 1.59
+c3d4_restat15, 1.57
+rlt12, 1.73
+c3d4_restat16, 2.38
+c3d4_restat17, 1.13
+rlt13, 0.66
+c3d4_restat18, 0.98
+rlt14, 0.95
+rlt15, 0.94
+c3d4_restat19, 0.89
+rlt16, 1.82
+c3d4_restat20, 1.08
+avp sc4, 2.07
+rlt17, 1.11
+c3d4_restat21, 1.79
+avp sc5, 1.08
+rlt18, 0.79
+avp sc5, 3.57
+rlt19, 1.72
+c3d4_restat22, 1.33
+rlt20, 1.60
+c3d4_restat23, 1.27
+rlt21, 0.84
+c3d4_restat24, 2.17
+rlt22, 1.55
+rlt23, 1.65
+c3d4_restat25, 1.33
+c3d4_restat26, 1.98
+rlt24, 1.75
+c3d4_restat27, 2.15
+rlt25, 2.13
+c3d4_restat28, 2.19
+rlt26, 1.49
+rlt27, 1.11
+c3d4_restat29, 0.96
+rlt28, 0.61
+rlt29, 1.31
+c3d4_restat30, 1.09
+c3d4_restat31, 0.94
+rlt30, 2.06
+c3d4_restat32, 1.66
+rlt31, 1.38
+rlt32, 1.76
+c3d4_restat33, 1.41
+rlt33, 2.18
+c3d4_restat34, 2.23
+rlt34, 1.15
+c3d4_restat35, 1.27
+c3d4_restat36, 1.29
+rlt35, 1.63
+c3d4_restat37, 1.56
+rlt36, 1.29
+c3d4_restat38, 1.75
+rlt37, 1.84
+c3d4_restat39, 1.28
+rlt38, 1.77
+rlt39, 1.66
+c3d4_restat40, 1.15
+rlt40, 1.34
+c3d4_restat41, 1.50
+c3d4_restat42, 1.59
+rlt41, 1.08
+rlt42, 1.70
+c3d4_restat43, 1.66
+rlt43, 1.23
+rlt44, 1.40
+c3d4_restat44, 1.16
+c3d4_restat45, 1.22
+rlt45, 1.84
+c3d4_restat46, 2.03
+rlt46, 1.85
+c3d4_restat47, 2.16
+rlt47, 1.68
+c3d4_restat48, 1.33
+rlt48, 1.63
+c3d4_restat49, 1.32
+rlt49, 1.52
+c3d4_restat50, 1.33
+rlt50, 1.59
+c3d4_restat51, 1.52
+rlt51, 1.48
+c3d4_restat52, 1.85
+rlt52, 1.38
+c3d4_restat53, 1.81
+rlt53, 1.77
+c3d4_restat54, 1.72
+rlt54, 1.65
+c3d4_restat55, 1.41
+rlt55, 1.60
+c3d4_restat56, 2.37
+rlt56, 1.58
+rlt57, 1.50
+c3d4_restat57, 1.13
+rlt58, 1.73
+c3d4_restat58, 1.40
+rlt59, 0.89
+c3d4_restat59, 1.29
+rlt60, 1.86
+c3d4_restat60, 2.22
+rlt61, 1.54
+rlt62, 1.67
+rlt63, 2.18
+rlt64, 1.70
+rlt65, 1.76
+rlt66, 1.63
+c3d4_restat61, 1.98
+rlt67, 2.12
+rlt68, 1.42
+c3d4_restat63, 2.29
+rlt69, 2.11
+c3d4_restat64, 1.32
+rlt70, 2.20
+c3d4_restat65, 2.61
+c3d4_restat66, 2.48
+c3d4_restat67, 2.85
+rlt71, 1.99
+c3d4_restat68, 2.66
+rlt72, 2.09
+c3d4_restat69, 1.77
+c3d4_restat72, 2.70
+rlt7, 2.51
+c3d4_restat71, 2.77
+rlt73, 2.18
+c3d4_restat72(2), 2.88
+c3d4_restat73, 3.44
+rlt74, 1.72
+c3d4_restat74, 3.00
+rlt75, 2.58
+c3d4_restat75, 3.43
+rlt76, 2.76
+c3d4_restat76, 2.79
+rlt77, 1.64
+c3d4_restat77, 2.81
+rlt78, 2.17
+c3d4_restat78, 3.60
+rlt79, 2.71
+c3d4_restat79, 3.07
+c3d4_restat80, 2.99
+c3d4_restat81, 3.09
+c3d4_restat82, 1.86
+rlt80, 2.30
+c3d4_restat83, 3.17
+c3d4_restat84, 3.19
+rlt81, 1.80
+rlt82, 1.89
+c3d4_restat85, 2.47
+rlt83, 2.16
+c3d4_restat86, 3.58
+rlt84, 2.41
+rlt85, 1.97
+c3d4_restat87, 2.48
+c3d4_restat88, 2.72
+c3d4_restat89, 2.50
+c3d4_restat90, 3.19
+c3d4_restat91, 3.04
+c3d4_restat92, 2.35
+c3d4_restat93, 1.90
+c3d4_restat94, 2.10
+c3d4_restat95, 2.27
+c3d4_restat96, 2.75
+c3d4_restat97, 2.96
+c3d4_restat98, 3.32
+c3d4_restat99, 3.06
+c3d4_restat100, 4.37
+C3D4-areaB, 3.96
+c3d4_areaB, 3.90
+Lab Test 20140909, 5.51
+DrivingSurveyAreaA, 3.29
+Lab Test 20140909_2, 5.53
+Lab Test 20140909_3, 4.29
+Test 20140909_3, 5.51
+Test_20140909_4, 5.97
+Test_20140909_5, 3.20
+Test_20140909_6, 17.59
+Test 20140909_6, 5.53
+test 20140909_6, 3.67
+test 20140909_7, 5.52
+tesr, 1.74
+tesr, 0.80
+tesr, 1.22
+Test 20140909_7, 18.18
+c3n4_refgas1, 2.62
+refgas, 2.92
+C3D4-Task4-refbotcap, 3.03
+C3N4-AreaA, 2.29
+areaA, 2.16
+C3D4-Task11-AreaC, 1.89
+isocap1, 1.63
+c3n4-AreaB, 1.16
+areaB, 2.17
+C3D4-isocap1, 1.29
+C3D4-AreaB, 1.68
+c3n4_areaC, 1.04
+areaC, 3.55
+C3D4-refbot2, 0.55
+C3D5-refgas, 1.84
+Lab Test 20140910_1, 17.14
+C3D5-areaA, 2.59
+RefGasCap1, 3.53
+SurveyAreaA, 3.72
+c3d5_refgas1, 6.91
+c3d5_areaA, 3.25
+C3D5-areaB, 3.25
+avp sc 9/10 v1, 3.32
+avp sc 9/10 v1, 3.34
+avp sc 9/10 v1, 3.19
+avp sc 9/10 v1, 4.93
+C3D5-areaC, 3.34
+SurveyAreaB, 3.82
+c3d5_areaB, 3.67
+c3d5-refgas2, 4.20
+mfg test 20140910_1, 4.97
+RefGasCap2, 4.31
+c3n5_refgas1, 3.31
+refgas1, 3.38
+C3N5-Refgas1, 3.81
+c3n5_AreaA, 2.44
+AreaA, 2.50
+C3N5-Area, 1.90
+C3N5-AreaA, 2.53
+isocap1, 3.14
+isocap2, 1.39
+c3n5_isocap1, 1.35
+isocap3, 1.47
+c3n5_isocap2, 1.69
+C3N5-Isocap1, 1.27
+C3N5-Isocap2, 1.64
+c3n5_isocap3, 1.74
+aeaB, 1.65
+C3N5-isocap3, 1.29
+C3N5-isocap4, 1.42
+c3n5_areaB, 0.93
+areaC, 0.23
+areaC, 3.20
+None, 0.96
+refgas2, 2.86
+c3n5_areac, 0.28
+c3n5_refgas2, 1.68
+c3d6_refgas1, 2.01
+c3d6_areaA, 3.77
+c3d6-refgas, 3.48
+c3d6-areaA, 2.64
+RefGasCap1, 5.82
+c3d6-areaA2, 2.70
+SurveyAreaC, 3.24
+test, 3.95
+c3d6-areaB, 0.86
+c3d6-areaB2, 2.81
+c3d6-areaB2, 3.61
+c3d5_areaB, 3.62
+SurveyAreaB, 3.57
+c3d6-areaC, 3.17
+c3d6-areaCmanual, 3.82
+SurveyAreaA, 3.48
+c3d6_areaC, 3.69
+RefGasCap2, 4.91
+c3d6-refgas2, 3.16
+c3d6_refgas2, 4.66
+c3d6_refgas3, 4.91
+c3n6_refgas1, 2.38
+c3n6_AreaA, 1.15
+C3D6N-AreaA, 1.39
+isocap1, 1.18
+c3n6_refgas2, 0.82
+c3d7-areaC, 2.38
+test, 1.94
+c3d7-areaC2, 3.07
+c3d7-areaC3, 3.30
+mfgtest 20140912_1, 4.52
+Test1, 2.03
+test2, 1.91
+TestDrive, 2.50
+c3n7_refgas1, 2.39
+c3n7-refbot1, 1.45
+c3n7_areaA, 1.56
+c3n7_AreaA, 1.66
+c3n7-areaB, 3.16
+c3n7-AreaB, 1.40
+c3n7-Refgas2, 1.48
+mfg altitude test 1, 12.88
+None, 3.31
+6hrsurvey, 1.22
+6hrsurvey, 7.46
+SpeedFac, 3.31
+DrivingSurvey, 3.57
+DrivingSurvey1_2, 1.15
+DrivingSurvey1_2, 5.05
+AreaB, 5.07
+DrivingSurvey1_2, 6.41
+Refgas, 5.32
+sk-2014-09-16-1058, 2.42
+vale test 9/16, 5.05
+SpeedFactor, 3.98
+shortsurvey, 6.23
+DrivingSurvey1, 3.15
+09162014-Refgas2, 3.31
+DrivingSurvey1_2, 3.82
+09162014-Refgas3, 4.03
+DriveSurveyIsoCap, 4.26
+refgas1, 2.17
+avp 5ref gas, 2.15
+DrivingSurvey1, 6.47
+09178014-Refgas, 5.37
+5refbots, 4.50
+DrivingSurvey2, 6.26
+last2refbot, 3.21
+Palo Alto daytime extended survey 9/17, 6.99
+freedrive, 7.33
+isocapture, 7.04
+09172014-local, 4.08
+None, 0.00
+longrun, 7.04
+DriveSurvey1, 7.71
+6hrsurvey, 8.15
+09182014-8hoursurvey, 7.36
+run card ttest 1, 4.92
+run card ttest 2, 4.29
+6hrsurvey, 10.23
+DriveSurvey, 8.99
+09192014-8hoursurvey2, 6.99
+longdrive, 7.32
+lunch, 4.69
+afterlunch, 7.92
+house test, 5.65
+pointlesstest, 5.77
+avp to hay 9/19, 4.14
+avp to hay 9/19, 5.07
+avp to hay 9/19, 4.45
+avp to hay 9/19, 5.88
+house test parallel, 4.34
+house test parallel, 4.88
+avp to sc 9/20, 5.85
+avp to sc 9/20, 2.49
+8hrsurvey, 8.06
+09222014-8hoursurvey3, 6.69
+DriveSurvey, 9.33
+longsurvey_092214, 9.82
+avp to lick 9/22, 6.90
+avp to lick 9/22, 6.51
+avp after lick, 5.62
+49errefsurvey, 7.33
+49er ref survey, 6.89
+49errefsurvey2, 7.73
+49er ref survey redo, 6.81
+avp to hay 9/22, 8.47
+avp to sc 9/23, 6.25
+longsurvey_092314, 7.87
+None, 3.44
+Derek_test, 5.65
+mfg test ew 2, 5.35
+gpstest, 5.76
+None, 4.71
+mfg twst ew 3, 5.71
+avp to hay 9/23, 6.10
+avp to hay 9/23, 5.74
+avp to sc 9/24, 5.86
+quicktest, 1.74
+test1, 2.32
+DriveSurvey, 8.45
+longsurvey_092414, 5.37
+09242014-8hourdrive4, 5.42
+09242014, 4.99
+derek2_escape_20140924, 7.43
+PicarroToSite, 6.03
+Area2Run1, 1.50
+area1survey1, 1.57
+Area1-Survey1, 1.95
+Area2Run2, 1.81
+area1survey2, 1.40
+Area1-Survey2, 2.74
+area2survey1, 2.47
+Area1Run1, 4.66
+Area2-Survey1, 3.39
+Area1Run2, 4.22
+area2survey2, 2.73
+SiteToPicarro, 3.45
+Area2-Survey2, 3.04
+ToPicarro, 0.66
+ToPicarro, 4.24
+topicarro, 4.57
+refgas, 2.49
+RefGasIsoCap, 3.28
+isocap, 3.36
+john'stest, 4.32
+likkerrun, 4.75
+refgas, 3.67
+RefGasTest, 2.17
+gas station leak, 5.87
+avp to hay 9/25, 4.80
+avp to sr 9/26, 2.32
+avp pge 9/26, 3.69
+toarea, 5.51
+area2run1, 2.84
+Area1-Survey1, 2.75
+area2run2, 2.62
+Area2Run1, 2.89
+Area2-Survey1, 3.20
+Area2Run2, 2.83
+None, 4.44
+topicarro, 4.68
+area1run1, 2.56
+Test1, 3.22
+SystemTest, 5.50
+small survey, 4.97
+RefgasCap, 5.46
+RefgasCap2, 4.37
+hay speed test, 3.65
+None, 4.09
+PicarroToSite, 6.80
+lickobservedrive, 6.34
+Area2MenloPark, 2.12
+Area2-Survey1, 2.47
+Area1MenloPark, 2.22
+Area1-Survey1, 2.78
+SiteToPicarro, 4.63
+Topicarro, 5.86
+IsoCapTest, 4.61
+None, 1.56
+OsoCapTest2, 5.37
+TestLoop, 3.06
+backpackcheck, 3.35
+LoopTest, 2.80
+TestLoop2, 3.29
+Refgascap, 3.74
+backpackcheck, 5.27
+RefGas_N_IsoCap_Test, 4.04
+mfg test 1 , 3.91
+lindentree, 3.72
+Loop, 4.62
+10012014, 3.21
+benton st &amp;kensington ave, 3.32
+blackfield ct, 3.42
+benton and wood duck, 3.88
+RefGasIsoCapTest, 3.20
+robinson, 3.80
+blackcield ct, 3.53
+kensgton ct, 3.16
+Tolick, 10.05
+test isotopic 20141001, 3.56
+TestReferenceGas, 2.80
+RefGasIsoCapTest, 3.89
+RefGasIsoTCapTest, 3.41
+10022014, 6.12
+beta 4 castle way, 1.79
+beta 4 1165 saxon way, 1.85
+beta 4 1165 saxon waysurvey 2, 1.08
+beta 4 olive, 1.94
+beta 4 reyna ct, 2.17
+340 san mateo dr, 1.63
+400 claire pl, 1.67
+speed, 9.03
+cotton st 1300, 2.06
+10032014, 17.26
+ 1945 valparaiso ave, 1.56
+cottton streetjand hill vbew corner leak, 2.31
+santa clara and plive, 2.04
+Drive1, 11.42
+10032014-2, 3.76
+fremont pl, 1.41
+fremont pl 2, 1.51
+1012 college ave, 2.52
+1012 college ave 2, 2.68
+arbor rd , 1.05
+abror, 1.42
+fremont st, 2.00
+arbor 3school out, 2.58
+roble ct, 2.54
+DriveTest, 1.93
+wallea dr, 1.25
+reyna redo, 1.76
+avp to berk 10/4/14, 4.48
+avp to berk 10/4/14, 11.83
+avp from berk 10/04/14, 7.42
+avp to hay10/04/14, 3.68
+avp to hay10/04/14, 3.17
+avp to sc 10/6/14, 5.61
+avp to sc 10/6/14, 2.99
+CWP_TEST, 2.54
+10062014, 3.27
+princeton isocap, 0.15
+graceland, 6.64
+10062014-2, 4.19
+requal, 2.74
+10062014-3, 4.57
+WhiteEscapeTest, 3.47
+testsurvey, 5.11
+WhiteEscapeTest2, 3.28
+avp to hay, 3.75
+10072014-8hoursdrive, 3.37
+10072014-8hoursdrive, 8.44
+manual 0.12, 3.49
+GPS_FOV_Test1, 2.61
+avp in sc 10/7/14, 6.07
+manual 0.3, 2.64
+GPS_FOV_Test3, 1.30
+GPS_FOV_Test2, 1.26
+GPS_FOV_Test4, 0.98
+ToPaloAlto, 8.01
+manual 1.0, 3.27
+rapidresp, 2.95
+operator, 3.47
+iso repeats, 4.49
+Test, 7.13
+avp to sun 10/7, 7.11
+Quimby run, 6.73
+avp to quimby, 6.38
+None, 3.58
+None, 4.09
+avp to hay 10/7, 5.49
+None, 4.74
+survey map area xyz1, 2.12
+None, 5.96
+longsurvey, 5.98
+None, 2.86
+8hr survey, 6.31
+None, 1.84
+None, 17.38
+None, 14.12
+None, 7.84
+avp sc 1, 3.64
+bugTestAnders, 4.57
+None, 3.41
+None, 17.42
+andersBugTest2, 3.75
+Jay smoke test, 10.73
+None, 6.83
+None, 5.52
+None, 5.35
+Test survey processing, 7.92
+8hr survey, 7.29
+6hr survey, 3.90
+Drive1, 4.62
+10092014, 5.48
+DriveFOV2, 2.44
+DriveFOV3, 2.00
+DriveFOV3_10MPH, 2.40
+DriveFOV4_25MPH, 1.78
+DriveFOV2_1, 2.64
+DriveFOV2_2, 2.21
+DriveFOV2_3, 2.26
+ToMenloPark, 6.95
+10092014-8hoursdrive, 5.44
+IsoCap_MenloPark, 3.66
+isocaps, 6.28
+FastGPS-1-AreaA, 5.00
+FastGPS-2-AreaA, 3.31
+isocaps2, 3.10
+isocaps2, 5.52
+8hr survey, 7.35
+Isocap, 6.44
+FastGPS-3-AreaA, 4.74
+FastGPS-4-AreaA, 4.61
+postupgratedrive, 6.16
+Isocap2, 4.48
+Isocap3, 4.25
+Isocap4 @corner, 3.53
+FastGPS-5-PuffTest, 2.07
+controlled captures, 3.76
+quickrun, 4.45
+controlledisocaps, 3.41
+cancelledcapture, 3.00
+calibrationcap1, 4.89
+calibrationcap2, 3.17
+calibrationcap3, 2.82
+calibrationcap4, 2.79
+calibrationcap5, 2.43
+calibrationcap6, 3.06
+calibrationcap7, 2.86
+10122014-8hoursdrive, 4.88
+calibrationcap7cont, 3.03
+calibrationcap7cont2, 3.13
+calibrationcap8, 3.59
+calibrationcap8, 4.37
+calibrationcap8cont, 2.64
+calibrationcap8cont, 3.89
+calibrationcap9, 3.69
+aaatest, 0.70
+aaatest, 1.29
+TestDrive, 9.82
+alarmTest1, 1.96
+alarmRTesr3, 3.10
+isocap1, 3.80
+isocap2, 4.91
+teat, 2.71
+isocap3, 5.50
+DriveTest2, 4.32
+isocap4, 4.97
+10132014, 5.33
+TESTdrive, 3.31
+isocap5, 6.37
+isocap6, 5.60
+isocap, 3.61
+10142014, 7.19
+LongSurvey, 8.31
+pause, 6.70
+startstoptest, 7.84
+longSurvey, 9.04
+pause, 5.08
+pause, 9.34
+GPS test, 4.72
+GPS test 2, 3.79
+GPS test 3, 4.93
+10152014-8hoursdrive, 5.72
+LongSurvey, 6.62
+bug1304, 3.60
+Ref bottle test, 1.36
+alarmtest, 2.04
+alarmtest, 2.55
+bug 1304_1, 5.59
+Dual-Max, 5.66
+forced refgas fail2, 3.33
+Dual-Max, 6.00
+forced refgas fail3, 3.69
+Rapid response, 2.72
+Operator, 3.76
+C3D2-Continous, 3.84
+RapidResponseTest, 2.36
+C3D2-Continous, 0.75
+C3D2-Continuous, 2.10
+Fast-Location1, 0.86
+Fast-1.38Lm-4m-20mph, 2.07
+test-max, 2.44
+C3D2-Continuous, 2.00
+Fast-1.37Lm-4m-20mph, 1.35
+test-max, 2.27
+refgascap1, 1.94
+test-max, 3.29
+Fast-0.47Lm-5m-20mph, 3.55
+test-max, 1.32
+test-max, 4.12
+C3D2-Continuous, 2.31
+Fast-0.47Lm-5m-20mph, 3.68
+test-max, 4.29
+Fast-0.47Lm-4m-20mph, 4.08
+C3D2-Continuous, 2.86
+Fast-0.47Lm-5m-40mph, 5.16
+isoGPStest, 4.20
+Fast-123Lm-5m-20mph, 4.02
+Fast-123Lm-5m-40mph, 4.42
+surveyinredwoodcity, 5.63
+connor's test, 5.29
+Fast-1.16Lm-13m-40mph, 5.06
+Fast-1.16Lm-13m-20mph, 4.60
+refgas, 3.60
+christest, 3.77
+chris2, 1.92
+chris3, 2.06
+vale test, 2.31
+vale test2, 2.10
+Men'o8hrCD, 6.30
+RB-S1-2014-10-19-1006, 2.02
+DF1400_20141020, 4.16
+ref gas measurments, 1.90
+history, 2.56
+history, 3.98
+history, 2.58
+Menlo8hrCD, 8.38
+8 hour jon training, 8.37
+disconnect anem, 1.63
+Menlo-Night-8h, 5.55
+4hoursurvey, 7.65
+MultipleRefGasTest, 4.17
+MultiRefGas, 4.32
+MultiIsoCap, 2.87
+None, 1.85
+RefGasCap-2014-10-22-1800, 2.43
+refgas-2014-22-10-1600, 2.38
+skref-2014-22-10-1809, 2.62
+skref-2014-22-10-1809, 0.90
+vale night dual system menlo park, 5.22
+vale night dual system menlo park, 1.11
+vale night dual system menlo park, 1.09
+vale night dual system menlo park, 1.27
+vale night dual system menlo park, 4.80
+P3200-S_Beta2_Day1, 3.03
+10232014-survey1, 3.76
+P3200-S_Beta2_Day1, 5.15
+10232014-survey2, 5.54
+ref gas test, 2.00
+Ref Gas Test, 1.54
+10242014-4hoursdrive, 1.67
+Ref Gas Test, 1.32
+RB-Test- 2014-10-24-1132, 0.67
+RB-Test-2014-10-24-1139, 0.70
+RB-Test- 2014-10-24-1154, 0.47
+MtHamiltonRefGasIsoCap, 6.56
+Ref Gas Test, 1.79
+Ref Gas Test, 6.97
+4hoursdriveinmelonpark, 4.84
+10262014-8hoursdrive, 6.61
+10252014-8hr-cd, 6.81
+8 hour menlo jdang, 8.36
+10262014-8hourdrive, 8.06
+8hr-menlo-areaAB, 8.24
+enterprise, 4.77
+to sf, 6.53
+sf rr, 2.82
+10272014, 3.90
+RB-Sanity-2014-10-27-1825, 2.24
+Menlo8hrCD, 3.44
+Menlo2hrc.03, 5.07
+Menlo2hrC.3, 2.67
+MultiRefGasIsoCap, 4.16
+Menlo2hrC.03, 7.74
+Menlo2hrD.3, 1.12
+MenloC, 1.55
+MenloC, 1.97
+MenloC, 1.24
+Menlo2hrD, 2.10
+pausetest, 4.50
+pausetest, 4.30
+Menlo8hrAB, 4.86
+Menlo4hrA, 5.36
+Menlo4hrC, 19.58
+to sf, 13.42
+Menlo4hrB, 4.32
+Menlo4hrD, 2.78
+MenloLongSurveyAB, 5.71
+attitudetest, 7.07
+MenloA, 3.16
+IsotopicCaptureinRain, 1.43
+isocap, 1.62
+melonparkdriving, 6.98
+MenloSunDrive, 4.18
+Menlo4hrC, 8.35
+melonC, 3.09
+melonC, 1.83
+melonC, 2.80
+melonC, 2.37
+melonC, 2.92
+melonC, 4.42
+Menlo2hrB, 2.77
+Lisa intro, 3.42
+Lisa intro, 5.87
+Menlo2hrA, 1.76
+MenloC2Hr, 15.04
+MenloD2hr, 5.12
+MenloC, 2.13
+MenloC, 2.25
+MenloC, 1.91
+MenloC, 18.36
+MenloC, 1.79
+MenloC, 1.96
+clisa, 3.65
+MenloC, 1.71
+clisa, 3.32
+clisa, 0.83
+vale pause test, 2.20
+vale pause test, 2.36
+vale pause test, 0.47
+MelonC, 1.79
+MenloC, 0.77
+MenloAreaA, 7.52
+MenloAreaB, 2.96
+pausefunction, 16.32
+pausefunction, 2.43
+menloC, 4.82
+pausefunction, 2.72
+pausefunction, 3.48
+test1, 4.92
+test1, 1.49
+test1, 1.08
+test1, 2.20
+pausefunction, 2.55
+to sf, 6.47
+mfg test 20141106, 5.54
+mfg test2 20141106, 2.22
+Menlo-M, 16.02
+Menlo-N, 1.75
+Menlo-O, 2.37
+Menlo-iso, 0.86
+MenloD, 4.77
+MenloD, 1.99
+MenloD, 4.77
+MenloD, 1.94
+MenloC, 3.17
+MenloD, 1.90
+MenloD, 2.55
+MenloC, 2.48
+MenloD, 2.00
+MenloC, 1.90
+MenloD, 2.67
+MenloC, 1.89
+MenloC, 2.23
+MenloD, 2.42
+MenloC, 2.60
+MenloD, 2.72
+MenloC, 2.16
+MenloD, 2.33
+MenloC, 2.16
+MenloD, 2.36
+MenloC, 2.40
+MenloD, 1.69
+MenloD, 1.34
+MenloD, 1.87
+MenloC, 1.72
+MenloD, 2.24
+MenloC, 2.41
+MenloD, 2.34
+MenloC, 2.61
+mfg test2 20141107, 4.53
+MenloC, 1.76
+MenloD, 3.97
+MenloC, 2.02
+MenloD, 1.78
+MenloC, 1.92
+MenloD, 2.76
+MenloC, 2.48
+MenloD, 1.39
+MenloC, 1.73
+MenloD, 2.08
+MenloC, 1.51
+MenloD, 5.91
+MenloC, 1.31
+MenloC, 8.29
+MenloD, 1.42
+MenloC, 1.48
+MenloC, 4.52
+Nov9 Pause Test, 2.77
+Nov9 Pause Test, 2.65
+Nov9 Pause Test, 1.50
+Nov9 Pause Test, 2.62
+Nov9 Pause Test, 1.82
+Nov9 Pause Test, 1.55
+Nov9 Pause Test, 13.11
+Nov9 Pause Test, 1.77
+Nov9 Pause Test, 2.26
+Nov9 Pause Test, 1.93
+Nov9 Pause Test, 2.46
+Nov9 Pause Test, 2.05
+Nov9 Pause Test, 2.42
+Nov9 Pause Test, 4.21
+Nov9 Pause Test, 1.39
+Nov9 Pause Test, 1.93
+Nov9 Pause Test, 2.33
+Nov9 Pause Test, 2.18
+Nov9 Pause Test, 1.35
+Nov9 Pause Test, 1.49
+Nov9 Pause Test, 1.78
+Nov9 Pause Test, 2.45
+Nov9 Pause Test, 2.06
+Nov9 Pause Test, 16.44
+Nov9 Pause Test, 0.95
+Menlo-GPStest-AreaC, 3.39
+mfg test 20141110, 2.71
+GPS test corners, 1.67
+11102014, 6.27
+GPS test corners, 1.18
+Menlo-GPStest-Creek, 2.17
+vale pause test, 1.90
+vale pause test, 2.14
+vale pause test, 2.03
+vale pause test, 3.66
+Menlo-GPStest-Arbor, 3.91
+Menlo-GPStest-Arbor-2, 2.51
+Menlo-GPStest-Arbor-2, 1.62
+mfg test 20141110 2, 7.06
+Menlo-GPStest-Creek-2, 1.91
+mfg test 20141110 3, 4.20
+Menlo-GPStest-Alto, 1.96
+Menlo-GPStest-Arbor-3, 2.24
+MenloC8hr, 5.13
+mfg test 20141111 1, 3.71
+gpstest, 7.07
+gpstest, 3.21
+vale san jose leak, 4.08
+cvale pause test, 2.65
+cvale pause test, 2.14
+gpstest, 3.51
+gpstest, 2.25
+gpstest, 3.38
+gpstest, 4.72
+mfg test 20141111 2, 3.17
+MenloC, 2.40
+None, 5.31
+MenloC, 0.98
+MenloC, 3.86
+MenloC, 0.62
+MenloC, 1.27
+MenloC, 0.62
+MenloC, 1.52
+MenloC, 0.98
+MenloC, 0.67
+MenloC, 0.81
+MenloC, 0.86
+MenloC, 1.27
+MenloC, 0.70
+MenloC, 1.13
+MenloC, 0.72
+MenloC, 0.78
+MenloC, 0.96
+MenloC, 0.58
+MenloC, 0.77
+MenloC, 1.03
+MenloC, 1.54
+MenloC, 0.60
+MenloC, 0.89
+MenloC, 0.45
+MenloC, 1.07
+MenloC, 0.78
+MenloC, 1.38
+MenloC, 1.44
+MenloC, 0.93
+MenloC, 2.02
+MenloC, 1.09
+MenloC, 0.79
+MenloC, 1.13
+MenloC, 0.70
+MenloC , 0.71
+MenloC, 0.81
+MenloC, 6.36
+MenloC, 1.29
+MenloC, 3.16
+MenloC, 0.96
+MenloC1, 0.39
+MenloC, 0.84
+MenloC, 0.75
+MenloC, 1.42
+avp sc 11/12, 1.50
+avp sc 11/12, 1.36
+avp sc 11/12, 2.34
+avp sc 11/12, 1.96
+avp sc 11/12, 3.27
+avp sc 11/12, 2.81
+avp sc 11/12 a, 1.94
+avp sc 11/12, 2.47
+avp sc 11/12, 0.80
+avp sc 11/12 a, 1.29
+avp sc 11/12, 2.88
+avp sc 11/12, 1.35
+avp sc 11/12 a, 1.64
+avp sc 11/12, 1.10
+avp sc 11/12, 1.08
+avp sc 11/12 a, 1.64
+avp sc 11/12, 1.93
+avp sc 11/12 a, 3.06
+avp sc 11/12, 2.82
+zankertasman, 3.61
+avp menlo 11/12, 6.94
+RB-Test-2014-11-12-1444, 1.06
+mfg test 20141112 1, 3.14
+iso capture, 5.51
+zankertasman, 4.49
+avp menlo 11/12, 3.22
+isotopic, 3.11
+mfg test 20141112 2, 2.74
+MelnoC, 4.78
+MenloD, 1.22
+Ref, 0.66
+Ref, 0.48
+Ref, 1.55
+Ref, 1.01
+Thermo Genic, 3.19
+MenloC, 3.58
+Bio Genic, 5.24
+SantaClaraA, 3.84
+Ref, 4.34
+SantaClaraA, 3.70
+Refgas jy, 1.69
+santaclaraC, 4.26
+Refgas jy, 3.04
+santaclaraC, 3.39
+santaclaraA, 3.36
+santaclaraA, 1.09
+santaclaraA, 3.32
+SantaClaraB, 3.89
+santaclaraA, 3.38
+gpstest, 5.36
+2042 health, 1.20
+2042 Ref, 1.60
+2042 Iso PatrickHenry, 3.11
+2042 Iso Zanker, 2.41
+Redwood#, 6.56
+Redwood #, 1.99
+2042 GPS, 5.73
+Redwood M, 1.23
+Redwood M, 1.66
+Redwood#, 0.40
+Redwood#, 0.43
+Redwood#, 0.62
+Redwood#, 0.50
+Redwood#, 7.86
+Redwood #, 0.62
+Redwood #, 1.20
+Redwood #, 0.94
+Redwood #, 0.69
+Redwood #, 0.92
+Redwood #, 1.45
+CMCFT, 0.59
+CMCFT, 0.64
+CMCFT, 0.74
+CMCFT, 0.79
+CMCFT, 0.72
+CMCFT, 0.59
+CMCFT, 0.65
+Redwood O, 1.46
+Redwood #, 0.23
+Redwood O, 1.41
+2042 Ref, 4.21
+Redwood M, 0.38
+Redwood O, 0.33
+RedwoodGrey, 6.77
+biogenic capture, 2.81
+redwood grey, 8.58
+captures, 4.13
+redwood grey, 5.62
+RedwoodGrey, 7.46
+captures_bio, 6.14
+thermogenic capture, 2.83
+dfCaptures, 2.04
+dfCaptures, 3.65
+iso cap, 4.19
+captures_regas, 2.39
+captures_regas, 2.14
+RedwoodGrey, 1.26
+Redwood8hr, 4.87
+Redwood8hr, 4.01
+Redwood8hr, 0.43
+Redwood8hr, 0.32
+Redwood8hr, 0.17
+Redwood8hr, 0.45
+Redwood8hr, 2.11
+Redwood8hr, 0.73
+Emerald GPS, 5.51
+Test1, 6.51
+Day 4 Redwood, 5.45
+Day 4 Redwood, 7.46
 </t>
 </tnodes>
 </leo_file>

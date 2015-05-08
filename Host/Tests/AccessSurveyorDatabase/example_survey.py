@@ -63,4 +63,29 @@ cursor.execute("""
 
 for row in cursor:
     print row
+        
+# Get surveys
+print "\nSurveys"
+cursor.execute("""
+    SELECT Tag, StartEpoch, EndEpoch, AnalyzerId
+        FROM [SurveyorEngineering].[dbo].[Survey]
+""")
+surveys = cursor.fetchall()
+for survey in surveys:
+    startEpoch = survey[1]
+    endEpoch = survey[2]
+    analyzerId = survey[3]
+    cursor.execute("""
+        SELECT EpochTime, CarSpeedNorth, CarSpeedEast, WindSpeedLongitudinal
+            FROM [SurveyorEngineering].[dbo].[Measurement] WHERE
+            EpochTime > %s AND EpochTime < %s AND AnalyzerId = '%s'
+    """ % (startEpoch, endEpoch, analyzerId))
+    maxSpeed = []
+    for row in cursor:
+        if row[1] is not None:
+            carSpeed = abs(row[1]+1j*row[2])
+            wsLon = row[3]
+            maxSpeed.append(abs(carSpeed - wsLon))
+    if maxSpeed:
+        print "%s, %.2f" % (survey[0], max(maxSpeed))
     
