@@ -1,4 +1,5 @@
 #  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
 #  2011 0323 - removed wlm3 feedback for SID 109 (old water at 6250) and used VL3 for the
 #              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
 #              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
@@ -132,6 +133,7 @@ max_delay = 20
 FastMethaneSpectrumId = 25
 IsotopicMethaneSpectrumId = 150
 MethaneIntervalAveragingTime = 30.0
+MethaneConcThreshold = 5.0
 # System status flags
 SystemStatus = 0x00000000
 AnalyzerStatus = 0x00000000
@@ -597,12 +599,17 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE
     # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
     #  is too slow
+
     tooSlow = False
     dt = _DATA_['interval']
     if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+        if _DATA_["CH4"] > MethaneConcThreshold:
+            dt = 0.25
         _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
         tooSlow = _PERSISTENT_["fastMethaneInterval"] > FastMethaneIntervalMax
     elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+        if _DATA_["CH4"] > MethaneConcThreshold:
+            dt = 1.0
         _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
         tooSlow = _PERSISTENT_["isotopicMethaneInterval"] > IsotopicMethaneIntervalMax
     if tooSlow:

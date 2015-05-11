@@ -117,6 +117,20 @@
 <v t="sze.20150506154736.5"><vh>new:fitScriptFCDS_fast declarations</vh></v>
 </v>
 </v>
+<v t="sze.20150510223148.1" a="E"><vh>Recovered Nodes</vh>
+<v t="sze.20150510223148.2"><vh>Recovered node "&lt;&lt;analyze_FBDS declarations&gt;&gt;" from analyze_FBDS.py</vh>
+<v t="sze.20150510223148.3"><vh>old:&lt;&lt;analyze_FBDS declarations&gt;&gt;</vh></v>
+<v t="sze.20150510223148.4"><vh>new:&lt;&lt;analyze_FBDS declarations&gt;&gt;</vh></v>
+</v>
+<v t="sze.20150510223148.5"><vh>Recovered node "&lt;&lt;Setup Constants&gt;&gt;" from analyze_FBDS.py</vh>
+<v t="sze.20150510223148.6"><vh>old:&lt;&lt;Setup Constants&gt;&gt;</vh></v>
+<v t="sze.20150510223148.7"><vh>new:&lt;&lt;Setup Constants&gt;&gt;</vh></v>
+</v>
+<v t="sze.20150510223148.8"><vh>Recovered node "&lt;&lt;Update AnalyzerStatus&gt;&gt;" from analyze_FBDS.py</vh>
+<v t="sze.20150510223148.9"><vh>old:&lt;&lt;Update AnalyzerStatus&gt;&gt;</vh></v>
+<v t="sze.20150510223148.10"><vh>new:&lt;&lt;Update AnalyzerStatus&gt;&gt;</vh></v>
+</v>
+</v>
 </vnodes>
 <tnodes>
 <t tx="sze.20150504102303.2">FEDS2008 10.100.3.42
@@ -129,7 +143,9 @@ John modified Fitter_FCDS_Fast.ini so that it reports the interval and spectrumI
 
 Script0 = ../../Scripts/Fitter/fitScriptFCDS_fast.py
 Script1 = ../../../CommonConfig/Scripts/Fitter/fitScriptLaserCurrentAverage.py
-</t>
+
+It seems that we should check the concentration as well and set the acquisition rate to the nominal value whenever the concentration is greater than 5 ppm.
+In this way, slow-downs due to high concentration will not cause the alarm to be raised.</t>
 <t tx="sze.20150504115900.1">@language python
 @tabwidth -4
 @others
@@ -971,7 +987,7 @@ CHEM_DETECT = 0
 if _PERSISTENT_["init"]:
     &lt;&lt;Initialization code&gt;&gt;
     
-&lt;&lt;Handle PeakDetector&gt;&gt;    
+&lt;&lt;Handle PeakDetector&gt;&gt;
 &lt;&lt;Ensure sensor minimal log is not running&gt;&gt;
 
 
@@ -1012,6 +1028,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     &lt;&lt;Report DATA and NEW_DATA&gt;&gt;
 </t>
 <t tx="sze.20150506155630.1">#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
 #  2011 0323 - removed wlm3 feedback for SID 109 (old water at 6250) and used VL3 for the
 #              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
 #              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
@@ -1105,7 +1122,8 @@ def evalLeaves(d):
 </t>
 <t tx="sze.20150506162409.1"># Handle options from command line
 optDict = eval("dict(%s)" % _OPTIONS_)
-conc = optDict.get("conc", "high").lower()</t>
+conc = optDict.get("conc", "high").lower()
+</t>
 <t tx="sze.20150506162645.1"># Define linear transformtions for post-processing
 DELTA_iCH4 = (_INSTR_["iCH4_concentration_iso_slope"],_INSTR_["iCH4_concentration_iso_intercept"])
 RATIO_iCH4 = (_INSTR_["iCH4_concentration_r_slope"],_INSTR_["iCH4_concentration_r_intercept"])
@@ -1265,7 +1283,8 @@ try:
     _DATA_["CH4down"] = _DATA_["12CH4_down"]
     _DATA_["CH4dt"] = _DATA_["C12H4_time_separation"]
 except:
-    pass</t>
+    pass
+</t>
 <t tx="sze.20150506163215.1"># Get peripheral data
 try:
     if _PERIPH_INTRF_:
@@ -1277,7 +1296,8 @@ try:
         except Exception, err:
             print "%r" % err
 except:
-    pass</t>
+    pass
+</t>
 <t tx="sze.20150506163404.1"># Check instrument status and do not do any updates if any parameters are unlocked
 
 pressureLocked =    _INSTR_STATUS_ &amp; INSTMGR_STATUS_PRESSURE_LOCKED
@@ -1285,22 +1305,26 @@ cavityTempLocked =  _INSTR_STATUS_ &amp; INSTMGR_STATUS_CAVITY_TEMP_LOCKED
 warmboxTempLocked = _INSTR_STATUS_ &amp; INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 warmingUp =         _INSTR_STATUS_ &amp; INSTMGR_STATUS_WARMING_UP
 systemError =       _INSTR_STATUS_ &amp; INSTMGR_STATUS_SYSTEM_ERROR
-good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)</t>
+good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
+</t>
 <t tx="sze.20150506163500.1">nowTs = getTimestamp()
 delay = nowTs-_DATA_["timestamp"]
 if delay &gt; max_delay*1000:
     Log("Large data processing latency, check excessive processor use",
         Data=dict(delay='%.1f s' % (0.001*delay,)),Level=2)
-    good = False</t>
+    good = False
+</t>
 <t tx="sze.20150506163547.1">if _DATA_['WarmBoxTemp'] &gt; Warmbox_setpoint - WB_TEMP_ISO_THRESHOLD and _DATA_['WarmBoxTemp'] &lt; Warmbox_setpoint + WB_TEMP_ISO_THRESHOLD:
     WBisoTempLocked = True
 else:
-    WBisoTempLocked = False</t>
+    WBisoTempLocked = False
+</t>
 <t tx="sze.20150506163653.1"># Turn off heater on first good data
 if _PERSISTENT_["turnOffHeater"]:
     Log("Heater turned off")
     _DRIVER_.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER","HEATER_CNTRL_DisabledState")
-    _PERSISTENT_["turnOffHeater"] = False</t>
+    _PERSISTENT_["turnOffHeater"] = False
+</t>
 <t tx="sze.20150506163722.1"># Wind anomaly handling
 validWindCheck = True
 windFields = ['PERIPHERAL_STATUS', 'CAR_SPEED', 'GPS_FIT']
@@ -1319,7 +1343,8 @@ if validWindCheck:
     else:
         if _PERSISTENT_['inactiveForWind']:
             Log("Survey status back to active after wind anomaly")
-            _PERSISTENT_['inactiveForWind'] = False</t>
+            _PERSISTENT_['inactiveForWind'] = False
+</t>
 <t tx="sze.20150506163829.1">if _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
     try:
         ch4_adjust = _DATA_["adjust_5"]
@@ -1381,7 +1406,8 @@ elif _DATA_["species"] == 153: # Update the offset for virtual laser 6
         _PERSISTENT_["wlm6_offset"] = newOffset0
         _FREQ_CONV_.setWlmOffset(6,float(newOffset0))
     except:
-        pass</t>
+        pass
+</t>
 <t tx="sze.20150506164313.1"># Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
 # _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
 for colname in _OLD_DATA_:    #  new ChemDetect section
@@ -1395,7 +1421,8 @@ if _OLD_DATA_["species"][-1].value == 150 and not _DATA_['fast_flag']:
 
     if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
         pass
-        #print "WARNING: ChemDetect Status is RED"</t>
+        #print "WARNING: ChemDetect Status is RED"
+</t>
 <t tx="sze.20150506164529.1">if 'MOBILE_FLOW' in _DATA_:
     if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
         AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
@@ -1404,7 +1431,8 @@ if _OLD_DATA_["species"][-1].value == 150 and not _DATA_['fast_flag']:
         AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
 
     elif _DATA_['MOBILE_FLOW'] &gt; IntakeFlowRateMax and alarmActive and alarmActiveState:
-        AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask</t>
+        AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
+</t>
 <t tx="sze.20150506164740.1">windSpeed = 0.0
 if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
 
@@ -1425,15 +1453,21 @@ if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
         carSpeed = numpy.sqrt(carN * carN + carE * carE)
 
 if carSpeed &gt; CarSpeedMaximum:
-    PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE</t>
+    PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE
+</t>
 <t tx="sze.20150506164942.1"># Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
 #  is too slow
+
 tooSlow = False
 dt = _DATA_['interval']
 if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+    if _DATA_["CH4"] &gt; MethaneConcThreshold:
+        dt = 0.25
     _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
     tooSlow = _PERSISTENT_["fastMethaneInterval"] &gt; FastMethaneIntervalMax
 elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+    if _DATA_["CH4"] &gt; MethaneConcThreshold:
+        dt = 1.0
     _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
     tooSlow = _PERSISTENT_["isotopicMethaneInterval"] &gt; IsotopicMethaneIntervalMax
 if tooSlow:
@@ -1470,9 +1504,11 @@ if wlm6OffsetMean != 0.0:
 if 0 != (AnalyzerStatus &amp; AnalyzerStatusDataRateMask):
     AnalyzerStatus |= AnalyzerStatusInvalidDataMask
 
-        </t>
+        
+</t>
 <t tx="sze.20150506165859.1">SystemStatusPeripheralMask = 0x00000001
-SystemStatusAnalyzerMask = 0x00000002</t>
+SystemStatusAnalyzerMask = 0x00000002
+</t>
 <t tx="sze.20150506165934.1">AnalyzerStatusIntakeFlowRateMask = 0x00000001
 AnalyzerStatusCavityBaselineLossMask = 0x00000002
 AnalyzerStatusSamplingIntervalMask = 0x00000004
@@ -1485,7 +1521,8 @@ AnalyzerStatusIntakeFlowDisconnected = 0x00000100
 AnalyzerStatusChemDetectMask = 0x00000200
 AnalyzerStatusDataRateMask = 0x00000400
 # The following bit invalidates the data (shown as a red path)
-AnalyzerStatusInvalidDataMask = 0x80000000</t>
+AnalyzerStatusInvalidDataMask = 0x80000000
+</t>
 <t tx="sze.20150506170022.1"># Alarm parameters
 IntakeFlowRateMin = 3.75
 IntakeFlowRateMax = 5.0
@@ -1506,10 +1543,12 @@ IsotopicMethaneIntervalMax = 1.6
 <t tx="sze.20150506170104.1"># System status flags
 SystemStatus = 0x00000000
 AnalyzerStatus = 0x00000000
-PeripheralStatus = 0x00000000</t>
+PeripheralStatus = 0x00000000
+</t>
 <t tx="sze.20150506170135.1"># Valve masks
 VALVE_MASK_ACTIVE = 0x10
-VALVE_MASK_CHECK_ALARM = 0x03</t>
+VALVE_MASK_CHECK_ALARM = 0x03
+</t>
 <t tx="sze.20150506170401.1">_PERSISTENT_["turnOffHeater"] = True
 _PERSISTENT_["wlm1_offset"] = 0.0
 _PERSISTENT_["wlm2_offset"] = 0.0
@@ -1585,7 +1624,8 @@ _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
 fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
 fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
-_PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']</t>
+_PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']
+</t>
 <t tx="sze.20150506170534.1"># read peak detect state register
 # # Enumerated definitions for PEAK_DETECT_CNTRL_StateType
 # PEAK_DETECT_CNTRL_StateType = c_uint
@@ -1601,7 +1641,8 @@ _PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']</t>
 peakDetectState = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER') #integer value, see interface.py
 _PERSISTENT_["peakDetectState"].append(peakDetectState)
 #read peak detect register to get number of remaining samples
-remainingPeakSamples = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER') #number of samples integer, samples are 0.2 seconds</t>
+remainingPeakSamples = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER') #number of samples integer, samples are 0.2 seconds
+</t>
 <t tx="sze.20150506170721.1">try:
     if _DATA_LOGGER_ and _DATA_LOGGER_.DATALOGGER_logEnabledRpc('DataLog_Sensor_Minimal'):
         try:
@@ -1609,13 +1650,15 @@ remainingPeakSamples = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_
         except Exception, err:
             pass###print "_DATA_LOGGER_ Error: %r" % err
 except:
-    pass</t>
+    pass
+</t>
 <t tx="sze.20150506181637.1"># Update the upper alarm status bits with some additional instrument status
 # flags.
 alarmActive = (int(_DATA_['ValveMask']) &amp; VALVE_MASK_CHECK_ALARM) == 0
 
 alarmActiveState = numpy.sum( numpy.abs( numpy.diff(_PERSISTENT_["peakDetectState"]) ) ) &lt; 1
-###print "alarmActive: " + str(alarmActive) + ", alarmActiveState: " + str(alarmActiveState)</t>
+###print "alarmActive: " + str(alarmActive) + ", alarmActiveState: " + str(alarmActiveState)
+</t>
 <t tx="sze.20150506181818.1">if _OLD_DATA_["species"][-1].value == 150:
     if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
         CHEM_DETECT = 1.0  # BAD data
@@ -1626,12 +1669,14 @@ else:
 
 _PERSISTENT_["ChemDetect_previous"] = CHEM_DETECT
 if CHEM_DETECT == 1.0:
-    AnalyzerStatus |= AnalyzerStatusChemDetectMask</t>
+    AnalyzerStatus |= AnalyzerStatusChemDetectMask
+</t>
 <t tx="sze.20150506181904.1">if ('PERIPHERAL_STATUS' in _NEW_DATA_) and (int(_NEW_DATA_['PERIPHERAL_STATUS'])) &gt; 0:
     SystemStatus |= SystemStatusPeripheralMask
 
 if AnalyzerStatus &gt; 0:
-    SystemStatus |= SystemStatusAnalyzerMask</t>
+    SystemStatus |= SystemStatusAnalyzerMask
+</t>
 <t tx="sze.20150506182103.1">_REPORT_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
 _REPORT_["wlm2_offset"] = _PERSISTENT_["wlm2_offset"]
 _REPORT_["wlm3_offset"] = _PERSISTENT_["wlm3_offset"]
@@ -1648,7 +1693,8 @@ _REPORT_["CHEM_DETECT"] = CHEM_DETECT
 _REPORT_["WBisoTempLocked"] = WBisoTempLocked
 _REPORT_["fineLaserCurrent_6_mean"] = _PERSISTENT_["fineLaserCurrent_6_mean"]  #report 0 for VL6 made to prevent new Column upon mode switch when WL is on to track CO2
 _REPORT_["fastMethaneInterval"] = _PERSISTENT_["fastMethaneInterval"]
-_REPORT_["isotopicMethaneInterval"] = _PERSISTENT_["isotopicMethaneInterval"]</t>
+_REPORT_["isotopicMethaneInterval"] = _PERSISTENT_["isotopicMethaneInterval"]
+</t>
 <t tx="sze.20150506182135.1">for k in _DATA_.keys():
     _REPORT_[k] = _DATA_[k]
 
@@ -1656,8 +1702,10 @@ for k in _NEW_DATA_.keys():
     if k.startswith("Delta"):
         _REPORT_[k] = clipReportData(_NEW_DATA_[k])
     else:
-        _REPORT_[k] = _NEW_DATA_[k]</t>
-<t tx="sze.20150506182201.1">exec _PERSISTENT_["adjustOffsetScript"] in globals()</t>
+        _REPORT_[k] = _NEW_DATA_[k]
+</t>
+<t tx="sze.20150506182201.1">exec _PERSISTENT_["adjustOffsetScript"] in globals()
+</t>
 <t tx="sze.20150506185525.1">@language python</t>
 <t tx="sze.20150506194536.1"># Limits for delta values reported
 REPORT_UPPER_LIMIT = 20000.0
@@ -1675,7 +1723,9 @@ max_delay = 20
 # Constants for calculating mean interval between data points
 FastMethaneSpectrumId = 25
 IsotopicMethaneSpectrumId = 150
-MethaneIntervalAveragingTime = 30.0</t>
+MethaneIntervalAveragingTime = 30.0
+MethaneConcThreshold = 5.0
+</t>
 <t tx="sze.20150507075702.1">@language python
 @tabwidth -4
 @others
@@ -3939,5 +3989,320 @@ Test1, 6.51
 Day 4 Redwood, 5.45
 Day 4 Redwood, 7.46
 </t>
+<t tx="sze.20150510223148.1"></t>
+<t tx="sze.20150510223148.10"># Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
+#  is too slow
+
+tooSlow = False
+dt = _DATA_['interval']
+if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+    if _DATA_["CH4"] &gt; MethaneConcThreshold:
+        dt = 0.25
+    _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+    tooSlow = _PERSISTENT_["fastMethaneInterval"] &gt; FastMethaneIntervalMax
+elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+    if _DATA_["CH4"] &gt; MethaneConcThreshold:
+        dt = 1.0
+    _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+    tooSlow = _PERSISTENT_["isotopicMethaneInterval"] &gt; IsotopicMethaneIntervalMax
+if tooSlow:
+    AnalyzerStatus |= AnalyzerStatusDataRateMask
+
+if _DATA_['CFADS_base'] &gt; CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
+    AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
+
+if (_NEW_DATA_['delta_interval'] &gt; DeltaIntervalMax) and (not alarmActive) and alarmActiveState:
+    AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
+
+if _DATA_['spect_latency'] &gt; SpectrumLatencyMax:
+    AnalyzerStatus |= AnalyzerStatusRingdownRateMask
+
+if numpy.absolute(_DATA_['ch4_high_shift']) &gt; WlmShiftMax:
+    AnalyzerStatus |= AnalyzerStatusWlmShiftMask
+
+if numpy.absolute(_DATA_['ch4_high_adjust']) &gt; WlmAdjustMax:
+    AnalyzerStatus |= AnalyzerStatusWlmAdjustMask
+
+if (numpy.absolute(_DATA_['ch4_high_shift']) &gt;= WlmShiftAdjustLimit) and (numpy.absolute(_DATA_['ch4_high_adjust']) &lt; WlmShiftAdjustLimit):
+    AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
+
+_PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
+wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
+wlm6OffsetMax = max(_PERSISTENT_['wlmOffsetBuffer'])
+wlm6OffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
+
+if wlm6OffsetMean != 0.0:
+    if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) &gt; WlmTargetFreqMaxDrift:
+        AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
+        
+# Set the InvalidData mask in the AnalyzerStatus. Currently it is set only if the data rate is too low.
+if 0 != (AnalyzerStatus &amp; AnalyzerStatusDataRateMask):
+    AnalyzerStatus |= AnalyzerStatusInvalidDataMask
+
+        
+</t>
+<t tx="sze.20150510223148.2">(uncached) sze.20150506155630.1
+Diff...
+- #  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+  #  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+  #  2011 0323 - removed wlm3 feedback for SID 109 (old water at 6250) and used VL3 for the
+  #              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
+  #              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
+  #  2011 0727 - modified isotopic methane analysis to use new schemes that report the entire spectrum in one piece
+  # 2014 0602 removed unnecessary sections left from CFI
+  #           added flag for isotopic capture when WB within .07 degC tolerance
+  #           improved reporting structure for Peripheral health monitoring
+  
+  import os
+  import sys
+  import inspect
+  import traceback
+  import collections
+  
+  from math import exp
+  
+  import numpy
+  from numpy import mean, isfinite, isnan
+  
+  from Host import PeriphIntrf
+  from Host.Common.EventManagerProxy import Log, LogExc
+  from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+  from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
+  from Host.Common.timestamp import getTimestamp
+  
+  here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
+  if here not in sys.path:
+      sys.path.append(here)
+  
+  from Chemdetect.instructionprocess import InstructionProcess # new ChemDetect
+  from Host.Common.CustomConfigObj import CustomConfigObj # new ChemDetect
+  
+</t>
+<t tx="sze.20150510223148.3">#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+#  2011 0323 - removed wlm3 feedback for SID 109 (old water at 6250) and used VL3 for the
+#              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
+#              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
+#  2011 0727 - modified isotopic methane analysis to use new schemes that report the entire spectrum in one piece
+# 2014 0602 removed unnecessary sections left from CFI
+#           added flag for isotopic capture when WB within .07 degC tolerance
+#           improved reporting structure for Peripheral health monitoring
+
+import os
+import sys
+import inspect
+import traceback
+import collections
+
+from math import exp
+
+import numpy
+from numpy import mean, isfinite, isnan
+
+from Host import PeriphIntrf
+from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
+from Host.Common.timestamp import getTimestamp
+
+here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
+if here not in sys.path:
+    sys.path.append(here)
+
+from Chemdetect.instructionprocess import InstructionProcess # new ChemDetect
+from Host.Common.CustomConfigObj import CustomConfigObj # new ChemDetect
+
+</t>
+<t tx="sze.20150510223148.4">#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+#  2011 0323 - removed wlm3 feedback for SID 109 (old water at 6250) and used VL3 for the
+#              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
+#              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
+#  2011 0727 - modified isotopic methane analysis to use new schemes that report the entire spectrum in one piece
+# 2014 0602 removed unnecessary sections left from CFI
+#           added flag for isotopic capture when WB within .07 degC tolerance
+#           improved reporting structure for Peripheral health monitoring
+
+import os
+import sys
+import inspect
+import traceback
+import collections
+
+from math import exp
+
+import numpy
+from numpy import mean, isfinite, isnan
+
+from Host import PeriphIntrf
+from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
+from Host.Common.timestamp import getTimestamp
+
+here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
+if here not in sys.path:
+    sys.path.append(here)
+
+from Chemdetect.instructionprocess import InstructionProcess # new ChemDetect
+from Host.Common.CustomConfigObj import CustomConfigObj # new ChemDetect
+
+</t>
+<t tx="sze.20150510223148.5">(uncached) sze.20150506194536.1
+Diff...
+  # Limits for delta values reported
+  REPORT_UPPER_LIMIT = 20000.0
+  REPORT_LOWER_LIMIT = -20000.0
+  # WB Temperature Proximity condition for isotopic measurement
+  WB_TEMP_ISO_THRESHOLD = 0.07
+  # SpectrumIds used
+  TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
+  # Parameters for updating WLM Offsets
+  max_adjust = 1.0e-5
+  max_adjust_H2O = 1.0e-4
+  damp = 0.2
+  # Maximum delay before signalling data manager latency
+  max_delay = 20
+  # Constants for calculating mean interval between data points
+  FastMethaneSpectrumId = 25
+  IsotopicMethaneSpectrumId = 150
+- MethaneIntervalAveragingTime = 30.0
+?                                    -
++ MethaneIntervalAveragingTime = 30.0- MethaneConcThreshold = 5.0
+</t>
+<t tx="sze.20150510223148.6"># Limits for delta values reported
+REPORT_UPPER_LIMIT = 20000.0
+REPORT_LOWER_LIMIT = -20000.0
+# WB Temperature Proximity condition for isotopic measurement
+WB_TEMP_ISO_THRESHOLD = 0.07
+# SpectrumIds used
+TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
+# Parameters for updating WLM Offsets
+max_adjust = 1.0e-5
+max_adjust_H2O = 1.0e-4
+damp = 0.2
+# Maximum delay before signalling data manager latency
+max_delay = 20
+# Constants for calculating mean interval between data points
+FastMethaneSpectrumId = 25
+IsotopicMethaneSpectrumId = 150
+MethaneIntervalAveragingTime = 30.0</t>
+<t tx="sze.20150510223148.7"># Limits for delta values reported
+REPORT_UPPER_LIMIT = 20000.0
+REPORT_LOWER_LIMIT = -20000.0
+# WB Temperature Proximity condition for isotopic measurement
+WB_TEMP_ISO_THRESHOLD = 0.07
+# SpectrumIds used
+TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
+# Parameters for updating WLM Offsets
+max_adjust = 1.0e-5
+max_adjust_H2O = 1.0e-4
+damp = 0.2
+# Maximum delay before signalling data manager latency
+max_delay = 20
+# Constants for calculating mean interval between data points
+FastMethaneSpectrumId = 25
+IsotopicMethaneSpectrumId = 150
+MethaneIntervalAveragingTime = 30.0
+MethaneConcThreshold = 5.0
+</t>
+<t tx="sze.20150510223148.8">(uncached) sze.20150506164942.1
+Diff...
+  # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
+  #  is too slow
+- 
+  tooSlow = False
+  dt = _DATA_['interval']
+  if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+-     if _DATA_["CH4"] &gt; MethaneConcThreshold:
+-         dt = 0.25
+      _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+      tooSlow = _PERSISTENT_["fastMethaneInterval"] &gt; FastMethaneIntervalMax
+  elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+-     if _DATA_["CH4"] &gt; MethaneConcThreshold:
+-         dt = 1.0
+      _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+      tooSlow = _PERSISTENT_["isotopicMethaneInterval"] &gt; IsotopicMethaneIntervalMax
+  if tooSlow:
+      AnalyzerStatus |= AnalyzerStatusDataRateMask
+  
+  if _DATA_['CFADS_base'] &gt; CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
+      AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
+  
+  if (_NEW_DATA_['delta_interval'] &gt; DeltaIntervalMax) and (not alarmActive) and alarmActiveState:
+      AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
+  
+  if _DATA_['spect_latency'] &gt; SpectrumLatencyMax:
+      AnalyzerStatus |= AnalyzerStatusRingdownRateMask
+  
+  if numpy.absolute(_DATA_['ch4_high_shift']) &gt; WlmShiftMax:
+      AnalyzerStatus |= AnalyzerStatusWlmShiftMask
+  
+  if numpy.absolute(_DATA_['ch4_high_adjust']) &gt; WlmAdjustMax:
+      AnalyzerStatus |= AnalyzerStatusWlmAdjustMask
+  
+  if (numpy.absolute(_DATA_['ch4_high_shift']) &gt;= WlmShiftAdjustLimit) and (numpy.absolute(_DATA_['ch4_high_adjust']) &lt; WlmShiftAdjustLimit):
+      AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
+  
+  _PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
+  wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
+  wlm6OffsetMax = max(_PERSISTENT_['wlmOffsetBuffer'])
+  wlm6OffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
+  
+  if wlm6OffsetMean != 0.0:
+      if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) &gt; WlmTargetFreqMaxDrift:
+          AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
+          
+  # Set the InvalidData mask in the AnalyzerStatus. Currently it is set only if the data rate is too low.
+  if 0 != (AnalyzerStatus &amp; AnalyzerStatusDataRateMask):
+      AnalyzerStatus |= AnalyzerStatusInvalidDataMask
+  
+-         
+?         -
++         </t>
+<t tx="sze.20150510223148.9"># Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
+#  is too slow
+tooSlow = False
+dt = _DATA_['interval']
+if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+    _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+    tooSlow = _PERSISTENT_["fastMethaneInterval"] &gt; FastMethaneIntervalMax
+elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+    _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+    tooSlow = _PERSISTENT_["isotopicMethaneInterval"] &gt; IsotopicMethaneIntervalMax
+if tooSlow:
+    AnalyzerStatus |= AnalyzerStatusDataRateMask
+
+if _DATA_['CFADS_base'] &gt; CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
+    AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
+
+if (_NEW_DATA_['delta_interval'] &gt; DeltaIntervalMax) and (not alarmActive) and alarmActiveState:
+    AnalyzerStatus |= AnalyzerStatusSamplingIntervalMask
+
+if _DATA_['spect_latency'] &gt; SpectrumLatencyMax:
+    AnalyzerStatus |= AnalyzerStatusRingdownRateMask
+
+if numpy.absolute(_DATA_['ch4_high_shift']) &gt; WlmShiftMax:
+    AnalyzerStatus |= AnalyzerStatusWlmShiftMask
+
+if numpy.absolute(_DATA_['ch4_high_adjust']) &gt; WlmAdjustMax:
+    AnalyzerStatus |= AnalyzerStatusWlmAdjustMask
+
+if (numpy.absolute(_DATA_['ch4_high_shift']) &gt;= WlmShiftAdjustLimit) and (numpy.absolute(_DATA_['ch4_high_adjust']) &lt; WlmShiftAdjustLimit):
+    AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
+
+_PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
+wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
+wlm6OffsetMax = max(_PERSISTENT_['wlmOffsetBuffer'])
+wlm6OffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
+
+if wlm6OffsetMean != 0.0:
+    if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) &gt; WlmTargetFreqMaxDrift:
+        AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
+        
+# Set the InvalidData mask in the AnalyzerStatus. Currently it is set only if the data rate is too low.
+if 0 != (AnalyzerStatus &amp; AnalyzerStatusDataRateMask):
+    AnalyzerStatus |= AnalyzerStatusInvalidDataMask
+
+        </t>
 </tnodes>
 </leo_file>
