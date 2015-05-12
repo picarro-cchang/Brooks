@@ -685,7 +685,8 @@ class AutosamplerFrame(AutosamplerGUI):
         # Need to implement:
         # This is hardcoded to tray 1, need to add support for 2 trays if we ever get that working in hardware
         timeString = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-        return (timeString, 1, self.v, self.jobNum, self.method, self.errCode)
+        return (timeString, self.tray, self.v, self.jobNum, self.method, self.errCode)
+        #return (timeString, 1, self.v, self.jobNum, self.method, self.errCode)
 
     def getInjected(self):
         return self.injectionComplete
