@@ -114,8 +114,8 @@ WlmShiftAdjustLimit = 5e-5
 WlmTargetFreqMaxDrift = 0.05
 WlmTargetFreqHistoryBufferLen = 6000
 CavityBaselineLossScaleFactor = 1.1
-FastMethaneIntervalMax = 0.4
-IsotopicMethaneIntervalMax = 1.6
+FastMethaneIntervalMax = 0.5
+IsotopicMethaneIntervalMax = 2.0
 # Limits for delta values reported
 REPORT_UPPER_LIMIT = 20000.0
 REPORT_LOWER_LIMIT = -20000.0

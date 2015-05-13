@@ -1537,8 +1537,8 @@ WlmShiftAdjustLimit = 5e-5
 WlmTargetFreqMaxDrift = 0.05
 WlmTargetFreqHistoryBufferLen = 6000
 CavityBaselineLossScaleFactor = 1.1
-FastMethaneIntervalMax = 0.4
-IsotopicMethaneIntervalMax = 1.6
+FastMethaneIntervalMax = 0.5
+IsotopicMethaneIntervalMax = 2.0
 </t>
 <t tx="sze.20150506170104.1"># System status flags
 SystemStatus = 0x00000000
