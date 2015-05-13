@@ -1,4 +1,5 @@
 #  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
+#  Data analysis script for the experimental instrument combining CBDS with CFADS for methane and water
 #  2011 0323 - removed wlm3 feedback for SID 109 (old water at 6250) and used VL3 for the
 #              high precision CH4 measurement, SID 25.  Now wlm4 is used exclusively for the
 #              low precision CH4 measurement, SID 29, which is also used for iCO2 correction.
@@ -31,48 +32,6 @@ if here not in sys.path:
 from Chemdetect.instructionprocess import InstructionProcess # new ChemDetect
 from Host.Common.CustomConfigObj import CustomConfigObj # new ChemDetect
 
-CHEM_DETECT = 0
-
-SystemStatusPeripheralMask = 0x00000001
-SystemStatusAnalyzerMask = 0x00000002
-
-AnalyzerStatusIntakeFlowRateMask = 0x00000001
-AnalyzerStatusCavityBaselineLossMask = 0x00000002
-AnalyzerStatusSamplingIntervalMask = 0x00000004
-AnalyzerStatusRingdownRateMask = 0x00000008
-AnalyzerStatusWlmShiftMask = 0x00000010
-AnalyzerStatusWlmAdjustMask = 0x00000020
-AnalyzerStatusWlmShiftAdjustCorrelationMask = 0x00000040
-AnalyzerStatusWlmTargetFreqMask = 0x00000080
-AnalyzerStatusIntakeFlowDisconnected = 0x00000100
-AnalyzerStatusChemDetectMask = 0x00000200
-
-# Alarm parameters
-IntakeFlowRateMin = 3.75
-IntakeFlowRateMax = 5.0
-IntakeFlowRateDisconnected = -9999.0
-WindSpeedHistoryBufferLen = 100
-CarSpeedMaximum = 4.47
-CarWindSpeedCorrelation = 0.75
-DeltaIntervalMax = 1.6
-SpectrumLatencyMax = 3.0
-WlmShiftMax = 2e-3
-WlmAdjustMax = 2e-3
-WlmShiftAdjustLimit = 5e-5
-WlmTargetFreqMaxDrift = 0.05
-WlmTargetFreqHistoryBufferLen = 6000
-CavityBaselineLossScaleFactor = 1.1
-
-GPS_GOOD = 2.0
-
-# System status flags
-SystemStatus = 0x00000000
-AnalyzerStatus = 0x00000000
-PeripheralStatus = 0x00000000
-
-# Valve masks
-VALVE_MASK_ACTIVE = 0x10
-VALVE_MASK_CHECK_ALARM = 0x03
 
 # From fitterThread.py -- should be integrated into DM to use the "flat" .ini structure of FitterConfig.ini
 def evalLeaves(d):
@@ -86,6 +45,102 @@ def evalLeaves(d):
                 pass
     return d
 
+
+def clipReportData(value):
+    if value > REPORT_UPPER_LIMIT:
+        return REPORT_UPPER_LIMIT
+    elif  value < REPORT_LOWER_LIMIT:
+        return REPORT_LOWER_LIMIT
+    else:
+        return value
+
+def applyLinear(value,xform):
+    return xform[0]*value + xform[1]
+
+def apply2Linear(value,xform1,xform2):
+    return applyLinear(applyLinear(value,xform1),xform2)
+
+def protDivide(num,den):
+    if den != 0:
+        return num/den
+    return 0
+
+def expAverage(xavg,x,dt,tau):
+    if xavg is None:
+        xavg = x
+    else:
+        xavg = (1.0-exp(-dt/tau))*x + exp(-dt/tau)*xavg
+    return xavg
+
+def boxAverage(buffer,x,t,tau):
+    buffer.append((x,t))
+    while t-buffer[0][1] > tau:
+        buffer.pop(0)
+    return mean([d for (d,t) in buffer])
+
+def unstableWindSpeed(windSpeed):
+    _PERSISTENT_['windSpeedBuffer'].append(windSpeed)
+    windSpeedHistoryStd = numpy.std(_PERSISTENT_['windSpeedBuffer'], ddof=1)
+    return windSpeed > (2.6 * windSpeedHistoryStd)
+
+
+CHEM_DETECT = 0
+SystemStatusPeripheralMask = 0x00000001
+SystemStatusAnalyzerMask = 0x00000002
+AnalyzerStatusIntakeFlowRateMask = 0x00000001
+AnalyzerStatusCavityBaselineLossMask = 0x00000002
+AnalyzerStatusSamplingIntervalMask = 0x00000004
+AnalyzerStatusRingdownRateMask = 0x00000008
+AnalyzerStatusWlmShiftMask = 0x00000010
+AnalyzerStatusWlmAdjustMask = 0x00000020
+AnalyzerStatusWlmShiftAdjustCorrelationMask = 0x00000040
+AnalyzerStatusWlmTargetFreqMask = 0x00000080
+AnalyzerStatusIntakeFlowDisconnected = 0x00000100
+AnalyzerStatusChemDetectMask = 0x00000200
+AnalyzerStatusDataRateMask = 0x00000400
+# The following bit invalidates the data (shown as a red path)
+AnalyzerStatusInvalidDataMask = 0x80000000
+# Alarm parameters
+IntakeFlowRateMin = 3.75
+IntakeFlowRateMax = 5.0
+IntakeFlowRateDisconnected = -9999.0
+WindSpeedHistoryBufferLen = 100
+CarSpeedMaximum = 35.0
+DeltaIntervalMax = 1.6
+SpectrumLatencyMax = 3.0
+WlmShiftMax = 2e-3
+WlmAdjustMax = 2e-3
+WlmShiftAdjustLimit = 5e-5
+WlmTargetFreqMaxDrift = 0.05
+WlmTargetFreqHistoryBufferLen = 6000
+CavityBaselineLossScaleFactor = 1.1
+FastMethaneIntervalMax = 0.5
+IsotopicMethaneIntervalMax = 2.0
+# Limits for delta values reported
+REPORT_UPPER_LIMIT = 20000.0
+REPORT_LOWER_LIMIT = -20000.0
+# WB Temperature Proximity condition for isotopic measurement
+WB_TEMP_ISO_THRESHOLD = 0.07
+# SpectrumIds used
+TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
+# Parameters for updating WLM Offsets
+max_adjust = 1.0e-5
+max_adjust_H2O = 1.0e-4
+damp = 0.2
+# Maximum delay before signalling data manager latency
+max_delay = 20
+# Constants for calculating mean interval between data points
+FastMethaneSpectrumId = 25
+IsotopicMethaneSpectrumId = 150
+MethaneIntervalAveragingTime = 30.0
+MethaneConcThreshold = 5.0
+# System status flags
+SystemStatus = 0x00000000
+AnalyzerStatus = 0x00000000
+PeripheralStatus = 0x00000000
+# Valve masks
+VALVE_MASK_ACTIVE = 0x10
+VALVE_MASK_CHECK_ALARM = 0x03
 
 if _PERSISTENT_["init"]:
     _PERSISTENT_["turnOffHeater"] = True
@@ -127,9 +182,10 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["fineLaserCurrent_6_mean"] = 0
     _PERSISTENT_["windSpeedBuffer"] = collections.deque(maxlen=WindSpeedHistoryBufferLen)
     _PERSISTENT_["wlmOffsetBuffer"] = collections.deque(maxlen=WlmTargetFreqHistoryBufferLen)
-    
     _PERSISTENT_["peakDetectState"] = collections.deque(maxlen=50)
-    
+    _PERSISTENT_["fastMethaneInterval"] = 0.0
+    _PERSISTENT_["isotopicMethaneInterval"] = 0.0
+
     WBisoTempLocked = False
 
     # For ChemDetect
@@ -163,7 +219,7 @@ if _PERSISTENT_["init"]:
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
     fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
     _PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']
-
+    
 # read peak detect state register
 # # Enumerated definitions for PEAK_DETECT_CNTRL_StateType
 # PEAK_DETECT_CNTRL_StateType = c_uint
@@ -180,8 +236,6 @@ peakDetectState = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER') #integer
 _PERSISTENT_["peakDetectState"].append(peakDetectState)
 #read peak detect register to get number of remaining samples
 remainingPeakSamples = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER') #number of samples integer, samples are 0.2 seconds
-
-
 try:
     if _DATA_LOGGER_ and _DATA_LOGGER_.DATALOGGER_logEnabledRpc('DataLog_Sensor_Minimal'):
         try:
@@ -191,54 +245,10 @@ try:
 except:
     pass
 
-REPORT_UPPER_LIMIT = 20000.0
-REPORT_LOWER_LIMIT = -20000.0
-
-WB_TEMP_ISO_THRESHOLD = 0.07
-
-TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
-
-def clipReportData(value):
-    if value > REPORT_UPPER_LIMIT:
-        return REPORT_UPPER_LIMIT
-    elif  value < REPORT_LOWER_LIMIT:
-        return REPORT_LOWER_LIMIT
-    else:
-        return value
-
-def applyLinear(value,xform):
-    return xform[0]*value + xform[1]
-
-def apply2Linear(value,xform1,xform2):
-    return applyLinear(applyLinear(value,xform1),xform2)
-
-def protDivide(num,den):
-    if den != 0:
-        return num/den
-    return 0
-
-def expAverage(xavg,x,dt,tau):
-    if xavg is None:
-        xavg = x
-    else:
-        xavg = (1.0-exp(-dt/tau))*x + exp(-dt/tau)*xavg
-    return xavg
-
-def boxAverage(buffer,x,t,tau):
-    buffer.append((x,t))
-    while t-buffer[0][1] > tau:
-        buffer.pop(0)
-    return mean([d for (d,t) in buffer])
-
-def unstableWindSpeed(windSpeed):
-    _PERSISTENT_['windSpeedBuffer'].append(windSpeed)
-    windSpeedHistoryStd = numpy.std(_PERSISTENT_['windSpeedBuffer'], ddof=1)
-    return windSpeed > (2.6 * windSpeedHistoryStd)
 
 # Handle options from command line
 optDict = eval("dict(%s)" % _OPTIONS_)
 conc = optDict.get("conc", "high").lower()
-
 # Define linear transformtions for post-processing
 DELTA_iCH4 = (_INSTR_["iCH4_concentration_iso_slope"],_INSTR_["iCH4_concentration_iso_intercept"])
 RATIO_iCH4 = (_INSTR_["iCH4_concentration_r_slope"],_INSTR_["iCH4_concentration_r_intercept"])
@@ -261,13 +271,13 @@ P5_A1_low_conc = _INSTR_["Peak5_CO2_lin_low_conc"]
 P5_H1_low_conc = _INSTR_["Peak5_water_lin_low_conc"]
 P5_H1M1_low_conc = _INSTR_["Peak5_water_bilin_low_conc"]
 
-Warmbox_setpoint = _DRIVER_.rdDasReg('WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER')
-
 try:
     NUM_BLOCKING_DATA = _INSTR_["num_blocking_data"]
 except:
     NUM_BLOCKING_DATA = 20
 
+Warmbox_setpoint = _DRIVER_.rdDasReg('WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER')
+    
 #iCH4
 
 _12_ch4_raw = 0.0
@@ -401,9 +411,7 @@ try:
     _DATA_["CH4dt"] = _DATA_["C12H4_time_separation"]
 except:
     pass
-
 suppressReporting = _DATA_['fast_flag'] and _DATA_['species'] != 25
-
 
 # Get peripheral data
 try:
@@ -417,12 +425,6 @@ try:
             print "%r" % err
 except:
     pass
-
-max_adjust = 1.0e-5
-max_adjust_H2O = 1.0e-4
-max_delay = 20
-damp = 0.2
-
 # Check instrument status and do not do any updates if any parameters are unlocked
 
 pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
@@ -431,17 +433,14 @@ warmboxTempLocked = _INSTR_STATUS_ & INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 warmingUp =         _INSTR_STATUS_ & INSTMGR_STATUS_WARMING_UP
 systemError =       _INSTR_STATUS_ & INSTMGR_STATUS_SYSTEM_ERROR
 good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
-
 nowTs = getTimestamp()
 delay = nowTs-_DATA_["timestamp"]
 if delay > max_delay*1000:
     Log("Large data processing latency, check excessive processor use",
         Data=dict(delay='%.1f s' % (0.001*delay,)),Level=2)
     good = False
-
 if _DATA_['WarmBoxTemp'] > Warmbox_setpoint - WB_TEMP_ISO_THRESHOLD and _DATA_['WarmBoxTemp'] < Warmbox_setpoint + WB_TEMP_ISO_THRESHOLD:
     WBisoTempLocked = True
-
 else:
     WBisoTempLocked = False
 
@@ -453,11 +452,10 @@ else:
         Log("Heater turned off")
         _DRIVER_.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER","HEATER_CNTRL_DisabledState")
         _PERSISTENT_["turnOffHeater"] = False
-
     # Wind anomaly handling
     validWindCheck = True
     windFields = ['PERIPHERAL_STATUS', 'CAR_SPEED', 'GPS_FIT']
-    
+
     for f in windFields:
         validWindCheck &= (f in _NEW_DATA_)
 
@@ -473,8 +471,6 @@ else:
             if _PERSISTENT_['inactiveForWind']:
                 Log("Survey status back to active after wind anomaly")
                 _PERSISTENT_['inactiveForWind'] = False
-
-
     if _DATA_["species"] == 150: # Update the offset for virtual laser 3,4,5
         try:
             ch4_adjust = _DATA_["adjust_5"]
@@ -537,7 +533,7 @@ else:
             _FREQ_CONV_.setWlmOffset(6,float(newOffset0))
         except:
             pass
-
+    
 # Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
 # _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
 for colname in _OLD_DATA_:    #  new ChemDetect section
@@ -563,17 +559,14 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         CHEM_DETECT = _PERSISTENT_["ChemDetect_previous"]
 
     _PERSISTENT_["ChemDetect_previous"] = CHEM_DETECT
-
+    if CHEM_DETECT == 1.0:
+        AnalyzerStatus |= AnalyzerStatusChemDetectMask
     # Update the upper alarm status bits with some additional instrument status
     # flags.
     alarmActive = (int(_DATA_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
 
     alarmActiveState = numpy.sum( numpy.abs( numpy.diff(_PERSISTENT_["peakDetectState"]) ) ) < 1
     ###print "alarmActive: " + str(alarmActive) + ", alarmActiveState: " + str(alarmActiveState)
-    
-    if CHEM_DETECT == 1.0:
-        AnalyzerStatus |= AnalyzerStatusChemDetectMask
-
     if 'MOBILE_FLOW' in _DATA_:
         if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
@@ -583,9 +576,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
         elif _DATA_['MOBILE_FLOW'] > IntakeFlowRateMax and alarmActive and alarmActiveState:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
-
+    windSpeed = 0.0
     if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
-        windSpeed = 0.0
 
         if (not numpy.isnan(_DATA_['WIND_N'])) and (not numpy.isnan(_DATA_['WIND_E'])):
             windN = _DATA_['WIND_N']
@@ -595,17 +587,33 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         if unstableWindSpeed(windSpeed):
             PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_UNSTABLE
 
-        if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
-            carSpeed = 0.0
+    carSpeed = 0.0
+    if ('CAR_VEL_N' in _DATA_) and ('CAR_VEL_E' in _DATA_):
 
-            if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
-                carN = _DATA_['CAR_VEL_N']
-                carE = _DATA_['CAR_VEL_E']
-                carSpeed = numpy.sqrt(carN * carN + carE * carE)
+        if (not numpy.isnan(_DATA_['CAR_VEL_N'])) and (not numpy.isnan(_DATA_['CAR_VEL_E'])):
+            carN = _DATA_['CAR_VEL_N']
+            carE = _DATA_['CAR_VEL_E']
+            carSpeed = numpy.sqrt(carN * carN + carE * carE)
 
-            if (carSpeed != 0.0) and (carSpeed > CarSpeedMaximum) and \
-               (numpy.absolute((windSpeed / carSpeed) - 1.0) > CarWindSpeedCorrelation):
-                PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_SPEED_CAR_SPEED_UNCORRELATED
+    if carSpeed > CarSpeedMaximum:
+        PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE
+    # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
+    #  is too slow
+
+    tooSlow = False
+    dt = _DATA_['interval']
+    if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+        if _DATA_["CH4"] > MethaneConcThreshold:
+            dt = 0.25
+        _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+        tooSlow = _PERSISTENT_["fastMethaneInterval"] > FastMethaneIntervalMax
+    elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+        if _DATA_["CH4"] > MethaneConcThreshold:
+            dt = 1.0
+        _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+        tooSlow = _PERSISTENT_["isotopicMethaneInterval"] > IsotopicMethaneIntervalMax
+    if tooSlow:
+        AnalyzerStatus |= AnalyzerStatusDataRateMask
 
     if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
         AnalyzerStatus |= AnalyzerStatusCavityBaselineLossMask
@@ -629,10 +637,16 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
     wlm6OffsetMax = max(_PERSISTENT_['wlmOffsetBuffer'])
     wlm6OffsetMin = min(_PERSISTENT_['wlmOffsetBuffer'])
-    
+
     if wlm6OffsetMean != 0.0:
         if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) > WlmTargetFreqMaxDrift:
             AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
+            
+    # Set the InvalidData mask in the AnalyzerStatus. Currently it is set only if the data rate is too low.
+    if 0 != (AnalyzerStatus & AnalyzerStatusDataRateMask):
+        AnalyzerStatus |= AnalyzerStatusInvalidDataMask
+
+            
     
 if ('PERIPHERAL_STATUS' in _NEW_DATA_) and (int(_NEW_DATA_['PERIPHERAL_STATUS'])) > 0:
     SystemStatus |= SystemStatusPeripheralMask
@@ -641,7 +655,6 @@ if AnalyzerStatus > 0:
     SystemStatus |= SystemStatusAnalyzerMask
 
 if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not suppressReporting:
-
     _REPORT_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
     _REPORT_["wlm2_offset"] = _PERSISTENT_["wlm2_offset"]
     _REPORT_["wlm3_offset"] = _PERSISTENT_["wlm3_offset"]
@@ -657,9 +670,9 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     _REPORT_["CHEM_DETECT"] = CHEM_DETECT
     _REPORT_["WBisoTempLocked"] = WBisoTempLocked
     _REPORT_["fineLaserCurrent_6_mean"] = _PERSISTENT_["fineLaserCurrent_6_mean"]  #report 0 for VL6 made to prevent new Column upon mode switch when WL is on to track CO2
-    
+    _REPORT_["fastMethaneInterval"] = _PERSISTENT_["fastMethaneInterval"]
+    _REPORT_["isotopicMethaneInterval"] = _PERSISTENT_["isotopicMethaneInterval"]
     exec _PERSISTENT_["adjustOffsetScript"] in globals()
-    
     for k in _DATA_.keys():
         _REPORT_[k] = _DATA_[k]
 
@@ -668,5 +681,3 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
             _REPORT_[k] = clipReportData(_NEW_DATA_[k])
         else:
             _REPORT_[k] = _NEW_DATA_[k]
-
-#=================================================================================

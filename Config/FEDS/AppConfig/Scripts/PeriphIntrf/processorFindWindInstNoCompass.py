@@ -104,7 +104,7 @@ class RawSource(object):
         if not self.oldData:
             self.getFromQueue()
         return self.oldData[0].ts if self.oldData else None
-    
+
     def getData(self, requestTs):
         """Get data at specified timestamp using interpolation if needed.
         
@@ -420,7 +420,6 @@ def trueWindSource(derivCdataSrc, distFromAxle, speedFactor=1.0, maxTrueWindSpee
                 if optAngle is not None:
                     tVel = cVel * exp(1j * optAngle)
                 else:
-                    d = d._replace(status=int(d.status) | PeripheralStatus.WIND_DIRECTION_NOT_AVAILABLE)
                     tVel = NOT_A_NUMBER                    
         else:
             tVel = NOT_A_NUMBER
