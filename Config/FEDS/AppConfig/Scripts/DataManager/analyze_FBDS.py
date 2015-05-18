@@ -99,7 +99,7 @@ AnalyzerStatusIntakeFlowDisconnected = 0x00000100
 AnalyzerStatusChemDetectMask = 0x00000200
 AnalyzerStatusDataRateMask = 0x00000400
 # The following bit invalidates the data (shown as a red path)
-AnalyzerStatusInvalidDataMask = 0x80000000
+AnalyzerStatusInvalidDataMask = 0x00800000
 # Alarm parameters
 IntakeFlowRateMin = 3.75
 IntakeFlowRateMax = 5.0
@@ -132,6 +132,7 @@ max_delay = 20
 # Constants for calculating mean interval between data points
 FastMethaneSpectrumId = 25
 IsotopicMethaneSpectrumId = 150
+IsotopicModeSpectrumIds = [150, 153]
 MethaneIntervalAveragingTime = 30.0
 MethaneConcThreshold = 5.0
 # System status flags
@@ -607,10 +608,11 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
             dt = 0.25
         _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
         tooSlow = _PERSISTENT_["fastMethaneInterval"] > FastMethaneIntervalMax
-    elif _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
-        if _DATA_["CH4"] > MethaneConcThreshold:
-            dt = 1.0
-        _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+    elif _DATA_['SpectrumID'] in IsotopicModeSpectrumIds:
+        if _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+            if _DATA_["CH4"] > MethaneConcThreshold:
+                dt = 1.0
+            _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
         tooSlow = _PERSISTENT_["isotopicMethaneInterval"] > IsotopicMethaneIntervalMax
     if tooSlow:
         AnalyzerStatus |= AnalyzerStatusDataRateMask
