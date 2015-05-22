@@ -479,7 +479,7 @@ else:
 
     if validWindCheck:
         if (int(_NEW_DATA_['PERIPHERAL_STATUS']) & PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_ANOMALY) > 0:
-            if not isnan(_NEW_DATA_['CAR_SPEED']) and _NEW_DATA_['GPS_FIT'] == GPS_GOOD:
+            if not isnan(_NEW_DATA_['CAR_SPEED']) and _NEW_DATA_['GPS_FIT'] >= 1:
                 Log("Wind NaN due to anomaly")
                 _PERSISTENT_['inactiveForWind'] = True
 
