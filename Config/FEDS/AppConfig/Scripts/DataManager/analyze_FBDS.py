@@ -631,19 +631,6 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     _PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
     if _PERSISTENT_["cavityTempOORAvg"] >= 0.5:
         AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
-            
-    alarm = 0 if (CavityTemperatureMin <= _DATA_['CavityTemp'] <= CavityTemperatureMax) else 1
-    _PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
-    if _PERSISTENT_["cavityTempOORAvg"] >= 0.5:
-        AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
-            
-
-    WarmBoxTemperatureMin = 49.4
-    WarmBoxTemperatureMin = 50.6
-    CavityTemperatureMin = 43.0
-    CavityTemperatureMax = 47.0
-    Module2FlowMin = 3.75
-    Module2FlowMax = 5.0
     # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
     #  is too slow or if the interval reported is precisely zero, and the SpectrumId is 25 or 150.
     # Cap the interval measurements at twice the alarm level so that the time required for recovery is not too long.

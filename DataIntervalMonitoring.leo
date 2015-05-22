@@ -3918,18 +3918,6 @@ alarm = 0 if (CavityTemperatureMin &lt;= _DATA_['CavityTemp'] &lt;= CavityTemper
 _PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
 if _PERSISTENT_["cavityTempOORAvg"] &gt;= 0.5:
     AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
-        
-alarm = 0 if (CavityTemperatureMin &lt;= _DATA_['CavityTemp'] &lt;= CavityTemperatureMax) else 1
-_PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
-if _PERSISTENT_["cavityTempOORAvg"] &gt;= 0.5:
-    AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
-        
-
-WarmBoxTemperatureMin = 49.4
-WarmBoxTemperatureMin = 50.6
-CavityTemperatureMin = 43.0
-CavityTemperatureMax = 47.0
-Module2FlowMin = 3.75
-Module2FlowMax = 5.0</t>
+</t>
 </tnodes>
 </leo_file>
