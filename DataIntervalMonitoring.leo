@@ -19,7 +19,7 @@
 <v t="sze.20150506182103.1"><vh>&lt;&lt;Report persistent variables&gt;&gt;</vh></v>
 </v>
 </v>
-<v t="sze.20150507213556.1" a="E"><vh>Reorganizing PeripheralStatus</vh>
+<v t="sze.20150507213556.1"><vh>Reorganizing PeripheralStatus</vh>
 <v t="sze.20150507214535.1" a="E"><vh>Changed code</vh>
 <v t="sze.20150507214410.2"><vh>class PeripheralStatus</vh></v>
 <v t="sze.20150507215103.1"><vh>OLD: class PeripheralStatus</vh></v>
@@ -30,6 +30,18 @@
 </v>
 <v t="sze.20150507214331.1"><vh>@clean Host\PeriphIntrf\PeripheralStatus.py</vh>
 <v t="sze.20150507214410.2"></v>
+</v>
+<v t="sze.20150519131341.1" a="E"><vh>FLagging on bad sensor values</vh>
+<v t="sze.20150519132712.1" a="E"><vh>Changed code</vh>
+<v t="sze.20150506170401.1"></v>
+<v t="sze.20150506170022.1"></v>
+<v t="sze.20150506194536.1"></v>
+<v t="sze.20150506165934.1"></v>
+<v t="sze.20150506164529.1"><vh>&lt;&lt;Check mobile kit flow sensor reading&gt;&gt;</vh></v>
+<v t="sze.20150519160514.1"><vh>&lt;&lt;Detect bad sensor readings&gt;&gt;</vh></v>
+<v t="sze.20150506164942.1"></v>
+<v t="sze.20150506182103.1"></v>
+</v>
 </v>
 <v t="sze.20150507213649.1" a="E"><vh>@clean Config\FEDS\AppConfig\Scripts\PeriphIntrf\processorFindWindInstNoCompass.py</vh>
 <v t="sze.20150507213822.1"><vh>processorFindWindInstNoCompass declarations</vh></v>
@@ -92,8 +104,9 @@
 <v t="sze.20150506164313.1"><vh>&lt;&lt;ChemDetect processing&gt;&gt;</vh></v>
 <v t="sze.20150506181818.1"><vh>&lt;&lt;Handle AnalyzerStatus ChemDetect mask&gt;&gt;</vh></v>
 <v t="sze.20150506181637.1"><vh>&lt;&lt;Set up alarmActive when not in capture mode&gt;&gt;</vh></v>
-<v t="sze.20150506164529.1"><vh>&lt;&lt;Check mobile kit flow sensor reading&gt;&gt;</vh></v>
+<v t="sze.20150506164529.1"></v>
 <v t="sze.20150506164740.1"></v>
+<v t="sze.20150519160514.1"></v>
 <v t="sze.20150506164942.1"></v>
 <v t="sze.20150506181904.1"><vh>&lt;&lt;Handle SystemStatus&gt;&gt;</vh></v>
 <v t="sze.20150506182103.1"></v>
@@ -882,6 +895,7 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     &lt;&lt;Set up alarmActive when not in capture mode&gt;&gt;
     &lt;&lt;Check mobile kit flow sensor reading&gt;&gt;
     &lt;&lt;Check for unstable wind speed and correlation between car speed and wind speed&gt;&gt;
+    &lt;&lt;Detect bad sensor readings&gt;&gt;
     &lt;&lt;Update AnalyzerStatus&gt;&gt;
     
 &lt;&lt;Handle SystemStatus&gt;&gt;
@@ -1287,16 +1301,16 @@ if _OLD_DATA_["species"][-1].value == 150 and not _DATA_['fast_flag']:
         pass
         #print "WARNING: ChemDetect Status is RED"
 </t>
-<t tx="sze.20150506164529.1">if 'MOBILE_FLOW' in _DATA_:
+<t tx="sze.20150506164529.1">dt = _DATA_['interval']
+if 'MOBILE_FLOW' in _DATA_:
     if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
         AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
-
-    elif _DATA_['MOBILE_FLOW'] &lt; IntakeFlowRateMin and alarmActive and alarmActiveState:
-        AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
-
-    elif _DATA_['MOBILE_FLOW'] &gt; IntakeFlowRateMax and alarmActive and alarmActiveState:
-        AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
-</t>
+        
+    if alarmActive and alarmActiveState:
+        alarm = 0 if (IntakeFlowRateMin &lt;= _DATA_['MOBILE_FLOW'] &lt;= IntakeFlowRateMax) else 1
+        _PERSISTENT_["module2FlowOORAvg"] = expAverage(_PERSISTENT_["module2FlowOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+        if _PERSISTENT_["module2FlowOORAvg"] &gt;= 0.5:
+            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask</t>
 <t tx="sze.20150506164740.1">windSpeed = 0.0
 if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
 
@@ -1320,22 +1334,28 @@ if carSpeed &gt; CarSpeedMaximum:
     PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE
 </t>
 <t tx="sze.20150506164942.1"># Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
-#  is too slow
-
+#  is too slow or if the interval reported is precisely zero, and the SpectrumId is 25 or 150.
+# Cap the interval measurements at twice the alarm level so that the time required for recovery is not too long.
 tooSlow = False
 dt = _DATA_['interval']
 if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+    _PERSISTENT_["badInterval"] = (dt == 0.0)
     if _DATA_["CH4"] &gt; MethaneConcThreshold:
         dt = 0.25
-    _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+    _PERSISTENT_["fastMethaneInterval"] = min(
+        2.0*FastMethaneIntervalMax,
+        expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime))
     tooSlow = _PERSISTENT_["fastMethaneInterval"] &gt; FastMethaneIntervalMax
 elif _DATA_['SpectrumID'] in IsotopicModeSpectrumIds:
     if _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+        _PERSISTENT_["badInterval"] = (dt == 0.0)
         if _DATA_["CH4"] &gt; MethaneConcThreshold:
             dt = 1.0
-        _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+        _PERSISTENT_["isotopicMethaneInterval"] = min(
+            2.0*IsotopicMethaneIntervalMax,
+            expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime))
     tooSlow = _PERSISTENT_["isotopicMethaneInterval"] &gt; IsotopicMethaneIntervalMax
-if tooSlow:
+if tooSlow or _PERSISTENT_["badInterval"]:
     AnalyzerStatus |= AnalyzerStatusDataRateMask
 
 if _DATA_['CFADS_base'] &gt; CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
@@ -1365,11 +1385,14 @@ if wlm6OffsetMean != 0.0:
     if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) &gt; WlmTargetFreqMaxDrift:
         AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
         
-# Set the InvalidData mask in the AnalyzerStatus. Currently it is set only if the data rate is too low.
-if 0 != (AnalyzerStatus &amp; AnalyzerStatusDataRateMask):
+# Set the InvalidData mask in the AnalyzerStatus.
+if 0 != (AnalyzerStatus &amp; 
+            (AnalyzerStatusDataRateMask | 
+             AnalyzerStatusCavityPressureMask |
+             AnalyzerStatusWarmBoxTemperatureMask |
+             AnalyzerStatusCavityTemperatureMask |
+             AnalyzerStatusIntakeFlowRateMask)):
     AnalyzerStatus |= AnalyzerStatusInvalidDataMask
-
-        
 </t>
 <t tx="sze.20150506165859.1">SystemStatusPeripheralMask = 0x00000001
 SystemStatusAnalyzerMask = 0x00000002
@@ -1385,11 +1408,15 @@ AnalyzerStatusWlmTargetFreqMask = 0x00000080
 AnalyzerStatusIntakeFlowDisconnected = 0x00000100
 AnalyzerStatusChemDetectMask = 0x00000200
 AnalyzerStatusDataRateMask = 0x00000400
+AnalyzerStatusCavityPressureMask = 0x00000800
+AnalyzerStatusWarmBoxTemperatureMask = 0x00001000
+AnalyzerStatusCavityTemperatureMask = 0x00002000
+AnalyzerStatusModule2FlowMask = 0x00004000
 # The following bit invalidates the data (shown as a red path)
 AnalyzerStatusInvalidDataMask = 0x00800000
 </t>
 <t tx="sze.20150506170022.1"># Alarm parameters
-IntakeFlowRateMin = 3.75
+IntakeFlowRateMin = 3.5
 IntakeFlowRateMax = 5.0
 IntakeFlowRateDisconnected = -9999.0
 WindSpeedHistoryBufferLen = 100
@@ -1404,6 +1431,13 @@ WlmTargetFreqHistoryBufferLen = 6000
 CavityBaselineLossScaleFactor = 1.1
 FastMethaneIntervalMax = 0.5
 IsotopicMethaneIntervalMax = 2.0
+CavityPressureMin = 147.0
+CavityPressureMax = 149.0
+WarmBoxTemperatureMin = 49.4
+WarmBoxTemperatureMax = 50.6
+CavityTemperatureMin = 43.0
+CavityTemperatureMax = 47.0
+
 </t>
 <t tx="sze.20150506170104.1"># System status flags
 SystemStatus = 0x00000000
@@ -1456,6 +1490,11 @@ _PERSISTENT_["wlmOffsetBuffer"] = collections.deque(maxlen=WlmTargetFreqHistoryB
 _PERSISTENT_["peakDetectState"] = collections.deque(maxlen=50)
 _PERSISTENT_["fastMethaneInterval"] = 0.0
 _PERSISTENT_["isotopicMethaneInterval"] = 0.0
+_PERSISTENT_["cavityPressureOORAvg"] = 0.0
+_PERSISTENT_["warmBoxTempOORAvg"] = 0.0
+_PERSISTENT_["cavityTempOORAvg"] = 0.0
+_PERSISTENT_["module2FlowOORAvg"] = 0.0
+_PERSISTENT_["badInterval"] = False
 
 WBisoTempLocked = False
 
@@ -1489,8 +1528,7 @@ _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
 fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
 fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
-_PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']
-</t>
+_PERSISTENT_['baselineCavityLoss'] = fitterConfig['CFADS_baseline']</t>
 <t tx="sze.20150506170534.1"># read peak detect state register
 # # Enumerated definitions for PEAK_DETECT_CNTRL_StateType
 # PEAK_DETECT_CNTRL_StateType = c_uint
@@ -1559,7 +1597,10 @@ _REPORT_["WBisoTempLocked"] = WBisoTempLocked
 _REPORT_["fineLaserCurrent_6_mean"] = _PERSISTENT_["fineLaserCurrent_6_mean"]  #report 0 for VL6 made to prevent new Column upon mode switch when WL is on to track CO2
 _REPORT_["fastMethaneInterval"] = _PERSISTENT_["fastMethaneInterval"]
 _REPORT_["isotopicMethaneInterval"] = _PERSISTENT_["isotopicMethaneInterval"]
-</t>
+_REPORT_["cavityPressureOORAvg"] = _PERSISTENT_["cavityPressureOORAvg"]
+_REPORT_["warmBoxTempOORAvg"] = _PERSISTENT_["warmBoxTempOORAvg"]
+_REPORT_["cavityTempOORAvg"] = _PERSISTENT_["cavityTempOORAvg"]
+_REPORT_["module2FlowOORAvg"] = _PERSISTENT_["module2FlowOORAvg"]</t>
 <t tx="sze.20150506182135.1">for k in _DATA_.keys():
     _REPORT_[k] = _DATA_[k]
 
@@ -1591,6 +1632,7 @@ IsotopicMethaneSpectrumId = 150
 IsotopicModeSpectrumIds = [150, 153]
 MethaneIntervalAveragingTime = 30.0
 MethaneConcThreshold = 5.0
+SensorAlarmAveragingTime = 30.0
 </t>
 <t tx="sze.20150507075702.1">@language python
 @tabwidth -4
@@ -3855,5 +3897,39 @@ Test1, 6.51
 Day 4 Redwood, 5.45
 Day 4 Redwood, 7.46
 </t>
+<t tx="sze.20150519131341.1">Cavity pressure: Bad if outside 147 - 149
+Warm Box Temperature: Bad if outside 49.4 - 50.6
+Cavity Tempearature: Bad if outside 43.0 - 47.0
+Mobile Flow: Bad if outside 3.75 - 5.0
+</t>
+<t tx="sze.20150519132712.1">@language python</t>
+<t tx="sze.20150519160514.1">dt = _DATA_['interval']
+alarm = 0 if (CavityPressureMin &lt;= _DATA_['CavityPressure'] &lt;= CavityPressureMax) else 1
+_PERSISTENT_["cavityPressureOORAvg"] = expAverage(_PERSISTENT_["cavityPressureOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+if _PERSISTENT_["cavityPressureOORAvg"] &gt;= 0.5:
+    AnalyzerStatus |= AnalyzerStatusCavityPressureMask
+    
+alarm = 0 if (WarmBoxTemperatureMin &lt;= _DATA_['WarmBoxTemp'] &lt;= WarmBoxTemperatureMax) else 1
+_PERSISTENT_["warmBoxTempOORAvg"] = expAverage(_PERSISTENT_["warmBoxTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+if _PERSISTENT_["warmBoxTempOORAvg"] &gt;= 0.5:
+    AnalyzerStatus |= AnalyzerStatusWarmBoxTemperatureMask
+        
+alarm = 0 if (CavityTemperatureMin &lt;= _DATA_['CavityTemp'] &lt;= CavityTemperatureMax) else 1
+_PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+if _PERSISTENT_["cavityTempOORAvg"] &gt;= 0.5:
+    AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
+        
+alarm = 0 if (CavityTemperatureMin &lt;= _DATA_['CavityTemp'] &lt;= CavityTemperatureMax) else 1
+_PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+if _PERSISTENT_["cavityTempOORAvg"] &gt;= 0.5:
+    AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
+        
+
+WarmBoxTemperatureMin = 49.4
+WarmBoxTemperatureMin = 50.6
+CavityTemperatureMin = 43.0
+CavityTemperatureMax = 47.0
+Module2FlowMin = 3.75
+Module2FlowMax = 5.0</t>
 </tnodes>
 </leo_file>

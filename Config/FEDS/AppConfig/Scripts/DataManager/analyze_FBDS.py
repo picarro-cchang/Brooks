@@ -98,10 +98,14 @@ AnalyzerStatusWlmTargetFreqMask = 0x00000080
 AnalyzerStatusIntakeFlowDisconnected = 0x00000100
 AnalyzerStatusChemDetectMask = 0x00000200
 AnalyzerStatusDataRateMask = 0x00000400
+AnalyzerStatusCavityPressureMask = 0x00000800
+AnalyzerStatusWarmBoxTemperatureMask = 0x00001000
+AnalyzerStatusCavityTemperatureMask = 0x00002000
+AnalyzerStatusModule2FlowMask = 0x00004000
 # The following bit invalidates the data (shown as a red path)
 AnalyzerStatusInvalidDataMask = 0x00800000
 # Alarm parameters
-IntakeFlowRateMin = 3.75
+IntakeFlowRateMin = 3.5
 IntakeFlowRateMax = 5.0
 IntakeFlowRateDisconnected = -9999.0
 WindSpeedHistoryBufferLen = 100
@@ -116,6 +120,13 @@ WlmTargetFreqHistoryBufferLen = 6000
 CavityBaselineLossScaleFactor = 1.1
 FastMethaneIntervalMax = 0.5
 IsotopicMethaneIntervalMax = 2.0
+CavityPressureMin = 147.0
+CavityPressureMax = 149.0
+WarmBoxTemperatureMin = 49.4
+WarmBoxTemperatureMax = 50.6
+CavityTemperatureMin = 43.0
+CavityTemperatureMax = 47.0
+
 # Limits for delta values reported
 REPORT_UPPER_LIMIT = 20000.0
 REPORT_LOWER_LIMIT = -20000.0
@@ -135,6 +146,7 @@ IsotopicMethaneSpectrumId = 150
 IsotopicModeSpectrumIds = [150, 153]
 MethaneIntervalAveragingTime = 30.0
 MethaneConcThreshold = 5.0
+SensorAlarmAveragingTime = 30.0
 # System status flags
 SystemStatus = 0x00000000
 AnalyzerStatus = 0x00000000
@@ -186,6 +198,11 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["peakDetectState"] = collections.deque(maxlen=50)
     _PERSISTENT_["fastMethaneInterval"] = 0.0
     _PERSISTENT_["isotopicMethaneInterval"] = 0.0
+    _PERSISTENT_["cavityPressureOORAvg"] = 0.0
+    _PERSISTENT_["warmBoxTempOORAvg"] = 0.0
+    _PERSISTENT_["cavityTempOORAvg"] = 0.0
+    _PERSISTENT_["module2FlowOORAvg"] = 0.0
+    _PERSISTENT_["badInterval"] = False
 
     WBisoTempLocked = False
 
@@ -568,15 +585,16 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     alarmActiveState = numpy.sum( numpy.abs( numpy.diff(_PERSISTENT_["peakDetectState"]) ) ) < 1
     ###print "alarmActive: " + str(alarmActive) + ", alarmActiveState: " + str(alarmActiveState)
+    dt = _DATA_['interval']
     if 'MOBILE_FLOW' in _DATA_:
         if _DATA_['MOBILE_FLOW'] == IntakeFlowRateDisconnected:
             AnalyzerStatus |= AnalyzerStatusIntakeFlowDisconnected
-
-        elif _DATA_['MOBILE_FLOW'] < IntakeFlowRateMin and alarmActive and alarmActiveState:
-            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
-
-        elif _DATA_['MOBILE_FLOW'] > IntakeFlowRateMax and alarmActive and alarmActiveState:
-            AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
+            
+        if alarmActive and alarmActiveState:
+            alarm = 0 if (IntakeFlowRateMin <= _DATA_['MOBILE_FLOW'] <= IntakeFlowRateMax) else 1
+            _PERSISTENT_["module2FlowOORAvg"] = expAverage(_PERSISTENT_["module2FlowOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+            if _PERSISTENT_["module2FlowOORAvg"] >= 0.5:
+                AnalyzerStatus |= AnalyzerStatusIntakeFlowRateMask
     windSpeed = 0.0
     if ('WIND_N' in _DATA_) and ('WIND_E' in _DATA_):
 
@@ -598,23 +616,57 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     if carSpeed > CarSpeedMaximum:
         PeripheralStatus |= PeriphIntrf.PeripheralStatus.PeripheralStatus.CAR_SPEED_TOO_LARGE
-    # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
-    #  is too slow
+    dt = _DATA_['interval']
+    alarm = 0 if (CavityPressureMin <= _DATA_['CavityPressure'] <= CavityPressureMax) else 1
+    _PERSISTENT_["cavityPressureOORAvg"] = expAverage(_PERSISTENT_["cavityPressureOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+    if _PERSISTENT_["cavityPressureOORAvg"] >= 0.5:
+        AnalyzerStatus |= AnalyzerStatusCavityPressureMask
+        
+    alarm = 0 if (WarmBoxTemperatureMin <= _DATA_['WarmBoxTemp'] <= WarmBoxTemperatureMax) else 1
+    _PERSISTENT_["warmBoxTempOORAvg"] = expAverage(_PERSISTENT_["warmBoxTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+    if _PERSISTENT_["warmBoxTempOORAvg"] >= 0.5:
+        AnalyzerStatus |= AnalyzerStatusWarmBoxTemperatureMask
+            
+    alarm = 0 if (CavityTemperatureMin <= _DATA_['CavityTemp'] <= CavityTemperatureMax) else 1
+    _PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+    if _PERSISTENT_["cavityTempOORAvg"] >= 0.5:
+        AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
+            
+    alarm = 0 if (CavityTemperatureMin <= _DATA_['CavityTemp'] <= CavityTemperatureMax) else 1
+    _PERSISTENT_["cavityTempOORAvg"] = expAverage(_PERSISTENT_["cavityTempOORAvg"], alarm, dt, SensorAlarmAveragingTime)
+    if _PERSISTENT_["cavityTempOORAvg"] >= 0.5:
+        AnalyzerStatus |= AnalyzerStatusCavityTemperatureMask
+            
 
+    WarmBoxTemperatureMin = 49.4
+    WarmBoxTemperatureMin = 50.6
+    CavityTemperatureMin = 43.0
+    CavityTemperatureMax = 47.0
+    Module2FlowMin = 3.75
+    Module2FlowMax = 5.0
+    # Check for the interval between methane data points and set the AnalyzerStatusDataRateMask if the exponentially averaged rate
+    #  is too slow or if the interval reported is precisely zero, and the SpectrumId is 25 or 150.
+    # Cap the interval measurements at twice the alarm level so that the time required for recovery is not too long.
     tooSlow = False
     dt = _DATA_['interval']
     if _DATA_['SpectrumID'] == FastMethaneSpectrumId:
+        _PERSISTENT_["badInterval"] = (dt == 0.0)
         if _DATA_["CH4"] > MethaneConcThreshold:
             dt = 0.25
-        _PERSISTENT_["fastMethaneInterval"] = expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+        _PERSISTENT_["fastMethaneInterval"] = min(
+            2.0*FastMethaneIntervalMax,
+            expAverage(_PERSISTENT_["fastMethaneInterval"], dt, dt, MethaneIntervalAveragingTime))
         tooSlow = _PERSISTENT_["fastMethaneInterval"] > FastMethaneIntervalMax
     elif _DATA_['SpectrumID'] in IsotopicModeSpectrumIds:
         if _DATA_['SpectrumID'] == IsotopicMethaneSpectrumId:
+            _PERSISTENT_["badInterval"] = (dt == 0.0)
             if _DATA_["CH4"] > MethaneConcThreshold:
                 dt = 1.0
-            _PERSISTENT_["isotopicMethaneInterval"] = expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime)
+            _PERSISTENT_["isotopicMethaneInterval"] = min(
+                2.0*IsotopicMethaneIntervalMax,
+                expAverage(_PERSISTENT_["isotopicMethaneInterval"], dt, dt, MethaneIntervalAveragingTime))
         tooSlow = _PERSISTENT_["isotopicMethaneInterval"] > IsotopicMethaneIntervalMax
-    if tooSlow:
+    if tooSlow or _PERSISTENT_["badInterval"]:
         AnalyzerStatus |= AnalyzerStatusDataRateMask
 
     if _DATA_['CFADS_base'] > CavityBaselineLossScaleFactor * _PERSISTENT_['baselineCavityLoss']:
@@ -644,11 +696,14 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
         if ((wlm6OffsetMax - wlm6OffsetMin) / wlm6OffsetMean) > WlmTargetFreqMaxDrift:
             AnalyzerStatus |= AnalyzerStatusWlmTargetFreqMask
             
-    # Set the InvalidData mask in the AnalyzerStatus. Currently it is set only if the data rate is too low.
-    if 0 != (AnalyzerStatus & AnalyzerStatusDataRateMask):
+    # Set the InvalidData mask in the AnalyzerStatus.
+    if 0 != (AnalyzerStatus & 
+                (AnalyzerStatusDataRateMask | 
+                 AnalyzerStatusCavityPressureMask |
+                 AnalyzerStatusWarmBoxTemperatureMask |
+                 AnalyzerStatusCavityTemperatureMask |
+                 AnalyzerStatusIntakeFlowRateMask)):
         AnalyzerStatus |= AnalyzerStatusInvalidDataMask
-
-            
     
 if ('PERIPHERAL_STATUS' in _NEW_DATA_) and (int(_NEW_DATA_['PERIPHERAL_STATUS'])) > 0:
     SystemStatus |= SystemStatusPeripheralMask
@@ -674,6 +729,10 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
     _REPORT_["fineLaserCurrent_6_mean"] = _PERSISTENT_["fineLaserCurrent_6_mean"]  #report 0 for VL6 made to prevent new Column upon mode switch when WL is on to track CO2
     _REPORT_["fastMethaneInterval"] = _PERSISTENT_["fastMethaneInterval"]
     _REPORT_["isotopicMethaneInterval"] = _PERSISTENT_["isotopicMethaneInterval"]
+    _REPORT_["cavityPressureOORAvg"] = _PERSISTENT_["cavityPressureOORAvg"]
+    _REPORT_["warmBoxTempOORAvg"] = _PERSISTENT_["warmBoxTempOORAvg"]
+    _REPORT_["cavityTempOORAvg"] = _PERSISTENT_["cavityTempOORAvg"]
+    _REPORT_["module2FlowOORAvg"] = _PERSISTENT_["module2FlowOORAvg"]
     exec _PERSISTENT_["adjustOffsetScript"] in globals()
     for k in _DATA_.keys():
         _REPORT_[k] = _DATA_[k]
