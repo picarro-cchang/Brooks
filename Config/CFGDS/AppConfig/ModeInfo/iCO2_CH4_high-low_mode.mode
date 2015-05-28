@@ -1,0 +1,86 @@
+[INSTRUMENT_MODE]
+Tuning = CavityLength
+
+[SCHEME_CONFIG]
+# Define what schemes should be loaded and sequenced and in what order
+#   - Never worry about what DAS table index is used - this is automatically taken
+#     care of (primarily for the background load/alternate scheme index stuff)
+
+SchemeCount = 2
+#Scheme_1_Path = ../Schemes/_CBCF2xxx_zippy_cal_v1.sch
+#Scheme_2_Path = ../Schemes/_CBCF2xxx_zippy_nocal_v1.sch
+#Scheme_1_Path = ../Schemes/_CBDS2xxx_v42_VL_C12_C13_Hybrid_zippy_cal.sch
+#Scheme_2_Path = ../Schemes/_CBDS2xxx_v42_VL_C12_C13_Hybrid_zippy_nocal.sch
+Scheme_1_Path = ../Schemes/_CFF2xxx_zippy_high-low_cal_v3.sch
+Scheme_2_Path = ../Schemes/_CFF2xxx_zippy_high-low_nocal_v3.sch
+
+
+[SPECTRUM_IDS]
+#Specify logical names for referencing each SubSchemeID...
+#SHOULD USUALLY BE IN _BaseDefinitions.ini - JUST HERE FOR REFERENCE
+
+############################################################################
+###
+# "Standard" Spectrum Processing and Analysis Instructions...
+############################################################################
+[12_CO2]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[13_CO2]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[H2O]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[CFADS_H2O]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[CH4]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[CH4_high]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[_12CO2_alt]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[_13CO2_alt]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+[H2O_alt]
+Analyzer= ../Scripts/DataManager/analyze_iCO2.py
+
+############################################################################
+###
+# Analysis Instructions for DataManager Generated Data
+# - DataManager can feed itself with data (either synchronously or asynchrounously)
+# - All forwarded data labels automatically get a + prefix for clarity
+# - Specifying a processor here makes no sense.
+# - even if there is to be no analyzer, the label should be here
+#   - either with no options, or with "Analyzer = None"
+###
+############################################################################
+#[+Async_H2S]
+#No analyzer - just accumulating forwarded results in the data history for
+#the periodic analyzer
+#Analyzer = None
+
+############################################################################
+###
+# Synchronous Script Definitions
+#  - These are read and executed by the Data Manager
+###
+############################################################################
+[SYNC_SETUP]
+#Define synchronous executions to be run by the DataManager in this mode
+# - Note that these are in addition to any in _BaseDefinition.ini
+NumSyncAnalyzers = 0
+
+#Sync_1_Period_s = 30
+#Sync_1_ReportName = WLMCal
+#Sync_1_Script = ../Scripts/DataManager/update_cal_iCO2.py
+#Sync_1_ScriptArgs =
+
+#Sync_1_Period_s = 10
+#Sync_1_ReportName = DataRate
+#Sync_1_Script = ../Scripts/DataManager/calDataRate.py
