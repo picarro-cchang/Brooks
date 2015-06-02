@@ -36,8 +36,8 @@ __doc__ += HELP_STRING
 from sys import path as sys_path
 if "../Common" not in sys_path: sys_path.append("../Common")
 import wx
-import CmdFIFO
-#import BetterTraceback
+import Host.Common.CmdFIFO as CmdFIFO
+#import Host.Common.BetterTraceback as BetterTraceback
 
 CmdTypeChoicesDict = {
     "CMD_TYPE_Default"   : CmdFIFO.CMD_TYPE_Default,

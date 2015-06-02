@@ -74,7 +74,7 @@ class DasConfigure(SharedTypes.Singleton):
             self.scriptEnv = {"Operation":Operation,"GROUPS":self.opGroups}
     def installCheck(self,key):
         return self.installed.get(key,0)
-    
+
     def setHardwarePresent(self):
         mapping = [("LASER1_PRESENT",      1<<interface.HARDWARE_PRESENT_Laser1Bit),
                    ("LASER2_PRESENT",      1<<interface.HARDWARE_PRESENT_Laser2Bit),
@@ -96,7 +96,7 @@ class DasConfigure(SharedTypes.Singleton):
             if self.installCheck(key) > 0:
                 mask |= bit
         self.dasInterface.hostToDspSender.wrRegUint("HARDWARE_PRESENT_REGISTER",mask)
-        
+
     def run(self):
         # If heaterCntrlMode == interface.HEATER_CNTRL_MODE_TEC_TARGET, we need to make some changes in the parameter
         #  forms for heater control
@@ -124,7 +124,7 @@ class DasConfigure(SharedTypes.Singleton):
             raise ValueError("VERIFY_INIT_REGISTER not initialized correctly")
         self.setHardwarePresent()
         # Reset I2C multiplexers
-        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[1<<interface.KERNEL_CONTROL_I2C_RESET_B,"FPGA_KERNEL","KERNEL_CONTROL"]))                
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[1<<interface.KERNEL_CONTROL_I2C_RESET_B,"FPGA_KERNEL","KERNEL_CONTROL"]))
         # Define operation groups as a dictionary accessed using
         #  e.g. self.opGroups["FAST"]["SENSOR_READ"]
         for rate in schedulerPeriods:
@@ -137,35 +137,35 @@ class DasConfigure(SharedTypes.Singleton):
         # Start heartbeat to let sentry handler know that the scheduler is alive
         self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SCHEDULER_HEARTBEAT"))
 
-        
+
         # Schedule code specified in the initialization file
         if self.extraScheduleCode is not None:
             try:
                 exec self.extraScheduleCode in self.scriptEnv
             except:
                 LogExc("Error processing extra scheduler code in Driver initialization file", Level=3)
-                
+
         soa = self.installCheck("SOA_PRESENT")
         fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
         if soa and fiber_amp:
             raise ValueError,"Cannot have both SOA and fiber amplifier present"
-        
+
         injCtrl = sender.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
-        
-        # Disable SOA current bit in FPGA if both SOA_PRESENT and FIBER_AMPLIFIER_PRESENT flags are not set in 
+
+        # Disable SOA current bit in FPGA if both SOA_PRESENT and FIBER_AMPLIFIER_PRESENT flags are not set in
         #  the Master.ini file
-        
+
         soaPresent = 1<<interface.INJECT_CONTROL_SOA_PRESENT_B
         if soa or fiber_amp:
             injCtrl |= soaPresent
         else:
             injCtrl &= ~soaPresent
         sender.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injCtrl)
-        
+
         if fiber_amp:
             injCtrl2 = sender.rdFPGA("FPGA_INJECT","INJECT_CONTROL2")
             sender.wrFPGA("FPGA_INJECT","INJECT_CONTROL2",injCtrl2 | (1<<interface.INJECT_CONTROL2_FIBER_AMP_PRESENT_B))
-        
+
         for laserNum in range(1,5):
             present = self.installCheck("LASER%d_PRESENT" % laserNum)
             if laserNum == 4:
@@ -204,7 +204,7 @@ class DasConfigure(SharedTypes.Singleton):
                             ["STREAM_Laser%dTec" % laserNum,"LASER%d_TEC_REGISTER" % laserNum]))
                     self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                         Operation("ACTION_TEMP_CNTRL_LASER%d_STEP" % laserNum))
-                    
+
             if present:
                 # Set present to a negative number to disable I2C reads
                 if present > 0:
@@ -242,7 +242,7 @@ class DasConfigure(SharedTypes.Singleton):
                         if i<degree-1:
                             env.state[i] += env.state[i+1]
                     sender.wrEnv("LASER%d_TEMP_MODEL_ENV" % laserNum,env)
-                    
+
                 self.opGroups["FAST"]["STREAMER"].addOperation(
                     Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                         ["STREAM_Laser%dTemp" % laserNum,"LASER%d_TEMPERATURE_REGISTER" % laserNum]))
@@ -276,7 +276,7 @@ class DasConfigure(SharedTypes.Singleton):
                     self.opGroups["FAST"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                             ["STREAM_Laser%dCurrent" % laserNum,"LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
-                
+
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
         if self.installCheck("DAS_TEMP_MONITOR"):
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(Operation("ACTION_DS1631_READTEMP",
@@ -309,7 +309,7 @@ class DasConfigure(SharedTypes.Singleton):
                         ["I2C_ETALON_THERMISTOR_ADC",
                          "ETALON_RESISTANCE_REGISTER",
                          "ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-    
+
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["ETALON_RESISTANCE_REGISTER",
@@ -329,13 +329,13 @@ class DasConfigure(SharedTypes.Singleton):
                         ["I2C_WARM_BOX_THERMISTOR_ADC",
                          "WARM_BOX_RESISTANCE_REGISTER",
                          "WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-        
+
                 self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_THERMISTOR_RESISTANCE",
                         ["I2C_WARM_BOX_HEATSINK_THERMISTOR_ADC",
                          "WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
                          "WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["WARM_BOX_RESISTANCE_REGISTER",
@@ -343,7 +343,7 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER",
                      "CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",
                      "WARM_BOX_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["WARM_BOX_HEATSINK_RESISTANCE_REGISTER",
@@ -351,28 +351,28 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER",
                      "CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",
                      "WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-            
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_WarmBoxTemp","WARM_BOX_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_WarmBoxHeatsinkTemp","WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_WarmBoxTec","WARM_BOX_TEC_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_WARM_BOX_STEP"))
-    
-        # Set up interpolation for warm box TEC. Make the following unconditional so that 
+
+        # Set up interpolation for warm box TEC. Make the following unconditional so that
         #  the PWM will always start up.
-        
+
         if self.enableInterpolation:
             rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
-            
+
             self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
                 Operation("ACTION_INTERPOLATOR_SET_TARGET",
                           ["WARM_BOX_TEC_REGISTER",rateRatio],
@@ -386,7 +386,7 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
                 Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                           ["WARM_BOX_TEC_REGISTER","FPGA_PWM_WARMBOX","PWM_PULSE_WIDTH"]))
-        
+
         # Hot Box
 
         present = self.installCheck("HOT_BOX_PRESENT")
@@ -399,13 +399,13 @@ class DasConfigure(SharedTypes.Singleton):
                         ["I2C_CAVITY_THERMISTOR_ADC",
                          "CAVITY_RESISTANCE_REGISTER",
                          "CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-        
+
                 self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_THERMISTOR_RESISTANCE",
                         ["I2C_HOT_BOX_HEATSINK_THERMISTOR_ADC",
                          "HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
                          "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-                
+
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["CAVITY_RESISTANCE_REGISTER",
@@ -413,7 +413,7 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_CAVITY_THERM_CONSTB_REGISTER",
                      "CONVERSION_CAVITY_THERM_CONSTC_REGISTER",
                      "CAVITY_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                     ["HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
@@ -421,19 +421,19 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER",
                      "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",
                      "HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_HotBoxHeatsinkTemp","HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-    
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_HotBoxTec","CAVITY_TEC_REGISTER"]))
-    
+
             #self.opGroups["SLOW"]["STREAMER"].addOperation(
             #    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
             #        ["STREAM_HotBoxHeater","HEATER_CNTRL_MARK_REGISTER"]))
@@ -441,10 +441,10 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_HotBoxHeater","HEATER_MARK_REGISTER"]))
-            
+
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(
                 Operation("ACTION_TEMP_CNTRL_CAVITY_STEP"))
-    
+
             if self.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_TEC_TARGET]:
                 self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                     Operation("ACTION_FLOAT_ARITHMETIC",
@@ -455,7 +455,7 @@ class DasConfigure(SharedTypes.Singleton):
                     Operation("ACTION_FLOAT_ARITHMETIC",
                              ["HOT_BOX_HEATSINK_TEMPERATURE_REGISTER","CAVITY_TEMPERATURE_REGISTER",
                               "HEATER_CNTRL_SENSOR_REGISTER","FLOAT_ARITHMETIC_Subtraction"]))
-    
+
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_HEATER_CNTRL_STEP"))
 
             # Set up the interpolator for the heater
@@ -467,7 +467,7 @@ class DasConfigure(SharedTypes.Singleton):
                     Operation("ACTION_INTERPOLATOR_SET_TARGET",
                               ["HEATER_MARK_REGISTER",rateRatio],
                               "HEATER_INTERPOLATOR_ENV"))
-        
+
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_INTERPOLATOR_STEP",
                               ["FPGA_PWM_HEATER","PWM_PULSE_WIDTH"],
@@ -480,18 +480,18 @@ class DasConfigure(SharedTypes.Singleton):
 
             #self.opGroups["SLOW"]["CONTROLLER"].addOperation(
             #    Operation("ACTION_HEATER_CNTRL_STEP"))
-            
+
             #self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
             #    Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
             #        ["HEATER_CNTRL_MARK_REGISTER","FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
 
-        # Set up interpolation for cavity TEC. Make the following unconditional so that 
+        # Set up interpolation for cavity TEC. Make the following unconditional so that
         #  the PWM will always start up.
-        
-        
+
+
         if self.enableInterpolation:
             rateRatio = schedulerPeriods["SLOW"]//schedulerPeriods["FAST"]
-            
+
 
             self.opGroups["SLOW"]["ACTUATOR_CONVERT"].addOperation(
                 Operation("ACTION_INTERPOLATOR_SET_TARGET",
@@ -506,14 +506,14 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
                 Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                           ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
-                
+
         # Fan control
         fanCntrl = not self.installCheck("FAN_CONTROL_DISABLED")
         if fanCntrl:
             self.opGroups["SLOW"]["CONTROLLER"].addOperation(Operation("ACTION_FAN_CNTRL_STEP"))
             self.opGroups["SLOW"]["ACTUATOR_WRITE"].addOperation(
-                Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))        
-                
+                Operation("ACTION_ACTIVATE_FAN",["FAN_CNTRL_STATE_REGISTER"]))
+
         # Valve control
 
         if present:
@@ -523,86 +523,86 @@ class DasConfigure(SharedTypes.Singleton):
                     Operation("ACTION_READ_PRESSURE_ADC",
                         ["I2C_CAVITY_PRESSURE_ADC",
                          "CAVITY_PRESSURE_ADC_REGISTER"]))
-        
+
                 self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                     Operation("ACTION_READ_PRESSURE_ADC",
                         ["I2C_AMBIENT_PRESSURE_ADC",
                          "AMBIENT_PRESSURE_ADC_REGISTER"]))
-                
+
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_SET_INLET_VALVE",
                               ["VALVE_CNTRL_INLET_VALVE_REGISTER","VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER"]))
-                
+
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_SET_OUTLET_VALVE",
                               ["VALVE_CNTRL_OUTLET_VALVE_REGISTER","VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER"]))
-                              
+
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_MODIFY_VALVE_PUMP_TEC_FROM_REGISTER",
                               [0x3F,"VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
-            
+
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_ADC_TO_PRESSURE",
                     ["CAVITY_PRESSURE_ADC_REGISTER",
                      "CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER",
                      "CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER",
                      "CAVITY_PRESSURE_REGISTER"]))
-                    
+
             self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_ADC_TO_PRESSURE",
                     ["AMBIENT_PRESSURE_ADC_REGISTER",
                      "CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",
                      "CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",
                      "AMBIENT_PRESSURE_REGISTER"]))
-            
+
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_CavityPressure","CAVITY_PRESSURE_REGISTER"]))
-    
+
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_AmbientPressure","AMBIENT_PRESSURE_REGISTER"]))
-    
+
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_InletValve","VALVE_CNTRL_INLET_VALVE_REGISTER"]))
-    
+
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_OutletValve","VALVE_CNTRL_OUTLET_VALVE_REGISTER"]))
-    
+
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_ValveMask","VALVE_CNTRL_SOLENOID_VALVES_REGISTER"]))
-                    
+
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_FanState","FAN_CNTRL_STATE_REGISTER"]))
-                    
+
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_MPVPosition","VALVE_CNTRL_MPV_POSITION_REGISTER"]))
-            
+
             self.opGroups["FAST"]["CONTROLLER"].addOperation(
                 Operation("ACTION_VALVE_CNTRL_STEP"))
-        
+
         # Ringdown detector variable gain control
-        
-        rddVarGainPresent = self.installCheck("RDD_VAR_GAIN_PRESENT")        
+
+        rddVarGainPresent = self.installCheck("RDD_VAR_GAIN_PRESENT")
         if rddVarGainPresent:
             self.opGroups["FAST"]["CONTROLLER"].addOperation(
                 Operation("ACTION_RDD_CNTRL_STEP"))
-                    
+
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
-        
+
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_TUNER_CNTRL_STEP"))
 
         # Update the laser temperature register of the WLM simulator
         self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_UPDATE_WLMSIM_LASER_TEMP"))
-        
+
         # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
@@ -632,7 +632,7 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_Flow1","FLOW1_REGISTER"]))
-                
+
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
         # Schedule operation groups which are non-empty
@@ -650,7 +650,7 @@ class DasConfigure(SharedTypes.Singleton):
                 exec self.extraInitCode in self.scriptEnv
             except:
                 LogExc("Error processing extra initialization code in Driver initialization file", Level=3)
-        
+
         runCont = (1<<interface.PWM_CS_RUN_B) | (1<<interface.PWM_CS_CONT_B)
 
         for laserNum in range(1,5):
@@ -691,7 +691,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
-   
+
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER",10000.0)
         sender.wrRegFloat("LASER2_RESISTANCE_REGISTER",9000.0)
         sender.wrRegFloat("LASER3_RESISTANCE_REGISTER",8000.0)
@@ -709,7 +709,7 @@ class DasConfigure(SharedTypes.Singleton):
 
         sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
         sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
-        
+
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_RDMAN","RDMAN_CONTROL"]))

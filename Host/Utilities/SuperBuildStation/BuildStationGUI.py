@@ -9,14 +9,14 @@ from Host.Common.GraphPanel import GraphPanel
 
 from Host.Common.GraphPanel import GraphPanel
 
-from ModeAnalyzer import ModePanel
-from ModeAnalyzer import ScopePanel
+from Host.Utilities.SuperBuildStation.ModeAnalyzer import ModePanel
+from Host.Utilities.SuperBuildStation.ModeAnalyzer import ScopePanel
 
 from Host.Common.GraphPanel import GraphPanel
 
 from Host.Common.GraphPanel import GraphPanel
 
-from ModeViewer import ModePanel
+from Host.Utilities.SuperBuildStation.ModeViewer import ModePanel
 # end wxGlade
 
 

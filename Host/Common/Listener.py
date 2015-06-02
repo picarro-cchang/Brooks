@@ -18,7 +18,7 @@
 import select
 import socket
 import Queue
-import StringPickler
+import Host.Common.StringPickler as StringPickler
 import ctypes
 import threading
 import time
@@ -183,7 +183,7 @@ class Listener(threading.Thread):
 
 if __name__ == "__main__":
     import ctypes
-    import StringPickler
+    import Host.Common.StringPickler as StringPickler
 
     class MyTime(ctypes.Structure):
         _fields_ = [

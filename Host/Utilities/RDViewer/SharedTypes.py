@@ -22,7 +22,7 @@
 import ctypes
 import os
 import time
-import interface
+import Host.Utilities.RDViewer.interface as interface
 
 # Constants...
 ACCESS_PUBLIC = 0
@@ -79,7 +79,7 @@ BROADCAST_PORT_SPECTRUM_COLLECTOR = 40045
 BROADCAST_PORT_MEAS_SYSTEM       = 40050
 BROADCAST_PORT_DATA_MANAGER      = 40060
 BROADCAST_PORT_INSTMGR_DISPLAY   = 40070
-BROADCAST_PORT_FITTER_BASE       = 40080 # Fitters use consecutive ports starting from this one 
+BROADCAST_PORT_FITTER_BASE       = 40080 # Fitters use consecutive ports starting from this one
 BROADCAST_PORT_PROCESSED_RESULTS = 40100
 BROADCAST_PORT_IPV               = 40110
 
@@ -116,7 +116,7 @@ class Singleton(object):
         return cls._instance
 
 class Bunch(object):
-    """ This class is used to group together a collection as a single object, 
+    """ This class is used to group together a collection as a single object,
         so that they may be accessed as attributes of that object"""
     def __init__(self,**kwds):
         """ The namespace of the object may be initialized using keyword arguments """
@@ -127,14 +127,14 @@ class Bunch(object):
         return "%s(%s)" % (self.__class__.__name__,self.__dict__)
     def __repr__(self):
         return self.__str__()
-        
+
 class makeHandler(object):
     """This class is used to call a reader function repeatedly and to perform some specified
-    action on the output of that reader, either for a duration which is as close as 
+    action on the output of that reader, either for a duration which is as close as
     possible to a specified value, or until the reader returns None.
 
     It is useful when handling a number of queues within a single threaded environment
-    so that we do not spend too much time trying to empty out a queue while others 
+    so that we do not spend too much time trying to empty out a queue while others
     remain unserviced."""
 
     def __init__(self,readerFunc,processFunc):
@@ -160,10 +160,10 @@ def getSchemeTableClass(numRows):
 
     if numRows > interface.NUM_SCHEME_ROWS:
         raise ValueError, "Maximum number of scheme rows is %d" % interface.NUM_SCHEME_ROWS
-    
+
     if numRows not in schemeTableClassMemo:
         SchemeRowArray = interface.SchemeRowType * numRows
-        
+
         class SchemeTableType(ctypes.Structure):
             _fields_ = [("numRepeats",ctypes.c_uint),
                         ("numRows",ctypes.c_uint),

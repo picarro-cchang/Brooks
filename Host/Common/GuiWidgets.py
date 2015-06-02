@@ -22,4 +22,3 @@ class CheckIndicator(wx.CheckBox):
 
     def Pass(self,e):
         pass
-    

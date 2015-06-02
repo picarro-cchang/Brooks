@@ -11,8 +11,8 @@ import time
 import threading
 import csv
 
-import LossStream
-import ValveMaskStream
+import Host.MobileKit.Utilities.ValveExplorer.LossStream as LossStream
+import Host.MobileKit.Utilities.ValveExplorer.ValveMaskStream as ValveMaskStream
 
 from Host.Common import CmdFIFO
 from Host.Common import SharedTypes

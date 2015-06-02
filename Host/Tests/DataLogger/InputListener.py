@@ -107,10 +107,9 @@ if __name__ == "__main__":
         #time.sleep(1)
         #app, res = il.q.get()
         #print "%s: %s" % (app, res)
-        
+
         while True:
             res = il.q.get()
-            
+
             cPickle.dump(res, f, -1)
             print res[0]
-

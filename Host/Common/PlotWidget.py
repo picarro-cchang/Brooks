@@ -13,7 +13,7 @@
 import wx
 import sys
 if "../Common" not in sys.path: sys.path.append("../Common")
-import plot
+import Host.Common.plot as plot
 
 try:
     import Numeric

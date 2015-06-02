@@ -14,14 +14,14 @@ from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYS
 # Need to find path to the translation table
 here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
 if here not in sys.path: sys.path.append(here)
-from translate import newname
-from syncList import syncList
+from Host.Tests.DataManager.Scripts.translate import newname
+from Host.Tests.DataManager.Scripts.syncList import syncList
 
 AVE_TIME_SEC = 300
 
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-    
+
 if _PERSISTENT_["init"]:
     _PERSISTENT_["wlm1_offset"] = 0.0
     _PERSISTENT_["wlm2_offset"] = 0.0
@@ -30,7 +30,7 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["init"] = False
     for newCol in _PERIPH_INTRF_COLS_:
         syncList.append((newCol, newCol+"_sync", None, None))
-    _PERSISTENT_["sync"] = Synchronizer("SYNC1", 
+    _PERSISTENT_["sync"] = Synchronizer("SYNC1",
                                         syncList,
                                         syncInterval=1000,
                                         syncLatency=5000,
@@ -47,9 +47,9 @@ print "Inside data manager script, optdict: %s" % (optDict,)
 
 
 ###############
-# Calibration of WLM offsets    
+# Calibration of WLM offsets
 ###############
-    
+
 max_adjust = 1.0e-5
 
 # Check instrument status and do not do any updates if any parameters are unlocked
@@ -95,9 +95,9 @@ else:
             pass
 
 ###############
-# Apply instrument calibration 
+# Apply instrument calibration
 ###############
-        
+
 CO2 = (_INSTR_["co2_conc_slope"],_INSTR_["co2_conc_intercept"])
 CH4 = (_INSTR_["ch4_conc_slope"],_INSTR_["ch4_conc_intercept"])
 H2O = (_INSTR_["h2o_conc_slope"],_INSTR_["h2o_conc_intercept"])
@@ -117,7 +117,7 @@ try:
 except:
     #_NEW_DATA_["co2_conc_dry"] = 0.0
     _NEW_DATA_["co2_conc"] = 0.0
-    
+
 try:
     ch4_conc = applyLinear(_DATA_["ch4_conc_ppmv_final"],CH4)
     _NEW_DATA_["ch4_conc"] = ch4_conc
@@ -130,11 +130,11 @@ try:
 except:
     _NEW_DATA_["ch4_conc"] = 0.0
     #_NEW_DATA_["ch4_conc_dry"] = 0.0
-    
+
 try:
     h2o_reported = applyLinear(_DATA_["h2o_conc_precal"],H2O)
     h2o_precorr = 0.5*(h2o_reported+_OLD_DATA_["h2o_reported"][-4].value)  # average of current and last uncorrected h2o measurements
-    
+
     try:
         ch4_conc_dry = _OLD_DATA_["ch4_conc"][-2].value/(1.0+h2o_precorr*(_INSTR_["ch4_watercorrection_linear"]+h2o_precorr*_INSTR_["ch4_watercorrection_quadratic"]))
         _NEW_DATA_["ch4_conc_dry"] = ch4_conc_dry
@@ -143,7 +143,7 @@ try:
     except:
         _NEW_DATA_["ch4_conc_dry"] = 0.0
         _NEW_DATA_["co2_conc_dry"] = 0.0
-    
+
     try:
         h2o_actual = _INSTR_["h2o_selfbroadening_linear"]*(h2o_reported+_INSTR_["h2o_selfbroadening_quadratic"]*h2o_reported**2)
         _NEW_DATA_["h2o_reported"] = h2o_reported
@@ -155,7 +155,7 @@ except:
     _NEW_DATA_["h2o_conc"] = 0.0
     _NEW_DATA_["h2o_reported"] = 0.0
 
-if _DATA_["SpectrumID"] != 10:      
+if _DATA_["SpectrumID"] != 10:
     t = time.gmtime(_MEAS_TIME_)
     t1 = float("%04d%02d%02d" % t[0:3])
     t2 = "%02d%02d%02d.%03.0f" % (t[3],t[4],t[5],1000*(_MEAS_TIME_-int(_MEAS_TIME_)),)
@@ -168,7 +168,7 @@ if _DATA_["SpectrumID"] != 10:
         _REPORT_["ymd"] = t1
         _REPORT_["hms"] = t2
 
-        try:    
+        try:
             if _PERIPH_INTRF_:
                 try:
                     interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
@@ -179,20 +179,20 @@ if _DATA_["SpectrumID"] != 10:
                     print "%r" % err
         except:
             pass
-            
-     
+
+
         for k in _DATA_.keys():
             if k in newname:
                 _REPORT_[newname[k]] = _DATA_[k]
             else:
                 _REPORT_[k] = _DATA_[k]
-            
+
         for k in _NEW_DATA_.keys():
             if k in newname:
                 _REPORT_[newname[k]] = _NEW_DATA_[k]
             else:
                 _REPORT_[k] = _NEW_DATA_[k]
-            
+
         _REPORT_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
         _REPORT_["wlm2_offset"] = _PERSISTENT_["wlm2_offset"]
         _REPORT_["wlm4_offset"] = _PERSISTENT_["wlm4_offset"]

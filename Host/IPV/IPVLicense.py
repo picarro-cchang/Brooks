@@ -31,14 +31,14 @@ For more information, please visit:
 http://www.picarro.com/gas_analyzers/peripherals/ipv""",
 
 r"""Your %d-Day IPV Trial has ended!
-                                                           
+
 With IPV, Picarro can monitor your instruments around the world and around the clock, so you don't have to. IPV allows Picarro's support team to move quickly to correct problems and, in some cases, react to potential instrument problems before they happen.
 
 IPV has been disabled on your instrument. If you would like to continue to use IPV, please contact your Picarro sales representative, or send an email to support@picarro.com
 """,
 
 r"""Your %d-Day IPV Subscription has ended!
-                                                               
+
 With IPV, Picarro can monitor your instruments around the world and around the clock, so you don't have to. IPV allows Picarro's support team to move quickly to correct problems and, in some cases, react to potential instrument problems before they happen.
 
 IPV has been disabled on your instrument. If you would like to continue to use IPV, please contact your Picarro sales representative, or send an email to support@picarro.com
@@ -49,7 +49,7 @@ TITLE_LIST = \
 [ "%d-Day Trial",
 "%d-Day Trial",
 "%d-Day Subscription"
-]  
+]
 
 YES_BUTTON_LIST = ["Activate IPV Trial", "OK", "OK"]
 
@@ -86,8 +86,8 @@ class IPVLicenseFrame(wx.Frame):
         # Buttons
         self.buttonAnsYes = wx.Button(self.panel2, -1, YES_BUTTON_LIST[selector], style=wx.BU_EXACTFIT)
         self.buttonAnsYes.SetFocus()
-        self.buttonAnsNo = wx.Button(self.panel2, -1, "No Thanks", style=wx.BU_EXACTFIT)             
-        self.buttonRemind = wx.Button(self.panel2, -1, "Remind me later", style=wx.BU_EXACTFIT) 
+        self.buttonAnsNo = wx.Button(self.panel2, -1, "No Thanks", style=wx.BU_EXACTFIT)
+        self.buttonRemind = wx.Button(self.panel2, -1, "Remind me later", style=wx.BU_EXACTFIT)
         self.buttonAnsYes.SetMinSize((170, 25))
         self.buttonAnsYes.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonAnsYes.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
@@ -97,10 +97,10 @@ class IPVLicenseFrame(wx.Frame):
         self.buttonRemind.SetMinSize((170, 25))
         self.buttonRemind.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonRemind.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
-        
+
         if selector == 1:
             self.buttonAnsNo.Destroy()
-        
+
         self.__do_layout()
 
     def __do_layout(self):
@@ -113,16 +113,16 @@ class IPVLicenseFrame(wx.Frame):
         sizer_1.Add(self.labelTitle, 0, wx.TOP|wx.ALIGN_CENTER, 10)
         sizer_1.Add(self.labelTitle2, 0, wx.BOTTOM|wx.ALIGN_CENTER, 10)
         self.panel1.SetSizer(sizer_1)
-        
+
         sizer_2.Add(self.staticLine, 0, wx.EXPAND|wx.BOTTOM, 5)
         sizer_2.Add(self.textCtrlMessage, 0, wx.LEFT|wx.RIGHT, 10)
-        
+
         sizer_3.Add(self.buttonAnsYes, 0, wx.ALL|wx.ALIGN_CENTER, 10)
         if selector == 0:
             sizer_3.Add(self.buttonAnsNo, 0, wx.ALL|wx.ALIGN_CENTER, 10)
         else:
             sizer_3.Add(self.buttonRemind, 0, wx.ALL|wx.ALIGN_CENTER, 10)
-        
+
         sizer_4.Add(sizer_2, 0, wx.BOTTOM, 20)
         sizer_4.Add(sizer_3, 0, wx.LEFT, 70)
         sizer_4.Add((-1,5))
@@ -130,7 +130,7 @@ class IPVLicenseFrame(wx.Frame):
             sizer_4.Add(self.buttonRemind, 0, wx.ALL|wx.ALIGN_CENTER, 5)
         sizer_4.Add(self.labelFooter, 0, wx.EXPAND|wx.BOTTOM|wx.TOP, 10)
         self.panel2.SetSizer(sizer_4)
-        
+
         sizer_5.Add(self.panel1, 0, wx.EXPAND, 0)
         sizer_5.Add(self.panel2, 0, wx.EXPAND, 0)
 
@@ -143,11 +143,11 @@ class IPVLicense(IPVLicenseFrame):
         self.configFileName = configFile
         self.cp = CustomConfigObj(configFile)
         self.selector = selector
-        self.trialDays = trialDays 
+        self.trialDays = trialDays
         self.remindDays = remindDays
         IPVLicenseFrame.__init__(self, selector, trialDays, *args, **kwds)
         self.bindEvents()
-        if selector != 0:        
+        if selector != 0:
             self.cp.set("Main", "enabled", "False")
             self.cp.write()
             self.killIPV()
@@ -160,15 +160,15 @@ class IPVLicense(IPVLicenseFrame):
         u=f2.read().strip()
         self.user = "%s\%s" % (d,u)
         self.password = "picarro"
-        
+
     def bindEvents(self):
         self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMessage)
-        self.Bind(wx.EVT_BUTTON, self.onRemindButton, self.buttonRemind) 
+        self.Bind(wx.EVT_BUTTON, self.onRemindButton, self.buttonRemind)
         if self.selector == 0:
             self.Bind(wx.EVT_BUTTON, self.onYesButton, self.buttonAnsYes)
             self.Bind(wx.EVT_BUTTON, self.onNoButton, self.buttonAnsNo)
         else:
-            self.Bind(wx.EVT_BUTTON, self.onOKButton, self.buttonAnsYes)   
+            self.Bind(wx.EVT_BUTTON, self.onOKButton, self.buttonAnsYes)
 
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
@@ -177,7 +177,7 @@ class IPVLicense(IPVLicenseFrame):
             wx.LaunchDefaultBrowser(urlString)
         else:
             event.Skip()
-            
+
     def onYesButton(self, event):
         self.cp.set("Main", "enabled", "True")
         self.cp.write()
@@ -191,7 +191,7 @@ class IPVLicense(IPVLicenseFrame):
 
     def onOKButton(self, event):
         self.Destroy()
-        
+
     def onNoButton(self, event):
         self.cp.set("Main", "enabled", "False")
         self.cp.write()
@@ -205,10 +205,10 @@ class IPVLicense(IPVLicenseFrame):
         os.system(r'schtasks.exe /delete /tn IPVLicense /f')
         os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.configFileName, self.selector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
         self.Destroy()
- 
+
     def killIPV(self):
         os.system(r'taskkill.exe /IM IPV.exe /F')
-        
+
 def handleCommandSwitches():
     shortOpts = "c:s:t:r:"
     longOpts = []
@@ -227,21 +227,21 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     selector = 0
     if "-s" in options:
-        selector = int(options["-s"])  
-        
+        selector = int(options["-s"])
+
     trialDays = 90.0
     if "-t" in options:
-        trialDays = float(options["-t"])  
-        
+        trialDays = float(options["-t"])
+
     remindDays = 3.0
     if "-r" in options:
-        remindDays = float(options["-r"]) 
-        
+        remindDays = float(options["-r"])
+
     return configFile, selector, trialDays, remindDays
-    
+
 if __name__ == "__main__" :
     configFile, selector, trialDays, remindDays = handleCommandSwitches()
     app = wx.PySimpleApp(0)

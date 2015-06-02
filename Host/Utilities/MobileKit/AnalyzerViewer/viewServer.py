@@ -1,7 +1,7 @@
 from flask import Flask, Markup
 from flask import make_response, render_template, request
-from jsonrpc import JSONRPCHandler, Fault
-from jsonrpcutils import Proxy
+from Host.Utilities.MobileKit.AnalyzerViewer.jsonrpc import JSONRPCHandler, Fault
+from Host.Utilities.MobileKit.AnalyzerViewer.jsonrpcutils import Proxy
 from functools import wraps
 from configobj import ConfigObj
 import glob
@@ -65,7 +65,7 @@ def emptyResponse():
 def maps():
     threshold = float(request.values.get('threshold',2.5))
     return render_template('maps.html',threshold=threshold)
-    
+
 @app.route('/updateView')
 def updateView():
     DTR = pi/180.0
@@ -101,19 +101,19 @@ def updateView():
     except:
         print traceback.format_exc()
         return emptyResponse()
-        
+
 @app.route('/updateData')
 def updateData():
     global SCALE, OFFSET, LINE_COLOR, POLY_COLOR
     cookie = {}
     clearClientData = False
-    
+
     try:
         if 'lastPos' in request.values:
             result = service.getData({'startPos':int(request.values['lastPos'])})
         else:
             result = service.getData({})
-            
+
         filename = request.values.get('filename','')
         lastPos = result['lastPos']
         CH4 = result['CH4']
@@ -122,7 +122,7 @@ def updateData():
         cookie['filename'] = result['filename']
         if filename != result['filename']:
             clearClientData = True
-        
+
         if os.path.exists(changeIni):
             try:
                 ini = ConfigObj(changeIni)
@@ -133,7 +133,7 @@ def updateData():
                     LINE_COLOR = settings.get('line_color',LINE_COLOR)
                     POLY_COLOR = settings.get('poly_color',POLY_COLOR)
                     restart = int(settings.get('restart',0))
-                    if restart: 
+                    if restart:
                         service.restartDatalog({})
                         print "Restarting Data Log"
             except:
@@ -142,9 +142,9 @@ def updateData():
             finally:
                 os.remove(changeIni)
             clearClientData = True
-            
+
         kmlPrefix = ""
-        data = []                
+        data = []
         if clearClientData:
             kmlPrefix = """
 <Delete>
@@ -170,10 +170,10 @@ def updateData():
             cookie["lastPos"] = "%s" % lastPos
             for ch4,lat,long in zip(CH4,lat,long):
                 data.append("%.5f,%.5f,%.0f" % (long,lat,SCALE*(ch4-OFFSET)))
-        
+
         # Convert the cookie dictionary into a string
         cookie = Markup.escape("&".join(["%s=%s" % (k,cookie[k]) for k in cookie]))
-        
+
         kml = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <NetworkLinkControl>
@@ -206,7 +206,7 @@ def updateData():
     except:
         print traceback.format_exc()
         return emptyResponse()
-    
+
 if __name__ == '__main__':
     import getopt
     shortOpts = 'a:'
@@ -229,4 +229,3 @@ if __name__ == '__main__':
     # Connect to the analyzer JSON RPC server
     service = Proxy('http://%s:5000/jsonrpc' % addr.strip())
     app.run(host='127.0.0.1',port=5100)
-    

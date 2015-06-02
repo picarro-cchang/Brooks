@@ -6,18 +6,18 @@
 #  we instantiate a Synchronizer object (class defined in ScriptRunner) when the script is first
 #  run. The parameters of the constructor are:
 #
-#  analyzer: An identifier corresponding to a SPECTRUM_ID in the mode file whose name specifies the 
-#             analyzer for the synchronized data. 
-#  varList: A list of tuples specifying which variables are to be synchronized. Each tuple is of 
+#  analyzer: An identifier corresponding to a SPECTRUM_ID in the mode file whose name specifies the
+#             analyzer for the synchronized data.
+#  varList: A list of tuples specifying which variables are to be synchronized. Each tuple is of
 #             the form (raw_var_name, sync_var_name, cond_var_name, cond_var_value). The raw variable
-#             is assumed to be valid when cond_var_name takes on the value cond_var_value. This is 
-#             typically used to specify a subscheme Id. If cond_var_name is set to None, the raw 
+#             is assumed to be valid when cond_var_name takes on the value cond_var_value. This is
+#             typically used to specify a subscheme Id. If cond_var_name is set to None, the raw
 #             variable is assumed to update on every raw data row.
 #  syncInterval: The time between synchronized samples in milliseconds. The resulting timestamps are
 #             integer multiples of the syncInterval.
 #  syncLatency: When a raw data point arrives with a given timestamp, the resampled datapoints are
 #             computed while the resulting timestamps are less than the timestamp minus the syncLatency.
-#             The syncLatency is chosen so that after this amount of time, we have enough information 
+#             The syncLatency is chosen so that after this amount of time, we have enough information
 #             to interpolate all the variables in varList up to that instant.
 #  processInterval: Number of milliseconds between the times at which the raw analysis script calls the
 #             synchronizer.
@@ -29,7 +29,7 @@
 
 # When a raw data entry arrives, we call the dispatch method of the Synchronizer object. This triggers the
 #  synchronization analysis script provided at the new timestamp is at least processInterval more than
-#  the timestamp associated with the last trigger. 
+#  the timestamp associated with the last trigger.
 #
 # When the synchronization analysis script is triggered, it repeatedly calls itself, performing as
 #   many interpolatioin steps as it can. To do this, it stores "lastMeasTimestamp" and "resampTimestamp"
@@ -112,7 +112,7 @@ def resync(analyzer,env):
     aa = env["_ANALYZE_"]
 
     report = {}
-    
+
     if "synchronizer" not in pp:
         pp["synchronizer"] = dict(resampTimestamp=None,lastMeasTimestamp=None)
 
@@ -124,7 +124,7 @@ def resync(analyzer,env):
     resampTimestamp = p["resampTimestamp"]
     maxDelay = g["maxDelay"]
     varList = g["varList"]
-    
+
     ts = int(dd["timestamp"])
     if lastMeasTimestamp is None or ts>lastMeasTimestamp:
         p["lastMeasTimestamp"] = lastMeasTimestamp = ts
@@ -133,7 +133,7 @@ def resync(analyzer,env):
         return report
     else:
         nextResampTimestamp = resampTimestamp+g["syncInterval"]
-        
+
     if nextResampTimestamp<lastMeasTimestamp-g["syncLatency"]:
         report = {"timestamp":nextResampTimestamp}
         good = True

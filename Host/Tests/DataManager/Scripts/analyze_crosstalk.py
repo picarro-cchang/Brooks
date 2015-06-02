@@ -39,7 +39,7 @@ class XSync(object):
         # The values of the variables which are actually measured at this timestamp are called the targetValues
         # All other variables required to do the crosstalk removal are calculated using linear interpolation from
         #  measurements made around the specified timestamp (bookending).
-        # 
+        #
         self.timestamp, value = current[name]
         nVar = len(indexByName)
         self.indexByName = indexByName
@@ -101,11 +101,11 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["init"] = False
 
 ###############
-# Apply instrument calibration 
+# Apply instrument calibration
 ###############
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-        
+
 CO2 = (_INSTR_["co2_conc_slope"],_INSTR_["co2_conc_intercept"])
 CH4 = (_INSTR_["ch4_conc_slope"],_INSTR_["ch4_conc_intercept"])
 H2O = (_INSTR_["h2o_conc_slope"],_INSTR_["h2o_conc_intercept"])
@@ -118,7 +118,7 @@ try:
         _NEW_DATA_["co2_conc"] = _OLD_DATA_["co2_conc"][-1].value
 except:
     _NEW_DATA_["co2_conc"] = 0.0
-    
+
 try:
     ch4_conc = applyLinear(_DATA_["ch4_conc_ppmv_final"],CH4)
     _NEW_DATA_["ch4_conc"] = ch4_conc
@@ -131,11 +131,11 @@ try:
 except:
     _NEW_DATA_["ch4_conc"] = 0.0
     #_NEW_DATA_["ch4_conc_dry"] = 0.0
-    
+
 try:
     h2o_reported = applyLinear(_DATA_["h2o_conc_precal"],H2O)
     h2o_precorr = 0.5*(h2o_reported+_OLD_DATA_["h2o_reported"][-4].value)  # average of current and last uncorrected h2o measurements
-    
+
     try:
         ch4_conc_dry = _OLD_DATA_["ch4_conc"][-2].value/(1.0+h2o_precorr*(_INSTR_["ch4_watercorrection_linear"]+h2o_precorr*_INSTR_["ch4_watercorrection_quadratic"]))
         _NEW_DATA_["ch4_conc_dry"] = ch4_conc_dry
@@ -144,7 +144,7 @@ try:
     except:
         _NEW_DATA_["ch4_conc_dry"] = 0.0
         _NEW_DATA_["co2_conc_dry"] = 0.0
-    
+
     try:
         h2o_actual = _INSTR_["h2o_selfbroadening_linear"]*(h2o_reported+_INSTR_["h2o_selfbroadening_quadratic"]*h2o_reported**2)
         _NEW_DATA_["h2o_reported"] = h2o_reported
@@ -163,4 +163,3 @@ for k in _DATA_.keys():
     _REPORT_[k] = _DATA_[k]
 for k in _NEW_DATA_.keys():
     _REPORT_[k] = _NEW_DATA_[k]
-

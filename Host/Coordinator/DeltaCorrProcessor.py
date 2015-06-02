@@ -19,7 +19,7 @@ class DeltaCorrProcessorFrame(wx.Frame):
         self.SetMinSize((270,100))
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.labelFooter = wx.StaticText(self.panel1, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
-        
+
         # Menu bar
         self.frameMenubar = wx.MenuBar()
         self.iFile = wx.Menu()
@@ -38,7 +38,7 @@ class DeltaCorrProcessorFrame(wx.Frame):
         self.SetMenuBar(self.frameMenubar)
 
         self.textCtrl = wx.TextCtrl(self.panel1, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
-        self.textCtrl.SetMinSize((250, 80))        
+        self.textCtrl.SetMinSize((250, 80))
 
         self.applyButton = wx.Button(self.panel1, -1, "Apply Correction", size=(115,20))
         self.closeButton = wx.Button(self.panel1, wx.ID_CLOSE, "", size=(115,20))
@@ -53,15 +53,15 @@ class DeltaCorrProcessorFrame(wx.Frame):
         self.stdDelta = None
         self.updateTextCtrl()
         self.applyButton.Enable(False)
-        
-    def bindEvents(self):       
+
+    def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onLoadFileMenu, self.iLoadFile)
         self.Bind(wx.EVT_MENU, self.onOutDirMenu, self.iOutDir)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
-        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.applyButton)       
-        self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton) 
+        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.applyButton)
+        self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton)
         self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrl)
-    
+
     def onApplyButton(self, event):
         if not self.filename:
             dlg = wx.MessageDialog(None,"Please select input file       ", "Error", style=wx.ICON_EXCLAMATION|wx.STAY_ON_TOP|wx.OK)
@@ -82,12 +82,12 @@ class DeltaCorrProcessorFrame(wx.Frame):
             self.textCtrl.SetValue("Output file:\nfile:%s\n" % proc.getoOutputFilename())
         else:
             self.textCtrl.SetValue("Failed to create output file")
-            
+
     def onAboutMenu(self, evt):
         d = wx.MessageDialog(None, "This application applies standard delta offset to correct sample delta values.\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Discrete Sample Delta Correction", wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
             urlString = self.textCtrl.GetRange(event.GetURLStart()+5, event.GetURLEnd())
@@ -122,7 +122,7 @@ class DeltaCorrProcessorFrame(wx.Frame):
     def onCloseButton(self, evt):
         sys.exit(0)
         self.Destroy()
-        
+
     def updateTextCtrl(self):
         msg1 = "1. Load data file (.csv)"
         msg2 = "2. Select output directory"
@@ -133,7 +133,7 @@ class DeltaCorrProcessorFrame(wx.Frame):
         self.textCtrl.SetValue("Before applying correction, please:\n%s\n%s"% (msg1, msg2))
         if self.filename and self.outputDir:
             self.applyButton.Enable(True)
-    
+
     def __do_layout(self):
         grid_sizer_1 = wx.FlexGridSizer(0, 2)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
@@ -148,19 +148,19 @@ class DeltaCorrProcessorFrame(wx.Frame):
         self.SetSizer(sizer_3)
         sizer_3.Fit(self)
         self.Layout()
-        
+
 class DeltaCorrProcessor():
     def __init__(self, dirname=""):
         self.outputDir = dirname
         self.filepath = ""
         self.outputFilename = ""
-    
+
     def setFilename(self, filepath):
         self.filepath = filepath
-           
+
     def getoOutputFilename(self):
         return self.outputFilename
-        
+
     def procData(self):
         if not self.filepath:
             return
@@ -172,7 +172,7 @@ class DeltaCorrProcessor():
             newLines = fd.readlines()
             header = newLines[0]
             measData = newLines[1:]
-            fd.close()                
+            fd.close()
         except Exception, errMsg:
             print errMsg
             return
@@ -215,13 +215,13 @@ class DeltaCorrProcessor():
                     sampleBagList[stdId][sampleId][2] = "%15.3f" % (float(sampleBagList[stdId][sampleId][4]) - standardDeltaOffset)
                     sampleBagList[stdId][sampleId][3] = "%15.3f" % (float(sampleBagList[stdId][sampleId][5]) - standard12CO2Offset)
                     outputList.append(colFormat % tuple(sampleBagList[stdId][sampleId]))
-            outputList.append(colFormat % tuple(standardList[-1]))        
+            outputList.append(colFormat % tuple(standardList[-1]))
             fd = open(self.outputFilename, "w")
             fd.writelines(outputList)
             fd.close()
         else:
             print "No enough standard measurement for delta correction"
- 
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

@@ -11,24 +11,24 @@ class SupervisorLauncherFrame(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("Picarro Mode Switcher")
         self.SetBackgroundColour("#E0FFFF")
-        
+
         # labels
         self.labelTitle = wx.StaticText(self, -1, "Picarro Mode Switcher", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         copyrightText = "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0]
         self.labelFooter = wx.StaticText(self, -1, copyrightText, style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Measurement Mode", style=wx.ALIGN_CENTER)
-        
+
         # Divider line
         self.staticLine = wx.StaticLine(self, -1)
-        
+
         # controls
         self.comboBoxSelect = wx.ComboBox(self, -1, value = typeChoices[0], choices = typeChoices, style = wx.CB_READONLY|wx.CB_DROPDOWN)
-        
+
         # button
         self.buttonLaunch = wx.Button(self, -1, "Launch", size=(110, 20))
         self.buttonLaunch.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.__do_layout()
 
     def __do_layout(self):

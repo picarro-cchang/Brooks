@@ -16,7 +16,7 @@ class TestAdc(unittest.TestCase):
     def setUp(self):
     	self.zmqContext = zmq.Context()
         self.adcSender = subprocess.Popen(["python.exe",r".\adcSender.py"])
-        
+
     def tearDown(self):
         self.adcSender.wait()
         self.zmqContext.term()
@@ -78,8 +78,8 @@ class TestAdc(unittest.TestCase):
         cmdSocket.send(json.dumps({"func": "close", "args": []}))
         result = json.loads(cmdSocket.recv())
         print result
-        cmdSocket.close()     
+        cmdSocket.close()
 	pass
 
 if __name__ == '__main__':
-    unittest.main()	
+    unittest.main()

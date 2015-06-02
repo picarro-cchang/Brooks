@@ -2,7 +2,7 @@ from Host.Common import CmdFIFO
 RPC_PORT_DRIVER = 50010
 import time
 
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, 
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
     'RDDGainSetter', IsDontCareConnection = False)
 
 balance = int(raw_input("Balance (0-255)? "))

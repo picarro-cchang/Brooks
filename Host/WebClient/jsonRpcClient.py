@@ -86,6 +86,6 @@ if __name__ == "__main__":
         params = dict(range=range,pickle=1)
         timeTaken[0] = time.time()
         service.call('getDmDataStruct',[params],onResult,onError)
-    
+
     while running[0]:
         time.sleep(0.05)

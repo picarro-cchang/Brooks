@@ -18,7 +18,7 @@
 
 import os
 from Host.Common.SharedTypes import Bunch
-from CustomConfigObj import CustomConfigObj
+from Host.Common.CustomConfigObj import CustomConfigObj
 
 class ModeDefException(Exception):
     "Base class for ModeDef exceptions"
@@ -44,7 +44,7 @@ def LoadModeDefinitions(ModeDefFilePath):
     """
     if not os.path.exists(ModeDefFilePath):
         raise IOError("Base mode definition path not found: %s" % ModeDefFilePath)
-    cp = CustomConfigObj(ModeDefFilePath) 
+    cp = CustomConfigObj(ModeDefFilePath)
     defDir = os.path.split(ModeDefFilePath)[0]
     modeCount = cp.getint("AVAILABLE_MODES", "ModeCount")
     modeDict = {}
@@ -78,7 +78,7 @@ class MeasMode(object):
     def __init__(self):
         self.SourcePath = ""
         self.Name = ""
-        self.SchemeConfigs = {} # Dictionary of scheme configurations, keyed by the characters 
+        self.SchemeConfigs = {} # Dictionary of scheme configurations, keyed by the characters
                                 #  following "SCHEME_CONFIG" in the section name
 
         self.SpectrumIdLookup = {} # Keys are spectrum IDs, values are names
@@ -218,7 +218,7 @@ class MeasMode(object):
             raise IllegalSection("Section '%s' is not a valid section and must be fixed/removed!" % Label)
 
     def ReadDefinitionFP(self, fp, IgnoreSections = [], IllegalSections = []):
-        cp = CustomConfigObj(fp, ignore_option_case=False) 
+        cp = CustomConfigObj(fp, ignore_option_case=False)
         #To stop the damn lower casing that ConfigParser does with optionxform -> OK....now it is taken care by CustomConfigObj!
         for section in cp.list_sections():
             ignore = False

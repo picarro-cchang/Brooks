@@ -93,7 +93,7 @@ DetectorViewer = Target(description = "DetectorViewer", # used for the versionin
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "DetectorViewer"
                     )
-                    
+
 ################################################################
 
 # And now to the main setup routine...

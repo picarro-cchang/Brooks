@@ -1,5 +1,5 @@
 # Model code
-# We have a REQ socket for 
+# We have a REQ socket for
 # We have a PUB socket that broadcasts information about the model, which any subscribers may use (e.g. to display information about the model state)
 
 try:
@@ -14,7 +14,7 @@ context = zmq.Context()
 
 CMD_PORT = 5101
 BROADCAST_PORT = 5102
- 
+
 class View(object):
     def __init__(self):
         self.cmdSock = context.socket(zmq.REQ)
@@ -22,7 +22,7 @@ class View(object):
         self.broadcastSock = context.socket(zmq.SUB)
         self.broadcastSock.connect("tcp://127.0.0.1:%d" % BROADCAST_PORT)
         self.broadcastSock.setsockopt(zmq.SUBSCRIBE, "")
-    
+
     def run(self):
         poller = zmq.Poller()
         poller.register(self.broadcastSock, zmq.POLLIN)

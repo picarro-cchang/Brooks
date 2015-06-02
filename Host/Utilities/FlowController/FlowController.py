@@ -14,7 +14,7 @@ PARAM_LIST = [("start", "Starting Inlet Value", "10000"),
               ]
 
 DriverRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AutoThresStats")
-    
+
 if __name__ == "__main__" :
     guiParamDict = {}
     app=wx.App()
@@ -33,17 +33,17 @@ if __name__ == "__main__" :
     end = int(guiParamDict["end"])
     increment = int(guiParamDict["increment"])
     incrementTime = float(guiParamDict["incrementTime"])
-    
+
     d = wx.MessageDialog(None,"Start flow control now?", "Confirmation", \
         style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
     startFlow = (d.ShowModal() == wx.ID_YES)
     d.Destroy()
     if not startFlow:
         sys.exit()
-            
+
     # Set outlet valve control
     DriverRpc.wrDasReg("VALVE_CNTRL_STATE_REGISTER", 1)
-    
+
     # Open inlet valve gradually
     inletValList = range(start, end, increment)
     if inletValList[-1] != end:
@@ -56,5 +56,3 @@ if __name__ == "__main__" :
         count += 1
         dlg.Update(count)
     dlg.Destroy()
-
-    

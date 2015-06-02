@@ -4,7 +4,7 @@ from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.configobj import ConfigObj
 from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR
 from Host.autogen import interface
 import numpy
 import os
@@ -44,20 +44,20 @@ def setFPGAbits(FPGAblockName,FPGAregName,optList):
     oldVal = Driver.rdFPGA(FPGAblockName,FPGAregName)
     newVal = ((~optMask) & oldVal) | optNew
     Driver.wrFPGA(FPGAblockName,FPGAregName,newVal)
-    
+
 def stopAcquisition():
     Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
     time.sleep(0.5)
 
 def setAnalyzerTuningMode(mode):
     Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",mode)
-    
+
 def setSpectCntrlDiagnostic():
     Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_DiagnosticState")
-    
+
 def setTunerOffset(offset):
     Driver.wrFPGA("FPGA_TWGEN","TWGEN_PZT_OFFSET",offset)
-    
+
 def setActiveLaser(laserNum):
     laserMask = 1<<(laserNum-1)
     setFPGAbits("FPGA_INJECT","INJECT_CONTROL",[("LASER_SELECT",laserNum-1)])
@@ -67,7 +67,7 @@ def setActiveLaser(laserNum):
 
 def setDirectTune(enable):
     setFPGAbits("FPGA_LASERLOCKER","LASERLOCKER_OPTIONS",[("DIRECT_TUNE",enable)])
-    
+
 def turnOffLasers():
     setFPGAbits("FPGA_INJECT","INJECT_CONTROL",[("MODE",0)])
     for i in range(4):
@@ -82,7 +82,7 @@ def setLaserCurrent(laserNum,coarse,fine=32768):
     Driver.wrDasReg("LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % laserNum,coarse)
     Driver.wrDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" % laserNum,fine)
     Driver.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum,"LASER_CURRENT_CNTRL_ManualState")
-    
+
 def setTuner(rampParams=None,ditherParams=None,slopes=None):
     if rampParams is not None:
         sweepLow,winLow,winHigh,sweepHigh = rampParams
@@ -143,20 +143,20 @@ class ScopePanel(wx.Panel):
     def setYLim2(self,yMin,yMax):
         self.graphPanel2.SetGraphProperties(YSpec=(yMin,yMax))
 
-class ControlPanel(wx.Panel):        
+class ControlPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
-        
+
         self.handlers = {}
         self.serialNumber = ""
         self.average = 64
         self.averageCount = 0
         self.enableAverage = False
         self.enable = True
-        
+
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        
+
         self.check_box_enable_average = wx.CheckBox(self, -1, "Exponential Average")
         self.label_average = wx.StaticText(self, -1, "Average")
         self.text_ctrl_average = wx.TextCtrl(self, -1, "%d" % self.average, style=wx.TE_PROCESS_ENTER)
@@ -164,7 +164,7 @@ class ControlPanel(wx.Panel):
         self.check_box_enable.SetValue(True)
         self.label_std_dev = wx.StaticText(self, -1, "Std Dev")
         self.text_ctrl_std_dev = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
-        
+
         sizer_1.Add(self.check_box_enable_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.label_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.text_ctrl_average, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 10)
@@ -174,10 +174,10 @@ class ControlPanel(wx.Panel):
         sizer_1.AddStretchSpacer()
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
-        
+
         self.Bind(wx.EVT_CHECKBOX, self.onAverageCheckbox, self.check_box_enable_average)
         self.Bind(wx.EVT_CHECKBOX, self.onEnableCheckbox, self.check_box_enable)
-                
+
         self.Bind(wx.EVT_TEXT_ENTER, self.onAverageEnter, self.text_ctrl_average)
         self.text_ctrl_average.Bind(wx.EVT_KILL_FOCUS, self.onAverageEnter)
 
@@ -186,26 +186,26 @@ class ControlPanel(wx.Panel):
         if name not in self.handlers:
             self.handlers[name] = []
         self.handlers[name].append(observer)
-        
+
     def onAverageEnter(self,evt):
         if not self.enableAverage:
             self.average = float(self.text_ctrl_average.GetValue())
         if evt: evt.Skip()
-        
+
     def onAverageCheckbox(self,evt):
         self.enableAverage = self.check_box_enable_average.GetValue()
-        if not self.enableAverage: 
+        if not self.enableAverage:
             self.averageCount = 0
             self.text_ctrl_average.SetEditable(True)
             self.text_ctrl_average.SetValue("%d" % self.average)
         else:
             self.text_ctrl_average.SetEditable(False)
         if evt: evt.Skip()
-        
+
     def onEnableCheckbox(self,evt):
         self.enable = self.check_box_enable.GetValue()
         if evt: evt.Skip()
-        
+
 class GenericPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
@@ -218,7 +218,7 @@ class GenericPanel(wx.Panel):
         self.eColor = wx.TextCtrl(self, -1, " ", size=(10,-1))
         self.eColor.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, 0, ""))
         sizer_1 = wx.StaticBoxSizer(self.sizer_1_staticbox, wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)       
+        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2.Add(self.value, 1, wx.RIGHT, 5)
         sizer_2.Add(self.eColor, 0, wx.RIGHT, 5)
         sizer_1.Add(sizer_2,0,wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
@@ -262,22 +262,22 @@ class DetectorViewer(wx.Frame):
     def selectLaser(self,aLaserNum):
         self.aLaserNum = aLaserNum
         setActiveLaser(aLaserNum)
-        
+
     def setLaserTemperature(self,laserTemp):
         self.laserTemperature = laserTemp
         setLaserTemperature(self.aLaserNum,laserTemp)
 
     def setLaserCurrent(self,laserCurrent):
         self.laserCurrent = laserCurrent
-        
+
     def setupAnalyzer(self):
         self.npoints = 4095
-        x = numpy.arange(self.npoints,dtype=float) 
+        x = numpy.arange(self.npoints,dtype=float)
         self.data = numpy.zeros(self.npoints,dtype=float)
         stopAcquisition()
         setAnalyzerTuningMode(interface.ANALYZER_TUNING_CavityLengthTuningMode)
         setTunerOffset(0)
-        setDirectTune(False) 
+        setDirectTune(False)
         self.upSlope = 8000
         self.downSlope = 8000
         self.pztPk2pk = 65000
@@ -296,17 +296,17 @@ class DetectorViewer(wx.Frame):
         Driver.wrFPGA("FPGA_RDMAN","RDMAN_NUM_SAMP",self.npoints)
         Driver.wrFPGA("FPGA_RDMAN","RDMAN_DIVISOR",self.divisor-1)
         setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",False),("SCOPE_MODE",True),("SCOPE_SLOPE",True)])
-        
+
     def setupSweep(self):
         rmax = self.pztMax
         rmin = self.pztMin
         setTuner(rampParams=(rmin,rmin,rmax,rmax),slopes=(self.upSlope,self.downSlope))
-        
+
     def onTimer(self,evt):
         extra = 9 # Extra bits in high-resolution tuner accumulator
         hTuner = 0.01 # Tuner interval in ms
 
-        
+
         if self.nSample % 8 == 0:
             self.npoints = Driver.rdFPGA("FPGA_RDMAN","RDMAN_NUM_SAMP")
             self.divisor = Driver.rdFPGA("FPGA_RDMAN","RDMAN_DIVISOR")+1
@@ -316,11 +316,11 @@ class DetectorViewer(wx.Frame):
             self.pztMin = Driver.rdDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER")
 
         self.nSample += 1
-        
+
         N = self.npoints
         self.dt = self.divisor/(25.0e3) # In milliseconds
         tMax = N*self.dt
-        
+
         if self.controlPanel.enable:
             d = Driver.rdOscilloscopeTrace()
             d = d[:N] & 16383
@@ -335,14 +335,14 @@ class DetectorViewer(wx.Frame):
                 self.data = d
 
             w = self.scopePanel.graph1Waveform
-            w.Clear()        
+            w.Clear()
             for x,y in enumerate(self.data):
                 w.Add(x*self.dt,y)
             pztRange = (self.pztMax-self.pztMin)*2**extra
             upPoints = pztRange//self.upSlope
             downPoints = pztRange//self.downSlope
             start = 0
-            
+
             w = self.scopePanel.graph2Waveform
             w.Clear()
             w.Add(start,self.pztMin)
@@ -353,7 +353,7 @@ class DetectorViewer(wx.Frame):
                 w.Add(start,self.pztMax)
                 w.Add(start+downPoints*hTuner,self.pztMax-downPoints*float(self.downSlope)/2**extra)
                 start += (downPoints+1)*hTuner
-                
+
         numGraphs = 2
         for idx in range(numGraphs):
             if not self.graphPanel[idx].GetIsNewXAxis():
@@ -369,7 +369,7 @@ class DetectorViewer(wx.Frame):
                         self.graphPanel[i].SetForcedXAxis(currXAxis)
                         self.graphPanel[i].Update(forcedRedraw=True)
                         self.graphPanel[i].ClearForcedXAxis()
-                    self.allTimeLocked = True  
+                    self.allTimeLocked = True
                     break
                 elif self.allTimeLocked:
                     #print "Graph %d unzooming others in time-locked mode" % idx
@@ -380,12 +380,12 @@ class DetectorViewer(wx.Frame):
                     self.allTimeLocked = False
                     break
 
-        self.scopePanel.setYLim1(0,16500)    
+        self.scopePanel.setYLim1(0,16500)
         self.scopePanel.setXLim(0,tMax)
         self.scopePanel.Update()
-        
+
         if evt: evt.Skip()
-    
+
 _DEFAULT_CONFIG_NAME = "DetectorViewer.ini"
 
 HELP_STRING = \
@@ -403,7 +403,7 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     import getopt
-  
+
     shortOpts = 'c:h'
     longOpts = ["help"]
     try:
@@ -416,21 +416,21 @@ def HandleCommandSwitches():
     options = {}
     for o, a in switches:
         options[o] = a
-      
+
     if "/?" in args or "/h" in args:
         options["-h"] = ""
-  
+
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit(0)
- 
+
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-    
+
     return (configFile)
 
 
@@ -440,6 +440,6 @@ def main():
     frame = DetectorViewer(configFile)
     frame.Show()
     app.MainLoop()
-    
+
 if __name__ == "__main__":
     main()

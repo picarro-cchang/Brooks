@@ -11,19 +11,19 @@ if __name__ == "__main__":
 	base,name = os.path.split(abs_name)
 	anz = name.split("-")[0]
 	print anz
-	
-	dat_type="dat"   
-	psys="google"   
+
+	dat_type="dat"
+	psys="google"
 	identity="N7boCjtBEcKwzzrzJHLTiDjmPFc1LchhXQBxQLvd"
 	lines="1000"
 	history_range="365"
 	ticket_url="https://p3.picarro.com/google/rest/sec/dummy/1.0/Admin/"
 	log_metadata_url="https://p3.picarro.com/google/rest/gdu/<TICKET>/1.0/AnzLogMeta/"
-	ip_req_url="https://p3.picarro.com/google/rest/gdu/<TICKET>/1.0/AnzMeta/"  
+	ip_req_url="https://p3.picarro.com/google/rest/gdu/<TICKET>/1.0/AnzMeta/"
 	push_url="https://p3.picarro.com/google/rest/gdu/<TICKET>/1.0/AnzLog/"
 
-	subprocess.call(["DatEchoP3.exe", 
-					 "--listen-path", abs_name, 
+	subprocess.call(["DatEchoP3.exe",
+					 "--listen-path", abs_name,
 					 "--data-type", dat_type,
 					 "--analyzer-name", anz,
 					 "--log-metadata-url", log_metadata_url,

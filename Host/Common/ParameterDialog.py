@@ -12,7 +12,7 @@
 #
 # HISTORY:
 #   06-Jan-2009  sze  Initial version.
-#   30-Jun-2009  sze  Modifications to allow access to FPGA registers as 
+#   30-Jun-2009  sze  Modifications to allow access to FPGA registers as
 #                      well as DSP registers
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
@@ -21,7 +21,7 @@
 import wx
 import ctypes
 
-from ParameterDialogGui import ParameterDialogGui
+from Host.Common.ParameterDialogGui import ParameterDialogGui
 
 class ParameterDialog(ParameterDialogGui):
     def __init__(self, *args, **kwds):
@@ -110,7 +110,7 @@ class ParameterDialog(ParameterDialogGui):
             regLoc,regType,reg,label,units,valueFmt,readable,writable = param
             if regType == 'mask':
                 # For mask type, the bits are stored as a list of tuples in the label field.
-                #  The choices for each field are stored in the last position of the tuple. 
+                #  The choices for each field are stored in the last position of the tuple.
                 #  If this is an empty list, that does not contribute to a row
                 #  There are thus as many rows for this register as elements in the list
                 rows += len([1 for bitmask,label,choices in label if choices])

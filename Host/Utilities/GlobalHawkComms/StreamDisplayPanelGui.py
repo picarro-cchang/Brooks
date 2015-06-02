@@ -59,5 +59,3 @@ class StreamDisplayPanelGui(wx.Panel):
         event.Skip()
 
 # end of class StreamDisplayPanelGui
-
-

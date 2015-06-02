@@ -34,7 +34,7 @@ def parseAutosamplerLog(logText):
     trayName = "Unknown"
     jobNum = -1
     methodName = "Unknown"
-    
+
     sampleLineNum = -1
     try:
         while True:
@@ -61,7 +61,7 @@ def parseAutosamplerLog(logText):
                     break
             sampleLineNum -= 1
     except:
-        pass            
+        pass
     return logDate, logTime, injTime, sampleNum, jobNum, methodName
 
 
@@ -82,7 +82,6 @@ class TestLogParser(unittest.TestCase):
         self.assertEqual(sampleNum,3)
         self.assertEqual(jobNum,1)
         self.assertEqual(methodName,"5ulMethd")
-        
+
 if __name__ == "__main__":
     unittest.main()
-            

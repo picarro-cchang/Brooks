@@ -8,7 +8,7 @@ class AlarmEmail(object):
         self.smtpHostname = "woodstock.blueleaf.com"
         self.toAddrList = toAddrList
         self.fromAddr = fromAddr
-        
+
     def sendMsg(self, subject="Message from CRDS", msg="This is a testing alarm message"):
         msg = MIMEText(msg)
         outer = MIMEMultipart()

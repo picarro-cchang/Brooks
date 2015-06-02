@@ -1,9 +1,9 @@
 """
 File Name: AccessViaNet.py
 Purpose: This is responsible for network communications to an analyzer
-         It supports several external commands via TCP or UDP. 
+         It supports several external commands via TCP or UDP.
          N.B. These MUST be terminated using a "\n" before they are obeyed.
-         
+
          DRIVER   - Send command to driver
          SYNC     - Resynchronize clock
          STANDBY  - Shut down but keep driver operating
@@ -14,7 +14,7 @@ Purpose: This is responsible for network communications to an analyzer
 
 File History:
     11-09-05 sze   Initial release
-    
+
 Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
@@ -154,12 +154,12 @@ def sntp_time(server):
         offset = ((t2 - t1) + (t3 - t4)) / 2.
         return address[0], delay, offset
     except:
-        # 
+        #
         return 3*(None,)
 
 def inRange(value,optimal,tolerance):
     return abs(value - optimal) <= tolerance
-    
+
 class AnalyzerStatus(object):
     # Determine the analyzer status based upon which subsystems are reporting. At the lowest
     #  level, only the host computer is operational. When the driver is operating, sensor data
@@ -191,7 +191,7 @@ class AnalyzerStatus(object):
     def receivedSensors(self,sensors):
         self.sensorsWithoutData += 1
         self.heartBeatWithoutSensors = 0
-        if (self.level>AnalyzerStatus.SENSORS_ACTIVE) and (self.sensorsWithoutData<2): 
+        if (self.level>AnalyzerStatus.SENSORS_ACTIVE) and (self.sensorsWithoutData<2):
             return
         self.level = AnalyzerStatus.SENSORS_ACTIVE
         state = {
@@ -203,7 +203,7 @@ class AnalyzerStatus(object):
         self.status = (self.status & ~mask) | value
     def receivedHeartbeat(self):
         self.heartBeatWithoutSensors += 1
-        if (self.level>AnalyzerStatus.HOST_ONLY) and (self.heartBeatWithoutSensors<6): 
+        if (self.level>AnalyzerStatus.HOST_ONLY) and (self.heartBeatWithoutSensors<6):
             return
         self.level = AnalyzerStatus.HOST_ONLY
         self.status = self.READY
@@ -277,7 +277,7 @@ class AnalyzerControl(Singleton):
     def doDriverRpc(self,args):
         expr = "self.driver." + args
         return "%s" % (eval(expr),)
-    
+
     def syncTime(self,updateClock=True):
         response = []
         if not self.syncClock: return "\n".join(response)
@@ -314,7 +314,7 @@ class AnalyzerControl(Singleton):
         else:
             response.append("No timeservers available")
         return "\n".join(response)
-    
+
     def help(self):
         usage = []
         usage.append("Available commands:")
@@ -325,7 +325,7 @@ class AnalyzerControl(Singleton):
         usage.append("STANDBY  - Closes valves, stops measurement, but leaves analyzer driver running")
         usage.append("STOP     - Stops measurement and analyzer control loops")
         return "\n".join(usage)
-        
+
     def standby(self):
         self.killUncontrolled()
         self.supervisor.TerminateApplications(False, False)
@@ -340,7 +340,7 @@ class AnalyzerControl(Singleton):
         # Close down sample handling
         self.driver.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
         return "OK"
-        
+
     def stop(self):
         self.killUncontrolled()
         try:
@@ -350,7 +350,7 @@ class AnalyzerControl(Singleton):
             status = "Supervisor not active. Stopping driver only."
             self.driver.CmdFIFO.StopServer()
         return status
-        
+
     def shutdown(self):
         self.killUncontrolled()
         try:
@@ -360,7 +360,7 @@ class AnalyzerControl(Singleton):
             status = "Supervisor not active. Shutting down windows."
             os.system("shutdown -s -t 20")
         return status
-        
+
     def reboot(self):
         self.killUncontrolled()
         os.chdir(self.supervisorHostDir)
@@ -383,8 +383,8 @@ class AnalyzerControl(Singleton):
                     time.sleep(2.0)
         except:
             pass
-        time.sleep(5.0)        
-        
+        time.sleep(5.0)
+
         os.chdir(self.supervisorHostDir)
         info = subprocess.STARTUPINFO()
         if self.consoleMode != 1:
@@ -392,7 +392,7 @@ class AnalyzerControl(Singleton):
             info.wShowWindow = subprocess.SW_HIDE
         dwCreationFlags = win32process.CREATE_NEW_CONSOLE
         print ["SupervisorLauncher.exe","-a","-c",AccessViaNet().launcherConfigFile]
-        
+
         subprocess.Popen(["SupervisorLauncher.exe","-a","-c",AccessViaNet().launcherConfigFile], startupinfo=info, creationflags=dwCreationFlags)
 
         #if self.launchType == "exe":
@@ -405,7 +405,7 @@ class AnalyzerControl(Singleton):
         #    info = subprocess.STARTUPINFO()
         #    subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
         return 'OK'
-                                        
+
 class TcpServer(asyncore.dispatcher):
     """Receives connections and establishes handlers for each client.
     """
@@ -454,7 +454,7 @@ class TcpMultiServer(asyncore.dispatcher):
     def handle_close(self):
         self.close()
         return
-        
+
 class UdpServer(asyncore.dispatcher):
     def __init__(self,address,target):
         asyncore.dispatcher.__init__(self)
@@ -490,7 +490,7 @@ class UdpServer(asyncore.dispatcher):
         if sent < len(data):
             remaining = data[sent:]
             self.data.to_write.append(remaining)
-                
+
 class GoAwayHandler(asynchat.async_chat):
     """Tell client to go away and close the connection"""
     def __init__(self,sock):
@@ -505,7 +505,7 @@ class GoAwayHandler(asynchat.async_chat):
     def handle_close(self):
         self.close()
         return
-    
+
 class TcpCmdHandler(asynchat.async_chat):
     """Handles processing commands from a single client.
     """
@@ -527,7 +527,7 @@ class TcpCmdHandler(asynchat.async_chat):
         self.buffer = []
     def handle_close(self):
         self.closed = True
-        self.close()        
+        self.close()
 
 class TcpDataHandler(asynchat.async_chat):
     """Handles sending data to a client.
@@ -546,8 +546,8 @@ class TcpDataHandler(asynchat.async_chat):
         self.buffer = []
     def handle_close(self):
         self.closed = True
-        self.close()        
-        
+        self.close()
+
 def tidy(line):
     """Handle backspace characters in line"""
     result = []
@@ -557,18 +557,18 @@ def tidy(line):
         else:
             result.append(c)
     return "".join(result)
-        
+
 class CommandHandler(object):
     def __init__(self,target):
         self.target = target
         self.actions = dict(DRIVER   = self.target.doDriverRpc,
                             HELP     = self.target.help,
-                            STANDBY  = self.target.standby, 
+                            STANDBY  = self.target.standby,
                             STOP     = self.target.stop,
                             RESTART  = self.target.restart,
                             REBOOT   = self.target.reboot,
                             SHUTDOWN = self.target.shutdown)
-                   
+
     def doCommand(self,cmd):
         cmd = tidy(cmd.strip()).split(None,1)
         response = ""
@@ -586,11 +586,11 @@ class CommandHandler(object):
             except:
                 response = traceback.format_exc().replace("\n","\r\n")
         return response + "\r\n> "
-            
-        
+
+
 def format(fmtList,v):
     for t,f in fmtList:
-        if isinstance(v,t): 
+        if isinstance(v,t):
             try:
                 return f % (v,)
             except TypeError:
@@ -599,10 +599,10 @@ def format(fmtList,v):
 
 MAX_SENSORS = 14
 MAX_DATA = 14
-    
+
 class AccessViaNet(Singleton):
     initialized = False
-    def __init__(self, configPath=None):        
+    def __init__(self, configPath=None):
         if not self.initialized:
             if configPath != None:
                 # Read from .ini file
@@ -666,7 +666,7 @@ class AccessViaNet(Singleton):
                 raise ValueError("Configuration file must be specified to initialize AccessViaNet network interface")
             self.initialized = True
         Log('AccessViaNet initialized',Data=dict(statusIP='%s:%d'%(self.statusHost,self.statusPort)))
-        
+
     def sendPacket(self,data):
         try:
             self.statusSocket.sendto(data,('<broadcast>',self.statusPort))
@@ -675,18 +675,18 @@ class AccessViaNet(Singleton):
         for h in self.tcpDataServer.handlers:
             if not h.closed:
                 h.send_data(data)
-        
-    # Get data from sensor queue until some timestamp (from any stream) exceeds reportTime. 
+
+    # Get data from sensor queue until some timestamp (from any stream) exceeds reportTime.
     # If the queue becomes empty before this happens, return None
-    # Otherwise, report latest values of sensor streams specified in streamNames as a 
+    # Otherwise, report latest values of sensor streams specified in streamNames as a
     #  list of the same length as streamNames. This is a COPY of currentSensors so we can
     #  safely update currentSensors
-    
+
     def getSensorData(self,reportTime):
         # Get all the data in the sensor queue up to reportTime and return all the current sensor
         #  values at that time. If the data in the sensor queue are all before reportTime, return None
         def getStreamName(streamNum):
-            return interface.STREAM_MemberTypeDict[streamNum][7:]        
+            return interface.STREAM_MemberTypeDict[streamNum][7:]
         d = None
         try:
             while not self.sensorQueue.empty():
@@ -699,7 +699,7 @@ class AccessViaNet(Singleton):
             if d is not None:
                 self.currentSensors[getStreamName(d.streamNum)] = d.value
 
-        
+
     def run(self):
         try:
             self.analyzerControl = AnalyzerControl(self.config)
@@ -715,7 +715,7 @@ class AccessViaNet(Singleton):
             nextReport = self.sensorPeriod*((startTs + self.sensorPeriod)//self.sensorPeriod)
             nextHeartbeat = self.heartBeatPeriod*((startTs + self.heartBeatPeriod)//self.heartBeatPeriod)
             formatList = [(int,'%d'),(float,'%.5f'),(types.NoneType,'')]
-            
+
             while True:
                 asyncore.loop(timeout=0.1,count=1)
                 # Get available data manager queue data
@@ -778,8 +778,8 @@ class AccessViaNet(Singleton):
             self.tcpServer.close()
             self.tcpDataServer.close()
             self.udpServer.close()
-                
-                
+
+
 HELP_STRING = """AccessViaNet.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following. Note that options override

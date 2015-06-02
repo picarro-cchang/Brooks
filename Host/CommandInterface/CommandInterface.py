@@ -7,12 +7,12 @@ File History:
     08-01-18 sze   Use datetime rather than time for improved resolution
     08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
     09-07-03 alex  Tested and debugged both serial and socket interfaces
-    09-07-22 alex  Supported more command sets. Supported multiple concentration reporting. Used semicolon instead of tab.  
+    09-07-22 alex  Supported more command sets. Supported multiple concentration reporting. Used semicolon instead of tab.
     10-06-07 alex  Added function for flux mode switcher
     14-10-28 tracy Support decimal places from ini file by adding NumDecPlaces = <n> to
                    command section. Only for _MEAS_GETCONC, _MEAS_GETCONCEX, _MEAS_GETSCANTIME,
                    _MEAS_GETBUFFERFIRST, _PULSE_GETBUFFERFIRST, and _PULSE_GETBUFFER.
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -23,7 +23,7 @@ __version__ = 1.0
 import os
 import sys
 import time
-import datetime 
+import datetime
 import getopt
 import re
 import threading
@@ -31,14 +31,15 @@ import Queue
 from inspect import isclass
 from numpy import *
 
-import SerialInterface, SocketInterface
+import Host.CommandInterface.SerialInterface as SerialInterface
+import Host.CommandInterface.SocketInterface as SocketInterface
 from Host.InstMgr.InstMgr import INSTMGR_SHUTDOWN_PREP_SHIPMENT, INSTMGR_SHUTDOWN_HOST_AND_DAS, MAX_ERROR_LIST_NUM
 from Host.Common import CmdFIFO, Listener, TextListener
 from Host.Common import MeasData
 from Host.Common.SharedTypes import RPC_PORT_COMMAND_HANDLER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
                                     RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_MEAS_SYSTEM,\
                                     RPC_PORT_EIF_HANDLER,  RPC_PORT_DATALOGGER,\
-                                    BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_DATA_MANAGER 
+                                    BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_DATA_MANAGER
 from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
@@ -95,7 +96,7 @@ class CommandInterface(object):
         self._EIFRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_EIF_HANDLER, ClientName = "CommandInterface")
         self._DataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "CommandInterface")
         self.cmdThread = None
-        
+
         # Create measurement system related variables
         self.measListener  = Listener.Listener(None, BROADCAST_PORT_DATA_MANAGER,
           ArbitraryObject, self.MeasFilter, retry = True, name="Command Interface", logFunc = Log)
@@ -139,7 +140,7 @@ class CommandInterface(object):
                 self.maketimetuple = datetime.datetime.fromtimestamp
             else:
                 self.maketimetuple = datetime.datetime.utcfromtimestamp
-            
+
             for label in self.config.get(HEADER_SECTION,'meas_label').split(","):
                 label = label.strip()
                 self.meas_label_list.append(label)
@@ -158,7 +159,7 @@ class CommandInterface(object):
             self.switcher = FluxSwitcher(switcherConfig, supervisorConfig)
         except:
             self.switcher = None
-            
+
         # Create error constants from config
         for name in self.errorList:
             args = tuple(self.errorList[name].split(',',1))
@@ -273,14 +274,14 @@ class CommandInterface(object):
                 #print msg
                 time.sleep(0.2)
                 continue
-                    
+
     def Run(self):
         """ Executes command """
         while ( self.terminate == False ):
             if self.pause == True:
                 time.sleep(1)
 
-            try:    
+            try:
                 cmdline = self.Read().strip(LF_CHAR)
                 if len(cmdline)==0:
                     time.sleep(0.2)
@@ -393,7 +394,7 @@ class CommandInterface(object):
     def runRpcServer(self):
         self.RpcServerInit()
         self.RpcServer.serve_forever()
-        
+
     def MeasFilter( self, dataDict ):
         """Filter for data broadcasts"""
         try:
@@ -407,7 +408,7 @@ class CommandInterface(object):
                         cdata = self._measData.Data[label]
                         self._cdata.append(cdata)
                         self.addToMeasQueue(label, (self._ctimeString, cdata))
-                if self._lastctime: 
+                if self._lastctime:
                     self.addToScantimeQueue(self._ctime - self._lastctime)
                 self._lastctime = self._ctime
         except:
@@ -432,7 +433,7 @@ class CommandInterface(object):
             self._scantimeQueue.append(scantime)
         finally:
             self._scantimeLock.release()
-            
+
     def getAveScantime(self):
         if len(self._scantimeQueue) > 0:
             return mean(self._scantimeQueue)
@@ -486,7 +487,7 @@ class CommandInterface(object):
 
         if retString != "":
             self.Print( retString )
-                    
+
     def _MEAS_CLEARBUFFER(self):
         for label in self.meas_label_list:
             self._measLockDict[label].acquire()
@@ -524,7 +525,7 @@ class CommandInterface(object):
         for i in userLogs:
             self._DataLoggerRpc.DATALOGGER_startLogRpc(i,True)
         self.Print("OK")
-        
+
     # Instrument Manager functions
     def _INSTR_PARK(self):
         self._InstMgrRpc.INSTMGR_ShutdownRpc( INSTMGR_SHUTDOWN_PREP_SHIPMENT )
@@ -582,7 +583,7 @@ class CommandInterface(object):
             self.Print("OK")
         else:
             self.PrintError(ERROR_EIF_INVALID_CHANNEL)
-            
+
     def _EIF_ANALOGOUT_SETOUTPUT(self, channel, outputLevel):
         isOK = self._EIFRpc.AO_SetOutput(int(channel), float(outputLevel))
         if isOK:
@@ -598,7 +599,7 @@ class CommandInterface(object):
             self.PrintError(ERROR_EIF_INVALID_CHANNEL)
 
     def _EIF_ANALOGOUT_CONFIGURE(self, channel, calSlope, calOffset, minOutput, maxOutput, bootmode, bootvalue, invalidvalue ):
-        isOK = self._EIFRpc.AO_Configure( int(channel), float(calSlope), float(calOffset), float(minOutput), 
+        isOK = self._EIFRpc.AO_Configure( int(channel), float(calSlope), float(calOffset), float(minOutput),
                                           float(maxOutput), int(bootmode), float(bootvalue), float(invalidvalue) )
         if isOK:
             self.Print("OK")
@@ -681,7 +682,7 @@ class CommandInterface(object):
         self._ValveSeqRpc.stopValveSeq()
         self.Print("OK")
 
-    def _VALVES_SEQ_READSTATE(self): 
+    def _VALVES_SEQ_READSTATE(self):
         self.Print(self._ValveSeqRpc.getValveSeqStatus())
 
     def _VALVES_SEQ_SETSTATE(self, valveMask):
@@ -696,7 +697,7 @@ class CommandInterface(object):
             self.Print("Starting new mode: %s" % mode)
         else:
             self.Print("Flux mode switcher not available")
-        
+
     # Print functions
     def Print(self, msg, debug=True):
         if self.interface != None:
@@ -705,7 +706,7 @@ class CommandInterface(object):
                 if debug: print msg + self.append
             except:
                 print "Failed to write to interface"
-                
+
     def PrintError( self, code ):
         msg = ("ERR:%s\t%s"+ self.append) % ( code, _TimeToString(datetime.datetime.now()))
         if self.interface != None:
@@ -751,6 +752,6 @@ def Main():
         msg = "Exception trapped outside execution"
         print msg + ": %s %r" % (E, E)
         Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
-        
+
 if __name__ == "__main__" :
     Main()

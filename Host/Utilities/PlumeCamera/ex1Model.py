@@ -1,5 +1,5 @@
 # Model code
-# We have a REQ socket for 
+# We have a REQ socket for
 # We have a PUB socket that broadcasts information about the model, which any subscribers may use (e.g. to display information about the model state)
 
 try:
@@ -15,7 +15,7 @@ context = zmq.Context()
 
 CMD_PORT = 5101
 BROADCAST_PORT = 5102
-  
+
 class Model(object):
     def __init__(self):
         self.cmdSock = context.socket(zmq.REP)
@@ -25,22 +25,22 @@ class Model(object):
         self.terminate = False
         self.input = None
         self.output = None
-        
+
     def squareAndStore(self,data):
         self.output = data**2
         return self.output
-        
+
     def run(self):
         t = time.time()
         nextTime = math.ceil(t)
-        
+
         poller = zmq.Poller()
         poller.register(self.cmdSock, zmq.POLLIN)
         while not self.terminate:
             timeout = 1000*(nextTime - time.time())
             socks = {}
             if timeout>0: socks = dict(poller.poll(timeout=timeout))
-            # Check for no available sockets, indicating that the timeout occured 
+            # Check for no available sockets, indicating that the timeout occured
             if not socks:
                 print "Broadcasting"
                 self.broadcastSock.send("TICK\n" + json.dumps({"time": time.time(), "output": self.output}))
@@ -61,4 +61,3 @@ class Model(object):
 if __name__ == "__main__":
     m = Model()
     m.run()
-    

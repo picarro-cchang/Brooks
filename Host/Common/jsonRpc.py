@@ -14,7 +14,10 @@
 #
 #  Copyright (c) 2011 Picarro, Inc. All rights reserved
 #
-import urllib2,uuid,thread,base64
+import urllib2
+import uuid
+import thread
+import base64
 try:
     import simplejson as json
 except:

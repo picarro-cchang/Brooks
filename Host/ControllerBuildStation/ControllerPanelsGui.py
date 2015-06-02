@@ -559,5 +559,3 @@ class StatsPanelGui(wx.Panel):
         event.Skip()
 
 # end of class StatsPanelGui
-
-

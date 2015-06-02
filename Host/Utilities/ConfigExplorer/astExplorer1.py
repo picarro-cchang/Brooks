@@ -25,6 +25,6 @@ try:
     for typ,st,(srow,scol),(erow,ecol),line in tokenize.generate_tokens(fp.readline):
         if typ == tokenize.STRING:
             print st
-            
+
 finally:
     fp.close()

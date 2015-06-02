@@ -6,15 +6,15 @@ import wx
 
 # begin wxGlade: extracode
 from wx.py import crust
-from WebControllerPanels import StatsPanel
-from WebControllerPanels import RingdownPanel
-from WebControllerPanels import WlmPanel
-from WebControllerPanels import PressurePanel
-from WebControllerPanels import HotBoxPanel
-from WebControllerPanels import WarmBoxPanel
-from WebControllerPanels import LaserPanel
+from Host.WebClient.WebController.WebControllerPanels import StatsPanel
+from Host.WebClient.WebController.WebControllerPanels import RingdownPanel
+from Host.WebClient.WebController.WebControllerPanels import WlmPanel
+from Host.WebClient.WebController.WebControllerPanels import PressurePanel
+from Host.WebClient.WebController.WebControllerPanels import HotBoxPanel
+from Host.WebClient.WebController.WebControllerPanels import WarmBoxPanel
+from Host.WebClient.WebController.WebControllerPanels import LaserPanel
 
-# from WebControllerPanels import CommandLogPanel
+# from Host.WebClient.WebController.WebControllerPanels import CommandLogPanel
 # end wxGlade
 
 
@@ -37,7 +37,7 @@ class ControllerFrameGui(wx.Frame):
         self.laser2Pane = wx.Panel(self.topNotebook, -1)
         self.laser1Pane = wx.Panel(self.topNotebook, -1)
         # self.commandLogPane = wx.Panel(self.topNotebook, -1)
-        
+
         # Menu Bar
         self.controllerFrameGui_menubar = wx.MenuBar()
         self.interface = wx.Menu()

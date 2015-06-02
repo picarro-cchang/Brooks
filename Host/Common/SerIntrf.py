@@ -23,10 +23,10 @@ class SerIntrf(object):
 
     def flush(self):
         self.ser.flushInput()
-        
+
     def sendString(self,str):
         self.ser.write(str + "\r")
-        
+
     def getLine(self):
         line = []
         while True:
@@ -37,7 +37,7 @@ class SerIntrf(object):
                 line.append(ch)
             else:
                 return "".join(line)
-                
+
     def getLines(self):
         lines = []
         while True:
@@ -45,6 +45,4 @@ class SerIntrf(object):
                 lines.append(self.getLine())
             except TimeoutError:
                 return "\n".join(lines)
-
-
 

@@ -43,7 +43,7 @@ class PulseAnalyzerStatus(object):
                      "numPointsToRelease": 1,
                      "armCond": None
                    }
-                   
+
         for key in defaults:
             if key not in self.kwargs:
                 self.kwargs[key] = defaults[key]
@@ -66,10 +66,10 @@ class PulseAnalyzerStatus(object):
 
     def setNextDataBad(self):
         self.nextDataBad = True
-    
+
     def isNextDataBad(self):
         return self.nextDataBad
-        
+
     def clearNextDataBad(self):
         self.nextDataBad = False
         pass

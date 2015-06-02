@@ -29,8 +29,8 @@ import types
 import traceback
 from numpy import array, transpose
 
-from DasConfigure import DasConfigure
-from DriverAnalogInterface import AnalogInterface
+from Host.Driver.DasConfigure import DasConfigure
+from Host.Driver.DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp

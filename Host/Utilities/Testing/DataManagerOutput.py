@@ -14,11 +14,11 @@ from Host.Common import AppStatus
 
 def Log(msg):
     print msg
-    
+
 class DataManagerOutput(object):
     def __init__(self):
         self.dmQueue = Queue.Queue(0)
-        
+
     def listen(self):
         self.dmListener = Listener(self.dmQueue,
                                     BROADCAST_PORT_DATA_MANAGER,
@@ -33,15 +33,14 @@ class DataManagerOutput(object):
                 if output['source'] == 'analyze_CFADS':
                     print  time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(output["data"]["time"])), output["data"]["CO2"], output["data"]["CH4"], output["data"]["H2O"]
             time.sleep(1)
-    
+
     def getOutput(self,maxWait=10):
         return self.dmQueue.get(1,maxWait)
-        
+
     def stop(self):
         self.dmListener.stop()
-        
+
 if __name__ == "__main__":
     dm = DataManagerOutput()
     dm.listen()
     dm.run()
-    

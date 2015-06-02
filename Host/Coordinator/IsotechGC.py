@@ -42,7 +42,7 @@ class GC(TTLIntrf):
 
     # The following functions are not useful in real applications, but good for in-lab testing
     def getCtrlXSample(self):
-        return self.getControl(CTRL_X_SAMPLE)	
+        return self.getControl(CTRL_X_SAMPLE)
 
     def getCtrlYSample(self):
         return self.getControl(CTRL_Y_SAMPLE)

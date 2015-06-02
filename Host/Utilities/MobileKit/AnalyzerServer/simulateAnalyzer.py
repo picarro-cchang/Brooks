@@ -5,7 +5,7 @@ import sys
 import time
 import datetime
 
-# When started, this program creates a dummy live archive file with only the timestamp, latitude 
+# When started, this program creates a dummy live archive file with only the timestamp, latitude
 #  and longitude columns
 
 #dataFile = 'data/BFADS03-20110609-1014-Data.dat'
@@ -44,6 +44,6 @@ for line in ip.readlines():
     time.sleep(0.25)
     sys.stderr.write('.')
     sys.stderr.flush()
-    
+
 CloseHandle(handle)
-ip.close()    
+ip.close()

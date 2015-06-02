@@ -4,7 +4,7 @@ Purpose: Custom software to restrat all the user logs at exact hours
 
 File History:
     2012-05-10 alex  Created
-    
+
 Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 
@@ -59,7 +59,7 @@ class DataLoggerInterface(object):
                 if en:
                     fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
                     live, fname = self.archiverRpc.GetLiveArchiveFileName(i,fname)
-                    userLogDict[i] = (True,live,fname)                    
+                    userLogDict[i] = (True,live,fname)
                 else:
                     userLogDict[i] = (False,False,'')
             for i in privateLogs:
@@ -67,7 +67,7 @@ class DataLoggerInterface(object):
                 if en:
                     fname = self.dataLoggerRpc.DATALOGGER_getFilenameRpc(i)
                     live, fname = self.archiverRpc.GetLiveArchiveFileName(i,fname)
-                    privateLogDict[i] = (True,live,fname)                    
+                    privateLogDict[i] = (True,live,fname)
                 else:
                     privateLogDict[i] = (False,False,'')
         except Exception,e:
@@ -96,14 +96,14 @@ class DataLoggerInterface(object):
         # Refresh info with changes made
         self._getDataLoggerInfo()
         self.rpcInProgress = False
-        
+
 class UserLogTimer(object):
     def __init__(self):
         self.dataLogger = DataLoggerInterface()
         self.dataLogger.getDataLoggerInfo()
         self.interval = FAST_INTERVAL_S
         self.lastHr = None
-        
+
     def run(self):
         while True:
             if not self.lastHr:
@@ -123,7 +123,7 @@ class UserLogTimer(object):
                     else:
                         self.interval = SLOW_INTERVAL_S
             time.sleep(self.interval)
-            
+
 if __name__ == "__main__":
     Log("%s started." % APP_NAME, Level = 0)
     app = SingleInstance("UserLogTimer")

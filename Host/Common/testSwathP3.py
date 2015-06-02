@@ -1,6 +1,6 @@
 from pylab import *
 from numpy.random import RandomState
-import SwathProcessor
+import Host.Common.SwathProcessor as SwathProcessor
 import swathP as sp
 import time
 

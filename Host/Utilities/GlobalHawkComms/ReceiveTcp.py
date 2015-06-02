@@ -4,7 +4,7 @@ Purpose: This receives data from the Global Hawk aircraft network using the TCP 
 
 File History:
     11-11-06 sze   Initial release
-    
+
 Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
@@ -12,9 +12,9 @@ import wx
 import socket
 import sys
 
-from ReceiverFrameGui import ReceiverFrameGui
-from StreamDisplayPanel import StreamDisplayPanel
-    
+from Host.Utilities.GlobalHawkComms.ReceiverFrameGui import ReceiverFrameGui
+from Host.Utilities.GlobalHawkComms.StreamDisplayPanel import StreamDisplayPanel
+
 class ReceiverFrame(ReceiverFrameGui):
     MAX_DATA = 14
     MAX_ITEMS = 1000
@@ -50,16 +50,16 @@ class ReceiverFrame(ReceiverFrameGui):
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
         self.updateTimer.Start(milliseconds=1000)
         self.Bind(wx.EVT_CLOSE,self.onClose)
-        
+
     def onClose(self,evt):
         if self.socket is not None: self.socket.close()
         self.socket = None
         evt.Skip()
-        
+
     def onUpdateTimer(self,evt):
         wx.WakeUpIdle()
         evt.Skip()
-        
+
     def onIdle(self,evt):
         try:
             self.data += self.socket.recv(1024)
@@ -74,7 +74,7 @@ class ReceiverFrame(ReceiverFrameGui):
                         if len(data)>2: self.list_ctrl_stream.SetStringItem(index,2,data[2])
                         for dataCol in range(self.MAX_DATA):
                             col = 3 + dataCol
-                            if len(data)>col: 
+                            if len(data)>col:
                                 self.list_ctrl_stream.SetStringItem(index,col,data[col])
                             else:
                                 break
@@ -91,11 +91,11 @@ class ReceiverFrame(ReceiverFrameGui):
                 wx.MessageBox('TCP Connection Broken','Error',wx.OK | wx.ICON_ERROR)
             self.Close()
         evt.Skip()
-    
+
     def refreshGraphs(self,dataList):
         for sdp in self.stream_display_panels:
             sdp.appendPlotDatum(dataList)
-        
+
 class ReceiverApp(wx.App):
     def OnInit(self):
         wx.InitAllImageHandlers()
@@ -103,8 +103,8 @@ class ReceiverApp(wx.App):
         self.SetTopWindow(frame_receiver)
         frame_receiver.Show()
         return 1
-        
-    
+
+
 # end of class ReceiverApp
 
 if __name__ == "__main__":

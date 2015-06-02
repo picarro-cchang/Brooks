@@ -546,4 +546,3 @@ bitrevStr = "".join([chr(b) for b in bitrevList])
 
 def bitReverse(inputStr):
     return inputStr.translate(bitrevStr)
-

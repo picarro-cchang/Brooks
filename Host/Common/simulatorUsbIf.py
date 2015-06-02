@@ -17,7 +17,7 @@
 from sys import platform
 from ctypes import byref, create_string_buffer, c_ubyte, c_ushort, c_short, c_uint, c_int, c_float
 from ctypes import sizeof, addressof, Union
-from hexfile import HexFile
+from Host.Common.hexfile import HexFile
 import logging
 from Host.autogen import usbdefs
 from Host.Common.SharedTypes import Singleton

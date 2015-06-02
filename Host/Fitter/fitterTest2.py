@@ -4,7 +4,7 @@ import unittest
 import sys
 import os
 from Host.Common.SharedTypes import Bunch
-from fitterCoreWithFortran import *
+from Host.Fitter.fitterCoreWithFortran import *
 
 from Host.Common.CustomConfigObj import CustomConfigObj
 from cStringIO import StringIO
@@ -59,7 +59,7 @@ vary coefficients= 1,0,0, 1,0, 0, 0,1,1,0,0
 
 class BunchWithItems(Bunch,dict):
     pass
-    
+
 class FitPeakTestCase(unittest.TestCase):
     def setUp(self):
         ini = CustomConfigObj(StringIO(spLib))
@@ -73,7 +73,7 @@ class FitPeakTestCase(unittest.TestCase):
     def testPeakAmplitude(self):
         self.assertEqual(Analysis.index,0,"Unexpected analysis index")
         aList = [Analysis(self.config)]
-        
+
         # Generate the data which is to be fitted
         shiftList = linspace(-0.1,0.1,21)
         for shift in shiftList:
@@ -102,7 +102,7 @@ class FitPeakTestCase(unittest.TestCase):
             # print r['base',0], r['base',1], r['base',2], r['base',3]
             # print r[0,'peak'], r[0,'base'], r[0,'center'], r[0,'scaled_strength'], r[0,'scaled_y'], r[0,'scaled_z']
         # show()
-        
+
 class FitPeakTestSuite(unittest.TestSuite):
     def __init__(self):
         unittest.TestSuite.__init__(self)

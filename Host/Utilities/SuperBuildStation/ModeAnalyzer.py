@@ -4,7 +4,7 @@ from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.configobj import ConfigObj
 from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR
 from Host.autogen import interface
 import numpy
 import os
@@ -13,7 +13,7 @@ import Queue
 import time
 import types
 import inspect
-from BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
+from Host.Utilities.SuperBuildStation.BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -45,20 +45,20 @@ def setFPGAbits(FPGAblockName,FPGAregName,optList):
     oldVal = Driver.rdFPGA(FPGAblockName,FPGAregName)
     newVal = ((~optMask) & oldVal) | optNew
     Driver.wrFPGA(FPGAblockName,FPGAregName,newVal)
-    
+
 def stopAcquisition():
     Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
     time.sleep(0.5)
 
 def setAnalyzerTuningMode(mode):
     Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",mode)
-    
+
 def setSpectCntrlDiagnostic():
     Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_DiagnosticState")
-    
+
 def setTunerOffset(offset):
     Driver.wrFPGA("FPGA_TWGEN","TWGEN_PZT_OFFSET",offset)
-    
+
 def setActiveLaser(laserNum):
     laserMask = 1<<(laserNum-1)
     setFPGAbits("FPGA_INJECT","INJECT_CONTROL",[("LASER_SELECT",laserNum-1)])
@@ -68,7 +68,7 @@ def setActiveLaser(laserNum):
 
 def setDirectTune(enable):
     setFPGAbits("FPGA_LASERLOCKER","LASERLOCKER_OPTIONS",[("DIRECT_TUNE",enable)])
-    
+
 def turnOffLasers():
     setFPGAbits("FPGA_INJECT","INJECT_CONTROL",[("MODE",0)])
     for i in range(4):
@@ -86,7 +86,7 @@ def setLaserCurrent(laserNum,coarse,fine=32768):
 
 def setCoarseLaserCurrent(laserNum,coarse):
     Driver.wrDasReg("LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % laserNum,coarse)
-    
+
 def setTuner(rampParams=None,ditherParams=None,slopes=None):
     if rampParams is not None:
         sweepLow,winLow,winHigh,sweepHigh = rampParams
@@ -133,7 +133,7 @@ class ScopePanel(wx.Panel):
         self.graphPanel1.SetGraphProperties(XSpec=(xMin,xMax))
     def setYLim(self,yMin,yMax):
         self.graphPanel1.SetGraphProperties(YSpec=(yMin,yMax))
-    
+
 class ModeSelectPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
@@ -149,7 +149,7 @@ class ModeSelectPanel(wx.Panel):
         self.eColor.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, 0, ""))
         sizer_1 = wx.StaticBoxSizer(self.sizer_1_staticbox, wx.VERTICAL)
         sizer_1.Add(self.cbPlotData, 0, wx.TOP|wx.BOTTOM, 5)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)       
+        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2.Add(self.eModeAmplitude, 1, wx.RIGHT, 5)
         sizer_2.Add(self.eColor, 0, wx.RIGHT, 5)
         sizer_1.Add(sizer_2,0,wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
@@ -179,7 +179,7 @@ class GenericPanel(wx.Panel):
         self.eColor = wx.TextCtrl(self, -1, " ", size=(10,-1))
         self.eColor.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, 0, ""))
         sizer_1 = wx.StaticBoxSizer(self.sizer_1_staticbox, wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)       
+        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2.Add(self.value, 1, wx.RIGHT, 5)
         sizer_2.Add(self.eColor, 0, wx.RIGHT, 5)
         sizer_1.Add(sizer_2,0,wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
@@ -194,7 +194,7 @@ class GenericPanel(wx.Panel):
         self.eColor.Refresh()
     def setValue(self,value):
         self.value.SetValue("%s" % value)
-        
+
 class ModePanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
@@ -277,35 +277,35 @@ class ModeAnalyzer(object):
         self.numAvg = int(frame.text_ctrl_num_average.GetValue())
         self.npoints = 4096
         self.active = False
-        
+
     def start(self,tuningMode='pzt'):
         self.active = True
         self.setupAnalyzer(tuningMode)
         self.onClear(self.frame)
         self.captureTimer()
-        
+
     def stop(self):
         if self.active:
             setAnalyzerTuningMode(interface.ANALYZER_TUNING_CavityLengthTuningMode)
-            setDirectTune(False) 
+            setDirectTune(False)
             self.releaseTimer()
             Driver.loadIniFile()
             self.active = False
-            
+
     def captureTimer(self):
         f = self.frame
         f.registerObserver("onTimer",self.onTimer)
         self.frame.startTimer(200)
-    
+
     def releaseTimer(self):
         f = self.frame
         self.frame.stopTimer()
         f.deregisterObserver("onTimer",self.onTimer)
-                
+
     def selectLaser(self,aLaserNum):
         self.aLaserNum = aLaserNum
         setActiveLaser(aLaserNum)
-        
+
     def setLaserTemperature(self,laserTemperature=None):
         if laserTemperature is None:
             laserTemperature = float(self.frame.text_ctrl_laser_temperature.GetValue())
@@ -317,9 +317,9 @@ class ModeAnalyzer(object):
             laserCurrent = float(self.frame.text_ctrl_laser_current.GetValue())
         self.laserCurrent = laserCurrent
         setCoarseLaserCurrent(self.aLaserNum,laserCurrent)
-        
+
     def setupAnalyzer(self,tuningMode):
-        x = numpy.arange(self.npoints,dtype=float) 
+        x = numpy.arange(self.npoints,dtype=float)
         self.ref = numpy.exp(-0.5*((x-self.mainPos)/100)**2)
         self.data = numpy.zeros(self.npoints,dtype=float)
         self.winsize = (self.npoints)/4
@@ -330,7 +330,7 @@ class ModeAnalyzer(object):
                 self.modeDict[mode] = {'range':[int(x) for x in self.config['_PZT Tuning Ranges'][mode]]}
             setAnalyzerTuningMode(interface.ANALYZER_TUNING_CavityLengthTuningMode)
             setTunerOffset(0)
-            setDirectTune(False) 
+            setDirectTune(False)
             self.slope = 2000
             self.pztPk2pk = 32500
             self.divisor = 512
@@ -341,7 +341,7 @@ class ModeAnalyzer(object):
                 setAnalyzerTuningMode(interface.ANALYZER_TUNING_FsrHoppingTuningMode)
             else:
                 setAnalyzerTuningMode(interface.ANALYZER_TUNING_LaserCurrentTuningMode)
-                setDirectTune(True) 
+                setDirectTune(True)
             setTunerOffset(0)
             setSpectCntrlDiagnostic()
             self.slope = 90
@@ -359,7 +359,7 @@ class ModeAnalyzer(object):
         self.fsr = 0
         self.sampleNo = 0
         self.lost = 10
-        
+
     def setupSweep(self):
         slope = int(self.slope)
         rmax = int(32768.0+0.5*self.pztPk2pk)
@@ -369,7 +369,7 @@ class ModeAnalyzer(object):
     def onLaserTemperatureEnter(self,frame):
         print 'Setting laser temperature'
         self.setLaserTemperature()
-        
+
     def onLaserCurrentEnter(self,frame):
         print 'Setting laser current'
         self.setLaserCurrent()
@@ -377,11 +377,11 @@ class ModeAnalyzer(object):
     def onNumAverageEnter(self,frame):
         print 'Setting points to average'
         self.numAvg = int(frame.text_ctrl_num_average.GetValue())
-        
+
     def onClear(self,frame):
         frame.mode_panel.clearAllSequences()
         self.refWt = 1
-        
+
     def onTimer(self,frame):
         sel = frame.notebook_graphs.GetSelection()
         N = self.npoints
@@ -394,12 +394,12 @@ class ModeAnalyzer(object):
         # The following finds the shift that must be applied to the second signal
         #  to best align it with the first
         shift = numpy.argmax(ccorr[N-winsize:N+winsize])-winsize
-        
+
         skip = N/2
         # Find number of samples to the next copy of the cavity spectrum
         pkpos = numpy.argmax(numpy.asarray(ccorr[N+shift-skip::-1])) + skip
         fsr = 0.004*self.slope*self.divisor*pkpos/512.0
-        
+
         scale = (pkpos/self.mainSep)**0.05
         self.slope *= scale
         self.pztPk2pk *= scale
@@ -413,8 +413,8 @@ class ModeAnalyzer(object):
         if dTemp > 0.001: dTemp = 0.001
         if shift < 0: self.setLaserTemperature(self.laserTemperature+dTemp)
         else: self.setLaserTemperature(self.laserTemperature-dTemp)
-        
-        # Update the averaged data with the shifted waveform, and update the FSR 
+
+        # Update the averaged data with the shifted waveform, and update the FSR
         self.data = (self.refWt*self.data + circshift(d,shift))/(self.refWt + 1)
         #self.data = d # circshift(d,shift)
         self.fsr  = (self.refWt*self.fsr  + fsr)/(self.refWt + 1)
@@ -438,11 +438,11 @@ class ModeAnalyzer(object):
             md['area'] = md['sum'] - md['count']*ymin
         pkAreas = numpy.asarray([self.modeDict[m]['area'] for m in ['Main1','Saddle','Horizontal','Polarization','Focus','Vertical','Main2']])
         modeAmpl = 2.0*pkAreas[1:-1]/(pkAreas[0]+pkAreas[-1])
-        
+
         frame.mode_panel.setFsr(self.fsr)
         if self.refWt > 2:
             frame.mode_panel.addData(self.sampleNo,100.0*modeAmpl)
-            for m,a in enumerate(modeAmpl): 
+            for m,a in enumerate(modeAmpl):
                 frame.mode_panel.setPercentage(m,100.0*a)
             self.sampleNo += 1
             frame.mode_panel.fsrPanel.setColor("green")
@@ -454,18 +454,18 @@ class ModeAnalyzer(object):
             self.flash = not self.flash
         if sel == 0:
             w = frame.scope_panel.graph1Waveform
-            w.Clear()        
+            w.Clear()
             for x,y in enumerate(self.data):
                 w.Add(x,y)
-            frame.scope_panel.setYLim(0,16500)    
-            frame.scope_panel.setXLim(0,N)    
+            frame.scope_panel.setYLim(0,16500)
+            frame.scope_panel.setXLim(0,N)
             frame.scope_panel.Update()
         elif sel == 1:
             for m in range(len(modeAmpl)):
                 vis = frame.mode_panel.modeSelectPanels[m].getPlotDataFlag()
                 frame.mode_panel.setVisible(m,0,vis)
             frame.mode_panel.Update()
-    
+
 _DEFAULT_CONFIG_NAME = "ModeViewer.ini"
 
 HELP_STRING = \
@@ -483,7 +483,7 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     import getopt
-  
+
     shortOpts = 'c:h'
     longOpts = ["help"]
     try:
@@ -496,21 +496,21 @@ def HandleCommandSwitches():
     options = {}
     for o, a in switches:
         options[o] = a
-      
+
     if "/?" in args or "/h" in args:
         options["-h"] = ""
-  
+
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit(0)
- 
+
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-    
+
     return (configFile)
 
 
@@ -520,6 +520,6 @@ def main():
     frame = ModeViewer(configFile)
     frame.Show()
     app.MainLoop()
-    
+
 if __name__ == "__main__":
     main()

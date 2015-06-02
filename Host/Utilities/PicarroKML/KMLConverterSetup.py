@@ -84,7 +84,7 @@ KMLConverter = Target(description = "KMLConverter", # used for the versioninfo r
                     ##    icon_resources = [(1, "icon.ico")],
                     dest_base = "KMLConverter"
                     )
-                    
+
 ################################################################
 
 # And now to the main setup routine...

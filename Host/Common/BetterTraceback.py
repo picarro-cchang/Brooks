@@ -16,7 +16,8 @@ full stack frame information.
 It is a file intended for debugging purposes.
 """
 
-import sys, traceback
+import sys
+import traceback
 
 def get_advanced_traceback(StackSkipCount = 0):
     """Returns a string with advanced traceback information.

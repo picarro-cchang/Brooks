@@ -33,7 +33,7 @@ import wx
 import csv
 from PIL import ImageGrab
 
-from WlmCalUtilityGui import WlmCalUtilityGui
+from Host.Utilities.WlmCalUtility.WlmCalUtilityGui import WlmCalUtilityGui
 
 import Host.autogen.interface as interface
 from Host.autogen.interface import *
@@ -82,12 +82,12 @@ class Model(object):
     Use this by generating a subclass with the class variable propNames.
 
     propNames is the list of property names supported by the model
- 
+
     Each property is associated with a field whose name is an underscore followed by the property name.
     The getter for the property returns the value of the field and the setter sets the field and calls
     any listeners who have registered an interest in the property.
     Attempting to access attributes which are not in the list of propNames raises an error
-    """ 
+    """
     propNames = []
 
     def __init__(self):
@@ -96,11 +96,11 @@ class Model(object):
 
         for propName, fieldName in zip(self.__class__.propNames, self.__class__.fieldNames):
             object.__setattr__(self, fieldName, None)
-            def setter(self, value, f=fieldName, p=propName): 
+            def setter(self, value, f=fieldName, p=propName):
                 object.__setattr__(self, f, value)
                 listeners = object.__getattribute__(self, "listeners")
                 if p in listeners:
-                    for listener in listeners[p]: 
+                    for listener in listeners[p]:
                         listener(value)
             def getter(self, f=fieldName):
                 return object.__getattribute__(self, f)
@@ -157,7 +157,7 @@ class SensorListener(object):
     def __init__(self, debugFilename=None, debug=False):
         self.doc = {}
         self.deque = deque()
-        self.queue = Queue(0)                          
+        self.queue = Queue(0)
         self.listener = Listener(self.queue, SharedTypes.BROADCAST_PORT_SENSORSTREAM, SensorEntryType, self.streamFilter)
         self.sensorList = ["Laser1Temp", "Laser2Temp", "Laser3Temp", "Laser4Temp", "Etalon1", "Reference1", "Etalon2", "Reference2"]
         self.streams = [getattr(interface, "STREAM_" + s) for s in self.sensorList]
@@ -196,7 +196,7 @@ class SensorListener(object):
         # This filter is designed to enqueue requested sensor entries which all have the same timestamp.
         if abs(self.doc.get("timestamp",0) - result.timestamp) > 1:
             if len(self.doc) > 1:
-                rDoc = self.doc.copy() 
+                rDoc = self.doc.copy()
                 self.doc = { "timestamp": result.timestamp }
 
                 if result.streamNum in self.sensorByStream:
@@ -265,22 +265,22 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.saveImageType = self.config.get("Files", "save_image_type", "png")
 
         self.model = WlmCalModel()
-        self.displayNames = [ 
-            ("etalon_1", "%.1f"), 
-            ("etalon_1_dark", "%.1f"), 
-            ("reference_1", "%.1f"), 
-            ("reference_1_dark", "%.1f"), 
-            ("etalon_2", "%.1f"), 
-            ("etalon_2_dark", "%.1f"), 
-            ("reference_2", "%.1f"), 
-            ("reference_2_dark", "%.1f"), 
-            ("ratio_1", "%.3f"), 
-            ("ratio_2", "%.3f"), 
-            ("center_1", "%.3f"), 
+        self.displayNames = [
+            ("etalon_1", "%.1f"),
+            ("etalon_1_dark", "%.1f"),
+            ("reference_1", "%.1f"),
+            ("reference_1_dark", "%.1f"),
+            ("etalon_2", "%.1f"),
+            ("etalon_2_dark", "%.1f"),
+            ("reference_2", "%.1f"),
+            ("reference_2_dark", "%.1f"),
+            ("ratio_1", "%.3f"),
+            ("ratio_2", "%.3f"),
+            ("center_1", "%.3f"),
             ("center_2", "%.3f"),
-            ("scale_1", "%.3f"), 
-            ("scale_2", "%.3f"), 
-            ("norm_scale_1", "%.3f"), 
+            ("scale_1", "%.3f"),
+            ("scale_2", "%.3f"),
+            ("norm_scale_1", "%.3f"),
             ("norm_scale_2", "%.3f"),
             ("phase_deg", "%.1f"),
             ("phase_rad", "%.3f")]
@@ -295,7 +295,7 @@ class WlmCalUtility(WlmCalUtilityGui):
             self.model.register_listener(name, setTextCtrl)
             self.registered_listeners[name] = setTextCtrl
 
-        self.editableNames = [ "etalon_1_dark", "reference_1_dark", 
+        self.editableNames = [ "etalon_1_dark", "reference_1_dark",
                                "etalon_2_dark", "reference_2_dark" ]
 
         # Bind the events for text entry and loss of focus to change the model

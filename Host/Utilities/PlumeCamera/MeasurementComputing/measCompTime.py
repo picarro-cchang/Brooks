@@ -2,7 +2,7 @@ from ctypes import byref, c_int, c_long, c_short, c_ushort, c_void_p, POINTER, w
 from Host.Common.timestamp import getTimestamp
 import time
 import numpy as np
-from MeasComp import *
+from Host.Utilities.PlumeCamera.MeasurementComputing.MeasComp import *
 
 if __name__ == "__main__":
     BoardNum = 0

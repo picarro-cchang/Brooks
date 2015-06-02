@@ -2,13 +2,13 @@
 #  2012 1128:  Start work
 #  2013 0104:  Added empirical y- and z-dependencies; dry mole fraction
 #  2013 0110:  Adjusted y and z for 140 Torr operation
-#  2013 0111:  Tweaked [O2] scale factor to get better agreement with standard atmosphere 
+#  2013 0111:  Tweaked [O2] scale factor to get better agreement with standard atmosphere
 
 import os.path
 import time
 from numpy import *
 from copy import copy
-    
+
 def initialize_Baseline():
     init["base",0] = Base
     init[1000,0] = A0
@@ -43,7 +43,7 @@ def outlierFilter(x,threshold,minPoints=2):
         good[minIndex] = 1
         break
     return good
-    
+
 if INIT:
     fname = os.path.join(BASEPATH,r"./MADS/spectral library v2_1_AADS4_MA_20110601.ini")
     spectrParams = getInstrParams(fname)
@@ -58,14 +58,14 @@ if INIT:
     fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/Master_lct.ini")
     masterParams = getInstrParams(fname)
     pzt_per_fsr =  masterParams['DAS_REGISTERS']['PZT_INCR_PER_CAVITY_FSR']
-    
+
     anO2 = []
     anO2.append(Analysis(os.path.join(BASEPATH,r"./MADS/H2O - O2 doublet VC VY v1_1.ini")))
     anO2.append(Analysis(os.path.join(BASEPATH,r"./MADS/H2O - O2 doublet VC VY v1_1.ini")))
-    
+
 #   Globals
     last_time = None
-      
+
     #  Baseline parameters
     Base = instrParams['Baseline_level']
     A0 = instrParams['Sine0_ampl']
@@ -76,10 +76,10 @@ if INIT:
     Nu1 = instrParams['Sine1_freq']
     Per1 = instrParams['Sine1_period']
     Phi1 = instrParams['Sine1_phase']
-    
+
 init = InitialValues()
 deps = Dependencies()
-ANALYSIS = []    
+ANALYSIS = []
 d = copy(DATA)
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
 #d.sparse(maxPoints=1000,width=0.01,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",outlierThreshold=4)
@@ -114,7 +114,7 @@ if species == 61:
     o2_residuals = r["std_dev_res"]
     o2_conc = 742.2*peak81
     h2o_conc = 403.5*peak82
-    
+
     f = d.waveNumber
     l = 1000*d.uncorrectedAbsorbance
 
@@ -129,14 +129,14 @@ if species == 61:
         peak_height = tiptop - base
     else:
         tiptop = tipstd = 0.0
-       
+
     #  Next define FSR spectrum and fit it in FSR units
-    
+
     in61 = (d.fitData["freq"] >= 7822.80) & (d.fitData["freq"] <= 7823.2)
-    good61 = sum(in61)            
+    good61 = sum(in61)
     index61 = round_((d.fitData["freq"] - 7822.9835)/fsr)
     d.fitData["freq"] = 7822.9835 + index61*fsr
-                     
+
     r = anO2[1](d,init,deps)
     ANALYSIS.append(r)
     fsr_shift = r["base",3]
@@ -166,8 +166,8 @@ if r != None:
     last_time = r["time"]
 else:
     IgnoreThis = True
-   
-if not IgnoreThis:    
+
+if not IgnoreThis:
     RESULT = {"o2_shift":o2_shift,"peak81":peak81,"o2_y":o2_y,"o2_residuals":o2_residuals,
             "str81":str81,"fsr_str81":fsr_str81,"fsr_residuals":fsr_residuals,
             "h2o_y":h2o_y,"peak82":peak82,"str82":str82,"o2_conc":o2_conc,"h2o_conc":h2o_conc,

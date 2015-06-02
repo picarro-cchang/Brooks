@@ -3,8 +3,8 @@
 # Class of a panel of plot controls for DatViewer plots.
 #
 import wx
-from PlotControlPanelGui import PlotControlPanelGui
-#from PlotPanel import PlotPanel2
+from Host.DatViewer.PlotControlPanelGui import PlotControlPanelGui
+#from Host.DatViewer.PlotPanel import PlotPanel2
 
 
 class DummyPlot(wx.Panel):
@@ -80,7 +80,7 @@ class DummyPlot(wx.Panel):
             # See these links:
             # http://stackoverflow.com/questions/6670483/wxpythons-settransparent-doesnt-capture-user-input-if-set-to-an-opacity-of-zer
             # http://stackoverflow.com/questions/1032138/wxpython-good-way-to-overlay-a-wx-panel-on-an-existing-wx-panel
-            # 
+            #
             # This SetTransparent() call does work.
             #parent.SetTransparent(128)
 
@@ -192,7 +192,7 @@ class PlotControlPanel(PlotControlPanelGui):
         self.model.changed = ""
 
         # Create a listener for plot updates. The creator of this object needs to register
-        # 
+        #
         self.listenerWrapper = ListenerWrapper(panelNum, panelName)
 
         dataSetNameList = ["", "data A", "data B", "data C"]

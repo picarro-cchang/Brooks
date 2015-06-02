@@ -17,7 +17,7 @@ import win32process
 import win32con
 import shutil
 from Host.Common.CustomConfigObj import CustomConfigObj
-from FluxSwitcherGuiFrame import FluxSwitcherGuiFrame
+from Host.Utilities.FluxSwitcher.FluxSwitcherGuiFrame import FluxSwitcherGuiFrame
 from Host.Common.FluxSwitcher import FluxSwitcher
 
 DEFAULT_CONFIG_NAME = "FluxSwitcherGui.ini"
@@ -28,7 +28,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-    
+
 class FluxSwitcherGui(FluxSwitcherGuiFrame):
     def __init__(self, configFile, supervisorConfigFile, flux, *args, **kwds):
         self.co = CustomConfigObj(configFile)
@@ -43,7 +43,7 @@ class FluxSwitcherGui(FluxSwitcherGuiFrame):
         self.switcher.select(type)
         self.switcher.launch()
         self.buttonLaunch.Enable(True)
-                
+
 HELP_STRING = \
 """
 
@@ -58,7 +58,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -87,11 +87,11 @@ def HandleCommandSwitches():
     if "-s" in options:
         supervisorConfigFile = options["-s"]
         print "Supervisor Launcher config file specified at command line: %s" % supervisorConfigFile
-        
+
     flux = "--not_flux" not in options
-    
+
     return configFile, supervisorConfigFile, flux
-    
+
 if __name__ == "__main__":
     configFile, supervisorConfigFile, flux = HandleCommandSwitches()
     app = wx.PySimpleApp()

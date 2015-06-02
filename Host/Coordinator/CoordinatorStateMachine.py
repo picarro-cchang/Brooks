@@ -1,32 +1,32 @@
 #
-# FILE:  
+# FILE:
 #   CoordinatorStateMachine.py
 #
-# DESCRIPTION:                                                
+# DESCRIPTION:
 #   Finite state machine driver for autosampler, evaporator and CRDS analyzer
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
+#
+# SEE ALSO:
+#   Specify any related information.
+#
 # HISTORY:
 #   03-Jun-2008  sze  Initial version.
 #   04-Dec-2008  alex Use CustomConfigObj to replace configobj
-#   20-Sep-2010  sze  Add spectrum collector to list of RPC servers accessible 
+#   20-Sep-2010  sze  Add spectrum collector to list of RPC servers accessible
 #                      from CoordinatorScripts
 #
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved 
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
 import sys
 import time
 from traceback import format_exc
-from time import sleep, mktime, localtime, strptime, strftime 
+from time import sleep, mktime, localtime, strptime, strftime
 
-from CoordinatorScripts import calcInjectDateTime, formatOutput, Comms
-from CoordinatorScripts import getValveStep, setValveStep, sendValveSequence
-from CoordinatorScripts import dummyGetLog, DummyAutosampler
-import CoordinatorScripts
-from Autosampler import Autosampler
-from IsotechGC import GC
+from Host.Coordinator.CoordinatorScripts import calcInjectDateTime, formatOutput, Comms
+from Host.Coordinator.CoordinatorScripts import getValveStep, setValveStep, sendValveSequence
+from Host.Coordinator.CoordinatorScripts import dummyGetLog, DummyAutosampler
+import Host.Coordinator.CoordinatorScripts as CoordinatorScripts
+from Host.Coordinator.Autosampler import Autosampler
+from Host.Coordinator.IsotechGC import GC
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, \
@@ -55,15 +55,15 @@ class State(object):
 
 class GuiProxy(object):
     """This class allows methods belonging to the main frame (gui) to be called from within a thread.
-       A method of the proxy object is mapped to the corresponding method of the gui. The arguments 
-       passed to the function are use to curry the main frame method, so that the resulting function 
+       A method of the proxy object is mapped to the corresponding method of the gui. The arguments
+       passed to the function are use to curry the main frame method, so that the resulting function
        object (with no arguments) may be passed to the main frame via the control queue for execution."""
-       
+
     def __init__(self,gui,controlFunc):
         self.gui = gui
         self.controlFunc = controlFunc
         self.guiMethods = []
-        
+
     def __getattr__(self,name):
         # A queue of methods is needed here. If only the most recent method is kept, it may be overwritten before it gets a chance
         #  to be curried
@@ -80,18 +80,18 @@ class GuiProxy(object):
             raise reply
         elif stat == TIMEOUT:
             print reply
-        
+
 class StateMachine(object):
     # The scriptFile is compiled and executed when run is called to provide an environment within which
     #  the state machine actions can be executed. If the scriptFile is not specified, the 'script' option
     #  within the 'Setup' section of the iniFile is used.
-    # The state machine transitions according to the entries in the iniFile, until it reaches the 
+    # The state machine transitions according to the entries in the iniFile, until it reaches the
     #  final state, whereupon it stops. If the state machine is stopped by calling the stop method,
     #  it will jump to the final state on the next transition, so that there is an opportunity to tidy up.
-    # The functions logFunc and fileDataFunc are placed within the environment in which the script 
+    # The functions logFunc and fileDataFunc are placed within the environment in which the script
     #  and state machine actions are run, so that they can communicate to the user.
     # A copy of the ConfigObj object made from the ini file is placed in the script environment as "config"
-    # The main GUI which is used for user interaction is passed as "gui". A proxy object is passed to the 
+    # The main GUI which is used for user interaction is passed as "gui". A proxy object is passed to the
     #   script file so that the script can call functions of the main GUI even though it is not in the main thread.
     #   These function calls are actually enqueued so that the main GUI thread can execute them when idle.
     #
@@ -175,13 +175,13 @@ class StateMachine(object):
 
     def getDescription(self,key):
         return self.gui.sampleDescriptionDict.get(key,"")
-        
+
     def turnOffRunningFlag(self):
         self.scriptEnv["runningFlag"] = False
 
     def turnOnRunningFlag(self):
         self.scriptEnv["runningFlag"] = True
-        
+
     def run(self):
         self.running = True
         self.state = self.initialState
@@ -207,7 +207,7 @@ class StateMachine(object):
         CoordinatorScripts.FREQCONV = self.rdFreqConverter
         CoordinatorScripts.SPECTCOLLECTOR = self.spectCollector
         CoordinatorScripts.VALSEQ = self.valveSequencer
-        
+
         #try:
         #    exec self.script in self.scriptEnv
         #except Exception,e:
@@ -236,7 +236,7 @@ class StateMachine(object):
             try:
                 self.state = self.states[self.scriptEnv["NEXT"]]
             except:
-                raise ValueError("State %s does not exist\nCurrent state: %s\nCurrent action: %s" % 
+                raise ValueError("State %s does not exist\nCurrent state: %s\nCurrent action: %s" %
                     (self.scriptEnv["NEXT"],self.state.name,self.state.actionString))
         self.running = False
         return self.scriptEnv

@@ -13,7 +13,7 @@ from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 
 APP_NAME = "SupervisorTerminator"
-                                         
+
 CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
                                          APP_NAME,
                                          IsDontCareConnection = False)
@@ -23,26 +23,26 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-   
+
 class StopSupervisorFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("Stop CRDS Software")
         self.SetBackgroundColour("#E0FFFF")
-        
+
         # labels
         self.labelTitle = wx.StaticText(self, -1, "Stop CRDS Software", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        
+
         self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-        choices=["Stop software but keep driver running", "Stop software and driver", "Turn off analyzer in current state"], 
+        choices=["Stop software but keep driver running", "Stop software and driver", "Turn off analyzer in current state"],
         majorDimension=1, style=wx.RA_SPECIFY_COLS)
-            
+
         # button
         self.buttonStop = wx.Button(self, -1, "Stop", style=wx.ALIGN_CENTRE, size=(110, 20))
         self.buttonStop.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.__do_layout()
 
     def __do_layout(self):
@@ -55,7 +55,7 @@ class StopSupervisorFrame(wx.Frame):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
-        
+
 class StopSupervisor(StopSupervisorFrame):
     def __init__(self, *args, **kwds):
         StopSupervisorFrame.__init__(self, *args, **kwds)
@@ -75,7 +75,7 @@ class StopSupervisor(StopSupervisorFrame):
                     os.system(r'taskkill.exe /IM QuickGui.exe /F')
                     # Kill Controller if it isn't under Supervisor's supervision
                     os.system(r'taskkill.exe /IM Controller.exe /F')
-                    
+
                     sel = self.selectShutdownType.GetSelection()
                     if sel == 0:
                         CRDS_Supervisor.TerminateApplications(False, False)
@@ -94,7 +94,7 @@ class StopSupervisor(StopSupervisorFrame):
             d = wx.MessageDialog(None,"Analyzer is not running\n", "Action cancelled", style=wx.ICON_EXCLAMATION)
             d.ShowModal()
             d.Destroy()
-    
+
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()

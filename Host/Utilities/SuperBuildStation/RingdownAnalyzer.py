@@ -16,9 +16,9 @@ from Host.Common.Listener import Listener
 from Host.Common.GraphPanel import Series
 from Host.Common.Listener import Listener
 from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR
 from Host.autogen import interface
-from BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
+from Host.Utilities.SuperBuildStation.BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
 
 class RingdownAnalyzer(object):
     def __init__(self,frame,config):
@@ -27,7 +27,7 @@ class RingdownAnalyzer(object):
         self.minGraphPoints = 500
         self.maxWaveformPoints = 20000
         self.graphPoints = int(self.frame.text_ctrl_graph_points.GetValue())
-        
+
         self.maxSpectrumPoints = 40000
         self.maxRipplePoints = 5*self.maxSpectrumPoints
         self.waveNoArray = zeros(self.maxSpectrumPoints,float)
@@ -52,15 +52,15 @@ class RingdownAnalyzer(object):
         self.rejectionScale = float(self.frame.text_ctrl_rejection_scale.GetValue())
         self.frame.graph_panel_spectrum.SetGraphProperties(xlabel='Wavenumber',timeAxes=(False,False),ylabel='Ripple (ppb/cm)',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_spectrum.AddSeriesAsPoints(self.spectrumWaveformGood,colour='blue',fillcolour='blue',marker='square',size=1,width=1)        
-        self.frame.graph_panel_spectrum.AddSeriesAsPoints(self.spectrumWaveformBad,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_spectrum.AddSeriesAsPoints(self.spectrumWaveformGood,colour='blue',fillcolour='blue',marker='square',size=1,width=1)
+        self.frame.graph_panel_spectrum.AddSeriesAsPoints(self.spectrumWaveformBad,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.frame.graph_panel_ripple.SetGraphProperties(xlabel='Ripple Period',timeAxes=(False,False),ylabel='Ripple Amplitude (ppb/cm)',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             XSpec=(0.0,2.0))
-        self.frame.graph_panel_ripple.AddSeriesAsLine(self.rippleWaveform,colour='blue',width=2)        
+        self.frame.graph_panel_ripple.AddSeriesAsLine(self.rippleWaveform,colour='blue',width=2)
         for limitWaveform in self.limitWaveforms:
-            self.frame.graph_panel_ripple.AddSeriesAsLine(limitWaveform,colour='red',width=4)        
-        
+            self.frame.graph_panel_ripple.AddSeriesAsLine(limitWaveform,colour='red',width=4)
+
         self.rdQueue = Queue(500)
         self.graph1Waveform = Series(self.maxWaveformPoints)
         self.graph2Waveform = Series(self.maxWaveformPoints)
@@ -85,7 +85,7 @@ class RingdownAnalyzer(object):
         self.tsLast = timestamp.getTimestamp()
         self.setupObservers()
         self.active = False
-        
+
     def setupObservers(self):
         f = self.frame
         f.registerObserver("onClear",self.onClear)
@@ -94,48 +94,48 @@ class RingdownAnalyzer(object):
         f.registerObserver("onDitherEnable",self.onDitherEnable)
         f.registerObserver("onRejectionWindowEnter",self.onRejectionWindowEnter)
         f.registerObserver("onRejectionScaleEnter",self.onRejectionScaleEnter)
-    
+
     def start(self):
         if not self.active:
             self.active = True
             Driver.wrFPGA("FPGA_RDMAN","RDMAN_DIVISOR",1)
             setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("SCOPE_MODE",False)])
             self.captureTimer()
-        
+
     def stop(self):
         if self.active:
             self.releaseTimer()
             self.active = False
-            
+
     def captureTimer(self):
         f = self.frame
         f.registerObserver("onTimer",self.onTimer)
         self.frame.startTimer(100)
-    
+
     def releaseTimer(self):
         f = self.frame
         self.frame.stopTimer()
         f.deregisterObserver("onTimer",self.onTimer)
-    
+
     def graphAgainstRingdown(self):
         self.frame.graph_panel_1.SetGraphProperties(xlabel='Ringdown',timeAxes=(False,False),ylabel='Ringdown Index',grid=True,frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_1.AddSeriesAsPoints(self.graph1Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_1.AddSeriesAsPoints(self.graph1Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.frame.graph_panel_2.SetGraphProperties(xlabel='Ringdown',timeAxes=(False,False),ylabel='Shot to shot (%)',grid=True,frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_2.AddSeriesAsPoints(self.graph2Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_2.AddSeriesAsPoints(self.graph2Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.plotType = 'ringdown'
 
     def graphAgainstTime(self):
         self.frame.graph_panel_1.SetGraphProperties(xlabel='Time',timeAxes=(True,False),ylabel='RD Time (us)',grid=True,frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_1.AddSeriesAsPoints(self.graph1Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_1.AddSeriesAsPoints(self.graph1Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.frame.graph_panel_2.SetGraphProperties(xlabel='Time',timeAxes=(True,False),ylabel='Shot to shot (%)',grid=True,frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_2.AddSeriesAsPoints(self.graph2Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_2.AddSeriesAsPoints(self.graph2Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.plotType = 'time'
-        
+
     def graphAgainstWavenumber(self):
         self.frame.graph_panel_1.SetGraphProperties(xlabel='Wavenumber',timeAxes=(False,False),ylabel='RD Time (us)',grid=True,frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_1.AddSeriesAsPoints(self.graph1Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_1.AddSeriesAsPoints(self.graph1Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.frame.graph_panel_2.SetGraphProperties(xlabel='Wavenumber',timeAxes=(False,False),ylabel='Shot to shot (%)',grid=True,frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.frame.graph_panel_2.AddSeriesAsPoints(self.graph2Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)        
+        self.frame.graph_panel_2.AddSeriesAsPoints(self.graph2Waveform,colour='red',fillcolour='red',marker='square',size=1,width=1)
         self.plotType = 'wavenumber'
 
     def rdFilter(self,data):
@@ -150,11 +150,11 @@ class RingdownAnalyzer(object):
                 return ts,t,wavenum,uLoss,cavityPressure
         except Exception,e:
             print "rdFilter exception: %s, %r" % (e,e)
-        
+
     def onRefresh(self):
         self.frame.text_ctrl_graph_points.SetValue("%d" % self.graphPoints)
         self.frame.text_ctrl_rd_threshold.SetValue("%d" % Driver.rdDasReg("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER"))
-    
+
     def onGraphPointsEnter(self,frame):
         self.graphPoints = int(frame.text_ctrl_graph_points.GetValue())
         if self.graphPoints < self.minGraphPoints:
@@ -178,13 +178,13 @@ class RingdownAnalyzer(object):
     def setRdThreshold(self,rdThreshold):
         Driver.wrDasReg("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER",rdThreshold)
         Driver.wrFPGA("FPGA_RDMAN","RDMAN_THRESHOLD",rdThreshold)
-        
+
     def onDitherEnable(self,frame):
         if frame.checkbox_dither_enable.IsChecked():
             setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",True)])
         else:
             setFPGAbits("FPGA_RDMAN","RDMAN_OPTIONS",[("DITHER_ENABLE",False)])
-        
+
     def onTimer(self,frame):
         pageNum = frame.notebook_graphs.GetSelection()
         pageText = frame.notebook_graphs.GetPageText(pageNum)
@@ -197,7 +197,7 @@ class RingdownAnalyzer(object):
                 ts,t,wavenum,uLoss,self.cavityPressure = self.rdQueue.get(timeout=0.1)
             except Empty:
                 continue
-                
+
             self.waveNoArray[self.nextFree] = wavenum
             self.uLossArray[self.nextFree] = uLoss
             self.timestampArray[self.nextFree] = ts
@@ -205,7 +205,7 @@ class RingdownAnalyzer(object):
             if self.nextFree >= self.maxSpectrumPoints:
                 self.nextFree -= self.maxSpectrumPoints
             self.dataLen = min(self.maxSpectrumPoints,self.dataLen+1)
-                
+
             datum = array([uLoss,t,wavenum])
             if self.discardSamples > 0:
                 self.discardSamples -= 1
@@ -291,10 +291,10 @@ class RingdownAnalyzer(object):
         self.frame.text_ctrl_s2s.SetValue("%.4f" % self.s2s)
         self.frame.text_ctrl_rd_rate.SetValue("%.1f" % self.rd_rate)
         self.frame.text_ctrl_cavity_pressure.SetValue("%.2f" % self.cavityPressure)
-        
+
     def clearBuffers(self):
         time.sleep(1.0)
-        while not self.rdQueue.empty(): 
+        while not self.rdQueue.empty():
             while not self.rdQueue.empty():
                 self.rdQueue.get(timeout=0.1)
             time.sleep(2.0)
@@ -302,12 +302,12 @@ class RingdownAnalyzer(object):
         self.varSumSq = zeros(3,dtype=float)
         while len(self.varDeque)>0: self.varDeque.popleft()
         self.discardSamples = 10
-    
+
     def onClear(self,frame):
-        self.graph1Waveform.Clear()        
+        self.graph1Waveform.Clear()
         self.graph2Waveform.Clear()
-        self.spectrumWaveformBad.Clear()        
-        self.spectrumWaveformGood.Clear()        
+        self.spectrumWaveformBad.Clear()
+        self.spectrumWaveformGood.Clear()
         self.rippleWaveform.Clear()
         self.rdIndex = 0
         self.nextFree = 0
@@ -319,9 +319,9 @@ class RingdownAnalyzer(object):
             self.frame.graph_panel_spectrum.Update()
         except:
             pass
-            
+
     def onRejectionScaleEnter(self,frame):
         self.rejectionScale = float(frame.text_ctrl_rejection_scale.GetValue())
-        
+
     def onRejectionWindowEnter(self,frame):
         self.rejectionWindow = float(frame.text_ctrl_rejection_window.GetValue())

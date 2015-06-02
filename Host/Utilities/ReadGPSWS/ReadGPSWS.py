@@ -38,16 +38,16 @@ class ReadGPSWS(object):
                                                 ServerName = APP_NAME,
                                                 ServerDescription = APP_DESCRIPTION,
                                                 ServerVersion = __version__,
-                                                threaded = True) 
+                                                threaded = True)
         config = CustomConfigObj(configFile)
         self.enGPS = config.getboolean("Enable", "enableGPS", True)
         portGPS = config.get("Serial", "portGPS", "COM1")
         baudrateGPS = config.getint("Serial", "baudrateGPS", 19200)
-        
+
         if self.enGPS:
             self.gps = serial.Serial(port=portGPS,baudrate=baudrateGPS,bytesize=8,parity="N",stopbits=1,timeout=0.05)
             self.gps.open()
-            
+
         self.enWS = config.getboolean("Enable", "enableWS", True)
         portWS = config.get("Serial", "portWS", "COM2")
         baudrateWS = config.getint("Serial", "baudrateWS", 9600)
@@ -57,7 +57,7 @@ class ReadGPSWS(object):
 
         self.latitudeCenter = config.getfloat("Location", "latitudeCenter", 41.03166)
         self.longitudeCenter = config.getfloat("Location", "longitudeCenter", -109.63833)
-        
+
         self.measSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % (RPC_PORT_MEAS_SYSTEM,),ClientName="GPSWSSender")
 
     def read(self):
@@ -112,13 +112,13 @@ class ReadGPSWS(object):
                 self.gps.close()
             if self.enWS:
                 self.ws.close()
-            
+
     def runApp(self):
         rpcThread = threading.Thread(target = self.read)
         rpcThread.setDaemon(True)
         rpcThread.start()
         self.RpcServer.serve_forever()
-        
+
 HELP_STRING = \
 """ readGps.py [-c<FILENAME>] [-h|--help]
 
@@ -164,17 +164,16 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME)  
+    Log("%s application started." % APP_NAME)
     try:
         rGPSWS = ReadGPSWS(configFile)
-        rGPSWS.runApp()        
+        rGPSWS.runApp()
     except Exception, E:
         if DEBUG: raise
         msg = "Exception trapped outside execution"
         print msg + ": %s %r" % (E, E)
         Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
-  
+
 if __name__ == "__main__":
     DEBUG = __debug__
     main()
-    

@@ -24,7 +24,7 @@ import threading
 from ctypes import addressof
 from ctypes import c_char, c_byte, c_float, c_int, c_longlong
 from ctypes import c_short, c_uint, c_ushort, sizeof, Structure
-from configobj import ConfigObj
+from Host.Common.configobj import ConfigObj
 from time import sleep, time, clock
 from numpy import *
 import sqlite3
@@ -291,7 +291,7 @@ class DasInterface(Singleton):
         self.analyzerUsb.hpicWrite(0x00010001)
         #
         self.hostToDspSender = HostToDspSender(self.analyzerUsb,5.0)
-        
+
     def getMessage(self):
         """Retrieves message from the analyzer or None if nothing is available"""
         ts = self.hostToDspSender.rdMessageTimestamp(self.messageIndex)
@@ -302,7 +302,7 @@ class DasInterface(Singleton):
             if self.messageIndex >= interface.NUM_MESSAGES:
                 self.messageIndex = 0
             return ts,msg
-                
+
     def getSensorData(self):
         """Retrieves sensor data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdSensorData(self.sensorIndex)
@@ -313,7 +313,7 @@ class DasInterface(Singleton):
                 self.sensorIndex = 0
             # self.sensorHistory.record(data)
             return data
-                
+
     def getRingdownData(self):
         """Retrieves ringdown data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdRingdownData(
@@ -464,7 +464,7 @@ class HostToDspSender(Singleton):
         #    if 0 != self.initStatus & interface.COMM_STATUS_CompleteMask:
         #        break
         #    print "Waiting for COMM_STATUS complete before USB communication"
-        #    sleep(0.1)            
+        #    sleep(0.1)
         self.initStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
         if self.seqNum == None:
             self.seqNum = (self.getSequenceNumber() + 1) & 0xFF
@@ -489,7 +489,7 @@ class HostToDspSender(Singleton):
         hostMsg[i] = calcCrc32(0,hostMsg,4*(numInt+2))
         # logging.info("CRC = %x" % hostMsg[numInt+2])
         self.oldStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
-        
+
         self.usb.hpiWrite(HOST_BASE,hostMsg)
         sleep(0.003) # Necessary to ensure hpiWrite completes before signalling interrupt
         for i in range(10): # Retry count
@@ -498,11 +498,11 @@ class HostToDspSender(Singleton):
             sleep(0.01)
         else:
             raise ValueError("Writing to DSP host area failed")
-            
+
         # Assert DSPINT
         self.usb.hpicWrite(0x00010003)
         # print "hpic after DSPINT: %08x" % self.usb.hpicRead()
-        
+
         return self.getStatusWhenDone() # or throw SharedTypes.DasCommsException on error
     @usbLockProtect
     def getSequenceNumber(self):
@@ -514,7 +514,7 @@ class HostToDspSender(Singleton):
             self.status = self.rdRegUint(interface.COMM_STATUS_REGISTER)
             ntries += 1
             if self.oldStatus & interface.COMM_STATUS_SequenceNumberMask == \
-                  self.status & interface.COMM_STATUS_SequenceNumberMask: 
+                  self.status & interface.COMM_STATUS_SequenceNumberMask:
                 # Loop while we still read the old status, since
                 #  DSP has not yet updated it
                 continue
@@ -579,7 +579,7 @@ class HostToDspSender(Singleton):
         result = (c_uint*numInt)()
         self.usb.hpiRead(addr,result)
         return list(result)
-    
+
     @usbLockProtect
     def rdRegFloat(self,reg):
         # Performs a host read of a single floating point number
@@ -665,7 +665,7 @@ class HostToDspSender(Singleton):
         return data.value
     @usbLockProtect
     def rdEnv(self,index,envClass):
-        # reads an environment at the specified index into an object 
+        # reads an environment at the specified index into an object
         #  of type envClass
         env = envClass()
         self.usb.hpiRead(ENVIRONMENT_BASE+4*lookup(index),env)
@@ -677,12 +677,12 @@ class HostToDspSender(Singleton):
     def wrScheme(self,schemeNum,numRepeats,schemeRows):
         # Write schemeRows into scheme table schemeNum. For speed, this is done
         #  directly via the HPI interface into DSP memory rather than through
-        #  the host area. We need to declare the scheme areas as volatile in the 
+        #  the host area. We need to declare the scheme areas as volatile in the
         #  DSP code so that they are always read from memory.
         SCHEME_BASE = interface.DSP_DATA_ADDRESS + 4*interface.SCHEME_OFFSET
         if schemeNum >= interface.NUM_SCHEME_TABLES:
             raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
-        
+
         schemeTableAddr = SCHEME_BASE + 4*schemeNum*interface.SCHEME_TABLE_SIZE
         self.doOperation(Operation("ACTION_WB_INV_CACHE",[schemeTableAddr,4*interface.SCHEME_TABLE_SIZE]))
         schemeTable = getSchemeTableClass(len(schemeRows))()
@@ -704,7 +704,7 @@ class HostToDspSender(Singleton):
         SCHEME_BASE = interface.DSP_DATA_ADDRESS + 4*interface.SCHEME_OFFSET
         if schemeNum >= interface.NUM_SCHEME_TABLES:
             raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
-        
+
         schemeTableAddr = SCHEME_BASE + 4*schemeNum*interface.SCHEME_TABLE_SIZE
         self.doOperation(Operation("ACTION_WB_CACHE",[schemeTableAddr,4*interface.SCHEME_TABLE_SIZE]))
         schemeHeader = interface.SchemeTableHeaderType()
@@ -733,7 +733,7 @@ class HostToDspSender(Singleton):
             valveSequence[i].maskAndValue = (mask << 8) | (value & 0xFF)
             valveSequence[i].dwell = dwell
         self.usb.hpiWrite(VALVE_SEQUENCE_BASE,valveSequence)
-    
+
     @usbLockProtect
     def rdValveSequence(self):
         # Reads the valve sequence as a list of triples (mask,value,duration)
@@ -745,7 +745,7 @@ class HostToDspSender(Singleton):
             entry = valveSequence[i]
             sequenceRows.append(((entry.maskAndValue >> 8)&0xFF,entry.maskAndValue & 0xFF,entry.dwell))
         return sequenceRows
-    
+
     @usbLockProtect
     def wrVirtualLaserParams(self,vLaserNum,vLaserParams):
         # Write virtual laser parameters for vLaserNum (ONE-based index)
@@ -769,11 +769,11 @@ class HostToDspSender(Singleton):
         self.doOperation(Operation("ACTION_WB_CACHE",[virtualLaserParamsAddr,4*interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.usb.hpiRead(virtualLaserParamsAddr,vLaserParams)
         return vLaserParams
-    
+
     @usbLockProtect
     def wrDac(self,channel,value):
         self.usb.wrDac(channel,value)
-        
+
     @usbLockProtect
     def wrAuxiliary(self,data):
         self.usb.wrAuxiliary(data)
@@ -797,7 +797,7 @@ class HostToDspSender(Singleton):
     # @usbLockProtect
     # def serveDacQueues(self):
         # return self.usb.serveDacQueues()
-        
+
     @usbLockProtect
     def rdDspTimerRegisters(self):
         timerRegs = (c_uint*3)()
@@ -815,7 +815,7 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def setDacReloadCount(self,reloadCount):
         return self.usb.setDacReloadCount(reloadCount)
-    
+
     @usbLockProtect
     def getDacTimestamp(self):
         return self.usb.getDacTimestamp()
@@ -823,7 +823,7 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def getDacReloadCount(self):
         return self.usb.getDacReloadCount()
-        
+
     @usbLockProtect
     def getDacQueueFree(self):
         return self.usb.getDacQueueFree()
@@ -835,7 +835,7 @@ class HostToDspSender(Singleton):
     @usbLockProtect
     def enqueueDacSamples(self,data):
         return self.usb.enqueueDacSamples(data)
-        
+
 class SensorHistory(Singleton):
     """Stores latest values of all sensor streams in a dictionary
     so that snapshots of these quantities may be written to the state
@@ -932,7 +932,7 @@ def protectedRead(func):
             raise exc
         return result
     return wrapper
-    
+
 class StateDatabase(Singleton):
     periodByLevel = [1.0,10.0,100.0,1000.0,10000.0]
     initialized = False
@@ -955,14 +955,14 @@ class StateDatabase(Singleton):
             self.lastTimeCheckWlmHist = None
             # Max size for WLM history table is 180 days
             self.wlmHistMaxTime_s = 15552000
-            # Check WLM History table size and delete old data every 30 minutes  
+            # Check WLM History table size and delete old data every 30 minutes
             self.wlmHistCheckPeriod_s = 1800
         elif fileName is not None:
             raise ValueError("StateDatabase has already been initialized")
     def getId(self):
         StateDatabase.txId += 1
         return StateDatabase.txId
-            
+
     def _safeTxQueuePut(self, txCmd):
         try:
             self.txQueue.put_nowait(txCmd)
@@ -974,7 +974,7 @@ class StateDatabase(Singleton):
                     Log("StateDatabase tx queue has reached the max size limit while executing (%s, %s)" % (txCmd[0], txCmd[1]), Level = 2)
         except:
             pass
-       
+
     def _safeRxQueuePut(self, rxCmd):
         try:
             self.rxQueue.put_nowait(rxCmd)
@@ -986,7 +986,7 @@ class StateDatabase(Singleton):
                     Log("StateDatabase rx queue has reached the max size limit", Level = 2)
         except:
             pass
-            
+
     def saveFloatRegList(self,floatList):
         """Save a list of (name,value) pairs in the floating point register table."""
         def _saveFloatRegList(floatList):
@@ -1054,7 +1054,7 @@ class StateDatabase(Singleton):
                                       maxVal,maxIdx[level]))
                 self.con.executemany(
                     "insert into history values (?,?,?,?,?,?,?)",dataList)
-    
+
                 if maxIdx[level] % 10 == 0:
                     self.con.execute("delete from history where level=? and idx<=?",
                                  (level,maxIdx[level]-maxRows))
@@ -1098,13 +1098,13 @@ class StateDatabase(Singleton):
             " where streamNum=?",
             (streamNum,)).fetchall()
         return values
-        
+
     @protectedRead
     def getHistoryByCommand(self, command, args=None):
         a = (args,) if args is not None else ()
         values = self.con.execute(command, *a).fetchall()
         return values
-        
+
     def txQueueHandler(self):
         print "txQueueHandler thread id = ", thread.get_ident()
         """Creates the connection to the database and services the queue of requests"""

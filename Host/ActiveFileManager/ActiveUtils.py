@@ -30,7 +30,7 @@ ActiveFileManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_
 ANALYZER_DATA = ActiveFileManager.getArchivedFileDir()
 print "Archived analyzer data directory: %s" % ANALYZER_DATA
 
-        
+
 def sortByName(top, nameList):
     nameList.sort()
     return nameList
@@ -41,7 +41,7 @@ def sortByMtime(top, nameList):
     fileList = [(os.path.getmtime(os.path.join(top, name)), name) for name in nameList]
     fileList.sort()
     return [name for _, name in fileList]
-    
+
 def walkTree(top, onError=None, sortDir=None, sortFiles=None):
     """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
     before the parent, and directories are visited before files.) The order of directory traversal is determined by
@@ -87,7 +87,7 @@ def overlap(int1, int2):
     return start2 <= start1 < stop2 or start1 <= start2 < stop1
 
 def fetchFilesInRange(top, startTimestamp, stopTimestamp, reverse=False):
-    """Generator which yields HDF5 filenames containing data which overlap with 
+    """Generator which yields HDF5 filenames containing data which overlap with
     the specified timestamp range in a time-based directoy tree rooted at top.
     The filenames must be of the form startTimestamp_stopTimestamp_*. If reverse
     is False, the files are fetched in order of increasing time, while if reverse
@@ -166,10 +166,10 @@ def getSensorData(tstart,tstop,streamName):
         return numpy.concatenate(result_list)
     else:
         return None
-        
+
 def getLatestSensorData(streamName):
     return ActiveFileManager.getLatestSensorData(streamName)
-    
+
 def getRdData(tstart,tstop,varList):
     """Return numpy record array with requested variables and specified start and stop times"""
     result_list = []
@@ -194,10 +194,10 @@ def getRdData(tstart,tstop,varList):
         return numpy.concatenate(result_list)
     else:
         return None
-    
+
 def getLatestRdData(varList):
     return ActiveFileManager.getLatestRdData(varList)
-    
+
 def getDmData(mode,source,tstart,tstop,varList):
     """Return numpy record array with requested variables and specified start and stop times"""
     result_list = []
@@ -225,11 +225,11 @@ def getDmData(mode,source,tstart,tstop,varList):
 
 def getLatestDmData(mode,source,varList):
     return ActiveFileManager.getLatestDmData(mode,source,varList)
-    
+
 def getRdDataStruct(tstart,tstop):
-    # Generate a dictionary whose keys are the available ringdown data columns. The values 
+    # Generate a dictionary whose keys are the available ringdown data columns. The values
     #  stored are the data types of the desired columns as strings.
-    # We iterate backwards through the files since the latest files are more likely to contain 
+    # We iterate backwards through the files since the latest files are more likely to contain
     #  all the data columns.
     dataDict = ActiveFileManager.getRdDataStruct(tstart, tstop)
     for f in fetchFilesInRange(ANALYZER_DATA, tstart, tstop, reverse=True):
@@ -245,12 +245,12 @@ def getRdDataStruct(tstart,tstop):
         finally:
             af.close()
     return dataDict
-    
+
 def getDmDataStruct(tstart,tstop):
-    # Generate a nested dictionary, the first level is indexed by mode, the second by analysis 
+    # Generate a nested dictionary, the first level is indexed by mode, the second by analysis
     #  name and the third by available data columns. The values stored are the column data types
     #  as strings.
-    # We iterate backwards through the files since the latest files are more likely to contain 
+    # We iterate backwards through the files since the latest files are more likely to contain
     #  all the data columns.
     dataDict = ActiveFileManager.getDmDataStruct(tstart, tstop)
     for f in fetchFilesInRange(ANALYZER_DATA, tstart, tstop, reverse=True):
@@ -331,7 +331,7 @@ def recArrayToJSON(recArray):
     for n in recArray.dtype.names:
         obj[n] = [float(v) for v in recArray[n]]
     return obj
-    
+
 if __name__ == "__main__":
     option = input("Option? ") if len(sys.argv)<=1 else int(sys.argv[1])
     if option == 0:
@@ -367,4 +367,4 @@ if __name__ == "__main__":
         tstop = getTimestamp()
         tstart = tstop - 10 * 1000
         r = ActiveFileManager.getRdDataStruct(tstart,tstop)
-        print r        
+        print r

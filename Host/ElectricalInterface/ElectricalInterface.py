@@ -2,7 +2,7 @@
 File Name: ElectricalInterface.py
 Purpose: This module manages Electrical Interface signals
 
-TODO: 
+TODO:
     Make sure config file can be restored to defaults when corrupted.
 
 File History:
@@ -11,7 +11,7 @@ File History:
     08-06-04 sze     Allow errorvalue and invalidvalue to lie outside the range of available voltages, to indicate that
                      the error or invalid condition should be ignored
     08-09-18 alex    Replace ConfigParser with CustomConfigObj
-    09-08-07 alex    Clean up the code and put the physical limitation of analog output in .ini file. 
+    09-08-07 alex    Clean up the code and put the physical limitation of analog output in .ini file.
                      Again, allow errorvalue and invalidvalue to lie outside the range of available voltages.
     10-05-03 alex    Modified the code to work with the new analog card in G2000 platform (no digital interface anymore).
                      Removed errorvalue.
@@ -55,7 +55,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
     IniDir = os.path.normpath(os.path.join(os.path.dirname(AppPath),".."))
-    
+
 EIF_OUTPUT_MODE_MANUAL    = 0
 EIF_OUTPUT_MODE_TRACKING  = 1
 
@@ -118,16 +118,16 @@ class EifAnalogOutput(EifSignal):
         self.units  = ''
         self.allowedMin = allowedMin
         self.allowedMax = allowedMax
-        
+
         self.configlist = ['mode', 'source', 'slope', 'offset', 'min', 'max', 'bootmode', 'bootvalue',
           'invalidvalue', 'currentvalue' ]
 
         tuples = self.config.list_items( 'ANALOG_OUTPUT_CHANNEL'+str(channel) )
         self._create_var_from_tuple_list(tuples)
-        
+
         # Verify min and max values
         self._verifyMinMax()
-        
+
         self.mode = self.bootmode
 
         # set value to default
@@ -169,7 +169,7 @@ class EifAnalogOutput(EifSignal):
         self.bootvalue  = bootvalue
         self.invalidvalue = invalidvalue
         self._verifyMinMax()
-            
+
         l = [ 'slope', 'offset', 'min', 'max', 'bootmode', 'bootvalue', 'invalidvalue']
         for n in l:
             v = getattr(self, n)
@@ -182,7 +182,7 @@ class EifAnalogOutput(EifSignal):
         except:
             LogExc("Unable to write config file",  dict(FileName = filename))
         return True
-        
+
     def _verifyMinMax(self):
         # Swap the values if min > max
         if self.min > self.max:
@@ -207,7 +207,7 @@ class EifAnalogOutput(EifSignal):
                 outputLevel = self.allowedMin
             elif outputLevel > self.allowedMax:
                 outputLevel = self.allowedMax
-                
+
         self.currentvalue = outputLevel
         return ( dasTime, self.channel, outputLevel )
 
@@ -233,7 +233,7 @@ class EifAnalogOutput(EifSignal):
         return self._writeOutput( outputLevel )
 
     def setMeasOutput( self, measuredValue ):
-        """Manually set the analog output to the output level appropriate for the specified value. 
+        """Manually set the analog output to the output level appropriate for the specified value.
            The value is determined using the calibration values currently associated with the output:
            Analog output value = (cal slope)*(measured value) + (Cal offset)
            If not already in Manual mode, this forces manual mode.
@@ -245,7 +245,7 @@ class EifAnalogOutput(EifSignal):
     def getInfo( self, getStr=True ):
         """ Retrieves the configuration information for the specified channel.
             The returned values are as follows (in a dictionary if getStr option == False):
-              CurrentState; MeasSource; CalSlope; CalOffset; MinOutput; MaxOutput; 
+              CurrentState; MeasSource; CalSlope; CalOffset; MinOutput; MaxOutput;
               bootmode; bootvalue; invalidvalue; CurrentValue
         """
         if not getStr:
@@ -258,9 +258,9 @@ class EifAnalogOutput(EifSignal):
             retStr = ""
             for n in self.configlist:
                 v = getattr( self, n)
-                retStr += (str(v)+";") 
+                retStr += (str(v)+";")
             return retStr
-            
+
 #
 # Eif MANAGER
 #
@@ -269,7 +269,7 @@ class EifMgr(object):
         """ Initialize class """
         self._terminate = False
         self._debug_=False
-        
+
         self._measData = MeasData.MeasData()
 
         # driver rpc
@@ -278,11 +278,11 @@ class EifMgr(object):
         # list of analog objects
         self.analogOutput={}
         self.sampleBuffer = Queue.Queue(0)
-        
+
         # Load configuration file
         self.loadConfig(filename)
         Log("ElectricalInterface application initialization complete.")
-        
+
         # Create listener
         self.measListener  = Listener.Listener(None, BROADCAST_PORT_DATA_MANAGER,
           ArbitraryObject, self.measFilter, retry = True,
@@ -331,7 +331,7 @@ class EifMgr(object):
 
     def writeSample(self, channel, voltage):
         self._driver.writeDacSample(channel, voltage)
-        
+
     def measFilter( self, dataDict ):
         """Filter for data broadcasts"""
         tStart = time.time()
@@ -397,7 +397,7 @@ class EifMgr(object):
             return self.analogOutput[channel].setOutputMode( 1 )
         else:
             return False
-            
+
     def RPC_AO_SetSource( self, channel, sourceName ):
         """Set the source name of the variable to monitor"""
         if channel in self.analogOutput:
@@ -422,7 +422,7 @@ class EifMgr(object):
             return False
 
     def RPC_AO_SetMeasOutput( self, channel, measuredValue):
-        """Sets the analog output to the output level appropriate for the specified value. 
+        """Sets the analog output to the output level appropriate for the specified value.
            The value is determined using the calibration values currently associated with the output:
            Analog output value = (cal slope)*(measured value) + (Cal offset)
            If not already in Manual mode, this forces manual mode."""

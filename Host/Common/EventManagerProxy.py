@@ -6,7 +6,7 @@
 #   and easy.
 #
 # Notes:
-#  - This file is designed to be imported with "from EventManagerProxy import *"
+#  - This file is designed to be imported with "from Host.Common.EventManagerProxy import *"
 #  - EventManagerProxy_Init must be called first before using the functions.
 #
 # File History:
@@ -19,7 +19,7 @@
 
 from Host.Common import SharedTypes #to get the right TCP port to use
 from Host.Common import CmdFIFO
-from SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
+from Host.Common.SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
 
 import traceback
 import sys

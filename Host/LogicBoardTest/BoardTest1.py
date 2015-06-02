@@ -53,11 +53,11 @@ ENVIRONMENT_BASE = interface.SHAREDMEM_ADDRESS + \
 HOST_BASE        = interface.SHAREDMEM_ADDRESS + \
                        4*interface.HOST_OFFSET
 RINGDOWN_BASE    = interface.DSP_DATA_ADDRESS
-    
+
 def lookup(sym):
     if isinstance(sym,(str,unicode)): sym = getattr(interface,sym)
     return sym
-    
+
 def usbLockProtect(f):
     # Decorator for serializing access to the method f from different
     #  threads by using the usbLock
@@ -138,7 +138,7 @@ class BoardTest1(object):
         self.dioShadowBits=0
         # print self.usbFile, self.dspFile, self.fpgaFile
         # for k in self.__dict__:
-        #     print "%20s: %s" % (k,self.__dict__[k])        
+        #     print "%20s: %s" % (k,self.__dict__[k])
     def loadUsbIfCode(self,usbCodeFilename):
         """Downloads file to USB Cypress FX2 chip, if not already downloaded"""
         analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
@@ -179,7 +179,7 @@ class BoardTest1(object):
         self.analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
         self.analyzerUsb.connect()
         return self.analyzerUsb.getUsbSpeed()
-        
+
     def programFPGA(self,fileName):
         """Program the FPGA via the USB interface"""
         assert self.analyzerUsb
@@ -207,7 +207,7 @@ class BoardTest1(object):
             print "CRC error during FPGA load, bytes sent: %d" % (lTot,)
         print "Time to load FPGA: %.1fs" % (time.time() - tStart,)
         time.sleep(0.2)
-        
+
     def initEmif(self):
         """Initializes exiternal memory interface on DSP using HPI interface"""
         assert self.analyzerUsb
@@ -316,7 +316,7 @@ class BoardTest1(object):
             if t%1000==0: sys.stderr.write("v")
         print
         print "Memory test done: %d trials, %d errors" % (nTrials,nErrors)
-        
+
     def checkRamRtnString(self,startAddr,endAddr,nTrials):
         """Do random memory writes followed by reads to check memory"""
         assert self.sender
@@ -354,14 +354,14 @@ class BoardTest1(object):
         self.analyzerUsb.hpicWrite(0x00010003)
         time.sleep(0.5)
         self.analyzerUsb.hpicWrite(0x00010001)
-        
+
     def run(self):
         SDRAM_BASE = 0x80000000
 
         verbose = True
         self.initLb(verbose)
         self.checkMagicCode(verbose)
-        
+
         print "Writing and reading blocks via USB"
         numBytes = 65536
         numIter = 16
@@ -372,9 +372,9 @@ class BoardTest1(object):
         stop = time.time()
         print
         print "%.1f us per byte" % (1e6*(stop-start)/(numIter*numBytes),)
-            
+
         # Do some reads and writes to DSP memory
-        
+
         # Check internal memory. There is 256KB of memory at this stage, since
         #  the L2 cache is not set up until the DSP starts running.
         self.checkRam(0,0x40000,10000)
@@ -392,17 +392,17 @@ class BoardTest1(object):
             x = int(eval(x))
             self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_HI",(x&0xFF00000000)>>32)
             self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_LO",(x&0xFFFFFFFF))
-        
+
         print "Loading DSP code"
         self.loadDspCode(self.dspFile)
         print "NOOP_REGISTER: %x" % (self.sender.rdRegUint("NOOP_REGISTER"),)
-        
-        self.setFpgaHsDacAccess(verbose)        
+
+        self.setFpgaHsDacAccess(verbose)
         while True:
             print "Ringdown ADC: %d" % self.sender.rdFPGA("FPGA_RDMAN","RDMAN_RINGDOWN_DATA")
             r = raw_input("q to quit, <Enter> to read again ")
             if r and r=="q": break
-        
+
 
     def runSelfTest(self,numRAMBytes,numSDRAMBytes):
         # Check internal memory. There is 256KB of memory at this stage, since
@@ -425,7 +425,7 @@ class BoardTest1(object):
             print msg
             raise ValueError(msg)
         return code
-        
+
     def initLb(self,verbose=False):
         """Initialize the USB controller and the FPGA on the logic board. Also sets up sender attribute
          to access board."""
@@ -442,15 +442,15 @@ class BoardTest1(object):
             print "Removed DSP reset, allowing EDMA access to DSP memory space"
         self.initPll()
         self.initEmif()
-        self.sender = HostToDspSender(self.analyzerUsb,timeout=5) 
-        
-    def setFpgaManualDout(self,verbose=False):   
+        self.sender = HostToDspSender(self.analyzerUsb,timeout=5)
+
+    def setFpgaManualDout(self,verbose=False):
         "Set FPGA to allow manual control of digital outputs"
         assert self.sender
         if verbose:
             print "Setting FPGA to allow manual control of digital outputs"
         self.sender.wrFPGA("FPGA_KERNEL","KERNEL_CONTROL",1<<interface.KERNEL_CONTROL_DOUT_MAN_B)
-            
+
     def setFpgaHsDacAccess(self,verbose=False):
         """Allow access to the ringdown ADC via the RDMAN block in the FPGA. The block is set to run continuously,
         and to use the real ADC rather than operating in simulation mode.
@@ -460,34 +460,34 @@ class BoardTest1(object):
             print "Setting FPGA to allow access to high-speed (ringdown) ADC"
         self.sender.wrFPGA("FPGA_RDMAN","RDMAN_CONTROL",(1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B))
         self.sender.wrFPGA("FPGA_RDMAN","RDMAN_OPTIONS",(1<<interface.RDMAN_OPTIONS_SIM_ACTUAL_B))
-        
+
     def readRdAdc(self):
         """Read the output of the high-speed ADC. Returns a number of counts between 0-16k, 32k bit set on overflow"""
         assert self.sender
         return self.sender.rdFPGA("FPGA_RDMAN","RDMAN_RINGDOWN_DATA")
-        
+
     def setDigOut(self,value):
         """Set the digital outputs to the 40-bit value specified"""
         assert self.sender
-        self.dioShadowBits = value & 0xFFFFFFFFFF        
+        self.dioShadowBits = value & 0xFFFFFFFFFF
         self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_HI",(self.dioShadowBits&0xFF00000000)>>32)
         self.sender.wrFPGA("FPGA_KERNEL","KERNEL_DOUT_LO",(self.dioShadowBits&0xFFFFFFFF))
-        
+
     def setDigOutBit(self, bitnum, bitval):
         """Modify a single digital I/O bit, 0 <= bitnum < 40."""
         assert self.sender
         if (bitval):
             value = self.dioShadowBits | (1<<bitnum)
-        else: 
+        else:
             value = self.dioShadowBits & ~(1<<bitnum)
         self.setDigOut(value)
-            
+
     def getDigIn(self):
         """Get the FPGA digital inputs as a 24-bit number. These correspond to logic board I/O lines
             63 through 40, but these are returned as bits 23 through 0 of the result."""
         assert self.sender
         return self.sender.rdFPGA("FPGA_KERNEL","KERNEL_DIN")
-    
+
     def getDigInBit(self, bitnum):
         """Get an individual FPGA digital input bit. The allowed values are 64 > bitnum >= 40."""
         assert self.sender
@@ -495,8 +495,8 @@ class BoardTest1(object):
         bitnum = bitnum - 40
         self.getDigIn()
         rslt = (bitvals >> bitnum) & 1
-        return rslt 
-    
+        return rslt
+
     def testBlockUsb(self,nbytes,addr,offset=0):
         """Write a block of random data of length "nbytes" (must be multiple of 4) to the specified
             DSP address and then reads it back, comparing the blocks to check for errors. We can
@@ -512,7 +512,7 @@ class BoardTest1(object):
         self.sender.writeDspMem(addr,data)
         self.sender.readDspMem(addr+offset,result)
         assert result.raw == data.raw
-    
+
 def handleCommandSwitches():
     shortOpts = 'hc:'
     longOpts = ["help"]

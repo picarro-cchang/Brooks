@@ -17,7 +17,7 @@ class MyFormHandler(tornado.web.RequestHandler):
 application = tornado.web.Application([
     (r"/myform", MyFormHandler),
 ])
-        
+
 if __name__ == "__main__":
     application.listen(7777)
-    tornado.ioloop.IOLoop.instance().start()        
+    tornado.ioloop.IOLoop.instance().start()

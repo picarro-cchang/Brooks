@@ -12,7 +12,7 @@ class MCC_Error(RuntimeError):
 IDLE          =   0
 RUNNING       =   1
 
-# Types of configuration information 
+# Types of configuration information
 GLOBALINFO    =     1
 BOARDINFO     =     2
 DIGITALINFO   =     3
@@ -31,7 +31,7 @@ DAQIFUNCTION  =  6 # Daq Input Function
 DAQOFUNCTION  =  7 # Daq Output Function
 
 # Selectable A/D Ranges codes
-BIP60VOLTS      = 20 # -60 to 60 Volts 
+BIP60VOLTS      = 20 # -60 to 60 Volts
 BIP20VOLTS      = 15 # -20 to +20 Volts
 BIP15VOLTS      = 21 # -15 to +15 Volts
 BIP10VOLTS      = 1  # -10 to +10 Volts
@@ -162,7 +162,7 @@ EIGHTHPORTCH  =   41
 class MeasComp(object):
     def __init__(self):
         DLL_Path = ["cbw32.dll"]
-        for p in DLL_Path:        
+        for p in DLL_Path:
             try:
                 self.measCompDLL = windll.LoadLibrary(p)
                 break
@@ -170,7 +170,7 @@ class MeasComp(object):
                 continue
         else:
             raise ValueError("Cannot load Measurement Computing shared library")
-        
+
         # This method is used to provide the error messages for those methods
         #  that return a status code
         self.cbGetErrMsg = self.measCompDLL.cbGetErrMsg
@@ -185,7 +185,7 @@ class MeasComp(object):
         self.cbWinBufAlloc32 = self.measCompDLL.cbWinBufAlloc32
         self.cbWinBufAlloc32.argtypes = [c_long]
         self.cbWinBufAlloc32.restype = c_void_p
-        
+
         self.cbWinBufAlloc64 = self.measCompDLL.cbWinBufAlloc64
         self.cbWinBufAlloc64.argtypes = [c_long]
         self.cbWinBufAlloc64.restype = c_void_p
@@ -193,20 +193,20 @@ class MeasComp(object):
         # These methods return a status code, so they are wrapped to throw an exception
         #  with a meaningful message if the status is non-zero
         self.cbAInScan = self._wrap(self.measCompDLL.cbAInScan)
-        self.cbAInScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long), 
+        self.cbAInScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long),
                                    c_int, c_void_p, c_int]
         self.cbAInScan.restype = c_int
-        
+
         self.cbALoadQueue = self._wrap(self.measCompDLL.cbALoadQueue)
         self.cbALoadQueue.argtypes = [c_int, POINTER(c_short), POINTER(c_short), c_int]
         self.cbALoadQueue.restype = c_int
-        
+
         self.cbAOut = self._wrap(self.measCompDLL.cbAOut)
         self.cbAOut.argtypes = [c_int, c_int, c_int, c_short]
         self.cbAOut.restype = c_int
 
         self.cbAOutScan = self._wrap(self.measCompDLL.cbAOutScan)
-        self.cbAOutScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long), 
+        self.cbAOutScan.argtypes = [c_int, c_int, c_int, c_long, POINTER(c_long),
                                     c_int, c_void_p, c_int]
         self.cbAOutScan.restype = c_int
 
@@ -253,24 +253,24 @@ class MeasComp(object):
         self.cbGetConfig = self._wrap(self.measCompDLL.cbGetConfig)
         self.cbGetConfig.argtypes = [c_int, c_int, c_int, c_int, POINTER(c_int)]
         self.cbGetConfig.restype = c_int
-        
+
         self.cbGetStatus = self._wrap(self.measCompDLL.cbGetIOStatus)
-        self.cbGetStatus.argtypes = [c_int, POINTER(c_short), POINTER(c_ulong), 
+        self.cbGetStatus.argtypes = [c_int, POINTER(c_short), POINTER(c_ulong),
                                      POINTER(c_long), c_int]
         self.cbGetStatus.restype = c_int
-        
+
         self.cbStopBackground = self._wrap(self.measCompDLL.cbStopIOBackground)
         self.cbStopBackground.argtypes = [c_int, c_int]
         self.cbStopBackground.restype = c_int
-        
+
         self.cbWinBufFree = self._wrap(self.measCompDLL.cbWinBufFree)
         self.cbWinBufFree.argtypes = [c_void_p]
         self.cbWinBufFree.restype = c_int
-    
+
     def _wrap(self,func):
         """Wraps a function so that it throws an exception rather
         than returning an error code. The keyword parameter wrap
-        (True by default) controls whether this wrapping takes place.""" 
+        (True by default) controls whether this wrapping takes place."""
         def _func(*a,**k):
             wrap = k.get("wrap",True)
             if "wrap" in k: del k["wrap"]

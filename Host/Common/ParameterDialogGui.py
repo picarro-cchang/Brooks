@@ -5,7 +5,7 @@
 import wx
 
 # begin wxGlade: extracode
-from ParameterGrid import ParameterGrid
+from Host.Common.ParameterGrid import ParameterGrid
 
 # end wxGlade
 

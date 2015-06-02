@@ -17,7 +17,7 @@ File History:
     09-07-03 alex  Provide an option to construct the storage paths using local time (generally GMT is used)
     10-06-14 sze   Allow a timestamp to be specified when calling archiveData
     10-06-15 sze   New RPC function "DoesFileExist"
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 APP_NAME = "Archiver"
@@ -52,11 +52,11 @@ EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-    
+
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                             APP_NAME,
                                             IsDontCareConnection = False)
-                                            
+
 #
 # Functions
 #
@@ -102,7 +102,7 @@ def sortByMtime(top,nameList,reversed=False):
         return [name for t,name in fileList]
     else:
         return [name for t,name in fileList[::-1]]
-    
+
 def walkTree(top,onError=None,sortDir=None,sortFiles=None,reversed=False):
     """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
     before the parent, and directories are visited before files.) The order of directory traversal is determined by
@@ -158,7 +158,7 @@ def makeStoragePathName(struct_time,level):
     """
     if level<0 or level>6:
         raise ValueError,"Invalid level in makeStoragePathName (valid value: 0...6)"
-    elif level>0:    
+    elif level>0:
         pathList = ["%04d" % (struct_time[0],)]
         for i in range(1,level):
             pathList.append("%02d" % (struct_time[i],))
@@ -178,7 +178,7 @@ class LiveArchive(object):
         self.srcFp = None
         self.archiveGroup = archiveGroup
         self.oldNBytes = 0
-        
+
     # Live updating for data logs
     def startUpdate(self):
         self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
@@ -208,7 +208,7 @@ class LiveArchive(object):
             self.archiveGroup.makeSpace(nBytes,0)
             WriteFile(self.destHandle,data)
             self.bytesCopied += nBytes
-            
+
     def stopUpdate(self):
         self.updating = False
         CloseHandle(self.destHandle)
@@ -217,7 +217,7 @@ class LiveArchive(object):
         self.updateThread.join(15.0)
         if self.updateThread.isAlive():
             Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
-    
+
     # Live copying for coordinator output files
     def startCopy(self):
         self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
@@ -248,7 +248,7 @@ class LiveArchive(object):
             SetFilePointer(self.destHandle, 0, FILE_BEGIN)
             WriteFile(self.destHandle,data)
             self.oldNBytes = nBytes
-                
+
     def copier(self):
         while self.updating:
             self.makeCopy()
@@ -259,13 +259,13 @@ class LiveArchive(object):
         if self.srcFp:
             self.srcFp.close()
             deleteFile(self.srcPathName)
-        
+
     def stopCopy(self):
         self.updating = False
         self.copyThread.join(20.0)
         if self.copyThread.isAlive():
             Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
-            
+
 class ArchiveGroup(object):
     """Class associated with each storage group. This corresponds to a directory called "groupName" created under the
     storageRoot of the archiver. Under this directory, files are stored in a tree organized by file modification time in GMT.
@@ -291,7 +291,7 @@ class ArchiveGroup(object):
             self.maketimetuple = time.localtime
         else:
             self.maketimetuple = time.gmtime
-                
+
         self.maxCount = archiver.config.getint(groupName,'MaxCount')
         self.maxSize = int(1000000 * archiver.config.getfloat(groupName,'MaxSize_MB'))
         try:
@@ -320,13 +320,13 @@ class ArchiveGroup(object):
             Log("Creating archive group directory %s" % (self.groupRoot,))
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(archiver.storageRoot,groupName + ".zip")
-        if os.path.exists(self.tempFileName): 
+        if os.path.exists(self.tempFileName):
             self.cmdQueue.put(("archiveFile",(self.tempFileName,)))
         # Dictionary of live archives by source file name
         self.liveArchiveDict = {}
         # Lock for arbitrating access to file deletion routines to make space for new data
         self.makeSpaceLock = threading.Lock()
-        
+
         # For data uploading
         self.uploader = archiver.uploader
         self.retryUploadInterval = archiver.retryUploadInterval
@@ -338,7 +338,7 @@ class ArchiveGroup(object):
             self.retryUploadThread = threading.Thread(target=self.retryUploadScheduler)
             self.retryUploadThread.setDaemon(True)
             self.retryUploadThread.start()
-            
+
         self.serverThread.setDaemon(True)
         self.serverThread.start()
 
@@ -367,7 +367,7 @@ class ArchiveGroup(object):
             except Exception, exc:
                 Log("Exception in ArchiveGroup server",
                     dict(GroupName = self.name), Verbose = "Exception = %s %r" % (exc, exc))
-                    
+
     def retryUploadScheduler(self):
         while True:
             if self.retryUploadNeeded:
@@ -410,8 +410,8 @@ class ArchiveGroup(object):
         # Create a uploadTreeWalker to retry uploading the newest entries when required
         self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
         # Remove empty subdirectories
-        self._removeEmptySubdirs()        
-        
+        self._removeEmptySubdirs()
+
     def extractFiles(self,destDir, startTime=None, endTime=None, uniqueFileNames = False, resultQueue = None):
         """Extract all files between the specified starting and ending times to the destination directory. If uniqueFileNames is
            True, the group name and date code are prepended to each file. Returns the number of files copied, and places them on
@@ -434,11 +434,11 @@ class ArchiveGroup(object):
                 time.sleep(0)
         if resultQueue is not None: resultQueue.put(count)
         return count
-        
+
     def doesFileExist(self,fileName,timestamp):
         """Inquires if the specified file name exists in this group for the specified timestamp"""
         timeTuple = self.maketimetuple(unixTime(timestamp))
-            
+
         pathName = makeStoragePathName(timeTuple,self.quantum)
         pathName = os.path.join(self.groupRoot,pathName)
         targetName = os.path.join(pathName,os.path.split(fileName)[-1])
@@ -446,15 +446,15 @@ class ArchiveGroup(object):
 
     def startLiveArchive(self, source, timestamp=None, copier=False):
         if timestamp is None:
-            now = time.time() 
+            now = time.time()
         else:
             now = unixTime(timestamp)
         timeTuple = self.maketimetuple(now)
-            
+
         pathName = makeStoragePathName(timeTuple,self.quantum)
         pathName = os.path.join(self.groupRoot,pathName)
 
-        if not os.path.exists(pathName): 
+        if not os.path.exists(pathName):
             os.makedirs(pathName)
         targetName = os.path.join(pathName,os.path.split(source)[-1])
 
@@ -480,7 +480,7 @@ class ArchiveGroup(object):
                 Log("LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName))
             else:
                 Log("LiveArchive failed")
-        
+
     def stopLiveArchive(self, source, copier=False):
         if source in self.liveArchiveDict:
             a = self.liveArchiveDict[source]
@@ -516,7 +516,7 @@ class ArchiveGroup(object):
                              StoredGroup = self.name,
                              StoredData = sourceFileName,
                              Verbose = "Exception = %s %r" % (e, e)))
-                    if not deleteFile(self.tempFileName): 
+                    if not deleteFile(self.tempFileName):
                         self.aggregation = 0
                     return
             else: # We are not aggregating and not compressing, so copy to temporary file if data are being sent as a string
@@ -544,15 +544,15 @@ class ArchiveGroup(object):
         """ Makes space the archive group by deleting old files as necessary so that we can add the specified number of
         bytes and files. Adds nBytes and nFiles to the current counts. This function can be called with negative nBytes or
         nFiles to indicate that some data or files have been deleted.
-        
-        Returns only when the cleanup is complete. This function is protected by a lock so that only 
+
+        Returns only when the cleanup is complete. This function is protected by a lock so that only
         a single thread can execute it at once """
         self.makeSpaceLock.acquire()
         try:
             if self.maxSize > 0 and nBytes > self.maxSize:
                 Log("Cannot fit data into archive group %s" % (self.name,),Level=3)
                 return False
-            nLoops = 0 
+            nLoops = 0
             while (self.maxSize > 0 and self.byteCount + nBytes > self.maxSize) or \
                   (self.maxCount > 0 and self.fileCount + nFiles > self.maxCount):
                 # Delete files and directories starting with the oldest
@@ -574,11 +574,11 @@ class ArchiveGroup(object):
         # If timestamp is None, use current time to store file in the correct location (local or GMT)
         #  otherwise use the specified timestamp
         if timestamp is None:
-            now = time.time() 
+            now = time.time()
         else:
             now = unixTime(timestamp)
         timeTuple = self.maketimetuple(now)
-        
+
         # The storage path for files to be uploaded is different from files to be archived locally
         if self.uploadEnabled:
             pathName = os.path.join(self.uploadRetryPath, makeStoragePathName(timeTuple,self.quantum))
@@ -596,7 +596,7 @@ class ArchiveGroup(object):
                 renameFlag = removeOriginal
         else:
             targetName = time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",timeTuple)
-                
+
         # Upload file to data warehouse if required
         if self.uploadEnabled:
             if self.uploader.upload(fileToArchive, targetName) == "OK":
@@ -618,9 +618,9 @@ class ArchiveGroup(object):
         status = False
         # First make room for the file by deleting old files, if necessary
         if self.makeSpace(nBytes, 1):
-            if not os.path.exists(pathName): 
+            if not os.path.exists(pathName):
                 os.makedirs(pathName)
-                
+
             targetName = os.path.join(pathName, targetName)
             if os.path.exists(targetName):
                 # Replace existing file
@@ -643,12 +643,12 @@ class ArchiveGroup(object):
                 Log("IOError renaming or copying file to %s. %s" % (targetName,e))
             except OSError,e:
                 Log("OSError renaming or copying file to %s. %s" % (targetName,e))
-                
+
         # Make sure the temporary file is gone
-        if os.path.exists(self.tempFileName): 
+        if os.path.exists(self.tempFileName):
             deleteFile(self.tempFileName)
         return status
-        
+
     def retryUpload(self):
         """Use the treeWalker to upload the newest file in the "upload" directory. Returns the number of
         bytes freed, number of file uploaded (0 or 1), and the name of the file uploaded,.
@@ -689,7 +689,7 @@ class ArchiveGroup(object):
             return nBytes, nFiles, name
         finally:
             self.makeSpaceLock.release()
-            
+
     def _retryUploadFile(self, name):
         nBytes = 0
         nFiles = 0
@@ -704,7 +704,7 @@ class ArchiveGroup(object):
         except Exception, err:
             print "_retryUploadFile Error: %r" % err
         return nBytes, nFiles
-        
+
     def _deleteUploadDir(self, name):
         try:
             os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
@@ -713,7 +713,7 @@ class ArchiveGroup(object):
             print "(Retry Upload) Directory %s deleted" % (name,)
         except Exception, err:
             print "_deleteUploadDir Error: %r" % err
-                    
+
     def updateAndGetArchiveSize(self):
         """
         Determine the number of files and number of bytes presently in the archive group.
@@ -745,7 +745,7 @@ class ArchiveGroup(object):
             self.updateAndGetArchiveSize()
             self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
             type, name = self.treeWalker.next()
-        
+
         if type == 'file':
             nBytes = os.path.getsize(name)
             nFiles = 1
@@ -772,7 +772,7 @@ class ArchiveGroup(object):
         self.byteCount -= nBytes
         self.fileCount -= nFiles
         return nBytes, nFiles, name, msg
-        
+
     def _removeEmptySubdirs(self):
         for root, dirs, files in os.walk(self.groupRoot):
             for dirname in dirs:
@@ -780,7 +780,7 @@ class ArchiveGroup(object):
                     os.rmdir(os.path.join(root,dirname))
                 except:
                     pass
-                    
+
 class Archiver(object):
     """The archiver manages storage of data and files, placing them in FIFO order into storage groups whose sizes may be
     specified."""
@@ -826,7 +826,7 @@ class Archiver(object):
         basePath = os.path.split(filename)[0]
         try:
             self.storageRoot = os.path.join(basePath, self.config.get(_MAIN_CONFIG_SECTION,'StorageRoot'))
-            
+
             # For S3 uploader
             uploadBucketName = self.config.get(_MAIN_CONFIG_SECTION, "UploadBucketName", "picarro_analyzerup")
             try:
@@ -838,7 +838,7 @@ class Archiver(object):
                 analyzerId = "Unknown"
             self.uploader = S3Uploader(uploadBucketName, analyzerId)
             self.retryUploadInterval = self.config.getfloat(_MAIN_CONFIG_SECTION, "RetryUploadInterval", 30.0)
-            
+
             # Fetch names of storage groups
             self.storageGroupNames = self.config.list_sections()
             self.storageGroupNames.remove(_MAIN_CONFIG_SECTION)
@@ -855,21 +855,21 @@ class Archiver(object):
             raise ValueError,"Source file %s does not exist" % (sourceFile,)
         group.cmdQueue.put(("startLiveArchive",(sourceFile, timestamp, copier)))
         return "startLiveArchive command queued for group %s" % (groupName,)
-    
+
     def RPC_GetLiveArchiveFileName(self,groupName,sourceFile):
         try:
             group = self.storageGroups[groupName]
             return (True,os.path.abspath(group.liveArchiveDict[sourceFile].destPathName))
         except:
             return (False,sourceFile)
-        
+
     def RPC_StopLiveArchive(self, groupName, sourceFile, copier = False):
         """Stop a previously started 'live' archive of the source file in the specified archive group"""
         sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         group.cmdQueue.put(("stopLiveArchive",(sourceFile, copier)))
         return "stopLiveArchive command queued for group %s" % (groupName,)
-        
+
     def RPC_ArchiveFile(self, groupName, sourceFile, removeOriginal = True, timestamp = None):
         """Archive the file SourceFile according to the rules of the storage group groupName. If removeOriginal
         is true, the source file is deleted when archival is done. The archive time is the current time, unless
@@ -882,7 +882,7 @@ class Archiver(object):
         return "archiveFile command queued for group %s" % (groupName,)
 
     def RPC_ArchiveData(self, groupName, dataName, wrappedData, timestamp = None):
-        """Archive the named dataBytes according to the rules of the storage group groupName. 
+        """Archive the named dataBytes according to the rules of the storage group groupName.
         The archive time is the current time, unless an explicit timestamp is specified."""
         group = self.storageGroups[groupName]
         group.cmdQueue.put(("archiveData",((dataName,wrappedData.data), False, timestamp)))
@@ -893,7 +893,7 @@ class Archiver(object):
             Throws exception if archive group does not exist."""
         group = self.storageGroups[groupName]
         return group.doesFileExist(fileName,timestamp)
-        
+
     def RPC_CopyFileDates(self, groupName, startDate_s, stopDate_s, destDir, uniqueFileNames = False, timeOut = 30):
         """Copies archived files in groupName from startDate_s to stopDate_s to destDir. Both startDate_s and
         stopDate_s are in "seconds since epoch". The date checked is the file modification on the archive file.

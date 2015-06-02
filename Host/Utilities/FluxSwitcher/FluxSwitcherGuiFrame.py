@@ -13,7 +13,7 @@ class FluxSwitcherGuiFrame(wx.Frame):
         else:
             self.SetTitle("Picarro Quick Mode Switcher")
         self.SetBackgroundColour("#E0FFFF")
-        
+
         # labels
         if flux:
             self.labelTitle = wx.StaticText(self, -1, "Picarro Flux Mode Switcher", style=wx.ALIGN_CENTRE)
@@ -22,17 +22,17 @@ class FluxSwitcherGuiFrame(wx.Frame):
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Measurement Mode", style=wx.ALIGN_CENTER)
-        
+
         # Divider line
         self.staticLine = wx.StaticLine(self, -1)
-        
+
         # controls
         self.comboBoxSelect = wx.ComboBox(self, -1, value = typeChoices[0], choices = typeChoices, style = wx.CB_READONLY|wx.CB_DROPDOWN)
-        
+
         # button
         self.buttonLaunch = wx.Button(self, -1, "Launch", size=(110, 20))
         self.buttonLaunch.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.__do_layout()
 
     def __do_layout(self):

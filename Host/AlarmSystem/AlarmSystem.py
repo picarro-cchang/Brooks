@@ -4,19 +4,19 @@
 File Name: AlarmSystem.py
 Purpose:
     The alarm system application is responsible for monitoring of gas concentration(s) and reporting alarm(s)
-    
+
 Notes:
-    An alarm is triggered if the concentration is: 
+    An alarm is triggered if the concentration is:
         1. higher than a configured alarm threshold,
         2. lower than configured alarm threshold,
         3. in between two configured thresholds, or
         4. outside two configured thresholds.
-    An alarm is cleared if the concentration is: 
+    An alarm is cleared if the concentration is:
         1. lower than configured clear threshold,
         2. higher than configured clear threshold,
         3. outside two clear thresholds, or
         4. inside two configured thresholds.
-        
+
     Each alarm is configured to operate in one and only one of the four modes listed above.
 
     The alarm system broadcasts the alarm status register whenever a set or clear bit of one of the alarms changes.
@@ -192,7 +192,7 @@ class AlarmSystem(object):
         if __debug__: Log("Loading config options.")
         self.configPath = configPath
         self.noInstMgr = noInstMgr
-        
+
         self.AlarmDict = {}    # contains alarm config objects for each alarm section found in the config file.
         self.SrcDict = {}      # Dictionary of source scripts which contains list of alarm names, which is used for filtering of broadcast data.
         self.PortDict = {}
@@ -270,7 +270,7 @@ class AlarmSystem(object):
     def _DataListener(self, dataMgrObject):
 
         self.md.ImportPickleDict(dataMgrObject)
-        
+
         # check to make sure this a broadcast that I'm interested in
         if self.md.Source in self.SrcDict:
             # iterate through all alarm object found in the list
@@ -298,7 +298,7 @@ class AlarmSystem(object):
                             if not self.noInstMgr:
                                 self.InstrMgrRpc.INSTMGR_SendDisplayMessageRpc(r"<%s> Cleared" % (self.AlarmDict[alarmName].Name,))
 
-            if __debug__: 
+            if __debug__:
                 if self.lastStatus and self.lastStatus !=self.AppStatus._Status:
                     Log("Alarm Status %d" % self.AppStatus._Status)
             self.lastStatus = self.AppStatus._Status
@@ -358,7 +358,7 @@ class AlarmSystem(object):
                 return ALARM_SYSTEM_RPC_FAILED
         else:
             return ALARM_SYSTEM_RPC_FAILED
-            
+
     def ALARMSYSTEM_isEnabledRpc(self, alarmIndex):
         """Returns the enabled status of the alarm specified by alarmIndex. Note: alarmIndex is one based."""
         """Returns the mode of the alarm specified by alarmIndex. Note: alarmIndex is one based."""
@@ -506,7 +506,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     shortOpts = 'hc:'
     longOpts = ["help", "no_inst_mgr"]
-    
+
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -528,11 +528,11 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         Log ("Config file specified at command line: %s" % configFile)
-    
+
     noInstMgr = False
     if "--no_inst_mgr" in options:
         noInstMgr = True
-        
+
     return (configFile, noInstMgr)
 
 def main():

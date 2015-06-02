@@ -101,20 +101,20 @@ def buildExes():
     curDirPath = os.getcwd()
     curDir = os.path.split(curDirPath)[1]
 
-    # Windows dirs are not case-sensitive. 
+    # Windows dirs are not case-sensitive.
     # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
     if curDir.lower() != "host":
         print "Not running in expected folder 'Host'!"
         sys.exit(1)
-    
+
     # Set the PYTHONPATH environment variable so the current folder tree is used to
     # pull local libraries from.
     parentDir = os.path.normpath(os.path.join(curDirPath, ".."))
     firmwareDir = os.path.normpath(os.path.join(curDirPath, "..", "Firmware"))
-    
+
     # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
     commonDir = os.path.join(parentDir, "Host", "Common")
-    
+
     # folders must exist
     folders = [parentDir, commonDir, firmwareDir]
     for folder in folders:

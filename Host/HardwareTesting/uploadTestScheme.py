@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     coarseCurrent = 36000
     fineCurrent = 32768
-    laserParams = {'actualLaser': 1L, 
+    laserParams = {'actualLaser': 1L,
                    'ratio1Center': 0.6, 'ratio1Scale': 1.2, 'ratio2Center': 0.6, 'ratio2Scale': 1.2, 'phase': 0.0,
                    'tempSensitivity': 0.0, 'calTemp': 45.0,
                    'calPressure': 760.0, 'pressureC0': 0.0, 'pressureC1': 0.0, 'pressureC2': 0.0, 'pressureC3': 0.0}

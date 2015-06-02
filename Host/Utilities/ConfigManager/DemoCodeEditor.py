@@ -1,6 +1,6 @@
 import wx
 from wx import stc
-from StyledTextCtrl_2 import PythonSTC
+from Host.Utilities.ConfigManager.StyledTextCtrl_2 import PythonSTC
 
 class DemoCodeEditor(PythonSTC):
     def __init__(self, parent, style=wx.BORDER_NONE):
@@ -56,20 +56,20 @@ class DemoCodeEditor(PythonSTC):
         start = self.PositionFromLine(line)
         end = self.GetLineEndPosition(line)
         self.SetSelection(start, end)
-        
+
     def SetUpEditor(self):
         """
-        This method carries out the work of setting up the demo editor.            
+        This method carries out the work of setting up the demo editor.
         It's seperate so as not to clutter up the init code.
         """
         import keyword
-        
+
         self.SetLexer(stc.STC_LEX_PYTHON)
         # self.SetLexer(stc.STC_LEX_PROPERTIES)
         self.SetKeyWords(0, " ".join(keyword.kwlist))
 
         # Enable folding
-        self.SetProperty("fold", "1" ) 
+        self.SetProperty("fold", "1" )
 
         # Highlight tab/space mixing (shouldn't be any)
         self.SetProperty("tab.timmy.whinge.level", "1")
@@ -89,16 +89,16 @@ class DemoCodeEditor(PythonSTC):
         self.SetTabIndents(True)        # Tab key indents
         self.SetTabWidth(4)             # Proscribed tab size for wx
         self.SetUseTabs(False)          # Use spaces rather than tabs, or
-                                        # TabTimmy will complain!    
+                                        # TabTimmy will complain!
         # White space
         self.SetViewWhiteSpace(False)   # Don't view white space
 
         # EOL: Since we are loading/saving ourselves, and the
         # strings will always have \n's in them, set the STC to
-        # edit them that way.            
+        # edit them that way.
         self.SetEOLMode(wx.stc.STC_EOL_LF)
         self.SetViewEOL(False)
-        
+
         # No right-edge mode indicator
         self.SetEdgeMode(stc.STC_EDGE_NONE)
 
@@ -119,16 +119,16 @@ class DemoCodeEditor(PythonSTC):
 
         # Global default style
         if wx.Platform == '__WXMSW__':
-            self.StyleSetSpec(stc.STC_STYLE_DEFAULT, 
+            self.StyleSetSpec(stc.STC_STYLE_DEFAULT,
                               'fore:#000000,back:#FFFFFF,face:Courier New')
         elif wx.Platform == '__WXMAC__':
-            # TODO: if this looks fine on Linux too, remove the Mac-specific case 
+            # TODO: if this looks fine on Linux too, remove the Mac-specific case
             # and use this whenever OS != MSW.
-            self.StyleSetSpec(stc.STC_STYLE_DEFAULT, 
+            self.StyleSetSpec(stc.STC_STYLE_DEFAULT,
                               'fore:#000000,back:#FFFFFF,face:Monaco')
         else:
             defsize = wx.SystemSettings.GetFont(wx.SYS_ANSI_FIXED_FONT).GetPointSize()
-            self.StyleSetSpec(stc.STC_STYLE_DEFAULT, 
+            self.StyleSetSpec(stc.STC_STYLE_DEFAULT,
                               'fore:#000000,back:#FFFFFF,face:Courier,size:%d'%defsize)
 
         # Clear styles and revert to default.
@@ -138,7 +138,7 @@ class DemoCodeEditor(PythonSTC):
         # The rest remains unchanged.
 
         # Line numbers in margin
-        self.StyleSetSpec(wx.stc.STC_STYLE_LINENUMBER,'fore:#000000,back:#99A9C2')    
+        self.StyleSetSpec(wx.stc.STC_STYLE_LINENUMBER,'fore:#000000,back:#99A9C2')
         # Highlighted brace
         self.StyleSetSpec(wx.stc.STC_STYLE_BRACELIGHT,'fore:#00009D,back:#FFFF00')
         # Unmatched brace

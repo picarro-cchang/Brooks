@@ -22,7 +22,7 @@ Notes:
     There is an optional GUI that can be launched via command-line or via an
     RPC call.  The GUI takes no memory when not in use.
     This replaces the simple Logger.py that existed before.
-    
+
     Event properties...
     ---
     Index (Time alone may get confusing in case of DST)
@@ -82,7 +82,7 @@ if sys.platform == 'win32':
     TimeStamp = time.clock
 else:
     TimeStamp = time.time
-    
+
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
@@ -118,7 +118,7 @@ class EventInfo(object):
                     should really not be used for one-time-only message events
                     that are created.
     """
-    def __init__(self, Description, Data = "", Level = 1, Code = 0, AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY, 
+    def __init__(self, Description, Data = "", Level = 1, Code = 0, AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY,
                  VerboseDesc = ""):
         self.Description = Description
         self.Level = Level
@@ -223,14 +223,14 @@ class EventLogFile(object):
             self.maketimetuple = time.localtime
         else:
             self.maketimetuple = time.gmtime
-            
+
     def _CreateNewLogFilePath(self):
         """Creates a new log file named with the current time stamp and with a version header."""
         if self.TimeStandard.lower() == "local":
             timeStr = time.strftime("%Y_%m_%d_%H_%M_%S",self.maketimetuple())
         else:
             timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ",self.maketimetuple())
-            
+
         fname = "%s%s.%s" % (LOGFILE_PREFIX,
                              timeStr,
                              LOGFILE_EXTENSION)
@@ -624,7 +624,7 @@ def HandleCommandSwitches():
     return (showViewer, configFile)
 
 def LaunchViewerGUI(EL):
-    import EventManagerGUI
+    import Host.EventManager.EventManagerGUI as EventManagerGUI
     logViewer = EventManagerGUI.LogViewer(EL.EventList, EventSourceCounter = EL.EventSourceCounter, EventSourceList = EL.EventSourceList)
     #Now link the EventLogger to the viewer...
     EL.Viewer = logViewer

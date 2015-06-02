@@ -9,9 +9,9 @@ from Queue import Queue, Empty
 import inspect
 from numpy import *
 import types
-from RingdownAnalyzer import RingdownAnalyzer
-from ModeAnalyzer import ModeAnalyzer
-from BuildStationGUI import BuildStationGUI
+from Host.Utilities.SuperBuildStation.RingdownAnalyzer import RingdownAnalyzer
+from Host.Utilities.SuperBuildStation.ModeAnalyzer import ModeAnalyzer
+from Host.Utilities.SuperBuildStation.BuildStationGUI import BuildStationGUI
 from Host.Common import timestamp
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.configobj import ConfigObj
@@ -20,17 +20,17 @@ from Host.Common.GraphPanel import Series
 from Host.Common.Listener import Listener
 from Host.Common.TextListener import TextListener
 from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR
 from Host.autogen import interface
-from BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
+from Host.Utilities.SuperBuildStation.BuildStationCommon import _value, setFPGAbits, Driver, FreqConverter, SpectrumCollector
 
-from TravellerDataPush import TravellerDataPush
+from Host.Utilities.SuperBuildStation.TravellerDataPush import TravellerDataPush
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-            
+
 class BuildStationFrame(BuildStationGUI):
     configName = 'BuildStationSettings.ini'
     scriptConfigName = 'BuildStationScript.ini'
@@ -67,15 +67,15 @@ class BuildStationFrame(BuildStationGUI):
         self.button_pause.Show(False)
         #self.button_save.Show(False)
         self.Bind(wx.EVT_CLOSE, self.onClose)
-        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)        
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
         self.performAction()
 
     def startTimer(self,interval):
         self.timer.Start(interval)
-        
+
     def stopTimer(self):
         self.timer.Stop()
-    
+
     def registerObserver(self,handler,observer):
         name = handler if isinstance(handler,types.StringType) else handler.__name__
         if name not in self.handlers:
@@ -88,7 +88,7 @@ class BuildStationFrame(BuildStationGUI):
         if name in self.handlers:
             if observer in self.handlers[name]:
                 self.handlers[name].remove(observer)
-        
+
     def dispatcher(self):
         funcName = inspect.stack()[1][3]
         if funcName in self.handlers:
@@ -102,7 +102,7 @@ class BuildStationFrame(BuildStationGUI):
                     if i in self.guiSave[c]:
                         name = '%s_%s' % (c,i)
                         getattr(eval('self.' + name),'SetValue')(self.cast[c](cfg[c][i]))
-    
+
     def saveGuiSettings(self):
         cfg = ConfigObj(self.configName)
         for c in self.guiSave:
@@ -111,7 +111,7 @@ class BuildStationFrame(BuildStationGUI):
                 name = '%s_%s' % (c,i)
                 cfg[c][i] = getattr(eval('self.' + name),'GetValue')()
         cfg.write()
-        
+
     def processScriptIni(self,fname):
         self.actions = {}
         fp = file(fname,'r')
@@ -144,7 +144,7 @@ class BuildStationFrame(BuildStationGUI):
         save_ts = datetime.datetime.now()
         png_name = 'bstn_%s.png' % (save_ts.strftime("%Y%m%d%H%M%S"))
         dfile_name = 'bstn_%s.ctl' % (save_ts.strftime("%Y%m%d%H%M%S"))
-        
+
         ## for now we are building a csv.  But we should build an H5 once
         ## we learn the proper format
         h5file_name = 'bstn_%s.h5' % (save_ts.strftime("%Y%m%d%H%M%S"))
@@ -161,29 +161,29 @@ class BuildStationFrame(BuildStationGUI):
         dump_data['rdmdoc_rd_time'] = self.text_ctrl_rd_time.GetValue()
         dump_data['rdmdoc_s2s_pct'] = self.text_ctrl_s2s.GetValue()
         dump_data['cavity_sn'] = self.text_ctrl_serial_number.GetValue()
-        
+
         ctl_f = open(dfile_name, "w")
         str = "[cavity_traveller]\n"
         for kv in dump_data:
             str += "%s: %s\n" % (kv, dump_data[kv])
-        
+
         try:
-            xvals = self.rdAnalyzer.graph1Waveform.GetX() 
+            xvals = self.rdAnalyzer.graph1Waveform.GetX()
             yvals = self.rdAnalyzer.graph1Waveform.GetY()
         except:
             xvals = []
             yvals = []
-        
+
         if len(xvals) == len(yvals):
             dta_f = open(csvplotfile_name, 'w')
             dstr = ''
             for x, y in zip(xvals, yvals):
                 dstr += '%s,%s\n' % (x, y)
-            
+
             dta_f.write(dstr)
-            
+
         ctl_f.write(str)
-        
+
         context = wx.WindowDC(self)
         memory = wx.MemoryDC( )
         x,y = self.GetSizeTuple()
@@ -191,26 +191,26 @@ class BuildStationFrame(BuildStationGUI):
         memory.SelectObject( bitmap )
         memory.Blit( 0,0,x,y, context, 0,0)
         memory.SelectObject( wx.NullBitmap )
-        bitmap.SaveFile( png_name, wx.BITMAP_TYPE_PNG )  
+        bitmap.SaveFile( png_name, wx.BITMAP_TYPE_PNG )
 
         parm_data['image_file'] = png_name
         parm_data['plot_file'] = csvplotfile_name
-        
+
         try:
             if self.last_userid:
                 dump_data['userid'] = self.last_userid
         except:
             self.last_userid = None
-        
+
         ## Wrapped in a try so as not to kill the buildstation if there
         ## is some issuw with the Traveller Push
         try:
             c = TravellerDataPush(data_dict=dump_data,parm_dict=parm_data)
-            self.last_userid = c.last_userid 
+            self.last_userid = c.last_userid
             del c
         except:
-            pass 
-        
+            pass
+
     def setupFromGui(self):
         self.onMin1Enter()
         self.onMax1Enter()
@@ -219,12 +219,12 @@ class BuildStationFrame(BuildStationGUI):
         self.onMax2Enter()
         self.onAutoscale2()
         self.onGraphPointsEnter()
-            
+
     def performAction(self):
         dlg = wx.BusyInfo('Configuring analyzer, please wait')
         exec self.actions[self.combo_box_action.GetValue()] in self.scriptEnvironment
         del dlg
-        
+
     def onLaserSelect(self,evt):
         self.performAction()
         if evt: evt.Skip()
@@ -232,7 +232,7 @@ class BuildStationFrame(BuildStationGUI):
     def onActionSelect(self,evt):
         self.performAction()
         if evt: evt.Skip()
-        
+
     def notebook_setup(self,visiblePages):
         if self.oldVisiblePages == visiblePages: return
         pages = [(self.notebook_graphs_ringdowns,"Ringdowns"),
@@ -254,7 +254,7 @@ class BuildStationFrame(BuildStationGUI):
         self.SetAutoLayout(True)
         self.Layout()
         self.oldVisiblePages = visiblePages
-        
+
     def onAutoscale1(self, evt=None):
         if self.checkbox_autoscale_1.IsChecked():
             self.graph_panel_1.SetGraphProperties(YSpec="auto")
@@ -266,29 +266,29 @@ class BuildStationFrame(BuildStationGUI):
         if not self.checkbox_autoscale_1.IsChecked():
             self.graph_panel_1.SetGraphProperties(YSpec=(float(self.text_ctrl_min_1.GetValue()),float(self.text_ctrl_max_1.GetValue())))
         if evt: evt.Skip()
-        
+
     def onMax1Enter(self,evt=None):
         if not self.checkbox_autoscale_1.IsChecked():
             self.graph_panel_1.SetGraphProperties(YSpec=(float(self.text_ctrl_min_1.GetValue()),float(self.text_ctrl_max_1.GetValue())))
         if evt: evt.Skip()
-        
+
     def onAutoscale2(self, evt=None):
         if self.checkbox_autoscale_2.IsChecked():
             self.graph_panel_2.SetGraphProperties(YSpec="auto")
         else:
             self.graph_panel_2.SetGraphProperties(YSpec=(float(self.text_ctrl_min_2.GetValue()),float(self.text_ctrl_max_2.GetValue())))
         if evt: evt.Skip()
-        
+
     def onMin2Enter(self,evt=None):
         if not self.checkbox_autoscale_2.IsChecked():
             self.graph_panel_2.SetGraphProperties(YSpec=(float(self.text_ctrl_min_2.GetValue()),float(self.text_ctrl_max_2.GetValue())))
         if evt: evt.Skip()
-        
+
     def onMax2Enter(self,evt=None):
         if not self.checkbox_autoscale_2.IsChecked():
             self.graph_panel_2.SetGraphProperties(YSpec=(float(self.text_ctrl_min_2.GetValue()),float(self.text_ctrl_max_2.GetValue())))
         if evt: evt.Skip()
-    
+
     def onGraphPointsEnter(self,evt=None):
         self.dispatcher()
         if evt: evt.Skip()
@@ -312,11 +312,11 @@ class BuildStationFrame(BuildStationGUI):
     def onRejectionWindowEnter(self,evt=None):
         self.dispatcher()
         if evt: evt.Skip()
-        
+
     def onRejectionScaleEnter(self,evt=None):
         self.dispatcher()
         if evt: evt.Skip()
-        
+
     def onTimer(self,evt=None):
         interval = self.timer.GetInterval()
         self.timer.Stop()
@@ -327,7 +327,7 @@ class BuildStationFrame(BuildStationGUI):
     def onDitherEnable(self,evt=None):
         self.dispatcher()
         if evt: evt.Skip()
-    
+
     def onClear(self,evt=None):
         self.dispatcher()
         if evt: evt.Skip()
@@ -335,23 +335,23 @@ class BuildStationFrame(BuildStationGUI):
     def onPause(self,evt=None):
         self.dispatcher()
         if evt: evt.Skip()
-        
+
     def onSave(self,evt=None):
         self.dispatcher()
         self.screenDump()
         if evt: evt.Skip()
-        
+
     def onClose(self,evt=None):
         self.dispatcher()
         self.timer.Stop()
         self.saveGuiSettings()
         if evt: evt.Skip()
-    
+
     def onQuit(self,evt=None):
         self.dispatcher()
         self.Close()
         if evt: evt.Skip()
-        
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

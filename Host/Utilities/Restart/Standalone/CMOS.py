@@ -18,7 +18,7 @@ from ctypes import windll
 class InpOut32(object):
     def __init__(self):
         DLL_Path = ["InpOut32.dll",r"C:\Picarro\G2000\HostExe\InpOut32.dll"]
-        for p in DLL_Path:        
+        for p in DLL_Path:
             try:
                 self.ioDLL = windll.LoadLibrary(p)
                 break
@@ -43,7 +43,7 @@ class CMOS(object):
     ALARM_HOUR = 86
     ALARM_MIN = 87
     ALARM_SEC = 88
-    
+
     def __init__(self):
         self.ioDll = InpOut32()
 
@@ -56,7 +56,7 @@ class CMOS(object):
             msg = "%3d : %03d = 0x%02x" % (i,d,d)
             print>>op, msg
         op.close()
-        
+
     def read(self,addr):
         try:
             self.ioDll.Out32(0x70,addr)
@@ -70,7 +70,7 @@ class CMOS(object):
             self.ioDll.Out32(0x71,value)
         finally:
             time.sleep(0.001)
-    
+
     def dumpCMOS(self):
         contents = []
         for i in range(128):
@@ -86,7 +86,7 @@ class CMOS(object):
         min = int("%02x" % self.read(2))
         sec = int("%02x" % self.read(0))
         return year,month,day,hour,min,sec
-    
+
     def getChecksum(self):
         return 256*self.read(self.CHKSUM_MSB) + self.read(self.CHKSUM_LSB)
 
@@ -137,7 +137,7 @@ class CMOS(object):
         if new != old:
             self.write(self.ALARM_SEC,new)
             self.setChecksum(oldChksum+new-old)
-        
+
     def getAlarmEnable(self):
         return bool(self.read(self.ALARM_ENABLE) & self.ALARM_ENABLE_MASK)
 

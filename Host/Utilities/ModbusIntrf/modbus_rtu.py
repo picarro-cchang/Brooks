@@ -10,11 +10,11 @@
 
 """
 
-from modbus import *
+from Host.Utilities.ModbusIntrf.modbus import *
 import logging
 import sys
 import time
-from hooks import call_hooks 
+from Host.Utilities.ModbusIntrf.hooks import call_hooks
 
 #-------------------------------------------------------------------------------
 class RtuQuery(Query):
@@ -75,7 +75,7 @@ class RtuQuery(Query):
 #-------------------------------------------------------------------------------
 class RtuMaster(Master):
     """Subclass of Master. Implements the Modbus RTU MAC layer"""
-    
+
     def __init__(self, serial, interchar_multiplier=1.5):
         """Constructor. Pass the pyserial.Serial object"""
         self._serial = serial

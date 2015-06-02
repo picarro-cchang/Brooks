@@ -6,7 +6,7 @@ from numpy.linalg import inv, norm
 
 # Forward analysis script for interference removal
 if _PERSISTENT_["init"]:
-    influence_of = {"peak_1a":{}, "peak_2":{}, "peak15":{}, "ch4_splinemax":{}, "nh3_conc_ave":{}} 
+    influence_of = {"peak_1a":{}, "peak_2":{}, "peak15":{}, "ch4_splinemax":{}, "nh3_conc_ave":{}}
 
     test1 = influence_of["peak_1a"]
     test1["peak_1a"] = 1
@@ -84,13 +84,13 @@ CO2 = (_INSTR_["concentration_co2_slope"],_INSTR_["concentration_co2_intercept"]
 H2O = (_INSTR_["concentration_h2o_slope"],_INSTR_["concentration_h2o_intercept"])
 N2O = (_INSTR_["concentration_n2o_slope"],_INSTR_["concentration_n2o_intercept"])
 NH3 = (_INSTR_["concentration_nh3_slope"],_INSTR_["concentration_nh3_intercept"])
-    
+
 n2o = newValues[xs.indexByName["peak_1a"]] / 1.82
 co2 = newValues[xs.indexByName["peak_2"]] * 252.9
 h2o = newValues[xs.indexByName["peak15"]] * 2.685
 ch4 = newValues[xs.indexByName["ch4_splinemax"]] / 216.3
 nh3 = newValues[xs.indexByName["nh3_conc_ave"]]
-    
+
 _REPORT_["N2O_raw"] = applyLinear(n2o,N2O)
 _REPORT_["CO2"] = applyLinear(co2,CO2)
 _REPORT_["H2O"] = applyLinear(h2o,H2O)

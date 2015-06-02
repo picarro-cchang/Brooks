@@ -1,5 +1,5 @@
-import Listener
-import StringPickler
+import Host.Common.Listener as Listener
+import Host.Common.StringPickler as StringPickler
 import time
 import sys
 from Host.autogen.interface import ProcessedRingdownEntryType

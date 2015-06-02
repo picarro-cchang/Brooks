@@ -31,12 +31,12 @@ File History:
     08-10-20  alex Closed all client connection (_HandleState_INIT) before restarting the broadcaster in SpectrumManager
     09-06-25  alex Only "ArchiveFile", no more "ArchiveData" for spectrum data
     09-10-16  alex Work with new structure of cost-reduction platform
-    10-03-17  sze  Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which 
+    10-03-17  sze  Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which
                     are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
                     in which these dictionaries map to tables.
-    10-04-27  sze  Added error recovery features. Driver scan is restarted when Measurement System is in enabled mode and 
+    10-04-27  sze  Added error recovery features. Driver scan is restarted when Measurement System is in enabled mode and
                     is stopped when the measurement system is initialized or is in the ready mode.
-    
+
     Copyright (c) 2010 Picarro, Inc. All rights reserved
 
 """
@@ -79,7 +79,7 @@ EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-    
+
 STATE__UNDEFINED = -100
 STATE_ERROR = 0x0F
 STATE_INIT = 0
@@ -146,7 +146,7 @@ SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_
 
 FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
                                      APP_NAME, IsDontCareConnection = False)
-                                     
+
 class MeasSystemError(CrdsException):
     """Base class for MeasSystem errors."""
 class MeasurementDisabled(MeasSystemError):
@@ -182,11 +182,11 @@ class MeasSystem(object):
             self.StartingMeasMode = ""
             self.fitterIpAddressList = []
             self.fitterPortList = []
-            
+
         def Load(self, IniPath):
             """Loads the configuration from the specified ini/config file."""
-            cp = CustomConfigObj(IniPath) 
-            
+            cp = CustomConfigObj(IniPath)
+
             basePath = os.path.split(IniPath)[0]
 
             self.ModeDefinitionFile = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "ModeDefinitionFile"))
@@ -237,7 +237,7 @@ class MeasSystem(object):
         self.ConfigPath = ConfigPath
         self.Config = MeasSystem.ConfigurationOptions(SimMode)
         self.Config.Load(self.ConfigPath)
-        
+
         #Set up the Broadcaster that will be used to send processor data to the Data Manager...
         self.ProcDataBroadcaster = Broadcaster(BROADCAST_PORT_MEAS_SYSTEM, APP_NAME, logFunc=Log)
         #Now set up the RPC server...
@@ -248,22 +248,22 @@ class MeasSystem(object):
                                                 threaded = True)
 
         self.RpcThread = None
-        
+
         self.getSpectrumTimes = []
         self.fitterTimes = []
-        
+
         #Register the rpc functions...
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not isclass(attr)):
                 self.RpcServer.register_function(attr, NameSlice = 4)
-        
+
         self.noInstMgr = noInstMgr
         if not self.noInstMgr:
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
                                                         IsDontCareConnection = True)
-                                                        
+
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
             raise CommandError("Command invalid in present state ('%s')." % StateName[self.__State])
@@ -318,10 +318,10 @@ class MeasSystem(object):
         Mode changes are only valid when the instrument is not measuring.
 
         """
-        self._AssertValidCallingState([STATE_READY,   
+        self._AssertValidCallingState([STATE_READY,
                                        STATE_ENABLED,
                                      ])
-                                     
+
         if not ModeName in self.MeasModes.keys():
             raise InvalidModeSelection("An invalid mode was selected: '%s'" % ModeName)
         Driver.stopScan()
@@ -381,18 +381,18 @@ class MeasSystem(object):
         """Returns a dictionary with a text indication of the system states."""
         ret = dict(State_MeasSystem = StateName[self.__State])
         return ret
-        
+
     def RPC_GetSensorData(self):
         """Returns most recent sensor data from the DAS"""
         return SpectrumCollector.getSensorData()
-        
+
     def _ChangeMode(self, ModeName):
         """Changes the measurement mode of the instrument."""
         self._ScanInProgress = False
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._SetupMeasMode()
         SpectrumCollector.setSequence(ModeName)
-        
+
     def _SetupMeasMode(self):
         """Perform any instrument setup required for this mode by calling the instrument manager"""
         if not self.noInstMgr:
@@ -401,7 +401,7 @@ class MeasSystem(object):
             Log("Setting instrument mode: %s" % (modeDict,))
         else:
             Log("Running without Instrument Manager - can't set mode in instrument")
-            
+
     def __SetState(self, NewState):
         """Sets the state of the MeasSystem.  Variable init is done as appropriate."""
         if NewState == self.__State:
@@ -435,7 +435,7 @@ class MeasSystem(object):
             dict(State = StateName[NewState],
                  PreviousState = StateName[self.__LastState]),
             Level = eventLevel)
-        
+
     def _HandleState_INIT(self):
         try:
             ##Stop any active scan
@@ -446,10 +446,10 @@ class MeasSystem(object):
             ##Figure out what modes are available and load all details...
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionFile)
             Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
-            
+
             for m in self.MeasModes.values():
                 SpectrumCollector.addNamedSequenceOfSchemeConfigs(m.Name,m.SchemeConfigs)
-            
+
             # Deal with startup configuration options...
             if self.Config.StartEngine:
                 Log("Engine started (with Driver.startEngine) due to 'StartEngine' startup config setting.")
@@ -458,7 +458,7 @@ class MeasSystem(object):
                 Log("EnableEvent set due to 'AutoEnableOnCleanStart' startup config setting.")
                 #Set it up to automatically start...
                 self._EnableEvent.set()
-                
+
             # Set up the starting measurement mode (if defined... normally we wait to be told in ready state)
             if self.Config.StartingMeasMode:
                 self._ChangeMode(self.Config.StartingMeasMode)
@@ -532,7 +532,7 @@ class MeasSystem(object):
         stateHandler[STATE_ERROR] = self._HandleState_ERROR
 
         # ### THIS IS THE MAIN STATE HANDLER LOOP ### #
-        
+
         loopTimes = []
         lastTime = TimeStamp()
         while not self._ShutdownRequested and not self._FatalError:
@@ -615,7 +615,7 @@ def HandleCommandSwitches():
             noInstMgr = True
         if "-s" in options or "--simulation" in options:
             simMode = True
-            
+
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
@@ -623,9 +623,9 @@ def HandleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", configFile)
-        
+
     return (configFile, executeTest, noFitter, noInstMgr, simMode)
-    
+
 def ExecuteTest(MS):
     """A self test executed via the --test command-line switch."""
     assert isinstance(MS, MeasSystem)
@@ -633,7 +633,7 @@ def ExecuteTest(MS):
     MS.RPC_Enable()
     print "MS enabled!!!"
     #MS.Disable()
-    
+
 def main():
     #Get and handle the command line options...
     configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()

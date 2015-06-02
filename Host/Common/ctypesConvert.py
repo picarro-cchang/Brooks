@@ -97,7 +97,7 @@ def dictToCtypes(d,c):
                 setattr(c,k,d[k])
             else:
                 raise ValueError,"Unknown structure field name %s" % k
-    
+
 if __name__ == "__main__":
     p = RD_ResultsEntryType()
     p.ratio1 = 1.2
@@ -109,12 +109,10 @@ if __name__ == "__main__":
     p.values[0] = 10
     p.values[1] = 20
     p.values[2] = 30
-    
+
     r = ctypesToDict(p)
     print r
     q = RD_ResultsEntryType()
     # r.update(dict(foo='bar'))
     dictToCtypes(r,q)
     print ctypesToDict(q)
-
-    

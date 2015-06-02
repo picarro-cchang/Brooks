@@ -3,7 +3,7 @@ import sys
 from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.configobj import ConfigObj
 from Host.Common.SharedTypes import ctypesToDict, RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, BROADCAST_PORT_RD_RECALC
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR
 from Host.autogen import interface
 import numpy
 import os
@@ -62,20 +62,20 @@ class ScopePanel(wx.Panel):
     def setYLim2(self,yMin,yMax):
         self.graphPanel2.SetGraphProperties(YSpec=(yMin,yMax))
 
-class ControlPanel(wx.Panel):        
+class ControlPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
-        
+
         self.handlers = {}
         self.serialNumber = ""
         self.average = 64
         self.averageCount = 0
         self.enableAverage = False
         self.enable = True
-        
+
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        
+
         self.check_box_enable_average = wx.CheckBox(self, -1, "Exponential Average")
         self.label_average = wx.StaticText(self, -1, "Average")
         self.text_ctrl_average = wx.TextCtrl(self, -1, "%d" % self.average, style=wx.TE_PROCESS_ENTER)
@@ -83,7 +83,7 @@ class ControlPanel(wx.Panel):
         self.check_box_enable.SetValue(True)
         self.label_std_dev = wx.StaticText(self, -1, "Std Dev")
         self.text_ctrl_std_dev = wx.TextCtrl(self, -1, style=wx.TE_READONLY)
-        
+
         sizer_1.Add(self.check_box_enable_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.label_average, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
         sizer_1.Add(self.text_ctrl_average, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 10)
@@ -93,10 +93,10 @@ class ControlPanel(wx.Panel):
         sizer_1.AddStretchSpacer()
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
-        
+
         self.Bind(wx.EVT_CHECKBOX, self.onAverageCheckbox, self.check_box_enable_average)
         self.Bind(wx.EVT_CHECKBOX, self.onEnableCheckbox, self.check_box_enable)
-                
+
         self.Bind(wx.EVT_TEXT_ENTER, self.onAverageEnter, self.text_ctrl_average)
         self.text_ctrl_average.Bind(wx.EVT_KILL_FOCUS, self.onAverageEnter)
 
@@ -105,26 +105,26 @@ class ControlPanel(wx.Panel):
         if name not in self.handlers:
             self.handlers[name] = []
         self.handlers[name].append(observer)
-        
+
     def onAverageEnter(self,evt):
         if not self.enableAverage:
             self.average = float(self.text_ctrl_average.GetValue())
         if evt: evt.Skip()
-        
+
     def onAverageCheckbox(self,evt):
         self.enableAverage = self.check_box_enable_average.GetValue()
-        if not self.enableAverage: 
+        if not self.enableAverage:
             self.averageCount = 0
             self.text_ctrl_average.SetEditable(True)
             self.text_ctrl_average.SetValue("%d" % self.average)
         else:
             self.text_ctrl_average.SetEditable(False)
         if evt: evt.Skip()
-        
+
     def onEnableCheckbox(self,evt):
         self.enable = self.check_box_enable.GetValue()
         if evt: evt.Skip()
-        
+
 class GenericPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
@@ -137,7 +137,7 @@ class GenericPanel(wx.Panel):
         self.eColor = wx.TextCtrl(self, -1, " ", size=(10,-1))
         self.eColor.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, 0, ""))
         sizer_1 = wx.StaticBoxSizer(self.sizer_1_staticbox, wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)       
+        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2.Add(self.value, 1, wx.RIGHT, 5)
         sizer_2.Add(self.eColor, 0, wx.RIGHT, 5)
         sizer_1.Add(sizer_2,0,wx.EXPAND|wx.TOP|wx.BOTTOM, 5)
@@ -173,7 +173,7 @@ class DetectorViewer(wx.Frame):
         self.Bind(wx.EVT_TIMER,self.onTimer,self.timer)
         self.timer.Start(250)
         self.graphPanel = [self.scopePanel.graphPanel1,self.scopePanel.graphPanel2]
-        
+
     def onTimer(self,evt):
         numGraphs = 2
         for idx in range(numGraphs):
@@ -190,7 +190,7 @@ class DetectorViewer(wx.Frame):
                         self.graphPanel[i].SetForcedXAxis(currXAxis)
                         self.graphPanel[i].Update(forcedRedraw=True)
                         self.graphPanel[i].ClearForcedXAxis()
-                    self.allTimeLocked = True  
+                    self.allTimeLocked = True
                     break
                 elif self.allTimeLocked:
                     #print "Graph %d unzooming others in time-locked mode" % idx
@@ -201,12 +201,12 @@ class DetectorViewer(wx.Frame):
                     self.allTimeLocked = False
                     break
 
-        self.scopePanel.setYLim1(0,16500)    
+        self.scopePanel.setYLim1(0,16500)
         self.scopePanel.setXLim(0,1000)
         self.scopePanel.Update()
-        
+
         if evt: evt.Skip()
-    
+
 _DEFAULT_CONFIG_NAME = "DetectorViewer.ini"
 
 HELP_STRING = \
@@ -224,7 +224,7 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     import getopt
-  
+
     shortOpts = 'c:h'
     longOpts = ["help"]
     try:
@@ -237,21 +237,21 @@ def HandleCommandSwitches():
     options = {}
     for o, a in switches:
         options[o] = a
-      
+
     if "/?" in args or "/h" in args:
         options["-h"] = ""
-  
+
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit(0)
- 
+
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-    
+
     return (configFile)
 
 
@@ -261,6 +261,6 @@ def main():
     frame = DetectorViewer(configFile)
     frame.Show()
     app.MainLoop()
-    
+
 if __name__ == "__main__":
     main()

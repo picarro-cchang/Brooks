@@ -27,7 +27,7 @@ def checkLock(func):
         finally:
             self.lock.release()
     return wrapper
-    
+
 class FigureInteraction(object):
     def __init__(self,fig,lock):
         self.fig = fig
@@ -35,7 +35,7 @@ class FigureInteraction(object):
         self.canvas = fig.canvas
         w = self.canvas
         # Find the nearest top-level window
-        while w and not w.IsTopLevel(): 
+        while w and not w.IsTopLevel():
             w = w.GetParent()
         self.topLevel = {self.canvas:w}
         self.lastTime = 0
@@ -63,13 +63,13 @@ class FigureInteraction(object):
     @checkLock
     def isActive(self):
         return self._active
-        
+
     @checkLock
     def onEnterFigure(self,event):
         w = wx.Window.FindFocus()
         if w not in self.topLevel:
             p = w
-            while p and not p.IsTopLevel(): 
+            while p and not p.IsTopLevel():
                 p = p.GetParent()
             self.topLevel[w] = p
         if self.topLevel[w] == self.topLevel[event.canvas]:

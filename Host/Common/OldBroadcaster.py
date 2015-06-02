@@ -266,7 +266,7 @@ class Broadcaster(threading.Thread):
 if __name__ == "__main__":
     from time import strftime,localtime,sleep
     import ctypes
-    import StringPickler
+    import Host.Common.StringPickler as StringPickler
     class MyTime(ctypes.Structure):
         _fields_ = [
         ("year",ctypes.c_int),

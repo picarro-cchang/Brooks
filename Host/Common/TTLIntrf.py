@@ -20,7 +20,7 @@ class DriverError(Exception):
 class IbaseDio(object):
     def __init__(self):
         DLL_Path = ["ib_wdt.dll"]
-        for p in DLL_Path:        
+        for p in DLL_Path:
             try:
                 self.dioDLL = windll.LoadLibrary(p)
                 break
@@ -62,12 +62,12 @@ class TTLIntrf(object):
         self.dio = IbaseDio()
         self.assertSig = assertSig
         self.deassertSig = deassertSig
-        
+
     def open(self):
         self.dio.installDriver()
         if not self.dio.isDioAvailable(0):
             self.dio.removeDriver()
-            raise DriverError("No DIO driver installed for SBC")            
+            raise DriverError("No DIO driver installed for SBC")
         self.dio.setDioInputMask(0x0F)
         self.dio.setDioOutputMask(0xF0)
         self.dio.shadow = 0xF0
@@ -78,31 +78,31 @@ class TTLIntrf(object):
         self.dio.shadow = 0xF0
         self.dio.setDioOutput(self.dio.shadow)
         self.dio.removeDriver()
-        
+
     def initialize(self):
         self.open()
-            
+
     def setControl(self,line,value):
         """Sets the value of control line (1-4) to specified value (0 or 1)"""
         mask = 1<<(3+line)
         self.dio.shadow &= ~mask
-        if value: 
+        if value:
             self.dio.shadow |= mask
         self.dio.setDioOutput(self.dio.shadow)
 
     def assertControl(self, line):
         """Asserts the value of control line (1-4)"""
         self.setControl(line,self.assertSig)
-        
+
     def deassertControl(self, line):
-        """Deasserts the value of control line (1-4)"""  
+        """Deasserts the value of control line (1-4)"""
         self.setControl(line,self.deassertSig)
-        
+
     def getControl(self,line):
         """Gets the value of control line (1-4). Returns 1 if asserted."""
-        mask = 1<<(3+line)          
+        mask = 1<<(3+line)
         return self.assertSig == (self.dio.shadow & mask)>>(3+line)
-        
+
     def getStatus(self,line):
         """Gets the value of status line (1-4). Returns 1 if asserted."""
         mask = 1<<(line-1)

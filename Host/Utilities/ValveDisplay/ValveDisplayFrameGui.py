@@ -5,7 +5,7 @@
 import wx
 
 # begin wxGlade: extracode
-from CheckIndicator import CheckIndicator
+from Host.Utilities.ValveDisplay.CheckIndicator import CheckIndicator
 # end wxGlade
 
 

@@ -64,29 +64,29 @@ class ScopePanel(wx.Panel):
             if whichGraphs is None or i in whichGraphs:
                 gp.SetGraphProperties(YSpec=(yMin,yMax))
 
-class ControlPanel(wx.Panel):        
+class ControlPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
         self.root = kwds.get("root", None)
         if "root" in kwds: del kwds["root"]
 
         wx.Panel.__init__(self, *args, **kwds)
-        
+
         self.handlers = {}
-        
+
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        
+
         self.button_start = wx.Button(self,-1,"Start")
         self.button_stop = wx.Button(self,-1,"Stop")
         self.button_quit = wx.Button(self,-1,"Quit")
-        
+
         sizer_1.Add(self.button_start, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
         sizer_1.Add(self.button_stop, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
         sizer_1.Add(self.button_quit, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
 
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
-        
+
         self.Bind(wx.EVT_BUTTON, self.onStart, self.button_start)
         self.Bind(wx.EVT_BUTTON, self.onStop,  self.button_stop)
         self.Bind(wx.EVT_BUTTON, self.onQuit,  self.button_quit)
@@ -212,7 +212,7 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     import getopt
-  
+
     shortOpts = 'c:h'
     longOpts = ["help"]
     try:
@@ -225,21 +225,21 @@ def HandleCommandSwitches():
     options = {}
     for o, a in switches:
         options[o] = a
-      
+
     if "/?" in args or "/h" in args:
         options["-h"] = ""
-  
+
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit(0)
- 
+
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-    
+
     return (configFile)
 
 
@@ -249,6 +249,6 @@ def main():
     frame = Viewer(configFile)
     frame.Show()
     app.MainLoop()
-    
+
 if __name__ == "__main__":
     main()

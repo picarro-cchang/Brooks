@@ -19,7 +19,7 @@ File History:
     10-06-14 john  Outlier filter added to sparser
     10-06-24 sze   Added numGroups key to RdData objects
     10-12-07 sze   Allow scripts to use different spectral and spline libraries instead
-                    of making these libraries global 
+                    of making these libraries global
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -34,7 +34,7 @@ from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, asarray, bool_, concatenate, cos
 from numpy import diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
 from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
-from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros 
+from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
 from string import strip
@@ -75,7 +75,7 @@ def readConfig(fname):
     # config = CustomConfigObj(prependAppDir(fname))
     config = CustomConfigObj(fname)
     return config
-    
+
 ################################################################################
 # Functions available to fitter scripts
 ################################################################################
@@ -99,7 +99,7 @@ def loadSplineLibrary(fnameOrConfig):
     splineLibrary = SplineLibrary(fnameOrConfig)
     sys._getframe(1).f_globals["splineLibrary"] = splineLibrary
     return splineLibrary
-    
+
 ################################################################################
 # Print deprecation messages
 ################################################################################
@@ -395,7 +395,7 @@ def convHdf5ToDict(h5Filename):
             retDict[tableName][colKey] = table.read(field=colKey)
     h5File.close()
     return retDict
-    
+
 def hdf5RepositoryFromList(hdf5Files):
     """Generator which yields successive spectra (in HDF5 format) from a
     list of .h5 files"""
@@ -700,7 +700,7 @@ class BasisFunctions(object):
     can be evaluated at a set of frequencies to give the spectrum."""
     # The base class also :
     #  1) implements memoization for its subclasses to avoid unnecessary recomputations
-    #  2) allows the subclass function to be called with a "useModifier" parameter, so that 
+    #  2) allows the subclass function to be called with a "useModifier" parameter, so that
     #      any xModifier defined in the parent model is applied before evaluating the function
     def __init__(self):
         self.parent = None
@@ -734,7 +734,7 @@ class BasisFunctions(object):
            or useModifier != self.useModifierSaved:
             self.asaved = a.copy()
             self.xsaved = x.copy()
-            if useModifier and self.parent != None and self.parent.xModifier is not None: 
+            if useModifier and self.parent != None and self.parent.xModifier is not None:
                 x = self.parent.xModifier(x)
             self.ysaved = self.call(a,x)
             self.memoUsed = False
@@ -998,8 +998,8 @@ class RdfData(object):
     _pacing = {}
     def __init__(self):
         """An RdfData object is essentially just a bunch of dynamically created attributes for holding
-        ringdown data. 
-        
+        ringdown data.
+
             self.rdfKeys holds the list of dynamic attribute names
             self.sensorDict is a dictionary of averaged sensor data
             self.indexVector is used for selection and permutation so that we can sort and filter the data
@@ -1014,15 +1014,15 @@ class RdfData(object):
         self.indexVector = []
         self.nrows = 0
         self.sensorDict = {}
-        
+
     def merge(self,rdfDataList):
         """Make a composite RdfData object from the current object and those in rdfDataList. We check
         that they are all compatible in the sense of having the same rdfKeys and sensorDict.
-        
-        The numpy concatenate function is used to join the corresponding arrays in rdfDataList. 
-        The keys in the sensorDicts are averaged together, weighted according to the number of 
+
+        The numpy concatenate function is used to join the corresponding arrays in rdfDataList.
+        The keys in the sensorDicts are averaged together, weighted according to the number of
         rows in each RdfData object.
-        
+
         indexVector is set to select all the data in natural order
         nrows is set to the sum of the rows of the original object and those in the list
         """
@@ -1046,7 +1046,7 @@ class RdfData(object):
                 aList = []
             aList += [getattr(d,k) for d in rdfDataList]
             object.__setattr__(self, k, concatenate(aList))
-                    
+
         if self.sensorDict:
             for k in sensorKeys:
                 self.sensorDict[k] *= self.nrows
@@ -1058,24 +1058,24 @@ class RdfData(object):
 
         for k in sensorKeys:
             self.sensorDict[k] /= self.nrows
-            
+
         self.indexVector = arange(self.nrows)
         self.startRow = 0
         self.endRow = self.nrows
-        
+
     @staticmethod
     def getSpectraDict(rdfDict):
-        """Generates individual spectra (in RdfData() format) from a dictionary with keys 
-        "rdData", "sensorData" and optionally "controlData" and "tagalongData". 
-        
+        """Generates individual spectra (in RdfData() format) from a dictionary with keys
+        "rdData", "sensorData" and optionally "controlData" and "tagalongData".
+
         rdfDict["controlData"] is typically a numpy record array with a field "RDDataSize"
-        which indicates how the rows of rdfDict["rdData"] are to be divided into "chunks" 
-        containing individual spectra. 
-        
+        which indicates how the rows of rdfDict["rdData"] are to be divided into "chunks"
+        containing individual spectra.
+
         """
         rdData = rdfDict["rdData"]
         otherData = rdfDict["sensorData"]
-        if "tagalongData" in rdfDict: 
+        if "tagalongData" in rdfDict:
             otherData.update(rdfDict["tagalongData"])
         try:
             controlData = rdfDict["controlData"]
@@ -1085,7 +1085,7 @@ class RdfData(object):
         except:
             rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
-            
+
         RED_THRESHOLD = 250
         RED_DISCARD_ALL = 500
 
@@ -1108,7 +1108,7 @@ class RdfData(object):
             otherDataForChunk = {}
             for key in otherData:
                 otherDataForChunk[key] = otherData[key][i]
-                
+
             # Returns an RdfData object from ringdown data between indices low and high
             def makeRdfData(low,high):
                 rdfData = RdfData()
@@ -1131,7 +1131,7 @@ class RdfData(object):
             # Split spectra further according to subfield of the subschemeId
             low = start
             high = start + rdChunkSize
-            
+
             splits = flatnonzero(diff(rdData["subschemeId"][low:high] & 0x3FF))
             for s in splits:
                 id = rdData["subschemeId"][low] & 0x3FF
@@ -1161,7 +1161,7 @@ class RdfData(object):
         self.nrows = len(self.time)
         self.indexVector = arange(self.nrows)
         return self
-        
+
     def __getitem__(self,key):
         # Use item notation to recover certain properties of a data set for use in scripting
         try:
@@ -1232,7 +1232,7 @@ class RdfData(object):
             self.groupMedians[field] = array([median(x[g]) for g in self.groups])
             self.groupStdDevs[field] = array([std(x[g]) for g in self.groups])
             self.groupPtp[field] = array([ptp(x[g]) for g in self.groups])
-##  14 June 2010  added modified sigma filter named "outlierFilter            
+##  14 June 2010  added modified sigma filter named "outlierFilter
     def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
         "yColumn" into rectangles of maximum dimensions "width" by "height",
@@ -1287,7 +1287,7 @@ class RdfData(object):
         nStart = len(self.indexVector)
         nEnd = sum([len(g) for g in self.groups])
         self.filterHistory.append(("sparseFilter",nStart-nEnd,nEnd))
-    
+
     def calcGroupStats(self):
         self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue","ratio1","ratio2","wlmAngle","laserTemperature"])
         self.groupStats = {}
@@ -1314,7 +1314,7 @@ class RdfData(object):
                                    pzt_ensemble_offset = self.groupMeans["pztValue"][idx] - ensemblePzt,
                                    group_size = self.groupSizes[idx]
                                    )
-            
+
     def selectGroupStats(self, nameWaveNumList):
         """
         nameWaveNumList = [(name, waveNum), ...]
@@ -1327,7 +1327,7 @@ class RdfData(object):
             for key in closestGroupStats:
                 results[name+"_"+key] = closestGroupStats[key]
         return results
-    
+
     def calcSpectrumStats(self):
         ringdownsInSpectrum = unique(concatenate([s for s in self.groups]))
         ringdownsInSpectrum = ringdownsInSpectrum[self.uncorrectedAbsorbance[ringdownsInSpectrum] != 0.0]
@@ -1353,10 +1353,10 @@ class RdfData(object):
         s = self.groupMeans["pztValue"]
         self.spectrumStats["ss_group_pzt_slope"] = polyfit(self.groupMeans["waveNumber"], s, 1)[0]
         self.spectrumStats["ss_group_pzt_stddev"] = std(s)
-        
+
     def getSpectrumStats(self):
         return self.spectrumStats
-        
+
     def badRingdownFilter(self,fieldName,minVal=0.50,maxVal=20.0):
         """Remove entries whose "field" value lies outside the specified range"""
         def goodValue(x):
@@ -1404,7 +1404,7 @@ class Analysis(object):
         spectralLibrary = callerGlobals["spectralLibrary"]
         splineLibrary = callerGlobals["splineLibrary"]
         physicalConstants = callerGlobals["physicalConstants"]
-    
+
         if not isinstance(fnameOrConfig,CustomConfigObj):
             fnameOrConfig = readConfig(fnameOrConfig)
         self.config = fnameOrConfig
@@ -1513,7 +1513,7 @@ class Analysis(object):
         odict = self.__dict__.copy()
         del odict['config']
         return odict
-        
+
     def setData(self,xx,yy,stdDev):
         """Specify the data which are to be fitted. Only the points within the fit regions are used"""
         selected = zeros(shape(xx),bool_)
@@ -1599,7 +1599,7 @@ class Analysis(object):
     def __call__(self,dList,initVals=None,deps=None):
         """Run the specified analysis on the RdfData object or on a list of RdfData objects.
         For a list of objects, all of the data are combined before analysis takes place.
-        We take into account the dependencies and initial values which override the defaults from 
+        We take into account the dependencies and initial values which override the defaults from
         the spectral library and .ini files.
         Returns "self", the Analysis object"""
         # print "Analysis %d call" % id(self)

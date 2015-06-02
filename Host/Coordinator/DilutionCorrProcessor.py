@@ -20,7 +20,7 @@ class DilutionCorrProcessorFrame(wx.Frame):
         self.SetMinSize((270,100))
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.labelFooter = wx.StaticText(self.panel1, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
-        
+
         # Menu bar
         self.frameMenubar = wx.MenuBar()
         self.iFile = wx.Menu()
@@ -39,15 +39,15 @@ class DilutionCorrProcessorFrame(wx.Frame):
         self.SetMenuBar(self.frameMenubar)
 
         self.textCtrl = wx.TextCtrl(self.panel1, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
-        self.textCtrl.SetMinSize((250, 80))        
+        self.textCtrl.SetMinSize((250, 80))
 
         self.applyButton = wx.Button(self.panel1, -1, "Apply Correction", size=(115,20))
         self.closeButton = wx.Button(self.panel1, wx.ID_CLOSE, "", size=(115,20))
         self.applyButton.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.closeButton.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.comboBoxSelect = wx.ComboBox(self.panel1, -1, choices = ["CO2", "CH4"], value="CO2", style = wx.CB_READONLY|wx.CB_DROPDOWN)
-        
+
         self.__do_layout()
         self.bindEvents()
         self.defaultPath = os.getcwd()
@@ -58,20 +58,20 @@ class DilutionCorrProcessorFrame(wx.Frame):
         self.stdDelta = None
         self.updateTextCtrl()
         self.applyButton.Enable(False)
-        
-    def bindEvents(self):       
+
+    def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onLoadFileMenu, self.iLoadFile)
         self.Bind(wx.EVT_MENU, self.onOutDirMenu, self.iOutDir)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
-        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.applyButton)       
-        self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton) 
+        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.applyButton)
+        self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrl)
-    
+
     def onSelect(self, event):
         self.dilType = self.comboBoxSelect.GetValue()
         self.updateTextCtrl()
-        
+
     def onApplyButton(self, event):
         if not self.filename:
             dlg = wx.MessageDialog(None,"Please select input file       ", "Error", style=wx.ICON_EXCLAMATION|wx.STAY_ON_TOP|wx.OK)
@@ -98,12 +98,12 @@ class DilutionCorrProcessorFrame(wx.Frame):
             self.textCtrl.SetValue("Output file:\nfile:%s\n" % proc.getoOutputFilename())
         else:
             self.textCtrl.SetValue("Failed to create output file")
-            
+
     def onAboutMenu(self, evt):
         d = wx.MessageDialog(None, "This application applies standard concentration to correct sample concentration values.\n\nCopyright 1999-2011 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Discrete Sample Delta Correction", wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
             urlString = self.textCtrl.GetRange(event.GetURLStart()+5, event.GetURLEnd())
@@ -138,7 +138,7 @@ class DilutionCorrProcessorFrame(wx.Frame):
     def onCloseButton(self, evt):
         sys.exit(0)
         self.Destroy()
-        
+
     def updateTextCtrl(self):
         msg1 = "1. Load data file (.csv)"
         msg2 = "2. Select output directory"
@@ -153,7 +153,7 @@ class DilutionCorrProcessorFrame(wx.Frame):
         self.textCtrl.SetValue("Before applying correction, please:\n%s\n%s\n%s"% (msg1, msg2, msg3))
         if self.filename and self.outputDir and self.dilType:
             self.applyButton.Enable(True)
-    
+
     def __do_layout(self):
         grid_sizer_1 = wx.FlexGridSizer(0, 3)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
@@ -169,20 +169,20 @@ class DilutionCorrProcessorFrame(wx.Frame):
         self.SetSizer(sizer_3)
         sizer_3.Fit(self)
         self.Layout()
-        
+
 class DilutionCorrProcessor():
     def __init__(self, dilType="CO2", dirname=""):
         self.outputDir = dirname
         self.filepath = ""
         self.outputFilename = ""
         self.dilType = dilType
-    
+
     def setFilename(self, filepath):
         self.filepath = filepath
-           
+
     def getoOutputFilename(self):
         return self.outputFilename
-        
+
     def procData(self):
         if not self.filepath:
             return
@@ -194,7 +194,7 @@ class DilutionCorrProcessor():
             newLines = fd.readlines()
             header = newLines[0]
             measData = newLines[1:]
-            fd.close()                
+            fd.close()
         except Exception, errMsg:
             print errMsg
             return
@@ -218,7 +218,7 @@ class DilutionCorrProcessor():
                     sampleBlock.append(parsedLine)
                     if lastSource == "Standard" and len(standardBlock)>0:
                         standardBlockList.append(standardBlock)
-                        standardBlock = []  
+                        standardBlock = []
                 else:
                     standardBlock.append(parsedLine)
                     if lastSource.startswith("Sample") and len(sampleBlock)>0:
@@ -231,7 +231,7 @@ class DilutionCorrProcessor():
             standardBlockList.append(standardBlock)
         if len(sampleBlock)>0:
             sampleBlockList.append(sampleBlock)
-            
+
         outputList = [COLUMN_FORMAT[:-1] % tuple(header.split(","))]
         if len(standardBlockList) >= 1:
             # Repeat the first block of standard data without using it
@@ -254,21 +254,21 @@ class DilutionCorrProcessor():
                     else:
                         sampleBlockList[stdBlockId-1][sampleId][2] = "%15.3f" % (float(sampleBlockList[stdBlockId-1][sampleId][4])/stdConcRatio)
                     outputList.append(COLUMN_FORMAT % tuple(sampleBlockList[stdBlockId-1][sampleId]))
-                
+
                 for stdId in range(len(standardBlockList[stdBlockId])):
                     # Fill in the "Corrected Delta" column
                     if self.dilType.upper() == "CO2":
                         standardBlockList[stdBlockId][stdId][2] = "%15.3f" % (float(standardBlockList[stdBlockId][stdId][3])/stdConcRatio)
                     else:
                         standardBlockList[stdBlockId][stdId][2] = "%15.3f" % (float(standardBlockList[stdBlockId][stdId][4])/stdConcRatio)
-                    outputList.append(COLUMN_FORMAT % tuple(standardBlockList[stdBlockId][stdId]))       
-            
+                    outputList.append(COLUMN_FORMAT % tuple(standardBlockList[stdBlockId][stdId]))
+
             fd = open(self.outputFilename, "w")
             fd.writelines(outputList)
             fd.close()
         else:
             print "No enough standard measurement for dilution correction"
- 
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

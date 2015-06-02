@@ -34,5 +34,3 @@ class DriverRPCTests(object):
         for k in keys:
             assert k in versions
 
-
-

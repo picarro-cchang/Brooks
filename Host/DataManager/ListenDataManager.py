@@ -14,7 +14,7 @@ def logFunc(msg):
     msg = "Listener %s: %s" % (time.ctime(time.time),msg)
     print msg
     print >> fp, msg
-    
+
 class DataManagerListener(object):
     def __init__(self):
         self.queue = Queue.Queue()
@@ -45,4 +45,3 @@ if __name__ == "__main__":
                 numPoints += 1
     finally:
         fp.close()
-        

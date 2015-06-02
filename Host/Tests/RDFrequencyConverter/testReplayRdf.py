@@ -59,13 +59,13 @@ class DummyDriver(object):
         """Registers the functions accessible by XML-RPC
         """
         self._register_rpc_functions_for_object( self )
-        
+
     def _startServer(self):
         """Start RPC server in a separate thread of execution"""
         self.rpcThread = threading.Thread(target=self.server.serve_forever)
         self.rpcThread.setDaemon(daemonic=True)
         self.rpcThread.start()
-        
+
     def stopScan(self):
         print "Driver.stopScan called"
 
@@ -77,13 +77,13 @@ class DummyDriver(object):
     def rdDasReg(self, regName):
         if regName == "ANALYZER_TUNING_MODE_REGISTER":
             return interface.ANALYZER_TUNING_CavityLengthTuningMode
-        
+
     def hostGetTicks(self):
         return timestamp.getTimestamp()
 
     def wrVirtualLaserParams(self, vLaserNum, laserParams):
         print "Driver.wrVirtualLaserParams(%d, %s) called" % (vLaserNum, laserParams)
-    
+
     def wrScheme(self, *args, **kwargs):
         argList = [("%s" % a) for a in args]
         argList.extend([("%s=%r" % (key, kwargs[key])) for key in kwargs])
@@ -101,7 +101,7 @@ class DummyDriver(object):
 
 class RdfReplay(object):
     """Object to allow user to broadcast contents of a collection of ringdown files.
-    
+
     Args:
         fileNameList: List of fully qualified RDF filenames to replay.
         rdFreqConv: Dictionary with keys:
@@ -121,7 +121,7 @@ class RdfReplay(object):
         self.schemeIndex = 0
 
     def startRdFreqConv(self):
-        self.rdFreqConv = subprocess.Popen(["python.exe", self.rdFreqConvSrc, "-c", 
+        self.rdFreqConv = subprocess.Popen(["python.exe", self.rdFreqConvSrc, "-c",
                                             self.rdFreqConvIni], stderr=file("NUL", "w"))
         self.rdFreqConvRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_FREQ_CONVERTER,
                                     "testReplayRdf", IsDontCareConnection = False)
@@ -133,10 +133,10 @@ class RdfReplay(object):
     def stopRdFreqConv(self):
         self.rdFreqConv.terminate()
         self.rdFreqConv.wait()
-        
+
     def sendRdfFile(self, fname):
         """Send an RDF file via the broadcaster.
-        
+
         Args:
             fname: Name of file to send
         """
@@ -151,14 +151,14 @@ class RdfReplay(object):
                 if fieldType == c_float:
                     setattr(rdEntry, fieldName, float(rdData[fieldName][k]))
                 else:
-                    setattr(rdEntry, fieldName, int(rdData[fieldName][k])) 
+                    setattr(rdEntry, fieldName, int(rdData[fieldName][k]))
             rdEntry.schemeVersionAndTable &= 0xF
             dataStr = StringPickler.ObjAsString(rdEntry)
             self.broadcaster.send(dataStr)
-    
+
     def setSchemeFiles(self, schemeFiles, startTable=0):
         """Specify the list of scheme files to be used, and the scheme table for the first file.
-        
+
         Args:
             schemeFiles: List of filenames containing the scheme files
             startTable: Index of scheme table into which the first file is to be loaded
@@ -168,19 +168,19 @@ class RdfReplay(object):
         for i in range(nschemes):
             schemeFileName = schemeFiles[i]
             _, ext = os.path.splitext(schemeFileName)
-            self.schemes.append((Scheme(schemeFileName), 1, ext.lower() == ".sch"))       
+            self.schemes.append((Scheme(schemeFileName), 1, ext.lower() == ".sch"))
         self.activeTable = startTable
         self.schemeIndex = 0
-    
+
     def sendScheme(self):
         """Compile and send next scheme in the sequence to the DAS.
         """
         scheme, rep, freqBased = self.schemes[self.schemeIndex]
         assert rep == 1
-        
+
         print "Scheme %s is being loaded into table %s" \
             % (os.path.split(scheme.fileName)[-1], self.activeTable)
-        
+
         if freqBased:
             self.rdFreqConvRpc.wrFreqScheme(self.activeTable, scheme)
             self.rdFreqConvRpc.convertScheme(self.activeTable)
@@ -188,10 +188,10 @@ class RdfReplay(object):
         else:
             self.driverRpc.wrScheme(self.activeTable, *(scheme.repack()))
         self.driverRpc.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER, self.activeTable)
-        
+
         self.schemeIndex = (self.schemeIndex + 1) % len(self.schemes)
         self.activeTable = (self.activeTable + 1) % 4
-        
+
     def run(self):
         """Interactively broadcast the ringdown files.
         """
@@ -202,7 +202,7 @@ class RdfReplay(object):
         totFiles = len(self.fileNameList)
         try:
             while True:
-                response = raw_input("%d files left to send. <Enter> to send one file or specify number to send: " % 
+                response = raw_input("%d files left to send. <Enter> to send one file or specify number to send: " %
                                      (totFiles - startPos,))
                 try:
                     nFiles = int(response)
@@ -226,7 +226,7 @@ class RdfReplay(object):
                     break
         finally:
             self.stopRdFreqConv()
-    
+
 if __name__ == "__main__":
     dirName = r"C:\temp\CorruptingRDFS\RDF"
     fileNames = []
@@ -237,18 +237,18 @@ if __name__ == "__main__":
             if line.startswith("#"):
                 continue
             fileNames.append(os.path.join(dirName, line))
-    rdFreqConv = dict(source = r"c:\Users\stan\Dropbox\GitHub\host\Host\RDFrequencyConverter\RDFrequencyConverter.py", 
+    rdFreqConv = dict(source = r"c:\Users\stan\Dropbox\GitHub\host\Host\RDFrequencyConverter\RDFrequencyConverter.py",
                       config = r"c:\temp\CorruptingRDFS\RDFrequencyConverter.ini")
     #schemeFiles = [r"c:\temp\CorruptingRDFS\_Beta_CFKADS_nocal_v2.sch",
     #               r"c:\temp\CorruptingRDFS\_Beta_CFKADS_cal_v2.sch"]
     schemeFiles = [r"c:\temp\CorruptingRDFS\_Beta_CFKADS_cal_v2.sch"]
-    
+
     dd = DummyDriver()
     dd._startServer()  # pylint: disable=W0212
     rr = RdfReplay(fileNames, rdFreqConv)
     rr.setSchemeFiles(schemeFiles, startTable=2)
     rr.run()
-    
+
 """
 Notes:
 We need to broadcast interface.RingdownEntryType objects to the BROADCAST_PORT_RD_RESULTS

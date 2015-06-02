@@ -13,7 +13,7 @@ class ConfigManagerGui(wx.Frame):
         # begin wxGlade: ConfigManagerGui.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        
+
         # Menu Bar
         self.frame_1_menubar = wx.MenuBar()
         wxglade_tmp_menu = wx.Menu()

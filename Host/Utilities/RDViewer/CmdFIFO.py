@@ -64,7 +64,7 @@ class RemoteException(RuntimeError):
 #        return func(*a, **k)
 #    except:
 #        raise RemoteException(traceback.format_exc())
-    
+
 def rpc_wrap(func):
     def wrapper(*a,**k):
         try:
@@ -470,12 +470,12 @@ class CmdFIFOServer(object):
         """Gets the version of the rpc server."""
         return self.serverVersion
 
-    @rpc_wrap    
+    @rpc_wrap
     def _CmdFIFO_DebugDelay(self,sec):
         if sec>0: time.sleep(sec)
         else:
             raise ValueError("Invalid delay: %s" % sec)
-    
+
     def _CmdFIFO_KillServer(self,password):
         """Stops the server immediately"""
         if password == "please":
@@ -568,7 +568,7 @@ class CmdFIFOServer(object):
             return "%s method not found" % method_name
         else:
             return getattr(method,"__wrapped_doc",pydoc.getdoc(method))
-            
+
     def register_function(self, function,name = None,DefaultMode = CMD_TYPE_Blocking,NameSlice = 0,EscapeDoubleUS = False):
         """Registers a function to respond to RPC requests.
 
@@ -795,7 +795,7 @@ class CmdFIFOServerProxy(object):
                     self.setupRemoteObject()
                 except Pyro.errors.ProtocolError:
                     self.setup = False
-            if self.setup:        
+            if self.setup:
                 def curried():
                     try:
                         self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)

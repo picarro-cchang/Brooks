@@ -12,7 +12,7 @@
 # HISTORY:
 #   07-Apr-2009  sze  Initial version.
 #   19-Jul-2010  sze  Moved to spectrum collector
-#   16-Dec-2013  sze  Allow scheme sequences to be loaded that depend on the peak detector 
+#   16-Dec-2013  sze  Allow scheme sequences to be loaded that depend on the peak detector
 #                      state. This will allow for dealing with high background in surveyor.
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved

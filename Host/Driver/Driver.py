@@ -1236,8 +1236,8 @@ class Driver(SharedTypes.Singleton):
                         Log("EEPROM ID matches Software Installer ID (%s)" % (self.analyzerType,),Level=1)
 
             # Here follows the main loop. Note that we handle messages, sensor data and ring-down data from the DSP.
-            #  The routine makeHandler in SharedTypes repeatedly calls a function which either retrieves a datum from 
-            #  the DSP or returns None. Once None is returned or if the maximum time is exceeded, we break out of the 
+            #  The routine makeHandler in SharedTypes repeatedly calls a function which either retrieves a datum from
+            #  the DSP or returns None. Once None is returned or if the maximum time is exceeded, we break out of the
             #  loop to poll the next handler.
             Log("Starting main driver loop", Level=1)
             maxRpcTime = 0.5
@@ -1257,13 +1257,13 @@ class Driver(SharedTypes.Singleton):
                             rpcTime = maxRpcTime
                     else:
                         rpcTime = 0.9 * rpcTime
-                        if rpcTime < 0.01: 
+                        if rpcTime < 0.01:
                             rpcTime = 0.01
                     requestTimeout = rpcTime
                     now = time.time()
                     doneTime = now + rpcTime
                     rpcLoops = 0
-                    while now < doneTime: 
+                    while now < doneTime:
                         rpcLoops += 1
                         daemon.handleRequests(requestTimeout)
                         now = time.time()
@@ -1271,7 +1271,7 @@ class Driver(SharedTypes.Singleton):
                     # The following logs statistics for the main loop, including the times taken and number of entries processed for each of the
                     #  sensor, ringdown and message queues
                     if False:
-                        Log("Driver", Data = {'rpcTime':'%.3f'%rpcTime, 
+                        Log("Driver", Data = {'rpcTime':'%.3f'%rpcTime,
                             'messages': '(%d, %.3f, %d)' % (messages.nprocessed,  messages.duration, messages.finished),
                             'sensors': '(%d, %.3f, %d)' % (sensors.nprocessed,  sensors.duration, sensors.finished),
                             'ringdowns': '(%d, %.3f, %d)' % (ringdowns.nprocessed,  ringdowns.duration, ringdowns.finished),
@@ -1288,7 +1288,7 @@ class Driver(SharedTypes.Singleton):
                         self.nudgeDasTimestamp()
                         self.dasInterface.saveDasState()
                         self.lastSaveDasState = now
-                        
+
                 Log("Driver RPC handler shut down")
             except:
                 type,value,trace = sys.exc_info()

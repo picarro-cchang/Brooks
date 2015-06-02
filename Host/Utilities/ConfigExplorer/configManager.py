@@ -1,16 +1,16 @@
 import wx
-from DemoCodeEditor import DemoCodeEditor
-import wx.stc as stc 
+from Host.Utilities.ConfigExplorer.DemoCodeEditor import DemoCodeEditor
+import wx.stc as stc
 import os
 import re
 import tokenize
 from configobj import ConfigObj
-from ConfigManagerGui import ConfigManagerGui
+from Host.Utilities.ConfigExplorer.ConfigManagerGui import ConfigManagerGui
 import compiler
 
 def evalStringLit(s):
     return compiler.parse(s,mode='eval').node.value
-    
+
 def getMatches(fName,matchRe,matchOpt=re.I):
     f = None
     f = open(fName,'r')
@@ -23,12 +23,12 @@ def getMatches(fName,matchRe,matchOpt=re.I):
         return matches
     finally:
         if f: f.close()
-        
+
 def ConfigNodeFactory(filename,**kwds):
-    """Construct an instance of a subclass ConfigNode for the specified file. The node 
-       type may be specified as the non-None keyword argument nodeClass. Otherwise, it 
+    """Construct an instance of a subclass ConfigNode for the specified file. The node
+       type may be specified as the non-None keyword argument nodeClass. Otherwise, it
        is inferred from the file extension"""
-       
+
     name,ext = os.path.splitext(filename)
     if 'nodeClass' in kwds: nodeClass = kwds['nodeClass']
     if nodeClass is not None:
@@ -63,7 +63,7 @@ class ConfigNode(object):
         self.parent = kwargs.get('parent',None)
         childBasePath = kwargs.get('childBasePath',None)
         self.childBasePath = childBasePath if (childBasePath is not None) else self.basePath
-        
+
     def addChild(self,p):
         f = os.path.join(self.childBasePath,p)
         n = ConfigNodeFactory(f,parent=self,
@@ -73,19 +73,19 @@ class ConfigNode(object):
             if n.absPath == c.absPath: break
         else:
             self.children.append(n)
-        
+
     def findChildren(self):
         print "Should be implemented in a subclass"
-    
+
     def nodeClass(self,filename):
         return None
 
     def getChildBasePath(self):
         return None
-        
+
 class DefIniConfigNode(ConfigNode):
     # Default INI handler which looks for keys which have .ini, .py or .sch extensions
-    
+
     def findChildren(self):
         self.children = []
         patt = re.compile(*self.pattRe())
@@ -100,21 +100,21 @@ class DefIniConfigNode(ConfigNode):
                         self.addChild(p)
                     for p in self.extraChildren(sec,opt,ini[sec][opt]):
                         self.addChild(p)
-                    
+
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch",re.I
-        
+
     def extraChildren(self,sec,opt,value):
         return []
-        
+
 class MeasSystemIniConfigNode(DefIniConfigNode):
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch|.*?\.mode",re.I
-        
+
 class DataManagerIniConfigNode(DefIniConfigNode):
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch|.*?\.mode",re.I
-    
+
 class FitterIniConfigNode(DefIniConfigNode):
     def nodeClass(self,filename):
         return FitterScriptConfigNode
@@ -127,9 +127,9 @@ class SampleManagerIniConfigNode(DefIniConfigNode):
             return [value.strip() + '.py']
         else:
             return []
-            
+
 class DefPyConfigNode(ConfigNode):
-    # Default PY handler 
+    # Default PY handler
     def findChildren(self):
         self.children = []
         fp = None
@@ -146,15 +146,15 @@ class DefPyConfigNode(ConfigNode):
                         self.addChild(st)
         finally:
             if fp: fp.close()
-            
+
     def readline(self,fp):
         return fp.readline
 
 class FitterScriptConfigNode(DefPyConfigNode):
     pass
-    
+
 class DefSchConfigNode(DefPyConfigNode):
-    # Default SCH handler 
+    # Default SCH handler
     def readline(self,fp):
         def linesBetweenMarkers(marker):
             emitting = False
@@ -170,9 +170,9 @@ class DefSchConfigNode(DefPyConfigNode):
             except StopIteration:
                 return ""
         return readBetweenMarkers
-        
+
 class DefModeConfigNode(DefIniConfigNode):
-    # Default MODE handler 
+    # Default MODE handler
     def findChildren(self):
         DefIniConfigNode.findChildren(self)
         ini = ConfigObj(self.absPath)
@@ -189,7 +189,7 @@ class DefModeConfigNode(DefIniConfigNode):
                     if n.absPath == c.absPath: break
                 else:
                     self.children.append(n)
-        
+
     def pattRe(self):
         return r".*?\.py|.*?\.sch",re.I
 
@@ -215,14 +215,14 @@ class SupervisorConfigNode(ConfigNode):
                             if n.absPath == c.absPath: break
                         else:
                             self.children.append(n)
-                            
+
     def nodeClass(self,execName):
         if execName.lower().find('fitter')>=0: return FitterIniConfigNode
         elif execName.lower().find('meassystem')>=0: return MeasSystemIniConfigNode
         elif execName.lower().find('datamanager')>=0: return DataManagerIniConfigNode
         elif execName.lower().find('samplemanager')>=0: return SampleManagerIniConfigNode
         else: return DefIniConfigNode
-        
+
 class ConfigManager(ConfigManagerGui):
     def __init__(self,*a,**k):
         ConfigManagerGui.__init__(self,*a,**k)
@@ -244,7 +244,7 @@ class ConfigManager(ConfigManagerGui):
         self.Bind(wx.EVT_FIND_CLOSE, self.onFindClose)
         self.Bind(wx.EVT_FIND_REPLACE, self.onFindReplace)
         self.Bind(wx.EVT_FIND_REPLACE_ALL, self.onFindReplaceAll)
-        
+
     def run(self,rootNode):
         r = self.treeCtrlFiles.AddRoot(rootNode.fileName)
         if rootNode.absPath not in self.treeNodesByFileAbsPath:
@@ -253,7 +253,7 @@ class ConfigManager(ConfigManagerGui):
         rootNode.findChildren()
         self.treeCtrlFiles.SetItemHasChildren(r,True)
         self.treeCtrlFiles.SetItemPyData(r,rootNode)
-    
+
     def getChildren(self,treeNode):
         result = []
         item, cookie = self.treeCtrlFiles.GetFirstChild(treeNode)
@@ -261,20 +261,20 @@ class ConfigManager(ConfigManagerGui):
             result.append(item)
             item, cookie = self.treeCtrlFiles.GetNextChild(treeNode,cookie)
         return result
-        
+
     def removeChildren(self,treeNode):
         for n in self.getChildren(treeNode):
             for p in self.treeNodesByFileAbsPath:
                 if n in self.treeNodesByFileAbsPath[p]:
                     self.treeNodesByFileAbsPath[p].remove(n)
         self.treeCtrlFiles.DeleteChildren(treeNode)
-        
+
     def onItemCollapsed(self,evt):
         self.removeChildren(evt.GetItem())
-    
+
     def onItemExpanding(self,evt):
         self.addTreeNodes(evt.GetItem())
-        
+
     def onSelChanged(self,evt):
         selNode = self.treeCtrlFiles.GetItemPyData(evt.GetItem())
         # If node is not currently open, open in a new tab
@@ -288,7 +288,7 @@ class ConfigManager(ConfigManagerGui):
             p = wx.Panel(self.notebookEditors, -1)
             self.notebookEditorPanels.append(p)
             # t = wx.TextCtrl(p, -1, "", style=wx.TE_MULTILINE)
-            
+
             #t = stc.StyledTextCtrl(p,-1)
             #t.StyleSetSpec(stc.STC_STYLE_DEFAULT, "size:%d,face:%s" % (10, 'Courier New'))
             # line numbers in the margin
@@ -324,7 +324,7 @@ class ConfigManager(ConfigManagerGui):
         # Set the focus to the i'th tab
         self.notebookEditors.SetSelection(i)
         self.treeCtrlFiles.SetFocus()
-        
+
     def addTreeNodes(self,parentItem):
         top = self.treeCtrlFiles.GetItemPyData(parentItem)
         for c in top.children:
@@ -335,7 +335,7 @@ class ConfigManager(ConfigManagerGui):
             self.treeNodesByFileAbsPath[c.absPath].append(node)
             self.treeCtrlFiles.SetItemPyData(node,c)
             self.treeCtrlFiles.SetItemHasChildren(node,bool(c.children))
-    
+
     def onEditorSelected(self,evt):
         # Place absolute path name in status bar
         self.whichEditor = evt.GetSelection()
@@ -344,11 +344,11 @@ class ConfigManager(ConfigManagerGui):
         self.frameMainStatusbar.SetStatusText(p, 2)
         mod = t.GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
-    
+
     def onEditChange(self,evt):
         mod = evt.GetEventObject().GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
-        
+
     def onHelpFind(self,evt):
         if self.finddlg != None:
             return
@@ -364,16 +364,16 @@ class ConfigManager(ConfigManagerGui):
         t.SetSelectionEnd(t.GetAnchor())
         self.finddlg = wx.FindReplaceDialog(self, self.finddata, "Replace", wx.FR_REPLACEDIALOG|wx.FR_NOUPDOWN)
         self.finddlg.Show(True)
-        
+
     def cvtFlags(self,frFlags):
         flags = 0
         flags += stc.STC_FIND_WHOLEWORD if 0 != frFlags & wx.FR_WHOLEWORD else 0
         flags += stc.STC_FIND_MATCHCASE if 0 != frFlags & wx.FR_MATCHCASE else 0
         return flags
-        
+
     def onFind(self,evt):
         self.onFindNext(evt)
-            
+
     def onFindNext(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         s = self.finddata.GetFindString()
@@ -400,16 +400,16 @@ class ConfigManager(ConfigManagerGui):
             dlg.Destroy()
             evt.GetDialog().Show()
         t.EnsureCaretVisible()
-        
+
     def onFindReplace(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         s = self.finddata.GetFindString()
         r = self.finddata.GetReplaceString()
         f = self.finddata.GetFlags()
         if t.GetSelectedText() == s if (0 != (f & wx.FR_MATCHCASE)) else t.GetSelectedText().lower() == s.lower():
-            t.ReplaceSelection(r)            
+            t.ReplaceSelection(r)
         self.onFindNext(evt)
-        
+
     def onFindReplaceAll(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         s = self.finddata.GetFindString()
@@ -422,7 +422,7 @@ class ConfigManager(ConfigManagerGui):
         while True:
             if t.GetSelectedText() == s if (0 != (f & wx.FR_MATCHCASE)) else t.GetSelectedText().lower() == s.lower():
                 ss = t.GetSelectionStart()
-                t.ReplaceSelection(r)            
+                t.ReplaceSelection(r)
                 se = t.GetSelectionEnd()
                 nReplace += 1
             t.SetSelectionStart(t.GetSelectionEnd())
@@ -440,11 +440,11 @@ class ConfigManager(ConfigManagerGui):
         dlg.ShowModal()
         dlg.Destroy()
         evt.GetDialog().Show()
-            
+
     def onFindClose(self,evt):
         evt.GetDialog().Destroy()
         self.finddlg = None
-    
+
     def onSave(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         mod = t.GetModify()
@@ -468,7 +468,7 @@ class ConfigManager(ConfigManagerGui):
                 self.treeCtrlFiles.SetItemHasChildren(n,bool(configNode.children))
         mod = t.GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
-        
+
     def onKeyPressed(self,evt):
         key = evt.GetKeyCode()
         if key == 70 and evt.ControlDown():
@@ -477,7 +477,7 @@ class ConfigManager(ConfigManagerGui):
             self.onHelpReplace(evt)
         if key == 83 and evt.ControlDown():
             self.onSave(evt)
-        else:    
+        else:
             evt.Skip()
 if __name__ == "__main__":
     appConfigManager = wx.PySimpleApp(0)
@@ -489,4 +489,3 @@ if __name__ == "__main__":
     frameMain.run(r)
     frameMain.Show()
     appConfigManager.MainLoop()
-    

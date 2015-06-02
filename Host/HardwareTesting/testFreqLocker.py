@@ -58,8 +58,8 @@ class TestFreqLocker:
         self.processingDone = threading.Event()
         self.queue = Queue.Queue()
         self.listener = Listener(self.queue,SharedTypes.BROADCAST_PORT_RDRESULTS,RingdownEntryType,rdFilter)
-        
-        
+
+
     def makeAndUploadScheme(self,wlmAngles,laserTemps,vLaserNum,repeat,dwell):
         # Generate an angle-based scheme with subschemeId given by the value of self.seq.
         # Use scheme number 14, unless it is the current scheme, in which case use scheme 15.
@@ -72,7 +72,7 @@ class TestFreqLocker:
         virtualLasers = (vLaserNum-1)*ones(wlmAngles.shape)
         thresholds = zeros(wlmAngles.shape)
         pztSetpoints = zeros(wlmAngles.shape)
-        if schemeNum == Driver.rdDasReg("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER"): 
+        if schemeNum == Driver.rdDasReg("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER"):
             schemeNum = 15
         Driver.wrScheme(schemeNum,repeat,zip(wlmAngles,dwells,subschemeIds,virtualLasers,thresholds,pztSetpoints,laserTemps))
         Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER",schemeNum)
@@ -81,9 +81,9 @@ class TestFreqLocker:
         assert RDFreqConv.getWarmBoxCalFilePath()
     def test_vLaserParams(self):
         lookup = {"TEMP_SENSITIVITY":"tempSensitivity",
-                  "RATIO1_CENTER" : "ratio1Center", 
+                  "RATIO1_CENTER" : "ratio1Center",
                   "RATIO2_CENTER" : "ratio2Center",
-                  "RATIO1_SCALE" : "ratio1Scale", 
+                  "RATIO1_SCALE" : "ratio1Scale",
                   "RATIO2_SCALE" : "ratio2Scale",
                   "PHASE" : "phase",
                   "CAL_TEMP" : "calTemp",
@@ -103,7 +103,7 @@ class TestFreqLocker:
                 vLaserDict = Driver.rdVirtualLaserParams(vLaserNum)
                 for k in lookup:
                     assert allclose(float(vLaserSec[k]),float(vLaserDict[lookup[k]])),"Comparison of %s for virtual laser %s failed" % (k,vLaserNum)
-                assert(int(wConfig["LASER_MAP"]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum]) == vLaserDict["actualLaser"]+1)        
+                assert(int(wConfig["LASER_MAP"]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum]) == vLaserDict["actualLaser"]+1)
     def test_convertAngle(self):
         vLaserNum = 1
         wp = RDFreqConv.getWarmBoxCalFilePath()
@@ -157,7 +157,7 @@ class TestFreqLocker:
         ratio2 = ratio2Mean/32768.0
         assert allclose((ratio1-ratio1Center)*ratio2Scale*sin(wlmAngleMean + phase),
                         (ratio2-ratio2Center)*ratio1Scale*cos(wlmAngleMean),rtol=5e-3)
-        
+
 if __name__ == "__main__":
     t = TestFreqLocker()
     t.setup_class()

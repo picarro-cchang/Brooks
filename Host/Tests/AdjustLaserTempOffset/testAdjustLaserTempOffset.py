@@ -86,7 +86,7 @@ def initBadDataHigh(data):
     # virtual laser 2 has a too high mean
     # Note: None should match their targets or will result in false negatives
     currentMeansBad = {1: 25974, 2: 60001, 4: 60000, 5: 69999}
-    
+
     for vLaserNum in currentMeansBad:
         name = "fineLaserCurrent_%d_mean" % vLaserNum
         data[name] = currentMeansBad[vLaserNum]
@@ -97,7 +97,7 @@ def initBadDataLow(data):
     # Note: None should match their targets or will result in false negatives
     #       Testing edge cases around the 5000 limit
     currentMeansBad = {1: 25974, 2: 5001, 4: 5000, 5: 4999}
-    
+
     for vLaserNum in currentMeansBad:
         name = "fineLaserCurrent_%d_mean" % vLaserNum
         data[name] = currentMeansBad[vLaserNum]

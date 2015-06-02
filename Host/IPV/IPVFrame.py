@@ -8,7 +8,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = abspath(AppPath)
-    
+
 SEC_TITLES = ["Laser Status", "Wavelength Monitor Status", "Cavity Status"]
 
 class IPVFrame(wx.Frame):
@@ -34,17 +34,17 @@ class IPVFrame(wx.Frame):
             #gridLabel.SetBackgroundColour('blue')
             gridLabel.SetBackgroundColour('#736AFF')
             self.gridLabelList.append(gridLabel)
-        
+
         self.textCtrlStatus = wx.TextCtrl(self.panel_3, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE)
         self.textCtrlStatus.SetMinSize((800,100))
-        
+
         self.labelTimestamp = wx.StaticText(self.panel_3, -1, "Timestamp", size=(-1,25))
         self.labelTimestamp.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.textCtrlTimestamp = wx.TextCtrl(self.panel_3, -1, size=(152,24), style=wx.TE_READONLY|wx.TE_CENTER)
         self.buttonRunIPV = wx.Button(self.panel_3, -1, "Run IPV", size = (152,25), style=wx.BU_EXACTFIT)
         self.buttonUpload = wx.Button(self.panel_3, -1, "Upload Files", size = (152,25), style=wx.BU_EXACTFIT)
         self.buttonCreateDiagFile = wx.Button(self.panel_3, -1, "Create Diagnostic File (.h5)", size = (152,25), style=wx.BU_EXACTFIT)
-        
+
         self.__set_properties()
         self.__do_layout()
 
@@ -71,7 +71,7 @@ class IPVFrame(wx.Frame):
         self.buttonRunIPV.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonCreateDiagFile.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonUpload.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         #self.okBmp = wx.Bitmap(dirname(AppPath)+'/ok.png',wx.BITMAP_TYPE_PNG)
         #self.warningBmp = wx.Bitmap(dirname(AppPath)+'/warning.png',wx.BITMAP_TYPE_PNG)
 
@@ -81,15 +81,15 @@ class IPVFrame(wx.Frame):
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
-        
+
         sizer_4.Add(self.label_1, 1, wx.ALL|wx.EXPAND, 15)
         self.panel_1.SetSizer(sizer_4)
-        
+
         for i in range(self.numSections):
             sizer_3.Add(self.gridLabelList[i], 0, wx.EXPAND|wx.ALL, 6)
             sizer_3.Add(self.gridList[i], self.numRowsList[i]+2, wx.EXPAND|wx.ALL, 6)
         self.panel_2.SetSizer(sizer_3)
-        
+
         sizer_5.Add(self.labelTimestamp, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
         sizer_5.Add((10,-1))
         sizer_5.Add(self.textCtrlTimestamp, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
@@ -101,7 +101,7 @@ class IPVFrame(wx.Frame):
         sizer_6.Add(sizer_5)
         sizer_6.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 15)
         self.panel_3.SetSizer(sizer_6)
-        
+
         sizer_2.Add(self.panel_1, 0, wx.ALL|wx.EXPAND, 5)
         sizer_2.Add(self.panel_2, 2, wx.ALL|wx.EXPAND, 5)
         sizer_2.Add(self.panel_3, 0, wx.ALL|wx.EXPAND, 5)

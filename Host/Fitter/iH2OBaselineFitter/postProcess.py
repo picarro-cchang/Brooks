@@ -13,8 +13,8 @@ while True:
         results.append(cPickle.loads(fp.read(l)))
     except:
         break
-        
-arrays = {}        
+
+arrays = {}
 for r in results:
     for k in r:
         if k not in arrays:

@@ -1,5 +1,5 @@
 import wx
-from exFrame1Gui import ExFrame1Gui
+from Host.Utilities.PlumeCamera.exFrame1Gui import ExFrame1Gui
 import zmq
 try:
     import json
@@ -25,7 +25,7 @@ class ExFrame1(ExFrame1Gui):
         self.Bind(wx.EVT_TIMER,self.onTimer,self.timer)
         self.Bind(wx.EVT_CLOSE,self.onClose)
         self.timer.Start(20)
-        
+
     def onTimer(self,evt):
         self.timer.Stop()
         socks = dict(self.poller.poll(timeout=0))
@@ -35,17 +35,17 @@ class ExFrame1(ExFrame1Gui):
             print "Received packet", data
             self.text_ctrl_output.SetValue(data)
         self.timer.Start()
-    
+
     def onEvaluate(self,evt):
         self.cmdSock.send(json.dumps({"func": "squareAndStore", "args":( float(self.text_ctrl_input.GetValue()),) }))
         self.cmdSock.recv()
-        
+
     def onClose(self,evt):
         self.timer.Stop()
         self.cmdSock.close()
         self.broadcastSock.close()
         evt.Skip()
-        
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

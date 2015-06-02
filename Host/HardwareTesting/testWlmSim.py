@@ -18,7 +18,7 @@ if __name__ == "__main__":
         eta2.append(driver.rdFPGA("FPGA_WLMSIM","WLMSIM_ETA2"))
         ref2.append(driver.rdFPGA("FPGA_WLMSIM","WLMSIM_REF2"))
     eta1 = array(eta1,dtype=float)
-    eta2 = array(eta2,dtype=float) 
+    eta2 = array(eta2,dtype=float)
     ref1 = array(ref1,dtype=float)
     ref2 = array(ref2,dtype=float)
     figure(1)
@@ -28,4 +28,3 @@ if __name__ == "__main__":
     plot(thList,eta1/ref1,thList,eta2/ref2)
     grid(True)
     show()
-    

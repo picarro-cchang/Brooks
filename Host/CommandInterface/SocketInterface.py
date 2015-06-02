@@ -27,7 +27,7 @@ class SocketInterface(object):
     def config( self, port=None, backlog=1 ):
         self.port    = port
         self.backlog = backlog
-        
+
     """
     # To use the regular accept() as below we need to add "self.sock.settimeout(0.5)" in self.open()
     def listener(self):
@@ -41,7 +41,7 @@ class SocketInterface(object):
             except:
                 pass
     """
-    
+
     def listener(self):
         (ir, iw, ie) = ([self.sock], [], [])
         while self.terminate==False:
@@ -62,7 +62,7 @@ class SocketInterface(object):
         """ Opens port """
         if self.sock == None:
             self.close()
-            self.terminate = False    
+            self.terminate = False
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             #self.sock.settimeout(0.5)
             self.sock.bind(('',self.port))
@@ -76,11 +76,11 @@ class SocketInterface(object):
         if self.sock != None:
             self.sock.close()
             self.sock = None
-        if  self.client != None:    
+        if  self.client != None:
             self.client.close()
             self.client = None
         self.terminate = True
-            
+
     def read( self ):
         return self.client.recv(1)
 

@@ -2,7 +2,7 @@
 #
 """
 File Name: RtcAlarmOff.py
-Purpose: Turn off RTC alarm in BIOS which restarts computer at 
+Purpose: Turn off RTC alarm in BIOS which restarts computer at
     specified time
 
 File History:
@@ -13,16 +13,16 @@ Copyright (c) 2011 Picarro, Inc. All rights reserved
 from os import system
 from _winreg import ConnectRegistry, SetValueEx, CloseKey, OpenKey
 from _winreg import KEY_WRITE, REG_SZ, HKEY_LOCAL_MACHINE
-from CMOS import CMOS
-    
+from Host.Utilities.Restart.Standalone.CMOS import CMOS
+
 if __name__ == "__main__":
     cmos = CMOS()
-    cmos.setAlarmEnable(False)    
+    cmos.setAlarmEnable(False)
     aReg = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
     aKey = OpenKey(aReg, r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", 0, KEY_WRITE)
-    try:   
-        SetValueEx(aKey,"MyNewKey",0, REG_SZ, r"c:\picarro\G2000\HostExe\restart3.bat") 
-    except EnvironmentError:                                          
+    try:
+        SetValueEx(aKey,"MyNewKey",0, REG_SZ, r"c:\picarro\G2000\HostExe\restart3.bat")
+    except EnvironmentError:
         print "Encountered problems writing into the Registry..."
     CloseKey(aKey)
     CloseKey(aReg)

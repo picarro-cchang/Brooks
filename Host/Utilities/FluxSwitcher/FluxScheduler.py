@@ -23,7 +23,7 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.FluxSwitcher import FluxSwitcher
 from Host.Utilities.SupervisorLauncher.SupervisorLauncher import SupervisorLauncher
-from FluxSchedulerFrame import FluxSchedulerFrame
+from Host.Utilities.FluxSwitcher.FluxSchedulerFrame import FluxSchedulerFrame
 
 DEFAULT_CONFIG_NAME = "FluxScheduler.ini"
 FLUX_TYPES = ["CO2_H2O", "H2O_CH4", "CO2_CH4"]
@@ -47,7 +47,7 @@ def getWinProcessListStr():
             #print "Cannot fetch information for %s: %s" % (p,e)
     processListStr = "\n".join(moduleList)
     return processListStr
-    
+
 class FluxScheduler(FluxSchedulerFrame):
     def __init__(self, configFile, supervisorConfigFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
@@ -73,7 +73,7 @@ class FluxScheduler(FluxSchedulerFrame):
         self.Bind(wx.EVT_BUTTON, self.onLaunch1, self.buttonLaunch1)
         self.Bind(wx.EVT_BUTTON, self.onLaunch2, self.buttonLaunch2)
         self.Bind(wx.EVT_CLOSE, self.onClose)
-        
+
     def onClose(self, event):
         self.supervisorLauncher.Destroy()
         self.Destroy()
@@ -84,7 +84,7 @@ class FluxScheduler(FluxSchedulerFrame):
         self.buttonLaunch2.Enable(True)
         self.buttonStop.Enable(False)
         self._enableSelects()
-        
+
     def onLaunch1(self, event):
         self.terminate = False
         self.buttonLaunch1.Enable(False)
@@ -125,7 +125,7 @@ class FluxScheduler(FluxSchedulerFrame):
                       IsDontCareConnection = False)
         solValves = DriverRpc.rdDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER")
         self.currentFlowMode = "High" if (solValves and 0x4) else "Low"
-    
+
     def _runSwitcher(self):
         self.getCurrentFlowMode()
         print "runSwitcher: ",self.currentFlowMode
@@ -154,7 +154,7 @@ class FluxScheduler(FluxSchedulerFrame):
         self.buttonLaunch1.Enable(True)
         self.buttonLaunch2.Enable(True)
         self._enableSelects()
-        
+
     def _runScheduler(self):
         self.getCurrentFlowMode()
         idx = 0
@@ -205,23 +205,23 @@ class FluxScheduler(FluxSchedulerFrame):
                 idx = (idx+1) % numModes
         else:
             self.onStop(None)
-            
+
     def launchSupvervisor(self, supervisorType):
         self.supervisorLauncher.assignType(supervisorType)
         self.supervisorLauncher.runForcedLaunch()
-                        
+
     def _disableSelects(self):
         for i in range(self.numTypes):
             self.dwell[i].Enable(False)
             self.comboBoxSelect1[i].Enable(False)
             self.comboBoxSelect2.Enable(False)
-        
+
     def _enableSelects(self):
         for i in range(self.numTypes):
             self.dwell[i].Enable(True)
             self.comboBoxSelect1[i].Enable(True)
             self.comboBoxSelect2.Enable(True)
-            
+
 HELP_STRING = \
 """
 
@@ -236,7 +236,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -265,9 +265,9 @@ def HandleCommandSwitches():
     if "-s" in options:
         supervisorConfigFile = options["-s"]
         print "Supervisor Launcher config file specified at command line: %s" % supervisorConfigFile
-        
+
     return configFile, supervisorConfigFile
-    
+
 if __name__ == "__main__":
     fluxSchedulerApp = SingleInstance("PicarroFluxModeScheduler")
     if fluxSchedulerApp.alreadyrunning():

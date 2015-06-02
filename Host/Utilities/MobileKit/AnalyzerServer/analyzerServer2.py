@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import make_response, render_template, request
-from jsonrpc import JSONRPCHandler, Fault
+from Host.Utilities.MobileKit.AnalyzerServer.jsonrpc import JSONRPCHandler, Fault
 from functools import wraps
 import glob
 import os
@@ -40,10 +40,10 @@ def rpcWrapper(func):
             raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
     return JSON_RPC_wrapper
 
-def _getData(fp,startPos=None,shift=0):    
+def _getData(fp,startPos=None,shift=0):
     #
-    # Gets data from the analyzer live archive file "fp" starting  at the specified 
-    #  position "startPos" within the file. It is also possible to specify a 
+    # Gets data from the analyzer live archive file "fp" starting  at the specified
+    #  position "startPos" within the file. It is also possible to specify a
     #  "shift" for aligning the GPS data with the concentration data. By convention
     #  a NEGATIVE shift associates concentration data with EARLIER GPS data. Any
     #  columns whose names start with "GPS" are shifted in this way.
@@ -53,7 +53,7 @@ def _getData(fp,startPos=None,shift=0):
     #
     # We collect "posList" which indicates the position in the file of the start of
     #  each row of data. There are corresponding lists for GPS variables and non-GPS
-    #  variables. If we read nRows of data from the file, we can only report 
+    #  variables. If we read nRows of data from the file, we can only report
     #  nRows-abs(shift) rows back to the caller. If nRows<abs(shift), we return nothing.
     #
     # For shift>0, we report GPS[shift:] and nonGPS[:-shift] and return lastPos = posList[-shift-1]
@@ -108,8 +108,8 @@ def _getData(fp,startPos=None,shift=0):
     finally:
         fp.close()
 
-def _getLastDataRows(fp,numRows=1,shift=0):        
-    # Gets the last numRows of data from 
+def _getLastDataRows(fp,numRows=1,shift=0):
+    # Gets the last numRows of data from
     fp.seek(0,0)
     header = fp.readline()
     linelen = len(header)
@@ -121,7 +121,7 @@ def _getLastDataRows(fp,numRows=1,shift=0):
     for h in result:
         result[h] = (result[h])[-numRows:]
     return result
-    
+
 @handler.register
 @rpcWrapper
 def getData(params):
@@ -131,7 +131,7 @@ def getData(params):
         fp = file(name,'rb')
     except:
         return {'lastPos':0, 'filename':''}
-        
+
     if 'startPos' in params:
         startPos = int(params['startPos'])
     else:
@@ -181,7 +181,7 @@ def getLastDataRows(params):
     result = _getLastDataRows(fp,numRows,shift)
     result['filename'] = os.path.basename(name)
     return result
-    
+
 @handler.register
 @rpcWrapper
 def getPath(params):
@@ -204,7 +204,7 @@ def getPath(params):
 def restartDatalog(params):
     print "<------------------ Restarting data log ------------------>"
     return {}
-    
+
 @handler.register
 @rpcWrapper
 def getDateTime(params):
@@ -215,7 +215,6 @@ def getDateTime(params):
 def maps():
     threshold = float(request.values.get('threshold',2.5))
     return render_template('maps.html',threshold=threshold)
-   
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000)
-    

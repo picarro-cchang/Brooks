@@ -6,7 +6,7 @@ Purpose: The editor to help user design recipes for IM-CRDS (MBW)
 
 File History:
     2011-09-07 Alex Lee  Created
-    
+
 Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 import os
@@ -28,7 +28,7 @@ AppPath = os.path.abspath(AppPath)
 DEFAULT_CONFIG_NAME = "RecipeEditor.ini"
 
 # The recommended way to use wx with mpl is with the WXAgg
-# backend. 
+# backend.
 import matplotlib
 matplotlib.use('WXAgg')
 from matplotlib.figure import Figure
@@ -38,13 +38,13 @@ from matplotlib.backends.backend_wxagg import \
 from matplotlib.artist import *
 
 COEFF_MAPPING = [["Coefficient A:", "polyA", "0.0"], ["Coefficient B:", "polyB", "0.0"], ["Coefficient C:", "polyC", "0.0"],
-                 ["Heat Time (sec):", "heatTime", "600.0"], ["Pre-Heat Time (sec):", "preheatTime", "5.0"], 
-                 ["Low Threshold (ppm):", "h2oLowThreshold", "1000.0"], ["End Threshold (ppm):", "h2oEndHeatThreshold", "800.0"]] 
+                 ["Heat Time (sec):", "heatTime", "600.0"], ["Pre-Heat Time (sec):", "preheatTime", "5.0"],
+                 ["Low Threshold (ppm):", "h2oLowThreshold", "1000.0"], ["End Threshold (ppm):", "h2oEndHeatThreshold", "800.0"]]
 class RecipeEditor(wx.Frame):
     """ The main frame of the application
     """
     title = 'Picarro IM-CRDS Recipe Editor'
-    
+
     def __init__(self, configFile, *args, **kwds):
         cp = CustomConfigObj(configFile)
         try:
@@ -68,31 +68,31 @@ class RecipeEditor(wx.Frame):
 
     def createMenu(self):
         self.menubar = wx.MenuBar()
-        
+
         menuFile = wx.Menu()
         self.mSavePlot = menuFile.Append(-1, "Save plot")
-        
+
         menuHelp = wx.Menu()
         self.mAbout = menuHelp.Append(-1, "About Recipe Editor")
-        
+
         self.menubar.Append(menuFile, "&File")
         self.menubar.Append(menuHelp, "&Help")
         self.SetMenuBar(self.menubar)
 
     def createMainPanel(self):
         """ Creates the main panel with all the controls on it:
-             * mpl canvas 
+             * mpl canvas
              * mpl navigation toolbar
              * Control panel for interaction
         """
         self.panel1 = wx.Panel(self)
         self.panel1.SetBackgroundColour("#E0FFFF")
-        
+
         self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel2.SetBackgroundColour("#BDEDFF")
         self.labelFooter = wx.StaticText(self.panel2, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
-        
-        # Create the mpl Figure and FigCanvas objects. 
+
+        # Create the mpl Figure and FigCanvas objects.
         self.dpi = 100
         self.fig = Figure((6.0, 5.0), dpi=self.dpi)
         self.canvas = FigCanvas(self.panel1, -1, self.fig)
@@ -102,11 +102,11 @@ class RecipeEditor(wx.Frame):
         for i in range(self.numCoeff):
             self.textlabels.append(wx.StaticText(self.panel1, -1, COEFF_MAPPING[i][0], style=wx.ALIGN_RIGHT))
             self.textboxes.append(wx.TextCtrl(self.panel1, size=(150,-1), style=wx.TE_PROCESS_ENTER|wx.ALIGN_RIGHT))
-        
+
         self.drawbutton = wx.Button(self.panel1, -1, "Draw", size=(150,-1))
         self.savebutton = wx.Button(self.panel1, -1, "Save Recipe", size=(150,-1))
         self.removebutton = wx.Button(self.panel1, -1, "Remove Recipe", size=(150,-1))
-            
+
         self.recipeList = self.recipeConfig.list_sections() + ["NEW"]
         self.holderList = self.holderConfig.list_sections()
         self.recipeLabel = wx.StaticText(self.panel1, -1, "Recipe:", style=wx.ALIGN_RIGHT)
@@ -116,7 +116,7 @@ class RecipeEditor(wx.Frame):
 
         # Create the navigation toolbar, tied to the canvas
         self.toolbar = NavigationToolbar(self.canvas)
-        
+
         # Layout with box sizers
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox2 = wx.BoxSizer(wx.VERTICAL)
@@ -143,20 +143,20 @@ class RecipeEditor(wx.Frame):
         self.vbox.AddSpacer(10)
         self.vbox.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
         self.vbox.Add(self.toolbar, 0, wx.EXPAND)
-        
+
         self.hbox.Add((10,0))
         self.hbox.Add(grid_sizer, 0)
         self.hbox.Add(self.vbox, 0)
         self.panel1.SetSizer(self.hbox)
-        
+
         self.hbox2.Add(self.labelFooter, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 10)
         self.panel2.SetSizer(self.hbox2)
-        
+
         self.vbox2.Add(self.panel1, 0, wx.EXPAND, 0)
         self.vbox2.Add(self.panel2, 0, wx.EXPAND, 0)
         self.SetSizer(self.vbox2)
         self.vbox2.Fit(self)
-    
+
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onSavePlot, self.mSavePlot)
         self.Bind(wx.EVT_MENU, self.onAbout, self.mAbout)
@@ -175,12 +175,12 @@ class RecipeEditor(wx.Frame):
         x = arange(float(self.textboxes[3].GetValue()))
         y = coeff[0]*x**2+coeff[1]*x+coeff[2]
         # Set 50 as the upper limit
-        y = choose(greater(y, 50.0), (y, 50.0)) 
+        y = choose(greater(y, 50.0), (y, 50.0))
         y = self.offset + self.slope * (255 - (y/100)*255)
         # clear the axes and redraw the plot anew
-        self.sp.clear()        
+        self.sp.clear()
         self.sp.grid(True)
-        line = self.sp.plot(x, y) 
+        line = self.sp.plot(x, y)
         setp(line, linewidth=2)
         self.sp.set_title("Recipe: %s (%s)" % (self.recipeComboBox.GetValue(), self.holderComboBox.GetValue()))
         self.sp.set_xlabel("Time [seconds]")
@@ -188,8 +188,8 @@ class RecipeEditor(wx.Frame):
         self.canvas.draw()
 
     def onDrawButton(self, event):
-        self.drawFigure()  
-    
+        self.drawFigure()
+
     def onTextEnter(self, event):
         self.drawFigure()
 
@@ -205,13 +205,13 @@ class RecipeEditor(wx.Frame):
         self.slope = self.holderConfig.getfloat(holder, "slope")
         self.offset = self.holderConfig.getfloat(holder, "offset")
         self.drawFigure()
-        
+
     def onSaveButton(self, event):
         recipe = self.recipeComboBox.GetValue()
         timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
         if recipe == "NEW":
             recipe = "Recipe_" + timestamp
-            
+
         dlg = wx.TextEntryDialog(self, "Save recipe as...", "Save recipe as...", recipe)
         if dlg.ShowModal() == wx.ID_OK:
             newRecipe = dlg.GetValue()
@@ -249,20 +249,20 @@ class RecipeEditor(wx.Frame):
         d.ShowModal()
         self.recipeComboBox.SetSelection(removeIdx)
         self.onComboBox(None)
-            
+
     def onSavePlot(self, event):
         file_choices = "PNG (*.png)|*.png"
         recipe = self.recipeComboBox.GetValue()
         holder = self.holderComboBox.GetValue()
         dlg = wx.FileDialog(self, message="Save plot as...", defaultDir=os.getcwd(), defaultFile="%s-%s.png" % (recipe, holder), wildcard=file_choices, style=wx.SAVE)
-        
+
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.canvas.print_figure(path, dpi=self.dpi)
-        
+
     def onAbout(self, event):
         msg = """Editor that allows user review and design recipes for IM-CRDS (MBW)
-        
+
         Copyright 1999-2011 Picarro Inc. All rights reserved.
         The copyright of this computer program belongs to Picarro Inc.
         Any reproduction or distribution of this program requires permission from Picarro Inc.
@@ -287,18 +287,16 @@ def handleCommandSwitches():
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
-    
+
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == '__main__':
     configFile = handleCommandSwitches()
     app = wx.PySimpleApp()
     app.frame = RecipeEditor(configFile)
     app.frame.Show()
     app.MainLoop()
-
-

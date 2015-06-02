@@ -23,7 +23,7 @@ class TcpServer(asyncore.dispatcher):
     def handle_close(self):
         self.close()
         return
-        
+
 class UdpServer(asynchat.async_chat):
     def __init__(self,address):
         asynchat.async_chat.__init__(self)
@@ -40,7 +40,7 @@ class UdpServer(asynchat.async_chat):
         # self.logger.debug('found terminator')
     def handle_connect(self):
         pass
-                
+
 class GoAwayHandler(asynchat.async_chat):
     """Tell client to go away and close the connection"""
     def __init__(self,sock):
@@ -52,7 +52,7 @@ class GoAwayHandler(asynchat.async_chat):
         return
     def found_terminator(self):
         return
-    
+
 class TcpHandler(asynchat.async_chat):
     """Handles processing data from a single client.
     """
@@ -69,7 +69,7 @@ class TcpHandler(asynchat.async_chat):
         self.buffer = []
     def handle_close(self):
         self.closed = True
-        self.close()        
+        self.close()
 
 if __name__ == '__main__':
     import socket
@@ -80,5 +80,5 @@ if __name__ == '__main__':
 
     TcpServer(('localhost', 50000))
     UdpServer(('localhost', 50001))
-    
+
     asyncore.loop()

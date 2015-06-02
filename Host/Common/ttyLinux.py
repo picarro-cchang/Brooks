@@ -7,7 +7,9 @@
 # readLookAhead reads lookahead chars from the keyboard without
 # echoing them. It still honors ^C etc
 #
-import termios, sys, time
+import termios
+import sys
+import time
 
 def setSpecial () :
     "set keyboard to read single chars lookahead only"

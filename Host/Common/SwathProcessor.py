@@ -15,7 +15,7 @@ from numpy import pi, sin, sqrt
 import cPickle
 import time
 import sys
-import SurveyorInstStatus as sis
+import Host.Common.SurveyorInstStatus as sis
 
 """
 if sys.platform == "win32":

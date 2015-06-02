@@ -11,7 +11,7 @@ def setItemFont(obj,fontTuple):
     obj.SetFont(font)
     obj.SetForegroundColour(fg)
     obj.SetBackgroundColour(bg)
-    
+
 def getInnerStr(str):
     """
     This function is used to get around the problem that ConfigObj can't read '#' in
@@ -27,9 +27,9 @@ def getInnerStr(str):
             if type(innerStr) == type(''):
                 return innerStr
         except:
-            pass        
+            pass
     return str
-    
+
 class DataXferValidator(wx.PyValidator):
     def __init__(self,data,key,validator):
         wx.PyValidator.__init__(self)

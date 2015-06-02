@@ -86,10 +86,10 @@ import traceback
 import string
 from inspect import isclass
 from collections import deque
-import ScriptRunner
+import Host.DataManager.ScriptRunner as ScriptRunner
 import heapq
 
-from PulseAnalyzer import PulseAnalyzer
+from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
 from Host.PeriphIntrf.PeriphIntrf import PeriphIntrf
 from Host.CommandInterface import SerialInterface
@@ -753,37 +753,37 @@ class DataManager(object):
     def RPC_Cal_GetInstrCalibrations(self):
         """Returns instrument calibrations"""
         return self.InstrData
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_getFineLaserCurrentGain(self):
         """Returns gain used in laser aging compensation"""
         gain = self.InstrData.get("la_fineLaserCurrent_gain", 0.0)
         return gain
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_setFineLaserCurrentGain(self, gain):
         """Sets gain used in laser aging compensation"""
         newGain = float(gain)
         self.InstrData["la_fineLaserCurrent_gain"] = newGain
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_getFineLaserCurrentMaxStep(self):
         """Returns max step size used in laser aging compensation"""
         maxStep = self.InstrData.get("la_fineLaserCurrent_maxStep", 0.0)
         return maxStep
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_setFineLaserCurrentMaxStep(self, step):
         """Sets max step size used in laser aging compensation"""
         newStep = float(step)
         self.InstrData["la_fineLaserCurrent_maxStep"] = newStep
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_La_getMinFineCurrent(self):
         """Returns minimum fine current setting used in laser aging compensation"""
         maxStep = self.InstrData.get("la_fineLaserCurrent_minFineCurrent", 0.0)
         return maxStep
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_setMinFineCurrent(self, minCurrent):
         """Sets minimum fine current setting used in laser aging compensation.
@@ -791,7 +791,7 @@ class DataManager(object):
         """
         newMinCurrent = float(minCurrent)
         self.InstrData["la_fineLaserCurrent_minFineCurrent"] = newMinCurrent
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_getIsEnabled(self):
         """Returns whether laser aging compensation is enabled"""
@@ -800,27 +800,27 @@ class DataManager(object):
         if isEnabled != 0.0:
             fEnabled = True
         return fEnabled
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_Enable(self):
         """Enables laser aging compensation"""
         self.InstrData["la_enabled"] = 1.0
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_Disable(self):
         """Disables laser aging compensation"""
         self.InstrData["la_enabled"] = 0.0
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_getLaserCurrentTarget(self, vLaserNum):
         """Gets target fine laser current setting for a virtual laser.
         vLaserNum is 1-based.
         """
-        
+
         name = "la_fineLaserCurrent_%d_target" % vLaserNum
         assert (name in self.InstrData), "Invalid virtual laser number %d" % vLaserNum
         return self.InstrData[name]
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_La_setLaserCurrentTarget(self, vLaserNum, target):
         """Sets target laser current setting for a virtual laser.

@@ -47,7 +47,7 @@ class SaveData(object):
         else:
             infileName = raw_input("Name of input sensor file: ")
         outDef = os.path.join(os.path.split(os.path.abspath(infileName))[0], "sensors.h5")
-        
+
         if len(argList) >= 2:
             outfileName = argList[1]
         else:
@@ -63,7 +63,7 @@ class SaveData(object):
         TableType = type("TableType", (IsDescription,), self.colDict)
         filters = Filters(complevel=1, fletcher32=True)
         self.sensorTable = self.h5f.createTable(self.h5f.root, "sensors", TableType, filters=filters)
-        
+
         self.sf = openFile(infileName, "r")
         self.streamFilterState = "COLLECTING_DATA"
         self.resultDict = {}
@@ -81,11 +81,11 @@ class SaveData(object):
         #  A state machine is used to cache the first sample that occure at a new time and to
         #  return the dictionary collected at the last time.
         self.latestDict[STREAM_MemberTypeDict[row['streamNum']][7:]] = row['value']
-        
+
         if self.streamFilterState == "RETURNED_RESULT":
             self.lastTime = self.cachedResult.timestamp
             self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:]: self.cachedResult.value}
-            
+
         if abs(row['time'] - self.lastTime) > 5:
             self.cachedResult = SensorEntryType(row['time'], row['streamNum'], row['value'])
             self.streamFilterState = "RETURNED_RESULT"
@@ -101,7 +101,7 @@ class SaveData(object):
         else:
             self.resultDict[STREAM_MemberTypeDict[row['streamNum']][7:]] = row['value']
             self.streamFilterState = "COLLECTING_DATA"
-        
+
     def run(self):
         sensorTable = self.sf.root.sensors
         try:

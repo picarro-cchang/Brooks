@@ -25,7 +25,10 @@
 # 06-11-06 ytsai   Created file
 # 12-30-09 alex    Modified code for G2000 platform
 
-import os, sys, time, getopt
+import os
+import sys
+import time
+import getopt
 from Host.autogen import interface
 from Host.SampleManager import *
 
@@ -39,15 +42,15 @@ class SurveyorFlowMode(SampleManagerBaseMode):
         return True
     # Check that cavity is warmed up to within 5 degC of setpoint before starting flow
     cavityTemp,cavityTempSetpoint = self._RPC_ReadCavityTemperatureAndSetpoint()
-    
+
     if abs(cavityTemp-cavityTempSetpoint) > 5:
         print "Cavity temperature is too far from setpoint to start flow. Difference is", abs(cavityTemp-cavityTempSetpoint)
         return False
-        
+
     self._clearStatus()
-    
+
     self._LPC_WritePressureSetpoint( self.operate_pressure_sp_torr )
-    
+
     # Check for terminate request. See terminate remarks in Sample Manager base class.
     if self._terminateCalls: return False
 
@@ -78,7 +81,7 @@ class SurveyorFlowMode(SampleManagerBaseMode):
         step       = self.proportional_step
         try:
             iterations = deltapos/step
-            self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=1 ) 
+            self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=1 )
         except:
             pass
         self._LPC_SetValve( stepValve, targetpos )
@@ -94,7 +97,7 @@ class SurveyorFlowMode(SampleManagerBaseMode):
       return False
     print "After pressure stabilization"
     # N.B. Assert SAMPLEMGR_STATUS_FLOW_STARTED to allow measurements to start
-    self._setStatus( SAMPLEMGR_STATUS_FLOW_STARTED ) 
+    self._setStatus( SAMPLEMGR_STATUS_FLOW_STARTED )
 
   def RPC_FlowStop(self):
     """STOP FLOW"""
@@ -135,7 +138,7 @@ class SurveyorFlowMode(SampleManagerBaseMode):
     #self._LPC_OpenSolenoidValves( self.solenoid_valves )
     #self._setStatus( SAMPLEMGR_STATUS_PREPARED )
     self._LPC_StartSolenoidValveControl( 'SmScript', 'Solenoid3ValveControl', 'VALVES' )
-    
+
   def RPC_Purge(self):
     """PURGE"""
     self._setStatus( SAMPLEMGR_STATUS_PURGED, excl=True )

@@ -129,7 +129,7 @@ class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
     """
     def _marshaled_dispatch(self, data, dispatch_method = None):
         """Dispatches a JSON-RPC method from marshalled (JSON) data.
-    
+
         JSON-RPC methods are dispatched from the marshalled (JSON) data
         using the _dispatch method and the result is returned as
         marshalled data. For backwards compatibility, a dispatch
@@ -139,14 +139,14 @@ class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
         of changing method dispatch behavior.
         """
         rawreq = json.loads(data)
-    
+
         #params, method = xmlrpclib.loads(data)
         id = rawreq.get('id', 0)
         method = rawreq['method']
         params = rawreq.get('params', [])
-        
+
         responseDict = {'id':id}
-    
+
         # generate response
         try:
             if dispatch_method is not None:
@@ -166,9 +166,9 @@ class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
             #    xmlrpclib.Fault(1, "%s:%s" % (sys.exc_type, sys.exc_value))
             #    )
             responseDict['error'] = "%s:%s" % (sys.exc_type, sys.exc_value)
-    
+
         return json.dumps(responseDict)
-    
+
 
 #class SimpleXMLRPCRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
@@ -179,7 +179,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler)
     """
     def do_POST(self):
         """Handles the HTTP POST request.
-    
+
         Attempts to interpret all HTTP POST requests as JSON-RPC calls,
         which are forwarded to the server's _dispatch method for handling.
         """
@@ -205,11 +205,11 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler)
             self.send_header("Content-length", str(len(response)))
             self.end_headers()
             self.wfile.write(response)
-    
+
             # shut down the connection
             self.wfile.flush()
             self.connection.shutdown(1)
-    
+
 class SimpleJSONRPCServer(SocketServer.TCPServer,
                          SimpleJSONRPCDispatcher):
     """Simple JSON-RPC server.
@@ -231,18 +231,18 @@ class CGIJSONRPCRequestHandler(SimpleJSONRPCDispatcher):
     """Simple handler for JSON-RPC data passed through CGI."""
     def __init__(self):
         SimpleJSONRPCDispatcher.__init__(self)
-    
+
     def handle_get(self):
         """Handle a single HTTP GET request.
-    
+
         Default implementation indicates an error because
         XML-RPC uses the POST method.
         """
-    
+
         code = 400
         message, explain = \
                  BaseHTTPServer.BaseHTTPRequestHandler.responses[code]
-    
+
         response = BaseHTTPServer.DEFAULT_ERROR_MESSAGE % \
             {
              'code' : code,
@@ -254,10 +254,10 @@ class CGIJSONRPCRequestHandler(SimpleJSONRPCDispatcher):
         print 'Content-Length: %d' % len(response)
         print
         sys.stdout.write(response)
-    
+
     def handle_request(self, request_text = None):
         """Handle a single JSON-RPC request passed through a CGI post method.
-    
+
         If no JSON data is given then it is read from stdin. The resulting
         JSON-RPC response is printed to stdout along with the correct HTTP
         headers.
@@ -269,23 +269,21 @@ class CGIJSONRPCRequestHandler(SimpleJSONRPCDispatcher):
             # POST data is normally available through stdin
             if request_text is None:
                 request_text = sys.stdin.read()
-    
+
             self.handle_jsonrpc(request_text)
-    
+
     def handle_jsonrpc(self, request_text):
         """Handle a single JSON-RPC request"""
-    
+
         response = self._marshaled_dispatch(request_text)
-    
+
         print 'Content-Type: text/json'
         print 'Content-Length: %d' % len(response)
         print
         sys.stdout.write(response)
-    
+
 if __name__ == '__main__':
     server = SimpleJSONRPCServer(("localhost", 8000))
     server.register_function(pow)
     server.register_function(lambda x,y: x+y, 'add')
     server.serve_forever()
-
-

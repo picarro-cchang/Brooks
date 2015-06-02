@@ -156,7 +156,7 @@ class makeHandler(object):
         #   is nothing more to process.
         #  processFunc returns the number of entries successfully processed. For backwards compatibility
         #  if processFunc returns None this actually means that one entry was processed.
-        # We return the time taken during this 
+        # We return the time taken during this
         start = time.time()
         nprocessed = 0
         finished = False

@@ -1,6 +1,6 @@
 import wx
 import os
-from ConfigManagerGui import ConfigManagerGui
+from Host.Utilities.ConfigExplorer.ConfigManagerGui import ConfigManagerGui
 
 class DiskViewer(ConfigManagerGui):
     def __init__(self,*a,**k):
@@ -8,18 +8,18 @@ class DiskViewer(ConfigManagerGui):
         # self.Bind(wx.EVT_TREE_ITEM_EXPANDED,self.onItemExpanded,self.treeCtrlFiles)
         self.Bind(wx.EVT_TREE_ITEM_COLLAPSED,self.onItemCollapsed,self.treeCtrlFiles)
         self.Bind(wx.EVT_TREE_ITEM_EXPANDING,self.onItemExpanding,self.treeCtrlFiles)
-        
+
     def run(self):
         r = self.treeCtrlFiles.AddRoot("C:\\")
         self.treeCtrlFiles.SetItemHasChildren(r,True)
         self.treeCtrlFiles.SetItemPyData(r,"C:\\")
-    
+
     def onItemCollapsed(self,evt):
         self.treeCtrlFiles.DeleteChildren(evt.GetItem())
-    
+
     def onItemExpanding(self,evt):
         self.addTreeNodes(evt.GetItem())
-    
+
     def addTreeNodes(self,parentItem):
         top = self.treeCtrlFiles.GetItemPyData(parentItem)
         try:
@@ -33,7 +33,7 @@ class DiskViewer(ConfigManagerGui):
                 self.treeCtrlFiles.SetItemHasChildren(parentItem,False)
         except StopIteration:
             self.treeCtrlFiles.SetItemHasChildren(parentItem,False)
-        
+
 # end of class ConfigManagerGui
 if __name__ == "__main__":
     appDiskViewer = wx.PySimpleApp(0)
@@ -43,4 +43,3 @@ if __name__ == "__main__":
     frameMain.run()
     frameMain.Show()
     appDiskViewer.MainLoop()
-    

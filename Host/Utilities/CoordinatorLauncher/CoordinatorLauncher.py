@@ -16,7 +16,7 @@ import win32api
 import win32process
 import win32con
 from configobj import ConfigObj
-from CoordinatorLauncherFrame import CoordinatorLauncherFrame
+from Host.Utilities.CoordinatorLauncher.CoordinatorLauncherFrame import CoordinatorLauncherFrame
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_VALVE_SEQUENCER
 
@@ -43,7 +43,7 @@ def getWinProcessListStr():
             print "Cannot fetch information for %s: %s" % (p,e)
     processListStr = "\n".join(moduleList)
     return processListStr
-    
+
 class CoordinatorLauncher(CoordinatorLauncherFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = ConfigObj(configFile)
@@ -70,9 +70,9 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
             self.coordinatorArgs = self.co[self.coordinatorType]["Arguments"]
         except:
             self.coordinatorArgs = ""
-            
+
     def onLaunch(self, event):
-        try:        
+        try:
             winProcessListStr = getWinProcessListStr()
             if "Coordinator.exe" in winProcessListStr:
                 d = wx.MessageDialog(None,"Coordinator is currently running.\nDo you want to re-start the Coordinator now?", "Re-start Coordinator Confirmation", \
@@ -86,7 +86,7 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
                     return
         except Exception, err:
             print "%r" % err
-                   
+
         try:
             valSeqStatus = CRDS_ValveSequencer.getValveSeqStatus()
             if "ON" in valSeqStatus:
@@ -100,20 +100,20 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
                     return
         except Exception, err:
             print "%r" % err
-        
+
         launchCoordinatorThread = threading.Thread(target = self._launchCoordinator)
         launchCoordinatorThread.setDaemon(True)
         launchCoordinatorThread.start()
         time.sleep(3)
         self.Destroy()
-        
+
     def _launchCoordinator(self):
         info = subprocess.STARTUPINFO()
         argList = self.coordinatorArgs.split(" ")
         while "" in argList:
             argList.remove("")
         subprocess.Popen([self.coordinatorExe] + argList + ["-c", self.coordinatorIni], startupinfo=info)
-        
+
 HELP_STRING = \
 """
 
@@ -127,7 +127,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -154,7 +154,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     app = wx.PySimpleApp()

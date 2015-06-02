@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import make_response, render_template, request
-from jsonrpc import JSONRPCHandler, Fault
+from Host.Utilities.MobileKit.AnalyzerServer.jsonrpc import JSONRPCHandler, Fault
 try:
     import simplejson as json
 except:
@@ -57,7 +57,7 @@ class DataLoggerInterface(object):
         th.setDaemon(True)
         th.start()
         return True
-        
+
     def _startUserLogs(self,userLogList,restart):
         try:
             for i in userLogList:
@@ -80,11 +80,11 @@ def rpcWrapper(func):
             type,value = sys.exc_info()[:2]
             raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
     return JSON_RPC_wrapper
-    
+
 def _getPeaks(fp,startRow,minAmp):
     #
-    # Gets data from the analyzer peak parameters file "fp" starting  at the specified 
-    #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are 
+    # Gets data from the analyzer peak parameters file "fp" starting  at the specified
+    #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are
     #  reported. The result dictionary has keys:
     # DISTANCE        Distance along path at which maxima are located
     # GPS_ABS_LONG    Longitude of maxima
@@ -115,10 +115,10 @@ def _getPeaks(fp,startRow,minAmp):
     result['NEXT_ROW'] = startRow
     return result
 
-def _getData(fp,startPos=None,shift=0):    
+def _getData(fp,startPos=None,shift=0):
     #
-    # Gets data from the analyzer live archive file "fp" starting  at the specified 
-    #  position "startPos" within the file. It is also possible to specify a 
+    # Gets data from the analyzer live archive file "fp" starting  at the specified
+    #  position "startPos" within the file. It is also possible to specify a
     #  "shift" for aligning the GPS data with the concentration data. By convention
     #  a NEGATIVE shift associates concentration data with EARLIER GPS data. Any
     #  columns whose names start with "GPS" are shifted in this way.
@@ -128,7 +128,7 @@ def _getData(fp,startPos=None,shift=0):
     #
     # We collect "posList" which indicates the position in the file of the start of
     #  each row of data. There are corresponding lists for GPS variables and non-GPS
-    #  variables. If we read nRows of data from the file, we can only report 
+    #  variables. If we read nRows of data from the file, we can only report
     #  nRows-abs(shift) rows back to the caller. If nRows<abs(shift), we return nothing.
     #
     # For shift>0, we report GPS[shift:] and nonGPS[:-shift] and return lastPos = posList[-shift-1]
@@ -185,8 +185,8 @@ def _getData(fp,startPos=None,shift=0):
     finally:
         fp.close()
 
-def _getLastDataRows(fp,numRows=1,shift=0):        
-    # Gets the last numRows of data from 
+def _getLastDataRows(fp,numRows=1,shift=0):
+    # Gets the last numRows of data from
     fp.seek(0,0)
     header = fp.readline()
     linelen = len(header)
@@ -198,7 +198,7 @@ def _getLastDataRows(fp,numRows=1,shift=0):
     for h in result:
         result[h] = (result[h])[-numRows:]
     return result
-    
+
 @handler.register
 @rpcWrapper
 def getData(params):
@@ -211,7 +211,7 @@ def rest_getData():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-    
+
 def getDataEx(params):
     names = sorted(glob.glob(USERLOGFILES))
     try:
@@ -219,7 +219,7 @@ def getDataEx(params):
         fp = file(name,'rb')
     except:
         return {'lastPos':0, 'filename':''}
-        
+
     if 'startPos' in params and (params['startPos'] is not None) and (params['startPos'] != "null"):
         startPos = int(params['startPos'])
     else:
@@ -229,12 +229,12 @@ def getDataEx(params):
     result['filename'] = os.path.basename(name)
     result['lastPos'] = lastPos
     return result
-   
+
 @handler.register
 @rpcWrapper
 def getPos():
     return getPosEx()
-    
+
 @app.route('/rest/getPos')
 def rest_getPos():
     result = getPosEx(request.values)
@@ -242,7 +242,7 @@ def rest_getPos():
         return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
     else:
         return make_response(json.dumps({"result":result}))
-    
+
 def getPosEx():
     names = sorted(glob.glob(USERLOGFILES))
     try:
@@ -265,7 +265,7 @@ def getPosEx():
         return result
     finally:
         fp.close()
-    
+
 @handler.register
 @rpcWrapper
 def getPath(params):
@@ -296,11 +296,11 @@ def getPeaks(params):
         return {'filename':''}
     result = _getPeaks(fp,startRow,minAmp)
     fp.close();
-    dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"] 
+    dist, long, lat = result["DISTANCE"], result["GPS_ABS_LONG"], result["GPS_ABS_LAT"]
     ch4, amp, sigma = result["CH4"], result["AMPLITUDE"], result["SIGMA"]
     nextRow = result["NEXT_ROW"]
     return(dict(filename=name,dist=dist,long=long,lat=lat,ch4=ch4,amp=amp,sigma=sigma,nextRow=nextRow))
-    
+
 @handler.register
 @rpcWrapper
 def restartDatalog(params):
@@ -308,7 +308,7 @@ def restartDatalog(params):
     dataLogger = DataLoggerInterface()
     dataLogger.startUserLogs(['DataLog_User_Minimal'],restart=True)
     return {}
-    
+
 @handler.register
 @rpcWrapper
 def getDateTime(params):
@@ -324,7 +324,6 @@ def maps():
     center_latitude = float(request.values.get('center_latitude',37.39604))
     return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
                                        center_latitude=center_latitude,center_longitude=center_longitude)
-                                       
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000,debug=True)
-    

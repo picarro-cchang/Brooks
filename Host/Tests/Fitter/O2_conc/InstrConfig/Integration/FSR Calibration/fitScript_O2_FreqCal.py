@@ -1,6 +1,6 @@
 #  Fit script for spectroscopic calibration of the cavity FSR using O2 comb in the 7820 wavenumber region
 #  Version 1 started 25 April 2011 by hoffnagle
-#  2011 0513 -  Version 2.1 changes the way in which FSR indices are handled 
+#  2011 0513 -  Version 2.1 changes the way in which FSR indices are handled
 
 from numpy import arange, mean, std, sqrt, digitize, polyfit
 import os.path
@@ -10,7 +10,7 @@ if INIT:
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
-    
+
     anO2 = []
     anO2.append(Analysis(os.path.join(BASEPATH,r"./FSR_10.ini")))
     anO2.append(Analysis(os.path.join(BASEPATH,r"./FSR_11.ini")))
@@ -20,9 +20,9 @@ if INIT:
     anO2.append(Analysis(os.path.join(BASEPATH,r"./FSR_15.ini")))
     anO2.append(Analysis(os.path.join(BASEPATH,r"./FSR_16.ini")))
     anO2.append(Analysis(os.path.join(BASEPATH,r"./FSR_17.ini")))
-    
+
     out = file("FSR_calibration.txt","w")
-    
+
     def print2(str):
         print str
         print >> out,str
@@ -64,14 +64,14 @@ N = len(fitted_centers)
 if N > 1:
     lr = polyfit(fitted_centers,fitted_refs,1)
 
-rms = 0        
+rms = 0
 print2("Fitted %d O2 reference lines" % N)
 print2("Wavenumber    FSR     rms")
-for j in range(N):    
+for j in range(N):
     print2("%10.5f %8.3f %7.3f" % (fitted_refs[j],fitted_centers[j],residuals[j]))
     df = lr[1]+lr[0]*fitted_centers[j]-fitted_refs[j]
     rms += df**2
-    
+
 if N > 1:
     print2("FSR = %.7f wvn" % lr[0])
     print2("f(0) = %.5f wvn" % lr[1])
@@ -79,5 +79,5 @@ if N > 1:
 else:
     print2("No FSR calibration possible with only %d fitted reference" % N)
 
-out.close()    
+out.close()
 RESULT = { }

@@ -14,21 +14,21 @@ while True:
         results.append(cPickle.loads(fp.read(l)))
     except:
         break
-        
-arrays = {}        
+
+arrays = {}
 for r in results:
     for k in r:
         if k not in arrays:
             arrays[k] = []
         arrays[k].append(r[k])
-      
+
 for k in arrays:
     x = asarray(arrays[k])
     arrays[k] = dict(data=x,mean=mean(x),std=std(x))
-    
+
 #good = asarray(arrays['h2o_ppmv']['data'] < 80)
 #print good
- 
+
 figure()
 subplot(2,1,1)
 a = arrays['amp_ripp_1']

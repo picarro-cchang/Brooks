@@ -1,4 +1,4 @@
-import numpy 
+import numpy
 import os.path
 import time
 import cPickle
@@ -69,7 +69,7 @@ h2o_ppmv = 7.546*splinemax
 RESULT = {'amp_ripp_1':amp_ripp_1, 'amp_ripp_2':amp_ripp_2, 'amp_ripp_3':amp_ripp_3,
           'phase_ripp_1':phase_ripp_1, 'phase_ripp_2':phase_ripp_2, 'phase_ripp_3':phase_ripp_3,
           'freq_ripp_1':freq_ripp_1, 'freq_ripp_2':freq_ripp_2, 'freq_ripp_3':freq_ripp_3,
-          'base0':base0, 'base1':base1, 'base3':base3, 'h2o_spline_amp':h2o_spline_amp, 
+          'base0':base0, 'base1':base1, 'base3':base3, 'h2o_spline_amp':h2o_spline_amp,
           'splinemax':splinemax, 'h2o_ppmv':h2o_ppmv, 'stddevres':r["std_dev_res"]}
 op = file(oname,"ab")
 s = cPickle.dumps(RESULT)

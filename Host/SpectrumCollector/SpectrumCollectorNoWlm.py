@@ -6,7 +6,7 @@ Purpose: Collects spectrum and related information to save in HDF5 files. Spectr
 File History:
     12-Oct-2009  alex  Initial version.
     05-Feb-2010  sze   Removed relative timestamps, make HDF5 files contain data corresponding to a scheme file.
-    17-Mar-2010  sze   Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which 
+    17-Mar-2010  sze   Make all the dictionaries in a spectrum (rdData, sensorData and controlData) have values which
                         are lists or arrays. This improves compatibility with HDF5 storage of RdfData (spectrum) objects
                         in which these dictionaries map to tables. For a normal spectrum, sensorData and controlData
                         contain lists with only one element each.
@@ -35,13 +35,13 @@ from Host.autogen import interface
 from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RDRESULTS
-from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import unixTime
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Sequencer import Sequencer
+from Host.SpectrumCollector.Sequencer import Sequencer
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -49,12 +49,12 @@ if sys.platform == 'win32':
     from time import clock as TimeStamp
 else:
     from time import time as TimeStamp
-    
+
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-    
+
 # Some masks for interpreting the "subSchemeID" info (subSchemeID is basically
 # a pass through, with the exception of the special increment bit 15)...
 # !!! NOTE: Bit 15 is reserved for increment flag in firmware, so never use it for other purposes!!!
@@ -80,10 +80,10 @@ Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
 Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                     APP_NAME,
                                     IsDontCareConnection = False)
-                                    
+
 class RingdownTimeout(CrdsException):
     """Timed out while waiting for a ringdown to arrive."""
-    
+
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
         threading.Thread.__init__(self)
@@ -97,9 +97,9 @@ class RpcServerThread(threading.Thread):
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
-            
+
 class SpectrumCollector(object):
-    """A class for collecting spectrum and related information and 
+    """A class for collecting spectrum and related information and
     writing them to files.
 
     streamDir is specified to store the output file.
@@ -117,7 +117,7 @@ class SpectrumCollector(object):
         if not os.path.isdir(self.streamDir):
             os.makedirs(self.streamDir)
         Log("Created streamDir in %s" % self.streamDir)
-            
+
         # RPC server
         self.rpcThread = None
         self._shutdownRequested = False
@@ -131,7 +131,7 @@ class SpectrumCollector(object):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not inspect.isclass(attr)):
                 self.rpcServer.register_function(attr, name=s, NameSlice = 4)
-                
+
         # Sensor data handling
         self.sensorListener = Listener.Listener(None, # no queuing, we'll just be tracking the latest
                                                 BROADCAST_PORT_SENSORSTREAM,
@@ -144,8 +144,8 @@ class SpectrumCollector(object):
         for key in interface.STREAM_MemberTypeDict:
             self.latestSensors[interface.STREAM_MemberTypeDict[key][7:]] = 0.0
         self.sensorsUpdated = True
-        self.cachedSensors = None 
-        
+        self.cachedSensors = None
+
         # Processed RD data (frequency-based) handling
         self.rdQueue = Queue.Queue()
         self.processedRdListener = Listener.Listener(self.rdQueue,
@@ -153,7 +153,7 @@ class SpectrumCollector(object):
                                             RingdownEntryType,
                                             retry = True,
                                             name = "Spectrum collector listener",logFunc = Log)
-        
+
         #Initialize the sensor averaging...
         self.sensorAvgCount = 0
         self.avgSensors = {}
@@ -166,7 +166,7 @@ class SpectrumCollector(object):
         self.rdBuffer = {}
         for fname,ftype in RingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
-        
+
         # Broadcaster for spectra
         self.spectrumBroadcaster = Broadcaster.Broadcaster(
                             port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
@@ -185,7 +185,7 @@ class SpectrumCollector(object):
         self.lastSchemeTable = 0
         self.lastSchemeVersion = 0
         self.tagalongData = {}
-        self.controlData = {}            
+        self.controlData = {}
         self.numPts = 0
         self.emptyCount = 0
         self.startWaitTime = 0
@@ -201,7 +201,7 @@ class SpectrumCollector(object):
         self.useSequencer = True
         self.sequencer = None
         self.schemesUsed = {}
-        
+
     def run(self):
         self.sequencer = Sequencer()
         # start the rpc server on another thread...
@@ -216,40 +216,40 @@ class SpectrumCollector(object):
             #Pull a spectral point from the RD queue...
             try:
                 rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None: 
+                if rdData is None:
                     time.sleep(0.5)
                     continue
                 now = TimeStamp()
                 if self.rdQueueGetLastTime != 0:
                     rtt = now - self.rdQueueGetLastTime
                     if rtt > 10:
-                        Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))                    
+                        Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))
                     if rtt > self.maxRdQueueGetRtt:
                         Log("Maximum Processed Ringdowns loop RTT so far: %.3f" % (self.maxRdQueueGetRtt,))
                         self.maxRdQueueGetRtt = rtt
                 self.rdQueueGetLastTime = now
-               
+
                 #localRdTime = Driver.hostGetTicks()
                 self.lastSchemeTable = self.schemeTable
                 self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
                 self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable,None)
-                
+
                 thisSubSchemeID = rdData.subschemeId
                 self.lastSpectrumID = self.spectrumID
                 self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
                 self.lastSchemeVersion = self.schemeVersion
                 self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
                 thisCount = rdData.count
-                
+
                 # The schemeCount is changed when a scheme starts, i.e. it tracks entire schemes, including the
                 #  repeat count. We make an HDF5 file each time a scheme is run
                 schemeStatus = rdData.status
                 schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
-                
+
                 if self.lastSchemeCount != schemeCount:
                     if self.lastSchemeCount >= 0: self.closeHdf5File = True
                     self.lastSchemeCount = schemeCount
-                    
+
                 errDataDict = dict(schemeTable = self.schemeTable,
                                    schemeRow = rdData.schemeRow,
                                    ssID = thisSubSchemeID,
@@ -268,7 +268,7 @@ class SpectrumCollector(object):
                     if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
                         self.appendPoint(rdData)
             except RingdownTimeout:
-                if self.numPts > 0: 
+                if self.numPts > 0:
                     Log("Closing spectrum due to ringdown timeout (count = %d)" % thisCount, Level = 0)
                     self.closeSpectrumWhenDone = True
                     self.closeHdf5File = True
@@ -278,14 +278,14 @@ class SpectrumCollector(object):
                 self.schemesUsed = {}
 
             lastCount = thisCount
-            
+
         Log("Spectrum Collector RPC handler shut down")
 
     def getSpectralDataPoint(self, timeToRetry, timeout = 10):
         """Pops rdData out of the local ringdown queue and returns it. If there are no ringdowns
         within the timeToRetry interval, return None. Raise RingdownTimeout
         """
-        if self.emptyCount == 0: 
+        if self.emptyCount == 0:
             self.startWaitTime = time.time()
         if self.tempRdDataBuffer:
             #The last time a spectrum was read it read one too many points, and this is it.
@@ -315,14 +315,14 @@ class SpectrumCollector(object):
         #
         # The data are added from RingdownEntryType objects, one row at a time from each ringdown.
         #  We need to store them as columns in the spectrum file. The rdBuffer dictionary is keyed by the
-        #  field (column) name and contains tuples consisting of a list of the column values and the type 
+        #  field (column) name and contains tuples consisting of a list of the column values and the type
         #  of the data in the column
         #
         # Initialize the rdBuffer with the names and types of fields in RingdownEntryType
         self.rdBuffer = {}
         for fname,ftype in RingdownEntryType._fields_:
             self.rdBuffer[fname] = ([],ftype)
-        
+
     def _sensorFilter(self, entry):
         """Updates the latest sensor readings.
 
@@ -332,7 +332,7 @@ class SpectrumCollector(object):
         self.latestSensors["timestamp"] = entry.timestamp
         self.latestSensors[interface.STREAM_MemberTypeDict[entry.streamNum][7:]] = entry.value
         self.sensorsUpdated = True
-    
+
     def getLatestSensors(self):
         if self.sensorsUpdated:
             self.sensorsUpdated = False
@@ -382,11 +382,11 @@ class SpectrumCollector(object):
         for t in self.tagalongData:
             self.rdfDict["tagalongData"][t] = [self.tagalongData[t][0]]
 
-        #Write control data dictionary 
+        #Write control data dictionary
         qsize = 0
         self.rdfDict["controlData"] = {"RDDataSize":[self.numPts], "SpectrumQueueSize":[qsize]}
-        
-        # Process spectrum files (HDF5 or RDF). RDF files contain a single spectrum, while HDF5 files 
+
+        # Process spectrum files (HDF5 or RDF). RDF files contain a single spectrum, while HDF5 files
         #  contain the spectra in a single scheme.
         if self.enableSpectrumFiles:
             if self.useHDF5:
@@ -422,9 +422,9 @@ class SpectrumCollector(object):
                                 self.tableDict[dataKey].append(dataRec)
                             except:
                                 self.closeHdf5File = True
-                                break                                
+                                break
                 self.newHdf5File = False
-                
+
                 if self.closeHdf5File:
                     self.closeHdf5File = False
                     self.newHdf5File = True
@@ -443,28 +443,28 @@ class SpectrumCollector(object):
                     except Exception:
                         Log("Archiver call error",Verbose=traceback.format_exc())
             else:
-                # Pickle the rdfDict 
+                # Pickle the rdfDict
                 filename = "%03d_%013d.rdf" % (self.lastSpectrumID, int(time.time()*1000))
                 self.streamPath = os.path.join(self.streamDir, filename)
                 self.streamFP = file(self.streamPath, "wb")
-                self.streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL)) 
+                self.streamFP.write(cPickle.dumps(self.rdfDict,cPickle.HIGHEST_PROTOCOL))
                 self.streamFP.close()
                 # Archive RDF files
                 try:
                     Archiver.ArchiveFile(self.archiveGroup, self.streamPath, True)
                 except Exception:
                     LogExc("Archiver call error")
-            
+
         self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(self.rdfDict))
 
         self.reset()
-        
+
     # RPC functions which are handled by the sequencer
 
     @CmdFIFO.rpc_wrap
     def RPC_addSequenceByName(self,name,config):
         self.sequencer.addSequenceByName(name,config)
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_addNamedSequenceOfSchemeConfigs(self,name,schemeConfigs):
         self.sequencer.addNamedSequenceOfSchemeConfigs(name,schemeConfigs)
@@ -472,7 +472,7 @@ class SpectrumCollector(object):
     @CmdFIFO.rpc_wrap
     def RPC_reloadSequences(self):
         self.sequencer.reloadSequences()
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_getSequenceNames(self):
         return self.sequencer.getSequenceNames()
@@ -489,31 +489,31 @@ class SpectrumCollector(object):
             self.sequencer.pendingSequence = str(seq)
             self.sequencer.loadSequenceLock.release()
         self.useSequencer = True
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_startSequence(self,seq=None):
         self.RPC_setSequence(seq)
         self.sequencer.startSequence()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_getSequence(self):
         return self.sequencer.getSequenceName()
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_setSequencerMode(self,useSequencer):
         self.useSequencer = useSequencer
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_startScan(self):
         if self.useSequencer:
             self.sequencer.startSequence()
         else:
             Driver.startScan()
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_sequencerGetCurrent(self):
         return self.sequencer.getCurrent()
-                
+
     @CmdFIFO.rpc_wrap
     def RPC_closeSpectrum(self):
         self.closeSpectrumWhenDone = True
@@ -521,11 +521,11 @@ class SpectrumCollector(object):
     @CmdFIFO.rpc_wrap
     def RPC_disableSpectrumFiles(self):
         self.enableSpectrumFiles = False
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_enableSpectrumFiles(self):
         self.enableSpectrumFiles = True
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_setTagalongData(self, Name, Value):
         """Sets RDF tagalong data (and timestamp) with the given token Name."""
@@ -551,20 +551,20 @@ class SpectrumCollector(object):
 
         """
         return list(self.tagalongData.pop(Name, []))
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_getSensorData(self):
         sensorData = self.getLatestSensors()
         return sensorData.copy()
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_shutdown(self):
         self._shutdownRequested = True
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_setAuxiliarySpectrumFile(self,fileName):
         self.auxSpectrumFile = fileName
-    
+
 
 HELP_STRING = """SpectrumCollector.py [-c<FILENAME>] [-h|--help]
 
@@ -601,7 +601,7 @@ def handleCommandSwitches():
         configFile = options["-c"]
     return configFile, options
 
-if __name__ == "__main__":                          
+if __name__ == "__main__":
     configFile, options = handleCommandSwitches()
     spCollectorApp = SpectrumCollector(configFile)
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)

@@ -12,8 +12,8 @@ import sqlite3
 import tables
 import wx
 import threading
-from datetime import datetime, timedelta 
-from DiagDataCollectorFrame import DiagDataCollectorFrame
+from datetime import datetime, timedelta
+from Host.Utilities.DiagDataCollector.DiagDataCollectorFrame import DiagDataCollectorFrame
 from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -56,12 +56,12 @@ class DiagDataCollector(DiagDataCollectorFrame):
         self.h5 = None
         self.table = None
         self.timeLimits = None
-        
+
         # Bind button event
         self.Bind(wx.EVT_BUTTON, self.onGetFile, self.buttonGetFile)
         # Bind URL to message box
-        self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg) 
-        
+        self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg)
+
         self.textCtrlMsg.SetValue("Select date and time to retrieve diagnostic data files\n")
 
     def onOverUrl(self, event):
@@ -71,7 +71,7 @@ class DiagDataCollector(DiagDataCollectorFrame):
             wx.LaunchDefaultBrowser(urlString)
         else:
             event.Skip()
-            
+
     def onGetFile(self, event):
         self.startDatetime = self._convToDatetime(self.ctrlStartDate.GetValue(), self.ctrlStartTime.GetValue())
         dataDurHrs = float(self.spinCtrlDataDur.GetValue())
@@ -88,11 +88,11 @@ class DiagDataCollector(DiagDataCollectorFrame):
         self._createH5File()
         # Threading is not allowed in SQLite!
         self._writeH5File()
-        
-    def _convToDatetime(self, wxDate, timeStr): 
+
+    def _convToDatetime(self, wxDate, timeStr):
         return datetime.strptime("%s-%s-%s %s" % (wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay(), timeStr),
                                           "%Y-%m-%d %H:%M:%S")
-         
+
     def _createH5File(self):
         if self.table != None:
             self.table.flush()
@@ -107,7 +107,7 @@ class DiagDataCollector(DiagDataCollectorFrame):
             print err
             self.h5 = None
         self.table = None
-        
+
     def _closeH5File(self):
         if self.table != None:
             self.table.flush()
@@ -116,7 +116,7 @@ class DiagDataCollector(DiagDataCollectorFrame):
         self.h5 = None
         self.table = None
         self.timeLimits = None
-        
+
     def _writeH5File(self):
         if self.h5 != None and self.timeLimits != None:
             for level in range(MAX_LEVEL+1):
@@ -161,7 +161,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -188,7 +188,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     app = wx.PySimpleApp()
