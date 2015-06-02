@@ -12,7 +12,7 @@ import time
 
 def Log(text):
     print "Log: %s" % text
-    
+
 
 class DummyDataManager(object):
     def __init__(self):
@@ -25,7 +25,7 @@ class DummyDataManager(object):
                                      name = "Data manager sensor stream listener",logFunc = Log)
         self.fitterListener = []
         self.fitterListenerQueue = []
-        
+
         for fitterIndex in range(interface.MAX_FITTERS):
             q = Queue(0)
             self.fitterListenerQueue.append(q)

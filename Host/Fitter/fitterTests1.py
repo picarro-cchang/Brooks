@@ -1013,7 +1013,7 @@ class DataFiltersTestCase(unittest.TestCase):
             # y = r.uncorrectedAbsorbance[g]
             # if len(y)>1:
                 # self.assertTrue(max(abs(y - mean(y))) < 1.8*std(y))
-        # self.assertEqual(r.filterHistory,[('sparseFilter',19,82)])            
+        # self.assertEqual(r.filterHistory,[('sparseFilter',19,82)])
 
 class DataFiltersTestSuite(unittest.TestSuite):
     def __init__(self):
@@ -1168,7 +1168,7 @@ class AnalysisTestCase(unittest.TestCase):
         self.assertAlmostEqual(m[7,'scaled_strength'],g7.initialParams[1],5,"Galatry peak 7 scaled strength incorrect")
         m[7,'strength'] = m.pressure*19.0
         self.assertAlmostEqual(m[7,'scaled_strength'],19.0,5,"Galatry peak 7 scaled strength not set")
-        
+
 class AnalysisTestSuite(unittest.TestSuite):
     def __init__(self):
         unittest.TestSuite.__init__(self)

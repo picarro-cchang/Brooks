@@ -61,7 +61,7 @@ class RDFreqConvProxy(SharedTypes.Singleton):
                 SharedTypes.RPC_PORT_FREQ_CONVERTER)
             self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="Controller")
             self.initialized = True
-            
+
 class SpectrumCollectorProxy(SharedTypes.Singleton):
     """Encapsulates access to the Spectrum Collector via RPC calls"""
     initialized = False
@@ -112,7 +112,7 @@ class SensorListener(SharedTypes.Singleton):
                             retry = True,
                             name = "Controller sensor stream listener",
                             logFunc = Log)
-        
+
     def  filter(self,data):
         utime = timestamp.unixTime(data.timestamp)
         if data.streamNum == interface.STREAM_Laser1Temp:

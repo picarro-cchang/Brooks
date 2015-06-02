@@ -35,8 +35,8 @@ from Host.Common.SharedTypes import BROADCAST_PORT_EVENTLOG
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.GuiTools import getInnerStr
 
-from IPVFrame import IPVFrame
-from ReportSender import ReportSender
+from Host.IPV.IPVFrame import IPVFrame
+from Host.IPV.ReportSender import ReportSender
 
 
 APP_NAME = "IPV"

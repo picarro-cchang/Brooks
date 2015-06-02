@@ -216,7 +216,7 @@ class PeakDetectCntrl(_object):
     __swig_setmethods__["historyBuffer"] = _peakDetect.PeakDetectCntrl_historyBuffer_set
     __swig_getmethods__["historyBuffer"] = _peakDetect.PeakDetectCntrl_historyBuffer_get
     if _newclass:historyBuffer = _swig_property(_peakDetect.PeakDetectCntrl_historyBuffer_get, _peakDetect.PeakDetectCntrl_historyBuffer_set)
-    def __init__(self): 
+    def __init__(self):
         this = _peakDetect.new_PeakDetectCntrl()
         try: self.this.append(this)
         except: self.this = this
@@ -248,4 +248,3 @@ setFlow = _peakDetect.setFlow
 # This file is compatible with both classic and new-style classes.
 
 cvar = _peakDetect.cvar
-

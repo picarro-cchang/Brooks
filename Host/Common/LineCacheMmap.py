@@ -3,9 +3,9 @@
 """
 File Name: LineCacheMmap.py
 Purpose: Uses memory mapping to support line-based access to text files.
- 
+
  It provides the following function:
-  
+
   getSlice(filename,start=None,end=None,clear=False)
     Returns lines from start to end (using Python 0-origin slice semantics) from the specified filename.
      A cache is maintained which maps line numbers to byte offsets in the file. This cache is lazily
@@ -13,20 +13,20 @@ Purpose: Uses memory mapping to support line-based access to text files.
      the cache entry for the file must be cleared before extracting the slice by setting clear=True.
     The cached filenames are stored in an ordered dictionary so that the least recently used file
      can be released if there are too many (>MAX_CACHED_FILES) mappings.
- 
- A new mmap is created for each slice request, so that this works with a dynamically growing file. 
+
+ A new mmap is created for each slice request, so that this works with a dynamically growing file.
   Access to the file is read-only.
 
 File History:
  17-Dec-2011  sze    Initial version
-    
+
  Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
-from ordereddict import OrderedDict
+from Host.Common.ordereddict import OrderedDict
 import mmap
 import os
-from namedtuple import namedtuple
+from Host.Common.namedtuple import namedtuple
 
 MAX_CACHED_FILES = 32
 cachedFiles = OrderedDict()
@@ -46,7 +46,7 @@ def getSliceIter(filename,start=None,end=None,clear=False):
             cachedFiles.popitem(last=False).clear()
     if clear: cachedFiles[filename].clear()
     for l in cachedFiles[filename].getSliceIter(start,end): yield l
-    
+
 def getSlice(filename,start=None,end=None,clear=False):
     return [l for l in getSliceIter(filename,start,end,clear)]
 
@@ -54,7 +54,7 @@ class LineCachedFile(object):
     def __init__(self,filename):
         self.linePtr = [0]
         self.filename = os.path.abspath(filename)
-        
+
     def getSliceIter(self,start=None,end=None):
         if os.path.getsize(self.filename) == 0: return
         try:
@@ -82,15 +82,15 @@ class LineCachedFile(object):
             fmap.close()
         finally:
             f.close()
-    
+
     def clear(self):
         self.linePtr = [0]
 
 # Simple test code
-        
+
 if __name__ == "__main__":
     import tempfile
-    
+
     try:
         f = open("tempFile.tmp",mode="wb")
         fname = f.name
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         f.close()
     assert getSlice(fname,0,10) == []
     assert getSlice(fname,0) == []
-    
+
     try:
         f = open(fname,"wb")
         f.write("\n\n ")
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     finally:
         f.close()
     assert getSlice(fname,0,10,clear=True) == [(0,"First line\n"), (1,"No newline at EOF")]
-    
+
     try:
         f = open(fname,"wb")
         f.write("First line\nWith newline at EOF\n")
@@ -134,6 +134,6 @@ if __name__ == "__main__":
     assert getSlice(fname1,17,54)  == [(i,"This is line %d\n" % i) for i in range(17,54)]
     assert getSlice(fname1,1000,-1000)  == [(i,"This is line %d\n" % i) for i in range(1000,20000-1000)]
     assert getSlice(fname1,-30000,10)  == [(i,"This is line %d\n" % i) for i in range(0,10)]
-    
+
     os.unlink(fname)
     os.unlink(fname1)

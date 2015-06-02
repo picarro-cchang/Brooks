@@ -1,20 +1,20 @@
 #!/usr/bin/python
 #
-# FILE:  
+# FILE:
 #   hexfile.py
 #
-# DESCRIPTION:                                                
-#   Routines for parsing an Intel Hex format file 
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
+# DESCRIPTION:
+#   Routines for parsing an Intel Hex format file
+#
+# SEE ALSO:
+#   Specify any related information.
+#
 # HISTORY:
 #   07-May-2008  sze  Initial version.
 #   23-Jul-2008  sze  Implement 32-bit addresses
 #
-#  Copyright (c) 2008 Picarro, Inc. All rights reserved 
-#                                                            
+#  Copyright (c) 2008 Picarro, Inc. All rights reserved
+#
 import unittest
 from cStringIO import StringIO
 
@@ -73,7 +73,7 @@ class HexFile(object):
                 elif type == 4:
                     # Extended linear address record
                     self.highAddress = (ord(data[0])<<8) + ord(data[1])
-        return regions        
+        return regions
 
 sampleHex1 = """
 :03000000021400E7

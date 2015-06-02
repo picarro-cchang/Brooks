@@ -5,11 +5,11 @@ import os
 import Queue
 import sys
 from configobj import ConfigObj
-from ValveDisplayFrameGui import ValveDisplayFrameGui, ValveWidgetGui
+from Host.Utilities.ValveDisplay.ValveDisplayFrameGui import ValveDisplayFrameGui, ValveWidgetGui
 from Host.Common import Listener
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM
 from Host.autogen import interface
- 
+
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
@@ -28,7 +28,7 @@ class ValveWidget(ValveWidgetGui):
     def setLabel(self,label):
         self.lblStatus.SetLabel(label)
     def setStatus(self,status):
-        self.cbStatus.Set3StateValue(status)   
+        self.cbStatus.Set3StateValue(status)
 class ValveDisplayFrame(ValveDisplayFrameGui):
     def __init__(self,*a,**k):
         ValveDisplayFrameGui.__init__(self,*a,**k)
@@ -36,7 +36,7 @@ class ValveDisplayFrame(ValveDisplayFrameGui):
         self.streamQueue = Queue.Queue(0)
         self.valveData = []
         self.timer = wx.Timer(self)
-        
+
     def run(self,configFile):
         self.configFile = configFile
         self.config = ConfigObj(configFile)
@@ -98,7 +98,7 @@ class ValveDisplayFrame(ValveDisplayFrameGui):
                         widget.setStatus(wx.CHK_CHECKED)
                     else:
                         widget.setStatus(wx.CHK_UNCHECKED)
-                        
+
 def printUsage():
     print HELP_STRING
 def handleCommandSwitches():

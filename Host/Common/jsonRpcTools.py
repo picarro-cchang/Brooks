@@ -5,12 +5,12 @@ from Host.Common import CmdFIFO, SharedTypes, jsonRpc, timestamp
 class JsonRpcTools(object):
     def __init__(self, service_url, auth_user = None, auth_password = None):
         self.jsonRpcService = jsonRpc.Proxy(service_url, auth_user, auth_password)
-        
+
     def getSeriesRange(self, wfmList, maxDuration):
         """
-        Normally, data from the most recent timestamp in the waveforms of wfmList to the current 
-        time are retrieved, but if this is of greater duration than maxDuration, the interval is 
-        truncated to [now-maxDuration,now] and clearFlag becomes True. 
+        Normally, data from the most recent timestamp in the waveforms of wfmList to the current
+        time are retrieved, but if this is of greater duration than maxDuration, the interval is
+        truncated to [now-maxDuration,now] and clearFlag becomes True.
         """
         tstop = timestamp.getTimestamp()
         minTimestamp = None
@@ -22,7 +22,7 @@ class JsonRpcTools(object):
         #  come after the lastestTs for each waveform are added to it.
         for w in wfmList:
             ts = 0
-            if w is not None and w.x.count>0: 
+            if w is not None and w.x.count>0:
                 ts = timestamp.unixTimeToTimestamp(w.x.GetLatest())
                 if minTimestamp is None or ts<minTimestamp: minTimestamp = ts
             latestTs[w] = ts
@@ -32,7 +32,7 @@ class JsonRpcTools(object):
             clearFlag = True
         range = dict(start=tstart,stop=tstop)
         return range, clearFlag, latestTs.copy()
-        
+
     def plotSensors(self, wfmList, sensorList, maxDuration):
         """
         Fetch sensor information and update sensor series by calling JSON RPC.
@@ -48,7 +48,7 @@ class JsonRpcTools(object):
                     for ts,v in zip(result[s]['timestamp'],result[s][s]):
                         if ts>latestTs[w]: w.Add(timestamp.unixTime(ts),v)
         return result
-            
+
     def plotData(self, wfm, data, mode, source, maxDuration):
         """
         Fetch analyzer data and update data series by calling JSON RPC.
@@ -63,26 +63,26 @@ class JsonRpcTools(object):
             for ts,v in result:
                 if ts>latestTs[wfm]: wfm.Add(timestamp.unixTime(ts),v)
         return result
-      
+
     def getLatestDmData(self, mode, source, varList):
         params = dict(mode=mode,source=source,varList=varList,pickle=1)
         result = loads(b64decode(self.jsonRpcService.getLatestDmData(params)))
         return result
-        
+
     def getDataStruct(self, tstart, tstop):
         """
-        Fetch data structure within specified time range by calling JSON RPC. 
+        Fetch data structure within specified time range by calling JSON RPC.
         """
         range = dict(start=tstart,stop=tstop)
         params = dict(range=range,pickle=1)
         return loads(b64decode(self.jsonRpcService.getDmDataStruct(params)))
-        
+
     def invokeRPC(self, rpcProxyName, funcName, argTuple):
         """Invoke RPC function calls to communicate with Host software
         """
         params = dict(rpcProxyName=rpcProxyName,funcName=funcName,argTuple=argTuple)
         return self.jsonRpcService.invokeRPC(params)
-        
+
     def restartHost(self, restartCmd):
         """Restart host software
         """

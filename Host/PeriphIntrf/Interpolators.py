@@ -27,4 +27,3 @@ class Interpolators(object):
     def bitwiseOr(pPair, tPair, t):
         pPair = [int(x) for x in pPair]
         return float(pPair[0] | pPair[1])
-

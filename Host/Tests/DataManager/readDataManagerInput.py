@@ -10,7 +10,7 @@ import cPickle
 
 def Log(text):
     print "Log: %s" % text
-    
+
 
 class DummyDataManager(object):
     def __init__(self):
@@ -23,7 +23,7 @@ class DummyDataManager(object):
                                      name = "Data manager sensor stream listener",logFunc = Log)
         self.fitterListener = []
         self.fitterListenerQueue = []
-        
+
         for fitterIndex in range(interface.MAX_FITTERS):
             q = Queue(0)
             self.fitterListenerQueue.append(q)
@@ -52,4 +52,3 @@ if __name__ == "__main__":
                 print "Fitter %d: %s" % (fitterIndex,str(dm.fitterListenerQueue[fitterIndex].get())[:132])
         if not dm.instMgrStatusQueue.empty():
             print "Status: %s" % str(ctypesToDict(dm.instMgrStatusQueue.get()))[:132]
-            

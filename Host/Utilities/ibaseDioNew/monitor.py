@@ -4,7 +4,7 @@ import time
 class IbaseDio(object):
     def __init__(self):
         DLL_Path = ["ib_wdt.dll"]
-        for p in DLL_Path:        
+        for p in DLL_Path:
             try:
                 self.dioDLL = windll.LoadLibrary(p)
                 break

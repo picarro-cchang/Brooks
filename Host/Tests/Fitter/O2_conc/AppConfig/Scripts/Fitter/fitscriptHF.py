@@ -1,6 +1,6 @@
 #  Fit script for HF based on the MADS fitter.
 #  Translated from R:\crd\485_MA010_v1.0\Config\20100726\MADS10\GUI\MADSxx Release 1_12 2008 08 12.txt
-#  by hoffnagle.  Begun 3 February 2011. 
+#  by hoffnagle.  Begun 3 February 2011.
 #  2011 0512:  added code to ignore first 10 measurements while baseline average is equilibrating.  Also changed line
 #                     centers in spectral library to match spectra acquired with MADS2015,  with spectroscopic WLM calibration.
 #  2012 0127:  added call to fitterConfig,ini for baseline parameters
@@ -16,7 +16,7 @@ def expAverage(xavg,x,n,dxMax):
     if abs(y-xavg)<dxMax: return y
     elif y>xavg: return xavg+dxMax
     else: return xavg-dxMax
-    
+
 def initExpAverage(xavg,x,hi,dxMax,count):
     if xavg is None: return x
     n = min(max(count,1),hi)
@@ -24,10 +24,10 @@ def initExpAverage(xavg,x,hi,dxMax,count):
     if abs(y-xavg)<dxMax: return y
     elif y>xavg: return xavg+dxMax
     else: return xavg-dxMax
-    
+
 def fitQuality(sdFit,maxPeak,normPeak,sdTau):
     return sqrt(sdFit**2/((maxPeak/normPeak)**2 + sdTau**2))
-    
+
 def outlierFilter(x,threshold,minPoints=2):
     """ Return Boolean array giving points in the vector x which lie
     within +/- threshold * std_deviation of the mean. The filter is applied iteratively
@@ -71,7 +71,7 @@ if INIT:
     loadSplineLibrary(fname)
     fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/FitterConfig.ini")
     instrParams = getInstrParams(fname)
-    
+
     anHF = []
     anHF.append(Analysis(os.path.join(BASEPATH,r"./MADS/H2O peak #80 VC v1_0 20080512.ini")))
     anHF.append(Analysis(os.path.join(BASEPATH,r"./MADS/H2O peak #80 FC v1_0 20080512.ini")))
@@ -89,9 +89,9 @@ if INIT:
     Nu1 = instrParams['Sine1_freq']
     Per1 = instrParams['Sine1_period']
     Phi1 = instrParams['Sine1_phase']
-    
+
     #  Globals to pass between spectral regions
-    
+
     adjust_81 = 0.0
     base0 = 0.0
     base1 = 0.0
@@ -128,16 +128,16 @@ if INIT:
     hf_ppbv = 0.0
     hf_ppbv_ave = 0.0
     ntopper = tiptop = tipstd = tip_base = 0.0
-    
+
     counter = -20
     ignore_count = 8
-    
+
     pzt_mean = 0.0
     pzt_stdev = 0.0
 
 init = InitialValues()
 deps = Dependencies()
-ANALYSIS = []    
+ANALYSIS = []
 d = DATA
 #d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.50,maxVal=20.0)
 #d.tunerEnsembleFilter(maxDev=500000,sigmaThreshold=3.0)
@@ -168,7 +168,7 @@ if d["spectrumId"]==60 and d["ngroups"]>7:
     str_80 = r[80,"strength"]
     base_80 = r[80,"base"]
     y_80 = r[80,"y"]
-    
+
     #  Fit water-HF doublet at 7823.8 with centration from previous step
     #init["base",3] = shift_80
     #init[77,"strength"] = 1.99*str_80
@@ -197,7 +197,7 @@ if d["spectrumId"]==60 and d["ngroups"]>7:
     hf_ppbv = 0.2727*peak_77
     hf_ppbv_ave = 0.2727*peak77_baseave
     counter += 1
-    
+
     f = d.waveNumber
     l = 1000*d.uncorrectedAbsorbance
 
@@ -212,9 +212,9 @@ if d["spectrumId"]==60 and d["ngroups"]>7:
         tip_base = tiptop - base_77
     else:
         tiptop = tipstd = tip_base = 0.0
-    
+
 if d["spectrumId"]==61 and d["ngroups"]>8:
-#   Wide range fit with VC 
+#   Wide range fit with VC
     initialize_Baseline()
     r = anHF[4](d,init,deps)
     ANALYSIS.append(r)
@@ -235,16 +235,16 @@ if d["spectrumId"]==61 and d["ngroups"]>8:
     y_82 = r[82,"y"]
     o2_conc = 0.07422*peak_81
     h2o_conc_61 = 0.04*peak_82
-    
+
     adjust_81 = shift_81
- 
+
 cal = (d.subschemeId & 4096) != 0
 if any(cal):
     pzt_mean = mean(d.pztValue[cal])
-    pzt_stdev = std(d.pztValue[cal])    
+    pzt_stdev = std(d.pztValue[cal])
 
 ignore_count = max(0,ignore_count-1)
-if (ignore_count == 0):      
+if (ignore_count == 0):
     RESULT = {"base0":base0,"base1":base1,"base77_ave":base77_ave,"y_77":y_77,"y_79":y_79,
           "peak_77":peak_77,"str_77":str_77,"base_77":base_77,"shift_77":shift_77,
           "peak_79":peak_79,"str_79":str_79,"base_79":base_79,"adjust_77":adjust_77,
@@ -254,7 +254,7 @@ if (ignore_count == 0):
           "h2o_conc_60":h2o_conc_60,"h2o_conc_61":h2o_conc_61,"o2_conc":o2_conc,
           "hf_ppbv":hf_ppbv,"hf_ppbv_ave":hf_ppbv_ave,
           "ntopper":ntopper,"tiptop":tiptop,"tipstd":tipstd,"tip_base":tip_base,
-          "ngroups":d["ngroups"],"numRDs":d["datapoints"],          
+          "ngroups":d["ngroups"],"numRDs":d["datapoints"],
           "pzt_mean":pzt_mean,"pzt_stdev":pzt_stdev}
     RESULT.update({"species":d["spectrumId"],"fittime":time.time()-tstart,
                "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,

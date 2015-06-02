@@ -19,8 +19,8 @@ USERLOGFILES = os.path.join(AppDir,'static/datalog/*.dat')
 PEAKFILES = os.path.join(AppDir,'static/datalog/*.peaks')
 
 # Convert a minimal .dat file to a text file for Matlab processing
-#  The columns in the output file are distance(m), methane 
-#  concentration(ppm), longitude(deg), latitude(deg) and 
+#  The columns in the output file are distance(m), methane
+#  concentration(ppm), longitude(deg), latitude(deg) and
 #  time.
 # N.B. NO SHIFT is applied to the data
 
@@ -37,15 +37,15 @@ def distVincenty(lat1, lon1, lat2, lon2):
     cosU1 = cos(U1)
     sinU2 = sin(U2)
     cosU2 = cos(U2)
-  
+
     Lambda = L
     iterLimit = 100;
     for iter in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) + 
+        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) +
                         (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
-        if sinSigma==0: 
+        if sinSigma==0:
             return 0  # co-incident points
         cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
         sigma = arctan2(sinSigma, cosSigma)
@@ -76,7 +76,7 @@ def toXY(lat,long,lat_ref,long_ref):
     y = distVincenty(lat_ref,long,lat,long)
     if lat<lat_ref: y = -y
     return x,y
-    
+
 def fixed_width(text,width):
     start = 0
     result = []
@@ -94,7 +94,7 @@ def followFile(fname):
             time.sleep(0.1)
             continue
         yield line
-        
+
 def followLastUserFile(fname):
     fp = file(fname,'rb')
     counter = 0
@@ -106,7 +106,7 @@ def followLastUserFile(fname):
             if counter == 10:
                 names = sorted(glob.glob(USERLOGFILES))
                 try:    # Stop iteration if we are not the last file
-                    if fname != names[-1]: 
+                    if fname != names[-1]:
                         fp.close()
                         print "\r\nClosing source stream\r\n"
                         return
@@ -158,7 +158,7 @@ def shifter(source,shift=0):
 
     We now split this into several sources for the following tests:
     >>> src1,src2,src3 = itertools.tee(src,3)
-    
+
     and the shift is zero, the result should just be the original data:
     >>> for e in shifter(src1,0): print e
     ('x0', 'U0', 'S0')
@@ -167,7 +167,7 @@ def shifter(source,shift=0):
     ('x3', 'U3', 'S3')
     ('x4', 'U4', 'S4')
     ('x5', 'U5', 'S5')
-    
+
     If the shift is negative, we move the shifted data up relative to the unshifted data:
     >>> for e in shifter(src2,-2): print e
     ('x0', 'U0', 'S2')
@@ -196,10 +196,10 @@ def shifter(source,shift=0):
             tempStore.append(s)
             if i>=shift:
                 yield x,u,tempStore.popleft()
-        
+
 def interpolator(source,interval):
     """
-    Perform linear interpolation of the data in source at specified interval, where the 
+    Perform linear interpolation of the data in source at specified interval, where the
     source generates data of the form
         (x,(d1,d2,d3,...))
     The data are re-gridded on equally spaced intervals starting with the multiple of
@@ -215,7 +215,7 @@ def interpolator(source,interval):
     3.0 7.0
     3.5 8.0
     4.0 9.0
-    
+
     Next we test the situation in which the first interpolation point does not coincide
     with the start of the data array
     >>> src = (x for x in [(0.25,(2,)),(2.25,(4,))])
@@ -284,7 +284,7 @@ def spaceScale(source,dx,t_0,nlevels,tfactor):
         isPeak = (v>ssbuff[level+1,colp]) and (v>ssbuff[level+1,col]) and (v>ssbuff[level+1,colm]) and \
                  (v>ssbuff[level,colp])   and (v>ssbuff[level,colm])  and \
                  (v>ssbuff[level-1,colp]) and (v>ssbuff[level-1,col]) and (v>ssbuff[level+1,colm])
-        return isPeak, col         
+        return isPeak, col
     # Define a cache for the position and concentration data so that the
     #  coordinates and value of peaks can be looked up
     cache = zeros((4,npoints),float)
@@ -295,7 +295,7 @@ def spaceScale(source,dx,t_0,nlevels,tfactor):
     z = 0
     initBuff = True
     for x,(long,lat,epochTime,methane) in source:
-        # Initialize 
+        # Initialize
         if initBuff:
             for i in range(nlevels):
                 ssbuff[i,c-hList[i]:c+hList[i]+1] = -methane*cumsum(kernelList[i])
@@ -331,7 +331,7 @@ def spaceScale(source,dx,t_0,nlevels,tfactor):
         for peak in peaks: yield peak
 
 if __name__ == "__main__":
-        
+
     shift = -4
     dx = 2.0
     source = None

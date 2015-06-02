@@ -74,28 +74,28 @@ class MeasBufferStatus(object):
         self.bufferSize = None
         self.active = False
         self.nextDataBad = False
-        
+
     def isActive(self):
         return self.active
-        
+
     def setConfiguration(self, dataMgr, columns, bufferSize):
         self.dataMgr = dataMgr
         self.cols = columns
         self.bufferSize = bufferSize
-        
+
     def configuration(self):
         return (self.dataMgr, self.cols, self.bufferSize)
-        
+
     def setNextDataBad(self):
         self.nextDataBad = True
-    
+
     def isNextDataBad(self):
         return self.nextDataBad
-        
+
     def clearNextDataBad(self):
         self.nextDataBad = False
         pass
-    
+
 MEAS_BUFFER = MeasBufferStatus()
 
 PULSE_ANALYZER = PulseAnalyzerStatus.PulseAnalyzerStatus()
@@ -130,7 +130,7 @@ def pulseAnalyzerMakeSafe(func):
             PULSE_ANALYZER.setActive(False)
             PULSE_ANALYZER.setNextDataBad()
             return False
-            
+
         """
         except Exception, err:
             if logPulseAnalyzer & PA_LOG_MASK_Exceptions:
@@ -365,7 +365,7 @@ def pulseAnalyzerStartAddingData():
     LOGFUNC("Started adding data to pulse analyzer\n")
     return ret
 
-    
+
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerStopAddingData():
     ret = DATAMGR.PulseAnalyzer_StopAddingData()
@@ -376,7 +376,7 @@ def pulseAnalyzerStopAddingData():
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetDataReady():
     return DATAMGR.PulseAnalyzer_GetDataReady()
-    
+
 
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerIsTriggeredStatus():
@@ -421,7 +421,7 @@ def pulseAnalyzerReset():
             # Try to instantiate one and start it. We'll try maxAttempts times
             # and wait a bit in between each try...
             nAttempts += 1
-            
+
             if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
                 LOGFUNC("pulseAnalyzerReset: RemoteException: nAttempts=%d\n" % nAttempts)
 
@@ -474,7 +474,7 @@ def pulseAnalyzerReset():
     if ret is False:
         PULSE_ANALYZER.setActive(False)
         PULSE_ANALYZER.setNextDataBad()
-        
+
     if nAttempts > 0:
         LOGFUNC("pulseAnalyzerReset: restart (nAttempts=%d, success=%d)\n" % (int(nAttempts), ret))
 
@@ -503,7 +503,7 @@ def _reinit_pulseAnalyzer():
             try:
                 # must call DataMgr function directly to avoid a potential infinite loop
                 ret = DATAMGR.PulseAnalyzer_Reset()
-                
+
                 if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
                     LOGFUNC("_reinit_pulseAnalyzer: PulseAnalyzer_Reset returned ret=%s\n" % ret)
 
@@ -580,7 +580,7 @@ def pulseAnalyzerResetIfNotActive():
 
     return ret
 
-    
+
 @pulseAnalyzerMakeSafe
 def pulseAnalyzerGetStatistics():
     return DATAMGR.PulseAnalyzer_GetStatistics()
@@ -624,15 +624,15 @@ def measGetBufferFirst():
             DATAMGR.MeasBuffer_Set(*MEAS_BUFFER.configuration())
             DATAMGR.MeasBuffer_Clear()
             MEAS_BUFFER.active = True
-   
+
         return DATAMGR.MeasBuffer_GetFirst()
-    
+
     except CmdFIFO.ShutdownInProgress:
         MEAS_BUFFER.active = False
         MEAS_BUFFER.setNextDataBad()
         LOGFUNC("DataManager shutdown in progress\n")
         return None
-    
+
     except Pyro.errors.ProtocolError:
         MEAS_BUFFER.active = False
         MEAS_BUFFER.setNextDataBad()
@@ -643,7 +643,7 @@ def measIsDataBad():
     isBad = MEAS_BUFFER.isNextDataBad()
     MEAS_BUFFER.clearNextDataBad()
     return isBad
-        
+
 def enableCalScript():
     LOGFUNC("Calibration script from Data Manager is enabled\n")
     DATAMGR.Cal_Enable()

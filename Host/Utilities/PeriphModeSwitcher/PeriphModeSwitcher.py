@@ -14,7 +14,7 @@ import shutil
 import win32gui
 import wx
 from Host.Common.CustomConfigObj import CustomConfigObj
-from PeriphModeSwitcherFrame import PeriphModeSwitcherFrame
+from Host.Utilities.PeriphModeSwitcher.PeriphModeSwitcherFrame import PeriphModeSwitcherFrame
 from Host.Common.SingleInstance import SingleInstance
 
 DEFAULT_CONFIG_NAME = "PeriphModeSwitcher.ini"
@@ -25,7 +25,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-    
+
 class PeriphModeSwitcher(PeriphModeSwitcherFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
@@ -36,32 +36,32 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
         except Exception, err:
             print "%r" % err
             self.restartCmd = r"C:\Picarro\G2000\HostExe\SupervisorLauncher.exe -a -c C:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini"
-            
+
         try:
             self.periphIntrfConfig = os.path.abspath(os.path.join(basePath, self.co.get("PeriphIntrf", "periphIntrfConfig")))
         except Exception, err:
             print "%r" % err
             self.periphIntrfConfig = os.path.abspath(os.path.join(basePath, "../PeriphIntrf/RunSerial2Socket.ini"))
-            
+
         try:
             periphCo = CustomConfigObj(self.periphIntrfConfig)
             currentPeriphMode = periphCo.get("SETUP", "ID")
         except Exception, err:
             print "%r" % err
             currentPeriphMode = None
-            
+
         try:
             periphModeDir = os.path.abspath(os.path.join(basePath, self.co.get("PeriphIntrf", "periphModeDir")))
         except Exception, err:
             print "%r" % err
             periphModeDir = os.path.dirname(self.periphIntrfConfig)
-            
+
         try:
             modeList = [m.strip().upper() for m in self.co.get("PeriphIntrf", "modeList").split(",") if m.strip()]
         except Exception, err:
             print "%r" % err
             modeList = ["ALL"]
-            
+
         self.periphModeDict = {}
         periphModeFileList = [f for f in os.listdir(periphModeDir) if f.startswith("PeriphMode_")]
         if os.path.isdir(periphModeDir):
@@ -75,12 +75,12 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
                             self.periphModeDict[m] = os.path.join(periphModeDir, f)
         else:
             raise Exception, "PeriphMode files not found in %s" % (periphModeDir,)
- 
+
         typeChoices = sorted(self.periphModeDict.keys())
         PeriphModeSwitcherFrame.__init__(self, typeChoices, currentPeriphMode, *args, **kwds)
-        
+
         self.Bind(wx.EVT_BUTTON, self.onApply, self.buttonApply)
-        
+
     def onApply(self, event):
         periphMode = self.comboBoxSelect.GetValue()
         periphModeFile = self.periphModeDict[periphMode]
@@ -88,7 +88,7 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
             shutil.copy2(periphModeFile, self.periphIntrfConfig)
         except:
             pass
-                
+
         d = wx.MessageDialog(None,"Analyzer software needs to be re-started to enable the new peripheral mode.\nDo you want to re-start the analyzer now?\n\nSelect \"Yes\" to re-start the analyzer now.\nSelect \"No\" to re-start the analyzer manually later.", "New Peripheral Mode: %s" % periphMode, \
                             style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
         restart = (d.ShowModal() == wx.ID_YES)
@@ -102,7 +102,7 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
                 pass
         time.sleep(0.1)
         self.Destroy()
-                
+
 HELP_STRING = \
 """
 
@@ -116,7 +116,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -141,9 +141,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     periphModeSwitcherApp = SingleInstance("PicarroPeriphModeSwitcher")

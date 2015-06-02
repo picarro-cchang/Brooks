@@ -14,4 +14,3 @@ class PeripheralStatus(object):
     WIND_ROM_CHECKSUM_ERROR = 0x0040
     MALFORMED_DATA_STRING = 0x0080
     WIND_BAD_UNITS = 0x0100
-

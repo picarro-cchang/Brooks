@@ -7,7 +7,7 @@
 #
 # The input filename is hard-coded, where "__main__" is handled near the bottom
 # of this file. It must match the filename in InputListener.py.
-# 
+#
 # The Config subfolder contains an example stripped down Supervisor config file.
 # Paths are relative so they should work as long as the structure of this
 # source code doesn't change.
@@ -46,8 +46,8 @@ class BroadcastToDataLogger(object):
         self.filename = filename
         self.delay = delay
         self.dataMgrUseCurTime = dataMgrUseCurTime
-        self.fileWrap = fileWrap 
-        
+        self.fileWrap = fileWrap
+
     def playback(self):
         with open(self.filename, "rb") as f:
             timeDiff = 0.0
@@ -134,4 +134,3 @@ Broadcast data captured by the InputListener app.
 
 if __name__ == "__main__":
     main()
-

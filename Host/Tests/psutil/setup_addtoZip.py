@@ -25,6 +25,6 @@ setup(console=['usePsutil.py'],
                    bundle_files=1,
                    excludes=exclusionList,
                    includes=inclusionList,
-                   packages=packageList)}, 
+                   packages=packageList)},
       data_files=data_files,**py2exe_options
       )

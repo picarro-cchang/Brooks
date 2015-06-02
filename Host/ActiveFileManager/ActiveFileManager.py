@@ -5,9 +5,9 @@ File Name: ActiveFileManager.py
 Purpose: Manages active HDF5 files which are still being written to by the instrument
 Description: This application listens to broadcasts from the driver, ringdown frequency converter and data manager and
     stores the data in a collection of HDF5 files. These files will ultimately be sent to the archiver, but while they
-    are still being written to by the instrument, we need to carefully control requests to read the data by 
-    interspersing them with the writes. The active file manager runs a single thread that services the listener 
-    queues which cause writes to the actve files and also handles the RPC calls which read from the files. 
+    are still being written to by the instrument, we need to carefully control requests to read the data by
+    interspersing them with the writes. The active file manager runs a single thread that services the listener
+    queues which cause writes to the actve files and also handles the RPC calls which read from the files.
 
 File History:
     06-Jun-2010  sze       Initial version.
@@ -60,7 +60,7 @@ class ArchiverProxy(Singleton):
 
 # For convenience in calling archiver functions
 Archiver = ArchiverProxy().rpc
-    
+
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
         threading.Thread.__init__(self)
@@ -105,50 +105,50 @@ class ActiveFileManagerRpcHandler(Singleton):
         #register the functions contained in this file...
         self._register_rpc_functions_for_object( self )
         Log("Registered RPC functions")
-                    
+
     def getArchivedFileDir(self):
         return self.parent.archivedFileDir
-        
+
     def getRdData(self,*a,**k):
         """ Get ringdown data specified by "varList" from "tstart" (inclusive) up to "tstop" (exclusive).
             Result is a numpy record array which is placed on the rpcResultQueue by genRdData.
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
-        self.parent.rpcCommandQueue.put((self.parent.genRdData,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genRdData,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
         else:
             return result
-        
+
     def getLatestRdData(self,*a,**k):
         """ Get the latest ringdown data specified by "varList" """
-        self.parent.rpcCommandQueue.put((self.parent.genLatestRdData,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genLatestRdData,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
         else:
             return result
-            
+
     def getRdDataStruct(self,*a,**k):
-        """ Get "structure" of the data available from the ringdown data in the time range "tstart" (inclusive) 
+        """ Get "structure" of the data available from the ringdown data in the time range "tstart" (inclusive)
         up to "tstop" (exclusive). The result is a dictionary whose keys are the column names and whose
         values are the data types of the columns.
-        Only "active" files are used to satisfy the request since the database is expected to deal 
+        Only "active" files are used to satisfy the request since the database is expected to deal
         with files which have already been archived"""
-        self.parent.rpcCommandQueue.put((self.parent.genRdDataStruct,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genRdDataStruct,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
         else:
             return result
-            
+
     def getSensorData(self,*a,**k):
         """ Get sensor data specified by "streamName" from "tstart" (inclusive) up to "tstop" (exclusive).
             Result is a numpy record array which is placed on the rpcResultQueue by genSensorData.
             Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
-        self.parent.rpcCommandQueue.put((self.parent.genSensorData,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genSensorData,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
@@ -157,20 +157,20 @@ class ActiveFileManagerRpcHandler(Singleton):
 
     def getLatestSensorData(self,*a,**k):
         """ Get the latest sensor data specified by "streamName" """
-        self.parent.rpcCommandQueue.put((self.parent.genLatestSensorData,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genLatestSensorData,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
         else:
             return result
-            
+
     def getDmData(self,*a,**k):
-        """ Get data manager for "mode" and "source" whose columns are specified by "varList" from 
-            "tstart" (inclusive) up to "tstop" (exclusive). 
+        """ Get data manager for "mode" and "source" whose columns are specified by "varList" from
+            "tstart" (inclusive) up to "tstop" (exclusive).
             Result is a numpy record array which is placed on the rpcResultQueue by genDmData.
-            Only "active" files are used to satisfy the request since the database is expected to deal 
+            Only "active" files are used to satisfy the request since the database is expected to deal
             with files which have already been archived"""
-        self.parent.rpcCommandQueue.put((self.parent.genDmData,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genDmData,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
@@ -179,39 +179,39 @@ class ActiveFileManagerRpcHandler(Singleton):
 
     def getLatestDmData(self,*a,**k):
         """ Get the latest sensor data data manager for "mode" and "source" whose columns are specified by "varList" """
-        self.parent.rpcCommandQueue.put((self.parent.genLatestDmData,(a,k))) 
+        self.parent.rpcCommandQueue.put((self.parent.genLatestDmData,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
         else:
             return result
-            
+
     def getDmDataStruct(self,*a,**k):
-        """ Get "structure" of the data available from the data manager in the time range "tstart" (inclusive) 
+        """ Get "structure" of the data available from the data manager in the time range "tstart" (inclusive)
         up to "tstop" (exclusive). The result is a nested dictionary keyed by instrument mode, then by analysis
-        name and finally by column name. The value is a string giving the column type. Only "active" files 
-        are used to satisfy the request since the database is expected to deal with files which have already 
+        name and finally by column name. The value is a string giving the column type. Only "active" files
+        are used to satisfy the request since the database is expected to deal with files which have already
         been archived """
-        
-        self.parent.rpcCommandQueue.put((self.parent.genDmDataStruct,(a,k))) 
+
+        self.parent.rpcCommandQueue.put((self.parent.genDmDataStruct,(a,k)))
         result = self.parent.rpcResultQueue.get()
         if isinstance(result,Exception):
             raise result
         else:
             return result
-            
+
     def shutdown(self):
         self.parent._shutdownRequested = True
-        
-        
-ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, ctypes.c_int:tables.Int32Col, 
-                  ctypes.c_short:tables.Int16Col, ctypes.c_ushort:tables.UInt16Col, ctypes.c_longlong:tables.Int64Col, 
+
+
+ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, ctypes.c_int:tables.Int32Col,
+                  ctypes.c_short:tables.Int16Col, ctypes.c_ushort:tables.UInt16Col, ctypes.c_longlong:tables.Int64Col,
                   ctypes.c_float:tables.Float32Col, ctypes.c_double:tables.Float64Col }
-        
+
 # def recArrayExtract(A,fields):
     # """
     # Extract the list of named fields (columns) out of a numpy record array to produce
-    # another. Each element of fields is either the name of a field in A or a tuple 
+    # another. Each element of fields is either the name of a field in A or a tuple
     # (originalName,newName) giving the original name of the field in A and the new name
     # of the field in the output array.
     # The field dtypes are copied from the source to the destination file
@@ -229,7 +229,7 @@ ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, 
             # newFields[field] = field
     # dtype = [(newFields[name],aFields[name][0]) for name in oldFields if name in aFields]
     # B = numpy.zeros(len(A),dtype=dtype)
-    # for name in oldFields: 
+    # for name in oldFields:
         # if name in aFields:
             # B[newFields[name]] = A[name]
     # return B
@@ -237,14 +237,14 @@ ctype2coltype = { ctypes.c_byte:tables.Int8Col, ctypes.c_uint:tables.UInt32Col, 
 def recArrayExtract(A,fields,fieldTypes=None):
     """
     Extract the list of named fields (columns) out of a numpy record array to produce
-    another. Each element of fields is either the name of a field in A or a tuple 
+    another. Each element of fields is either the name of a field in A or a tuple
     (originalName,newName) giving the original name of the field in A and the new name
     of the field in the output array.
-    
-    If fieldTypes is specified, it should be a list of strings with the names of the 
+
+    If fieldTypes is specified, it should be a list of strings with the names of the
     dtypes associated with fields. When fieldTypes is not None, the output record array
     always has as many fields as specified by the "fields" argument, and their types are
-    given by "fieldTypes". On the other hand, if fieldTypes is None, the output record 
+    given by "fieldTypes". On the other hand, if fieldTypes is None, the output record
     array only has fields that are present in the "fields" and in the original array. The
     field dtypes are copied from those of the source array.
     """
@@ -264,32 +264,32 @@ def recArrayExtract(A,fields,fieldTypes=None):
     else:
         dt = [(newFields[name],numpy.dtype(fieldTypes[i])) for i,name in enumerate(oldFields)]
     B = numpy.zeros(len(A),dtype=dt)
-    for name in oldFields: 
+    for name in oldFields:
         if name in aFields:
             B[newFields[name]] = A[name]
     return B
-    
+
 class ActiveFile(object):
     """Objects of this class are associated with HDF5 files in the active file directory.
        The class is used to abstract away details about accessing HDF5 files."""
-       
+
     # The following dictionaries are used to create HDF5 tables. They are initialized
     #  from the ctypes structure definitions of the corresponding broadcasts.
     Init = False
     SensorDataDescr = {}
     RdDataDescr = {}
     DmDataDescr = {}
-    
+
     def structureToDescr(self,structure):
         descr = {}
         for name,cls in structure._fields_:
             descr[name] = (ctype2coltype[cls])()
         return descr
-        
+
     def makeDescr(self):
         ActiveFile.SensorDataDescr = self.structureToDescr(interface.SensorEntryType)
         ActiveFile.RdDataDescr = self.structureToDescr(interface.ProcessedRingdownEntryType)
-    
+
     def __init__(self):
         self.handle = None
         self.baseTime = None    # Base time is in ms
@@ -302,7 +302,7 @@ class ActiveFile(object):
         self.streamLookup = {}
         self.sensorDataTableMemo = None
         self.rdDataTableMemo = None
-        
+
     def create(self,dirName,baseTime,stopTime):
         self.baseTime = baseTime
         self.stopTime = stopTime
@@ -315,37 +315,37 @@ class ActiveFile(object):
         t = self.handle.createTable(self.baseGroup,"sensorData",self.SensorDataDescr,expectedrows=2000000)
         t._f_setAttr("streamNames",interface.STREAM_MemberTypeDict)
         for k in interface.STREAM_MemberTypeDict:
-            self.streamLookup[interface.STREAM_MemberTypeDict[k][7:]] = k 
+            self.streamLookup[interface.STREAM_MemberTypeDict[k][7:]] = k
         self.handle.createTable(self.baseGroup,"rdData",self.RdDataDescr,expectedrows=1000000)
         self.handle.createGroup(self.baseGroup,"dataManager")
         return self
-        
+
     def getSensorDataTable(self):
         if self.sensorDataTableMemo is None:
             try:
                 self.sensorDataTableMemo = self.handle.getNode(self.baseGroup,"sensorData")
                 streamDict = self.sensorDataTableMemo._f_getAttr("streamNames")
                 for k in streamDict:
-                    self.streamLookup[streamDict[k][7:]] = k 
+                    self.streamLookup[streamDict[k][7:]] = k
             except tables.exceptions.NoSuchNodeError:
                 pass
         return self.sensorDataTableMemo
-        
+
     def getRdDataTable(self):
         if self.rdDataTableMemo is None:
-            try:    
+            try:
                 self.rdDataTableMemo = self.handle.getNode(self.baseGroup,"rdData")
             except tables.exceptions.NoSuchNodeError:
                 pass
         return self.rdDataTableMemo
-        
+
     def getDmDataTable(self,mode,source):
         try:
             modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
             return getattr(modeGroup,source)
         except tables.exceptions.NoSuchNodeError:
             return None
-        
+
     def retrieveOrMakeDmDataTable(self,mode,source,colNames):
         try:
             modeGroup = getattr(self.handle.getNode(self.baseGroup,"dataManager"),mode)
@@ -373,24 +373,24 @@ class ActiveFile(object):
         except AttributeError:
             table = self.handle.createTable(modeGroup,source,self.descrFromColNames(colNameSet),expectedrows=500000)
             return table
-            
+
     def descrFromColNames(self,colNameSet):
         """Construct a table description dictionary from the set of column names.
-            At present, all columns are associated with a Float32Col. Later this will 
-            be moodifiable using INI file options. Two additional columns "time" and 
-            "timestamp" are added of type Float64Col and Int64Col respectively""" 
+            At present, all columns are associated with a Float32Col. Later this will
+            be moodifiable using INI file options. Two additional columns "time" and
+            "timestamp" are added of type Float64Col and Int64Col respectively"""
         descr = {}
         colNameSet = colNameSet.union(set(['time','timestamp']))
         for name in colNameSet:
-            if name in ['time']:  
+            if name in ['time']:
                 descr[name] = tables.Float64Col()
-            elif name in ['timestamp']:  
+            elif name in ['timestamp']:
                 descr[name] = tables.Int64Col()
-            else: 
+            else:
                 descr[name] = tables.Float32Col()
         return descr
-            
-    def open(self,filename):    
+
+    def open(self,filename):
         self.abspath = os.path.abspath(filename)
         self.handle = tables.openFile(filename,"a")
         # For active files, we expect there to be only a single group off
@@ -401,17 +401,17 @@ class ActiveFile(object):
             self.stopTime = node._f_getAttr("stopTime")
             self.tsRange = "%d_%d" % (self.baseTime,self.stopTime)
             if "t_" + self.tsRange != node._v_name:
-                raise ValueError("Bad timestamp attributes in %s" % filename) 
+                raise ValueError("Bad timestamp attributes in %s" % filename)
             return self
 
     def close(self):
         self.handle.close()
         self.handle = None
-        
+
     def remove(self):
         if self.handle is not None: self.close()
         os.remove(self.abspath)
-        
+
     def getRdData(self,tstart,tstop,varList):
         """Get ringdown data lying in the specified time range"""
         table = self.getRdDataTable()
@@ -429,7 +429,7 @@ class ActiveFile(object):
             return recArrayExtract(selected,varList)
         else:
             return None
-            
+
     def getSensorData(self,tstart,tstop,streamName):
         """Get sensor data lying in the specified time range."""
         table = self.getSensorDataTable()
@@ -439,7 +439,7 @@ class ActiveFile(object):
             return recArrayExtract(selected,["timestamp",("value",str(streamName))])
         else:
             return None
-    
+
     def getLatestSensorData(self, streamName):
         """Get the latest value of the specified sensor data"""
         table = self.getSensorDataTable()
@@ -449,7 +449,7 @@ class ActiveFile(object):
             return recArrayExtract(selected,["timestamp",("value",str(streamName))])
         else:
             return None
-            
+
     def getDmData(self,mode,source,tstart,tstop,varList):
         """Get data manager data from specified mode and source lying in the specified time range"""
         table = self.getDmDataTable(mode,source)
@@ -468,7 +468,7 @@ class ActiveFile(object):
             return recArrayExtract(selected,varList)
         else:
             return None
-            
+
 class ActiveFileManager(object):
     def __init__(self,configFile):
         self.config = CustomConfigObj(configFile)
@@ -503,10 +503,10 @@ class ActiveFileManager(object):
         self.rpcThread = RpcServerThread(self.rpcHandler.server, self.rpcHandler.shutdown)
         self.rpcCommandQueue = Queue(0)
         self.rpcResultQueue  = Queue(0)
-        
+
         self._shutdownRequested = False
         self.rpcInProgress = False
-        
+
         self.sensorDataTable = None
         self.sensorDataBaseTime = 0
         self.rdDataTable = None
@@ -521,7 +521,7 @@ class ActiveFileManager(object):
         for f in fileList:
             a = ActiveFile().open(f)
             self.activeFiles[a.baseTime] = a
-        
+
     def getBaseTime(self,timestamp):
         return int(numpy.floor(timestamp / (1000*self.activeFilePeriod)) * (1000*self.activeFilePeriod))
 
@@ -532,11 +532,11 @@ class ActiveFileManager(object):
             a = ActiveFile().create(self.activeFileDir,baseTime,baseTime+1000*self.activeFilePeriod)
             self.activeFiles[a.baseTime] = a
         return self.activeFiles[baseTime]
-    
+
     def closeActiveFiles(self):
         for a in self.activeFiles.values():
             a.close()
-    
+
     def removeOldFiles(self,timestamp):
         for k,a in self.activeFiles.items():
             if timestamp > a.baseTime + 1000*(self.activeFilePeriod + self.graceInterval):
@@ -548,12 +548,12 @@ class ActiveFileManager(object):
                     if Archiver.DoesFileExist(self.archiveGroupName, a.compressedFilePath, a.baseTime):
                         del self.activeFiles[k]
                         a.remove()
-    
+
     def doRpcRequests(self):
-        """Carry out up to 500ms of work satisfying up to 10 RPC requests from the rpcCommandQueue. 
-        Since some requests can involve looking through many H5 files and take a long time, a request 
-        is done by a generator which keeps track of which H5 files have been processed so far. A completed 
-        request places a result array on the rpcResultQueue. The rpcInProgress attribute is True while a 
+        """Carry out up to 500ms of work satisfying up to 10 RPC requests from the rpcCommandQueue.
+        Since some requests can involve looking through many H5 files and take a long time, a request
+        is done by a generator which keeps track of which H5 files have been processed so far. A completed
+        request places a result array on the rpcResultQueue. The rpcInProgress attribute is True while a
         request has not yet been completely satisfied.
         """
         for iter in range(10):
@@ -574,7 +574,7 @@ class ActiveFileManager(object):
 
     def genWrapper(self,gen,*a,**k):
         """Wrapper for a generator so that it gives a method which returns False to indicate
-           that the generator has terminated and placed a result on rpcResultQueue and which 
+           that the generator has terminated and placed a result on rpcResultQueue and which
            returns True if there is still more work to do"""
         if not self.rpcInProgress:
             self.gen = gen(*a,**k)
@@ -586,7 +586,7 @@ class ActiveFileManager(object):
             return True
         except StopIteration:
             return False
-            
+
     def genRdData(self,tstart,tstop,varList):
         results = []
         t = time.time()
@@ -611,7 +611,7 @@ class ActiveFileManager(object):
         result = a.getLatestRdData(varList)
         self.rpcResultQueue.put(result)
         t = yield False
-            
+
     def genSensorData(self,tstart,tstop,streamName):
         results = []
         t = time.time()
@@ -621,7 +621,7 @@ class ActiveFileManager(object):
             a = self.activeFiles[baseTime]
             if tstart >= a.stopTime: continue
             d = a.getSensorData(tstart,tstop,streamName)
-            if d is not None: 
+            if d is not None:
                 results.append(d)
             # If it takes longer than 0.5 seconds, set self.rpcInProgress as True and try again next time
             if time.time()-t > 0.5: t = yield True # Indicate not yet done
@@ -636,7 +636,7 @@ class ActiveFileManager(object):
         result = a.getLatestSensorData(streamName)
         self.rpcResultQueue.put(result)
         t = yield False
-        
+
     def genDmData(self,mode,source,tstart,tstop,varList):
         results = []
         t = time.time()
@@ -648,7 +648,7 @@ class ActiveFileManager(object):
             if tstart >= a.stopTime: continue
             # We may get an AttributeError exception in genDmData for the most
             #  recent files if the required tables have not yet been created.
-            #  Similarly, when the analyer is warming up, we may not have the 
+            #  Similarly, when the analyer is warming up, we may not have the
             #  correct modes or sources available.
             # We only report an error if there are no results
             try:
@@ -670,7 +670,7 @@ class ActiveFileManager(object):
         result = a.getLatestDmData(mode,source,varList)
         self.rpcResultQueue.put(result)
         t = yield False
-        
+
     def genRdDataStruct(self,tstart,tstop):
         dataDict = {}
         t = time.time()
@@ -692,7 +692,7 @@ class ActiveFileManager(object):
             self.rpcResultQueue.put(dataDict)
         else:
             self.rpcResultQueue.put(None)
-             
+
     def genDmDataStruct(self,tstart,tstop):
         dataDict = {}
         t = time.time()
@@ -721,7 +721,7 @@ class ActiveFileManager(object):
             self.rpcResultQueue.put(dataDict)
         else:
             self.rpcResultQueue.put(None)
-            
+
     def compressHdf5File(self,activeFile):
         """Copy an uncompressed file to a new HDF5 file with the compression filters
            turned on. Returns name of the compressed file."""
@@ -729,24 +729,24 @@ class ActiveFileManager(object):
         newPath = activeFile.abspath.replace('.h5','_c.h5')
         activeFile.handle.copyFile(newPath,filters=filters,copyuserattrs=True)
         return newPath
-        
+
     # There is a directory in which the active file is maintained.
     # The timestamp is rounded down to a multiple of the activeFilePeriod to give the
     # "baseTime" which labels the active file to which the data belong.
-    
-    # Given a timestamp and an active file period, we need to see if a new file needs 
+
+    # Given a timestamp and an active file period, we need to see if a new file needs
     #  to be created or if a pre-existing active file should be used.
-    # Pre-existing active files which are no longer current must be closed and sent 
+    # Pre-existing active files which are no longer current must be closed and sent
     #  to the archiver for compression and long-term storage
-    # 
-    # We keep track of an active file and the next active file so that points in a 
-    #  queue that stradle the boundary between files can be dealt with properly. It 
-    #  is only safe to close the current active file once there are data from all 
-    #  queues whose baseTime values are after the baseTime of the current active 
+    #
+    # We keep track of an active file and the next active file so that points in a
+    #  queue that stradle the boundary between files can be dealt with properly. It
+    #  is only safe to close the current active file once there are data from all
+    #  queues whose baseTime values are after the baseTime of the current active
     #  file. However, in order to cope with the situation in which no data arrive
     #  in a queue for an extended period, there is a grace period beyond which an
     #  active file is closed unconditionally.
-       
+
     def run(self):
         self.rpcThread.start()
         # Here follows the main loop.
@@ -758,7 +758,7 @@ class ActiveFileManager(object):
                 while not self.sensorQueue.empty():
                     d = self.sensorQueue.get()
                     if not (self.sensorDataBaseTime <= d.timestamp < self.sensorDataBaseTime + self.activeFilePeriod):
-                        if self.sensorDataTable is not None: 
+                        if self.sensorDataTable is not None:
                             try:
                                 self.sensorDataTable.flush()
                             except:
@@ -770,7 +770,7 @@ class ActiveFileManager(object):
                     for name,cls in interface.SensorEntryType._fields_:
                         row[name] = getattr(d,name)
                     row.append()
-                if self.sensorDataTable is not None: 
+                if self.sensorDataTable is not None:
                     try:
                         self.sensorDataTable.flush()
                     except:
@@ -779,7 +779,7 @@ class ActiveFileManager(object):
                 while not self.rdQueue.empty():
                     d = self.rdQueue.get()
                     if not (self.rdDataBaseTime <= d.timestamp < self.rdDataBaseTime + self.activeFilePeriod):
-                        if self.rdDataTable is not None: 
+                        if self.rdDataTable is not None:
                             try:
                                 self.rdDataTable.flush()
                             except:
@@ -791,18 +791,18 @@ class ActiveFileManager(object):
                     for name,cls in interface.ProcessedRingdownEntryType._fields_:
                         row[name] = getattr(d,name)
                     row.append()
-                if self.rdDataTable is not None: 
+                if self.rdDataTable is not None:
                     try:
                         self.rdDataTable.flush()
                     except:
                         pass
-                
+
                 while not self.dmQueue.empty():
                     d = self.dmQueue.get()
                     timestamp, mode, source = d['data']['timestamp'], d['mode'], d['source']
                     colNameSet = set(d['data'].keys())
                     a = self.getActiveFile(timestamp)
-                    # Get data manager table for given mode and source, creating it if it does not 
+                    # Get data manager table for given mode and source, creating it if it does not
                     #  exist
                     dmDataTable = a.retrieveOrMakeDmDataTable(mode,source,colNameSet)
                     if self.dmDataTable is not None and self.dmDataTable != dmDataTable:
@@ -815,7 +815,7 @@ class ActiveFileManager(object):
                     for name in colNameSet:
                         row[name] = d['data'][name]
                     row.append()
-                if self.dmDataTable is not None: 
+                if self.dmDataTable is not None:
                     try:
                         self.dmDataTable.flush()
                     except:
@@ -826,8 +826,8 @@ class ActiveFileManager(object):
                 if not self.rpcInProgress: self.removeOldFiles(ts)
                 self.doRpcRequests()    # Perform next bit of work for RPC functions
                 time.sleep(0.05)
-                
-            print "Shutdown requested"    
+
+            print "Shutdown requested"
             Log("ActiveFileManager RPC handler shut down")
         except:
             type,value,trace = sys.exc_info()
@@ -836,7 +836,7 @@ class ActiveFileManager(object):
             Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                 Verbose=traceback.format_exc(),Level=3)
         self.closeActiveFiles()
-        
+
 HELP_STRING = """ActiveFileManager.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following:
@@ -875,4 +875,3 @@ if __name__ == "__main__":
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     a = ActiveFileManager(configFile)
     a.run()
-    

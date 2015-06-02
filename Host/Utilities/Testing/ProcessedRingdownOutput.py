@@ -14,11 +14,11 @@ from Host.Common import AppStatus
 
 def Log(msg):
     print msg
-    
+
 class RingdownOutput(object):
     def __init__(self):
         self.rdQueue = Queue.Queue(0)
-        
+
     def listen(self):
         self.rdListener = Listener(self.rdQueue,
                                     BROADCAST_PORT_RD_RECALC,
@@ -33,9 +33,8 @@ class RingdownOutput(object):
                 i += 1
                 if i%100 == 0:
                     print "Processed Ringdown Delay: %s" % (0.001*(timestamp.getTimestamp()-output.timestamp),)
-            time.sleep(0.1)    
+            time.sleep(0.1)
 if __name__ == "__main__":
     f = RingdownOutput()
     f.listen()
     f.run()
-    

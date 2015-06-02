@@ -15,7 +15,7 @@ import threading
 import win32gui
 import shutil
 from configobj import ConfigObj
-from SupervisorLauncherFrame import SupervisorLauncherFrame
+from Host.Utilities.SupervisorLauncher.SupervisorLauncherFrame import SupervisorLauncherFrame
 from Host.autogen import interface
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
@@ -39,7 +39,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-    
+
 class SupervisorLauncher(SupervisorLauncherFrame):
     def __init__(self, configFile, autoLaunch, closeValves, killAll, *args, **kwds):
         self.mode = None
@@ -69,7 +69,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             hostDir = "Host"
         self.supervisorHostDir = os.path.join(apacheDir, hostDir)
         self.startupSupervisorIni = os.path.join(self.supervisorIniDir, self.co["Main"]["StartupSupervisorIni"].strip())
-        
+
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
@@ -85,7 +85,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             self.runForcedLaunch()
             time.sleep(3)
             self.Destroy()
-    
+
     def initMode(self):
         ini = ConfigObj(self.startupSupervisorIni)
         try:
@@ -93,7 +93,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         except:
             pass
         self.assignType(self.comboBoxSelect.GetValue())
-        
+
     def onSelect(self, event):
         self.supervisorType = self.comboBoxSelect.GetValue()
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
@@ -101,15 +101,15 @@ class SupervisorLauncher(SupervisorLauncherFrame):
     def assignType(self, supervisorType):
         self.supervisorType = supervisorType
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[self.supervisorType]["SupervisorIniFile"].strip())
-    
+
     def runExplicitModeLaunch(self):
         self.explicitModeLaunch = True
         self.onLaunch(None)
-    
+
     def runForcedLaunch(self):
         self.forcedLaunch = True
         self.onLaunch(None)
-        
+
     def onLaunch(self, event):
         # Terminate the current supervisor
         try:
@@ -149,7 +149,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     CRDS_Driver.setValveMask(0)
         except:
             pass
-            
+
         if (not self.forcedLaunch) and (self.launchType == "exe"):
             try:
                 shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
@@ -160,13 +160,13 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 startupIni.write()
             except:
                 pass
-                
+
         os.chdir(self.supervisorHostDir)
         info = subprocess.STARTUPINFO()
         if self.consoleMode != 1:
             info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             info.wShowWindow = subprocess.SW_HIDE
-            
+
         if self.launchType == "exe":
             subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
         else:
@@ -179,12 +179,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         #else:
         #   os.chdir(r"C:\Picarro\G2000\Host\Utilities\SupervisorLauncher")
         #   subprocess.Popen(["python.exe", "HostStartup.py","-c",self.supervisorIni.replace("EXE","")], startupinfo=info)
-        
+
         # Change QuickGui Title
         setTitleThread = threading.Thread(target=self.setGuiTitle)
         setTitleThread.setDaemon(True)
         setTitleThread.start()
-                
+
     def setGuiTitle(self):
         titleSet = False
         try:
@@ -205,7 +205,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 except:
                     count += 1
                 time.sleep(0.5)
-                
+
 HELP_STRING = \
 """
 
@@ -223,7 +223,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -248,18 +248,18 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     autoLaunch = "-a" in options
     closeValves = "-v" in options
     killAll = "-k" in options
     modeSpecified = options.get("-m",None)
-    
+
     return (configFile, autoLaunch, closeValves, killAll, modeSpecified)
-    
+
 if __name__ == "__main__":
     (configFile, autoLaunch, closeValves, killAll, modeSpecified) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
-    
+
     if supervisorLauncherApp.alreadyrunning() and not (autoLaunch or modeSpecified!=None):
         try:
             handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")

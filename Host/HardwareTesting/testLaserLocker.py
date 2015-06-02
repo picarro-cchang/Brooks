@@ -32,7 +32,7 @@ def test_laserLocker():
     driver = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="testLaserLocker")
     driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_CS",1<<LASERLOCKER_CS_RUN_B)
     cs = driver.rdFPGA("FPGA_LASERLOCKER","LASERLOCKER_CS")
-    assert 0 == cs & (1<<LASERLOCKER_CS_RUN_B) 
+    assert 0 == cs & (1<<LASERLOCKER_CS_RUN_B)
     print "Single step test passed"
     eta1_dark, ref1_dark, eta2_dark, ref2_dark = [randrange(100,200) for i in range(4)]
     driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_ETA1",eta1_dark)
@@ -115,14 +115,14 @@ def test_laserLocker():
         # Generate some test vectors
         wm_lock_window = randrange(32768)
         driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_WM_LOCK_WINDOW",wm_lock_window)
-        
+
         wm_int_gain = randrange(-5000,5000) % mod
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_WM_INT_GAIN,wm_int_gain)
         wm_prop_gain = randrange(-5000,5000) % mod
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_WM_PROP_GAIN,wm_prop_gain)
         wm_deriv_gain = randrange(-5000,5000) % mod
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_WM_DERIV_GAIN,wm_deriv_gain)
-        
+
         ref1, ref2 = [randrange(30000,65536-200) for i in range(2)]
         eta1 = randrange(0,min(2*ref1,65536-200))
         eta2 = randrange(0,min(2*ref2,65536-200))
@@ -134,7 +134,7 @@ def test_laserLocker():
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_ETA2,eta2)
         ref2 += ref2_off
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_REF2,ref2)
-    
+
         ratio1_cen = randrange(20000,44000)
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_RATIO1_CENTER,ratio1_cen)
         ratio2_cen = randrange(20000,44000)
@@ -145,7 +145,7 @@ def test_laserLocker():
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_RATIO2_MULTIPLIER,ratio2_multiplier)
         tuning_offset = randrange(30000,34000)
         driver.wrFPGA("FPGA_LASERLOCKER",LASERLOCKER_TUNING_OFFSET,tuning_offset)
-    
+
         # Calculate expected values of all locker variables
         ratio1 = div_sim(sub_sim(eta1,eta1_off),sub_sim(ref1,ref1_off))
         ratio2 = div_sim(sub_sim(eta2,eta2_off),sub_sim(ref2,ref2_off))
@@ -166,20 +166,20 @@ def test_laserLocker():
         deriv2 = deriv - prev_lock_error_deriv
         prev_lock_error = lock_error
         prev_lock_error_deriv = deriv
-    
+
         int_prod = signed_mul_sim(lock_error,wm_int_gain)
         prop_prod = signed_mul_sim(deriv,wm_prop_gain)
         deriv_prod = signed_mul_sim(deriv2,wm_deriv_gain)
-    
+
         fine_current = add_sim(fine_current,int_prod)
         fine_current = add_sim(fine_current,prop_prod)
         fine_current = add_sim(fine_current,deriv_prod)
-    
+
         #print "IntegralProduct = %04x" % (int_prod,)
         #print "ProportionalProduct = %04x" % (prop_prod,)
         #print "DerivProduct = %04x" % (deriv_prod,)
         #print "FineCurrent = %04x" % (fine_current,)
-    
+
         # Carry out algorithm in FPGA
         driver.wrFPGA("FPGA_LASERLOCKER","LASERLOCKER_CS",1<<LASERLOCKER_CS_RUN_B | 1<<LASERLOCKER_CS_ADC_STROBE_B | 1<<LASERLOCKER_CS_ACC_EN_B)
         while driver.rdFPGA("FPGA_LASERLOCKER","LASERLOCKER_CYCLE_COUNTER")<50:
@@ -198,7 +198,6 @@ def test_laserLocker():
         assert locked == (0 != (cs & 1<<LASERLOCKER_CS_LASER_FREQ_OK_B))
         sys.stdout.write(".")
     print
-    
+
 if __name__ == "__main__":
     test_laserLocker()
-    

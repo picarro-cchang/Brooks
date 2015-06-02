@@ -1,11 +1,11 @@
 import wx
-from DemoCodeEditor import DemoCodeEditor
-import wx.stc as stc 
+from Host.Utilities.ConfigManager.DemoCodeEditor import DemoCodeEditor
+import wx.stc as stc
 import os
 import re
 import tokenize
 from configobj import ConfigObj
-from ConfigManagerGui import ConfigManagerGui
+from Host.Utilities.ConfigManager.ConfigManagerGui import ConfigManagerGui
 import compiler
 import optparse
 import sys
@@ -13,7 +13,7 @@ import sys
 
 def evalStringLit(s):
     return compiler.parse(s,mode='eval').node.value
-    
+
 def getMatches(fName,matchRe,matchOpt=re.I):
     f = None
     f = open(fName,'r')
@@ -26,12 +26,12 @@ def getMatches(fName,matchRe,matchOpt=re.I):
         return matches
     finally:
         if f: f.close()
-        
+
 def ConfigNodeFactory(filename,**kwds):
-    """Construct an instance of a subclass ConfigNode for the specified file. The node 
-       type may be specified as the non-None keyword argument nodeClass. Otherwise, it 
+    """Construct an instance of a subclass ConfigNode for the specified file. The node
+       type may be specified as the non-None keyword argument nodeClass. Otherwise, it
        is inferred from the file extension"""
-       
+
     name,ext = os.path.splitext(filename)
     if 'nodeClass' in kwds: nodeClass = kwds['nodeClass']
     if nodeClass is not None:
@@ -66,7 +66,7 @@ class ConfigNode(object):
         self.parent = kwargs.get('parent',None)
         childBasePath = kwargs.get('childBasePath',None)
         self.childBasePath = childBasePath if (childBasePath is not None) else self.basePath
-        
+
     def addChild(self,p,option=None):
         f = os.path.join(self.childBasePath,p)
         n = ConfigNodeFactory(f,parent=self,
@@ -76,19 +76,19 @@ class ConfigNode(object):
             if n.absPath == c.absPath: break
         else:
             self.children.append(n)
-        
+
     def findChildren(self):
         print "Should be implemented in a subclass"
-    
+
     def nodeClass(self,filename,option):
         return None
 
     def getChildBasePath(self):
         return None
-        
+
 class DefIniConfigNode(ConfigNode):
     # Default INI handler which looks for keys which have .ini, .py or .sch extensions
-    
+
     def findChildren(self):
         self.children = []
         patt = re.compile(*self.pattRe())
@@ -103,29 +103,29 @@ class DefIniConfigNode(ConfigNode):
                         self.addChild(p,opt)
                     for p in self.extraChildren(sec,opt,ini[sec][opt]):
                         self.addChild(p,opt)
-                    
+
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch",re.I
-        
+
     def extraChildren(self,sec,opt,value):
         return []
-        
+
 class MeasSystemIniConfigNode(DefIniConfigNode):
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch|.*?\.mode",re.I
-        
+
 class DataManagerIniConfigNode(DefIniConfigNode):
     def pattRe(self):
         return r".*?\.ini|.*?\.py|.*?\.sch|.*?\.mode",re.I
     def nodeClass(self,filename,option):
        if option == "periphIntrfConfig":
            return RunSerial2SocketIniConfigNode
-            
+
 class DataLoggerIniConfigNode(DefIniConfigNode):
     def nodeClass(self,filename,option):
        if option == "periphIntrfConfig":
            return RunSerial2SocketIniConfigNode
-    
+
 class FitterIniConfigNode(DefIniConfigNode):
     def nodeClass(self,filename,option):
         return FitterScriptConfigNode
@@ -145,15 +145,15 @@ class RunSerial2SocketIniConfigNode(DefIniConfigNode):
         ini = ConfigObj(self.absPath,list_values=False)
         scriptPath = ini['SETUP']['SCRIPTPATH']
         self.childBasePath = os.path.join(self.basePath,scriptPath)
-    
+
     def extraChildren(self,sec,opt,value):
         if opt.upper() == 'SCRIPTFUNC':
             return [value.strip() + '.py']
         else:
             return []
-    
+
 class DefPyConfigNode(ConfigNode):
-    # Default PY handler 
+    # Default PY handler
     def findChildren(self):
         self.children = []
         fp = None
@@ -170,15 +170,15 @@ class DefPyConfigNode(ConfigNode):
                         self.addChild(st)
         finally:
             if fp: fp.close()
-            
+
     def readline(self,fp):
         return fp.readline
 
 class FitterScriptConfigNode(DefPyConfigNode):
     pass
-    
+
 class DefSchConfigNode(DefPyConfigNode):
-    # Default SCH handler 
+    # Default SCH handler
     def readline(self,fp):
         def linesBetweenMarkers(marker):
             emitting = False
@@ -194,9 +194,9 @@ class DefSchConfigNode(DefPyConfigNode):
             except StopIteration:
                 return ""
         return readBetweenMarkers
-        
+
 class DefModeConfigNode(DefIniConfigNode):
-    # Default MODE handler 
+    # Default MODE handler
     def findChildren(self):
         DefIniConfigNode.findChildren(self)
         ini = ConfigObj(self.absPath,list_values=False)
@@ -213,7 +213,7 @@ class DefModeConfigNode(DefIniConfigNode):
                     if n.absPath == c.absPath: break
                 else:
                     self.children.append(n)
-        
+
     def pattRe(self):
         return r".*?\.py|.*?\.sch",re.I
 
@@ -239,7 +239,7 @@ class SupervisorConfigNode(ConfigNode):
                             if n.absPath == c.absPath: break
                         else:
                             self.children.append(n)
-                            
+
     def nodeClass(self,execName,option):
         if execName.lower().find('fitter')>=0: return FitterIniConfigNode
         elif execName.lower().find('meassystem')>=0: return MeasSystemIniConfigNode
@@ -248,7 +248,7 @@ class SupervisorConfigNode(ConfigNode):
         elif execName.lower().find('runserial2socket')>=0: return RunSerial2SocketIniConfigNode
         elif execName.lower().find('datalogger')>=0: return DataLoggerIniConfigNode
         else: return DefIniConfigNode
-        
+
 class ConfigManager(ConfigManagerGui):
     def __init__(self,*a,**k):
         ConfigManagerGui.__init__(self,*a,**k)
@@ -272,7 +272,7 @@ class ConfigManager(ConfigManagerGui):
         self.Bind(wx.EVT_FIND_CLOSE, self.onFindClose)
         self.Bind(wx.EVT_FIND_REPLACE, self.onFindReplace)
         self.Bind(wx.EVT_FIND_REPLACE_ALL, self.onFindReplaceAll)
-        
+
     def run(self,rootNode):
         self.treeRoot = self.treeCtrlFiles.AddRoot(rootNode.fileName)
         if rootNode.absPath not in self.treeNodesByFileAbsPath:
@@ -291,7 +291,7 @@ class ConfigManager(ConfigManagerGui):
         while child:
             self.traverse(child, function)
             child,cookie = self.treeCtrlFiles.GetNextChild(traverseroot,cookie)
-        
+
     def removeChildren(self,treeNode):
         self.treeCtrlFiles.DeleteChildren(treeNode)
         allNodes = []
@@ -300,13 +300,13 @@ class ConfigManager(ConfigManagerGui):
         self.traverse(self.treeRoot,collect)
         for p in self.treeNodesByFileAbsPath:
             self.treeNodesByFileAbsPath[p] = [n for n in self.treeNodesByFileAbsPath[p] if n in allNodes]
-        
+
     def onItemCollapsed(self,evt):
         self.removeChildren(evt.GetItem())
-    
+
     def onItemExpanding(self,evt):
         self.addTreeNodes(evt.GetItem())
-        
+
     def onSelChanged(self,evt):
         selNode = self.treeCtrlFiles.GetItemPyData(evt.GetItem())
         # If node is not currently open, open in a new tab
@@ -320,7 +320,7 @@ class ConfigManager(ConfigManagerGui):
             p = wx.Panel(self.notebookEditors, -1)
             self.notebookEditorPanels.append(p)
             # t = wx.TextCtrl(p, -1, "", style=wx.TE_MULTILINE)
-            
+
             #t = stc.StyledTextCtrl(p,-1)
             #t.StyleSetSpec(stc.STC_STYLE_DEFAULT, "size:%d,face:%s" % (10, 'Courier New'))
             # line numbers in the margin
@@ -358,7 +358,7 @@ class ConfigManager(ConfigManagerGui):
         # Set the focus to the i'th tab
         self.notebookEditors.SetSelection(i)
         self.treeCtrlFiles.SetFocus()
-        
+
     def addTreeNodes(self,parentItem):
         top = self.treeCtrlFiles.GetItemPyData(parentItem)
         for c in top.children:
@@ -369,7 +369,7 @@ class ConfigManager(ConfigManagerGui):
             self.treeNodesByFileAbsPath[c.absPath].append(node)
             self.treeCtrlFiles.SetItemPyData(node,c)
             self.treeCtrlFiles.SetItemHasChildren(node,bool(c.children))
-    
+
     def onEditorSelected(self,evt):
         # Place absolute path name in status bar
         self.whichEditor = evt.GetSelection()
@@ -378,15 +378,15 @@ class ConfigManager(ConfigManagerGui):
         self.frameMainStatusbar.SetStatusText(p, 2)
         mod = t.GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
-    
+
     def onEditChange(self,evt):
         mod = evt.GetEventObject().GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
-        
+
     def onHelpSelectAll(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         t.SelectAll()
-        
+
     def onHelpFind(self,evt):
         if self.finddlg != None:
             return
@@ -406,16 +406,16 @@ class ConfigManager(ConfigManagerGui):
         t.SetSelectionEnd(t.GetAnchor())
         self.finddlg = wx.FindReplaceDialog(self, self.finddata, "Replace", wx.FR_REPLACEDIALOG|wx.FR_NOUPDOWN)
         self.finddlg.Show(True)
-        
+
     def cvtFlags(self,frFlags):
         flags = 0
         flags += stc.STC_FIND_WHOLEWORD if 0 != frFlags & wx.FR_WHOLEWORD else 0
         flags += stc.STC_FIND_MATCHCASE if 0 != frFlags & wx.FR_MATCHCASE else 0
         return flags
-        
+
     def onFind(self,evt):
         self.onFindNext(evt)
-            
+
     def onFindNext(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         s = self.finddata.GetFindString()
@@ -442,16 +442,16 @@ class ConfigManager(ConfigManagerGui):
             dlg.Destroy()
             evt.GetDialog().Show()
         t.EnsureCaretVisible()
-        
+
     def onFindReplace(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         s = self.finddata.GetFindString()
         r = self.finddata.GetReplaceString()
         f = self.finddata.GetFlags()
         if t.GetSelectedText() == s if (0 != (f & wx.FR_MATCHCASE)) else t.GetSelectedText().lower() == s.lower():
-            t.ReplaceSelection(r)            
+            t.ReplaceSelection(r)
         self.onFindNext(evt)
-        
+
     def onFindReplaceAll(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         s = self.finddata.GetFindString()
@@ -464,7 +464,7 @@ class ConfigManager(ConfigManagerGui):
         while True:
             if t.GetSelectedText() == s if (0 != (f & wx.FR_MATCHCASE)) else t.GetSelectedText().lower() == s.lower():
                 ss = t.GetSelectionStart()
-                t.ReplaceSelection(r)            
+                t.ReplaceSelection(r)
                 se = t.GetSelectionEnd()
                 nReplace += 1
             t.SetSelectionStart(t.GetSelectionEnd())
@@ -482,11 +482,11 @@ class ConfigManager(ConfigManagerGui):
         dlg.ShowModal()
         dlg.Destroy()
         evt.GetDialog().Show()
-            
+
     def onFindClose(self,evt):
         evt.GetDialog().Destroy()
         self.finddlg = None
-    
+
     def onReload(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         mod = t.GetModify()
@@ -511,10 +511,10 @@ class ConfigManager(ConfigManagerGui):
         try:
             self.notebookEditorFileMtimes[self.whichEditor] = os.stat(p).st_mtime
         except:
-            self.notebookEditorFileMtimes[self.whichEditor] = None        
+            self.notebookEditorFileMtimes[self.whichEditor] = None
         mod = t.GetModify()
-        self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)        
-    
+        self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
+
     def onSave(self,evt):
         t = self.notebookEditorTextCtrls[self.whichEditor]
         mod = t.GetModify()
@@ -548,13 +548,13 @@ class ConfigManager(ConfigManagerGui):
         ap = self.notebookEditorFileAbsPaths[self.whichEditor]
         p,f = os.path.split(ap)
         d,e = os.path.splitext(ap)
-        
+
         dlg = wx.FileDialog(self,"Save file as",p,f,"*%s"%e,wx.SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             fname = dlg.GetFilename()
             dname = dlg.GetDirectory()
             name = os.path.join(dname,fname)
-        
+
             f = None
             try:
                 try:
@@ -572,7 +572,7 @@ class ConfigManager(ConfigManagerGui):
                 t.EmptyUndoBuffer()
             finally:
                 if f: f.close()
-                
+
             self.notebookEditors.SetPageText(self.whichEditor, fname)
 
             # Update the tree to reflect the changes in the file
@@ -593,8 +593,8 @@ class ConfigManager(ConfigManagerGui):
                 self.notebookEditorFileMtimes[self.whichEditor] = os.stat(p).st_mtime
             except:
                 self.notebookEditorFileMtimes[self.whichEditor] = None
-        dlg.Destroy()        
-    
+        dlg.Destroy()
+
     def onSaveAll(self,evt):
         # Iterate through files in editors and save any modified files
         for w,(t,p) in enumerate(zip(self.notebookEditorTextCtrls,self.notebookEditorFileAbsPaths)):
@@ -620,11 +620,11 @@ class ConfigManager(ConfigManagerGui):
                 self.notebookEditorFileMtimes[w] = os.stat(p).st_mtime
             except:
                 self.notebookEditorFileMtimes[w] = None
-            
+
         t = self.notebookEditorTextCtrls[self.whichEditor]
         mod = t.GetModify()
         self.frameMainStatusbar.SetStatusText("Mod" if mod else "",1)
-    
+
     def onKeyPressed(self,evt):
         key = evt.GetKeyCode()
         if key == 65 and evt.ControlDown():
@@ -634,12 +634,12 @@ class ConfigManager(ConfigManagerGui):
         elif key == 72 and evt.ControlDown():
             self.onHelpReplace(evt)
         elif key == 83 and evt.ControlDown():
-            self.onSave(evt)    
+            self.onSave(evt)
         elif key == 344:
-            self.onReload(evt)    
-        else:    
+            self.onReload(evt)
+        else:
             evt.Skip()
-            
+
     def onExit(self,evt):
         # Iterate through files in editors and offer to save any modified files
         for w,(t,p) in enumerate(zip(self.notebookEditorTextCtrls,self.notebookEditorFileAbsPaths)):
@@ -656,7 +656,7 @@ class ConfigManager(ConfigManagerGui):
                     self.onSave(evt)
                 elif result == wx.ID_CANCEL:
                     return
-        self.Close()        
+        self.Close()
 
     def onUpdateTimer(self,evt):
         self.updateTimer.Stop()
@@ -818,4 +818,3 @@ if __name__ == "__main__":
         frameMain.run(r)
         frameMain.Show()
         appConfigManager.MainLoop()
-    

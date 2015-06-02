@@ -19,10 +19,10 @@ File History:
     10-06-14 john  Outlier filter added to sparser
     10-06-24 sze   Added numGroups key to RdData objects
     10-12-07 sze   Allow scripts to use different spectral and spline libraries instead
-                    of making these libraries global 
+                    of making these libraries global
     13-01-29 sze   Add per virtual laser offset for use with FSR hopping or laser current tuning
     13-10-19 sze   Calculate spectral duration for each spectrum
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -36,7 +36,7 @@ from glob import glob
 from numpy import arange, arctan, argmax, argmin, argsort, array, asarray, bool_, concatenate, cos
 from numpy import delete, diff, searchsorted, dot, exp, flatnonzero, float_, frompyfunc
 from numpy import int8, int_, invert, iterable, linspace, logical_and, mean, median, ndarray, ones
-from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros 
+from numpy import pi, polyfit, ptp, shape, sin, sqrt, std, unique, zeros
 from os.path import getmtime, join, split, exists
 from scipy.optimize import leastsq, brent
 from scipy.signal import order_filter
@@ -88,7 +88,7 @@ def readConfig(fname):
     # config = CustomConfigObj(prependAppDir(fname))
     config = CustomConfigObj(fname)
     return config
-    
+
 ################################################################################
 # Functions available to fitter scripts
 ################################################################################
@@ -112,7 +112,7 @@ def loadSplineLibrary(fnameOrConfig):
     splineLibrary = SplineLibrary(fnameOrConfig)
     sys._getframe(1).f_globals["splineLibrary"] = splineLibrary
     return splineLibrary
-    
+
 ################################################################################
 # Print deprecation messages
 ################################################################################
@@ -193,7 +193,7 @@ def voigt0(x,y):
 
 def voigt(x,y):
     return fitutils.voigt(x,y)
-    
+
 ################################################################################
 def galatry0(x,y,z,strength=1.0,minimum_loss=0.001):
     """Evaluate the Galatry function at locations x."""
@@ -280,7 +280,7 @@ def galatry0(x,y,z,strength=1.0,minimum_loss=0.001):
         result[region4] = 0.0
 
     return result
-    
+
 def galatry(x,y,z,strength=1.0,minimum_loss=0.001):
     return fitutils.galatry(x,y,z,strength,minimum_loss)
 ################################################################################
@@ -416,7 +416,7 @@ def convHdf5ToDict(h5Filename):
             retDict[tableName][colKey] = r[colKey] # table.read(field=colKey)
     h5File.close()
     return retDict
-    
+
 def hdf5RepositoryFromList(hdf5Files):
     """Generator which yields successive spectra (in HDF5 format) from a
     list of .h5 files"""
@@ -602,7 +602,7 @@ class CubicSpline(object):
         # D = (B**3-B)*h[xbg-1]**2/6.0
         # y[good] = A*self.y_vals[xbg-1]+B*self.y_vals[xbg]+C*self.y2_vals[xbg-1]+D*self.y2_vals[xbg]
         # return y
-        
+
     def call(self,x):
         return fitutils.speval(self.x_vals,self.y_vals,self.y2_vals,x)
 
@@ -695,7 +695,7 @@ class Model(object):
         nParams = f.numParams()
         f.setParamIndices(arange(self.nParameters,self.nParameters+nParams))
         self.nParameters += nParams
-        self.vlaserOffsets = f        
+        self.vlaserOffsets = f
     def registerXmodifier(self,f):
         f.parent = self
         nParams = f.numParams()
@@ -730,7 +730,7 @@ class Model(object):
             return y - self(x + self.vlaserOffsets(x)[v])
         else:
             return y - self(x)
-    
+
     def __setitem__(self,key,value):
         class1, class2, key1, key2, extra = classifyKeyTuple(key)
         if class1 == 0: # We have a function between 0 and 999
@@ -742,7 +742,7 @@ class Model(object):
                 return
             elif class2 == 3: # This is "center", "strength", "y", "z" or "v"
                 self.parameters[f.paramIndices[galDict1[key2]]] = value
-                return 
+                return
             else:
                 raise KeyError("Cannot set parameter %s for function %s of type %s" % (key2,key1,type(f)))
         elif class1 == 1: # We have a function greater than or equal to 1000
@@ -762,7 +762,7 @@ class Model(object):
                 raise KeyError("Model parameter %s is not defined" % (key2,))
         else:
             raise KeyError("Model function %s is not defined" % (key1,))
-    
+
     def __getitem__(self,key):
         """We use index notation to extract the values of the model. If the first
         index is an integer, it represents a function within the basisFunctionByIndex dictionary
@@ -782,8 +782,8 @@ class Model(object):
         "scaled_z":        the z parameter divided by the pressure
 
         NOTE: Galatry parameters in the spectral library are the SCALED values.
-        
-        For bispline functions, the second index can also be the string "peak". This returns the peak 
+
+        For bispline functions, the second index can also be the string "peak". This returns the peak
                             value of the bispline.
 
         If the first parameter is the string "base", simply return the model parameter with the index
@@ -822,7 +822,7 @@ class Model(object):
                 raise KeyError("Model parameter %s is not defined" % (key2,))
         else:
             raise KeyError("Model function %s is not defined" % (key1,))
-        
+
 ################################################################################
 # Basis functions are summed together to produce a model spectrum
 ################################################################################
@@ -831,7 +831,7 @@ class BasisFunctions(object):
     can be evaluated at a set of frequencies to give the spectrum."""
     # The base class also :
     #  1) implements memoization for its subclasses to avoid unnecessary recomputations
-    #  2) allows the subclass function to be called with a "useModifier" parameter, so that 
+    #  2) allows the subclass function to be called with a "useModifier" parameter, so that
     #      any xModifier defined in the parent model is applied before evaluating the function
     def __init__(self):
         self.parent = None
@@ -865,7 +865,7 @@ class BasisFunctions(object):
            or useModifier != self.useModifierSaved:
             self.asaved = a.copy()
             self.xsaved = x.copy()
-            if useModifier and self.parent != None and self.parent.xModifier is not None: 
+            if useModifier and self.parent != None and self.parent.xModifier is not None:
                 x = self.parent.xModifier(x)
             self.ysaved = self.call(a,x)
             self.memoUsed = False
@@ -907,8 +907,8 @@ class VlaserOffsets(BasisFunctions):
             self.initialParams = params
         else:
             self.initialParams = zeros(self.nParams,dtype=float)
-    def call(self,a,x):    
-        return asarray(a) 
+    def call(self,a,x):
+        return asarray(a)
 ################################################################################
 # FrequencySquish for frequency offset and scale
 ################################################################################
@@ -988,7 +988,7 @@ class BiSpline(BasisFunctions):
     def call(self,a,x):
         return fitutils.bseval(self.splineA.x_vals,self.splineA.y_vals,self.splineA.y2_vals,
                               self.splineB.x_vals,self.splineB.y_vals,self.splineB.y2_vals,
-                              a,x)        
+                              a,x)
     def getDomain(self):
         xAmin,xAmax = self.splineA.getDomain()
         xBmin,xBmax = self.splineB.getDomain()
@@ -1145,8 +1145,8 @@ class RdfData(object):
     _pacing = {}
     def __init__(self):
         """An RdfData object is essentially just a bunch of dynamically created attributes for holding
-        ringdown data. 
-        
+        ringdown data.
+
             self.rdfKeys holds the list of dynamic attribute names
             self.sensorDict is a dictionary of averaged sensor data
             self.indexVector is used for selection and permutation so that we can sort and filter the data
@@ -1161,15 +1161,15 @@ class RdfData(object):
         self.indexVector = []
         self.nrows = 0
         self.sensorDict = {}
-        
+
     def merge(self,rdfDataList):
         """Make a composite RdfData object from the current object and those in rdfDataList. We check
         that they are all compatible in the sense of having the same rdfKeys and sensorDict.
-        
-        The numpy concatenate function is used to join the corresponding arrays in rdfDataList. 
-        The keys in the sensorDicts are averaged together, weighted according to the number of 
+
+        The numpy concatenate function is used to join the corresponding arrays in rdfDataList.
+        The keys in the sensorDicts are averaged together, weighted according to the number of
         rows in each RdfData object.
-        
+
         indexVector is set to select all the data in natural order
         nrows is set to the sum of the rows of the original object and those in the list
         """
@@ -1193,7 +1193,7 @@ class RdfData(object):
                 aList = []
             aList += [getattr(d,k) for d in rdfDataList]
             object.__setattr__(self, k, concatenate(aList))
-                    
+
         if self.sensorDict:
             for k in sensorKeys:
                 self.sensorDict[k] *= self.nrows
@@ -1205,25 +1205,25 @@ class RdfData(object):
 
         for k in sensorKeys:
             self.sensorDict[k] /= self.nrows
-            
+
         self.indexVector = arange(self.nrows)
         self.startRow = 0
         self.endRow = self.nrows
-        
+
     @staticmethod
     def getSpectraDict(rdfDict):
-        """Generates individual spectra (in RdfData() format) from a dictionary with keys 
-        "rdData", "sensorData" and optionally "controlData" and "tagalongData". 
-        
+        """Generates individual spectra (in RdfData() format) from a dictionary with keys
+        "rdData", "sensorData" and optionally "controlData" and "tagalongData".
+
         rdfDict["controlData"] is typically a numpy record array with a field "RDDataSize"
-        which indicates how the rows of rdfDict["rdData"] are to be divided into "chunks" 
-        containing individual spectra. 
-        
+        which indicates how the rows of rdfDict["rdData"] are to be divided into "chunks"
+        containing individual spectra.
+
         """
         rdData = rdfDict["rdData"]
         otherData = rdfDict["sensorData"]
         latency = 0.0
-        if "tagalongData" in rdfDict: 
+        if "tagalongData" in rdfDict:
             otherData.update(rdfDict["tagalongData"])
         try:
             controlData = rdfDict["controlData"]
@@ -1234,7 +1234,7 @@ class RdfData(object):
         except:
             rdChunkSizes = [len(rdData["waveNumber"])]
             qSizes = [0]
-            
+
         RED_THRESHOLD = 250
         RED_DISCARD_ALL = 500
 
@@ -1257,7 +1257,7 @@ class RdfData(object):
             otherDataForChunk = {}
             for key in otherData:
                 otherDataForChunk[key] = otherData[key][i]
-                
+
             # Returns an RdfData object from ringdown data between indices low and high
             def makeRdfData(low,high):
                 rdfData = RdfData()
@@ -1282,7 +1282,7 @@ class RdfData(object):
             # Split spectra further according to subfield of the subschemeId
             low = start
             high = start + rdChunkSize
-            
+
             splits = flatnonzero(diff(rdData["subschemeId"][low:high] & 0x3FF))
             for i,s in enumerate(splits):
                 id = rdData["subschemeId"][low] & 0x3FF
@@ -1312,7 +1312,7 @@ class RdfData(object):
         self.nrows = len(self.time)
         self.indexVector = arange(self.nrows)
         return self
-        
+
     def __getitem__(self,key):
         # Use item notation to recover certain properties of a data set for use in scripting
         try:
@@ -1385,14 +1385,14 @@ class RdfData(object):
             self.groupPtp[field] = array([ptp(x[g]) for g in self.groups])
     def cluster(self,xColumn='waveNumber',minSize=3,diameter=0.015,minJump=0.015,localJumpEstimatorHalfwidth=3):
         """This is used to analyze FSR data collected in "frequency hopping" mode. The values in xColumn are
-        grouped into clusters no larger than the specified diameter using the QT algorithm (i.e., a ball of the 
-        specified diameter is used to find the largest cluster. The points in this cluster are removed and the 
-        process is repeated). Clusters with fewer than minSize ringdowns are discarded. The cluster means are 
-        then computed and if any pair is separated by less than minJump, the smaller of the clusters of that 
+        grouped into clusters no larger than the specified diameter using the QT algorithm (i.e., a ball of the
+        specified diameter is used to find the largest cluster. The points in this cluster are removed and the
+        process is repeated). Clusters with fewer than minSize ringdowns are discarded. The cluster means are
+        then computed and if any pair is separated by less than minJump, the smaller of the clusters of that
         pair is deleted. This is repeated until all cluster means are at least minJump apart.
             We now need to assign integer FSR indices to the clusters. This is done by computing a local estimate
-        of the FSR and assigning an integer 'jump' to the difference between the cluster means by rounding 
-        the ratio of the difference to the local FSR to the nearest integer. The local estimate of the FSR is 
+        of the FSR and assigning an integer 'jump' to the difference between the cluster means by rounding
+        the ratio of the difference to the local FSR to the nearest integer. The local estimate of the FSR is
         defined as the minimum difference between the cluster means in a collection of 2*localJumpEstimatorHalfwidth+1
         groups surrounding the location of interest. The assignment of FSRs is placed in self.fsr_indices."""
         def clusterAgg(xx):
@@ -1422,7 +1422,7 @@ class RdfData(object):
                     dx[m-1] += dx[m]
                     dx = delete(dx,m)
                     good = delete(good,m)
-                else:    
+                else:
                     dx[m+1] += dx[m]
                     dx = delete(dx,m)
                     good = delete(good,m+1)
@@ -1442,7 +1442,7 @@ class RdfData(object):
             return groups
         self.sortBy(xColumn)
         self.groupBy([xColumn],clusterAgg)
-            
+
 ##  14 June 2010  added modified sigma filter named "outlierFilter"
     def sparse(self,maxPoints,width,height,xColumn,yColumn,sigmaThreshold=-1,outlierThreshold=-1):
         """Sparse the ringdown data by binning the data specified by "xColumn" and
@@ -1560,7 +1560,7 @@ class RdfData(object):
         nStart = len(self.indexVector)
         nEnd = sum([len(g) for g in self.groups])
         self.filterHistory.append(("sparseByVlaserFilter",nStart-nEnd,nEnd))
-        
+
     def calcGroupStats(self):
         self.evaluateGroups(["waveNumber","uncorrectedAbsorbance","waveNumberSetpoint","pztValue","ratio1","ratio2","wlmAngle","laserTemperature"])
         self.groupStats = {}
@@ -1587,7 +1587,7 @@ class RdfData(object):
                                    pzt_ensemble_offset = self.groupMeans["pztValue"][idx] - ensemblePzt,
                                    group_size = self.groupSizes[idx]
                                    )
-            
+
     def selectGroupStats(self, nameWaveNumList):
         """
         nameWaveNumList = [(name, waveNum), ...]
@@ -1600,7 +1600,7 @@ class RdfData(object):
             for key in closestGroupStats:
                 results[name+"_"+key] = closestGroupStats[key]
         return results
-    
+
     def calcSpectrumStats(self):
         ringdownsInSpectrum = unique(concatenate([s for s in self.groups]))
         ringdownsInSpectrum = ringdownsInSpectrum[self.uncorrectedAbsorbance[ringdownsInSpectrum] != 0.0]
@@ -1626,10 +1626,10 @@ class RdfData(object):
         s = self.groupMeans["pztValue"]
         self.spectrumStats["ss_group_pzt_slope"] = polyfit(self.groupMeans["waveNumber"], s, 1)[0]
         self.spectrumStats["ss_group_pzt_stddev"] = std(s)
-        
+
     def getSpectrumStats(self):
         return self.spectrumStats
-        
+
     def badRingdownFilter(self,fieldName,minVal=0.50,maxVal=20.0):
         """Remove entries whose "field" value lies outside the specified range"""
         def goodValue(x):
@@ -1677,7 +1677,7 @@ class Analysis(object):
         spectralLibrary = callerGlobals["spectralLibrary"]
         splineLibrary = callerGlobals["splineLibrary"]
         physicalConstants = callerGlobals["physicalConstants"]
-    
+
         if not isinstance(fnameOrConfig,CustomConfigObj):
             fnameOrConfig = readConfig(fnameOrConfig)
         self.config = fnameOrConfig
@@ -1694,7 +1694,7 @@ class Analysis(object):
         self.fitSequenceParameters = []
         section = "options"
         self.useVlaserOffsets = self.config.getboolean(section,"use virtual laser offsets", False)
-        
+
         section = "Region Fit Definitions"
         for k in range(self.config.getint(section,"number of sections")):
             self.regionStart.append(self.config.getfloat(section,"Start frequency_%d" % k))
@@ -1747,7 +1747,7 @@ class Analysis(object):
             self.fitSequenceParameters[k]["depDest"] = [int(d[1]) for d in depList]
             self.fitSequenceParameters[k]["depSlope"] = [float(d[2]) for d in depList]
             self.fitSequenceParameters[k]["depOffset"] = [float(d[3]) for d in depList]
-            
+
         # We now construct the model
         m = Model()
         m.setAttributes(x_center=self.centerFrequency)
@@ -1783,13 +1783,13 @@ class Analysis(object):
                 else:
                     raise ValueError("Unimplemented functional form: %s" % form)
         self.model = m
-        
+
     def __getstate__(self):
         """Remove self.config from deepcopy() dictionary to avoid errors"""
         odict = self.__dict__.copy()
         del odict['config']
         return odict
-        
+
     def setData(self,xx,yy,stdDev,vlaser):
         """Specify the data which are to be fitted. Only the points within the fit regions are used"""
         selected = zeros(shape(xx),bool_)
@@ -1802,7 +1802,7 @@ class Analysis(object):
             self.vlaser = vlaser[selected]
         else:
             self.vlaser = None
-            
+
     def processDeps(self,seqIndex,deps):
         dlist = []
         slist = []
@@ -1906,7 +1906,7 @@ class Analysis(object):
     def __call__(self,dList,initVals=None,deps=None):
         """Run the specified analysis on the RdfData object or on a list of RdfData objects.
         For a list of objects, all of the data are combined before analysis takes place.
-        We take into account the dependencies and initial values which override the defaults from 
+        We take into account the dependencies and initial values which override the defaults from
         the spectral library and .ini files.
         Returns "self", the Analysis object"""
         # print "Analysis %d call" % id(self)

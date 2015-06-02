@@ -21,7 +21,7 @@ except:
     from Host.Common.namedtuple import namedtuple
 
 from scipy.special import erf
-import SurveyorInstStatus as sis
+import Host.Common.SurveyorInstStatus as sis
 
 EARTH_RADIUS = 6378100
 DTR = pi/180.0

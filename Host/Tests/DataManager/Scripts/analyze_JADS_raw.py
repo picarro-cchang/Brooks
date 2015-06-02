@@ -58,7 +58,7 @@ class XSync(object):
         # The values of the variables which are actually measured at this timestamp are called the targetValues
         # All other variables required to do the crosstalk removal are calculated using linear interpolation from
         #  measurements made around the specified timestamp (bookending).
-        # 
+        #
         self.timestamp, value = current[name]
         nVar = len(indexByName)
         self.indexByName = indexByName
@@ -81,7 +81,7 @@ class XSync(object):
         self.ready = self.valueOk[self.valueNeeded].all()
         self.data = data
         self.new_data = new_data
-        
+
     def update(self, current, name, ignore=None):
         i = self.indexByName[name]
         timestamp, value = current[name]
@@ -107,7 +107,7 @@ class XSync(object):
                 self.valueOk[i] = True
         self.ready = self.valueOk[self.valueNeeded].all() or timestamp-self.timestamp > 1000*self.TIMEOUT
 
-# Cross-talk variable list 
+# Cross-talk variable list
 crossList = \
 [
  ("peak_1a", "species", [45,47]),
@@ -133,17 +133,17 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["chemdetect_inst"] = InstructionProcess()
     configFile = os.path.join(here,"..\..\..\InstrConfig\Calibration\InstrCal\ChemDetect\ChemDetect.ini")
     configPath = os.path.split(configFile)[0]
-    config = CustomConfigObj(configFile) 
+    config = CustomConfigObj(configFile)
     ChemDetect_FileName = config.get("Main", "ChemDetect_FileName") # Get the ChemDetect excel file name from the ini file
     print "ChemDetect_FileName = ", ChemDetect_FileName
     _PERSISTENT_["chemdetect_inst"].load_set_from_csv(os.path.join(configPath,ChemDetect_FileName))
                                                        # need to replace with self.instruction_path
-    _PERSISTENT_["ChemDetect_previous"] = 0.0 
-    
+    _PERSISTENT_["ChemDetect_previous"] = 0.0
+
     # Set up the resynchronizer
     _GLOBALS_["xProcessor"] = CrosstalkProcessor(crossList,"FORWARD1")
-        
-    
+
+
 REPORT_UPPER_LIMIT = 5000.0
 REPORT_LOWER_LIMIT = -5000.0
 
@@ -156,10 +156,10 @@ def clipReportData(value):
         return REPORT_LOWER_LIMIT
     else:
         return value
-        
+
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-    
+
 def apply2Linear(value,xform1,xform2):
     return applyLinear(applyLinear(value,xform1),xform2)
 
@@ -167,7 +167,7 @@ def protDivide(num,den):
     if den != 0:
         return num/den
     return 0
-    
+
 def expAverage(xavg,x,dt,tau):
     if xavg is None:
         xavg = x
@@ -207,8 +207,8 @@ def boxAverage(buffer,x,t,tau):
         # _NEW_DATA_["N2O_5min"] = boxAverage(_PERSISTENT_["average300"],n2o,now,300)
     # except:
         # pass
-                
-    try: # new ChemDetect section    
+
+    try: # new ChemDetect section
         Cor_res_CO2 = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_res_CO2']
         Cor_res_H2O = _PERSISTENT_["chemdetect_inst"].current_var_values['Cor_res_H2O']
         _NEW_DATA_["res2"] = _DATA_["res"] - Cor_res_CO2*_NEW_DATA_["CO2"] - Cor_res_H2O*_NEW_DATA_["H2O"]
@@ -217,12 +217,12 @@ def boxAverage(buffer,x,t,tau):
 
         res2_fit = a0_res2 + _NEW_DATA_["N2O_raw"] * a1_res2
         _NEW_DATA_["res2_diff"] = _NEW_DATA_["res2"] - res2_fit
-        _NEW_DATA_["res2_a1"] = (_NEW_DATA_["res2"] - a0_res2) / _NEW_DATA_["N2O_raw"]           
+        _NEW_DATA_["res2_a1"] = (_NEW_DATA_["res2"] - a0_res2) / _NEW_DATA_["N2O_raw"]
     except:
         pass
-                
-                
-    try:    
+
+
+    try:
         if _PERIPH_INTRF_:
             try:
                 interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
@@ -233,16 +233,16 @@ def boxAverage(buffer,x,t,tau):
                 print "%r" % err
     except:
         pass
-            
+
     for k in _DATA_.keys():
         _REPORT_[k] = _DATA_[k]
-    
+
     for k in _NEW_DATA_.keys():
         if k.startswith("Delta"):
             _REPORT_[k] = clipReportData(_NEW_DATA_[k])
-        else:    
+        else:
             _REPORT_[k] = _NEW_DATA_[k]
-        
+
 #max_adjust = 1.0e-4
 max_adjust = 1.0e-5
 n2o_gain = 0.2
@@ -266,18 +266,18 @@ else:
             newOffset0 = _FREQ_CONV_.getWlmOffset(1) + n2o_adjust
             _PERSISTENT_["wlm1_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(1,float(newOffset0))
-            #print "New N2O (virtual laser 1) offset: %.5f" % newOffset0 
+            #print "New N2O (virtual laser 1) offset: %.5f" % newOffset0
         except:
             pass
             #print "No new N2O (virtual laser 1) offset"
     if _DATA_["species"] in [2,3]: # Update the offset for virtual laser 5
         try:
             h2o_adjust = _DATA_["h2o_adjust"]
-            h2o_adjust = min(max_adjust,max(-max_adjust,h2o_adjust))           
+            h2o_adjust = min(max_adjust,max(-max_adjust,h2o_adjust))
             newOffset0 = _FREQ_CONV_.getWlmOffset(5) + h2o_adjust
             _PERSISTENT_["wlm5_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(5,float(newOffset0))
-            #print "New H2O (virtual laser 5) offset: %.5f" % newOffset5 
+            #print "New H2O (virtual laser 5) offset: %.5f" % newOffset5
         except:
             pass
             #print "No new H2O (virtual laser 5) offset"
@@ -289,7 +289,7 @@ else:
             newOffset0 = _FREQ_CONV_.getWlmOffset(7) + ch4_adjust
             _PERSISTENT_["wlm7_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(7,float(newOffset0))
-            #print "New CH4 (virtual laser 7) offset: %.5f" % newOffset0 
+            #print "New CH4 (virtual laser 7) offset: %.5f" % newOffset0
         except:
             pass
             #print "No new CH4 (virtual laser 7) offset"
@@ -297,19 +297,19 @@ else:
 _REPORT_["wlm1_offset"] = _NEW_DATA_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
 _REPORT_["wlm5_offset"] = _NEW_DATA_["wlm5_offset"] = _PERSISTENT_["wlm5_offset"]
 _REPORT_["wlm7_offset"] = _NEW_DATA_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"]
-    
-    
+
+
 # Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
 # _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
 # for colname in _OLD_DATA_:    #  new ChemDetect section
      # _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _OLD_DATA_[colname][-1].value
-     
-# for colname in _NEW_DATA_:    
+
+# for colname in _NEW_DATA_:
      # _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _NEW_DATA_[colname]
-     
+
 # if _OLD_DATA_["species"][-1].value == 47:
   # _PERSISTENT_["chemdetect_inst"].process_set()
-  
+
   # if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
      # print "WARNING: ChemDetect Status is RED"
 
@@ -319,16 +319,16 @@ _REPORT_["wlm7_offset"] = _NEW_DATA_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"
     # print ' '
     # print 'N2O_raw = ', _NEW_DATA_["N2O_raw"]
     # print 'ChemDetect: NOTOK_res2         = ', _PERSISTENT_["chemdetect_inst"].current_var_values['NOTOK_res2']
-    
+
     # if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
        # _REPORT_["ChemDetect"] = 1.0  # BAD data
     # else:
-       # _REPORT_["ChemDetect"] = 0.0  # Good data 
+       # _REPORT_["ChemDetect"] = 0.0  # Good data
   # else:
     # #_REPORT_["ChemDetect"] = -1.0  ## N/A due to non-ch4 data
     # _REPORT_["ChemDetect"] = _PERSISTENT_["ChemDetect_previous"]
 
-  # print "_REPORT_[ChemDetect] = ", _REPORT_["ChemDetect"]    
+  # print "_REPORT_[ChemDetect] = ", _REPORT_["ChemDetect"]
   # _PERSISTENT_["ChemDetect_previous"] = _REPORT_["ChemDetect"]
 
 xp = _GLOBALS_["xProcessor"]

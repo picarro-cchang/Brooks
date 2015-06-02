@@ -20,7 +20,7 @@ from numpy.dual import *
 from ctypes import *
 import threading
 import time
-from configobj import ConfigObj
+from Host.Common.configobj import ConfigObj
 
 class Bunch(object):
     """ This class is used to group together a collection as a single object, so that they may be accessed as attributes of that object"""
@@ -58,7 +58,7 @@ def polyFitEvaluator(coeffs,cen=0,scale=1):
 # Routines for manipulating cubic B-splines defined on a regular unit-spaced grid
 
 def bspEval(p0,coeffs,x):
-    """Evaluate the sum of polyval(p0,x) and the spline defined by coefficients "coeffs" 
+    """Evaluate the sum of polyval(p0,x) and the spline defined by coefficients "coeffs"
        at the position "x" """
     nc = len(coeffs)
     y = polyval(p0,x)
@@ -132,7 +132,7 @@ def bspInverse(p0,coeffs,y):
     x0 = arange(1,len(coeffs)-1,dtype='d')
     # Evaluate spline + linear polynomial at the knots
     ygrid = polyval(p0,x0) + (coeffs[:-2] + 4*coeffs[1:-1] + coeffs[2:])/6.0
-    # Check for monotonicity within the range of values at which inverse 
+    # Check for monotonicity within the range of values at which inverse
     #  interpolation is performed
     ymin, ymax = y.min(), y.max()
     index = arange(len(ygrid))
@@ -172,12 +172,12 @@ class BspInterp(object):
         self.N = N
         self.coeffs = zeros(N+4,'d')
         self.weights = ones(N+4,'d')
-        
+
     def eval(self,x):
         return bspEval([0],self.coeffs,x+1.0)
-        
+
     def seqUpdate(self,x,y,relax):
-        """Update the coefficients of a B-spline so that it better interpolates 
+        """Update the coefficients of a B-spline so that it better interpolates
         the points (x,y). The points are processed sequentially, and the residual
         from a point is used for the next. A relaxation factor relax is used in the
         updating."""
@@ -416,7 +416,7 @@ class NoWlmFile(object):
             comps = line.split()
             for i in range(self.ncols):
                 self.data[i].append(float(comps[i]))
-                
+
 class AutoCal(object):
     # Calibration requires us to store:
     # Laser calibration constants which map laser temperature to laser wavenumber
@@ -434,9 +434,9 @@ class AutoCal(object):
         self.waveNumberMeasured = None
         self.ignoreSpline = False
         self.tempOffset = 0.0
-        
+
     def loadFromWlmFile(self,wlmFile,dTheta = 0.05,wMin = None,wMax = None):
-        # Construct an Autocal object from a WlmFile object based on measured data which lie within the 
+        # Construct an Autocal object from a WlmFile object based on measured data which lie within the
         #  wavenumber range wMin to wMax
         self.lock.acquire()
         try:
@@ -481,12 +481,12 @@ class AutoCal(object):
             # Temperature sensitivity of etalon
             self.wlmTempSensitivity = -0.185 * (mean(wlmFile.WaveNumber[window])/6158.0)# radians/degC
             self.autocalStatus = 0
-        finally:    
+        finally:
             self.lock.release()
         return self
 
     def loadFromEepromDict(self,eepromDict,dTheta,wMin,wMax):
-        # Construct an Autocal object from a Eeprom dictionary based on measured data which lie within the 
+        # Construct an Autocal object from a Eeprom dictionary based on measured data which lie within the
         #  wavenumber range wMin to wMax
         self.lock.acquire()
         try:
@@ -526,18 +526,18 @@ class AutoCal(object):
             # Temperature sensitivity of etalon
             self.wlmTempSensitivity = -0.185 * (mean(waveNumber[window])/6158.0)# radians/degC
             self.autocalStatus = 0
-        finally:    
+        finally:
             self.lock.release()
         return self
-    
+
     def loadFromIni(self,ini,vLaserNum):
         """Fill up the AutoCal structure based on the information in the .ini file
         using the specified "vLaserNum" to indicate which virtual laser (1-origin) is involved.
-        The INI file must have valid ACTUAL_LASER and LASER_MAP sections as well as the 
+        The INI file must have valid ACTUAL_LASER and LASER_MAP sections as well as the
         VIRTUAL_PARAMS, VIRTUAL_CURRENT and VIRTUAL_ORIGINAL sections for the specified
         vLaserNum. If the VIRTUAL_* sections are all missing, this returns None indicating
         that the specified virtual laser is absent. Otherwise, an exception is raised."""
-        
+
         def fetchCoeffs(sec,prefix):
             # Fetches coefficients from a section of an INI file into a list
             coeffs = []
@@ -549,7 +549,7 @@ class AutoCal(object):
                 except:
                     break
             return coeffs
-        
+
         self.lock.acquire()
         try:
             paramSec = "VIRTUAL_PARAMS_%d" % vLaserNum
@@ -576,7 +576,7 @@ class AutoCal(object):
             scale = float(ini[aLaserSec]["WAVENUM_SCALE"])
             coeffs = array(fetchCoeffs(ini[aLaserSec],"W2T_"))
             # Function w2t is defined here so that changes in coeffs, cen and scale before self.waveNumber2LaserTemp
-            #  is called do not affect its value. However, we do want self.tempOffset to be evaluated when 
+            #  is called do not affect its value. However, we do want self.tempOffset to be evaluated when
             #  self.waveNumber2LaserTemp is invoked.
             w2t = polyFitEvaluator(coeffs,cen,scale)
             self.waveNumber2LaserTemp = lambda W: w2t(W) + self.tempOffset
@@ -585,8 +585,8 @@ class AutoCal(object):
             scale = float(ini[aLaserSec]["TEMP_SCALE"])
             coeffs = array(fetchCoeffs(ini[aLaserSec],"T2W_"))
             # Function t2w is defined here so that changes in coeffs, cen and scale before self.laserTemp2WaveNumber
-            #  is called do not affect its value. However, we do want self.tempOffset to be evaluated when 
-            #  self.laserTemp2WaveNumber is invoked.            
+            #  is called do not affect its value. However, we do want self.tempOffset to be evaluated when
+            #  self.laserTemp2WaveNumber is invoked.
             t2w = polyFitEvaluator(coeffs,cen,scale)
             self.laserTemp2WaveNumber = lambda T: t2w(T - self.tempOffset)
 
@@ -619,10 +619,10 @@ class AutoCal(object):
             return self
         finally:
             self.lock.release()
-    
+
     def updateIni(self,ini,vLaserNum):
-        """Update (and possibly create) sections and keys in "ini" to describe the current 
-        AutoCal object, using the specified "vLaserNum" to indicate which virtual laser 
+        """Update (and possibly create) sections and keys in "ini" to describe the current
+        AutoCal object, using the specified "vLaserNum" to indicate which virtual laser
         (1-origin) is involved"""
         self.lock.acquire()
         try:
@@ -660,7 +660,7 @@ class AutoCal(object):
             ini[currentSec] = {}
             for i in range(len(self.coeffs)):
                 ini[currentSec]["COEFF%d" % i] = self.coeffs[i]
-            
+
             ini[originalSec] = {}
             for i in range(len(self.coeffs)):
                 ini[originalSec]["COEFF%d" % i] = self.coeffsOrig[i]
@@ -677,14 +677,14 @@ class AutoCal(object):
         try:
             x = (thetaCal-self.thetaBase)/self.dTheta
             if self.ignoreSpline:
-                return polyval(self.sLinear,x)            
+                return polyval(self.sLinear,x)
             else:
                 return bspEval(self.sLinear,self.coeffs,x)
         finally:
             self.lock.release()
 
     def thetaCalAndLaserTemp2WaveNumber(self,thetaCal,laserTemp):
-        """Use laser temperature to place calibrated angles on the correct revolution and look up 
+        """Use laser temperature to place calibrated angles on the correct revolution and look up
         in current calibration to get wavenumbers"""
         self.lock.acquire()
         try:
@@ -694,7 +694,7 @@ class AutoCal(object):
             thetaCal += 2*pi*floor((thetaHat-thetaCal)/(2*pi)+0.5)
             x = (thetaCal-self.thetaBase)/self.dTheta
             if self.ignoreSpline:
-                return polyval(self.sLinear,x)            
+                return polyval(self.sLinear,x)
             else:
                 return bspEval(self.sLinear,self.coeffs,x)
         finally:
@@ -723,7 +723,7 @@ class AutoCal(object):
     def waveNumber2ThetaCal(self,waveNumbers):
         """Look up current calibration to find WLM angle for a given wavenumber"""
         self.lock.acquire()
-        try: 
+        try:
             if self.ignoreSpline:
                 result = (waveNumbers-self.sLinear[1])/self.sLinear[0]
             else:
@@ -750,7 +750,7 @@ class AutoCal(object):
                        do not update the calibration
         """
         self.lock.acquire()
-        try: 
+        try:
             x = (thetaCal-self.thetaBase)/self.dTheta
             currentWaveNumbers = bspEval(self.sLinear,self.coeffs,x)
             res = waveNumbers - currentWaveNumbers
@@ -800,7 +800,7 @@ class AutoCal(object):
     def setOffset(self,offset):
         """Apply a spectroscopically determined wavelength monitor offset."""
         self.lock.acquire()
-        try: 
+        try:
             self.offset = offset
             self.sLinear = self.sLinear0 + array([0.0,self.offset])
         finally:
@@ -809,15 +809,15 @@ class AutoCal(object):
     def getOffset(self):
         """Returns the current value of the offset."""
         self.lock.acquire()
-        try: 
+        try:
             return self.offset
         finally:
             self.lock.release()
-            
+
     def setTempOffset(self,offset):
         """Apply a spectroscopically determined laser temp offset."""
         self.lock.acquire()
-        try: 
+        try:
             self.tempOffset = offset
         finally:
             self.lock.release()
@@ -825,7 +825,7 @@ class AutoCal(object):
     def getTempOffset(self):
         """Returns the current value of the temp offset."""
         self.lock.acquire()
-        try: 
+        try:
             return self.tempOffset
         finally:
             self.lock.release()
@@ -836,7 +836,7 @@ class AutoCal(object):
         waveNumber    wavenumber to which it corresponds
         relax         relaxation parameter for update"""
         self.lock.acquire()
-        try: 
+        try:
             x = (thetaCal-self.thetaBase)/self.dTheta
             if self.ignoreSpline:
                 currentWaveNumber = polyval(self.sLinear,asarray([x]))[0]
@@ -847,7 +847,7 @@ class AutoCal(object):
             offset = self.sLinear[1] - self.sLinear0[1]
         finally:
             self.lock.release()
-    
+
 if __name__ == "__main__":
     from pylab import *
     # Check inverse interpolation via a linear function
@@ -882,7 +882,7 @@ if __name__ == "__main__":
     target = array([-30.0,-40.0,-19.0,-57.3])
     xx = bspInverse([-5,0],coeffs,target)
     assert allclose(bspEval([-5,0],coeffs,xx[0]),target)
-    
+
     w = WlmFile(file("../../Utilities/Laser_818028_CH4.wlm","r"))
     a = AutoCal()
     a.loadFromWlmFile(w)
@@ -892,5 +892,3 @@ if __name__ == "__main__":
     a.updateIni(ini,2)
     ini.filename = "../../Utilities/newfoo.ini"
     ini.write()
-    
-

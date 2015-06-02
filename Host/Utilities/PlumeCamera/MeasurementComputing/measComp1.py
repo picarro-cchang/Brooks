@@ -3,7 +3,7 @@ from Host.Common.timestamp import getTimestamp
 import time
 import numpy as np
 import pylab as pl
-from MeasComp import *
+from Host.Utilities.PlumeCamera.MeasurementComputing.MeasComp import *
 
 if __name__ == "__main__":
     BoardNum = 0

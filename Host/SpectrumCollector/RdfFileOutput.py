@@ -24,7 +24,7 @@ SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_
 
 def work(parentPid, queue):
     """Function run within a separate process to save spectrum files and submit them for archiving
-    
+
     Args:
         parentPid: Process ID of parent. This process terminates if the parent dies.
         queue: Queue holding commands and data to process. Each entry consists of a dictionary
@@ -34,10 +34,10 @@ def work(parentPid, queue):
     from tables import Float32Col, Float64Col, Int16Col, Int32Col, Int64Col
     from tables import UInt16Col, UInt32Col, UInt64Col
     import psutil
-    
+
     def fillRdfTables(fileName, spectraInScheme, attrs=None):
         """Transfer data from spectraInScheme to tables in an HDF5 output file.
-    
+
         Args:
             fileName: Name of HDF5 file to receive spectra
             spectraInScheme: This is a list of dictionaries, one for each spectrum. Each spectrum consists
@@ -54,7 +54,7 @@ def work(parentPid, queue):
                     setattr(hdf5Handle.root._v_attrs, a, attrs[a])
             # Lookup table giving pyTables column generation function keyed
             # by the numpy dtype.name
-            colByName = dict(float32=Float32Col, float64=Float64Col, 
+            colByName = dict(float32=Float32Col, float64=Float64Col,
                              int16=Int16Col, int32=Int32Col, int64=Int64Col,
                              uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
             # We make HDF5 tables and define the columns needed in these tables
@@ -66,7 +66,7 @@ def work(parentPid, queue):
                     if len(spectTableData) > 0:
                         keys, values = zip(*sorted(spectTableData.items()))
                         if tableName not in tableDict:
-                            # We are encountering this table for the first time, so we 
+                            # We are encountering this table for the first time, so we
                             #  need to build up colDict whose keys are the column names and
                             #  whose values are the subclasses of Col used by pytables to
                             #  define the HDF5 column. These are retrieved from colByName.
@@ -87,11 +87,11 @@ def work(parentPid, queue):
                         table.flush()
         finally:
             hdf5Handle.close()
-            
+
     # Here follows the main loop of the process where commands are dispatched
     while True:
         try:
-            req = queue.get(timeout=1)        
+            req = queue.get(timeout=1)
             if req['cmd'] == 'stop':
                 break
             elif req['cmd'] == 'writeFile':
@@ -111,31 +111,31 @@ class WriterProcess(object):
         self.cmdQueue = multiprocessing.Queue()
         self.processHandle = multiprocessing.Process(target=work, args=(os.getpid(), self.cmdQueue,))
         self.numberSubmitted = 0
-        
+
     def start(self):
         """Delegated to handle method to start process
         """
         self.processHandle.start()
-        
+
     def submit(self, fileName, spectraInScheme, attrs, auxSpectrumFile):
         """Submit a set of spectra for writing out to a file and archiving
-        
+
         Args:
             fileName: Name of HDF5 file to write the spectrum
             spectraInScheme: List of spectra, each of which is a dictionary containing numpy arrays
             attrs: Attributes to be written as metadata in the HDF5 file
             auxSpectrumFile: If not None, the spectrum file is also copied to this location
         """
-        req = dict(cmd='writeFile', fileName=fileName, spectraInScheme=spectraInScheme, 
+        req = dict(cmd='writeFile', fileName=fileName, spectraInScheme=spectraInScheme,
                    attrs=attrs, auxSpectrumFile=auxSpectrumFile)
         self.numberSubmitted += 1
         self.cmdQueue.put(req)
-        
+
     def requestTermination(self):
         """Request that the process terminates by enqueueing stop command
         """
         self.cmdQueue.put(dict(cmd='stop'))
-    
+
 class WriterManager(object):
     """Manages a collection of writer processes, killing each after it has done maxJobs jobs"""
     def __init__(self, maxJobs=10):
@@ -143,13 +143,13 @@ class WriterManager(object):
         self.lock = threading.Lock()
         self.maxJobs = maxJobs
         self.newWriterNeeded = True
-        
+
     def submit(self, *args, **kwargs):
         """Submit a request to write out spectra, delegated to underlying WriterProcess.
-        
+
         This also keeps track of the active writers and starts up new ones as needed.
         """
-        self.lock.acquire()       
+        self.lock.acquire()
         try:
             self.writers = [w for w in self.writers if w.processHandle.is_alive()]
             if self.newWriterNeeded:
@@ -161,10 +161,10 @@ class WriterManager(object):
             writer.submit(*args, **kwargs)
             if writer.numberSubmitted >= self.maxJobs:
                 writer.requestTermination()
-                self.newWriterNeeded = True                
+                self.newWriterNeeded = True
         finally:
             self.lock.release()
-        
+
 writerManager = WriterManager()
 
 def writeSpectrumFile(fileName, spectraInScheme, attrs, auxSpectrumFile):

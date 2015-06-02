@@ -38,11 +38,11 @@ class MyFrame(wx.Frame):
         self.t = arange(0,5,self.dt)
         self.x = sin(2*pi*self.t)
 
-        # Extents of data sequence: 
+        # Extents of data sequence:
         self.i_min = 0
         self.i_max = len(self.t)
 
-        # Size of plot window:       
+        # Size of plot window:
         self.i_window = 100
 
         # Indices of data interval to be plotted:
@@ -67,7 +67,7 @@ class MyFrame(wx.Frame):
         self.axes.set_ylim((min(self.x[self.i_start:self.i_end]),
                             max(self.x[self.i_start:self.i_end])))
 
-        # Redraw:                  
+        # Redraw:
         self.canvas.draw()
 
     def OnScrollEvt(self, event):

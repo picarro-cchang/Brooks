@@ -11,18 +11,18 @@ Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
 from os import system, makedirs
-from os.path import abspath, exists, join, split 
+from os.path import abspath, exists, join, split
 from _winreg import ConnectRegistry, SetValueEx, CloseKey, OpenKey
 from _winreg import KEY_WRITE, REG_SZ, HKEY_LOCAL_MACHINE
 from shutil import move
 from glob import glob
-from CMOS import CMOS
+from Host.Utilities.Restart.Standalone.CMOS import CMOS
 
 def moveWildToDir(src,dest):
     srcFiles = glob(src)
     for f in srcFiles:
         move(abspath(f),join(dest,split(f)[1]))
-    
+
 if __name__ == "__main__":
     src  = r"C:\Documents and Settings\picarro\Start Menu\Programs\Startup"
     dest = r"C:\Picarro\G2000\Log\DisabledStartup"
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         raise ValueError('Unrecognized BIOS, cannot continue')
     if not exists(dest): makedirs(dest)
     moveWildToDir(src + "\\*", dest)
-    
+
     year,month,day,hour,min,sec = cmos.getRTC()
     # Advance by 5 min
     min += 5
@@ -48,11 +48,10 @@ if __name__ == "__main__":
     print "Restarting at %2d:%02d:%02d" % (hour,min,sec)
     aReg = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
     aKey = OpenKey(aReg, r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", 0, KEY_WRITE)
-    try:   
-        SetValueEx(aKey,"MyNewKey",0, REG_SZ, r"c:\picarro\G2000\HostExe\restart2.bat") 
-    except EnvironmentError:                                          
+    try:
+        SetValueEx(aKey,"MyNewKey",0, REG_SZ, r"c:\picarro\G2000\HostExe\restart2.bat")
+    except EnvironmentError:
         print "Encountered problems writing into the Registry..."
     CloseKey(aKey)
     CloseKey(aReg)
     system('shutdown -r -t 5 -c "Picarro analyzer reset (phase 1 of 3)"')
-    

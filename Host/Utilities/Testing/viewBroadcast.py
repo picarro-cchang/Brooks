@@ -16,7 +16,7 @@ from Host.Common import AppStatus
 
 def Log(msg):
     print msg
-    
+
 class DataManagerListeners(object):
     def __init__(self):
         self.measSystemQueue = Queue.Queue(0)
@@ -25,18 +25,18 @@ class DataManagerListeners(object):
         self.measSystemListener = None
         self.sensorListener = None
         self.instMgrListener = None
-        
+
     def _MeasDataFilter(self, obj):
         measData = MeasData()
         measData.ImportPickleDict(obj)
         return (1, timestamp.getTimestamp(), measData)
-        
+
     def _SensorFilter(self, obj):
         return (2, timestamp.getTimestamp(), ctypesToDict(obj))
-        
+
     def _InstMgrStatusFilter(self, obj):
         return (3, timestamp.getTimestamp(), ctypesToDict(obj))
-        
+
     def run(self):
         self.measSystemListener = Listener(self.measSystemQueue,
                                          BROADCAST_PORT_MEAS_SYSTEM,
@@ -60,7 +60,7 @@ class DataManagerListeners(object):
         self.measSystemListener.stop()
         self.sensorListener.stop()
         self.instMgrListener.stop()
-        
+
 if __name__ == "__main__":
     dm = DataManagerListeners()
     dm.run()

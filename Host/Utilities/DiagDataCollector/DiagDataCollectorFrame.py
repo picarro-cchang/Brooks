@@ -11,7 +11,7 @@ class DiagDataCollectorFrame(wx.Frame):
         self.SetTitle("CRDS Diagnostic Data Collector")
         self.SetBackgroundColour("#E0FFFF")
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
-        
+
         self.labelStartDate = wx.StaticText(self, -1, "Start Date/Time")
         self.ctrlStartDate = wx.DatePickerCtrl(self, -1, style = wx.DP_DROPDOWN)
         self.spinButtonStartTime = wx.SpinButton(self, -1, size=(17,22), style=wx.SP_VERTICAL)
@@ -23,15 +23,15 @@ class DiagDataCollectorFrame(wx.Frame):
         #self.labelEndDate = wx.StaticText(self, -1, "End Date/Time")
         #self.ctrlEndDate = wx.DatePickerCtrl(self, -1, style = wx.DP_DROPDOWN)
         #self.spinButtonEndTime = wx.SpinButton(self, -1, size=(17,22), style=wx.SP_VERTICAL)
-        #self.ctrlEndTime = TimeCtrl(self, -1, fmt24hr=True, spinButton=self.spinButtonEndTime)  
+        #self.ctrlEndTime = TimeCtrl(self, -1, fmt24hr=True, spinButton=self.spinButtonEndTime)
         #self.ctrlEndTime.SetValue(datetime.strftime(datetime.now(), "%H:%M:%S"))
 
         self.textCtrlMsg = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH2)
         self.textCtrlMsg.SetMinSize((305, 50))
-        
+
         self.buttonGetFile = wx.Button(self, -1, "Retrieve Diagnostic Data File", style=wx.BU_EXACTFIT)
         self.buttonGetFile.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.__do_layout()
 
     def __do_layout(self):

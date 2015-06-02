@@ -3,7 +3,7 @@ APP_NAME = "BuildStation"
 import types
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR
 from Host.autogen import interface
 
 Driver = CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,APP_NAME, IsDontCareConnection = False)

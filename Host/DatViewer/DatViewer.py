@@ -192,7 +192,7 @@ class FigureInteraction(object):
     @checkLock
     def isActive(self):
         return self._active
-        
+
     @checkLock
     def onEnterFigure(self, event):
         w = wx.Window.FindFocus()
@@ -799,7 +799,7 @@ class Plot2D(HasTraits):
         for l in labels:
             l.set(rotation=0, fontsize=10)
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.tryCanvasDraw()    
+            self.tryCanvasDraw()
         self.lock.release()
         return handles
 
@@ -807,7 +807,7 @@ class Plot2D(HasTraits):
         self.lock.acquire()
         handle = self.axes.text(*a, **k)
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.tryCanvasDraw()    
+            self.tryCanvasDraw()
         self.lock.release()
         return handle
 
@@ -817,7 +817,7 @@ class Plot2D(HasTraits):
         if self.autoscaleOnUpdate:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.tryCanvasDraw()    
+            self.tryCanvasDraw()
         self.lock.release()
 
     def updateTimeSeries(self, handle, newX, newY, linkedPlots=None):
@@ -833,13 +833,13 @@ class Plot2D(HasTraits):
         if self.autoscaleOnUpdate:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.tryCanvasDraw()    
+            self.tryCanvasDraw()
         self.lock.release()
 
     def redraw(self):
         self.lock.acquire()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.tryCanvasDraw()    
+            self.tryCanvasDraw()
         self.lock.release()
 
     def tryCanvasDraw(self):
@@ -908,7 +908,7 @@ class XyViewer(HasTraits):
         self.plot.axes.set_ylim((self.yMin, self.yMax))
         self.plot.axes.set_xlabel(self.xLabel)
         self.plot.axes.set_ylabel(self.yLabel)
-    
+
     def notify(self, ax):
         self.xLim = ax.get_xlim()
         self.yLim = ax.get_ylim()
@@ -1002,7 +1002,7 @@ class DatViewer(HasTraits):
             for h in self.dataHandles:
                 h.set_marker('None')
                 h.set_linestyle('-')
-        
+
         if any(boxsel):
             self.mean = oldSum(self.yData[0][boxsel]) / sum(boxsel)
             self.stdDev = sqrt(oldSum((self.yData[0][boxsel] - self.mean) ** 2) / sum(boxsel))
@@ -1161,7 +1161,7 @@ class DatViewer(HasTraits):
 
     def _showPoints_changed(self):
         self.notify(self.plot.axes)
-        
+
     def _doAverage_fired(self):
         # TODO: is this ever called when the spectrum ID dropdown is displayed?
         #       If so, logic needs to be modifed so it is like _varName_changed().
@@ -1172,7 +1172,7 @@ class DatViewer(HasTraits):
                 dateTime = array([unixTime(int(t)) for t in self.table.col("timestamp")])
             except:
                 dateTime = array([unixTime(int(t)) for t in self.table.col("time")])
-            
+
         values = self.table.col(self.varName)
         values = eval(self.transform)(values)
         p = argsort(dateTime)
@@ -1186,7 +1186,7 @@ class DatViewer(HasTraits):
             fData = lfilter(fKernel, [1], values[p])[self.nAverage - 1:]
             self.plot.updateTimeSeries(self.dataHandles[0], fTime, fData)
         self.notify(self.plot.axes)
-            
+
     def getYDataAndLimInWindow(self):
         return self.table.col(self.varName)
 
@@ -1194,7 +1194,7 @@ class DatViewer(HasTraits):
 class Dat2h5(HasTraits):
     datFileName = CStr
     h5FileName = CStr
-    
+
     def fixed_width(self, text, width):
         start = 0
         result = []
@@ -1426,7 +1426,7 @@ class SeriesWindow(Window):
     resizable = CBool(True)
     parent = Any()
     xlimSet = CBool(False)
-    
+
     def __init__(self, *a, **k):
         Window.__init__(self, *a, **k)
         self.tz = k.get("tz", pytz.timezone("UTC"))
@@ -1645,7 +1645,7 @@ class AllanWindow(Window):
                 raise ValueError
             # Find conversion from points to a time axis
             slope, offset = polyfit(arange(n), xV.xData[0][xV.sel], 1)
-                
+
             npts = int(floor(log(n) / log(2)))
             av = AllanVar(int(npts))
             for y in xV.yData[0][xV.sel]:
@@ -2264,7 +2264,7 @@ class NotebookHandler(Handler):
                 d.ShowModal()
         else:
             d.Destroy()
-            
+
     def onSeries(self, info, nFrames):
         if not info.object.dataFile:
             wx.MessageBox("Please open or convert a file first")
@@ -2279,7 +2279,7 @@ class NotebookHandler(Handler):
 
     def onSeries2(self, info):
         return self.onSeries(info, 2)
-        
+
     def onSeries3(self, info):
         return self.onSeries(info, 3)
 
@@ -2291,7 +2291,7 @@ class NotebookHandler(Handler):
         window.set(dataFile=info.object.dataFile)
         window.traits_view.set(title=info.object.dataFile)
         window.edit_traits(view=window.traits_view, context=window.cDict)
-        
+
     def onAllanPlot(self, info):
         if not info.object.dataFile:
             wx.MessageBox("Please open or convert a file first")

@@ -38,7 +38,7 @@ class CoordinatorFrameGui(wx.Frame):
             self.textCtrlChangeSampleNum = None
         if self.useSeptum:
             self.changeSeptumButton = wx.Button(self.panel_1, -1, "Change Septum")
-        else:    
+        else:
             self.changeSeptumButton = None
         if self.hasPause:
             # Add a menu bar
@@ -50,14 +50,14 @@ class CoordinatorFrameGui(wx.Frame):
             menuItem.Append(self.idResume, "&Resume", "", wx.ITEM_NORMAL)
             self.frameMenubar.Append(menuItem, "&Control")
             self.SetMenuBar(self.frameMenubar)
-        
+
         self.paramLabelList = []
         self.paramTextCtrlList = []
         for idx in range(min(numDispParams, len(paramTupleList))):
             self.paramLabelList.append(wx.StaticText(self.panel_1, -1, paramTupleList[idx][1], style=wx.ALIGN_CENTRE))
             self.paramTextCtrlList.append(wx.TextCtrl(self.panel_1, -1, paramTupleList[idx][2], style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE))
             self.paramTextCtrlList[-1].SetEditable(False)
-        
+
         self.fileDataListCtrl = wx.ListCtrl(self.window_1_pane_1, wx.ID_ANY, style=wx.LC_REPORT|wx.LC_VRULES|wx.SUNKEN_BORDER)
         self.label_2 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Log")
         self.logTextCtrl = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "", style=wx.TE_MULTILINE)
@@ -69,14 +69,14 @@ class CoordinatorFrameGui(wx.Frame):
         self.__do_layout()
 
         self.Bind(wx.EVT_BUTTON, self.onNewFile, self.newFileButton)
-        
+
         if self.hasPause:
-            self.Bind(wx.EVT_MENU, self.onPause, id = self.idPause)        
+            self.Bind(wx.EVT_MENU, self.onPause, id = self.idPause)
             self.Bind(wx.EVT_MENU, self.onResume, id = self.idResume)
-        if self.hasSampleDescr:    
+        if self.hasSampleDescr:
             self.Bind(wx.EVT_BUTTON, self.onLoadSampleDescriptions, self.loadSampleDescrButton)
         if hasSampleNum:
-            self.Bind(wx.EVT_TEXT, self.onChangeSampleNum, self.textCtrlChangeSampleNum)        
+            self.Bind(wx.EVT_TEXT, self.onChangeSampleNum, self.textCtrlChangeSampleNum)
         if self.useSeptum:
             self.Bind(wx.EVT_BUTTON, self.onChangeSeptum, self.changeSeptumButton)
         self.Bind(wx.EVT_BUTTON, self.onManualButton, self.manualButton)
@@ -118,15 +118,15 @@ class CoordinatorFrameGui(wx.Frame):
             sizerParam = wx.BoxSizer(wx.VERTICAL)
             sizerParam.Add(self.paramLabelList[idx], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 10)
             sizerParam.Add(self.paramTextCtrlList[idx], 0, wx.ALL|wx.EXPAND, 10)
-            sizer_5.Add(sizerParam, 0, wx.EXPAND, 10) 
-        
+            sizer_5.Add(sizerParam, 0, wx.EXPAND, 10)
+
         if self.hasSampleDescr:
             sizer_5.Add(self.loadSampleDescrButton, 0, wx.LEFT|wx.TOP|wx.ALIGN_LEFT, 10)
-        if self.hasSampleNum:    
+        if self.hasSampleNum:
             sizerChangeSampleNum = wx.BoxSizer(wx.VERTICAL)
             sizerChangeSampleNum.Add(self.labelChangeSampleNum, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 10)
-            sizerChangeSampleNum.Add(self.textCtrlChangeSampleNum, 0, wx.ALL|wx.EXPAND, 10)            
-            sizer_5.Add(sizerChangeSampleNum, 0, wx.EXPAND, 10) 
+            sizerChangeSampleNum.Add(self.textCtrlChangeSampleNum, 0, wx.ALL|wx.EXPAND, 10)
+            sizer_5.Add(sizerChangeSampleNum, 0, wx.EXPAND, 10)
         if self.useSeptum:
             sizer_useSeptum = wx.BoxSizer(wx.HORIZONTAL)
             sizer_useSeptum.Add(self.changeSeptumButton, 0, wx.RIGHT|wx.ALIGN_RIGHT, 10)
@@ -162,7 +162,7 @@ class CoordinatorFrameGui(wx.Frame):
     def onResume(self, event): # wxGlade: CoordinatorFrameGui.<event_handler>
         print "Event handler `onResume' not implemented!"
         event.Skip()
-        
+
     def onLoadSampleDescriptions(self, event): # wxGlade: CoordinatorFrameGui.<event_handler>
         print "Event handler `onLoadSampleDescriptions' not implemented!"
         event.Skip()
@@ -174,7 +174,7 @@ class CoordinatorFrameGui(wx.Frame):
     def onChangeSampleNum(self, event): # wxGlade: CoordinatorFrameGui.<event_handler>
         print "Event handler `onChangeSampleNum' not implemented!"
         event.Skip()
-        
+
     def onManualButton(self, event): # wxGlade: CoordinatorFrameGui.<event_handler>
         print "Event handler `onManualButton' not implemented!"
         event.Skip()
@@ -258,6 +258,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 

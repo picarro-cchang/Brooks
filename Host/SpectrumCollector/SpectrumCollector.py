@@ -251,7 +251,7 @@ class SpectrumCollector(object):
 
                 if self.lastSchemeCount != schemeCount:
                     if self.lastSchemeCount >= 0:
-                        endOfSpectrum = True 
+                        endOfSpectrum = True
                         endOfScheme = True
                     self.lastSchemeCount = schemeCount
                 else:
@@ -259,10 +259,10 @@ class SpectrumCollector(object):
                     self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
                     self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable, None)
 
-                # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file), 
+                # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file),
                 #  we know a new SPECTRUM is coming and we have to process whatever we currently have.
                 if thisCount != lastCount:
-                    # We "push back" the last data point so that it is fetched again next time as part 
+                    # We "push back" the last data point so that it is fetched again next time as part
                     #  of the next spectrum
                     self.tempRdDataBuffer = rdData
                     endOfSpectrum = True
@@ -314,7 +314,7 @@ class SpectrumCollector(object):
             try:
                 rdData = self.rdQueue.get(True, timeToRetry)
                 self.emptyCount = 0
-            except Queue.Empty: 
+            except Queue.Empty:
                 rdData = None
                 self.emptyCount += 1
                 if time.time() - self.startWaitTime > timeout:
@@ -430,26 +430,26 @@ class SpectrumCollector(object):
         # Create HDF5 file
         numSchemes = len(self.schemesUsed)
         attrs = {}
-        
+
         if numSchemes == 1:
             scheme = self.schemesUsed.values()[0]
             if scheme is not None:
                 attrs["schemeFile"] = scheme[3]
                 attrs["modeName"] = scheme[0]
         else:
-            Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]), 
+            Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]),
                 Data=self.schemesUsed)
-            
+
         writeSpectrumFile(fileName, spectraInScheme, attrs, self.auxSpectrumFile)
         self.auxSpectrumFile = None
-            
+
 
     def archiveSpectrumFile(self, fileName, auxSpectrumFile):
         # Archive HDF5 file
         archiveThread = threading.Thread(target = self._archiveFile, args = (fileName, auxSpectrumFile))
         archiveThread.setDaemon(True)
         archiveThread.start()
-            
+
     def _archiveFile(self, streamPath, auxSpectrumFile):
         time.sleep(1.0)
         # Copy to auxiliary spectrum file and reset filename to empty

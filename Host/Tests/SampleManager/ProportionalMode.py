@@ -25,7 +25,10 @@
 # 06-11-06 ytsai   Created file
 # 12-30-09 alex    Modified code for G2000 platform
 
-import os, sys, time, getopt
+import os
+import sys
+import time
+import getopt
 from Host.autogen import interface
 from Host.SampleManager.SampleManager import *
 
@@ -38,9 +41,9 @@ class ProportionalMode(SampleManagerBaseMode):
     if (status & mask) == mask:
         return True
     self._clearStatus()
-    
+
     self._LPC_WritePressureSetpoint( self.operate_pressure_sp_torr )
-    
+
     # Check for terminate request. See terminate remarks in Sample Manager base class.
     if self._terminateCalls: return False
 
@@ -66,7 +69,7 @@ class ProportionalMode(SampleManagerBaseMode):
     step       = self.proportional_step
     try:
         iterations = deltapos/step
-        status = self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=2 ) 
+        status = self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=2 )
         if status==False:
           print "Step valve failed."
           return False
@@ -74,7 +77,7 @@ class ProportionalMode(SampleManagerBaseMode):
         pass
     self._LPC_SetValve( stepValve, targetpos )
     self._Sleep( 5 )
-    
+
     # Wait until pressure stabilize
     # setPoint = self._RPC_ReadPressureSetpoint()
     print "Waiting for pressure to stabilize"
@@ -85,7 +88,7 @@ class ProportionalMode(SampleManagerBaseMode):
       return False
     print "After pressure stabilization"
     # N.B. Assert SAMPLEMGR_STATUS_FLOW_STARTED to allow measurements to start
-    self._setStatus( SAMPLEMGR_STATUS_FLOW_STARTED ) 
+    self._setStatus( SAMPLEMGR_STATUS_FLOW_STARTED )
 
   def RPC_FlowStop(self):
     """STOP FLOW"""
@@ -126,7 +129,7 @@ class ProportionalMode(SampleManagerBaseMode):
     #self._LPC_OpenSolenoidValves( self.solenoid_valves )
     #self._setStatus( SAMPLEMGR_STATUS_PREPARED )
     self._LPC_StartSolenoidValveControl( 'SmScript', 'Solenoid3ValveControl', 'VALVES' )
-    
+
   def RPC_Purge(self):
     """PURGE"""
     self._setStatus( SAMPLEMGR_STATUS_PURGED, excl=True )

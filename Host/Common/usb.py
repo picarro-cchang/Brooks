@@ -1,19 +1,19 @@
 #!/usr/bin/python
 #
-# FILE:  
+# FILE:
 #   usb.py
 #
-# DESCRIPTION:                                                
+# DESCRIPTION:
 #   Python wrapper for libusb
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
+#
+# SEE ALSO:
+#   Specify any related information.
+#
 # HISTORY:
 #   07-May-2008  sze  Copied from silverstone project
 #
-#  Copyright (c) 2008 Picarro, Inc. All rights reserved 
-#                                                            
+#  Copyright (c) 2008 Picarro, Inc. All rights reserved
+#
 import sys
 from ctypes import _Pointer, create_string_buffer, c_char, c_char_p, c_int, c_ubyte, c_ushort, c_uint, c_ulong
 from ctypes import Structure, POINTER, c_void_p, cdll, byref
@@ -235,7 +235,7 @@ class usb_dev_handle(Structure):
 class LibUSB(object):
     def __init__(self):
         DLL_Path = ["libusb0.dll","/usr/lib/libusb-0.1.so.4"]
-        for p in DLL_Path:        
+        for p in DLL_Path:
             try:
                 self.usbDLL = cdll.LoadLibrary(p)
                 break

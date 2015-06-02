@@ -61,8 +61,8 @@ class test_RPCs(MockerTestCase):
         self.mocker.replay()
         SampleManager.RegisterRPCs.im_func(self.mock_SampleManager,obj)
 
-        
-        
+
+
 class test_initSampleManager(MockerTestCase):
     def setUp(self):
         self.mock_Log = self.mocker.replace('Host.Common.EventManagerProxy.Log')
@@ -71,13 +71,13 @@ class test_initSampleManager(MockerTestCase):
         self.mock_Listener = self.mocker.replace('Host.Common.Listener.Listener')
         self.mock_Queue = self.mocker.replace('Queue.Queue')
         self.mock_Thread = self.mocker.replace('threading.Thread')
-        
+
         # We do not expect any Log messages, so fail if they turn up
         self.mock_Log(ANY)
         self.mocker.call(lambda s: sys.stdout.write('LOG:: %s\n' % s))
         self.mocker.count(0,None)
         #
-        self.mock_Listener(None,BROADCAST_PORT_SENSORSTREAM,interface.SensorEntryType,ARGS,KWARGS)        
+        self.mock_Listener(None,BROADCAST_PORT_SENSORSTREAM,interface.SensorEntryType,ARGS,KWARGS)
         self.mock_Listener(ARGS,KWARGS)
         self.mocker.call(lambda *a,**k: sys.stdout.write('LISTENER:: %s, %s\n' % (a,k)))
         self.mocker.count(0,None)
@@ -85,8 +85,8 @@ class test_initSampleManager(MockerTestCase):
         self.mock_Thread(ARGS,KWARGS)
         self.mocker.call(lambda *a,**k: sys.stdout.write('THREAD:: %s, %s\n' % (a,k)))
         self.mocker.count(0,None)
-    
-        
+
+
     def test_StartThreads(self):
         """Test to see if sample manager starts up all threads"""
         sampleConfig = CustomConfigObj(["[DEFAULT_CONFIGS]","[MAIN]","Mode=ProportionalMode","[ProportionalMode]","script_filename=ProportionalMode"])
@@ -100,9 +100,9 @@ class test_initSampleManager(MockerTestCase):
         self.mocker.result(self.mock_Thread)
         self.mock_Thread.setDaemon(True)
         self.mocker.count(3)
-        
+
         self.mocker.replay()
         s = SampleManager("test.ini")
-    
+
 if __name__ == "__main__":
     main()

@@ -52,17 +52,17 @@ class ReadMemUsage(object):
         if differenceFound(currentList, newList):
             self.procList = newProcList
             self.createNewFile()
-        
+
     def createNewFile(self):
         self.cnt = 0
         filename = "MemLog-%s.dat" % (time.strftime("%Y%m%d-%H%M%S",time.localtime()))
         self.filepath = os.path.abspath(os.path.join(self.targetDir, filename))
         print "%s Created" % self.filepath
         self._writeHeader()
-        
+
     def _writeEntry(self, fp, string):
         fp.write((string[:self.colWidth-1]).ljust(self.colWidth))
-        
+
     def _writeHeader(self):
         fp = open(self.filepath, "a")
         self._writeEntry(fp, "timestamp")
@@ -71,7 +71,7 @@ class ReadMemUsage(object):
         fp.write("\n")
         fp.close()
         self.cnt += 1
-        
+
     def _writeData(self, dataDict):
         fp = open(self.filepath, "a")
         self._writeEntry(fp, dataDict["timestamp"])
@@ -79,7 +79,7 @@ class ReadMemUsage(object):
             self._writeEntry(fp, dataDict["%s_%d" % (p.name, p.pid)])
         fp.write("\n")
         fp.close()
-        self.cnt += 1 
+        self.cnt += 1
 
     def read(self):
         while True:
@@ -95,7 +95,7 @@ class ReadMemUsage(object):
             except Exception, errMsg:
                 print errMsg
             time.sleep(self.intervalS)
-        
+
 HELP_STRING = \
 """ ReadMemUsage.py [-c<FILENAME>] [-h|--help]
 
@@ -137,9 +137,8 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return (configFile)
-  
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     app = ReadMemUsage(configFile)
     app.read()
-    

@@ -13,11 +13,11 @@ import sys
 import time
 import serial
 import itertools
-import modbus
-import utils
-import defines as cst
+import Host.Utilities.ModbusIntrf.modbus as modbus
+import Host.Utilities.ModbusIntrf.utils as utils
+import Host.Utilities.ModbusIntrf.defines as cst
 import _winreg as winreg
-import modbus_rtu
+import Host.Utilities.ModbusIntrf.modbus_rtu as modbus_rtu
 
 def scanSerialPorts():
     """ Uses the Win32 registry to return an
@@ -35,13 +35,13 @@ def scanSerialPorts():
             yield str(val[1])
         except EnvironmentError:
             break
-            
+
 class ModbusIntrf(object):
     def __init__(self):
         # Search for Modbus interface with CM
         self.ser = None
         self.master = None
-        
+
     def searchSerPort(self):
         for p in scanSerialPorts():
             if self.ser:
@@ -62,7 +62,7 @@ class ModbusIntrf(object):
                 break
             except:
                 pass
-                
+
         if not self.master:
             if self.ser:
                 self.ser.close()
@@ -71,7 +71,7 @@ class ModbusIntrf(object):
         else:
             print "Costech Modbus interface found at %s" % (p)
             return p
-            
+
     def trigger(self):
         try:
             self.master.execute(1, cst.WRITE_SINGLE_REGISTER, 2100, output_value=1)
@@ -103,7 +103,6 @@ class ModbusIntrf(object):
             self.ser.close()
             self.ser = None
             raise
-            
+
 if __name__ == "__main__":
     m = ModbusIntrf()
-    

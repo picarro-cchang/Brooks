@@ -1,7 +1,7 @@
 #@+leo-ver=4-thin
 #@+node:stan.20080530002206.2:@thin AutosamplerConfig.py
 import wx
-import AutosamplerParameterDialog
+import Host.Coordinator.AutosamplerParameterDialog as AutosamplerParameterDialog
 from string import maketrans
 
 transtab = maketrans('\x91\x9b\x9d','\xba\xb1\xb5')
@@ -57,7 +57,7 @@ class Objects(object):
                         listType = classParams[i][1][-1]
                         p = lists.data[int(listType)].choices[int(p)]
                     elif paramName[0] != "&":
-                        units = classParams[i][1][-1] 
+                        units = classParams[i][1][-1]
                         if units not in classes.classes:
                             if units == 'E': units = ''
                             p = " ".join([p,units])
@@ -92,7 +92,7 @@ class Objects(object):
                                     paramsList.append(link)
                         objectList.append([o,paramsList])
                         hyperTargets[o] = paramsList
-                    else:    
+                    else:
                         objectList.append(o)
                 self.treeList.append([className,objectList])
             else:
@@ -117,7 +117,7 @@ class Classes(object):
                 self.classes[line[1:].strip()] = current
             else:
                 l = line.strip().split(";")
-                current.append((l[0],l[1:]))            
+                current.append((l[0],l[1:]))
 
 class Atoms(object):
     def __init__(self,fp):
@@ -134,7 +134,7 @@ class Atoms(object):
                 self.atoms[line[1:].strip()] = current
             else:
                 l = line.strip().split(";")
-                current.append((l[0],l[1:]))            
+                current.append((l[0],l[1:]))
 
     def setupChoices(self,objects,classes,lists):
         self.atomParamDict = {}

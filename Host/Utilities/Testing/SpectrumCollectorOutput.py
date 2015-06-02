@@ -14,11 +14,11 @@ from Host.Common import AppStatus
 
 def Log(msg):
     print msg
-    
+
 class SpectrumCollectorOutput(object):
     def __init__(self):
         self.spectQueue = Queue.Queue(0)
-        
+
     def listen(self):
         self.spectListener = Listener(self.spectQueue,
                                       BROADCAST_PORT_SPECTRUM_COLLECTOR,
@@ -34,9 +34,8 @@ class SpectrumCollectorOutput(object):
                 print "Spectrum Collector Output: %s - %s" % (0.001*(now-timevect.max()),
                 0.001*(now-timevect.min()),)
             time.sleep(0.05)
-            
+
 if __name__ == "__main__":
     f = SpectrumCollectorOutput()
     f.listen()
     f.run()
-    

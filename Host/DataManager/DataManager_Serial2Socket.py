@@ -2,7 +2,7 @@
 #
 """
 File Name: DataManager.py
-Purpose: Collect and compute data. Report the results to higher level interface modules (GUI, etc) 
+Purpose: Collect and compute data. Report the results to higher level interface modules (GUI, etc)
 
 File History:
     2006-12-19 russ  First official release
@@ -18,12 +18,12 @@ File History:
     2009-01-21 alex  Added pulse analyzer
     2009-04-30 alex  Added preserved time base feature for serial output
     2009-05-11 alex  Added more STATUS_MASK_SyncToggle_N flags so more than 4 periodic scripts can be run
-    2009-05-11 alex  Corrected the time stamp for broadcasting in _HandleScriptExecution() function. The current Data Manager 
-                     broadcasts fitter results with the actual data time, but broadcasts periodic script results with 
-                     script running time. This has be to changed for re-sync data for data alignment with the original data. 
-                     Data Manager needs to be modified so that when the script reports "time" in the output dictionary, 
-                     the reported time will be use for broadcasting. 
-                     If the script output doesn't contain "time" information, the script running time will be used 
+    2009-05-11 alex  Corrected the time stamp for broadcasting in _HandleScriptExecution() function. The current Data Manager
+                     broadcasts fitter results with the actual data time, but broadcasts periodic script results with
+                     script running time. This has be to changed for re-sync data for data alignment with the original data.
+                     Data Manager needs to be modified so that when the script reports "time" in the output dictionary,
+                     the reported time will be use for broadcasting.
+                     If the script output doesn't contain "time" information, the script running time will be used
                      (same as before). This modification affects both broadcasting and serial output.
     2009-08-08 alex  Allowed RPC_PulseAnalyzer_SetParam() to update the parameter values in DataManager.ini file
     2009-10-16 alex  Added an option to run DataManager without InstMgr
@@ -32,7 +32,7 @@ File History:
     2010-04-27 sze   Not having an analyzer for some data is now logged, rather than causing an exception.
     2010-05-05 alex  Create the RPC functions and measBuffer for Coordinator to retrieve conc data.
     2010-08-19 alex  Create the RPC functions and pulseBuffer for command interface to retrieve pulse data.
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -86,10 +86,10 @@ import traceback
 import string
 from inspect import isclass
 from collections import deque
-import ScriptRunner
+import Host.DataManager.ScriptRunner as ScriptRunner
 import heapq
 
-from PulseAnalyzer import PulseAnalyzer
+from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
 from Host.PeriphIntrf.PeriphIntrf import PeriphIntrf
 from Host.PeriphIntrf.RunSerial2Socket import RunSerial2Socket
@@ -118,7 +118,7 @@ EventManagerProxy_Init(APP_NAME)
 
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-    
+
 ####
 ## Some debugging/development helpers...
 ####
@@ -218,7 +218,7 @@ class MeasTuple(tuple):
             return self[1]
         elif name == "timestamp":
             return timestamp.unixTimeToTimestamp(self[0])
-            
+
 class DataManager(object):
     """Container class/structure for DataManager options."""
     class ConfigurationOptions(object):
@@ -237,7 +237,7 @@ class DataManager(object):
                 self.useSerial = cp.getboolean(_SERIAL_CONFIG_SECTION,"Enable",default=True)
             else:
                 self.useSerial = False
-                
+
             if self.useSerial:
                 self.serialPort = cp.get(_SERIAL_CONFIG_SECTION,"Port",default="COM1")
                 self.serialTimePreserved = cp.getboolean(_SERIAL_CONFIG_SECTION,"TimePreserved",default=False)
@@ -249,7 +249,7 @@ class DataManager(object):
                 self.serialBaud = cp.getint(_SERIAL_CONFIG_SECTION,"Baud",default=9600)
                 self.xonxoff = cp.getboolean(_SERIAL_CONFIG_SECTION,"XonXoff",default=False)
                 self.rtscts = cp.getboolean(_SERIAL_CONFIG_SECTION,"RtsCts",default=False)
-                
+
                 bits = cp.getint(_SERIAL_CONFIG_SECTION,"DataBits",default=8)
                 self.serialDataBits = (bits == 5) and serial.FIVEBITS or \
                                       (bits == 6) and serial.SIXBITS  or \
@@ -268,21 +268,21 @@ class DataManager(object):
                                     (p in ['o','O']) and [serial.PARITY_ODD]
                 if not self.serialParity: raise ValueError("Invalid parity string (N/E/O)")
                 self.serialParity = self.serialParity[0]
-                   
+
                 try:
                     self.pollChar = eval(cp.get(_SERIAL_CONFIG_SECTION,"PollChar"))
                     self.useSerialPoll = True
                 except KeyError:
                     self.useSerialPoll = False
-                    
+
                 self.ignoreBadKeys = cp.getboolean(_SERIAL_CONFIG_SECTION,"IgnoreBadKeys",default=True)
                 self.invalidValue = cp.getfloat(_SERIAL_CONFIG_SECTION,"InvalidValue",default=0.0)
-                
+
                 try:
                     self.emptyString = eval(cp.get(_SERIAL_CONFIG_SECTION,"EmptyString"))
                 except KeyError:
                     self.emptyString = "\r\n"
-                
+
                 self.serialSource = cp.get(_SERIAL_CONFIG_SECTION,"Source")
                 self.serialFormat = eval(cp.get(_SERIAL_CONFIG_SECTION,"Format"))
                 c = 0
@@ -296,7 +296,7 @@ class DataManager(object):
             if not FileExists(IniPath):
                 raise Exception("Configuration file '%s' not found." % IniPath)
             basePath = os.path.split(IniPath)[0]
-            cp = CustomConfigObj(IniPath) 
+            cp = CustomConfigObj(IniPath)
 
             self.AnalysisHistory = cp.getint(_MAIN_CONFIG_SECTION, "AnalysisHistory")
             self.ModeDefinitionPath = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "ModeDefinitionPath"))
@@ -315,7 +315,7 @@ class DataManager(object):
             else:
                 self.maketimetuple = time.gmtime
             self.fitterResequencerLength = cp.getint(_MAIN_CONFIG_SECTION, "FitterResequencerLength", 1)
-            
+
             # Get INI for peripheral interface
             try:
                 self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
@@ -324,14 +324,14 @@ class DataManager(object):
                     self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
                 except:
                     self.periphIntrfConfig = None
-                    
+
             self.enablePulseAnalyzer = False
-            if "PulseAnalyzer" in cp: 
+            if "PulseAnalyzer" in cp:
                 if cp.getboolean("PulseAnalyzer", "enabled", False):
                     self.enablePulseAnalyzer = True
 
             return cp
-        
+
     #endclass (ConfigurationOptions for DataManager)
 
     def __init__(self, ConfigPath, noInstMgr=False, options={}):
@@ -387,7 +387,7 @@ class DataManager(object):
                                      self._FitterFilter,
                                      retry = True,
                                      name = "Data manager fitter %d listener" % fitterIndex,logFunc = Log))
-        self.lastFitAnalyzed = 0        
+        self.lastFitAnalyzed = 0
         self.resultsByAnalyzer = {}
         self.InstMgrStatusListener = None
         self.LatestInstMgrStatus = -1
@@ -403,14 +403,14 @@ class DataManager(object):
         self.pulseBufferLock = threading.Lock()
         # Priority queue for synchronous scripts ordered by ideal execution time and period
         #  Entries on queue are (execTime, period, startTime, iteration, syncInfoObj)
-        self.syncScriptQueue = []  
+        self.syncScriptQueue = []
         self.syncScriptsLaunched = False
         self.lastTimeGood = True
         self.maxLate = 0
         self.maxScriptDuration = {}
         self.syncScriptDelayHist = {}
         self.options = options.get("-o","")
-        
+
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DATA_MANAGER),
                                                 ServerName = APP_NAME,
@@ -439,12 +439,12 @@ class DataManager(object):
         self.CRDS_PeriphIntrf = None
         self.periphIntrfCols = []
         self.serial2socketStarted = False
-        
+
         # Pulse Analyzer
         self.pulseAnalyzer = None
         self.runPulseAnalyzer = False
         self.addToPulseAnalyzer = False
-                                          
+
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
             raise CommandError("Command invalid in present state ('%s')." % StateName[self.__State])
@@ -454,11 +454,11 @@ class DataManager(object):
         while self.serialThreadAllowRun:
             if self.Config.useSerialPoll:
                 ch = self.serial.read()
-                if ch != self.Config.pollChar: 
+                if ch != self.Config.pollChar:
                     continue
                 self.serialPollLock.acquire()
                 self.serial.write(self.serialString)
-                self.serialPollLock.release()                
+                self.serialPollLock.release()
             else:
                 try:
                     (measDataTime, enqueueTime, serialOutputToWrite) = self.serialOutQueue.get(block=True,timeout=self.Config.serialQueueTimeout)
@@ -470,13 +470,13 @@ class DataManager(object):
                         curTime = time.time()
                         if self.Config.serialTimePreserved:
                             offSchedule = curTime - (measDataTime + self.Config.serialDelay)
-                            #if abs(offSchedule) > 1.0: 
+                            #if abs(offSchedule) > 1.0:
                             #    Log("Serial output %.3f seconds off of schedule" % offSchedule, Level = 1)
                         else:
                             #offSchedule = curTime - measDataTime
                             # Record the time required to send the data out of queue
                             offSchedule = curTime - enqueueTime
-                        if abs(offSchedule) > 1.0: 
+                        if abs(offSchedule) > 1.0:
                             Log("Serial output %.3f seconds off of schedule" % offSchedule, Level = 1)
                 except Queue.Empty:
                     pass
@@ -493,12 +493,12 @@ class DataManager(object):
 
         """
         self._ShutdownRequested = True
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_ReInit(self):
         """Restarts the application, putting it through INIT state again."""
         self.ReInitRequested = True
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_Mode_Set(self, ModeName):
         """Sets the measurement mode, determining how data will be analyzed."""
@@ -508,7 +508,7 @@ class DataManager(object):
             raise InvalidModeSelection(ModeName)
         self._ChangeMode(ModeName)
         return "OK"
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_Mode_Get(self):
         """Returns the name of the mode the measurement system is currently set to.
@@ -518,12 +518,12 @@ class DataManager(object):
         if self.CurrentMeasMode == None:
             return "<NOT SPECIFIED YET>"
         return self.CurrentMeasMode.Name
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_Mode_GetAvailable(self):
         """Returns a list of the available measurement modes."""
         return self.MeasModes.keys()
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_Error_Clear(self):
         """Clears the current error state (and starts in INIT state again).
@@ -536,20 +536,20 @@ class DataManager(object):
         self._AssertValidCallingState([STATE_ERROR,])
         Log("Request received to clear error state")
         self._ClearErrorEvent.set()
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_GetState(self):
         """Returns a dictionary with a text indication of the system states."""
         ret = dict(State = StateName[self.__State])
         return ret
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_GetDelays(self):
         """Returns dictionary of data manager synchronous script delay histograms, keyed
-        by script name. The 9 bins of each histogram are logarithmically spaced, with 
+        by script name. The 9 bins of each histogram are logarithmically spaced, with
         bin=math.floor(2*log10(delay)+6)"""
         return self.syncScriptDelayHist
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_Enable(self):
         """Enables the data manager in the mode set by Mode_Set.
@@ -576,7 +576,7 @@ class DataManager(object):
             LogExc("Unhandled exception in command call", Data = dict(Command = NameOfThisCall))
             raise
         return "OK"
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_Disable(self, keepSyncScripts=False):
         """Disables the measurement system and stops the instrument from scanning.
@@ -586,7 +586,7 @@ class DataManager(object):
             self._StopSyncScripts()
         self._EnableEvent.clear()
         return "OK"
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_StartInstMgrListener(self):
         """Start the listener for instrument manager status. This is called by the instrument manager when
@@ -601,21 +601,21 @@ class DataManager(object):
             return "OK"
         else:
             return "Already started"
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_Enable(self):
         self.calEnabled = True
         Log("Calibration enabled")
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_Disable(self):
         self.calEnabled = False
         Log("Calibration disabled")
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_GetMeasNames(self):
         return self.UserCalAppListDict.keys()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_AdjustZero(self, MeasName, ObservedOffset):
         """Changes the zero offset for the reported-vs-measured cal for the given MeasName.
@@ -643,7 +643,7 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (slope, newOffset)
         self._UpdateUserCalibrationFile()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_AdjustSpan(self, MeasName, ExpectedMeas, ReportedMeas):
         """Changes the cal slope for the reported-vs-measured cal for the given MeasName.
@@ -671,7 +671,7 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (newSlope, calOffset)
         self._UpdateUserCalibrationFile()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_SetSlopeAndOffset(self, MeasName, Slope = 1, Offset = 0):
         """Changes both the cal slope and offset for the given MeasName.
@@ -688,7 +688,7 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (Slope, Offset)
         self._UpdateUserCalibrationFile()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_RestoreFactoryDefaults(self, MeasName):
         """Restores the factory cal (slope =1, offset = 0) for MeasName.
@@ -702,7 +702,7 @@ class DataManager(object):
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (1, 0)
         self._UpdateUserCalibrationFile()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_RestoreAllFactoryDefaults(self):
         """Restores the factory cal (slope = 1, offset = 0) for all measurements.
@@ -714,7 +714,7 @@ class DataManager(object):
             for appMeas in self.UserCalAppListDict[MeasName]:
                 self.UserCalibration[appMeas] = (1, 0)
         self._UpdateUserCalibrationFile()
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_GetUserCalibrations(self):
         """Returns the set of user calibrations that have been specified.
@@ -730,7 +730,7 @@ class DataManager(object):
 
         """
         return self.UserCalibration
-    
+
     @CmdFIFO.rpc_wrap
     def RPC_Cal_GetUserCal(self, measName):
         """Returns the set of user calibration for a specified measName
@@ -740,15 +740,15 @@ class DataManager(object):
         """
         return self.UserCalibration[measName]
 
-    @CmdFIFO.rpc_wrap    
+    @CmdFIFO.rpc_wrap
     def RPC_Cal_GetInstrCalibrations(self):
         """Returns instrument calibrations"""
         return self.InstrData
-            
-    @CmdFIFO.rpc_wrap        
-    def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0], 
-                              thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0, 
-                              validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, 
+
+    @CmdFIFO.rpc_wrap
+    def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0],
+                              thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
+                              validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
                               bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
         try:
             self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
@@ -759,7 +759,7 @@ class DataManager(object):
             return "OK"
         except Exception, err:
             return err
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartRunning(self):
         # Run pulse analyzer with state machine
@@ -769,7 +769,7 @@ class DataManager(object):
         self.runPulseAnalyzer = True
         self.addToPulseAnalyzer = False
         return "OK"
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StopRunning(self):
         # Stop pulse analyzer with state machine
@@ -777,7 +777,7 @@ class DataManager(object):
             return "No Pulse Analyzer"
         self.runPulseAnalyzer = False
         return "OK"
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_StartAddingData(self):
         # Manually add data into pulse analyzer buffer
@@ -795,10 +795,10 @@ class DataManager(object):
             return "No Pulse Analyzer"
         self.addToPulseAnalyzer = False
         return "OK"
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetOutput(self):
-        """Returns the result list in the format of [status, pulseFinished, concBufferDict]. 
+        """Returns the result list in the format of [status, pulseFinished, concBufferDict].
         It won't clear the pulse anlayzer buffer.
         """
         if self.pulseAnalyzer == None:
@@ -826,7 +826,7 @@ class DataManager(object):
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.isTriggeredStatus()
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_Reset(self):
         if self.pulseAnalyzer == None:
@@ -834,7 +834,7 @@ class DataManager(object):
         else:
             self.pulseAnalyzer.resetAnalyzer()
             return "OK"
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetStatistics(self):
         """Retrieve statistics of data in pulse analyzer buffer"""
@@ -842,14 +842,14 @@ class DataManager(object):
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getStatistics()
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetPulseStartEndTime(self):
         if self.pulseAnalyzer == None:
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getPulseStartEndTime()
-            
+
     # Below pulse analyzer functions are used by Command Interface
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetBuffer(self):
@@ -864,7 +864,7 @@ class DataManager(object):
             self.pulseBuffer = []
             self.pulseBufferLock.release()
             return ret
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_GetBufferFirst(self):
         """Get the first pulse analysis data from pulse analyzer buffer. It will also remove this data from the buffer"""
@@ -882,7 +882,7 @@ class DataManager(object):
             finally:
                 self.pulseBufferLock.release()
             return ret
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_PulseAnalyzer_ClearBuffer(self):
         """Clear all the data in the internal pulse analyzer buffer"""
@@ -900,7 +900,7 @@ class DataManager(object):
             return "No Pulse Analyzer"
         else:
             return self.pulseAnalyzer.getStatus()
-          
+
     def _AddToPulseBuffer(self, pulseData):
         self.pulseBufferLock.acquire()
         try:
@@ -911,7 +911,7 @@ class DataManager(object):
             pass
         finally:
             self.pulseBufferLock.release()
-            
+
     @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Set(self, source, colList, bufSize):
         """Set up an internal measurement buffer for the Coordinator"""
@@ -920,7 +920,7 @@ class DataManager(object):
         self.measBuffer = []
         self.measBufferLock.release()
         return "OK"
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Clear(self):
         """Clear all the data in the internal measurement buffer"""
@@ -928,7 +928,7 @@ class DataManager(object):
         self.measBuffer = []
         self.measBufferLock.release()
         return "OK"
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_Get(self):
         """Get all the data in the internal measurement buffer"""
@@ -937,7 +937,7 @@ class DataManager(object):
         self.measBuffer = []
         self.measBufferLock.release()
         return ret
-        
+
     @CmdFIFO.rpc_wrap
     def RPC_MeasBuffer_GetFirst(self):
         """Get the first (oldest) data in the internal measurement buffer"""
@@ -948,23 +948,23 @@ class DataManager(object):
         self.measBuffer = self.measBuffer[1:]
         self.measBufferLock.release()
         return ret
- 
+
     def startSerial2socket(self,configPath):
         print "Starting serial2socket with configuration %s" % configPath
         app = SingleInstance("RunSerial2Socket")
         if not app.alreadyrunning():
             RunSerial2Socket(configPath)
-        
+
     def _AddToMeasBuffer(self, measData):
         (source, colList, bufSize) = self.measBufferConfig
         if len(colList) == 0 or bufSize < 1:
             return
-        if measData.Source != source: 
+        if measData.Source != source:
             return
         self.measBufferLock.acquire()
         try:
             result = {"measTime":measData.Time}
-            result["date"] = time.strftime("%Y/%m/%d %H:%M:%S", self.Config.maketimetuple(measData.Time))       
+            result["date"] = time.strftime("%Y/%m/%d %H:%M:%S", self.Config.maketimetuple(measData.Time))
             for c in colList:
                 result[c] = measData.Data[c]
             if len(self.measBuffer) >= bufSize:
@@ -974,9 +974,9 @@ class DataManager(object):
             pass
         finally:
             self.measBufferLock.release()
-                
+
     def _UpdateUserCalibrationFile(self):
-        cp = CustomConfigObj(self.Config.UserCalibrationPath) 
+        cp = CustomConfigObj(self.Config.UserCalibrationPath)
         for measName in self.UserCalAppListDict.keys():
             if measName not in cp.list_sections():
                 cp.add_section(measName)
@@ -993,14 +993,14 @@ class DataManager(object):
     def _EnqueueSyncScript(self,sai,startTime,iteration):
         assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
         heapq.heappush(self.syncScriptQueue,(startTime+iteration*sai.Period_s,sai.Period_s,startTime,iteration,sai))
-    
+
     def _TimeToNextSyncScript(self):
         if self.syncScriptQueue:
             xeqTime,period,startTime,iteration,sai = self.syncScriptQueue[0]
             return xeqTime - time.time()
         else:
             return None
-        
+
     def _LaunchSyncScripts(self):
         """Enqueues initial synchronous script execution requests. These run when time.time() is an integer
            multiple of the period of the script"""
@@ -1013,7 +1013,7 @@ class DataManager(object):
                 startTime = math.ceil(time.time()/sai.Period_s) * sai.Period_s
                 self._EnqueueSyncScript(sai,startTime,0)
             Log("Synchronous analyzers have all been enqueued")
-            
+
     def _ToggleStatusSyncBit(self, SyncInfoObj):
         index = self.CurrentMeasMode.SyncSetup.index(SyncInfoObj)
         if index == 0:
@@ -1025,16 +1025,16 @@ class DataManager(object):
         elif index == 3:
             mask = STATUS_MASK_SyncToggle_4
         elif index == 4:
-            mask = STATUS_MASK_SyncToggle_5            
+            mask = STATUS_MASK_SyncToggle_5
         elif index == 5:
-            mask = STATUS_MASK_SyncToggle_6 
+            mask = STATUS_MASK_SyncToggle_6
         elif index == 6:
-            mask = STATUS_MASK_SyncToggle_7            
+            mask = STATUS_MASK_SyncToggle_7
         elif index == 7:
             mask = STATUS_MASK_SyncToggle_8
-            
+
         self._Status.ToggleStatusBit(mask)
-        
+
     def _RunNextSyncScript(self):
         if self.syncScriptQueue:
             xeqTime,period,startTime,iteration,sai = heapq.heappop(self.syncScriptQueue)
@@ -1057,7 +1057,7 @@ class DataManager(object):
                 self.syncScriptDelayHist[sai.ReportName][bin] += 1
             else:
                 self.syncScriptDelayHist[sai.ReportName] = [0 for bin in range(9)]
-                
+
             if late > self.maxLate:
                 Log("Max periodic script delay so far %.3fs on iteration %d: %s" % (late,iteration,sai.ReportName))
                 self.maxLate = late
@@ -1067,7 +1067,7 @@ class DataManager(object):
                 skip = int(math.floor(late/period))
                 iteration += skip
                 Log("Skipping %d iterations of synchronous script %s" % (skip,sai.ReportName))
-            # Enqueue next execution time for this script    
+            # Enqueue next execution time for this script
             if self.syncScriptsLaunched:
                 self._EnqueueSyncScript(sai,startTime,iteration+1)
         else:
@@ -1081,7 +1081,7 @@ class DataManager(object):
         time.sleep(1)   # Wait to ensure currently running scripts have stopped
         self.syncScriptQueue = []
         Log("Synchronous analyzers have all been stopped.")
-        
+
     def _ChangeMode(self, ModeName):
         """Changes the measurement mode of the DataManager."""
         if __debug__: Log("Measurement mode change request received", dict(NewMode = ModeName), Level = 0)
@@ -1093,7 +1093,7 @@ class DataManager(object):
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._LaunchSyncScripts()
         Log("Measurement mode changed.", dict(NewMode = ModeName, OldMode = oldModeName))
-        
+
     def __SetState(self, NewState):
         """Sets the state of the DataManager.  Variable init is done as appropriate."""
         if NewState == self.__State:
@@ -1140,7 +1140,7 @@ class DataManager(object):
         a thread (to get dontcare-like functionality)"""
         self.rdInstMgr.INSTMGR_ReportErrorRpc(ErrorCode)
     def _FitterFilter(self, fitterOut):
-        # Sort the data queue by timestamp as the primary key and spectrumId 
+        # Sort the data queue by timestamp as the primary key and spectrumId
         #  as the secondary key
         self.dataQueueLock.acquire()
         try:
@@ -1148,12 +1148,12 @@ class DataManager(object):
             if results: heapq.heappush(self.dataQueue,(avgTimestamp,spectrumId,results))
         finally:
             self.dataQueueLock.release()
-            
+
     def getFitterData(self):
         if len(self.dataQueue) < self.minQueueSamples:
             time.sleep(0.01)
             raise Queue.Empty
-            
+
         avgTimestamp,spectrumId,results = self.dataQueue[0]
         self.dataQueueLock.acquire()
         stragglers = 0
@@ -1197,7 +1197,7 @@ class DataManager(object):
             results = self.resultsByAnalyzer[analyzer]
             measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
         return measDataList
-        
+
     # def removeStragglers(self):
         # """Remove entries from the data queue which have timestamps before self.lastFitAnalyzed.
         # This should be called while holding the dataQueueLock"""
@@ -1212,12 +1212,12 @@ class DataManager(object):
             # avgTimestamp,spectrumId,results = self.dataQueue[0]
         # if stragglers>0:
             # Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
-    
+
     # def getFitterData1(self,timeout):
         # """Get the data with the most recent timestamp from self.dataQueue, where the result
         # dictionaries with exactly equal timestamps must be merged. Keep track of latest timestamp
         # that has been returned so that we can discard stragglers due to fitters which have failed.
-        # If thead(=time at the head of the queue) is later than the current time-timeout, wait until 
+        # If thead(=time at the head of the queue) is later than the current time-timeout, wait until
         # thead+timeout before processing the data and returning anything.
         # """
         # self.dataQueueLock.acquire()
@@ -1238,7 +1238,7 @@ class DataManager(object):
         # avgTimestamp,spectrumId,results = self.dataQueue[0]
         # now = timestamp.getTimestamp()
         # waitTime = 0.001*(avgTimestamp-now)+timeout
-        # if waitTime>0.0: 
+        # if waitTime>0.0:
             # self.dataQueueLock.release()
             # time.sleep(waitTime)
             # self.dataQueueLock.acquire()
@@ -1273,7 +1273,7 @@ class DataManager(object):
             # results = self.resultsByAnalyzer[analyzer]
             # measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
         # return measDataList
-        
+
     def _SensorFilter(self, obj):
         """Updates the latest sensor readings.
 
@@ -1309,16 +1309,16 @@ class DataManager(object):
             #Load the main application configuration settings...
             self.cp = self.Config.Load(self.ConfigPath)
             self.minQueueSamples = self.Config.fitterResequencerLength
-                
+
             # open the serial port (may be used by scripts)
             if self.serialThread != None:
                 self.killSerialThread()
-                self.serialThread.join(2.0)   
+                self.serialThread.join(2.0)
                 if self.serialThread.isAlive():
                     Log("Cannot kill old serial output thread",Level=2)
                     raise RuntimeError("Cannot kill old serial output thread")
                 self.serialThread = None
-            if self.serial != None: 
+            if self.serial != None:
                 self.serial.close()
                 self.serial = None
             if self.Config.useSerial:
@@ -1342,11 +1342,11 @@ class DataManager(object):
                     self.serial = None
             else:
                 self.serial = None
-                
+
             if not self.serial2socketStarted and self.Config.periphIntrfConfig is not None:
                 self.startSerial2socket(self.Config.periphIntrfConfig)
                 self.serial2socketStarted = True
-                
+
             ##Figure out what modes are available and load all details...
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionPath)
             Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
@@ -1433,12 +1433,12 @@ class DataManager(object):
                     self.addToPulseAnalyzer = False
                 except Exception, err:
                     print "%r" % err
-                                         
+
             self.__SetState(STATE_READY)
         except:
             LogExc(Data = dict(State = StateName[self.__State]))
             self.__SetState(STATE_ERROR)
-            
+
     def _configPulseAnalyzerFromIni(self):
         source = self.cp.get("PulseAnalyzer", "source")
         concNameList = [conc.strip() for conc in self.cp.get("PulseAnalyzer","concNameList").split(",")]
@@ -1464,7 +1464,7 @@ class DataManager(object):
         msg = "Pre-defined pulse analyzer started. (%s, %s, %s, %s)" % (targetConc, thres1Pair, thres2Pair, triggerType)
         print msg
         Log(msg)
-        
+
     def _HandleState_READY(self):
         try:
             exitState = STATE__UNDEFINED
@@ -1477,10 +1477,10 @@ class DataManager(object):
             # Allow script to run if we are within 10ms of the target execution time.
             if self.syncScriptQueue:
                 timeToNextSyncScript = self._TimeToNextSyncScript()
-                while timeToNextSyncScript != None and timeToNextSyncScript < 0.01: 
+                while timeToNextSyncScript != None and timeToNextSyncScript < 0.01:
                     self._RunNextSyncScript()
                     timeToNextSyncScript = self._TimeToNextSyncScript()
-            
+
             if self._EnableEvent.isSet():
                 if not self.CurrentMeasMode:
                     raise DataManagerError("No measurement mode set - Can't enable the measurement system!")
@@ -1493,7 +1493,7 @@ class DataManager(object):
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_READY has a code error - the exitState has not been specified!!")
         self.__SetState(exitState)
-    
+
     def _HandleState_ENABLED(self):
         #In this state we processing data as it is appears in the data queue
         # - Sync scripts will be running as appropriate for the mode
@@ -1511,7 +1511,7 @@ class DataManager(object):
                 #  run if we are within 10ms of the target execution time.
                 if self.syncScriptQueue:
                     timeToNextSyncScript = self._TimeToNextSyncScript()
-                    while timeToNextSyncScript != None and timeToNextSyncScript < 0.01: 
+                    while timeToNextSyncScript != None and timeToNextSyncScript < 0.01:
                         self._RunNextSyncScript()
                         timeToNextSyncScript = self._TimeToNextSyncScript()
                 # Information on the forwarded data queue must be dealt with before processing more collected
@@ -1532,12 +1532,12 @@ class DataManager(object):
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_ENABLED has a code error - the exitState has not been specified!!")
         self.__SetState(exitState)
-        
+
     def _HandleState_ERROR(self):
         self._ClearErrorEvent.wait(0.05)
         if self._ClearErrorEvent.isSet():
             self.__SetState(STATE_INIT)
-            
+
     def _MainLoop(self):
         #When started, sit and wait until a sweep is started (which sets the
         #Enabled Event). If enabled, loop and keep assembling spectra.  When
@@ -1575,10 +1575,10 @@ class DataManager(object):
             Log("DataManager terminated due to a fatal error.", Level = 3)
         else:
             Log("DataManager exited due to shutdown request.", Level = 2)
-            
+
     def Start(self):
         self._MainLoop()
-        
+
     def _AddToHistory(self, HistoryDict, DataDict, DataTime):
         """Records DataDict elements into HistoryDict with the given DataTime stamp.
 
@@ -1635,7 +1635,7 @@ class DataManager(object):
                 self.serialPollLock.acquire()
                 self.serialString = resultAsString
                 self.serialPollLock.release()
-            else:    
+            else:
                 self.serialOutQueue.put((measDataTime, time.time(), resultAsString))
 
     def _getPeriphData(self, requestTime, dataList):
@@ -1645,7 +1645,7 @@ class DataManager(object):
             Log("Peripheral Interface was interrupted")
             print "Peripheral Interface was interrupted"
             self.CRDS_PeriphIntrf = None
-            
+
     def _HandleScriptExecution(self,
                                ScriptCodeObj,
                                ScriptArgs,
@@ -1673,20 +1673,20 @@ class DataManager(object):
         self.lastSourceTime_s = SourceTime_s
         ##First, run the script!!
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, True)
-        
+
         # self.LatestInstMgrStatus is updated by self.InstMgrStatusListener
         currentInstMgrStatus = self.LatestInstMgrStatus
-        
+
         try:
             UserCalDict = self.RPC_Cal_GetUserCalibrations()
         except:
             UserCalDict = {}
-            
+
         if self.CRDS_PeriphIntrf:
             periphIntrfFunc = self._getPeriphData
         else:
             periphIntrfFunc = None
-            
+
         ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj = ScriptCodeObj,
                                              ScriptArgs = ScriptArgs,
                                              SourceTime_s = SourceTime_s,
@@ -1715,12 +1715,12 @@ class DataManager(object):
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
 
         # Update SourceTime_s with the "time" information provided by the script (if available)
-        
+
         # Deal with explicit "time" and "timestamp" fields in the reportDict
         # 1. If "time" is present, it is used to set both SourceTime_s and "timestamp"
         # 2. Elif "timestamp" is present, it is used to set both SourceTime_s and "time"
         # 3. Elif neither is present, both are set from the SourceTime_s
-        
+
         if reportDict:
             if "time" in reportDict:
                 rptSourceTime_s = reportDict["time"]
@@ -1812,14 +1812,14 @@ class DataManager(object):
                     except Exception, err:
                         LogExc("Pulse analyzer operation failed. EXCEPTION: %s %r" % (err, err), Level=3)
                     self.pulseWaitForData = False
-                
+
         #Put forwarded data in the to-be-analyzed queue...
         for dataPacketLabel in forwardDict.keys():
             dataPacketDict = forwardDict[dataPacketLabel]
             #Force a + prefix on all forwarded data labels...
             self.forwardedDataQueue.append(MeasData("+%s" % dataPacketLabel, rptSourceTime_s, dataPacketDict, Mode=self.RPC_Mode_Get()))
         time.sleep(0)
-        
+
     def _AnalyzeData(self, Data):
         """Runs the analysis script appropriate for the given Data and current Mode."""
         #also need to provide
@@ -1831,7 +1831,7 @@ class DataManager(object):
         if Data.Source in self.CurrentMeasMode.Analyzers:
             analyzerPath = self.CurrentMeasMode.Analyzers[Data.Source].ScriptPath
         else:
-            Log("Analyzer path not found for given data source! Data source = %s, Analyzers are %s" 
+            Log("Analyzer path not found for given data source! Data source = %s, Analyzers are %s"
                    % (Data.Source, self.CurrentMeasMode.Analyzers.keys()),Level=2)
             return
         if not self.AnalyzerCode.has_key(analyzerPath):
@@ -1901,7 +1901,7 @@ def HandleCommandSwitches():
         noInstMgr = True
     else:
         noInstMgr = False
-        
+
     return (configFile, noInstMgr, executeTest, options)
 def ExecuteTest(DM):
     """A self test executed via the --test command-line switch."""

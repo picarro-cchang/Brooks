@@ -41,12 +41,12 @@ class FluxSwitcher(object):
         self.startupSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Main"]["StartupSupervisorIni"].strip())
         if self.flux:
             self.fluxSupervisorIni = os.path.join(self.supervisorIniDir, self.coSupervisor["Flux"]["SupervisorIniFile"].strip())
-            
+
     def select(self, type):
         self.mode = self.co[type]["Mode"].strip()
         self.guiIni = os.path.join(self.guiIniDir, self.co[type]["GuiIni"].strip())
         self.supervisorIni = os.path.join(self.supervisorIniDir, self.co[type]["SupervisorIni"].strip())
-            
+
     def launch(self):
         for tries in range(5):
             try:
@@ -68,14 +68,14 @@ class FluxSwitcher(object):
         launchQuickGuiThread = threading.Thread(target = self._restartQuickGui)
         launchQuickGuiThread.setDaemon(True)
         launchQuickGuiThread.start()
-    
+
     def _restartQuickGui(self):
         print "C:/Picarro/G2000/HostExe/QuickGui.exe"
         subprocess.Popen(["C:/Picarro/G2000/HostExe/QuickGui.exe","-c",self.guiIni])
         shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
         if self.flux:
             shutil.copy2(self.supervisorIni, self.fluxSupervisorIni)
-    
+
 if __name__ == "__main__":
     configFile, supervisorConfigFile, flux, type = sys.argv[1:]
     if flux.lower() == "true":

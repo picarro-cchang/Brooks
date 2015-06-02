@@ -1,6 +1,6 @@
 from flask import redirect, url_for, abort, render_template, flash, make_response
 from flask import Flask, Response, request
-from jsonrpc import JSONRPCHandler, Fault
+from Host.WebServer.jsonrpc import JSONRPCHandler, Fault
 
 from Host.Common import timestamp, CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_ARCHIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_SUPERVISOR
@@ -50,7 +50,7 @@ def rpcWrapper(func):
 def recArrayToDict(recArray):
     obj = {}
     for n in recArray.dtype.names:
-        # N.B. MUST have float since numpy scalars do not JSON 
+        # N.B. MUST have float since numpy scalars do not JSON
         #  serialize
         obj[n] = [float(v) for v in recArray[n]]
     return obj
@@ -65,7 +65,7 @@ def getSensorData(params):
     # sensorList: A list of variable names to extract
     # pickle: If present and True, return a base64 encoded pickle rather
     #          than a plain JSON result
-    # Result is a dictionary keyed by the sensor name. Values are record arrays 
+    # Result is a dictionary keyed by the sensor name. Values are record arrays
     #  consisting of timestamps and values
     pickle = ('pickle' in params) and params['pickle']
     range = params['range']
@@ -93,7 +93,7 @@ def getRdData(params):
     tstart, tstop = range['start'], range['stop']
     data = ActiveUtils.getRdData(tstart,tstop,varList)
     return b64encode(dumps(data,HIGHEST_PROTOCOL)) if pickle else recArrayToDict(data)
-    
+
 @handler.register
 @rpcWrapper
 def getDmData(params):
@@ -130,7 +130,7 @@ def getLatestDmData(params):
     varList = [str(v) for v in params['varList']]
     data = ActiveUtils.getLatestDmData(mode,source,varList)
     return b64encode(dumps(data,HIGHEST_PROTOCOL)) if pickle else recArrayToDict(data)
-    
+
 @handler.register
 @rpcWrapper
 def getRdDataStruct(params):
@@ -158,7 +158,7 @@ def getDmDataStruct(params):
     tstart, tstop = range['start'], range['stop']
     data = ActiveUtils.getDmDataStruct(tstart,tstop)
     return b64encode(dumps(data,HIGHEST_PROTOCOL)) if pickle else data
-    
+
 @handler.register
 @rpcWrapper
 def invokeRPC(params):
@@ -168,7 +168,7 @@ def invokeRPC(params):
     argTuple = tuple(params['argTuple'])
     assert isinstance(server, CmdFIFO.CmdFIFOServerProxy)
     return server.__getattr__(funcName)(*argTuple)
-    
+
 @handler.register
 @rpcWrapper
 def restartHost(params):
@@ -176,7 +176,7 @@ def restartHost(params):
     restartCmd = params['restartCmd']
     print restartCmd
     return os.system(restartCmd)
-    
+
 @app.route("/")
 def index():
     return render_template('index.html')

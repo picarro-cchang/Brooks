@@ -18,7 +18,7 @@ import time
 import stat
 import traceback
 from Host.Common.CustomConfigObj import CustomConfigObj
-        
+
 STANDARD_BUTTON_COLOR = wx.Colour(237, 228, 199)
 EXTENSIONS_TO_KEEP = ["ini", "py", "bat", "zip", "wlm"]
 BACKUP_FOLDER = "AutoIntegration"
@@ -37,7 +37,7 @@ def removeFiles(pathToClean, exceptionList):
                     os.remove(filepath)
                 except OSError,errorMsg:
                     self._writeToStatus('ERROR: %s' % (errorMsg))
-                            
+
 def removeEmptyDirs(rootPath):
     emptyDirFound = False
     for root, dirs, files in os.walk(rootPath):
@@ -50,7 +50,7 @@ def removeEmptyDirs(rootPath):
             except:
                 pass
     return emptyDirFound
-    
+
 class ResetIPVGui(wx.Dialog):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
@@ -74,15 +74,15 @@ class ResetIPVGui(wx.Dialog):
         self.ctrlList.append(wx.ComboBox(self.panel_2, -1, value = "Trial", choices = ["Trial", "Paid Subscription"], size=ctrlSize, style = wx.CB_READONLY|wx.CB_DROPDOWN))
         self.ctrlList.append(wx.TextCtrl(self.panel_2, -1, "90", size=ctrlSize))
         self.ctrlList.append(wx.TextCtrl(self.panel_2, -1, self.ipvIni, size=textSize, style=wx.TE_READONLY|wx.VSCROLL|wx.TE_MULTILINE|wx.TE_RICH))
-                
+
         self.okButton = wx.Button(self.panel_1, wx.ID_OK, "Reset IPV", size=buttonSize)
         self.cancelButton = wx.Button(self.panel_1, wx.ID_CANCEL, "", size=buttonSize)
         self.__do_layout()
         self.bindEvents()
 
-    def bindEvents(self):    
-        self.Bind(wx.EVT_BUTTON, self.onSelectFile, self.labelList[2]) 
-        
+    def bindEvents(self):
+        self.Bind(wx.EVT_BUTTON, self.onSelectFile, self.labelList[2])
+
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -102,7 +102,7 @@ class ResetIPVGui(wx.Dialog):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
-        
+
     def onSelectFile(self, evt):
         if not self.defaultPath:
             self.defaultPath = os.getcwd()
@@ -116,7 +116,7 @@ class ResetIPVGui(wx.Dialog):
             dlg.Destroy()
             return
         self.defaultPath = dlg.GetDirectory()
-            
+
 class IntegrationBackupFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
@@ -125,7 +125,7 @@ class IntegrationBackupFrame(wx.Frame):
         self.SetBackgroundColour("#E0FFFF")
         self.labelTitle = wx.StaticText(self, -1, "Integration Backup Tool", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        
+
         # Menu bar
         self.frameMenubar = wx.MenuBar()
         self.iReset = wx.Menu()
@@ -139,7 +139,7 @@ class IntegrationBackupFrame(wx.Frame):
         self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, "Integration Backup Tool", "", wx.ITEM_NORMAL)
         self.iHelp.AppendItem(self.iAbout)
         self.SetMenuBar(self.frameMenubar)
-        
+
         # Other graphical components
         self.staticLine = wx.StaticLine(self, -1)
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
@@ -151,10 +151,10 @@ class IntegrationBackupFrame(wx.Frame):
         self.labelStatus.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
         self.textCtrlStatus = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
         self.textCtrlStatus.SetMinSize((625,100))
-        
+
         # Buttons
-        self.buttonSourceDir = wx.Button(self, -1, "Source Directory", style=wx.BU_EXACTFIT)             
-        self.buttonTargetDir = wx.Button(self, -1, "Target Directory", style=wx.BU_EXACTFIT) 
+        self.buttonSourceDir = wx.Button(self, -1, "Source Directory", style=wx.BU_EXACTFIT)
+        self.buttonTargetDir = wx.Button(self, -1, "Target Directory", style=wx.BU_EXACTFIT)
         self.buttonStart = wx.Button(self, -1, "Start", style=wx.BU_EXACTFIT)
         self.buttonClose = wx.Button(self, -1, "Close", style=wx.BU_EXACTFIT)
         self.buttonSourceDir.SetMinSize((157, 25))
@@ -169,7 +169,7 @@ class IntegrationBackupFrame(wx.Frame):
         self.buttonClose.SetMinSize((157, 25))
         self.buttonClose.SetBackgroundColour(STANDARD_BUTTON_COLOR)
         self.buttonClose.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
-        
+
         self.__do_layout()
 
     def __do_layout(self):
@@ -181,20 +181,20 @@ class IntegrationBackupFrame(wx.Frame):
         sizer_1.SetMinSize((550,100))
         sizer_1.Add(self.labelTitle, 0, wx.ALL|wx.ALIGN_CENTER, 10)
         sizer_1.Add(self.staticLine, 0, wx.EXPAND|wx.BOTTOM, 5)
-        
+
         grid_sizer_1.Add(self.buttonSourceDir, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.textCtrlSourceDir, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        
+
         grid_sizer_1.Add(self.buttonTargetDir, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.textCtrlTargetDir, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        
+
         sizer_2.Add(self.labelStatus, 0, wx.LEFT|wx.RIGHT, 10)
         sizer_2.Add((-1,5))
         sizer_2.Add(self.textCtrlStatus, 0, wx.LEFT|wx.RIGHT, 10)
-        
+
         sizer_3.Add(self.buttonStart, 0, wx.LEFT, 140)
         sizer_3.Add(self.buttonClose, 0, wx.LEFT, 30)
-        
+
         sizer_1.Add(grid_sizer_1, 0, wx.BOTTOM, 10)
         sizer_1.Add(sizer_2, 0, wx.BOTTOM, 20)
         sizer_1.Add(sizer_3, 0, wx.BOTTOM, 20)
@@ -232,15 +232,15 @@ class IntegrationBackup(IntegrationBackupFrame):
             self.buttonTargetDir.SetBackgroundColour("red")
             self.buttonStart.Enable(False)
         self.sourceZipPath = ""
-            
+
     def bindEvents(self):
-        self.Bind(wx.EVT_BUTTON, self.onSourceDirButton, self.buttonSourceDir)    
+        self.Bind(wx.EVT_BUTTON, self.onSourceDirButton, self.buttonSourceDir)
         self.Bind(wx.EVT_BUTTON, self.onTargetDirButton, self.buttonTargetDir)
         self.Bind(wx.EVT_BUTTON, self.onStartButton, self.buttonStart)
         self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.buttonClose)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_MENU, self.onResetIPVMenu, self.iResetIPV)
-        
+
     def onResetIPVMenu(self, evt):
         d = ResetIPVGui(None, -1, "")
         getCtrl = (d.ShowModal() == wx.ID_OK)
@@ -270,10 +270,10 @@ class IntegrationBackup(IntegrationBackupFrame):
                 d2 = wx.MessageDialog(self, "Error occurred. Please try again.\nError: %s" % traceback.format_exc(), "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
                 d2.ShowModal()
                 d2.Destroy()
-        
+
     def onCloseButton(self, evt):
         self.Destroy()
-        
+
     def onStartButton(self, evt):
         launchCoordinatorThread = threading.Thread(target = self._start)
         launchCoordinatorThread.setDaemon(True)
@@ -282,7 +282,7 @@ class IntegrationBackup(IntegrationBackupFrame):
         self.buttonSourceDir.Enable(False)
         self.buttonTargetDir.Enable(False)
         self.buttonClose.Enable(False)
-        
+
     def onSourceDirButton(self, evt):
         d = wx.DirDialog(None,"Select the source integration directory", style=wx.DD_DEFAULT_STYLE,
                          defaultPath=self.sourceDir)
@@ -301,23 +301,23 @@ class IntegrationBackup(IntegrationBackupFrame):
             self.textCtrlTargetDir.SetValue("%s (\'%s\' folder will be created automatically)" % (self.targetDir, BACKUP_FOLDER))
             self.buttonTargetDir.SetBackgroundColour(STANDARD_BUTTON_COLOR)
             self.buttonStart.Enable(True)
-            
+
     def onAboutMenu(self, evt):
         d = wx.MessageDialog(None, "Copyright 1999-2011 Picarro Inc. All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc. (http://www.picarro.com)", "About Integration Backup Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def _writeToStatus(self, message):
         self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
         self.statusMessage = self.statusMessage[-20:]
         self.textCtrlStatus.SetValue("".join(self.statusMessage))
-        
+
     def _getTime(self, format=0):
         if format == 0:
             return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         else:
             return time.strftime("%Y%m%d%H%M%S", time.localtime())
-            
+
     def _backupFiles(self):
         self._writeToStatus("Copying integration files from %s to %s..." % (self.sourceDir, self.targetDir))
         if not os.path.isdir(self.targetDir):
@@ -327,7 +327,7 @@ class IntegrationBackup(IntegrationBackupFrame):
                 self._writeToStatus("Failed to create folder to back up integration files")
                 return
         subprocess.call(["xcopy", "/E", "/Y", "/I", self.sourceDir, self.targetDir])
-        
+
     def _zipEncryptedDir(self):
         self._writeToStatus("Zipping integration files...")
         if not os.path.isdir(self.sourceZipDir):
@@ -340,32 +340,32 @@ class IntegrationBackup(IntegrationBackupFrame):
         self.sourceZipPath = os.path.join(self.sourceZipDir,targetFilename)
         subprocess.call(["7z", "a", "-p"+PASSWORD,
                          "-r", "-xr!zip", self.sourceZipPath, self.sourceDir+"\\*"])
-                      
+
         self._writeToStatus("Password-protected ZIP file was created in %s" % self.sourceZipPath)
-  
+
     def _removeFilesAndDirs(self):
         # Remove files with specified extensions
         self._writeToStatus("Removing integration files in %s except for file extensions in %s..." % (self.sourceDir, EXTENSIONS_TO_KEEP))
         removeFiles(self.sourceDir, EXTENSIONS_TO_KEEP)
-        
+
         # Removre empty directories after file cleaning
         # Repeat this until all empty directories are removed
         self._writeToStatus("Removing empty directories in %s..." % (self.sourceDir,))
         newEmptyDirsExist = removeEmptyDirs(self.sourceDir)
         while newEmptyDirsExist:
-            newEmptyDirsExist = removeEmptyDirs(self.sourceDir)   
-        
+            newEmptyDirsExist = removeEmptyDirs(self.sourceDir)
+
     def _start(self):
         self._backupFiles()
         self._zipEncryptedDir()
         self._removeFilesAndDirs()
         self._writeToStatus("Integration backup process completed")
-        
+
         self.buttonStart.Enable(True)
         self.buttonSourceDir.Enable(True)
         self.buttonTargetDir.Enable(True)
         self.buttonClose.Enable(True)
-        
+
 
 if __name__ == "__main__" :
     app = wx.PySimpleApp()

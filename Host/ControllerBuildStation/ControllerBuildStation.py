@@ -16,9 +16,9 @@ import wx
 import sys
 import traceback
 
-from ControllerBuildStationFrameGui import ControllerBuildStationFrameGui
-from ControllerBuildStationModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
-from ControllerBuildStationModels import LogListener, SensorListener, RawRingdownListener, ControllerRpcHandler
+from Host.ControllerBuildStation.ControllerBuildStationFrameGui import ControllerBuildStationFrameGui
+from Host.ControllerBuildStation.ControllerBuildStationModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
+from Host.ControllerBuildStation.ControllerBuildStationModels import LogListener, SensorListener, RawRingdownListener, ControllerRpcHandler
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.ParameterDialog import ParameterDialog
@@ -184,7 +184,7 @@ class Controller(ControllerBuildStationFrameGui):
         d = wx.MessageDialog(None,v,"Picarro CRDS",wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def onClose(self,evt):
         for id in self.openParamDialogs:
             try:
@@ -195,17 +195,17 @@ class Controller(ControllerBuildStationFrameGui):
         self.Close()
 
     def onFullInterface(self,evt):
-        if self.fullInterface: 
+        if self.fullInterface:
             return
         else:
             dlg = wx.TextEntryDialog(self, 'Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
             self.fullInterface = (dlg.ShowModal() == wx.ID_OK) and (dlg.GetValue() == self.password)
             dlg.Destroy()
-        if self.fullInterface: 
+        if self.fullInterface:
             self.updateInterface()
 
     def onUserInterface(self,evt):
-        if not self.fullInterface: 
+        if not self.fullInterface:
             return
         else:
             self.fullInterface = False
@@ -215,13 +215,13 @@ class Controller(ControllerBuildStationFrameGui):
         """ Update the Controller GUI based on self.fullInterface."""
         if not self.fullInterface:
             self.controllerFrameGui_menubar.EnableTop(pos=1,enable=False)
-            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False) 
+            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False)
             self.commandLogPanel.disableAll()
         else:
             self.controllerFrameGui_menubar.EnableTop(pos=1,enable=True)
             self.controllerFrameGui_menubar.EnableTop(pos=2,enable=True)
             self.commandLogPanel.enableAll()
-        
+
     def onUpdateTimer(self,evt):
         self.commandLogPanel.updateLoopStatus()
         # self.commandLogPanel.updateCalFileStatus()
@@ -259,7 +259,7 @@ class Controller(ControllerBuildStationFrameGui):
                 self.commandLogPanel.addMessage(msg)
             else:
                 break
-            
+
         # Deal with Controller RPC calls within GUI idle loop
         try:
             daemon = self.rpcHandler.server.daemon
@@ -276,7 +276,7 @@ class Controller(ControllerBuildStationFrameGui):
 
     def onWriteIni(self, event):
         Driver.writeIniFile()
-            
+
 # Report GUI exceptions in EventManager
 def excepthook(type,value,trace):
     exc = traceback.format_exception(type,value,trace)

@@ -16,14 +16,14 @@
 #                 Note that additional points are not deleted, so maxPoints can be changed on-the-fly.
 # 07-09-27 sze   Added Text methods to GraphPanel to allow strings within graphs
 # 08-03-07 sze   Add GetPointers and SerPointers to Sequences
-# 09-02-12 alex  Always update statistics window when running Update() on timer, even witout re-drawing 
+# 09-02-12 alex  Always update statistics window when running Update() on timer, even witout re-drawing
 # 09-07-10 alex Support time-axis locking function from QuickGui
 # 09-08-04 alex Define a flag to detect if x-axis has been changed since last update. Support forced re-draw even when new data hasn't come in yet.
 
 import wx
-import plot
+import Host.Common.plot as plot
 import numpy
-from MyPlotCanvas import MyPlotCanvas
+from Host.Common.MyPlotCanvas import MyPlotCanvas
 import time
 import sys
 import threading
@@ -163,7 +163,7 @@ class ColorSeries(Series):
             return self.colors.GetValues()
         else:
             return self.colors.GetValues()[-self.maxPoints:]
-        
+
 class GraphPanel(wx.Panel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL
@@ -193,7 +193,7 @@ class GraphPanel(wx.Panel):
         self.colorTimeList = []
     def clearColors(self):
         self.colorList = []
-        self.colorTimeList = []    
+        self.colorTimeList = []
     def getNumColors(self):
         return len(self.colorList)
     def AddColorTime(self, colorTime):
@@ -209,7 +209,7 @@ class GraphPanel(wx.Panel):
     def SetForcedXAxis(self, xAxisTuple):
         self.forcedXAxis = xAxisTuple
     def GetForcedXAxis(self):
-        return self.forcedXAxis        
+        return self.forcedXAxis
     def ClearForcedXAxis(self):
         self.forcedXAxis = None
     def AddSeriesAsLine(self,series,select=None,statsFlag=False,**attr):
@@ -288,14 +288,14 @@ class GraphPanel(wx.Panel):
 
     def GetIsNewXAxis(self):
         return self.isNewXAxis
-    
+
     def Update(self,delay=0.0,forcedRedraw=False,autoscaleY=False):
         try:
             return self._Update(delay,forcedRedraw,autoscaleY)
         except:
             type,value,trace = sys.exc_info()
             print "GraphPanel Update : %s: %s\n %s" % (type,value,traceback.format_exc())
-        
+
     def _Update(self,delay,forcedRedraw,autoscaleY):
         # Check to see if we do not need to update after all, since nothing has changed since the last one
         self.yMin = None
@@ -310,7 +310,7 @@ class GraphPanel(wx.Panel):
         if (self.latestUpdate is not None) and (self.latestUpdate >= mostRecentChange-delay) \
            and (not forcedRedraw) and (not isinstance(self.forcedXAxis,tuple)):
             skipDrawing = True
-   
+
         self.latestUpdate = mostRecentChange
         canvas = self.canvas
         if autoscaleY:
@@ -346,7 +346,7 @@ class GraphPanel(wx.Panel):
                         self.stats.append(self.calcStats(data,canvas))
                 del data
             else:
-                if len(self.colorList)-len(self.colorTimeList) == 1:    
+                if len(self.colorList)-len(self.colorTimeList) == 1:
                     try:
                         if select != None:
                             selSequence,selValue = select
@@ -364,19 +364,19 @@ class GraphPanel(wx.Panel):
                             if len(data) > 0:
                                 attr['colour'] = color
                                 plot_objects.append(plot.PolyLine(data,**attr))
-                                statData = concatenate((statData,data)) 
+                                statData = concatenate((statData,data))
                             del data
                         if statsFlag:
                             self.stats.append(self.calcStats(statData,canvas))
                     except Exception, err:
                         print err
-                else:    
+                else:
                     data = numpy.column_stack((timeSeries,dataSeries))
                     if len(data) > 0:
                         if select != None:
                             selSequence,selValue = select
                             data = data[selSequence.GetValues() == selValue]
-                        if len(data)>0: 
+                        if len(data)>0:
                             plot_objects.append(plot.PolyLine(data,**attr))
                         if statsFlag:
                             self.stats.append(self.calcStats(data,canvas))
@@ -428,26 +428,26 @@ class GraphPanel(wx.Panel):
                             attr['colour'] = color
                             attr['fillcolour'] = color
                             plot_objects.append(plot.PolyMarker(data,**attr))
-                            statData = concatenate((statData,data)) 
+                            statData = concatenate((statData,data))
                         del data
                     if statsFlag:
                         self.stats.append(self.calcStats(statData,canvas))
                 except Exception, err:
                     print err
-            else:  
+            else:
                 data = numpy.column_stack((timeSeries,dataSeries))
-                if len(data) > 0:            
+                if len(data) > 0:
                     if select != None:
                         selSequence,selValue = select
                         data = data[selSequence.GetValues() == selValue]
-                    if len(data)>0: 
+                    if len(data)>0:
                         plot_objects.append(plot.PolyMarker(data,**attr))
                     if statsFlag:
                         self.stats.append(self.calcStats(data,canvas))
                 del data
         for h in self._text:
             plot_objects.append(self._text[h])
-        
+
         if skipDrawing:
             del plot_objects
             (graphics, xAxis, yAxis) = canvas.last_draw
@@ -459,7 +459,7 @@ class GraphPanel(wx.Panel):
             self.lastXAxis = xAxis
             # self.isNewXAxis = False
             return
-            
+
         if len(plot_objects) > 0:
             if not isinstance(canvas.GetXSpec(),tuple):
                 canvas.SetXSpec('min')
@@ -469,10 +469,10 @@ class GraphPanel(wx.Panel):
                 (graphics, xAxis, yAxis) = canvas.last_draw
                 xAxis = tuple(xAxis)
                 yAxis = tuple(yAxis)
-            
+
             if autoscaleY:
                 yAxis = (self.yMin, self.yMax)
-            
+
             if isinstance(self.forcedXAxis,tuple):
                 xAxis = self.forcedXAxis
 
@@ -503,7 +503,7 @@ class GraphPanel(wx.Panel):
             while self.colorTimeList[0] < minTime:
                 self.colorTimeList = self.colorTimeList[1:]
                 self.colorList = self.colorList[1:]
-                
+
         if len(self.colorTimeList) > 0:
             changePtList = digitize(self.colorTimeList, timeSeries)
             changePtList = compress(changePtList<numData, changePtList).tolist()
@@ -511,7 +511,7 @@ class GraphPanel(wx.Panel):
             return changePtList
         else:
             return [0, numData]
-        
+
     def GetCanvas(self):
         #return self.Graph.canvas
         return self.canvas

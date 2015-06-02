@@ -10,23 +10,23 @@ class CoordinatorLauncherFrame(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("Picarro Coordinator Launcher")
         self.SetBackgroundColour("#E0FFFF")
-        
+
         # labels
         self.labelTitle = wx.StaticText(self, -1, "Picarro Coordinator Launcher", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
         self.labelSelect = wx.StaticText(self, -1, "Select Coordinator", style=wx.ALIGN_CENTER)
-        
+
         # Divider line
         self.staticLine = wx.StaticLine(self, -1)
-        
+
         # controls
         self.comboBoxSelect = wx.ComboBox(self, -1, value = coorChoices[0], choices = coorChoices, style = wx.CB_READONLY|wx.CB_DROPDOWN)
-        
+
         # button
         self.buttonLaunch = wx.Button(self, -1, "Launch", size=(110, 20))
         self.buttonLaunch.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.__do_layout()
 
     def __do_layout(self):

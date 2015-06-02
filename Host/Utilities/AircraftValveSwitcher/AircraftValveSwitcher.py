@@ -4,7 +4,7 @@ Purpose: Customized utility to enable fast valve switching using current valve s
 
 File History:
     2012-04-04 alex  Created
-    
+
 Copyright (c) 2012 Picarro, Inc. All rights reserved
 """
 
@@ -48,7 +48,7 @@ class AircraftValveSwitcherFrame(wx.Frame):
         self.labelCurStatus = wx.StaticText(self.panel1, -1, "Current Status", size = (150,-1))
         self.valCurStatus = wx.TextCtrl(self.panel1, -1, "", size = (150, -1), style = wx.TE_READONLY)
         self.valCurStatus.SetBackgroundColour("#FFFF99")
-        
+
         self.labelCurSeq = wx.StaticText(self.panel1, -1, "Current Valve Sequence", size = (150,-1))
         self.valCurSeq = wx.TextCtrl(self.panel1, -1, "", size = (150, -1), style = wx.TE_READONLY)
         self.valCurSeq.SetBackgroundColour("#FFFF99")
@@ -74,11 +74,11 @@ class AircraftValveSwitcherFrame(wx.Frame):
 
         sizer_3.Add(self.panel1, 0, wx.EXPAND, 0)
         sizer_3.Add(self.panel2, 0, wx.EXPAND, 0)
-        
+
         self.SetSizer(sizer_3)
         sizer_3.Fit(self)
         self.Layout()
-        
+
 class AircraftValveSwitcher(AircraftValveSwitcherFrame):
     def __init__(self, configFile, *args, **kwds):
         self.valveSequencerRPC = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, APP_NAME)
@@ -111,16 +111,16 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
         self.timer.Start(timerIntervalS*1000)
 
-    
+
     def readDIO(self):
         return self.dio.getStatus(self.dioChannel)
-        
+
     def shutdown(self):
         if self.shutdownOption == 0:
             self.instMgrRpc.INSTMGR_ShutdownRpc(2)
         else:
             self.supervisorRPC.TerminateApplications(powerDown=False,stopProtected=True)
-        
+
     def onTimer(self, event):
             dio = self.readDIO()
             if self.state == "Init":
@@ -156,13 +156,13 @@ class AircraftValveSwitcher(AircraftValveSwitcherFrame):
                     self.shutdown()
                     sys.exit(0)
                 else:
-                   self.shutdownCount += 1 
+                   self.shutdownCount += 1
             #print "Current state = %s" % (self.state,)
             self.valCurStatus.SetValue(self.state)
             if self.state == "Shutting Down":
                 self.valCurStatus.SetForegroundColour("red")
             self.valCurSeq.SetValue(self.seq)
-            
+
 HELP_STRING = \
 """
 AircraftValveSwitcher.py [-h] [-c <FILENAME>]
@@ -174,7 +174,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -199,9 +199,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == "__main__":
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()

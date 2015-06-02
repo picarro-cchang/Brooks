@@ -175,7 +175,7 @@ class ParameterDialogBase(wx.Dialog):
     def __set_color(self,row,optional):
         """ Blue text indicates an optional quantity,
             Normal text is black """
-        if optional:            
+        if optional:
             self.grid_1.SetCellTextColour(row, nameCol, wx.BLUE)
             self.grid_1.SetCellTextColour(row, valueCol, wx.BLUE)
             self.grid_1.SetCellTextColour(row, minimumCol, wx.BLUE)

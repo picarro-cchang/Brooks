@@ -34,7 +34,7 @@ class UserCalGui(wx.Dialog):
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_1 = wx.FlexGridSizer(self.numParams, 2, 10, 10)
         grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)        
+        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
         for idx in range(1,self.numParams):
             grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
             grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)

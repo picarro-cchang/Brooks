@@ -16,9 +16,9 @@ import wx
 import sys
 import traceback
 
-from WebControllerFrameGui import ControllerFrameGui
-from WebControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
-from WebControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
+from Host.WebClient.WebController.WebControllerFrameGui import ControllerFrameGui
+from Host.WebClient.WebController.WebControllerModels import waveforms, parameterForms, panels, DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy
+from Host.WebClient.WebController.WebControllerModels import LogListener, SensorListener, RingdownListener, ControllerRpcHandler
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.ParameterDialog import ParameterDialog
@@ -182,7 +182,7 @@ class Controller(ControllerFrameGui):
         d = wx.MessageDialog(None,v,"Picarro CRDS",wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def onClose(self,evt):
         #for id in self.openParamDialogs:
         #    try:
@@ -193,17 +193,17 @@ class Controller(ControllerFrameGui):
         self.Close()
 
     def onFullInterface(self,evt):
-        if self.fullInterface: 
+        if self.fullInterface:
             return
         else:
             dlg = wx.TextEntryDialog(self, 'Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
             self.fullInterface = (dlg.ShowModal() == wx.ID_OK) and (dlg.GetValue() == self.password)
             dlg.Destroy()
-        if self.fullInterface: 
+        if self.fullInterface:
             self.updateInterface()
 
     def onUserInterface(self,evt):
-        if not self.fullInterface: 
+        if not self.fullInterface:
             return
         else:
             self.fullInterface = False
@@ -213,13 +213,13 @@ class Controller(ControllerFrameGui):
         """ Update the Controller GUI based on self.fullInterface."""
         if not self.fullInterface:
             self.controllerFrameGui_menubar.EnableTop(pos=1,enable=False)
-            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False) 
+            self.controllerFrameGui_menubar.EnableTop(pos=2,enable=False)
             # self.commandLogPanel.disableAll()
         else:
             self.controllerFrameGui_menubar.EnableTop(pos=1,enable=True)
             self.controllerFrameGui_menubar.EnableTop(pos=2,enable=True)
             # self.commandLogPanel.enableAll()
-        
+
     def onUpdateTimer(self,evt):
         pageNum = self.topNotebook.GetSelection()
         pageText = self.topNotebook.GetPageText(pageNum)
@@ -252,7 +252,7 @@ class Controller(ControllerFrameGui):
         # # Deal with updating the command log panel
         # self.commandLogPanel.setStreamFileState()
         # acqState = self.commandLogPanel.updateAcquisitionState()
-        # self.controllerFrameGui_statusbar.SetStatusText(acqState,0)        
+        # self.controllerFrameGui_statusbar.SetStatusText(acqState,0)
         # # Deal with event manager log messages
         # while True:
             # msg = self.logListener.getLogMessage()
@@ -260,7 +260,7 @@ class Controller(ControllerFrameGui):
                 # self.commandLogPanel.addMessage(msg)
             # else:
                 # break
-            
+
         # Deal with Controller RPC calls within GUI idle loop
         try:
             daemon = self.rpcHandler.server.daemon
@@ -277,7 +277,7 @@ class Controller(ControllerFrameGui):
 
     def onWriteIni(self, event):
         Driver.writeIniFile()
-            
+
 # Report GUI exceptions in EventManager
 def excepthook(type,value,trace):
     exc = traceback.format_exception(type,value,trace)

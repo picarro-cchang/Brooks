@@ -23,9 +23,9 @@ import os
 import zipfile
 import pytz
 from optparse import OptionParser
-from DatViewerPrefs import DatViewerPrefs
-from PlotControlPanel import PlotControlPanel
-from PlotPanel import PlotPanel, PlotPanel2, MplPanel
+from Host.DatViewer.DatViewerPrefs import DatViewerPrefs
+from Host.DatViewer.PlotControlPanel import PlotControlPanel
+from Host.DatViewer.PlotPanel import PlotPanel, PlotPanel2, MplPanel
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
@@ -202,7 +202,7 @@ class SeriesFrame(wx.Frame):
                                      panelName=panelName,
                                      fAutoscaleY=fAutoscaleY,
                                      fShowPoints=fShowPoints)
-            
+
             self.panels.append(panel)
 
             # wrap a sizer around the panel with a margin
@@ -655,7 +655,7 @@ class AppFrame(wx.Frame):
 
     def onSeries2(self, event):
         return self.onSeries(self.h5File, 2)
-        
+
     def onSeries3(self, event):
         return self.onSeries(self.h5File, 3)
 

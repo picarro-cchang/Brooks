@@ -25,7 +25,7 @@ if sys.platform == 'win32':
     from time import clock as TimeStamp
 else:
     from time import time as TimeStamp
-import EventManager
+import Host.EventManager.EventManager as EventManager
 import threading
 if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
@@ -542,7 +542,7 @@ class LogViewer(object):
 
     def UpdateEventData(self):
         def _UpdateEventData():
-            # Events will appear on screen when CommandTimer fires next 
+            # Events will appear on screen when CommandTimer fires next
             #update the event count in the status bar...
             self.frame_1.StatusBar.SetStatusText("%6s events" % len(self._EventDataSource), 0)
         self.commandQueue.put(_UpdateEventData)

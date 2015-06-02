@@ -1,9 +1,9 @@
 """
 File Name: GlobalHawk.py
 Purpose: This is responsible for network communications with the NASA Global Hawk Aircraft
-         It supports several external commands via TCP or UDP. 
+         It supports several external commands via TCP or UDP.
          N.B. These MUST be terminated using a "\n" before they are obeyed.
-         
+
          STANDBY  - Shut down but keep driver operating
          STOP     - Shut down and stop driver
          RESTART  - Restart analyzer
@@ -12,7 +12,7 @@ Purpose: This is responsible for network communications with the NASA Global Haw
 
 File History:
     11-09-05 sze   Initial release
-    
+
 Copyright (c) 2011 Picarro, Inc. All rights reserved
 """
 
@@ -92,7 +92,7 @@ class AnalyzerControl(Singleton):
     def standby(self):
         self.killUncontrolled()
         self.supervisor.TerminateApplications(False, False)
-        
+
     def stop(self):
         self.killUncontrolled()
         self.supervisor.TerminateApplications(False, True)
@@ -122,7 +122,7 @@ class AnalyzerControl(Singleton):
                     time.sleep(2.0)
         except:
             pass
-                
+
         os.chdir(self.supervisorHostDir)
         info = subprocess.STARTUPINFO()
         print "ConsoleMode = ", self.consoleMode
@@ -130,7 +130,7 @@ class AnalyzerControl(Singleton):
             info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             info.wShowWindow = subprocess.SW_HIDE
         dwCreationFlags = win32process.CREATE_NEW_CONSOLE
-            
+
         if self.launchType == "exe":
             subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
         else:
@@ -141,7 +141,7 @@ class AnalyzerControl(Singleton):
             info = subprocess.STARTUPINFO()
             subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
 
-                                        
+
 class TcpServer(asyncore.dispatcher):
     """Receives connections and establishes handlers for each client.
     """
@@ -164,7 +164,7 @@ class TcpServer(asyncore.dispatcher):
     def handle_close(self):
         self.close()
         return
-        
+
 class UdpServer(asynchat.async_chat):
     def __init__(self,address,target):
         asynchat.async_chat.__init__(self)
@@ -180,7 +180,7 @@ class UdpServer(asynchat.async_chat):
         self.buffer = []
     def handle_connect(self):
         pass
-                
+
 class GoAwayHandler(asynchat.async_chat):
     """Tell client to go away and close the connection"""
     def __init__(self,sock):
@@ -192,7 +192,7 @@ class GoAwayHandler(asynchat.async_chat):
         return
     def found_terminator(self):
         return
-    
+
 class TcpHandler(asynchat.async_chat):
     """Handles processing data from a single client.
     """
@@ -202,7 +202,7 @@ class TcpHandler(asynchat.async_chat):
         self.push("Connected to Picarro TCP server\r\n")
         self.closed = False
         self.buffer = []
-        self.actions = dict(STANDBY  = target.standby, 
+        self.actions = dict(STANDBY  = target.standby,
                             STOP     = target.stop,
                             RESTART  = target.restart,
                             REBOOT   = target.reboot,
@@ -221,14 +221,14 @@ class TcpHandler(asynchat.async_chat):
         except:
             self.push(traceback.format_exc().replace("\n","\r\n"))
         self.buffer = []
-        
+
     def handle_close(self):
         self.closed = True
-        self.close()        
+        self.close()
 
 def format(fmtList,v):
     for t,f in fmtList:
-        if isinstance(v,t): 
+        if isinstance(v,t):
             try:
                 return f % (v,)
             except TypeError:
@@ -237,10 +237,10 @@ def format(fmtList,v):
 
 MAX_SENSORS = 14
 MAX_DATA = 14
-    
+
 class GlobalHawk(Singleton):
     initialized = False
-    def __init__(self, configPath=None):        
+    def __init__(self, configPath=None):
         if not self.initialized:
             if configPath != None:
                 # Read from .ini file
@@ -297,21 +297,21 @@ class GlobalHawk(Singleton):
                 raise ValueError("Configuration file must be specified to initialize GlobalHawk network interface")
             self.initialized = True
         Log('GlobalHawk initialized',Data=dict(statusIP='%s:%d'%(self.statusHost,self.statusPort)))
-        
+
     def sendStatus(self,data):
         self.statusSocket.sendto(data,(self.statusHost,self.statusPort))
-        
-    # Get data from sensor queue until some timestamp (from any stream) exceeds reportTime. 
+
+    # Get data from sensor queue until some timestamp (from any stream) exceeds reportTime.
     # If the queue becomes empty before this happens, return None
-    # Otherwise, report latest values of sensor streams specified in streamIndices as a 
+    # Otherwise, report latest values of sensor streams specified in streamIndices as a
     #  list of the same length as streamIndices. This is a COPY of currentSensors so we can
     #  safely update currentSensors
-    
+
     def setSensorStreams(self,streamIndices):
         # Specify list of stream indices that we wish to have reported
         self.streamIndices = streamIndices
         self.currentSensors = len(streamIndices)*[None]
-        
+
     def getSensorData(self,reportTime):
         # Get all the data in the sensor queue up to reportTime and return all the current sensor
         #  values at that time. If the data in the sensor queue are all before reportTime, return None
@@ -328,7 +328,7 @@ class GlobalHawk(Singleton):
             if d is not None:
                 if d.streamNum in self.streamIndices:
                     self.currentSensors[self.streamIndices.index(d.streamNum)] = d.value
-        
+
     def run(self):
         self.analyzerControl = AnalyzerControl(self.config)
         TcpServer((self.tcpHost,self.tcpPort),self.analyzerControl)
@@ -340,7 +340,7 @@ class GlobalHawk(Singleton):
         #startTs = d.timestamp
         nextReport = self.sensorPeriod*((startTs + self.sensorPeriod)//self.sensorPeriod)
         formatList = [(int,'%d'),(float,'%.5f'),(types.NoneType,'')]
-        
+
         while True:
             asyncore.loop(timeout=0.1,count=1)
             # Get data available on the data manager queue
@@ -348,7 +348,7 @@ class GlobalHawk(Singleton):
                 status_fields = [self.id]
                 d = self.dmQueue.get()
                 ts, mode, source = d['data']['timestamp'], d['mode'], d['source']
-                if source == self.dataSource: 
+                if source == self.dataSource:
                     tsAsString = timestampToUtcDatetime(ts).strftime('%Y%m%dT%H%M%S') + '.%03d' % (ts % 1000,)
                     status_fields.append(tsAsString)
                     status_fields.append('DATA')
@@ -368,7 +368,7 @@ class GlobalHawk(Singleton):
                 data = ','.join(status_fields)
                 self.sendStatus('%s\r\n' % data)
                 nextReport += self.sensorPeriod
-        
+
 HELP_STRING = """GlobalHawk.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following. Note that options override

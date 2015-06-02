@@ -11,7 +11,7 @@
 # 07-03-12 sze   Patched daylight saving time issue in normalize
 # 07-05-18 sze   Added color handling for graph text and axis lines
 import wx
-import plot
+import Host.Common.plot as plot
 import numpy
 import time
 import calendar
@@ -201,9 +201,9 @@ class MyPlotCanvas(plot.PlotCanvas):
 
     def Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
         """Wrapper around _Draw, which handles log axes"""
-        
+
         graphics.setLogScale(self.getLogScale())
-        
+
         if xAxis is not None: xAxis = tuple(xAxis)
         if yAxis is not None: yAxis = tuple(yAxis)
         # check Axis is either tuple or none
@@ -220,7 +220,7 @@ class MyPlotCanvas(plot.PlotCanvas):
             if yAxis[0] == yAxis[1]:
                 return
         self._Draw(graphics, xAxis, yAxis, dc)
-        
+
     def _Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
         """\
         Draw objects in graphics with specified x and y axis.
@@ -238,11 +238,11 @@ class MyPlotCanvas(plot.PlotCanvas):
             if yAxis[0] == yAxis[1]:
                 self.Reset()
                 return
-            
+
         p1, p2 = graphics.boundingBox()
         if numpy.isnan(p1).any() or numpy.isnan(p2).any():
             return
-            
+
         if self._hasDragged: return
         if dc == None:
             # sets new dc and clears it
@@ -273,7 +273,7 @@ class MyPlotCanvas(plot.PlotCanvas):
             # Both axis specified in Draw
             p1= numpy.array([xAxis[0], yAxis[0]])    # lower left corner user scale (xmin,ymin)
             p2= numpy.array([xAxis[1], yAxis[1]])     # upper right corner user scale (xmax,ymax)
-            
+
 
         self.last_draw = (graphics, numpy.array(xAxis), numpy.array(yAxis))       # saves most recient values
         # Get ticks and textExtents for axis if required

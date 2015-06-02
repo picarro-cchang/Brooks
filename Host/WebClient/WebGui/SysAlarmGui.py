@@ -60,13 +60,13 @@ class SysAlarmDialog(wx.Dialog):
         #btn = wx.Button(self, wx.ID_CANCEL)
         #setItemFont(btn,getFontFromIni('DialogButtons'))
         #btnsizer.AddButton(btn)
-        
+
         btnsizer.Realize()
 
         self.vsizer.Add(btnsizer, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
         self.SetSizer(self.vsizer)
         self.vsizer.Fit(self)
-        
+
 class SysAlarmViewListCtrl(wx.ListCtrl):
     """ListCtrl to display alarm status
     attrib is a list of wx.ListItemAttr objects for the disabled and enabled alarm text
@@ -152,7 +152,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
             return self.attrib[1]
         else:
             return self.attrib[0]
-            
+
     def OnGetItemImage(self, item):
         goodStatus, descr = self._DataSource.getStatus(item)
         enabled = self._DataSource.alarmData[item][1]
@@ -160,10 +160,10 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
             return self.IconAlarmClear
         else:
             return self.IconAlarmSet
-            
+
     def RefreshList(self):
         self.RefreshItems(0,self.GetItemCount()-1)
-        
+
 class SysAlarmInterface(object):
     """Interface to the alarm system RPC and status ports"""
     def __init__(self):
@@ -178,19 +178,19 @@ class SysAlarmInterface(object):
                                                     self._IPVStatusFilter,
                                                     retry = True,
                                                     name = "System Alarm IPV listener")
-                                            
+
         self.alarmData = [["System Alarm", True], ["IPV Connectivity", False]]
         self.latestInstMgrStatus = -1
         self.latestIPVStatus = "-1,0.0"
-        
+
     def _InstMgrStatusFilter(self, obj):
         """Updates the local (latest) copy of the instrument manager status bits."""
         self.latestInstMgrStatus = obj.status
-        
+
     def _IPVStatusFilter(self, obj):
         """Updates the local (latest) copy of the IPV status bits."""
         self.latestIPVStatus = obj
-        
+
     def setAlarm(self,index, enable):
         """Set alarm enable and threshold by making a non-blocking RPC call to the alarm system"""
         self.alarmData[index][1] = enable

@@ -18,7 +18,7 @@ import os
 import sys
 import time
 import os.path
-from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR 
+from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common import Broadcaster, Listener, StringPickler
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from tables import openFile
@@ -68,7 +68,7 @@ class rdReprocessor(object):
             # raw_input("Press <Enter> to send %s" % f)
             broadcaster.send(StringPickler.PackArbitraryObject(rdfDict))
             time.sleep(1.0)
-       
+
 HELP_STRING = \
 """ rdReprocessor.py [-c<FILENAME>] [-h|--help]
 
@@ -95,13 +95,13 @@ def HandleCommandSwitches():
 
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
-        
+
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME # this is not working...
     #configFile = DEFAULT_CONFIG_NAME
     print "Name of DEFAULT configFile is %s" % configFile
-    
-    
+
+
     if '-h' in options:
         PrintUsage()
         sys.exit()
@@ -111,7 +111,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return (configFile)
-  
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     print  "The name of configFile is %s" % configFile

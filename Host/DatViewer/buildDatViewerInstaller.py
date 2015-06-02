@@ -4,7 +4,7 @@ Copyright 2014 Picarro Inc.
 Create an installer for DatViewer. It's currently distributed as
 source, so installer should work for either Win7 or WinXP.
 
-Currently works for 
+Currently works for
 """
 
 from __future__ import with_statement

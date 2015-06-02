@@ -5,7 +5,7 @@ import sys
 # Need to find path to the translation table
 here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
 if here not in sys.path: sys.path.append(here)
-from translate import newname
+from Host.Tests.DataManager.Scripts.translate import newname
 
 rdict = _SYNC_OUT_("SYNC1")
 for k in rdict:

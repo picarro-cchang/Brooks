@@ -54,4 +54,4 @@ class TestAmalgamator(unittest.TestCase):
         self.assertEqual(self.amalgamator.result,str3+str5+str3)
 
 if __name__ == "__main__":
-    unittest.main()         
+    unittest.main()

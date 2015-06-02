@@ -1,19 +1,19 @@
 #!/usr/bin/python
 #
-# FILE:  
+# FILE:
 #   processUtils.py
 #
-# DESCRIPTION:                                                
+# DESCRIPTION:
 #   Utilities to launch and terminate processes
-#                                                             
-# SEE ALSO:                                             
-#   Specify any related information.                   
-#                                                             
+#
+# SEE ALSO:
+#   Specify any related information.
+#
 # HISTORY:
 #   07-Jan-2009  sze  Initial version.
 #
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved 
-#                                                            
+#  Copyright (c) 2009 Picarro, Inc. All rights reserved
+#
 import ctypes
 import os
 import sys
@@ -40,7 +40,7 @@ if sys.platform == "win32":
       }
 
 elif sys.platform == "linux2":
-    import ttyLinux
+    import Host.Common.ttyLinux as ttyLinux
     libc = ctypes.CDLL("libc.so.6")
     sched_getaffinity = libc.sched_getaffinity
     sched_setaffinity = libc.sched_setaffinity
@@ -193,7 +193,7 @@ elif sys.platform == "linux2":
         else:
             try:
                 retval = os.waitpid(processHandle.pid,os.WNOHANG)
-                return retval[0] == 0   # This means that wait would have blocked            
+                return retval[0] == 0   # This means that wait would have blocked
             except OSError:
                 return False
             except Exception,e:
@@ -223,4 +223,3 @@ if __name__ ==  "__main__":
     sys.stdout.write("\n")
     print "Terminating notepad"
     terminateProcess(process)
-    

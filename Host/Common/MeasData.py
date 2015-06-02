@@ -17,7 +17,7 @@
 # 06-12-19 russ  Fixed/improved version handling
 # 08-03-07 sze   Convert data in MeasData object to floats to avoid issues with pickling numpy output
 # 10-10-23 sze   Include ms timestamp in data
-import StringPickler
+import Host.Common.StringPickler as StringPickler
 from Host.Common.timestamp import unixTimeToTimestamp
 
 class IncompatibleMeasDataPickleVer(Exception): pass
@@ -78,8 +78,8 @@ class MeasData(object):
         return ret
 
 if __name__ == "__main__":
-    import Broadcaster
-    import SharedTypes
+    import Host.Common.Broadcaster as Broadcaster
+    import Host.Common.SharedTypes as SharedTypes
     import random
     import time
 

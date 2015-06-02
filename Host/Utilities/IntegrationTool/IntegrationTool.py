@@ -34,8 +34,8 @@ FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "IntegrationTool")
 
 ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
-TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM", 
-             "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate FSR", "Run Calibrate System", 
+TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM",
+             "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate FSR", "Run Calibrate System",
              "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control", "Write Software Version"]
 HOSTEXE_DIR = r"C:\Picarro\G2000\HostExe"
 INTEGRATION_DIR = r"C:\Picarro\G2000\InstrConfig\Integration"
@@ -65,25 +65,25 @@ THRESHOLD_STATS_SCHEMES = {
               },
               "CFADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
               "CFBDS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
               "CFDDS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
               "CFEDS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
@@ -99,18 +99,18 @@ THRESHOLD_STATS_SCHEMES = {
               },
               "CFKADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
                 "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
               },
               "CFKBDS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
                 "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
               },
               "AEDS":
@@ -119,20 +119,20 @@ THRESHOLD_STATS_SCHEMES = {
               },
               "CKADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch", 
+                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
               },
               "CFFDS":
-              { "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch", 
+              { "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
+                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
                 "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
                 "C12Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
                 "C13Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
               },
               "CFHADS":
               { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "H2O_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_BL.sch",
                 "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
@@ -140,22 +140,22 @@ THRESHOLD_STATS_SCHEMES = {
               },
               "BFADS":
               { "H2S_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch", 
+                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
                 "H2S_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_PK.sch",
                 "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
               },
               "FCDS":
               { "iCH4_BL"       : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineiCH4.sch",
-                "C12_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_12C-iCH4.sch", 
+                "C12_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_12C-iCH4.sch",
                 "C13_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_13C-iCH4.sch",
                 "CH4_BL"        : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineCFADS.sch"
               },
               "MADS":
               { "HF_BL"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_baseline.sch",
-                "HF_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_peak.sch", 
+                "HF_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_peak.sch",
               },
              }
-                  
+
 # Connect to database
 try:
     #http://user:pass@host:port/path
@@ -176,7 +176,7 @@ class IntegrationToolFrame(wx.Frame):
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.panel2.SetBackgroundColour("#BDEDFF")
         self.panel3.SetBackgroundColour("#85B24A")
-        
+
         # Menu bar
         self.frameMenubar = wx.MenuBar()
         self.iHelp = wx.Menu()
@@ -186,7 +186,7 @@ class IntegrationToolFrame(wx.Frame):
         self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, "About Picarro Integration Tool", "", wx.ITEM_NORMAL)
         self.iHelp.AppendItem(self.iAbout)
         self.SetMenuBar(self.frameMenubar)
-        
+
         # Analyzer information section
         self.labelAnalyzer = wx.StaticText(self.panel1, -1, "Analyzer Information", style = wx.ALIGN_CENTER)
         self.labelAnalyzer.SetFont(wx.Font(10, wx.DEFAULT, style = wx.NORMAL,weight = wx.BOLD))
@@ -195,7 +195,7 @@ class IntegrationToolFrame(wx.Frame):
             analyzerChassis = "CHAS2K"+Driver.fetchObject("LOGIC_EEPROM")[0]["Chassis"]
         except:
             pass
-            
+
         try:
             #analyzerChoices = [elem['identifier'] for elem in DB.get_values("Analyzer",dict(status="I"))]
             analyzerChoices = [elem['identifier'] for elem in DB.get_values("chassis2k",dict(status__in = ["I","U"]))]
@@ -226,8 +226,8 @@ class IntegrationToolFrame(wx.Frame):
         self.labelTest.SetFont(wx.Font(10, wx.DEFAULT, style = wx.NORMAL,weight = wx.BOLD))
 
         self.textCtrlIntegration = wx.TextCtrl(self.panel2, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
-        self.textCtrlIntegration.SetMinSize((350, 150))        
-        
+        self.textCtrlIntegration.SetMinSize((350, 150))
+
         self.testButtonList = []
         for i in range(len(TEST_LIST)):
             newButton = wx.Button(self.panel2, -1, TEST_LIST[i], size = (350, -1))
@@ -255,7 +255,7 @@ class IntegrationToolFrame(wx.Frame):
         sizer_1.Add(grid_sizer_1, 0)
         sizer_1.Add((-1,10))
         self.panel1.SetSizer(sizer_1)
-        
+
         sizer_2.Add(self.labelTest, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER, 10)
         for i in range(len(TEST_LIST)):
             sizer_2.Add(self.testButtonList[i], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER, 10)
@@ -269,7 +269,7 @@ class IntegrationToolFrame(wx.Frame):
         sizer_4.Add(self.panel1, 0, wx.EXPAND, 0)
         sizer_4.Add(self.panel2, 0, wx.EXPAND, 0)
         sizer_4.Add(self.panel3, 0, wx.EXPAND, 0)
-        
+
         self.SetSizer(sizer_4)
         sizer_4.Fit(self)
         self.Layout()
@@ -287,11 +287,11 @@ class IntegrationTool(IntegrationToolFrame):
                     newStr = r"%s" % self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName]
                     self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName] = newStr
             self.allSchemes.update(self.cp["THRESHOLD_STATS_SCHEMES"])
-            self.textCtrlIntegration.SetValue("Config file specified at command line: %s" % configFile) 
+            self.textCtrlIntegration.SetValue("Config file specified at command line: %s" % configFile)
         except Exception, err:
             #print traceback.format_exc()
             self.textCtrlIntegration.SetValue("Config file not used")
-        
+
         self.wbCalFile = os.path.join(CAL_DIR, WARMBOX_CAL)
         self.wbCalBackup = os.path.join(CAL_DIR, (WARMBOX_CAL+"_Backup"))
         self.wbCalDuplicate = os.path.join(INTEGRATION_DIR, WARMBOX_CAL)
@@ -311,7 +311,7 @@ class IntegrationTool(IntegrationToolFrame):
         # For example, {1: ("966507", "CO2"), 2: ("916778", "CH4")}
         self.bindEvents()
         self.onSelect(None)
-        
+
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
@@ -327,12 +327,12 @@ class IntegrationTool(IntegrationToolFrame):
         self.Bind(wx.EVT_BUTTON, self.onThresholdStats, self.testButtonList[8])
         self.Bind(wx.EVT_BUTTON, self.onFlowControl, self.testButtonList[9])
         self.Bind(wx.EVT_BUTTON, self.onWriteSoftwareVer, self.testButtonList[10])
-        
+
     def onSelect(self, event):
         self.analyzer = self.comboBoxSelect.GetValue()
         self.analyzerType = "Beta"
         self.showAnalyzerName()
-        
+
         if DB is None:
             # No database connection available
             if os.path.exists(self.wbCalFile+".ini") and os.path.exists(self.hbCalFile+".ini"):
@@ -348,8 +348,8 @@ class IntegrationTool(IntegrationToolFrame):
         self.testButtonList[10].Enable(True)
 
         try:
-            self.warmbox = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
-                            if elem['type'] == 'warmbox2k'][0]            
+            self.warmbox = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k"))
+                            if elem['type'] == 'warmbox2k'][0]
             self.testButtonList[1].Enable(True)
             self.testButtonList[2].Enable(True)
             self.testButtonList[3].Enable(True)
@@ -362,17 +362,17 @@ class IntegrationTool(IntegrationToolFrame):
             self.testButtonList[3].Enable(False)
             self.testButtonList[4].Enable(False)
         self.textCtrlAnalyzerInfoList[1].SetValue(self.warmbox)
-        
+
         try:
-            self.wlm = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.warmbox,type="warmbox2k")) 
-                            if elem['type'] == 'wlm2k'][0]            
+            self.wlm = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.warmbox,type="warmbox2k"))
+                            if elem['type'] == 'wlm2k'][0]
         except Exception, err:
             #print err
             self.wlm = "N/A"
         self.textCtrlAnalyzerInfoList[2].SetValue(self.wlm)
-        
-        try:    
-            self.hotbox = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
+
+        try:
+            self.hotbox = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k"))
                             if elem['type'] == 'hotbox2k'][0]
             self.testButtonList[5].Enable(True)
             self.testButtonList[6].Enable(True)
@@ -388,9 +388,9 @@ class IntegrationTool(IntegrationToolFrame):
             self.testButtonList[8].Enable(False)
             self.testButtonList[9].Enable(False)
         self.textCtrlAnalyzerInfoList[4].SetValue(self.hotbox)
-            
-        try:    
-            self.cavity = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.hotbox)) 
+
+        try:
+            self.cavity = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.hotbox))
                             if elem['type'] == 'cavity'][0]
         except Exception, err:
             #print err
@@ -401,10 +401,10 @@ class IntegrationTool(IntegrationToolFrame):
         self.laserSerNumDict = {}
         laserNumStr = ""
         try:
-            self.numLasers = len([elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
+            self.numLasers = len([elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k"))
                                   if elem['type'] == 'laserpcb2k'])
             for idx in range(self.numLasers):
-                laserId = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k")) 
+                laserId = [elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer,type="chassis2k"))
                             if elem['slot'] == 'Laser%dPcb'%(idx+1)][0]
                 laserSerNum, laserTypeKey = DB.get_contents(dict(identifier=laserId,type="laserpcb2k"))[0]["identifier"].split("-")
                 laserType = self.LaserTypeDict[laserTypeKey]
@@ -426,7 +426,7 @@ class IntegrationTool(IntegrationToolFrame):
         except:
             self.name = "N/A"
         self.textCtrlAnalyzerInfoList[0].SetValue(self.name)
-        
+
     def onAboutMenu(self, event):
         d = wx.MessageDialog(None, "Integration tool for calibrating and verifying Picarro G2000 instruments\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Integration Tool", wx.OK)
         d.ShowModal()
@@ -453,7 +453,7 @@ class IntegrationTool(IntegrationToolFrame):
             makeEepromCalCo = ConfigObj(os.path.join(INTEGRATION_DIR, "MakeCalFromEeproms.ini"), raise_errors=True)
             iniList = ["writeWlmEeprom.ini", "MakeWarmBoxCalFile.ini", "MakeCalFromEeproms.ini"]
         except Exception, err:
-            print err             
+            print err
         for idx in range(self.numLasers):
             laserNum = idx+1
             laserFilename = "Laser_%s_%s" % self.laserSerNumDict[laserNum]
@@ -467,20 +467,20 @@ class IntegrationTool(IntegrationToolFrame):
             key = "LASER%d" % laserNum
             wlmEepromCo["FILES"][key] = os.path.join(INTEGRATION_DIR, laserFilename)
             makeWarmBoxCalCo["FILES"][key] = os.path.join(INTEGRATION_DIR, laserFilename)
-            iniList = iniList + [("MakeWlmFileLaser%d.ini" % laserNum), ("writeLaserEeprom%d.ini" % laserNum)] 
+            iniList = iniList + [("MakeWlmFileLaser%d.ini" % laserNum), ("writeLaserEeprom%d.ini" % laserNum)]
         wlmEepromCo["SETTINGS"]["SERIAL"] = self.wlm
         makeWarmBoxCalCo["FILES"]["OUTPUT"] = self.wbCalBackup
         makeEepromCalCo["FILES"]["OUTPUT"] = self.wbCalFile
-        
+
         wlmEepromCo.write()
         makeWarmBoxCalCo.write()
         makeEepromCalCo.write()
-        
+
         self.display += "The following INI files are updated:\n"
         for ini in iniList:
             self.display += "%s\n" % ini
-        self.textCtrlIntegration.SetValue(self.display) 
-        
+        self.textCtrlIntegration.SetValue(self.display)
+
     def onLaserWlmCal(self, event):
         d = wx.MessageDialog(None,"Is Burleigh wavemeter connected?", "Check Burleigh wavemeter", \
         style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
@@ -488,7 +488,7 @@ class IntegrationTool(IntegrationToolFrame):
         d.Destroy()
         if not burleighConnected:
             self.display += "Need to connect Burleigh wavemeter first...\n"
-            self.textCtrlIntegration.SetValue(self.display)        
+            self.textCtrlIntegration.SetValue(self.display)
             return
         d = wx.TextEntryDialog(None, "Please enter time delay (minutes)", "Set time delay", "0.0")
         getDelay = (d.ShowModal() == wx.ID_OK)
@@ -499,12 +499,12 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "Action cancelled...\n"
             self.textCtrlIntegration.SetValue(self.display)
             d.Destroy()
-            return 
-            
+            return
+
         newThread = threading.Thread(target = self._onLaserWlmCal, args = (timeDelay,))
         newThread.setDaemon(True)
         newThread.start()
-        
+
     def _onLaserWlmCal(self, timeDelay):
         os.chdir(INTEGRATION_DIR)
         try:
@@ -517,12 +517,12 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "%s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
- 
+
     def onEEPROM(self, event):
         newThread = threading.Thread(target = self._onEEPROM)
         newThread.setDaemon(True)
         newThread.start()
-        
+
     def _onEEPROM(self):
         # Need to use blocking calls to serialize the events
         os.chdir(INTEGRATION_DIR)
@@ -539,23 +539,23 @@ class IntegrationTool(IntegrationToolFrame):
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteWlmEeprom.exe"), "WriteWlmEeprom.ini")
             print cmd
             os.system(cmd)
-            self.display += "EEPROM for WLM written.\n"  
+            self.display += "EEPROM for WLM written.\n"
         except Exception, err:
-            self.display += "%s\n" % err           
+            self.display += "%s\n" % err
         try:
             cmd = os.path.join(HOSTEXE_DIR, "DumpEeproms.exe")
             print cmd
             os.system(cmd)
-            self.display += "Dump EEPROMs.\n" 
+            self.display += "Dump EEPROMs.\n"
         except Exception, err:
-            self.display += "%s\n" % err 
+            self.display += "%s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
-    
+
     def onMakeWbCal(self, event):
         newThread = threading.Thread(target = self._onMakeWbCal)
         newThread.setDaemon(True)
         newThread.start()
-        
+
     def _onMakeWbCal(self):
         os.chdir(INTEGRATION_DIR)
         try:
@@ -564,7 +564,7 @@ class IntegrationTool(IntegrationToolFrame):
             os.system(cmd)
             self.display += "WB calibration table created from EEPROMs.\n"
         except Exception, err:
-            self.display += "%s\n" % err    
+            self.display += "%s\n" % err
         try:
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWarmBoxCalFile.exe"), "MakeWarmBoxCalFile.ini")
             print cmd
@@ -579,7 +579,7 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "%s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
-        
+
     def onCalibrateFSR(self, event):
         os.chdir(INTEGRATION_DIR)
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateFSR") and ini.endswith(".ini"))]
@@ -591,7 +591,7 @@ class IntegrationTool(IntegrationToolFrame):
         co = ConfigObj(os.path.join("../..",ini), raise_errors=True)
         if 'INSTRUCTIONS' in co['SETTINGS']:
             if wx.MessageBox(co['SETTINGS']['INSTRUCTIONS'],"Instructions - Cancel if not ready",
-                wx.OK | wx.CANCEL) != wx.OK: 
+                wx.OK | wx.CANCEL) != wx.OK:
                 return
         spectrumFile = os.path.abspath(co['SETTINGS']['SPECTRUM_FILE'])
         if os.path.exists(spectrumFile):
@@ -601,15 +601,15 @@ class IntegrationTool(IntegrationToolFrame):
         newThread = threading.Thread(target = self._onCalibrateFSR, args=(ini,spectrumFile,fitIni))
         newThread.setDaemon(True)
         newThread.start()
-        
-    def _onCalibrateFSR(self,ini,spectrumFile,fitIni):   
+
+    def _onCalibrateFSR(self,ini,spectrumFile,fitIni):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
         newDir = time.strftime(INTEGRATION_DIR + "/CalibrateFSR/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
-                os.makedirs(newDir)            
+                os.makedirs(newDir)
             os.chdir(newDir)
             cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateFsr.exe"), ini)
             print cmd
@@ -656,7 +656,7 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "Calibrate FSR failed: %s\n" % err
             self.display += traceback.format_exc()
-            
+
         self.textCtrlIntegration.SetValue(self.display)
         os.chdir(INTEGRATION_DIR)
 
@@ -664,8 +664,8 @@ class IntegrationTool(IntegrationToolFrame):
         newThread = threading.Thread(target = self._onCalibrateSystem)
         newThread.setDaemon(True)
         newThread.start()
-        
-    def _onCalibrateSystem(self):   
+
+    def _onCalibrateSystem(self):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
@@ -673,7 +673,7 @@ class IntegrationTool(IntegrationToolFrame):
         newDir = time.strftime(INTEGRATION_DIR + "/CalibrateSystem/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
-                os.makedirs(newDir)            
+                os.makedirs(newDir)
             os.chdir(newDir)
             for ini in iniList:
                 cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateSystem.exe"), ini)
@@ -692,12 +692,12 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "Calibrate System failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         os.chdir(INTEGRATION_DIR)
-        
+
     def onWlmOffset(self, event):
         newThread = threading.Thread(target = self._onWlmOffset)
         newThread.setDaemon(True)
         newThread.start()
-        
+
     def _onWlmOffset(self):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
@@ -722,12 +722,12 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "WLM Offset failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         os.chdir(INTEGRATION_DIR)
-        
+
     def onThresholdStats(self, event):
         newThread = threading.Thread(target = self._onThresholdStats)
         newThread.setDaemon(True)
         newThread.start()
-        
+
     def _onThresholdStats(self):
         os.chdir(INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
@@ -738,7 +738,7 @@ class IntegrationTool(IntegrationToolFrame):
                 os.makedirs(newDir)
             os.chdir(newDir)
             analyzerId = Driver.fetchObject("LOGIC_EEPROM")[0]
-            instrType = analyzerId["Analyzer"] 
+            instrType = analyzerId["Analyzer"]
             instrName = instrType + analyzerId["AnalyzerNum"]
             schemeDict = self.allSchemes[instrType]
             start, end, increment = [2000, 16000, 1000]
@@ -758,7 +758,7 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += "Threshold Stats failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
         os.chdir(INTEGRATION_DIR)
-     
+
     def onFlowControl(self, event):
         try:
             cmd = os.path.join(HOSTEXE_DIR, "FlowController.exe")
@@ -781,7 +781,7 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "Software version number can't be written to database: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
-     
+
 def handleCommandSwitches():
     shortOpts = "c:"
     longOpts = []
@@ -798,13 +798,13 @@ def handleCommandSwitches():
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
-    
+
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()

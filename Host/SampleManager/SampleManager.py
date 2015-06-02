@@ -15,7 +15,7 @@ File History:
     10-04-27 sze   Added RPC to allow scripts to check cavity temperature and setpoint to see if it is safe to start
                     flow. Modify StepValve and WaitPressureStabilize to terminate early with a returned value of False
                     if the valve controller is disabled during the operation.
-                    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -125,7 +125,7 @@ class SampleManagerBaseMode(object):
 
         self._valveCtrl = self._DriverRpc.getValveCtrlState()
         self._valveEnabled = (self._valveCtrl not in [interface.VALVE_CNTRL_DisabledState, interface.VALVE_CNTRL_ManualControlState])
-              
+
     def _create_var_from_config(self,config):
         for k,v in config.items():
             #this is ugly but, cant seem to check type.
@@ -158,7 +158,7 @@ class SampleManagerBaseMode(object):
         """Get pressure readings"""
         return self._DriverRpc.getPressureReading()
         #return self._pressure
-        
+
     def _RPC_ReadCavityTemperatureAndSetpoint(self):
         """Get cavity temperature and setpoint to see if it is safe to start flow"""
         return self._DriverRpc.getCavityTemperatureAndSetpoint()
@@ -198,7 +198,7 @@ class SampleManagerBaseMode(object):
             return self.pressure_tolerance_per
         except:
             return None
-            
+
     @LpcWrapper
     def _LPC_SetValveControl(self, control ):
         """ Set Valve Control. Valid control values are:
@@ -299,8 +299,8 @@ class SampleManagerBaseMode(object):
 
     @LpcWrapper
     def _LPC_StepValve( self, valve, start, step, iterations, interval, maxPressureChange=10 ):
-        """Step valve values in pre-definied iterations and interval. If for safety reason 
-        the valve control was disabled by the firmware, the step process will re-start from 
+        """Step valve values in pre-definied iterations and interval. If for safety reason
+        the valve control was disabled by the firmware, the step process will re-start from
         the beginning.
         """
         try:
@@ -324,7 +324,7 @@ class SampleManagerBaseMode(object):
             else: # Hardware entered disabled state
                 return False
         return True
-        
+
     @LpcWrapper
     def _LPC_PumpDownCavity( self, tolerance=0.2, timeout=300,interval=DEFAULT_SLEEP_INTERVAL, lockCount=1 ):
         """ Use outlet valve to pump down cavity """
@@ -390,7 +390,7 @@ class SampleManagerBaseMode(object):
 
     def _RPC_SetVerbose(self,flag):
         self.verbose = flag
-        
+
     def _LPC_OpenCloseSolenoidValves( self, valve, duration, concentration ):
         """ WARNING: This routine blocks until completes or terminated by control flag!!
             Open solenoid valves for specified durations in seconds and then close it.
@@ -436,7 +436,7 @@ class SampleManagerBaseMode(object):
     def _RPC_ReadHardwarePresent(self):
         """Read hardware present bit mask"""
         return self._DriverRpc.rdDasReg("HARDWARE_PRESENT_REGISTER")
-        
+
     def _HandleSolenoidValves(self,config):
         """ Solenoid valve script execution thread """
         self._terminateSolenoidControl = False
@@ -470,7 +470,7 @@ class SampleManagerBaseMode(object):
         try:
             if self._skipPressureCheck:
                 self._clearStatus()
-                self._setStatus( SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING )                    
+                self._setStatus( SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING )
                 return
             self._flowCtrl = self._DriverRpc.rdDasReg( interface.FLOW_CNTRL_STATE_REGISTER )
             self._valveCtrl = self._DriverRpc.getValveCtrlState()
@@ -541,7 +541,7 @@ class SampleManagerBaseMode(object):
                             valveInRange = True
                             self._clearStatus( SAMPLEMGR_STATUS_FLOW_LOW | SAMPLEMGR_STATUS_FLOW_HIGH )
 
-                # Check pressure (if not set skipped)   
+                # Check pressure (if not set skipped)
                 pressureLocked = False
                 pressure = self._RPC_ReadPressure()
                 pressureTol = self.pressure_tolerance_per
@@ -589,7 +589,7 @@ class SampleManagerBaseMode(object):
 
             else:
                 return
-            if self.verbose: 
+            if self.verbose:
                 print "pressure: %r, inletdac %r, outletdac %r" % (self._pressure, self._inletDacValue, self._outletDacValue )
         except:
             msg = "HandleStreamException:  %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
@@ -629,7 +629,7 @@ class SampleManager(object):
 
         if modeName == "BatchMode":
             self.mode._RPC_SkipPressureCheck()
-            
+
         self.streamListener = Listener(None,
                                        BROADCAST_PORT_SENSORSTREAM,
                                        interface.SensorEntryType,
@@ -679,7 +679,7 @@ class SampleManager(object):
     def CmdHandler(self):
         while ( self.terminate==False ):
             self.DoCommand()
-            
+
     def DoCommand(self):
         try:
             cmd,args,kwargs = self.cmdQueue.get( block=True, timeout=self.cmdTimeout )
@@ -780,9 +780,9 @@ class SampleManager(object):
             scriptBasename = dict(modeConfig)['script_filename']
             (modePath, modeFile) = os.path.split(scriptBasename)
 
-            scriptPath =  os.path.join(self.iniAbsBasePath, modePath) 
+            scriptPath =  os.path.join(self.iniAbsBasePath, modePath)
             scriptFilename = os.path.join(scriptPath,modeFile).strip() + ".py"
-            
+
             exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
             modeClass = locals()[modeFile]
 
@@ -818,7 +818,7 @@ class SampleManager(object):
     @RpcWrapStateChangeCalls
     def RPC_FlowStart(self):
         """START FLOW"""
-        
+
     @RpcWrapStateChangeCalls
     def RPC_FlowStop(self):
         """STOP FLOW"""

@@ -13,7 +13,7 @@
 import os
 import pickle
 from Host.autogen.interface import NUM_SCHEME_ROWS
-from configobj import ConfigObj
+from Host.Common.configobj import ConfigObj
 from copy import deepcopy
 
 # Memoize configuration files for efficiency
@@ -44,18 +44,18 @@ class Row(object):
                 raise IndexError('Unknown key %s in scheme row' % n)
     def __getattr__(self,n):
         if n in self.keynames:
-            return self.data[self.keynames[n]] 
+            return self.data[self.keynames[n]]
         else:
             raise AttributeError('Unknown key %s when getting scheme row attribute' % n)
     def __setattr__(self,n,v):
         if n in self.keynames:
-            self.data[self.keynames[n]] = v 
+            self.data[self.keynames[n]] = v
         else:
             object.__setattr__(self,n,v)
-        
+
 class SchemeError(Exception):
     pass
-    
+
 class Scheme(object):
     def __init__(self,fileName=None):
         self.fileName = fileName
@@ -64,7 +64,7 @@ class Scheme(object):
         self.numErrors = 0
         # Define sandbox environment for scheme
         self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy}
-        
+
         if fileName is not None:
             schemePath = os.path.split(os.path.abspath(fileName))[0]
             def getConfig(relPath):
@@ -77,7 +77,7 @@ class Scheme(object):
                         fp.close()
                 return configMemo.get(path,{})
             self.env['getConfig'] = getConfig
-            
+
         #
         self.version = 0
         self.nrepeat = 0
@@ -98,7 +98,7 @@ class Scheme(object):
             self.compile()
         if self.numErrors > 0:
             raise SchemeError(self.__str__())
-        
+
     def __str__(self):
         descr = ['Scheme version %d from %s' % (self.version, self.fileName)]
         if self.numErrors>0:
@@ -107,7 +107,7 @@ class Scheme(object):
         else:
             descr.append('Repeat count: %d, Rows: %d' % (self.nrepeat, self.numEntries))
         return '\n'.join(descr)
-    
+
     def evalInEnv(self,x):
         try:
             return eval(x,self.env)
@@ -121,7 +121,7 @@ class Scheme(object):
         except Exception, e:
             self.numErrors += 1
             self.errors.append("Line %d [%s]: %s" % (self.lineNum,e.__class__.__name__,e))
-            
+
     def compile(self):
         try:
             fp = file(self.fileName,"r")
@@ -145,7 +145,7 @@ class Scheme(object):
                             if x[1:3] == '$$':  # Start of a code block
                                 state = 'CODE_BLOCK'
                                 block =[]
-                            else:    
+                            else:
                                 x = x[1:].strip()
                                 # print 'Code: ', x
                                 self.execInEnv(x)
@@ -154,14 +154,14 @@ class Scheme(object):
                                 x = ",".join(x.split()) if "," not in x else x
                                 if rowType == 'repeat':
                                     self.env['repeat'] = self.evalInEnv(x)
-                                    rowType = 'numRows' 
+                                    rowType = 'numRows'
                                 elif rowType == 'numRows':
                                     self.env['numRows'] = self.evalInEnv(x)
                                     rowType = 'schemeRow'
-                                else: 
+                                else:
                                     x = 'Row(%s)' % x
                                     self.env['schemeRows'].append(self.evalInEnv(x))
-                            else:   
+                            else:
                                 # print 'Scheme: (%s)' % x
                                 x = 'Row(%s)' % x
                                 self.env['schemeRows'].append(self.evalInEnv(x))
@@ -174,7 +174,7 @@ class Scheme(object):
             if state == 'CODE_BLOCK':
                 self.numErrors += 1
                 self.errors.append("Line %d: Scheme ended within a code block" % (self.lineNum,))
-    
+
             numRows = self.env['numRows']
             schemeRows = self.env['schemeRows']
             self.numEntries = len(schemeRows) if numRows is None else numRows
@@ -183,7 +183,7 @@ class Scheme(object):
                 self.errors.append("Scheme has incorrect number of rows (%d != %d)" % (len(schemeRows),self.numEntries))
             if self.numEntries > NUM_SCHEME_ROWS:
                 self.numErrors += 1
-                self.errors.append("Scheme has more than %d rows" % (NUM_SCHEME_ROWS,))                
+                self.errors.append("Scheme has more than %d rows" % (NUM_SCHEME_ROWS,))
             if self.numErrors == 0:
                 self.nrepeat = self.env['repeat']
                 self.version = self.env['schemeVersion']
@@ -201,9 +201,9 @@ class Scheme(object):
         finally:
             fp.close()
             del self.env
-            
+
     def makeAngleTemplate(self):
-        # Make an angle based scheme template from a frequency based scheme where the setpoint 
+        # Make an angle based scheme template from a frequency based scheme where the setpoint
         #  and laserTemp fields are copies of the original, while all the other fields point to
         #  the originals
         s = Scheme()
@@ -222,7 +222,7 @@ class Scheme(object):
         s.extra3 = self.extra3
         s.extra4 = self.extra4
         return s
-        
+
     def repack(self):
         # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
         #  from the scheme, which is appropriate for sending it to the DAS
@@ -231,11 +231,11 @@ class Scheme(object):
 
 from sys import argv
 import numpy as np
-            
+
 if __name__ == "__main__":
     if len(argv)>1:
         fname = argv[1]
-    else:    
+    else:
         fname = raw_input("Name of scheme file")
     s = Scheme(fname)
     print "%-10d # Repetitions" % s.nrepeat
@@ -244,6 +244,6 @@ if __name__ == "__main__":
         print "%11.5f,%6d,%6d, %1d,%6d,%6d,%8.4f, %d, %d, %d, %d" % (s.setpoint[i],\
                 s.dwell[i],s.subschemeId[i],s.virtualLaser[i],s.threshold[i],s.pztSetpoint[i],\
                 s.laserTemp[i],s.extra1[i],s.extra2[i],s.extra3[i],s.extra4[i])
-        
+
     # fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"
     # fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"

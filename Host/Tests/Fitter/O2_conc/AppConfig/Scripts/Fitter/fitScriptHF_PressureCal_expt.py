@@ -15,21 +15,21 @@ if INIT:
     #fname = os.path.join(BASEPATH,r"test_instr_params.ini")
     #instrParams = getInstrParams(fname)
     #locals().update(instrParams)
-    
+
     anO2 = []
     anO2.append(Analysis(os.path.join(BASEPATH,r"./MADS/HF_PressureCal_VZ81_VZ82_v1.ini")))
     lastShift = None
-    
-# For offline analysis and output to file    
+
+# For offline analysis and output to file
     out = open("Fit_results.txt","w")
     first_fit = 1
 
 init = InitialValues()
 if lastShift is not None:
     init["base",3] = lastShift
-    
+
 deps = Dependencies()
-ANALYSIS = []    
+ANALYSIS = []
 d = DATA
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.30,maxVal=20.0)
 #d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
@@ -60,11 +60,11 @@ if d["spectrumId"] == 0:
     else:
         hf_adjust = 0
     lastShift = hf_adjust
-    
+
     RESULT = {"hf_res":hf_res,"y_parameter":abs(y_81),"o2_peak":peak_81,"str_81":str_81,
         "baseline":base,"baseline_slope":slope,"h2o_peak":peak_82,"z_parameter":abs(z_81),
         "y_82":abs(y_82),"z_82":abs(z_82),"hf_shift":hf_shift,"freq_offset":hf_adjust}
-         
+
     RESULT.update({"species":0,"fittime":time.time()-tstart,
                    "cavity_pressure":P,"cavity_temperature":T})
     RESULT.update(d.sensorDict)

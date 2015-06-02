@@ -11,7 +11,7 @@ class DriverError(Exception):
 class IbaseDio(object):
     def __init__(self):
         DLL_Path = ["ib_wdt.dll"]
-        for p in DLL_Path:        
+        for p in DLL_Path:
             try:
                 self.dioDLL = windll.LoadLibrary(p)
                 break
@@ -58,7 +58,7 @@ class Autosampler(object):
         self.dio.installDriver()
         if not self.dio.isDioAvailable(0):
             self.dio.removeDriver()
-            raise DriverError("No DIO driver installed for SBC")            
+            raise DriverError("No DIO driver installed for SBC")
         self.dio.setDioInputMask(0x0F)
         self.dio.setDioOutputMask(0xF0)
         self.dio.shadow = 0xF0
@@ -119,4 +119,3 @@ class Autosampler(object):
     def getLog(self):
         self.sendString("GET_LOG")
         return self.getLines()
-

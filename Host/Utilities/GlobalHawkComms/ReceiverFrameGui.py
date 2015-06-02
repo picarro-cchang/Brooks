@@ -7,7 +7,7 @@ import wx
 # end wxGlade
 
 # begin wxGlade: extracode
-from StreamDisplayPanel import StreamDisplayPanel
+from Host.Utilities.GlobalHawkComms.StreamDisplayPanel import StreamDisplayPanel
 # end wxGlade
 
 class ReceiverFrameGui(wx.Frame):
@@ -40,5 +40,3 @@ class ReceiverFrameGui(wx.Frame):
         # end wxGlade
 
 # end of class ReceiverFrameGui
-
-

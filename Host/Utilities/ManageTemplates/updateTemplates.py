@@ -1,7 +1,7 @@
 import os
 #import sys
 import subprocess
-import bzrUtils as bu
+import Host.Utilities.ManageTemplates.bzrUtils as bu
 
 dest = r"c:\temp\Templates"
 #dest = r"C:\Users\twalder\Documents\Testing\TemplateResults"

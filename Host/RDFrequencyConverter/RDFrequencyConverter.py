@@ -12,16 +12,16 @@ File History:
     14-Oct-2009  sze       Added support for calibration rows in schemes
     16-Oct-2009  alex      Added .ini file and update active warmbox and hotbox calibration files
     20-Oct-2009  alex      Added functionality to handle scheme switch and update warmbox and hotbox calibration files
-    21-Oct-2009  alex      Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and 
+    21-Oct-2009  alex      Added calibration file paths to .ini file. Added RPC_setCavityLengthTuning() and
                                RPC_setLaserCurrentTuning().
     22-Apr-2010  sze       Fixed non-updating of angle schemes when no calibration points are present
     20-Sep-2010  sze       Added pCalOffset parameter to RPC_loadWarmBoxCal for flight calibration
-    24-Oct-2010  sze       Put scheme version number in high order bits of schemeVersionAndTable in 
+    24-Oct-2010  sze       Put scheme version number in high order bits of schemeVersionAndTable in
                                ProcessedRingdownEntry type
-    09-Mar-2012  sze       Use 7th (1-origin) column of scheme file to specify laser temperature offset from the 
+    09-Mar-2012  sze       Use 7th (1-origin) column of scheme file to specify laser temperature offset from the
                                nominal temperature
     15-Feb-2013  sze       Always center tuner about 32768, rather than around value passed in as argument
-    13-Dec-2013  sze       Corrected bug which was ignoring values of MAX_ANGLE_TARGETTING_ERROR and 
+    13-Dec-2013  sze       Corrected bug which was ignoring values of MAX_ANGLE_TARGETTING_ERROR and
                             MAX_TEMP_TARGETTING_ERROR from hot box calibration file.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -69,7 +69,7 @@ Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
 
 class CalibrationDataInRow(object):
     """Structure for collecting ringdown metadata for calibration ringdowns associated with a scheme row.
-    
+
     Scheme rows are marked as calibration points by turning on the SUBSCHEME_ID_IsCalMask bit.
     This structure stores the laser temperature, PZT and WLM angles at such points, for updating
     the wavelength monitor calibration, since they are known to be separated by the cavity FSR.
@@ -88,7 +88,7 @@ class CalibrationDataInRow(object):
 
 class SchemeBasedCalibrator(object):
     """Calibrator for WLM splines based on scheme rows marked as calibration points.
-    
+
     We update the calibration of each virtual laser individually, based on the calibration points
         which involve that virtual laser.
     """
@@ -106,36 +106,36 @@ class SchemeBasedCalibrator(object):
 
     def isCalibrationDone(self, vLaserNumList):
         """Check if calibration has been done for the specified list of virtual lasers.
-        
+
         Args:
-            vLaserNumList: List of integer virtual laser indexes (1-origin)      
-        
+            vLaserNumList: List of integer virtual laser indexes (1-origin)
+
         Returns: List of Boolean results
         """
         return [self.calibrationDone[vLaserNum-1] for vLaserNum in vLaserNumList]
 
     def clearCalibrationDone(self, vLaserNumList):
         """Clear calibration done flag for the specified list of virtual lasers.
-        
+
         Args:
-            vLaserNumList: List of integer virtual laser indexes (1-origin)      
+            vLaserNumList: List of integer virtual laser indexes (1-origin)
         """
         for vLaserNum in vLaserNumList:
             self.calibrationDone[vLaserNum-1] = False
 
     def processCalRingdownEntry(self, entry):
         """Process a ringdown entry which is marked as a calibration row.
-        
+
         The ringdown metadata for ringdowns associated with a particular scheme row should cluster
         tightly around values for that row. These data are stored in lists in a CalibrationDataInRow
         object so that we can later compute medians of the various metadata, which are used to update
         the WLM splines. These ojects are stored in a hash table keyed by the scheme row.
-        
+
         Args:
             entry: RingdownEntryType object corresponding to a ringdown marked with the calibration flag
         """
         assert isinstance(entry, interface.RingdownEntryType)
-        
+
         row = entry.schemeRow
         # At this stage entry.schemeVersionAndTable is the scheme table index (version is added later)
         table = entry.schemeVersionAndTable
@@ -152,7 +152,7 @@ class SchemeBasedCalibrator(object):
         # Update the metadata
         calDataForRow = self.calDataByRow[row]
         calDataForRow.count += 1
-        # We separately deal with sin and cos to avoid 2*pi ambiguity for angles which mess up median 
+        # We separately deal with sin and cos to avoid 2*pi ambiguity for angles which mess up median
         #  calculation
         calDataForRow.thetaCalCos.append(cos(entry.wlmAngle))
         calDataForRow.thetaCalSin.append(sin(entry.wlmAngle))
@@ -163,15 +163,15 @@ class SchemeBasedCalibrator(object):
 
     def calFailed(self, vLaserNum):
         """Mark a calibration attempt as having failed.
-        
-        Typical causes of failure include an unstable etalon temperature during warmup, rapid changes in pressure, 
-        or the analyzer getting choked. When this happens, the analyzer ringdown rate can be very slow due to 
+
+        Typical causes of failure include an unstable etalon temperature during warmup, rapid changes in pressure,
+        or the analyzer getting choked. When this happens, the analyzer ringdown rate can be very slow due to
         transitions into ramp mode. This routine looks for more than a certain number of consecutive failures to
         calibrate, and if these occur, the driver is instructed to ignore the repeat count in the scheme file. By
         causing the scheme to finish more quickly, it may be possible to switch modes or otherwise recover from the
-        slowdown. Note that this is only called if the "ShortCircuitSchemes" section is present in the 
+        slowdown. Note that this is only called if the "ShortCircuitSchemes" section is present in the
         RDFrequencyConverter configuration file.
-        
+
         Args:
             vLaserNum: Virtual laser index (1-origin) for failed calibration attempt
         """
@@ -186,12 +186,12 @@ class SchemeBasedCalibrator(object):
 
     def calSucceeded(self, vLaserNum):
         """Mark a calibration attempt as having succeeded.
-        
+
         This routine looks for more than a certain number of consecutive successful calibrations, and switches the
-        driver back to SchemeMultipleMode from SchemeMultipleNoRepeatMode so that the repeat count is honored. 
-        Note that this is only called if the "ShortCircuitSchemes" section is present in the RDFrequencyConverter 
+        driver back to SchemeMultipleMode from SchemeMultipleNoRepeatMode so that the repeat count is honored.
+        Note that this is only called if the "ShortCircuitSchemes" section is present in the RDFrequencyConverter
         configuration file.
-        
+
         Args:
             vLaserNum: Virtual laser index (1-origin) for successful calibration attempt
         """
@@ -223,7 +223,7 @@ class SchemeBasedCalibrator(object):
             calData.laserTempMed = median(calData.laserTempVals)
         # Process the data one virtual laser at a time
         for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
-            # Get scheme rows involving this virtual laser. If the calibration were correct, the PZT values for all 
+            # Get scheme rows involving this virtual laser. If the calibration were correct, the PZT values for all
             # ringdowns associated with the rows would be equal. We find medians of the metadata for each row
             # and look at the variation between the rows to derive the corrections.
             rows = [k for k in calDataByRow if (calDataByRow[k].vLaserNum == vLaserNum)]
@@ -237,7 +237,7 @@ class SchemeBasedCalibrator(object):
                 thetaCal  +=  2*pi*floor((thetaHat-thetaCal)/(2*pi) + 0.5) # Apply correction for revolution
                 tuner     = array([calDataByRow[k].tunerMed for k in rows])
                 pzt       = array([calDataByRow[k].pztMed for k in rows])
-                # Ideally, PZT values for all rows should be close together. We check for large jumps and forgo 
+                # Ideally, PZT values for all rows should be close together. We check for large jumps and forgo
                 #  calibration in such cases
                 jump = abs(diff(pzt)).max()
                 if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_JUMP")):
@@ -259,23 +259,23 @@ class SchemeBasedCalibrator(object):
                 tunerCenteringThread = threading.Thread(target = self.centerTuner, args=(tunerCenter,))
                 tunerCenteringThread.setDaemon(True)
                 tunerCenteringThread.start()
-                
+
                 # The deviation of the PZT values from their weighted average is used to adjust the wavelength
                 #  monitor spline calibration
                 pztMean = float(sum(pzt*count))/sum(count)
                 pztDev  = pzt - pztMean
-                # If pztDev is not all zeros, this indicates that the collection of WLM angles which was 
+                # If pztDev is not all zeros, this indicates that the collection of WLM angles which was
                 #  used by the laser frequency locker do not correspond precisely to frequencies separated
                 #  by the cavity FSR. We use the values in the deviations to adjust the WLM angles by
-                #  multiplying each PZT deviation by an adjust factor (with units of 
+                #  multiplying each PZT deviation by an adjust factor (with units of
                 #  (WLM radians)/(PZT digitizer units)) and using this as a correction.
                 #
-                # The ADJUST_FACTOR should be an underestimate of the WLM angle shift corresponding to 
+                # The ADJUST_FACTOR should be an underestimate of the WLM angle shift corresponding to
                 #  a digitizer unit of PZT. This provides a degree of under-relaxation and filtering.
                 #
                 thetaShifted = thetaCal - (float(
                     self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","ADJUST_FACTOR")) * pztDev)
-                # Elements in thetaShifted should correspond to a set of frequencies separated by 
+                # Elements in thetaShifted should correspond to a set of frequencies separated by
                 #  multiples of the cavity FSR. We now need to determine what these multiples are
                 perm = thetaShifted.argsort()
                 thetaShifted = thetaShifted[perm]
@@ -286,14 +286,14 @@ class SchemeBasedCalibrator(object):
                 # 1) The APPROX_WLM_ANGLE_PER_FSR is divided into dtheta, and the result is rounded to the
                 #     nearest integers. Since the angle per fsr is only approximate, we get less sure of these
                 #     multiples as they get larger. We select only the WLM angle jumps corresponding to one FSR.
-                # 2) From the selected WLM angle jumps corresponding to one cavity FSR, we make a better 
+                # 2) From the selected WLM angle jumps corresponding to one cavity FSR, we make a better
                 #     estimate of the WLM angle per cavity FSR, and use these to improve fsrJump
                 # Note that all this work is done to determine if we should do the calibration or not (depending
                 #  on the offgrid parameter calculated later). The scheme is used to determine the frequencies
                 #  associated with the WLM angles.
                 fsrJump = round_(dtheta / float(self.rdFreqConv.RPC_getHotBoxCalParam(
                     "AUTOCAL","APPROX_WLM_ANGLE_PER_FSR")))
-                
+
                 dthetaSel = dtheta[fsrJump == 1]
                 if len(dthetaSel) >= 1:
                     anglePerFsr = mean(dthetaSel)
@@ -301,15 +301,15 @@ class SchemeBasedCalibrator(object):
                     if (fsrJump != fsrJumpRevised).any():
                         Log("During WLM calibration, counting of FSRs may have been inaccurate. vLaserNum: %d" % vLaserNum)
                     fsrJump = fsrJumpRevised
-                    # Ensure that the differences between the WLM angles at the calibration rows are close 
-                    #  to multiples of the FSR before we do the calibration. This prevents calibrations from 
+                    # Ensure that the differences between the WLM angles at the calibration rows are close
+                    #  to multiples of the FSR before we do the calibration. This prevents calibrations from
                     #  occurring if the pressure is changing, etc.
                     devs = abs(dtheta/anglePerFsr - fsrJump)
                     offGrid = devs.max()
                     if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_OFFGRID")):
-                        Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" % 
+                        Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" %
                             (std(pztDev), offGrid, sum(devs>0.25)/float(len(devs))))
-                        if scs: 
+                        if scs:
                             self.calFailed(vLaserNum)
                     else:
                         #Update the live copy of the polar<->freq coefficients...
@@ -335,11 +335,11 @@ class SchemeBasedCalibrator(object):
                         stdTuner = std(tunerDev)
                         stdPzt = std(pztDev)
                         if scs:
-                            if stdTuner > float(scs['maxTunerStandardDeviation']): 
+                            if stdTuner > float(scs['maxTunerStandardDeviation']):
                                 self.calFailed(vLaserNum)
-                            else: 
+                            else:
                                 self.calSucceeded(vLaserNum)
-                        Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" % 
+                        Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" %
                             (vLaserNum, anglePerFsr, stdPzt))
 
     def centerTuner(self, tunerCenter):
@@ -362,9 +362,9 @@ class SchemeBasedCalibrator(object):
         weights[kprev:] = counter
         return weights
 
-    def medianHist(self, values, freqs, useAverage=True):        
+    def medianHist(self, values, freqs, useAverage=True):
         """Compute median of a set of values, where each value has an associated frequency.
-        
+
         Args:
             values: Array of values
             freqs: Array of frequencies associated with above values
@@ -498,10 +498,10 @@ class RDFrequencyConverter(Singleton):
             self.rdListener = None
 
     def rdFilter(self, entry):
-        """Filter applied to RingdownEntryType objects obtained from Driver. Within this filter, the 
+        """Filter applied to RingdownEntryType objects obtained from Driver. Within this filter, the
         scheme calibration rows are pulled out and used to run the WLM calibration. The entries are
         then placed onto the ringdown queue.
-        
+
         Args:
             entry: RingdownEntryType obtained from Listener to Driver
         """
@@ -523,14 +523,14 @@ class RDFrequencyConverter(Singleton):
                 # The spectral point is close to the setpoint
                 self.sbc.processCalRingdownEntry(entry)
             else:
-                Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %  
+                Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %
                     (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
         return entry
 
     def run(self):
         """Runs main loop of the RDFrequencyConverter.
-        
-        Ringdowns from the driver are passed through the ringdown filter and are then placed onto the 
+
+        Ringdowns from the driver are passed through the ringdown filter and are then placed onto the
         ringdown queue.
         """
         # Start the thread for saving WLM history into database
@@ -543,14 +543,14 @@ class RDFrequencyConverter(Singleton):
         self.rpcThread.start()
         startTime = time.time()
         timeout = 0.5
-        
+
         self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
         while not self._shutdownRequested:
             # Check if it's time to update and archive the warmbox calibration file
             if self.timeToUpdateWarmBoxCal():
                 Log("Time to update warm box calibration file")
                 #  we'll do it in a separate thread in case it takes too long to write the new calibration file to disk
-                updateWarmBoxCalThread = threading.Thread(target = self.updateWarmBoxCal, 
+                updateWarmBoxCalThread = threading.Thread(target = self.updateWarmBoxCal,
                                                           args=(self.warmBoxCalFilePathActive,))
                 updateWarmBoxCalThread.setDaemon(True)
                 updateWarmBoxCalThread.start()
@@ -575,7 +575,7 @@ class RDFrequencyConverter(Singleton):
             except:
                 excType, value, _trace = sys.exc_info()
                 Log("Error: %s: %s" % (str(excType), str(value)), Verbose=traceback.format_exc(), Level=3)
-                while not self.rdQueue.empty(): 
+                while not self.rdQueue.empty():
                     self.rdQueue.get(False)
                 self.rdProcessedCache = []
                 time.sleep(0.02)
@@ -613,7 +613,7 @@ class RDFrequencyConverter(Singleton):
             if cacheIndex[vLaserNum-1]: # There are angles to convert for this laser
                 self._assertVLaserNum(vLaserNum)
                 freqConv = self.freqConverter[vLaserNum-1]
-                waveNumbers = freqConv.thetaCalAndLaserTemp2WaveNumber(array(wlmAngle[vLaserNum-1]), 
+                waveNumbers = freqConv.thetaCalAndLaserTemp2WaveNumber(array(wlmAngle[vLaserNum-1]),
                                                             array(laserTemperature[vLaserNum-1]))
                 for i, waveNumber in enumerate(waveNumbers):
                     index = cacheIndex[vLaserNum-1][i]
@@ -785,7 +785,7 @@ class RDFrequencyConverter(Singleton):
             raise ValueError("No AUTOCAL section in hot box calibration.")
         if ("CAVITY_LENGTH_TUNING" not in self.hotBoxCal) and \
            ("LASER_CURRENT_TUNING" not in self.hotBoxCal):
-            raise ValueError("Hot box calibration must contain at least one of " + 
+            raise ValueError("Hot box calibration must contain at least one of " +
                              "CAVITY_LENGTH_TUNING or LASER_CURRENT_TUNING sections.")
         if "CAVITY_LENGTH_TUNING" in self.hotBoxCal:
             self.cavityLengthTunerAdjuster = TunerAdjuster("CAVITY_LENGTH_TUNING")
@@ -919,7 +919,7 @@ class RDFrequencyConverter(Singleton):
         """
         self._assertVLaserNum(vLaserNum)
         self.freqConverter[vLaserNum-1].setOffset(offset)
-        
+
     def RPC_getLaserTempOffset(self, vLaserNum):
         """Fetches the temp offset for the virtual laser. vLaserNum is 1-based.
         Returns offset in degrees.
@@ -966,7 +966,7 @@ class RDFrequencyConverter(Singleton):
             fp.write(calStr)
         finally:
             calStrIO.close()
-            if fp is not None: 
+            if fp is not None:
                 fp.close()
 
     def RPC_getWarmBoxConfig(self):
@@ -975,8 +975,8 @@ class RDFrequencyConverter(Singleton):
             freqConv = self.freqConverter[i]
             if freqConv is not None:
                 freqConv.updateIni(config, i+1) # Note: In Autocal1, laser indices are 1 based
-        return config        
-    
+        return config
+
     def RPC_updateWarmBoxCal(self, fileName=None):
         """
         Write calibration back to the file with a new checksum.
@@ -1011,7 +1011,7 @@ class RDFrequencyConverter(Singleton):
             filePtr.write(calStr)
         finally:
             calStrIO.close()
-            if filePtr is not None: 
+            if filePtr is not None:
                 filePtr.close()
 
     def RPC_updateWlmCal(self, vLaserNum, thetaCal, waveNumbers, weights, relax=5e-3,
@@ -1084,7 +1084,7 @@ class TunerAdjuster(object):
             # We return either maxCen or minCen depending on which is closer to the grid of
             #  value+n*fsr
             #
-            if abs(value + n1*fsr - minCen) < abs(value + (n2+1)*fsr - maxCen): 
+            if abs(value + n1*fsr - minCen) < abs(value + (n2+1)*fsr - maxCen):
                 return minCen
             return maxCen
     def setTunerRegisters(self, centerValue=None, fsrFactor = 1.3, windowFactor = 0.9):

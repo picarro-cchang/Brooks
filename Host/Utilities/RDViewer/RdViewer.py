@@ -30,9 +30,9 @@ try:
     from Host.Common import CmdFIFO, SharedTypes
     from Host.Common.SharedTypes import RPC_PORT_DRIVER
 except:
-    from interface import *
-    import CmdFIFO
-    from SharedTypes import RPC_PORT_DRIVER
+    from Host.Utilities.RDViewer.interface import *
+    import Host.Utilities.RDViewer.CmdFIFO as CmdFIFO
+    from Host.Utilities.RDViewer.SharedTypes import RPC_PORT_DRIVER
 
 import threading
 from numpy import *
@@ -45,7 +45,7 @@ from enthought.traits.ui.wx.editor import Editor
 from enthought.traits.ui.table_column import *
 from traceback import format_exc
 from numpy.linalg import solve
-from FigureInteraction import FigureInteraction
+from Host.Utilities.RDViewer.FigureInteraction import FigureInteraction
 
 def doFit(data,tSamp):
     """Perform exponential fitting to data, sampled at intervals tSamp"""
@@ -92,13 +92,13 @@ def doImprove(data,tSamp,start,nIter):
         G = sum(v1*res)
         H = sum(v2*res)
         I = sum(v3*res)
-        
+
         da,db,dal = solve(array([[A,B,C],[B,D,E],[C,E,F]]),array([G,H,I]))
         a += da
         b += db
         f *= exp(+dal*tSamp)
-    return a,b,f    
-    
+    return a,b,f
+
 class _MPLFigureEditor(Editor):
     scrollable = True
 
@@ -132,7 +132,7 @@ class Plot2D(HasTraits):
     sharey = Instance(matplotlib.axes.Axes)
     traits_view = View(Item("plot2dFigure",editor=MPLFigureEditor(),show_label=False),width=700,height=600,resizable=True)
     lock = Instance(threading.RLock,())
-    
+
     def plotData(self,*a,**k):
         self.lock.acquire()
         self.plot2dFigure.clf()
@@ -149,7 +149,7 @@ class Plot2D(HasTraits):
             self.plot2dFigure.canvas.draw()
         self.lock.release()
         return handles
-    
+
     def addText(self,*a,**k):
         self.lock.acquire()
         handle = self.axes.text(*a,**k)
@@ -157,7 +157,7 @@ class Plot2D(HasTraits):
             self.plot2dFigure.canvas.draw()
         self.lock.release()
         return handle
-        
+
     def updateData(self,handle,newX,newY,linkedPlots=None):
         self.lock.acquire()
         handle.set_data(newX,newY)
@@ -177,7 +177,7 @@ class Plot2D(HasTraits):
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
             self.plot2dFigure.canvas.draw()
         self.lock.release()
-            
+
     def autoscale(self):
         self.axes.relim()
         self.axes.autoscale_view()
@@ -193,7 +193,7 @@ class RingdownGrabber(HasTraits):
     fitEnd = CInt(4096)
     thresholdPercent = CFloat(80.0)
     lowerThreshold = CFloat(13000.0)
-    
+
     traits_view = View(VGroup(Item("loss"),
                               Item("a"),
                               Item("b"),
@@ -205,7 +205,7 @@ class RingdownGrabber(HasTraits):
     def __init__(self):
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                     "", IsDontCareConnection = False)
-    
+
     def getData(self):
         self.driverRpc.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_PausedState)
         time.sleep(0.2)
@@ -224,7 +224,7 @@ class RingdownGrabber(HasTraits):
         thresh = min(frac*maxVal + (1.0-frac)*minVal,self.lowerThreshold)
         # Scan starting from position of maximum to find point which is below thresh
         istart = self.fitStart + argmax(self.rd[self.fitStart:self.fitEnd])
-        while self.rd[istart]>thresh: 
+        while self.rd[istart]>thresh:
             istart += 1
         self.a,self.b,f = doFit(self.rd[istart:self.fitEnd],self.tSamp)
         self.tau = -self.tSamp/log(f)
@@ -236,7 +236,7 @@ class RingdownGrabber(HasTraits):
 class Waveform(IsDescription):
     index = Int16Col()
     value = Int16Col()
-    
+
 class Main(HasTraits):
     plot2d = Instance(Plot2D)
     instrument = Instance(RingdownGrabber)
@@ -269,8 +269,8 @@ class Main(HasTraits):
         self.plotHandles = self.plot2d.plotData([],[],'b-',[],[],'g-',[],[],'r-')
 
     def _fCutoff_changed(self):
-        self.bFilt, self.aFilt = butter(3,2*self.instrument.tSamp*self.fCutoff) 
-    
+        self.bFilt, self.aFilt = butter(3,2*self.instrument.tSamp*self.fCutoff)
+
     def _outputFile_changed(self,old,new):
         if self.h5f != None:
             self.h5f.close()
@@ -281,13 +281,13 @@ class Main(HasTraits):
         self.table.attrs.sample_time = self.instrument.tSamp
         self.table.attrs.next_index = 0
         self.h5f = h5f
-        
+
     def doPlot(self):
         if self.run:
             t, rd = self.instrument.getData()
             t = t[:self.instrument.fitEnd]
             rd = rd[:self.instrument.fitEnd]
-            if self.sumBufferLength is None: 
+            if self.sumBufferLength is None:
                 self.sumBufferLength = len(t)-400
                 self.sumBuffer = zeros(self.sumBufferLength,dtype=float)
             if self.h5f:
@@ -296,7 +296,7 @@ class Main(HasTraits):
                     entry["index"] = self.table.attrs.next_index
                     entry["value"] = v
                     entry.append()
-                self.table.attrs.next_index += 1    
+                self.table.attrs.next_index += 1
                 self.table.flush()
             try:
                 a, b, tau, loss, tres, res = self.instrument.fitExp()
@@ -305,11 +305,11 @@ class Main(HasTraits):
                 self.sumBuffer += res[:self.sumBufferLength]
                 self.nAverage += 1
                 self.plot2d.updateData(self.plotHandles[0],1e6*t,rd)
-                if self.showRes: 
+                if self.showRes:
                     self.plot2d.updateData(self.plotHandles[1],1e6*tres,self.resScale*res)
                 else:
                     self.plot2d.updateData(self.plotHandles[1],[0],[0])
-                if self.showAvg: 
+                if self.showAvg:
                     self.plot2d.updateData(self.plotHandles[2],1e6*t[:self.sumBufferLength],self.resScale*self.sumBuffer/self.nAverage)
                 else:
                     self.plot2d.updateData(self.plotHandles[2],[0],[0])
@@ -331,7 +331,7 @@ class Main(HasTraits):
     def _resetAverage_fired(self):
         self.nAverage = 0
         self.sumBuffer = 0.0
-        
+
 if __name__ == "__main__":
     m =  Main()
     viewer = View(
@@ -349,5 +349,5 @@ if __name__ == "__main__":
                              Item("nAverage",style="readonly"),
                              Item("resetAverage",show_label=False)
               ))),
-        width=700,height=600,resizable=True,buttons=NoButtons,title="Examine Ringdowns") 
+        width=700,height=600,resizable=True,buttons=NoButtons,title="Examine Ringdowns")
     m.configure_traits(view = viewer)

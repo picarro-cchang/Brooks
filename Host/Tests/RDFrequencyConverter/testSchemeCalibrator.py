@@ -64,9 +64,9 @@ class FirstTestCase(TestCase):
         #for entry in makeEntries(recipe,interface.RingdownEntryType):
         #    self.assertTrue(isinstance(entry,interface.RingdownEntryType))
         #    self.sbc.processCalPoint(entry)
-            
-            
-        
+
+
+
         #"""Example of mocking smtp.SMTP object"""
         #smtplib.SMTP = Mock('smtplib.SMTP')
         #smtplib.SMTP.mock_returns = Mock('smtp_connection')
@@ -88,8 +88,8 @@ class FirstTestCase(TestCase):
         #fp.write("This writes to the file")
         #assert_same_trace("""Called file_handle.write('This writes to the file')""")
     #def test3(self):
-        #"""The class MyClass defines method3 to be the sum of method2 and method1. 
-        #Both method1 and method2 are somewhat complex, so we mock them to test 
+        #"""The class MyClass defines method3 to be the sum of method2 and method1.
+        #Both method1 and method2 are somewhat complex, so we mock them to test
         #method3 by itself"""
         #m = MyClass()
         #m.method1 = Mock('MyClass.method1')
@@ -105,7 +105,7 @@ class FirstTestCase(TestCase):
         #Called MyClass.method2(42)
         #""")
     #def test4(self):
-        #"""Alternatively, we can mock the methods within the class beforehand, so 
+        #"""Alternatively, we can mock the methods within the class beforehand, so
         #that the object p gets the mocked methods"""
         #mock('MyClass.method1',returns=8)
         #mock('MyClass.method2',returns=9)
@@ -120,9 +120,9 @@ class FirstTestCase(TestCase):
         #p = MyClass()
         #self.assertAlmostEqual(p.method3(42),130.83597245795309)
     #def test5(self):
-        #"""method4 in MyClass uses the id function on self, and calls method3 with 
-        #the result. In the following, we mock id so that it returns a known 
-        #value and also mock method3 so that we can see that the value is 
+        #"""method4 in MyClass uses the id function on self, and calls method3 with
+        #the result. In the following, we mock id so that it returns a known
+        #value and also mock method3 so that we can see that the value is
         #correctly passed."""
         #mock('id',returns=123)
         #mock('MyClass.method3')
@@ -132,6 +132,6 @@ class FirstTestCase(TestCase):
         #Called id(<...MyClass object ...>)
         #Called MyClass.method3(123)
         #""")
-        
+
 if __name__ == "__main__":
     main()

@@ -1186,5 +1186,3 @@ Application to monitor event logs, looking for crashers.
 
 if __name__ == '__main__':
     main()
-
-

@@ -52,9 +52,9 @@ from traceback import format_exc
 from cPickle import dumps
 
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
-from fitterCoreWithFortran import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
-from fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
-from fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
+from Host.Fitter.fitterCoreWithFortran import loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary
+from Host.Fitter.fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
+from Host.Fitter.fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
 from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_BASE, BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common import Broadcaster, Listener, StringPickler

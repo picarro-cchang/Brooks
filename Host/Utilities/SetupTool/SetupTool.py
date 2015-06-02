@@ -16,8 +16,8 @@ import time
 from numpy import *
 from matplotlib import pyplot
 from matplotlib.artist import *
-from SetupToolFrame import SetupToolFrame
-from SetupToolPages import printError
+from Host.Utilities.SetupTool.SetupToolFrame import SetupToolFrame
+from Host.Utilities.SetupTool.SetupToolPages import printError
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI, RPC_PORT_DRIVER
@@ -31,17 +31,17 @@ CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUIC
 CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
                                          APP_NAME,
                                          IsDontCareConnection = False)
-                                         
+
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                          APP_NAME,
                                          IsDontCareConnection = False)
-                                            
-TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV", 
-                   "commandInterface": "Command Interface", "dataManager": "Data Streaming", 
+
+TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV",
+                   "commandInterface": "Command Interface", "dataManager": "Data Streaming",
                    "coordinator": "Coordinator", "readGPSWS": "GPS and WS", "electricalInterface": "Electrical Interface"}
 
 class SetupTool(SetupToolFrame):
-    def __init__(self, setupToolIni, *args, **kwds):       
+    def __init__(self, setupToolIni, *args, **kwds):
         self.setupCp = CustomConfigObj(setupToolIni, list_values = True)
         self.appConfigPath = self.setupCp.get("Setup", "appConfigPath")
         try:
@@ -70,7 +70,7 @@ class SetupTool(SetupToolFrame):
             self.hasReadGPSWS = True
             self.pageAppDict[1] += ["readGPSWS"]
             self.appIniDirDict["readGPSWS"] = readGPSWSDir
-            
+
         comPortList = self.setupCp.get("Setup", "comPortList")
         self._getCoordinatorPathAndPortList()
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
@@ -107,12 +107,12 @@ class SetupTool(SetupToolFrame):
                     self.coordinatorPathList.append(coorPath)
             except:
                 continue
-                        
+
     def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_MENU, self.onInterfaceMenu, self.iInterface)
         self.Bind(wx.EVT_COMBOBOX, self.onModeComboBox, self.comboBoxMode)
-        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)    
+        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)
         self.Bind(wx.EVT_BUTTON, self.onExitButton, self.buttonExit)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
@@ -120,7 +120,7 @@ class SetupTool(SetupToolFrame):
         d = wx.MessageDialog(None, "Software tool to customize Picarro G2000 analyzer\n\nCopyright 1999-2011 Picarro Inc. All rights reserved.\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Setup Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def onInterfaceMenu(self, event):
         if not self.fullInterface:
             d = wx.TextEntryDialog(self, 'Service Mode Password: ','Authorization required', '', wx.STAY_ON_TOP|wx.OK|wx.CANCEL|wx.TE_PASSWORD)
@@ -147,7 +147,7 @@ class SetupTool(SetupToolFrame):
             self.iSettings.SetLabel(self.idInterface, "Switch to Service Mode")
             for pageObj in self.pages:
                 pageObj.setFullInterface(False)
-            
+
     def onApplyButton(self, event):
         try:
             if CRDS_Supervisor.CmdFIFO.PingFIFO() == "Ping OK":
@@ -159,7 +159,7 @@ class SetupTool(SetupToolFrame):
         if analyzerRunning and not self.fullInterface:
             printError("Analyzer software is currently running.\nPlease stop analyzer software and try to apply configuration changes again.", "Error", "Unapplied changes will be lost if exiting Setup Tool now." )
             return
-                
+
         page = self.nb.GetSelection()
         response = self.pages[page].apply()
         if response:
@@ -168,11 +168,11 @@ class SetupTool(SetupToolFrame):
             d.Destroy()
         else:
             printError("Failed to apply changes on \"%s\" page." % self.nb.GetPageText(page), "Error", "")
-            
+
         response = self.pages[page].showCurValues()
         if not response:
             printError("Failed to show current configurations on \"%s\" page." % self.nb.GetPageText(page), "Error", "")
-            
+
     def onModeComboBox(self, event):
         if event:
             eventObj = event.GetEventObject()
@@ -185,12 +185,12 @@ class SetupTool(SetupToolFrame):
             response = self.pages[page].showCurValues()
             if not response:
                 printError("Failed to show current configurations on \"%s\" page." % self.nb.GetPageText(page), "Error", "")
- 
+
     def setIni(self):
         for page in range(len(self.pages)):
             pageObj = self.pages[page]
             appList = self.pageAppDict[page]
-            
+
             iniList = []
             for app in appList:
                 # coordinator and readGPSWS are global - don't belong to any specific mode
@@ -213,7 +213,7 @@ class SetupTool(SetupToolFrame):
                 # Add data cols file for data logger page
                 iniList.append(self.dataColsFile)
             pageObj.setIni(iniList)
-            
+
             comment = ""
             for app in appList:
                 # coordinator and readGPSWS are global - don't belong to any specific mode
@@ -225,7 +225,7 @@ class SetupTool(SetupToolFrame):
                         iniName = [i for i in os.listdir(self.appIniDirDict[app]) if i.endswith(".ini")][0]
                         self.setupCp[self.mode][app] = iniName
                         self.setupCp.write()
-                        
+
                     if iniName in self.modeList:
                         # Configurations depend on other modes
                         if page == 0:
@@ -254,7 +254,7 @@ class SetupTool(SetupToolFrame):
                         else:
                             pageObj.enable(True)
             pageObj.setComment(comment)
-            
+
     def getIniPath(self, app, iniName):
         if app == "coordinator":
             return self.coordinatorPathList
@@ -268,14 +268,14 @@ class SetupTool(SetupToolFrame):
             else:
                 iniPath = [os.path.join(self.appIniDirDict[app], ini) for ini in iniName]
         return iniPath
-                    
+
     def onExitButton(self, event):
         self.Destroy()
-        
+
     def onClose(self, event):
         sys.exit()
-        
-        
+
+
 HELP_STRING = \
 """\
 SetupTool [-h] [-c <SetupTool.ini path>]
@@ -311,7 +311,7 @@ def handleCommandSwitches():
     setupToolIni = ".\SetupTool.ini"
     if "-c" in options:
         setupToolIni = options["-c"]
-    
+
     if not os.path.isfile(setupToolIni):
         app = wx.App()
         app.MainLoop()
@@ -322,7 +322,7 @@ def handleCommandSwitches():
             dlg.Destroy()
         else:
             dlg.Destroy()
-            
+
     if not os.path.isfile(setupToolIni):
         print "\nERROR: Valid SetupTool.ini path must be specified!\n"
         print HELP_STRING
@@ -330,7 +330,7 @@ def handleCommandSwitches():
     else:
         print "SetupTool.ini specified: %s" % setupToolIni
         return setupToolIni
-        
+
 if __name__ == "__main__":
     setupToolIni = handleCommandSwitches()
     app = wx.PySimpleApp()

@@ -27,17 +27,17 @@ class DataManagerOutput(object):
         self.dmQueue = Queue.Queue(0)
         self.colWidth = 26
         self.createNewFile()
-        
+
     def createNewFile(self):
         self.cnt = 0
         filename = "TempDataLog-%s.dat" % (time.strftime("%Y%m%d-%H%M%S",time.localtime()))
         self.filepath = os.path.abspath(os.path.join(self.targetDir, filename))
         print "%s Created" % self.filepath
         self._writeHeader()
-        
+
     def _writeEntry(self, fp, string):
         fp.write((string[:self.colWidth-1]).ljust(self.colWidth))
-        
+
     def _writeHeader(self):
         fp = open(self.filepath, "a")
         self._writeEntry(fp, "DATETTIME")
@@ -46,7 +46,7 @@ class DataManagerOutput(object):
         fp.write("\n")
         fp.close()
         self.cnt += 1
-        
+
     def _writeData(self, dataDict):
         fp = open(self.filepath, "a")
         self._writeEntry(fp, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(dataDict["time"])))
@@ -55,7 +55,7 @@ class DataManagerOutput(object):
         fp.write("\n")
         fp.close()
         self.cnt += 1
-        
+
     def listen(self):
         self.dmListener = Listener(self.dmQueue,
                                     BROADCAST_PORT_DATA_MANAGER,
@@ -74,7 +74,7 @@ class DataManagerOutput(object):
                     #outlist = [time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(output["data"]["time"]))] + [output["data"][c] for c in self.datalist]
                     #print outlist
             time.sleep(1)
-        
+
 def HandleCommandSwitches():
     import getopt
 
@@ -94,12 +94,11 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
     else:
         configFile = ".\WriteDataManagerOutput.ini"
-        
+
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     dm = DataManagerOutput(configFile)
     dm.listen()
     dm.run()
-    

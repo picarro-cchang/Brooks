@@ -1,5 +1,5 @@
 from pylab import *
-import SwathProcessor
+import Host.Common.SwathProcessor as SwathProcessor
 import swathP as sp
 
 stabClass = 'C'

@@ -20,4 +20,3 @@ class TestInterpolators(object):
     def testBitwiseOr(self):
         assert Interpolators.bitwiseOr([0x0F, 0xF0], [0.0, 1.0], 0.5) == 255.0
         assert Interpolators.bitwiseOr([0x00, 0x00], [0.0, 1.0], 0.5) == 0.0
-

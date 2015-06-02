@@ -93,29 +93,29 @@ class Broadcaster(threading.Thread):
         self.logFunc = logFunc
         self.setDaemon(True)
         self.start()
-        
+
     def setupSockListen(self):
         self.sockListen = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.sockListen.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.sockListen.bind(('',self.port))
         self.sockListen.listen(5)
-        
+
     def safeLog(self,msg,*args,**kwargs):
         try:
             if self.logFunc != None: self.logFunc(msg,*args,**kwargs)
         except:
             pass
-        
+
     def send(self,msg):
         """ Send the message to all registered clients. This does not wait for socket transfers
         to complete
         """
         self.messageQueue.put(msg)
         return self.queueSize()
-    
+
     def queueSize(self):
         return self.messageQueue.qsize()
-    
+
     def stop(self,timeout=None):
         """ Used to stop the main loop """
         self._stopevent.set()
@@ -124,7 +124,7 @@ class Broadcaster(threading.Thread):
     def addBadClient(self,client):
         if client not in self.badClients:
             self.badClients.append(client)
-        
+
     def killBadClients(self):
         # Kill bad clients
         for client in self.badClients:
@@ -133,7 +133,7 @@ class Broadcaster(threading.Thread):
             # self.safeLog("%s: Forced disconnection of client." % (self.name,))
             self.__killClient(sock)
         self.badClients = []
-        
+
     def __killClient(self,sock):
         """ Close client socket and remove it from dictionary of clients """
         if sock in self.clients:
@@ -144,11 +144,11 @@ class Broadcaster(threading.Thread):
             del self.clients[sock]
         else:
             sock.close()
-            
+
     def run(self):
         """ The thread execution function listens for new client connections and sends data to the registered client sockets """
         self.setupSockListen()
-        self.errCount = 0 
+        self.errCount = 0
         self.badClients = []
         try:
             while not self._stopevent.isSet():
@@ -162,7 +162,7 @@ class Broadcaster(threading.Thread):
             if self.sockListen != None:
                 self.sockListen.close()
                 self.sockListen = None
-                
+
     def handleInput(self,iw):
         """This handles sockets which have data available to read"""
         for sock in iw:
@@ -195,7 +195,7 @@ class Broadcaster(threading.Thread):
                             self.setupSockListen()
                     else:
                         self.__killClient(s)
-                        
+
         self.handleInput(iw)
         while not self.messageQueue.empty():
             s = self.messageQueue.get()
@@ -211,11 +211,11 @@ class Broadcaster(threading.Thread):
                     self.safeLog("%s" % (e,))
                     self.killBadClients()
                 fromStart = False
-                
+
 if __name__ == "__main__":
     from time import strftime,localtime,sleep
     import ctypes
-    import StringPickler
+    import Host.Common.StringPickler as StringPickler
     class MyTime(ctypes.Structure):
         _fields_ = [
         ("year",ctypes.c_int),
@@ -224,8 +224,8 @@ if __name__ == "__main__":
         ("hour",ctypes.c_int),
         ("minute",ctypes.c_int),
         ("second",ctypes.c_int),
-        ]    
-        
+        ]
+
     def myLog(msg):
         print msg
     b = Broadcaster(8881,logFunc=myLog)

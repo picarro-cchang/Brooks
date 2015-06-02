@@ -9,5 +9,3 @@ setup(console=['WriteDataManagerOutput.py'],
                    excludes = exclusionList,
                    includes = inclusionList)),
     )
-
-

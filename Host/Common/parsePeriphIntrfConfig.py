@@ -15,7 +15,7 @@ def parsePeriphIntrfConfig(periphIntrfConfig, selectAll=True):
             syncDict["source"].append(src)
     except:
         pass
-        
+
     for s in periphCo.list_sections():
         if s.startswith("PORT"):
             try:

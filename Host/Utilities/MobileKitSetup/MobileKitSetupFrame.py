@@ -26,13 +26,13 @@ class MobileKitSetupFrame(wx.Frame):
         buttonSize = (150, 25)
         buttonColor = wx.Colour(237, 228, 199)
         comboBoxSize = (100, 20)
-        
+
         # labels
         self.labelTitle1 = wx.StaticText(self.panel1, -1, "Server Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle1.SetFont(titleFont)
         self.labelIp = wx.StaticText(self.panel1, -1, "Analyzer IP Address", style=wx.ALIGN_CENTRE)
         self.labelIp.SetFont(labelFont)
-        
+
         self.labelTitle2 = wx.StaticText(self.panel2, -1, "Graphical Properties", style=wx.ALIGN_CENTRE)
         self.labelTitle2.SetFont(titleFont)
         self.labelBaseline = wx.StaticText(self.panel2, -1, "Baseline", style=wx.ALIGN_CENTRE)
@@ -51,17 +51,17 @@ class MobileKitSetupFrame(wx.Frame):
         self.labelTitle3 = wx.StaticText(self.panel3, -1, "Control", style=wx.ALIGN_CENTRE)
         self.labelTitle3.SetFont(titleFont)
         self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
-        
+
         # Divider lines
         self.staticLine1 = wx.StaticLine(self.panel1, -1, size=(0,3))
         self.staticLine2 = wx.StaticLine(self.panel2, -1, size=(0,3))
-        
+
         # Controls
         self.ipCtrl = IpAddrCtrl(self.panel1, -1)
         self.buttonLaunchServer = wx.Button(self.panel1, -1, "Launch Mobile Kit Server", size=buttonSize)
         self.buttonLaunchServer.SetBackgroundColour(buttonColor)
         self.buttonLaunchServer.SetFont(labelFont)
-        
+
         self.textCtrlBaseline = wx.TextCtrl(self.panel2, -1, "1.5", size=comboBoxSize)
         self.textCtrlScaling = wx.TextCtrl(self.panel2, -1, "100", size=comboBoxSize)
         self.cselLineColor = csel.ColourSelect(self.panel2, -1, "", (255, 0, 0), size = comboBoxSize)
@@ -71,13 +71,13 @@ class MobileKitSetupFrame(wx.Frame):
         self.buttonApply = wx.Button(self.panel2, -1, "Apply", size=buttonSize)
         self.buttonApply.SetBackgroundColour(buttonColor)
         self.buttonApply.SetFont(labelFont)
-               
+
         self.buttonNewRun = wx.Button(self.panel3, -1, "Start a New Run", size=buttonSize)
         self.buttonNewRun.SetBackgroundColour(buttonColor)
         self.buttonNewRun.SetFont(labelFont)
-        
+
         self.__do_layout()
-        
+
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -100,7 +100,7 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_1.Add((0,10))
         sizer_1.Add(self.staticLine1, 0, wx.EXPAND)
         self.panel1.SetSizer(sizer_1)
-        
+
         sizer_3.Add(self.labelTitle2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
         grid_sizer_1.Add(self.labelBaseline, 0, wx.ALL|wx.ALIGN_LEFT, 3)
         grid_sizer_1.Add(self.textCtrlBaseline, 0, wx.ALL, 3)
@@ -124,19 +124,19 @@ class MobileKitSetupFrame(wx.Frame):
         sizer_3.Add((0,10))
         sizer_3.Add(self.staticLine2, 0, wx.EXPAND)
         self.panel2.SetSizer(sizer_3)
-        
+
         sizer_5.Add(self.labelTitle3, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 10)
         sizer_5.Add(self.buttonNewRun, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 3)
         #sizer_5.Add((0,5))
         sizer_5.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER, 10)
         self.panel3.SetSizer(sizer_5)
-        
+
         sizer_all.Add(self.panel1, 0, wx.EXPAND)
         sizer_all.Add(self.panel2, 0, wx.EXPAND)
         sizer_all.Add(self.panel3, 0, wx.EXPAND)
         self.SetSizer(sizer_all)
         sizer_all.Fit(self)
-        #self.SetSize((500,-1))    
+        #self.SetSize((500,-1))
         self.Layout()
 
 if __name__ == "__main__":

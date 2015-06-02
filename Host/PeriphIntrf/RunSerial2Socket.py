@@ -24,7 +24,7 @@ class RunSerial2Socket(object):
         exeFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "EXE")))
         instrConfigFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "INSTRCONFIG")))
         self.numPorts = len([s for s in self.appCo.list_sections() if s.startswith("PORT")])
-        
+
         # Create the instrument config file to run serial2socket.exe
         self.autoSearch = self.appCo.getboolean("SETUP", "AUTOSEARCH", False)
         instrConfigDir = os.path.dirname(instrConfigFile)
@@ -39,7 +39,7 @@ class RunSerial2Socket(object):
             self.instrCo.add_section("PORTS")
         self.instrCo.write()
         self.updateIni(self.findPorts())
-        
+
         # Launch the EXE program
         affmask = self.appCo.getint("SETUP", "AFFINITYMASK", 1)
         lpApplicationName = None
@@ -65,7 +65,7 @@ class RunSerial2Socket(object):
         )
         win32process.SetProcessAffinityMask(hProcess, affmask)
         #subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], startupinfo=lpStartupInfo, creationflags = dwCreationFlags)
-        
+
     def _getCleanPortList(self, pList):
         retList = []
         for i in range(len(pList)):
@@ -79,7 +79,7 @@ class RunSerial2Socket(object):
                 except:
                     pass
         return retList
-        
+
     def findPorts(self):
         # Compile the assigned and skipped COM port list
         try:
@@ -101,7 +101,7 @@ class RunSerial2Socket(object):
         skipList = self._getCleanPortList(pList)
 
         print "Assigned List: %s; Skipped List: %s" % (assignList, skipList)
-        
+
         if self.numPorts <= len(assignList):
             portList = assignList[:self.numPorts]
         else:
@@ -134,7 +134,7 @@ class RunSerial2Socket(object):
                 if option.upper() in ["BAUD", "STOPBITS", "PARITY", "HANDSHAKE", "BLOCKSIZE", "DELIM"]:
                     self.instrCo.set(section, option, self.appCo.get(section, option))
         self.instrCo.write()
-            
+
 HELP_STRING = \
 """
 
@@ -148,7 +148,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -173,9 +173,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-  
+
     return configFile
-    
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     app = SingleInstance("RunSerial2Socket")

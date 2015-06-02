@@ -58,7 +58,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
 
         if name in instr:
             laserDict = {}
-            
+
             # Change this to median if using instead of mean (must also change
             # laserTempOffsets ini file as target values should be higher)
             target = float(instr[name])
@@ -70,7 +70,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
                     (vLaserNum, fineCurrent, target, minFineCurrent, maxFineCurrent)
 
             curValue = freqConv.getLaserTempOffset(vLaserNum)
-            
+
             # save off values in laser dict
             laserDict["target"] = target
             laserDict["dev"] = dev
@@ -80,7 +80,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
             laserDict["maxStep"] = maxStep
             laserDict["minFineCurrent"] = minFineCurrent
             laserDict["maxFineCurrent"] = maxFineCurrent
-            
+
             # set some initial defaults
             laserDict["controlOn"] = False
 
@@ -88,11 +88,11 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
             # and larger and larger negative temp offsets being applied
             if (laIsEnabled > 0):
                 laserDict["controlOn"] = True
-                
+
                 if fineCurrent > minFineCurrent and fineCurrent < maxFineCurrent:
                     if printInfo:
                         print "in limits, fineCurrent=%f min=%f" % (fineCurrent, minFineCurrent)
-                    
+
                     # compute adjustment needed
                     delta = gain * dev
                     deltaAbs = abs(delta)
@@ -101,14 +101,14 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
                     if (maxStep > 0.0 and deltaAbs > maxStep):
                         deltaAbs = maxStep
                         deltaOrig = delta   # only needed for printing below
-                        
+
                         if (delta >= 0.0):
                             delta = maxStep
                         else:
                             delta = -maxStep
-                        
+
                         Log("Limiting laser temperature adjustment step size to maxStep=%f, deltaOrig=%f  delta=%f" % (maxStep, deltaOrig, delta))
-                        
+
                     # apply change to the current laser temp offset
                     newValue = curValue + delta
                     laserDict["newValue"] = newValue
@@ -120,7 +120,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
                         (vLaserNum, minFineCurrent, maxFineCurrent, fineCurrent), Level=2)
             else:
                 laserDict["controlOn"] = False
-            
+
             # save off dictionary for this laser in the all lasers dictionary
             allLasersDict[vLaserNum] = laserDict
 
@@ -129,7 +129,7 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
     allControlOn = True
     for v in range(8):
         vLaserNum = v + 1
-        
+
         if vLaserNum in allLasersDict:
             laserDict = allLasersDict[vLaserNum]
 
@@ -143,17 +143,17 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
         allControlOn = False
     elif not allControlOn:
         Log("Problem detected for at least one laser, turned off temperature control loop for all lasers", Level=2)
-        
+
     # if there are any virtual laser groupings, average the computed offsets for all virtual lasers in the group
     laserGroups = "la_fineLaserCurrent_laserGroups"
-    
+
     if laIsEnabled > 0 and allControlOn:
         if laserGroups in instr:
             groups = instr[laserGroups]
 
             if printInfo:
                 print "groups =", groups
-            
+
             for g in groups:
                 adjValue = 0.0
 
@@ -168,10 +168,10 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
 
                 # compute offset average across all lasers in the group
                 adjValue = float(adjValue) / len(g)
-                
+
                 if printInfo:
                     print "    adjValue=", adjValue
-                
+
                 # apply this offset to all lasers in the group
                 for v in g:
                     freqConv.setLaserTempOffset(v, adjValue)
@@ -183,16 +183,16 @@ def doAdjustTempOffset(instr=None, data=None, freqConv=None, report=None, printI
     #
     for v in range(8):
         vLaserNum = v + 1
-        
+
         if vLaserNum in allLasersDict:
             laserDict = allLasersDict[vLaserNum]
-            
+
             dev = laserDict["dev"]
             newValue = laserDict["newValue"]
             curValue = laserDict["curValue"]
 
             #print " setLaserTempOffset vLaserNum=%d oldtempOffset=%f newTempOffset=%f" % (vLaserNum, curValue, newValue)
-            
+
             # set the laser temp offset if controlling all lasers
             if allControlOn:
                 #Log(" setLaserTempOffset vLaserNum=%d oldtempOffset=%f newTempOffset=%f" % (vLaserNum, curValue, newValue))

@@ -75,4 +75,4 @@ if __name__ == "__main__":
                     ddm.statusCast.send(StringPickler.ObjAsString(c))
             except:
                 raise
-        fp.close() 
+        fp.close()

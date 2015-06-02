@@ -25,4 +25,3 @@ if __name__ == "__main__":
     baseName = r"C:\Picarro\G2000\AppConfig\Config\Supervisor\supervisorEXE_CFADS.ini"
     configObj = configobj.ConfigObj(baseName)
     print configObj.walk(lambda section,key: section[key])
-    

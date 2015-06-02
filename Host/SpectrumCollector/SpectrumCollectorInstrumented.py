@@ -43,7 +43,7 @@ from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import unixTime, getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Sequencer import Sequencer
+from Host.SpectrumCollector.Sequencer import Sequencer
 import psutil
 
 EventManagerProxy_Init(APP_NAME)
@@ -438,7 +438,7 @@ class SpectrumCollector(object):
             if self.useHDF5:
                 # Lookup table giving pyTables column generation function keyed
                 # by the numpy dtype.name
-                colByName = dict(float32=Float32Col, float64=Float64Col, 
+                colByName = dict(float32=Float32Col, float64=Float64Col,
                                  int16=Int16Col, int32=Int32Col, int64=Int64Col,
                                  uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
                 if self.newHdf5File:
@@ -467,7 +467,7 @@ class SpectrumCollector(object):
                         if dataKey not in self.tableDict:
                             # We need to build up the colDict whose keys are the column
                             #  names and whose values are instances of subclasses of Col
-                            # We find out which subclass of Col to use from the dtype of the 
+                            # We find out which subclass of Col to use from the dtype of the
                             #  value to be stored in that column
                             h5 = self.streamFP
                             values = [numpy.asarray(v) for v in values]

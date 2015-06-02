@@ -54,24 +54,24 @@ def get_log_buffer(prefix, buff):
 
 class ConsoleHandler(logging.Handler):
     """This class is a logger handler. It prints on the console"""
-    
+
     def __init__(self):
         """Constructor"""
         logging.Handler.__init__(self)
-        
+
     def emit(self, record):
         """format and print the record on the console"""
         print self.format(record)
 
 class LogitHandler(logging.Handler):
     """This class is a logger handler. It send to a udp socket"""
-    
+
     def __init__(self, dest):
         """Constructor"""
         logging.Handler.__init__(self)
         self._dest = dest
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        
+
     def emit(self, record):
         """format and send the record over udp"""
         self._sock.sendto(self.format(record)+"\r\n", self._dest)
@@ -83,7 +83,7 @@ class DummyHandler(logging.Handler):
         """Constructor"""
         logging.Handler.__init__(self)
 
-    def emit(self, record): 
+    def emit(self, record):
         """do nothinbg with the given record"""
         pass
 
@@ -115,7 +115,7 @@ def calculate_crc(data):
     """Calculate the CRC16 of a datagram"""
     crc = 0xFFFF
     for i in data:
-        crc = crc ^ ord(i)        
+        crc = crc ^ ord(i)
         for j in xrange(8):
             tmp = crc & 1
             crc = crc >> 1
@@ -129,7 +129,7 @@ def calculate_rtu_inter_char(baudrate):
         return 11.0 / baudrate
     else:
         return 0.0005
-    
+
 class WorkerThread:
     """
     A thread which is running an almost-ever loop
@@ -138,21 +138,21 @@ class WorkerThread:
     def __init__(self, main_fct, args=(), init_fct=None, exit_fct=None):
         """Constructor"""
         self._fcts = [init_fct, main_fct, exit_fct]
-        self._args = args 
+        self._args = args
         self._thread = threading.Thread(target=WorkerThread._run, args=(self,))
         self._go = threading.Event()
-        
+
     def start(self):
         """Start the thread"""
         self._go.set()
         self._thread.start()
-    
+
     def stop(self):
         """stop the thread"""
         if self._thread.isAlive():
             self._go.clear()
             self._thread.join()
-        
+
     def _run(self):
         """main function of the thread execute _main_fct until stop is called"""
         try:

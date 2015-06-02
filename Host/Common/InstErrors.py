@@ -13,7 +13,7 @@
 
 import sys
 if "../Common" not in sys.path: sys.path.append("../Common")
-from SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_CAL_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_CAL_MANAGER
 
 class ErrorInfo(object):
     "Class to store error information"
@@ -33,7 +33,7 @@ CLEAR_ERROR   = 5  # Calls appropriate application clearError RPC
 SELF_DIAG     = 6  # perform self-diag
 
 errorActionDict = {0: "DO_NOTHING",
-                   1: "SHUTDOWN_INST", 
+                   1: "SHUTDOWN_INST",
                    2: "RESTART_INST",
                    3: "RESTART_DAS",
                    4: "RESTART_MEAS",

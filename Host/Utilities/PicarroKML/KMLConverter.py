@@ -14,8 +14,8 @@ import threading
 import getopt
 from math import ceil
 import time
-from KMLConverterFrame import KMLConverterFrame
-from CustomConfigObj import CustomConfigObj
+from Host.Utilities.PicarroKML.KMLConverterFrame import KMLConverterFrame
+from Host.Utilities.PicarroKML.CustomConfigObj import CustomConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -99,13 +99,13 @@ class ConvertKML(object):
         for line in lines[1:]:
             if len(line.split()) >= requiredLen:
                 self.data.append(line.split())
-                
+
     def _getTime(self, format=0):
         if format == 0:
             return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
         else:
             return time.strftime("%Y%m%d%H%M%S", time.localtime())
-            
+
     def convert(self, concList, gpsList, colorList, baselineList, multiplierList, shiftConcSamples=0):
         # if self.shiftConcSamples < 0 - align concs to earlier GPS
         # if self.shiftConcSamples > 0 - align concs to later GPS
@@ -141,12 +141,12 @@ class ConvertKML(object):
         out = open(kmlFilename,'w')
         out.flush()
         MAXPOLY = 1000
-        
+
         # KML_OPEN_TEMPLATE
         out.write(KML_OPEN_TEMPLATE)
-        
+
         # KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
-        
+
         for i in range(numConcs):
             # stackList[i] has all the concentration data for the i'th species. We need to break it into chunks not exceeding MAXPOLY
             #  so as not to overflow Google Earth's rendering abilities
@@ -154,7 +154,7 @@ class ConvertKML(object):
             nBlocks = int(ceil(float(len(kmlBlock))/MAXPOLY))
             for j in range(nBlocks):
                 if j == 0:
-                    out.write(KML_BODY_TEMPLATE % (i, baselineList[i], multiplierList[i], i, colorList[i], colorList[i], 
+                    out.write(KML_BODY_TEMPLATE % (i, baselineList[i], multiplierList[i], i, colorList[i], colorList[i],
                                                    concList[i], i, "\n".join(kmlBlock[j*MAXPOLY:(j+1)*MAXPOLY+1])))
                 else:
                     out.write(KML_CONTINUATION_TEMPLATE % (concList[i], i, "\n".join(kmlBlock[j*MAXPOLY:(j+1)*MAXPOLY+1])))
@@ -163,7 +163,7 @@ class ConvertKML(object):
         out.close()
 
         return kmlFilename
-        
+
 class KMLConverter(KMLConverterFrame):
     def __init__(self, configFile, *args, **kwds):
         self.cp = CustomConfigObj(configFile)
@@ -181,17 +181,17 @@ class KMLConverter(KMLConverterFrame):
         self.filenames = []
         self.converters = []
         self.bindEvents()
-        
-    def bindEvents(self):       
+
+    def bindEvents(self):
         self.Bind(wx.EVT_MENU, self.onLoadFileMenu, self.iLoadFile)
         self.Bind(wx.EVT_MENU, self.onOutDirMenu, self.iOutDir)
         self.Bind(wx.EVT_MENU, self.onShiftMenu, self.iShift)
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
-        self.Bind(wx.EVT_BUTTON, self.onProcButton, self.procButton)              
-        self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton) 
-        self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg) 
+        self.Bind(wx.EVT_BUTTON, self.onProcButton, self.procButton)
+        self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton)
+        self.Bind(wx.EVT_TEXT_URL, self.onOverUrl, self.textCtrlMsg)
         self.Bind(wx.EVT_CLOSE, self.onCloseButton)
-        
+
     def onOutDirMenu(self, event):
         d = wx.DirDialog(None,"Specify the output directory for the converted KML files", style=wx.DD_DEFAULT_STYLE,
                          defaultPath=self.outputDir)
@@ -201,13 +201,13 @@ class KMLConverter(KMLConverterFrame):
             self.cp.write()
 
     def onShiftMenu(self, event):
-        d = wx.NumberEntryDialog(None,"Specify the number of shifting samples\n-N => Align current concentrations with GPS N samples ago\n+N => Align current GPS with concentrations N samples ago", 
+        d = wx.NumberEntryDialog(None,"Specify the number of shifting samples\n-N => Align current concentrations with GPS N samples ago\n+N => Align current GPS with concentrations N samples ago",
             "Number of shifting samples", "Number of shifting samples", self.shiftConcSamples, -1000, 1000)
         if d.ShowModal() == wx.ID_OK:
             self.shiftConcSamples = d.GetValue()
             self.cp.set("PostProcess", "shiftConcSamples", self.shiftConcSamples)
             self.cp.write()
-            
+
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
             urlString = self.textCtrlMsg.GetRange(event.GetURLStart()+5, event.GetURLEnd())
@@ -215,7 +215,7 @@ class KMLConverter(KMLConverterFrame):
             wx.LaunchDefaultBrowser(urlString)
         else:
             event.Skip()
-        
+
     def onProcButton(self, evt):
         if not self.converters:
             return
@@ -223,11 +223,11 @@ class KMLConverter(KMLConverterFrame):
         procThread = threading.Thread(target = self.procFiles)
         procThread.setDaemon(True)
         procThread.start()
-        
+
     def onCloseButton(self, evt):
         sys.exit(0)
         self.Destroy()
-        
+
     def onAboutMenu(self, evt):
         d = wx.MessageDialog(None, "All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Picarro KML Converter", wx.OK)
         d.ShowModal()
@@ -273,7 +273,7 @@ class KMLConverter(KMLConverterFrame):
             self.converters.append(ConvertKML(filename, self.textCtrlMsg, self.outputDir))
             self.textCtrlMsg.WriteText("%s\n" % filename)
         self.enableAll(True)
-        
+
     def enableAll(self, onFlag):
         if onFlag:
             self.iLoadFile.Enable(True)
@@ -285,7 +285,7 @@ class KMLConverter(KMLConverterFrame):
             self.iAbout.Enable(False)
             self.procButton.Enable(False)
             self.closeButton.Enable(False)
-            
+
 def handleCommandSwitches():
     shortOpts = "c:"
     longOpts = []
@@ -302,13 +302,13 @@ def handleCommandSwitches():
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
-    
+
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == "__main__" :
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()

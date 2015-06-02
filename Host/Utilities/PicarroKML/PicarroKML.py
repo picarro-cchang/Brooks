@@ -105,7 +105,7 @@ class CameraCtrlGui(wx.Dialog):
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_1 = wx.FlexGridSizer(self.numParams, 2, 10, 10)
         grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)        
+        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
         for idx in range(1,self.numParams):
             grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
             grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
@@ -122,7 +122,7 @@ class CameraCtrlGui(wx.Dialog):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
-        
+
 class PicarroKMLFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
@@ -131,23 +131,23 @@ class PicarroKMLFrame(wx.Frame):
         self.SetBackgroundColour("#E0FFFF")
         self.labelTitle = wx.StaticText(self, -1, "Picarro KML Tool", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        
+
         # Menu bar
         self.frameMenubar = wx.MenuBar()
-        
+
         self.iSettings = wx.Menu()
         self.frameMenubar.Append(self.iSettings,"Settings")
         self.iCameraCtrl = wx.MenuItem(self.iSettings, wx.NewId(), "Camera Control", "", wx.ITEM_NORMAL)
         self.iSettings.AppendItem(self.iCameraCtrl)
-        
+
         self.iHelp = wx.Menu()
         self.frameMenubar.Append(self.iHelp,"Help")
         self.idAbout = wx.NewId()
         self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, "Picarro KML Tool", "", wx.ITEM_NORMAL)
         self.iHelp.AppendItem(self.iAbout)
-        
+
         self.SetMenuBar(self.frameMenubar)
-        
+
         # Other graphical components
         self.staticLine = wx.StaticLine(self, -1)
         self.labelFooter = wx.StaticText(self, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
@@ -157,11 +157,11 @@ class PicarroKMLFrame(wx.Frame):
         self.labelStatus = wx.StaticText(self, -1, "Status (last 20 lines)")
         self.textCtrlStatus = wx.TextCtrl(self, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
         self.textCtrlStatus.SetMinSize((560,275))
-        
+
         # Buttons
         self.buttonStart = wx.Button(self, -1, "Start", style=wx.BU_EXACTFIT)
-        self.buttonStop = wx.Button(self, -1, "Stop", style=wx.BU_EXACTFIT)             
-        self.buttonExit = wx.Button(self, -1, "Exit", style=wx.BU_EXACTFIT) 
+        self.buttonStop = wx.Button(self, -1, "Stop", style=wx.BU_EXACTFIT)
+        self.buttonExit = wx.Button(self, -1, "Exit", style=wx.BU_EXACTFIT)
         self.buttonStart.SetMinSize((157, 25))
         self.buttonStart.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonStart.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
@@ -171,7 +171,7 @@ class PicarroKMLFrame(wx.Frame):
         self.buttonExit.SetMinSize((157, 25))
         self.buttonExit.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonExit.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
-        
+
         self.__do_layout()
 
     def __do_layout(self):
@@ -183,18 +183,18 @@ class PicarroKMLFrame(wx.Frame):
         sizer_1.SetMinSize((550,100))
         sizer_1.Add(self.labelTitle, 0, wx.ALL|wx.ALIGN_CENTER, 10)
         sizer_1.Add(self.staticLine, 0, wx.EXPAND|wx.BOTTOM, 5)
-        
+
         grid_sizer_1.Add(self.labelOutputPath, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_1.Add(self.textCtrlOutputPath, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        
+
         sizer_2.Add(self.labelStatus, 0, wx.LEFT|wx.RIGHT, 10)
         sizer_2.Add((-1,5))
         sizer_2.Add(self.textCtrlStatus, 0, wx.LEFT|wx.RIGHT, 10)
-        
+
         sizer_3.Add(self.buttonStart, 1, wx.LEFT|wx.RIGHT, 10)
         sizer_3.Add(self.buttonStop, 1, wx.LEFT|wx.RIGHT, 10)
         sizer_3.Add(self.buttonExit, 1, wx.LEFT|wx.RIGHT, 10)
-        
+
         sizer_1.Add(grid_sizer_1, 0, wx.BOTTOM, 10)
         sizer_1.Add(sizer_2, 0, wx.BOTTOM, 20)
         sizer_1.Add(sizer_3, 0, wx.BOTTOM, 20)
@@ -229,7 +229,7 @@ class PicarroKML(PicarroKMLFrame):
             # Align concs to later GPS - add concs to buffer
             for label in self.concList:
                 self.delayedBuffer[label] = deque()
-                
+
         self.stop = True
         self.statusMessage = []
         #picarro instrument connection
@@ -244,15 +244,15 @@ class PicarroKML(PicarroKMLFrame):
         self.range = self.cp.get("Camera", "range", "5000")
         self.tilt = self.cp.get("Camera", "tilt", "30")
         self.heading = self.cp.get("Camera", "heading", "0")
-        
+
     def bindEvents(self):
         self.Bind(wx.EVT_BUTTON, self.onStartButton, self.buttonStart)
-        self.Bind(wx.EVT_BUTTON, self.onStopButton, self.buttonStop)    
+        self.Bind(wx.EVT_BUTTON, self.onStopButton, self.buttonStop)
         self.Bind(wx.EVT_BUTTON, self.onClose, self.buttonExit)
-        self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)       
+        self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_MENU, self.onCameraCtrl, self.iCameraCtrl)
-        
+
     def onStartButton(self, evt):
         self.stop = False
         launchCoordinatorThread = threading.Thread(target = self._start)
@@ -260,15 +260,15 @@ class PicarroKML(PicarroKMLFrame):
         launchCoordinatorThread.start()
         self.buttonStart.Enable(False)
         self.buttonStop.Enable(True)
-        
+
     def onStopButton(self, evt):
         self.stop = True
-        
+
     def onAboutMenu(self, evt):
         d = wx.MessageDialog(None, "All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc. (http://www.picarro.com)", "About Picarro KML Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
-        
+
     def onClose(self, evt):
         d = wx.MessageDialog(None, "Terminate Picarro KML Tool now?\n\nSelect \"Yes\" to terminate this program.\nSelect \"No\" to cancel this action.",\
                         "Exit Confirmation", wx.YES_NO|wx.ICON_EXCLAMATION)
@@ -291,19 +291,19 @@ class PicarroKML(PicarroKMLFrame):
         self.cp.set("Camera", "tilt", self.tilt)
         self.cp.set("Camera", "heading", self.range)
         self.cp.write()
-    
-    
+
+
     def _getTime(self, format=0):
         if format == 0:
             return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
         else:
             return time.strftime("%Y%m%d%H%M%S", time.localtime())
-    
+
     def _writeToStatus(self, message):
         self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
         self.statusMessage = self.statusMessage[-20:]
         self.textCtrlStatus.SetValue("".join(self.statusMessage))
-        
+
     def _createFilename(self):
         timestamp = self._getTime(1)
         self.datFilename = []
@@ -324,10 +324,10 @@ class PicarroKML(PicarroKMLFrame):
         else:
             self.kmlFilename = "PicarroGIS-%s-%s.kml" % (timestamp, "-".join(self.concList))
         self.textCtrlOutputPath.SetValue(os.path.abspath(self.kmlFilename))
-            
+
     def _start(self):
         self._createFilename()
-        self._writeToStatus("Picarro KML Tool starting")        
+        self._writeToStatus("Picarro KML Tool starting")
 
         for i in range(self.numConcs):
             datout = open(self.datFilename[i],'w')
@@ -343,21 +343,21 @@ class PicarroKML(PicarroKMLFrame):
                 if not reply:
                     time.sleep(0.5)
                     continue
-                
+
                 for i in range(len(self.concList)):
                     label = self.concList[i]
                     try:
                         reply[label] = (reply[label] - self.baselineList[i]) * self.multiplierList[i]
                     except:
                         pass
-                        
+
                 if self.shiftConcSamples < 0:
                     for label in self.gpsList:
                         self.delayedBuffer[label].append(reply[label])
                 elif self.shiftConcSamples > 0:
                     for label in self.concList:
                         self.delayedBuffer[label].append(reply[label])
-                        
+
                 if bufferSize < abs(self.shiftConcSamples):
                     bufferSize += 1
                     continue
@@ -378,12 +378,12 @@ class PicarroKML(PicarroKMLFrame):
                         self.delayedBuffer[label].popleft()
                     for label in self.gpsList:
                         valueList.append(reply[label])
-                
+
                 valueStrList = [str(val) for val in valueList]
                 labelStr = ", ".join(self.completeList)
                 valueStr = ", ".join(valueStrList)
                 self._writeToStatus('%s = %s' % (labelStr, valueStr))
-                
+
                 stackList = []
                 newLat = 0.0
                 newLong = 0.0
@@ -394,7 +394,7 @@ class PicarroKML(PicarroKMLFrame):
                     datout.close()
                     newLat = valueList[-2]
                     newLong = valueList[-1]
-                    
+
                     datout = open(self.datFilename[i],'r')
                     stackList.append(datout.read())
                     datout.close()
@@ -402,10 +402,10 @@ class PicarroKML(PicarroKMLFrame):
 
                 out = open(self.kmlFilename,'w')
                 out.flush()
-                
+
                 # KML_OPEN_TEMPLATE
                 out.write(KML_OPEN_TEMPLATE % (newLong, newLat, self.range, self.tilt, self.heading))
-                
+
                 # KML_BODY_TEMPLATE % (index, baseline, multiplier, index, color, color, conc, index, body)
                 for i in range(self.numConcs):
                     out.write(KML_BODY_TEMPLATE % (i, self.baselineList[i], self.multiplierList[i], i, self.colorList[i], self.colorList[i], self.concList[i], i, stackList[i]))
@@ -421,16 +421,16 @@ class PicarroKML(PicarroKMLFrame):
                                 CRDS_Archiver.ArchiveFile(self.archiveGroupName, self.datFilename[i], removeOriginal=True)
                             except Exception, err:
                                 print "%r" % err
-                                
+
                         self._writeToStatus("Archiving %s" % (self.kmlFilename,))
                         try:
                             CRDS_Archiver.ArchiveFile(self.archiveGroupName, self.kmlFilename, removeOriginal=True)
                         except Exception, err:
                             print "%r" % err
-                                
+
                         self._createFilename()
                         numLines = 0
-                        
+
             # instrument will throw index errors when it runs out of data buffer
 
             except IndexError:
@@ -439,12 +439,12 @@ class PicarroKML(PicarroKMLFrame):
             except Exception, err:
                 self._writeToStatus("%r" % (err,))
                 time.sleep(0.5)
- 
+
         self._writeToStatus("Picarro KML Tool stopped")
-        
+
         self.buttonStart.Enable(True)
         self.buttonStop.Enable(False)
-                
+
 def handleCommandSwitches():
     shortOpts = "c:"
     longOpts = []
@@ -462,9 +462,9 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == "__main__" :
     configFile = handleCommandSwitches()
     app = wx.PySimpleApp()

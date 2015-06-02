@@ -2,13 +2,13 @@
 #
 """
 File Name: DriverAnalogInterface.py
-Purpose: Communicates with analog interface card. 
+Purpose: Communicates with analog interface card.
 
 1. Enqueues timestamped voltage data for output. These are ordered by timestamp,
     and coalasced so that all channels for a specified time are grouped together.
-2. Applies calibration constants from the [ANALOG_OUTPUT] section of the 
+2. Applies calibration constants from the [ANALOG_OUTPUT] section of the
     Master.ini file to convert voltages to DAC values.
-3. Provides facilities for keeping timestamps on Cypress and on DSP in 
+3. Provides facilities for keeping timestamps on Cypress and on DSP in
     synchronization.
 
 File History:
@@ -32,7 +32,7 @@ class AnalogInterface(object):
     def __init__(self,driver,config):
         self.config = config
         self.driver = driver
-        
+
         self.scale  = [6553.6 for i in range(NCHANNELS)]
         self.offset = [0.0 for i in range(NCHANNELS)]
         if "ANALOG_OUTPUT" in config:
@@ -52,7 +52,7 @@ class AnalogInterface(object):
         # List of strings to send to DACs
         self.dacStr = []
         self.dacStrLen = 0
-        
+
     def initializeClock(self):
         #timestamp = self.driver.rpcHandler.dasGetTicks()
         timestamp = getTimestamp()
@@ -60,11 +60,11 @@ class AnalogInterface(object):
         reloadCount = 65536 - self.divisor
         self.driver.rpcHandler.setDacReloadCount(reloadCount)
         self.driver.rpcHandler.resetDacQueue()
-        # Samples which are enqueued with timestamps before 
+        # Samples which are enqueued with timestamps before
         #  self.lastClk*self.clockPeriodms are discarded
         # self.lastClk = int((self.driver.rpcHandler.dasGetTicks()+1000)//self.clockPeriodms)
         self.lastClk = int((getTimestamp()+1000)//self.clockPeriodms)
-        
+
     def nudgeClock(self):
         ts1 = self.driver.rpcHandler.dasGetTicks()
         clk = self.driver.rpcHandler.getDacTimestamp()
@@ -105,7 +105,7 @@ class AnalogInterface(object):
         dacCounts = int(voltage*self.scale[channel] + self.offset[channel] + 0.5)
         dacCounts = max(min(dacCounts,65535),0)
         self.driver.rpcHandler.wrDac(channel,dacCounts)
-        
+
     def serve(self):
         """Send all enqueued samples which have to be output before now + bufferTime"""
         bufferTime = 1000 # In milliseconds
@@ -129,7 +129,7 @@ class AnalogInterface(object):
             self.sendToDacs(self.lastClk,samplesToSend)
         self.flush()
         self.nudgeClock()
-        
+
     def sendToDacs(self,clk,samplesToSend):
         """Encode data to send to DACs and slices them into USB packet sized chunks (64 bytes).
             At each time, we send the 10ms timestamp, a channel bitmask, and then the actual
@@ -150,14 +150,14 @@ class AnalogInterface(object):
             self.dacStrLen = 0
         self.dacStrLen += len(sendStr)
         self.dacStr.append(sendStr)
-        
+
     def flush(self):
         """Flush the USB auxiliary message buffer"""
-        if self.dacStr:    
+        if self.dacStr:
             self.driver.rpcHandler.enqueueDacSamples("".join(self.dacStr))
             self.dacStr = []
             self.dacStrLen = 0
-    
+
     def serveForever(self,period_ms):
         while True:
             try:
@@ -165,9 +165,9 @@ class AnalogInterface(object):
             except:
                 raise
             time.sleep(0.001*period_ms)
-                
+
 from math import pi, cos, sin
-        
+
 if __name__ == "__main__":
     config = CustomConfigObj("../../InstrConfig/Calibration/InstrCal/Master.ini")
     a = AnalogInterface(config)
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     tLast = tSamp*int((timestamp + tSamp)//tSamp)    # Round up to next sample interval
     freq = 1.0
     x = 0.0
-    dx = 0.002*pi*freq*tSamp 
+    dx = 0.002*pi*freq*tSamp
     while True:
         try:
             timestamp = getTimestamp()
@@ -194,4 +194,3 @@ if __name__ == "__main__":
         except:
             pass
         time.sleep(0.5)
-            

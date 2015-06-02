@@ -18,17 +18,17 @@ class BinAverager(object):
         self.streamTotals = zeros((nStreams, maxPoints), dtype=float)
         self.streamPoints = zeros((nStreams, maxPoints), dtype=int)
         self.baseIndex = 0
-        
+
     def setAvgInterval(self, avgInterval):
         self.avgInterval = avgInterval
         self.clear()
-    
+
     def clear(self):
         self.streamLatest = zeros(self.nStreams)
         self.streamTotals = zeros((self.nStreams, self.maxPoints), dtype=float)
         self.streamPoints = zeros((self.nStreams, self.maxPoints), dtype=int)
         self.baseIndex = 0
-                
+
     def insertData(self, timestamp, streamNum, datVal):
         """
         Insert data into the specified streamNum at the specified timestamp (ms). We update the totals
@@ -45,7 +45,7 @@ class BinAverager(object):
         self.streamTotals[streamNum, index] += datVal
         self.streamPoints[streamNum, index] += 1
         self.streamLatest[streamNum] = max(self.streamLatest[streamNum],timestamp)
-        
+
     def shiftBuffers(self, timestamp, targetIndex):
         """
         Shift data in the buffers so that timestamp maps to targetIndex after the shift.
@@ -62,8 +62,8 @@ class BinAverager(object):
             temp2[:,:self.maxPoints-startIndex] = self.streamPoints[:,startIndex:self.maxPoints]
         self.streamTotals = temp1
         self.streamPoints = temp2
-        self.baseIndex = bin - targetIndex    
-    
+        self.baseIndex = bin - targetIndex
+
     def getRecentStreamData(self, streamNum, timestamp, maxPoints):
         """
         Get averaged stream data from the specified streamNum, finishing at the specified timestamp
@@ -84,4 +84,3 @@ class BinAverager(object):
             result.append(self.streamTotals[streamNum,i]/self.streamPoints[streamNum,i] if self.streamPoints[streamNum,i]>0 else NaN)
             timestamps.append(self.avgInterval*(self.baseIndex + i))
         return asarray(timestamps), asarray(result)
-            

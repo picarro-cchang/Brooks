@@ -17,12 +17,12 @@ class RdResultsListener(object):
         self.saveTable = None
         self.saveFname = ''
         self.latestTimestamp = None
-    
+
     def setSaveFile(self, name):
         self.saveFname = name
         self.saveHandle = tables.openFile(self.saveFname, mode='w', title="CRDS Loss Data")
         self.saveTable = self.saveHandle.createTable(self.saveHandle.root, "lossData", LossDataTableType)
-        
+
     def closeSaveFile(self):
         if self.saveTable is not None:
             self.saveTable.flush()
@@ -32,7 +32,7 @@ class RdResultsListener(object):
             print "Closing loss file"
             self.saveHandle = None
             self.saveFname = ''
-    
+
     def run(self):
         poller = zmq.Poller()
         poller.register(self.listenSock, zmq.POLLIN)
@@ -57,13 +57,13 @@ class RdResultsListener(object):
             self.latestTimestamp = obj.timestamp
             if self.saveTable is not None:
                 row = self.saveTable.row
-                row['time'] = obj.timestamp 
+                row['time'] = obj.timestamp
                 row['uncorrectedLoss'] = obj.uncorrectedAbsorbance
                 row.append()
             return obj
         except zmq.ZMQError:
             return None
-    
+
     def getAvailableData(self,deque,maxLength):
          while True:
             obj = self.saveAndFetch()

@@ -18,18 +18,18 @@ class KMLConverterFrame(wx.Frame):
         self.SetTitle("Picarro KML Converter")
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.panel2.SetBackgroundColour("#BDEDFF")
-        
+
         # Menu bar
         self.frameMenubar = wx.MenuBar()
         self.iFile = wx.Menu()
         self.iSetup = wx.Menu()
         self.iHelp = wx.Menu()
-        
+
         self.frameMenubar.Append(self.iFile,"File")
         self.idLoadFile = wx.NewId()
         self.iLoadFile = wx.MenuItem(self.iFile, self.idLoadFile, "Load data files (.dat)", "", wx.ITEM_NORMAL)
         self.iFile.AppendItem(self.iLoadFile)
-        
+
         self.idOutDir = wx.NewId()
         self.iOutDir = wx.MenuItem(self.iFile, self.idOutDir, "Change output directory", "", wx.ITEM_NORMAL)
         self.iFile.AppendItem(self.iOutDir)
@@ -38,21 +38,21 @@ class KMLConverterFrame(wx.Frame):
         self.idShift = wx.NewId()
         self.iShift = wx.MenuItem(self.iSetup, self.idShift, "Shift samples", "", wx.ITEM_NORMAL)
         self.iSetup.AppendItem(self.iShift)
-        
+
         self.frameMenubar.Append(self.iHelp,"Help")
         self.idAbout = wx.NewId()
         self.iAbout = wx.MenuItem(self.iHelp, self.idAbout, "Picarro KML Converter", "", wx.ITEM_NORMAL)
         self.iHelp.AppendItem(self.iAbout)
-        
+
         self.SetMenuBar(self.frameMenubar)
-        
+
         # Other components
         self.textCtrlMsg = wx.TextCtrl(self.panel1, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH)
-        self.textCtrlMsg.SetMinSize((300, 100))        
+        self.textCtrlMsg.SetMinSize((300, 100))
 
         self.procButton = wx.Button(self.panel1, -1, "Convert", size = (120,22))
         self.closeButton = wx.Button(self.panel1, wx.ID_CLOSE, "", size = (120,22))
-        
+
         self.labelFooter = wx.StaticText(self.panel2, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
         self.__do_layout()
 
@@ -85,4 +85,3 @@ if __name__ == "__main__":
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
-    

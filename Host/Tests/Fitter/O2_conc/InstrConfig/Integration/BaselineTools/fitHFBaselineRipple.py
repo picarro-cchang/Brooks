@@ -1,6 +1,6 @@
 #  Baseline ripple fitter for HF analyzer (MADS)
 #  17 Sep 2012:  Implement initial estimate of ripple frequencies using autocorrrelation of baseline
-from numpy import * 
+from numpy import *
 import os.path
 import time
 import cPickle
@@ -34,7 +34,7 @@ def autoCorr2(f,l,df):
 
     l[0:s0] = 0.0
     l[s0:N] = r[0:N-s0]
-    
+
     r = r+l
     minA = 1e12
     shift = int(minPeriod/df)
@@ -88,7 +88,7 @@ if first_fit:
         p1 = p[1]
     first_fit = 0
 
-#  THE INITIAL GUESSES FOR RIPPLE PERIOICITIES GO HERE    
+#  THE INITIAL GUESSES FOR RIPPLE PERIOICITIES GO HERE
 init[1000,2] = p0
 init[1001,2] = p1
 
@@ -114,7 +114,7 @@ while phase_ripp_1 < -pi:
     phase_ripp_1 += 2*pi
 while phase_ripp_1 > pi:
     phase_ripp_1 -= 2*pi
-    
+
 if amp_ripp_2 < 0:
     amp_ripp_2 = -amp_ripp_2
     phase_ripp_2 += pi

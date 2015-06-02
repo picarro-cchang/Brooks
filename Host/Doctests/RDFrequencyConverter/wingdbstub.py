@@ -8,17 +8,17 @@ Written by Stephan R.A. Deibel and John P. Ehresman
 Usage:
 -----
 
-This is the file that Wing DB users copy into their python project 
+This is the file that Wing DB users copy into their python project
 directory if they want to be able to debug programs that are launched
 outside of the IDE (e.g., CGI scripts, in response to a browser page
 load).
 
-To use this, edit the configuration values below to match your 
+To use this, edit the configuration values below to match your
 Wing IDE installation and requirements of your project.
 
 Then, add the following line to your code:
 
-  import wingdbstub
+  import Host.Doctests.RDFrequencyConverter.wingdbstub as wingdbstub
 
 Debugging will start immediately after this import statements.
 
@@ -32,7 +32,7 @@ set set.
 
 If the debug process is started before the IDE, or is not listening
 at the time this module is imported then the program will run with
-debugging until an attach request is seen.  Attaching only works 
+debugging until an attach request is seen.  Attaching only works
 if the .wingdebugpw file is present; see the manual for details.
 
 One win32, you either need to edit WINGHOME in this script or
@@ -48,7 +48,7 @@ import imp
 
 
 #------------------------------------------------------------------------
-# Default configuration values:  Note that the named environment 
+# Default configuration values:  Note that the named environment
 # variables, if set, will override these settings.
 
 # Set this to 1 to disable all debugging; 0 to enable debugging
@@ -65,15 +65,15 @@ kWingHostPort = 'localhost:50005'
 # This is only used when the debug process is not attached to
 # an IDE or the IDE has dropped its connection. The configured
 # port can optionally be added to the IDE's Common Attach Hosts
-# preference. Note that a random port is used instead if this 
+# preference. Note that a random port is used instead if this
 # port is already in use!
 # (WINGDB_ATTACHPORT environment variable)
 kAttachPort = '50015'
 
 # Set this to a filename to log verbose information about the debugger
 # internals to a file.  If the file does not exist, it will be created
-# as long as its enclosing directory exists and is writeable.  Use 
-# "<stderr>" or "<stdout>".  Note that "<stderr>" may cause problems 
+# as long as its enclosing directory exists and is writeable.  Use
+# "<stderr>" or "<stdout>".  Note that "<stderr>" may cause problems
 # on win32 if the debug process is not running in a console.
 # (WINGDB_LOGFILE environment variable)
 kLogFile = None
@@ -83,7 +83,7 @@ kLogFile = None
 kLogVeryVerbose = 0
 
 # Set this to 1 when debugging embedded scripts in an environment that
-# creates and reuses a Python instance across multiple script invocations:  
+# creates and reuses a Python instance across multiple script invocations:
 # It turns off automatic detection of program quit so that the debug session
 # can span multiple script invocations.  When this is turned on, you may
 # need to call ProgramQuit() on the debugger object to shut down the
@@ -96,10 +96,10 @@ kLogVeryVerbose = 0
 kEmbedded = 0
 
 # Path to search for the debug password file and the name of the file
-# to use.  The password file contains the encryption type and connect 
+# to use.  The password file contains the encryption type and connect
 # password for all connections to the IDE and must match the wingdebugpw
-# file in the profile dir used by the IDE.  Any entry of '$<winguserprofile>' 
-# is replaced by the wing user profile directory for the user that the 
+# file in the profile dir used by the IDE.  Any entry of '$<winguserprofile>'
+# is replaced by the wing user profile directory for the user that the
 # current process is running as
 # (WINGDB_PWFILEPATH environment variable)
 kPWFilePath = [os.path.dirname(__file__), '$<winguserprofile>']
@@ -121,7 +121,7 @@ if sys.hexversion >= 0x03000000:
 else:
   def has_key(o, key):
     return o.has_key(key)
-    
+
 # Check environment:  Must have WINGHOME defined if still == None
 if WINGHOME == None:
   if has_key(os.environ, 'WINGHOME'):
@@ -148,10 +148,10 @@ if __debug__ == 0:
   sys.stdout.write("Error: You must omit the -O or -OO command line option, or undefine\n")
   sys.stdout.write("Error: environment variable PYTHONOPTIMIZE before launching python.\n")
   sys.exit(2)
-  
+
 def _ImportWingdb(winghome, user_settings=None):
   """ Find & import wingdb module. """
-  
+
   try:
     exec_dict = {}
     execfile(os.path.join(winghome, 'bin', '_patchsupport.py'), exec_dict)
@@ -181,11 +181,11 @@ if not kWingDebugDisabled and not has_key(os.environ, 'WINGDB_DISABLED') and \
    not has_key(os.environ, 'WINGDB_ACTIVE'):
 
   exit_on_fail = 0
-  
+
   try:
     # Obtain exit if fails value
     exit_on_fail = os.environ.get('WINGDB_EXITONFAILURE', kExitOnFailure)
-    
+
     # Obtain configuration for log file to use, if any
     logfile = os.environ.get('WINGDB_LOGFILE', kLogFile)
     if logfile == '-' or logfile == None or len(logfile.strip()) == 0:
@@ -194,31 +194,31 @@ if not kWingDebugDisabled and not has_key(os.environ, 'WINGDB_DISABLED') and \
     very_verbose_log = os.environ.get('WINGDB_LOGVERYVERBOSE', kLogVeryVerbose)
     if type(very_verbose_log) == type('') and very_verbose_log.strip() == '':
       very_verbose_log = 0
-      
+
     # Determine remote host/port where the IDE is running
     hostport = os.environ.get('WINGDB_HOSTPORT', kWingHostPort)
     colonpos = hostport.find(':')
     host = hostport[:colonpos]
     port = int(hostport[colonpos+1:])
-  
+
     # Determine port to listen on locally for attach requests
     attachport = int(os.environ.get('WINGDB_ATTACHPORT', kAttachPort))
-  
+
     # Check if running embedded script
     embedded = int(os.environ.get('WINGDB_EMBEDDED', kEmbedded))
-  
+
     # Obtain debug password file search path
     if has_key(os.environ, 'WINGDB_PWFILEPATH'):
       pwfile_path = os.environ['WINGDB_PWFILEPATH'].split(os.pathsep)
     else:
       pwfile_path = kPWFilePath
-    
+
     # Obtain debug password file name
     if has_key(os.environ, 'WINGDB_PWFILENAME'):
       pwfile_name = os.environ['WINGDB_PWFILENAME']
     else:
       pwfile_name = kPWFileName
-    
+
     # Load wingdb.py
     wingdb = _ImportWingdb(WINGHOME, kUserSettingsDir)
     if wingdb == None:
@@ -226,13 +226,13 @@ if not kWingDebugDisabled and not has_key(os.environ, 'WINGDB_DISABLED') and \
       sys.stdout.write("Error: Cannot find wingdb.py in $(WINGHOME)/bin or $(WINGHOME)/src\n")
       sys.stdout.write("Error: Please check the WINGHOME definition in wingdbstub.py\n")
       sys.exit(2)
-    
+
     # Find the netserver module and create an error stream
     netserver = wingdb.FindNetServerModule(WINGHOME, kUserSettingsDir)
     err = wingdb.CreateErrStream(netserver, logfile, very_verbose_log)
-    
+
     # Start debugging
-    debugger = netserver.CNetworkServer(host, port, attachport, err, 
+    debugger = netserver.CNetworkServer(host, port, attachport, err,
                                         pwfile_path=pwfile_path,
                                         pwfile_name=pwfile_name,
                                         autoquit=not embedded)
@@ -240,7 +240,7 @@ if not kWingDebugDisabled and not has_key(os.environ, 'WINGDB_DISABLED') and \
     os.environ['WINGDB_ACTIVE'] = "1"
     if debugger.ChannelClosed():
       raise ValueError('Not connected')
-    
+
   except:
     if exit_on_fail:
       raise

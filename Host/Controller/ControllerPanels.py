@@ -27,11 +27,11 @@ from math import log10, sqrt
 import os
 import sys
 
-from ControllerModels import DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy, ControllerRpcHandler, waveforms, dasInfo
-from ControllerModels import ringdowns, ringdownLock
-from ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
-from ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
-from ControllerPanelsGui import WlmPanelGui, ProcessedLossPanelGui, StatsPanelGui
+from Host.Controller.ControllerModels import DriverProxy, RDFreqConvProxy, SpectrumCollectorProxy, ControllerRpcHandler, waveforms, dasInfo
+from Host.Controller.ControllerModels import ringdowns, ringdownLock
+from Host.Controller.ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
+from Host.Controller.ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
+from Host.Controller.ControllerPanelsGui import WlmPanelGui, ProcessedLossPanelGui, StatsPanelGui
 
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
@@ -86,7 +86,7 @@ class RingdownPanel(RingdownPanelGui):
         for w in waveforms["Ringdown"].values():
             w.RetainLast()
         self.ringdownGraph.Update(delay=0)
-            
+
     def  onSelectGraphType(self,evt):
         colourNames = ["red","green","blue","yellow","cyan","magenta","black","white"]
         fillColours = [wx.NamedColour(c).GetRGB() for c in colourNames]
@@ -94,7 +94,7 @@ class RingdownPanel(RingdownPanelGui):
             print data.timestamp, data.uncorrectedAbsorbance
         def dataGood(data):
             return not (data.status & interface.RINGDOWN_STATUS_RingdownTimeout)
-        
+
         choice = self.graphTypeRadioBox.GetSelection()
         y = ""
         self.appendData = printData
@@ -270,7 +270,7 @@ class RingdownPanel(RingdownPanelGui):
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["wavenumber"].Add(utime, wavenumber,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='', 
+            self.ringdownGraph.SetGraphProperties(xlabel='',
             timeAxes=(True,False),ylabel='Wavenumber',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
@@ -412,7 +412,7 @@ class WlmPanel(WlmPanelGui):
     def onClear(self,evt):
         for w in waveforms["Wlm"].values():
             w.Clear()
-                
+
 class LaserPanel(LaserPanelGui):
     def __init__(self,*a,**k):
         LaserPanelGui.__init__(self,*a,**k)
@@ -444,7 +444,7 @@ class LaserPanel(LaserPanelGui):
         self.currentGraph.AddSeriesAsLine(self.currentWfm,
             colour='red',width=2)
         self.laserNum = None
-        
+
     def setLaserNum(self,laserNum):
         self.laserNum = laserNum
 
@@ -456,7 +456,7 @@ class LaserPanel(LaserPanelGui):
     def onClear(self,evt):
         for w in waveforms["Laser%d" % self.laserNum].values():
             w.Clear()
-            
+
 class PressurePanel(PressurePanelGui):
     def __init__(self,*a,**k):
         PressurePanelGui.__init__(self,*a,**k)
@@ -564,7 +564,7 @@ class WarmBoxPanel(WarmBoxPanelGui):
     def onClear(self,evt):
         for w in waveforms["WarmBox"].values():
             w.Clear()
-            
+
     def onWaveformSelectChanged(self, event):
         self.temperatureGraph.RemoveAllSeries()
         if self.etalonTemperatureCheckbox.IsChecked():
@@ -575,7 +575,7 @@ class WarmBoxPanel(WarmBoxPanelGui):
                 colour='green',width=2)
         if self.heatsinkTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
-                colour='blue',width=2)            
+                colour='blue',width=2)
 
 class HotBoxPanel(HotBoxPanelGui):
     def __init__(self,*a,**k):
@@ -604,7 +604,7 @@ class HotBoxPanel(HotBoxPanelGui):
         self.heatsinkTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
             colour='blue',width=2)
-        self.dasTemperatureWfm = Series(wfmPoints)        
+        self.dasTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.dasTemperatureWfm,
             colour='green',width=2)
         self.tecWfm = Series(wfmPoints)
@@ -651,11 +651,11 @@ class ProcessedLossPanel(ProcessedLossPanelGui):
 
     def update(self):
         self.processedLossGraph.Update(delay=0)
- 
+
     def onClear(self,evt):
         for w in waveforms["ProcessedLoss"].values():
             w.Clear()
-            
+
     def onProcessedLossChanged(self, event):
         self.processedLossGraph.RemoveAllSeries()
         if self.processedLoss1Checkbox.IsChecked():
@@ -666,12 +666,12 @@ class ProcessedLossPanel(ProcessedLossPanelGui):
                 colour='green',width=2)
         if self.processedLoss3Checkbox.IsChecked():
             self.processedLossGraph.AddSeriesAsLine(self.processedLossWfm[2],
-                colour='blue',width=2)            
+                colour='blue',width=2)
         if self.processedLoss4Checkbox.IsChecked():
             self.processedLossGraph.AddSeriesAsLine(self.processedLossWfm[3],
-                colour='yellow',width=2)            
+                colour='yellow',width=2)
 
-                
+
 class CommandLogPanel(CommandLogPanelGui):
     acqLabels = dict(start="Start Acquisition",resume="Resume Acquisition",
                      stop="Stop Acquisition",clear="Clear Error")
@@ -722,7 +722,7 @@ class CommandLogPanel(CommandLogPanelGui):
         self.logListCtrl.SetStringItem(index,4,code)
         self.logListCtrl.SetStringItem(index,5,txt.strip()[1:])
         self.logListCtrl.EnsureVisible(index)
-    
+
     def onStartEngine(self,event):
         Driver.startEngine()
 
@@ -746,11 +746,11 @@ class CommandLogPanel(CommandLogPanelGui):
                     self.warmBoxCalFileTextCtrl.SetValue(os.path.split(fname)[1])
         finally:
             dlg.Destroy()
-            
+
         if fname:
             defaultDir, defaultFile = os.path.split(fname)[0],""
         else:
-            defaultDir, defaultFile = os.getcwd(),""            
+            defaultDir, defaultFile = os.getcwd(),""
 
         fname = RDFreqConv.getHotBoxCalFilePath()
         if fname:
@@ -768,7 +768,7 @@ class CommandLogPanel(CommandLogPanelGui):
                 self.hotBoxCalFileTextCtrl.SetValue(os.path.split(fname)[1])
         finally:
             dlg.Destroy()
-                
+
     def onStartAcquisition(self,event):
         currentLabel = self.startAcquisitionButton.GetLabel()
         if currentLabel == CommandLogPanel.acqLabels["start"]:
@@ -841,7 +841,7 @@ class CommandLogPanel(CommandLogPanelGui):
             if len(seq)>1:
                 self.seqTextCtrl.SetValue(seq[0])
         return result
-        
+
     def disableAll(self):
         self.startEngineButton.Enable(False)
         self.laser1State.Enable(False)
@@ -858,7 +858,7 @@ class CommandLogPanel(CommandLogPanelGui):
         self.startAcquisitionButton.Enable(False)
         self.seqTextCtrl.Enable(False)
         #self.logListCtrl.Enable(False)
-      
+
     def enableAll(self):
         self.startEngineButton.Enable(True)
         self.laser1State.Enable(True)
@@ -875,7 +875,7 @@ class CommandLogPanel(CommandLogPanelGui):
         self.startAcquisitionButton.Enable(True)
         self.seqTextCtrl.Enable(True)
         #self.logListCtrl.Enable(True)
-        
+
 class StatsPanel(StatsPanelGui):
     def __init__(self,*a,**k):
         StatsPanelGui.__init__(self,*a,**k)
@@ -929,7 +929,7 @@ class StatsPanel(StatsPanelGui):
                 size=1,width=1)
         self.rdStats = RdStats(100)
         self.active = False
-        
+
     def appendData(self,data):
         if self.active and 0 == (data.status & interface.RINGDOWN_STATUS_RingdownTimeout):
             self.rdStats.processDatum(data.timestamp/1000.0,data.uncorrectedAbsorbance)
@@ -938,7 +938,7 @@ class StatsPanel(StatsPanelGui):
             self.waveNumberAllanVar.processDatum(data.waveNumber)
             self.ratio1AllanVar.processDatum(data.ratio1)
             self.ratio2AllanVar.processDatum(data.ratio2)
-                
+
     def updateSeriesAndStats(self):
         meanLoss,shot2shot,rate = self.rdStats.getStats()
         self.meanLossTextCtrl.SetValue("%.4f" % meanLoss)
@@ -951,7 +951,7 @@ class StatsPanel(StatsPanelGui):
         self.stdLossTextCtrl.SetValue("%.4f" % (1000.0*sqrt(v[0]),))
         if rate != 0.0:
             self.sensitivityTextCtrl.SetValue("%.5f" % (1000.0*sqrt(v[0]/rate),))
-        if meanLoss != 0.0: self.shotToShotTextCtrl.SetValue("%.3f" % (100.0*sqrt(v[0])/meanLoss))    
+        if meanLoss != 0.0: self.shotToShotTextCtrl.SetValue("%.3f" % (100.0*sqrt(v[0])/meanLoss))
         self.waveNumberStats.Clear()
         n,v = self.waveNumberAllanVar.getVariances()
         for k in range(statsPoints):
@@ -967,7 +967,7 @@ class StatsPanel(StatsPanelGui):
         n,v = self.ratio2AllanVar.getVariances()
         for k in range(statsPoints):
             if v[k]>0: self.ratio2Stats.Add(log10(2**k),0.5*log10(v[k]))
-            
+
     def update(self):
         self.updateSeriesAndStats()
         self.lossGraph.Update(delay=0)

@@ -543,7 +543,7 @@ class PlotCanvas(wx.Panel):
         self.border = (1,1)
 
         self.SetBackgroundColour("white")
-        
+
         # Adjust canvas size
         self.heightAdjustment = 0
 
@@ -749,7 +749,7 @@ class PlotCanvas(wx.Panel):
 
     def SetHeightAdjustment(self, value=0):
         self.heightAdjustment = value
-        
+
     def setLogScale(self, logscale):
         if type(logscale) != tuple:
             raise TypeError, 'logscale must be a tuple of bools, e.g. (False, False)'
@@ -999,7 +999,7 @@ class PlotCanvas(wx.Panel):
 
     def Draw(self, graphics, xAxis = None, yAxis = None, dc = None):
         """Wrapper around _Draw, which handles log axes"""
-        
+
         graphics.setLogScale(self.getLogScale())
 
         # check Axis is either tuple or none
@@ -1776,7 +1776,8 @@ class PlotPrintout(wx.Printout):
 
 #----------------------------------------------------------------------
 from wx import ImageFromStream, BitmapFromImage
-import cStringIO, zlib
+import cStringIO
+import zlib
 
 
 def getMagPlusData():

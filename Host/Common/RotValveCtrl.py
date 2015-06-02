@@ -25,10 +25,10 @@ class RotValveCtrl(object):
 
     def flush(self):
         self.ser.flushInput()
-        
+
     def sendString(self,str):
         self.ser.write(str + "\r")
-        
+
     def getLine(self):
         line = []
         while True:
@@ -39,7 +39,7 @@ class RotValveCtrl(object):
                 line.append(ch)
             else:
                 return "".join(line)
-                
+
     def getLines(self):
         lines = []
         while True:
@@ -56,12 +56,12 @@ class RotValveCtrl(object):
         except:
             currPos = "-1"
         return currPos
-      
+
     def reopen(self):
         self.ser.close()
         self.ser = serial.Serial(port=self.port,baudrate=9600,timeout=1,xonxoff=1, writeTimeout=1.0)
         self.ser.open()
-        
+
     def setPosition(self, pos):
         retryTimes = 0
         while retryTimes < MAX_RETRY_TIMES:
@@ -75,4 +75,3 @@ class RotValveCtrl(object):
                 time.sleep(0.5)
         print "Rotary valve: Valve position command failed for %d times.\n" % MAX_RETRY_TIMES
         raise Exception("Rotary valve: Valve position command failed for %d times." % MAX_RETRY_TIMES)
-

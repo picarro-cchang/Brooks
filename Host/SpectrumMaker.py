@@ -34,7 +34,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-    
+
 class Spectrum(object):
     def __init__(self,name,config,basePath,env):
         self.name = name
@@ -44,7 +44,7 @@ class Spectrum(object):
         self.physicalConstants = loadPhysicalConstants(libName)
         self.config = config
         self.spectrumIds = asarray(eval(config["SpectrumId"]+",",env))
-    def setupModel(self,env):    
+    def setupModel(self,env):
         config = self.config
         self.basisArray = asarray(eval(config["identification"]+",",env))
         self.centerFrequency = eval(config["center"],env) if "center" in config else 0
@@ -109,7 +109,7 @@ class Spectrum(object):
                     if not done:
                         m[pkNum,var] = eval(config[basisName][var],env)
         self.model = m
-        
+
 class SpectrumMaker(Singleton):
     initialized = False
     def __init__(self, configPath=None,env={}):
@@ -135,7 +135,7 @@ class SpectrumMaker(Singleton):
                                 self.spectrumNamesById[id] = []
                             self.spectrumNamesById[id].append(secName)
                         self.spectra[secName] = sp
-                self.baseEnv = env.copy()        
+                self.baseEnv = env.copy()
                 self.config = cp
                 self.schemeCount = eval(cp.get("SCHEME_CONFIG", "schemeCount", "1"),env)
                 self.schemePaths = []
@@ -156,7 +156,7 @@ class SpectrumMaker(Singleton):
             for name in self.spectra:
                 self.spectra[name].setupModel(env)
             yield self.spectra
-            
+
     def genEnv(self):
         """Generator yielding environment dictionaries with variables as keys and
             values drawn from constants and the outer product of sequences"""
@@ -172,12 +172,12 @@ class SpectrumMaker(Singleton):
             envDict = dict(constants)
             for name,v in zip(names,values): envDict[name]=v
             yield envDict
-    
+
     def findVariables(self,variables,env={}):
         # Find entries in the variables dictionary which have values that evaluate to sequences
         #  and those which evaluate to constants. The result is the pair constants, sequences
-        #  where constants is a list with (name,value) pairs and sequences is a list of 
-        #  (name,sequence) pairs, where name is the name of the variable and sequence is a 
+        #  where constants is a list with (name,value) pairs and sequences is a list of
+        #  (name,sequence) pairs, where name is the name of the variable and sequence is a
         #  tuple of values that the variable must assume
         constants, sequences = [], []
         for k in variables:
@@ -188,7 +188,7 @@ class SpectrumMaker(Singleton):
             else:
                 constants.append((k,e))
         return constants, sequences
-            
+
     def run(self):
         nu = linspace(6237.0,6238.0,1000)
         #nu = linspace(6056.0,6058.0,1000)
@@ -205,7 +205,7 @@ class SpectrumMaker(Singleton):
         ylabel('Loss (ppb/cm)')
         grid(True)
         show()
-        
+
 HELP_STRING = """SpectrumMaker.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following. Note that options override
@@ -247,4 +247,3 @@ if __name__ == "__main__":
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     spectrumMakerApp.run()
     Log("Exiting program")
-    

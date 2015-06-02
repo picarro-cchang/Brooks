@@ -18,7 +18,7 @@ from Helpers import BroadcastSink
 
 
 class TestPeriphIntrf(object):
-    
+
     def setup_method(self, m):
         self.broadcaster = BroadcastSink.BroadcastSink()
 
@@ -179,7 +179,5 @@ class TestPeriphIntrf(object):
         assert ret[1] == 12.0
 
 
-    
 
-        
-        
+

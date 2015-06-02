@@ -39,7 +39,7 @@ class ReadExtSensor(object):
                                                 ServerDescription = APP_DESCRIPTION,
                                                 ServerVersion = __version__,
                                                 threaded = True)
-                                                
+
         self.measSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % (RPC_PORT_MEAS_SYSTEM,),ClientName="ReadExtSensor")
 
         config = CustomConfigObj(configFile)
@@ -51,7 +51,7 @@ class ReadExtSensor(object):
         self.offset = config.getfloat("Setup", "offset")
         self.externalSensor = None
         self.externalSensorFound = False
-            
+
         if self.comPort.strip() == "":
             # Find the dynamic COM port
             rotValve = None
@@ -75,7 +75,7 @@ class ReadExtSensor(object):
                         break
                 except:
                     pass
-                    
+
             if not self.externalSensorFound:
                 print "External sensor not found.\n"
                 if self.externalSensor:
@@ -91,7 +91,7 @@ class ReadExtSensor(object):
             self.externalSensor.open()
             self.externalSensorFound = True
             print "External sensor located at %s...\n"% (self.comPort)
-            
+
     def read(self):
         try:
             while True:
@@ -105,13 +105,13 @@ class ReadExtSensor(object):
         finally:
             self.externalSensor.close()
         print "ReadExtSensor stopped."
-        
+
     def runApp(self):
         rpcThread = threading.Thread(target = self.read)
         rpcThread.setDaemon(True)
         rpcThread.start()
         self.RpcServer.serve_forever()
-        
+
 HELP_STRING = \
 """ readExtSensor.py [-c<FILENAME>] [-h|--help]
 
@@ -157,16 +157,15 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()
-    Log("%s application started." % APP_NAME)  
+    Log("%s application started." % APP_NAME)
     print "%s application started." % APP_NAME
     try:
         app = ReadExtSensor(configFile)
-        app.runApp()      
+        app.runApp()
     except Exception, E:
         msg = "Exception trapped outside execution"
         print msg + ": %s %r" % (E, E)
         Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
-  
+
 if __name__ == "__main__":
     main()
-    

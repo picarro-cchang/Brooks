@@ -5,7 +5,7 @@ if _PERSISTENT_["init"]:
         _DATA_LOGGER_.DATALOGGER_startLogRpc("DataLog_Sensor_Minimal")
     except Exception, err:
         print "_DATA_LOGGER_ Error: %r" % err
-        
+
 try :
     for sensorKey in _OLD_SENSOR_:
         _REPORT_[sensorKey] = _OLD_SENSOR_[sensorKey][-1][1]

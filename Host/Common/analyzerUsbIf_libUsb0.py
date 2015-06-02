@@ -87,7 +87,7 @@ class AnalyzerUsb(Singleton):
             time.sleep(2.0)
             _connect()
         else:
-            self.interfaceClaimed = True            
+            self.interfaceClaimed = True
 
     def controlInTransaction(self,var,cmd,value=0,index=0):
         sv = sizeof(var)
@@ -116,10 +116,10 @@ class AnalyzerUsb(Singleton):
             a += chunkSize
             dataLength -= chunkSize
             time.sleep(0) # to yield processor when transferring a large block
-        if dataLength > 0:    
+        if dataLength > 0:
             dataBuffer = (c_ubyte*dataLength).from_address(a)
             self.controlOutTransaction(dataBuffer,cmd,address)
-    
+
     def getUsbVersion(self):
         def _getUsbVersion():
             version = c_ushort()
@@ -267,11 +267,11 @@ class AnalyzerUsb(Singleton):
             a += chunkSize
             dataLength -= chunkSize
             time.sleep(0) # to yield processor when transferring a large block
-        if dataLength > 0:    
+        if dataLength > 0:
             dataBuffer = (c_ubyte*dataLength).from_address(a)
             self.hpiaWrite(address)
             self.hpidWrite(dataBuffer)
-        
+
     def hpidRead(self,result):
         """Use bulk read to acquire block of 32 bit words from HPID"""
         nBytes = sizeof(result)
@@ -297,7 +297,7 @@ class AnalyzerUsb(Singleton):
             a += chunkSize
             dataLength -= chunkSize
             time.sleep(0) # to yield processor when transferring a large block
-        if dataLength > 0:    
+        if dataLength > 0:
             dataBuffer = (c_ubyte*dataLength).from_address(a)
             self.hpiaWrite(address)
             self.hpidRead(dataBuffer)
@@ -319,7 +319,7 @@ class AnalyzerUsb(Singleton):
         if 0 == dataLength or 512 < dataLength:
             raise UsbPacketLengthError("Invalid data length %d in auxiliaryWrite" % (dataLength,))
         self._claimInterfaceWrapper(_wrAuxiliary)
-        
+
     def setDspControl(self,value):
         """Use vendor command to reset DSP or send HINT"""
         def _setDspControl():
@@ -350,7 +350,7 @@ class AnalyzerUsb(Singleton):
             # self.controlInTransaction(errors,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_ERRORS)
             # return dict(underflows = errors[0], overflows = errors[1], now = (errors[3]<<8) + errors[2])
         # return self._claimInterfaceWrapper(_getDacQueueErrors)
-        
+
     # def setDacQueuePeriod(self,channel,period):
         # """Sets service period (in hundredth's of a second) of a DAC queue"""
         # if channel<0 or channel>=8:
@@ -365,7 +365,7 @@ class AnalyzerUsb(Singleton):
             # self.controlOutTransaction(data,
                 # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SET_PERIOD)
         # self._claimInterfaceWrapper(_setDacQueuePeriod)
-        
+
     # def resetDacQueues(self):
         # """Stop serving from DAC queues and set them all to empty"""
         # def _resetDacQueues():
@@ -422,7 +422,7 @@ class AnalyzerUsb(Singleton):
             self.controlInTransaction(data,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_GET_RELOAD_COUNT)
             return data.value
         return self._claimInterfaceWrapper(_getDacReloadCount)
-        
+
     def getDacQueueFree(self):
         """Returns number of bytes available in DAC queue"""
         def _getDacQueueFree():
@@ -438,7 +438,7 @@ class AnalyzerUsb(Singleton):
             self.controlInTransaction(errors,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_ERRORS)
             return errors.value
         return self._claimInterfaceWrapper(_getDacQueueErrors)
-    
+
     def enqueueDacSamples(self,data):
         """Use vendor command to send block of 16 bit words (stored as a string in data) to auxiliary board"""
         dataLength = sizeof(data)
@@ -447,7 +447,7 @@ class AnalyzerUsb(Singleton):
         if 0 == dataLength or 64 < dataLength:
             raise UsbPacketLengthError("Invalid data length %d in enqueueDacSamples" % (dataLength,))
         return self._claimInterfaceWrapper(_enqueueDacSamples)
-    
+
     def dspWrite(self,addrValueList):
         """Write a list of (address,value) pairs to the DSP"""
         self.hpicWrite(0x00010001)

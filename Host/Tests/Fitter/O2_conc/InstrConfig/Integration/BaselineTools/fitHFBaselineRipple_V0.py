@@ -1,4 +1,4 @@
-import numpy 
+import numpy
 import os.path
 import time
 import cPickle

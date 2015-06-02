@@ -203,7 +203,7 @@ class SchemeBasedCalibrator(object):
                 # Ensure that the differences between the WLM angles at the calibration rows are close to multiples of the
                 #  FSR before we do the calibration. This prevents calibrations from occurring if the pressure is changing, etc.
                 m = round_(dtheta / float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","APPROX_WLM_ANGLE_PER_FSR")))
-                
+
                 dthetaSel = dtheta[m == 1]
                 if len(dthetaSel) >= 1:
                     anglePerFsr = mean(dthetaSel)
@@ -229,7 +229,7 @@ class SchemeBasedCalibrator(object):
                         #
                         fileName = "file_%d_vl_%d.npz" % (SchemeBasedCalibrator.fileNum, vLaserNum)
                         print fileName
-                        savez(fileName, thetaShifted=thetaShifted, waveNumberSetpoints=waveNumberSetpoints, 
+                        savez(fileName, thetaShifted=thetaShifted, waveNumberSetpoints=waveNumberSetpoints,
                                         weights=weights, thetaCal=thetaCal[perm], pztDev=pztDev[perm])
                         #
                         self.rdFreqConv.RPC_updateWlmCal(vLaserNum,thetaShifted,waveNumberSetpoints,weights,
@@ -411,7 +411,7 @@ class RDFrequencyConverter(Singleton):
                 # The spectral point is close to the setpoint
                 self.sbc.processCalPoint(entry)
             else:
-                Log("WLM Calibration point cannot be used", Data=dict(rowNum=rowNum, 
+                Log("WLM Calibration point cannot be used", Data=dict(rowNum=rowNum,
                                                                       angleError=min(angleError, 2*pi-angleError),
                                                                       tempError=abs(tempError)))
         return entry
@@ -717,11 +717,11 @@ class RDFrequencyConverter(Singleton):
                 self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
         else:
             self.warmBoxCalFilePath = os.path.abspath(warmBoxCalFilePath)
-        
+
         # Load up the frequency converters for each laser in the DAS...
         ini = CustomConfigObj(self.warmBoxCalFilePath)
-        
-        
+
+
         for vLaserNum in range(1, self.numLasers + 1): # N.B. In AutoCal, laser indices are 1 based
             ac = AutoCal()
             self.freqConverter[vLaserNum-1] = ac.loadFromIni(ini, vLaserNum)
@@ -801,7 +801,7 @@ class RDFrequencyConverter(Singleton):
         """
         self._assertVLaserNum(vLaserNum)
         self.freqConverter[vLaserNum-1].setOffset(offset)
-        
+
     def RPC_getLaserTempOffset(self, vLaserNum):
         """Fetches the temp offset for the virtual laser. vLaserNum is 1-based.
         Returns offset in degrees.
@@ -856,8 +856,8 @@ class RDFrequencyConverter(Singleton):
             ac = self.freqConverter[i]
             if ac is not None:
                 ac.updateIni(cp, i+1) # Note: In Autocal1, laser indices are 1 based
-        return cp        
-    
+        return cp
+
     def RPC_updateWarmBoxCal(self,fileName=None):
         """
         Write calibration back to the file with a new checksum.
@@ -890,7 +890,7 @@ class RDFrequencyConverter(Singleton):
         finally:
             calStrIO.close()
             if fp is not None: fp.close()
-            
+
     def RPC_updateWlmCal(self,vLaserNum,thetaCal,waveNumbers,weights,relax=5e-3,relative=True,relaxDefault=5e-3,relaxZero=5e-5,maxDiff=0.4):
         """Updates the wavelength monitor calibration using the information that angles specified as "thetaCal"
            map to the specified list of waveNumbers. Also relax the calibration towards the default using

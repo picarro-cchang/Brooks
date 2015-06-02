@@ -33,10 +33,10 @@ class StateDatabaseTestCase(unittest.TestCase):
         except WindowsError:
             pass
         time.sleep(0.1)
-        
+
     def logFunc(self, message):
         self.message = message
-        
+
     def test_InitializeStateDatabase(self):
         with self.assertRaises(ValueError) as context:
             StateDatabase()
@@ -52,13 +52,13 @@ class StateDatabaseTestCase(unittest.TestCase):
         time.sleep(1.0)
         # Make sure that the database file exists
         self.assertTrue(os.path.exists(self.dbFile))
-        
+
     def idFetcher(self, threadNum):
         db = StateDatabase()
         for k in range(200):
             self.idQueue.put((threadNum, db.getId()))
             time.sleep(0)
-    
+
     def test_GetId(self):
         stateDb = StateDatabase(self.dbFile, self.logFunc)
         try:
@@ -81,15 +81,15 @@ class StateDatabaseTestCase(unittest.TestCase):
             for i, thread in enumerate(threads):
                 thread.join()
             # Get the results from the queue, sort them and see if we got the correct ids
-            idList = [] 
+            idList = []
             while not self.idQueue.empty():
                 idList.append(self.idQueue.get())
             idFound = sorted([id for threadNum, id in idList])
             self.assertEqual(len(idFound), nThreads * 200)
-            self.assertEqual(idFound, range(11,11+len(idList)))           
+            self.assertEqual(idFound, range(11,11+len(idList)))
         finally:
             stateDb.close()
-            
+
     def getFloatRegNames(self):
         # Get list of all floating point registers
         floatRegNames = []
@@ -97,7 +97,7 @@ class StateDatabaseTestCase(unittest.TestCase):
             if regInfo.type == ctypes.c_float:
                 floatRegNames.append(regInfo.name)
         return floatRegNames
-    
+
     def getIntRegNames(self):
         # Get list of all integer registers
         intRegNames = []
@@ -105,11 +105,10 @@ class StateDatabaseTestCase(unittest.TestCase):
             if regInfo.type == ctypes.c_uint:
                 intRegNames.append(regInfo.name)
         return intRegNames
-        
+
     def test_FloatReg(self):
         # Save some floating point registers and fetch them back
         print self.getIntRegNames()
 
 if __name__ == "__main__":
     unittest.main()
-    

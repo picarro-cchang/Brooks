@@ -15,7 +15,7 @@ def depthFirst(code,parentType=None):
         if parentType.__name__ == "Str":
         #if isinstance(code,str) and code.endswith('.ini'):
             print "%s: %s" % (parentType,code)
-            
+
 #fname = 'c:/Picarro/G2000/AppConfig/scripts/fitter/fitScriptCO2.py'
 fname = 'c:/Picarro/G2000/Host/Fitter/FitterCoreWithFortran.py'
 fp = None

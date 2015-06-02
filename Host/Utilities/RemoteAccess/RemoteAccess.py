@@ -1,6 +1,6 @@
 """
 File Name: RemoteAccess.py
-Purpose: 
+Purpose:
     Program for establishing dialup connection to Internet, performing
     time synchronization and e-mailing contents of a results directory
 
@@ -10,7 +10,7 @@ File History:
     07-03-15 sze   Send e-mail message even if no files are present in directory
     08-09-18 alex  Replaced ConfigParser with CustomConfigObj
     10-11-03 alex  Get instrument ID from EEPROM
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -44,7 +44,7 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                              APP_NAME,
                                              IsDontCareConnection = False)
-        
+
 def getRequiredOption(configParser,section,option):
     """Get a key from a configParser object, complaining if it does not exist"""
     try:
@@ -161,7 +161,7 @@ class RemoteAccess(object):
         except IOError:
             logging.error("Cannot open initialization file %s." % (self.configFilename,))
             sys.exit()
-        self.basePath = os.path.split(configFile)[0]     
+        self.basePath = os.path.split(configFile)[0]
         self.useDialUp = self.config.has_section('DIALUP')
         self.sendEmail = self.config.has_section('EMAIL')
         self.syncClock = self.config.has_section('NTP')
@@ -172,7 +172,7 @@ class RemoteAccess(object):
         handler = logging.handlers.RotatingFileHandler(logFilepath,maxBytes=65536,backupCount=10)
         handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s',datefmt='%Y%m%d %H:%M:%S'))
         logging.getLogger('').addHandler(handler)
-        
+
         # Plug analyzer name in "from address" and "subject" of emails
         try:
             analyzerName = CRDS_Driver.fetchInstrInfo("analyzername")
@@ -195,7 +195,7 @@ class RemoteAccess(object):
             else:
                 logging.error("Error: A valid \"From\" address is required!")
                 sys.exit()
-                
+
     def dialConnection(self):
         if not self.useDialUp: return
         cmd = ["rasdial"]
@@ -280,7 +280,7 @@ class RemoteAccess(object):
                 except ValueError:
                     logging.warning("Unrecognized option %s ignored" % (option,))
         dir = os.path.join(self.basePath, getRequiredOption(self.config,'EMAIL','Directory'))
-        
+
         fnameList = []
         for filename in os.listdir(dir):
             tnow = time()
@@ -363,7 +363,7 @@ class RemoteAccess(object):
                 useSSL = False
             if useSSL:
                 self.mailServer.ehlo()
-                self.mailServer.starttls() 
+                self.mailServer.starttls()
                 self.mailServer.ehlo()
             # self.mailServer.set_debuglevel(True)
             try:
@@ -396,17 +396,17 @@ if __name__ == "__main__":
     defaultPath = "AppConfig/Config/RemoteAccess/RemoteAccess.ini"
     if len(sys.argv) == 2:
         configFile = sys.argv[1]
-    elif len(sys.argv) == 1:   
+    elif len(sys.argv) == 1:
         if os.path.isfile("../../../" + defaultPath):
             configFile = "../../../" + defaultPath
         elif os.path.isfile("../../" + defaultPath):
             configFile = "../../" + defaultPath
         else:
-            assert 0, usage 
+            assert 0, usage
     else:
         assert 0, usage
-    print "Config file is %s" % configFile    
-    r = RemoteAccess(configFile)        
+    print "Config file is %s" % configFile
+    r = RemoteAccess(configFile)
     try:
         r.dialConnection()
         r.syncTime()

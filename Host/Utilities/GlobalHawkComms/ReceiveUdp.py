@@ -2,9 +2,9 @@ import wx
 import socket
 import sys
 
-from ReceiverFrameGui import ReceiverFrameGui
-from StreamDisplayPanel import StreamDisplayPanel
-    
+from Host.Utilities.GlobalHawkComms.ReceiverFrameGui import ReceiverFrameGui
+from Host.Utilities.GlobalHawkComms.StreamDisplayPanel import StreamDisplayPanel
+
 class ReceiverFrame(ReceiverFrameGui):
     MAX_DATA = 14
     MAX_ITEMS = 1000
@@ -34,11 +34,11 @@ class ReceiverFrame(ReceiverFrameGui):
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
         self.updateTimer.Start(milliseconds=1000)
-        
+
     def onUpdateTimer(self,evt):
         wx.WakeUpIdle()
         evt.Skip()
-        
+
     def onIdle(self,evt):
         try:
             self.data += self.socket.recv(1024)
@@ -53,7 +53,7 @@ class ReceiverFrame(ReceiverFrameGui):
                         if len(data)>2: self.list_ctrl_stream.SetStringItem(index,2,data[2])
                         for dataCol in range(self.MAX_DATA):
                             col = 3 + dataCol
-                            if len(data)>col: 
+                            if len(data)>col:
                                 self.list_ctrl_stream.SetStringItem(index,col,data[col])
                             else:
                                 break
@@ -66,11 +66,11 @@ class ReceiverFrame(ReceiverFrameGui):
         except socket.timeout:
             pass
         evt.Skip()
-    
+
     def refreshGraphs(self,dataList):
         for sdp in self.stream_display_panels:
             sdp.appendPlotDatum(dataList)
-        
+
 class ReceiverApp(wx.App):
     def OnInit(self):
         wx.InitAllImageHandlers()
@@ -78,11 +78,10 @@ class ReceiverApp(wx.App):
         self.SetTopWindow(frame_receiver)
         frame_receiver.Show()
         return 1
-        
-    
+
+
 # end of class ReceiverApp
 
 if __name__ == "__main__":
     app = ReceiverApp(0)
     app.MainLoop()
-    

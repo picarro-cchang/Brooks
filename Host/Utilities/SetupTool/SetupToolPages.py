@@ -6,7 +6,7 @@ from datetime import datetime
 import wx.lib.agw.aui as aui
 from wx.lib.masked.timectrl import TimeCtrl
 from Host.Common.CustomConfigObj import CustomConfigObj
-                                            
+
 PAGE1_LEFT_MARGIN = 80
 PAGE2_LEFT_MARGIN = 140
 PAGE3_LEFT_MARGIN = 140
@@ -25,13 +25,13 @@ def printError(errMsg1, errTitle, errMsg2="Action cancelled."):
     d = wx.MessageDialog(None, errMsg, errTitle, wx.STAY_ON_TOP|wx.OK|wx.ICON_ERROR)
     d.ShowModal()
     d.Destroy()
-                
+
 def strToList(inStr):
     if not inStr:
         return []
     retList = [i.strip() for i in inStr.split(",")]
     return retList
-    
+
 #----------------------------------------------------------------------------------------------------------------------------------------#
 class Page1(wx.Panel):
     def __init__(self, parent, quickGuiRpc, *args, **kwds):
@@ -40,8 +40,8 @@ class Page1(wx.Panel):
         wx.Panel.__init__(self, *args, **kwds)
         self.labelTitle = wx.StaticText(self, -1, "Data Logger Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        self.buttonGet = wx.Button(self, -1, "Get Complete Data Columns")   
-        self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+        self.buttonGet = wx.Button(self, -1, "Get Complete Data Columns")
+        self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.buttonGet.SetMinSize((250, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
@@ -60,11 +60,11 @@ class Page1(wx.Panel):
         self.maxSizeChoices = ["1", "5", "10", "15", "20", "25", "30", "35", "40"]
         self.enFlag = True
         self.fullInterface = False
-        
+
     def _sortDataList(self, reservedList, dataList):
         addList = [d for d in dataList if d not in reservedList]
         return reservedList + addList
-                
+
     def onGetButton(self, event):
         try:
             dataKeyDict = self.quickGuiRpc.getDataKeys()
@@ -86,7 +86,7 @@ class Page1(wx.Panel):
         except Exception, err:
             print "%r" % err
             return
-            
+
         self.updateLayout()
         self.showCurValues()
         # Update the Command Interface and Data Streaming pages as well
@@ -96,11 +96,11 @@ class Page1(wx.Panel):
         self.parent.pages[5].updateDataSourceCols()
         self.parent.pages[5].updateLayout()
         self.parent.pages[5].showCurValues()
-        
+
         d = wx.MessageDialog(None, "Data columns saved for scource(s):\n%s" % "\n".join(dataKeyDict.keys()), "Data Columns Saved", wx.OK|wx.ICON_INFORMATION)
         d.ShowModal()
         d.Destroy()
-                
+
     def onCheckListBox(self, event):
         return
         # eventObj = event.GetEventObject()
@@ -117,7 +117,7 @@ class Page1(wx.Panel):
                 # checkedList = list(eventObj.GetChecked())
                 # checkedList.append(index)
                 # eventObj.SetChecked(checkedList)
-            
+
     def onDataDuration(self, event):
         eventObj = event.GetEventObject()
         newVal = float(eventObj.GetValue())
@@ -125,7 +125,7 @@ class Page1(wx.Panel):
             eventObj.SetForegroundColour("red")
         else:
             eventObj.SetForegroundColour("black")
-            
+
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         gridSizer1 = wx.FlexGridSizer(0, 2)
@@ -158,7 +158,7 @@ class Page1(wx.Panel):
                     self.controlDict[dataLog][idx].Destroy()
         except:
             pass
-        
+
     def __createGUIElements(self):
         self.dataCols = []
         self.labelDict = {} # For each dataLog, the labels are [Data Columns, Hours of Each Log File, Archived Directory Structure, Log Storage Size]
@@ -193,10 +193,10 @@ class Page1(wx.Panel):
                 print "%r" % err
                 fulldataList = self._sortDataList(resdata, stddataList)
             self.dataCols.append(fulldataList)
-            
+
             self.labelDict[dataLog] = []
             self.controlDict[dataLog] = []
-            
+
             if self.fullInterface:
                 datalistChoices = fulldataList
             else:
@@ -209,18 +209,18 @@ class Page1(wx.Panel):
             dataCheckListBox = wx.CheckListBox(self, newId, choices = datalistChoices, size = (250, dataColumnBoxHeight))
             self.controlDict[dataLog].append(dataCheckListBox)
             self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckListBox, dataCheckListBox)
-            
+
             label = wx.StaticText(self, -1, "Hours of Each Log File (0.01~24)", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
             self.controlDict[dataLog].append(wx.TextCtrl(self, -1, size = (230, -1)))
             self.Bind(wx.EVT_TEXT, self.onDataDuration, self.controlDict[dataLog][-1])
-            
+
             label = wx.StaticText(self, -1, "Enable Mailbox Archiving", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
             self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.mailboxChoices, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
-            
+
             label = wx.StaticText(self, -1, "Archived Directory Structure", style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
@@ -230,7 +230,7 @@ class Page1(wx.Panel):
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelDict[dataLog].append(label)
             self.controlDict[dataLog].append(wx.ComboBox(self, -1, choices = self.maxSizeChoices, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
-            
+
     def setIni(self, iniList):
         if self.targetIni == iniList[0]:
             return
@@ -254,18 +254,18 @@ class Page1(wx.Panel):
             self.dataColsCp = CustomConfigObj(self.dataColsFile, create_empty = True, file_error = False)
         except Exception, err:
             print "%r" % err
-            
+
         self.updateLayout()
 
     def updateLayout(self):
         self.__clear_layout()
         self.__createGUIElements()
         self.__do_layout()
-        
+
     def showCurValues(self):
         if self.cp == None or self.archiverCp == None:
             return False
-        
+
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
             curDataList = strToList(self.cp.get(dataLog, "datalist", ""))
@@ -282,10 +282,10 @@ class Page1(wx.Panel):
                 self.cp.set(dataLog, "datalist", checkedList[:-1])
                 self.cp.write()
             self.controlDict[dataLog][0].SetCheckedStrings(curDataList)
-            
+
             dataDuration = self.cp.get(dataLog, "maxlogduration_hrs")
             self.controlDict[dataLog][1].SetValue(dataDuration)
-            
+
             try:
                 setVal = "NO"
                 if self.cp.getboolean(dataLog, "mailboxenable"):
@@ -294,18 +294,18 @@ class Page1(wx.Panel):
                 print "%r" % err
                 setVal = ""
             self.controlDict[dataLog][2].SetValue(setVal)
-        
+
             quantumIdx = int(self.archiverCp.get(dataLog, "Quantum"))-1
             self.controlDict[dataLog][3].SetValue(self.quantumChoices[quantumIdx])
-            
+
             maxSize = str(int(float(self.archiverCp.get(dataLog, "MaxSize_MB"))/1000.0))
             self.controlDict[dataLog][4].SetValue(maxSize)
         return True
-                
+
     def apply(self):
         if self.cp == None or self.archiverCp == None:
             return False
-            
+
         for idx in range(self.numDataLogSections):
             dataLog = self.dataLogSections[idx]
             dataDuration = self.controlDict[dataLog][1].GetValue()
@@ -313,7 +313,7 @@ class Page1(wx.Panel):
             if float(dataDuration) < 0.01 or float(dataDuration) > 24.0:
                 printError("Log file duration must be between 0.01 and 24.0 hours", "Invalid Log File Duration")
                 return False
-                
+
             # Update Data Logger
             try:
                 writeCp = False
@@ -350,9 +350,9 @@ class Page1(wx.Panel):
                     self.archiverCp.write()
             except Exception, err:
                 print "%r" % err
-                
+
         return True
-        
+
     def enable(self, idxList, en):
         self.enFlag = en
         for dataLog in self.dataLogSections:
@@ -361,7 +361,7 @@ class Page1(wx.Panel):
         if 0 in idxList:
             # Use 0 to identify that this is for Data Logger section
             self.buttonGet.Enable(en and self.fullInterface)
-        
+
     def setComment(self, comment):
         self.comment.SetValue(comment)
 
@@ -373,7 +373,7 @@ class Page1(wx.Panel):
 
     def getDataSourceCols(self):
         return self.dataSources, self.dataLogSections, self.dataCols
-            
+
 #----------------------------------------------------------------------------------------------------------------------------------------#
 class Page2(wx.Panel):
     def __init__(self, comPortList, coordinatorPortList, hasReadGPSWS, *args, **kwds):
@@ -396,7 +396,7 @@ class Page2(wx.Panel):
         self.keyLabelList = []
         self.comboBoxIdList = []
         self.comboBoxList = []
-        
+
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -406,7 +406,7 @@ class Page2(wx.Panel):
             self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
 
         self.portAppDict = {}
-        
+
         self.__do_layout()
         self.bindEvents()
 
@@ -423,11 +423,11 @@ class Page2(wx.Panel):
         sizer2.Add(sizer1, 0, wx.LEFT, PAGE2_LEFT_MARGIN)
         self.SetSizer(sizer2)
         sizer2.Fit(self)
-        
+
     def bindEvents(self):
         for combo in self.comboBoxList:
             combo.Bind(wx.EVT_COMBOBOX, self.onComboBox)
-        
+
     def setIni(self, iniList):
         try:
             (self.dataMgrIni, self.valveIni, self.cmdIni, self.coordinatorIni, self.readGPSWSIni) = iniList
@@ -436,7 +436,7 @@ class Page2(wx.Panel):
             self.readGPSWSIni = None
         if type(self.coordinatorIni) != type([]):
             self.coordinatorIni = [self.coordinatorIni]
-        
+
     def showCurValues(self):
         try:
             cp = CustomConfigObj(self.dataMgrIni)
@@ -453,7 +453,7 @@ class Page2(wx.Panel):
             setVal = ""
         self.comboBoxList[0].SetStringSelection(setVal)
         self._updatePortDict(self.keyLabelStrings[0], setVal)
-            
+
         try:
             cp = CustomConfigObj(self.valveIni)
             setVal = cp.get("MAIN", "comPortRotValve")
@@ -466,7 +466,7 @@ class Page2(wx.Panel):
             setVal = ""
         self.comboBoxList[1].SetStringSelection(setVal)
         self._updatePortDict(self.keyLabelStrings[1], setVal)
-        
+
         try:
             cp = CustomConfigObj(self.cmdIni)
             if cp.get("HEADER", "interface") == "SerialInterface":
@@ -504,7 +504,7 @@ class Page2(wx.Panel):
                 self._updatePortDict(self.keyLabelStrings[3+i], portDict[coorPortName])
         except Exception, err:
              print "Coordinator port Exception: %r" % err
-             
+
         if self.readGPSWSIni:
             try:
                 cp = CustomConfigObj(self.readGPSWSIni)
@@ -524,9 +524,9 @@ class Page2(wx.Panel):
             self._updatePortDict(self.keyLabelStrings[-2], gpsPort)
             self.comboBoxList[-1].SetStringSelection(wsPort)
             self._updatePortDict(self.keyLabelStrings[-1], wsPort)
-        
+
         return True
-             
+
     def apply(self):
         conflict = False
         for p in self.portAppDict:
@@ -534,13 +534,13 @@ class Page2(wx.Panel):
                 conflict = True
                 break
         if conflict:
-            d = wx.MessageDialog(None, "Conflicting port assignment found.\nDo you still want to apply the changes?", "Conflicting Ports", 
+            d = wx.MessageDialog(None, "Conflicting port assignment found.\nDo you still want to apply the changes?", "Conflicting Ports",
                                 wx.STAY_ON_TOP|wx.YES|wx.NO|wx.ICON_WARNING)
             yesClicked = d.ShowModal() == wx.ID_YES
             d.Destroy()
             if not yesClicked:
                 return False
-                    
+
         streamPort = self.comboBoxList[0].GetValue()
         try:
             cp = CustomConfigObj(self.dataMgrIni)
@@ -555,7 +555,7 @@ class Page2(wx.Panel):
                 pass
         except Exception, err:
             print "Data streaming port Exception: %r" % err
-            
+
         mpvPort = self.comboBoxList[1].GetValue()
         if mpvPort != "":
             try:
@@ -564,7 +564,7 @@ class Page2(wx.Panel):
                 cp.write()
             except Exception, err:
                 print "MPV port Exception: %r" % err
-        
+
         cmdPort = self.comboBoxList[2].GetValue()
         if cmdPort != "":
             try:
@@ -622,9 +622,9 @@ class Page2(wx.Panel):
                     cp.write()
                 except Exception, err:
                      print "WS port Exception: %r" % err
-            
+
         return True
-        
+
     def enable(self, idxList, en):
         for idx in idxList:
             self.comboBoxList[idx].Enable(en)
@@ -634,7 +634,7 @@ class Page2(wx.Panel):
 
     def setFullInterface(self, full):
         pass
-        
+
     def onComboBox(self, event):
         eventObj = event.GetEventObject()
         curId = eventObj.GetId()
@@ -645,15 +645,15 @@ class Page2(wx.Panel):
 
     def _getIdxFromAppLabel(self, label):
         return self.keyLabelStrings.index(label)
-        
+
     def _updateFontColor(self, idx, color):
         self.keyLabelList[idx].SetLabel(self.keyLabelList[idx].GetLabel())
         self.keyLabelList[idx].SetForegroundColour(color)
-        
+
     def _updatePortDict(self, app, port):
         if port == "":
             return
-            
+
         if port not in self.portAppDict:
             self.portAppDict[port] = [app]
         elif app not in self.portAppDict[port]:
@@ -670,35 +670,35 @@ class Page2(wx.Panel):
             else:
                 for i in [self._getIdxFromAppLabel(app) for app in self.portAppDict[p]]:
                     self._updateFontColor(i,"black")
-   
-#----------------------------------------------------------------------------------------------------------------------------------------#   
+
+#----------------------------------------------------------------------------------------------------------------------------------------#
 class Page3(wx.Panel):
     def __init__(self, driverRpc, *args, **kwds):
         self.driverRpc = driverRpc
         wx.Panel.__init__(self, *args, **kwds)
-        self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject", 
+        self.keyLabelStrings = ["Use SSL", "Use Authentication", "Server", "User Name", "Password", "From", "To", "Subject",
                                 "Data Directory"]
         self.choiceLists = [["YES","NO"], ["YES","NO"]]
         self.labelTitle = wx.StaticText(self, -1, "Data Delivery Setup", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
-        
-        self.buttonGet = wx.Button(self, -1, "Get Default Configurations")   
-        self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+
+        self.buttonGet = wx.Button(self, -1, "Get Default Configurations")
+        self.buttonGet.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.buttonGet.SetMinSize((240, 25))
         self.buttonGet.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.buttonGet.Enable(False)
-        self.buttonDir = wx.Button(self, -1, "Data Directory")   
-        self.buttonDir.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+        self.buttonDir = wx.Button(self, -1, "Data Directory")
+        self.buttonDir.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.buttonDir.SetMinSize((240, 25))
         self.buttonDir.SetBackgroundColour(wx.Colour(237, 228, 199))
         if self.checkRemoteAccessScheduled():
-            self.buttonSch = wx.Button(self, -1, "Stop Delivery Scheduler") 
+            self.buttonSch = wx.Button(self, -1, "Stop Delivery Scheduler")
         else:
-            self.buttonSch = wx.Button(self, -1, "Start Delivery Scheduler")   
-        self.buttonSch.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))       
+            self.buttonSch = wx.Button(self, -1, "Start Delivery Scheduler")
+        self.buttonSch.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.buttonSch.SetMinSize((240, 25))
         self.buttonSch.SetBackgroundColour(wx.Colour(237, 228, 199))
-        
+
         self.comment = wx.TextCtrl(self, -1, "", size = COMMENT_BOX_SIZE, style = wx.TRANSPARENT_WINDOW|wx.TE_READONLY|wx.TE_MULTILINE|wx.NO_BORDER|wx.TE_RICH|wx.ALIGN_LEFT)
         self.comment.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.comment.SetForegroundColour("red")
@@ -713,7 +713,7 @@ class Page3(wx.Panel):
         self.cp = None
         self.enFlag = True
         self.fullInterface = False
-        
+
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -726,7 +726,7 @@ class Page3(wx.Panel):
                 self.textCtrlLabelList.append(label)
                 self.textCtrlIdList.append(newId)
                 self.textCtrlList.append(wx.TextCtrl(self, newId, size = (240,-1)))
-        
+
         self.startTimeLabel = wx.StaticText(self, -1, "Delivery Start Time", style=wx.ALIGN_LEFT)
         self.startTimeLabel.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.spinButtonStartTime = wx.SpinButton(self, -1, size=(17,22), style=wx.SP_VERTICAL)
@@ -763,14 +763,14 @@ class Page3(wx.Panel):
         if self.cp == None:
             printError("INI file not found", "Missing INI file")
             return
-            
+
         # Plug analyzer name in "from address" and "subject" of emails
         try:
             analyzerName = self.driverRpc.fetchInstrInfo("analyzername")
         except:
             printError("Analyzer name not available.", "Error", "Please make sure analyzer software is running.")
             return
-            
+
         subject = self.cp.get("EMAIL", "Subject", "")
         if subject == "":
             if analyzerName != None:
@@ -779,7 +779,7 @@ class Page3(wx.Panel):
                 self.cp.write()
             else:
                 pass
-                
+
         fromAddr = self.cp.get("EMAIL", "From", "")
         if fromAddr == "":
             if analyzerName != None:
@@ -789,7 +789,7 @@ class Page3(wx.Panel):
             else:
                 pass
         self.showCurValues()
-        
+
     def onDirButton(self, event):
         d = wx.DirDialog(None,"Select the source directory where the log files will be delivered from", style=wx.DD_DEFAULT_STYLE,
                          defaultPath=self.dataDir)
@@ -801,7 +801,7 @@ class Page3(wx.Panel):
             d.ShowModal()
             d.Destroy()
         self.showCurValues()
-                    
+
     def __do_layout(self):
         sizer1 = wx.BoxSizer(wx.VERTICAL)
         sizer2 = wx.BoxSizer(wx.VERTICAL)
@@ -829,13 +829,13 @@ class Page3(wx.Panel):
         sizer2.Add(sizer1, 0, wx.LEFT, PAGE3_LEFT_MARGIN)
         self.SetSizer(sizer2)
         sizer2.Fit(self)
-        
+
     def bindEvents(self):
         self.Bind(wx.EVT_BUTTON, self.onDirButton, self.buttonDir)
         self.Bind(wx.EVT_BUTTON, self.onGetButton, self.buttonGet)
         self.Bind(wx.EVT_BUTTON, self.onSchButton, self.buttonSch)
         self.Bind(wx.EVT_COMBOBOX, self.onAuthComboBox, self.comboBoxList[1])
-        
+
     def onSchButton(self, event):
         # warn user if unsupported OS
         if self.supportedOS is False:
@@ -853,7 +853,7 @@ class Page3(wx.Panel):
             os.system(r'schtasks.exe /delete /tn RemoteAccessLogOn /f')
             os.system(r'schtasks.exe /create /tn RemoteAccessLogOn /tr "C:\Picarro\G2000\HostExe\RemoteAccess.exe %s" /sc ONLOGON /ru %s /rp %s' % (self.targetIni, self.user, self.password))
             self.buttonSch.SetLabel("Stop Delivery Scheduler")
-            
+
     def checkRemoteAccessScheduled(self):
         schQuery = os.popen("schtasks.exe /query /fo CSV","r")
         r = schQuery.read()
@@ -862,7 +862,7 @@ class Page3(wx.Panel):
             return True
         else:
             return False
-            
+
     def onAuthComboBox(self, event):
         if event:
             eventObj = event.GetEventObject()
@@ -883,11 +883,11 @@ class Page3(wx.Panel):
             self.cp = CustomConfigObj(self.targetIni, list_values = True)
         except Exception, err:
             print "%r" % err
-            
+
     def showCurValues(self):
         if self.cp == None:
             return False
-            
+
         try:
             setVal = "NO"
             if self.cp.getboolean("EMAIL", "UseSSL"):
@@ -906,7 +906,7 @@ class Page3(wx.Panel):
             setVal = ""
         self.comboBoxList[1].SetValue(setVal)
         self.onAuthComboBox(None)
-        
+
         self.textCtrlList[0].SetValue(self.cp.get("EMAIL", "Server", ""))
         self.textCtrlList[1].SetValue(self.cp.get("EMAIL", "UserName", ""))
         self.textCtrlList[2].SetValue(self.cp.get("EMAIL", "Password", ""))
@@ -915,13 +915,13 @@ class Page3(wx.Panel):
         self.textCtrlList[5].SetValue(self.cp.get("EMAIL", "Subject", ""))
         self.dataDir = self.cp.get("EMAIL", "Directory", "")
         self.textCtrlList[6].SetValue(self.dataDir)
-        
+
         return True
 
     def apply(self):
         if self.cp == None:
             return False
-            
+
         try:
             if self.comboBoxList[0].GetValue() == "YES":
                 self.cp.set("EMAIL", "UseSSL", "True")
@@ -960,8 +960,8 @@ class Page3(wx.Panel):
     def setFullInterface(self, full):
         self.fullInterface = full
         self.buttonGet.Enable(self.enFlag and self.fullInterface)
-   
-#----------------------------------------------------------------------------------------------------------------------------------------#   
+
+#----------------------------------------------------------------------------------------------------------------------------------------#
 class Page4(wx.Panel):
     def __init__(self, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
@@ -980,7 +980,7 @@ class Page4(wx.Panel):
         self.cp = None
         self.enFlag = True
         self.fullInterface = False
-                
+
         for i in range(len(self.keyLabelStrings)):
             label = wx.StaticText(self, -1, self.keyLabelStrings[i], style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -990,7 +990,7 @@ class Page4(wx.Panel):
             self.comboBoxList.append(wx.ComboBox(self, newId, choices = self.choiceLists[i], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN))
 
         self.comboBoxList[1].Enable(False)
-            
+
         self.__do_layout()
 
     def __do_layout(self):
@@ -1015,18 +1015,18 @@ class Page4(wx.Panel):
             self.cp = CustomConfigObj(self.targetIni)
         except Exception, err:
             print "%r" % err
-            
+
     def showCurValues(self):
         if self.cp == None:
             return False
-        
+
         try:
             setVal = self.cp.get("Graph", "NumGraphs")
         except Exception, err:
             print "%r" % err
             setVal = ""
         self.comboBoxList[0].SetValue(setVal)
-        
+
         try:
             setVal = self.cp.getboolean("ValveSequencer", "Enable")
             if not setVal:
@@ -1036,13 +1036,13 @@ class Page4(wx.Panel):
         except Exception, err:
             print "%r" % err
             self.comboBoxList[1].SetValue("Yes")
-        
+
         return True
-        
+
     def apply(self):
         if self.cp == None:
             return False
-            
+
         try:
             self.cp.set("Graph", "NumGraphs", self.comboBoxList[0].GetValue())
             val = self.comboBoxList[1].GetValue()
@@ -1055,20 +1055,20 @@ class Page4(wx.Panel):
         except Exception, err:
             print "%r" % err
             return False
-            
+
     def enable(self, en):
         self.enFlag = en
         self.comboBoxList[0].Enable(en)
         self.comboBoxList[1].Enable(self.enFlag and self.fullInterface)
-            
+
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        
+
     def setFullInterface(self, full):
         self.fullInterface = full
         self.comboBoxList[1].Enable(self.enFlag and self.fullInterface)
-       
-#----------------------------------------------------------------------------------------------------------------------------------------#       
+
+#----------------------------------------------------------------------------------------------------------------------------------------#
 class Page5(wx.Panel):
     def __init__(self, parent, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
@@ -1097,14 +1097,14 @@ class Page5(wx.Panel):
         self.SetSizer(sizer2)
         sizer2.Fit(self)
         self.Layout()
-        
+
     def __clear_layout(self):
         try:
             for comboBox in self.controlList:
                 comboBox.Destroy()
         except:
             pass
-        
+
     def __createGUIElements(self):
         self.labelList = []
         self.controlList = []
@@ -1119,7 +1119,7 @@ class Page5(wx.Panel):
         label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelList.append(label)
         self.controlList.append(wx.CheckListBox(self, -1, choices = self.dataCols[self.idx], size = (250, 400)))
-    
+
     def onSelectDataSource(self, event):
         eventObj = event.GetEventObject()
         newDataSource = self.secSourceDict[eventObj.GetValue()]
@@ -1127,17 +1127,17 @@ class Page5(wx.Panel):
         self.idx = self.dataSources.index(newDataSource)
         self.updateLayout()
         self.showCurValues()
-       
+
     def updateDataSourceCols(self):
         (self.dataSources, self.dataSec, self.dataCols) = self.parent.pages[0].getDataSourceCols()
         self.secSourceDict = dict(zip(self.dataSec, self.dataSources))
         self.sourceColDict = dict(zip(self.dataSources, self.dataCols))
-        
+
     def updateLayout(self):
         self.__clear_layout()
         self.__createGUIElements()
         self.__do_layout()
-        
+
     def setIni(self, iniList):
         if self.targetIni == iniList[0]:
             return
@@ -1146,7 +1146,7 @@ class Page5(wx.Panel):
             self.cp = CustomConfigObj(self.targetIni)
         except Exception, err:
             print "%r" % err
-           
+
         self.updateDataSourceCols()
         try:
             curDataSource = self.cp.get("HEADER", "meas_source")
@@ -1154,7 +1154,7 @@ class Page5(wx.Panel):
         except:
             self.idx = 0
         self.updateLayout()
-        
+
     def showCurValues(self):
         if self.cp == None:
             return False
@@ -1173,16 +1173,16 @@ class Page5(wx.Panel):
                     checkedList += "%s," % data
                 self.cp.set("HEADER", "meas_label", checkedList[:-1])
                 self.cp.write()
-          
+
             self.controlList[1].SetCheckedStrings(curDataList)
         else:
             pass
         return True
-        
+
     def apply(self):
         if self.cp == None:
             return False
-            
+
         dataSource = self.dataSources[self.idx]
         dataCols = self.sourceColDict[dataSource]
         try:
@@ -1201,18 +1201,18 @@ class Page5(wx.Panel):
         except Exception, err:
             print "%r" % err
         return True
-        
+
     def enable(self, en):
         for comboBox in self.controlList:
             comboBox.Enable(en)
-            
+
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        
+
     def setFullInterface(self, full):
         pass
-     
-#----------------------------------------------------------------------------------------------------------------------------------------#     
+
+#----------------------------------------------------------------------------------------------------------------------------------------#
 class Page6(wx.Panel):
     def __init__(self, parent, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
@@ -1241,14 +1241,14 @@ class Page6(wx.Panel):
         self.SetSizer(sizer2)
         sizer2.Fit(self)
         self.Layout()
-        
+
     def __clear_layout(self):
         try:
             for comboBox in self.controlList:
                 comboBox.Destroy()
         except:
             pass
-        
+
     def __createGUIElements(self):
         self.labelList = []
         self.controlList = []
@@ -1263,7 +1263,7 @@ class Page6(wx.Panel):
         label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.labelList.append(label)
         self.controlList.append(wx.CheckListBox(self, -1, choices = self.dataCols[self.idx], size = (250, 400)))
-    
+
     def onSelectDataSource(self, event):
         eventObj = event.GetEventObject()
         newDataSource = self.secSourceDict[eventObj.GetValue()]
@@ -1271,7 +1271,7 @@ class Page6(wx.Panel):
         self.idx = self.dataSources.index(newDataSource)
         self.updateLayout()
         self.showCurValues()
-       
+
     def updateDataSourceCols(self):
         (self.dataSources, self.dataSec, self.dataCols) = self.parent.pages[0].getDataSourceCols()
         for idx in range(len(self.dataCols)):
@@ -1280,12 +1280,12 @@ class Page6(wx.Panel):
                     self.dataCols[idx].remove(data)
         self.secSourceDict = dict(zip(self.dataSec, self.dataSources))
         self.sourceColDict = dict(zip(self.dataSources, self.dataCols))
-        
+
     def updateLayout(self):
         self.__clear_layout()
         self.__createGUIElements()
         self.__do_layout()
-        
+
     def setIni(self, iniList):
         if self.targetIni == iniList[0]:
             return
@@ -1294,7 +1294,7 @@ class Page6(wx.Panel):
             self.cp = CustomConfigObj(self.targetIni)
         except Exception, err:
             print "%r" % err
-            
+
         self.updateDataSourceCols()
         try:
             curDataSource = self.cp.get("SerialOutput", "Source")
@@ -1302,7 +1302,7 @@ class Page6(wx.Panel):
         except:
             self.idx = 0
         self.updateLayout()
-        
+
     def __writeColumns(self, colList, dataSource=None):
         colList += ["ymd", "hms"]
         # Clean current columns before updating
@@ -1310,7 +1310,7 @@ class Page6(wx.Panel):
             colName = self.cp.get("SerialOutput", col)
             if colName.lower() not in ["time"]:
                 self.cp.remove_option("SerialOutput", col)
-                
+
         for idx in range(len(colList)):
             self.cp.set("SerialOutput", "Column%d" % (idx+1), colList[idx])
         dataFormat=r'"%15.2f' + ' %10.4f'*len(colList) + r'\r\n"'
@@ -1318,7 +1318,7 @@ class Page6(wx.Panel):
         if dataSource != None:
             self.cp.set("SerialOutput", "Source", dataSource)
         self.cp.write()
-        
+
     def showCurValues(self):
         if self.cp == None:
             return False
@@ -1326,7 +1326,7 @@ class Page6(wx.Panel):
         if "SerialOutput" not in self.cp.list_sections():
             self.enable(False)
             return True
-            
+
         curDataSource = self.cp.get("SerialOutput", "Source", "")
         curDataList = []
         for curData in [self.cp.get("SerialOutput", i) for i in self.cp.list_options("SerialOutput") if i.lower().startswith("column")]:
@@ -1344,11 +1344,11 @@ class Page6(wx.Panel):
         else:
             pass
         return True
-        
+
     def apply(self):
         if self.cp == None:
             return False
-            
+
         dataSource = self.dataSources[self.idx]
         dataCols = self.sourceColDict[dataSource]
         try:
@@ -1359,23 +1359,23 @@ class Page6(wx.Panel):
         except Exception, err:
             print "%r" % err
         return True
-        
+
     def enable(self, en):
         for comboBox in self.controlList:
             comboBox.Enable(en)
-            
+
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        
+
     def setFullInterface(self, full):
         pass
-        
-#----------------------------------------------------------------------------------------------------------------------------------------#   
+
+#----------------------------------------------------------------------------------------------------------------------------------------#
 class Page7(wx.Panel):
     def __init__(self, parent, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
         self.parent = parent
-        self.keyLabelStrings = ["Analog Output Channel", "Data Source", "Data Columns", "Mode", "Slope", "Offset", "Manual Voltage (0~10V)", "Min Voltage (0~10V)", 
+        self.keyLabelStrings = ["Analog Output Channel", "Data Source", "Data Columns", "Mode", "Slope", "Offset", "Manual Voltage (0~10V)", "Min Voltage (0~10V)",
                                 "Max Voltage (0~10V)", "Invalid Value Voltage (0~10V)"]
         self.labelTitle = wx.StaticText(self, -1, "Electrical Interface", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -1405,35 +1405,35 @@ class Page7(wx.Panel):
         self.SetSizer(sizer2)
         sizer2.Fit(self)
         self.Layout()
-        
+
     def __clear_layout(self):
         try:
             for comboBox in self.controlList:
                 comboBox.Destroy()
         except:
             pass
-        
+
     def __createGUIElements(self, newDataSource):
         self.labelList = []
         self.controlList = []
         self.controlId = []
-        
+
         if newDataSource:
             srcIdx = self.dataSources.index(newDataSource)
         else:
             srcIdx = 0
-            
+
         for s in self.keyLabelStrings:
             label = wx.StaticText(self, -1, s, style=wx.ALIGN_LEFT)
             label.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
             self.labelList.append(label)
-        
+
         newId = wx.NewId()
         self.controlId.append(newId)
         combo = wx.ComboBox(self, newId, choices = [str(i) for i in range(4)], value = self.channel, size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
         combo.Bind(wx.EVT_COMBOBOX, self.onSelectChannel)
         self.controlList.append(combo)
-        
+
         newId = wx.NewId()
         self.controlId.append(newId)
         combo = wx.ComboBox(self, newId, choices = self.dataSec, value = self.dataSec[srcIdx], size = (230, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
@@ -1457,7 +1457,7 @@ class Page7(wx.Panel):
             self.controlId.append(newId)
             self.controlList.append(wx.TextCtrl(self, newId, size = (230, -1)))
             self.controlList[i+4].Bind(wx.EVT_TEXT, self.onEntry)
-        
+
     def onEntry(self, event):
         eventObj = event.GetEventObject()
         eventId = eventObj.GetId()
@@ -1472,16 +1472,16 @@ class Page7(wx.Panel):
             except:
                 pass
         self.channelConfigDict["ANALOG_OUTPUT_CHANNEL"+self.channel][self.ctrlConfigDict[controlListIdx]] = eventObj.GetValue()
-        
+
     def onBootMode(self, event):
         self.channelConfigDict["ANALOG_OUTPUT_CHANNEL"+self.channel]["BOOTMODE"] = str(int(event.GetEventObject() == "Tracking"))
-        
+
     def onSelectChannel(self, event):
         eventObj = event.GetEventObject()
         self.channel = eventObj.GetValue()
         self.updateLayout()
         self.showCurValues()
-        
+
     def onSelectDataSource(self, event):
         eventObj = event.GetEventObject()
         self.updateLayout(self.secSourceDict[eventObj.GetValue()])
@@ -1493,11 +1493,11 @@ class Page7(wx.Panel):
         newData = [i for i in eventObj.GetCheckedStrings() if i not in curDataCols]
         if not newData:
             return
-        else: 
+        else:
             eventObj.SetCheckedStrings(newData)
             self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel][0] =  self.secSourceDict[self.controlList[1].GetValue()]
             self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel][1] = newData[0]
-            
+
     def updateDataSourceCols(self):
         (self.dataSources, self.dataSec, self.dataCols) = self.parent.pages[0].getDataSourceCols()
         for idx in range(len(self.dataCols)):
@@ -1506,12 +1506,12 @@ class Page7(wx.Panel):
                     self.dataCols[idx].remove(data)
         self.secSourceDict = dict(zip(self.dataSec, self.dataSources))
         self.sourceColDict = dict(zip(self.dataSources, self.dataCols))
-        
+
     def updateLayout(self, newDataSource=None):
         self.__clear_layout()
         self.__createGUIElements(newDataSource)
         self.__do_layout()
-        
+
     def setIni(self, iniList):
         if self.targetIni == iniList[0]:
             return
@@ -1520,16 +1520,16 @@ class Page7(wx.Panel):
             self.cp = CustomConfigObj(self.targetIni)
         except Exception, err:
             print "%r" % err
-            
+
         self.updateDataSourceCols()
         self.updateLayout()
-        
+
         # Set up the channel dictionaries
         for channel in ["ANALOG_OUTPUT_CHANNEL%d" % i for i in range(4)]:
             self.channelDataDict[channel] = self.cp.get(channel, "SOURCE").split(",")
             self.channelConfigDict[channel] = self.cp[channel]
             self.channelConfigDict[channel].pop("SOURCE")
-        
+
     def showCurValues(self):
         if self.cp == None:
             return False
@@ -1537,11 +1537,11 @@ class Page7(wx.Panel):
         if "ANALOG_OUTPUT_CHANNEL"+self.channel not in self.cp.list_sections():
             self.enable(False)
             return False
-            
+
         [curDataSource, curData] = self.channelDataDict["ANALOG_OUTPUT_CHANNEL"+self.channel]
         if self.secSourceDict[self.controlList[1].GetValue()] == curDataSource:
             self.controlList[2].SetCheckedStrings([curData])
-            
+
         curConfig = self.channelConfigDict["ANALOG_OUTPUT_CHANNEL"+self.channel]
         for key in curConfig:
             try:
@@ -1553,7 +1553,7 @@ class Page7(wx.Panel):
                 self.controlList[self.configCtrlDict[key]].SetValue(curConfig[key])
             except:
                 pass
-                
+
         return True
 
     def apply(self):
@@ -1568,13 +1568,13 @@ class Page7(wx.Panel):
         except Exception, err:
             print "%r" % err
         return True
-        
+
     def enable(self, en):
         for comboBox in self.controlList:
             comboBox.Enable(en)
-            
+
     def setComment(self, comment):
         self.comment.SetValue(comment)
-        
+
     def setFullInterface(self, full):
         pass

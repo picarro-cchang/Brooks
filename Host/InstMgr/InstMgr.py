@@ -12,10 +12,10 @@ Purpose:
     4. Instrument Error handling and Health Monitoring
     5. System wide procedures
        - Start and stop measuring commands.
-       
-The instrument manager state transition methods such as _EnterWarming, _EnterMeasure etc can be called from many 
-  different places, including RPCs (which are served in a separate thread). They perform actions and then return. 
-  The _Monitor method loops around in the main thread and periodically calls RPCs from other applications. From 
+
+The instrument manager state transition methods such as _EnterWarming, _EnterMeasure etc can be called from many
+  different places, including RPCs (which are served in a separate thread). They perform actions and then return.
+  The _Monitor method loops around in the main thread and periodically calls RPCs from other applications. From
   the data collected, it updates the instrument manager status flags and may call the state transition methods.
 
 File History:
@@ -40,7 +40,7 @@ File History:
     08-09-18 alex Replaced ConfigParser with CustomConfigObj
     09-10-21 alex Replaced CalManager with RDFrequencyConverter. Added an option to run without SampleManager.
     10-02-25 sze  When SampleManager is disabled, do not adjust valves
-    10-04-26 sze  Allow flow to be established in the Monitor if the valves are all closed, whether or not 
+    10-04-26 sze  Allow flow to be established in the Monitor if the valves are all closed, whether or not
                    we are in measuring mode. It is up to the sample manager to check that the cavity temperature
                    is not too far off to protect the cavity from condensation.
     10-04-27 sze  Modified error recovery features for G2000 analyzer. Provide an RPC to trigger a simulated error condition.
@@ -49,7 +49,7 @@ File History:
                     of states.
     10-06-07 alex  Stop ringdown acquisition in warming mode
     10-08-12 alex  Added RPC functions and INI parameter to enable/disable auto restart flow after valve control is disabled.
-    
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -95,7 +95,7 @@ if sys.platform == 'win32':
     from time import clock as TimeStamp
 else:
     from time import time as TimeStamp
-    
+
 # ---------------------------------------------------------------------------
 # These should be added to interface???
 # Enumerated definitions for DASCNTRL_StateType
@@ -209,7 +209,7 @@ class DummySampleManager(object):
         #target = 18000
         #step = 500
         #iterations = int((target-start)/step)
-        #self.inletTarget = start + iterations*step 
+        #self.inletTarget = start + iterations*step
         #interval = 2
         #maxPressureChange = 10
         #self._StepInletValve( start, step, iterations, interval, maxPressureChange)
@@ -250,7 +250,7 @@ class DummySampleManager(object):
                 index = 0
                 value = start
                 prevPressure = self.DriverRpc.getPressureReading()
-            
+
 class ConfigurationOptions(object):
     def __init__(self):
         # - AutoEnableAfterBadShutdown is to avoid auto-measure after power failures
@@ -306,7 +306,7 @@ class InstMgr(object):
         self.FreqConvRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
                                                      APP_NAME,
                                                      IsDontCareConnection = False)
-                                                            
+
         self.SpectrumCollectorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
                                                         APP_NAME,
                                                         IsDontCareConnection = False)
@@ -314,17 +314,17 @@ class InstMgr(object):
         self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
                                                         APP_NAME,
                                                         IsDontCareConnection = False)
-        
+
         if not self.noSampleMgr:
             self.SampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR,
                                                             APP_NAME,
                                                             IsDontCareConnection = False)
         else:
             self.SampleMgrRpc = DummySampleManager()
-                                                            
+
         # used during error recovery
         self.rpcDict = {RPC_PORT_DATA_MANAGER:INST_ERROR_DATA_MANAGER_RESTART,
-                        RPC_PORT_MEAS_SYSTEM:INST_ERROR_MEAS_SYS_RESTART, 
+                        RPC_PORT_MEAS_SYSTEM:INST_ERROR_MEAS_SYS_RESTART,
                         RPC_PORT_DRIVER:INST_ERROR_DRIVER_RESTART}
         if not self.noSampleMgr:
             self.rpcDict[RPC_PORT_SAMPLE_MGR] = INST_ERROR_SAMPLE_MANAGER_RESTART
@@ -443,7 +443,7 @@ class InstMgr(object):
         self.MeasSysRpc.Disable()
         self.DataMgrRpc.Disable()
         self.DriverRpc.stopScan()
-        
+
         self.cavityTempLockCount = 0
         self.warmChamberTempLockCount = 0
         self._ClearStatus(INSTMGR_STATUS_READY)
@@ -541,13 +541,13 @@ class InstMgr(object):
         self._SendDisplayMessage("Temp and pressure stabilizing...")
 
         return INST_ERROR_OKAY
-        
+
     def _EnterMeasure(self):
         """ called when entering measuring state """
         self._SendDisplayMessage("Preparing to measure")
 
         # Wait for up to 5s for the measurement system to get into READY or ENABLED state
-        
+
         for waitTime in range(5):
             stateDict = self.MeasSysRpc.GetStates()
             if stateDict['State_MeasSystem'] in ['READY','ENABLED']:
@@ -555,7 +555,7 @@ class InstMgr(object):
             time.sleep(1)
         else:
             Log("MeasSys fails to enter READY or ENABLED state in _EnterMeasure",Level=2)
-            
+
         try:
             self.MeasSysRpc.Mode_Set(self.Config.measMode)
         except:
@@ -613,7 +613,7 @@ class InstMgr(object):
     def _ExitMeasure(self):
         """ called when exiting measuring state """
         self._SendDisplayMessage("Leaving Measuring")
-        
+
         if self.diableDataManager:
             # Disable Data Manager
             try:
@@ -622,7 +622,7 @@ class InstMgr(object):
             except:
                 tbMsg = traceback.format_exc()
                 Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-        else: 
+        else:
             # Put the data manager back into the warming mode
             try:
                 self.DataMgrRpc.Mode_Set(self.Config.warmMode)
@@ -682,7 +682,7 @@ class InstMgr(object):
         self.dasRestartCount = 0
         self.measRestartCount = 0
         return INST_ERROR_OKAY
-        
+
     def _SamplePrepare(self):
         """ called to prepare sample """
         self._SendDisplayMessage("Preparing Sample")
@@ -753,7 +753,7 @@ class InstMgr(object):
         """ called when entering parking state """
         self._SendDisplayMessage("Parking")
         self.State = INSTMGR_STATE_PARKING
-        
+
         # Disable auto restart flow in parking state
         self.INSTMGR_DisableAutoRestartFlow()
 
@@ -773,7 +773,7 @@ class InstMgr(object):
         status = INST_ERROR_OKAY
 
         if event == EVENT_RESTART_INST:
-        
+
             status = self._EnterWarming()
         elif event == EVENT_RESTART_DAS:
             try:
@@ -874,13 +874,13 @@ class InstMgr(object):
 
         if self.Config.measMode == "":
             raise Exception("App Type %d Doesn't Exist" % self.Config.StartAppType)
-            
+
     def _VerifyInstallerId(self):
         (validInstallerId, analyzerType, installerId) = self.DriverRpc.verifyInstallerId()
         if not validInstallerId:
             Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" % (analyzerType,installerId),Level=3)
         elif analyzerType != None and installerId != None:
-            Log("EEPROM ID matches Software Installer ID (%s)" % (analyzerType,),Level=1)            
+            Log("EEPROM ID matches Software Installer ID (%s)" % (analyzerType,),Level=1)
 
     def _Monitor(self):
 
@@ -891,7 +891,7 @@ class InstMgr(object):
                 dasState = self.DriverRpc.DAS_GetState(0)
                 pressure = self.DriverRpc.getPressureReading()
                 inletValve, outletValve = self.DriverRpc.getProportionalValves()
-                
+
                 if inletValve > 0 and outletValve > 0:
                     self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
                 else:
@@ -911,7 +911,7 @@ class InstMgr(object):
                         self.MeasuringState = MEAS_STATE_PRESSURE_STAB
                         self.SampleMgrRpc.FlowStart()
                     self.flowStarted = True
-    
+
             except Exception, e:
                 Log("Das Monitor: error %s" % (e,),Level = 2)
 
@@ -1004,7 +1004,7 @@ class InstMgr(object):
                         status = self._StateHandler(EVENT_SHUTDOWN_INST)
                         # ask supervisor to terminate all applications including INSTMGR
                         self.SupervisorRpc.TerminateApplications(True)
-                        
+
                 if self.MeasuringState in [MEAS_STATE_CONT_MEASURING, MEAS_STATE_BATCH_MEASURING]:
                     try:
                         stateDict = self.MeasSysRpc.GetStates()
@@ -1019,7 +1019,7 @@ class InstMgr(object):
                             self.DataMgrRpc.Enable()
                     except:
                         pass
-                        
+
             time.sleep(5)
     def _PurgingCompleteCallback(self):
         self._SendDisplayMessage("Purge complete")
@@ -1195,11 +1195,11 @@ class InstMgr(object):
             return INSTMGR_RPC_SUCCESS
         else:
             return INSTMGR_RPC_FAILED
-            
+
     def INSTMGR_simulateErrorRpc(self,error):
         # Force instrument to handle the specified error
         return self._HandleError(error)
-        
+
     def INSTMGR_disablePumpRpc(self):
         # No pump to be disabled in G2000
         return INSTMGR_RPC_SUCCESS
@@ -1259,7 +1259,7 @@ class InstMgr(object):
         return INSTMGR_RPC_SUCCESS
     def INSTMGR_ModifyAuxStatusRpc(self,auxStatus,auxStatusMask=0xFFFF):
         # Modify auxiliary status bits, which are the high-order 16 bits of
-        #  the 32-bit status word. Only the bits specified in the mask are 
+        #  the 32-bit status word. Only the bits specified in the mask are
         #  modified
         auxStatusMask &= 0xFFFF
         status = auxStatus & auxStatusMask
@@ -1269,7 +1269,7 @@ class InstMgr(object):
     def INSTMGR_GetStatusRpc(self):
         return self.AppStatus._Status
     def INSTMGR_GetStateRpc(self):
-        return {"InstMgr":StateName[self.State], 
+        return {"InstMgr":StateName[self.State],
                 "Warming":WarmingStateName[self.WarmingState],
                 "Measuring":MeasStateName[self.MeasuringState]}
     def INSTMGR_SendDisplayMessageRpc(self, message):
@@ -1293,11 +1293,11 @@ class InstMgr(object):
     def INSTMGR_EnableAutoRestartFlow(self):
         self.Config.AutoRestartFlow = True
         Log("Enabled auto-restart-flow")
-        
+
     def INSTMGR_DisableAutoRestartFlow(self):
         self.Config.AutoRestartFlow = False
         Log("Disabled auto-restart-flow")
-        
+
     def _FindChangedInstrumentModes(self,modeDict):
         changedModes = {}
         for key,value in modeDict.items():
@@ -1310,7 +1310,7 @@ class InstMgr(object):
 
     def _SetInstMode_Tuning_LaserCurrent(self):
         self.FreqConvRpc.setLaserCurrentTuning()
-        
+
     def _SetInstMode_Tuning_FsrHopping(self):
         self.FreqConvRpc.setFsrHoppingTuning()
 
@@ -1366,7 +1366,7 @@ def HandleCommandSwitches():
         noSampleMgr = True
     else:
         noSampleMgr = False
-            
+
     return (configFile, noSampleMgr)
 def main():
     #Get and handle the command line options...

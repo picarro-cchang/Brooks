@@ -39,8 +39,8 @@ from os.path import dirname as os_dirname
 from string import maketrans
 from Queue import Queue, Empty
 
-from fitterThread import FITTER_STATE_IDLE, FITTER_STATE_PROC, FITTER_STATE_READY, FITTER_STATE_FITTING, FITTER_STATE_COMPLETE
-from fitterThread import main as fitterMain
+from Host.Fitter.fitterThread import FITTER_STATE_IDLE, FITTER_STATE_PROC, FITTER_STATE_READY, FITTER_STATE_FITTING, FITTER_STATE_COMPLETE
+from Host.Fitter.fitterThread import main as fitterMain
 from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_BASE
 from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy

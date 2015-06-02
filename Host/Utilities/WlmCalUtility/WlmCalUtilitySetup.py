@@ -93,7 +93,7 @@ WlmCalUtility = Target(description = "WlmCalUtility", # used for the versioninfo
 # And now to the main setup routine...
 exclusionList = ["Tkconstants","Tkinter","tcl", '_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg',
                 '_fltkagg', '_gtk', '_gtkcairo', ]
-                
+
 inclusionList = ["scipy.interpolate",
                  "scipy.misc",
                  "sip",
@@ -106,7 +106,7 @@ inclusionList = ["scipy.interpolate",
                  "configobj",
                  "encodings.*",
                  "tables.*"]
-                 
+
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
 
 data_files = [(".", ["WlmCalUtility.ini"]),
@@ -117,7 +117,7 @@ data_files = [(".", ["WlmCalUtility.ini"]),
               (r'mpl-data\images',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\images\*.*' % pyDirname)),
               (r'mpl-data\fonts',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\fonts\*.*' % pyDirname)),
              ]
-            
+
 setup(version = "1.0",
       description = "CRDS Wlm Calibration Utility Tool",
       name = "CRDS Wlm Calibration Utility",

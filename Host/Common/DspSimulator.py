@@ -62,4 +62,3 @@ class DspSimulator(object):
             self.simWriteHostMem((address-self.hostBase)/4,sizeof(uintArray)/4,uintArray)
         else:
             logging.debug("Writing to outside host region. Address = %x" % address)
-

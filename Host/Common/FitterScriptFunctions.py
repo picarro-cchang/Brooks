@@ -14,7 +14,7 @@ def expAverage(xavg,x,n,dxMax):
     if abs(y-xavg)<dxMax: return y
     elif y>xavg: return xavg+dxMax
     else: return xavg-dxMax
-    
+
 def initExpAverage(xavg,x,hi,dxMax,count):
     if xavg is None: return x
     n = min(max(count,1),hi)

@@ -22,12 +22,12 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
-    
+
 def moveWildToDir(src,dest):
     srcFiles = glob(src)
     for f in srcFiles:
         move(abspath(f),join(dest,split(f)[1]))
-    
+
 if __name__ == "__main__":
     src  = r"C:\Documents and Settings\picarro\Start Menu\Programs\Startup"
     dest = r"C:\Picarro\G2000\Log\DisabledStartup"
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         raise ValueError('Unrecognized BIOS, cannot continue')
     if not exists(dest): makedirs(dest)
     moveWildToDir(src + "\\*", dest)
-    
+
     year,month,day,hour,min,sec = cmos.getRTC()
     # Advance by 5 min
     min += 5
@@ -53,12 +53,11 @@ if __name__ == "__main__":
     print "Restarting at %2d:%02d:%02d" % (hour,min,sec)
     aReg = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
     aKey = OpenKey(aReg, r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", 0, KEY_WRITE)
-    try:   
+    try:
         exePath = join(dirname(AppPath), "RtcAlarmOff.exe")
-        SetValueEx(aKey,"MyNewKey",0, REG_SZ, exePath) 
-    except EnvironmentError:                                          
+        SetValueEx(aKey,"MyNewKey",0, REG_SZ, exePath)
+    except EnvironmentError:
         print "Encountered problems writing into the Registry..."
     CloseKey(aKey)
     CloseKey(aReg)
     system('shutdown -r -t 5 -c "Picarro analyzer reset (phase 1 of 3)"')
-    

@@ -23,8 +23,8 @@
 # 06-12-14 Al    Fixed ToggleStatusBit.  Was using undefined variable, instead of parameter being passed in.
 
 from threading import RLock
-import Broadcaster
-from StringPickler import ObjAsString
+import Host.Common.Broadcaster as Broadcaster
+from Host.Common.StringPickler import ObjAsString
 from ctypes import Structure, c_uint
 
 STATUS_STATE_MASK       = 0x0000000F

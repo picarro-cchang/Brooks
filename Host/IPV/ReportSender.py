@@ -7,7 +7,7 @@ class ReportSender(object):
         self.xmlProxy = xmlrpclib.ServerProxy(uri)
         self.xmlUser = user
         self.xmlPasswd = passwd
-        
+
     def testConnect(self):
         dataDict = {}
         dataDict["user"] = self.xmlUser
@@ -23,23 +23,23 @@ class ReportSender(object):
         dataDict["passwd"] = self.xmlPasswd
         dataDict["filename"] = basename
         ret = self.xmlProxy.ipv_upload_h5(dataDict, diagfile)
-        return ret 
+        return ret
 
     def sendReport(self, filename):
         basename = os.path.basename(filename)
         [docType, docName, host, softVer, ymdhms] = basename.split("_")
         ymdhms = ymdhms.split(".")[0].rstrip("Z")
-        fmtStr = "%Y%m%d%H%M%S" 
+        fmtStr = "%Y%m%d%H%M%S"
         identifier = "%s_%s" % (docName, ymdhms)
-        
+
         try:
             reportFile = open(filename,"rb")
             reportReader = csv.reader(reportFile, )
         except:
             raise RuntimeErowIdxor, "Failed to read report"
-        
+
         colDescRow = reportReader.next() # Just move the pointer in reportReader
-        
+
         dataDict = {}
         dataDict["user"] = self.xmlUser
         dataDict["passwd"] = self.xmlPasswd
@@ -49,7 +49,7 @@ class ReportSender(object):
         dataDict["ipvdoc_report_dt"] = ymdhms
         dataDict["ipvdoc_state"] = "OK"
         dataDict["detail"] = {}
-  
+
         rowIdx = 0
         while True:
             try:
@@ -64,15 +64,15 @@ class ReportSender(object):
             dataDict["detail"]["%s" % (rowIdx)]["ipvdtl_set_point"] = row[4].strip()
             dataDict["detail"]["%s" % (rowIdx)]["ipvdtl_tolerance"] = row[5].strip()
             dataDict["detail"]["%s" % (rowIdx)]["ipvdtl_value"] = row[6].strip()
-            
+
             if not row[1].strip() == "OK":
                 if dataDict["ipvdoc_state"] == "OK":
                     if not row[2].strip() == "":
                         dataDict["ipvdoc_state"] = row[2].strip()
                     else:
                         dataDict["ipvdoc_state"] = "signal erowIdxor"
-                    
-            rowIdx += 1    
-        
+
+            rowIdx += 1
+
         ret = self.xmlProxy.ipv_add_document(dataDict)
-        return ret 
+        return ret

@@ -17,7 +17,7 @@ import wx
 from Host.autogen.interface import *
 #pylint: enable=W0401,W0614
 
-import ValveExplorer
+import Host.MobileKit.Utilities.ValveExplorer.ValveExplorer as ValveExplorer
 from Host.Common import GraphPanel
 from Host.Common import timestamp
 

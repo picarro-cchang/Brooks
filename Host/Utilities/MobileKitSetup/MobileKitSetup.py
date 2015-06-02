@@ -15,7 +15,7 @@ import psutil
 import win32gui
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
-from MobileKitSetupFrame import MobileKitSetupFrame
+from Host.Utilities.MobileKitSetup.MobileKitSetupFrame import MobileKitSetupFrame
 
 DEFAULT_CONFIG_NAME = "MobileKitSetup.ini"
 
@@ -31,7 +31,7 @@ AppPath = os.path.abspath(AppPath)
 
 def getPidList():
     return [p.pid for p in psutil.get_process_list()]
-    
+
 class MobileKitSetup(MobileKitSetupFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = CustomConfigObj(configFile)
@@ -52,12 +52,12 @@ class MobileKitSetup(MobileKitSetupFrame):
             d = wx.MessageDialog(None, "Error in Mobile Kit INI file: %r" % err, "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
             d.ShowModal()
             return
-            
+
         MobileKitSetupFrame.__init__(self, *args, **kwds)
 
         self.bindEvents()
         self.setInit()
-        
+
     def setInit(self):
         currentPid = self.co.getint("Server", "pid")
         if currentPid in getPidList():
@@ -75,11 +75,11 @@ class MobileKitSetup(MobileKitSetupFrame):
         self.comboBoxPolyOpacity.SetValue(opacSel)
         self.textCtrlBaseline.SetValue(self.targetConfig.get("SETTINGS", "offset"))
         self.textCtrlScaling.SetValue(self.targetConfig.get("SETTINGS", "scale"))
-        
+
     def bindEvents(self):
         self.Bind(wx.EVT_BUTTON, self.onLaunchButton, self.buttonLaunchServer)
-        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply) 
-        self.Bind(wx.EVT_BUTTON, self.onNewRunButton, self.buttonNewRun) 
+        self.Bind(wx.EVT_BUTTON, self.onApplyButton, self.buttonApply)
+        self.Bind(wx.EVT_BUTTON, self.onNewRunButton, self.buttonNewRun)
 
     def _convertColor2KML(self, colorTuple, opacity):
         [r,g,b] = [hex(c).upper()[2:].zfill(2) for c in colorTuple]
@@ -90,9 +90,9 @@ class MobileKitSetup(MobileKitSetupFrame):
         b = eval("0x%s" % KMLColor[2:4])
         g = eval("0x%s" % KMLColor[4:6])
         r = eval("0x%s" % KMLColor[6:8])
-        colorCode = (r, g, b) 
+        colorCode = (r, g, b)
         return opacSel, colorCode
-        
+
     def _copyIniFiles(self):
         try:
             shutil.copy2(self.targetIniFile, self.activeIniFile)
@@ -130,7 +130,7 @@ class MobileKitSetup(MobileKitSetupFrame):
             self.buttonLaunchServer.SetLabel("Stop Mobile Kit Server")
             self.ipCtrl.Enable(False)
         self.co.write()
-            
+
     def onApplyButton(self, event):
         lineColor = self._convertColor2KML(self.cselLineColor.GetValue(), OPACITY_DICT[self.comboBoxLineOpacity.GetValue()])
         polyColor = self._convertColor2KML(self.cselPolyColor.GetValue(), OPACITY_DICT[self.comboBoxPolyOpacity.GetValue()])
@@ -144,12 +144,12 @@ class MobileKitSetup(MobileKitSetupFrame):
             self.targetConfig.set("SETTINGS", "restart", "0")
         self.targetConfig.write()
         self._copyIniFiles()
-            
+
     def onNewRunButton(self, event):
         self.targetConfig.set("SETTINGS", "restart", "1")
         self.targetConfig.write()
         self._copyIniFiles()
-            
+
 HELP_STRING = \
 """
 
@@ -163,7 +163,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-    
+
 def HandleCommandSwitches():
     import getopt
 
@@ -188,9 +188,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-        
+
     return configFile
-    
+
 if __name__ == "__main__":
     mobileKitApp = SingleInstance("MobileKitSetup")
     if mobileKitApp.alreadyrunning():
