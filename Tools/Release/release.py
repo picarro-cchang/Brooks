@@ -533,7 +533,7 @@ def makeExe(opts):
 
     # CONFIGS is a dict containing analyzer types and species
     # CONFIG_REPOS is a dict containing analyzer types and repo for configs (either
-    #   "bzr" or "git", default is "bzr")
+    #   "bzr" or "git", default is "git")
     # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
     # if --types option was used, buildInfo will include only the wanted build types
     buildTypesSpecific = False     # default to all build types from JSON file
@@ -568,7 +568,7 @@ def makeExe(opts):
                 itemDict = buildInfo[item]
                 CONFIGS[item] = itemDict["species"]
                 INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-                CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
+                CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
 
     else:
         # building all types
@@ -576,7 +576,7 @@ def makeExe(opts):
             itemDict = buildInfo[item]
             CONFIGS[item] = itemDict["species"]
             INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-            CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
+            CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
 
     #print "CONFIGS=", CONFIGS
     #print ""
@@ -1577,10 +1577,10 @@ def _verAsUINumString(ver):
 
 def main():
     usage = """
-%prog [options]
+    %prog [options]
 
-Builds a new release of HostExe, AnalyzerServerExe and all installers.
-"""
+    Builds a new release of HostExe, AnalyzerServerExe and all installers.
+    """
 
     parser = OptionParser(usage=usage)
     parser.add_option('-v', '--version', dest='version', metavar='VERSION',
