@@ -481,99 +481,99 @@ PEAK_DETECT_MAX_HISTORY_LENGTH = 1024
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint
-float_type = 0 #
-uint_type = 1 #
-int_type = 2 #
+float_type = 0 # 
+uint_type = 1 # 
+int_type = 2 # 
 
 # Dictionary for enumerated constants in RegTypes
 RegTypesDict = {}
-RegTypesDict[0] = 'float_type' #
-RegTypesDict[1] = 'uint_type' #
-RegTypesDict[2] = 'int_type' #
+RegTypesDict[0] = 'float_type' # 
+RegTypesDict[1] = 'uint_type' # 
+RegTypesDict[2] = 'int_type' # 
 
 # Enumerated definitions for STREAM_MemberType
 STREAM_MemberType = c_uint
-STREAM_Laser1Temp = 0 #
-STREAM_Laser2Temp = 1 #
-STREAM_Laser3Temp = 2 #
-STREAM_Laser4Temp = 3 #
-STREAM_EtalonTemp = 4 #
-STREAM_WarmBoxTemp = 5 #
-STREAM_WarmBoxHeatsinkTemp = 6 #
-STREAM_CavityTemp = 7 #
-STREAM_HotBoxHeatsinkTemp = 8 #
-STREAM_DasTemp = 9 #
-STREAM_Etalon1 = 10 #
-STREAM_Reference1 = 11 #
-STREAM_Etalon2 = 12 #
-STREAM_Reference2 = 13 #
-STREAM_Ratio1 = 14 #
-STREAM_Ratio2 = 15 #
-STREAM_Laser1Current = 16 #
-STREAM_Laser2Current = 17 #
-STREAM_Laser3Current = 18 #
-STREAM_Laser4Current = 19 #
-STREAM_CavityPressure = 20 #
-STREAM_AmbientPressure = 21 #
-STREAM_Laser1Tec = 22 #
-STREAM_Laser2Tec = 23 #
-STREAM_Laser3Tec = 24 #
-STREAM_Laser4Tec = 25 #
-STREAM_WarmBoxTec = 26 #
-STREAM_HotBoxTec = 27 #
-STREAM_HotBoxHeater = 28 #
-STREAM_InletValve = 29 #
-STREAM_OutletValve = 30 #
-STREAM_ValveMask = 31 #
-STREAM_MPVPosition = 32 #
-STREAM_FanState = 33 #
-STREAM_ProcessedLoss1 = 34 #
-STREAM_ProcessedLoss2 = 35 #
-STREAM_ProcessedLoss3 = 36 #
-STREAM_ProcessedLoss4 = 37 #
-STREAM_Flow1 = 38 #
+STREAM_Laser1Temp = 0 # 
+STREAM_Laser2Temp = 1 # 
+STREAM_Laser3Temp = 2 # 
+STREAM_Laser4Temp = 3 # 
+STREAM_EtalonTemp = 4 # 
+STREAM_WarmBoxTemp = 5 # 
+STREAM_WarmBoxHeatsinkTemp = 6 # 
+STREAM_CavityTemp = 7 # 
+STREAM_HotBoxHeatsinkTemp = 8 # 
+STREAM_DasTemp = 9 # 
+STREAM_Etalon1 = 10 # 
+STREAM_Reference1 = 11 # 
+STREAM_Etalon2 = 12 # 
+STREAM_Reference2 = 13 # 
+STREAM_Ratio1 = 14 # 
+STREAM_Ratio2 = 15 # 
+STREAM_Laser1Current = 16 # 
+STREAM_Laser2Current = 17 # 
+STREAM_Laser3Current = 18 # 
+STREAM_Laser4Current = 19 # 
+STREAM_CavityPressure = 20 # 
+STREAM_AmbientPressure = 21 # 
+STREAM_Laser1Tec = 22 # 
+STREAM_Laser2Tec = 23 # 
+STREAM_Laser3Tec = 24 # 
+STREAM_Laser4Tec = 25 # 
+STREAM_WarmBoxTec = 26 # 
+STREAM_HotBoxTec = 27 # 
+STREAM_HotBoxHeater = 28 # 
+STREAM_InletValve = 29 # 
+STREAM_OutletValve = 30 # 
+STREAM_ValveMask = 31 # 
+STREAM_MPVPosition = 32 # 
+STREAM_FanState = 33 # 
+STREAM_ProcessedLoss1 = 34 # 
+STREAM_ProcessedLoss2 = 35 # 
+STREAM_ProcessedLoss3 = 36 # 
+STREAM_ProcessedLoss4 = 37 # 
+STREAM_Flow1 = 38 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
-STREAM_MemberTypeDict[0] = 'STREAM_Laser1Temp' #
-STREAM_MemberTypeDict[1] = 'STREAM_Laser2Temp' #
-STREAM_MemberTypeDict[2] = 'STREAM_Laser3Temp' #
-STREAM_MemberTypeDict[3] = 'STREAM_Laser4Temp' #
-STREAM_MemberTypeDict[4] = 'STREAM_EtalonTemp' #
-STREAM_MemberTypeDict[5] = 'STREAM_WarmBoxTemp' #
-STREAM_MemberTypeDict[6] = 'STREAM_WarmBoxHeatsinkTemp' #
-STREAM_MemberTypeDict[7] = 'STREAM_CavityTemp' #
-STREAM_MemberTypeDict[8] = 'STREAM_HotBoxHeatsinkTemp' #
-STREAM_MemberTypeDict[9] = 'STREAM_DasTemp' #
-STREAM_MemberTypeDict[10] = 'STREAM_Etalon1' #
-STREAM_MemberTypeDict[11] = 'STREAM_Reference1' #
-STREAM_MemberTypeDict[12] = 'STREAM_Etalon2' #
-STREAM_MemberTypeDict[13] = 'STREAM_Reference2' #
-STREAM_MemberTypeDict[14] = 'STREAM_Ratio1' #
-STREAM_MemberTypeDict[15] = 'STREAM_Ratio2' #
-STREAM_MemberTypeDict[16] = 'STREAM_Laser1Current' #
-STREAM_MemberTypeDict[17] = 'STREAM_Laser2Current' #
-STREAM_MemberTypeDict[18] = 'STREAM_Laser3Current' #
-STREAM_MemberTypeDict[19] = 'STREAM_Laser4Current' #
-STREAM_MemberTypeDict[20] = 'STREAM_CavityPressure' #
-STREAM_MemberTypeDict[21] = 'STREAM_AmbientPressure' #
-STREAM_MemberTypeDict[22] = 'STREAM_Laser1Tec' #
-STREAM_MemberTypeDict[23] = 'STREAM_Laser2Tec' #
-STREAM_MemberTypeDict[24] = 'STREAM_Laser3Tec' #
-STREAM_MemberTypeDict[25] = 'STREAM_Laser4Tec' #
-STREAM_MemberTypeDict[26] = 'STREAM_WarmBoxTec' #
-STREAM_MemberTypeDict[27] = 'STREAM_HotBoxTec' #
-STREAM_MemberTypeDict[28] = 'STREAM_HotBoxHeater' #
-STREAM_MemberTypeDict[29] = 'STREAM_InletValve' #
-STREAM_MemberTypeDict[30] = 'STREAM_OutletValve' #
-STREAM_MemberTypeDict[31] = 'STREAM_ValveMask' #
-STREAM_MemberTypeDict[32] = 'STREAM_MPVPosition' #
-STREAM_MemberTypeDict[33] = 'STREAM_FanState' #
-STREAM_MemberTypeDict[34] = 'STREAM_ProcessedLoss1' #
-STREAM_MemberTypeDict[35] = 'STREAM_ProcessedLoss2' #
-STREAM_MemberTypeDict[36] = 'STREAM_ProcessedLoss3' #
-STREAM_MemberTypeDict[37] = 'STREAM_ProcessedLoss4' #
-STREAM_MemberTypeDict[38] = 'STREAM_Flow1' #
+STREAM_MemberTypeDict[0] = 'STREAM_Laser1Temp' # 
+STREAM_MemberTypeDict[1] = 'STREAM_Laser2Temp' # 
+STREAM_MemberTypeDict[2] = 'STREAM_Laser3Temp' # 
+STREAM_MemberTypeDict[3] = 'STREAM_Laser4Temp' # 
+STREAM_MemberTypeDict[4] = 'STREAM_EtalonTemp' # 
+STREAM_MemberTypeDict[5] = 'STREAM_WarmBoxTemp' # 
+STREAM_MemberTypeDict[6] = 'STREAM_WarmBoxHeatsinkTemp' # 
+STREAM_MemberTypeDict[7] = 'STREAM_CavityTemp' # 
+STREAM_MemberTypeDict[8] = 'STREAM_HotBoxHeatsinkTemp' # 
+STREAM_MemberTypeDict[9] = 'STREAM_DasTemp' # 
+STREAM_MemberTypeDict[10] = 'STREAM_Etalon1' # 
+STREAM_MemberTypeDict[11] = 'STREAM_Reference1' # 
+STREAM_MemberTypeDict[12] = 'STREAM_Etalon2' # 
+STREAM_MemberTypeDict[13] = 'STREAM_Reference2' # 
+STREAM_MemberTypeDict[14] = 'STREAM_Ratio1' # 
+STREAM_MemberTypeDict[15] = 'STREAM_Ratio2' # 
+STREAM_MemberTypeDict[16] = 'STREAM_Laser1Current' # 
+STREAM_MemberTypeDict[17] = 'STREAM_Laser2Current' # 
+STREAM_MemberTypeDict[18] = 'STREAM_Laser3Current' # 
+STREAM_MemberTypeDict[19] = 'STREAM_Laser4Current' # 
+STREAM_MemberTypeDict[20] = 'STREAM_CavityPressure' # 
+STREAM_MemberTypeDict[21] = 'STREAM_AmbientPressure' # 
+STREAM_MemberTypeDict[22] = 'STREAM_Laser1Tec' # 
+STREAM_MemberTypeDict[23] = 'STREAM_Laser2Tec' # 
+STREAM_MemberTypeDict[24] = 'STREAM_Laser3Tec' # 
+STREAM_MemberTypeDict[25] = 'STREAM_Laser4Tec' # 
+STREAM_MemberTypeDict[26] = 'STREAM_WarmBoxTec' # 
+STREAM_MemberTypeDict[27] = 'STREAM_HotBoxTec' # 
+STREAM_MemberTypeDict[28] = 'STREAM_HotBoxHeater' # 
+STREAM_MemberTypeDict[29] = 'STREAM_InletValve' # 
+STREAM_MemberTypeDict[30] = 'STREAM_OutletValve' # 
+STREAM_MemberTypeDict[31] = 'STREAM_ValveMask' # 
+STREAM_MemberTypeDict[32] = 'STREAM_MPVPosition' # 
+STREAM_MemberTypeDict[33] = 'STREAM_FanState' # 
+STREAM_MemberTypeDict[34] = 'STREAM_ProcessedLoss1' # 
+STREAM_MemberTypeDict[35] = 'STREAM_ProcessedLoss2' # 
+STREAM_MemberTypeDict[36] = 'STREAM_ProcessedLoss3' # 
+STREAM_MemberTypeDict[37] = 'STREAM_ProcessedLoss4' # 
+STREAM_MemberTypeDict[38] = 'STREAM_Flow1' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
@@ -929,45 +929,45 @@ HARDWARE_PRESENT_BitTypeDict[13] = 'HARDWARE_PRESENT_RddVarGainBit' # Variable g
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
-FLOAT_ARITHMETIC_Addition = 1 #
-FLOAT_ARITHMETIC_Subtraction = 2 #
-FLOAT_ARITHMETIC_Multiplication = 3 #
-FLOAT_ARITHMETIC_Division = 4 #
-FLOAT_ARITHMETIC_Average = 5 #
+FLOAT_ARITHMETIC_Addition = 1 # 
+FLOAT_ARITHMETIC_Subtraction = 2 # 
+FLOAT_ARITHMETIC_Multiplication = 3 # 
+FLOAT_ARITHMETIC_Division = 4 # 
+FLOAT_ARITHMETIC_Average = 5 # 
 
 # Dictionary for enumerated constants in FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorTypeDict = {}
-FLOAT_ARITHMETIC_OperatorTypeDict[1] = 'FLOAT_ARITHMETIC_Addition' #
-FLOAT_ARITHMETIC_OperatorTypeDict[2] = 'FLOAT_ARITHMETIC_Subtraction' #
-FLOAT_ARITHMETIC_OperatorTypeDict[3] = 'FLOAT_ARITHMETIC_Multiplication' #
-FLOAT_ARITHMETIC_OperatorTypeDict[4] = 'FLOAT_ARITHMETIC_Division' #
-FLOAT_ARITHMETIC_OperatorTypeDict[5] = 'FLOAT_ARITHMETIC_Average' #
+FLOAT_ARITHMETIC_OperatorTypeDict[1] = 'FLOAT_ARITHMETIC_Addition' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[2] = 'FLOAT_ARITHMETIC_Subtraction' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[3] = 'FLOAT_ARITHMETIC_Multiplication' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[4] = 'FLOAT_ARITHMETIC_Division' # 
+FLOAT_ARITHMETIC_OperatorTypeDict[5] = 'FLOAT_ARITHMETIC_Average' # 
 
 # Enumerated definitions for HEATER_CNTRL_ModeType
 HEATER_CNTRL_ModeType = c_uint
-HEATER_CNTRL_MODE_DELTA_TEMP = 0 #
-HEATER_CNTRL_MODE_TEC_TARGET = 1 #
-HEATER_CNTRL_MODE_HEATER_FIXED = 2 #
+HEATER_CNTRL_MODE_DELTA_TEMP = 0 # 
+HEATER_CNTRL_MODE_TEC_TARGET = 1 # 
+HEATER_CNTRL_MODE_HEATER_FIXED = 2 # 
 
 # Dictionary for enumerated constants in HEATER_CNTRL_ModeType
 HEATER_CNTRL_ModeTypeDict = {}
-HEATER_CNTRL_ModeTypeDict[0] = 'HEATER_CNTRL_MODE_DELTA_TEMP' #
-HEATER_CNTRL_ModeTypeDict[1] = 'HEATER_CNTRL_MODE_TEC_TARGET' #
-HEATER_CNTRL_ModeTypeDict[2] = 'HEATER_CNTRL_MODE_HEATER_FIXED' #
+HEATER_CNTRL_ModeTypeDict[0] = 'HEATER_CNTRL_MODE_DELTA_TEMP' # 
+HEATER_CNTRL_ModeTypeDict[1] = 'HEATER_CNTRL_MODE_TEC_TARGET' # 
+HEATER_CNTRL_ModeTypeDict[2] = 'HEATER_CNTRL_MODE_HEATER_FIXED' # 
 
 # Enumerated definitions for LOG_LEVEL_Type
 LOG_LEVEL_Type = c_uint
-LOG_LEVEL_DEBUG = 0 #
-LOG_LEVEL_INFO = 1 #
-LOG_LEVEL_STANDARD = 2 #
-LOG_LEVEL_CRITICAL = 3 #
+LOG_LEVEL_DEBUG = 0 # 
+LOG_LEVEL_INFO = 1 # 
+LOG_LEVEL_STANDARD = 2 # 
+LOG_LEVEL_CRITICAL = 3 # 
 
 # Dictionary for enumerated constants in LOG_LEVEL_Type
 LOG_LEVEL_TypeDict = {}
-LOG_LEVEL_TypeDict[0] = 'LOG_LEVEL_DEBUG' #
-LOG_LEVEL_TypeDict[1] = 'LOG_LEVEL_INFO' #
-LOG_LEVEL_TypeDict[2] = 'LOG_LEVEL_STANDARD' #
-LOG_LEVEL_TypeDict[3] = 'LOG_LEVEL_CRITICAL' #
+LOG_LEVEL_TypeDict[0] = 'LOG_LEVEL_DEBUG' # 
+LOG_LEVEL_TypeDict[1] = 'LOG_LEVEL_INFO' # 
+LOG_LEVEL_TypeDict[2] = 'LOG_LEVEL_STANDARD' # 
+LOG_LEVEL_TypeDict[3] = 'LOG_LEVEL_CRITICAL' # 
 
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
@@ -2517,7 +2517,7 @@ KERNEL_CONFIG_ENGINE1_TEC_W = 1 # Engine 1 TEC Enable bit width
 KERNEL_CONFIG_ENGINE2_TEC_B = 2 # Engine 2 TEC Enable bit position
 KERNEL_CONFIG_ENGINE2_TEC_W = 1 # Engine 2 TEC Enable bit width
 
-KERNEL_INTRONIX_CLKSEL = 4 #
+KERNEL_INTRONIX_CLKSEL = 4 # 
 KERNEL_INTRONIX_CLKSEL_DIVISOR_B = 0 # Intronix sampling rate bit position
 KERNEL_INTRONIX_CLKSEL_DIVISOR_W = 5 # Intronix sampling rate bit width
 
@@ -2559,7 +2559,7 @@ RDSIM_PZT_WINDOW_HALF_WIDTH = 2 # Half-width of PZT window within which cavity f
 RDSIM_FILLING_RATE = 3 # Rate of increase of accumulator value during filling
 RDSIM_DECAY = 4 # Exponential decay of accumulator when not filling
 RDSIM_DECAY_IN_SHIFT = 5 # Bits to  right shift decay input
-RDSIM_DECAY_IN_OFFSET = 6 #
+RDSIM_DECAY_IN_OFFSET = 6 # 
 RDSIM_ACCUMULATOR = 7 # Simulated ringdown value
 
 # Block LASERLOCKER Laser frequency locker
@@ -2786,7 +2786,7 @@ WLMSIM_OPTIONS_INPUT_SEL_W = 1 # Input select bit width
 WLMSIM_Z0 = 1 # Phase angle
 WLMSIM_RFAC = 2 # Reflectivity factor
 WLMSIM_WFAC = 3 # Width factor of simulated spectrum
-WLMSIM_LASER_TEMP = 4 #
+WLMSIM_LASER_TEMP = 4 # 
 WLMSIM_ETA1_OFFSET = 5 # Etalon 1 offset
 WLMSIM_REF1_OFFSET = 6 # Reference 1 offset
 WLMSIM_ETA2_OFFSET = 7 # Etalon 2 offset
@@ -2810,7 +2810,7 @@ DYNAMICPWM_HIGH = 2 # Upper limit of dither waveform
 DYNAMICPWM_LOW = 3 # Lower limit of dither waveform
 DYNAMICPWM_SLOPE = 4 # Slope of dither waveform
 
-# Block SCALER
+# Block SCALER 
 SCALER_SCALE1 = 0 # Scale factor for PZT waveform
 
 # FPGA map indices

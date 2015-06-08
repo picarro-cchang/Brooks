@@ -37,61 +37,62 @@ from Host.Common import version as hostVersion
 
 version = sys.version_info
 pyDirname = "Python%d%d" % (version[0],version[1])
-sys.path.append("ActiveFileManager")
-sys.path.append("Coordinator")
-sys.path.append("ValveSequencer")
-sys.path.append("AlarmSystem")
-sys.path.append("RDFrequencyConverter")
-sys.path.append("SpectrumCollector")
-sys.path.append("CommandInterface")
-sys.path.append("Common")
-sys.path.append("autogen")
-sys.path.append("Controller")
-# sys.path.append("ControllerBuildStation")
-sys.path.append("DataLogger")
-sys.path.append("DataManager")
-sys.path.append("Driver")
-sys.path.append("ElectricalInterface")
-sys.path.append("EventManager")
-sys.path.append("Fitter")
-sys.path.append("InstMgr")
-sys.path.append("Archiver")
-sys.path.append("FileEraser")
-sys.path.append("MeasSystem")
-sys.path.append("QuickGui")
-sys.path.append("SampleManager")
-sys.path.append("Supervisor")
-sys.path.append("ReadExtSensor")
-sys.path.append("IPV")
-sys.path.append("ConfigMonitor")
-sys.path.append("PeriphIntrf")
-sys.path.append("Utilities")
-sys.path.append("WebServer")
-sys.path.append("rdReprocessor")
-sys.path.append("Utilities/RemoteAccess")
-sys.path.append("Utilities/DiagDataCollector")
-sys.path.append("Utilities/SupervisorLauncher")
-sys.path.append("Utilities/CoordinatorLauncher")
-sys.path.append("Utilities/FluxSwitcher")
-sys.path.append("Utilities/ValveDisplay")
-sys.path.append("Utilities/InstrEEPROMAccess")
-sys.path.append("Utilities/DataRecal")
-sys.path.append("Utilities/IntegrationTool")
-sys.path.append("Utilities/SetupTool")
-sys.path.append("Utilities/PicarroKML")
-sys.path.append("Utilities/ReadGPSWS")
-sys.path.append("Utilities/IntegrationBackup")
-sys.path.append("Utilities/FlowController")
-sys.path.append("Utilities/ReadMemUsage")
-sys.path.append("Utilities/PeriphModeSwitcher")
-sys.path.append("Utilities/RecipeEditor")
-sys.path.append("Utilities/BackpackServer")
-sys.path.append("Utilities/ConfigManager")
-sys.path.append("Utilities/AircraftValveSwitcher")
-sys.path.append("Utilities/ProgramVariableGainRdd")
-sys.path.append("Utilities/RestartSupervisor")
-sys.path.append('Utilities/KillRestartSupervisor')
-sys.path.append("../Firmware/Utilities")
+
+# sys.path.append("ActiveFileManager")
+# sys.path.append("Coordinator")
+# sys.path.append("ValveSequencer")
+# sys.path.append("AlarmSystem")
+# sys.path.append("RDFrequencyConverter")
+# sys.path.append("SpectrumCollector")
+# sys.path.append("CommandInterface")
+# sys.path.append("Common")
+# sys.path.append("autogen")
+# sys.path.append("Controller")
+# # sys.path.append("ControllerBuildStation")
+# sys.path.append("DataLogger")
+# sys.path.append("DataManager")
+# sys.path.append("Driver")
+# sys.path.append("ElectricalInterface")
+# sys.path.append("EventManager")
+# sys.path.append("Fitter")
+# sys.path.append("InstMgr")
+# sys.path.append("Archiver")
+# sys.path.append("FileEraser")
+# sys.path.append("MeasSystem")
+# sys.path.append("QuickGui")
+# sys.path.append("SampleManager")
+# sys.path.append("Supervisor")
+# sys.path.append("ReadExtSensor")
+# sys.path.append("IPV")
+# sys.path.append("ConfigMonitor")
+# sys.path.append("PeriphIntrf")
+# sys.path.append("Utilities")
+# sys.path.append("WebServer")
+# sys.path.append("rdReprocessor")
+# sys.path.append("Utilities/RemoteAccess")
+# sys.path.append("Utilities/DiagDataCollector")
+# sys.path.append("Utilities/SupervisorLauncher")
+# sys.path.append("Utilities/CoordinatorLauncher")
+# sys.path.append("Utilities/FluxSwitcher")
+# sys.path.append("Utilities/ValveDisplay")
+# sys.path.append("Utilities/InstrEEPROMAccess")
+# sys.path.append("Utilities/DataRecal")
+# sys.path.append("Utilities/IntegrationTool")
+# sys.path.append("Utilities/SetupTool")
+# sys.path.append("Utilities/PicarroKML")
+# sys.path.append("Utilities/ReadGPSWS")
+# sys.path.append("Utilities/IntegrationBackup")
+# sys.path.append("Utilities/FlowController")
+# sys.path.append("Utilities/ReadMemUsage")
+# sys.path.append("Utilities/PeriphModeSwitcher")
+# sys.path.append("Utilities/RecipeEditor")
+# sys.path.append("Utilities/BackpackServer")
+# sys.path.append("Utilities/ConfigManager")
+# sys.path.append("Utilities/AircraftValveSwitcher")
+# sys.path.append("Utilities/ProgramVariableGainRdd")
+# sys.path.append("Utilities/RestartSupervisor")
+# sys.path.append('Utilities/KillRestartSupervisor')
+# sys.path.append("MfgUtilities")
 
 sys.stderr = sys.stdout
 
@@ -672,27 +673,27 @@ consoleList = [
     "Utilities/RestartSupervisor/RestartSupervisor.py",
     "Utilities/ProgramVariableGainRdd/programRdd.py",
     'Utilities/KillRestartSupervisor/KillRestartSupervisor.py',
-    "../Firmware/Utilities/CalibrateSystem.py",
-    "../Firmware/Utilities/CalibrateFsr.py",
-    "../Firmware/Utilities/AdjustWlmOffset.py",
-    "../Firmware/Utilities/ExamineRawRD.py",
-    "../Firmware/Utilities/ExamineRDCount.py",
-    "../Firmware/Utilities/LaserLockPrbs.py",
-    "../Firmware/Utilities/LaserPidPrbs.py",
-    "../Firmware/Utilities/MakeWarmBoxCalFile.py",
-    "../Firmware/Utilities/MakeWarmBoxCal_NoWlm.py",
-    "../Firmware/Utilities/MakeWlmFile1.py",
-    "../Firmware/Utilities/WriteLaserEeprom.py",
-    "../Firmware/Utilities/MakeNoWlmFile.py",
-    "../Firmware/Utilities/WriteWlmEeprom.py",
-    "../Firmware/Utilities/DumpEeproms.py",
-    "../Firmware/Utilities/MakeCalFromEeproms.py",
-    "../Firmware/Utilities/FindWlmOffset.py",
-    "../Firmware/Utilities/SaveData.py",
-    "../Firmware/Utilities/SaveRaw.py",
-    "../Firmware/Utilities/TestClient.py",
-    "../Firmware/Utilities/ThresholdStats.py",
-    "../Firmware/Utilities/CheckLaserCal.py",
+    "MfgUtilities/CalibrateSystem.py",
+    "MfgUtilities/CalibrateFsr.py",
+    "MfgUtilities/AdjustWlmOffset.py",
+    "MfgUtilities/ExamineRawRD.py",
+    "MfgUtilities/ExamineRDCount.py",
+    "MfgUtilities/LaserLockPrbs.py",
+    "MfgUtilities/LaserPidPrbs.py",
+    "MfgUtilities/MakeWarmBoxCalFile.py",
+    "MfgUtilities/MakeWarmBoxCal_NoWlm.py",
+    "MfgUtilities/MakeWlmFile1.py",
+    "MfgUtilities/WriteLaserEeprom.py",
+    "MfgUtilities/MakeNoWlmFile.py",
+    "MfgUtilities/WriteWlmEeprom.py",
+    "MfgUtilities/DumpEeproms.py",
+    "MfgUtilities/MakeCalFromEeproms.py",
+    "MfgUtilities/FindWlmOffset.py",
+    "MfgUtilities/SaveData.py",
+    "MfgUtilities/SaveRaw.py",
+    "MfgUtilities/TestClient.py",
+    "MfgUtilities/ThresholdStats.py",
+    "MfgUtilities/CheckLaserCal.py",
     Fitter,
     "ConfigMonitor/ConfigMonitor.py",
     "PeriphIntrf/RunSerial2Socket.py",

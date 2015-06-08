@@ -31,8 +31,8 @@ import Queue
 from inspect import isclass
 from numpy import *
 
-import Host.CommandInterface.SerialInterface as SerialInterface
-import Host.CommandInterface.SocketInterface as SocketInterface
+from Host.CommandInterface.SerialInterface import SerialInterface
+from Host.CommandInterface.SocketInterface import SocketInterface
 from Host.InstMgr.InstMgr import INSTMGR_SHUTDOWN_PREP_SHIPMENT, INSTMGR_SHUTDOWN_HOST_AND_DAS, MAX_ERROR_LIST_NUM
 from Host.Common import CmdFIFO, Listener, TextListener
 from Host.Common import MeasData
@@ -75,8 +75,10 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 if os.path.split(AppPath)[0] not in sys.path: sys.path.append(os.path.split(AppPath)[0])
+sys.path.append("CommandInterface")
 
 class CommandInterface(object):
+    interfaceClass = dict(SerialInterface=SerialInterface, SocketInterface=SocketInterface)
     def __init__(self):
         """ Initializes Interface """
         self.commandList   = []
@@ -174,9 +176,7 @@ class CommandInterface(object):
 
         # Load interface definitions
         try:
-            interfaceModule  = __import__(self.interfaceName)
-            interfaceClass   = getattr(interfaceModule, self.interfaceName)
-            self.interface   = interfaceClass()
+            self.interface   = CommandInterface.interfaceClass[self.interfaceName]()
             self.interface.config( **interfaceConfig )
         except:
             msg = "Unable to configure interface. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
