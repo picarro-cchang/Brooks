@@ -45,10 +45,10 @@ def analyze_local(filename, mod_names, pkg_path):
                     
                     
 if __name__ == "__main__":
-    for root, dirs,files in os.walk(r'Host'):
+    for root, dirs,files in os.walk(r'src\Host'):
         py_files = glob.glob(os.path.join(root,"*.py"))
         mod_names = [os.path.split(fname)[-1][:-3] for fname in py_files]
-        pkg_path = ".".join(root.split(os.path.sep)[:])
+        pkg_path = ".".join(root.split(os.path.sep)[1:])
         for name in files:
             if name.endswith('py'):
                 py_file = os.path.join(root, name)                
