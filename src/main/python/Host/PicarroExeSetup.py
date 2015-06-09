@@ -608,7 +608,6 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                    "Utilities/SupervisorLauncher/Picarro_icon.ico",
                    "Utilities/SupervisorLauncher/Utilities_icon.ico",
                    "PeriphIntrf/Serial2Socket.exe",
-                   "../MobileKit/AnalyzerServer/configAnalyzerServer.ini",
                    "../repoBzrVer.py"]),
             (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
             # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
@@ -618,13 +617,7 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
             (r'mpl-data\fonts',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\fonts\*.*' % pyDirname)),
             ("Images", hex_images),
             ("static", glob.glob(r'Utilities\BackpackServer\static\*.*')),
-            ("templates", glob.glob(r'Utilities\BackpackServer\templates\*.*')),
-            ("static", glob.glob(r'..\MobileKit\AnalyzerServer\static\*.*')),
-            ("templates", glob.glob(r'..\MobileKit\AnalyzerServer\templates\*.*')),
-            (r"static\images", glob.glob(r'..\MobileKit\AnalyzerServer\static\images\*.*')),
-            (r"static\images\icons", glob.glob(r'..\MobileKit\AnalyzerServer\static\images\icons\*.*')),
-            (r"static\css", glob.glob(r'..\MobileKit\AnalyzerServer\static\css\*.*')),
-            (r"static\sound", glob.glob(r'..\MobileKit\AnalyzerServer\static\sound\*.*')),
+            ("templates", glob.glob(r'Utilities\BackpackServer\templates\*.*'))
             ]
 for d in cypressDriverDirs:
     data_files.append(("Images/%s"%d, glob.glob("../Firmware/CypressUSB/Drivers/" + "%s/*.*" %d)))

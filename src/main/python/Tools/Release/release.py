@@ -385,7 +385,6 @@ def makeExe(opts):
     """
     Make a HostExe release from a clean checkout.
     """
-
     # get OS type so we can construct a filename for the JSON config file (e.g., g2000_win7.json)
     # and the log file
     # returns 'XP' (WinXP) or '7' (Win7)
@@ -399,13 +398,11 @@ def makeExe(opts):
         osType = 'unknown'
         print "Unexpected OS type!"
         sys.exit(1)
-
     # -------- validate some of the arguments --------
     # product argument is required
     if opts.product is None:
         LogErr("--product option is required!")
         sys.exit(1)
-
     # osType argument only allowed with --make-official (promote to release)
     if opts.osType is not None:
         if opts.makeOfficial is False:
@@ -418,14 +415,12 @@ def makeExe(opts):
         else:
             LogErr("Invalid --ostype argument, must be win7 or winxp!")
             sys.exit(1)
-
     if opts.archiveOnly is True:
         if opts.makeOfficial is False:
             LogErr("--archive must be used with --make-official!")
             sys.exit(1)
 
     archiveOnly = opts.archiveOnly
-
     # --dry-run has been replaced with --debug-local
     # (maybe change --debug-local to --dry-run? main difference is that
     # output folder paths are more closely replicated by --debug-local
@@ -437,7 +432,6 @@ def makeExe(opts):
     if opts.local and opts.dryRun:
         LogErr("--local and --dry-run options cannot be used together!")
         sys.exit(1)
-
     # Note: opts.cloneAllRepos was set to False if skipping either host or config clones
     if not opts.cloneAllRepos and not opts.local:
         print ""
@@ -461,11 +455,9 @@ def makeExe(opts):
     cloneAllRepos = opts.cloneAllRepos
     cloneConfigRepo = opts.cloneConfigRepo
     cloneHostRepo = opts.cloneHostRepo
-
     if not opts.buildExes and not opts.local:
         LogErr("--debug-skip-exe is allowed only with --local option!")
         sys.exit(1)
-
     # get the branch for this script that is executing
     branchScriptCur = getGitBranch(os.getcwd())
 
@@ -488,8 +480,6 @@ def makeExe(opts):
             # User typed something other than y or Y, bail
             if inStr != 'y':
                 sys.exit(1)
-
-
     # productFamily incorporates the product and OS type ('g2000_win7' for example)
     productFamily = "%s_%s" % (opts.product, osType)
 
@@ -502,9 +492,8 @@ def makeExe(opts):
         logfile = opts.logfile
     else:
         logfile = "%s_log_%s" % (productFamily, time.strftime("%Y%m%d_%H%M%S.log", startTime))
-
+    
     # -------- validate JSON files --------
-
     productConfigs = "%s_%s.json" % (opts.product, osType)
     versionConfig = "%s_version.json" % opts.product
 
@@ -515,7 +504,6 @@ def makeExe(opts):
     if not os.path.isfile(versionConfig):
         LogErr("%s is missing!" % versionConfig)
         sys.exit(1)
-
     configInfo = {}
 
     with open(productConfigs, 'r') as prods:

@@ -4,8 +4,10 @@ import glob
 import py2exe
 import os
 import platform
+import subprocess
 import sys
 import time
+from Common import OS
 
 def _getOsType():
     osType = platform.uname()[2]
@@ -78,7 +80,27 @@ def _getBuildType():
 
     return buildTypeStr
 
+def _runBatFile(batComponent, batFilename, batDir):
+    """
+    Runs a Windows .bat file to build a component. Arguments:
+      batComponent   name of component being built (e.g., fitutils.pyd)
+      batFilename    Windows .bat filename to execute
+      batDir         folder containing the .bat file (can be relative to current dir)
+    """
+    print "building %s using %s" % (batComponent, batFilename)
 
+    # this saves off current folder and restores it when done
+    with OS.chdir(batDir):
+        if not os.path.isfile(batFilename):
+            print "Batch file '%s' does not exist in folder '%s'!" % (batFilename, batDir)
+            sys.exit(1)
+
+        retCode = subprocess.Popen([batFilename]).wait()
+
+        if retCode != 0:
+            print "Error building %s, retCode=%d, batFilename=%s" % (batComponent, retCode, batFilename)
+            sys.exit(retCode)
+    
 class Target:
     def __init__(self, **kw):
         self.__dict__.update(kw)
@@ -119,6 +141,33 @@ if __name__ == "__main__":
     
     sys.path.insert(1,firmwareDir)
     sys.path.insert(1,parentDir)
+
+    # Build the various Host .pyd modules
+    #
+    # Fitter: build cluster_analyzer.pyd and fitutils.pyd
+    if pythonVer == "2.5":
+        fitutilsBatFilename = "makeFitutils25.bat"
+    elif pythonVer == "2.7":
+        fitutilsBatFilename = "makeFitutils27.bat"
+    else:
+        print "Unsupported Python version %s!" % pythonVer
+        sys.exit(1)
+
+    _runBatFile("fitutils.pyd, cluster_analyzer.pyd", fitutilsBatFilename, "Fitter")
+
+    # Common: swathP.pyd
+    if pythonVer == "2.5":
+        swathPBatFilename = "makeSwathP25.bat"
+    elif pythonVer == "2.7":
+        swathPBatFilename = "makeSwathP27.bat"
+    else:
+        print "Unsupported Python version %s!" % pythonVer
+        sys.exit(1)
+
+    _runBatFile("swathP.pyd", swathPBatFilename, "Common")
+
+    # Utilities\SuperBuildStation: fastLomb.pyd
+    _runBatFile("fastLomb.pyd", "setup.bat", os.path.join("Utilities", "SuperBuildStation"))
     
     cDep = ""
 
@@ -246,27 +295,27 @@ if __name__ == "__main__":
         "Utilities/RestartSupervisor/RestartSupervisor.py",
         "Utilities/ProgramVariableGainRdd/programRdd.py",
         'Utilities/KillRestartSupervisor/KillRestartSupervisor.py',
-        "../Firmware/Utilities/CalibrateSystem.py",
-        "../Firmware/Utilities/CalibrateFsr.py",
-        "../Firmware/Utilities/AdjustWlmOffset.py",
-        "../Firmware/Utilities/ExamineRawRD.py",
-        "../Firmware/Utilities/ExamineRDCount.py",
-        "../Firmware/Utilities/LaserLockPrbs.py",
-        "../Firmware/Utilities/LaserPidPrbs.py",
-        "../Firmware/Utilities/MakeWarmBoxCalFile.py",
-        "../Firmware/Utilities/MakeWarmBoxCal_NoWlm.py",
-        "../Firmware/Utilities/MakeWlmFile1.py",
-        "../Firmware/Utilities/WriteLaserEeprom.py",
-        "../Firmware/Utilities/MakeNoWlmFile.py",
-        "../Firmware/Utilities/WriteWlmEeprom.py",
-        "../Firmware/Utilities/DumpEeproms.py",
-        "../Firmware/Utilities/MakeCalFromEeproms.py",
-        "../Firmware/Utilities/FindWlmOffset.py",
-        "../Firmware/Utilities/SaveData.py",
-        "../Firmware/Utilities/SaveRaw.py",
-        "../Firmware/Utilities/TestClient.py",
-        "../Firmware/Utilities/ThresholdStats.py",
-        "../Firmware/Utilities/CheckLaserCal.py",
+        "MfgUtilities/CalibrateSystem.py",
+        "MfgUtilities/CalibrateFsr.py",
+        "MfgUtilities/AdjustWlmOffset.py",
+        "MfgUtilities/ExamineRawRD.py",
+        "MfgUtilities/ExamineRDCount.py",
+        "MfgUtilities/LaserLockPrbs.py",
+        "MfgUtilities/LaserPidPrbs.py",
+        "MfgUtilities/MakeWarmBoxCalFile.py",
+        "MfgUtilities/MakeWarmBoxCal_NoWlm.py",
+        "MfgUtilities/MakeWlmFile1.py",
+        "MfgUtilities/WriteLaserEeprom.py",
+        "MfgUtilities/MakeNoWlmFile.py",
+        "MfgUtilities/WriteWlmEeprom.py",
+        "MfgUtilities/DumpEeproms.py",
+        "MfgUtilities/MakeCalFromEeproms.py",
+        "MfgUtilities/FindWlmOffset.py",
+        "MfgUtilities/SaveData.py",
+        "MfgUtilities/SaveRaw.py",
+        "MfgUtilities/TestClient.py",
+        "MfgUtilities/ThresholdStats.py",
+        "MfgUtilities/CheckLaserCal.py",
         "ConfigMonitor/ConfigMonitor.py",
         "PeriphIntrf/RunSerial2Socket.py",
         'LockWorkstation/LockWorkstation.py'
