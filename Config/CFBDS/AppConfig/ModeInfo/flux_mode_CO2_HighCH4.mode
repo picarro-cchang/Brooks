@@ -1,0 +1,88 @@
+[INSTRUMENT_MODE]
+Tuning = CavityLength
+
+[SCHEME_CONFIG]
+# Define what schemes should be loaded and sequenced and in what order
+#   - Never worry about what DAS table index is used - this is automatically taken
+#     care of (primarily for the background load/alternate scheme index stuff)
+
+SchemeCount = 2
+Scheme_1_Path = ../../InstrConfig/Schemes/Beta_CO2_HighCH4_nocal_new.sch
+Scheme_2_Path = ../../InstrConfig/Schemes/Beta_CO2_HighCH4_new.sch
+#Scheme_1_Path = ../../InstrConfig/Schemes/6057.0902_fixed.sch
+#Scheme_1_Path = ../../InstrConfig/Schemes/Beta_CH4_20Hrz.sch
+
+[SPECTRUM_IDS]
+#Specify logical names for referencing each SubSchemeID...
+#SHOULD USUALLY BE IN _BaseDefinitions.ini - JUST HERE FOR REFERENCE
+
+############################################################################
+###
+# "Standard" Spectrum Processing and Analysis Instructions...
+############################################################################
+[CO2]
+Analyzer= ../Scripts/DataManager/raw_analyze_flux.py
+
+[CH4]
+Analyzer= ../Scripts/DataManager/raw_analyze_flux.py
+
+[H2O_A]
+Analyzer= ../Scripts/DataManager/raw_analyze_flux.py
+
+[H2O_B]
+Analyzer= ../Scripts/DataManager/raw_analyze_flux.py
+
+[+CORR_FLUX]
+Analyzer = ../Scripts/DataManager/analyze_flux.py
+
+############################################################################
+###
+# Analysis Instructions for DataManager Generated Data
+# - DataManager can feed itself with data (either synchronously or asynchrounously)
+# - All forwarded data labels automatically get a + prefix for clarity
+# - Specifying a processor here makes no sense.
+# - even if there is to be no analyzer, the label should be here
+#   - either with no options, or with "Analyzer = None"
+###
+############################################################################
+#[+Async_H2S]
+#No analyzer - just accumulating forwarded results in the data history for
+#the periodic analyzer
+#Analyzer = None
+
+############################################################################
+###
+# Synchronous Script Definitions
+#  - These are read and executed by the Data Manager
+###
+############################################################################
+[SYNC_SETUP]
+#Define synchronous executions to be run by the DataManager in this mode
+# - Note that these are in addition to any in _BaseDefinition.ini
+NumSyncAnalyzers = 4
+
+Sync_1_Period_s = 60
+Sync_1_ReportName = WLMCal
+Sync_1_Script = ../Scripts/DataManager/update_cal.py
+Sync_1_ScriptArgs = CO2_CH4
+
+Sync_2_Period_s = 1
+Sync_2_ReportName = SlowDisplay
+Sync_2_Script = ../Scripts/DataManager/slow_display.py
+Sync_2_ScriptArgs = CO2_CH4
+
+Sync_3_Period_s = 1
+Sync_3_ReportName = DataRate
+Sync_3_Script = ../Scripts/DataManager/calDataRate.py
+Sync_3_ScriptArgs = CO2_CH4
+
+#Try a generic synchronizer...
+Sync_4_Period_s = 0.1
+Sync_4_ReportName = FluxSync
+Sync_4_Script = ../Scripts/DataManager/resyncOnly.py
+Sync_4_ScriptArgs = CO2_CH4
+
+#Sync_5_Period_s = 10
+#Sync_5_ReportName = NoiseReduction
+#Sync_5_Script = ../Scripts/DataManager/noiseReduction.py
+#Sync_5_ScriptArgs = CO2_CH4
