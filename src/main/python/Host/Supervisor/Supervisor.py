@@ -144,6 +144,10 @@ if sys.platform == "linux2":
 # Protected applications (not shut down on normal termination)
 PROTECTED_APPS = ["Driver"]
 
+# Only the below apps are allowed to run in the virtual mode
+APPS_IN_VIRTUAL_MODE = ("EventManager", "Archiver", "DataManager", "InstMgr", "rdReprocessor", "QuickGui", "DataLogger", \
+                        "BackupSupervisor", "RDFreqConverter", "Fitter", "Fitter1", "Fitter2", "Fitter3")
+
 #set up the main logger connection...
 CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\
     uri = "http://localhost:%d" % RPC_PORT_LOGGER,\
@@ -262,7 +266,7 @@ if sys.platform == "win32":
         Log("Launching application", appName, 1)
         ##Used to do this with spawnv, but doing this causes the spawned apps to
         ##share the console with Supervisor.  This is normally ok, but if the
-        ##Supervisor is shut down, teh console disappears.  Then if any spawned app
+        ##Supervisor is shut down, the console disappears.  Then if any spawned app
         ##tries to use the console (eg: a print statement) the app process dies.
         #self._ProcessHandle = spawnv(P_NOWWAIT, exeName, exeArgs)
         #self._ProcessId = windll.kernel32.GetProcessId(self._ProcessHandle)
@@ -932,9 +936,15 @@ class WorkerThread(threading.Thread):
         if self._semaphore:
             self._semaphore.release()
 class Supervisor(object):
-    def __init__(self, FileName):
+    def __init__(self, FileName, viFileName = ""):
         if not os.path.exists(FileName):
-            raise "File " + FileName + " not found."
+            raise Exception("File '%s' not found" % FileName)
+        if len(viFileName) > 0: # viFileName contains information for rdReprocessor
+            self.virtualMode = True
+            if not os.path.exists(viFileName):
+                raise Exception("File '%s' not found" % viFileName)
+        else:
+            self.virtualMode = False
         self.FileName = FileName
         co = CustomConfigObj(FileName)
         self.RPCServer = None
@@ -977,6 +987,9 @@ class Supervisor(object):
         #Cruise through the application names (and port shortcut values)...
         for appInfo in co[_MAIN_SECTION].items():
             appName = appInfo[0]
+            if self.virtualMode:
+                if appName not in APPS_IN_VIRTUAL_MODE:
+                    continue
             appPort = appInfo[1].strip()
             self.AppNameList.append(appName)
             #generate the defaults for the app...
@@ -992,6 +1005,17 @@ class Supervisor(object):
             #see if there are overrides to the default options...
             A.ReadAppOptions(co)
 
+        #Append rdReprocessor for virtual mode, just before the first Fitter
+        if self.virtualMode and "rdReprocessor" not in self.AppNameList:
+            firstFitter = next(a for a in self.AppNameList if a.startswith("Fitter"))
+            firstFitterIndex = self.AppNameList.index(firstFitter)
+            self.AppNameList.insert(firstFitterIndex, "rdReprocessor")
+            self.AppDict["rdReprocessor"] = App("rdReprocessor", self, defaultSettings)
+            assert isinstance(self.AppDict["rdReprocessor"], App)
+            #Read options for rdReprocessor if in virtual mode
+            co_vi = CustomConfigObj(viFileName)
+            self.AppDict["rdReprocessor"].ReadAppOptions(co_vi)
+
         #Now check the options...
         for appName in self.AppNameList:
             A = self.AppDict[appName]
@@ -1000,10 +1024,15 @@ class Supervisor(object):
             if not os.path.exists(A.Executable):
                 raise AppErr("File '%s' does not exist for AppName '%s'." % (A.Executable, appName))
 
+            #Launch apps in virtual mode
+            if self.virtualMode and appName in ["InstMgr", "RDFreqConverter"]:
+                A.LaunchArgs += " --vi"
+
             #check the dependency list...
-            for a in [s.strip() for s in A.Dependencies.split("|") if not s == '']:
-                if not a in self.AppNameList:
-                    raise AppErr("Unrecognized dependency listed for application (D = '%s' for A = '%s')." % (a, appName))
+            if not self.virtualMode:
+                for a in [s.strip() for s in A.Dependencies.split("|") if not s == '']:
+                    if not a in self.AppNameList:
+                        raise AppErr("Unrecognized dependency listed for application (D = '%s' for A = '%s')." % (a, appName))
 
             if A.Mode in [0,1,3]:
                 self.AppMonitorCount += 1
@@ -1129,7 +1158,7 @@ class Supervisor(object):
                         raise
 
                 if not appStarted:
-                    failedAppDependents = failedAppDependents + self.GetDependents(appName)
+                    if not self.virtualMode: failedAppDependents = failedAppDependents + self.GetDependents(appName)
                     Log("FATAL - Unable to successfully launch application",
                         "App = %s, NumAttempts = %s" % (appName, MAX_LAUNCH_COUNT))
                     # errMsg = "FATAL ERROR - Launching the '%s' application failed after %s attempts." % (appName, MAX_LAUNCH_COUNT)
@@ -1562,6 +1591,7 @@ def PrintUsage():
           --nl        No Launch. Suppress all apps from being launched (suppresses step 3)
           --nm        No Monitoring. Don't enter the monitoring loop (suppresses step 4)
           --inilog    Create a log of the INI Coordinator verification results
+          --vi        Trigger virtual mode and specify an ini file. Usage is --vi <FILENAME>
           -o         Add command-line args to a particular app.  Use quotes if using spaces.
           eg:  -oDriver:"--nokeepalive --otherarg"
 
@@ -1572,7 +1602,7 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     shortOpts = 'hc:ifkt:o:'
-    longOpts = ["ke", "nl", "nm", "backup", "inilog" ]
+    longOpts = ["ke", "nl", "nm", "backup", "inilog", "vi="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -1614,6 +1644,7 @@ def HandleCommandSwitches():
     listMode = False
     freshStartMode = False
     killOnlyMode = False
+    viConfigFile = ""
 
     macroModeSetCount = 0
     flagCount = 0
@@ -1665,6 +1696,9 @@ def HandleCommandSwitches():
     if flagCount > 0 and macroModeSetCount > 0:
         print "\nOPTION ERROR: You cannot set macro modes and flags at the same time."
         sys.exit()
+    if "--vi" in options:
+        viConfigFile = options["--vi"]
+        print "'Virtual Mode' macro mode requested on commandline."
 
     #if here, the options make sense...
     if listMode:
@@ -1679,14 +1713,14 @@ def HandleCommandSwitches():
         killExisting = True
         suppressLaunch = True
         suppressMonitoring = True
-    return (configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs)
+    return (configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs, viConfigFile)
 
 def GetConfigFileAndIniLog():
     # default configFile
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
     # Get configFile from command line
     shortOpts = 'hc:ifkt:o:'
-    longOpts = ["ke", "nl", "nm", "backup", "inilog" ]
+    longOpts = ["ke", "nl", "nm", "backup", "inilog", "vi="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -1705,7 +1739,7 @@ def main():
     try:
         performDuties = False
         #Get and handle the command line options...
-        configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs = HandleCommandSwitches()
+        configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs, viConfigFile = HandleCommandSwitches()
 
         if backupMode:
             try:
@@ -1725,7 +1759,7 @@ def main():
             if supervisorApp.alreadyrunning():
                 sys.exit(0)
             try:
-                supe = Supervisor(FileName = configFile) #loads all the app info
+                supe = Supervisor(FileName = configFile, viFileName = viConfigFile) #loads all the app info
                 supe.AddExtraArgs(extraAppArgs)
                 supe.LaunchMasterRPCServer() # in separate thread, only supports TerminateApplications RPC
                 supe.Execute(KillExistingApps = killExisting,

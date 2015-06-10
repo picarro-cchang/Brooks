@@ -213,15 +213,17 @@ class SpectrumMaker(Singleton):
         #  since different spectra may be involved
         for id in unique(spectrumId):
             rows = spectrumId == id
+            if id not in self.spectrumNamesById: continue
             for spectrum in [spectra[name] for name in self.spectrumNamesById[id]]:
                 tot[rows] += spectrum.model(nu[rows])
 
-        rdfDict = {"rdData": dict(waveNumber=[], waveNumberSetpoint=[], uncorrectedAbsorbance=[],
+        rdfDict = {"rdData": dict(waveNumber=[], waveNumberSetpoint=[], uncorrectedAbsorbance=[],correctedAbsorbance=[],
                                        subschemeId=[], timestamp=[], tunerValue=[], pztValue=[],
-                                       cavityPressure=[]),
+                                       cavityPressure=[], fineLaserCurrent=[], laserUsed=[], laserTemperature=[],
+                                       extra1=[], extra2=[], extra3=[], extra4=[], ratio1=[], ratio2=[], wlmAngle=[]),
                         "sensorData": dict(timestamp=[], SpectrumID=[], CavityPressure=[], CavityTemp=[],
-                                           ValveMask=[], DasTemp=[], EtalonTemp=[],
-                                           InletValve=[], OutletValve=[]),
+                                           ValveMask=[], DasTemp=[], EtalonTemp=[], WarmBoxTemp=[],
+                                           InletValve=[], OutletValve=[], MPVPosition=[]),
                         "tagalongData":{},
                         "controlData": dict(RDDataSize=[],SpectrumQueueSize=[])}
 
@@ -235,12 +237,23 @@ class SpectrumMaker(Singleton):
                 rdData["waveNumber"].append(nu[i])
                 rdData["waveNumberSetpoint"].append(nu[i])
                 rdData["uncorrectedAbsorbance"].append(0.001*tot[i])
+                rdData["correctedAbsorbance"].append(0.001*tot[i])
                 rdData["subschemeId"].append(s.subschemeId[i])
                 rdData["timestamp"].append(self.startTime)
                 self.startTime += 5
                 rdData["tunerValue"].append(32768.0)
                 rdData["pztValue"].append(32768.0)
                 rdData["cavityPressure"].append(self.currentEnv.get("pressure",140.0))
+                rdData["fineLaserCurrent"].append(36000)
+                rdData["laserUsed"].append(0)
+                rdData["extra1"].append(0L)
+                rdData["extra2"].append(0L)
+                rdData["extra3"].append(0L)
+                rdData["extra4"].append(0L)
+                rdData["ratio1"].append(2000)
+                rdData["ratio2"].append(20000)
+                rdData["wlmAngle"].append(2)
+                rdData["laserTemperature"].append(22)
                 rowsInSpectrum += 1
             if s.subschemeId[i] & INCR_FLAG_MASK:
                 controlData["RDDataSize"].append(rowsInSpectrum)
@@ -252,14 +265,18 @@ class SpectrumMaker(Singleton):
                 sensorData["ValveMask"].append(1)
                 sensorData["DasTemp"].append(40.0)
                 sensorData["EtalonTemp"].append(45.0)
+                sensorData["WarmBoxTemp"].append(45.0)
                 sensorData["InletValve"].append(32768)
                 sensorData["OutletValve"].append(32768)
+                sensorData["MPVPosition"].append(0)
                 rowsInSpectrum = 0
         return rdfDict
 
-    def makeRDF(self,rdfDict):
+    def makeRDF(self,rdfDict, destination):
         SpectrumMaker.rdfIndex += 1
         filename = "RD_%013d.h5" % SpectrumMaker.rdfIndex
+        if len(destination) > 0:
+            filename = os.path.join(destination, filename)
         h5 = openFile(filename,"w")
         for dataKey in rdfDict.keys():
             subDataDict = rdfDict[dataKey]
@@ -277,13 +294,13 @@ class SpectrumMaker(Singleton):
                 h5.createTable("/", dataKey, dataRec, dataKey, filters=Filters(complevel=1,fletcher32=True))
         h5.close()
 
-    def run(self):
+    def run(self, destination = ""):
         for spectra in self.genSpectra():
-            figure()
+            #figure()
             for s in self.schemes:
                 rdfDict = self.collectSpectrum(spectra,s)
-                self.makeRDF(rdfDict)
-                plot(rdfDict["rdData"]["waveNumber"],rdfDict["rdData"]["uncorrectedAbsorbance"],'.')
+                self.makeRDF(rdfDict, destination)
+                #plot(rdfDict["rdData"]["waveNumber"],rdfDict["rdData"]["uncorrectedAbsorbance"],'.')
 
         #nu = linspace(6237.0,6238.0,1000)
         #nu = linspace(6056.0,6058.0,1000)
@@ -308,13 +325,14 @@ settings in the configuration file:
 
 -h, --help           print this help
 -c                   specify a config file:  default = "./SpectrumMaker.ini"
+-d                   specify the destination folder for output
 """
 
 def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:'
+    shortOpts = 'hc:d:'
     longOpts = ["help"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -334,11 +352,13 @@ def handleCommandSwitches():
         sys.exit()
     if "-c" in options:
         configFile = options["-c"]
-    return configFile, options
+    if "-d" in options:
+        destination = options["-d"]
+    return configFile, destination, options
 
 if __name__ == "__main__":
-    configFile, options = handleCommandSwitches()
+    configFile, destination, options = handleCommandSwitches()
     spectrumMakerApp = SpectrumMaker(configFile,{})
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    spectrumMakerApp.run()
+    spectrumMakerApp.run(destination)
     Log("Exiting program")

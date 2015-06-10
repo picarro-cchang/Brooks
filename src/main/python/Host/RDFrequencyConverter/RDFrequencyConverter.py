@@ -419,9 +419,10 @@ def validateChecksum(fname):
 
 class RDFrequencyConverter(Singleton):
     initialized = False
-    def __init__(self, configPath=None):
+    def __init__(self, configPath=None, virtualMode=False):
         if not self.initialized:
             self.tunerCenter = None
+            self.virtualMode = virtualMode
 
             if configPath != None:
                 # Read from .ini file
@@ -458,7 +459,8 @@ class RDFrequencyConverter(Singleton):
             self._shutdownRequested = False
             self.freqConvertersLoaded = False
             # Ensure no ringdowns are being collected when the RDFrequencyConverter starts up
-            Driver.stopScan()
+            if not virtualMode:
+                Driver.stopScan()
             self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FREQ_CONVERTER),
                                                     ServerName = "FrequencyConverter",
                                                     ServerDescription = "Frequency Converter for CRDS hardware",
@@ -543,6 +545,9 @@ class RDFrequencyConverter(Singleton):
         self.rpcThread.start()
         startTime = time.time()
         timeout = 0.5
+
+        while self.virtualMode:
+            time.sleep(1.0)
 
         self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
         while not self._shutdownRequested:
@@ -823,7 +828,8 @@ class RDFrequencyConverter(Singleton):
         #  Checksums are ignored and the specified file is used unconditionally. Any errors in the
         #   file or the non-existence of the file will cause an exception. The active file name is
 
-        self.warmBoxCalUpdateTime = Driver.hostGetTicks()
+        if not self.virtualMode:
+            self.warmBoxCalUpdateTime = Driver.hostGetTicks()
         if warmBoxCalFilePath == "":
             if os.path.isfile(self.warmBoxCalFilePathActive):
                 try:
@@ -867,7 +873,8 @@ class RDFrequencyConverter(Singleton):
                     laserParams['pressureC1'] = 0.0
                     laserParams['pressureC2'] = 0.0
                     laserParams['pressureC3'] = 0.0
-                Driver.wrVirtualLaserParams(vLaserNum, laserParams)
+                if not self.virtualMode:
+                    Driver.wrVirtualLaserParams(vLaserNum, laserParams)
         # Start the ringdown listener only once there are frequency converters available to do the conversion
         if not self.freqConvertersLoaded:
             self.rdListener = Listener.Listener(self.rdQueue,
@@ -1147,7 +1154,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
-    longOpts = ["help"]
+    longOpts = ["help", "vi"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, exc:
@@ -1166,11 +1173,15 @@ def handleCommandSwitches():
         sys.exit()
     if "-c" in opts:
         configFile = opts["-c"]
-    return configFile, opts
+    if "--vi" in opts:
+        virtualMode = True
+    else:
+        virtualMode = False
+    return configFile, virtualMode, opts
 
 if __name__ == "__main__":
-    configFilename, options = handleCommandSwitches()
-    rdFreqConvertApp = RDFrequencyConverter(configFilename)
+    configFilename, virtualMode, options = handleCommandSwitches()
+    rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
     Log("%s started." % APP_NAME, dict(ConfigFile = configFilename), Level = 0)
     rdFreqConvertApp.run()
     Log("Exiting program")

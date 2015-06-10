@@ -1092,6 +1092,24 @@ class InstMgr(object):
         # start DAS monitor. It monitors for errors and lock status changes
         self._Monitor()
 
+    def INSTMGR_Start_virtualMode(self):
+        self._SendDisplayMessage("Starting")
+        self._LoadConfigFile(self.configPath)
+        # settings for DataManager
+        self.DataMgrRpc.Mode_Set(self.Config.measMode)
+        self.DataMgrRpc.Enable()
+        # settings for RDFreqConverter
+        self.FreqConvRpc.loadWarmBoxCal()
+
+        #start the rpc server on another thread...
+        self.RpcThread = RpcServerThread(self.RpcServer, self._RpcServerExit)
+        self.RpcThread.start()
+
+        self.MonitorShutdown = False
+
+        while True and self.MonitorShutdown == False:
+            time.sleep(5)
+
     def _GetInstrumentMode(self):
         return self.InstrumentMode
 
@@ -1332,6 +1350,7 @@ Where the options can be a combination of the following:
 -h                  Print this help.
 -c                  Specify a different config file.  Default = "./InstMgr.ini"
 --no_sample_mgr     Run this application without Sample Manager.
+--vi                Enter virtual mode that runs without analyser
 
 """
 
@@ -1339,7 +1358,7 @@ def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
     shortOpts = 'hc:'
-    longOpts = ["no_sample_mgr", "help"]
+    longOpts = ["no_sample_mgr", "help", "vi"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1367,14 +1386,22 @@ def HandleCommandSwitches():
     else:
         noSampleMgr = False
 
-    return (configFile, noSampleMgr)
+    if "--vi" in options:
+        virtualMode = True
+    else:
+        virtualMode = False
+
+    return (configFile, noSampleMgr, virtualMode)
 def main():
     #Get and handle the command line options...
-    configFile, noSampleMgr = HandleCommandSwitches()
+    configFile, noSampleMgr, virtualMode = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile, NoSampleMgr = noSampleMgr), Level = 0)
     try:
         app = InstMgr(configFile, noSampleMgr)
-        app.INSTMGR_Start()
+        if virtualMode:
+            app.INSTMGR_Start_virtualMode()
+        else:
+            app.INSTMGR_Start()
     except Exception, E:
         if __debug__: raise
         msg = "Exception trapped outside execution"
