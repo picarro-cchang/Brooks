@@ -52,4 +52,8 @@ f_12CO2_CFADS = 153
 
 [SYNC_SETUP]
 #Define synchronous executions to be run, regardless of mode.
-NumSyncAnalyzers = 0
+NumSyncAnalyzers = 1
+
+Sync_1_Period_s = 5
+Sync_1_ReportName = Sensors
+Sync_1_Script = ../Scripts/DataManager/analyze_warming.py

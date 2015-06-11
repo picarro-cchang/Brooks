@@ -6,9 +6,9 @@ max_adjust = 1e-5
 try:
     adjust = _OLD_DATA_["freq_offset"][-1].value
     adjust = min(max_adjust,max(-max_adjust,adjust))
-    newOffset0 = _FREQ_CONV_.getWlmOffset(1) + adjust
+    newOffset0 = _FREQ_CONV_.getWlmOffset(7) + adjust
     _NEW_DATA_["wlm1_offset"] = newOffset0
-    _FREQ_CONV_.setWlmOffset(1,float(newOffset0))
+    _FREQ_CONV_.setWlmOffset(7,float(newOffset0))
 except:
     pass
 
