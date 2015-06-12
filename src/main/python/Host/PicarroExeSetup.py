@@ -38,62 +38,6 @@ from Host.Common import version as hostVersion
 version = sys.version_info
 pyDirname = "Python%d%d" % (version[0],version[1])
 
-# sys.path.append("ActiveFileManager")
-# sys.path.append("Coordinator")
-# sys.path.append("ValveSequencer")
-# sys.path.append("AlarmSystem")
-# sys.path.append("RDFrequencyConverter")
-# sys.path.append("SpectrumCollector")
-# sys.path.append("CommandInterface")
-# sys.path.append("Common")
-# sys.path.append("autogen")
-# sys.path.append("Controller")
-# # sys.path.append("ControllerBuildStation")
-# sys.path.append("DataLogger")
-# sys.path.append("DataManager")
-# sys.path.append("Driver")
-# sys.path.append("ElectricalInterface")
-# sys.path.append("EventManager")
-# sys.path.append("Fitter")
-# sys.path.append("InstMgr")
-# sys.path.append("Archiver")
-# sys.path.append("FileEraser")
-# sys.path.append("MeasSystem")
-# sys.path.append("QuickGui")
-# sys.path.append("SampleManager")
-# sys.path.append("Supervisor")
-# sys.path.append("ReadExtSensor")
-# sys.path.append("IPV")
-# sys.path.append("ConfigMonitor")
-# sys.path.append("PeriphIntrf")
-# sys.path.append("Utilities")
-# sys.path.append("WebServer")
-# sys.path.append("rdReprocessor")
-# sys.path.append("Utilities/RemoteAccess")
-# sys.path.append("Utilities/DiagDataCollector")
-# sys.path.append("Utilities/SupervisorLauncher")
-# sys.path.append("Utilities/CoordinatorLauncher")
-# sys.path.append("Utilities/FluxSwitcher")
-# sys.path.append("Utilities/ValveDisplay")
-# sys.path.append("Utilities/InstrEEPROMAccess")
-# sys.path.append("Utilities/DataRecal")
-# sys.path.append("Utilities/IntegrationTool")
-# sys.path.append("Utilities/SetupTool")
-# sys.path.append("Utilities/PicarroKML")
-# sys.path.append("Utilities/ReadGPSWS")
-# sys.path.append("Utilities/IntegrationBackup")
-# sys.path.append("Utilities/FlowController")
-# sys.path.append("Utilities/ReadMemUsage")
-# sys.path.append("Utilities/PeriphModeSwitcher")
-# sys.path.append("Utilities/RecipeEditor")
-# sys.path.append("Utilities/BackpackServer")
-# sys.path.append("Utilities/ConfigManager")
-# sys.path.append("Utilities/AircraftValveSwitcher")
-# sys.path.append("Utilities/ProgramVariableGainRdd")
-# sys.path.append("Utilities/RestartSupervisor")
-# sys.path.append('Utilities/KillRestartSupervisor')
-# sys.path.append("MfgUtilities")
-
 sys.stderr = sys.stdout
 
 def _getPythonVersion():
@@ -521,35 +465,6 @@ osType = _getOsType()
 versionStr = _getBuildVersion()
 buildTypeStr = _getBuildType()
 
-
-# Build the various Host .pyd modules
-#
-# Fitter: build cluster_analyzer.pyd and fitutils.pyd
-if pythonVer == "2.5":
-    fitutilsBatFilename = "makeFitutils25.bat"
-elif pythonVer == "2.7":
-    fitutilsBatFilename = "makeFitutils27.bat"
-else:
-    print "Unsupported Python version %s!" % pythonVer
-    sys.exit(1)
-
-_runBatFile("fitutils.pyd, cluster_analyzer.pyd", fitutilsBatFilename, "Fitter")
-
-# Common: swathP.pyd
-if pythonVer == "2.5":
-    swathPBatFilename = "makeSwathP25.bat"
-elif pythonVer == "2.7":
-    swathPBatFilename = "makeSwathP27.bat"
-else:
-    print "Unsupported Python version %s!" % pythonVer
-    sys.exit(1)
-
-_runBatFile("swathP.pyd", swathPBatFilename, "Common")
-
-# Utilities\SuperBuildStation: fastLomb.pyd
-_runBatFile("fastLomb.pyd", "setup.bat", os.path.join("Utilities", "SuperBuildStation"))
-
-
 # And now to the main setup routine...
 #
 # The following lists and tuples are common to both Python 2.5 and 2.7 builds. If any
@@ -654,6 +569,8 @@ consoleList = [
     "ReadExtSensor/ReadExtSensor.py",
     "WebServer/server.py",
     "rdReprocessor/rdReprocessor.py",
+    "SpectrumMaker/SpectrumMaker.py",
+    "SpectrumMaker/SupervisorAnalyzer.py",
     "Utilities/RemoteAccess/RemoteAccess.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
     "Utilities/IntegrationBackup/IntegrationBackup.py",
@@ -716,10 +633,6 @@ windowsList = [
     "Utilities/AircraftValveSwitcher/AircraftValveSwitcher.py",
 ]
 
-# Autogenerate required files
-with OS.chdir(os.path.join(os.path.dirname(__file__), '..', 'Firmware', 'xml')):
-    subprocess.Popen(['python.exe', 'xmldom1.py']).wait()
-
 # Generate git repo version file. Filename is a carryover from when we used
 # bzr to archive our sources, is an import lib used in Driver.py for version info.
 verFilePath = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'repoBzrVer.py'))
@@ -777,9 +690,8 @@ if pythonVer == "2.5":
 )
 
 elif pythonVer == "2.7":
-    if pythonSubVer == "2.7.3":
-        import zmq
-        os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
+    import zmq
+    os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
 
     packageList = ["werkzeug","jinja2","email"]
 

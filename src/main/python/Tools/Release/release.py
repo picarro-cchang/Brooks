@@ -521,11 +521,10 @@ def makeExe(opts):
 
     # CONFIGS is a dict containing analyzer types and species
     # CONFIG_REPOS is a dict containing analyzer types and repo for configs (either
-    #   "bzr" or "git", default is "bzr")
+    #   "bzr" or "git", default is "git")
     # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
     # if --types option was used, buildInfo will include only the wanted build types
     buildTypesSpecific = False     # default to all build types from JSON file
-
     if opts.buildTypes is not None:
         # only building specific types
         buildTypesSpecific = True
@@ -556,7 +555,7 @@ def makeExe(opts):
                 itemDict = buildInfo[item]
                 CONFIGS[item] = itemDict["species"]
                 INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-                CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
+                CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
 
     else:
         # building all types
@@ -564,12 +563,11 @@ def makeExe(opts):
             itemDict = buildInfo[item]
             CONFIGS[item] = itemDict["species"]
             INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-            CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
+            CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
 
     #print "CONFIGS=", CONFIGS
     #print ""
     #print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
-
     # determine config repos needed
     bzrConfigsNeeded = False
     gitConfigsNeeded = False
@@ -579,9 +577,7 @@ def makeExe(opts):
             bzrConfigsNeeded = True
         elif CONFIG_REPOS[c] == "git":
             gitConfigsNeeded = True
-
     # -------- prepare build options --------
-
     # version to be built
     changedVersion = True
 
@@ -636,7 +632,6 @@ def makeExe(opts):
         # append product to paths used for make-official option
         DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
         STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-
     # print summary of build info so user can review it
     _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
                   cloneAllRepos=cloneAllRepos,
@@ -654,7 +649,6 @@ def makeExe(opts):
         else:
             print "Build canceled"
             sys.exit(0)
-
     # -------- start of build --------
     #
     # init logging to stdout and stderr
@@ -669,7 +663,7 @@ def makeExe(opts):
                   cloneConfigRepo=cloneConfigRepo,
                   bzrConfigsNeeded=bzrConfigsNeeded,
                   cloneHostRepo=cloneHostRepo)
-
+                  
     # if bzr repos not needed, fix up clone repo settings
     if bzrConfigsNeeded is False:
         cloneAllRepos = False
@@ -678,6 +672,7 @@ def makeExe(opts):
     # set the quiet flag if option set
     logger.set_quiet(opts.debugQuiet)
 
+              
     # --local: modify base paths for testing on local C: drive
     #
     # we're no longer writing anything to the following R drive folders:

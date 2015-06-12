@@ -20,15 +20,12 @@ default_task = "publish"
 def set_properties(project):
     pass
 
-@after("package")
 def write_setup_script(project, logger):
     setup_script = project.expand_path("$dir_dist/Host/setup.py")
     logger.info("Writing setup.py as %s", setup_script)
     shutil.copyfile("testSetup.py", setup_script)
     os.chmod(setup_script, 0o755)
 
-
-@before("publish")
 def build_binary_distribution(project, logger):
     reports_dir = project.expand_path("$dir_reports/distutils")
     if not os.path.exists(reports_dir):
@@ -54,29 +51,40 @@ def build_binary_distribution(project, logger):
             raise BuildFailedException(
                 "Error while executing setup command %s, see %s for details" % (command, output_file_path))
     shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-                
+
+@before("publish")
+def run_py2exe(project, logger):
+    logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
+    reports_dir = project.expand_path("$dir_reports/run_py2exe")
+    if not os.path.exists(reports_dir):
+        os.mkdir(reports_dir)
+    output_file_path = os.path.join(reports_dir, "hostexe")
+    with open(output_file_path, "w") as output_file:
+        process = subprocess.Popen(["doit", "build_hostexe", "--build_dir", "%s" % project.expand_path("$dir_dist/Host")],
+                                   stdout=output_file,
+                                   stderr=output_file,
+                                   shell=False)
+        return_code = process.wait()
+        if return_code != 0:
+            raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
+
+    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
+    
+@task
+def compile_sources(project, logger):
+    reports_dir = project.expand_path("$dir_reports/compile_sources")
+    if not os.path.exists(reports_dir):
+        os.mkdir(reports_dir)
+    output_file_path = os.path.join(reports_dir, "compile_sources")
+    with open(output_file_path, "w") as output_file:
+        process = subprocess.Popen(["doit", "compile_sources"],
+                                   stdout=output_file,
+                                   stderr=output_file,
+                                   shell=False)
+        return_code = process.wait()
+        if return_code != 0:
+            raise BuildFailedException("Error while executing compile_sources")
+            
 @task
 def publish(project, logger):
     pass
-""" 
-['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_build_dependencies', '_files_to_install', '_install_dependencies', '_manifest_include', '_manifest_included_files', '_package_data', '_properties', 'author', 'authors', 'basedir', 'build_dependencies', 'build_depends_on', 'build_depends_on_requirements', 'default_task', 'dependencies', 'depends_on', 'depends_on_requirements', 'description', 'expand', 'expand_path', 'files_to_install', 'get_mandatory_property', 'get_property', 'has_property', 'home_page', 'include_file', 'install_file', 'license', 'list_modules', 'list_packages', 'list_scripts', 'manifest_included_files', 'name', 'package_data', 'properties', 'set_property', 'set_property_if_unset', 'summary', 'url', 'validate', 'validate_dependencies', 'version', 'write_report']
-{'dir_target': 'target', 
-u'unittest_module_glob': u'*_tests', 
-'verbose': False, 
-'dir_logs': '$dir_target/logs', 
-'dir_source_main_python': 'Host', 
-'dir_dist_scripts': 'scripts', 
-'basedir': 'C:\\GitHub\\host-reorg', 
-'install_dependencies_upgrade': False, 
-'dir_install_logs': '$dir_logs/install_dependencies', 
-'dir_dist': '$dir_target/dist/Host-1.0.dev0', 
-u'unittest_test_method_prefix': None, 
-'install_dependencies_index_url': None, 
-u'dir_source_unittest_python': 'unittest', 
-'install_dependencies_local_mapping': {}, 
-'dir_source_main_scripts': 'scripts', 
-'dir_reports': '$dir_target/reports', 
-'install_dependencies_extra_index_url': None, 
-u'unittest_file_suffix': None}
------------------------------------------------------
-"""
