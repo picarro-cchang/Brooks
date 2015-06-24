@@ -17,13 +17,35 @@ use_plugin("python.install_dependencies")
 
 default_task = "publish"
 
+def handle_types(types, build_info, logger=None):
+    types = types.strip()
+    negate = (types[0] == "!")
+    types_list = (types[1:] if negate else types).split(',') 
+    types_list = [item.strip() for item in types_list]
+
+    types_to_build = []
+    for item in sorted(build_info.keys()):
+        if negate:
+            if item not in types_list:
+                types_to_build.append(item)
+        else:
+            if item in types_list:
+                types_to_build.append(item)
+    if logger:
+        logger.info("Installer types to build: %s" % ", ".join(types_to_build))
+        
 @init
 def initialize(project, logger):
-    official = project.get_property("official", False)
+    # official removes "INTERNAL" from version number
+    official = project.get_property("official", "False")
+    official = official.lower() in ("yes", "true", "t", "1")
+    # product specifies which installer to produce, currently supported values are g2000
     product = project.get_property("product", "g2000")
+    # types is a comma separated list of installers to create or to exclude (if preceeded by !)
+    #  Default is to include all types
+    types = project.get_property("types", "!")
     
     version_file = os.path.join("versions","%s_version.json" % product)
-    
     with open(version_file,"r") as inp:
         ver = json.load(inp)
         project.name = product
@@ -31,6 +53,14 @@ def initialize(project, logger):
             (ver["major"], ver["minor"], ver["revision"], ver["build"], "" if official else "-INTERNAL" ))
     # Need to set the directory into which the output distribution is placed        
     project.set_property('dir_dist','$dir_target/dist/%s-%s' % (project.name, project.version))
+    
+    types_file = os.path.join("versions","%s_types.json" % product)
+    with open(types_file,"r") as inp:
+        config_info = json.load(inp)
+    handle_types(types, config_info["buildTypes"], logger)
+        
+        
+    
 
 @after("prepare")
 def setup_buildenv(project, logger):
