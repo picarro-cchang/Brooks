@@ -47,6 +47,7 @@ def _getOsType():
         sys.exit(1)
 
     return osType
+    
 def _generateBuildVersion(product, osType, ver):
     """
     Create a file ('build_version.py') containing the version metadata used 
@@ -167,7 +168,8 @@ Builds a local HostExe.
     osType = _getOsType()
     product = "%s-INTERNAL" % options.product
 
-    _generateBuildVersion(product, osType, VERSION)
+    if not os.path.exists('build_version.py'):
+        _generateBuildVersion(product, osType, VERSION)
 
     # build the executables
     buildExes()

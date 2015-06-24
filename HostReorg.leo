@@ -263,6 +263,7 @@
 <v t="sze.20150527175358.1" a="E"><vh>Versioning of Host, Firmware and Configurations</vh>
 <v t="stan@picarro-com.20150612091536.1"><vh>Current versioning method</vh></v>
 </v>
+<v t="sze.20150616212829.1"><vh>Versioning of AddOns</vh></v>
 <v t="sze.20150527185824.1" a="E"><vh>Build script</vh>
 <v t="stan@picarro-com.20150610192902.1" a="E"><vh>@clean build.py</vh>
 <v t="stan@picarro-com.20150610192913.1"><vh>build declarations</vh></v>
@@ -273,9 +274,39 @@
 <v t="stan@picarro-com.20150610192913.5"><vh>publish</vh></v>
 </v>
 <v t="stan@picarro-com.20150529220322.6"><vh>_getBuildVersion</vh></v>
-<v t="stan@picarro-com.20150609180605.1"><vh>Notes on release script</vh>
+<v t="stan@picarro-com.20150529220159.1" a="E"><vh>@clean src/main/python/Host/PicarroExeSetup.py</vh>
+<v t="stan@picarro-com.20150529220322.1"><vh>PicarroExeSetup declarations</vh></v>
+<v t="stan@picarro-com.20150529220322.2"><vh>_getPythonVersion</vh></v>
+<v t="stan@picarro-com.20150529220322.3"><vh>_getPythonSubVersion</vh></v>
+<v t="stan@picarro-com.20150529220322.4"><vh>_getOsType</vh></v>
+<v t="stan@picarro-com.20150529220322.5"><vh>_runBatFile</vh></v>
+<v t="stan@picarro-com.20150529220322.6"></v>
+<v t="stan@picarro-com.20150529220322.7"><vh>_getBuildType</vh></v>
+<v t="stan@picarro-com.20150529220322.8"><vh>runCommand</vh></v>
+<v t="stan@picarro-com.20150529220322.9"><vh>_getGitBranch</vh></v>
+<v t="stan@picarro-com.20150529220322.10"><vh>_getTimeIso8601Str</vh></v>
+<v t="stan@picarro-com.20150529220322.11"><vh>_getTimeStr</vh></v>
+<v t="stan@picarro-com.20150529220322.12"><vh>_createGitVersionPythonFile</vh></v>
+<v t="stan@picarro-com.20150529220322.13" a="E"><vh>class Target</vh>
+<v t="stan@picarro-com.20150529220322.14"><vh>__init__</vh></v>
+</v>
+</v>
+<v t="stan@picarro-com.20150609110503.1" a="E"><vh>@clean src/main/python/Host/buildHost.py</vh>
+<v t="stan@picarro-com.20150609110523.1"><vh>buildHost declarations</vh></v>
+<v t="stan@picarro-com.20150609110523.2"><vh>_getOsType</vh></v>
+<v t="stan@picarro-com.20150609110523.3"><vh>_generateBuildVersion</vh></v>
+<v t="stan@picarro-com.20150609110523.5"><vh>_verAsNumString</vh></v>
+<v t="stan@picarro-com.20150609110523.4"><vh>_verAsString</vh></v>
+<v t="stan@picarro-com.20150609110523.6"><vh>buildExes</vh></v>
+<v t="stan@picarro-com.20150609110523.7"><vh>main</vh></v>
+</v>
+<v t="stan@picarro-com.20150529220127.1"><vh>Original setup.py</vh>
+<v t="stan@picarro-com.20150529220127.2"><vh>setup declarations</vh></v>
+</v>
+</v>
+<v t="stan@picarro-com.20150609180605.1" a="E"><vh>The release script (release.py)</vh>
 <v t="stan@picarro-com.20150609175614.30"><vh>_buildExes</vh></v>
-<v t="stan@picarro-com.20150609175614.25" a="E"><vh>makeExe</vh>
+<v t="stan@picarro-com.20150609175614.25"><vh>makeExe</vh>
 <v t="stan@picarro-com.20150609181355.1"><vh>&lt;&lt;get osType&gt;&gt;</vh></v>
 <v t="stan@picarro-com.20150609181559.1"><vh>&lt;&lt;validate opts.product&gt;&gt;</vh></v>
 <v t="stan@picarro-com.20150609181647.1"><vh>&lt;&lt;validate opts.osType (only valid with --make-official)&gt;&gt;</vh></v>
@@ -310,32 +341,6 @@
 <v t="stan@picarro-com.20150609175614.39"><vh>_verAsNumString</vh></v>
 <v t="stan@picarro-com.20150609175614.40"><vh>_verAsUINumString</vh></v>
 </v>
-<v t="stan@picarro-com.20150529220159.1"><vh>@clean src/main/python/Host/PicarroExeSetup.py</vh>
-<v t="stan@picarro-com.20150529220322.1"><vh>PicarroExeSetup declarations</vh></v>
-<v t="stan@picarro-com.20150529220322.2"><vh>_getPythonVersion</vh></v>
-<v t="stan@picarro-com.20150529220322.3"><vh>_getPythonSubVersion</vh></v>
-<v t="stan@picarro-com.20150529220322.4"><vh>_getOsType</vh></v>
-<v t="stan@picarro-com.20150529220322.5"><vh>_runBatFile</vh></v>
-<v t="stan@picarro-com.20150529220322.6"></v>
-<v t="stan@picarro-com.20150529220322.7"><vh>_getBuildType</vh></v>
-<v t="stan@picarro-com.20150529220322.8"><vh>runCommand</vh></v>
-<v t="stan@picarro-com.20150529220322.9"><vh>_getGitBranch</vh></v>
-<v t="stan@picarro-com.20150529220322.10"><vh>_getTimeIso8601Str</vh></v>
-<v t="stan@picarro-com.20150529220322.11"><vh>_getTimeStr</vh></v>
-<v t="stan@picarro-com.20150529220322.12"><vh>_createGitVersionPythonFile</vh></v>
-<v t="stan@picarro-com.20150529220322.13" a="E"><vh>class Target</vh>
-<v t="stan@picarro-com.20150529220322.14"><vh>__init__</vh></v>
-</v>
-</v>
-<v t="stan@picarro-com.20150609110503.1"><vh>@clean src/main/python/Host/buildHost.py</vh>
-<v t="stan@picarro-com.20150609110523.1"><vh>buildHost declarations</vh></v>
-<v t="stan@picarro-com.20150609110523.2"><vh>_getOsType</vh></v>
-<v t="stan@picarro-com.20150609110523.3"><vh>_generateBuildVersion</vh></v>
-<v t="stan@picarro-com.20150609110523.5"><vh>_verAsNumString</vh></v>
-<v t="stan@picarro-com.20150609110523.4"><vh>_verAsString</vh></v>
-<v t="stan@picarro-com.20150609110523.6"><vh>buildExes</vh></v>
-<v t="stan@picarro-com.20150609110523.7"><vh>main</vh></v>
-</v>
 <v t="stan@picarro-com.20150609175513.1" a="E"><vh>@clean src/main/python/Tools/Release/release.py</vh>
 <v t="stan@picarro-com.20150609175614.1"><vh>release declarations</vh></v>
 <v t="stan@picarro-com.20150609175614.2"><vh>class StdoutLogger</vh>
@@ -364,7 +369,7 @@
 <v t="stan@picarro-com.20150609175614.22"><vh>runCommand</vh></v>
 <v t="stan@picarro-com.20150609175614.23"><vh>getGitBranch</vh></v>
 <v t="stan@picarro-com.20150609175614.24"><vh>handleRemoveReadonly</vh></v>
-<v t="stan@picarro-com.20150609175614.25" a="E"></v>
+<v t="stan@picarro-com.20150609175614.25"></v>
 <v t="stan@picarro-com.20150609175614.26"><vh>_promoteStagedRelease</vh></v>
 <v t="stan@picarro-com.20150609175614.27"><vh>_copyBuildAndInstallers</vh></v>
 <v t="stan@picarro-com.20150609175614.28"><vh>_branchFromRepo</vh></v>
@@ -382,10 +387,6 @@
 <v t="stan@picarro-com.20150609175614.40"></v>
 <v t="stan@picarro-com.20150609175614.41"><vh>main</vh></v>
 </v>
-<v t="stan@picarro-com.20150529220127.1"><vh>Original setup.py</vh>
-<v t="stan@picarro-com.20150529220127.2"><vh>setup declarations</vh></v>
-</v>
-</v>
 <v t="sze.20150528150419.1"><vh>Running py2exe on application in two directories</vh>
 <v t="sze.20150528151615.1"><vh>setup.py</vh></v>
 <v t="sze.20150528151728.1"><vh>App1/app1.py</vh></v>
@@ -394,30 +395,24 @@
 <v t="stan@picarro-com.20150531164144.1"><vh>Problems with py2exe when importing modules from the same directory</vh>
 <v t="stan@picarro-com.20150531172203.1"><vh>@clean find_local_imports.py</vh></v>
 </v>
-<v t="stan@picarro-com.20150609133908.1"><vh>Learning doit</vh>
-<v t="stan@picarro-com.20150609133916.1"><vh>@clean dodo.py</vh></v>
+<v t="stan@picarro-com.20150609133908.1" a="E"><vh>Learning doit</vh>
+<v t="stan@picarro-com.20150609133916.1" a="E"><vh>@clean dodo.py</vh>
+<v t="stan@picarro-com.20150622142233.1"><vh>&lt;&lt;_verAsNumString&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622142251.1"><vh>&lt;&lt;_verAsString&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622171115.1"><vh>&lt;&lt;_remove_python_version_files&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622174109.1"><vh>&lt;&lt;run_command&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135659.1"><vh>&lt;&lt;task_make_sources_from_xml&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135727.1"><vh>&lt;&lt;task_compile_fitutils&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135802.1"><vh>&lt;&lt;task_compile_cluster_analyzer&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135818.1"><vh>&lt;&lt;task_compile_swathP&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135912.1"><vh>&lt;&lt;task_compile_fastLomb&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135925.1"><vh>&lt;&lt;task_compile_sources&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622135949.1"><vh>&lt;&lt;task_build_hostexe&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150622140041.1"><vh>&lt;&lt;task_make_release&gt;&gt;</vh></v>
+</v>
 <v t="stan@picarro-com.20150609134842.1"><vh>Using a python action</vh></v>
 </v>
-<v t="stan@picarro-com.20150610154023.1" a="E"><vh>Recovered Nodes</vh>
-<v t="stan@picarro-com.20150610154023.2"><vh>Recovered node "makeExe" from release.py</vh>
-<v t="stan@picarro-com.20150610154023.3"><vh>old:makeExe</vh></v>
-<v t="stan@picarro-com.20150610154023.4"><vh>new:makeExe</vh></v>
-</v>
-</v>
-<v t="stan@picarro-com.20150612091425.2" a="E"><vh>Recovered Nodes</vh>
-<v t="stan@picarro-com.20150612091425.3"><vh>Recovered node "write_setup_script" from @clean build.py</vh>
-<v t="stan@picarro-com.20150612091425.4"><vh>old:write_setup_script</vh></v>
-<v t="stan@picarro-com.20150612091425.5"><vh>new:write_setup_script</vh></v>
-</v>
-<v t="stan@picarro-com.20150612091425.6"><vh>Recovered node "build_binary_distribution" from @clean build.py</vh>
-<v t="stan@picarro-com.20150612091425.7"><vh>old:build_binary_distribution</vh></v>
-<v t="stan@picarro-com.20150612091425.8"><vh>new:build_binary_distribution</vh></v>
-</v>
-<v t="stan@picarro-com.20150612091425.9"><vh>Recovered node "compile_sources" from @clean build.py</vh>
-<v t="stan@picarro-com.20150612091425.10"><vh>old:compile_sources</vh></v>
-<v t="stan@picarro-com.20150612091425.11"><vh>new:compile_sources</vh></v>
-</v>
-</v>
+<v t="stan@picarro-com.20150621191519.1"><vh>Creating an official release with PyBuilder</vh></v>
 </vnodes>
 <tnodes>
 <t tx="stan@picarro-com.20150529101713.1"></t>
@@ -861,7 +856,7 @@ with open(os.path.join(os.path.dirname(__file__), 'Common',
         ["# autogenerated by PicarroExeSetup.py, %s\n" % time.asctime(),
          "\n",
          "def versionString():\n",
-         "    return '%s'\n" % hostVersion.versionString()])
+         "    return '%s'\n" % buildTypeStr])
 
 
 description = "Picarro Host Core Analyzer Software"
@@ -1188,7 +1183,7 @@ class Target:
 
             # Internal build, includes last git check-in SHA1
             # returns "Internal (&lt;SHA1&gt;)"
-            buildTypeStr = hostVersion.versionString()
+            buildTypeStr = hostVersion.buildType()
             print "Setup build type: %s" % buildTypeStr
 
         except Exception, e:
@@ -1531,95 +1526,31 @@ Builds a local HostExe.
 
 </t>
 <t tx="stan@picarro-com.20150609133908.1"></t>
-<t tx="stan@picarro-com.20150609133916.1">import os
+<t tx="stan@picarro-com.20150609133916.1">import json
+import os
+import pprint
+import subprocess
 import sys
+import textwrap
+import time
+from doit.tools import check_timestamp_unchanged
 
-def task_make_sources_from_xml():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
-    src_dir = os.path.join('src','main','python','Firmware','xml')
-    python_dir = os.path.join('src','main','python','Host','autogen')
-    usb_dir = os.path.join('src','main','python','Firmware','CypressUSB','autogen')
-    dsp_dir = os.path.join('src','main','python','Firmware','DSP','autogen')
-    return {
-        'actions':[
-            r'cd %s &amp;&amp; python xmldom1.py' % (src_dir,),
-        ],
-        'targets':[os.path.join(python_dir,fname) for fname in ['interface.py', 'usbdefs.py']] + \
-                  [os.path.join(usb_dir,fname) for fname in ['usbdefs.h', 'usbdefs.inc']] + \
-                  [os.path.join(dsp_dir,fname) for fname in ['dspAutogen.c', 'dspAutogen.h', 'interface.h']],
-        'file_dep':[os.path.join(src_dir,fname) for fname in ['interface.xml', 'Interface.dtd', 'ParameterPages.xml']],
-        'clean': True
-    }
+RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
+INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
 
-def task_compile_fitutils():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
-    src_dir = os.path.join('src','main','python','Host','Fitter')
-    f2py = os.path.join(python_scripts_dir, 'f2py.py')
-    return {
-        'actions':[
-            r'cd %s &amp;&amp; if exist fitutils.pyd del fitutils.pyd' % src_dir,
-            r'cd %s &amp;&amp; python %s -c -m fitutils fitutils.f --compiler=mingw32' % (src_dir, f2py),
-        ],
-        'targets':[os.path.join(src_dir,'fitutils.pyd')],
-        'file_dep':[os.path.join(src_dir,'fitutils.f')],
-        'clean':True
-    }
+&lt;&lt;_verAsNumString&gt;&gt;
+&lt;&lt;_verAsString&gt;&gt;
+&lt;&lt;_remove_python_version_files&gt;&gt;  
+&lt;&lt;run_command&gt;&gt;
 
-def task_compile_cluster_analyzer():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
-    src_dir = os.path.join('src','main','python','Host','Fitter')
-    return {
-        'actions':[
-            r'cd %s &amp;&amp; if exist cluster_analyzer.pyd del cluster_analyzer.pyd' % (src_dir,),
-            r'cd %s &amp;&amp; python setup.py build_src build_ext --inplace -c mingw32' % (src_dir,),
-            r'cd %s &amp;&amp; del cluster_analyzermodule.c' % (src_dir,),
-            r'cd %s &amp;&amp; rd/s/q build' % (src_dir,)
-        ],
-        'targets':[os.path.join(src_dir,'cluster_analyzer.pyd')],
-        'file_dep':[os.path.join(src_dir,fname) for fname in ['cluster_analyzer.c', 'cluster_analyzer.h']],
-        'clean':True
-    }
-
-def task_compile_swathP():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
-    src_dir = os.path.join('src','main','python','Host','Common')
-    f2py = os.path.join(python_scripts_dir, 'f2py.py')
-    return {
-        'actions':[
-            r'cd %s &amp;&amp; if exist swathP.pyd del swathP.pyd' % src_dir,
-            r'cd %s &amp;&amp; python %s swathP.pyf swathP.c -c --compiler=mingw32' % (src_dir, f2py),
-        ],
-        'targets':[os.path.join(src_dir,'swathP.pyd')],
-        'file_dep':[os.path.join(src_dir,fname) for fname in ['swathP.c', 'swathP.pyf']],
-        'clean':True
-    }
-
-def task_compile_fastLomb():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
-    src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
-    return {
-        'actions':[
-            r'cd %s &amp;&amp; if exist fastLomb.pyd del fastLomb.pyd' % (src_dir,),
-            r'cd %s &amp;&amp; setup.py build_src build_ext --inplace -c mingw32' % (src_dir,),
-            r'cd %s &amp;&amp; del fastLombmodule.c' % (src_dir,),
-            r'cd %s &amp;&amp; rd/s/q build' % (src_dir,)
-        ],
-        'targets':[os.path.join(src_dir,'fastLomb.pyd')],
-        'file_dep':[os.path.join(src_dir,fname) for fname in ['fastLomb.c', 'fastLomb.pyf']],
-        'clean':True
-    }
-
-def task_compile_sources():
-    return {'actions': None,
-            'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}
-            
-def task_build_hostexe():
-    return {'actions': [r'cd %(build_dir)s &amp;&amp; python buildHost.py'],
-            'task_dep': ['compile_sources'],
-            'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
-            'verbosity': 2
-    }
-</t>
+&lt;&lt;task_make_sources_from_xml&gt;&gt;
+&lt;&lt;task_compile_fitutils&gt;&gt;
+&lt;&lt;task_compile_cluster_analyzer&gt;&gt;
+&lt;&lt;task_compile_swathP&gt;&gt;
+&lt;&lt;task_compile_fastLomb&gt;&gt;
+&lt;&lt;task_compile_sources&gt;&gt;
+&lt;&lt;task_build_hostexe&gt;&gt;            
+&lt;&lt;task_make_release&gt;&gt;</t>
 <t tx="stan@picarro-com.20150609134842.1">def task_hello():
     def python_hello(times, text, targets):
         with open(targets[0],"a") as output:
@@ -4679,6 +4610,69 @@ Builds a new release of HostExe, AnalyzerServerExe and all installers.
 2. Build MobileKit directory for Surveyor P3100
 3. Build using PicarroExeSetup.py
 
+Usage:
+release.py [options]
+
+Builds a new release of HostExe, AnalyzerServerExe and all installers.
+
+
+Options:
+  -h, --help            show this help message and exit
+  -v VERSION, --version=VERSION
+                        Specify a version for this release and tag it as such
+                        in the repository.
+  --skip-tag            Skip creating a tag, even if a version # is specified.
+  --skip-installers     Skip creating installers.
+  --make-official       Promote the current release in staging to the official
+                        distribution channels.
+  --types=BUILDTYPES    Comma-delimited list of analyzer types to build or
+                        types to move from staging to the official release
+                        area. If the list starts with a "!" every type but
+                        those in the list will be built or moved.
+  --ostype=OSTYPE       OS type for promoting the current release to
+                        release.Valid arguments are win7 or winxp. Only
+                        allowed with the --make-official option.
+  --archive             When promoting staged to release, copy installers to
+                        the Archive folder but don't copy them to Current.
+                        Only allowed with the --make-official option.
+  --dry-run             Only works with --make-official. Tests the move to
+                        staging by using a temporary directory as the target.
+  --product=PRODUCT     The product line to generate the release for. This
+                        option is required.
+  --branch=BRANCH       The remote branch from which the release is built.
+  --no-confirm          Don't ask for confirmation of build settings before
+                        proceeding with the build.
+  --debug-local         Use local C: drive in place of R: or S: for build
+                        destination paths. Useful for debugging this build
+                        script. This option cannot be used in combination with
+                        --dry-run.
+  --debug-skip-all-clone
+                        Skip cloning all repositories. The sandbox must
+                        already exist from a prior build. Intended for use
+                        with --debug-local. Useful for quick testing of minor
+                        changes or debugging this build script.
+  --debug-skip-host-clone
+                        Skip cloning the git host repository. The sandbox git
+                        repo must already exist from a prior build. Intended
+                        for use with --debug-local. Useful for quick testing
+                        of minor changes or debugging this build script.
+  --debug-skip-config-clone
+                        Skip cloning the bzr config repositories. The sandbox
+                        repos must already exist from a prior build. Intended
+                        for use with --debug-local. Useful for quick testing
+                        of minor changes or debugging this build script.
+  --debug-skip-exe      Skip building the executables. The sandbox and
+                        executables must already exist from a prior build.
+                        Intended for use with --debug-local. Useful for quick
+                        testing of minor changes or debugging this build
+                        script.
+  --logfile=LOGFILE     Use this option to specify a filename for logging
+                        output from stdout and stderr. A default filename is
+                        generated using the product, branch, and current time
+                        if no filename is specified.
+  --debug-quiet         Only output from stderr is directed to the console.
+                        The logfile will always contain output from both
+                        stdout and stderr.
 </t>
 <t tx="stan@picarro-com.20150609181355.1"># get OS type so we can construct a filename for the JSON config file (e.g., g2000_win7.json)
 # and the log file
@@ -4805,1098 +4799,6 @@ if not os.path.isfile(productConfigs):
 if not os.path.isfile(versionConfig):
     LogErr("%s is missing!" % versionConfig)
     sys.exit(1)
-</t>
-<t tx="stan@picarro-com.20150610154023.1"></t>
-<t tx="stan@picarro-com.20150610154023.2">(uncached) stan@picarro-com.20150609175614.25
-Diff...
-  ###############################################################################
-  
-  def makeExe(opts):
-      """
-      Make a HostExe release from a clean checkout.
-      """
-      &lt;&lt;get osType&gt;&gt;
-      # -------- validate some of the arguments --------
-      &lt;&lt;validate opts.product&gt;&gt;
-      &lt;&lt;validate opts.osType (only valid with --make-official)&gt;&gt;
-      &lt;&lt;validate opts.archiveOnly&gt;&gt;
-      &lt;&lt;warn about deprecated opts.dryRun&gt;&gt;
-      &lt;&lt;handle skip cloning options&gt;&gt;
-      &lt;&lt;validate opts.buildExes&gt;&gt;
-      &lt;&lt;check git branch matches command line option&gt;&gt;
-      &lt;&lt;get productFamily and time to generate logging filename&gt;&gt;
-      
-      # -------- validate JSON files --------
-      &lt;&lt;check for product and version configuration JSON files&gt;&gt;
-      configInfo = {}
-  
-      with open(productConfigs, 'r') as prods:
-          configInfo.update(json.load(prods))
-  
-      # win7 g2000 builds have categories in the JSON file but winxp g2000 and mobile don't currently.
-      # override the hard-coded dir
-      global INSTALLER_SCRIPTS_DIR
-      global CONFIGS
-      global CONFIG_REPOS
-  
-      # updated JSON file format is required ()
-      INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
-      buildInfo = configInfo["buildTypes"]
-  
-      # CONFIGS is a dict containing analyzer types and species
-      # CONFIG_REPOS is a dict containing analyzer types and repo for configs (either
--     #   "bzr" or "git", default is "git")
-?                                     ^^^
-+     #   "bzr" or "git", default is "bzr")
-?                                     ^^^
-      # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
-      # if --types option was used, buildInfo will include only the wanted build types
-      buildTypesSpecific = False     # default to all build types from JSON file
-  
-      if opts.buildTypes is not None:
-          # only building specific types
-          buildTypesSpecific = True
-          negate = False
-          typesList = None
-          types = opts.buildTypes
-  
-          if types[0] == '!':
-              negate = True
-              typesList = types[1:].split(',')
-          else:
-              typesList = types.split(',')
-  
-          #print "typesList=", typesList
-  
-          for item in buildInfo:
-              addItem = False
-  
-              # negate=True: ignore item if in typesList
-              if negate is True and item not in typesList:
-                  addItem = True
-  
-              # negate=False: include item only if in typesList
-              elif negate is False and item in typesList:
-                  addItem = True
-  
-              if addItem is True:
-                  itemDict = buildInfo[item]
-                  CONFIGS[item] = itemDict["species"]
-                  INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
--                 CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
-?                                                                  ^^^
-+                 CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
-?                                                                  ^^^
-  
-      else:
-          # building all types
-          for item in buildInfo:
-              itemDict = buildInfo[item]
-              CONFIGS[item] = itemDict["species"]
-              INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
--             CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
-?                                                              ^^^
-+             CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
-?                                                              ^^^
-  
-      #print "CONFIGS=", CONFIGS
-      #print ""
-      #print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
-  
-      # determine config repos needed
-      bzrConfigsNeeded = False
-      gitConfigsNeeded = False
-  
-      for c in CONFIG_REPOS:
-          if CONFIG_REPOS[c] == "bzr":
-              bzrConfigsNeeded = True
-          elif CONFIG_REPOS[c] == "git":
-              gitConfigsNeeded = True
-  
-      # -------- prepare build options --------
-  
-      # version to be built
-      changedVersion = True
-  
-      #global MFG_DISTRIB_BASE, STAGING_MFG_DISTRIB_BASE
-      global DISTRIB_BASE, STAGING_DISTRIB_BASE
-      global STAGING_DISTRIB_BASE
-      #global TEST_MFG_DISTRIB_BASE, TEST_DISTRIB_BASE
-  
-      if not opts.makeOfficial:
-          # version
-          with open(versionConfig, 'r') as ver:
-              VERSION.update(json.load(ver))
-  
-          if opts.version:
-              m = re.compile(r'(\d+)\.(\d+)\.(\d+)').search(opts.version)
-              VERSION['major'] = m.group(1)
-              VERSION['minor'] = m.group(2)
-              VERSION['revision'] = m.group(3)
-              VERSION['build'] = '0'
-          else:
-              # For local builds, don't bother to bump the version number
-              if opts.local is True:
-                  VERSION['build'] = "%s" % int(VERSION['build'])
-                  changedVersion = False
-  
-              else:
-                  # Bump the build number if we are continuing with the previous version.
-                  VERSION['build'] = "%s" % (int(VERSION['build']) + 1)
-  
-          if opts.local:
-              # use C:\ for local build destination folder paths
-              #MFG_DISTRIB_BASE = 'C' + MFG_DISTRIB_BASE[1:]
-              DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-              #STAGING_MFG_DISTRIB_BASE = 'C' + STAGING_MFG_DISTRIB_BASE[1:]
-              STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
-  
-          # append productFamily to paths (it's something like "g2000_win7")
-          #MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, productFamily])
-          DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-          #STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, productFamily])
-          STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-  
-          #TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, productFamily])
-          #TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, productFamily])
-  
-      else:
-          if opts.local:
-              # use C:\ for local build destination folder paths
-              DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-              STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
-  
-          # append product to paths used for make-official option
-          DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-          STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-  
-      # print summary of build info so user can review it
-      _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
-                    cloneAllRepos=cloneAllRepos,
-                    cloneConfigRepo=cloneConfigRepo,
-                    bzrConfigsNeeded=bzrConfigsNeeded,
-                    cloneHostRepo=cloneHostRepo)
-  
-      # ask user for build confirmation before proceeding
-      if not opts.skipConfirm:
-          print ""
-          response = raw_input("OK to continue? Y or N: ")
-  
-          if response == "Y" or response == "y":
-              print "Y typed, continuing"
-          else:
-              print "Build canceled"
-              sys.exit(0)
-  
-      # -------- start of build --------
-      #
-      # init logging to stdout and stderr
-      logger = Logger(logfile, quiet=False)
-  
-      # output the start time
-      print "Build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
-  
-      # reiterate the build summary so it is saved in the log
-      _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
-                    cloneAllRepos=cloneAllRepos,
-                    cloneConfigRepo=cloneConfigRepo,
-                    bzrConfigsNeeded=bzrConfigsNeeded,
-                    cloneHostRepo=cloneHostRepo)
-  
-      # if bzr repos not needed, fix up clone repo settings
-      if bzrConfigsNeeded is False:
-          cloneAllRepos = False
-          cloneConfigRepo = False
-  
-      # set the quiet flag if option set
-      logger.set_quiet(opts.debugQuiet)
-  
-      # --local: modify base paths for testing on local C: drive
-      #
-      # we're no longer writing anything to the following R drive folders:
-      #   MFG_DISTRIB_BASE            R:/G2000_HostSoftwareInstallers
-      #   STAGING_MFG_DISTRIB_BASE    R:/G2000_HostSoftwareInstallers_Staging
-      #
-      if opts.local:
-          # make sure dirs exist on the local drive
-          #if not os.path.exists(MFG_DISTRIB_BASE):
-          #    os.makedirs(MFG_DISTRIB_BASE)
-  
-          if not os.path.exists(DISTRIB_BASE):
-              os.makedirs(DISTRIB_BASE)
-  
-          #if not os.path.exists(STAGING_MFG_DISTRIB_BASE):
-              #os.makedirs(STAGING_MFG_DISTRIB_BASE)
-  
-          if not os.path.exists(STAGING_DISTRIB_BASE):
-              os.makedirs(STAGING_DISTRIB_BASE)
-  
-      if opts.dryRun:
-          print "--dry-run feature not implemented, aborting!"
-          sys.exit(1)
-  
-  
-          """
-          targetMfgDistribBase = TEST_MFG_DISTRIB_BASE
-          targetDistribBase = TEST_DISTRIB_BASE
-  
-          # TODO: only remove the dir itself so we don't lose everything
-          #       I haven't been using --dry-run so ignoring for now. tw
-          if os.path.isdir(targetMfgDistribBase):
-              shutil.rmtree(targetMfgDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
-  
-          if os.path.isdir(targetDistribBase):
-              shutil.rmtree(targetDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
-  
-          os.makedirs(targetMfgDistribBase)
-          os.makedirs(targetDistribBase)
-  
-          for c in CONFIGS:
-              os.makedirs(os.path.join(targetDistribBase, c, 'Archive'))
-              os.makedirs(os.path.join(targetDistribBase, c, 'Current'))
-          """
-  
-      else:
-          #targetMfgDistribBase = MFG_DISTRIB_BASE
-          #targetMfgDistribBase = None
-          targetDistribBase = DISTRIB_BASE
-  
-      if opts.makeOfficial:
-          # promote the release installers and return
-          _promoteStagedRelease(types=opts.buildTypes,
-                                #mfgDistribBase=targetMfgDistribBase,
-                                distribBase=targetDistribBase,
-                                versionConfig=versionConfig,
-                                product=productFamily,
-                                osType=osType,
-                                archiveOnly=archiveOnly)
-  
-          _buildDoneMsg("MAKE-OFFICIAL", startSec, logfile)
-          return
-  
-      with open(versionConfig, 'w') as ver:
-          json.dump(VERSION, ver)
-  
-      # Commit and push new version number if it was changed
-      if changedVersion is True:
-          print "git.exe add %s" % versionConfig
-          retCode = subprocess.call(['git.exe',
-                                     'add',
-                                     versionConfig])
-  
-          if retCode != 0:
-              LogErr('Error staging new version metadata in local repo, retCode=%d.' % retCode)
-              sys.exit(1)
-  
-          print "git.exe commit -m release.py version update (%s)." % _verAsString(productFamily, VERSION)
-          retCode = subprocess.call(['git.exe',
-                                     'commit',
-                                     '-m',
-                                     "release.py version update (%s)." % _verAsString(productFamily, VERSION)])
-  
-          if retCode != 0:
-              LogErr('Error committing new version metadata to local repo, retCode=%d.' % retCode)
-              sys.exit(1)
-  
-          print "git.exe push"
-          retCode = subprocess.call(['git.exe',
-                                     'push'])
-  
-          if retCode != 0:
-              LogErr('Error pushing new version metadata to repo, retCode=%d.' % retCode)
-  
-      else:
-          print "Version number was not changed, skipping update version metadata in local repo."
-  
-      if cloneAllRepos or cloneHostRepo:
-          _branchFromRepo(opts.branch)
-      else:
-          print "Skipping cloning of Git repo."
-  
-          # do a quick test for existence of the sandbox dir (won't ensure build integrity though)
-          if not os.path.exists(SANDBOX_DIR):
-              LogErr("Sandbox directory containing repos does not exist!")
-              sys.exit(1)
-  
-      _generateReleaseVersion(productFamily, VERSION)
-  
-      if opts.buildExes:
-          _buildExes()
-      else:
-          print "Skipping building executables"
-  
-          # quick test for existence of sandbox dir and dist folders
-          if not os.path.exists(SANDBOX_DIR):
-              LogErr("Sandbox directory containing repos does not exist!")
-              sys.exit(1)
-  
-          exeDir = os.path.join(SANDBOX_DIR, "host", "Host", "dist")
-          if not os.path.exists(exeDir):
-              LogErr("'%s' does not exist!" % exeDir)
-              sys.exit(1)
-  
-          exeDir = os.path.join(SANDBOX_DIR, "host", "MobileKit", "dist")
-          if not os.path.exists(exeDir):
-              LogErr("'%s' does not exist!" % exeDir)
-              sys.exit(1)
-  
-      # XXX This is likely superfluous once the configuration files have
-      # been merged into the main repository.
-      if cloneAllRepos or cloneConfigRepo:
-          if bzrConfigsNeeded is True:
-              _makeLocalConfig()
-          else:
-              print "Bzr configs not used by installers, skipping cloning of Bzr repos"
-      else:
-          print "Skipping cloning of Bzr config repos"
-  
-      # If any configs in git repository, create version.ini files for them
-      if gitConfigsNeeded is True:
-          _setGitConfigVer(opts.createTag, productFamily, VERSION)
-  
-      if opts.createInstallers:
-          _compileInstallers(productFamily, osType, VERSION)
-      else:
-          print "Skipping creating the installers."
-  
-      if opts.createTag:
-          _tagRepository(productFamily, VERSION)
-  
-          # Only tag bzr repos if they were used.
-          # These should be removed when we finish merging the
-          # configuration file directories into the repository.
-          if bzrConfigsNeeded is True:
-              _tagCommonConfig(productFamily, VERSION)
-              _tagAppInstrConfigs(productFamily, VERSION)
-      else:
-          print "Skipping tagging of the repository."
-  
-      # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-      _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBuild=buildTypesSpecific)
-  
-      _buildDoneMsg("BUILD", startSec, logfile)
-  
-  
-</t>
-<t tx="stan@picarro-com.20150610154023.3">###############################################################################
-
-def makeExe(opts):
-    """
-    Make a HostExe release from a clean checkout.
-    """
-    &lt;&lt;get osType&gt;&gt;
-    # -------- validate some of the arguments --------
-    &lt;&lt;validate opts.product&gt;&gt;
-    &lt;&lt;validate opts.osType (only valid with --make-official)&gt;&gt;
-    &lt;&lt;validate opts.archiveOnly&gt;&gt;
-    &lt;&lt;warn about deprecated opts.dryRun&gt;&gt;
-    &lt;&lt;handle skip cloning options&gt;&gt;
-    &lt;&lt;validate opts.buildExes&gt;&gt;
-    &lt;&lt;check git branch matches command line option&gt;&gt;
-    &lt;&lt;get productFamily and time to generate logging filename&gt;&gt;
-    
-    # -------- validate JSON files --------
-    &lt;&lt;check for product and version configuration JSON files&gt;&gt;
-    configInfo = {}
-
-    with open(productConfigs, 'r') as prods:
-        configInfo.update(json.load(prods))
-
-    # win7 g2000 builds have categories in the JSON file but winxp g2000 and mobile don't currently.
-    # override the hard-coded dir
-    global INSTALLER_SCRIPTS_DIR
-    global CONFIGS
-    global CONFIG_REPOS
-
-    # updated JSON file format is required ()
-    INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
-    buildInfo = configInfo["buildTypes"]
-
-    # CONFIGS is a dict containing analyzer types and species
-    # CONFIG_REPOS is a dict containing analyzer types and repo for configs (either
-    #   "bzr" or "git", default is "bzr")
-    # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
-    # if --types option was used, buildInfo will include only the wanted build types
-    buildTypesSpecific = False     # default to all build types from JSON file
-
-    if opts.buildTypes is not None:
-        # only building specific types
-        buildTypesSpecific = True
-        negate = False
-        typesList = None
-        types = opts.buildTypes
-
-        if types[0] == '!':
-            negate = True
-            typesList = types[1:].split(',')
-        else:
-            typesList = types.split(',')
-
-        #print "typesList=", typesList
-
-        for item in buildInfo:
-            addItem = False
-
-            # negate=True: ignore item if in typesList
-            if negate is True and item not in typesList:
-                addItem = True
-
-            # negate=False: include item only if in typesList
-            elif negate is False and item in typesList:
-                addItem = True
-
-            if addItem is True:
-                itemDict = buildInfo[item]
-                CONFIGS[item] = itemDict["species"]
-                INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-                CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
-
-    else:
-        # building all types
-        for item in buildInfo:
-            itemDict = buildInfo[item]
-            CONFIGS[item] = itemDict["species"]
-            INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-            CONFIG_REPOS[item] = itemDict.get("configRepo", "bzr")
-
-    #print "CONFIGS=", CONFIGS
-    #print ""
-    #print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
-
-    # determine config repos needed
-    bzrConfigsNeeded = False
-    gitConfigsNeeded = False
-
-    for c in CONFIG_REPOS:
-        if CONFIG_REPOS[c] == "bzr":
-            bzrConfigsNeeded = True
-        elif CONFIG_REPOS[c] == "git":
-            gitConfigsNeeded = True
-
-    # -------- prepare build options --------
-
-    # version to be built
-    changedVersion = True
-
-    #global MFG_DISTRIB_BASE, STAGING_MFG_DISTRIB_BASE
-    global DISTRIB_BASE, STAGING_DISTRIB_BASE
-    global STAGING_DISTRIB_BASE
-    #global TEST_MFG_DISTRIB_BASE, TEST_DISTRIB_BASE
-
-    if not opts.makeOfficial:
-        # version
-        with open(versionConfig, 'r') as ver:
-            VERSION.update(json.load(ver))
-
-        if opts.version:
-            m = re.compile(r'(\d+)\.(\d+)\.(\d+)').search(opts.version)
-            VERSION['major'] = m.group(1)
-            VERSION['minor'] = m.group(2)
-            VERSION['revision'] = m.group(3)
-            VERSION['build'] = '0'
-        else:
-            # For local builds, don't bother to bump the version number
-            if opts.local is True:
-                VERSION['build'] = "%s" % int(VERSION['build'])
-                changedVersion = False
-
-            else:
-                # Bump the build number if we are continuing with the previous version.
-                VERSION['build'] = "%s" % (int(VERSION['build']) + 1)
-
-        if opts.local:
-            # use C:\ for local build destination folder paths
-            #MFG_DISTRIB_BASE = 'C' + MFG_DISTRIB_BASE[1:]
-            DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-            #STAGING_MFG_DISTRIB_BASE = 'C' + STAGING_MFG_DISTRIB_BASE[1:]
-            STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
-
-        # append productFamily to paths (it's something like "g2000_win7")
-        #MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, productFamily])
-        DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-        #STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, productFamily])
-        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-
-        #TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, productFamily])
-        #TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, productFamily])
-
-    else:
-        if opts.local:
-            # use C:\ for local build destination folder paths
-            DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-            STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
-
-        # append product to paths used for make-official option
-        DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-
-    # print summary of build info so user can review it
-    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
-                  cloneAllRepos=cloneAllRepos,
-                  cloneConfigRepo=cloneConfigRepo,
-                  bzrConfigsNeeded=bzrConfigsNeeded,
-                  cloneHostRepo=cloneHostRepo)
-
-    # ask user for build confirmation before proceeding
-    if not opts.skipConfirm:
-        print ""
-        response = raw_input("OK to continue? Y or N: ")
-
-        if response == "Y" or response == "y":
-            print "Y typed, continuing"
-        else:
-            print "Build canceled"
-            sys.exit(0)
-
-    # -------- start of build --------
-    #
-    # init logging to stdout and stderr
-    logger = Logger(logfile, quiet=False)
-
-    # output the start time
-    print "Build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
-
-    # reiterate the build summary so it is saved in the log
-    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
-                  cloneAllRepos=cloneAllRepos,
-                  cloneConfigRepo=cloneConfigRepo,
-                  bzrConfigsNeeded=bzrConfigsNeeded,
-                  cloneHostRepo=cloneHostRepo)
-
-    # if bzr repos not needed, fix up clone repo settings
-    if bzrConfigsNeeded is False:
-        cloneAllRepos = False
-        cloneConfigRepo = False
-
-    # set the quiet flag if option set
-    logger.set_quiet(opts.debugQuiet)
-
-    # --local: modify base paths for testing on local C: drive
-    #
-    # we're no longer writing anything to the following R drive folders:
-    #   MFG_DISTRIB_BASE            R:/G2000_HostSoftwareInstallers
-    #   STAGING_MFG_DISTRIB_BASE    R:/G2000_HostSoftwareInstallers_Staging
-    #
-    if opts.local:
-        # make sure dirs exist on the local drive
-        #if not os.path.exists(MFG_DISTRIB_BASE):
-        #    os.makedirs(MFG_DISTRIB_BASE)
-
-        if not os.path.exists(DISTRIB_BASE):
-            os.makedirs(DISTRIB_BASE)
-
-        #if not os.path.exists(STAGING_MFG_DISTRIB_BASE):
-            #os.makedirs(STAGING_MFG_DISTRIB_BASE)
-
-        if not os.path.exists(STAGING_DISTRIB_BASE):
-            os.makedirs(STAGING_DISTRIB_BASE)
-
-    if opts.dryRun:
-        print "--dry-run feature not implemented, aborting!"
-        sys.exit(1)
-
-
-        """
-        targetMfgDistribBase = TEST_MFG_DISTRIB_BASE
-        targetDistribBase = TEST_DISTRIB_BASE
-
-        # TODO: only remove the dir itself so we don't lose everything
-        #       I haven't been using --dry-run so ignoring for now. tw
-        if os.path.isdir(targetMfgDistribBase):
-            shutil.rmtree(targetMfgDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
-
-        if os.path.isdir(targetDistribBase):
-            shutil.rmtree(targetDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
-
-        os.makedirs(targetMfgDistribBase)
-        os.makedirs(targetDistribBase)
-
-        for c in CONFIGS:
-            os.makedirs(os.path.join(targetDistribBase, c, 'Archive'))
-            os.makedirs(os.path.join(targetDistribBase, c, 'Current'))
-        """
-
-    else:
-        #targetMfgDistribBase = MFG_DISTRIB_BASE
-        #targetMfgDistribBase = None
-        targetDistribBase = DISTRIB_BASE
-
-    if opts.makeOfficial:
-        # promote the release installers and return
-        _promoteStagedRelease(types=opts.buildTypes,
-                              #mfgDistribBase=targetMfgDistribBase,
-                              distribBase=targetDistribBase,
-                              versionConfig=versionConfig,
-                              product=productFamily,
-                              osType=osType,
-                              archiveOnly=archiveOnly)
-
-        _buildDoneMsg("MAKE-OFFICIAL", startSec, logfile)
-        return
-
-    with open(versionConfig, 'w') as ver:
-        json.dump(VERSION, ver)
-
-    # Commit and push new version number if it was changed
-    if changedVersion is True:
-        print "git.exe add %s" % versionConfig
-        retCode = subprocess.call(['git.exe',
-                                   'add',
-                                   versionConfig])
-
-        if retCode != 0:
-            LogErr('Error staging new version metadata in local repo, retCode=%d.' % retCode)
-            sys.exit(1)
-
-        print "git.exe commit -m release.py version update (%s)." % _verAsString(productFamily, VERSION)
-        retCode = subprocess.call(['git.exe',
-                                   'commit',
-                                   '-m',
-                                   "release.py version update (%s)." % _verAsString(productFamily, VERSION)])
-
-        if retCode != 0:
-            LogErr('Error committing new version metadata to local repo, retCode=%d.' % retCode)
-            sys.exit(1)
-
-        print "git.exe push"
-        retCode = subprocess.call(['git.exe',
-                                   'push'])
-
-        if retCode != 0:
-            LogErr('Error pushing new version metadata to repo, retCode=%d.' % retCode)
-
-    else:
-        print "Version number was not changed, skipping update version metadata in local repo."
-
-    if cloneAllRepos or cloneHostRepo:
-        _branchFromRepo(opts.branch)
-    else:
-        print "Skipping cloning of Git repo."
-
-        # do a quick test for existence of the sandbox dir (won't ensure build integrity though)
-        if not os.path.exists(SANDBOX_DIR):
-            LogErr("Sandbox directory containing repos does not exist!")
-            sys.exit(1)
-
-    _generateReleaseVersion(productFamily, VERSION)
-
-    if opts.buildExes:
-        _buildExes()
-    else:
-        print "Skipping building executables"
-
-        # quick test for existence of sandbox dir and dist folders
-        if not os.path.exists(SANDBOX_DIR):
-            LogErr("Sandbox directory containing repos does not exist!")
-            sys.exit(1)
-
-        exeDir = os.path.join(SANDBOX_DIR, "host", "Host", "dist")
-        if not os.path.exists(exeDir):
-            LogErr("'%s' does not exist!" % exeDir)
-            sys.exit(1)
-
-        exeDir = os.path.join(SANDBOX_DIR, "host", "MobileKit", "dist")
-        if not os.path.exists(exeDir):
-            LogErr("'%s' does not exist!" % exeDir)
-            sys.exit(1)
-
-    # XXX This is likely superfluous once the configuration files have
-    # been merged into the main repository.
-    if cloneAllRepos or cloneConfigRepo:
-        if bzrConfigsNeeded is True:
-            _makeLocalConfig()
-        else:
-            print "Bzr configs not used by installers, skipping cloning of Bzr repos"
-    else:
-        print "Skipping cloning of Bzr config repos"
-
-    # If any configs in git repository, create version.ini files for them
-    if gitConfigsNeeded is True:
-        _setGitConfigVer(opts.createTag, productFamily, VERSION)
-
-    if opts.createInstallers:
-        _compileInstallers(productFamily, osType, VERSION)
-    else:
-        print "Skipping creating the installers."
-
-    if opts.createTag:
-        _tagRepository(productFamily, VERSION)
-
-        # Only tag bzr repos if they were used.
-        # These should be removed when we finish merging the
-        # configuration file directories into the repository.
-        if bzrConfigsNeeded is True:
-            _tagCommonConfig(productFamily, VERSION)
-            _tagAppInstrConfigs(productFamily, VERSION)
-    else:
-        print "Skipping tagging of the repository."
-
-    # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-    _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBuild=buildTypesSpecific)
-
-    _buildDoneMsg("BUILD", startSec, logfile)
-
-
-</t>
-<t tx="stan@picarro-com.20150610154023.4">###############################################################################
-
-def makeExe(opts):
-    """
-    Make a HostExe release from a clean checkout.
-    """
-    &lt;&lt;get osType&gt;&gt;
-    # -------- validate some of the arguments --------
-    &lt;&lt;validate opts.product&gt;&gt;
-    &lt;&lt;validate opts.osType (only valid with --make-official)&gt;&gt;
-    &lt;&lt;validate opts.archiveOnly&gt;&gt;
-    &lt;&lt;warn about deprecated opts.dryRun&gt;&gt;
-    &lt;&lt;handle skip cloning options&gt;&gt;
-    &lt;&lt;validate opts.buildExes&gt;&gt;
-    &lt;&lt;check git branch matches command line option&gt;&gt;
-    &lt;&lt;get productFamily and time to generate logging filename&gt;&gt;
-    
-    # -------- validate JSON files --------
-    &lt;&lt;check for product and version configuration JSON files&gt;&gt;
-    configInfo = {}
-
-    with open(productConfigs, 'r') as prods:
-        configInfo.update(json.load(prods))
-
-    # win7 g2000 builds have categories in the JSON file but winxp g2000 and mobile don't currently.
-    # override the hard-coded dir
-    global INSTALLER_SCRIPTS_DIR
-    global CONFIGS
-    global CONFIG_REPOS
-
-    # updated JSON file format is required ()
-    INSTALLER_SCRIPTS_DIR = configInfo["installerScriptsDir"]
-    buildInfo = configInfo["buildTypes"]
-
-    # CONFIGS is a dict containing analyzer types and species
-    # CONFIG_REPOS is a dict containing analyzer types and repo for configs (either
-    #   "bzr" or "git", default is "git")
-    # INSTALLER_SIGNATURES is another dict containing analyzer types and installer signature text
-    # if --types option was used, buildInfo will include only the wanted build types
-    buildTypesSpecific = False     # default to all build types from JSON file
-
-    if opts.buildTypes is not None:
-        # only building specific types
-        buildTypesSpecific = True
-        negate = False
-        typesList = None
-        types = opts.buildTypes
-
-        if types[0] == '!':
-            negate = True
-            typesList = types[1:].split(',')
-        else:
-            typesList = types.split(',')
-
-        #print "typesList=", typesList
-
-        for item in buildInfo:
-            addItem = False
-
-            # negate=True: ignore item if in typesList
-            if negate is True and item not in typesList:
-                addItem = True
-
-            # negate=False: include item only if in typesList
-            elif negate is False and item in typesList:
-                addItem = True
-
-            if addItem is True:
-                itemDict = buildInfo[item]
-                CONFIGS[item] = itemDict["species"]
-                INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-                CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
-
-    else:
-        # building all types
-        for item in buildInfo:
-            itemDict = buildInfo[item]
-            CONFIGS[item] = itemDict["species"]
-            INSTALLER_SIGNATURES[item] = itemDict["installerSignature"]
-            CONFIG_REPOS[item] = itemDict.get("configRepo", "git")
-
-    #print "CONFIGS=", CONFIGS
-    #print ""
-    #print "INSTALLER_SIGNATURES=", INSTALLER_SIGNATURES
-
-    # determine config repos needed
-    bzrConfigsNeeded = False
-    gitConfigsNeeded = False
-
-    for c in CONFIG_REPOS:
-        if CONFIG_REPOS[c] == "bzr":
-            bzrConfigsNeeded = True
-        elif CONFIG_REPOS[c] == "git":
-            gitConfigsNeeded = True
-
-    # -------- prepare build options --------
-
-    # version to be built
-    changedVersion = True
-
-    #global MFG_DISTRIB_BASE, STAGING_MFG_DISTRIB_BASE
-    global DISTRIB_BASE, STAGING_DISTRIB_BASE
-    global STAGING_DISTRIB_BASE
-    #global TEST_MFG_DISTRIB_BASE, TEST_DISTRIB_BASE
-
-    if not opts.makeOfficial:
-        # version
-        with open(versionConfig, 'r') as ver:
-            VERSION.update(json.load(ver))
-
-        if opts.version:
-            m = re.compile(r'(\d+)\.(\d+)\.(\d+)').search(opts.version)
-            VERSION['major'] = m.group(1)
-            VERSION['minor'] = m.group(2)
-            VERSION['revision'] = m.group(3)
-            VERSION['build'] = '0'
-        else:
-            # For local builds, don't bother to bump the version number
-            if opts.local is True:
-                VERSION['build'] = "%s" % int(VERSION['build'])
-                changedVersion = False
-
-            else:
-                # Bump the build number if we are continuing with the previous version.
-                VERSION['build'] = "%s" % (int(VERSION['build']) + 1)
-
-        if opts.local:
-            # use C:\ for local build destination folder paths
-            #MFG_DISTRIB_BASE = 'C' + MFG_DISTRIB_BASE[1:]
-            DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-            #STAGING_MFG_DISTRIB_BASE = 'C' + STAGING_MFG_DISTRIB_BASE[1:]
-            STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
-
-        # append productFamily to paths (it's something like "g2000_win7")
-        #MFG_DISTRIB_BASE = "/".join([MFG_DISTRIB_BASE, productFamily])
-        DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-        #STAGING_MFG_DISTRIB_BASE = "/".join([STAGING_MFG_DISTRIB_BASE, productFamily])
-        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-
-        #TEST_MFG_DISTRIB_BASE = "/".join([TEST_MFG_DISTRIB_BASE, productFamily])
-        #TEST_DISTRIB_BASE = "/".join([TEST_DISTRIB_BASE, productFamily])
-
-    else:
-        if opts.local:
-            # use C:\ for local build destination folder paths
-            DISTRIB_BASE  = 'C' + DISTRIB_BASE [1:]
-            STAGING_DISTRIB_BASE = 'C' + STAGING_DISTRIB_BASE[1:]
-
-        # append product to paths used for make-official option
-        DISTRIB_BASE = "/".join([DISTRIB_BASE, productFamily])
-        STAGING_DISTRIB_BASE = "/".join([STAGING_DISTRIB_BASE, productFamily])
-
-    # print summary of build info so user can review it
-    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
-                  cloneAllRepos=cloneAllRepos,
-                  cloneConfigRepo=cloneConfigRepo,
-                  bzrConfigsNeeded=bzrConfigsNeeded,
-                  cloneHostRepo=cloneHostRepo)
-
-    # ask user for build confirmation before proceeding
-    if not opts.skipConfirm:
-        print ""
-        response = raw_input("OK to continue? Y or N: ")
-
-        if response == "Y" or response == "y":
-            print "Y typed, continuing"
-        else:
-            print "Build canceled"
-            sys.exit(0)
-
-    # -------- start of build --------
-    #
-    # init logging to stdout and stderr
-    logger = Logger(logfile, quiet=False)
-
-    # output the start time
-    print "Build script start: %s" % time.strftime("%Y/%m/%d %H:%M:%S %p", startTime)
-
-    # reiterate the build summary so it is saved in the log
-    _printSummary(opts, osType, logfile, productFamily, productConfigs, versionConfig,
-                  cloneAllRepos=cloneAllRepos,
-                  cloneConfigRepo=cloneConfigRepo,
-                  bzrConfigsNeeded=bzrConfigsNeeded,
-                  cloneHostRepo=cloneHostRepo)
-
-    # if bzr repos not needed, fix up clone repo settings
-    if bzrConfigsNeeded is False:
-        cloneAllRepos = False
-        cloneConfigRepo = False
-
-    # set the quiet flag if option set
-    logger.set_quiet(opts.debugQuiet)
-
-    # --local: modify base paths for testing on local C: drive
-    #
-    # we're no longer writing anything to the following R drive folders:
-    #   MFG_DISTRIB_BASE            R:/G2000_HostSoftwareInstallers
-    #   STAGING_MFG_DISTRIB_BASE    R:/G2000_HostSoftwareInstallers_Staging
-    #
-    if opts.local:
-        # make sure dirs exist on the local drive
-        #if not os.path.exists(MFG_DISTRIB_BASE):
-        #    os.makedirs(MFG_DISTRIB_BASE)
-
-        if not os.path.exists(DISTRIB_BASE):
-            os.makedirs(DISTRIB_BASE)
-
-        #if not os.path.exists(STAGING_MFG_DISTRIB_BASE):
-            #os.makedirs(STAGING_MFG_DISTRIB_BASE)
-
-        if not os.path.exists(STAGING_DISTRIB_BASE):
-            os.makedirs(STAGING_DISTRIB_BASE)
-
-    if opts.dryRun:
-        print "--dry-run feature not implemented, aborting!"
-        sys.exit(1)
-
-
-        """
-        targetMfgDistribBase = TEST_MFG_DISTRIB_BASE
-        targetDistribBase = TEST_DISTRIB_BASE
-
-        # TODO: only remove the dir itself so we don't lose everything
-        #       I haven't been using --dry-run so ignoring for now. tw
-        if os.path.isdir(targetMfgDistribBase):
-            shutil.rmtree(targetMfgDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
-
-        if os.path.isdir(targetDistribBase):
-            shutil.rmtree(targetDistribBase, ignore_errors=False, onerror=handleRemoveReadonly)
-
-        os.makedirs(targetMfgDistribBase)
-        os.makedirs(targetDistribBase)
-
-        for c in CONFIGS:
-            os.makedirs(os.path.join(targetDistribBase, c, 'Archive'))
-            os.makedirs(os.path.join(targetDistribBase, c, 'Current'))
-        """
-
-    else:
-        #targetMfgDistribBase = MFG_DISTRIB_BASE
-        #targetMfgDistribBase = None
-        targetDistribBase = DISTRIB_BASE
-
-    if opts.makeOfficial:
-        # promote the release installers and return
-        _promoteStagedRelease(types=opts.buildTypes,
-                              #mfgDistribBase=targetMfgDistribBase,
-                              distribBase=targetDistribBase,
-                              versionConfig=versionConfig,
-                              product=productFamily,
-                              osType=osType,
-                              archiveOnly=archiveOnly)
-
-        _buildDoneMsg("MAKE-OFFICIAL", startSec, logfile)
-        return
-
-    with open(versionConfig, 'w') as ver:
-        json.dump(VERSION, ver)
-
-    # Commit and push new version number if it was changed
-    if changedVersion is True:
-        print "git.exe add %s" % versionConfig
-        retCode = subprocess.call(['git.exe',
-                                   'add',
-                                   versionConfig])
-
-        if retCode != 0:
-            LogErr('Error staging new version metadata in local repo, retCode=%d.' % retCode)
-            sys.exit(1)
-
-        print "git.exe commit -m release.py version update (%s)." % _verAsString(productFamily, VERSION)
-        retCode = subprocess.call(['git.exe',
-                                   'commit',
-                                   '-m',
-                                   "release.py version update (%s)." % _verAsString(productFamily, VERSION)])
-
-        if retCode != 0:
-            LogErr('Error committing new version metadata to local repo, retCode=%d.' % retCode)
-            sys.exit(1)
-
-        print "git.exe push"
-        retCode = subprocess.call(['git.exe',
-                                   'push'])
-
-        if retCode != 0:
-            LogErr('Error pushing new version metadata to repo, retCode=%d.' % retCode)
-
-    else:
-        print "Version number was not changed, skipping update version metadata in local repo."
-
-    if cloneAllRepos or cloneHostRepo:
-        _branchFromRepo(opts.branch)
-    else:
-        print "Skipping cloning of Git repo."
-
-        # do a quick test for existence of the sandbox dir (won't ensure build integrity though)
-        if not os.path.exists(SANDBOX_DIR):
-            LogErr("Sandbox directory containing repos does not exist!")
-            sys.exit(1)
-
-    _generateReleaseVersion(productFamily, VERSION)
-
-    if opts.buildExes:
-        _buildExes()
-    else:
-        print "Skipping building executables"
-
-        # quick test for existence of sandbox dir and dist folders
-        if not os.path.exists(SANDBOX_DIR):
-            LogErr("Sandbox directory containing repos does not exist!")
-            sys.exit(1)
-
-        exeDir = os.path.join(SANDBOX_DIR, "host", "Host", "dist")
-        if not os.path.exists(exeDir):
-            LogErr("'%s' does not exist!" % exeDir)
-            sys.exit(1)
-
-        exeDir = os.path.join(SANDBOX_DIR, "host", "MobileKit", "dist")
-        if not os.path.exists(exeDir):
-            LogErr("'%s' does not exist!" % exeDir)
-            sys.exit(1)
-
-    # XXX This is likely superfluous once the configuration files have
-    # been merged into the main repository.
-    if cloneAllRepos or cloneConfigRepo:
-        if bzrConfigsNeeded is True:
-            _makeLocalConfig()
-        else:
-            print "Bzr configs not used by installers, skipping cloning of Bzr repos"
-    else:
-        print "Skipping cloning of Bzr config repos"
-
-    # If any configs in git repository, create version.ini files for them
-    if gitConfigsNeeded is True:
-        _setGitConfigVer(opts.createTag, productFamily, VERSION)
-
-    if opts.createInstallers:
-        _compileInstallers(productFamily, osType, VERSION)
-    else:
-        print "Skipping creating the installers."
-
-    if opts.createTag:
-        _tagRepository(productFamily, VERSION)
-
-        # Only tag bzr repos if they were used.
-        # These should be removed when we finish merging the
-        # configuration file directories into the repository.
-        if bzrConfigsNeeded is True:
-            _tagCommonConfig(productFamily, VERSION)
-            _tagAppInstrConfigs(productFamily, VERSION)
-    else:
-        print "Skipping tagging of the repository."
-
-    # Copy both HostExe and AnalyzerServerExe for non-installer upgrades.
-    _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBuild=buildTypesSpecific)
-
-    _buildDoneMsg("BUILD", startSec, logfile)
-
-
 </t>
 <t tx="stan@picarro-com.20150610155655.1">configInfo = {}
 
@@ -6344,197 +5246,6 @@ def compile_sources(project, logger):
             raise BuildFailedException("Error while executing compile_sources")
             
 </t>
-<t tx="stan@picarro-com.20150612091425.10">@task
-def compile_sources(project, logger):
-    print "Hello from compile_sources"
-    pass
-</t>
-<t tx="stan@picarro-com.20150612091425.11">@task
-def compile_sources(project, logger):
-    reports_dir = project.expand_path("$dir_reports/compile_sources")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "compile_sources")
-    with open(output_file_path, "w") as output_file:
-        process = subprocess.Popen(["doit", "compile_sources"],
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException("Error while executing compile_sources")
-            
-</t>
-<t tx="stan@picarro-com.20150612091425.2"></t>
-<t tx="stan@picarro-com.20150612091425.3">(uncached) stan@picarro-com.20150610192913.3
-Diff...
-+ @after("package")
-  def write_setup_script(project, logger):
-      setup_script = project.expand_path("$dir_dist/Host/setup.py")
-      logger.info("Writing setup.py as %s", setup_script)
-      shutil.copyfile("testSetup.py", setup_script)
-      os.chmod(setup_script, 0o755)
-  
-+ 
-</t>
-<t tx="stan@picarro-com.20150612091425.4">@after("package")
-def write_setup_script(project, logger):
-    setup_script = project.expand_path("$dir_dist/Host/setup.py")
-    logger.info("Writing setup.py as %s", setup_script)
-    shutil.copyfile("testSetup.py", setup_script)
-    os.chmod(setup_script, 0o755)
-
-
-</t>
-<t tx="stan@picarro-com.20150612091425.5">def write_setup_script(project, logger):
-    setup_script = project.expand_path("$dir_dist/Host/setup.py")
-    logger.info("Writing setup.py as %s", setup_script)
-    shutil.copyfile("testSetup.py", setup_script)
-    os.chmod(setup_script, 0o755)
-
-</t>
-<t tx="stan@picarro-com.20150612091425.6">(uncached) stan@picarro-com.20150610192913.4
-Diff...
-+ @before("publish")
-  def build_binary_distribution(project, logger):
-      reports_dir = project.expand_path("$dir_reports/distutils")
-      if not os.path.exists(reports_dir):
-          os.mkdir(reports_dir)
-  
-      setup_script = project.expand_path("$dir_dist/Host/buildHost.py")
-  
-      logger.info("Building binary distribution in %s",
-                  project.expand_path("$dir_dist"))
-  
-      command = "buildHost"
-      logger.debug("Executing buildHost.py")
-      output_file_path = os.path.join(reports_dir, command)
-      with open(output_file_path, "w") as output_file:
-          commands = [sys.executable, setup_script]
-          process = subprocess.Popen(commands,
-                                     cwd=project.expand_path("$dir_dist/Host"),
-                                     stdout=output_file,
-                                     stderr=output_file,
-                                     shell=False)
-          return_code = process.wait()
-          if return_code != 0:
-              raise BuildFailedException(
-                  "Error while executing setup command %s, see %s for details" % (command, output_file_path))
-      shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-+                 
-- 
-- @before("publish")
-- def run_py2exe(project, logger):
--     logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
--     reports_dir = project.expand_path("$dir_reports/run_py2exe")
--     if not os.path.exists(reports_dir):
--         os.mkdir(reports_dir)
--     output_file_path = os.path.join(reports_dir, "hostexe")
--     with open(output_file_path, "w") as output_file:
--         process = subprocess.Popen(["doit", "build_hostexe", "--build_dir", "%s" % project.expand_path("$dir_dist/Host")],
--                                    stdout=output_file,
--                                    stderr=output_file,
--                                    shell=False)
--         return_code = process.wait()
--         if return_code != 0:
--             raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
-- 
--     shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
--     
-</t>
-<t tx="stan@picarro-com.20150612091425.7">@before("publish")
-def build_binary_distribution(project, logger):
-    reports_dir = project.expand_path("$dir_reports/distutils")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-
-    setup_script = project.expand_path("$dir_dist/Host/buildHost.py")
-
-    logger.info("Building binary distribution in %s",
-                project.expand_path("$dir_dist"))
-
-    command = "buildHost"
-    logger.debug("Executing buildHost.py")
-    output_file_path = os.path.join(reports_dir, command)
-    with open(output_file_path, "w") as output_file:
-        commands = [sys.executable, setup_script]
-        process = subprocess.Popen(commands,
-                                   cwd=project.expand_path("$dir_dist/Host"),
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException(
-                "Error while executing setup command %s, see %s for details" % (command, output_file_path))
-    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-                
-</t>
-<t tx="stan@picarro-com.20150612091425.8">def build_binary_distribution(project, logger):
-    reports_dir = project.expand_path("$dir_reports/distutils")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-
-    setup_script = project.expand_path("$dir_dist/Host/buildHost.py")
-
-    logger.info("Building binary distribution in %s",
-                project.expand_path("$dir_dist"))
-
-    command = "buildHost"
-    logger.debug("Executing buildHost.py")
-    output_file_path = os.path.join(reports_dir, command)
-    with open(output_file_path, "w") as output_file:
-        commands = [sys.executable, setup_script]
-        process = subprocess.Popen(commands,
-                                   cwd=project.expand_path("$dir_dist/Host"),
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException(
-                "Error while executing setup command %s, see %s for details" % (command, output_file_path))
-    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-
-@before("publish")
-def run_py2exe(project, logger):
-    logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
-    reports_dir = project.expand_path("$dir_reports/run_py2exe")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "hostexe")
-    with open(output_file_path, "w") as output_file:
-        process = subprocess.Popen(["doit", "build_hostexe", "--build_dir", "%s" % project.expand_path("$dir_dist/Host")],
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
-
-    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-    
-</t>
-<t tx="stan@picarro-com.20150612091425.9">(uncached) stan@picarro-com.20150610193301.1
-Diff...
-  @task
-  def compile_sources(project, logger):
-+     print "Hello from compile_sources"
-+     pass
--     reports_dir = project.expand_path("$dir_reports/compile_sources")
--     if not os.path.exists(reports_dir):
--         os.mkdir(reports_dir)
--     output_file_path = os.path.join(reports_dir, "compile_sources")
--     with open(output_file_path, "w") as output_file:
--         process = subprocess.Popen(["doit", "compile_sources"],
--                                    stdout=output_file,
--                                    stderr=output_file,
--                                    shell=False)
--         return_code = process.wait()
--         if return_code != 0:
--             raise BuildFailedException("Error while executing compile_sources")
--             
-</t>
 <t tx="stan@picarro-com.20150612091536.1">1. PicarroExeSetup.py produces a file repoBzrVer.py which it places in \target\dist\Host-version. This is obtained from Git. It is used by the Driver to fill out             
 
 versionDict["host version id"] = repoBzrVer['revision_id']
@@ -6771,6 +5482,234 @@ Calls Driver.allVersions()
 <t tx="stan@picarro-com.20150612091900.7"></t>
 <t tx="stan@picarro-com.20150612091900.8"></t>
 <t tx="stan@picarro-com.20150612091900.9"></t>
+<t tx="stan@picarro-com.20150621191519.1">Use cases
+=========
+1. Given a version number or a git commit hash and a set of product types, rebuild an installer with the precise code.
+
+2. Having made some changes to the host code and made a commit, make an internal build so that we can do regression testing and check that nothing has been broken. This should be possible from any branch since we may have multiple projects by different developers making changes.
+
+i.e. the build server should be able to make a build at any time - these should simply be tagged by the Git commit hash. There may be version numbers left in the source directories which will populate some of the version number fields when these are requested.
+
+3. After having changed a configuration, make sure that all future installers will make use of the new configuration, and ensure that the version number of the configuration is updated when a change is made.
+
+4. Make official releases.
+
+Keep a file with commit hashes and build numbers. We can always reconstruct a build by fetching this commit. How do we track config version numbers?
+
+Should the utilities that do the builds live in the same repository? Do we always use the latest build scripts or the ones that were in use at the time the code was written?
+
+There are a set of tagged commits from which it is safe to build official distributions.
+
+What if we have a master_G2000, a master_MidIR and a master_Surveyor branch?
+
+
+
+N.B. For configuration files, e.g. config/CFADS/AppConfig, there is a version.ini file in that directory which specifies a git commit hash, e.g. 8908a30d. This is the commit which should contain the specified configuration. If we issue the commands
+
+git diff 8908a30d -- dirname
+git ls-files -- others with-tree=8908a30d dirname
+
+there should be no changes. It is not permissible to check in a new configuration if these commands indicate there have been changes. If a change has been made, it is necessary to update the version information first before committing the change.
+
+
+Alternatively, we check with the latest commit to see if there are any changes in the configuration directories. If there are, we must create a new version.ini file with an updated version number.
+
+git diff --summary Config\CFADS
+ delete mode 100644 Config/CFADS/AppConfig/Schemes/_CFADS_CO2_Fast_nocal_v2.sch
+
+git ls-files --others Config\CFADS
+Config/CFADS/AppConfig/Schemes/_CFADS_CO2_Fast_nocal_v2a.sch
+
+
+
+
+What happens if I specify a commit number - does that give a branch as well?
+e.g. cf32d63 21-May-2014 15:06 mobile_win7-2.0.0-1
+
+git reset --hard
+git clean -f -d
+git checkout cf32d63
+
+&gt; git status
+HEAD detached at cf32d63
+nothing to commit, working directory clean
+
+There is no branch information for the working tree at this point. If we want to turn this into a branch
+ 
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b new_branch_name
+
+In order to switch to another branch, we can use, e.g.,
+
+git checkout feature/sze/usePybuilder
+
+
+
+
+version
+product
+
+branch
+build-type: release or internal
+
+pyb_ release -P branch="feature/sze/usePybuilder" -P version="1.2.3.4" -P types="AADS,CFADS" 
+-P hash="a343082bd3"
+
+
+1. Need to make sure that the correct branch is checked out from GitHub
+
+
+Fetching a specific file from a commit using Git and write it to stdout. Note the use of /
+
+git show d11a469:Host/Common/Averager.py
+ </t>
+<t tx="stan@picarro-com.20150622135659.1">def task_make_sources_from_xml():
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    src_dir = os.path.join('src','main','python','Firmware','xml')
+    python_dir = os.path.join('src','main','python','Host','autogen')
+    usb_dir = os.path.join('src','main','python','Firmware','CypressUSB','autogen')
+    dsp_dir = os.path.join('src','main','python','Firmware','DSP','autogen')
+    return {
+        'actions':[
+            r'cd %s &amp;&amp; python xmldom1.py' % (src_dir,),
+        ],
+        'targets':[os.path.join(python_dir,fname) for fname in ['interface.py', 'usbdefs.py']] + \
+                  [os.path.join(usb_dir,fname) for fname in ['usbdefs.h', 'usbdefs.inc']] + \
+                  [os.path.join(dsp_dir,fname) for fname in ['dspAutogen.c', 'dspAutogen.h', 'interface.h']],
+        'file_dep':[os.path.join(src_dir,fname) for fname in ['interface.xml', 'Interface.dtd', 'ParameterPages.xml']],
+        'clean': True
+    }</t>
+<t tx="stan@picarro-com.20150622135727.1">def task_compile_fitutils():
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    src_dir = os.path.join('src','main','python','Host','Fitter')
+    f2py = os.path.join(python_scripts_dir, 'f2py.py')
+    return {
+        'actions':[
+            r'cd %s &amp;&amp; if exist fitutils.pyd del fitutils.pyd' % src_dir,
+            r'cd %s &amp;&amp; python %s -c -m fitutils fitutils.f --compiler=mingw32' % (src_dir, f2py),
+        ],
+        'targets':[os.path.join(src_dir,'fitutils.pyd')],
+        'file_dep':[os.path.join(src_dir,'fitutils.f')],
+        'clean':True
+    }</t>
+<t tx="stan@picarro-com.20150622135802.1">def task_compile_cluster_analyzer():
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    src_dir = os.path.join('src','main','python','Host','Fitter')
+    return {
+        'actions':[
+            r'cd %s &amp;&amp; if exist cluster_analyzer.pyd del cluster_analyzer.pyd' % (src_dir,),
+            r'cd %s &amp;&amp; python setup.py build_src build_ext --inplace -c mingw32' % (src_dir,),
+            r'cd %s &amp;&amp; del cluster_analyzermodule.c' % (src_dir,),
+            r'cd %s &amp;&amp; rd/s/q build' % (src_dir,)
+        ],
+        'targets':[os.path.join(src_dir,'cluster_analyzer.pyd')],
+        'file_dep':[os.path.join(src_dir,fname) for fname in ['cluster_analyzer.c', 'cluster_analyzer.h']],
+        'clean':True
+    }</t>
+<t tx="stan@picarro-com.20150622135818.1">def task_compile_swathP():
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    src_dir = os.path.join('src','main','python','Host','Common')
+    f2py = os.path.join(python_scripts_dir, 'f2py.py')
+    return {
+        'actions':[
+            r'cd %s &amp;&amp; if exist swathP.pyd del swathP.pyd' % src_dir,
+            r'cd %s &amp;&amp; python %s swathP.pyf swathP.c -c --compiler=mingw32' % (src_dir, f2py),
+        ],
+        'targets':[os.path.join(src_dir,'swathP.pyd')],
+        'file_dep':[os.path.join(src_dir,fname) for fname in ['swathP.c', 'swathP.pyf']],
+        'clean':True
+    }</t>
+<t tx="stan@picarro-com.20150622135912.1">def task_compile_fastLomb():
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
+    return {
+        'actions':[
+            r'cd %s &amp;&amp; if exist fastLomb.pyd del fastLomb.pyd' % (src_dir,),
+            r'cd %s &amp;&amp; setup.py build_src build_ext --inplace -c mingw32' % (src_dir,),
+            r'cd %s &amp;&amp; del fastLombmodule.c' % (src_dir,),
+            r'cd %s &amp;&amp; rd/s/q build' % (src_dir,)
+        ],
+        'targets':[os.path.join(src_dir,'fastLomb.pyd')],
+        'file_dep':[os.path.join(src_dir,fname) for fname in ['fastLomb.c', 'fastLomb.pyf']],
+        'clean':True
+    }</t>
+<t tx="stan@picarro-com.20150622135925.1">def task_compile_sources():
+    return {'actions': None,
+            'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}</t>
+<t tx="stan@picarro-com.20150622135949.1">def task_build_hostexe():
+    return {'actions': [r'cd %(build_dir)s &amp;&amp; python buildHost.py'],
+            'task_dep': ['compile_sources'],
+            'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
+            'verbosity': 2
+    }</t>
+<t tx="stan@picarro-com.20150622140041.1">def task_make_release():
+    src_dir = os.path.join('versions')
+    dest_dir = os.path.join('src', 'main', 'python', 'Host', 'Common')
+
+    def python_make_release(product, targets, official):
+        contents = textwrap.dedent("""\
+        # autogenerated by PyBuilder / doit, %s
+        
+        def versionString():
+            return '%s'
+        
+        def versionNumString():
+            return '%s'
+        
+        def buildType():
+            # Empty string indicates official release
+            return '%s'
+        """)
+        src_file = os.path.join(src_dir, "%s_version.json" % product)
+        git_hash, stdout_value = run_command("git.exe log -1 --pretty=format:%H")
+        ver = {"git_hash":git_hash[:8]}
+
+        target = os.path.join(*RELEASE_VERSION_FILE) if official else os.path.join(*INTERNAL_VERSION_FILE)
+        with open(src_file,"r") as inp:
+            ver.update(json.load(inp))
+        with open(target,"w") as outp:
+            outp.write(contents % (time.asctime(), _verAsString(product, ver), _verAsNumString(ver), '' if official else 'INTERNAL'))
+    
+    return {'actions':[(_remove_python_version_files,), (python_make_release,)],
+            'params':[{'name':'product', 'long':'product', 'default':'g2000'},
+                      {'name':'official', 'long':'official', 'type':bool, 'default':False}],
+    }</t>
+<t tx="stan@picarro-com.20150622142233.1">def _verAsNumString(ver):
+    """
+    Convert a version dict into a string of numbers in this format:
+        &lt;major&gt;.&lt;minor&gt;.&lt;revision&gt;.&lt;build&gt;
+    """
+    number = "%(major)s.%(minor)s.%(revision)s.%(build)s" % ver
+    return number</t>
+<t tx="stan@picarro-com.20150622142251.1">def _verAsString(product, ver, osType=None):
+    """
+    Convert a version dict into a human-readable string.
+    """
+    number = _verAsNumString(ver)
+    if osType is not None:
+        return "%s-%s-%s (%s)" % (product, osType, number, ver["git_hash"])
+    else:
+        return "%s-%s (%s)" % (product, number, ver["git_hash"])</t>
+<t tx="stan@picarro-com.20150622171115.1">def _remove_python_version_files():
+    try:
+        os.remove(os.path.join(*RELEASE_VERSION_FILE))
+    except WindowsError:
+        pass
+    try:
+        os.remove(os.path.join(*INTERNAL_VERSION_FILE))
+    except WindowsError:
+        pass</t>
+<t tx="stan@picarro-com.20150622174109.1">def run_command(command):
+    """
+    Run a command line command so we can capture its output.
+    """
+    p = subprocess.Popen(command,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+    stdout_value, stderr_value = p.communicate()
+    return stdout_value, stderr_value</t>
 <t tx="sze.20150327093644.2"></t>
 <t tx="sze.20150327094108.1"></t>
 <t tx="sze.20150327114556.1"></t>
@@ -7054,5 +5993,6 @@ setup(version = "0.0.1",
 </t>
 <t tx="sze.20150528151728.1">if __name__ == "__main__":
     print "This is app1"</t>
+<t tx="sze.20150616212829.1">Each AddOn has a release.py file</t>
 </tnodes>
 </leo_file>
