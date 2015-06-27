@@ -9,4 +9,4 @@
 [Files]
 
 ; icon files
-Source: {#sandboxDir}\host\Assets\icons\*.ico; DestDir: {app}\HostExe; Flags: replacesameversion
+Source: {#sandboxDir}\Assets\icons\*.ico; DestDir: {app}\HostExe; Flags: replacesameversion

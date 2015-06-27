@@ -26,5 +26,5 @@ Source: {#configDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Fl
 Source: {#configDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
 
 ; HostExe executables (icons handled by inc_icons.iss)
-Source: {#sandboxDir}\host\Host\dist\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
+Source: {#distDir}\HostExe\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
 

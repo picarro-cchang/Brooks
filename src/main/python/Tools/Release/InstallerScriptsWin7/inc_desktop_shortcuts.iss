@@ -72,8 +72,8 @@
 
 ; bat and json files needed for running EventLogWatcher from desktop shortcuts
 ; app folder is C:\Picarro\G2000 but want these files to go into C:\Picarro\Utilities\EventLogWatcher
-Source: {#sandboxDir}\host\Host\EventLogWatcher\*.bat; DestDir: {app}\..\Utilities\EventLogWatcher; Flags: replacesameversion
-Source: {#sandboxDir}\host\Host\EventLogWatcher\EventLogWatcher.json; DestDir: {app}\..\Utilities\EventLogWatcher; Flags: replacesameversion
+Source: {#sandboxDir}\Host\EventLogWatcher\*.bat; DestDir: {app}\..\Utilities\EventLogWatcher; Flags: replacesameversion
+Source: {#sandboxDir}\Host\EventLogWatcher\EventLogWatcher.json; DestDir: {app}\..\Utilities\EventLogWatcher; Flags: replacesameversion
 
 
 [Icons]

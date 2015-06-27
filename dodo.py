@@ -10,6 +10,7 @@ from doit.tools import check_timestamp_unchanged
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
 
+
 def _verAsNumString(ver):
     """
     Convert a version dict into a string of numbers in this format:
@@ -44,7 +45,6 @@ def run_command(command):
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
     return stdout_value, stderr_value
-
 def task_make_sources_from_xml():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Firmware','xml')

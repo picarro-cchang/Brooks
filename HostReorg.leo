@@ -10,7 +10,7 @@
 <preferences/>
 <find_panel_settings/>
 <vnodes>
-<v t="stan@picarro-com.20150609175653.1" a="E"><vh>@clean src/main/python/Tools/Release/release_original.py</vh>
+<v t="stan@picarro-com.20150609175653.1"><vh>@clean src/main/python/Tools/Release/release_original.py</vh>
 <v t="stan@picarro-com.20150609175653.2"><vh>release declarations</vh></v>
 <v t="stan@picarro-com.20150609175653.3"><vh>class StdoutLogger</vh>
 <v t="stan@picarro-com.20150609175653.4"><vh>__init__</vh></v>
@@ -64,11 +64,11 @@
 <v t="sze.20150327145041.1"><vh>AppConfigBase</vh></v>
 <v t="sze.20150327145048.1"><vh>InstrConfigBase</vh></v>
 <v t="sze.20150327144553.1"><vh>CommonConfig</vh></v>
-<v t="sze.20150327144708.1" a="E"><vh>CFADS</vh>
+<v t="sze.20150327144708.1"><vh>CFADS</vh>
 <v t="sze.20150327144713.1"><vh>AppConfig</vh></v>
 <v t="sze.20150327144717.1"><vh>InstrConfig</vh></v>
 </v>
-<v t="sze.20150327144638.1" a="E"><vh>AEDS</vh>
+<v t="sze.20150327144638.1"><vh>AEDS</vh>
 <v t="sze.20150327144644.1"><vh>AppConfig</vh></v>
 <v t="sze.20150327144651.1"><vh>InstrConfig</vh></v>
 </v>
@@ -139,7 +139,7 @@
 </v>
 <v t="sze.20150327114611.1"><vh>scripts</vh></v>
 </v>
-<v t="sze.20150327114631.1" a="E"><vh>unittest</vh>
+<v t="sze.20150327114631.1"><vh>unittest</vh>
 <v t="sze.20150327114803.1"><vh>python</vh></v>
 </v>
 </v>
@@ -260,21 +260,26 @@
 <v t="sze.20150527174828.1"><vh>Microsoft</vh></v>
 </v>
 </v>
-<v t="sze.20150527175358.1" a="E"><vh>Versioning of Host, Firmware and Configurations</vh>
+<v t="sze.20150527175358.1"><vh>Versioning of Host, Firmware and Configurations</vh>
 <v t="stan@picarro-com.20150612091536.1"><vh>Current versioning method</vh></v>
 </v>
 <v t="sze.20150616212829.1"><vh>Versioning of AddOns</vh></v>
-<v t="sze.20150527185824.1" a="E"><vh>Build script</vh>
+<v t="sze.20150527185824.1"><vh>Build script</vh>
+<v t="stan@picarro-com.20150623223923.1"><vh>Properties for PyBuilder</vh></v>
 <v t="stan@picarro-com.20150610192902.1" a="E"><vh>@clean build.py</vh>
 <v t="stan@picarro-com.20150610192913.1"><vh>build declarations</vh></v>
-<v t="stan@picarro-com.20150610192913.2"><vh>set_properties</vh></v>
+<v t="stan@picarro-com.20150624185413.1"><vh>handle_types</vh></v>
+<v t="stan@picarro-com.20150624100735.1"><vh>initialize</vh></v>
+<v t="stan@picarro-com.20150610192913.2"><vh>setup_buildenv</vh></v>
 <v t="stan@picarro-com.20150610192913.3"><vh>write_setup_script</vh></v>
 <v t="stan@picarro-com.20150610192913.4"><vh>build_binary_distribution</vh></v>
+<v t="stan@picarro-com.20150623221216.1"><vh>run_py2exe</vh></v>
 <v t="stan@picarro-com.20150610193301.1"><vh>compile_sources</vh></v>
 <v t="stan@picarro-com.20150610192913.5"><vh>publish</vh></v>
+<v t="stan@picarro-com.20150624184236.1"><vh>make_installers</vh></v>
 </v>
 <v t="stan@picarro-com.20150529220322.6"><vh>_getBuildVersion</vh></v>
-<v t="stan@picarro-com.20150529220159.1" a="E"><vh>@clean src/main/python/Host/PicarroExeSetup.py</vh>
+<v t="stan@picarro-com.20150529220159.1"><vh>@clean src/main/python/Host/PicarroExeSetup.py</vh>
 <v t="stan@picarro-com.20150529220322.1"><vh>PicarroExeSetup declarations</vh></v>
 <v t="stan@picarro-com.20150529220322.2"><vh>_getPythonVersion</vh></v>
 <v t="stan@picarro-com.20150529220322.3"><vh>_getPythonSubVersion</vh></v>
@@ -287,11 +292,11 @@
 <v t="stan@picarro-com.20150529220322.10"><vh>_getTimeIso8601Str</vh></v>
 <v t="stan@picarro-com.20150529220322.11"><vh>_getTimeStr</vh></v>
 <v t="stan@picarro-com.20150529220322.12"><vh>_createGitVersionPythonFile</vh></v>
-<v t="stan@picarro-com.20150529220322.13" a="E"><vh>class Target</vh>
+<v t="stan@picarro-com.20150529220322.13"><vh>class Target</vh>
 <v t="stan@picarro-com.20150529220322.14"><vh>__init__</vh></v>
 </v>
 </v>
-<v t="stan@picarro-com.20150609110503.1" a="E"><vh>@clean src/main/python/Host/buildHost.py</vh>
+<v t="stan@picarro-com.20150609110503.1"><vh>@clean src/main/python/Host/buildHost.py</vh>
 <v t="stan@picarro-com.20150609110523.1"><vh>buildHost declarations</vh></v>
 <v t="stan@picarro-com.20150609110523.2"><vh>_getOsType</vh></v>
 <v t="stan@picarro-com.20150609110523.3"><vh>_generateBuildVersion</vh></v>
@@ -304,7 +309,7 @@
 <v t="stan@picarro-com.20150529220127.2"><vh>setup declarations</vh></v>
 </v>
 </v>
-<v t="stan@picarro-com.20150609180605.1" a="E"><vh>The release script (release.py)</vh>
+<v t="stan@picarro-com.20150609180605.1"><vh>The release script (release.py)</vh>
 <v t="stan@picarro-com.20150609175614.30"><vh>_buildExes</vh></v>
 <v t="stan@picarro-com.20150609175614.25"><vh>makeExe</vh>
 <v t="stan@picarro-com.20150609181355.1"><vh>&lt;&lt;get osType&gt;&gt;</vh></v>
@@ -341,7 +346,7 @@
 <v t="stan@picarro-com.20150609175614.39"><vh>_verAsNumString</vh></v>
 <v t="stan@picarro-com.20150609175614.40"><vh>_verAsUINumString</vh></v>
 </v>
-<v t="stan@picarro-com.20150609175513.1" a="E"><vh>@clean src/main/python/Tools/Release/release.py</vh>
+<v t="stan@picarro-com.20150609175513.1"><vh>@clean src/main/python/Tools/Release/release.py</vh>
 <v t="stan@picarro-com.20150609175614.1"><vh>release declarations</vh></v>
 <v t="stan@picarro-com.20150609175614.2"><vh>class StdoutLogger</vh>
 <v t="stan@picarro-com.20150609175614.3"><vh>__init__</vh></v>
@@ -395,24 +400,46 @@
 <v t="stan@picarro-com.20150531164144.1"><vh>Problems with py2exe when importing modules from the same directory</vh>
 <v t="stan@picarro-com.20150531172203.1"><vh>@clean find_local_imports.py</vh></v>
 </v>
-<v t="stan@picarro-com.20150609133908.1" a="E"><vh>Learning doit</vh>
-<v t="stan@picarro-com.20150609133916.1" a="E"><vh>@clean dodo.py</vh>
-<v t="stan@picarro-com.20150622142233.1"><vh>&lt;&lt;_verAsNumString&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622142251.1"><vh>&lt;&lt;_verAsString&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622171115.1"><vh>&lt;&lt;_remove_python_version_files&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622174109.1"><vh>&lt;&lt;run_command&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135659.1"><vh>&lt;&lt;task_make_sources_from_xml&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135727.1"><vh>&lt;&lt;task_compile_fitutils&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135802.1"><vh>&lt;&lt;task_compile_cluster_analyzer&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135818.1"><vh>&lt;&lt;task_compile_swathP&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135912.1"><vh>&lt;&lt;task_compile_fastLomb&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135925.1"><vh>&lt;&lt;task_compile_sources&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622135949.1"><vh>&lt;&lt;task_build_hostexe&gt;&gt;</vh></v>
-<v t="stan@picarro-com.20150622140041.1"><vh>&lt;&lt;task_make_release&gt;&gt;</vh></v>
+<v t="stan@picarro-com.20150609133908.1"><vh>Learning doit</vh>
+<v t="stan@picarro-com.20150609133916.1"><vh>@clean dodo.py</vh>
+<v t="stan@picarro-com.20150622142233.1"><vh>_verAsNumString</vh></v>
+<v t="stan@picarro-com.20150622142251.1"><vh>_verAsString</vh></v>
+<v t="stan@picarro-com.20150622171115.1"><vh>_remove_python_version_files</vh></v>
+<v t="stan@picarro-com.20150622174109.1"><vh>run_command</vh></v>
+<v t="stan@picarro-com.20150622135659.1"><vh>task_make_sources_from_xml</vh></v>
+<v t="stan@picarro-com.20150622135727.1"><vh>task_compile_fitutils</vh></v>
+<v t="stan@picarro-com.20150622135802.1"><vh>task_compile_cluster_analyzer</vh></v>
+<v t="stan@picarro-com.20150622135818.1"><vh>task_compile_swathP</vh></v>
+<v t="stan@picarro-com.20150622135912.1"><vh>task_compile_fastLomb</vh></v>
+<v t="stan@picarro-com.20150622135925.1"><vh>task_compile_sources</vh></v>
+<v t="stan@picarro-com.20150622135949.1"><vh>task_build_hostexe</vh></v>
+<v t="stan@picarro-com.20150622140041.1"><vh>task_make_release</vh></v>
 </v>
 <v t="stan@picarro-com.20150609134842.1"><vh>Using a python action</vh></v>
 </v>
 <v t="stan@picarro-com.20150621191519.1"><vh>Creating an official release with PyBuilder</vh></v>
+<v t="stan@picarro-com.20150624094139.1"><vh>Running ISS installer</vh>
+<v t="stan@picarro-com.20150624094645.1"><vh>@clean src\main\python\Tools\Release\g2000_win7.json</vh></v>
+<v t="stan@picarro-com.20150624095237.1"><vh>Handling the g2000_win7.json file</vh>
+<v t="stan@picarro-com.20150609182831.1"></v>
+<v t="stan@picarro-com.20150610155754.1"></v>
+<v t="stan@picarro-com.20150610155915.1"></v>
+<v t="stan@picarro-com.20150610155655.1"></v>
+<v t="stan@picarro-com.20150610160202.1"></v>
+</v>
+<v t="stan@picarro-com.20150609175614.37"></v>
+<v t="stan@picarro-com.20150609175614.27"></v>
+</v>
+<v t="stan@picarro-com.20150624001144.1"><vh>Recovered Nodes</vh>
+<v t="stan@picarro-com.20150624001144.2"><vh>Recovered node "_getBuildVersion" from PicarroExeSetup.py</vh>
+<v t="stan@picarro-com.20150624001144.3"><vh>old:_getBuildVersion</vh></v>
+<v t="stan@picarro-com.20150624001144.4"><vh>new:_getBuildVersion</vh></v>
+</v>
+<v t="stan@picarro-com.20150624001144.5"><vh>Recovered node "_getBuildType" from PicarroExeSetup.py</vh>
+<v t="stan@picarro-com.20150624001144.6"><vh>old:_getBuildType</vh></v>
+<v t="stan@picarro-com.20150624001144.7"><vh>new:_getBuildType</vh></v>
+</v>
+</v>
 </vnodes>
 <tnodes>
 <t tx="stan@picarro-com.20150529101713.1"></t>
@@ -572,7 +599,7 @@ Controller = Target(description = "Controller", # used for the versioninfo resou
                                         1,
                                         manifest_template % dict(prog="Controller")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "Controller"
                     )
 
@@ -582,7 +609,7 @@ Controller = Target(description = "Controller", # used for the versioninfo resou
 #                                        1,
 #                                        manifest_template % dict(prog="ControllerBuildStation")
 #                                        )],
-#                    ##    icon_resources = [(1, "icon.ico")],
+#                    ##    icon_resources = [(0, "icon.ico")],
 #                    dest_base = "ControllerBuildStation"
 #                    )
 
@@ -592,7 +619,7 @@ QuickGui = Target(description = "QuickGui", # used for the versioninfo resource
                                         1,
                                         manifest_template % dict(prog="QuickGui")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "QuickGui"
                     )
 
@@ -602,7 +629,7 @@ Fitter = Target(description = "Fitter", # used for the versioninfo resource
                                         1,
                                         manifest_template % dict(prog="Fitter")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "Fitter"
                     )
 
@@ -612,7 +639,7 @@ Coordinator = Target(description = "Coordinator", # used for the versioninfo res
                                         1,
                                         manifest_template % dict(prog="Coordinator")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "Coordinator"
                     )
 
@@ -622,7 +649,7 @@ deltaCorrProcessor = Target(description = "DeltaCorrProcessor", # used for the v
                                         1,
                                         manifest_template % dict(prog="deltaCorrProcessor")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "DeltaCorrProcessor"
                     )
 
@@ -632,7 +659,7 @@ dilutionCorrProcessor = Target(description = "DilutionCorrProcessor", # used for
                                         1,
                                         manifest_template % dict(prog="dilutionCorrProcessor")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "DilutionCorrProcessor"
                     )
 
@@ -642,7 +669,7 @@ supervisorLauncher = Target(description = "SupervisorLauncher", # used for the v
                                         1,
                                         manifest_template % dict(prog="supervisorLauncher")
                                         )],
-                    ##    icon_resources = [(1, "icon.ico")],
+                    icon_resources = [(5, "Utilities/SupervisorLauncher/Picarro_icon.ico")],
                     dest_base = "SupervisorLauncher"
                     )
 
@@ -660,7 +687,7 @@ pythonVer = _getPythonVersion()
 pythonSubVer = _getPythonSubVersion()
 osType = _getOsType()
 
-versionStr = _getBuildVersion()
+versionNum, versionStr = _getBuildVersion()
 buildTypeStr = _getBuildType()
 
 # And now to the main setup routine...
@@ -721,7 +748,8 @@ data_files = [(".", ["EventManager/Warning_16x16_32.ico",
                    "Utilities/SupervisorLauncher/Picarro_icon.ico",
                    "Utilities/SupervisorLauncher/Utilities_icon.ico",
                    "PeriphIntrf/Serial2Socket.exe",
-                   "../repoBzrVer.py"]),
+                   #"../repoBzrVer.py",
+                   ]),
             (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
             # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
             # So add it manually here:
@@ -809,7 +837,11 @@ consoleList = [
 ]
 
 windowsList = [
-    QuickGui, Coordinator,Controller,deltaCorrProcessor, dilutionCorrProcessor,
+    QuickGui, 
+    Coordinator,
+    Controller,
+    deltaCorrProcessor, 
+    dilutionCorrProcessor,
     "Common/StopSupervisor.py",
     "IPV/IPV.py",
     "IPV/IPVLicense.py",
@@ -833,14 +865,14 @@ windowsList = [
 
 # Generate git repo version file. Filename is a carryover from when we used
 # bzr to archive our sources, is an import lib used in Driver.py for version info.
-verFilePath = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'repoBzrVer.py'))
-branchName = _getGitBranch(os.path.dirname(os.getcwd()))
+#verFilePath = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'repoBzrVer.py'))
+#branchName = _getGitBranch(os.path.dirname(os.getcwd()))
 
-ret = _createGitVersionPythonFile(verFilePath, buildTypeStr, branchName)
+#ret = _createGitVersionPythonFile(verFilePath, buildTypeStr, branchName)
 
-if ret != 0:
-    print "Error creating git config file '%s'" % verFilePath
-    sys.exit(1)
+#if ret != 0:
+#    print "Error creating git config file '%s'" % verFilePath
+#    sys.exit(1)
 
 """
 # old bzr method - incredibly it worked (somewhat) on git dirs
@@ -856,10 +888,10 @@ with open(os.path.join(os.path.dirname(__file__), 'Common',
         ["# autogenerated by PicarroExeSetup.py, %s\n" % time.asctime(),
          "\n",
          "def versionString():\n",
-         "    return '%s'\n" % buildTypeStr])
+         "    return '%s %s'\n" % (buildTypeStr, versionStr) ])
 
 
-description = "Picarro Host Core Analyzer Software"
+description = "Picarro CRDS %s" % versionStr
 
 productName = "Picarro CRDS"
 if buildTypeStr != "":
@@ -870,7 +902,7 @@ if pythonVer == "2.5":
     # only packageList differs for Python 2.5 and 2.7
     packageList = ["simplejson", "werkzeug","flask","jinja2","email"]
 
-    setup(version = versionStr,
+    setup(version = versionNum,
       description = description,
       name = productName,
       options = dict(py2exe = dict(compressed = 1,
@@ -894,7 +926,7 @@ elif pythonVer == "2.7":
     packageList = ["werkzeug","jinja2","email"]
 
     # no bundle_files, specify zipfile
-    setup(version = versionStr,
+    setup(version = versionNum,
           description = description,
           name = productName,
           options = dict(py2exe = dict(compressed = 1,
@@ -1148,21 +1180,24 @@ class Target:
         # First look for release_version which is generated by
         # release.py
         from Host.Common import release_version as buildVersion
-        verStr = buildVersion.versionNumString()
-        print "Release version: %s" % verStr
+        versionNum = buildVersion.versionNumString()
+        versionStr = buildVersion.versionString()
+        print "Release version: %s" % versionStr
     except Exception, e:
         # Next try build_version which is generated by
         # buildHost.py (command line script for internal builds)
         try:
-            import build_version as buildVersion
-            verStr = buildVersion.versionNumString()
-            print "Setup version: %s" % verStr
+            from Host import build_version as buildVersion
+            versionNum = buildVersion.versionNumString()
+            versionStr = buildVersion.versionString()
+            print "Setup version: %s" % versionStr
         except Exception, e:
             # use default
-            verStr = "1.0.0.0"
-            print "Release or setup version not found, using: %s" % verStr
+            versionNum = "0.0.0.0"
+            versionStr = "0.0.0.0 (unknown)"
+            print "Release or setup version not found, using: %s" % versionStr
 
-    return verStr
+    return versionNum, versionStr
 
 
 </t>
@@ -1170,20 +1205,19 @@ class Target:
     try:
         # First look for release_version which is generated by
         # release.py
-        import release_version as buildVersion
+        from Host.Common import release_version as buildVersion
         buildTypeStr = buildVersion.buildType()
         print "Release build type: %s" % buildTypeStr
     except Exception, e:
         try:
             # Not found, try setup_version (generated by buildHost.py
             # during internal builds)
-            #import build_version as buildVersion
-            #buildTypeStr = buildVersion.buildType()
+            from Host import build_version as buildVersion
+            buildTypeStr = buildVersion.buildType()
             #print "Setup build type: %s" % buildTypeStr
 
             # Internal build, includes last git check-in SHA1
             # returns "Internal (&lt;SHA1&gt;)"
-            buildTypeStr = hostVersion.buildType()
             print "Setup build type: %s" % buildTypeStr
 
         except Exception, e:
@@ -1342,7 +1376,8 @@ if __name__ == "__main__":
 @tabwidth -4
 @others
 if __name__ == "__main__":
-    main()</t>
+    main()
+</t>
 <t tx="stan@picarro-com.20150609110523.1"># buildHost.py
 #
 # Set up the build environment and build Host components. Use this
@@ -1393,6 +1428,7 @@ VERSION = {}
         sys.exit(1)
 
     return osType
+    
 </t>
 <t tx="stan@picarro-com.20150609110523.3">def _generateBuildVersion(product, osType, ver):
     """
@@ -1518,7 +1554,8 @@ Builds a local HostExe.
     osType = _getOsType()
     product = "%s-INTERNAL" % options.product
 
-    _generateBuildVersion(product, osType, VERSION)
+    if not os.path.exists('build_version.py'):
+        _generateBuildVersion(product, osType, VERSION)
 
     # build the executables
     buildExes()
@@ -1538,19 +1575,9 @@ from doit.tools import check_timestamp_unchanged
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
 
-&lt;&lt;_verAsNumString&gt;&gt;
-&lt;&lt;_verAsString&gt;&gt;
-&lt;&lt;_remove_python_version_files&gt;&gt;  
-&lt;&lt;run_command&gt;&gt;
 
-&lt;&lt;task_make_sources_from_xml&gt;&gt;
-&lt;&lt;task_compile_fitutils&gt;&gt;
-&lt;&lt;task_compile_cluster_analyzer&gt;&gt;
-&lt;&lt;task_compile_swathP&gt;&gt;
-&lt;&lt;task_compile_fastLomb&gt;&gt;
-&lt;&lt;task_compile_sources&gt;&gt;
-&lt;&lt;task_build_hostexe&gt;&gt;            
-&lt;&lt;task_make_release&gt;&gt;</t>
+@others
+</t>
 <t tx="stan@picarro-com.20150609134842.1">def task_hello():
     def python_hello(times, text, targets):
         with open(targets[0],"a") as output:
@@ -5150,7 +5177,9 @@ _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBui
 @tabwidth -4
 @others
 </t>
-<t tx="stan@picarro-com.20150610192913.1">import os
+<t tx="stan@picarro-com.20150610192913.1">import json
+import os
+import pprint
 
 from pybuilder.core import after, before, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
@@ -5158,6 +5187,10 @@ from pybuilder.errors import BuildFailedException
 import shutil
 import subprocess
 import sys
+import time
+
+ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
+INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'Tools', 'Release', 'InstallerScriptsWin7') 
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -5165,14 +5198,32 @@ use_plugin("python.install_dependencies")
 # use_plugin("python.flake8")
 # use_plugin("python.coverage")
 
-name = "Host"
 default_task = "publish"
 
 </t>
-<t tx="stan@picarro-com.20150610192913.2">@init
-def set_properties(project):
-    pass
+<t tx="stan@picarro-com.20150610192913.2">
+@after("prepare")
+def setup_buildenv(project, logger):
+    official = project.get_property("official", False)
+    product = project.get_property("product", "g2000")
 
+    reports_dir = project.expand_path("$dir_reports")
+    if not os.path.exists(reports_dir):
+        os.mkdir(reports_dir)
+    output_file_path = os.path.join(reports_dir, "setup_buildenv")
+
+    logger.info("Setting up build environment")
+    cmd = ["doit", "make_release", "--product", product]
+    if official:
+        cmd.append(["--official"])
+    with open(output_file_path, "w") as output_file:
+        process = subprocess.Popen(cmd,
+                                   stdout=output_file,
+                                   stderr=output_file,
+                                   shell=False)
+        return_code = process.wait()
+        if return_code != 0:
+            raise BuildFailedException("Error while executing make_release")
 </t>
 <t tx="stan@picarro-com.20150610192913.3">def write_setup_script(project, logger):
     setup_script = project.expand_path("$dir_dist/Host/setup.py")
@@ -5206,25 +5257,6 @@ def set_properties(project):
             raise BuildFailedException(
                 "Error while executing setup command %s, see %s for details" % (command, output_file_path))
     shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-
-@before("publish")
-def run_py2exe(project, logger):
-    logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
-    reports_dir = project.expand_path("$dir_reports/run_py2exe")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "hostexe")
-    with open(output_file_path, "w") as output_file:
-        process = subprocess.Popen(["doit", "build_hostexe", "--build_dir", "%s" % project.expand_path("$dir_dist/Host")],
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
-
-    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-    
 </t>
 <t tx="stan@picarro-com.20150610192913.5">@task
 def publish(project, logger):
@@ -5564,6 +5596,16 @@ pyb_ release -P branch="feature/sze/usePybuilder" -P version="1.2.3.4" -P types=
 Fetching a specific file from a commit using Git and write it to stdout. Note the use of /
 
 git show d11a469:Host/Common/Averager.py
+
+
+
+TODO:
+a) Checkout a specific commit or branch from git and force working tree to be consistent with that branch
+b) Compute hash of a directory subtree and record results in an INI file. Perform check to see if anything has changed in that directory
+c) Look at tracking dependencies for entire host project
+
+
+
  </t>
 <t tx="stan@picarro-com.20150622135659.1">def task_make_sources_from_xml():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
@@ -5710,6 +5752,463 @@ git show d11a469:Host/Common/Averager.py
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
     return stdout_value, stderr_value</t>
+<t tx="stan@picarro-com.20150623221216.1">@before("publish")
+def run_py2exe(project, logger):
+    logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
+    reports_dir = project.expand_path("$dir_reports")
+    if not os.path.exists(reports_dir):
+        os.mkdir(reports_dir)
+    output_file_path = os.path.join(reports_dir, "build_hostexe")
+    with open(output_file_path, "w") as output_file:
+        process = subprocess.Popen(["doit", "build_hostexe", "--build_dir", "%s" % project.expand_path("$dir_dist/Host")],
+                                   stdout=output_file,
+                                   stderr=output_file,
+                                   shell=False)
+        return_code = process.wait()
+        if return_code != 0:
+            raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
+
+    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
+    
+    </t>
+<t tx="stan@picarro-com.20150623223923.1">product: String specifying product for which installer is to be made
+default: g2000
+
+official: Boolean specifying if an official or an internal release is required
+default: False</t>
+<t tx="stan@picarro-com.20150624001144.1"></t>
+<t tx="stan@picarro-com.20150624001144.2">(uncached) stan@picarro-com.20150529220322.6
+Diff...
+  def _getBuildVersion():
+      try:
+          # First look for release_version which is generated by
+          # release.py
+          from Host.Common import release_version as buildVersion
+-         versionNum = buildVersion.versionNumString()
+-         versionStr = buildVersion.versionString()
+?            ----
++         verStr = buildVersion.versionNumString()
+?                                      +++
+-         print "Release version: %s" % versionStr
+?                                          ----
++         print "Release version: %s" % verStr
+      except Exception, e:
+          # Next try build_version which is generated by
+          # buildHost.py (command line script for internal builds)
+          try:
+-             from Host import build_version as buildVersion
+?            ----------
++             import build_version as buildVersion
+-             versionNum = buildVersion.versionNumString()
+-             versionStr = buildVersion.versionString()
+?                ----
++             verStr = buildVersion.versionNumString()
+?                                          +++
+-             print "Setup version: %s" % versionStr
+?                                            ----
++             print "Setup version: %s" % verStr
+          except Exception, e:
+              # use default
+-             versionNum = "0.0.0.0"
+?                ^^^^^^^    ^
++             verStr = "1.0.0.0"
+?                ^^^    ^
+-             versionStr = "0.0.0.0 (unknown)"
+-             print "Release or setup version not found, using: %s" % versionStr
+?                                                                        ----
++             print "Release or setup version not found, using: %s" % verStr
+  
+-     return versionNum, versionStr
++     return verStr
+  
+  
+</t>
+<t tx="stan@picarro-com.20150624001144.3">def _getBuildVersion():
+    try:
+        # First look for release_version which is generated by
+        # release.py
+        from Host.Common import release_version as buildVersion
+        verStr = buildVersion.versionNumString()
+        print "Release version: %s" % verStr
+    except Exception, e:
+        # Next try build_version which is generated by
+        # buildHost.py (command line script for internal builds)
+        try:
+            import build_version as buildVersion
+            verStr = buildVersion.versionNumString()
+            print "Setup version: %s" % verStr
+        except Exception, e:
+            # use default
+            verStr = "1.0.0.0"
+            print "Release or setup version not found, using: %s" % verStr
+
+    return verStr
+
+
+</t>
+<t tx="stan@picarro-com.20150624001144.4">def _getBuildVersion():
+    try:
+        # First look for release_version which is generated by
+        # release.py
+        from Host.Common import release_version as buildVersion
+        versionNum = buildVersion.versionNumString()
+        versionStr = buildVersion.versionString()
+        print "Release version: %s" % versionStr
+    except Exception, e:
+        # Next try build_version which is generated by
+        # buildHost.py (command line script for internal builds)
+        try:
+            from Host import build_version as buildVersion
+            versionNum = buildVersion.versionNumString()
+            versionStr = buildVersion.versionString()
+            print "Setup version: %s" % versionStr
+        except Exception, e:
+            # use default
+            versionNum = "0.0.0.0"
+            versionStr = "0.0.0.0 (unknown)"
+            print "Release or setup version not found, using: %s" % versionStr
+
+    return versionNum, versionStr
+
+
+</t>
+<t tx="stan@picarro-com.20150624001144.5">(uncached) stan@picarro-com.20150529220322.7
+Diff...
+  def _getBuildType():
+      try:
+          # First look for release_version which is generated by
+          # release.py
+-         from Host.Common import release_version as buildVersion
+?        -----------------
++         import release_version as buildVersion
+          buildTypeStr = buildVersion.buildType()
+          print "Release build type: %s" % buildTypeStr
+      except Exception, e:
+          try:
+              # Not found, try setup_version (generated by buildHost.py
+              # during internal builds)
+-             from Host import build_version as buildVersion
+?             ^^^^^^^^^^
++             #import build_version as buildVersion
+?             ^
+-             buildTypeStr = buildVersion.buildType()
++             #buildTypeStr = buildVersion.buildType()
+?             +
+              #print "Setup build type: %s" % buildTypeStr
+  
+              # Internal build, includes last git check-in SHA1
+              # returns "Internal (&lt;SHA1&gt;)"
++             buildTypeStr = hostVersion.buildType()
+              print "Setup build type: %s" % buildTypeStr
+  
+          except Exception, e:
+              # Should never get here...
+              buildTypeStr = "DEVELOPMENT"
+              print "Release or setup version build type not found, using: %s" % buildTypeStr
+  
+      return buildTypeStr
+  
+  
+</t>
+<t tx="stan@picarro-com.20150624001144.6">def _getBuildType():
+    try:
+        # First look for release_version which is generated by
+        # release.py
+        import release_version as buildVersion
+        buildTypeStr = buildVersion.buildType()
+        print "Release build type: %s" % buildTypeStr
+    except Exception, e:
+        try:
+            # Not found, try setup_version (generated by buildHost.py
+            # during internal builds)
+            #import build_version as buildVersion
+            #buildTypeStr = buildVersion.buildType()
+            #print "Setup build type: %s" % buildTypeStr
+
+            # Internal build, includes last git check-in SHA1
+            # returns "Internal (&lt;SHA1&gt;)"
+            buildTypeStr = hostVersion.buildType()
+            print "Setup build type: %s" % buildTypeStr
+
+        except Exception, e:
+            # Should never get here...
+            buildTypeStr = "DEVELOPMENT"
+            print "Release or setup version build type not found, using: %s" % buildTypeStr
+
+    return buildTypeStr
+
+
+</t>
+<t tx="stan@picarro-com.20150624001144.7">def _getBuildType():
+    try:
+        # First look for release_version which is generated by
+        # release.py
+        from Host.Common import release_version as buildVersion
+        buildTypeStr = buildVersion.buildType()
+        print "Release build type: %s" % buildTypeStr
+    except Exception, e:
+        try:
+            # Not found, try setup_version (generated by buildHost.py
+            # during internal builds)
+            from Host import build_version as buildVersion
+            buildTypeStr = buildVersion.buildType()
+            #print "Setup build type: %s" % buildTypeStr
+
+            # Internal build, includes last git check-in SHA1
+            # returns "Internal (&lt;SHA1&gt;)"
+            print "Setup build type: %s" % buildTypeStr
+
+        except Exception, e:
+            # Should never get here...
+            buildTypeStr = "DEVELOPMENT"
+            print "Release or setup version build type not found, using: %s" % buildTypeStr
+
+    return buildTypeStr
+
+
+</t>
+<t tx="stan@picarro-com.20150624094139.1"></t>
+<t tx="stan@picarro-com.20150624094645.1">@language unknown_language
+{
+    "buildTypes": {
+        "AEDS": {
+            "species": "NH3",
+            "installerSignature": "AEDS"
+        },
+
+        "BFADS": {
+            "species": "H2S_CH4",
+            "installerSignature": "BFADS"
+        },
+
+        "CBDS": {
+            "species": "iCO2",
+            "installerSignature": "CBDS"
+        },
+
+        "CFADS": {
+            "species": "CO2_CH4_H2O",
+            "installerSignature": "CFADS"
+        },
+
+        "CFBDS": {
+            "species": "Flux",
+            "installerSignature": "CFBDS"
+        },
+
+        "CFDDS": {
+            "species": "CO2_CH4_Flight",
+            "installerSignature": "CFDDS"
+        },
+
+        "CFEDS": {
+            "species": "iCO2_iCH4",
+            "installerSignature": "CFEDS"
+        },
+
+        "CFFDS": {
+            "species": "iCO2_CH4",
+            "installerSignature": "CFFDS"
+        },
+
+        "CFGDS": {
+            "species": "iCO2",
+            "installerSignature": "CFGDS"
+        },
+
+        "CFHADS": {
+            "species": "SuperFlux",
+            "installerSignature": "CFHADS"
+        },
+
+        "CFHDS": {
+            "species": "iCO2",
+            "installerSignature": "CFHDS",
+            "comment": "for NEON"
+        },
+
+        "CFIDS": {
+            "species": "iCO2_iCH4",
+            "installerSignature": "CFIDS"
+        },
+
+        "CFJDS": {
+            "species": "High_Conc_iCH4_DCH3_i13CH4",
+            "installerSignature": "CFJDS"
+        },
+
+        "CFKADS": {
+            "species": "4Species",
+            "installerSignature": "CFKADS"
+        },
+
+        "CFKBDS": {
+            "species": "4Species_Flight",
+            "installerSignature": "CFKBDS"
+        },
+
+        "CHADS": {
+            "species": "i13CO2_iHDO",
+            "installerSignature": "CHADS"
+        },
+
+        "CKADS": {
+            "species": "CO2_CO_H2O",
+            "installerSignature": "CKADS"
+        },
+
+        "FCDS": {
+            "species": "iCH4",
+            "installerSignature": "FCDS"
+        },
+
+        "HBDS": {
+            "species": "iH2O",
+            "installerSignature": "HBDS"
+        },
+
+        "HIDS": {
+            "species": "iH2O",
+            "installerSignature": "HIDS"
+        },
+
+        "HKDS": {
+            "species": "iH2O",
+            "installerSignature": "HKDS"
+        },
+
+        "JFAADS": {
+            "species": "5Species",
+            "installerSignature": "JFAADS",
+            "comment": "species are N2O_CH4_CO2_NH3_H2O"
+        },
+
+        "MADS": {
+            "species": "HF",
+            "installerSignature": "MADS"
+        },
+
+        "NBDS": {
+            "species": "H2O2",
+            "installerSignature": "NBDS"
+        }
+
+    },
+
+    "installerScriptsDir": "InstallerScriptsWin7"
+}
+</t>
+<t tx="stan@picarro-com.20150624095237.1">N.B. opt.buildTypes is set by:
+
+parser.add_option('--types', dest='buildTypes',
+                  default=None, help=('Comma-delimited list of analyzer types to build or '
+                                      'types to move from staging to the official release '
+                                      'area. If the list starts with a "!" every type but those '
+                                      'in the list will be built or moved.'))
+</t>
+<t tx="stan@picarro-com.20150624100735.1">@init
+def initialize(project, logger):
+    # official removes "INTERNAL" from version number
+    official = project.get_property("official", "False")
+    official = official.lower() in ("yes", "true", "t", "1")
+    # product specifies which installer to produce, currently supported values are g2000
+    product = project.get_property("product", "g2000")
+    # types is a comma separated list of installers to create or to exclude (if preceeded by !)
+    #  Default is to include all types
+    types = project.get_property("types", "!")
+    
+    version_file = os.path.join("versions","%s_version.json" % product)
+    with open(version_file,"r") as inp:
+        ver = json.load(inp)
+        project.name = product
+        project.version = ("%s.%s.%s.%s%s" % 
+            (ver["major"], ver["minor"], ver["revision"], ver["build"], "" if official else "-INTERNAL" ))
+        project.set_property('installer_version',"%s.%s.%s.%s" % (ver["major"], ver["minor"], ver["revision"], ver["build"]))
+    # Need to set the directory into which the output distribution is placed        
+    project.set_property('dir_dist','$dir_target/dist/%s-%s' % (project.name, project.version))
+    
+    types_file = os.path.join("versions","%s_types.json" % product)
+    with open(types_file,"r") as inp:
+        config_info = json.load(inp)
+    types_to_build = handle_types(types, config_info['buildTypes'], logger)
+        
+    project.set_property('types_to_build', types_to_build)
+    project.set_property('config_info', config_info['buildTypes'])
+        
+    
+</t>
+<t tx="stan@picarro-com.20150624184236.1">@task
+def make_installers(project, logger):
+    config_info = project.get_property('config_info')
+    sandbox_dir = project.expand_path('$dir_source_main_python')
+    resource_dir = project.expand_path('$dir_dist/Installers')
+    dist_dir = project.expand_path('$dir_dist') 
+    reports_dir = project.expand_path("$dir_reports")
+    logger.info("Reports_dir: %s" % reports_dir)
+    if not os.path.exists(reports_dir):
+        os.mkdir(reports_dir)
+    output_file_path = os.path.join(reports_dir, "make_installers")
+
+    for installer_type in project.get_property('types_to_build'):
+        species = config_info[installer_type]['species']
+        iss_filename = "setup_%s_%s.iss" % (installer_type, species)
+        setup_file_path = os.path.join(*(INSTALLER_SCRIPTS_DIR + (iss_filename,)))
+        logger.info("Building from %s" % setup_file_path)
+        config_dir = os.path.join(os.getcwd(),'Config')
+        #
+        # Build a fully qualified path for the scripts folder, so ISCC can find
+        # the include files (can't find them using a relative path here)
+        # Notes:
+        #
+        # installerVersion: must be of the form x.x.x.x, for baking version number
+        #                   into setup_xxx.exe metadata (for Explorer properties)
+        # hostVersion:      e.g., g2000_win7-x.x.x-x, displayed in the installer UI
+        # productVersion:   used for displaying Product version in Explorer properties
+        current_year = time.strftime("%Y")
+        logger.info('Project version: %s' % project.version)
+        args = [ISCC_WIN7, "/dinstallerType=%s" % installer_type,
+                "/dhostVersion=%s" % project.version,
+                "/dinstallerVersion=%s" % project.get_property('installer_version'),
+                "/dproductVersion=%s" % project.version,
+                "/dproductYear=%s" % current_year,
+                "/dsandboxDir=%s" % sandbox_dir,
+                "/dconfigDir=%s" % config_dir,
+                "/dcommonName=%s" % species,
+                "/ddistDir=%s" % dist_dir,
+                "/v9",
+                "/O%s" % resource_dir,
+                setup_file_path]
+                
+        output_file_path = os.path.join(reports_dir, "make_installers")
+        with open(output_file_path, "a") as output_file:
+            process = subprocess.Popen(args,
+                                       stdout=output_file,
+                                       stderr=output_file,
+                                       shell=False)
+            return_code = process.wait()
+            if return_code != 0:
+                raise BuildFailedException("Error while making installer for %s" % installer_type)
+                sys.exit(retCode)
+</t>
+<t tx="stan@picarro-com.20150624185413.1">def handle_types(types, build_info, logger=None):
+    types = types.strip()
+    negate = (types[0] == "!")
+    types_list = (types[1:] if negate else types).split(',') 
+    types_list = [item.strip() for item in types_list]
+
+    types_to_build = []
+    for item in sorted(build_info.keys()):
+        if negate:
+            if item not in types_list:
+                types_to_build.append(item)
+        else:
+            if item in types_list:
+                types_to_build.append(item)
+    if logger:
+        logger.info("Installer types to build: %s" % ", ".join(types_to_build))
+        
+    return types_to_build
+</t>
 <t tx="sze.20150327093644.2"></t>
 <t tx="sze.20150327094108.1"></t>
 <t tx="sze.20150327114556.1"></t>

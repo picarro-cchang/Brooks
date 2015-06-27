@@ -4,8 +4,8 @@
 
 [Files]
 
-Source: {#sandboxDir}\host\Host\DatViewer\DatViewer.py; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\host\Host\DatViewer\datViewer.ini; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\Host\DatViewer\DatViewer.py; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\Host\DatViewer\datViewer.ini; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
 
 
 [Icons]

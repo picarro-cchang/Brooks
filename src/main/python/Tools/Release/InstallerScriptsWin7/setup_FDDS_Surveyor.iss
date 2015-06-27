@@ -44,7 +44,7 @@
 [Files]
 
 ; Surveyor also includes MobileKit exes
-Source: {#sandboxDir}\host\MobileKit\dist\*; DestDir: {app}\AnalyzerServerExe; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\MobileKit\dist\*; DestDir: {app}\AnalyzerServerExe; Flags: recursesubdirs replacesameversion
 
 
 [Icons]
