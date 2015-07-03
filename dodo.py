@@ -18,6 +18,7 @@ def _verAsNumString(ver):
     """
     number = "%(major)s.%(minor)s.%(revision)s.%(build)s" % ver
     return number
+
 def _verAsString(product, ver, osType=None):
     """
     Convert a version dict into a human-readable string.
@@ -27,6 +28,7 @@ def _verAsString(product, ver, osType=None):
         return "%s-%s-%s (%s)" % (product, osType, number, ver["git_hash"])
     else:
         return "%s-%s (%s)" % (product, number, ver["git_hash"])
+
 def _remove_python_version_files():
     try:
         os.remove(os.path.join(*RELEASE_VERSION_FILE))
@@ -36,6 +38,7 @@ def _remove_python_version_files():
         os.remove(os.path.join(*INTERNAL_VERSION_FILE))
     except WindowsError:
         pass
+
 def run_command(command):
     """
     Run a command line command so we can capture its output.
@@ -45,6 +48,7 @@ def run_command(command):
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
     return stdout_value, stderr_value
+
 def task_make_sources_from_xml():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Firmware','xml')
@@ -61,6 +65,7 @@ def task_make_sources_from_xml():
         'file_dep':[os.path.join(src_dir,fname) for fname in ['interface.xml', 'Interface.dtd', 'ParameterPages.xml']],
         'clean': True
     }
+
 def task_compile_fitutils():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Fitter')
@@ -74,6 +79,7 @@ def task_compile_fitutils():
         'file_dep':[os.path.join(src_dir,'fitutils.f')],
         'clean':True
     }
+
 def task_compile_cluster_analyzer():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Fitter')
@@ -88,6 +94,7 @@ def task_compile_cluster_analyzer():
         'file_dep':[os.path.join(src_dir,fname) for fname in ['cluster_analyzer.c', 'cluster_analyzer.h']],
         'clean':True
     }
+
 def task_compile_swathP():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Common')
@@ -101,6 +108,7 @@ def task_compile_swathP():
         'file_dep':[os.path.join(src_dir,fname) for fname in ['swathP.c', 'swathP.pyf']],
         'clean':True
     }
+
 def task_compile_fastLomb():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
@@ -115,15 +123,18 @@ def task_compile_fastLomb():
         'file_dep':[os.path.join(src_dir,fname) for fname in ['fastLomb.c', 'fastLomb.pyf']],
         'clean':True
     }
+
 def task_compile_sources():
     return {'actions': None,
             'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}
+
 def task_build_hostexe():
     return {'actions': [r'cd %(build_dir)s && python buildHost.py'],
             'task_dep': ['compile_sources'],
             'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
             'verbosity': 2
     }
+
 def task_make_release():
     src_dir = os.path.join('versions')
     dest_dir = os.path.join('src', 'main', 'python', 'Host', 'Common')

@@ -438,16 +438,6 @@
 <v t="stan@picarro-com.20150609175614.37"></v>
 <v t="stan@picarro-com.20150609175614.27"></v>
 </v>
-<v t="stan@picarro-com.20150624001144.1"><vh>Recovered Nodes</vh>
-<v t="stan@picarro-com.20150624001144.2"><vh>Recovered node "_getBuildVersion" from PicarroExeSetup.py</vh>
-<v t="stan@picarro-com.20150624001144.3"><vh>old:_getBuildVersion</vh></v>
-<v t="stan@picarro-com.20150624001144.4"><vh>new:_getBuildVersion</vh></v>
-</v>
-<v t="stan@picarro-com.20150624001144.5"><vh>Recovered node "_getBuildType" from PicarroExeSetup.py</vh>
-<v t="stan@picarro-com.20150624001144.6"><vh>old:_getBuildType</vh></v>
-<v t="stan@picarro-com.20150624001144.7"><vh>new:_getBuildType</vh></v>
-</v>
-</v>
 </vnodes>
 <tnodes>
 <t tx="stan@picarro-com.20150529101713.1"></t>
@@ -1577,12 +1567,12 @@ import pprint
 import subprocess
 import sys
 import textwrap
+
 import time
 from doit.tools import check_timestamp_unchanged
 
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
-
 
 @others
 </t>
@@ -5187,21 +5177,20 @@ _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBui
 </t>
 <t tx="stan@picarro-com.20150610192913.1">from configobj import ConfigObj
 from hashlib import sha1
-import json
 import os
-import pprint
 
 from pybuilder.core import after, before, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
 
 import shlex
-import shutil
 import subprocess
 import sys
-import time
 
-ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
-INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'Tools', 'Release', 'InstallerScriptsWin7') 
+curdir = os.path.dirname(os.path.abspath(__file__))
+if curdir not in sys.path:
+    sys.path.insert(0,curdir)
+
+from BuildG2000 import BuildG2000
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -5214,81 +5203,14 @@ default_task = "publish"
 </t>
 <t tx="stan@picarro-com.20150610192913.2">
 @after("prepare")
-def setup_buildenv(project, logger):
-    official = project.get_property("official", False)
-    product = project.get_property("product", "g2000")
-
-    reports_dir = project.expand_path("$dir_reports")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "setup_buildenv")
-
-    logger.info("Setting up build environment")
-    cmd = ["doit", "make_release", "--product", product]
-    if official:
-        cmd.append(["--official"])
-    with open(output_file_path, "w") as output_file:
-        process = subprocess.Popen(cmd,
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException("Error while executing make_release")
+def after_prepare(project, logger):
+    builder = project.get_property("builder")
+    builder.after_prepare()
 </t>
-<t tx="stan@picarro-com.20150610192913.3">def write_setup_script(project, logger):
-    setup_script = project.expand_path("$dir_dist/Host/setup.py")
-    logger.info("Writing setup.py as %s", setup_script)
-    shutil.copyfile("testSetup.py", setup_script)
-    os.chmod(setup_script, 0o755)
-
-</t>
-<t tx="stan@picarro-com.20150610192913.4">def build_binary_distribution(project, logger):
-    reports_dir = project.expand_path("$dir_reports/distutils")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-
-    setup_script = project.expand_path("$dir_dist/Host/buildHost.py")
-
-    logger.info("Building binary distribution in %s",
-                project.expand_path("$dir_dist"))
-
-    command = "buildHost"
-    logger.debug("Executing buildHost.py")
-    output_file_path = os.path.join(reports_dir, command)
-    with open(output_file_path, "w") as output_file:
-        commands = [sys.executable, setup_script]
-        process = subprocess.Popen(commands,
-                                   cwd=project.expand_path("$dir_dist/Host"),
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException(
-                "Error while executing setup command %s, see %s for details" % (command, output_file_path))
-    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-</t>
-<t tx="stan@picarro-com.20150610192913.5">@task
-def publish(project, logger):
-    pass
-</t>
-<t tx="stan@picarro-com.20150610193301.1">@task
-def compile_sources(project, logger):
-    reports_dir = project.expand_path("$dir_reports/compile_sources")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "compile_sources")
-    with open(output_file_path, "w") as output_file:
-        process = subprocess.Popen(["doit", "compile_sources"],
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException("Error while executing compile_sources")
-            
-</t>
+<t tx="stan@picarro-com.20150610192913.3"></t>
+<t tx="stan@picarro-com.20150610192913.4"></t>
+<t tx="stan@picarro-com.20150610192913.5"></t>
+<t tx="stan@picarro-com.20150610193301.1"></t>
 <t tx="stan@picarro-com.20150612091536.1">1. PicarroExeSetup.py produces a file repoBzrVer.py which it places in \target\dist\Host-version. This is obtained from Git. It is used by the Driver to fill out             
 
 versionDict["host version id"] = repoBzrVer['revision_id']
@@ -5633,7 +5555,9 @@ d) Revise buildHost.py
                   [os.path.join(dsp_dir,fname) for fname in ['dspAutogen.c', 'dspAutogen.h', 'interface.h']],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['interface.xml', 'Interface.dtd', 'ParameterPages.xml']],
         'clean': True
-    }</t>
+    }
+
+</t>
 <t tx="stan@picarro-com.20150622135727.1">def task_compile_fitutils():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Fitter')
@@ -5646,7 +5570,9 @@ d) Revise buildHost.py
         'targets':[os.path.join(src_dir,'fitutils.pyd')],
         'file_dep':[os.path.join(src_dir,'fitutils.f')],
         'clean':True
-    }</t>
+    }
+
+</t>
 <t tx="stan@picarro-com.20150622135802.1">def task_compile_cluster_analyzer():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Fitter')
@@ -5660,7 +5586,9 @@ d) Revise buildHost.py
         'targets':[os.path.join(src_dir,'cluster_analyzer.pyd')],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['cluster_analyzer.c', 'cluster_analyzer.h']],
         'clean':True
-    }</t>
+    }
+
+</t>
 <t tx="stan@picarro-com.20150622135818.1">def task_compile_swathP():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Common')
@@ -5673,7 +5601,9 @@ d) Revise buildHost.py
         'targets':[os.path.join(src_dir,'swathP.pyd')],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['swathP.c', 'swathP.pyf']],
         'clean':True
-    }</t>
+    }
+
+</t>
 <t tx="stan@picarro-com.20150622135912.1">def task_compile_fastLomb():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
     src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
@@ -5687,16 +5617,22 @@ d) Revise buildHost.py
         'targets':[os.path.join(src_dir,'fastLomb.pyd')],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['fastLomb.c', 'fastLomb.pyf']],
         'clean':True
-    }</t>
+    }
+
+</t>
 <t tx="stan@picarro-com.20150622135925.1">def task_compile_sources():
     return {'actions': None,
-            'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}</t>
+            'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}
+
+</t>
 <t tx="stan@picarro-com.20150622135949.1">def task_build_hostexe():
     return {'actions': [r'cd %(build_dir)s &amp;&amp; python buildHost.py'],
             'task_dep': ['compile_sources'],
             'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
             'verbosity': 2
-    }</t>
+    }
+
+</t>
 <t tx="stan@picarro-com.20150622140041.1">def task_make_release():
     src_dir = os.path.join('versions')
     dest_dir = os.path.join('src', 'main', 'python', 'Host', 'Common')
@@ -5728,14 +5664,17 @@ d) Revise buildHost.py
     return {'actions':[(_remove_python_version_files,), (python_make_release,)],
             'params':[{'name':'product', 'long':'product', 'default':'g2000'},
                       {'name':'official', 'long':'official', 'type':bool, 'default':False}],
-    }</t>
+    }
+</t>
 <t tx="stan@picarro-com.20150622142233.1">def _verAsNumString(ver):
     """
     Convert a version dict into a string of numbers in this format:
         &lt;major&gt;.&lt;minor&gt;.&lt;revision&gt;.&lt;build&gt;
     """
     number = "%(major)s.%(minor)s.%(revision)s.%(build)s" % ver
-    return number</t>
+    return number
+
+</t>
 <t tx="stan@picarro-com.20150622142251.1">def _verAsString(product, ver, osType=None):
     """
     Convert a version dict into a human-readable string.
@@ -5744,7 +5683,9 @@ d) Revise buildHost.py
     if osType is not None:
         return "%s-%s-%s (%s)" % (product, osType, number, ver["git_hash"])
     else:
-        return "%s-%s (%s)" % (product, number, ver["git_hash"])</t>
+        return "%s-%s (%s)" % (product, number, ver["git_hash"])
+
+</t>
 <t tx="stan@picarro-com.20150622171115.1">def _remove_python_version_files():
     try:
         os.remove(os.path.join(*RELEASE_VERSION_FILE))
@@ -5753,7 +5694,9 @@ d) Revise buildHost.py
     try:
         os.remove(os.path.join(*INTERNAL_VERSION_FILE))
     except WindowsError:
-        pass</t>
+        pass
+
+</t>
 <t tx="stan@picarro-com.20150622174109.1">def run_command(command):
     """
     Run a command line command so we can capture its output.
@@ -5762,26 +5705,21 @@ d) Revise buildHost.py
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
-    return stdout_value, stderr_value</t>
-<t tx="stan@picarro-com.20150623221216.1">@before("publish")
-def run_py2exe(project, logger):
-    logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
-    reports_dir = project.expand_path("$dir_reports")
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "build_hostexe")
-    with open(output_file_path, "w") as output_file:
-        process = subprocess.Popen(["doit", "build_hostexe", "--build_dir", "%s" % project.expand_path("$dir_dist/Host")],
-                                   stdout=output_file,
-                                   stderr=output_file,
-                                   shell=False)
-        return_code = process.wait()
-        if return_code != 0:
-            raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
+    return stdout_value, stderr_value
 
-    shutil.move(project.expand_path("$dir_dist/Host/dist"),project.expand_path("$dir_dist/HostExe"))
-    
-    </t>
+</t>
+<t tx="stan@picarro-com.20150623221216.1">
+@task
+def compile_sources(project, logger):
+    builder = project.get_property("builder")
+    builder.compile_sources()
+
+@task
+def publish(project, logger):
+    builder = project.get_property("builder")
+    builder.publish()
+
+</t>
 <t tx="stan@picarro-com.20150623223923.1">product: String specifying product for which installer is to be made
 default: g2000
 
@@ -5793,197 +5731,6 @@ types: A comma separated list of analyzer types whose installers are to be built
 set_version: A string of the form major.minor.revision.build where each field is an integer. This will overwrite the contents of version.json so that the installers will have the specified version number. After the change is made, a new commit is created.
 
 incr_version: One of the strings "major", "minor", "revision" or "build". This will increment the contents of the appropriate field of version.json. After the change is made, a new commit is created.
-</t>
-<t tx="stan@picarro-com.20150624001144.1"></t>
-<t tx="stan@picarro-com.20150624001144.2">(uncached) stan@picarro-com.20150529220322.6
-Diff...
-  def _getBuildVersion():
-      try:
-          # First look for release_version which is generated by
-          # release.py
-          from Host.Common import release_version as buildVersion
--         versionNum = buildVersion.versionNumString()
--         versionStr = buildVersion.versionString()
-?            ----
-+         verStr = buildVersion.versionNumString()
-?                                      +++
--         print "Release version: %s" % versionStr
-?                                          ----
-+         print "Release version: %s" % verStr
-      except Exception, e:
-          # Next try build_version which is generated by
-          # buildHost.py (command line script for internal builds)
-          try:
--             from Host import build_version as buildVersion
-?            ----------
-+             import build_version as buildVersion
--             versionNum = buildVersion.versionNumString()
--             versionStr = buildVersion.versionString()
-?                ----
-+             verStr = buildVersion.versionNumString()
-?                                          +++
--             print "Setup version: %s" % versionStr
-?                                            ----
-+             print "Setup version: %s" % verStr
-          except Exception, e:
-              # use default
--             versionNum = "0.0.0.0"
-?                ^^^^^^^    ^
-+             verStr = "1.0.0.0"
-?                ^^^    ^
--             versionStr = "0.0.0.0 (unknown)"
--             print "Release or setup version not found, using: %s" % versionStr
-?                                                                        ----
-+             print "Release or setup version not found, using: %s" % verStr
-  
--     return versionNum, versionStr
-+     return verStr
-  
-  
-</t>
-<t tx="stan@picarro-com.20150624001144.3">def _getBuildVersion():
-    try:
-        # First look for release_version which is generated by
-        # release.py
-        from Host.Common import release_version as buildVersion
-        verStr = buildVersion.versionNumString()
-        print "Release version: %s" % verStr
-    except Exception, e:
-        # Next try build_version which is generated by
-        # buildHost.py (command line script for internal builds)
-        try:
-            import build_version as buildVersion
-            verStr = buildVersion.versionNumString()
-            print "Setup version: %s" % verStr
-        except Exception, e:
-            # use default
-            verStr = "1.0.0.0"
-            print "Release or setup version not found, using: %s" % verStr
-
-    return verStr
-
-
-</t>
-<t tx="stan@picarro-com.20150624001144.4">def _getBuildVersion():
-    try:
-        # First look for release_version which is generated by
-        # release.py
-        from Host.Common import release_version as buildVersion
-        versionNum = buildVersion.versionNumString()
-        versionStr = buildVersion.versionString()
-        print "Release version: %s" % versionStr
-    except Exception, e:
-        # Next try build_version which is generated by
-        # buildHost.py (command line script for internal builds)
-        try:
-            from Host import build_version as buildVersion
-            versionNum = buildVersion.versionNumString()
-            versionStr = buildVersion.versionString()
-            print "Setup version: %s" % versionStr
-        except Exception, e:
-            # use default
-            versionNum = "0.0.0.0"
-            versionStr = "0.0.0.0 (unknown)"
-            print "Release or setup version not found, using: %s" % versionStr
-
-    return versionNum, versionStr
-
-
-</t>
-<t tx="stan@picarro-com.20150624001144.5">(uncached) stan@picarro-com.20150529220322.7
-Diff...
-  def _getBuildType():
-      try:
-          # First look for release_version which is generated by
-          # release.py
--         from Host.Common import release_version as buildVersion
-?        -----------------
-+         import release_version as buildVersion
-          buildTypeStr = buildVersion.buildType()
-          print "Release build type: %s" % buildTypeStr
-      except Exception, e:
-          try:
-              # Not found, try setup_version (generated by buildHost.py
-              # during internal builds)
--             from Host import build_version as buildVersion
-?             ^^^^^^^^^^
-+             #import build_version as buildVersion
-?             ^
--             buildTypeStr = buildVersion.buildType()
-+             #buildTypeStr = buildVersion.buildType()
-?             +
-              #print "Setup build type: %s" % buildTypeStr
-  
-              # Internal build, includes last git check-in SHA1
-              # returns "Internal (&lt;SHA1&gt;)"
-+             buildTypeStr = hostVersion.buildType()
-              print "Setup build type: %s" % buildTypeStr
-  
-          except Exception, e:
-              # Should never get here...
-              buildTypeStr = "DEVELOPMENT"
-              print "Release or setup version build type not found, using: %s" % buildTypeStr
-  
-      return buildTypeStr
-  
-  
-</t>
-<t tx="stan@picarro-com.20150624001144.6">def _getBuildType():
-    try:
-        # First look for release_version which is generated by
-        # release.py
-        import release_version as buildVersion
-        buildTypeStr = buildVersion.buildType()
-        print "Release build type: %s" % buildTypeStr
-    except Exception, e:
-        try:
-            # Not found, try setup_version (generated by buildHost.py
-            # during internal builds)
-            #import build_version as buildVersion
-            #buildTypeStr = buildVersion.buildType()
-            #print "Setup build type: %s" % buildTypeStr
-
-            # Internal build, includes last git check-in SHA1
-            # returns "Internal (&lt;SHA1&gt;)"
-            buildTypeStr = hostVersion.buildType()
-            print "Setup build type: %s" % buildTypeStr
-
-        except Exception, e:
-            # Should never get here...
-            buildTypeStr = "DEVELOPMENT"
-            print "Release or setup version build type not found, using: %s" % buildTypeStr
-
-    return buildTypeStr
-
-
-</t>
-<t tx="stan@picarro-com.20150624001144.7">def _getBuildType():
-    try:
-        # First look for release_version which is generated by
-        # release.py
-        from Host.Common import release_version as buildVersion
-        buildTypeStr = buildVersion.buildType()
-        print "Release build type: %s" % buildTypeStr
-    except Exception, e:
-        try:
-            # Not found, try setup_version (generated by buildHost.py
-            # during internal builds)
-            from Host import build_version as buildVersion
-            buildTypeStr = buildVersion.buildType()
-            #print "Setup build type: %s" % buildTypeStr
-
-            # Internal build, includes last git check-in SHA1
-            # returns "Internal (&lt;SHA1&gt;)"
-            print "Setup build type: %s" % buildTypeStr
-
-        except Exception, e:
-            # Should never get here...
-            buildTypeStr = "DEVELOPMENT"
-            print "Release or setup version build type not found, using: %s" % buildTypeStr
-
-    return buildTypeStr
-
-
 </t>
 <t tx="stan@picarro-com.20150624094139.1"></t>
 <t tx="stan@picarro-com.20150624094645.1">@language unknown_language
@@ -6126,185 +5873,38 @@ parser.add_option('--types', dest='buildTypes',
 </t>
 <t tx="stan@picarro-com.20150624100735.1">@init
 def initialize(project, logger):
+    BuildClasses = dict(g2000 = BuildG2000)
     # official removes "INTERNAL" from version number
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "true", "t", "1")
+    project.set_property("official", official)
     # product specifies which installer to produce, currently supported values are g2000
-    product = project.get_property("product", "g2000")
-    # types is a comma separated list of installers to create or to exclude (if preceeded by !)
-    #  Default is to include all types
-    types = project.get_property("types", "!")
-    # set_version is a string of the form major.minor.revision.build. If present, this causes the
-    #  version of the installer to be set to the specified value, replacing the current value in the
-    #  json version file
-    
-    # incr_version is one of the strings "major", "minor", "revision" or "build". If present, this 
-    #  causes the version of the installer to be incremented from the value in the json
-    #  version file
-    
-    version_file = os.path.join("versions","%s_version.json" % product)
-
-    new_version = False
-    if project.has_property("set_version"):
-        if project.has_property("incr_version"):
-            raise ValueError("Cannot use both set_version and incr_version")
-        handle_set_version(project.get_property("set_version"), version_file, logger)
-        new_version = True
-        
-    if project.has_property("incr_version"):
-        handle_incr_version(project.get_property("incr_version"), version_file, logger)
-        new_version = True
-
-    if new_version:
-        out, retcode = run_command("git add %s" % version_file, False)
-        """TO DO: Commit to git and push to github as well"""
-        logger.info("Updating version on git\n%s", out)
-    
-    with open(version_file,"r") as inp:
-        ver = json.load(inp)
-        project.name = product
-        project.version = ("%s.%s.%s.%s%s" % 
-            (ver["major"], ver["minor"], ver["revision"], ver["build"], "" if official else "-INTERNAL" ))
-        project.set_property('installer_version',"%s.%s.%s.%s" % (ver["major"], ver["minor"], ver["revision"], ver["build"]))
-    # Need to set the directory into which the output distribution is placed        
-    project.set_property('dir_dist','$dir_target/dist/%s-%s' % (project.name, project.version))
-    
-    types_file = os.path.join("versions","%s_types.json" % product)
-    with open(types_file,"r") as inp:
-        config_info = json.load(inp)
-    types_to_build = handle_types(types, config_info['buildTypes'], logger)
-        
-    project.set_property('types_to_build', types_to_build)
-    project.set_property('config_info', config_info['buildTypes'])
-        
-    
+    product = project.get_property("product", "g2000").strip().lower()
+    project.set_property("product", product)
+    builder = BuildClasses[product.lower()](project, logger)
+    project.set_property("builder", builder)
+    builder.initialize(product)
 </t>
 <t tx="stan@picarro-com.20150624184236.1">@task
 def make_installers(project, logger):
-    config_info = project.get_property('config_info')
-    sandbox_dir = project.expand_path('$dir_source_main_python')
-    resource_dir = project.expand_path('$dir_dist/Installers')
-    dist_dir = project.expand_path('$dir_dist') 
-    reports_dir = project.expand_path("$dir_reports")
-    logger.info("Reports_dir: %s" % reports_dir)
-    if not os.path.exists(reports_dir):
-        os.mkdir(reports_dir)
-    output_file_path = os.path.join(reports_dir, "make_installers")
+    builder = project.get_property("builder")
+    builder.make_installers()
 
-    for installer_type in project.get_property('types_to_build'):
-        species = config_info[installer_type]['species']
-        iss_filename = "setup_%s_%s.iss" % (installer_type, species)
-        setup_file_path = os.path.join(*(INSTALLER_SCRIPTS_DIR + (iss_filename,)))
-        logger.info("Building from %s" % setup_file_path)
-        config_dir = os.path.join(os.getcwd(),'Config')
-        #
-        # Build a fully qualified path for the scripts folder, so ISCC can find
-        # the include files (can't find them using a relative path here)
-        # Notes:
-        #
-        # installerVersion: must be of the form x.x.x.x, for baking version number
-        #                   into setup_xxx.exe metadata (for Explorer properties)
-        # hostVersion:      e.g., g2000_win7-x.x.x-x, displayed in the installer UI
-        # productVersion:   used for displaying Product version in Explorer properties
-        current_year = time.strftime("%Y")
-        logger.info('Project version: %s' % project.version)
-        args = [ISCC_WIN7, "/dinstallerType=%s" % installer_type,
-                "/dhostVersion=%s" % project.version,
-                "/dinstallerVersion=%s" % project.get_property('installer_version'),
-                "/dproductVersion=%s" % project.version,
-                "/dproductYear=%s" % current_year,
-                "/dsandboxDir=%s" % sandbox_dir,
-                "/dconfigDir=%s" % config_dir,
-                "/dcommonName=%s" % species,
-                "/ddistDir=%s" % dist_dir,
-                "/v9",
-                "/O%s" % resource_dir,
-                setup_file_path]
-                
-        output_file_path = os.path.join(reports_dir, "make_installers")
-        with open(output_file_path, "a") as output_file:
-            process = subprocess.Popen(args,
-                                       stdout=output_file,
-                                       stderr=output_file,
-                                       shell=False)
-            return_code = process.wait()
-            if return_code != 0:
-                raise BuildFailedException("Error while making installer for %s" % installer_type)
-                sys.exit(retCode)
+
 </t>
-<t tx="stan@picarro-com.20150624185413.1">def handle_types(types, build_info, logger=None):
-    # Types is a comma-separated string of analyzer types
-    #  which may be preceeded by an "!" to indicate that those
-    #  types are to be excluded.
-    types = types.strip()
-    negate = (types[0] == "!")
-    types_list = (types[1:] if negate else types).split(',') 
-    types_list = [item.strip() for item in types_list]
-
-    types_to_build = []
-    for item in sorted(build_info.keys()):
-        if negate:
-            if item not in types_list:
-                types_to_build.append(item)
-        else:
-            if item in types_list:
-                types_to_build.append(item)
-    if logger:
-        logger.info("Installer types to build: %s" % ", ".join(types_to_build))
-        
-    return types_to_build
+<t tx="stan@picarro-com.20150624185413.1">
 </t>
 <t tx="stan@picarro-com.20150626185908.1">def task_git_set_credentials():
     return {'actions': ['git config --global credential.helper wincred',
                         'git fetch']
     }
 </t>
-<t tx="stan@picarro-com.20150626194530.1">def handle_set_version(version, version_file, logger=None):
-    # First check that the version is in the correct format
-    fields = ["major", "minor", "revision", "build"]
-    major, minor, revision, build = [int(v) for v in version.split(".")]
-    new_ver = dict(major=major, minor=minor, revision=revision, build=build)
-    new_ver_list = [int(new_ver[field]) for field in fields]
-    if os.path.exists(version_file):
-        with open(version_file,"r") as fp:
-            old_ver = json.load(fp)
-            old_ver_list = [int(old_ver[field]) for field in fields]
-            if new_ver_list &lt;= old_ver_list:
-                raise ValueError("Version to set must exceed current version: %s" %
-                                 ".".join(["%d" % f for f in old_ver_list]))
-    with open(version_file,"w") as outp:
-        ver_json = json.dumps(new_ver)
-        if logger:
-            logger.info("Setting version to %s" % ".".join(["%d" % f for f in new_ver_list]))
-        outp.write(ver_json)
-        </t>
-<t tx="stan@picarro-com.20150626195911.1">def handle_incr_version(field, version_file, logger=None):
-    # First check that the version is in the correct format
-    fields = ["major", "minor", "revision", "build"]
-    field = field.strip().lower()
-    if field not in fields:
-        raise ValueError("incr_version field should be one of %s" % ", ".join(fields))
-    with open(version_file,"r") as fp:
-        version = json.load(fp)
-    # Increment the specified field and reset fileds of lesser significance
-    reset = False
-    for f in fields:
-        if f == field:
-            version[f] += 1
-            reset = True
-        elif reset:
-            version[f] = 0
-    version_list = [int(version[field]) for field in fields]
-    with open(version_file,"w") as fp:
-        ver_json = json.dumps(version)
-        if logger:
-            logger.info("Setting version to %s" % ".".join(["%d" % f for f in version_list]))
-        fp.write(ver_json)
-</t>
+<t tx="stan@picarro-com.20150626194530.1"></t>
+<t tx="stan@picarro-com.20150626195911.1"></t>
 <t tx="stan@picarro-com.20150627070228.1">def run_command(command, ignore_status=False):
     """
     Run a command and return a string generated from its output streams and
-    the return code. If ignore_status is False, raise a RuntimeError if the 
+    the return code. If ignore_status is False, raise a RuntimeError if the
     return code from the command is non-zero.
     """
     args = shlex.split(command, posix=False)
@@ -6343,6 +5943,7 @@ def make_installers(project, logger):
             hash_ok =  (ini['Version']['dir_hash'] == result)
             revno = ini['Version'].get('revno', '0.0.0')
     return result, hash_ok, revno
+
 </t>
 <t tx="stan@picarro-com.20150627181936.1">from hashlib import sha1
 import os
@@ -6396,7 +5997,7 @@ def check_config_hashes(project, logger):
                 logger.info('CommonConfig hash incorrect: %s' % (dir_hash,))
                 print&gt;&gt;fp, "%s, %s" % ("CommonConfig",revno)
             else:
-                print&gt;&gt;cp, "%s, %s" % ("CommonConfig",revno)                
+                print&gt;&gt;cp, "%s, %s" % ("CommonConfig",revno)
             build_types = sorted(project.get_property('config_info', {}).keys())
             for build_type in sorted(build_types):
                 appconfig_dir = os.path.join('Config', build_type, 'AppConfig')
@@ -6419,6 +6020,7 @@ def check_config_hashes(project, logger):
         raise ValueError('New config version numbers needed. Please edit updated_configs.txt')
     else:
         logger.info('All configuration hashes verified')
+
 </t>
 <t tx="stan@picarro-com.20150702170254.1">@task
 def update_config_hashes(project, logger):
