@@ -1,3 +1,5 @@
+from configobj import ConfigObj
+from hashlib import sha1
 import json
 import os
 import pprint
@@ -5,6 +7,7 @@ import pprint
 from pybuilder.core import after, before, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
 
+import shlex
 import shutil
 import subprocess
 import sys
@@ -21,7 +24,25 @@ use_plugin("python.install_dependencies")
 
 default_task = "publish"
 
+def run_command(command, ignore_status=False):
+    """
+    Run a command and return a string generated from its output streams and
+    the return code. If ignore_status is False, raise a RuntimeError if the 
+    return code from the command is non-zero.
+    """
+    args = shlex.split(command, posix=False)
+    p = subprocess.Popen(args,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+
+    stdout_value, stderr_value = p.communicate()
+    if (not ignore_status) and p.returncode != 0:
+        raise RuntimeError("%s returned %d" % (command, p.returncode))
+    return stdout_value, p.returncode
 def handle_types(types, build_info, logger=None):
+    # Types is a comma-separated string of analyzer types
+    #  which may be preceeded by an "!" to indicate that those
+    #  types are to be excluded.
     types = types.strip()
     negate = (types[0] == "!")
     types_list = (types[1:] if negate else types).split(',') 
@@ -39,6 +60,47 @@ def handle_types(types, build_info, logger=None):
         logger.info("Installer types to build: %s" % ", ".join(types_to_build))
         
     return types_to_build
+def handle_set_version(version, version_file, logger=None):
+    # First check that the version is in the correct format
+    fields = ["major", "minor", "revision", "build"]
+    major, minor, revision, build = [int(v) for v in version.split(".")]
+    new_ver = dict(major=major, minor=minor, revision=revision, build=build)
+    new_ver_list = [int(new_ver[field]) for field in fields]
+    if os.path.exists(version_file):
+        with open(version_file,"r") as fp:
+            old_ver = json.load(fp)
+            old_ver_list = [int(old_ver[field]) for field in fields]
+            if new_ver_list <= old_ver_list:
+                raise ValueError("Version to set must exceed current version: %s" %
+                                 ".".join(["%d" % f for f in old_ver_list]))
+    with open(version_file,"w") as outp:
+        ver_json = json.dumps(new_ver)
+        if logger:
+            logger.info("Setting version to %s" % ".".join(["%d" % f for f in new_ver_list]))
+        outp.write(ver_json)
+        
+def handle_incr_version(field, version_file, logger=None):
+    # First check that the version is in the correct format
+    fields = ["major", "minor", "revision", "build"]
+    field = field.strip().lower()
+    if field not in fields:
+        raise ValueError("incr_version field should be one of %s" % ", ".join(fields))
+    with open(version_file,"r") as fp:
+        version = json.load(fp)
+    # Increment the specified field and reset fileds of lesser significance
+    reset = False
+    for f in fields:
+        if f == field:
+            version[f] += 1
+            reset = True
+        elif reset:
+            version[f] = 0
+    version_list = [int(version[field]) for field in fields]
+    with open(version_file,"w") as fp:
+        ver_json = json.dumps(version)
+        if logger:
+            logger.info("Setting version to %s" % ".".join(["%d" % f for f in version_list]))
+        fp.write(ver_json)
 @init
 def initialize(project, logger):
     # official removes "INTERNAL" from version number
@@ -49,8 +111,32 @@ def initialize(project, logger):
     # types is a comma separated list of installers to create or to exclude (if preceeded by !)
     #  Default is to include all types
     types = project.get_property("types", "!")
+    # set_version is a string of the form major.minor.revision.build. If present, this causes the
+    #  version of the installer to be set to the specified value, replacing the current value in the
+    #  json version file
+    
+    # incr_version is one of the strings "major", "minor", "revision" or "build". If present, this 
+    #  causes the version of the installer to be incremented from the value in the json
+    #  version file
     
     version_file = os.path.join("versions","%s_version.json" % product)
+
+    new_version = False
+    if project.has_property("set_version"):
+        if project.has_property("incr_version"):
+            raise ValueError("Cannot use both set_version and incr_version")
+        handle_set_version(project.get_property("set_version"), version_file, logger)
+        new_version = True
+        
+    if project.has_property("incr_version"):
+        handle_incr_version(project.get_property("incr_version"), version_file, logger)
+        new_version = True
+
+    if new_version:
+        out, retcode = run_command("git add %s" % version_file, False)
+        """TO DO: Commit to git and push to github as well"""
+        logger.info("Updating version on git\n%s", out)
+    
     with open(version_file,"r") as inp:
         ver = json.load(inp)
         project.name = product
@@ -212,3 +298,92 @@ def make_installers(project, logger):
             if return_code != 0:
                 raise BuildFailedException("Error while making installer for %s" % installer_type)
                 sys.exit(retCode)
+def get_dir_hash(root):
+    s = sha1()
+    ini = None
+    hash_ok = False
+    for path, dirs, files in os.walk(root):
+        dirs.sort()
+        for f in files:
+            fname = os.path.join(path, f)
+            relname = fname[len(root)+1:]
+            if relname.lower() == "version.ini":
+                ini = ConfigObj(fname)
+                continue
+            s.update(relname)
+            with open(fname,"rb") as f1:
+                while True:
+                    # Read file in as little chunks
+                    buf = f1.read(4096)
+                    if not buf : break
+                    s.update(buf)
+    result = s.hexdigest()
+    revno = '0.0.0'
+    if ini:
+        if 'Version' in ini and 'dir_hash' in ini['Version']:
+            hash_ok =  (ini['Version']['dir_hash'] == result)
+            revno = ini['Version'].get('revno', '0.0.0')
+    return result, hash_ok, revno
+@task
+def check_config_hashes(project, logger):
+    fnamec = 'current_configs.txt'
+    fnameu = 'updated_configs.txt'
+    break_build = False
+    with open(fnamec, 'w') as cp:
+        with open(fnameu, 'w') as fp:
+            commonconfig_dir = os.path.join('Config', 'CommonConfig')
+            dir_hash, hash_ok, revno = get_dir_hash(commonconfig_dir)
+            if not hash_ok:
+                break_build = True
+                logger.info('CommonConfig hash incorrect: %s' % (dir_hash,))
+                print>>fp, "%s, %s" % ("CommonConfig",revno)
+            else:
+                print>>cp, "%s, %s" % ("CommonConfig",revno)                
+            build_types = sorted(project.get_property('config_info', {}).keys())
+            for build_type in sorted(build_types):
+                appconfig_dir = os.path.join('Config', build_type, 'AppConfig')
+                dir_hash, hash_ok, revno = get_dir_hash(appconfig_dir)
+                if not hash_ok:
+                    break_build = True
+                    logger.info('AppConfig hash incorrect for %s: %s' % (build_type, dir_hash))
+                    print>>fp, "%s/%s, %s" % (build_type, 'AppConfig' ,revno)
+                else:
+                    print>>cp, "%s/%s, %s" % (build_type, 'AppConfig' ,revno)
+                instrconfig_dir = os.path.join('Config', build_type, 'InstrConfig')
+                dir_hash, hash_ok, revno = get_dir_hash(instrconfig_dir)
+                if not hash_ok:
+                    break_build = True
+                    logger.info('InstrConfig hash incorrect for %s: %s' % (build_type, dir_hash))
+                    print>>fp, "%s/%s, %s" % (build_type, 'InstrConfig' ,revno)
+                else:
+                    print>>cp, "%s/%s, %s" % (build_type, 'InstrConfig' ,revno)
+    if break_build:
+        raise ValueError('New config version numbers needed. Please edit updated_configs.txt')
+    else:
+        logger.info('All configuration hashes verified')
+@task
+def update_config_hashes(project, logger):
+    fnameu = 'updated_configs.txt'
+    with open(fnameu, 'r') as fp:
+        for line in fp:
+            dirname, new_revno = line.split(',')
+            config_dir = os.path.join('Config', dirname)
+            new_version = [int(v) for v in new_revno.split('.')]
+            ini = ConfigObj(os.path.join(config_dir, 'version.ini'))
+            dir_hash = None
+            old_revno = '0.0.0'
+            if ini:
+                if 'Version' in ini and 'dir_hash' in ini['Version']:
+                    dir_hash = ini['Version']['dir_hash']
+                    old_revno = ini['Version'].get('revno', '0.0.0')
+            old_version = [int(v) for v in old_revno.split('.')]
+            if new_version <= old_version:
+                raise ValueError('Updated version of %s must exceed old version number: %s' % (dirname, old_revno))
+            new_revno = new_revno.strip()
+            if 'Version' not in ini:
+                ini['Version'] = {}
+            ini['Version']['revno'] = new_revno
+            new_hash = get_dir_hash(config_dir)[0]
+            ini['Version']['dir_hash'] = new_hash
+            ini.write()
+            logger.info('Updated %s to version %s' % (dirname, new_revno))

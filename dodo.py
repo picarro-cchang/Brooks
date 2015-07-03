@@ -4,12 +4,12 @@ import pprint
 import subprocess
 import sys
 import textwrap
+
 import time
 from doit.tools import check_timestamp_unchanged
 
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
-
 
 def _verAsNumString(ver):
     """
@@ -155,4 +155,8 @@ def task_make_release():
     return {'actions':[(_remove_python_version_files,), (python_make_release,)],
             'params':[{'name':'product', 'long':'product', 'default':'g2000'},
                       {'name':'official', 'long':'official', 'type':bool, 'default':False}],
+    }
+def task_git_set_credentials():
+    return {'actions': ['git config --global credential.helper wincred',
+                        'git fetch']
     }

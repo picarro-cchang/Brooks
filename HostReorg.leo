@@ -264,11 +264,15 @@
 <v t="stan@picarro-com.20150612091536.1"><vh>Current versioning method</vh></v>
 </v>
 <v t="sze.20150616212829.1"><vh>Versioning of AddOns</vh></v>
-<v t="sze.20150527185824.1"><vh>Build script</vh>
+<v t="sze.20150527185824.1" a="E"><vh>Build script</vh>
 <v t="stan@picarro-com.20150623223923.1"><vh>Properties for PyBuilder</vh></v>
+<v t="stan@picarro-com.20150627181936.1"><vh>@clean get_dir_hash.py</vh></v>
 <v t="stan@picarro-com.20150610192902.1" a="E"><vh>@clean build.py</vh>
 <v t="stan@picarro-com.20150610192913.1"><vh>build declarations</vh></v>
+<v t="stan@picarro-com.20150627070228.1"><vh>run_command</vh></v>
 <v t="stan@picarro-com.20150624185413.1"><vh>handle_types</vh></v>
+<v t="stan@picarro-com.20150626194530.1"><vh>handle_set_version</vh></v>
+<v t="stan@picarro-com.20150626195911.1"><vh>handle_incr_version</vh></v>
 <v t="stan@picarro-com.20150624100735.1"><vh>initialize</vh></v>
 <v t="stan@picarro-com.20150610192913.2"><vh>setup_buildenv</vh></v>
 <v t="stan@picarro-com.20150610192913.3"><vh>write_setup_script</vh></v>
@@ -277,6 +281,9 @@
 <v t="stan@picarro-com.20150610193301.1"><vh>compile_sources</vh></v>
 <v t="stan@picarro-com.20150610192913.5"><vh>publish</vh></v>
 <v t="stan@picarro-com.20150624184236.1"><vh>make_installers</vh></v>
+<v t="stan@picarro-com.20150627171521.1"><vh>get_dir_hash</vh></v>
+<v t="stan@picarro-com.20150628002936.1"><vh>check_config_hashes</vh></v>
+<v t="stan@picarro-com.20150702170254.1"><vh>update_config_hashes</vh></v>
 </v>
 <v t="stan@picarro-com.20150529220322.6"><vh>_getBuildVersion</vh></v>
 <v t="stan@picarro-com.20150529220159.1"><vh>@clean src/main/python/Host/PicarroExeSetup.py</vh>
@@ -400,8 +407,8 @@
 <v t="stan@picarro-com.20150531164144.1"><vh>Problems with py2exe when importing modules from the same directory</vh>
 <v t="stan@picarro-com.20150531172203.1"><vh>@clean find_local_imports.py</vh></v>
 </v>
-<v t="stan@picarro-com.20150609133908.1"><vh>Learning doit</vh>
-<v t="stan@picarro-com.20150609133916.1"><vh>@clean dodo.py</vh>
+<v t="stan@picarro-com.20150609133908.1" a="E"><vh>Learning doit</vh>
+<v t="stan@picarro-com.20150609133916.1" a="E"><vh>@clean dodo.py</vh>
 <v t="stan@picarro-com.20150622142233.1"><vh>_verAsNumString</vh></v>
 <v t="stan@picarro-com.20150622142251.1"><vh>_verAsString</vh></v>
 <v t="stan@picarro-com.20150622171115.1"><vh>_remove_python_version_files</vh></v>
@@ -414,6 +421,7 @@
 <v t="stan@picarro-com.20150622135925.1"><vh>task_compile_sources</vh></v>
 <v t="stan@picarro-com.20150622135949.1"><vh>task_build_hostexe</vh></v>
 <v t="stan@picarro-com.20150622140041.1"><vh>task_make_release</vh></v>
+<v t="stan@picarro-com.20150626185908.1"><vh>task_git_set_credentials</vh></v>
 </v>
 <v t="stan@picarro-com.20150609134842.1"><vh>Using a python action</vh></v>
 </v>
@@ -5177,13 +5185,16 @@ _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBui
 @tabwidth -4
 @others
 </t>
-<t tx="stan@picarro-com.20150610192913.1">import json
+<t tx="stan@picarro-com.20150610192913.1">from configobj import ConfigObj
+from hashlib import sha1
+import json
 import os
 import pprint
 
 from pybuilder.core import after, before, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
 
+import shlex
 import shutil
 import subprocess
 import sys
@@ -5603,7 +5614,7 @@ TODO:
 a) Checkout a specific commit or branch from git and force working tree to be consistent with that branch
 b) Compute hash of a directory subtree and record results in an INI file. Perform check to see if anything has changed in that directory
 c) Look at tracking dependencies for entire host project
-
+d) Revise buildHost.py
 
 
  </t>
@@ -5775,7 +5786,14 @@ def run_py2exe(project, logger):
 default: g2000
 
 official: Boolean specifying if an official or an internal release is required
-default: False</t>
+default: False
+
+types: A comma separated list of analyzer types whose installers are to be built. The string may be preceeded by an ! to build all except the types in the list.
+
+set_version: A string of the form major.minor.revision.build where each field is an integer. This will overwrite the contents of version.json so that the installers will have the specified version number. After the change is made, a new commit is created.
+
+incr_version: One of the strings "major", "minor", "revision" or "build". This will increment the contents of the appropriate field of version.json. After the change is made, a new commit is created.
+</t>
 <t tx="stan@picarro-com.20150624001144.1"></t>
 <t tx="stan@picarro-com.20150624001144.2">(uncached) stan@picarro-com.20150529220322.6
 Diff...
@@ -6116,8 +6134,32 @@ def initialize(project, logger):
     # types is a comma separated list of installers to create or to exclude (if preceeded by !)
     #  Default is to include all types
     types = project.get_property("types", "!")
+    # set_version is a string of the form major.minor.revision.build. If present, this causes the
+    #  version of the installer to be set to the specified value, replacing the current value in the
+    #  json version file
+    
+    # incr_version is one of the strings "major", "minor", "revision" or "build". If present, this 
+    #  causes the version of the installer to be incremented from the value in the json
+    #  version file
     
     version_file = os.path.join("versions","%s_version.json" % product)
+
+    new_version = False
+    if project.has_property("set_version"):
+        if project.has_property("incr_version"):
+            raise ValueError("Cannot use both set_version and incr_version")
+        handle_set_version(project.get_property("set_version"), version_file, logger)
+        new_version = True
+        
+    if project.has_property("incr_version"):
+        handle_incr_version(project.get_property("incr_version"), version_file, logger)
+        new_version = True
+
+    if new_version:
+        out, retcode = run_command("git add %s" % version_file, False)
+        """TO DO: Commit to git and push to github as well"""
+        logger.info("Updating version on git\n%s", out)
+    
     with open(version_file,"r") as inp:
         ver = json.load(inp)
         project.name = product
@@ -6191,6 +6233,9 @@ def make_installers(project, logger):
                 sys.exit(retCode)
 </t>
 <t tx="stan@picarro-com.20150624185413.1">def handle_types(types, build_info, logger=None):
+    # Types is a comma-separated string of analyzer types
+    #  which may be preceeded by an "!" to indicate that those
+    #  types are to be excluded.
     types = types.strip()
     negate = (types[0] == "!")
     types_list = (types[1:] if negate else types).split(',') 
@@ -6208,6 +6253,199 @@ def make_installers(project, logger):
         logger.info("Installer types to build: %s" % ", ".join(types_to_build))
         
     return types_to_build
+</t>
+<t tx="stan@picarro-com.20150626185908.1">def task_git_set_credentials():
+    return {'actions': ['git config --global credential.helper wincred',
+                        'git fetch']
+    }
+</t>
+<t tx="stan@picarro-com.20150626194530.1">def handle_set_version(version, version_file, logger=None):
+    # First check that the version is in the correct format
+    fields = ["major", "minor", "revision", "build"]
+    major, minor, revision, build = [int(v) for v in version.split(".")]
+    new_ver = dict(major=major, minor=minor, revision=revision, build=build)
+    new_ver_list = [int(new_ver[field]) for field in fields]
+    if os.path.exists(version_file):
+        with open(version_file,"r") as fp:
+            old_ver = json.load(fp)
+            old_ver_list = [int(old_ver[field]) for field in fields]
+            if new_ver_list &lt;= old_ver_list:
+                raise ValueError("Version to set must exceed current version: %s" %
+                                 ".".join(["%d" % f for f in old_ver_list]))
+    with open(version_file,"w") as outp:
+        ver_json = json.dumps(new_ver)
+        if logger:
+            logger.info("Setting version to %s" % ".".join(["%d" % f for f in new_ver_list]))
+        outp.write(ver_json)
+        </t>
+<t tx="stan@picarro-com.20150626195911.1">def handle_incr_version(field, version_file, logger=None):
+    # First check that the version is in the correct format
+    fields = ["major", "minor", "revision", "build"]
+    field = field.strip().lower()
+    if field not in fields:
+        raise ValueError("incr_version field should be one of %s" % ", ".join(fields))
+    with open(version_file,"r") as fp:
+        version = json.load(fp)
+    # Increment the specified field and reset fileds of lesser significance
+    reset = False
+    for f in fields:
+        if f == field:
+            version[f] += 1
+            reset = True
+        elif reset:
+            version[f] = 0
+    version_list = [int(version[field]) for field in fields]
+    with open(version_file,"w") as fp:
+        ver_json = json.dumps(version)
+        if logger:
+            logger.info("Setting version to %s" % ".".join(["%d" % f for f in version_list]))
+        fp.write(ver_json)
+</t>
+<t tx="stan@picarro-com.20150627070228.1">def run_command(command, ignore_status=False):
+    """
+    Run a command and return a string generated from its output streams and
+    the return code. If ignore_status is False, raise a RuntimeError if the 
+    return code from the command is non-zero.
+    """
+    args = shlex.split(command, posix=False)
+    p = subprocess.Popen(args,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+
+    stdout_value, stderr_value = p.communicate()
+    if (not ignore_status) and p.returncode != 0:
+        raise RuntimeError("%s returned %d" % (command, p.returncode))
+    return stdout_value, p.returncode
+</t>
+<t tx="stan@picarro-com.20150627171521.1">def get_dir_hash(root):
+    s = sha1()
+    ini = None
+    hash_ok = False
+    for path, dirs, files in os.walk(root):
+        dirs.sort()
+        for f in files:
+            fname = os.path.join(path, f)
+            relname = fname[len(root)+1:]
+            if relname.lower() == "version.ini":
+                ini = ConfigObj(fname)
+                continue
+            s.update(relname)
+            with open(fname,"rb") as f1:
+                while True:
+                    # Read file in as little chunks
+                    buf = f1.read(4096)
+                    if not buf : break
+                    s.update(buf)
+    result = s.hexdigest()
+    revno = '0.0.0'
+    if ini:
+        if 'Version' in ini and 'dir_hash' in ini['Version']:
+            hash_ok =  (ini['Version']['dir_hash'] == result)
+            revno = ini['Version'].get('revno', '0.0.0')
+    return result, hash_ok, revno
+</t>
+<t tx="stan@picarro-com.20150627181936.1">from hashlib import sha1
+import os
+import sys
+from configobj import ConfigObj
+
+def get_dir_hash(root):
+    s = sha1()
+    ini = None
+    hash_ok = False
+    for path, dirs, files in os.walk(root):
+        dirs.sort()
+        for f in files:
+            fname = os.path.join(path, f)
+            relname = fname[len(root)+1:]
+            if relname.lower() == "version.ini":
+                ini = ConfigObj(fname)
+                continue
+            s.update(relname)
+            with open(fname,"rb") as f1:
+                while True:
+                    # Read file in as little chunks
+                    buf = f1.read(4096)
+                    if not buf : break
+                    s.update(buf)
+    result = s.hexdigest()
+    if ini:
+        if 'Version' in ini and 'dir_hash' in ini['Version']:
+            hash_ok =  (ini['Version']['dir_hash'] == result)
+    return result, hash_ok
+
+if __name__ == "__main__":
+    dir_hash, hash_ok = get_dir_hash(sys.argv[1])
+    if hash_ok:
+        print "Directory hash verified."
+    else:
+        print "Directory hash not found or invalid."
+        print "Computed value: %s" % dir_hash
+    </t>
+<t tx="stan@picarro-com.20150628002936.1">@task
+def check_config_hashes(project, logger):
+    fnamec = 'current_configs.txt'
+    fnameu = 'updated_configs.txt'
+    break_build = False
+    with open(fnamec, 'w') as cp:
+        with open(fnameu, 'w') as fp:
+            commonconfig_dir = os.path.join('Config', 'CommonConfig')
+            dir_hash, hash_ok, revno = get_dir_hash(commonconfig_dir)
+            if not hash_ok:
+                break_build = True
+                logger.info('CommonConfig hash incorrect: %s' % (dir_hash,))
+                print&gt;&gt;fp, "%s, %s" % ("CommonConfig",revno)
+            else:
+                print&gt;&gt;cp, "%s, %s" % ("CommonConfig",revno)                
+            build_types = sorted(project.get_property('config_info', {}).keys())
+            for build_type in sorted(build_types):
+                appconfig_dir = os.path.join('Config', build_type, 'AppConfig')
+                dir_hash, hash_ok, revno = get_dir_hash(appconfig_dir)
+                if not hash_ok:
+                    break_build = True
+                    logger.info('AppConfig hash incorrect for %s: %s' % (build_type, dir_hash))
+                    print&gt;&gt;fp, "%s/%s, %s" % (build_type, 'AppConfig' ,revno)
+                else:
+                    print&gt;&gt;cp, "%s/%s, %s" % (build_type, 'AppConfig' ,revno)
+                instrconfig_dir = os.path.join('Config', build_type, 'InstrConfig')
+                dir_hash, hash_ok, revno = get_dir_hash(instrconfig_dir)
+                if not hash_ok:
+                    break_build = True
+                    logger.info('InstrConfig hash incorrect for %s: %s' % (build_type, dir_hash))
+                    print&gt;&gt;fp, "%s/%s, %s" % (build_type, 'InstrConfig' ,revno)
+                else:
+                    print&gt;&gt;cp, "%s/%s, %s" % (build_type, 'InstrConfig' ,revno)
+    if break_build:
+        raise ValueError('New config version numbers needed. Please edit updated_configs.txt')
+    else:
+        logger.info('All configuration hashes verified')
+</t>
+<t tx="stan@picarro-com.20150702170254.1">@task
+def update_config_hashes(project, logger):
+    fnameu = 'updated_configs.txt'
+    with open(fnameu, 'r') as fp:
+        for line in fp:
+            dirname, new_revno = line.split(',')
+            config_dir = os.path.join('Config', dirname)
+            new_version = [int(v) for v in new_revno.split('.')]
+            ini = ConfigObj(os.path.join(config_dir, 'version.ini'))
+            dir_hash = None
+            old_revno = '0.0.0'
+            if ini:
+                if 'Version' in ini and 'dir_hash' in ini['Version']:
+                    dir_hash = ini['Version']['dir_hash']
+                    old_revno = ini['Version'].get('revno', '0.0.0')
+            old_version = [int(v) for v in old_revno.split('.')]
+            if new_version &lt;= old_version:
+                raise ValueError('Updated version of %s must exceed old version number: %s' % (dirname, old_revno))
+            new_revno = new_revno.strip()
+            if 'Version' not in ini:
+                ini['Version'] = {}
+            ini['Version']['revno'] = new_revno
+            new_hash = get_dir_hash(config_dir)[0]
+            ini['Version']['dir_hash'] = new_hash
+            ini.write()
+            logger.info('Updated %s to version %s' % (dirname, new_revno))
 </t>
 <t tx="sze.20150327093644.2"></t>
 <t tx="sze.20150327094108.1"></t>
