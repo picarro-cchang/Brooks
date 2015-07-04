@@ -14,6 +14,7 @@ if curdir not in sys.path:
     sys.path.insert(0,curdir)
 
 from BuildG2000 import BuildG2000
+from BuildVaporizerCleaner import BuildVaporizerCleaner
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -41,7 +42,7 @@ def run_command(command, ignore_status=False):
 
 @init
 def initialize(project, logger):
-    BuildClasses = dict(g2000 = BuildG2000)
+    BuildClasses = dict(g2000 = BuildG2000, vaporizer_cleaner=BuildVaporizerCleaner)
     # official removes "INTERNAL" from version number
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "true", "t", "1")
