@@ -21,7 +21,7 @@ AppVerName=Picarro G2000 Win7 Vaporizer Cleaner {#vaporizerCleanerVersion}
 Password=
 DefaultDirName=C:\Picarro\G2000
 DefaultGroupName=Picarro Vaporizer Cleaner
-OutputBaseFileName=setup_{#vaporizerCleanerVersion}
+OutputBaseFileName=setup_vaporizer_cleaner_{#vaporizerCleanerVersion}
 DirExistsWarning=no
 
 ; Windows 7 SP 1 or higher is required
@@ -30,14 +30,14 @@ MinVersion=6.1.7601
 [Files]
 
 ; Program
-Source: {#sandboxDir}\host\AddOns\VaporizerCleaner\dist\*; DestDir: {app}\VaporizerCleanerExe; Flags: recursesubdirs replacesameversion
+Source: {#distDir}\VaporizerCleanerExe\*; DestDir: {app}\VaporizerCleanerExe; Flags: recursesubdirs replacesameversion
 
 ; User manual
-Source: "{#sandboxDir}\host\AddOns\VaporizerCleaner\{#userManual}"; DestDir: {app}\AddOns\VaporizerCleanerExe; Flags: replacesameversion
+Source: "{#distDir}\AddOns\VaporizerCleaner\{#userManual}"; DestDir: {app}\AddOns\VaporizerCleanerExe; Flags: replacesameversion
 
 
 ; icon files
-Source: {#sandboxDir}\host\Assets\icons\{#utilitiesIcon}; DestDir: {app}\VaporizerCleanerExe; Flags: replacesameversion
+Source: {#distDir}\Assets\icons\{#utilitiesIcon}; DestDir: {app}\VaporizerCleanerExe; Flags: replacesameversion
 
 
 [Icons]

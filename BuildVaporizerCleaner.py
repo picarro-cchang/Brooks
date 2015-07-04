@@ -7,7 +7,7 @@ import textwrap
 import time
 
 ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
-INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'Tools', 'Release', 'InstallerScriptsWin7')
+INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'AddOns', 'VaporizerCleaner', 'InstallerScriptsWin7')
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'AddOns', 'VaporizerCleaner', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'AddOns', 'VaporizerCleaner', 'setup_version.py')
 JSON_VERSION_FILE = ('src', 'main', 'python', 'AddOns', 'VaporizerCleaner', 'version.json')
@@ -85,3 +85,50 @@ class BuildVaporizerCleaner(Builder):
         logger.info("Writing version files into source tree")
         self._remove_python_version_files()
         self._make_python_version_files()
+
+    def make_installers(self):
+        project = self.project
+        logger = self.logger
+        config_info = project.get_property('config_info')
+        sandbox_dir = project.expand_path('$dir_source_main_python')
+        resource_dir = project.expand_path('$dir_dist/Installers')
+        dist_dir = project.expand_path('$dir_dist')
+        reports_dir = project.expand_path("$dir_reports")
+        logger.info("Reports_dir: %s" % reports_dir)
+        if not os.path.exists(reports_dir):
+            os.mkdir(reports_dir)
+        output_file_path = os.path.join(reports_dir, "make_installers")
+
+        iss_filename = "setup_vaporizerCleaner.iss"
+        setup_file_path = os.path.join(*(INSTALLER_SCRIPTS_DIR + (iss_filename,)))
+        logger.info("Building from %s" % setup_file_path)
+        config_dir = os.path.join(os.getcwd(),'Config')
+        #
+        # Build a fully qualified path for the scripts folder, so ISCC can find
+        # the include files (can't find them using a relative path here)
+        # Notes:
+        #
+        # installerVersion: must be of the form x.x.x.x, for baking version number
+        #                   into setup_xxx.exe metadata (for Explorer properties)
+        # hostVersion:      e.g., g2000_win7-x.x.x-x, displayed in the installer UI
+        # productVersion:   used for displaying Product version in Explorer properties
+        current_year = time.strftime("%Y")
+        logger.info('Project version: %s' % project.version)
+        args = [ISCC_WIN7,
+                "/dvaporizerCleanerVersion=%s" % project.version,
+                "/dinstallerVersion=%s" % project.get_property('installer_version'),
+                "/dproductVersion=%s" % project.version,
+                "/dproductYear=%s" % current_year,
+                "/dsandboxDir=%s" % sandbox_dir,
+                "/ddistDir=%s" % dist_dir,
+                "/v9",
+                "/O%s" % resource_dir,
+                setup_file_path]
+
+        output_file_path = os.path.join(reports_dir, "make_vaporizer_cleaner_installers")
+        with open(output_file_path, "a") as output_file:
+            stdout, return_code = run_command(" ".join(args), True)
+            output_file.write(stdout)
+            if return_code != 0:
+                raise BuildFailedException("Error while making Vaporizer Cleaner installer")
+
