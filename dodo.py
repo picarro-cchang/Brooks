@@ -1,12 +1,14 @@
 import json
 import os
 import pprint
+import shutil
 import subprocess
 import sys
 import textwrap
 
 import time
 from doit.tools import check_timestamp_unchanged
+from doit import get_var
 
 def run_command(command):
     """
@@ -16,7 +18,7 @@ def run_command(command):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
-    return stdout_value, stderr_value
+    return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
 
 def task_make_sources_from_xml():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
@@ -98,7 +100,10 @@ def task_compile_sources():
             'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}
 
 def task_build_hostexe():
-    def python_buildhost(build_dir):
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_buildhost(dist_dir):
+        build_dir = os.path.join(dist_dir, "Host")
         old_dir = os.getcwd()
         os.chdir(build_dir)
         try:
@@ -128,17 +133,25 @@ def task_build_hostexe():
             ret_code = subprocess.call(['python.exe', 'PicarroExeSetup.py', 'py2exe'], env=build_env)
             if ret_code != 0:
                 raise ValueError("PicarroExeSetup.py failed")
+            dist_target = os.path.join(dist_dir, "HostExe")
+            if os.path.exists(dist_target):
+                shutil.rmtree(dist_target)
+            shutil.move(os.path.join(build_dir, "dist"), dist_target)
         finally:
             os.chdir(old_dir)
 
-    return {'actions': [(python_buildhost,)],
-            'task_dep': ['compile_sources'],
-            'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
-            'verbosity': 2
+    yield {'actions': [(python_buildhost, (dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "HostExe")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+           'verbosity': 2
     }
 
 def task_build_vap_clean_exe():
-    def python_build_vap_clean_exe(build_dir):
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_build_vap_clean_exe(dist_dir):
+        build_dir = os.path.join(dist_dir, "AddOns", "VaporizerCleaner")
         old_dir = os.getcwd()
         os.chdir(build_dir)
         try:
@@ -168,11 +181,18 @@ def task_build_vap_clean_exe():
             ret_code = subprocess.call(['python.exe', 'vaporizerCleanerSetup.py', 'py2exe'], env=build_env)
             if ret_code != 0:
                 raise ValueError("vaporizerCleanerSetup.py failed")
+            dist_target = os.path.join(dist_dir, "VaporizerCleanerExe")
+            if os.path.exists(dist_target):
+                shutil.rmtree(dist_target)
+            shutil.move(os.path.join(build_dir, "dist"), dist_target)
+
         finally:
             os.chdir(old_dir)
 
-    return {'actions': [(python_build_vap_clean_exe,)],
-            'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
+    yield {'actions': [(python_build_vap_clean_exe,(dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "VaporizerCleanerExe")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
             'verbosity': 2
     }
 

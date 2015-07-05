@@ -2,17 +2,16 @@ from configobj import ConfigObj
 from hashlib import sha1
 import os
 
-from pybuilder.core import after, before, use_plugin, init, task
+from pybuilder.core import after, before, depends, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
+from pybuilder.core import use_bldsup
 
 import shlex
 import subprocess
 import sys
 
-curdir = os.path.dirname(os.path.abspath(__file__))
-if curdir not in sys.path:
-    sys.path.insert(0,curdir)
-
+use_bldsup(build_support_dir="bldsup")
+from Builder import run_command
 from BuildG2000 import BuildG2000
 from BuildVaporizerCleaner import BuildVaporizerCleaner
 
@@ -22,23 +21,7 @@ use_plugin("python.install_dependencies")
 # use_plugin("python.flake8")
 # use_plugin("python.coverage")
 
-default_task = "publish"
-
-def run_command(command, ignore_status=False):
-    """
-    Run a command and return a string generated from its output streams and
-    the return code. If ignore_status is False, raise a RuntimeError if the
-    return code from the command is non-zero.
-    """
-    args = shlex.split(command, posix=False)
-    p = subprocess.Popen(args,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-
-    stdout_value, stderr_value = p.communicate()
-    if (not ignore_status) and p.returncode != 0:
-        raise RuntimeError("%s returned %d" % (command, p.returncode))
-    return stdout_value, p.returncode
+default_task = "make_installers"
 
 @init
 def initialize(project, logger):
@@ -70,10 +53,27 @@ def publish(project, logger):
     builder.publish()
 
 @task
+@depends('compile_sources')
+def copy_sources(project, logger):
+    builder = project.get_property("builder")
+    builder.copy_sources()
+
+@task
+@depends('copy_sources')
+def make_executables(project, logger):
+    builder = project.get_property("builder")
+    builder.publish()
+
+@task
+@depends('make_executables')
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()
 
+@after('clean')
+def after_clean(project, logger):
+    builder = project.get_property("builder")
+    builder.after_clean()
 
 def get_dir_hash(root):
     s = sha1()

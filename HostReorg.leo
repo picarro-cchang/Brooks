@@ -267,7 +267,7 @@
 <v t="sze.20150527185824.1" a="E"><vh>Build script</vh>
 <v t="stan@picarro-com.20150623223923.1"><vh>Properties for PyBuilder</vh></v>
 <v t="stan@picarro-com.20150627181936.1"><vh>@clean get_dir_hash.py</vh></v>
-<v t="stan@picarro-com.20150610192902.1" a="E"><vh>@clean build.py</vh>
+<v t="stan@picarro-com.20150610192902.1"><vh>@clean build.py</vh>
 <v t="stan@picarro-com.20150610192913.1"><vh>build declarations</vh></v>
 <v t="stan@picarro-com.20150627070228.1"><vh>run_command</vh></v>
 <v t="stan@picarro-com.20150624185413.1"><vh>handle_types</vh></v>
@@ -1564,16 +1564,14 @@ Builds a local HostExe.
 <t tx="stan@picarro-com.20150609133916.1">import json
 import os
 import pprint
+import shutil
 import subprocess
 import sys
 import textwrap
 
 import time
 from doit.tools import check_timestamp_unchanged
-
-RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
-INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
-
+from doit import get_var
 @others
 </t>
 <t tx="stan@picarro-com.20150609134842.1">def task_hello():
@@ -5179,18 +5177,18 @@ _copyBuildAndInstallers(versionConfig, productFamily, osType, VERSION, customBui
 from hashlib import sha1
 import os
 
-from pybuilder.core import after, before, use_plugin, init, task
+from pybuilder.core import after, before, depends, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
+from pybuilder.core import use_bldsup
 
 import shlex
 import subprocess
 import sys
 
-curdir = os.path.dirname(os.path.abspath(__file__))
-if curdir not in sys.path:
-    sys.path.insert(0,curdir)
-
+use_bldsup(build_support_dir="bldsup")
+from Builder import run_command
 from BuildG2000 import BuildG2000
+from BuildVaporizerCleaner import BuildVaporizerCleaner
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -5198,8 +5196,7 @@ use_plugin("python.install_dependencies")
 # use_plugin("python.flake8")
 # use_plugin("python.coverage")
 
-default_task = "publish"
-
+default_task = "make_installers"
 </t>
 <t tx="stan@picarro-com.20150610192913.2">
 @after("prepare")
@@ -5626,76 +5623,108 @@ d) Revise buildHost.py
 
 </t>
 <t tx="stan@picarro-com.20150622135949.1">def task_build_hostexe():
-    return {'actions': [r'cd %(build_dir)s &amp;&amp; python buildHost.py'],
-            'task_dep': ['compile_sources'],
-            'params':[{'name':'build_dir', 'long':'build_dir', 'default':'.'}],
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_buildhost(dist_dir):
+        build_dir = os.path.join(dist_dir, "Host")
+        old_dir = os.getcwd()
+        os.chdir(build_dir)
+        try:
+            # Get the current dir. Expect that we are in the Host folder.
+            cur_dir_path = os.getcwd()
+            cur_dir = os.path.split(cur_dir_path)[1]
+            # Windows dirs are not case-sensitive.
+            # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
+            if cur_dir.lower() != "host":
+                raise ValueError("Not running in expected folder 'Host'.")
+            # Set the PYTHONPATH environment variable so the current folder tree is used to
+            # pull local libraries from.
+            parent_dir = os.path.normpath(os.path.join(cur_dir_path, ".."))
+            firmware_dir = os.path.normpath(os.path.join(cur_dir_path, "..", "Firmware"))
+
+            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
+            common_dir = os.path.join(parent_dir, "Host", "Common")
+
+            # folders must exist
+            folders = [parent_dir, common_dir, firmware_dir]
+            for folder in folders:
+                if not os.path.isdir(folder):
+                    raise ValueError("Expected folder '%s' does not exist." % folder)
+
+            build_env = dict(os.environ)
+            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
+            ret_code = subprocess.call(['python.exe', 'PicarroExeSetup.py', 'py2exe'], env=build_env)
+            if ret_code != 0:
+                raise ValueError("PicarroExeSetup.py failed")
+            dist_target = os.path.join(dist_dir, "HostExe")
+            if os.path.exists(dist_target):
+                shutil.rmtree(dist_target)
+            shutil.move(os.path.join(build_dir, "dist"), dist_target)
+        finally:
+            os.chdir(old_dir)
+
+    yield {'actions': [(python_buildhost, (dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "HostExe")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+           'verbosity': 2
+    }
+
+def task_build_vap_clean_exe():
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_build_vap_clean_exe(dist_dir):
+        build_dir = os.path.join(dist_dir, "AddOns", "VaporizerCleaner")
+        old_dir = os.getcwd()
+        os.chdir(build_dir)
+        try:
+            # Get the current dir. Expect that we are in the Host folder.
+            cur_dir_path = os.getcwd()
+            cur_dir = os.path.split(cur_dir_path)[1]
+            # Windows dirs are not case-sensitive.
+            # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
+            if cur_dir.lower() != "vaporizercleaner":
+                raise ValueError("Not running in expected folder 'VaporizerCleaner'.")
+            # Set the PYTHONPATH environment variable so the current folder tree is used to
+            # pull local libraries from.
+            parent_dir = os.path.normpath(os.path.join(cur_dir_path, "..", ".."))
+            firmware_dir = os.path.normpath(os.path.join(cur_dir_path, "..", "..", "Firmware"))
+
+            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
+            common_dir = os.path.join(parent_dir, "Host", "Common")
+
+            # folders must exist
+            folders = [parent_dir, common_dir, firmware_dir]
+            for folder in folders:
+                if not os.path.isdir(folder):
+                    raise ValueError("Expected folder '%s' does not exist." % folder)
+
+            build_env = dict(os.environ)
+            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
+            ret_code = subprocess.call(['python.exe', 'vaporizerCleanerSetup.py', 'py2exe'], env=build_env)
+            if ret_code != 0:
+                raise ValueError("vaporizerCleanerSetup.py failed")
+            dist_target = os.path.join(dist_dir, "VaporizerCleanerExe")
+            if os.path.exists(dist_target):
+                shutil.rmtree(dist_target)
+            shutil.move(os.path.join(build_dir, "dist"), dist_target)
+
+        finally:
+            os.chdir(old_dir)
+
+    yield {'actions': [(python_build_vap_clean_exe,(dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "VaporizerCleanerExe")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
             'verbosity': 2
     }
 
 </t>
-<t tx="stan@picarro-com.20150622140041.1">def task_make_release():
-    src_dir = os.path.join('versions')
-    dest_dir = os.path.join('src', 'main', 'python', 'Host', 'Common')
-
-    def python_make_release(product, targets, official):
-        contents = textwrap.dedent("""\
-        # autogenerated by PyBuilder / doit, %s
-        
-        def versionString():
-            return '%s'
-        
-        def versionNumString():
-            return '%s'
-        
-        def buildType():
-            # Empty string indicates official release
-            return '%s'
-        """)
-        src_file = os.path.join(src_dir, "%s_version.json" % product)
-        git_hash, stdout_value = run_command("git.exe log -1 --pretty=format:%H")
-        ver = {"git_hash":git_hash[:8]}
-
-        target = os.path.join(*RELEASE_VERSION_FILE) if official else os.path.join(*INTERNAL_VERSION_FILE)
-        with open(src_file,"r") as inp:
-            ver.update(json.load(inp))
-        with open(target,"w") as outp:
-            outp.write(contents % (time.asctime(), _verAsString(product, ver), _verAsNumString(ver), '' if official else 'INTERNAL'))
-    
-    return {'actions':[(_remove_python_version_files,), (python_make_release,)],
-            'params':[{'name':'product', 'long':'product', 'default':'g2000'},
-                      {'name':'official', 'long':'official', 'type':bool, 'default':False}],
-    }
+<t tx="stan@picarro-com.20150622140041.1">
 </t>
-<t tx="stan@picarro-com.20150622142233.1">def _verAsNumString(ver):
-    """
-    Convert a version dict into a string of numbers in this format:
-        &lt;major&gt;.&lt;minor&gt;.&lt;revision&gt;.&lt;build&gt;
-    """
-    number = "%(major)s.%(minor)s.%(revision)s.%(build)s" % ver
-    return number
-
-</t>
-<t tx="stan@picarro-com.20150622142251.1">def _verAsString(product, ver, osType=None):
-    """
-    Convert a version dict into a human-readable string.
-    """
-    number = _verAsNumString(ver)
-    if osType is not None:
-        return "%s-%s-%s (%s)" % (product, osType, number, ver["git_hash"])
-    else:
-        return "%s-%s (%s)" % (product, number, ver["git_hash"])
-
-</t>
-<t tx="stan@picarro-com.20150622171115.1">def _remove_python_version_files():
-    try:
-        os.remove(os.path.join(*RELEASE_VERSION_FILE))
-    except WindowsError:
-        pass
-    try:
-        os.remove(os.path.join(*INTERNAL_VERSION_FILE))
-    except WindowsError:
-        pass
-
+<t tx="stan@picarro-com.20150622142233.1"></t>
+<t tx="stan@picarro-com.20150622142251.1"></t>
+<t tx="stan@picarro-com.20150622171115.1">
 </t>
 <t tx="stan@picarro-com.20150622174109.1">def run_command(command):
     """
@@ -5705,7 +5734,7 @@ d) Revise buildHost.py
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
-    return stdout_value, stderr_value
+    return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
 
 </t>
 <t tx="stan@picarro-com.20150623221216.1">
@@ -5873,7 +5902,7 @@ parser.add_option('--types', dest='buildTypes',
 </t>
 <t tx="stan@picarro-com.20150624100735.1">@init
 def initialize(project, logger):
-    BuildClasses = dict(g2000 = BuildG2000)
+    BuildClasses = dict(g2000 = BuildG2000, vaporizer_cleaner=BuildVaporizerCleaner)
     # official removes "INTERNAL" from version number
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "true", "t", "1")
@@ -5886,10 +5915,27 @@ def initialize(project, logger):
     builder.initialize(product)
 </t>
 <t tx="stan@picarro-com.20150624184236.1">@task
+@depends('compile_sources')
+def copy_sources(project, logger):
+    builder = project.get_property("builder")
+    builder.copy_sources()
+
+@task
+@depends('copy_sources')
+def make_executables(project, logger):
+    builder = project.get_property("builder")
+    builder.publish()
+
+@task
+@depends('make_executables')
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()
 
+@after('clean')
+def after_clean(project, logger):
+    builder = project.get_property("builder")
+    builder.after_clean()
 
 </t>
 <t tx="stan@picarro-com.20150624185413.1">
@@ -5901,22 +5947,7 @@ def make_installers(project, logger):
 </t>
 <t tx="stan@picarro-com.20150626194530.1"></t>
 <t tx="stan@picarro-com.20150626195911.1"></t>
-<t tx="stan@picarro-com.20150627070228.1">def run_command(command, ignore_status=False):
-    """
-    Run a command and return a string generated from its output streams and
-    the return code. If ignore_status is False, raise a RuntimeError if the
-    return code from the command is non-zero.
-    """
-    args = shlex.split(command, posix=False)
-    p = subprocess.Popen(args,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-
-    stdout_value, stderr_value = p.communicate()
-    if (not ignore_status) and p.returncode != 0:
-        raise RuntimeError("%s returned %d" % (command, p.returncode))
-    return stdout_value, p.returncode
-</t>
+<t tx="stan@picarro-com.20150627070228.1"></t>
 <t tx="stan@picarro-com.20150627171521.1">def get_dir_hash(root):
     s = sha1()
     ini = None
@@ -6203,10 +6234,11 @@ Tasks found for project "Host":
                           verify - Verifies the project and possibly integration tests.
                                    depends on tasks: run_integration_tests
                                    
-prepare &gt; compile_sources &gt; run_unit_tests &gt; package &gt; run_integration_tests &gt; verify &gt; publish                                   
+prepare &gt; compile_sources &gt; run_unit_tests &gt; package &gt; run_integration_tests &gt; verify &gt; publish
+package is the step in which the distribution directory is deleted and the source tree is copied
+publish is the step in which py2exe is run
 
-
-
+We want to be able to skip copying the source tree a                                  
 
 ['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_build_dependencies', '_files_to_install', '_install_dependencies', '_manifest_include', '_manifest_included_files', '_package_data', '_properties', 'author', 'authors', 'basedir', 'build_dependencies', 'build_depends_on', 'build_depends_on_requirements', 'default_task', 'dependencies', 'depends_on', 'depends_on_requirements', 'description', 'expand', 'expand_path', 'files_to_install', 'get_mandatory_property', 'get_property', 'has_property', 'home_page', 'include_file', 'install_file', 'license', 'list_modules', 'list_packages', 'list_scripts', 'manifest_included_files', 'name', 'package_data', 'properties', 'set_property', 'set_property_if_unset', 'summary', 'url', 'validate', 'validate_dependencies', 'version', 'write_report']
 

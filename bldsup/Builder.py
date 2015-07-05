@@ -1,7 +1,30 @@
+from filecmp import dircmp
+from fnmatch import fnmatch
 import json
 import os
 import shlex
 import subprocess
+import time
+from pybuilder.plugins.python.core_plugin import copy_python_sources, copy_scripts, init_dist_target
+
+def is_contained_in(dcmp, logger):
+    """Returns True if every file in the left directory tree of dcmp is present in the
+        right directory tree of dcmp and the file contents match
+    """
+    for name in dcmp.left_only:
+        if fnmatch(name, '*.pyc') or fnmatch(name, '.*'):
+            continue
+        logger.info('File missing: %s' % name)
+        return False
+    for name in dcmp.diff_files:
+        if fnmatch(name, '*.pyc') or fnmatch(name, '.*'):
+            continue
+        logger.info('File difference: %s' % name)
+        return False
+    for sub_dcmp in dcmp.subdirs.values():
+        if not is_contained_in(sub_dcmp, logger):
+            return False
+    return True
 
 def run_command(command, ignore_status=False):
     """
@@ -17,12 +40,24 @@ def run_command(command, ignore_status=False):
     stdout_value, stderr_value = p.communicate()
     if (not ignore_status) and p.returncode != 0:
         raise RuntimeError("%s returned %d" % (command, p.returncode))
-    return stdout_value, p.returncode
+    return stdout_value.replace('\r\n','\n').replace('\r','\n'), p.returncode
 
 class Builder(object):
     def __init__(self, project, logger):
         self.logger = logger
         self.project = project
+
+    def _remove_python_version_files(self):
+        project = self.project
+        logger = self.logger
+        source_dir = project.expand_path('$dir_source_main_python')
+        for root, dirs, files in os.walk(source_dir):
+            for fname in files:
+                if fname in ['release_version.py', 'setup_version.py', 'build_version.py']:
+                    try:
+                        os.remove(os.path.join(root, fname))
+                    except WindowsError:
+                        pass
 
     def _verAsNumString(self, ver):
         """
@@ -42,12 +77,61 @@ class Builder(object):
         else:
             return "%s-%s (%s)" % (product, number, ver["git_hash"])
 
+    def log_selected_project_properties(self, prop_list):
+        formatted = ""
+        for key in sorted(self.project.properties):
+            if key in prop_list:
+                formatted += "\n%40s : %s" % (key, self.project.get_property(key))
+        self.logger.info("Project properties: %s", formatted)
+
     def initialize(self, product):
         logger = self.logger
         logger.warn("Initialize should be overridden by build class")
 
+    def after_clean(self):
+        logger = self.logger
+        logger.info("Cleaning compiled sources")
+        stdout, return_code = run_command("doit clean", True)
+        if return_code != 0:
+            raise BuildFailedException("Error while executing doit clean")
+
     def after_prepare(self):
         return
+
+    def copy_sources(self):
+        project = self.project
+        logger = self.logger
+        python_source =  project.expand_path("$dir_source_main_python")
+        scripts_source = project.expand_path("$dir_source_main_scripts")
+        python_target = project.expand_path("$dir_dist")
+        scripts_target = project.expand_path("$dir_dist/$dir_dist_scripts")
+        logger.info("Comparing source directory and build directory")
+        python_ok = True
+        if os.path.exists(python_source):
+            if os.path.exists(python_target):
+                dcmp1 = dircmp(python_source, python_target)
+                python_ok = is_contained_in(dcmp1, logger)
+            else:
+                logger.info("No Python files in build directory")
+                python_ok = False
+        scripts_ok = True
+        if os.path.exists(scripts_source):
+            if os.path.exists(scripts_target):
+                dcmp2 = dircmp(scripts_source, scripts_target)
+                scripts_ok = is_contained_in(dcmp2, logger)
+            else:
+                logger.info("No script files in build directory")
+                scripts_ok = False
+
+        if python_ok and scripts_ok:
+            logger.info("Sources already copied to {0}".format(project.expand_path("$dir_dist")))
+        else:
+            init_dist_target(project, logger)
+            logger.info("Copying sources to {0}".format(project.expand_path("$dir_dist")))
+            copy_python_sources(project, logger)
+            copy_scripts(project, logger)
+            with open(os.path.join(python_target,'last_updated.txt'),"w") as fp:
+                print>>fp, time.asctime()
 
     def compile_sources(self):
         return
