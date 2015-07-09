@@ -1,5 +1,5 @@
 [Sequence]
-Size=20
+Size=0
 Method[0]=0
 Tray[0]=0
 Vial[0]=1

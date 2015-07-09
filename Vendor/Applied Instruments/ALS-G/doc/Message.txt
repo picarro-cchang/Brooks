@@ -1,0 +1,131 @@
+Dear Sze,
+
+ 
+
+I’m resending you this e-mail but now without the Picarro auto sampler firmware attached.
+
+That was rejected by the e-mail server.
+
+I have new firmware and release notes available, see e-mail below.
+
+Do you have a FTP server or something else on which I can put the new software?
+
+I can also setup DropBox for you in order to share files between Applied Instruments and Picarro.
+
+Let me know what you prefer.
+
+ 
+
+Best regards,
+
+ 
+
+Piet de Jager
+
+Applied Instruments.
+
+ 
+
+ 
+
+Van: Piet de Jager [mailto:pdj@aibv.eu]
+Verzonden: 04 February 2015 16:04
+Aan: Sze Tan
+CC: Kate Dennis (kdennis@picarro.com); Jan Willem Mol
+Onderwerp: Picarro Auto Sampler software release 1.40
+
+ 
+
+Dear Sze,
+
+ 
+
+Applied Instruments released ALS-G auto sampler software 1.40, see attached release notes.
+
+Both the Picarro_Training.exe and ALSG_API.dll are new and have version 1.40.
+
+ 
+
+I’ve attached the new software release (version 1.40) of the Picarro Training Utility program.
+
+To install, first uninstall the current Picarro Training Ututlity program, then unzip and run the setup.exe file.
+
+After completion you can take the ALSG_API.dll  file from the installation folder and put it in the installation folder of your analyser software
+
+in order to run your Python based application.
+
+Note that when you install the application in the Windows Program Files folder, the td files (data files) will be installed in the Program ‘Data\Picarro_Training\’ folder.
+
+ 
+
+The new ALSG-API.dll is not 100% compatible with previous versions concerning the API.
+
+In the release notes you will find the API changes.
+
+At least you have to change the RunInit() call. Replace it with RunInit(0) in your Python scripts.
+
+The zero indicates that you want to use the first wash station (=default).
+
+Since the new software supports multiple wash stations, you need to pass an extra argument.
+
+There is big chance that after the script change everything works.
+
+It depends on which API calls you have used, see again release notes.
+
+ 
+
+Currently I’m working on an Auto Sample SDK (software development kit).
+
+This will be written in C# (.NET) and will help software developers to develop
+
+an application in C# (or C++, VB.NET)  on top of the ALSG_API.dll.
+
+It will help you if you decide to port your software to .NET.
+
+I expect this to be ready next week and I will e-mail you this.
+
+ 
+
+Let me know if you have any questions.
+
+ 
+
+Met vriendelijke groeten / Kind regards / Mit freundlichen Grüßen,
+
+Piet de Jager
+
+Senior Software Engineer
+
+ 
+
+===============================
+
+Applied Instruments
+
+Dynamoweg 3
+
+NL-4382 WZ  Vlissingen
+
+The Netherlands
+
+ 
+
+tel +31 118 488 499
+
+fax +31 118 488 498
+
+direct +31 118 488 496
+
+email: pdj@aibv.eu
+
+web: www.applied-instruments.com
+
+ 
+
+--------------------------------------------------------------
+
+Confidentiality Notice
+
+The content of and attachment(s) to this electronic transmission are intended for the use of the person, firm or entity to which it is directed, and may contain information that is privileged, confidential, or exempt from disclosure under applicable law. If the reader of this message is not the intended recipient, or the employee or agent responsible for delivering the message to the intended recipient, you are hereby notified that any dissemination, distribution, copying, or use of this communication is strictly prohibited. If you have received this communication in error, please notify us immediately by telephone and delete the communication without making any copies.
+
+ 

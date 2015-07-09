@@ -480,13 +480,15 @@ class AutosamplerFrame(AutosamplerGUI):
                                                         dllPath))
 
         self.lib = windll.LoadLibrary(dllPath)
-
+        
         self.ASConnect()
 
         self.LoadMethodChoice.SetStringSelection(self.StateCfg["MethodChoice"])
         self.OnLoadMethodChoice(wx.EVT_CHOICE)
+        self.ASSetDataPath()
         self.ASReadInit()
         time.sleep(0.35)
+        self.ASSetConfigMode(0)
 
         # This calls an undocumented API function, which returns a syringe size code that gets
         # converted to a volume (floating point).
@@ -683,7 +685,8 @@ class AutosamplerFrame(AutosamplerGUI):
         # Need to implement:
         # This is hardcoded to tray 1, need to add support for 2 trays if we ever get that working in hardware
         timeString = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-        return (timeString, 1, self.v, self.jobNum, self.method, self.errCode)
+        return (timeString, self.tray, self.v, self.jobNum, self.method, self.errCode)
+        #return (timeString, 1, self.v, self.jobNum, self.method, self.errCode)
 
     def getInjected(self):
         return self.injectionComplete
@@ -1297,7 +1300,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.ASReadInit()
 
             # move to configured wait position
-            self.ASStepGoToWait()
+            self.ASStepGoToWait(0)
             time.sleep(1)
 
             # restore Run, End, Stop button from cached state
@@ -1352,6 +1355,19 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("ASDisConnect Failed\r\n")
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
+
+    def ASSetDataPath(self):
+        # set path to files
+        fn = os.path.dirname(os.path.abspath(self.tdFile))
+        self.ASWaitIdle()
+        rtn=self.lib.alsgSetDataPath(c_char_p(fn))
+        if(rtn==1):
+            self.Log("ASSetDataPath successful\r\n")
+            return True
+        else:
+            self.Log("ASSetDataPath Failed\r\n")
+            self.Log("Error =%s\r\n"%self.ASGetError())
+            return False
     
     def ASReadInit(self):
         # default tdFile is Parameter.td
@@ -1366,6 +1382,18 @@ class AutosamplerFrame(AutosamplerGUI):
             self.Log("Error =%s\r\n"%self.ASGetError())
             return False
 
+    def ASRunInit(self, nWashStation):
+        self.ASWaitIdle()
+        rtn=self.lib.alsgRunInit(c_short(nWashStation))
+        print "Returns", rtn
+        if(rtn==1):
+            self.Log("ASRunInit successful\r\n")
+            return True
+        else:
+            self.Log("ASRunInit Failed\r\n")
+            self.Log("Error =%s\r\n"%self.ASGetError())
+            return False
+            
     # TODO: call this as part of custom 3x3 tray configuration
     def ASSetInstallTraySampleDepth(self, nTray, dzDepth):
         self.ASWaitIdle()
@@ -1850,7 +1878,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.ErrorRecoveryMode=True
 
                 # move sampler specified position (0= Waste1) at specified depth in mm in relation to calibrated position
-                self.ASStepGoToWaste(0,20)
+                self.ASStepGoToWaste(0, 0, 20)
                 self.ErrorRecoveryMode=False
                 time.sleep(8.0)
                 self.OnPauseBtn(None)
@@ -1962,9 +1990,9 @@ class AutosamplerFrame(AutosamplerGUI):
             return False
 
     # not used
-    def ASStepGoToSolvent(self, nPos, dRelDepth):
+    def ASStepGoToSolvent(self, nWashStation, nPos, dRelDepth):
         self.ASWaitIdle()
-        rtn= self.lib.alsgStepGoToSolvent(c_short(nPos), c_double(dRelDepth))      
+        rtn= self.lib.alsgStepGoToSolvent(c_short(nWashStation), c_short(nPos), c_double(dRelDepth))      
         if(rtn==1):
             self.Log("ASStepGoToSolvent successful\r\n")
             return True
@@ -1974,9 +2002,9 @@ class AutosamplerFrame(AutosamplerGUI):
             return False
 
     # called on error
-    def ASStepGoToWaste(self, nPos, dRelDepth):
+    def ASStepGoToWaste(self, nWashStation, nPos, dRelDepth):
         self.ASWaitIdle()
-        rtn= self.lib.alsgStepGoToWaste(c_short(nPos), c_double(dRelDepth))  #This isn't exported from the dll!!    
+        rtn= self.lib.alsgStepGoToWaste(c_short(nWashStation), c_short(nPos), c_double(dRelDepth))  #This isn't exported from the dll!!    
         if(rtn==1):
             self.Log("ASStepGoToWaste successful\r\n")
             return True
@@ -1986,9 +2014,9 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.Log("Error =%s\r\n"%self.ASGetError())
                 return False
     
-    def ASStepGoToWait(self):
+    def ASStepGoToWait(self, nWashStation):
         self.ASWaitIdle()
-        rtn= self.lib.alsgStepGoToWait()    #This isn't exported from the dll!!
+        rtn= self.lib.alsgStepGoToWait(c_short(nWashStation))    #This isn't exported from the dll!!
         if(rtn==1):
             self.Log("ASStepGoToWait successful\r\n")
             return True
@@ -2649,8 +2677,7 @@ class AutosamplerFrame(AutosamplerGUI):
         # TODO: Should status codes not hard-coded strings (fragile code if we localize or modify status text strings!)
         #       Code below is comparing these strings, yikes! 
         status=self.ASGetStatus()
-
-
+       
         if status=="Move To Wait Position\r\n":
             self.stalledAtWait=True
         else:
@@ -2710,8 +2737,9 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.numInjDone=0
 
             elif(self.assertInj and todo>0):
+                self.ASRunInit(0)
                 cfg = self.Cfg
-
+                print cfg
                 # rinse is True if "Rinse only between vials" is checked (Method page)
                 rinse = (bool(cfg[self.method]['RinseBetweenVials']=="True")) 
                 self.Log("Using Vial #%d\r\n"%self.v)
@@ -2783,7 +2811,7 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.ASRunMethod(self.tray,self.v,1)
                 self.PauseBtn.Enable(True)
                 self.lastVial = self.v
-
+                
             elif self.paused:
                 # already paused, do nothing
                 return
@@ -2853,6 +2881,8 @@ class AutosamplerFrame(AutosamplerGUI):
         self.ASStepGoToSyrExchange(3)
         self.abortInProgress = False
         self.injectionComplete= True
+        # clear job queue
+        self.jobQueue=[]
 
     def OnStopBtn(self, event):
         if self.exchangePosition:
