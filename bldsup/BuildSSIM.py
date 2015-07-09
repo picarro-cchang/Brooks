@@ -60,8 +60,7 @@ class BuildSSIM(Builder):
             return '%s'
         """)
         src_file = os.path.join(*JSON_VERSION_FILE)
-        git_hash, _ = run_command("git.exe log -1 --pretty=format:%H")
-        ver = {"git_hash":git_hash[:8]}
+        ver = {"git_hash":self.git_hash[:8]}
 
         target = os.path.join(*RELEASE_VERSION_FILE) if official else os.path.join(*INTERNAL_VERSION_FILE)
         with open(src_file,"r") as inp:
@@ -79,9 +78,10 @@ class BuildSSIM(Builder):
     def make_installers(self):
         project = self.project
         logger = self.logger
+        raw_version = project.get_property('raw_version')
         config_info = project.get_property('config_info')
         sandbox_dir = project.expand_path('$dir_source_main_python')
-        resource_dir = project.expand_path('$dir_target/Installers/%s-%s' % (project.name, project.version))
+        resource_dir = project.expand_path('$dir_target/Installers/%s-%s' % (project.name, raw_version))
         dist_dir = project.expand_path('$dir_dist')
         reports_dir = project.expand_path("$dir_reports")
         logger.info("Reports_dir: %s" % reports_dir)
@@ -104,7 +104,7 @@ class BuildSSIM(Builder):
         current_year = time.strftime("%Y")
         logger.info('Project version: %s' % project.version)
         args = [ISCC_WIN7,
-                "/dversion=%s" % project.version,
+                "/dversion=%s" % raw_version,
                 "/dinstallerVersion=%s" % project.get_property('installer_version'),
                 "/dproductVersion=%s" % project.version,
                 "/dproductYear=%s" % current_year,

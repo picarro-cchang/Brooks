@@ -18,8 +18,9 @@ AppVerName=Picarro G2000 Win7 ChemCorrect {#chemCorrectVersion}
 Password=
 DefaultDirName=C:\Picarro\PostProcess
 DefaultGroupName=Picarro PostProcess
-OutputBaseFileName=setup_{#chemcorrectVersion}
+OutputBaseFileName=setup_postprocess_{#chemcorrectVersion}
 DirExistsWarning=no
+AppVersion={#productVersion}
 
 ; Windows 7 SP 1 or higher is required
 MinVersion=6.1.7601
@@ -27,10 +28,10 @@ MinVersion=6.1.7601
 [Files]
 
 ; Program
-Source: {#sandboxDir}\host\AddOns\ChemCorrect\dist\*; DestDir: {app}\ChemCorrectExe; Flags: recursesubdirs replacesameversion
+Source:  {#distDir}\ChemCorrectExe\*; DestDir: {app}\ChemCorrectExe; Flags: recursesubdirs replacesameversion
 
 ; icon files
-Source: {#sandboxDir}\host\Assets\icons\{#chemCorrectIcon}; DestDir: {app}\ChemCorrectExe; Flags: replacesameversion
+Source:  {#distDir}\Assets\icons\{#chemCorrectIcon}; DestDir: {app}\ChemCorrectExe; Flags: replacesameversion
 
 
 [Icons]

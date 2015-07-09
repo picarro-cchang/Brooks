@@ -3,6 +3,7 @@
 AppCopyright=Picarro Inc.
 AppName=Picarro SSIM Software Installer
 AppVerName=Picarro SSIM Version {#version}
+AppVersion={#productVersion}
 Password=
 DefaultDirName=C:\Picarro\G2000
 DefaultGroupName=Picarro SSIM Software

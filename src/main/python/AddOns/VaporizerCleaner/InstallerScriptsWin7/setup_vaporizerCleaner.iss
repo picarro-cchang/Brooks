@@ -15,7 +15,7 @@
 #define userManual = "Vaporizer Cleaning Procedure 2-17-10.pdf"
 
 [Setup]
-AppCopyright=Picarro Inc.
+AppCopyright=Picarro, Inc.
 AppName=Picarro G2000 Vaporizer Cleaner
 AppVerName=Picarro G2000 Win7 Vaporizer Cleaner {#vaporizerCleanerVersion}
 Password=
@@ -23,6 +23,7 @@ DefaultDirName=C:\Picarro\G2000
 DefaultGroupName=Picarro Vaporizer Cleaner
 OutputBaseFileName=setup_vaporizer_cleaner_{#vaporizerCleanerVersion}
 DirExistsWarning=no
+AppVersion={#productVersion}
 
 ; Windows 7 SP 1 or higher is required
 MinVersion=6.1.7601

@@ -12,13 +12,12 @@ AppVerName=Picarro G2000 Win7 SDM {#sdmVersion}
 Password=
 DefaultDirName=C:\Picarro
 DefaultGroupName=Picarro SDM
-OutputBaseFileName=setup_{#sdmVersion}
+OutputBaseFileName=setup_SDM_{#sdmVersion}
 DirExistsWarning=no
 
 VersionInfoCompany=Picarro Inc.
 VersionInfoVersion={#installerVersion}
-VersionInfoProductName=Picarro G2000 SDM
-VersionInfoProductTextVersion={#productVersion}
+AppVersion={#productVersion}
 VersionInfoCopyright=Copyright (C) 2009-2014 Picarro Inc.
 
 ; Windows 7 SP 1 or higher is required
@@ -27,17 +26,17 @@ MinVersion=6.1.7601
 [Files]
 
 ; Program
-Source: {#sandboxDir}\host\AddOns\SDM\DataProcessor\dist\*; DestDir: {app}\SyringePump\DataProcessor; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\host\AddOns\SDM\Priming\dist\*; DestDir: {app}\SyringePump\Priming; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\host\AddOns\SDM\Sequencer\dist\*; DestDir: {app}\SyringePump\Sequencer; Flags: recursesubdirs replacesameversion
+Source: {#distDir}\AddOns\SDM\DataProcessor\dist\*; DestDir: {app}\SyringePump\DataProcessor; Flags: recursesubdirs replacesameversion
+Source: {#distDir}\AddOns\SDM\Priming\dist\*; DestDir: {app}\SyringePump\Priming; Flags: recursesubdirs replacesameversion
+Source: {#distDir}\AddOns\SDM\Sequencer\dist\*; DestDir: {app}\SyringePump\Sequencer; Flags: recursesubdirs replacesameversion
 
 ; icon files
-Source: {#sandboxDir}\host\Assets\icons\{#sdmIcon}; DestDir: {app}\SyringePump\DataProcessor; Flags: replacesameversion
-Source: {#sandboxDir}\host\Assets\icons\{#sdmIcon}; DestDir: {app}\SyringePump\Priming; Flags: replacesameversion
-Source: {#sandboxDir}\host\Assets\icons\{#sdmIcon}; DestDir: {app}\SyringePump\Sequence; Flags: replacesameversion
+Source: {#distDir}\Assets\icons\{#sdmIcon}; DestDir: {app}\SyringePump\DataProcessor; Flags: replacesameversion
+Source: {#distDir}\Assets\icons\{#sdmIcon}; DestDir: {app}\SyringePump\Priming; Flags: replacesameversion
+Source: {#distDir}\Assets\icons\{#sdmIcon}; DestDir: {app}\SyringePump\Sequencer; Flags: replacesameversion
 
 ; Coordinator launcher, does not replace existing (TODO: update existing)
-Source: {#sandboxDir}\host\AddOns\SDM\CoordinatorLauncher.ini; DestDir: {app}\G2000\AppConfig\Config\Utilities; Flags: onlyifdoesntexist
+Source: {#distDir}\AddOns\SDM\CoordinatorLauncher.ini; DestDir: {app}\G2000\AppConfig\Config\Utilities; Flags: onlyifdoesntexist
 
 
 [Icons]

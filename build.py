@@ -12,9 +12,11 @@ import sys
 
 use_bldsup(build_support_dir="bldsup")
 from Builder import run_command
+from BuildChemCorrect import BuildChemCorrect
 from BuildG2000 import BuildG2000
-from BuildVaporizerCleaner import BuildVaporizerCleaner
+from BuildSDM import BuildSDM
 from BuildSSIM import BuildSSIM
+from BuildVaporizerCleaner import BuildVaporizerCleaner
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -26,9 +28,11 @@ default_task = "make_installers"
 
 @init
 def initialize(project, logger):
-    BuildClasses = dict(g2000 = BuildG2000,
-                        vaporizer_cleaner=BuildVaporizerCleaner,
-                        ssim=BuildSSIM)
+    BuildClasses = dict(chem_correct = BuildChemCorrect,
+                        g2000 = BuildG2000,
+                        sdm = BuildSDM,
+                        ssim = BuildSSIM,
+                        vaporizer_cleaner=BuildVaporizerCleaner)
     # official removes "INTERNAL" from version number
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "true", "t", "1")

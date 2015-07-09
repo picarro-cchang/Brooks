@@ -189,6 +189,56 @@ def task_build_ssim():
                'verbosity': 2
                }
 
+def task_build_chem_correct_exe():
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_build_chem_correct_exe(dist_dir):
+        build_dir = os.path.join(dist_dir, "AddOns", "ChemCorrect")
+        old_dir = os.getcwd()
+        os.chdir(build_dir)
+        try:
+            # Get the current dir. Expect that we are in the ChemCorrect folder.
+            cur_dir_path = os.getcwd()
+            cur_dir = os.path.split(cur_dir_path)[1]
+            # Windows dirs are not case-sensitive.
+            # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
+            if cur_dir.lower() != "chemcorrect":
+                raise ValueError("Not running in expected folder 'ChemCorrect'.")
+            # Set the PYTHONPATH environment variable so the current folder tree is used to
+            # pull local libraries from.
+            parent_dir = os.path.normpath(os.path.join(cur_dir_path, "..", ".."))
+            firmware_dir = os.path.normpath(os.path.join(cur_dir_path, "..", "..", "Firmware"))
+
+            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
+            common_dir = os.path.join(parent_dir, "Host", "Common")
+
+            # folders must exist
+            folders = [parent_dir, common_dir, firmware_dir]
+            for folder in folders:
+                if not os.path.isdir(folder):
+                    raise ValueError("Expected folder '%s' does not exist." % folder)
+
+            build_env = dict(os.environ)
+            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
+            ret_code = subprocess.call(['python.exe', 'chemcorrectSetup.py', 'py2exe'], env=build_env)
+            if ret_code != 0:
+                raise ValueError("chemcorrectSetup.py failed")
+            dist_target = os.path.join(dist_dir, "ChemCorrectExe")
+            if os.path.exists(dist_target):
+                shutil.rmtree(dist_target)
+            shutil.move(os.path.join(build_dir, "dist"), dist_target)
+
+        finally:
+            os.chdir(old_dir)
+
+    yield {'actions': [(python_build_chem_correct_exe,(dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "ChemCorrectExe")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+            'verbosity': 2
+    }
+
+
 def task_build_vap_clean_exe():
     dist_dir = get_var('dist_dir', '.')
 
@@ -238,6 +288,54 @@ def task_build_vap_clean_exe():
             'verbosity': 2
     }
 
+def task_build_sdm_exe():
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_build_sdm_exe(dist_dir):
+        # build_info specifies a list of tuples containing:
+        #    the directory in which a py2exe setup file is to be run,
+        #    the name of the py2exe setup file
+        #    the relative path to the directory which contains the G2000 Host subtree (added to the PYTHONPATH)
+        build_info = [(os.path.join(dist_dir, "AddOns", "SDM", "DataProcessor"), "dataProcessorSetup.py", ("..", "..", "..")),
+                      (os.path.join(dist_dir, "AddOns", "SDM", "Priming"), "primingSetup.py", ("..", "..", "..")),
+                      (os.path.join(dist_dir, "AddOns", "SDM", "Sequencer"), "sequencerSetup.py", ("..", "..", ".."))]
+
+        old_dir = os.getcwd()
+        try:
+            for build_dir, setup_file, parent_relpath in build_info:
+                os.chdir(build_dir)
+                # Get the current dir. Expect that we are in the Host folder.
+                cur_dir_path = os.getcwd()
+                # Set the PYTHONPATH environment variable so the current folder tree is used to
+                # pull local libraries from.
+                parent_dir = os.path.normpath(os.path.join(cur_dir_path, *parent_relpath))
+                firmware_dir = os.path.join(parent_dir, "Firmware")
+
+                # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
+                common_dir = os.path.join(parent_dir, "Host", "Common")
+
+                # folders must exist
+                folders = [parent_dir, common_dir, firmware_dir]
+                for folder in folders:
+                    if not os.path.isdir(folder):
+                        raise ValueError("Expected folder '%s' does not exist." % folder)
+
+                build_env = dict(os.environ)
+                build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
+                ret_code = subprocess.call(['python.exe', setup_file, 'py2exe'], env=build_env)
+                if ret_code != 0:
+                    raise ValueError("buid_sdm_exe failed")
+        finally:
+            os.chdir(old_dir)
+
+    yield {'actions': [(python_build_sdm_exe,(dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "AddOns", "SDM", "DataProcessor", "dist"),
+                        os.path.join(dist_dir, "AddOns", "SDM", "Priming", "dist"),
+                        os.path.join(dist_dir, "AddOns", "SDM", "Sequencer", "dist")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+            'verbosity': 2
+    }
 
 def task_git_set_credentials():
     return {'actions': ['git config --global credential.helper wincred',

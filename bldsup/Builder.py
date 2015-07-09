@@ -46,6 +46,7 @@ class Builder(object):
     def __init__(self, project, logger):
         self.logger = logger
         self.project = project
+        self.git_hash = None
 
     def _remove_python_version_files(self):
         project = self.project
@@ -240,11 +241,18 @@ class Builder(object):
             """TO DO: Commit to git and push to github as well"""
             logger.info("Updating version on git\n%s", out)
 
+        # At this point, no more changes can be made to the repository, so we get fetch the git hash
+        self.git_hash = run_command("git.exe log -1 --pretty=format:%H")[0]
+
         with open(version_file,"r") as inp:
             ver = json.load(inp)
             project.name = product
-            project.version = ("%s.%s.%s.%s%s" %
+            raw_version = ("%s.%s.%s.%s%s" %
                 (ver["major"], ver["minor"], ver["revision"], ver["build"], "" if official else "-INTERNAL" ))
+            project.version = "%s-%s" % (raw_version , self.git_hash[:8])
+            project.set_property('raw_version', raw_version)
             project.set_property('installer_version',"%s.%s.%s.%s" % (ver["major"], ver["minor"], ver["revision"], ver["build"]))
         # Need to set the directory into which the output distribution is placed
-        project.set_property('dir_dist','$dir_target/dist/%s-%s' % (project.name, project.version))
+        project.set_property('dir_dist','$dir_target/dist/%s-%s' % (project.name, raw_version))
+
+
