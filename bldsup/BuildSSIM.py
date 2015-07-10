@@ -30,12 +30,8 @@ class BuildSSIM(Builder):
         project = self.project
         logger = self.logger
         logger.info("Generating Coordinators in %s", project.expand_path("$dir_dist"))
-        reports_dir = project.expand_path("$dir_reports")
-        if not os.path.exists(reports_dir):
-            os.mkdir(reports_dir)
-        output_file_path = os.path.join(reports_dir, "build_ssim")
+        output_file_path = self.get_report_file_path("build_ssim")
         with open(output_file_path, "a") as output_file:
-            output_file.write("=== %s ===\n" % time.asctime())
             cmd = "doit dist_dir=%s build_ssim" % project.expand_path("$dir_dist")
             stdout, return_code = run_command(cmd, True)
             output_file.write(stdout)
@@ -83,11 +79,6 @@ class BuildSSIM(Builder):
         sandbox_dir = project.expand_path('$dir_source_main_python')
         resource_dir = project.expand_path('$dir_target/Installers/%s-%s' % (project.name, raw_version))
         dist_dir = project.expand_path('$dir_dist')
-        reports_dir = project.expand_path("$dir_reports")
-        logger.info("Reports_dir: %s" % reports_dir)
-        if not os.path.exists(reports_dir):
-            os.mkdir(reports_dir)
-        output_file_path = os.path.join(reports_dir, "make_installers")
 
         iss_filename = "setup_SSIM.iss"
         setup_file_path = os.path.join(*(INSTALLER_SCRIPTS_DIR + (iss_filename,)))
@@ -113,8 +104,7 @@ class BuildSSIM(Builder):
                 "/v9",
                 "/O%s" % resource_dir,
                 setup_file_path]
-
-        output_file_path = os.path.join(reports_dir, "make_SSIM_installers")
+        output_file_path = self.get_report_file_path("make_ssim_installer")
         with open(output_file_path, "a") as output_file:
             stdout, return_code = run_command(" ".join(args), True)
             output_file.write(stdout)

@@ -1,3 +1,4 @@
+import datetime
 from filecmp import dircmp
 from fnmatch import fnmatch
 import json
@@ -5,6 +6,7 @@ import os
 import shlex
 import subprocess
 import time
+from pybuilder.errors import BuildFailedException
 from pybuilder.plugins.python.core_plugin import copy_python_sources, copy_scripts, init_dist_target
 
 def is_contained_in(dcmp, logger):
@@ -142,6 +144,14 @@ class Builder(object):
 
     def make_installers(self):
         return
+
+    def get_report_file_path(self, basename):
+        project = self.project
+        reports_dir = project.expand_path("$dir_reports/%s" % basename)
+        if not os.path.exists(reports_dir):
+            os.makedirs(reports_dir)
+        return os.path.join(reports_dir, '%s_%s.txt' %
+                            (datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), basename))
 
     def handle_types(self, types, build_info):
         # Types is a comma-separated string of device types

@@ -12,6 +12,7 @@ import sys
 
 use_bldsup(build_support_dir="bldsup")
 from Builder import run_command
+from BuildAiAutosampler import BuildAiAutosampler
 from BuildChemCorrect import BuildChemCorrect
 from BuildG2000 import BuildG2000
 from BuildSDM import BuildSDM
@@ -28,7 +29,8 @@ default_task = "make_installers"
 
 @init
 def initialize(project, logger):
-    BuildClasses = dict(chem_correct = BuildChemCorrect,
+    BuildClasses = dict(ai_autosampler = BuildAiAutosampler,
+                        chem_correct = BuildChemCorrect,
                         g2000 = BuildG2000,
                         sdm = BuildSDM,
                         ssim = BuildSSIM,

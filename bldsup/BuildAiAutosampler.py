@@ -7,22 +7,22 @@ import textwrap
 import time
 
 ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
-INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'AddOns', 'ChemCorrect', 'InstallerScriptsWin7')
+INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'AddOns', 'AIAutosampler', 'InstallerScriptsWin7')
 
-RELEASE_VERSION_FILES = [('src', 'main', 'python', 'AddOns', 'ChemCorrect', 'release_version.py')]
-INTERNAL_VERSION_FILES = [('src', 'main', 'python', 'AddOns', 'ChemCorrect', 'setup_version.py')]
+RELEASE_VERSION_FILES = [('src', 'main', 'python', 'AddOns', 'AIAutosampler', 'release_version.py')]
+INTERNAL_VERSION_FILES = [('src', 'main', 'python', 'AddOns', 'AIAutosampler', 'setup_version.py')]
 
-JSON_VERSION_FILE = ('src', 'main', 'python', 'AddOns', 'ChemCorrect', 'version.json')
+JSON_VERSION_FILE = ('src', 'main', 'python', 'AddOns', 'AIAutosampler', 'version.json')
 
-class BuildChemCorrect(Builder):
+class BuildAiAutosampler(Builder):
     def __init__(self, project, logger):
-        super(BuildChemCorrect, self).__init__(project, logger)
-        logger.info("Instantiating BuildChemCorrect")
+        super(BuildAiAutosampler, self).__init__(project, logger)
+        logger.info("Instantiating BuildAiAutosampler")
 
     def initialize(self, product):
         project = self.project
         logger = self.logger
-        assert product.lower() == "chem_correct"
+        assert product.lower() == "ai_autosampler"
         project = self.project
         version_file = os.path.join(*JSON_VERSION_FILE)
         self.handle_version(version_file)
@@ -33,15 +33,14 @@ class BuildChemCorrect(Builder):
         project = self.project
         logger = self.logger
         logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
-        reports_dir = project.expand_path("$dir_reports")
-        output_file_path = self.get_report_file_path("build_chem_correct_exe")
+        output_file_path = self.get_report_file_path("build_ai_autosampler_exe")
         with open(output_file_path, "a") as output_file:
             output_file.write("=== %s ===\n" % time.asctime())
-            cmd = "doit dist_dir=%s build_chem_correct_exe" % project.expand_path("$dir_dist")
+            cmd = "doit dist_dir=%s build_ai_autosampler_exe" % project.expand_path("$dir_dist")
             stdout, return_code = run_command(cmd, True)
             output_file.write(stdout)
             if return_code != 0:
-                raise BuildFailedException("Error while executing run_py2exe/build_chem_correct_exe")
+                raise BuildFailedException("Error while executing run_py2exe/build_ai_autosampler_exe")
 
     def _make_python_version_files(self):
         project = self.project
@@ -85,8 +84,7 @@ class BuildChemCorrect(Builder):
         sandbox_dir = project.expand_path('$dir_source_main_python')
         resource_dir = project.expand_path('$dir_target/Installers/%s-%s' % (project.name, raw_version))
         dist_dir = project.expand_path('$dir_dist')
-
-        iss_filename = "setup_ChemCorrect.iss"
+        iss_filename = "setup_AIAutosampler.iss"
         setup_file_path = os.path.join(*(INSTALLER_SCRIPTS_DIR + (iss_filename,)))
         logger.info("Building from %s" % setup_file_path)
         #
@@ -100,7 +98,7 @@ class BuildChemCorrect(Builder):
         current_year = time.strftime("%Y")
         logger.info('Project version: %s' % project.version)
         args = [ISCC_WIN7,
-                "/dchemcorrectVersion=%s" % raw_version,
+                "/dautosamplerVersion=%s" % raw_version,
                 "/dinstallerVersion=%s" % project.get_property('installer_version'),
                 "/dproductVersion=%s" % project.version,
                 "/dproductYear=%s" % current_year,
@@ -109,10 +107,11 @@ class BuildChemCorrect(Builder):
                 "/v9",
                 "/O%s" % resource_dir,
                 setup_file_path]
-        output_file_path = self.get_report_file_path("make_chem_correct_installer")
+
+        output_file_path = self.get_report_file_path("make_ai_autosampler_installer")
         with open(output_file_path, "a") as output_file:
             stdout, return_code = run_command(" ".join(args), True)
             output_file.write(stdout)
             if return_code != 0:
-                raise BuildFailedException("Error while making ChemCorrect installer")
+                raise BuildFailedException("Error while making AIAutosampler installer")
 

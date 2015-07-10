@@ -37,12 +37,8 @@ class BuildG2000(Builder):
         project = self.project
         logger = self.logger
         logger.info("Compiling source files")
-        reports_dir = project.expand_path("$dir_reports")
-        if not os.path.exists(reports_dir):
-            os.mkdir(reports_dir)
-        output_file_path = os.path.join(reports_dir, "compile_sources")
+        output_file_path = self.get_report_file_path("compile_sources")
         with open(output_file_path, "a") as output_file:
-            output_file.write("=== %s ===\n" % time.asctime())
             stdout, return_code = run_command("doit compile_sources", True)
             output_file.write(stdout)
         if return_code != 0:
@@ -52,12 +48,8 @@ class BuildG2000(Builder):
         project = self.project
         logger = self.logger
         logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
-        reports_dir = project.expand_path("$dir_reports")
-        if not os.path.exists(reports_dir):
-            os.mkdir(reports_dir)
-        output_file_path = os.path.join(reports_dir, "build_hostexe")
+        output_file_path = self.get_report_file_path("build_hostexe")
         with open(output_file_path, "a") as output_file:
-            output_file.write("=== %s ===\n" % time.asctime())
             cmd = "doit dist_dir=%s build_hostexe" % project.expand_path("$dir_dist")
             stdout, return_code = run_command(cmd, True)
             output_file.write(stdout)
@@ -106,12 +98,7 @@ class BuildG2000(Builder):
         sandbox_dir = project.expand_path('$dir_source_main_python')
         resource_dir = project.expand_path('$dir_target/Installers/%s-%s' % (project.name, raw_version))
         dist_dir = project.expand_path('$dir_dist')
-        reports_dir = project.expand_path("$dir_reports")
-        logger.info("Reports_dir: %s" % reports_dir)
-        if not os.path.exists(reports_dir):
-            os.mkdir(reports_dir)
-        output_file_path = os.path.join(reports_dir, "make_installers")
-
+        output_file_path = self.get_report_file_path("make_g2000_installers")
         for installer_type in project.get_property('types_to_build'):
             species = config_info[installer_type]['species']
             iss_filename = "setup_%s_%s.iss" % (installer_type, species)
@@ -141,8 +128,6 @@ class BuildG2000(Builder):
                     "/v9",
                     "/O%s" % resource_dir,
                     setup_file_path]
-
-            output_file_path = os.path.join(reports_dir, "make_installers")
             with open(output_file_path, "a") as output_file:
                 output_file.write("=== %s ===\n" % time.asctime())
                 stdout, return_code = run_command(" ".join(args), True)

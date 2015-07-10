@@ -22,7 +22,7 @@ def run_command(command):
     return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
 
 def task_make_sources_from_xml():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Firmware','xml')
     python_dir = os.path.join('src','main','python','Host','autogen')
     usb_dir = os.path.join('src','main','python','Firmware','CypressUSB','autogen')
@@ -39,7 +39,7 @@ def task_make_sources_from_xml():
     }
 
 def task_compile_fitutils():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Fitter')
     f2py = os.path.join(python_scripts_dir, 'f2py.py')
     return {
@@ -53,7 +53,7 @@ def task_compile_fitutils():
     }
 
 def task_compile_cluster_analyzer():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Fitter')
     return {
         'actions':[
@@ -68,7 +68,7 @@ def task_compile_cluster_analyzer():
     }
 
 def task_compile_swathP():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Common')
     f2py = os.path.join(python_scripts_dir, 'f2py.py')
     return {
@@ -82,7 +82,7 @@ def task_compile_swathP():
     }
 
 def task_compile_fastLomb():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable))
+    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
     return {
         'actions':[
@@ -99,6 +99,55 @@ def task_compile_fastLomb():
 def task_compile_sources():
     return {'actions': None,
             'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}
+
+def task_build_ai_autosampler_exe():
+    dist_dir = get_var('dist_dir', '.')
+
+    def python_build_ai_autosampler_exe(dist_dir):
+        build_dir = os.path.join(dist_dir, "AddOns", "AIAutosampler")
+        old_dir = os.getcwd()
+        os.chdir(build_dir)
+        try:
+            # Get the current dir. Expect that we are in the AIAutosampler folder.
+            cur_dir_path = os.getcwd()
+            cur_dir = os.path.split(cur_dir_path)[1]
+            # Windows dirs are not case-sensitive.
+            # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
+            if cur_dir.lower() != "aiautosampler":
+                raise ValueError("Not running in expected folder 'AIAutosampler'.")
+            # Set the PYTHONPATH environment variable so the current folder tree is used to
+            # pull local libraries from.
+            parent_dir = os.path.normpath(os.path.join(cur_dir_path, "..", ".."))
+            firmware_dir = os.path.normpath(os.path.join(cur_dir_path, "..", "..", "Firmware"))
+
+            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
+            common_dir = os.path.join(parent_dir, "Host", "Common")
+
+            # folders must exist
+            folders = [parent_dir, common_dir, firmware_dir]
+            for folder in folders:
+                if not os.path.isdir(folder):
+                    raise ValueError("Expected folder '%s' does not exist." % folder)
+
+            build_env = dict(os.environ)
+            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
+            ret_code = subprocess.call(['python.exe', 'autosamplerSetup.py', 'py2exe'], env=build_env)
+            if ret_code != 0:
+                raise ValueError("autosamplerSetup.py failed")
+            dist_target = os.path.join(dist_dir, "AIAutosamplerExe")
+            if os.path.exists(dist_target):
+                shutil.rmtree(dist_target)
+            shutil.move(os.path.join(build_dir, "dist"), dist_target)
+
+        finally:
+            os.chdir(old_dir)
+
+    yield {'actions': [(python_build_ai_autosampler_exe,(dist_dir,))],
+           'name':dist_dir,
+           'targets' : [os.path.join(dist_dir, "AIAutosamplerExe")],
+           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+            'verbosity': 2
+    }
 
 def task_build_hostexe():
     dist_dir = get_var('dist_dir', '.')
@@ -290,52 +339,48 @@ def task_build_vap_clean_exe():
 
 def task_build_sdm_exe():
     dist_dir = get_var('dist_dir', '.')
+    build_info = [(os.path.join(dist_dir, "AddOns", "SDM", "DataProcessor"), "dataProcessorSetup.py", ("..", "..", "..")),
+                  (os.path.join(dist_dir, "AddOns", "SDM", "Priming"), "primingSetup.py", ("..", "..", "..")),
+                  (os.path.join(dist_dir, "AddOns", "SDM", "Sequencer"), "sequencerSetup.py", ("..", "..", ".."))]
 
-    def python_build_sdm_exe(dist_dir):
+    def python_build_sdm_exe(dist_dir, build_dir, setup_file, parent_relpath):
         # build_info specifies a list of tuples containing:
         #    the directory in which a py2exe setup file is to be run,
         #    the name of the py2exe setup file
         #    the relative path to the directory which contains the G2000 Host subtree (added to the PYTHONPATH)
-        build_info = [(os.path.join(dist_dir, "AddOns", "SDM", "DataProcessor"), "dataProcessorSetup.py", ("..", "..", "..")),
-                      (os.path.join(dist_dir, "AddOns", "SDM", "Priming"), "primingSetup.py", ("..", "..", "..")),
-                      (os.path.join(dist_dir, "AddOns", "SDM", "Sequencer"), "sequencerSetup.py", ("..", "..", ".."))]
-
         old_dir = os.getcwd()
         try:
-            for build_dir, setup_file, parent_relpath in build_info:
-                os.chdir(build_dir)
-                # Get the current dir. Expect that we are in the Host folder.
-                cur_dir_path = os.getcwd()
-                # Set the PYTHONPATH environment variable so the current folder tree is used to
-                # pull local libraries from.
-                parent_dir = os.path.normpath(os.path.join(cur_dir_path, *parent_relpath))
-                firmware_dir = os.path.join(parent_dir, "Firmware")
+            os.chdir(build_dir)
+            # Get the current dir. Expect that we are in the Host folder.
+            cur_dir_path = os.getcwd()
+            # Set the PYTHONPATH environment variable so the current folder tree is used to
+            # pull local libraries from.
+            parent_dir = os.path.normpath(os.path.join(cur_dir_path, *parent_relpath))
+            firmware_dir = os.path.join(parent_dir, "Firmware")
 
-                # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
-                common_dir = os.path.join(parent_dir, "Host", "Common")
+            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
+            common_dir = os.path.join(parent_dir, "Host", "Common")
 
-                # folders must exist
-                folders = [parent_dir, common_dir, firmware_dir]
-                for folder in folders:
-                    if not os.path.isdir(folder):
-                        raise ValueError("Expected folder '%s' does not exist." % folder)
+            # folders must exist
+            folders = [parent_dir, common_dir, firmware_dir]
+            for folder in folders:
+                if not os.path.isdir(folder):
+                    raise ValueError("Expected folder '%s' does not exist." % folder)
 
-                build_env = dict(os.environ)
-                build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
-                ret_code = subprocess.call(['python.exe', setup_file, 'py2exe'], env=build_env)
-                if ret_code != 0:
-                    raise ValueError("buid_sdm_exe failed")
+            build_env = dict(os.environ)
+            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
+            ret_code = subprocess.call(['python.exe', setup_file, 'py2exe'], env=build_env)
+            if ret_code != 0:
+                raise ValueError("buid_sdm_exe failed")
         finally:
             os.chdir(old_dir)
 
-    yield {'actions': [(python_build_sdm_exe,(dist_dir,))],
-           'name':dist_dir,
-           'targets' : [os.path.join(dist_dir, "AddOns", "SDM", "DataProcessor", "dist"),
-                        os.path.join(dist_dir, "AddOns", "SDM", "Priming", "dist"),
-                        os.path.join(dist_dir, "AddOns", "SDM", "Sequencer", "dist")],
-           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
-            'verbosity': 2
-    }
+    for build_dir, setup_file, parent_relpath in build_info:
+        yield {'actions': [(python_build_sdm_exe,(dist_dir, build_dir, setup_file, parent_relpath))],
+               'name': build_dir,
+               'targets' : [os.path.join(build_dir, "dist")],
+               'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+               'verbosity': 2}
 
 def task_git_set_credentials():
     return {'actions': ['git config --global credential.helper wincred',
