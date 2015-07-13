@@ -1,21 +1,18 @@
-#  Analysis script for isotopic water at 7200 wavenumbers.
+#  Analysis script for isotopic water at 7200 wavenumbers. 
 #  2011 0804:  Added time averages to experimental analysis script and changed names to conform better to HBDS style
 #  2011 0819:  Added methane reporting with averaging and changed reporting of concentrations to be more self-consistent
 #  2012 0215:  Reduced max shift from 1e-4 to 1e-5 to prevent "mouse bites"
 #  2012 0216:  Changed reported deltas to include methane cross-talk correction for air carrier ONLY (logbook III.66)
 #  2012 0328:  Tweaked methane cross-talk coefficients based on more careful CH4/water step test
 #  2012 0822:  Added conditions for stable operation and correct pressure to WLM update
+#  2013 1205:  Added calculation of "double differentials" for ChemCorrect
 #  2014 0613:  Changed WLM adjust/offset reporting to work correctly when pressure is unlocked
 
 import sys
 import os
-import inspect
 from numpy import mean
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
-
-here = os.path.split(os.path.abspath(inspect.getfile(inspect.currentframe())))[0]
-if not here in sys.path: sys.path.append(here)
 
 if os.path.isdir("../AppConfig/Scripts/DataManager"):
     # For .exe version
@@ -50,16 +47,6 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["CH4buffer300"] = []
     _PERSISTENT_["init"] = False
 
-    script = "adjustTempOffset.py"
-    scriptRelPath = os.path.join(here, '..', '..', '..', 'CommonConfig',
-                                 'Scripts', 'DataManager', script)
-    cp = file(os.path.join(here, scriptRelPath), "rU")
-    codeAsString = cp.read() + "\n"
-    cp.close()
-    _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
-
-exec _PERSISTENT_["adjustOffsetScript"] in globals()
-
 def clipReportData(value):
     if value > REPORT_UPPER_LIMIT:
         return REPORT_UPPER_LIMIT
@@ -67,10 +54,10 @@ def clipReportData(value):
         return REPORT_LOWER_LIMIT
     else:
         return value
-
+        
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-
+    
 def apply2Linear(value,xform1,xform2):
     return applyLinear(applyLinear(value,xform1),xform2)
 
@@ -78,16 +65,16 @@ def protDivide(num,den):
     if den != 0:
         return num/den
     return 0
-
+    
 def boxAverage(buffer,x,t,tau):
     buffer.append((x,t))
     while t-buffer[0][1] > tau:
         buffer.pop(0)
     return mean([d for (d,t) in buffer])
-
+    
 laserMap = [3,4,5,-1,-1] #physical laser number as function of species (index); -1 => not valid
 adjustMap = ["h16oh","h18oh","h16od","",""]
-
+    
 def adjustWLM(species,max_adj,gain):
     laser = laserMap[int(species)]
     adjust = adjustMap[int(species)]
@@ -116,8 +103,8 @@ H18OH = (_INSTR_["concentration_h18oh_gal_slope"],_INSTR_["concentration_h18oh_g
 H16OD = (_INSTR_["concentration_h16od_gal_slope"],_INSTR_["concentration_h16od_gal_intercept"])
 H2O = (_INSTR_["h2o_conc_slope"],_INSTR_["h2o_conc_intercept"])
 CH4 = (_INSTR_["ch4_conc_slope"],_INSTR_["ch4_conc_intercept"])
-
-if _DATA_["spectrum"] in [123,124]:
+    
+if _DATA_["spectrum"] in [123,124]:            
     try:
         # Note: _OLD_DATA_[][-1] is the current data
         now = _OLD_DATA_["peak2_offset"][-1].time
@@ -126,28 +113,32 @@ if _DATA_["spectrum"] in [123,124]:
         _NEW_DATA_["CH4"] = ch4_conc
         _NEW_DATA_["CH4_30s"] = boxAverage(_PERSISTENT_["CH4buffer30"],ch4_conc,now,30)
         _NEW_DATA_["CH4_2min"] = boxAverage(_PERSISTENT_["CH4buffer120"],ch4_conc,now,120)
-        _NEW_DATA_["CH4_5min"] = boxAverage(_PERSISTENT_["CH4buffer300"],ch4_conc,now,300)
+        _NEW_DATA_["CH4_5min"] = boxAverage(_PERSISTENT_["CH4buffer300"],ch4_conc,now,300)        
         h16oh_conc = applyLinear(_DATA_["peak2_offset"],H16OH)
         h18oh_conc = applyLinear(_DATA_["peak1_offset"],H18OH)
         h16od_conc = applyLinear(_DATA_["peak3_offset"],H16OD)
         ratioO = protDivide(h18oh_conc,h16oh_conc)
         Delta_18_16 = applyLinear(ratioO,DELTA_18O)
         if _DATA_["n2_flag"] == 0:
-            Delta_18_16 -= 1123.5*ch4_conc/h2o_conc
+            Delta_18_16 -= 1123.5*ch4_conc/h2o_conc        
         _NEW_DATA_["Delta_18_16"] = Delta_18_16
         _NEW_DATA_["Delta_18_16_30s"] = boxAverage(_PERSISTENT_["O18buffer30"],Delta_18_16,now,30)
         _NEW_DATA_["Delta_18_16_2min"] = boxAverage(_PERSISTENT_["O18buffer120"],Delta_18_16,now,120)
-        _NEW_DATA_["Delta_18_16_5min"] = boxAverage(_PERSISTENT_["O18buffer300"],Delta_18_16,now,300)
+        _NEW_DATA_["Delta_18_16_5min"] = boxAverage(_PERSISTENT_["O18buffer300"],Delta_18_16,now,300)    
         ratioD = protDivide(h16od_conc,h16oh_conc)
         Delta_D_H = applyLinear(ratioD,DELTA_D)
         if _DATA_["n2_flag"] == 0:
-            Delta_D_H += 2613*ch4_conc/h2o_conc
+            Delta_D_H += 2613*ch4_conc/h2o_conc        
         _NEW_DATA_["Delta_D_H"] = Delta_D_H
         _NEW_DATA_["Delta_D_H_30s"] = boxAverage(_PERSISTENT_["Dbuffer30"],Delta_D_H,now,30)
         _NEW_DATA_["Delta_D_H_2min"] = boxAverage(_PERSISTENT_["Dbuffer120"],Delta_D_H,now,120)
         _NEW_DATA_["Delta_D_H_5min"] = boxAverage(_PERSISTENT_["Dbuffer300"],Delta_D_H,now,300)
         h2o_conc *= (1.0 + (1.0+0.001*Delta_18_16)*R18_VSMOW + (1.0+0.001*Delta_D_H)*RD_VSMOW)/0.996275
         _NEW_DATA_["H2O"] = h2o_conc
+        _NEW_DATA_["dd0"] = _DATA_["baseline_shift"] - _DATA_["peak2_offset"]*(_INSTR_["baseline_lin"]+_INSTR_["baseline_quad"]*_DATA_["peak2_offset"])
+        _NEW_DATA_["dd1"] = _DATA_["slope_shift"] - _INSTR_["slope_lin"]*_DATA_["peak2_offset"]
+        _NEW_DATA_["dd2"] = _DATA_["baseline_curvature"] - _INSTR_["curve_lin"]*_DATA_["peak2_offset"]
+        _NEW_DATA_["dres"] = _DATA_["residuals"] - _INSTR_["residual_lin"]*_DATA_["peak2_offset"]
 
     except:
         pass
@@ -164,29 +155,28 @@ if abs(_DATA_["CavityPressure"]-50.0) > 10:
     good = False
 
 if not good:
-    #print "Updating WLM offset not done because of bad instrument status"
+    print "Updating WLM offset not done because of bad instrument status"  
     _NEW_DATA_["h16oh_WLMadjust"] = _OLD_DATA_["h16oh_WLMadjust"][-1].value
     _NEW_DATA_["h18oh_WLMadjust"] = _OLD_DATA_["h18oh_WLMadjust"][-1].value
     _NEW_DATA_["h16od_WLMadjust"] = _OLD_DATA_["h16od_WLMadjust"][-1].value
     _NEW_DATA_["WLMh16oh_offset"] = _OLD_DATA_["WLMh16oh_offset"][-1].value
     _NEW_DATA_["WLMh18oh_offset"] = _OLD_DATA_["WLMh18oh_offset"][-1].value
-    _NEW_DATA_["WLMh16od_offset"] = _OLD_DATA_["WLMh16od_offset"][-1].value
-
+    _NEW_DATA_["WLMh16od_offset"] = _OLD_DATA_["WLMh16od_offset"][-1].value    
 else:
     if _DATA_["spectrum"] in [123,124]:
         try:
             _NEW_DATA_["h16oh_WLMadjust"], _NEW_DATA_["WLMh16oh_offset"] = adjustWLM(0,max_shift,H16OH_cm_adjust_gain)
             _NEW_DATA_["h18oh_WLMadjust"], _NEW_DATA_["WLMh18oh_offset"] = adjustWLM(1,max_shift,H18OH_cm_adjust_gain)
             _NEW_DATA_["h16od_WLMadjust"], _NEW_DATA_["WLMh16od_offset"] = adjustWLM(2,max_shift,H16OD_cm_adjust_gain)
-            #print "Updated WLM offsets for virtual lasers 1--3"
+            print "Updated WLM offsets for virtual lasers 1--3" 
         except:
             pass
-
+        
 for k in _DATA_.keys():
     _REPORT_[k] = _DATA_[k]
-
+    
 for k in _NEW_DATA_.keys():
     if k == "delta":
         _REPORT_[k] = clipReportData(_NEW_DATA_[k])
-    else:
+    else:    
         _REPORT_[k] = _NEW_DATA_[k]

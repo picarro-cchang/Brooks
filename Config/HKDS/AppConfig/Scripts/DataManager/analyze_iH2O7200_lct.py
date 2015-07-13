@@ -87,10 +87,10 @@ def clipReportData(value):
         return REPORT_LOWER_LIMIT
     else:
         return value
-
+        
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-
+    
 def apply2Linear(value,xform1,xform2):
     return applyLinear(applyLinear(value,xform1),xform2)
 
@@ -98,13 +98,13 @@ def protDivide(num,den):
     if den != 0:
         return num/den
     return 0
-
+    
 def boxAverage(buffer,x,t,tau):
     buffer.append((x,t))
     while t-buffer[0][1] > tau:
         buffer.pop(0)
     return mean([d for (d,t) in buffer])
-
+    
 # Define linear transformtions for post-processing
 DELTA_17O = (_INSTR_["delta_17o_slope"],_INSTR_["delta_17o_intercept"])
 DELTA_18O = (_INSTR_["delta_18o_slope"],_INSTR_["delta_18o_intercept"])
@@ -114,27 +114,27 @@ H2O = (_INSTR_["h2o_conc_slope"],_INSTR_["h2o_conc_intercept"])
 CH4 = (_INSTR_["ch4_conc_slope"],_INSTR_["ch4_conc_intercept"])
 LAMBDA = _INSTR_["exponent_for_17excess"]
 
-if _DATA_["spectrum"] == 123:
+if _DATA_["spectrum"] == 123: 
     try:
         # Note: _OLD_DATA_[][-1] is the current data
         now = _OLD_DATA_["str2_offset"][-1].time
-
+        
         h2o_conc = applyLinear(_DATA_["h2o_ppm"],H2O)
-        ch4_conc = applyLinear(_DATA_["ch4_ppm"],CH4)
+        ch4_conc = applyLinear(_DATA_["ch4_ppm"],CH4)        
         SD_18_16 = applyLinear(protDivide(_DATA_["str11_offset"],_DATA_["str2_offset"]),DELTA_18O)
         SD_D_H =  applyLinear(protDivide(_DATA_["str3_offset"],_DATA_["str2_offset"]),DELTA_D)
         SD_17_16 =  applyLinear(protDivide(_DATA_["str13_offset"],_DATA_["str2_offset"]),DELTA_17O)
         if _DATA_["n2_flag"] == 0:
             SD_17_16 += 133.3*ch4_conc/h2o_conc
-            SD_18_16 += 227.3*ch4_conc/h2o_conc
-            SD_D_H -= 342.0*ch4_conc/h2o_conc
+            SD_18_16 += 227.3*ch4_conc/h2o_conc 
+            SD_D_H -= 342.0*ch4_conc/h2o_conc 
         _NEW_DATA_["SD_18_18"] = applyLinear(protDivide(_DATA_["str11_offset"],_DATA_["str1_offset"]),DELTA_1818)
-
+        
         _NEW_DATA_["Delta_18_16"] = SD_18_16
         _NEW_DATA_["Delta_18_16_30s"] = boxAverage(_PERSISTENT_["O18buffer30"],SD_18_16,now,30)
         _NEW_DATA_["Delta_18_16_100s"] = boxAverage(_PERSISTENT_["O18buffer100"],SD_18_16,now,100)
         _NEW_DATA_["Delta_18_16_2min"] = boxAverage(_PERSISTENT_["O18buffer120"],SD_18_16,now,120)
-        _NEW_DATA_["Delta_18_16_5min"] = boxAverage(_PERSISTENT_["O18buffer300"],SD_18_16,now,300)
+        _NEW_DATA_["Delta_18_16_5min"] = boxAverage(_PERSISTENT_["O18buffer300"],SD_18_16,now,300)    
         #ratioD = protDivide(h16od_conc,h16oh_conc)
         _NEW_DATA_["Delta_D_H"] = SD_D_H
         _NEW_DATA_["Delta_D_H_30s"] = boxAverage(_PERSISTENT_["Dbuffer30"],SD_D_H,now,30)
@@ -146,9 +146,9 @@ if _DATA_["spectrum"] == 123:
         _NEW_DATA_["D_excess_30s"] = boxAverage(_PERSISTENT_["Debuffer30"],Dexcess,now,30)
         _NEW_DATA_["D_excess_100s"] = boxAverage(_PERSISTENT_["Debuffer100"],Dexcess,now,100)
         _NEW_DATA_["D_excess_2min"] = boxAverage(_PERSISTENT_["Debuffer120"],Dexcess,now,120)
-        _NEW_DATA_["D_excess_5min"] = boxAverage(_PERSISTENT_["Debuffer300"],Dexcess,now,300)
+        _NEW_DATA_["D_excess_5min"] = boxAverage(_PERSISTENT_["Debuffer300"],Dexcess,now,300)        
         h2o_conc *= (1.0 + (1.0+0.001*SD_18_16)*R18_VSMOW + (1.0+0.001*SD_D_H)*RD_VSMOW)/0.996275
-        _NEW_DATA_["H2O"] = h2o_conc
+        _NEW_DATA_["H2O"] = h2o_conc       
         _NEW_DATA_["CH4"] = ch4_conc
         _NEW_DATA_["CH4_30s"] = boxAverage(_PERSISTENT_["CH4buffer30"],ch4_conc,now,30)
         _NEW_DATA_["CH4_2min"] = boxAverage(_PERSISTENT_["CH4buffer120"],ch4_conc,now,120)
@@ -158,7 +158,7 @@ if _DATA_["spectrum"] == 123:
             excess17 = 1000.0*(log(1.0+0.001*SD_17_16)-LAMBDA*log(1.0+0.001*SD_18_16))
         except:
             excess17 = SD_17_16 - LAMBDA*SD_18_16
-        _NEW_DATA_["Delta_17_16"] = SD_17_16
+        _NEW_DATA_["Delta_17_16"] = SD_17_16        
         _NEW_DATA_["Delta_17_16_30s"] = boxAverage(_PERSISTENT_["O17buffer30"],SD_17_16,now,30)
         _NEW_DATA_["Delta_17_16_100s"] = boxAverage(_PERSISTENT_["O17buffer100"],SD_17_16,now,100)
         _NEW_DATA_["Delta_17_16_2min"] = boxAverage(_PERSISTENT_["O17buffer120"],SD_17_16,now,120)
@@ -170,19 +170,19 @@ if _DATA_["spectrum"] == 123:
         _NEW_DATA_["Excess_17_5min"] = boxAverage(_PERSISTENT_["O17ebuffer300"],excess17,now,300)
 
     except:
-        pass
+        pass        
 
 else:
     _NEW_DATA_["Delta_18_16"] = _OLD_DATA_["Delta_18_16"][-1].value
     _NEW_DATA_["Delta_18_16_30s"] = _OLD_DATA_["Delta_18_16_30s"][-1].value
     _NEW_DATA_["Delta_18_16_100s"] = _OLD_DATA_["Delta_18_16_100s"][-1].value
     _NEW_DATA_["Delta_18_16_2min"] = _OLD_DATA_["Delta_18_16_2min"][-1].value
-    _NEW_DATA_["Delta_18_16_5min"] = _OLD_DATA_["Delta_18_16_5min"][-1].value
+    _NEW_DATA_["Delta_18_16_5min"] = _OLD_DATA_["Delta_18_16_5min"][-1].value    
     _NEW_DATA_["Delta_D_H"] = _OLD_DATA_["Delta_D_H"][-1].value
     _NEW_DATA_["Delta_D_H_30s"] = _OLD_DATA_["Delta_D_H_30s"][-1].value
     _NEW_DATA_["Delta_D_H_100s"] = _OLD_DATA_["Delta_D_H_100s"][-1].value
     _NEW_DATA_["Delta_D_H_2min"] = _OLD_DATA_["Delta_D_H_2min"][-1].value
-    _NEW_DATA_["Delta_D_H_5min"] = _OLD_DATA_["Delta_D_H_5min"][-1].value
+    _NEW_DATA_["Delta_D_H_5min"] = _OLD_DATA_["Delta_D_H_5min"][-1].value    
     _NEW_DATA_["H2O"] = _OLD_DATA_["H2O"][-1].value
     _NEW_DATA_["CH4"] = _OLD_DATA_["CH4"][-1].value
     _NEW_DATA_["CH4_30s"] = _OLD_DATA_["CH4_30s"][-1].value
@@ -202,13 +202,13 @@ else:
 
 for k in _DATA_.keys():
     _REPORT_[k] = _DATA_[k]
-
+    
 for k in _NEW_DATA_.keys():
     if k == "delta":
         _REPORT_[k] = clipReportData(_NEW_DATA_[k])
-    else:
+    else:    
         _REPORT_[k] = _NEW_DATA_[k]
-
+        
 max_shift = 1.0e-5
 H16OH_cm_adjust_gain = 0.1
 H18OH_cm_adjust_gain = 0.1
@@ -216,7 +216,7 @@ H16OD_cm_adjust_gain = 0.1
 O18a_cm_adjust_gain = 0.1
 O17_cm_adjust_gain = 0.1
 PZTgain = 0.05
-
+        
 # Check instrument status and do not do any updates if any parameters are unlocked
 
 pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
@@ -227,11 +227,11 @@ systemError =       _INSTR_STATUS_ & INSTMGR_STATUS_SYSTEM_ERROR
 good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
 if abs(_DATA_["CavityPressure"]-50.0) > 0.5:
     good = False
-
+    
 if not good:
     print "Updating WLM offset not done because of bad instrument status"
 else:
-    if _DATA_["spectrum"] == 123:
+    if _DATA_["spectrum"] == 123: 
         try:
             o18_adjust = _DATA_["O18a_adjust"]*O18a_cm_adjust_gain   # Update the offset for virtual laser 1
             o18_adjust = min(max_shift,max(-max_shift,o18_adjust))
@@ -239,7 +239,7 @@ else:
             _PERSISTENT_["wlm1_offset"] = newOffset0
             _NEW_DATA_["wlm1_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(1,float(newOffset0))
-            #print "New O18 (virtual laser 1) offset: %.5f" % newOffset0
+            #print "New O18 (virtual laser 1) offset: %.5f" % newOffset0 
         except:
             pass
             print "No new O18 (virtual laser 1) offset"
@@ -250,11 +250,11 @@ else:
             _NEW_DATA_["wlm2_offset"] = newOffset0
             _PERSISTENT_["wlm2_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(2,float(newOffset0))
-            #print "New O17 (virtual laser 2) offset: %.5f" % newOffset0
+            #print "New O17 (virtual laser 2) offset: %.5f" % newOffset0 
         except:
             pass
             print "No new O17 (virtual laser 2) offset"
-
+            
         try:
             o16_adjust = _DATA_["h16oh_adjust"]*H16OH_cm_adjust_gain   # Update the offset for virtual laser 3
             o16_adjust = min(max_shift,max(-max_shift,o16_adjust))
@@ -262,7 +262,7 @@ else:
             _PERSISTENT_["wlm3_offset"] = newOffset0
             _NEW_DATA_["wlm3_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(3,float(newOffset0))
-            #print "New O16 (virtual laser 3) offset: %.5f" % newOffset0
+            #print "New O16 (virtual laser 3) offset: %.5f" % newOffset0 
         except:
             pass
             print "No new O16 (virtual laser 3) offset"
@@ -274,11 +274,11 @@ else:
             _PERSISTENT_["wlm4_offset"] = newOffset0
             _NEW_DATA_["wlm4_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(4,float(newOffset0))
-            #print "New O18 (virtual laser 4) offset: %.5f" % newOffset0
+            #print "New O18 (virtual laser 4) offset: %.5f" % newOffset0 
         except:
             pass
             print "No new O18 (virtual laser 4) offset"
-
+            
         try:
             d_adjust = _DATA_["h16od_adjust"]*H16OD_cm_adjust_gain   # Update the offset for virtual laser 5
             d_adjust = min(max_shift,max(-max_shift,d_adjust))
@@ -286,13 +286,13 @@ else:
             _PERSISTENT_["wlm5_offset"] = newOffset0
             _NEW_DATA_["wlm5_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(5,float(newOffset0))
-            #print "New D (virtual laser 5) offset: %.5f" % newOffset0
+            #print "New D (virtual laser 5) offset: %.5f" % newOffset0 
         except:
             pass
             print "No new D (virtual laser 5) offset"
 
 #  PZT voltage control goes here.  First step is to apply the adjustments from spectroscopy
-
+            
         FSR = _DATA_["pzt_per_fsr"]
         try:
             adjust = _DATA_["pzt1_adjust"]*PZTgain
@@ -300,37 +300,37 @@ else:
             _PERSISTENT_["pzt1_offset"] = newPZToffset
         except:
             pass
-
+            
         try:
             adjust = _DATA_["pzt2_adjust"]*PZTgain
             newPZToffset = _PERSISTENT_["pzt2_offset"] + adjust
             _PERSISTENT_["pzt2_offset"] = newPZToffset
         except:
-            pass
-
+            pass 
+            
         try:
             adjust = _DATA_["pzt3_adjust"]*PZTgain
             newPZToffset = _PERSISTENT_["pzt3_offset"] + adjust
             _PERSISTENT_["pzt3_offset"] = newPZToffset
         except:
-            pass
-
+            pass 
+            
         try:
             adjust = _DATA_["pzt4_adjust"]*PZTgain
             newPZToffset = _PERSISTENT_["pzt4_offset"] + adjust
             _PERSISTENT_["pzt4_offset"] = newPZToffset
         except:
-            pass
-
+            pass 
+            
         try:
             adjust = _DATA_["pzt5_adjust"]*PZTgain
             newPZToffset = _PERSISTENT_["pzt5_offset"] + adjust
             _PERSISTENT_["pzt5_offset"] = newPZToffset
         except:
-            pass
-
+            pass 
+            
 #  Next force PZT voltages to lie within 1.1*FSR (approx. 22000 DN)
-
+        
         PZT = [{'index':1,'value':_PERSISTENT_["pzt1_offset"]},{'index':2,'value':_PERSISTENT_["pzt2_offset"]},
                {'index':3,'value':_PERSISTENT_["pzt3_offset"]},{'index':4,'value':_PERSISTENT_["pzt4_offset"]},
                {'index':5,'value':_PERSISTENT_["pzt5_offset"]}]
@@ -343,7 +343,7 @@ else:
             else:
                 PZT[highestPZT-1]['value'] -= FSR
             orderedPZT = sorted(PZT, key=lambda k: k['value'])
-
+            
 #  Check if PZTS are near limit and move all of them if they are
 
         if orderedPZT[0]['value'] < 32768 - 1.2*FSR:
@@ -360,7 +360,7 @@ else:
             PZT[3]['value'] -= FSR
             PZT[4]['value'] -= FSR
             _PERSISTENT_["PZTshift"] += 1
-
+            
 #  Report adjusted PZT voltages and apply to analyzer
 
         _PERSISTENT_["pzt1_offset"] = PZT[0]['value']
@@ -378,7 +378,7 @@ else:
         _PERSISTENT_["pzt5_offset"] = PZT[4]['value']
         _NEW_DATA_["pzt5_offset"] = PZT[4]['value']
         _DRIVER_.wrDasReg("PZT_OFFSET_VIRTUAL_LASER5",PZT[4]['value'])
-
+         
 _REPORT_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
 _REPORT_["wlm2_offset"] = _PERSISTENT_["wlm2_offset"]
 _REPORT_["wlm3_offset"] = _PERSISTENT_["wlm3_offset"]
