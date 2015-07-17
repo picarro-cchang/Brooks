@@ -52,6 +52,10 @@ class DataManagerPublisher(object):
             if 'species' in entry['data'] and (entry['data']['species'] == 0.0 or entry['data']['species'] == "0.0"):
                 print "Rejected species 0"
                 return None
+            elif source == 'Sensors' and entry['mode'] == 'FBDS_mode':
+                # block these data during the measurement, otherwise non-cavity parameters will be treated as 0 by surveyor programs
+                # CH4 and flow values shown on tablet will jump between 0 and normal reading.
+                return None
             return [{'type': 'measurement'}, {'mode': entry['mode']}, json.dumps(entry['data'])]
         elif source == 'parseGPS' or source == 'parseGillAnemometer':
             entry['data']['EPOCH_TIME'] = entry['time']
