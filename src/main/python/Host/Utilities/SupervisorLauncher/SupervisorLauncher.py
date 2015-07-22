@@ -8,6 +8,7 @@
 
 import sys
 import os
+import psutil
 import subprocess
 import wx
 import time
@@ -15,7 +16,8 @@ import threading
 import win32gui
 import shutil
 from configobj import ConfigObj
-from Host.Utilities.SupervisorLauncher.SupervisorLauncherFrame import SupervisorLauncherFrame
+from Host.Utilities.SupervisorLauncher.SupervisorLauncherFrame import (SupervisorLauncherFrame,
+    UserNotificationsFrameGui)
 from Host.autogen import interface
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
@@ -41,7 +43,7 @@ else:
 AppPath = os.path.abspath(AppPath)
 
 class SupervisorLauncher(SupervisorLauncherFrame):
-    def __init__(self, configFile, autoLaunch, closeValves, killAll, *args, **kwds):
+    def __init__(self, configFile, autoLaunch, closeValves, delay, killAll, *args, **kwds):
         self.mode = None
         if 'mode' in kwds:
             self.mode = kwds['mode']
@@ -51,6 +53,9 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             self.launchType = self.co["Main"]["Type"].strip().lower()
         except:
             self.launchType = "exe"
+        self.notificationsFrame = None
+        self.startSupervisorThread = None
+        self.delay = delay
         self.explicitModeLaunch = False
         self.forcedLaunch = False
         typeChoices = self.co.keys()
@@ -61,8 +66,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         except:
             self.consoleMode = 2
         apacheDir = self.co["Main"]["APACHEDir"].strip()
-        self.supervisorIniDir = os.path.join(apacheDir, "AppConfig\Config\Supervisor")
-        quickGuiIniFile = os.path.join(apacheDir, "AppConfig\Config\QuickGui\QuickGui.ini")
+        self.supervisorIniDir = os.path.join(apacheDir, r"AppConfig\Config\Supervisor")
+        quickGuiIniFile = os.path.join(apacheDir, r"AppConfig\Config\QuickGui\QuickGui.ini")
         try:
             hostDir = self.co["Main"]["HostDir"].strip()
         except:
@@ -73,18 +78,41 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
         self.Bind(wx.EVT_BUTTON, self.onLaunch, self.buttonLaunch)
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
+        self.timer.Start(1000)
         self.closeValves = closeValves
         self.killAll = killAll
+        if self.delay:
+            self.notificationsFrame = UserNotificationsFrameGui(None,-1,"")
+            self.notificationsFrame.button_dismiss.SetLabel("System Clock Reset - Restarting Analyzer")
+            self.notificationsFrame.Show()
+            wx.CallLater(1000*self.delay, self.doAutomatic)
+        else:
+            self.doAutomatic()
+
+    def onTimer(self, event):
+        if self.startSupervisorThread is not None:
+            if not self.startSupervisorThread.is_alive():
+                if self.notificationsFrame is not None:
+                    if not self.notificationsFrame.closed:
+                        return
+                    self.notificationsFrame.Close()
+                    self.notificationsFrame = None
+                self.timer.Stop()
+                self.Close()
+
+    def doAutomatic(self):
         if self.mode is not None:
             self.assignType(self.mode)
             self.runExplicitModeLaunch()
-            time.sleep(3)
-            self.Destroy()
+            wx.CallLater(3000, self.Hide)
         elif autoLaunch:
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
-            time.sleep(3)
-            self.Destroy()
+            wx.CallLater(3000, self.Hide)
+        else:
+            self.Show()
 
     def initMode(self):
         ini = ConfigObj(self.startupSupervisorIni)
@@ -161,29 +189,56 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             except:
                 pass
 
+        self.startSupervisorThread = threading.Thread(target=self.startSupervisor)
+        self.startSupervisorThread.setDaemon(True)
+        self.startSupervisorThread.start()
+
+    def startSupervisor(self):
         os.chdir(self.supervisorHostDir)
-        info = subprocess.STARTUPINFO()
-        if self.consoleMode != 1:
-            info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            info.wShowWindow = subprocess.SW_HIDE
 
-        if self.launchType == "exe":
-            subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
+        # At this point, we start up the supervisor and host startup
+        #
+        # while True:
+        #     Kill supervisors, kill HostStartup.exe
+        #     Start supervisor, start HostStartup.exe
+        #     backup_supervisor_running = False
+        #     while not backup_supervisor_running:
+        #         if main supervisor has terminated:
+        #             break
+        #         backup_supervisor_running = (Get process list and scan for backup supervisor ok)
+        #         sleep(2.0)
+        #     if backup_supervisor_running:
+        #         send title to QuickGui
+        #         break
+
+        if self.launchType != "exe":
+            proc = subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
         else:
-            subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
-
-        # Launch HostStartup
-        if self.launchType == "exe":
-            info = subprocess.STARTUPINFO()
-            subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
-        #else:
-        #   os.chdir(r"C:\Picarro\G2000\Host\Utilities\SupervisorLauncher")
-        #   subprocess.Popen(["python.exe", "HostStartup.py","-c",self.supervisorIni.replace("EXE","")], startupinfo=info)
-
-        # Change QuickGui Title
-        setTitleThread = threading.Thread(target=self.setGuiTitle)
-        setTitleThread.setDaemon(True)
-        setTitleThread.start()
+            backupSupervisorRunning = False
+            while not backupSupervisorRunning:
+                os.system("taskkill /im Supervisor.exe /f")
+                os.system("taskkill /im HostStartup.exe /f")
+                info = subprocess.STARTUPINFO()
+                if self.consoleMode != 1:
+                    info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    info.wShowWindow = subprocess.SW_HIDE
+                supervisor_proc = subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
+                info = subprocess.STARTUPINFO()
+                subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+                while not backupSupervisorRunning:
+                    retcode = supervisor_proc.poll()
+                    if retcode is not None: # i.e. main supervisor terminated
+                        break
+                    # Call psutil to see if backup supervisor is running
+                    for proc in psutil.process_iter():
+                        try:
+                            if proc.name.lower().startswith('supervisor.exe'):
+                                backupSupervisorRunning = '--backup' in proc.cmdline
+                                if backupSupervisorRunning: break
+                        except psutil.Error:
+                            pass
+                    time.sleep(2.0)
+        self.setGuiTitle()
 
     def setGuiTitle(self):
         titleSet = False
@@ -228,7 +283,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:avkm:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:d:avkm:", ["help"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -249,15 +304,19 @@ def HandleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
 
+    delay = 0
+    if "-d" in options:
+        delay = float(options["-d"])
+
     autoLaunch = "-a" in options
     closeValves = "-v" in options
     killAll = "-k" in options
     modeSpecified = options.get("-m",None)
 
-    return (configFile, autoLaunch, closeValves, killAll, modeSpecified)
+    return (configFile, autoLaunch, closeValves, delay, killAll, modeSpecified)
 
 if __name__ == "__main__":
-    (configFile, autoLaunch, closeValves, killAll, modeSpecified) = HandleCommandSwitches()
+    (configFile, autoLaunch, closeValves, delay, killAll, modeSpecified) = HandleCommandSwitches()
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
 
     if supervisorLauncherApp.alreadyrunning() and not (autoLaunch or modeSpecified!=None):
@@ -274,8 +333,10 @@ if __name__ == "__main__":
             pass
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
-        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, killAll, None, -1, "", mode=modeSpecified)
+        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "", mode=modeSpecified)
         frame.initMode()
         app.SetTopWindow(frame)
-        frame.Show()
+        #frame.Show()
         app.MainLoop()
+#
+# SupervisorLauncher.py -d 3 -k -a -c c:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini

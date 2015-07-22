@@ -567,10 +567,10 @@ class HostToDspSender(Singleton):
             now = time()
         seqNum = self.seqNum
         self.seqNum = None
-        raise RuntimeError,("Timeout getting status after %s tries." +
+        raise RuntimeError(("Timeout getting status after %s tries." +
             "Initial status: 0x%x, Final status: 0x%x," +
             "Expected sequence number: %s") % \
-            (ntries,self.initStatus,self.status,seqNum)
+            (ntries,self.initStatus,self.status,seqNum))
     @usbLockProtect
     def getStatusWhenDone(self):
         # Read done bit from COMM_STATUS_REGISTER

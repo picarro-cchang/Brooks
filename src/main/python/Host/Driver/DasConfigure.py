@@ -148,7 +148,7 @@ class DasConfigure(SharedTypes.Singleton):
         soa = self.installCheck("SOA_PRESENT")
         fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
         if soa and fiber_amp:
-            raise ValueError,"Cannot have both SOA and fiber amplifier present"
+            raise ValueError("Cannot have both SOA and fiber amplifier present")
 
         injCtrl = sender.rdFPGA("FPGA_INJECT","INJECT_CONTROL")
 
@@ -171,12 +171,12 @@ class DasConfigure(SharedTypes.Singleton):
             if laserNum == 4:
                 if soa:
                     if present:
-                        raise ValueError,"Cannot have both laser 4 and SOA present"
+                        raise ValueError("Cannot have both laser 4 and SOA present")
                     else:
                         present = soa
                 elif fiber_amp:
                     if present:
-                        raise ValueError,"Cannot have both laser 4 and fiber amplifier` present"
+                        raise ValueError("Cannot have both laser 4 and fiber amplifier present")
                     # The fiber amplifier thermal control operates on a slower timescale
                     if fiber_amp > 0:
                         # Temperature reading

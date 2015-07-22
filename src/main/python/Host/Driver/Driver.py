@@ -16,16 +16,15 @@ import cPickle
 import ctypes
 import getopt
 import inspect
-
 import os
 import struct
+import subprocess
 import sys
 import tables
-import threading
 import time
 import types
 import traceback
-from numpy import array, transpose
+from numpy import array
 
 from Host.Driver.DasConfigure import DasConfigure
 from Host.Driver.DriverAnalogInterface import AnalogInterface
@@ -39,7 +38,7 @@ from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.hostDasInterface import Operation
 from Host.Common.InstErrors import INST_ERROR_OKAY
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 from Host.Common import SchemeProcessor
@@ -120,6 +119,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
     #DASCNTRL_Diagnostic = 3 # DASCNTRL Diagnostic state.
     #DASCNTRL_Error = 4 # DASCNTRL Error state.
     #DASCNTRL_DspNotBooted = 5 # DASCNTRL Dsp Not Booted.
+
+    def invokeSupervisorLauncher(self):
+        self.driver.invokeSupervisorLauncher()
 
     def DAS_GetState(self, stateMachineIndex):
         """Need to be implemented"""
@@ -1075,6 +1077,7 @@ class StreamSaver(SharedTypes.Singleton):
 
 class Driver(SharedTypes.Singleton):
     def __init__(self,sim,configFile):
+        self.looping = True
         self.config = CustomConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
         self.autoStreamFile = False
@@ -1146,15 +1149,49 @@ class Driver(SharedTypes.Singleton):
         ts = timestamp.getTimestamp()
         sender.doOperation(Operation("ACTION_NUDGE_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
 
+    def invokeSupervisorLauncher(self):
+        # Start the supervisor launcher and stop execution of current instance of driver (by setting
+        #  self.looping to False). This allows the driver to tidy up before shutting down. It
+        #  is also important for the supervisor launcher not to be a child of the driver (since this
+        #  prevents the driver from shutting down cleanly). To this end, the launcher process is
+        #  created in the detatched state and all file descriptors are closed.
+
+        # Instruct the supervisor to shut down all applications except the driver, since the
+        #  driver will be shutdown using self.looping.
+        self.supervisor.TerminateApplications(False, False)
+        DETACHED_PROCESS = 0x00000008
+        try:
+            Log("Forced restart via supervisor launcher")
+            if os.getcwd().lower().endswith("hostexe"):
+                subprocess.Popen([r"SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
+                                  "-c", r"..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
+                                 shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
+                                 creationflags=DETACHED_PROCESS)
+            else:
+                subprocess.Popen([r"..\..\HostExe\SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
+                                  "-c", r"..\..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
+                                 shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
+                                 creationflags=DETACHED_PROCESS)
+                #Log("Cannot invoke supervisor launcher from %s" % os.getcwd())
+        except:
+            Log("Cannot communicate with supervisor:\n%s" % traceback.format_exc())
+        finally:
+            self.looping = False
+
     def run(self):
+        nudge = 0
         def messageProcessor(data):
             ts, msg = data
             if "Instrument placed in safe mode" in msg:
                 self.safeModeCount += 1
-                if (self.maxSafeModeCount is not None) and (self.safeModeCount >= self.maxSafeModeCount):
+                if (nudge > 10000):
+                    self.invokeSupervisorLauncher()
+                    return
+                elif (self.maxSafeModeCount is not None) and (self.safeModeCount >= self.maxSafeModeCount):
                     try:
-                        Log("Shutting down supervisor since maxSafeModeWarnings exceeded")
-                        self.supervisor.TerminateApplications(False, True)
+                        Log("Forced shutdown of supervisor.")
+                        self.supervisor.TerminateApplications(False, False)
+                        self.looping = False
                     except:
                         Log("Cannot communicate with supervisor")
             if len(msg)>2 and msg[1] == ':':
@@ -1243,7 +1280,7 @@ class Driver(SharedTypes.Singleton):
             maxRpcTime = 0.5
             rpcTime = 0.0
             try:
-                while not daemon.mustShutdown:
+                while self.looping and not daemon.mustShutdown:
                     timeSoFar = 0
                     messages = messageHandler.process(0.02)
                     timeSoFar += messages.duration
@@ -1285,7 +1322,13 @@ class Driver(SharedTypes.Singleton):
                     now = time.time()
 
                     if now > self.lastSaveDasState + 30.0:
-                        self.nudgeDasTimestamp()
+                        dasTime = self.rpcHandler.dasGetTicks()
+                        nudge = max(0.95*nudge, abs(timestamp.getTimestamp()-dasTime))
+                        if nudge < 30000:
+                            self.nudgeDasTimestamp()
+                        else:
+                            self.invokeSupervisorLauncher()
+                            sys.looping = False
                         self.dasInterface.saveDasState()
                         self.lastSaveDasState = now
 

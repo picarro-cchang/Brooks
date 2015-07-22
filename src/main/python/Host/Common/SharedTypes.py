@@ -259,4 +259,4 @@ if __debug__:
                                 "'%s' and '%s' are both %s" % (k,usedPorts[p],p))
             else:
                 usedPorts[p] = k
-    del localsNow, k, usedPorts
+    del localsNow, usedPorts

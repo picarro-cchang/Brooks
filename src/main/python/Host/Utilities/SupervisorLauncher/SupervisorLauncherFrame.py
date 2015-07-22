@@ -50,10 +50,47 @@ class SupervisorLauncherFrame(wx.Frame):
         sizer_1.Fit(self)
         self.Layout()
 
+class UserNotificationsFrameGui(wx.Frame):
+    def __init__(self, *args, **kwds):
+        # begin wxGlade: UserNotificationsFrameGui.__init__
+        kwds["style"] = wx.CAPTION | wx.STAY_ON_TOP
+        wx.Frame.__init__(self, *args, **kwds)
+        #self.panel_main = wx.Panel(self, wx.ID_ANY)
+        self.button_dismiss = wx.Button(self, wx.ID_ANY, "Recalibration Event")
+
+        self.__set_properties()
+        self.__do_layout()
+
+        self.Bind(wx.EVT_BUTTON, self.on_button_dismiss, self.button_dismiss)
+        self.closed = False
+        # end wxGlade
+
+    def __set_properties(self):
+        # begin wxGlade: UserNotificationsFrameGui.__set_properties
+        self.SetTitle("User Notifications")
+        self.SetSize((400, 100))
+        self.button_dismiss.SetBackgroundColour(wx.Colour(204, 50, 50))
+        self.button_dismiss.SetForegroundColour(wx.Colour(255, 255, 255))
+        self.button_dismiss.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        self.button_dismiss.SetToolTipString("Click to dismiss notification")
+        # end wxGlade
+
+    def __do_layout(self):
+        # begin wxGlade: UserNotificationsFrameGui.__do_layout
+        sizer_main = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_main.Add(self.button_dismiss, 1, wx.EXPAND, 0)
+        self.SetSizer(sizer_main)
+        self.Layout()
+        # end wxGlade
+
+    def on_button_dismiss(self, event):  # wxGlade: UserNotificationsFrameGui.<event_handler>
+        self.Hide()
+        self.closed = True
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    frame = SupervisorLauncherFrame(["CO2_CH4", "CO2_H2O"], None, -1, "")
+    frame = UserNotificationsFrameGui(None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
     app.MainLoop()
