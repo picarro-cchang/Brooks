@@ -7,7 +7,7 @@ here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[
 if here not in sys.path: sys.path.append(here)
 from translate import newname
 
-SYNC_LIST = ["NH3"]
+SYNC_LIST = ["NH3", "NH3_2min", "NH3_30s", "NH3_5min", "H2O"]
 SENSOR_LIST = ["species", "solenoid_valves", "DasTemp", "CavityPressure",
                "MPVPosition", "OutletValve", "CavityTemp", "WarmBoxTemp", "EtalonTemp"]
 setLag = 10.0

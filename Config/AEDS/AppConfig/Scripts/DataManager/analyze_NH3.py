@@ -1,4 +1,7 @@
 #  Analysis script for AEDS Ammonia analyzer started by Hoffnagle 2010-12-15
+#  2014 0731:  Added correction for direct and indirect water interference, dry-mole-fraction
+#              Added nonlinear calculation of h2o_actual based on cross-calibration with CFADS
+#  2015 0611:  Changed reporting so that "NH3" now means dry mole fraction, not raw value.
 
 import os
 import sys
@@ -65,6 +68,13 @@ NH3_CONC = (_INSTR_["concentration_nh3_slope"],_INSTR_["concentration_nh3_interc
 CO2_CONC = (_INSTR_["concentration_co2_slope"],_INSTR_["concentration_co2_intercept"])
 H2O_CONC = (_INSTR_["concentration_h2o_slope"],_INSTR_["concentration_h2o_intercept"])
 
+# Import water selfbroadening, cross-talk and cross-broadening parameters
+Hlin = _INSTR_["water_linear"]
+Hquad = _INSTR_["water_quadratic"]
+H1 = _INSTR_["water_crosstalk_linear"]
+A1H1 = _INSTR_["water_crossbroadening_linear"]
+A1H2 = _INSTR_["water_crossbroadening_quadratic"]
+
 if _DATA_["species"] == 4:
     try:
         _NEW_DATA_["CO2"] = _OLD_DATA_["CO2"][-1].value
@@ -74,16 +84,33 @@ if _DATA_["species"] == 4:
 
     try:
         temp = applyLinear(_DATA_["nh3_conc_ave"],NH3_CONC)
-        _NEW_DATA_["NH3"] = temp
-        now = _OLD_DATA_["NH3"][-2].time
-        _NEW_DATA_["NH3_30s"] = boxAverage(_PERSISTENT_["buffer30"],temp,now,30)
-        _NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["buffer120"],temp,now,120)
-        _NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["buffer300"],temp,now,300)
+        _NEW_DATA_["NH3_uncorrected"] = temp
+        now = _OLD_DATA_["NH3_uncorrected"][-2].time
+        h2o_actual = Hlin*_DATA_["peak15"] + Hquad*_DATA_["peak15"]**2
+        str15 = 1.1794*_DATA_["peak15"] + 0.001042*_DATA_["peak15"]**2
+        corrected = (temp + H1*_DATA_["peak15"])/(1.0 + A1H1*str15 + A1H2*str15**2)
+        dry = corrected/(1.0-0.01*h2o_actual)
+        _NEW_DATA_["NH3_broadeningCorrected"] = corrected
+        _NEW_DATA_["NH3_dry"] = dry
+        _NEW_DATA_["NH3"] = dry
+        _NEW_DATA_["NH3_30s"] = boxAverage(_PERSISTENT_["buffer30"],dry,now,30)
+        _NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["buffer120"],dry,now,120)
+        _NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["buffer300"],dry,now,300)
     except:
         pass
 
 if _DATA_["species"] == 2:
     try:
+        h2o_actual = Hlin*_DATA_["peak15"] + Hquad*_DATA_["peak15"]**2
+        temp = applyLinear(h2o_actual,H2O_CONC)
+        _NEW_DATA_["H2O"] = temp
+    except:
+        pass
+
+    try:
+        _NEW_DATA_["NH3_uncorrected"] = _OLD_DATA_["NH3_uncorrected"][-1].value
+        _NEW_DATA_["NH3_broadeningCorrected"] = _OLD_DATA_["NH3_broadeningCorrected"][-1].value
+        _NEW_DATA_["NH3_dry"] = _OLD_DATA_["NH3_dry"][-1].value
         _NEW_DATA_["NH3"] = _OLD_DATA_["NH3"][-1].value
         _NEW_DATA_["NH3_30s"] = _OLD_DATA_["NH3_30s"][-1].value
         _NEW_DATA_["NH3_2min"] = _OLD_DATA_["NH3_2min"][-1].value
@@ -94,12 +121,6 @@ if _DATA_["species"] == 2:
     try:
         temp = applyLinear(_DATA_["co2_conc"],CO2_CONC)
         _NEW_DATA_["CO2"] = temp
-    except:
-        pass
-
-    try:
-        temp = applyLinear(_DATA_["h2o_conc"],H2O_CONC)
-        _NEW_DATA_["H2O"] = temp
     except:
         pass
 
