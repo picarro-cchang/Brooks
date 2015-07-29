@@ -17,7 +17,7 @@ init["base",3] = lastShift
 deps = Dependencies()
 ANALYSIS = []
 d = DATA
-d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.50,maxVal=20.0)
+d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
 d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3.5)
 d.tunerEnsembleFilter(maxDev=500000,sigmaThreshold=3.5)
 d.sparse(maxPoints=100,width=0.0001,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",sigmaThreshold=2.0)
