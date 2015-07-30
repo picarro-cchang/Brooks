@@ -212,10 +212,13 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         #         break
 
         if self.launchType != "exe":
+            info = subprocess.STARTUPINFO()
             proc = subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
         else:
             backupSupervisorRunning = False
-            while not backupSupervisorRunning:
+            for loops in range(5):
+                if backupSupervisorRunning:
+                    break
                 os.system("taskkill /im Supervisor.exe /f")
                 os.system("taskkill /im HostStartup.exe /f")
                 info = subprocess.STARTUPINFO()
@@ -225,7 +228,9 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 supervisor_proc = subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
                 info = subprocess.STARTUPINFO()
                 subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
-                while not backupSupervisorRunning:
+                for waitBackupSupervisor in range(12):
+                    if backupSupervisorRunning:
+                        break
                     retcode = supervisor_proc.poll()
                     if retcode is not None: # i.e. main supervisor terminated
                         break
@@ -237,7 +242,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                                 if backupSupervisorRunning: break
                         except psutil.Error:
                             pass
-                    time.sleep(2.0)
+                    time.sleep(10.0)
+                else:
+                    raise RuntimeError("Timed out waiting for backup supervisor")
+            else:
+                raise RuntimeError("Too many restart attempts for supervisor")
+            time.sleep(2.0)
         self.setGuiTitle()
 
     def setGuiTitle(self):

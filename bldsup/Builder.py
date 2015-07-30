@@ -50,6 +50,11 @@ class Builder(object):
         self.project = project
         self.git_hash = None
 
+    def is_working_tree_clean(self):
+        """Calls git to see if the working tree is clean (consistent with the repo)"""
+        output, retcode = run_command("git diff-index --quiet HEAD --")
+        return retcode==0
+        
     def _remove_python_version_files(self):
         project = self.project
         logger = self.logger
