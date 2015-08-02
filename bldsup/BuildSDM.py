@@ -32,7 +32,8 @@ class BuildSDM(Builder):
         version_file = os.path.join(*JSON_VERSION_FILE)
         self.handle_version(version_file)
         logger.info("Distribution directory: %s" % project.get_property("dir_dist"))
-        self.log_selected_project_properties(['product', 'official', 'incr_version', 'set_version'])
+        self.log_selected_project_properties(['product', 'official', 'incr_version', 'set_version',
+            'check_working_tree', 'push', 'tag'])
 
     def publish(self):
         project = self.project

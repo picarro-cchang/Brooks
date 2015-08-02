@@ -1,6 +1,7 @@
-from Builder import Builder, run_command
+from Builder import Builder, check_config_hashes, run_command
 import json
 import os
+from pybuilder.core import task
 from pybuilder.errors import BuildFailedException
 import shutil
 import textwrap
@@ -17,9 +18,9 @@ class BuildG2000(Builder):
         logger.info("Instantiating BuildG2000")
 
     def initialize(self, product):
+        project = self.project
         logger = self.logger
         assert product.lower() == "g2000"
-        project = self.project
         version_file = os.path.join("versions","%s_version.json" % product)
         self.handle_version(version_file)
 
@@ -31,7 +32,37 @@ class BuildG2000(Builder):
             config_info = json.load(inp)
         self.handle_types(types, config_info['buildTypes'])
         project.set_property('config_info', config_info['buildTypes'])
-        self.log_selected_project_properties(['product', 'types', 'official', 'incr_version', 'set_version'])
+        # check_configs runs check_config_hashes before build is allowed to begin
+        check_configs = project.get_property("check_configs", "True")
+        check_configs = check_configs.lower() in ("yes", "true", "t", "1")
+        project.set_property("check_configs", check_configs)
+        if check_configs:
+            check_config_hashes(project, logger)
+        types_to_build = project.get_property('types_to_build')
+        logger.info("Installer types to build: %s" % ", ".join(types_to_build))
+        self.log_selected_project_properties(['product', 'types', 'official', 'incr_version', 'set_version',
+            'check_working_tree', 'check_configs', 'push', 'tag'])
+            
+    def handle_types(self, types, build_info):
+        # Types is a comma-separated string of device types
+        #  which may be preceeded by an "!" to indicate that those
+        #  types are to be excluded.
+        project = self.project
+        logger = self.logger
+        types = types.strip()
+        negate = (types[0] == "!")
+        types_list = (types[1:] if negate else types).split(',')
+        types_list = [item.strip() for item in types_list]
+
+        types_to_build = []
+        for item in sorted(build_info.keys()):
+            if negate:
+                if item not in types_list:
+                    types_to_build.append(item)
+            else:
+                if item in types_list:
+                    types_to_build.append(item)
+        project.set_property('types_to_build', types_to_build)
 
     def compile_sources(self):
         project = self.project
@@ -134,3 +165,32 @@ class BuildG2000(Builder):
                 output_file.write(stdout)
                 if return_code != 0:
                     raise BuildFailedException("Error while making installer for %s" % installer_type)
+                    
+def get_dir_hash(root):
+    s = sha1()
+    ini = None
+    hash_ok = False
+    for path, dirs, files in os.walk(root):
+        dirs.sort()
+        for f in files:
+            fname = os.path.join(path, f)
+            relname = fname[len(root)+1:]
+            if relname.lower() == "version.ini":
+                ini = ConfigObj(fname)
+                continue
+            s.update(relname)
+            with open(fname,"rb") as f1:
+                while True:
+                    # Read file in as little chunks
+                    buf = f1.read(4096)
+                    if not buf : break
+                    s.update(buf)
+    result = s.hexdigest()
+    revno = '0.0.0'
+    if ini:
+        if 'Version' in ini and 'dir_hash' in ini['Version']:
+            hash_ok =  (ini['Version']['dir_hash'] == result)
+            revno = ini['Version'].get('revno', '0.0.0')
+    return result, hash_ok, revno
+                    
+    

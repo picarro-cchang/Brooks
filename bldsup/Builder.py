@@ -1,6 +1,8 @@
+from configobj import ConfigObj
 import datetime
 from filecmp import dircmp
 from fnmatch import fnmatch
+from hashlib import sha1
 import json
 import os
 import shlex
@@ -46,14 +48,9 @@ def run_command(command, ignore_status=False):
 
 class Builder(object):
     def __init__(self, project, logger):
-        self.logger = logger
         self.project = project
+        self.logger = logger
         self.git_hash = None
-
-    def is_working_tree_clean(self):
-        """Calls git to see if the working tree is clean (consistent with the repo)"""
-        output, retcode = run_command("git diff-index --quiet HEAD --")
-        return retcode==0
         
     def _remove_python_version_files(self):
         project = self.project
@@ -99,7 +96,7 @@ class Builder(object):
     def after_clean(self):
         logger = self.logger
         logger.info("Cleaning compiled sources")
-        stdout, return_code = run_command("doit clean", True)
+        stdout, return_code = run_command("doit clean", ignore_status=True)
         if return_code != 0:
             raise BuildFailedException("Error while executing doit clean")
 
@@ -158,28 +155,6 @@ class Builder(object):
         return os.path.join(reports_dir, '%s_%s.txt' %
                             (datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), basename))
 
-    def handle_types(self, types, build_info):
-        # Types is a comma-separated string of device types
-        #  which may be preceeded by an "!" to indicate that those
-        #  types are to be excluded.
-        project = self.project
-        logger = self.logger
-        types = types.strip()
-        negate = (types[0] == "!")
-        types_list = (types[1:] if negate else types).split(',')
-        types_list = [item.strip() for item in types_list]
-
-        types_to_build = []
-        for item in sorted(build_info.keys()):
-            if negate:
-                if item not in types_list:
-                    types_to_build.append(item)
-            else:
-                if item in types_list:
-                    types_to_build.append(item)
-        if logger:
-            logger.info("Installer types to build: %s" % ", ".join(types_to_build))
-        project.set_property('types_to_build', types_to_build)
 
     def handle_set_version(self, version, version_file):
         project = self.project
@@ -193,7 +168,7 @@ class Builder(object):
             with open(version_file,"r") as fp:
                 old_ver = json.load(fp)
                 old_ver_list = [int(old_ver[field]) for field in fields]
-                if new_ver_list <= old_ver_list:
+                if new_ver_list <= old_ver_list and not project.get_property("force"):
                     raise ValueError("Version to set must exceed current version: %s" %
                                      ".".join(["%d" % f for f in old_ver_list]))
         with open(version_file,"w") as outp:
@@ -201,6 +176,7 @@ class Builder(object):
             if logger:
                 logger.info("Setting version to %s" % ".".join(["%d" % f for f in new_ver_list]))
             outp.write(ver_json)
+        return version
 
     def handle_incr_version(self, field, version_file):
         project = self.project
@@ -227,6 +203,7 @@ class Builder(object):
             if logger:
                 logger.info("Setting version to %s" % ".".join(["%d" % f for f in version_list]))
             fp.write(ver_json)
+        return version
 
     def handle_version(self, version_file):
         project = self.project
@@ -234,27 +211,27 @@ class Builder(object):
         official = project.get_property("official")
         product = project.get_property("product")
 
-        new_version = False
+        new_version = None
         # set_version is a string of the form major.minor.revision.build. If present, this causes the
         #  version of the installer to be set to the specified value, replacing the current value in the
         #  json version file
         if project.has_property("set_version"):
             if project.has_property("incr_version"):
                 raise ValueError("Cannot use both set_version and incr_version")
-            self.handle_set_version(project.get_property("set_version"), version_file)
-            new_version = True
+            new_version = self.handle_set_version(project.get_property("set_version"), version_file)
 
         # incr_version is one of the strings "major", "minor", "revision" or "build". If present, this
         #  causes the version of the installer to be incremented from the value in the json
         #  version file
         if project.has_property("incr_version"):
-            self.handle_incr_version(project.get_property("incr_version"), version_file)
-            new_version = True
+            new_version = self.handle_incr_version(project.get_property("incr_version"), version_file)
 
-        if new_version:
-            out, retcode = run_command("git add %s" % version_file, False)
-            """TO DO: Commit to git and push to github as well"""
-            logger.info("Updating version on git\n%s", out)
+        if new_version is not None:
+            out, retcode = run_command("git add %s" % version_file, ignore_status=False)
+            raw_version = ("%s.%s.%s.%s" %
+                (new_version["major"], new_version["minor"], new_version["revision"], new_version["build"]))
+            out, retcode = run_command('git commit -m "Updating %s to version %s"' % (product, raw_version), ignore_status=False)
+            logger.info("Updating version on local git repository\n%s" % out)
 
         # At this point, no more changes can be made to the repository, so we get fetch the git hash
         self.git_hash = run_command("git.exe log -1 --pretty=format:%H")[0]
@@ -268,6 +245,111 @@ class Builder(object):
             project.set_property('raw_version', raw_version)
             project.set_property('installer_version',"%s.%s.%s.%s" % (ver["major"], ver["minor"], ver["revision"], ver["build"]))
         # Need to set the directory into which the output distribution is placed
-        project.set_property('dir_dist','$dir_target/dist/%s-%s' % (project.name, raw_version))
+        project.set_property('dir_dist','$dir_target/dist/%s-%s' % (product, raw_version))
+    
+    def tidy_repo(self):
+        """Handle taggging and pushing of repository if these have been requested
+        """
+        project = self.project
+        logger = self.logger
+        if project.get_property('tag'):
+            installer_version = project.get_property('installer_version')
+            product = project.get_property('product')
+            tagname = '%s-%s' % (product, installer_version)
+            out, retcode = run_command('git tag -a %s -m %s"' % (tagname, tagname), ignore_status=False)
+            logger.info('Tagged repository: %s' % tagname)
+        if project.get_property('push'):
+            out, retcode = run_command('git push origin --tags', ignore_status=False)
+            logger.info('Pushed repository: %s' % out)
+            
+def get_dir_hash(root):
+    s = sha1()
+    ini = None
+    hash_ok = False
+    for path, dirs, files in os.walk(root):
+        dirs.sort()
+        for f in sorted(files):
+            fname = os.path.join(path, f)
+            relname = fname[len(root)+1:]
+            if relname.lower() == "version.ini":
+                ini = ConfigObj(fname)
+                continue
+            s.update(relname)
+            with open(fname,"rb") as f1:
+                while True:
+                    # Read file in as little chunks
+                    buf = f1.read(4096)
+                    if not buf : break
+                    s.update(buf)
+    result = s.hexdigest()
+    revno = '0.0.0'
+    if ini:
+        if 'Version' in ini and 'dir_hash' in ini['Version']:
+            hash_ok =  (ini['Version']['dir_hash'] == result)
+            revno = ini['Version'].get('revno', '0.0.0')
+    return result, hash_ok, revno
+        
+def check_config_hashes(project, logger):
+    fnamec = 'current_configs.txt'
+    fnameu = 'updated_configs.txt'
+    logger.info('Checking for configuration updates')
+    break_build = False
+    with open(fnamec, 'w') as cp:
+        with open(fnameu, 'w') as fp:
+            commonconfig_dir = os.path.join('Config', 'CommonConfig')
+            dir_hash, hash_ok, revno = get_dir_hash(commonconfig_dir)
+            if not hash_ok:
+                break_build = True
+                logger.info('CommonConfig hash incorrect: %s' % (dir_hash,))
+                print>>fp, "%s, %s" % ("CommonConfig",revno)
+            else:
+                print>>cp, "%s, %s" % ("CommonConfig",revno)
+            build_types = sorted(project.get_property('config_info', {}).keys())
+            for build_type in sorted(build_types):
+                appconfig_dir = os.path.join('Config', build_type, 'AppConfig')
+                dir_hash, hash_ok, revno = get_dir_hash(appconfig_dir)
+                if not hash_ok:
+                    break_build = True
+                    logger.info('AppConfig hash incorrect for %s: %s' % (build_type, dir_hash))
+                    print>>fp, "%s/%s, %s" % (build_type, 'AppConfig' ,revno)
+                else:
+                    print>>cp, "%s/%s, %s" % (build_type, 'AppConfig' ,revno)
+                instrconfig_dir = os.path.join('Config', build_type, 'InstrConfig')
+                dir_hash, hash_ok, revno = get_dir_hash(instrconfig_dir)
+                if not hash_ok:
+                    break_build = True
+                    logger.info('InstrConfig hash incorrect for %s: %s' % (build_type, dir_hash))
+                    print>>fp, "%s/%s, %s" % (build_type, 'InstrConfig' ,revno)
+                else:
+                    print>>cp, "%s/%s, %s" % (build_type, 'InstrConfig' ,revno)
+    if break_build:
+        raise ValueError('New config version numbers needed. Please edit updated_configs.txt')
+    else:
+        logger.info('All configuration hashes verified')
 
+def update_config_hashes(project, logger):
+    fnameu = 'updated_configs.txt'
+    with open(fnameu, 'r') as fp:
+        for line in fp:
+            dirname, new_revno = line.split(',')
+            config_dir = os.path.join('Config', dirname)
+            new_version = [int(v) for v in new_revno.split('.')]
+            ini = ConfigObj(os.path.join(config_dir, 'version.ini'))
+            dir_hash = None
+            old_revno = '0.0.0'
+            if ini:
+                if 'Version' in ini and 'dir_hash' in ini['Version']:
+                    dir_hash = ini['Version']['dir_hash']
+                    old_revno = ini['Version'].get('revno', '0.0.0')
+            old_version = [int(v) for v in old_revno.split('.')]
+            if new_version <= old_version and not project.get_property("force"):
+                raise ValueError('Updated version of %s must exceed old version number: %s' % (dirname, old_revno))
+            new_revno = new_revno.strip()
+            if 'Version' not in ini:
+                ini['Version'] = {}
+            ini['Version']['revno'] = new_revno
+            new_hash = get_dir_hash(config_dir)[0]
+            ini['Version']['dir_hash'] = new_hash
+            ini.write()
+            logger.info('Updated %s to version %s' % (dirname, new_revno))
 
