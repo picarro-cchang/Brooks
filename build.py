@@ -1,3 +1,7 @@
+from pybuilder import bootstrap
+
+bootstrap()
+
 import os
 from pybuilder.core import after, before, depends, use_plugin, init, task
 from pybuilder.errors import BuildFailedException
@@ -60,7 +64,7 @@ def initialize(project, logger):
     push = project.get_property("push", "True" if official else "False")
     push = push.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("push", push)
-    # force determines if we are to ignore version number ordering 
+    # force determines if we are to ignore version number ordering
     force = project.get_property("force", "False")
     force = force.lower() in ("yes", "y", "y", "true", "t", "1")
     project.set_property("force", force)
@@ -70,7 +74,7 @@ def initialize(project, logger):
         output, retcode = run_command("git symbolic-ref --short -q HEAD")
         output = output.strip()
         if output != branch:
-            raise RuntimeError("Incorrect branch: %s" % output)    
+            raise RuntimeError("Incorrect branch: %s" % output)
     project.set_property("builder", builder)
     builder.initialize(product)
 
@@ -120,7 +124,7 @@ def after_clean(project, logger):
 @task
 def check_config_hashes(project, logger):
     return Builder.check_config_hashes(project, logger)
-    
+
 @task
 def update_config_hashes(project, logger):
     return Builder.update_config_hashes(project, logger)

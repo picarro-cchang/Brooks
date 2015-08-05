@@ -34,7 +34,7 @@ class BuildG2000(Builder):
         project.set_property('config_info', config_info['buildTypes'])
         # check_configs runs check_config_hashes before build is allowed to begin
         check_configs = project.get_property("check_configs", "True")
-        check_configs = check_configs.lower() in ("yes", "true", "t", "1")
+        check_configs = check_configs.lower() in ("yes", "y", "true", "t", "1")
         project.set_property("check_configs", check_configs)
         if check_configs:
             check_config_hashes(project, logger)
@@ -42,7 +42,7 @@ class BuildG2000(Builder):
         logger.info("Installer types to build: %s" % ", ".join(types_to_build))
         self.log_selected_project_properties(['product', 'types', 'official', 'incr_version', 'set_version',
             'check_working_tree', 'check_configs', 'push', 'tag'])
-            
+
     def handle_types(self, types, build_info):
         # Types is a comma-separated string of device types
         #  which may be preceeded by an "!" to indicate that those
@@ -50,7 +50,7 @@ class BuildG2000(Builder):
         project = self.project
         logger = self.logger
         types = types.strip()
-        negate = (types[0] == "!")
+        negate = (types and types[0] == "!")
         types_list = (types[1:] if negate else types).split(',')
         types_list = [item.strip() for item in types_list]
 
@@ -165,7 +165,7 @@ class BuildG2000(Builder):
                 output_file.write(stdout)
                 if return_code != 0:
                     raise BuildFailedException("Error while making installer for %s" % installer_type)
-                    
+
 def get_dir_hash(root):
     s = sha1()
     ini = None
@@ -192,5 +192,3 @@ def get_dir_hash(root):
             hash_ok =  (ini['Version']['dir_hash'] == result)
             revno = ini['Version'].get('revno', '0.0.0')
     return result, hash_ok, revno
-                    
-    
