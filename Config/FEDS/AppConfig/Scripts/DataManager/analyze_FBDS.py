@@ -102,6 +102,7 @@ AnalyzerStatusCavityPressureMask = 0x00000800
 AnalyzerStatusWarmBoxTemperatureMask = 0x00001000
 AnalyzerStatusCavityTemperatureMask = 0x00002000
 AnalyzerStatusModule2FlowMask = 0x00004000
+AnalyzerStatusCH4ConcentrationMask = 0x00008000
 # The following bit invalidates the data (shown as a red path)
 AnalyzerStatusInvalidDataMask = 0x00800000
 # Alarm parameters
@@ -126,6 +127,7 @@ WarmBoxTemperatureMin = 49.4
 WarmBoxTemperatureMax = 50.6
 CavityTemperatureMin = 43.0
 CavityTemperatureMax = 47.0
+CH4Min = 1.5
 
 # Limits for delta values reported
 REPORT_UPPER_LIMIT = 20000.0
@@ -673,6 +675,9 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
 
     if (numpy.absolute(_DATA_['ch4_high_shift']) >= WlmShiftAdjustLimit) and (numpy.absolute(_DATA_['ch4_high_adjust']) < WlmShiftAdjustLimit):
         AnalyzerStatus |= AnalyzerStatusWlmShiftAdjustCorrelationMask
+        
+    if _DATA_['CH4'] < CH4Min:
+        AnalyzerStatus |= AnalyzerStatusCH4ConcentrationMask
 
     _PERSISTENT_['wlmOffsetBuffer'].append(_PERSISTENT_['wlm6_offset'])
     wlm6OffsetMean = numpy.mean(_PERSISTENT_['wlmOffsetBuffer'])
@@ -689,7 +694,8 @@ if _DATA_["species"] in TARGET_SPECIES and _PERSISTENT_["plot_iCH4"] and not sup
                  AnalyzerStatusCavityPressureMask |
                  AnalyzerStatusWarmBoxTemperatureMask |
                  AnalyzerStatusCavityTemperatureMask |
-                 AnalyzerStatusIntakeFlowRateMask)):
+                 AnalyzerStatusIntakeFlowRateMask |
+                 AnalyzerStatusCH4ConcentrationMask)):
         AnalyzerStatus |= AnalyzerStatusInvalidDataMask
     
 if ('PERIPHERAL_STATUS' in _NEW_DATA_) and (int(_NEW_DATA_['PERIPHERAL_STATUS'])) > 0:
