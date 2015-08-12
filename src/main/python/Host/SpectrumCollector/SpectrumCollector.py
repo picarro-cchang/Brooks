@@ -284,6 +284,7 @@ class SpectrumCollector(object):
                     if self.enableSpectrumFiles and spectraInScheme:
                         fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
                         self.writeOut(fileName, spectraInScheme)
+                        self.lastSchemeCount = -1
                     endOfScheme = False
                     self.schemesUsed = {}
                     spectraInScheme = []
