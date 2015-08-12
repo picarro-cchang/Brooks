@@ -146,7 +146,7 @@ PROTECTED_APPS = ["Driver"]
 
 # Only the below apps are allowed to run in the virtual mode
 APPS_IN_VIRTUAL_MODE = ("EventManager", "Archiver", "DataManager", "InstMgr", "rdReprocessor", "QuickGui", "DataLogger", \
-                        "BackupSupervisor", "RDFreqConverter", "Fitter", "Fitter1", "Fitter2", "Fitter3")
+                        "BackupSupervisor", "RDFreqConverter", "AlarmSystem", "Fitter", "Fitter1", "Fitter2", "Fitter3")
 
 #set up the main logger connection...
 CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\

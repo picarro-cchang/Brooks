@@ -23,11 +23,10 @@ from Host.Common import Broadcaster, Listener, StringPickler
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from tables import openFile
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.timestamp import getTimestamp
 
 APP_NAME = "rdReprocessor"
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
-
-#dirName = r"s:\for John\CFADS_RDFs\Picarro\G2000\Log\RDF"
 
 #AddPath and Def Config Name copied from ReadMemUsage.py
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -37,7 +36,7 @@ else:
 AppPath = os.path.abspath(AppPath)
 DEFAULT_CONFIG_NAME = "..\..\AppConfig\Config\rdReprocessor\rdReprocessor.ini"
 
-def convHdf5ToDict(h5Filename):
+def convHdf5ToDict(h5Filename, selfTiming):
     h5File = openFile(h5Filename, "r")
     retDict = {}
     for tableName in h5File.root._v_children.keys():
@@ -45,28 +44,46 @@ def convHdf5ToDict(h5Filename):
         retDict[tableName] = {}
         r = table.read()
         for colKey in table.colnames:
+            if colKey == "timestamp":
+                if selfTiming > 0:
+                    length = len(r[colKey])
+                    currTime = getTimestamp()
+                    r[colKey] = [currTime - 5*i for i in range(length)]
             retDict[tableName][colKey] = r[colKey] # table.read(field=colKey)
     h5File.close()
     return retDict
 
 class rdReprocessor(object):
-    def __init__(self, configFile):
+    def __init__(self, configFile, loop=0):
         config = CustomConfigObj(configFile)  # 2nd argument (list_values=True) removed
-#       self.dirName = config.get("File", "targetDir", "C:/UserData")
         self.dirName = config.get("Main", "dirName")
+        self.loop = loop
 
     def run(self):
         broadcaster =  Broadcaster.Broadcaster(
                     port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
                     name="Spectrum Collector broadcaster",logFunc = Log)
         self.files = sorted(glob(self.dirName + r'\*.h5'))
+        fnum = len(self.files)
+        index = 0
+        step = 1
         time.sleep(5)
-        ## raw_input("Press <Enter> to start sending")
-        for f in self.files:
+        #raw_input("Press <Enter> to start sending")
+        while index < fnum:
+            f = self.files[index]
             print f
-            rdfDict = convHdf5ToDict(f)
+            rdfDict = convHdf5ToDict(f, self.loop)
             # raw_input("Press <Enter> to send %s" % f)
             broadcaster.send(StringPickler.PackArbitraryObject(rdfDict))
+            if self.loop == 1:  # loop2
+                if index == fnum-1:
+                    step = -1
+                elif index == 0:
+                    step = 1
+            elif self.loop == 2:    # loop
+                if index == funm-1:
+                    index = -1
+            index += step
             time.sleep(1.0)
 
 HELP_STRING = \
@@ -75,13 +92,15 @@ HELP_STRING = \
 Where the options can be a combination of the following:
 -h, --help           print this help.
 -c                   Specify a config file.  Default = "./rdReprocessor.ini"
+--loop2              process data files from the first to the last then back to the first. Repeat this procedure forever
+--loop               loop processing data files forever
 """
 
 def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'hc:'
-    longOpts = ["help"]
+    longOpts = ["help", "loop2", "loop"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -99,8 +118,7 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME # this is not working...
     #configFile = DEFAULT_CONFIG_NAME
-    print "Name of DEFAULT configFile is %s" % configFile
-
+    loop = 0
 
     if '-h' in options:
         PrintUsage()
@@ -108,12 +126,15 @@ def HandleCommandSwitches():
 
     if "-c" in options:
         configFile = options["-c"]
-        print "Config file specified at command line: %s" % configFile
+    if "--loop2" in options:
+        loop = 1
+    elif "--loop" in options:
+        loop = 2
 
-    return (configFile)
+    return (configFile, loop)
 
 if __name__ == "__main__":
-    configFile = HandleCommandSwitches()
+    configFile, loop = HandleCommandSwitches()
     print  "The name of configFile is %s" % configFile
-    app = rdReprocessor(configFile)
+    app = rdReprocessor(configFile, loop)
     app.run()

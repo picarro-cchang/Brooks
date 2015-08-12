@@ -1096,6 +1096,7 @@ class InstMgr(object):
         self._SendDisplayMessage("Starting")
         self._LoadConfigFile(self.configPath)
         # settings for DataManager
+        self.DataMgrRpc.StartInstMgrListener()
         self.DataMgrRpc.Mode_Set(self.Config.measMode)
         self.DataMgrRpc.Enable()
         # settings for RDFreqConverter
@@ -1108,6 +1109,8 @@ class InstMgr(object):
         self.MonitorShutdown = False
 
         while True and self.MonitorShutdown == False:
+            # Keep sending "all is well" status in virtual mode
+            self._SetStatus(0x3C3)
             time.sleep(5)
 
     def _GetInstrumentMode(self):
