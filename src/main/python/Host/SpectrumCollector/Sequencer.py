@@ -14,6 +14,8 @@
 #   19-Jul-2010  sze  Moved to spectrum collector
 #   16-Dec-2013  sze  Allow scheme sequences to be loaded that depend on the peak detector
 #                      state. This will allow for dealing with high background in surveyor.
+#   22-Feb-2014  sze  Read back next scheme register for comparison with active scheme register
+#                       when in WAIT_UNTIL_ACTIVE state
 #
 #  Copyright (c) 2009 Picarro, Inc. All rights reserved
 #
@@ -199,8 +201,8 @@ class Sequencer(object):
                     self.useIndex = (self.activeIndex + 1) % 4
                     schemes = self.sequences[self.sequence]
                     scheme, rep, freqBased = schemes[self.scheme - 1]
-                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d"
-                        % (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat))
+                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d, Table = %d"
+                        % (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat, self.useIndex))
                     self.inDas[self.useIndex] = (self.sequence, self.scheme, self.repeat, scheme.fileName)
                     self.repeat += 1
                     if self.repeat > rep:
@@ -220,7 +222,10 @@ class Sequencer(object):
                     self.state = Sequencer.WAIT_UNTIL_ACTIVE
                 elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
                     self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
-                    if self.activeIndex == self.useIndex:
+                    next = Driver.rdDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
+                    if next != self.useIndex:
+                        Log("Unexpected next scheme register contents", Data={"expected":self.useIndex, "contents":next})
+                    if self.activeIndex == next:
                         self.state = Sequencer.SEND_SCHEME
                     elif Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
                         self.state = Sequencer.IDLE
