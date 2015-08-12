@@ -22,6 +22,8 @@ from Host.Common import timestamp
 from Host.Common import DoAdjustTempOffset
 import string
 
+from Host.AlarmSystem import AlarmFunctions
+
 #Input prefix definitions
 SOURCE_TIME_ID = "_MEAS_TIME_"
 SOURCE_TIMESTAMP_ID = "_MEAS_TIMESTAMP_"
@@ -45,20 +47,27 @@ SERIAL_INTERFACE_ID = "_SERIAL_"
 USER_CAL_ID = "_USER_CAL_"
 UTILS_ID = "_UTILS_"
 
+ALARM_PARAMS_ID = "_ALARM_PARAMS_"
+ALARM_FUNCTIONS_ID = "_ALARM_FUNCTIONS_"
+
 
 # Synchronizer output function name...
 SYNC_OUT_ID = "_SYNC_OUT_"
 
 #Output prefix definitions...
-REPORT_ID = "_REPORT_"
+REPORT_ID = "_REPORT_" #Report is an output from the data manager but is also an input to the alarm script
 FORWARD_ID = "_ANALYZE_"
 MEAS_GOOD_ID = "_MEAS_GOOD_"
 SCRIPT_NAME_ID = "_SCRIPT_NAME_"
+
+ALARMS_ID = "_ALARMS_"
 
 OPTIONS_ID = "_OPTIONS_"
 
 persistentDict = {}
 globals = {}
+
+alarmGlobals = {}
 
 class Synchronizer(object):
     def __init__(self,analyzer,varList=[],syncInterval=100,syncLatency=500,processInterval=500,maxDelay=2000):
@@ -234,3 +243,108 @@ def RunAnalysisScript(ScriptCodeObj,
         if "max_fitter_latency" in DataDict:
           reportedData["max_fitter_latency"] = DataDict["max_fitter_latency"]
     return (reportedData, forwardedData, newData, measGood, scriptName)
+
+def RunAlarmScript(   ScriptCodeObj,
+                      SourceTime_s,
+                      AlarmParamsDict,
+                      ReportDict,
+                      ReportHistory,
+                      SensorHistory,
+                      DriverRpcServer,
+                      InstrumentStatus,
+                      MeasSysRpcServer,
+                      FreqConvRpcServer,
+                      SpecCollRpcServer,
+                      PeriphIntrfFunc,
+                      PeriphIntrfCols,
+                      ExcLogFunc,
+                      numAlarmWords):
+    """Executes the CodeObj in an environment built with the other parameters.
+
+    Returns a tuple: (ReportedData, ForwardedData, NewData, MeasGood, ScriptName)
+      - ReportedData = dict of values added with REPORT_ID
+      - ForwardedData = dict of what should be added to the incoming to-be-analyzed
+                        queue.  It is a dict of dicts, with the first key being the
+                        label to trigger analysis.  Done with FORWARD_ID.
+      - NewData = dict of new data added to the incoming data set with NEW_DATA_ID.
+      - MeasGood = A boolean that defaults to True but can be overridden in the
+                   script with _MEAS_GOOD_
+      - ScriptName = The name to use to label the MeasData packet that contains
+                     the ReportedData.  This defaults to the value passed in, but
+                     can be overriden in the script.
+
+    Collecting the data history is the responsibility of the caller.  It is expected that OldDataDict
+    will be a dict of lists, where the list is of two-tuples (timestamp, value).
+
+    Script usage examples for old data would be:
+
+    OLD["H2S"][-10].time  -> gets the timestamp of the H2S data from 10 points ago
+    OLD["H2S"][-10].value -> gets the value of the H2S data from 10 points ago
+
+    _old_H2S[-10][0] -> gets the timestamp of the H2S data from 10 points ago
+    _old_H2S[-10][1] -> gets the value of the H2S data from 10 points ago
+
+    Went with _DATA_["NAME"] rather than adding a suite of variables like
+    _data_NAME to the data environment so that the script can work with the
+    dictionaries, rather than a bunch of single variables.
+
+    """
+    global alarmGlobals
+
+    #need to support inputs (given to the script):
+    # - cal data from provided files (INSTR_DATA)
+    # - all data from meas system    (DATA)
+    # - meas data history            (OLD_DATA list)
+    # - old report history           (OLD_REPORT)
+    # - old forward history          (OLD_FORWARD)
+    #need to support outputs (collected from the script):
+    # - data to be broadcasted       (REPORT)
+    # - data to be fed forward       (FORWARD_xxx)
+    #also need to provide
+    # - portal for making Driver calls    (_DRIVER_RPC as CmdFIFOServerProxy)
+    #Set up the dictionaries for use in the script environment...
+    # - providing copies to make sure the script doesn't screw the data up
+
+    alarmGlobals = {"init": True}
+    dataEnviron = {"_GLOBALS_" : alarmGlobals }
+
+    dataEnviron[SOURCE_TIME_ID] = SourceTime_s
+    dataEnviron[SOURCE_TIMESTAMP_ID] = timestamp.unixTimeToTimestamp(SourceTime_s)
+    dataEnviron[ALARM_PARAMS_ID] = AlarmParamsDict
+    dataEnviron[REPORT_ID] = ReportDict.copy()
+    dataEnviron[OLD_REPORTS_ID] = ReportHistory.copy()
+    dataEnviron[OLD_SENSORS_ID] = SensorHistory.copy()
+    dataEnviron[ALARMS_ID] = numAlarmWords*[0]
+    dataEnviron[DRIVER_RPC_SERVER_ID] = DriverRpcServer
+    dataEnviron[MEAS_SYS_RPC_SERVER_ID] = MeasSysRpcServer
+    dataEnviron[FREQ_CONV_RPC_SERVER_ID] = FreqConvRpcServer
+    dataEnviron[SPEC_COLL_RPC_SERVER_ID] = SpecCollRpcServer
+    dataEnviron[PERIPH_INTRF_ID] = PeriphIntrfFunc
+    dataEnviron[PERIPH_INTRF_COLS_ID] = PeriphIntrfCols
+    dataEnviron[INSTR_STATUS_ID] = InstrumentStatus
+
+    dataEnviron[ALARM_FUNCTIONS_ID] = AlarmFunctions
+
+    # Put the functions we want to expose to runtime scripts in a dictionary
+    # For now we are exposing functions by name. If there are any conflicts,
+    # using a dictionary gives future flexibility to expose them as a
+    # nested dictionary by module name.
+    #
+    # Warning: Do not remove existing dictionary keys that are function names
+    #          or you may break existing scripts!
+
+    try:
+        exec ScriptCodeObj in dataEnviron
+    except Exception, excData:
+        ExcLogFunc("UNHANDLED EXCEPTION IN ALARM SCRIPT")
+        if __debug__: print "SCRIPT EXCEPTION: %s %r" % (excData, excData)
+        raise
+
+    alarmGlobals = dataEnviron["_GLOBALS_"]
+
+    #Now check for magic keywords created by the script...
+    alarmsData = {}
+    for i, value in enumerate(dataEnviron[ALARMS_ID]):
+        alarmsData["ALARM_WORD_%d" % i] = value
+
+    return alarmsData

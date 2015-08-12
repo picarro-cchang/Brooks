@@ -91,6 +91,7 @@ import heapq
 
 from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
+from Host.AlarmSystem.AlarmSystemActual import AlarmSystem
 from Host.PeriphIntrf.PeriphIntrf import PeriphIntrf
 from Host.CommandInterface import SerialInterface
 from Host.Common import CmdFIFO, StringPickler
@@ -344,7 +345,7 @@ class DataManager(object):
 
     #endclass (ConfigurationOptions for DataManager)
 
-    def __init__(self, ConfigPath, noInstMgr=False, options={}):
+    def __init__(self, ConfigPath, alarmSystem, noInstMgr=False, options={}):
         # # # IMPORTANT # # #
         # THIS SHOULD ONLY CONTAIN VARIABLE/PROPERTY INITS... any actual code that
         # can fail (like talking to another CRDS app or reading the HDD) should be
@@ -368,6 +369,8 @@ class DataManager(object):
         self.ReportHistory = {}    # keys = data tokens; values = deque of two-tuples (time, value)
         self.LatestSensorData = {} # keys = sensor names; values = values
         self.SensorHistory = {}    # keys = sensor names; values = deque of two-tuples (time, value)
+        self.legacyAlarmSystem = alarmSystem is None
+        self.alarmSystem = alarmSystem #Alarm system object to recieve output of data manager
 
         #Measurement mode properties...
         # - Modes is a dict of MeasMode info idnicating all the config info per mode
@@ -831,6 +834,14 @@ class DataManager(object):
         assert (name in self.InstrData), "Invalid virtual laser number %d" % vLaserNum
         if name in self.InstrData:
             self.InstrData[name] = target
+
+    @CmdFIFO.rpc_wrap
+    def RPC_SetLegacyAlarmConfig(self, alarmConfigFile):
+        assert self.legacyAlarmSystem
+        alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=True)
+        alarmSystem.ALARMSYSTEM_start_inthread()
+        self.alarmSystem = alarmSystem
+        return interface.STATUS_OK
 
     ###############################
     ## Pulse Analyzer RPC functions
@@ -1546,7 +1557,7 @@ class DataManager(object):
             Log("Starting compilation of identified analyzer scripts", dict(Count = len(uniqueAnalyzerPaths)))
             for path in uniqueAnalyzerPaths:
                 sourceString = file(path,"r").read()
-                if sys.platform != 'win32':
+                if sys.platform == 'win32':
                     sourceString = sourceString.replace("\r","")
                 Log("Compiling analyzer script", dict(Path = path))
                 codeObj = compile(sourceString, path, "exec") #providing path accurately allows debugging of script
@@ -1865,6 +1876,8 @@ class DataManager(object):
                                              Options = self.options)
         #unpack the returned tuple (space saving above)...
         (reportDict, forwardDict, newDataDict, measGood, reportSource_out) = ret
+        if reportDict:
+            reportDict["INST_STATUS"] = self.LatestInstMgrStatus
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
 
         # Update SourceTime_s with the "time" information provided by the script (if available)
@@ -1933,9 +1946,37 @@ class DataManager(object):
                                     and (not systemError)
             else:
                 measGood = 1
+                
+            print "measGood, noInstMgr", measGood, self.noInstMgr
+            
             #Broadcast the result data...
-            measData = MeasData(reportSource_out, rptSourceTime_s, reportDict, measGood, self.RPC_Mode_Get())
-            self.DataBroadcaster.send(measData.dumps())
+            if self.alarmSystem is not None:
+                resultDict = self.alarmSystem._MeasDataListener(reportSource_out, reportDict, measGood)
+            else:
+                resultDict = reportDict
+
+            if (not self.legacyAlarmSystem) and (self.alarmSystem.alarmScriptCodeObj is not None):
+                alarmsDict = ScriptRunner.RunAlarmScript(   ScriptCodeObj = self.alarmSystem.alarmScriptCodeObj,
+                                                            SourceTime_s = SourceTime_s,
+                                                            AlarmParamsDict = self.alarmSystem.alarmParamsDict,
+                                                            ReportDict = resultDict,
+                                                            ReportHistory = self.ReportHistory,
+                                                            SensorHistory = self.SensorHistory,
+                                                            DriverRpcServer = CRDS_Driver,
+                                                            InstrumentStatus = self.LatestInstMgrStatus,
+                                                            MeasSysRpcServer = CRDS_MeasSys,
+                                                            FreqConvRpcServer = CRDS_FreqConv,
+                                                            SpecCollRpcServer = CRDS_SpecColl,
+                                                            PeriphIntrfFunc = periphIntrfFunc,
+                                                            PeriphIntrfCols = self.periphIntrfCols,
+                                                            ExcLogFunc = LogExc,
+                                                            numAlarmWords = self.alarmSystem.maxNumAlarmWords)
+
+                resultDict.update(alarmsDict)
+
+            measData = MeasData(reportSource_out, rptSourceTime_s, resultDict, measGood, self.RPC_Mode_Get())
+            pickleMeasData = measData.dumps()
+            self.DataBroadcaster.send(pickleMeasData)
             #Send to serial port if needed
             self._SendSerial(measData)
             # Add to the internal measBuffer for Coordinator
@@ -2018,8 +2059,8 @@ def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
     import getopt
-
-    shortOpts = 'hc:o:'
+    alarmConfigFile = None
+    shortOpts = 'hc:o:a:'
     longOpts = ["help", "test", "no_inst_mgr"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -2051,21 +2092,30 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", configFile)
 
+    if "-a" in options:
+        alarmConfigFile = options["-a"]
+        Log("Alarm system configuration file is", alarmConfigFile)
+
     if "--no_inst_mgr" in options:
         noInstMgr = True
     else:
         noInstMgr = False
 
-    return (configFile, noInstMgr, executeTest, options)
+    return (configFile, alarmConfigFile, noInstMgr, executeTest, options)
 def ExecuteTest(DM):
     """A self test executed via the --test command-line switch."""
     print "No self test implemented yet!"
 def main():
     #Get and handle the command line options...
-    configFile, noInstMgr, test, options = HandleCommandSwitches()
+    configFile, alarmConfigFile, noInstMgr, test, options = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     try:
-        app = DataManager(configFile, noInstMgr, options)
+        alarmSystem = None
+        if alarmConfigFile is not None:
+            alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=False)
+            alarmSystem.ALARMSYSTEM_start_inthread()
+
+        app = DataManager(configFile, alarmSystem, noInstMgr, options)
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
         app.Start()

@@ -407,7 +407,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
     attrib is a list of wx.ListItemAttr objects for the disabled and enabled alarm text
     DataSource must be the AlarmInterface object which reads the alarm status
     """
-    def __init__(self, parent, id, attrib, DataSource=None, pos=wx.DefaultPosition,
+    def __init__(self, parent, id, attrib, DataStore=None, DataSource=None, pos=wx.DefaultPosition,
                  size=wx.DefaultSize, numAlarms=4):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
@@ -431,6 +431,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
                                                      wx.BITMAP_TYPE_ICO))
         self.IconAlarmSet     = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
                                                      wx.BITMAP_TYPE_ICO))
+        self.dataStore = DataStore
         self._DataSource = DataSource
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
@@ -515,7 +516,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
 
     def OnGetItemImage(self, item):
         pass
-        status = self._DataSource.getStatus() & (1 << item)
+        status = int(self.dataStore.alarmStatus) & (1 << item)
         enabled = (self._DataSource.alarmData and self._DataSource.alarmData[item][2])
         if (status == 0) or (not enabled):
             return self.IconAlarmClear
@@ -530,11 +531,6 @@ class AlarmInterface(object):
     def __init__(self,config):
         self.config = config
         self.loadConfig()
-        self.queue = Queue.Queue()
-        self.listener = Listener.Listener(self.queue,
-                                          SharedTypes.STATUS_PORT_ALARM_SYSTEM,
-                                          AppStatus.STREAM_Status,
-                                          retry = True)
         self.alarmRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ALARM_SYSTEM, ClientName = "QuickGui")
 
         self.statusWord = 0x0
@@ -604,16 +600,6 @@ class AlarmInterface(object):
 
     def loadConfig(self):
         pass
-
-    def getQueuedEvents(self):
-        while True:
-            try:
-                self.statusWord = self.queue.get_nowait().status
-            except Queue.Empty:
-                return
-
-    def getStatus(self):
-        return self.statusWord
 
 class DataLoggerInterface(object):
     """Interface to the data logger and archiver RPC"""
@@ -1019,6 +1005,7 @@ class DataStore(object):
                                           StringPickler.ArbitraryObject, retry = True)
         self.sourceDict = {}
         self.oldData = {}
+        self.alarmStatus = 0
 
     def loadConfig(self):
         self.seqPoints = self.config.getint('DataManagerStream','Points')
@@ -1028,6 +1015,8 @@ class DataStore(object):
         while True:
             try:
                 obj = self.queue.get_nowait()
+                if "data" in obj and "ALARM_STATUS" in obj["data"]:
+                    self.alarmStatus = obj["data"]["ALARM_STATUS"]
                 source = obj['source']
                 if source not in self.oldData:
                     self.oldData[source] = {}
@@ -1641,7 +1630,7 @@ class QuickGui(wx.Frame):
         disabled = wx.ListItemAttr(fgColour,bgColour,font)
 
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
-                                           DataSource=self.alarmInterface,
+                                           DataStore=self.dataStore, DataSource=self.alarmInterface,
                                            size=size, numAlarms=self.numAlarms)
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
@@ -2024,7 +2013,6 @@ class QuickGui(wx.Frame):
         defaultSourceIndex = None
         self.dataStore.getQueuedData()
         self.eventStore.getQueuedEvents()
-        self.alarmInterface.getQueuedEvents()
         if not self.alarmInterface.alarmData:
             self.alarmInterface.getAlarmData()
         #self.sysAlarmInterface.getStatus(0)

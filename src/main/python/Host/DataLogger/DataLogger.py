@@ -90,7 +90,7 @@ from tables import *
 
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, timestamp
 from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, \
-                                    STATUS_PORT_ALARM_SYSTEM, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER, STATUS_PORT_INST_MANAGER
+                                    RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SafeFile import SafeFile, FileExists
 from Host.Common.MeasData import MeasData
@@ -175,8 +175,6 @@ class DataLog(object):
         self.BackupGroupName = BackupGroupName
         self.PeriphDictTuple = PeriphDictTuple
         self.SubDir = ""
-        self.AlarmStatus = 0
-        self.InstStatus = 0
         self.BareTime = False
         self.useHdf5 = False
         self.oldDataList = []
@@ -205,8 +203,8 @@ class DataLog(object):
                 self.maxDuration[self.LogPath] = duration
                 Log("Datalog: %s action %s takes new max time %.3f" % (self.LogPath,action,duration))
 
-    def Write(self, Time, DataDict, alarmStatus, instStatus):
-        self.queue.put(("write",[Time,DataDict.copy(),alarmStatus,instStatus]))
+    def Write(self, Time, DataDict):
+        self.queue.put(("write",[Time,DataDict.copy()]))
 
     def Close(self):
         if self.fp is not None:
@@ -411,8 +409,6 @@ class DataLog(object):
             tableDict["FRAC_HRS_SINCE_JAN1"]  = Float32Col()
             if self.WriteJulianDays:
                 tableDict["JULIAN_DAYS"] = Float32Col()
-        tableDict["ALARM_STATUS"]  = Float32Col()
-        tableDict["INST_STATUS"]  = Float32Col()
         for dataName in DataList:
             if dataName in ["time"]:
                 tableDict[dataName] = Float64Col()
@@ -437,15 +433,10 @@ class DataLog(object):
         return DataList
 
 
-    def _Write(self, Time, DataDict, alarmStatus, instStatus):
+    def _Write(self, Time, DataDict):
         """Writes a representation of the provided data to disk, either in text or H5 mode"""
 
         DataDict = DataDict.copy()
-        # Treat ALARM_STATUS specially so that it is reported with the output
-        #  of the alarm system.
-        if "ALARM_STATUS" in DataDict:
-            alarmStatus |= int(DataDict["ALARM_STATUS"])
-            del DataDict["ALARM_STATUS"]
 
         if self.TimeStandard == "local":
             currentTime = time.localtime(Time)
@@ -503,8 +494,6 @@ class DataLog(object):
                     row["FRAC_HRS_SINCE_JAN1"]  = hrs
                     if self.WriteJulianDays:
                         row["JULIAN_DAYS"] = days+1.0
-                row["ALARM_STATUS"] = alarmStatus
-                row["INST_STATUS"] = instStatus
                 for data in DataList:
                     row[data] = DataDict.get(data,0.0)
                 row.append()
@@ -541,9 +530,8 @@ class DataLog(object):
                 if self.WriteEpochTime:
                     self._WriteEntry("%.3f" % Time)
 
-                #write ALARM_STATUS and INST_STATUS
-                self._WriteEntry("%d" % alarmStatus)
-                self._WriteEntry("%d" % instStatus)
+                self._WriteEntry("%.0f" % DataDict.get('ALARM_STATUS', 0))
+                self._WriteEntry("%.0f" % DataDict.get('INST_STATUS', 0))
 
                 for data in DataList:
                     self._WriteEntry("%.10E" % DataDict.get(data,0.0))
@@ -596,10 +584,6 @@ class DataLogger(object):
 
         self.DataListenerLastTime = 0
         self.maxDataListenerRtt = 0
-        self.alarmListenerLastTime = 0
-        self.maxAlarmListenerRtt = 0
-        self.instListenerLastTime = 0
-        self.maxInstListenerRtt = 0
 
     def _LoadDefaultConfig(self):
         cp = CustomConfigObj(self.ConfigPath)
@@ -693,7 +677,7 @@ class DataLogger(object):
                 if logName in self.UserLogDict:
                     dataLog = self.UserLogDict[logName]
                     if dataLog.Enabled:
-                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus + 65536*(1-self.md.MeasGood), dataLog.InstStatus)
+                        dataLog.Write(self.md.Time, self.md.Data)
                     # Remove Active_ prefix from files for logs which are being stopped
                     if dataLog.StopPending:
                         dataLog.CopyToMailboxAndArchive()
@@ -701,47 +685,11 @@ class DataLogger(object):
                 if logName in self.PrivateLogDict:
                     dataLog = self.PrivateLogDict[logName]
                     if dataLog.Enabled:
-                        dataLog.Write(self.md.Time, self.md.Data, dataLog.AlarmStatus + 65536*(1-self.md.MeasGood), dataLog.InstStatus)
+                        dataLog.Write(self.md.Time, self.md.Data)
                     # Remove the Active_ prefix from files for logs which are being stopped
                     if dataLog.StopPending:
                         dataLog.CopyToMailboxAndArchive()
                         dataLog.StopPending = False
-
-    def _AlarmListener( self, data ):
-        """Listener for alarm status"""
-        now = TimeStamp()
-        if self.alarmListenerLastTime != 0:
-            rtt = now - self.alarmListenerLastTime
-            if rtt > self.maxAlarmListenerRtt:
-                Log("Maximum alarm listener loop RTT so far: %.3f" % (self.maxAlarmListenerRtt,))
-                self.maxAlarmListenerRtt = rtt
-        self.alarmListenerLastTime = now
-        try:
-            for logName, value in self.UserLogDict.iteritems():
-                self.UserLogDict[logName].AlarmStatus = data.status
-            for logName, value in self.PrivateLogDict.iteritems():
-                self.PrivateLogDict[logName].AlarmStatus = data.status
-        except:
-            tbMsg = traceback.format_exc()
-            Log("Listener Exception",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-
-    def _InstListener( self, data ):
-        """Listener for instrument status"""
-        now = TimeStamp()
-        if self.instListenerLastTime != 0:
-            rtt = now - self.instListenerLastTime
-            if rtt > self.maxInstListenerRtt:
-                Log("Maximum instrument status listener loop RTT so far: %.3f" % (self.maxInstListenerRtt,))
-                self.maxInstListenerRtt = rtt
-        self.instListenerLastTime = now
-        try:
-            for logName, value in self.UserLogDict.iteritems():
-                self.UserLogDict[logName].InstStatus = data.status
-            for logName, value in self.PrivateLogDict.iteritems():
-                self.PrivateLogDict[logName].InstStatus = data.status
-        except:
-            tbMsg = traceback.format_exc()
-            Log("Listener Exception",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
 
     def DATALOGGER_start(self):
         """Called to start the Data Logger."""
@@ -773,12 +721,6 @@ class DataLogger(object):
         for port,value in self.PortDict.iteritems():
             self.Listener = Listener.Listener(None, port, StringPickler.ArbitraryObject, self._DataListener, retry = True,
                                               name = "Data Logger data listener",logFunc = Log)
-
-        self.alarmListener = Listener.Listener(None, STATUS_PORT_ALARM_SYSTEM, STREAM_Status, self._AlarmListener, retry = True,
-                                              name = "Data Logger alarm status listener",logFunc = Log)
-
-        self.instStatusListener = Listener.Listener(None, STATUS_PORT_INST_MANAGER, STREAM_Status, self._InstListener, retry = True,
-                                              name = "Data Logger instrument status listener",logFunc = Log)
 
         self.RpcServer.serve_forever()
         self.DATALOGGER_shutdown()
