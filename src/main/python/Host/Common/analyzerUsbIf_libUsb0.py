@@ -320,6 +320,13 @@ class AnalyzerUsb(Singleton):
             raise UsbPacketLengthError("Invalid data length %d in auxiliaryWrite" % (dataLength,))
         self._claimInterfaceWrapper(_wrAuxiliary)
 
+    def pingWatchdog(self):
+        """Use vendor command to ping watchdog"""
+        def _pingWatchdog():
+            result = c_ubyte(0)
+            self.controlInTransaction(result,usbdefs.VENDOR_PING_WATCHDOG)
+        self._claimInterfaceWrapper(_pingWatchdog)
+
     def setDspControl(self,value):
         """Use vendor command to reset DSP or send HINT"""
         def _setDspControl():

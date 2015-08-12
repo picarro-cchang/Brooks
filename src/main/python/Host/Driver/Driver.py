@@ -1229,27 +1229,37 @@ class Driver(SharedTypes.Singleton):
         sensorHandler   = SharedTypes.makeHandler(self.dasInterface.getSensorDataBlock,  sensorBlockProcessor)
         ringdownHandler = SharedTypes.makeHandler(self.dasInterface.getRingdownDataBlock, ringdownBlockProcessor)
         try:
-            try:
-                usbSpeed = self.dasInterface.startUsb()
-                Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                self.dasInterface.upload()
-                time.sleep(1.0) # For DSP code to initialize
-                # Restore state from INI file
-                ic = InstrumentConfig()
-                ic.loadPersistentRegistersFromConfig()
-                # self.dasInterface.loadDasState() # Restore DAS state
-                Log("Configuring scheduler",Level=1)
-                DasConfigure(self.dasInterface,ic.config,self.config).run()
+            for attempt in range(5):
                 try:
-                    self.rpcHandler.readWlmDarkCurrents()
+                    usbSpeed = self.dasInterface.startUsb()
+                    self.dasInterface.pingWatchdog()
+                    time.sleep(0.5)
+                    self.dasInterface.pingWatchdog()
+                    Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
+                    self.dasInterface.upload()
+                    time.sleep(1.0) # For DSP code to initialize
+                    self.dasInterface.pingWatchdog()
+                    # Restore state from INI file
+                    ic = InstrumentConfig()
+                    ic.loadPersistentRegistersFromConfig()
+                    # self.dasInterface.loadDasState() # Restore DAS state
+                    Log("Configuring scheduler",Level=1)
+                    self.dasInterface.pingWatchdog()
+                    DasConfigure(self.dasInterface,ic.config,self.config).run()
+                    try:
+                        self.rpcHandler.readWlmDarkCurrents()
+                    except:
+                        Log("Cannot read dark currents from WLM EEPROM",Level=2)
+                    daemon = self.rpcHandler.server.daemon
+                    Log("DAS firmware uploaded",Level=1)
+                    break
                 except:
-                    Log("Cannot read dark currents from WLM EEPROM",Level=2)
-                daemon = self.rpcHandler.server.daemon
-                Log("DAS firmware uploaded",Level=1)
-            except:
+                    time.sleep(1.0)
+                    continue
+            else:
                 # type,value,trace = sys.exc_info()
                 Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
-                raise
+                raise RuntimeError("Cannot connect to instrument - please check hardware")
             # Initialize the analog interface
             analogInterfacePresent = 0 != (self.dasInterface.hostToDspSender.rdRegUint("HARDWARE_PRESENT_REGISTER") & (1 << interface.HARDWARE_PRESENT_AnalogInterface))
             print "Analog interface present: %s" % analogInterfacePresent
@@ -1281,6 +1291,7 @@ class Driver(SharedTypes.Singleton):
             rpcTime = 0.0
             try:
                 while self.looping and not daemon.mustShutdown:
+                    self.dasInterface.pingWatchdog()
                     timeSoFar = 0
                     messages = messageHandler.process(0.02)
                     timeSoFar += messages.duration
