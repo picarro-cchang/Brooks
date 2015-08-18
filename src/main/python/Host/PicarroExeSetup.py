@@ -584,6 +584,7 @@ consoleList = [
     "Utilities/ReadMemUsage/ReadMemUsage.py",
     "Utilities/BackpackServer/backpackServer.py",
     "Utilities/RestartSupervisor/RestartSupervisor.py",
+    "Utilities/RestartSurveyor/RestartSurveyor.py",
     "Utilities/ProgramVariableGainRdd/programRdd.py",
     'Utilities/KillRestartSupervisor/KillRestartSupervisor.py',
     "MfgUtilities/CalibrateSystem.py",
