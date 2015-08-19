@@ -14,7 +14,7 @@
 #include "ini.h"
 #include <errno.h>
 
-#define MAXPORTS (4)
+#define MAXPORTS (8)
 #define MAXDELIM (8)
 #define NOHANDSHAKE (0)
 #define HWHANDSHAKE (1)
@@ -416,7 +416,6 @@ static char *expect(const char *str, char *patt)
 
 #ifndef TEST
 
-#define MAXPORTS (4)
 #define BUFFSIZE (256)
 #define DELIM ('\n')
 #define PROTOPORT   5193
