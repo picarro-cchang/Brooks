@@ -49,7 +49,9 @@ class ControlBridge(object):
             "getPeakDetectorState" : self._getPeakDetectorState,
             "setToIdle" : self._setToIdle,
             "referenceGasPrime" : self._referenceGasPrime,
-            "referenceGasInjection" : self._referenceGasInjection
+            "referenceGasInjection" : self._referenceGasInjection,
+            "setToEQMode": self._setToEQMode,
+            "setToSurveyorMode": self._setToSurveyorMode
         }
  
     def run(self):
@@ -113,6 +115,11 @@ class ControlBridge(object):
         
         self.driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER", 0)
 
+    def _setToEQMode(self):
+        self.driver.closeValves(0x20)   # close valve 6
+        
+    def _setToSurveyorMode(self):
+        self.driver.openValves(0x20)   # open valve 6
         
 if __name__ == '__main__':
     bridge = ControlBridge()
