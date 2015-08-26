@@ -1946,8 +1946,6 @@ class DataManager(object):
                                     and (not systemError)
             else:
                 measGood = 1
-                
-            print "measGood, noInstMgr", measGood, self.noInstMgr
             
             #Broadcast the result data...
             if self.alarmSystem is not None:
