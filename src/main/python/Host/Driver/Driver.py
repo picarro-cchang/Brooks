@@ -1120,7 +1120,7 @@ class Driver(SharedTypes.Singleton):
             signaturePath = os.path.join(basePath, "../../../installerSignature.txt")
         try:
             sigFd = open(signaturePath, "r")
-            self.installerId = sigFd.readline()
+            self.installerId = sigFd.readline().strip()
             sigFd.close()
         except Exception, err:
             print "%r" % err
