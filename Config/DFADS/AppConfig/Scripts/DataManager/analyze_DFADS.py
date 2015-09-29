@@ -3,6 +3,7 @@
 #  This should reduce noise on the CO2 measurement and also align the average measurment time with that of CH4.
 #  Sequence of measurements is ... CO2 CH4 CO2 H2O ... with corresponding spectrum IDs ... 10 25 12 11 ...
 #  Note indices of _OLD_DATA_ in the water correction calculation
+#  2015 0623:  Changed logic for WLM1 adjust to apply adjust on SID 200 (correct) instead of 201 (old data)
 
 import inspect
 import os
@@ -20,7 +21,7 @@ AVE_TIME_SEC = 300
 
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-
+    
 if _PERSISTENT_["init"]:
     _PERSISTENT_["wlm1_offset"] = 0.0
     _PERSISTENT_["wlm2_offset"] = 0.0
@@ -29,9 +30,9 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["init"] = False
 
 ###############
-# Calibration of WLM offsets
+# Calibration of WLM offsets    
 ###############
-
+    
 max_adjust = 1.0e-5
 
 # Check instrument status and do not do any updates if any parameters are unlocked
@@ -45,7 +46,7 @@ good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmin
 if not good:
     print "Updating WLM offset not done because of bad instrument status"
 else:
-    if _DATA_["species"] == 201: # Update the offset for virtual laser 1
+    if _DATA_["species"] == 200: # Update the offset for virtual laser 1
         try:
             adjust = _DATA_["adjust_94"]
             adjust = min(max_adjust,max(-max_adjust,adjust))
@@ -77,9 +78,9 @@ else:
             pass
 
 ###############
-# Apply instrument calibration
+# Apply instrument calibration 
 ###############
-
+        
 C2H2 = (_INSTR_["c2h2_conc_slope"],_INSTR_["c2h2_conc_intercept"])
 CH4 = (_INSTR_["ch4_conc_slope"],_INSTR_["ch4_conc_intercept"])
 H2O = (_INSTR_["h2o_conc_slope"],_INSTR_["h2o_conc_intercept"])
@@ -99,7 +100,7 @@ try:
 except:
     #_NEW_DATA_["co2_conc_dry"] = 0.0
     _NEW_DATA_["c2h2_conc"] = 0.0
-
+    
 try:
     ch4_conc = applyLinear(_DATA_["ch4_conc_ppmv_final"],CH4)
     _NEW_DATA_["ch4_conc"] = ch4_conc
@@ -112,7 +113,7 @@ try:
 except:
     _NEW_DATA_["ch4_conc"] = 0.0
     #_NEW_DATA_["ch4_conc_dry"] = 0.0
-
+    
 try:
     h2o_conc = applyLinear(_DATA_["h2o_conc_precal"],H2O)
     _NEW_DATA_["h2o_conc"] = h2o_conc
@@ -125,7 +126,7 @@ try:
 except:
     _NEW_DATA_["h2o_conc"] = 0.0
     #_NEW_DATA_["ch4_conc_dry"] = 0.0
-
+    
 t = time.gmtime(_MEAS_TIME_)
 t1 = float("%04d%02d%02d" % t[0:3])
 t2 = "%02d%02d%02d.%03.0f" % (t[3],t[4],t[5],1000*(_MEAS_TIME_-int(_MEAS_TIME_)),)
@@ -138,7 +139,7 @@ else:
     _REPORT_["ymd"] = t1
     _REPORT_["hms"] = t2
 
-    try:
+    try:    
         if _PERIPH_INTRF_:
             try:
                 interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
@@ -148,20 +149,20 @@ else:
             except Exception, err:
                 print "%r" % err
     except:
-        pass
-
+        pass	
+    
     for k in _DATA_.keys():
         if k in newname:
             _REPORT_[newname[k]] = _DATA_[k]
         else:
             _REPORT_[k] = _DATA_[k]
-
+        
     for k in _NEW_DATA_.keys():
         if k in newname:
             _REPORT_[newname[k]] = _NEW_DATA_[k]
         else:
             _REPORT_[k] = _NEW_DATA_[k]
-
+        
     _REPORT_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"]
     _REPORT_["wlm2_offset"] = _PERSISTENT_["wlm2_offset"]
     _REPORT_["wlm3_offset"] = _PERSISTENT_["wlm3_offset"]
