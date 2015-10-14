@@ -9,7 +9,7 @@ elif os.path.isdir("../../AppConfig/Scripts/DataManager"):
 
 if pulseAnalyzerPath not in sys.path: sys.path.append(pulseAnalyzerPath)
 import time
-from PulseAnalyzer import PulseAnalyzer
+from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
 

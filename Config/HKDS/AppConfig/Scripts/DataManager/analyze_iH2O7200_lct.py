@@ -34,7 +34,7 @@ elif os.path.isdir("../../AppConfig/Scripts/DataManager"):
 
 if pulseAnalyzerPath not in sys.path: sys.path.append(pulseAnalyzerPath)
 import time
-from PulseAnalyzer import PulseAnalyzer
+from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 REPORT_UPPER_LIMIT = 5000.0
 REPORT_LOWER_LIMIT = -5000.0
 R18_VSMOW = 0.0020052
