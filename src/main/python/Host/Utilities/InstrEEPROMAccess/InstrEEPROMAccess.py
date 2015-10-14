@@ -39,7 +39,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
             signaturePath = "C:/Picarro/G2000/installerSignature.txt"
         try:
             sigFd = open(signaturePath, "r")
-            self.installerId = sigFd.readline()
+            self.installerId = sigFd.readline().strip()
             sigFd.close()
         except:
             self.installerId = None
