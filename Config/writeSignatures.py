@@ -8,6 +8,6 @@ if __name__ == "__main__":
     for subdir in get_immediate_subdirectories('.'):
         fname = os.path.join(subdir, "installerSignature.txt")
         with open(fname,"w") as fp:
-            fp.write("%s\n" % subdir)
+            fp.write("%s" % subdir)
 
     
