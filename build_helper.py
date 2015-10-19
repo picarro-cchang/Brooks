@@ -40,6 +40,7 @@ class BuildHelper(HasTraits):
                    "sdm",
                    "ssim",
                    "vaporizer_cleaner",
+                   "datviewer",
                    desc="the product to build software for",
                    label="Product")
     set_version = String("0.0.0.0", desc="Version number (dotted quad of integers)", label="Set Version")

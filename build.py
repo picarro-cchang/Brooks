@@ -19,6 +19,7 @@ from BuildG2000 import BuildG2000
 from BuildSDM import BuildSDM
 from BuildSSIM import BuildSSIM
 from BuildVaporizerCleaner import BuildVaporizerCleaner
+from BuildDatViewer import BuildDatViewer
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -40,7 +41,8 @@ def initialize(project, logger):
                         g2000 = BuildG2000,
                         sdm = BuildSDM,
                         ssim = BuildSSIM,
-                        vaporizer_cleaner=BuildVaporizerCleaner)
+                        vaporizer_cleaner=BuildVaporizerCleaner,
+                        datviewer=BuildDatViewer)
     # official removes "INTERNAL" from version number
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "y", "true", "t", "1")
