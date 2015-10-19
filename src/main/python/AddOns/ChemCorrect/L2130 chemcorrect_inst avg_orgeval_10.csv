@@ -211,16 +211,16 @@ C,XY_X(d18O_mean) XY_Y(dD_mean),TRUE,d18O x dD,gmwl,best_fit,,
 
 
 COMMENTS,,,,,,,
-PROCESS VARIABLES,Fixed value variables ü?? values evaluated once (at beginning of cycle),,,,,,
-SAMPLE VARIABLES,Fixed value variables ü?? values evaluated once per sample ,,,,,,
+PROCESS VARIABLES,Fixed value variables - values evaluated once (at beginning of cycle),,,,,,
+SAMPLE VARIABLES,Fixed value variables - values evaluated once per sample ,,,,,,
 
 
 
 FUNCTION DEFINITION,Meaning,,,,,,
-mean_all,sum all rows for specified column and return a  mean ü?? ignoring ü??ignoreü?ù rows,,,,,,
-mean_standards *process only,sum standards rows for specified column and return a  mean ü?? ignoring ü??ignoreü?ù rows,,,,,,
-std_all,sum all rows for specified column and return an std  ü?? ignoring ü??ignoreü?ù rows,,,,,,
-std_standards *process only,sum standards rows for specified column and return an std  ü?? ignoring ü??ignoreü?ù rows,,,,,,
+mean_all,sum all rows for specified column and return a  mean - ignoring "ignore"ù rows,,,,,,
+mean_standards *process only,sum standards rows for specified column and return a  mean - ignoring "ignore"ù rows,,,,,,
+std_all,sum all rows for specified column and return an std - ignoring "ignore"ù rows,,,,,,
+std_standards *process only,sum standards rows for specified column and return an std - ignoring "ignore"ù rows,,,,,,
 float,fixed float value,,,,,,
 int,fixed integer value
 evaluation,"simple math evaluation left/right factors of any standard variable  or float/int value and operand (*,/,+,-,<,<=,>,>=,==,!=)"
