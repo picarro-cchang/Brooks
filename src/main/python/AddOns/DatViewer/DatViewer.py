@@ -41,20 +41,21 @@ from scipy.signal import lfilter
 from scipy.optimize import curve_fit
 import matplotlib as mpl
 mpl.use('WXAgg')
+mpl.rc('font', family='Arial')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 from pandas import HDFStore,DataFrame
 
 # HasTraits, Float, Bool, Int, Long, Str
-from enthought.traits.api import *
-from enthought.traits.ui.api import *
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.basic_editor_factory import BasicEditorFactory
-from enthought.traits.ui.menu import *
+from traits.api import *
+from traitsui.api import *
+from traitsui.wx.editor import Editor
+from traitsui.basic_editor_factory import BasicEditorFactory
+from traitsui.menu import *
 
-from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.timestamp import unixTime, datenumToUnixTime, datetimeTzToUnixTime
+from CustomConfigObj import CustomConfigObj
+from timestamp import unixTime, datenumToUnixTime, datetimeTzToUnixTime, unixTimeToTimestamp
 from DateRangeSelectorFrame import DateRangeSelectorFrame
 from FileOperations import *
 from Analysis import *
@@ -200,7 +201,7 @@ def checkLock(func):
             
 class FeatureCapturePanelHandler(Handler):
     def show_help(self, info, control=None):
-        webbrowser.open(r'file:///' + Program_Path + r'/Manual/menus_time_series_plot.html#save-configuration')  
+        webbrowser.open(r'file:///' + Program_Path + r'/Manual/time_series_plot_menu.html#save-configuration')  
             
 class FeatureCapturePanel(HasTraits):
     Information = CStr("Select features that will be captured in the configuration file.")
@@ -296,6 +297,7 @@ class TreeEdit(HasTraits):
     move2Right = Button(label=">>")
     moveAll2Right = Button(label="All >>")
     defineDateRange = Button
+    largeDataset = Bool(False)
     selectedVar = Str
     selectedGroup = Str
     selectedFile = Str
@@ -328,6 +330,8 @@ class TreeEdit(HasTraits):
                VGroup(
                    HGroup(Item("instruction", style = "readonly", show_label=False),
                           Item("defineDateRange", show_label=False, width=80)),
+                   Group(Item("largeDataset", label="Large dataset. Click 'Help' to see details about this option."),
+                         show_left=False, padding=5),
                    HGroup(
                        Item('h5Left', editor = tree_editor, resizable = True),
                        VGroup(Item('move2Right', show_label=False, width=30), 
@@ -442,6 +446,7 @@ class TreeEdit(HasTraits):
             select["user_DateRange"] = self.dateRange
             select["user_PrivateLog"] = self.privateLog
             select["user_TimeZone"] = self.timeZone
+        select["user_LargeDateset"] = self.largeDataset
         return select                        
                         
 class Window(HasTraits):
@@ -449,13 +454,14 @@ class Window(HasTraits):
 
 class FigureStats(Window):
     statsInfo = Str(editor=TextEditor(multi_line=True))
+    Variables = ListStr
     traits_view = Instance(View)
     def __init__(self, *a, **k):
         Window.__init__(self, *a, **k)
         self.statsInfo = ""
         for i, s in enumerate(self.stats):
-            self.statsInfo += "[Panel %d]\n" % (i+1)
-            self.statsInfo += "Average = %s\nStd dev = %s\nPeak to peak = %s\n" % (s.mean, s.std, s.ptp)
+            self.statsInfo += "[%s]\n" % self.Variables[i]
+            self.statsInfo += "Average = %s\nStd dev = %s\nPeak to peak = %s\n" % (s.mean, s.std, s.ptp) if s is not None else "None\n"
                     
         self.traits_view = View(VGroup(Item("statsInfo", style='custom', width=400, show_label = False)), 
                                 buttons=[OKButton], title="Statistics",
@@ -590,7 +596,6 @@ class ImageEditor(Window):
         self.oldTimeZone = self.timeZone
 
 class FigureInteraction(object):
-
     def __init__(self, fig, lock):
         self.fig = fig
         self.lock = lock
@@ -680,10 +685,14 @@ class FigureInteraction(object):
     
     @checkLock
     def on_right_down(self, event):
+        if self.fig.displayMode == "Histogram":
+            return
         if self.image_popup_menu is None:
             menu = wx.Menu()
             self._append_menu_item(menu, None, "Export Image", self.saveImage)
             self._append_menu_item(menu, None, "Export Data in Current View", self.exportData)
+            if self.fig.displayMode != "XY":
+                self._append_menu_item(menu, None, "Export All Data in Current Time Range", self.exportDataAll)
             menu.AppendSeparator()
             self._append_menu_item(menu, None, "Edit Plot properties", self.editImage)
             menu.AppendSeparator()
@@ -854,7 +863,6 @@ class FigureInteraction(object):
                     self.autoscale[a] = True
             self.draw()
             return
-        
         if event.key is None:
             self._active = "ZOOMin"
             self.press_zoom(event)
@@ -1025,13 +1033,16 @@ class FigureInteraction(object):
         cursor = wx.StockCursor(cursord[cursor])
         self.canvas.SetCursor(cursor)
     
-    def getDefaultName(self):
-        ax = self.fig.gca()
-        xlabel = ax.get_xlabel()
-        ylabel = ax.get_ylabel()
-        path = os.path.split(self.fig.dataFile)[1]
+    def getDefaultName(self, all_column=False):
+        path = os.path.split(self.fig.viewer.dataFile)[1]
         filename = os.path.splitext(path)[0]
-        return "%s_%s_%s" % (filename, xlabel, ylabel)
+        if all_column:
+            return filename
+        else:
+            ax = self.fig.gca()
+            xlabel = ax.get_xlabel()
+            ylabel = ax.get_ylabel()
+            return "%s_%s_%s" % (filename, xlabel, ylabel)
     
     @checkLock
     def saveImage(self, event):
@@ -1091,6 +1102,45 @@ class FigureInteraction(object):
                     f.write("%-40s,%-40s\n" % (heading[0][0], ylabel))
                     for row in data_selected:
                         f.write(format % (row[0], row[1]))
+                        
+    def exportDataAll(self, event):
+        ax = self.fig.gca()
+        x0, x1 = ax.get_xlim()
+        data = self.fig.viewer.table
+        if "DATE_TIME" in data:
+            col = "DATE_TIME"
+        elif "time" in data:
+            col = "time"
+        else:
+            col = "timestamp"
+        if self.fig.displayMode == "DateTime":
+            x0 = datenumToUnixTime(x0)
+            x1 = datenumToUnixTime(x1)
+        else:
+            origin = datenumToUnixTime(self.fig.offset)
+            x0 = origin + x0 * 86400.0 / self.fig.multiplier
+            x1 = origin + x1 * 86400.0 / self.fig.multiplier
+        if "DATE_TIME" in data or "time" in data:
+            data_selected = data[(data[col] >= x0) & (data[col] <= x1)]
+        else:
+            x0 = unixTimeToTimestamp(x0)
+            x1 = unixTimeToTimestamp(x1)
+            data_selected = data[(data[col] >= x0) & (data[col] <= x1)]
+        fd = wx.FileDialog(None, "Export data filename",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                           defaultFile=self.getDefaultName(all_column=True),
+                           defaultDir="",
+                           wildcard="HDF5 file (*.h5)|*.h5")
+        if fd.ShowModal() == wx.ID_OK:
+            fname = fd.GetPath()
+            #data_selected.to_hdf(fname, "results", mode="w", format="table") # to_hdf doesn't work for old pandas
+            try:
+                op = tables.openFile(fname, "w")
+                filters = tables.Filters(complevel=1, fletcher32=True)
+                table = op.createTable(op.root, "results", data_selected.to_records(), filters=filters)
+                table.flush()
+            finally:
+                op.close()
        
     def editImage(self, event):
         editor = ImageEditor(figure=self.fig)
@@ -1108,7 +1158,7 @@ class FigureInteraction(object):
         boxsel = sel & (yData >= yLim[0]) & (yData <= yLim[1])
         s = getStatistics(yData[boxsel])
         
-        dlg = FigureStats(stats=[s])
+        dlg = FigureStats(stats=[s], Variables=[self.fig.viewer.varName])
         dlg.configure_traits(view=dlg.traits_view)
 
 class _MPLFigureEditor(Editor):
@@ -1176,7 +1226,7 @@ class Plot2D(HasTraits):
         self.plot2dFigure.clf()
         self.tz = k.get("tz", pytz.timezone("UTC"))
         self.plot2dFigure.tz = self.tz
-        self.plot2dFigure.offset = None
+        self.plot2dFigure.offset = 0
         formatter = mpl.dates.DateFormatter('%H:%M:%S\n%Y/%m/%d', self.tz)
         if len(t) > 0:
             dt = datetime.fromtimestamp(t[0], tz=self.tz)
@@ -1205,6 +1255,20 @@ class Plot2D(HasTraits):
         self.lock.release()
         return handles
 
+    def plotHistogram(self, data, *a, **k):
+        self.lock.acquire()
+        self.plot2dFigure.clf()
+        self.axes = self.plot2dFigure.add_subplot(111)
+        n, bins, patches = self.axes.hist(data, *a, **k)
+        bin_centres = (bins[:-1] + bins[1:]) / 2.0
+        coeff, var_matrix = curve_fit(gauss, bin_centres, n, p0=[1., 0., 1.])
+        hist_fit = gauss(bin_centres, *coeff)
+        self.axes.plot(bin_centres, hist_fit, 'r-')
+        info = u"\u03BC = %s\n\u03C3 = %s" % (coeff[1], coeff[2])
+        self.addText(0.05,0.9, info, bbox=dict(facecolor='white', alpha=1), transform=self.axes.transAxes)
+        self.lock.release()
+        return (n, bins)
+        
     def addText(self, *a, **k):
         self.lock.acquire()
         handle = self.axes.text(*a, **k)
@@ -1275,7 +1339,75 @@ class CurveFitPanel(HasTraits):
         self.initialGuess = self.input[2]
         self.traits_view = View(VGroup(Item("fitParameters"), Item("fitFunction"), Item("initialGuess")),
                            buttons=OKCancelButtons, width=500, title="Curve Fitting", kind="modal")
-            
+
+class HistogramHandler(Handler):
+    def init(self, info):
+        info.object.parent.infoSet.add(info)
+        Handler.init(self, info)
+
+    def close(self, info, is_ok):
+        info.object.parent.infoSet.discard(info)
+        info.ui.dispose()                           
+                           
+class HistogramViewer(HasTraits):
+    plot = Instance(Plot2D, ())
+    parent = Instance(object)
+    dataFile = CStr("")
+    data = CArray
+    bin = CInt(100)
+    normalized = CBool(False)
+    saveData = Button
+    saveImage = Button
+    traits_view = View(VGroup(Item("plot", style="custom", show_label=False),
+                              HGroup(Item("bin"),
+                                     Item("normalized"),
+                                     Item("saveData", show_label=False),
+                                     Item("saveImage", show_label=False),
+                                     padding=10)),
+                       width=500, height=500,resizable=True, handler=HistogramHandler())
+    def __init__(self, *a, **k):
+        HasTraits.__init__(self, *a, **k)
+        self.histData, self.histBins = self.plot.plotHistogram(self.data, bins=self.bin)
+        self.plot.plot2dFigure.displayMode = "Histogram"
+        self.plot.plot2dFigure.viewer = self
+        
+    def _bin_changed(self):
+        self.histData, self.histBins = self.plot.plotHistogram(self.data, bins=self.bin, normed=self.normalized)
+        self.plot.figureInteraction.subplots = self.plot.plot2dFigure.axes
+        
+    def _normalized_changed(self):
+        self.histData, self.histBins = self.plot.plotHistogram(self.data, bins=self.bin, normed=self.normalized)
+        self.plot.figureInteraction.subplots = self.plot.plot2dFigure.axes
+        
+    def _saveImage_fired(self):
+        path = os.path.split(self.dataFile)[1]
+        filename = os.path.splitext(path)[0]
+        fd = wx.FileDialog(None, "Export image name",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                           defaultFile=filename + "_histogram",
+                           defaultDir="",
+                           wildcard="JPG image (*.jpg)|*.jpg|PNG image (*.png)|*.png|PDF file (*.pdf)|*.pdf")
+        if fd.ShowModal() == wx.ID_OK:
+            fname = fd.GetPath()
+            self.plot.plot2dFigure.savefig(fname)
+        
+    def _saveData_fired(self):
+        format = "%-40s,%-40s\n"
+        bin_centres = (self.histBins[:-1] + self.histBins[1:]) / 2.0
+        data = zip(bin_centres, self.histData)
+        path = os.path.split(self.dataFile)[1]
+        filename = os.path.splitext(path)[0]
+        fd = wx.FileDialog(None, "Export data filename",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                           defaultFile=filename + "_histogram",
+                           defaultDir="",
+                           wildcard="CSV file (*.csv)|*.csv")
+        if fd.ShowModal() == wx.ID_OK:
+            fname = fd.GetPath()
+            with open(fname, "w") as f:
+                for row in data:
+                    f.write(format % (row[0], row[1]))
+                               
 class XyViewerHandler(Handler):
     def init(self, info):
         info.object.parent.infoSet.add(info)
@@ -1376,8 +1508,8 @@ class XyViewer(HasTraits):
     statistics = Action(name="Statistics", action="onStatistics")
     manual = Action(name="Help", action="onHelp")
     
-    traits_view = View(VGroup(Item("plot", style="custom", height=0.7, show_label=False),
-                              Item("information", style='custom', height=0.3, show_label = False)
+    traits_view = View(VGroup(Item("plot", style="custom", height=0.8, show_label=False),
+                              Item("information", style='custom', height=0.2, show_label = False)
                                     ),
                        menubar=MenuBar(Menu(saveConfig, name='&File'),
                                        Menu(Menu(linearFit, quadraticFit, polyFit, curveFit, name='Fitting'),
@@ -1389,7 +1521,7 @@ class XyViewer(HasTraits):
         HasTraits.__init__(self, *a, **k)
         self.dataHandle, self.fitHandle = self.plot.plotData([], [], '.', [], [], 'r-')
         self.plot.plot2dFigure.displayMode = "XY"
-        self.plot.plot2dFigure.dataFile = self.dataFile
+        self.plot.plot2dFigure.viewer = self
         #self.plot.axes.callbacks.connect("xlim_changed", self.notify)
         #self.plot.axes.callbacks.connect("ylim_changed", self.notify)
         self.xlim = None
@@ -1421,8 +1553,12 @@ class DatViewer(HasTraits):
     dataSetName = CStr
     varNameList = ListStr
     varName = CStr
+    autoscaleY = CBool(True)
     expression = Str(editor=TextEditor(enter_set=False, auto_set=False))
     nAverage = CInt(1)
+    mean = CFloat
+    stdDev = CFloat
+    peakToPeak = CFloat
     doAverage = Button
     loadScript = Button(desc="python script")
     parent = Instance(object)
@@ -1432,10 +1568,10 @@ class DatViewer(HasTraits):
         self.tz = tzlocal.get_localzone()
         self.dataHandle = self.plot.plotTimeSeries([], [], '-', tz=self.tz)[0]
         self.plot.plot2dFigure.displayMode = "DateTime"
-        self.plot.plot2dFigure.dataFile = self.dataFile
+        self.plot.plot2dFigure.viewer = self
         self.plot.axes.callbacks.connect("xlim_changed", self.notify)
-        self.xlim = None
-        self.ylim = None
+        self.xLim = None
+        self.yLim = None
         self.xData = None
         self.yData = None
         self.boxSel = None
@@ -1448,8 +1584,23 @@ class DatViewer(HasTraits):
         self.xData = self.dataHandle.get_xdata()
         self.yData = self.dataHandle.get_ydata()
         self.sel = (self.xData >= self.xLim[0]) & (self.xData <= self.xLim[1])
-        self.boxSel = self.sel & (self.yData >= self.yLim[0]) & (self.yData <= self.yLim[1])
+        if self.autoscaleY:
+            ymin, ymax = None, None
+            if any(self.sel):
+                ymin = min(self.yData[self.sel])
+                ymax = max(self.yData[self.sel])
+            if ymin is not None and ymax is not None:
+                ax.set_ylim(ymin, ymax)
+                self.boxSel = self.sel
+        else:
+            self.boxSel = self.sel & (self.yData >= self.yLim[0]) & (self.yData <= self.yLim[1])
         
+        if any(self.boxSel):
+            b = getStatistics(self.yData[self.boxSel])
+            self.mean = b.mean
+            self.stdDev = b.std
+            self.peakToPeak = b.ptp
+            
         # update other panels 
         if self.parent.listening:
             if self.plot.plot2dFigure.offset is None:
@@ -1462,8 +1613,7 @@ class DatViewer(HasTraits):
         self.dataSetNameList = []
         self.dataSetName = ""
         self.varName = ""
-        self.plot.plot2dFigure.dataFile = self.dataFile
-
+        
         if self.dataFile:
             self.data = HDFStore(self.dataFile)
             for k in self.data.keys():
@@ -1476,7 +1626,12 @@ class DatViewer(HasTraits):
 
     def _dataSetName_changed(self):
         if self.dataSetName:
-            self.table = self.data.get(self.dataSetName)
+            try:
+                self.table = self.data.get(self.dataSetName)
+            except:
+                table = getattr(self.data.handle.root, self.dataSetName)
+                self.table = DataFrame.from_records(table.read())
+            self.table.fillna(0.0)
             self.varNameList = list(self.table.columns.values)
             if self.updateFigure:
                 self.parent.filter = ""
@@ -1509,13 +1664,12 @@ class DatViewer(HasTraits):
         return viewer
             
     def VariableSelector(self, message):
-        dlg = CorrelationPlotSelector(nViewers=self.parent.nViewers, instruction=message)
+        dlg = CorrelationPlotSelector(nViewers=self.parent.nViewers, 
+                                      Variables=[v.varName for v in self.parent.viewers],
+                                      instruction=message)
         dlg.configure_traits(view=dlg.traits_view)
-        if dlg.panel1 > 0 and dlg.panel2 > 0:
-            return (dlg.panel2-1, dlg.panel1-1)
-        else:
-            return None
-    
+        return dlg.getVariables()
+            
     def runScript(self, script):
         #script = re.sub(r'\bx\b', self.varName, script)
         env = {}
@@ -1562,21 +1716,23 @@ class DatViewer(HasTraits):
         if "DATE_TIME" in self.tableFiltered:
             dateTime = self.tableFiltered["DATE_TIME"]
         elif "timestamp" in self.tableFiltered:
-            dateTime = array([unixTime(int(t)) for t in self.tableFiltered["timestamp"]])
+            dateTime = [unixTime(int(t)) for t in self.tableFiltered["timestamp"]]
         elif "time" in self.tableFiltered:
             dateTime = self.tableFiltered["time"]
         else:
             raise Exception("No time-related data is found in the data set!")
         if self.plot.plot2dFigure.displayMode == 'DateTime':
-            return dateTime
+            return array(dateTime)
         else:
             multiplier = DisplayMode2Multiplier(self.plot.plot2dFigure.displayMode)
-            return (dateTime - datenumToUnixTime(self.plot.plot2dFigure.offset)) / 86400.0 * multiplier
+            ret = (dateTime - datenumToUnixTime(self.plot.plot2dFigure.offset)) / 86400.0 * multiplier
+            return array(ret)
     
     def updatePlot(self):
         #self.plot.updateTimeSeries(self.dataHandle, [], [])
         try:
             if self.varName:
+                xLim = self.xLim
                 xData = self.getXData()
                 values = self.runScript(self.expression)
                 if values is not None:
@@ -1586,12 +1742,14 @@ class DatViewer(HasTraits):
                         self.plot.updateTimeSeries(self.dataHandle, xData[p], values[p])
                     else:
                         self.plot.updateData(self.dataHandle, xData[p], values[p])
-
-            self.notify(self.plot.axes)
+                self.notify(self.plot.axes)
+                if xLim is not None:
+                    wx.CallAfter(self.plot.axes.set_xlim, xLim)
 
         except Exception, e:
             d = wx.MessageDialog(None, "%s" % e, "Error while displaying", style=wx.OK | wx.ICON_ERROR)
             d.ShowModal()
+            raise
             
     def _expression_changed(self):
         if self.varName and self.updateFigure:
@@ -1627,29 +1785,60 @@ class DatViewer(HasTraits):
         
 class CorrelationPlotSelector(HasTraits):
     nViewers = CInt(3)
-    instruction = CStr("""
-    Select 2 frames and make correlation plot between
-    the y-data of these frames.
-    """)
-    panel1 = CInt(0, label="Panel")
-    panel2 = CInt(0, label="Panel")
-    panelList = List(Int)
+    instruction = CStr("Select 2 variables and make correlation plot.")
+    Yvar = CStr(label="Y:")
+    Xvar = CStr(label="X:")
+    Variables = ListStr
     vs = CStr("  vs")
     traits_view = Instance(View)
     
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
-        self.panelList = range(1, self.nViewers+1)
         
         self.traits_view = View(VGroup(
                                 Item("instruction", width=400, style="readonly", show_label=False, padding=5),
-                                HGroup(Item("panel1", width=100, editor=EnumEditor(name="panelList")),
+                                HGroup(Item("Yvar", width=100, editor=EnumEditor(name="Variables")),
                                        Item("vs", style='readonly', width=30, show_label=False),
-                                       Item("panel2", width=100, editor=EnumEditor(name="panelList"))),
+                                       Item("Xvar", width=100, editor=EnumEditor(name="Variables")),
+                                       padding=10),
                                 ), 
-                                buttons=OKCancelButtons, title="Select Plot Variables",
-                                width=400, height=200, resizable=False, kind="modal")
-                
+                                buttons=OKCancelButtons, title="Select Plot Variables", resizable=False, kind="modal")
+                                
+    def getVariables(self):
+        try:
+            y = self.Variables.index(self.Yvar)
+            x = self.Variables.index(self.Xvar)
+            return (x, y)
+        except:
+            return None
+
+class AnalysisSelector(HasTraits):
+    nViewers = CInt(3)
+    Variables = ListStr
+    instruction = CStr("Select the Variable(s) for analysis:")
+    frame1 = Bool(False)
+    frame2 = Bool(False)
+    frame3 = Bool(False)
+    traits_view = Instance(View)
+    
+    def __init__(self, *a, **k):
+        HasTraits.__init__(self, *a, **k)
+        a = []
+        for i in range(self.nViewers):
+            a.append(Item("frame%d" % (i+1), label=self.Variables[i]))
+        self.traits_view = View(VGroup(Item("instruction", style="readonly", show_label=False),
+                                       *a, padding=10),
+                       buttons=OKCancelButtons, title="Select Frames for Analysis",
+                       resizable=False, kind="modal")
+    
+    def getSelection(self):
+        sel = [self.frame1]
+        if self.nViewers > 1:
+            sel.append(self.frame2)
+        if self.nViewers > 2:
+            sel.append(self.frame3)
+        return sel
+                                
 class SeriesWindowHandler(Handler):
     def init(self, info):
         info.object.parent.infoSet.add(info)
@@ -1665,17 +1854,6 @@ class SeriesWindowHandler(Handler):
         SaveConfigFile(info.object)
 
     def onScreenShot(self, info):
-        fd = wx.FileDialog(None, "Capture Screenshot",
-                       style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-                       defaultFile="ScreenShot.png",
-                       defaultDir="",
-                       wildcard="PNG Images (*.png)|*.png")
-        if fd.ShowModal() == wx.ID_OK:
-            fileName = fd.GetPath()
-        else:
-            fd.Destroy()
-            return
-        fd.Destroy()
         time.sleep(0.3)
         #Create a DC for the whole screen area
         dcScreen = wx.ScreenDC()
@@ -1707,8 +1885,21 @@ class SeriesWindowHandler(Handler):
         #Select the Bitmap out of the memory DC by selecting a new
         #uninitialized Bitmap
         memDC.SelectObject(wx.NullBitmap)
- 
         img = bmp.ConvertToImage()
+        
+        path = os.path.split(info.object.dataFile)[1]
+        filename = os.path.splitext(path)[0]
+        fd = wx.FileDialog(None, "Capture Screenshot",
+                       style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                       defaultFile=filename+"_Screenshot",
+                       defaultDir="",
+                       wildcard="PNG Images (*.png)|*.png")
+        if fd.ShowModal() == wx.ID_OK:
+            fileName = fd.GetPath()
+        else:
+            fd.Destroy()
+            return
+        fd.Destroy()
         img.SaveFile(fileName, wx.BITMAP_TYPE_PNG)
         
     def onXaxisInDateTime(self, info):
@@ -1766,17 +1957,64 @@ class SeriesWindowHandler(Handler):
             SetFigureProperty(fig, fr.plot.axes, p)
                 
     def onCorrelationPlot(self, info):
-        dlg = CorrelationPlotSelector(nViewers=info.object.nViewers)
+        dlg = CorrelationPlotSelector(nViewers=info.object.nViewers,
+                                      Variables=[v.varName for v in info.object.viewers])
         dlg.configure_traits(view=dlg.traits_view)
-        if dlg.panel1 > 0 and dlg.panel2 > 0:
-            info.object.correlationPlot(dlg.panel2-1, dlg.panel1-1)
+        vars = dlg.getVariables()
+        if vars is not None:
+            info.object.correlationPlot(*vars)
+
+    def onAllenPlot(self, info):
+        obj = info.object
+        if obj.nViewers > 1:
+            a = AnalysisSelector(nViewers=obj.nViewers, Variables=[v.varName for v in obj.viewers])
+            a.configure_traits(view=a.traits_view)
+            sel = a.getSelection()
+        else:
+            sel = [True]
+        for i, fr in enumerate(obj.viewers):
+            if sel[i]:
+                try:
+                    n = len(fr.boxSel)
+                    if n > 0:
+                        viewer = XyViewer(parent=obj, dataFile=obj.dataFile)
+                        viewer.trait_view().set(title="Allan Std Dev: %s" % (fr.varName), x=100*i+100, y=100*i+100)
+                        viewer.edit_traits()
+                        AllenStandardDeviation(fr, viewer)
+                except:
+                    raise
+    
+    def onHistogram(self, info):
+        obj = info.object
+        if obj.nViewers > 1:
+            a = AnalysisSelector(nViewers=obj.nViewers,
+                                 Variables=[v.varName for v in obj.viewers])
+            a.configure_traits(view=a.traits_view)
+            sel = a.getSelection()
+        else:
+            sel = [True]
+        for i, fr in enumerate(obj.viewers):
+            if sel[i]:
+                try:
+                    n = len(fr.boxSel)
+                    if n > 0:
+                        viewer = HistogramViewer(parent=obj, dataFile=obj.dataFile, data=fr.yData[fr.boxSel])
+                        viewer.trait_view().set(title="Histogram: %s" % (fr.varName), x=100*i+100, y=100*i+100)
+                        viewer.edit_traits()
+                except:
+                    raise
             
     def onStatistics(self, info):
         stats = []
+        vars = []
         for fr in info.object.viewers:
-            data = fr.yData[fr.boxSel]
-            stats.append(getStatistics(data))
-        dlg = FigureStats(stats=stats)
+            vars.append(fr.varName)
+            if fr.boxSel is not None:
+                data = fr.yData[fr.boxSel]
+                stats.append(getStatistics(data))
+            else:
+                stats.append(None)
+        dlg = FigureStats(stats=stats, Variables=vars)
         dlg.configure_traits(view=dlg.traits_view)
 
     def onHelp(self, info):
@@ -1808,6 +2046,8 @@ class SeriesWindow(Window):
         xaxisHour = Action(name="x-Axis in Hour", action="onXaxisInHour", style="radio")
         statistics = Action(name="Statistics", action="onStatistics")
         correlationPlot = Action(name="Correlation Plot", action="onCorrelationPlot", enabled_when="object.nViewers > 1")
+        allenPlot = Action(name="Allan Standard Deviation Plot", action="onAllenPlot")
+        histogram = Action(name="Histogram", action="onHistogram")
         manual = Action(name="Help", action="onHelp")
         for i, fr in enumerate(self.viewers):
             a.append(
@@ -1818,7 +2058,12 @@ class SeriesWindow(Window):
                         Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
                         HGroup(Item("expression", object="h%d" % i, width=w),
                                Item("loadScript", object="h%d" % i, show_label=False, width=10)),
-                        HGroup(Item("nAverage", object="h%d" % i), Item("doAverage", object="h%d" % i, show_label=False))
+                        HGroup(Item("autoscaleY", object="h%d" % i), 
+                               Item("nAverage", object="h%d" % i), 
+                               Item("doAverage", object="h%d" % i, show_label=False)),
+                        Item("mean", object="h%d" % i, width=w),
+                        Item("stdDev", object="h%d" % i, width=w),
+                        Item("peakToPeak", object="h%d" % i, width=w),
                     )))
             self.cDict["h%d" % i] = fr
         
@@ -1827,7 +2072,7 @@ class SeriesWindow(Window):
         self.traits_view = View(VGroup(tGroup, 
                                        Item("filter", enabled_when="object.enableFilter")),
                                 menubar=MenuBar(Menu(saveConfig, takeScreenShot, name='&File'),
-                                                Menu(correlationPlot, statistics, name='&Analysis'),
+                                                Menu(correlationPlot, allenPlot, Separator(), statistics, histogram, name='&Analysis'),
                                                 Menu(xaxisDateTime, xaxisMinute, xaxisHour, name='&View'),
                                                 Menu(manual, name='&Help')),
                                 buttons=NoButtons, title="Time Series Viewer",
@@ -1965,7 +2210,7 @@ class NotebookHandler(Handler):
 
         if zipfile.is_zipfile(zipname):
             fname, variableDict = self.inspectZip(zipname)
-            if variableDict == {}: return
+            if len(variableDict) == 1: return
             # give the user a chance to change it and warn about overwrites
             fd = wx.FileDialog(None, "Output file",
                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
@@ -2056,7 +2301,7 @@ class NotebookHandler(Handler):
                 # validate by generating a default output filename from the dir name
                 # if None is returned, then it didn't contain any .H5 or ZIPs with .H5 files
                 defaultOutputFilename, variableDict = self.inspectFolder(path)
-                if variableDict == {}:
+                if len(variableDict) == 1:
                     fPromptForDir = False
                 elif defaultOutputFilename is not None and variableDict is not None:
                     fValidDir = True
@@ -2244,17 +2489,14 @@ class ViewNotebook(HasTraits):
         self.infoSet = set()
 
         # File menu
-        openAction = Action(name="&Open H5...\tCtrl+O", action="onOpen")
+        openAction = Action(name="&Open H5 File...\tCtrl+O", action="onOpen")
         openConfigAction = Action(name="Load Config...\t", action="onLoadConfig")
-        openZipAction = Action(name="Concatenate &ZIP to H5...\tZ", action="onConcatenateZip")
-
-        # replaced old concatenate folder function with new (asks for folder first so it can
-        # create an output filename from the first file in the folder)
-        concatenateActionNew = Action(name="Concatenate Folder to H5...\tF", action="onConcatenateFolder")
+        openZipAction = Action(name="Unpack Zip File...\tZ", action="onConcatenateZip")
+        concatenateActionNew = Action(name="Concatenate H5 Files...\tF", action="onConcatenateFolder")
         convertDatAction = Action(name="Convert &DAT to H5...\tAlt+Shift+C", action="onConvertDatToH5")
         convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+C", action="onConvertH5ToDat")
-        batchConvertDatAction = Action(name="&BatchConvert DAT to H5...\tB", action="onBatchConvertDatToH5")
-        batchConvertH5Action = Action(name="Batch&Convert H5 to DAT...\tC", action="onBatchConvertH5ToDat")
+        batchConvertDatAction = Action(name="&Batch Convert DAT to H5...\tB", action="onBatchConvertDatToH5")
+        batchConvertH5Action = Action(name="Batch &Convert H5 to DAT...\tC", action="onBatchConvertH5ToDat")
         exitAction = Action(name="E&xit", action="onExit")
 
         # New menu
@@ -2308,8 +2550,6 @@ DatViewer.py [-h] [-c<FILENAME>] [-v]
 Where the options can be a combination of the following:
 -h  Print this help.
 -c  Specify a different config file. Default = "datViewer.ini"
--p  Specify a different prefs file path. Default = "datViewerPrefs.ini"
-    in user's local appdata folder.
 -v  Print version number.
 
 View/analyze data in an HDF5 file.

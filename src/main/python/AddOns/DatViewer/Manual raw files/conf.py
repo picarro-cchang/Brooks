@@ -180,8 +180,8 @@ htmlhelp_basename = 'DatViewer'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'sampledoc.tex', u'sampledoc Documentation',
-   u'John Hunter, Fernando Perez, Michael Droettboom', 'manual'),
+  ('index', 'DatViewer.tex', u'DatViewer Documentation',
+   u'Picarro Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -199,4 +199,4 @@ latex_documents = [
 #latex_appendices = []
 
 # If false, no module index is generated.
-#latex_use_modindex = True
+latex_use_modindex = True

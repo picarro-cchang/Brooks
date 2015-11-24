@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Canvas &mdash; DatViewer Manual</title>
+    <title>Define Time Range &mdash; DatViewer Manual</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -52,51 +52,34 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="canvas">
-<span id="plotting-canvas"></span><h1>Canvas<a class="headerlink" href="#canvas" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="mouse-motion-and-figure-transform">
-<span id="mouse-events"></span><h2>Mouse motion and figure transform<a class="headerlink" href="#mouse-motion-and-figure-transform" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>Left click and drag: <strong>Zoom in</strong> into the selected area of the plot.</li>
-<li>Left click and drag with SHIFT key down: <strong>Pan</strong> the plot</li>
-<li>Left click and drag with CTRL key down: <strong>Zoom out</strong> from the plot</li>
-<li>Left click and drag with ALT key down: <strong>Stretch</strong> the plot</li>
-<li>Right click: Pop up righ-key menu</li>
-</ul>
+  <div class="section" id="define-time-range">
+<span id="id1"></span><h1>Define Time Range<a class="headerlink" href="#define-time-range" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/define_date_range.jpg" src="_images/define_date_range.jpg" />
+<p>DatViewer can search data files within the desirable date range and then concatenate such files into a H5 file.
+By defaut, TimeZone is set to the local one. However, if data were taken elsewhere, select the timezone
+where data were taken.</p>
+<p><strong>Data files are saved in directory trees named by date and time:</strong> Picarro software saves data in a directory tree
+that is named by the creation year, month and day. See, for example, the directory tree shown in the figure below.
+Select the option if the target folder has this file structure. This way DatViewer will
+only search folders within the desirable date range, which may substantially reduce processsing time.</p>
+<img alt="_images/directory_tree.jpg" src="_images/directory_tree.jpg" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To save processing time, DatViewer does not open data file but only determines data acquisition time by the file name.</p>
 </div>
-<div class="section" id="right-key-menu">
-<span id="id1"></span><h2>Right-key menu<a class="headerlink" href="#right-key-menu" title="Permalink to this headline">¶</a></h2>
-<img alt="_images/right_key_menu.jpg" src="_images/right_key_menu.jpg" />
-<div class="section" id="export-image">
-<h3>Export Image<a class="headerlink" href="#export-image" title="Permalink to this headline">¶</a></h3>
-<p>Export the current plot as a JPEG/PNG/PDF file.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Do NOT define time range if data file name has been changed.</p>
 </div>
-<div class="section" id="export-data-in-current-view">
-<h3>Export Data in Current View<a class="headerlink" href="#export-data-in-current-view" title="Permalink to this headline">¶</a></h3>
-<p>Export only Datetime and the selected variable in current view to a HDF5/CSV file.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">DatViewer does NOT concatenate data files exactly within the defined time range.</p>
 </div>
-<div class="section" id="export-all-data-in-current-time-range">
-<h3>Export All Data in Current Time Range<a class="headerlink" href="#export-all-data-in-current-time-range" title="Permalink to this headline">¶</a></h3>
-<p>Export all available columns of selected dataset in current time range to a HDF5 file.
-See <a class="reference internal" href="getting_started.html#concatenate-files-timerange"><span>Concatenate data files in a specific time range</span></a> for an example of use case.</p>
-</div>
-<div class="section" id="edit-plot-properties">
-<span id="image-editor"></span><h3>Edit Plot Properties<a class="headerlink" href="#edit-plot-properties" title="Permalink to this headline">¶</a></h3>
-<img alt="_images/image_editor.jpg" src="_images/image_editor.jpg" />
-<ul class="simple">
-<li><strong>Title</strong>: title of the plot.</li>
-<li><strong>Line</strong>: line pattern of the plot. If <em>None</em> is selected, data points will plotted without connecting lines.</li>
-<li><strong>Marker</strong>: marker of data points. If <em>None</em> is selected, data points will not be shown.</li>
-<li><strong>Min</strong> and <strong>Max</strong>: minimum and maximum of data range for the axis.</li>
-<li><strong>x[0]</strong>: set the earliest time of dataset as the minimum of x-axis.</li>
-<li><strong>Time zone</strong>: time zone selected for Datetime variables. This defaults to the local time zone.</li>
-<li><strong>Label</strong>: label of the axis.</li>
-</ul>
-</div>
-<div class="section" id="statistics">
-<h3>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline">¶</a></h3>
-<p>Calculate mean, standard deviation and peak to peak for data in the current view.</p>
-</div>
+<p>This is because the time extracted from file name is different from the data acquisition time. In order to not miss data points,
+DatViewer expands the specified time range so the resulting dataset normally has a wider time range than the user specification.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="getting_started.html#concatenate-files-timerange"><span>Concatenate data files in a specific time range</span></a></p>
 </div>
 </div>
 

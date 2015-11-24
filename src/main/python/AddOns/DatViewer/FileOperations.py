@@ -6,7 +6,7 @@ import numpy as np
 import time
 from datetime import datetime
 import pytz
-from Host.Common.timestamp import datetimeTzToUnixTime, unixTime
+from timestamp import datetimeTzToUnixTime, unixTime
 
 # Dictionary of known h5 column heading names that are too long and their
 # shortened names for DAT files.
@@ -97,7 +97,7 @@ class Dat2h5():
                         else:
                             fracSec = 0.0
                         try:
-                            when = time.mktime(time.strptime(dateTimeString, "%m/%d/%y %H:%M:%S")) + fracSec
+                            when = time.mktime(time.strptime(dateTimeString, "%m/%d/%Y %H:%M:%S")) + fracSec
                         except:
                             when = time.mktime(time.strptime(dateTimeString, "%Y-%m-%d %H:%M:%S")) + fracSec
                     entry = table.row
@@ -356,6 +356,7 @@ class ConcatenateFolder2File():
         self.DateRange = self.variableDict.pop("user_DateRange", None)
         self.PrivateLog = self.variableDict.pop("user_PrivateLog", None)
         self.TimeZone = self.variableDict.pop("user_TimeZone", None)
+        self.largeFile = self.variableDict.pop("user_LargeDateset", False)
         if self.TimeZone is not None:
             self.TimeZone = pytz.timezone(self.TimeZone)
         self.progress = 0
@@ -443,6 +444,17 @@ class ConcatenateFolder2File():
                                 self.fileList.append(path)
     
     def run(self):
+        if self.largeFile:
+            self.run_largeFile()
+        else:
+            self.run_sort()
+    
+    def run_sort(self):
+        """
+        This method keeps data in the memory so it will cause memory error 
+        if resulting file is too large (for example, 200Mb)
+        One unique feature of this method is that data set is sorted by timestamp
+        """
         variableDict = self.variableDict
         allData = {}
         for k in variableDict:
@@ -455,7 +467,8 @@ class ConcatenateFolder2File():
                 ip = tables.openFile(fname, "r")
                 try:
                     for k in variableDict:
-                        t = ip.getNode(k).read()
+                        # read the whole table from file and then select columns, which could be inefficient
+                        t = ip.getNode(k).read()    
                         if set(variableDict[k]).issubset(t.dtype.names):
                             allData[k].append(t[variableDict[k]])
                 finally:
@@ -494,19 +507,81 @@ class ConcatenateFolder2File():
         self.message = "Writing output file..."
 
         filters = tables.Filters(complevel=1, fletcher32=True)
-        for k in variableDict:
-            data = np.concatenate([dm for dm in allData[k]])
-            if 'DATE_TIME' in variableDict[k]:
-                perm = np.argsort(data['DATE_TIME'])
-                data = data[perm]
-            elif 'timestamp' in variableDict[k]:
-                perm = np.argsort(data['timestamp'])
-                data = data[perm]
-            elif 'time' in variableDict[k]:
-                perm = np.argsort(data['time'])
-                data = data[perm] 
-            table = self.fileHandle.createTable(self.fileHandle.root, k[1:], data, filters=filters)
-            table.flush()
-        self.progress = 100
-        self.fileHandle.close()
+        try:
+            for k in variableDict:
+                data = np.concatenate([dm for dm in allData[k]])
+                if 'DATE_TIME' in variableDict[k]:
+                    perm = np.argsort(data['DATE_TIME'])
+                    data = data[perm]
+                elif 'timestamp' in variableDict[k]:
+                    perm = np.argsort(data['timestamp'])
+                    data = data[perm]
+                elif 'time' in variableDict[k]:
+                    perm = np.argsort(data['time'])
+                    data = data[perm] 
+                table = self.fileHandle.createTable(self.fileHandle.root, k[1:], data, filters=filters)
+                table.flush()
+            self.progress = 100
+        except Exception, e:
+            self.progress = -1
+            self.message = "%s: %s" % (Exception, e)
+        finally:
+            self.fileHandle.close()
+        
+    def run_largeFile(self):
+        variableDict = self.variableDict
+        filters = tables.Filters(complevel=1, fletcher32=True)
+        allData = {}
+            
+        self.getFileList()
+        totalFile = len(self.fileList)
+        for fileIndex, fname in enumerate(self.fileList):
+            if fname.endswith('.h5'):
+                ip = tables.openFile(fname, "r")
+                try:
+                    for k in variableDict:
+                        t = ip.getNode(k).read()
+                        if set(variableDict[k]).issubset(t.dtype.names):
+                            if k not in allData:
+                                allData[k] = self.fileHandle.createTable(self.fileHandle.root, k[1:], t[variableDict[k]], filters=filters)
+                            else:
+                                allData[k].append(t[variableDict[k]])
+                            allData[k].flush()
+                finally:
+                    ip.close()
+                self.message = fname
+            elif fname.endswith(".zip"):
+                with zipfile.ZipFile(fname, 'r') as zipArchive:
+                    tmpDir = tempfile.gettempdir()
+                    if self.DateRange is not None:
+                        zlist = self.zipFileDict[fname]
+                    else:
+                        zlist = [zz for zz in zipArchive.namelist() if zz.lower().endswith(".h5")]
+                        zlist.sort()
+                    # enumerate files in the .zip archive
+                    for zfname in zlist:
+                        # extract the .h5 file from the zip archive into the temp dir
+                        zf = zipArchive.extract(zfname, tmpDir)
+                        ip = tables.openFile(zf, "r")
+                        try:
+                            for k in variableDict:
+                                t = ip.getNode(k).read()
+                                if set(variableDict[k]).issubset(t.dtype.names):
+                                    if k not in allData:
+                                        allData[k] = self.fileHandle.createTable(self.fileHandle.root, k[1:], t[variableDict[k]], filters=filters)
+                                    else:
+                                        allData[k].append(t[variableDict[k]])
+                                    allData[k].flush()
+                        finally:
+                            ip.close()
+                            os.remove(zf)  # delete the extracted temp file
+                        self.message = zfname
+            self.progress = int(fileIndex * 99 / totalFile)    # the extra 1% is for writing file
 
+        # check whether any valid .h5 data files were found and concatenated
+        if self.progress == 0:
+            self.progress = -1
+            self.message = "No HDF5 files found!"
+        else:
+            self.progress = 100
+        self.fileHandle.close()        
