@@ -6,9 +6,12 @@ Tuning = CavityLength
 #   - Never worry about what DAS table index is used - this is automatically taken
 #     care of (primarily for the background load/alternate scheme index stuff)
 
-SchemeCount = 2
-Scheme_1_Path = ../Schemes/_Beta_CFKADS_High_CH4_nocal_v2.sch
-Scheme_2_Path = ../Schemes/_Beta_CFKADS_High_CH4_cal_v2.sch
+#SchemeCount = 2
+#Scheme_1_Path = ../Schemes/_Beta_CFKADS_High_CH4_nocal_v2.sch
+#Scheme_2_Path = ../Schemes/_Beta_CFKADS_High_CH4_cal_v2.sch
+
+SchemeCount = 1
+Scheme_1_Path = ../Schemes/_CFKADS_High_CH4_v4.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
