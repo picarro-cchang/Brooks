@@ -27,8 +27,8 @@ f_H2O = 6549.76902
 f_CH4 = 6057.090
 f_CO2_HP = 6058.1985
 
-th_6562 = 8000
-th_6057 = 8000
+th_6562 = 13000
+th_6057 = 15000
 
 cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
@@ -39,12 +39,12 @@ def makeScan(base,incr,stepAndDwell,id,vLaser,threshold):
     for s,d in stepAndDwell:
         result.append(Row(base+s*incr,d,id,vLaser,threshold))
     return result
-
+    
 def transition(a,b,dwells,id,vLaser,threshold):
     incr = (b-a)/(len(dwells)+1)
     stepAndDwell = [(i+1,d) for i,d in enumerate(dwells)]
     return makeScan(a,incr,stepAndDwell,id,vLaser,threshold)
-
+    
 # Scans go up and down over CO2 (schemeID 127) and N2O (schemeID 128) peaks.
 # Each is an FSR scan about that peak.
 # There is only one virtual laser, which is flattened with a single long fsr scan
@@ -103,7 +103,7 @@ scan_H2O[-1].subschemeId |= fit
 # scan_NH3 = NH3_down + NH3_up
 # scan_NH3.append(Row(f_NH3+6*fsr,1,NH3 | fit,NH3_laser))
 # scan_NH3.append(Row(f_NH3-14*fsr,0,H2O | ignore,NH3_laser))
-
-#schemeRows = scan_CH4 + scan_N2O + scan_H2O + CO2_HP + scan_N2O + scan_NH3
-schemeRows = scan_CH4 + scan_N2O + scan_H2O + CO2_HP + scan_N2O
+    
+#schemeRows = scan_CH4 + scan_N2O + scan_H2O + CO2_HP + scan_N2O + scan_NH3 
+schemeRows = scan_CH4 + scan_N2O + scan_H2O + CO2_HP + scan_N2O   
 $$$

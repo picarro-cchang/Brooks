@@ -62,7 +62,7 @@ class XSync(object):
         # The values of the variables which are actually measured at this timestamp are called the targetValues
         # All other variables required to do the crosstalk removal are calculated using linear interpolation from
         #  measurements made around the specified timestamp (bookending).
-        #
+        # 
         self.timestamp, value = current[name]
         nVar = len(indexByName)
         self.indexByName = indexByName
@@ -85,7 +85,7 @@ class XSync(object):
         self.ready = self.valueOk[self.valueNeeded].all()
         self.data = data
         self.new_data = new_data
-
+        
     def update(self, current, name, ignore=None):
         i = self.indexByName[name]
         timestamp, value = current[name]
@@ -111,7 +111,7 @@ class XSync(object):
                 self.valueOk[i] = True
         self.ready = self.valueOk[self.valueNeeded].all() or timestamp-self.timestamp > 1000*self.TIMEOUT
 
-# Cross-talk variable list
+# Cross-talk variable list 
 crossList = \
 [
  ("peak_1a", "species", [45,47]),
@@ -140,7 +140,7 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["chemdetect_inst"] = InstructionProcess()
     configFile = os.path.join(here,"..\..\..\InstrConfig\Calibration\InstrCal\ChemDetect\ChemDetect.ini")
     configPath = os.path.split(configFile)[0]
-    config = CustomConfigObj(configFile)
+    config = CustomConfigObj(configFile) 
     ChemDetect_FileName = config.get("Main", "ChemDetect_FileName") # Get the ChemDetect excel file name from the ini file
     print "ChemDetect_FileName = ", ChemDetect_FileName
     _PERSISTENT_["chemdetect_inst"].load_set_from_csv(os.path.join(configPath,ChemDetect_FileName))
@@ -149,11 +149,11 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["ChemDetect_co2_previous"] = 0.0
     _PERSISTENT_["ChemDetect_ch4_previous"] = 0.0
     _PERSISTENT_["ChemDetect_previous"] = 0.0
-
+    
     # Handle options from command line
     optDict = eval("dict(%s)" % _OPTIONS_)
     g2308 = optDict.get("g2308", True)
-
+    
     # Set up the resynchronizer
     _GLOBALS_["xProcessor"] = CrosstalkProcessor(crossList,"FORWARD1")
 
@@ -167,8 +167,8 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
 exec _PERSISTENT_["adjustOffsetScript"] in globals()
-
-
+    
+    
 REPORT_UPPER_LIMIT = 5000.0
 REPORT_LOWER_LIMIT = -5000.0
 
@@ -181,10 +181,10 @@ def clipReportData(value):
         return REPORT_LOWER_LIMIT
     else:
         return value
-
+        
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-
+    
 def apply2Linear(value,xform1,xform2):
     return applyLinear(applyLinear(value,xform1),xform2)
 
@@ -192,7 +192,7 @@ def protDivide(num,den):
     if den != 0:
         return num/den
     return 0
-
+    
 def expAverage(xavg,x,dt,tau):
     if xavg is None:
         xavg = x
@@ -233,19 +233,32 @@ def boxAverage(buffer,x,t,tau):
     # except:
         # pass
 
-try: # new ChemDetect section
+# Get peripheral data
+try:
+    if _PERIPH_INTRF_:
+        try:
+            interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
+            for i in range(len(_PERIPH_INTRF_COLS_)):
+                if interpData[i] is not None:
+                    _NEW_DATA_[_PERIPH_INTRF_COLS_[i]] = interpData[i]
+        except Exception, err:
+            print "%r" % err
+except:
+    pass
+        
+try: # new ChemDetect section    
     n2o_raw = _DATA_["n2o_conc"]
     _NEW_DATA_["N2O_raw_ChemDet"] = n2o_raw
 
-    co2_raw = _DATA_["co2_conc_6058"]
+    co2_raw = _DATA_["co2_conc_6058"] 
     _NEW_DATA_["CO2_raw_ChemDet"] = co2_raw
     #print 'co2_raw = ', co2_raw
-
+    
     ch4_raw = _DATA_["ch4_conc_ppmv_final"]
     _NEW_DATA_["CH4_raw_ChemDet"] = ch4_raw
     #print 'ch4_raw = ', ch4_raw
     #print ' '
-
+    
     try:
         n2o_threshold  = _PERSISTENT_["chemdetect_inst"].current_var_values['N2O_thresh_param']
         n2o_mean_value = _PERSISTENT_["chemdetect_inst"].current_var_values['N2O_mean']
@@ -257,45 +270,32 @@ try: # new ChemDetect section
             _NEW_DATA_["res2"] = _DATA_["res"] # there is no H2O here. use res2=res
             a0_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a0_res2_HP']
             a1_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a1_res2_HP']
-        else:
+        else:    
             _NEW_DATA_["res2"] = _DATA_["res"]
             a0_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a0_res2_HR1']
             a1_res2 = _PERSISTENT_["chemdetect_inst"].current_var_values['a1_res2_HR1']
-
+        
         res2_fit = a0_res2 + n2o_raw * a1_res2
         _NEW_DATA_["res2_diff"] = _NEW_DATA_["res2"] - res2_fit         # For n2o ChemDetect
         _NEW_DATA_["res2_a1"] = _NEW_DATA_["res2_diff"] / n2o_raw  # For n2o ChemDetect
-
+    
     except:
-        _NEW_DATA_["res2_diff"] = 0.0 # These two lines are needed to avoid error on JADS 2007
+        _NEW_DATA_["res2_diff"] = 0.0 # These two lines are needed to avoid error on JADS 2007 
         _NEW_DATA_["res2_a1"] = 0.0  # where the first data collected is CO2, not n2o
-
-
+                        
+    
 except:
     pass
-
-
-try:
-    if _PERIPH_INTRF_:
-        try:
-            interpData = _PERIPH_INTRF_( _DATA_["timestamp"], _PERIPH_INTRF_COLS_)
-            for i in range(len(_PERIPH_INTRF_COLS_)):
-                if interpData[i]:
-                    _NEW_DATA_[_PERIPH_INTRF_COLS_[i]] = interpData[i]
-        except Exception, err:
-            print "%r" % err
-except:
-    pass
-
+                
 for k in _DATA_.keys():
     _REPORT_[k] = _DATA_[k]
-
+    
 for k in _NEW_DATA_.keys():
     if k.startswith("Delta"):
         _REPORT_[k] = clipReportData(_NEW_DATA_[k])
-    else:
+    else:    
         _REPORT_[k] = _NEW_DATA_[k]
-
+        
 #max_adjust = 1.0e-4
 max_adjust = 5.0e-5
 #max_adjust = 8.0e-5
@@ -322,7 +322,7 @@ else:
             newOffset0 = _FREQ_CONV_.getWlmOffset(1) + n2o_adjust
             _PERSISTENT_["wlm1_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(1,float(newOffset0))
-            #print "New N2O (virtual laser 1) offset: %.5f" % newOffset0
+            #print "New N2O (virtual laser 1) offset: %.5f" % newOffset0 
         except:
             pass
             #print "No new N2O (virtual laser 1) offset"
@@ -330,11 +330,11 @@ else:
         try:
             h2o_adjust = _DATA_["h2o_adjust"]
             #h2o_adjust = 0.0
-            h2o_adjust = min(max_adjust,max(-max_adjust,h2o_adjust))
+            h2o_adjust = min(max_adjust,max(-max_adjust,h2o_adjust))           
             newOffset0 = _FREQ_CONV_.getWlmOffset(5) + h2o_adjust
             _PERSISTENT_["wlm5_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(5,float(newOffset0))
-            #print "New H2O (virtual laser 5) offset: %.5f" % newOffset5
+            #print "New H2O (virtual laser 5) offset: %.5f" % newOffset5 
         except:
             pass
             #print "No new H2O (virtual laser 5) offset"
@@ -347,7 +347,7 @@ else:
             newOffset0 = _FREQ_CONV_.getWlmOffset(7) + ch4_adjust
             _PERSISTENT_["wlm7_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(7,float(newOffset0))
-            #print "New CH4 (virtual laser 7) offset: %.5f" % newOffset0
+            #print "New CH4 (virtual laser 7) offset: %.5f" % newOffset0 
         except:
             pass
             #print "No new CH4 (virtual laser 7) offset"
@@ -359,7 +359,7 @@ else:
             newOffset0 = _FREQ_CONV_.getWlmOffset(8) + co2_adjust
             _PERSISTENT_["wlm8_offset"] = newOffset0
             _FREQ_CONV_.setWlmOffset(8,float(newOffset0))
-            #print "New CO2 (virtual laser 8) offset: %.5f" % newOffset0
+            #print "New CO2 (virtual laser 8) offset: %.5f" % newOffset0 
         except:
             pass
             #print "No new CO2 (virtual laser 8) offset"
@@ -368,19 +368,19 @@ _REPORT_["wlm1_offset"] = _NEW_DATA_["wlm1_offset"] = _PERSISTENT_["wlm1_offset"
 _REPORT_["wlm5_offset"] = _NEW_DATA_["wlm5_offset"] = _PERSISTENT_["wlm5_offset"]
 _REPORT_["wlm7_offset"] = _NEW_DATA_["wlm7_offset"] = _PERSISTENT_["wlm7_offset"]
 _REPORT_["wlm8_offset"] = _NEW_DATA_["wlm8_offset"] = _PERSISTENT_["wlm8_offset"]
-
-
+    
+    
 # Save all the variables defined in the _OLD_DATA_  and  _NEW_DATA_ arrays in the
 # _PERSISTENT_ arrays so that they can be used in the ChemDetect spreadsheet.
 for colname in _OLD_DATA_:    #  new ChemDetect section
     _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _OLD_DATA_[colname][-1].value
-
-for colname in _NEW_DATA_:
+     
+for colname in _NEW_DATA_:    
     _PERSISTENT_["chemdetect_inst"].current_var_values[colname] = _NEW_DATA_[colname]
-
+     
 if _OLD_DATA_["species"][-1].value == 47 or _OLD_DATA_["species"][-1].value == 46 or _OLD_DATA_["species"][-1].value == 25:
     _PERSISTENT_["chemdetect_inst"].process_set()
-
+  
     #if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:
     #    print "WARNING: ChemDetect Status is RED"
 
@@ -389,59 +389,59 @@ if _DATA_["species"] in TARGET_SPECIES:
       print ' '
       #print 'target species=47, N2O_raw_ChemDet = ', _NEW_DATA_["N2O_raw_ChemDet"]
       #print 'ChemDetect: NOTOK_res2         = ', _PERSISTENT_["chemdetect_inst"].current_var_values['NOTOK_res2']
-
+    
       if _PERSISTENT_["chemdetect_inst"].current_var_values['RED_n2o'] == True:
         _NEW_DATA_["ChemDetect_n2o"] = 1.0  # BAD N2O data
       else:
-        _NEW_DATA_["ChemDetect_n2o"] = 0.0  # Good N2O data
+        _NEW_DATA_["ChemDetect_n2o"] = 0.0  # Good N2O data 
     else:
       _NEW_DATA_["ChemDetect_n2o"] = _PERSISTENT_["ChemDetect_n2o_previous"]
 
-    print "_NEW_DATA_[ChemDetect_n2o] = ", _NEW_DATA_["ChemDetect_n2o"]
+    print "_NEW_DATA_[ChemDetect_n2o] = ", _NEW_DATA_["ChemDetect_n2o"]    
     _PERSISTENT_["ChemDetect_n2o_previous"] = _NEW_DATA_["ChemDetect_n2o"]
 
     if _OLD_DATA_["species"][-1].value == 46:  # CO2
       print ' '
       #print 'target species=46, CO2_raw_ChemDet = ', _NEW_DATA_["CO2_raw_ChemDet"]
       #print 'ChemDetect: NOTOK_co2         = ', _PERSISTENT_["chemdetect_inst"].current_var_values['NOTOK_co2']
-
+    
       if _PERSISTENT_["chemdetect_inst"].current_var_values['RED_co2'] == True:
         _NEW_DATA_["ChemDetect_co2"] = 1.0  # BAD co2 data
       else:
-        _NEW_DATA_["ChemDetect_co2"] = 0.0  # Good co2 data
+        _NEW_DATA_["ChemDetect_co2"] = 0.0  # Good co2 data 
     else:
       _NEW_DATA_["ChemDetect_co2"] = _PERSISTENT_["ChemDetect_co2_previous"]
 
-    print "_NEW_DATA_[ChemDetect_co2] = ", _NEW_DATA_["ChemDetect_co2"]
-    _PERSISTENT_["ChemDetect_co2_previous"] = _NEW_DATA_["ChemDetect_co2"]
+    print "_NEW_DATA_[ChemDetect_co2] = ", _NEW_DATA_["ChemDetect_co2"]    
+    _PERSISTENT_["ChemDetect_co2_previous"] = _NEW_DATA_["ChemDetect_co2"]    
 
     if _OLD_DATA_["species"][-1].value == 25:  # CH4
       #print 'target species=46, CH4_raw_ChemDet = ', _NEW_DATA_["CH4_raw_ChemDet"]
       #print 'ChemDetect: NOTOK_ch4         = ', _PERSISTENT_["chemdetect_inst"].current_var_values['NOTOK_ch4']
-
+    
       if _PERSISTENT_["chemdetect_inst"].current_var_values['RED_ch4'] == True:
         _NEW_DATA_["ChemDetect_ch4"] = 1.0  # BAD ch4 data
       else:
-        _NEW_DATA_["ChemDetect_ch4"] = 0.0  # Good ch4 data
+        _NEW_DATA_["ChemDetect_ch4"] = 0.0  # Good ch4 data 
     else:
       _NEW_DATA_["ChemDetect_ch4"] = _PERSISTENT_["ChemDetect_ch4_previous"]
 
-    print "_NEW_DATA_[ChemDetect_ch4] = ", _NEW_DATA_["ChemDetect_ch4"]
-    _PERSISTENT_["ChemDetect_ch4_previous"] = _NEW_DATA_["ChemDetect_ch4"]
-
-
+    print "_NEW_DATA_[ChemDetect_ch4] = ", _NEW_DATA_["ChemDetect_ch4"]    
+    _PERSISTENT_["ChemDetect_ch4_previous"] = _NEW_DATA_["ChemDetect_ch4"]    
+    
+    
       #print 'ChemDetect: NOTOK_ch4         = ', _PERSISTENT_["chemdetect_inst"].current_var_values['NOTOK_ch4']
-
+    
     #if _PERSISTENT_["chemdetect_inst"].current_var_values['RED'] == True:  ## This does not work as time delay? happens
     if  _NEW_DATA_["ChemDetect_n2o"] + _NEW_DATA_["ChemDetect_ch4"] + _NEW_DATA_["ChemDetect_co2"] > 0:
         _NEW_DATA_["ChemDetect"] = 1.0  # BAD (n2o/co2/ch4) data
     else:
-        _NEW_DATA_["ChemDetect"] = 0.0  # Good (n2o/co2/ch4) data
+        _NEW_DATA_["ChemDetect"] = 0.0  # Good (n2o/co2/ch4) data 
 
-    print "_NEW_DATA_[ChemDetect] = ", _NEW_DATA_["ChemDetect"]
-    print "----------------------------------------------"
-    _PERSISTENT_["ChemDetect_previous"] = _NEW_DATA_["ChemDetect"]
-
-
+    print "_NEW_DATA_[ChemDetect] = ", _NEW_DATA_["ChemDetect"]    
+    print "----------------------------------------------"  
+    _PERSISTENT_["ChemDetect_previous"] = _NEW_DATA_["ChemDetect"]      
+        
+        
 xp = _GLOBALS_["xProcessor"]
 xp.process(_MEAS_TIMESTAMP_, _DATA_, _NEW_DATA_, _ANALYZE_)
