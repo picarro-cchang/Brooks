@@ -56,6 +56,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.notificationsFrame = None
         self.startSupervisorThread = None
         self.delay = delay
+        self.autoLaunch = autoLaunch
         self.explicitModeLaunch = False
         self.forcedLaunch = False
         typeChoices = self.co.keys()
@@ -107,10 +108,14 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             self.assignType(self.mode)
             self.runExplicitModeLaunch()
             wx.CallLater(3000, self.Hide)
-        elif autoLaunch:
+        elif self.autoLaunch and self.delay > 0: # auto launching by Driver due to system clock reset
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
             wx.CallLater(3000, self.Hide)
+        elif self.autoLaunch and self.delay == 0:    # auto launching by Start Instrument
+            self.supervisorIni = self.startupSupervisorIni
+            self.runForcedLaunch()
+            wx.CallLater(3000, self.Destroy)
         else:
             self.Show()
 
