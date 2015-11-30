@@ -66,6 +66,10 @@ def initialize(project, logger):
     push = project.get_property("push", "True" if official else "False")
     push = push.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("push", push)
+    # copy determines if installer is to be copied to another folder after the build
+    copy = project.get_property("copy", "True" if official else "False")
+    push = push.lower() in ("yes", "y", "true", "t", "1")
+    project.set_property("push", push)
     # force determines if we are to ignore version number ordering
     force = project.get_property("force", "False")
     force = force.lower() in ("yes", "y", "y", "true", "t", "1")

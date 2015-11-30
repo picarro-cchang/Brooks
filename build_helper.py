@@ -34,6 +34,8 @@ class BuildHelper(HasTraits):
     incr_version_e = Property(depends_on = ['version'])
     official = Bool(False, label="Official", desc="Produce an official release")
     push = Bool(False, desc="Push repository back to GitHub", label="Push repository")
+    copy = Bool(False, desc="Copy installers to folders", label="Copy installers")
+    changeDir = Button
     product = Enum("g2000",
                    "ai_autosampler",
                    "chem_correct",
@@ -73,6 +75,10 @@ class BuildHelper(HasTraits):
                 Item(name="set_version", enabled_when="set_version_e"),
                 Item(name="tag"),
                 Item(name="push"),
+                HGroup(
+                    Item(name="copy"),
+                    Item(name="changeDir", enabled_when="copy")
+                ),
                 Group(
                     Item(name="build", show_label=False, enabled_when="build_e")
                 )
@@ -88,6 +94,7 @@ class BuildHelper(HasTraits):
             config_info = json.load(inp)
         self.types_available = sorted(config_info['buildTypes'].keys())
         self.text_display = TextDisplay()
+        self.copyDir = ""
 
     def _get_check_configs_e(self):
         return self.product=='g2000'
@@ -112,6 +119,14 @@ class BuildHelper(HasTraits):
     def _official_changed(self):
         self.push = self.official
         self.tag = self.official
+        
+    def _copy_changed(self):
+        if self.copy:
+            d = wx.DirDialog(None, r"Select root directory and installers will be copied into subfolders named with analyzer species",
+                             style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+            if d.ShowModal() == wx.ID_OK:
+                self.copyDir = d.GetPath()
+            d.Destroy()
 
     def make_option(self, attr, formatter=None):
         if formatter is None:
@@ -149,6 +164,7 @@ class BuildHelper(HasTraits):
         command.extend(self.make_option("tag"))
         command.extend(self.make_option("push"))
         command.extend(self.make_option("types", self.list_formatter))
+        command.extend(self.make_option("copy", self.copyDir))
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)
