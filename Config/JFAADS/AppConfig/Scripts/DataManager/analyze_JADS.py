@@ -3,6 +3,7 @@ xh = xp.xHistory
 
 from numpy import *
 from numpy.linalg import inv, norm
+from Host.Common.EventManagerProxy import Log, LogExc
 
 # Forward analysis script for interference removal
 if _PERSISTENT_["init"]:
@@ -85,8 +86,11 @@ if _PERSISTENT_["init"]:
         return corr
 
     _PERSISTENT_["nonLinCorr"] = nonLinCorr
-    _PERSISTENT_["Ainv"] = inv(A)
-    print 'Reset averages'
+    try:
+        _PERSISTENT_["Ainv"] = inv(A)
+    except:
+        _PERSISTENT_["Ainv"] = zeros((n,n),dtype=float)
+        Log("Error in DataManager script: matrix inversion")
     _PERSISTENT_["average30"]  = []
     _PERSISTENT_["average60"] = []
     _PERSISTENT_["average300"] = []
