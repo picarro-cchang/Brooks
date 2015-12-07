@@ -10,9 +10,13 @@
 
 import sys
 import os
+import inspect
 from numpy import mean
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
+
+here = os.path.split(os.path.abspath(inspect.getfile(inspect.currentframe())))[0]
+if not here in sys.path: sys.path.append(here)
 
 if os.path.isdir("../AppConfig/Scripts/DataManager"):
     # For .exe version
@@ -46,6 +50,16 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["CH4buffer120"] = []
     _PERSISTENT_["CH4buffer300"] = []
     _PERSISTENT_["init"] = False
+
+    script = "adjustTempOffset.py"
+    scriptRelPath = os.path.join(here, '..', '..', '..', 'CommonConfig',
+                                 'Scripts', 'DataManager', script)
+    cp = file(os.path.join(here, scriptRelPath), "rU")
+    codeAsString = cp.read() + "\n"
+    cp.close()
+    _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
+ 
+exec _PERSISTENT_["adjustOffsetScript"] in globals()
 
 def clipReportData(value):
     if value > REPORT_UPPER_LIMIT:
