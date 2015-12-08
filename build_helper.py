@@ -138,6 +138,10 @@ class BuildHelper(HasTraits):
 
     def list_formatter(self, lis):
         return ",".join(lis)
+        
+    def getDir(self, attr):
+        if attr == "copy":
+            return self.copyDir
 
     def process_output(self, out):
         for line in iter(out.readline, ''):
@@ -164,7 +168,7 @@ class BuildHelper(HasTraits):
         command.extend(self.make_option("tag"))
         command.extend(self.make_option("push"))
         command.extend(self.make_option("types", self.list_formatter))
-        command.extend(self.make_option("copy", self.copyDir))
+        command.extend(self.make_option("copy", self.getDir))
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)
