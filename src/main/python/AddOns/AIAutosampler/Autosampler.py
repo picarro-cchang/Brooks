@@ -1106,6 +1106,7 @@ class AutosamplerFrame(AutosamplerGUI):
             self.running=True
             self.paused=False
             self.numInjDone=0
+            self.ASRunInit(0)
             try:
                 self.jobQueue.pop(0)
             except:
@@ -2719,7 +2720,8 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.Log("#Injections Done=%d\r\n"%self.numInjDone)
         if self.pausedAndInjStarted==True:
             if status=="Move to Wait Position\r\n":
-                self.ASRunAbort()
+                #self.ASRunAbort()
+                self.ASStepGoToWait(0)
                 self.pausedAndInjStarted=False
         self.lastStatus=status
 
@@ -2737,7 +2739,6 @@ class AutosamplerFrame(AutosamplerGUI):
                 self.numInjDone=0
 
             elif(self.assertInj and todo>0):
-                self.ASRunInit(0)
                 cfg = self.Cfg
                 print cfg
                 # rinse is True if "Rinse only between vials" is checked (Method page)
