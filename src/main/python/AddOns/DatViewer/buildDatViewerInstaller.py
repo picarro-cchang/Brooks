@@ -1,10 +1,8 @@
 """
-Copyright 2014 Picarro Inc.
+Copyright 2015 Picarro Inc.
 
 Create an installer for DatViewer. It's currently distributed as
 source, so installer should work for either Win7 or WinXP.
-
-Currently works for 
 """
 
 from __future__ import with_statement
@@ -13,7 +11,7 @@ import os
 import sys
 import shutil
 import subprocess
-#import pprint
+import py_compile
 import re
 import time
 import os.path
@@ -74,7 +72,6 @@ def makeInstaller(opts):
 
     print "verNum='%s'" % verNum
 
-
     # build the installer
     _compileInstaller(osType, verNum)
 
@@ -129,6 +126,13 @@ def _compileInstaller(osType, ver):
         LogErrmsg("Error building DatViewer installer, retCode=%d." % retCode)
         sys.exit(retCode)
 
+def compileSource():
+    py_compile.compile('DatViewer.py')
+    py_compile.compile('DateRangeSelectorFrame.py')
+    py_compile.compile('Analysis.py')
+    py_compile.compile('FileOperations.py')
+    py_compile.compile('timestamp.py')
+    py_compile.compile('CustomConfigObj.py')
 
 def main():
     usage = """
@@ -156,10 +160,9 @@ Builds an installer for DatViewer.
     #print "options=", options
 
     g_logMsgLevel = options.loglevel
-
+    
+    compileSource()
     makeInstaller(options)
-
-
-
+    
 if __name__ == '__main__':
     main()

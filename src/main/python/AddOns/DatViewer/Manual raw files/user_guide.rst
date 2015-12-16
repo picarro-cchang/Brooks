@@ -81,6 +81,19 @@ Convert data file from HDF5 to DAT format. See :ref:`DAT_H5` for details about t
 .. note:: When converting H5 to DAT format, each column has a fixed width of 26 characters. So if column headings are too long (more than 25 chars),
           DatViewer will convert or truncate them. For example, column name "fineLaserCurrent_1_controlOn" will be replaced by "fineLaserCurr_1_ctrlOn".
 
+Interpolation
+-----------------------
+Perform interpolation on a time grid with a constant interval. 
+
+Block Average
+-----------------------
+Divide dataset into small blocks with block size specified by the user. Average is calculated for data in each block, and results are saved in a new H5 file.
+
+.. note:: Block size needs to be much larger than average data interval. 
+
+As data interval is normally not a constant (unless interpolation is performed), fluctuation in data interval will affect block averaging if block size is comparable
+to average data interval.            
+          
 .. _time_series_plot:
 
 Time Series Plot
@@ -114,7 +127,9 @@ Here is an example of expression::
 Here *y* is the data of selected variable (y-axis data of the plot) and *CO2* is the data of CO2 column in selected table.
 So this expression transforms the plot to be summation of selected variable and CO2 data.
 
-.. note:: All variables in the selected dataset can be used in the *Expression* field. 
+.. note:: All variables in the selected dataset can be used in the *Expression* field by calling the variable name.
+          However, if variable name starts with a number, it needs to be called with a prefix of "dat". 
+          For example, "12CO2" needs to be called as "dat12CO2" in the *Expression* field.
           Besides, *x* and *y* are defined as short-cuts for x-axis and y-axis data of the plot, correspondingly.
           
 .. note:: *Expression* field is applied after :ref:`Filter` but before :ref:`Average`.
@@ -128,7 +143,9 @@ is displayed.
 
 Average
 ----------------------------
-When *Do average* button is clicked, moving average is calculated on the data with subset size specified in the field *N average*.
+If *Block* is checked, block average is calculated when *Do average* button is clicked. Otherwise moving average is calculated.
+
+For block average, *N average* specifies block size in unit of minute. For moving average, *N average* specifies subset size in unit of data points.
 
 .. note:: Averaging is performed after application of :ref:`Filter` and :ref:`Expression` fields.
 
@@ -149,7 +166,9 @@ Here is an example of filter::
 where CH4 and CO2 are both variable names in the selected data set. 
 So this filter removes all rows with CH4 >= 5 or CO2 >= 10 from dataset.
 
-.. note:: All variables in the selected dataset can be used in the *Filter* field. 
+.. note:: All variables in the selected dataset can be used in the *Filter* field by calling the variable name. 
+          However, if variable name starts with a number, it needs to be called with a prefix of "dat". 
+          For example, "12CO2" needs to be called as "dat12CO2" in the *Expression* field.
 
 .. note:: *Filter* field is applied before :ref:`Expression` field.
 

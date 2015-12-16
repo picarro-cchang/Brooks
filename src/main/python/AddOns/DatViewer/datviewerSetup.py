@@ -1,20 +1,7 @@
 """
-Copyright 2015 Picarro Inc.
-
-A disutils script that uses py2exe to build Win32 executables for
-DatViewer.
-
-Bails if PYTHONPATH is unset, to ensure Picarro.pth is being overridden
-so Picarro libs are pulled from the proper dir (primitive check, could
-be smarter)
-
-Usage: python datviewerSetup.py py2exe
-
-Notes: Use python buildDatViewer.py from the command line, which sets up
-       the environment for this script.
-#
-# File History:
-
+Dec 15, 2015 by Yuan Ren: this file tries to pack DatViewer into an executable.
+Although it does generate an exe file, the resulting program doesn't function as expected.
+Some files may conflict and some more files may need to be added.
 """
 
 
@@ -223,20 +210,94 @@ inclusionList = ["email",
                  "matplotlib.figure",
                  "pylab",
                  "numpy",
+                 "numexpr.*",
                  "configobj",
                  "encodings.*",
-                 "tables.*"]
+                 r'scipy.special._ufuncs_cxx',
+                 "tables.*",
+                 "traits.api",
+                 "traitsui.api",
+                 "traitsui.wx.editor",
+                 "traitsui.basic_editor_factory",
+                 "traitsui.menu",
+                 'wx',
+                 'wx.*',
+                 'wx.py.path',
+                 'pyface',
+                 'pyface.*',
+                 'pyface.wx', 
+                 'pyface.ui.wx',
+                 'pyface.ui.wx.init',
+                 'pyface.ui.wx.*',
+                 'pyface.ui.wx.grid.*',
+                 'pyface.ui.wx.action.*',
+                 'pyface.ui.wx.timer.*',
+                 'pyface.ui.wx.wizard.*',
+                 'pyface.ui.wx.workbench.*',
+                 'enable',
+                 'enable.drawing',
+                 'enable.tools',
+                 'enable.wx',
+                 'enable.wx.*',
+                 'enable.savage',
+                 'enable.savage.*',
+                 'enable.savage.svg',
+                 'enable.savage.svg.*',
+                 'enable.savage.svg.backends',
+                 'enable.savage.svg.backends.wx',
+                 'enable.savage.svg.backends.wx.*',
+                 'enable.savage.svg.css',
+                 'enable.savage.compliance',
+                 'enable.savage.trait_defs',
+                 'enable.savage.trait_defs.*',
+                 'enable.savage.trait_defs.ui',
+                 'enable.savage.trait_defs.ui.*',
+                 'enable.savage.trait_defs.ui.wx',
+                 'enable.savage.trait_defs.ui.wx.*']
 
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
-
 
 data_files = [(".", ["../../Assets/icons/Diagnostics_icon.ico"]),
               (r'Scripts', glob.glob(r'Scripts\*.*')),
               (r'Manual', glob.glob(r'Manual\*.*')),
               (r'Manual\_images', glob.glob(r'Manual\_images\*.*')),
               (r'Manual\_static', glob.glob(r'Manual\_static\*.*')),
-              (r'Manual\_sources', glob.glob(r'Manual\_sources\*.*'))]
+              (r'Manual\_sources', glob.glob(r'Manual\_sources\*.*'))
+              # (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
+              # # Because matplotlibrc does not have an extension, glob does not find it (at least I think that's why)
+              # # So add it manually here:
+              # (r'mpl-data', [r'C:\%s\Lib\site-packages\matplotlib\mpl-data\matplotlibrc' % pyDirname]),
+              # (r'mpl-data\images',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\images\*.*' % pyDirname)),
+              # (r'mpl-data\fonts',glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\fonts\*.*' % pyDirname))
+              ]
+import matplotlib as mpl
+Python_folder = r'C:\Python27\Lib\site-packages'
+data_files +=  mpl.get_py2exe_datafiles()
 
+data_folders = []
+data_folders.append( ( os.path.join(Python_folder,r'traitsui\wx\images')    , r'traitsui\wx\images') )
+data_folders.append( ( os.path.join(Python_folder,r'traitsui\image\library')      , r'traitsui\image\library') )
+data_folders.append( ( os.path.join(Python_folder,r'pyface\images')    , r'pyface\images') )
+data_folders.append( ( os.path.join(Python_folder,r'pyface\ui\wx\images')    , r'pyface\ui\wx\images') )
+data_folders.append( ( os.path.join(Python_folder,r'pyface\ui\wx\grid\images')    , r'pyface\ui\wx\grid\images') )
+data_folders.append( ( os.path.join(Python_folder,r'enable\images'), r'enable/images') )
+data_folders.append( ( os.path.join(Python_folder,r'enable\savage\trait_defs\ui\wx\data'), r'enable\savage\trait_defs\ui\wx\data') )
+data_folders.append( ( os.path.join(Python_folder,r'pytz\zoneinfo'), r'pytz\zoneinfo') )
+
+# Parsing folders and building the data_files table
+for folder, relative_path in data_folders:
+    for file in os.listdir(folder):
+        f1 = os.path.join(folder,file)
+        if os.path.isfile(f1): # skip directories
+            f2 = relative_path, [f1]
+            data_files.append(f2)
+        
+# pytz
+for root, dirs, files in os.walk(os.path.join(Python_folder,r'pytz\zoneinfo')):
+    for f in files:
+        f2 = root[30:], [os.path.join(root, f)]
+        data_files.append(f2)
+            
 # Python2.5 (WinXP) needs to include MSVCR71.dll
 if pythonVer == "2.5":
     data_files.append("../../Vendor/Microsoft/Python25/MSVCR71.dll")
@@ -271,7 +332,7 @@ if pythonVer == "2.5":
 )
 
 elif pythonVer == "2.7":
-    if pythonSubVer == "2.7.3":
+    if pythonSubVer == "2.7.6":
         import zmq
         os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
 
@@ -281,9 +342,14 @@ elif pythonVer == "2.7":
     setup(version = versionStr,
           description = "Picarro DatViewer Software",
           name = productName,
-          options = dict(py2exe = dict(compressed = 1,
-                                       optimize = 1,
-                                       # bundle_files = 1,
+          options = dict(py2exe = dict(optimize = 0,
+                                       dist_dir = 'dist',
+                                       bundle_files = 2,
+                                       xref = False,
+                                       skip_archive = True,
+                                       ascii = False,
+                                       custom_boot_script = '',
+                                       compressed = False,
                                        excludes = exclusionList,
                                        includes = inclusionList,
                                        dll_excludes = dllexclusionList,
@@ -292,8 +358,8 @@ elif pythonVer == "2.7":
           # targets to build...
           #console = consoleList,
           windows = windowsList,
-          data_files = data_files,
-          zipfile = "lib/share"
+          data_files = data_files
+          #zipfile = "lib/share"
     )
 
 else:

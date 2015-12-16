@@ -43,12 +43,22 @@ VersionInfoCopyright=Copyright (C) {#productYear} Picarro Inc.
 
 
 [Files]
-
-Source: {#sandboxDir}\Host\DatViewer\DatViewer.py; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\Host\DatViewer\datViewer.ini; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+; Program
+Source: {#sandboxDir}\AddOns\DatViewer\DatViewer.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\DateRangeSelectorFrame.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\Analysis.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\FileOperations.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\timestamp.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\CustomConfigObj.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+; Manual
+Source: {#sandboxDir}\AddOns\DatViewer\Manual\*; DestDir: {app}\DatViewer\Manual; Flags: recursesubdirs replacesameversion
+; tzlocal
+Source: {#sandboxDir}\AddOns\DatViewer\tzlocal\*; DestDir: C:\Python27\Lib\site-packages\tzlocal; Flags: recursesubdirs replacesameversion
+; Resources
+Source: {#sandboxDir}\AddOns\DatViewer\Scripts\*; DestDir: {app}\DatViewer\Scripts; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\datViewer.ini; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
 Source: {#sandboxDir}\Assets\icons\{#utilitiesIcon}; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-
 
 [Icons]
 
-Name: {userdesktop}\Picarro Utilities\Data File Viewer; Filename: C:\Python27\python.exe; Parameters: {app}\DatViewer\DatViewer.py -c DatViewer.ini; WorkingDir: {app}\DatViewer; IconFilename: {app}\DatViewer\{#utilitiesIcon}
+Name: {userdesktop}\Picarro Utilities\Data File Viewer; Filename: C:\Python27\python.exe; Parameters: {app}\DatViewer\DatViewer.pyc; WorkingDir: {app}\DatViewer; IconFilename: {app}\DatViewer\{#utilitiesIcon}

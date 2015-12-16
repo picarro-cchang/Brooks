@@ -139,7 +139,7 @@ def main():
     # this script is for internal builds only so tacking on
     # 'internal' in the product name
     osType = _getOsType()
-    product = "ChemCorrect-%s-INTERNAL" % osType
+    product = "DatViewer-%s-INTERNAL" % osType
 
     _generateBuildVersion(product, osType, VERSION)
 

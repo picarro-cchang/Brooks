@@ -45,7 +45,7 @@ mpl.rc('font', family='Arial')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
-from pandas import HDFStore,DataFrame
+from pandas import DataFrame
 
 # HasTraits, Float, Bool, Int, Long, Str
 from traits.api import *
@@ -286,7 +286,7 @@ class H5File ( HasTraits ):
 
 class TreeEditHandler(Handler):
     def show_help(self, info, control=None):
-        webbrowser.open(r'file:///' + Program_Path + r'/Manual/file_menu.html#concatenate-zip-folder-to-h5')  
+        webbrowser.open(r'file:///' + Program_Path + r'/Manual/user_guide.html#concatenate-h5-files')  
        
 class TreeEdit(HasTraits):
     h5FileName = Str
@@ -337,7 +337,7 @@ class TreeEdit(HasTraits):
                        VGroup(Item('move2Right', show_label=False, width=30), 
                               Item('move2Left', show_label=False, width=30),
                               Item('moveAll2Right', show_label=False, width=30)),
-                       Item('h5Right', editor = tree_editor, resizable = True ),
+                       Item('h5Right', editor = tree_editor, resizable = True),
                        show_labels = False)),
                 title = 'Select Variables',
                 buttons = [OKButton, CancelButton, HelpButton],
@@ -350,14 +350,15 @@ class TreeEdit(HasTraits):
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
         
-        h5 = HDFStore(self.h5FileName)
+        h5 = tables.openFile(self.h5FileName)
         groupList = []
-        for k in h5.keys():
-            table = h5.get(k)
-            varList = []
-            for v in table.columns.values:
-                varList.append(Variable(name=v, group=k, fileName=self.h5FileName))
-            groupList.append(DataGroup(name=k, variables=varList, fileName=self.h5FileName))
+        for k in h5.walkNodes("/"):
+            if isinstance(k, tables.Table):
+                table = h5.getNode(k._v_pathname)
+                varList = []
+                for v in table.colnames:
+                    varList.append(Variable(name=v, group=k._v_pathname, fileName=self.h5FileName))
+                groupList.append(DataGroup(name=k._v_pathname, variables=varList, fileName=self.h5FileName))
         self.h5Left = H5File(name=self.h5FileName, groups=groupList)
         self.h5Right = H5File(name="New File", groups=[])
         h5.close()
@@ -391,7 +392,7 @@ class TreeEdit(HasTraits):
     def _moveVariables(self, source, dest):
         if self.selectedFile == dest.name:
             return
-        if len(self.selectedVar) > 0:
+        if len(self.selectedVar) > 0:   # a variable is selected
             g = source.getGroup(self.selectedGroup)
             g.variables = [v for v in g.variables if v.name != self.selectedVar]
             gr = dest.getGroup(self.selectedGroup)
@@ -400,7 +401,7 @@ class TreeEdit(HasTraits):
             else:
                 varList = [Variable(name=self.selectedVar, group=self.selectedGroup, fileName=dest.name)]
                 dest.groups.append(DataGroup(name=self.selectedGroup, variables=varList, fileName=dest.name))
-        elif len(self.selectedGroup) > 0:
+        elif len(self.selectedGroup) > 0:   # a group is selected
             gl = source.getGroup(self.selectedGroup) 
             for v in gl.variables:
                 v.fileName = dest.name
@@ -411,7 +412,7 @@ class TreeEdit(HasTraits):
                 for v in gl.variables:
                     gr.variables.append(v)
             source.groups = [g for g in source.groups if g.name != self.selectedGroup]
-        elif len(self.selectedFile) > 0:
+        elif len(self.selectedFile) > 0:    # a file is selected
             for g in source.groups:
                 for v in g.variables:
                         v.fileName = dest.name
@@ -1068,13 +1069,13 @@ class FigureInteraction(object):
             xdata = [datenumToUnixTime(x) for x in xdata]
             x0 = datenumToUnixTime(x0)
             x1 = datenumToUnixTime(x1)
-            heading = [('timestamp', int64), (ylabel, type(ydata[0]))]
+            heading = [('time', float64), (ylabel, type(ydata[0]))]
             format = "%-40d,%-40s\n"
         elif self.fig.displayMode == 'Minute':
-            heading = [('Minute', int64), (ylabel, type(ydata[0]))]
+            heading = [('Minute', float32), (ylabel, type(ydata[0]))]
             format = "%-40d,%-40s\n"
         elif self.fig.displayMode == 'Hour':
-            heading = [('Hour', int64), (ylabel, type(ydata[0]))]
+            heading = [('Hour', float32), (ylabel, type(ydata[0]))]
             format = "%-40d,%-40s\n"
         elif self.fig.displayMode == 'XY':
             heading = [(xlabel, type(xdata[0])), (ylabel, type(ydata[0]))]
@@ -1480,7 +1481,7 @@ class XyViewerHandler(Handler):
         obj.information += "Average = %s\nStd Dev = %s" % (s.mean, s.std)
         
     def onHelp(self, info):
-        webbrowser.open(r'file:///' + Program_Path + r'/Manual/correlation_plot.html') 
+        webbrowser.open(r'file:///' + Program_Path + r'/Manual/user_guide.html#correlation-xy-plot') 
 
 class XyViewer(HasTraits):
     plot = Instance(Plot2D, ())
@@ -1554,6 +1555,7 @@ class DatViewer(HasTraits):
     varNameList = ListStr
     varName = CStr
     autoscaleY = CBool(True)
+    blockAverage = CBool(False)
     expression = Str(editor=TextEditor(enter_set=False, auto_set=False))
     nAverage = CInt(1)
     mean = CFloat
@@ -1615,22 +1617,25 @@ class DatViewer(HasTraits):
         self.varName = ""
         
         if self.dataFile:
-            self.data = HDFStore(self.dataFile)
-            for k in self.data.keys():
-                self.dataSetNameList.append(k)
-            
+            self.ip = tables.openFile(self.dataFile)
+            for n in self.ip.walkNodes("/"):
+                if isinstance(n, tables.Table):
+                    self.dataSetNameList.append(n._v_pathname)
+
             if 1 == len(self.dataSetNameList):
                 # this triggers DatViewer::_dataSetName_changed()
                 # which populates the var name dropdown
                 self.dataSetName = self.dataSetNameList[0]
-
+    
     def _dataSetName_changed(self):
         if self.dataSetName:
-            try:
-                self.table = self.data.get(self.dataSetName)
-            except:
-                table = getattr(self.data.handle.root, self.dataSetName)
-                self.table = DataFrame.from_records(table.read())
+            # try:  # for pandas 0.16
+                # self.table = self.data.get(self.dataSetName)
+            # except:   # for old pandas
+                # table = getattr(self.data.handle.root, self.dataSetName)
+                # self.table = DataFrame.from_records(table.read())
+            table = self.ip.getNode(self.dataSetName)
+            self.table = DataFrame.from_records(table.read())
             self.table.fillna(0.0)
             self.varNameList = list(self.table.columns.values)
             if self.updateFigure:
@@ -1674,7 +1679,10 @@ class DatViewer(HasTraits):
         #script = re.sub(r'\bx\b', self.varName, script)
         env = {}
         for col in self.tableFiltered.columns.values:
-            env[col] = array(self.tableFiltered[col])
+            if col[0].isdigit():
+                env['dat' + col] = array(self.tableFiltered[col])
+            else:
+                env[col] = array(self.tableFiltered[col])
         env.update({"_Figure_": self.plot.plot2dFigure, 
                     "_PlotXY_": self.PlotXY, "_VariableSelector_": self.VariableSelector,
                     "_Panels_": self.parent.viewers,
@@ -1701,7 +1709,10 @@ class DatViewer(HasTraits):
     def runFilter(self, filter):
         env = {}
         for col in self.table.columns.values:
-            env[col] = self.table[col]
+            if col[0].isdigit():
+                env['dat' + col] = self.table[col]
+            else:
+                env[col] = self.table[col]
         if "_RESULT_" not in filter and "\n" not in filter:
             filter = "_RESULT_ = " + filter
         exec filter in env
@@ -1749,7 +1760,6 @@ class DatViewer(HasTraits):
         except Exception, e:
             d = wx.MessageDialog(None, "%s" % e, "Error while displaying", style=wx.OK | wx.ICON_ERROR)
             d.ShowModal()
-            raise
             
     def _expression_changed(self):
         if self.varName and self.updateFigure:
@@ -1758,14 +1768,39 @@ class DatViewer(HasTraits):
     def _doAverage_fired(self):
         try:
             if self.varName:
-                xData = self.getXData()
-                values = self.runScript(self.expression)
-                p = argsort(xData)
-                fKernel = ones(self.nAverage, dtype=float) / self.nAverage
-                fTime = lfilter(fKernel, [1], xData[p])[self.nAverage - 1:]
-                fData = lfilter(fKernel, [1], values[p])[self.nAverage - 1:]
-                self.plot.updateTimeSeries(self.dataHandle, fTime, fData)
-                self.notify(self.plot.axes)
+                if self.blockAverage:
+                    xData = self.xData[self.boxSel]
+                    yData = self.yData[self.boxSel]
+                    if self.plot.plot2dFigure.displayMode == 'DateTime':
+                        blockSize = self.nAverage / 1440.0  # self.nAverage should be in unit of minute
+                    elif self.plot.plot2dFigure.displayMode == 'Minute':
+                        blockSize = self.nAverage
+                    elif self.plot.plot2dFigure.displayMode == 'Hour':
+                        blockSize = self.nAverage / 60.0
+                    fTime, fData = [0], [0]
+                    numP = 1.0
+                    start_time = xData[0]
+                    for t, y in zip(xData, yData):
+                        if t > start_time + blockSize:
+                            fTime.append(0)
+                            fData.append(0)
+                            numP = 1.0
+                            start_time = t
+                        fTime[-1] = (numP-1)/numP * fTime[-1] + t/numP
+                        fData[-1] = (numP-1)/numP * fData[-1] + y/numP
+                        numP += 1.0
+                    viewer = self.PlotXY(fTime, fData, xLabel=self.plot.plot2dFigure.displayMode, yLabel=self.varName)
+                    viewer.plot.axes.set_title("Block Average: size = %s minutes" % self.nAverage, fontdict = {'size': 18, 'weight': 'bold'})
+                    viewer.plot.redraw()
+                else:
+                    xData = self.getXData()
+                    values = self.runScript(self.expression)
+                    p = argsort(xData)
+                    fKernel = ones(self.nAverage, dtype=float) / self.nAverage
+                    fTime = lfilter(fKernel, [1], xData[p])[self.nAverage - 1:]
+                    fData = lfilter(fKernel, [1], values[p])[self.nAverage - 1:]
+                    self.plot.updateTimeSeries(self.dataHandle, fTime, fData)
+                    self.notify(self.plot.axes)
         except Exception, e:
             d = wx.MessageDialog(None, "%s" % e, "Error while displaying", style=wx.OK | wx.ICON_ERROR)
             d.ShowModal()
@@ -1855,6 +1890,21 @@ class SeriesWindowHandler(Handler):
 
     def onScreenShot(self, info):
         time.sleep(0.3)
+        title = info.object.traits_view.title
+        try:
+            import win32gui
+            hwnd = win32gui.FindWindow(None, title)
+            rect = win32gui.GetWindowRect(hwnd)
+            offsetX = rect[0]
+            offsetY = rect[1]
+            width = rect[2] - offsetX
+            height = rect[3] - offsetY
+        except:
+            offsetX = 0
+            offsetY = 0
+            width = rect[0]
+            height = rect[1]
+            
         #Create a DC for the whole screen area
         dcScreen = wx.ScreenDC()
         rect = wx.GetDisplaySize()
@@ -1862,7 +1912,7 @@ class SeriesWindowHandler(Handler):
         #Create a Bitmap that will hold the screenshot image later on
         #Note that the Bitmap must have a size big enough to hold the screenshot
         #-1 means using the current default colour depth
-        bmp = wx.EmptyBitmap(rect[0], rect[1])
+        bmp = wx.EmptyBitmap(width, height)
  
         #Create a memory DC that will be used for actually taking the screenshot
         memDC = wx.MemoryDC()
@@ -1875,11 +1925,11 @@ class SeriesWindowHandler(Handler):
         #and thus the Bitmap
         memDC.Blit( 0, #Copy to this X coordinate
                     0, #Copy to this Y coordinate
-                    rect[0], #Copy this width
-                    rect[1], #Copy this height
+                    width, #Copy this width
+                    height, #Copy this height
                     dcScreen, #From where do we copy?
-                    0, #What's the X offset in the original DC?
-                    0  #What's the Y offset in the original DC?
+                    offsetX, #What's the X offset in the original DC?
+                    offsetY  #What's the Y offset in the original DC?
                     )
  
         #Select the Bitmap out of the memory DC by selecting a new
@@ -2016,9 +2066,9 @@ class SeriesWindowHandler(Handler):
                 stats.append(None)
         dlg = FigureStats(stats=stats, Variables=vars)
         dlg.configure_traits(view=dlg.traits_view)
-
+   
     def onHelp(self, info):
-        webbrowser.open(r'file:///' + Program_Path + r'/Manual/time_series_plot.html')    
+        webbrowser.open(r'file:///' + Program_Path + r'/Manual/user_guide.html#time-series-plot')    
         
 class SeriesWindow(Window):
     dataFile = CStr
@@ -2059,7 +2109,8 @@ class SeriesWindow(Window):
                         HGroup(Item("expression", object="h%d" % i, width=w),
                                Item("loadScript", object="h%d" % i, show_label=False, width=10)),
                         HGroup(Item("autoscaleY", object="h%d" % i), 
-                               Item("nAverage", object="h%d" % i), 
+                               Item("nAverage", object="h%d" % i, width=-30),
+                               Item("blockAverage", label="Block", object="h%d" % i),
                                Item("doAverage", object="h%d" % i, show_label=False)),
                         Item("mean", object="h%d" % i, width=w),
                         Item("stdDev", object="h%d" % i, width=w),
@@ -2287,7 +2338,10 @@ class NotebookHandler(Handler):
         fValidDir = False
         fPromptForDir = True
         defaultOutputFilename = None
-        defaultPath = self.datDirName
+        if len(self.datDirName) > 0:
+            defaultPath = self.datDirName
+        else:
+            defaultPath = r"C:\Picarro\G2000\Log\Archive"
         
         # get folder containing files to concatenate
         while fValidDir is False and fPromptForDir is True:
@@ -2447,7 +2501,15 @@ class NotebookHandler(Handler):
             return
         window = SeriesWindow(nViewers=nFrames, tz=info.object.tz, parent=info.object)
         window.set(dataFile=info.object.dataFile)
-        window.traits_view.set(title=info.object.dataFile)
+        titleList = []
+        for i in info.object.infoSet:
+            titleList.append(i.object.traits_view.title)
+        title = "Time Series Viewer: " + info.object.dataFile
+        i = 2
+        while title in titleList:
+            title = "Time Series Viewer " + str(i) + " :" + info.object.dataFile
+            i += 1
+        window.traits_view.set(title=title)
         window.edit_traits(view=window.traits_view, context=window.cDict)
         return window
 
@@ -2460,6 +2522,75 @@ class NotebookHandler(Handler):
     def onSeries3(self, info):
         return self.onSeries(info, 3)
 
+    def onInterpolation(self, info):
+        # get interval
+        d = wx.TextEntryDialog(None, "Dataset will be interpolated on a time grid with a constant interval.\nEnter the desired interval in seconds", defaultValue='1.0')
+        try:
+            if d.ShowModal() == wx.ID_OK:
+                interval = float(d.GetValue())
+            else:
+                return
+        except:
+            m = wx.MessageDialog(None, "Unacceptable interval!", style=wx.OK | wx.ICON_ERROR)
+            m.ShowModal()
+            return
+        finally:
+            d.Destroy()
+        # get source file
+        d = wx.FileDialog(None, "Open HDF5 file to interpolate", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="h5 files (*.h5)|*.h5")
+        if d.ShowModal() == wx.ID_OK:
+            input = d.GetPath()
+            d.Destroy() 
+        else:
+            d.Destroy()
+            return
+        # get destination file   
+        d = wx.FileDialog(None, "Output file", style=wx.FD_OPEN, wildcard="h5 files (*.h5)|*.h5")
+        if d.ShowModal() == wx.ID_OK:
+            output = d.GetPath()
+            d.Destroy() 
+        else:
+            d.Destroy()
+            return
+        
+        fi = FileInterpolation(input, output, interval)
+        self.threadFileOperation(fi, "Data Interpolation", "Interpolating...", 0.5)
+        info.object.dataFile = output
+    
+    def onBlockAverage(self, info):
+        # get block size
+        d = wx.TextEntryDialog(None, "Enter block size in minutes", defaultValue='1.0')
+        try:
+            if d.ShowModal() == wx.ID_OK:
+                blockSize = float(d.GetValue()) * 60.0
+            else:
+                return
+        except:
+            m = wx.MessageDialog(None, "Unacceptable block size!", style=wx.OK | wx.ICON_ERROR)
+            m.ShowModal()
+            return
+        finally:
+            d.Destroy()
+        # get source file
+        d = wx.FileDialog(None, "Open source HDF5 file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="h5 files (*.h5)|*.h5")
+        if d.ShowModal() == wx.ID_OK:
+            input = d.GetPath()
+            d.Destroy() 
+        else:
+            d.Destroy()
+            return
+        # get destination file   
+        d = wx.FileDialog(None, "Output file", style=wx.FD_OPEN, wildcard="h5 files (*.h5)|*.h5")
+        if d.ShowModal() == wx.ID_OK:
+            output = d.GetPath()
+            d.Destroy() 
+        else:
+            d.Destroy()
+            return
+        ba = FileBlockAverage(input, output, blockSize)
+        self.threadFileOperation(ba, "Block Average", "Processing...", 0.5)
+        info.object.dataFile = output
+    
     def onHelp(self, info):
         webbrowser.open(r'file:///' + Program_Path + r'/Manual/index.html')
         
@@ -2487,7 +2618,7 @@ class ViewNotebook(HasTraits):
                 self.tzString = config.get("tz", self.tzString)
         self.tz = pytz.timezone(self.tzString)
         self.infoSet = set()
-
+        
         # File menu
         openAction = Action(name="&Open H5 File...\tCtrl+O", action="onOpen")
         openConfigAction = Action(name="Load Config...\t", action="onLoadConfig")
@@ -2497,6 +2628,8 @@ class ViewNotebook(HasTraits):
         convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+C", action="onConvertH5ToDat")
         batchConvertDatAction = Action(name="&Batch Convert DAT to H5...\tB", action="onBatchConvertDatToH5")
         batchConvertH5Action = Action(name="Batch &Convert H5 to DAT...\tC", action="onBatchConvertH5ToDat")
+        interpolationAction = Action(name="Interpolation...", action="onInterpolation")
+        blockAverageAction = Action(name="Block Average...", action="onBlockAverage")
         exitAction = Action(name="E&xit", action="onExit")
 
         # New menu
@@ -2521,14 +2654,15 @@ class ViewNotebook(HasTraits):
                                                      openConfigAction,
                                                      Separator(),
                                                      openZipAction,
-                                                     #concatenateAction,
                                                      concatenateActionNew,
                                                      Separator(),
                                                      convertDatAction,
                                                      convertH5Action,
-                                                     Separator(),
                                                      batchConvertDatAction,
                                                      batchConvertH5Action,
+                                                     Separator(),
+                                                     interpolationAction,
+                                                     blockAverageAction,
                                                      name='&File'),
                                                 Menu(series1Action,
                                                      series2Action,

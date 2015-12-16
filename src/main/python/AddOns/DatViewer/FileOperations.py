@@ -1,11 +1,13 @@
 import tables
 import os
+import Queue
 import zipfile
 import tempfile
 import numpy as np
 import time
 from datetime import datetime
 import pytz
+from scipy.interpolate import interp1d
 from timestamp import datetimeTzToUnixTime, unixTime
 
 # Dictionary of known h5 column heading names that are too long and their
@@ -19,7 +21,125 @@ H5ColNamesToDatNames = {"ch4_splinemax_for_correction": "ch4_splinemax_for_corre
                         "fineLaserCurrent_6_controlOn": "fineLaserCurr_6_ctrlOn",
                         "fineLaserCurrent_7_controlOn": "fineLaserCurr_7_ctrlOn",
                         "fineLaserCurrent_8_controlOn": "fineLaserCurr_8_ctrlOn"}
-                       
+
+class FileInterpolation():
+    def __init__(self, sourceFileName, destFileName, interval):
+        self.sourceFileName = sourceFileName
+        self.destFileName = destFileName
+        self.interval = interval
+        self.progress = 0
+        self.message = "Interpolating..."
+        
+    def run(self):
+        source, dest = None, None
+        try:
+            source = tables.openFile(self.sourceFileName, "r")
+            dest = tables.openFile(self.destFileName, "w")
+            filters = tables.Filters(complevel=1, fletcher32=True)
+            totalColumns = 0
+            col_index = 0
+            for t in source.listNodes('/'):
+                totalColumns += (len(t.dtype) - 1)
+            for n in source.listNodes('/'):
+                table = n.read()
+                if "DATE_TIME" in n.colnames:
+                    xCol = "DATE_TIME"
+                elif "timestamp" in n.colnames:
+                    xCol = "timestamp"
+                    self.interval *= 1000
+                elif "time" in n.colnames:
+                    xCol = "time"
+                else:
+                    self.progress = -1
+                    self.message = "No time-related data is found in table [%s]" % n.name
+                    return 
+                xData = table[xCol]
+                rowNum = int((xData[-1] - xData[0]) / self.interval)
+                newTable = np.zeros(rowNum, dtype=table.dtype)
+                newTable[xCol] = np.linspace(xData[0], xData[0]+(rowNum-1)*self.interval, rowNum)
+                for col in n.colnames:
+                    if col != xCol:
+                        f = interp1d(xData, table[col])
+                        newTable[col] = f(newTable[xCol])
+                        col_index += 1
+                        self.progress = int(col_index * 100.0 / totalColumns)
+                t = dest.createTable(dest.root, n.name, newTable, filters=filters)
+                t.flush()
+        except Exception, e:
+            self.message = "%s: %s" % (Exception, e)
+            self.progress = -1
+        finally:
+            if source is not None:
+                source.close()
+            if dest is not None:
+                dest.close()
+
+class FileBlockAverage():
+    def __init__(self, sourceFileName, destFileName, blockSize):
+        self.sourceFileName = sourceFileName
+        self.destFileName = destFileName
+        self.blockSize = blockSize
+        self.progress = 0
+        self.message = "Processing..."
+        
+    def run(self):
+        source, dest = None, None
+        try:
+            source = tables.openFile(self.sourceFileName, "r")
+            dest = tables.openFile(self.destFileName, "w")
+            filters = tables.Filters(complevel=1, fletcher32=True)
+            totalRows = 0
+            row_index = 0
+            for t in source.listNodes('/'):
+                totalRows += (t.shape[0])
+            for n in source.listNodes('/'):
+                table = n.read()
+                file_table = dest.createTable(dest.root, n.name, table.dtype, filters=filters)
+                if "DATE_TIME" in n.colnames:
+                    xCol = "DATE_TIME"
+                elif "timestamp" in n.colnames:
+                    xCol = "timestamp"
+                    self.blockSize *= 1000
+                elif "time" in n.colnames:
+                    xCol = "time"
+                else:
+                    self.progress = -1
+                    self.message = "No time-related data is found in table [%s]" % n.name
+                    return 
+                dataQueue = Queue.Queue()
+                start_time = table[0][xCol]
+                for row in table:
+                    if row[xCol] > start_time + self.blockSize:
+                        result = 0
+                        items = 0
+                        while True:
+                            try:
+                                data = dataQueue.get(block=False)
+                                result += np.array(data.item())
+                                items += 1.0
+                            except Queue.Empty:
+                                if items > 0:
+                                    result /= items
+                                    table_row = file_table.row
+                                    for i, col in enumerate(row.dtype.names):
+                                        table_row[col] = result[i]
+                                    table_row.append()
+                                    start_time = row[xCol]
+                                    self.progress = int(row_index * 100.0 / totalRows)
+                                break
+                    dataQueue.put(row)
+                    row_index += 1
+                file_table.flush()
+        except Exception, e:
+            # self.message = "%s: %s" % (Exception, e)
+            # self.progress = -1
+            raise
+        finally:
+            if source is not None:
+                source.close()
+            if dest is not None:
+                dest.close()
+                
 class Dat2h5BatchConvert():
     def __init__(self, dirPath):
         self.path = dirPath
@@ -116,6 +236,7 @@ class Dat2h5():
         except Exception, e:
             self.progress = -1
             self.message = "%s: %s" % (Exception, e)
+            raise
         finally:
             if h5f is not None:
                 h5f.close()

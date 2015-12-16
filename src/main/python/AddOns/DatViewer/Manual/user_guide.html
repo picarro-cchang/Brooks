@@ -125,6 +125,20 @@ When converting DAT to HDF5 format, DatViewer creates a table named &#8220;resul
 DatViewer will convert or truncate them. For example, column name &#8220;fineLaserCurrent_1_controlOn&#8221; will be replaced by &#8220;fineLaserCurr_1_ctrlOn&#8221;.</p>
 </div>
 </div>
+<div class="section" id="interpolation">
+<h3>Interpolation<a class="headerlink" href="#interpolation" title="Permalink to this headline">¶</a></h3>
+<p>Perform interpolation on a time grid with a constant interval.</p>
+</div>
+<div class="section" id="block-average">
+<h3>Block Average<a class="headerlink" href="#block-average" title="Permalink to this headline">¶</a></h3>
+<p>Divide dataset into small blocks with block size specified by the user. Average is calculated for data in each block, and results are saved in a new H5 file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Block size needs to be much larger than average data interval.</p>
+</div>
+<p>As data interval is normally not a constant (unless interpolation is performed), fluctuation in data interval will affect block averaging if block size is comparable
+to average data interval.</p>
+</div>
 </div>
 <div class="section" id="time-series-plot">
 <span id="id2"></span><h2>Time Series Plot<a class="headerlink" href="#time-series-plot" title="Permalink to this headline">¶</a></h2>
@@ -152,7 +166,9 @@ Here is an example of expression:</p>
 So this expression transforms the plot to be summation of selected variable and CO2 data.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">All variables in the selected dataset can be used in the <em>Expression</em> field.
+<p class="last">All variables in the selected dataset can be used in the <em>Expression</em> field by calling the variable name.
+However, if variable name starts with a number, it needs to be called with a prefix of &#8220;dat&#8221;.
+For example, &#8220;12CO2&#8221; needs to be called as &#8220;dat12CO2&#8221; in the <em>Expression</em> field.
 Besides, <em>x</em> and <em>y</em> are defined as short-cuts for x-axis and y-axis data of the plot, correspondingly.</p>
 </div>
 <div class="admonition note">
@@ -167,7 +183,8 @@ is displayed.</p>
 </div>
 <div class="section" id="average">
 <span id="id4"></span><h3>Average<a class="headerlink" href="#average" title="Permalink to this headline">¶</a></h3>
-<p>When <em>Do average</em> button is clicked, moving average is calculated on the data with subset size specified in the field <em>N average</em>.</p>
+<p>If <em>Block</em> is checked, block average is calculated when <em>Do average</em> button is clicked. Otherwise moving average is calculated.</p>
+<p>For block average, <em>N average</em> specifies block size in unit of minute. For moving average, <em>N average</em> specifies subset size in unit of data points.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Averaging is performed after application of <a class="reference internal" href="#filter"><span>Filter</span></a> and <a class="reference internal" href="#expression"><span>Expression</span></a> fields.</p>
@@ -188,7 +205,9 @@ Here is an example of filter:</p>
 So this filter removes all rows with CH4 &gt;= 5 or CO2 &gt;= 10 from dataset.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">All variables in the selected dataset can be used in the <em>Filter</em> field.</p>
+<p class="last">All variables in the selected dataset can be used in the <em>Filter</em> field by calling the variable name.
+However, if variable name starts with a number, it needs to be called with a prefix of &#8220;dat&#8221;.
+For example, &#8220;12CO2&#8221; needs to be called as &#8220;dat12CO2&#8221; in the <em>Expression</em> field.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
