@@ -18,7 +18,7 @@
 ; What matters more here what is the Python version installed, need Pascal code to detect this
 ; Used to create shortcut
 
-#define utilitiesIcon = "Utilities_icon.ico"
+#define diagnosticsIcon = "Diagnostics_icon.ico"
 
 ; Common [Setup] section stuff
 
@@ -27,7 +27,7 @@ AppCopyright=Picarro Inc.
 AppName=Picarro DatViewer
 AppVerName=Picarro DatViewer {#datViewerVersion}
 Password=
-DefaultDirName=C:\Picarro\Utilities
+DefaultDirName=C:\Picarro\G2000
 DefaultGroupName=Picarro Utilities
 OutputBaseFileName=setup_DatViewer_{#datViewerVersion}
 DirExistsWarning=no
@@ -57,8 +57,9 @@ Source: {#sandboxDir}\AddOns\DatViewer\tzlocal\*; DestDir: C:\Python27\Lib\site-
 ; Resources
 Source: {#sandboxDir}\AddOns\DatViewer\Scripts\*; DestDir: {app}\DatViewer\Scripts; Flags: recursesubdirs replacesameversion
 Source: {#sandboxDir}\AddOns\DatViewer\datViewer.ini; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\Assets\icons\{#utilitiesIcon}; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\Assets\icons\{#diagnosticsIcon}; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
 
 [Icons]
 
-Name: {userdesktop}\Picarro Utilities\Data File Viewer; Filename: C:\Python27\python.exe; Parameters: {app}\DatViewer\DatViewer.pyc; WorkingDir: {app}\DatViewer; IconFilename: {app}\DatViewer\{#utilitiesIcon}
+Name: {userdesktop}\Picarro Utilities\Data File Viewer; Filename: C:\Python27\python.exe; Parameters: {app}\DatViewer\DatViewer.pyc; WorkingDir: {app}\DatViewer; IconFilename: {app}\DatViewer\{#diagnosticsIcon}
+Name: {userdesktop}\Data File Viewer; Filename: C:\Python27\python.exe; Parameters: {app}\DatViewer\DatViewer.pyc; WorkingDir: {app}\DatViewer; IconFilename: {app}\DatViewer\{#diagnosticsIcon}
