@@ -1636,8 +1636,8 @@ class QuickGui(wx.Frame):
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
 
-        # numSysAlarms = 1 will hide IPV Connectivity, default is 2 (show both)
-        numSysAlarms = min(2, self.config.getint("AlarmBox", "NumSysAlarms", 2))
+        # numSysAlarms = 1 will hide IPV Connectivity, default is 1 (hide IPV)
+        numSysAlarms = min(2, self.config.getint("AlarmBox", "NumSysAlarms", 1))
 
         # System Alarm view
         # Define box height automatically
@@ -1867,21 +1867,23 @@ class QuickGui(wx.Frame):
         return k
 
     def OnShutdownButton(self,evt):
-        dialog = ShutdownDialog(self,None,-1)
+        #dialog = ShutdownDialog(self,None,-1)
+        dialog = wx.MessageDialog(self, "Do you really want to shut down the analyzer?", "Analyzer Shut Down", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()
-        if retCode == wx.ID_OK:
-            type = dialog.getShutdownType()
+        if retCode == wx.ID_YES:
+            self.setDisplayedSource(self.shutdownShippingSource)
+            # type = dialog.getShutdownType()
             # Call appropriate shutdown RPC routine on the instrument manager
-            if type == 0:
-                try:
-                    self.setDisplayedSource(self.shutdownShippingSource)
-                except Exception, err:
-                    print "%r" % err
-                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
-            elif type == 1:
-                self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
-            elif type == 2:
-                self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
+            # if type == 0:
+                # try:
+                    # self.setDisplayedSource(self.shutdownShippingSource)
+                # except Exception, err:
+                    # print "%r" % err
+                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
+            # elif type == 1:
+                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
+            # elif type == 2:
+                # self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
         dialog.Destroy()
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
