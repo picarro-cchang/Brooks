@@ -96,9 +96,40 @@ def task_compile_fastLomb():
         'clean':True
     }
 
+def task_compile_DatViewer():
+    def compile_datviewer_source():
+        import py_compile
+        py_compile.compile(os.path.join(datviewer_dir, 'DatViewer.py'))
+        py_compile.compile(os.path.join(datviewer_dir, 'DateRangeSelectorFrame.py'))
+        py_compile.compile(os.path.join(datviewer_dir, 'Analysis.py'))
+        py_compile.compile(os.path.join(datviewer_dir, 'FileOperations.py'))
+        py_compile.compile(os.path.join(datviewer_dir, 'timestamp.py'))
+        py_compile.compile(os.path.join(datviewer_dir, 'CustomConfigObj.py'))
+        
+    datviewer_dir = os.path.join('src','main','python','AddOns','DatViewer')
+    return {
+        'actions':[
+            compile_datviewer_source
+        ],
+        'targets': [os.path.join(datviewer_dir, 'DatViewer.pyc'),
+                    os.path.join(datviewer_dir, 'DateRangeSelectorFrame.pyc'),
+                    os.path.join(datviewer_dir, 'Analysis.pyc'),
+                    os.path.join(datviewer_dir, 'FileOperations.pyc'),
+                    os.path.join(datviewer_dir, 'timestamp.pyc'),
+                    os.path.join(datviewer_dir, 'CustomConfigObj.pyc')
+        ],
+        'file_dep':[os.path.join(datviewer_dir, 'DatViewer.py'),
+                    os.path.join(datviewer_dir, 'DateRangeSelectorFrame.py'),
+                    os.path.join(datviewer_dir, 'Analysis.py'),
+                    os.path.join(datviewer_dir, 'FileOperations.py'),
+                    os.path.join(datviewer_dir, 'timestamp.py'),
+                    os.path.join(datviewer_dir, 'CustomConfigObj.py')
+        ]
+    }
+
 def task_compile_sources():
     return {'actions': None,
-            'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb']}
+            'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb', 'compile_DatViewer']}
 
 def task_build_datviewer_exe():
     dist_dir = get_var('dist_dir', '.')
