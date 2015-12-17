@@ -67,9 +67,8 @@ def initialize(project, logger):
     push = push.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("push", push)
     # copy determines if installer is to be copied to another folder after the build
-    # copy = project.get_property("copy", "True" if official else "False")
-    # push = push.lower() in ("yes", "y", "true", "t", "1")
-    # project.set_property("push", push)
+    copy = project.get_property("copy", "")
+    project.set_property("copy", copy)
     # force determines if we are to ignore version number ordering
     force = project.get_property("force", "False")
     force = force.lower() in ("yes", "y", "y", "true", "t", "1")
@@ -120,6 +119,7 @@ def make_installers(project, logger):
 @after('make_installers')
 def tidy_repo(project, logger):
     builder = project.get_property("builder")
+    builder.copy_installer()
     builder.tidy_repo()
 
 @after('clean')
@@ -127,6 +127,11 @@ def after_clean(project, logger):
     builder = project.get_property("builder")
     builder.after_clean()
 
+@task
+def copy_installer(project, logger):
+    builder = project.get_property("builder")
+    builder.copy_installer()
+    
 @task
 def check_config_hashes(project, logger):
     return Builder.check_config_hashes(project, logger)

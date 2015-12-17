@@ -5,6 +5,7 @@ from fnmatch import fnmatch
 from hashlib import sha1
 import json
 import os
+import shutil
 import shlex
 import subprocess
 import time
@@ -261,6 +262,30 @@ class Builder(object):
         if project.get_property('push'):
             out, retcode = run_command('git push origin --tags', ignore_status=False)
             logger.info('Pushed repository: %s' % out)
+            
+    def copy_installer(self):
+        """Copy installers to remote directory (e.g., S drive) if this has been requested
+        """
+        project = self.project
+        logger = self.logger
+        dest_path = project.get_property('copy')
+        print dest_path, " LLLLLLLLL"
+        if len(dest_path) > 0:
+            installer_version = project.get_property('installer_version')
+            product = project.get_property('product')
+            installer_folder = os.path.join('target', 'Installers', '%s-%s' % (product, installer_version))
+            for file in os.listdir(installer_folder):
+                if file.endswith('.exe'):
+                    src_path = os.path.join(installer_folder, file)
+                    species = file.split('_')[1]
+                    if species == os.path.split(dest_path)[1]:  # already points to the species folder
+                        dst = dest_path
+                    else:
+                        dst = os.path.join(dest_path, species)
+                        if not os.path.isdir(dst):
+                            os.makedirs(dst)
+                    shutil.copy(src_path, dst)
+                    logger.info('Copy %s-%s installer to %s' % (species, installer_version, dst))
             
 def get_dir_hash(root):
     s = sha1()

@@ -122,7 +122,12 @@ class BuildHelper(HasTraits):
         
     def _copy_changed(self):
         if self.copy:
+            if self.copyDir == "":
+                defaultPath = r'S:\CRDS\CRD Engineering\Software\G2000'
+            else:
+                defaultPath = self.copyDir
             d = wx.DirDialog(None, r"Select root directory and installers will be copied into subfolders named with analyzer species",
+                             defaultPath=defaultPath,
                              style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
             if d.ShowModal() == wx.ID_OK:
                 self.copyDir = d.GetPath()
@@ -156,19 +161,29 @@ class BuildHelper(HasTraits):
 
     def restore_build_button(self):
         self.build_e = True
-
+    
+    def _changeDir_fired(self):
+        d = wx.DirDialog(None, r"Select root directory and installers will be copied into subfolders named with analyzer species",
+                         defaultPath=self.copyDir,
+                         style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        if d.ShowModal() == wx.ID_OK:
+            self.copyDir = d.GetPath()
+        d.Destroy()
+    
     def _build_fired(self):
         command = ["python -u build.py"]
         command.extend(self.make_option("product"))
-        command.extend(self.make_option("official"))
         command.extend(self.make_option("check_working_tree"))
-        command.extend(self.make_option("check_configs"))
-        command.extend(self.make_option("incr_version"))
-        command.extend(self.make_option("set_version"))
-        command.extend(self.make_option("tag"))
-        command.extend(self.make_option("push"))
+        if self.task != "update_config_hashes":
+            command.extend(self.make_option("check_configs"))
         command.extend(self.make_option("types", self.list_formatter))
-        command.extend(self.make_option("copy", self.getDir))
+        if self.task == "make_installers":
+            command.extend(self.make_option("official"))
+            command.extend(self.make_option("incr_version"))
+            command.extend(self.make_option("set_version"))
+            command.extend(self.make_option("push"))
+            command.extend(self.make_option("tag"))
+            command.extend(self.make_option("copy", self.getDir))
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)
