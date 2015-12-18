@@ -1870,8 +1870,12 @@ class QuickGui(wx.Frame):
         #dialog = ShutdownDialog(self,None,-1)
         dialog = wx.MessageDialog(self, "Do you really want to shut down the analyzer?", "Analyzer Shut Down", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()
-        if retCode == wx.YES:
-            self.setDisplayedSource(self.shutdownShippingSource)
+        if retCode == wx.ID_YES:
+            try:
+                self.setDisplayedSource(self.shutdownShippingSource)
+            except Exception, err:
+                print "%r" % err
+            self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
             # type = dialog.getShutdownType()
             # Call appropriate shutdown RPC routine on the instrument manager
             # if type == 0:
