@@ -1454,8 +1454,15 @@ class Supervisor(object):
             # Kill all the processes with the specified name
             namesToBeKilled = [n.lower() for n in self.SpecialKilledByNameList]
             for p in psutil.process_iter():
-                if p.name.lower() in namesToBeKilled:
-                    p.kill()
+                try:
+                    if callable(p.name):
+                        name = p.name()
+                    else:   # name is not an instance method in psutil 1.2.1
+                        name = p.name
+                    if name.lower() in namesToBeKilled:
+                        p.kill()
+                except:
+                    pass
 
         self._ShutdownRequested = True
 
