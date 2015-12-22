@@ -15,6 +15,7 @@
 #  29 May 2013:  Fixed bug in NH3 fitter (probably affects all NH3 fitters).  Baseline slope was not initialized correctly.
 #  31 May 2013:  Changed N2O preset factor in NH3 region from 0.4813 to 0.4358 based on cross-talk test. 
 #  23 Jul 2013:  Adjusted dependency between HDO line strengths based on low-pressure test.
+#  21 Jan 2014:  Adjusted frequency of NH3 spline based on new finescans; let WLM track off NH3
 
 #  SIDs:
 #    2  Ammonia and water from AADS (V6 modifies schemes to unify NH3 and H2O measurements)
@@ -84,7 +85,7 @@ def initialize_N2O_Baseline():
 tstart = time.clock()
 
 if INIT:
-    fname = os.path.join(BASEPATH,r"./JADS/JADS spectral library v3_6.ini")
+    fname = os.path.join(BASEPATH,r"./JADS/JADS spectral library v3_8.ini")
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
@@ -95,20 +96,28 @@ if INIT:
     anCH4.append(Analysis(os.path.join(BASEPATH,r"./CFADS/CFJADS-xx CH4 v2_1.ini")))
     anCH4.append(Analysis(os.path.join(BASEPATH,r"./CFADS/CFJADS-xx CH4 FC VY v2_0.ini")))
     anCH4.append(Analysis(os.path.join(BASEPATH,r"./CFADS/CFJADS-xx CH4 FC FY v2_0.ini")))
+    anCH4.append(Analysis(os.path.join(BASEPATH,r"./CFADS/CFJADS-xx CH4_fine.ini")))
+    
+    anH2O = []
+    # anH2O.append(Analysis(os.path.join(BASEPATH,r"./CFADS/FADS-1 H2O v1_1 2008 0304.ini")))
+    # anH2O.append(Analysis(os.path.join(BASEPATH,r"./CFADS/FADS-1 H2O FC v1_1 2008 0304.ini")))
+    anH2O.append(Analysis(os.path.join(BASEPATH,r"./CFADS/FADS-1 H2O_fine.ini")))
     
     anCO2 = []
     anCO2.append(Analysis(os.path.join(BASEPATH,r"./JADS/CO2 6058 VC VY v1_1.ini")))
     anCO2.append(Analysis(os.path.join(BASEPATH,r"./JADS/CO2 6058 FC FY v1_1.ini")))       
     
     anN2O = []
-    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O+CO2+HDO+CH4_VC_FY_v3_1.ini")))
-    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O_only_w_HDO+CH4_v3_1.ini")))
+    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O+CO2+HDO+CH4_VC_FY_v3_3.ini")))
+    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O_only_w_HDO+CH4_v3_3.ini")))
+    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O+CO2+HDO+CH4_fine.ini")))
     
     anNH3 = []
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/AADS-xx water + ammonia + CH4+N2O v1_1.ini")))
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/AADS-xx peak 11 + CH4+N2O v1_1.ini")))
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/AADS-xx peak 12 + CH4+N2O v1_1.ini")))
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/big water #25 v2_0 VY.ini")))
+    anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/AADS-xx water + ammonia + CH4+N2O_fine.ini")))
     
     #  Import instrument specific baseline constants
 
@@ -238,7 +247,52 @@ if INIT:
     co2_conc_6562 = 0.0
     co2_res = 0.0
     
+    y_4 = 0.0
+    y_5 = 0.0
+    peak4_center = 0.0
+    peak5_center = 0.0
+    
+    CFADS_h2o_res = 0.0
+    peak_75 = 0.0
+    strength_75 = 0.0
+    y_75 = 0.0
+    z_75 = 0.0
+    base_75 = 0.0
+    CFADS_h2o_conc = 0.0
+    h2o_quality = 0.0
+    
+    fine_peak_1 = 0.0
+    fine_peak_2 = 0.0
+    fine_peak_4 = 0.0
+    fine_str_2 = 0.0
+    fine_str_4 = 0.0
+    fine_co2_conc_6562 = 0.0
+    fine_base_level_n2o = 0.0
+    fine_base_slope_n2o = 0.0
+    fine_res = 0.0
+    splineamp = 0.0
+    fine_y_4 = 0.0
+    fine_y_5 = 0.0
+    
+    fine_peak11a = 0.0
+    fine_peak15 = 0.0
+    fine_peak17 = 0.0
+    fine_str15 = 0.0
+    fine_str17 = 0.0
+    fine_shift_a = 0.0
+    fine_y_15 = 0.0
+    fine_z_15 = 0.0
+    fine_y_16 = 0.0
+    center_diff15_16 = 0.0
+    fine_res_h2onh3 = 0.0
+    
     last_time = None
+    
+    # For offline analysis and output to file    
+    out = open("Fit_results.txt","w")
+    first_fit = 1
+    
+   
     
    
 init = InitialValues()
@@ -246,8 +300,8 @@ deps = Dependencies()
 ANALYSIS = []    
 d = DATA
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
-d.wlmSetpointFilter(maxDev=0.002,sigmaThreshold=3)
-d.sparse(maxPoints=200,width=0.005,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",outlierThreshold=4.0)
+d.wlmSetpointFilter(maxDev=0.002,sigmaThreshold=5)
+d.sparse(maxPoints=200,width=0.0005,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",outlierThreshold=4.0)
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
 d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
 P = d["cavitypressure"]
@@ -256,17 +310,38 @@ tunerMean = mean(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
 
+# if "O2_STATUS" in  d.sensorDict
+o2conc = d.sensorDict["O2_CONC"]
+o2status = d.sensorDict["O2_STATUS"]
+o2pressure = d.sensorDict["O2_CELL_PRESSURE"]
+o2temp = d.sensorDict["O2_CELL_TEMP"]
+# else
+    # o2conc = 20.95
+    # o2status = 0
+
 species = (d.subschemeId & 0x3FF)[0]
 
 tstart = time.clock()
 RESULT = {}
 r = None
 
+inN2O = (d.fitData["freq"] > 6561.0) & (d.fitData["freq"] < 6563.0)
+sumN2O = sum(inN2O)
+inH2O = (d.fitData["freq"] > 6057.5) & (d.fitData["freq"] < 6058)
+sumH2O = sum(inH2O)
+inCO2 = (d.fitData["freq"] > 6058.0) & (d.fitData["freq"] < 6059.0)
+sumCO2 = sum(inCO2)
+inNH3 = (d.fitData["freq"] > 6548.0) & (d.fitData["freq"] < 6550.0)
+sumNH3 = sum(inNH3)
+
+
+
+
 if species==2 and d["ngroups"]>29:            #  spectrumId historically was 0 
 #   Fit ammonia, CO2, and water lines
     initialize_NH3_Baseline()
     init[15,"strength"] = 0.0001  #  Probably not necessary
-    init[17,"strength"] = 0.0001
+    init[17,"strength"] = 0.09177*peak_41
     init[1002,2] = 0.00108*ch4_amp
     init[80,"strength"] = 0.4358*n2o_conc
     r = anNH3[0](d,init,deps)
@@ -368,6 +443,10 @@ if (species == 47 and d["ngroups"] > 6):  #  fit N2O, CO2, and HDO
     initialize_N2O_Baseline()
     init[1002,2] = 0.000955*nh3_conc_ave
     init[1003,2] = 0.00108*ch4_amp
+    # init[4, "y"] = 0.7922 + 0.0402*h2o_conc  FOR INSTRUMENTS WITH INCORRECT PRESSURE CAL
+    # init[5, "y"] = 0.7844 + 0.0393*h2o_conc
+    init[4, "y"] = 0.8402 + 0.0426*h2o_conc
+    init[5, "y"] = 0.8319 + 0.0417*h2o_conc
     r = anN2O[0](d,init,deps)
     ANALYSIS.append(r)
     shift_n2o = r["base",3]
@@ -381,10 +460,14 @@ if (species == 47 and d["ngroups"] > 6):  #  fit N2O, CO2, and HDO
     base_slope_n2o = r["base",1]
     res = r["std_dev_res"]
     splineamp = r[1002,2]
+    y_4 = r[4,"y"]
+    y_5 = r[5,"y"]
+    peak4_center = r[4, "center"]
+    peak5_center = r[5, "center"]
     #n2o_conc = peak_1/1.82
     
     #if (peak_1 > 1 or peak_2 > 1) and abs(shift_n2o) < 0.05:
-    if (peak_1 > 1.5 or peak_2 > 1 or peak_4 > 1.5) and abs(shift_n2o) < 0.05:    
+    if (peak_1 > 1.5 or peak_2 > 1 or peak_4 > 1.5 or nh3_conc_ave > 100) and abs(shift_n2o) < 0.05:    
         adjust_n2o = shift_n2o
     else:
         adjust_n2o = 0.0
@@ -398,9 +481,11 @@ if (species == 45 or species == 47):  #  fit N2O only with preset HDO and ammoni
     init["base",1] = base_slope_n2o
     init[2,"strength"] = str_2
     init[4,"strength"] = str_4
-    init[5,"strength"] = 0.444*str_4
+    init[5,"strength"] = 0.57*str_4
     init[1002,2] = 0.000955*nh3_conc_ave
     init[1003,2] = 0.00108*ch4_amp    
+    init[4, "y"] = 0.8402 + 0.0426*h2o_conc
+    init[5, "y"] = 0.8319 + 0.0417*h2o_conc
     r = anN2O[1](d,init,deps)
     ANALYSIS.append(r)
     peak_1a = r[1,"peak"]   
@@ -473,6 +558,67 @@ if species == 46:                                # CO2 at 6058.2
     co2_conc_6058 = 8.442*peak41_spec
     co2_res = r["std_dev_res"]
     
+#Extra analysis for O2 analysis of finescan spectra
+
+if species == 0 and sumH2O > 200: #CFADS H2O
+    initialize_CFADS_Baseline()
+    r = anH2O[0](d,init,deps)
+    shift_75 = r["base",3]
+    ANALYSIS.append(r)
+    CFADS_h2o_res = r["std_dev_res"]
+    peak_75 = r[75,"peak"]
+    strength_75 = r[75,"strength"]
+    y_75 = r[75,"y"]
+    z_75 = r[75,"z"]
+    base_75 = r[75,"base"]                    
+    CFADS_h2o_conc = peak_75 * 0.01002
+    h2o_quality = fitQuality(CFADS_h2o_res,peak_75,50,1)
+    
+# if species ==6: #CO2 at 6058
+    
+if species == 0 and sumN2O > 200: #N2O region
+    initialize_N2O_Baseline()
+    init[1002,2] = 0.000955*nh3_conc_ave
+    init[1003,2] = 0.00108*ch4_amp
+    r = anN2O[2](d,init,deps)
+    ANALYSIS.append(r)
+    shift_n2o = r["base",3]
+    fine_peak_1 = r[1,"peak"]
+    fine_peak_2 = r[2,"peak"]
+    fine_peak_4 = r[4,"peak"]
+    fine_str_2 = r[2,"strength"]
+    fine_str_4 = r[4,"strength"]
+    fine_co2_conc_6562 = 252.9*peak_2
+    fine_base_level_n2o = r["base",0]
+    fine_base_slope_n2o = r["base",1]
+    fine_res = r["std_dev_res"]
+    splineamp = r[1002,2]
+    fine_y_4 = r[4,"y"]
+    fine_y_5 = r[5,"y"]
+
+    
+if species == 0 and sumNH3 > 200: #6549 H2O and NH3 fine
+    initialize_NH3_Baseline()
+    init[15,"strength"] = 0.0001  #  Probably not necessary
+    init[17,"strength"] = 0.09177*peak_41
+    init[1002,2] = 0.00108*ch4_amp
+    init[80,"strength"] = 0.4358*n2o_conc
+    r = anNH3[4](d,init,deps)
+    ANALYSIS.append(r)
+    fine_peak11a = r[11,"peak"]
+    fine_peak15 = r[15,"peak"]
+    fine_peak17 = r[17,"peak"]
+    fine_str15 = r[15,"strength"]
+    fine_str17 = r[17,"strength"]
+    fine_shift_a = r["base",3]
+    fine_y_15 = r[15,"y"]
+    fine_z_15 = r[15,"z"]
+    fine_y_16 = r[16,"y"]
+    center_diff15_16 = r[16,"center"] - r[15,"center"]
+    fine_res_h2onh3 = r["std_dev_res"]
+
+
+    
 now = time.clock()
 fit_time = now-tstart
 if r != None:
@@ -507,8 +653,23 @@ if not IgnoreThis:
               "peak_41":peak_41,"peak41_spec":peak41_spec,"co2_conc_6058":co2_conc_6058,"co2_res":co2_res,
               "ch4_pzt_mean":ch4_pzt_mean,"ch4_pzt_stdev":ch4_pzt_stdev,
               "n2o_pzt_mean":n2o_pzt_mean,"n2o_pzt_stdev":n2o_pzt_stdev,          
-              "nh3_pzt_mean":nh3_pzt_mean,"nh3_pzt_stdev":nh3_pzt_stdev}
+              "nh3_pzt_mean":nh3_pzt_mean,"nh3_pzt_stdev":nh3_pzt_stdev,"y_4":y_4, "y_5":y_5, "peak4_center":peak4_center, "peak5_center":peak5_center,
+              "y_75":y_75,"z_75":z_75,"base_75":base_75,"shift_75":shift_75,"strength_75":strength_75,
+              "peak_75":peak_75,"CFADS_h2o_conc":CFADS_h2o_conc,"CFADS_h2o_res":CFADS_h2o_res,
+              "fine_peak_1": fine_peak_1,"fine_peak_2":fine_peak_2,"fine_peak_4":fine_peak_4,"fine_str_2":fine_str_2,"fine_str_4":fine_str_4,
+              "fine_base_level_n2o":fine_base_level_n2o,"fine_base_slope_n2o":fine_base_slope_n2o,"fine_res":fine_res, "fine_y_4":fine_y_4,"fine_y_5":fine_y_5,
+              "fine_peak11a":fine_peak11a,"fine_peak15":fine_peak15,"fine_peak17":fine_peak17,"fine_str15":fine_str15,"fine_str17":fine_str17,
+              "fine_shift_a":fine_shift_a,"fine_y_15":fine_y_15,"fine_z_15":fine_z_15,"fine_res_h2onh3":fine_res_h2onh3,"center_diff15_16":center_diff15_16
+              }
     RESULT.update({"species":species,"fittime":fit_time,"interval":interval,
                    "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
                    "das_temp":dasTemp})
     RESULT.update(d.sensorDict)
+    
+    # ---------  This section goes to end of file  ----------
+    if first_fit:
+        keys = sorted([k for k in RESULT])
+        print>>out," ".join(keys)
+        first_fit = 0
+    print>>out," ".join(["%s" % RESULT[k] for k in keys])
+    

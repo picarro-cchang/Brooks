@@ -43,7 +43,7 @@ WLMcal = 48
 # - If no processing is indicated here OR in the plan file for the mode, an error will be raised.
 
 [+FORWARD1]
-Analyzer= ../Scripts/DataManager/analyze_JADS.py
+Analyzer= ../Scripts/DataManager/analyze_JADSwO2.py
 
 [SENSOR_DATA]
 #

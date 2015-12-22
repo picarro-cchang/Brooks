@@ -7,11 +7,13 @@ Tuning = CavityLength
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 1
-#Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_v03.sch
-#Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_v04.sch
-#Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_CH4-shoulder_v05.sch
-#Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_v08.sch
 Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_v09.sch
+
+#SchemeCount = 4
+#Scheme_1_Path = ..\Schemes\_JADS_N2O+NH3_wet_v09+finescanCH4.sch
+#Scheme_2_Path = ..\Schemes\_JADS_N2O+NH3_wet_v09+finescanN2O.sch
+#Scheme_3_Path = ..\Schemes\_JADS_N2O+NH3_wet_v09+finescanCO2.sch
+#Scheme_4_Path = ..\Schemes\_JADS_N2O+NH3_wet_v09+finescanH2O.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...

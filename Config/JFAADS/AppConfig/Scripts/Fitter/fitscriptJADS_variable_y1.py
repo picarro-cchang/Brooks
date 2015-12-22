@@ -16,6 +16,7 @@
 #  31 May 2013:  Changed N2O preset factor in NH3 region from 0.4813 to 0.4358 based on cross-talk test. 
 #  23 Jul 2013:  Adjusted dependency between HDO line strengths based on low-pressure test.
 #  21 Jan 2014:  Adjusted frequency of NH3 spline based on new finescans; let WLM track off NH3
+#  26 Jan 2015:  Special-purpose fitter to check dependence of N2O linewidth on O2 mole fraction
 
 #  SIDs:
 #    2  Ammonia and water from AADS (V6 modifies schemes to unify NH3 and H2O measurements)
@@ -102,7 +103,7 @@ if INIT:
     anCO2.append(Analysis(os.path.join(BASEPATH,r"./JADS/CO2 6058 FC FY v1_1.ini")))       
     
     anN2O = []
-    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O+CO2+HDO+CH4_VC_FY_v3_3.ini")))
+    anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O+CO2+HDO+CH4_VC_VY1_v3_1.ini")))
     anN2O.append(Analysis(os.path.join(BASEPATH,r"./JADS/N2O_only_w_HDO+CH4_v3_3.ini")))
     
     anNH3 = []
@@ -193,6 +194,7 @@ if INIT:
     shift_n2o = 0
     adjust_n2o = 0
     peak_1 = 0
+    y_1 = 1.82
     peak_2 = 0
     str_2 = 0
     base_level_n2o = 0
@@ -239,8 +241,6 @@ if INIT:
     co2_conc_6562 = 0.0
     co2_res = 0.0
     
-    y_17 = 1.8
-    y_2 = 1.453
     y_4 = 0.0
     y_5 = 0.0
     peak4_center = 0.0
@@ -266,7 +266,6 @@ tunerMean = mean(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
 
-
 species = (d.subschemeId & 0x3FF)[0]
 
 tstart = time.clock()
@@ -291,7 +290,6 @@ if species==2 and d["ngroups"]>29:            #  spectrumId historically was 0
     res_a = r["std_dev_res"]
     h2o_conc = 0.0177*peak15
     co2_from_nh3 = 81.3*peak17
-    y_17 = r[17,"y"]
     #if peak15 > 2.0 or peak11a > 2.0:
     if peak15 > 20.0 or peak11a > 2.0:
         h2o_adjust = shift_a
@@ -397,9 +395,9 @@ if (species == 47 and d["ngroups"] > 6):  #  fit N2O, CO2, and HDO
     base_slope_n2o = r["base",1]
     res = r["std_dev_res"]
     splineamp = r[1002,2]
+    y_1 = r[1,"y"]
     y_4 = r[4,"y"]
     y_5 = r[5,"y"]
-    y_2 = r[2,"y"]
     peak4_center = r[4, "center"]
     peak5_center = r[5, "center"]
     #n2o_conc = peak_1/1.82
@@ -515,9 +513,9 @@ if not IgnoreThis:
               "peak25":peak25,"str25":str25,"shift25":shift25,"h2o_adjust":h2o_adjust,
               "nh3_peak_11":nh3_peak_11,"nh3_base_11":nh3_base_11,"nh3_slope_11":nh3_slope_11,
               "nh3_base_12":nh3_base_12,"nh3_peak_12":nh3_peak_12,"nh3_slope_12":nh3_slope_12,
-              "nh3_conc_ave":nh3_conc_ave,"nh3_conc_smooth":nh3_conc_smooth,"co2_from_nh3":co2_from_nh3,"y_17":y_17,
+              "nh3_conc_ave":nh3_conc_ave,"nh3_conc_smooth":nh3_conc_smooth,"co2_from_nh3":co2_from_nh3,
               "n2o_conc":n2o_conc,"peak_1":peak_1,"peak_1a":peak_1a,"peak_2":peak_2,"base_1a":base_1a,
-              "shift_n2o":shift_n2o,"adjust_n2o":adjust_n2o,"res":res,
+              "shift_n2o":shift_n2o,"adjust_n2o":adjust_n2o,"res":res,"y_1":y_1,
               "base_level_n2o":base_level_n2o,"base_slope_n2o":base_slope_n2o,
               "peak_4":peak_4,"str_4":str_4,
               "ngroups":d["ngroups"],"numRDs":d["datapoints"],
@@ -530,7 +528,7 @@ if not IgnoreThis:
               "peak_41":peak_41,"peak41_spec":peak41_spec,"co2_conc_6058":co2_conc_6058,"co2_res":co2_res,
               "ch4_pzt_mean":ch4_pzt_mean,"ch4_pzt_stdev":ch4_pzt_stdev,
               "n2o_pzt_mean":n2o_pzt_mean,"n2o_pzt_stdev":n2o_pzt_stdev,          
-              "nh3_pzt_mean":nh3_pzt_mean,"nh3_pzt_stdev":nh3_pzt_stdev,"y_4":y_4, "y_5":y_5,"y_2":y_2,"peak4_center":peak4_center, "peak5_center":peak5_center}
+              "nh3_pzt_mean":nh3_pzt_mean,"nh3_pzt_stdev":nh3_pzt_stdev,"y_4":y_4, "y_5":y_5, "peak4_center":peak4_center, "peak5_center":peak5_center}
     RESULT.update({"species":species,"fittime":fit_time,"interval":interval,
                    "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
                    "das_temp":dasTemp})

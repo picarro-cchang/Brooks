@@ -1,13 +1,14 @@
+#  22 Sep 2015:  Added correction from oxygen sensor -- renamed old results "preO2" and report O2-corrected results as final (jah)
+
 xp = _GLOBALS_["xProcessor"]
 xh = xp.xHistory
 
 from numpy import *
 from numpy.linalg import inv, norm
-from Host.Common.EventManagerProxy import Log, LogExc
 
 # Forward analysis script for interference removal
 if _PERSISTENT_["init"]:
-    influence_of = {"peak_1a":{}, "peak_41":{}, "peak_2":{},"peak15":{}, "peak_4":{}, "ch4_splinemax":{}, "nh3_conc_ave":{}}
+    influence_of = {"peak_1a":{}, "peak_41":{}, "peak_2":{},"peak15":{}, "peak_4":{}, "ch4_splinemax":{}, "nh3_conc_ave":{}} 
 
     test1 = influence_of["peak_1a"]
     test1["peak_1a"] = 1
@@ -26,7 +27,7 @@ if _PERSISTENT_["init"]:
     test1["peak_4"] = _INSTR_["peak41_on_peak4"]
     test1["ch4_splinemax"] = _INSTR_["peak41_on_ch4splinemax"]
     test1["nh3_conc_ave"] = _INSTR_["peak41_on_nh3concave"]
-
+    
     test1 = influence_of["peak_2"]
     test1["peak_1a"] = 0
     test1["peak_41"] = 0
@@ -35,7 +36,7 @@ if _PERSISTENT_["init"]:
     test1["peak_4"] = 0
     test1["ch4_splinemax"] = 0
     test1["nh3_conc_ave"] = 0
-
+    
     test1 = influence_of["peak15"]
     test1["peak_1a"] = _INSTR_["peak15_on_peak1a"]
     test1["peak_41"] = _INSTR_["peak15_on_peak41"]
@@ -44,7 +45,7 @@ if _PERSISTENT_["init"]:
     test1["peak_4"] = 0
     test1["ch4_splinemax"] = _INSTR_["peak15_on_ch4splinemax"]
     test1["nh3_conc_ave"] = 0
-
+    
     test1 = influence_of["peak_4"]
     test1["peak_1a"] = _INSTR_["peak4_on_peak1a"]
     test1["peak_41"] = 0
@@ -86,11 +87,8 @@ if _PERSISTENT_["init"]:
         return corr
 
     _PERSISTENT_["nonLinCorr"] = nonLinCorr
-    try:
-        _PERSISTENT_["Ainv"] = inv(A)
-    except:
-        _PERSISTENT_["Ainv"] = zeros((n,n),dtype=float)
-        Log("Error in DataManager script: matrix inversion")
+    _PERSISTENT_["Ainv"] = inv(A)
+    print 'Reset averages'
     _PERSISTENT_["average30"]  = []
     _PERSISTENT_["average60"] = []
     _PERSISTENT_["average300"] = []
@@ -116,13 +114,13 @@ for i,(c,f,v) in enumerate(xp.crossList):
 # Convert corrected peak heights to concentrations
 # Define linear transformations for post-processing
 
-
-
+    
+    
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
-
+    
 def boxAverage(buffer, x, t, tau):
-    buffer.append((x,t))
+    buffer.append((x,t))  
     while t-buffer[0][1] > tau:
         buffer.pop(0)
     return mean([d for (d,t) in buffer])
@@ -141,8 +139,16 @@ WD_P41_linear = _INSTR_["wd_co2_linear"]
 WD_P41_quad = _INSTR_["wd_co2_quad"]
 WD_CH4_linear = _INSTR_["wd_ch4_linear"]
 WD_CH4_quad = _INSTR_["wd_ch4_quad"]
+
+CH4_O2_linear = _INSTR_["ch4_o2_lin"]
+CO2_O2_linear = _INSTR_["co2_o2_lin"]
+H2O_O2_linear = _INSTR_["h2o_o2_lin"]
+N2O_O2_linear = _INSTR_["n2o_o2_lin"]
+NH3_O2_linear = _INSTR_["nh3_o2_lin"]
 WD_o2_linear = _INSTR_["wd_o2_linear"]
 WD_o2_quad = _INSTR_["wd_o2_quad"]
+O2_RANGE_MIN = 0.5
+O2_RANGE_MAX = 110.0
 
 # Handle options from command line
 optDict = eval("dict(%s)" % _OPTIONS_)
@@ -158,35 +164,40 @@ n2oConc = applyLinear(n2o,N2O)
 timestamp = xs.timestamp
 h2o_actual = _INSTR_["h2o_broadening_linear"]*h2o_spec + _INSTR_["h2o_broadening_quad"]*h2o_spec**2
 
+if "O2_CONC" in xs.data:
+    o2 = xs.data["O2_CONC"]
+    o2 = applyLinear(o2,O2)
+    o2_dry = o2 / (1 + WD_o2_linear * h2o_actual + WD_o2_quad * h2o_actual**2)
+else:
+    o2 = 20.947
+    o2_dry = 20.947
+if o2 > O2_RANGE_MAX or o2 < O2_RANGE_MIN:
+    o2 = 20.947
+
 if g2308:
     co2 = newValues[xs.indexByName["peak_2"]] * 252.9
-
+    
 else:
     co2 = newValues[xs.indexByName["peak_41"]] * 8.442
     peak_41_dry = newValues[xs.indexByName["peak_41"]]  / (1 + WD_P41_linear * h2o_spec + WD_P41_quad * h2o_spec**2)
     co2_dry = peak_41_dry * 8.442
-    _REPORT_["CO2_dry"] = applyLinear(co2_dry,CO2)
+    _REPORT_["CO2_dry_preO2"] = applyLinear(co2_dry,CO2)
+    _REPORT_["CO2_dry"] = applyLinear(co2_dry,CO2)*(1.0 + CO2_O2_linear*(o2 - 20.947))
 
-if "O2_CONC" in xs.data:
-    print "entered try"
-    o2 = applyLinear(xs.data['O2_CONC'],O2)
-    print o2
-    o2_dry = o2 / (1 + WD_o2_linear * h2o_actual + WD_o2_quad * h2o_actual**2)
-    print o2_dry
-    _REPORT_["O2"] = o2
-    print "reported o2"
-    _REPORT_["O2_dry"] = o2_dry
-    print "reported o2dry"
-else:
-    pass
-
-
-_REPORT_["N2O"] = applyLinear(n2o,N2O)
-_REPORT_["CO2"] = applyLinear(co2,CO2)
+_REPORT_["N2O_preO2"] = applyLinear(n2o,N2O)
+_REPORT_["CO2_preO2"] = applyLinear(co2,CO2)
 _REPORT_["h2o_spec"] = applyLinear(h2o_spec,H2O)
-_REPORT_["H2O"] = applyLinear(h2o_actual,H2O)
-_REPORT_["CH4"] = applyLinear(ch4,CH4)
-_REPORT_["NH3"] = applyLinear(nh3,NH3)
+_REPORT_["H2O_preO2"] = applyLinear(h2o_actual,H2O)
+_REPORT_["CH4_preO2"] = applyLinear(ch4,CH4)
+_REPORT_["NH3_preO2"] = applyLinear(nh3,NH3)
+
+_REPORT_["N2O"] = applyLinear(n2o,N2O)*(1.0 + N2O_O2_linear*(o2 - 20.947))
+_REPORT_["CO2"] = applyLinear(co2,CO2)*(1.0 + CO2_O2_linear*(o2 - 20.947))
+_REPORT_["H2O"] = applyLinear(h2o_actual,H2O)*(1.0 + H2O_O2_linear*(o2 - 20.947))
+_REPORT_["CH4"] = applyLinear(ch4,CH4)*(1.0 + CH4_O2_linear*(o2 - 20.947))
+_REPORT_["NH3"] = applyLinear(nh3,NH3)*(1.0 + NH3_O2_linear*(o2 - 20.947))
+_REPORT_["O2"] = o2
+_REPORT_["O2_dry"] = o2_dry
 
 peak_1a_dry = newValues[xs.indexByName["peak_1a"]] / (1 + WD_P1a_linear * h2o_spec + WD_P1a_quad * h2o_spec**2)
 ch4_splinemax_dry = newValues[xs.indexByName["ch4_splinemax"]] / (1 + WD_CH4_linear * 1.20439 * h2o_spec + WD_CH4_quad * 1.20439**2 * h2o_spec**2)
@@ -197,33 +208,32 @@ n2o_dry = peak_1a_dry / 1.82
 ch4_dry = ch4_splinemax_dry / 216.3
 n2oconcDry = applyLinear(n2o_dry,N2O)
 
-_REPORT_["N2O_dry"] = applyLinear(n2o_dry,N2O)
-_REPORT_["CH4_dry"] = applyLinear(ch4_dry,CH4)
+_REPORT_["N2O_dry_preO2"] = applyLinear(n2o_dry,N2O)
+_REPORT_["CH4_dry_preO2"] = applyLinear(ch4_dry,CH4)
 
-newN2O30s = boxAverage(_PERSISTENT_["average30"],n2oConc,timestamp,30.0 * 1000.0)
+_REPORT_["N2O_dry"] = applyLinear(n2o_dry,N2O)*(1.0 + N2O_O2_linear*(o2 - 20.947))
+_REPORT_["CH4_dry"] = applyLinear(ch4_dry,CH4)*(1.0 + CH4_O2_linear*(o2 - 20.947))
+
+newN2O30s = boxAverage(_PERSISTENT_["average30"],n2oConc*(1.0 + N2O_O2_linear*(o2 - 20.947)),timestamp,30.0 * 1000.0)
 _REPORT_["N2O_30s"] = newN2O30s
 
-newN2O1m = boxAverage(_PERSISTENT_["average60"],n2oConc,timestamp,60.0 * 1000.0)
+newN2O1m = boxAverage(_PERSISTENT_["average60"],n2oConc*(1.0 + N2O_O2_linear*(o2 - 20.947)),timestamp,60.0 * 1000.0)
 _REPORT_["N2O_1min"] = newN2O1m
 
 
-newN2O5m = boxAverage(_PERSISTENT_["average300"],n2oConc,timestamp,300.0 * 1000.0)
+newN2O5m = boxAverage(_PERSISTENT_["average300"],n2oConc*(1.0 + N2O_O2_linear*(o2 - 20.947)),timestamp,300.0 * 1000.0)
 _REPORT_["N2O_5min"] = newN2O5m
 
 
-newN2O30sdry = boxAverage(_PERSISTENT_["average30dry"],n2oconcDry,timestamp,30.0 * 1000.0)
+newN2O30sdry = boxAverage(_PERSISTENT_["average30dry"],n2oconcDry*(1.0 + N2O_O2_linear*(o2 - 20.947)),timestamp,30.0 * 1000.0)
 _REPORT_["N2O_dry30s"] = newN2O30sdry
 
 
-newN2O1mdry = boxAverage(_PERSISTENT_["average60dry"],n2oconcDry,timestamp,60.0 * 1000.0)
+newN2O1mdry = boxAverage(_PERSISTENT_["average60dry"],n2oconcDry*(1.0 + N2O_O2_linear*(o2 - 20.947)),timestamp,60.0 * 1000.0)
 _REPORT_["N2O_dry1min"] = newN2O1mdry
 
-newN2O5mdry = boxAverage(_PERSISTENT_["average300dry"],n2oconcDry,timestamp,300.0 * 1000.0)
+newN2O5mdry = boxAverage(_PERSISTENT_["average300dry"],n2oconcDry*(1.0 + N2O_O2_linear*(o2 - 20.947)),timestamp,300.0 * 1000.0)
 _REPORT_["N2O_dry5min"] = newN2O5mdry
-
-
-
-
 
 _REPORT_["timestamp"] = int(xs.timestamp)
 
@@ -237,3 +247,4 @@ for d in xs.new_data:
 
 if xh and xh[0].ready:
     _ANALYZE_[xp.forward_id] = {"new_timestamp":xh[0].timestamp}
+

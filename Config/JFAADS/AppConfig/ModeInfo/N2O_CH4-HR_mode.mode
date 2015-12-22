@@ -10,6 +10,7 @@ SchemeCount = 1
 #Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_v03.sch
 #Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_v04.sch
 Scheme_1_Path = ../Schemes/_JADS_N2O+NH3_wet_CH4-shoulder_v07.sch
+#_JADS_N2O+NH3_wet_CH4_HR_v09.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
