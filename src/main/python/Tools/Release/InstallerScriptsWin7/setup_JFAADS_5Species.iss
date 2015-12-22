@@ -31,6 +31,8 @@
 #include "inc_configtool.iss"
 
 ; Extras
-;
+[Icons]
+Name: {userdesktop}\O2 Sensor Calibration; Filename: {app}\HostExe\StartO2SensorCal.exe; WorkingDir: {app}\HostExe; IconFilename: {app}\DatViewer\{#diagnosticsIcon}
+
 ; Coordinator
 #include "inc_coordinator.iss"
