@@ -196,6 +196,8 @@ class O2SensorMonitor(O2CalDlg):
             time.sleep(0.5)
             self.ser.write("malt0001\r")   # measurement with dry gases
             time.sleep(0.5)
+            self.ser.write("clun0001\r")   # Oxygen unit (%O2) for the 2nd calibration value
+            time.sleep(0.5)
             self.ser.write("cloi%04d\r" % conc[1])  # set the integer part of the oxygen concentration
             time.sleep(0.5)
             self.ser.write("clof%04d\r" % (conc[0]*1000))   # set the fraction part of the oxygen concentration
@@ -235,6 +237,7 @@ class O2SensorMonitor(O2CalDlg):
                 time.sleep(0.5)
             self.Show(False)
             self.GuiOn = False
+            self.btnCancel.SetLabel('Skip')
     
     def MonitorLoop(self):
         lasttime = time.time()
