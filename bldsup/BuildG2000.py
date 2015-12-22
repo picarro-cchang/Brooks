@@ -33,7 +33,7 @@ class BuildG2000(Builder):
         self.handle_types(types, config_info['buildTypes'])
         project.set_property('config_info', config_info['buildTypes'])
         # check_configs runs check_config_hashes before build is allowed to begin
-        check_configs = project.get_property("check_configs", "True")
+        check_configs = project.get_property("check_configs", "False")
         check_configs = check_configs.lower() in ("yes", "y", "true", "t", "1")
         project.set_property("check_configs", check_configs)
         if check_configs:
