@@ -103,7 +103,7 @@ CustomConfigObj -- responsible for parsing a list of
         Turn on/off the ignore_option_case flag.
 
 """
-import Host.Utilities.PicarroKML.configobj as configobj
+import configobj
 import types
 
 class Error(Exception):

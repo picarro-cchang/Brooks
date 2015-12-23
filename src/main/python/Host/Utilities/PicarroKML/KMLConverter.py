@@ -14,8 +14,10 @@ import threading
 import getopt
 from math import ceil
 import time
-from Host.Utilities.PicarroKML.KMLConverterFrame import KMLConverterFrame
-from Host.Utilities.PicarroKML.CustomConfigObj import CustomConfigObj
+#from Host.Utilities.PicarroKML.KMLConverterFrame import KMLConverterFrame
+from KMLConverterFrame import KMLConverterFrame
+#from Host.Utilities.PicarroKML.CustomConfigObj import CustomConfigObj
+from CustomConfigObj import CustomConfigObj
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
