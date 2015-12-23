@@ -143,8 +143,9 @@ class O2SensorMonitor(O2CalDlg):
             try:
                 o2pres = .01*float(msg[4][1:])  # partial pressure of O2
             except:
-                if msg[4][1:].startswith("0000-"):
-                    o2pres = 0.0
+                if "-" in msg[4]:
+                    str = msg[4]
+                    o2pres = float(str[1:str.index("-")]) * 0.01
                 else:
                     raise
             cavityPres = self._getCavityPressure()
@@ -157,7 +158,8 @@ class O2SensorMonitor(O2CalDlg):
             phase = .01*float(msg[2][1:])
             valueList = [status, o2pres, o2conc, temperature, phase]
         except Exception, err:
-            LogExc("%r" % err) 
+            LogExc("%r" % err)
+            Log("Raw data from O2 sensor: %s" % datlist)
             return False
         return valueList
     
