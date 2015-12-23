@@ -249,7 +249,8 @@ class O2SensorMonitor(O2CalDlg):
                 else:
                     time.sleep(5)
             try:
-                if time.time() - lasttime >= 2:
+                wait_time = 2 - (time.time() - lasttime)
+                if  wait_time <= 0:
                     self.ser.write(unicode("data\r"))
                     response = self.ser.readline()
                     lasttime = time.time()
@@ -262,6 +263,8 @@ class O2SensorMonitor(O2CalDlg):
                             self.labelPressure.SetLabel(str(valuesDat[1]))
                             self.labelTemperature.SetLabel(str(valuesDat[3]))
                             self.labelPhaseShift.SetLabel(str(valuesDat[4]))
+                else:
+                    time.sleep(wait_time)
             except:
                 LogExc("Connection dropped!")
                 self.ser.close()
