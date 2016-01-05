@@ -486,7 +486,7 @@ class SampleManagerBaseMode(object):
                 self._outletDacValue = self._DriverRpc.rdDasReg(interface.VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER)
 
             if self._status._Status & SAMPLEMGR_STATUS_FLOWING:
-
+                valveInRange = False 
                 if self._flowCtrl == interface.FLOW_CNTRL_DisabledState:
                     # Check control valve
                     valveInRange = False
