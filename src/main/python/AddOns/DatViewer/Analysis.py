@@ -161,7 +161,7 @@ class AllanBin(object):
             self.sumPos, self.numPos = 0, 0
             self.sumNeg, self.numNeg = 0, 0
             
-def AllenStandardDeviation(datViewer, xyViewer):
+def AllenStandardDeviation(datViewer):
     x_sel = datViewer.xData[datViewer.boxSel]
     y_sel = datViewer.yData[datViewer.boxSel]
     n = len(x_sel)
@@ -174,13 +174,9 @@ def AllenStandardDeviation(datViewer, xyViewer):
         av.processDatum(var)
     v = av.getVariances()
     sdev = np.sqrt(np.asarray(v[1]))
-    
-    xyViewer.set(xArray=2 ** np.arange(npts) * slope*24*3600, yArray=sdev, xLabel="Time (s)", yLabel='Allan Std Dev', 
-                  xMin=1, xMax=2 ** npts, yMin=sdev.min(), yMax=sdev.max(), xScale='log', yScale='log')
-    xyViewer.update()
-    xyViewer.getSelection()
-    fit_yData = xyViewer.yData[0] / np.sqrt(xyViewer.xData / xyViewer.xData[0])
-    xyViewer.fitHandle.set_data(xyViewer.xData, fit_yData)
-    xyViewer.plot.axes.grid(which='both')
-    xyViewer.plot.axes.set_title("Allen Standard Deviation Plot: %s" % (datViewer.varName), fontdict = {'size': 18, 'weight': 'bold'})
-    xyViewer.plot.redraw()
+    xArray = 2 ** np.arange(npts) * slope*24*3600
+    yArray = sdev
+    boxSel = (xArray>=1) & (xArray<=2 ** npts)
+    fit_xData = xArray[boxSel]
+    fit_yData = sdev[boxSel][0] / np.sqrt(fit_xData / fit_xData[0])
+    return xArray, yArray, fit_xData, fit_yData
