@@ -63,7 +63,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.1"
+APPVERSION = "3.0.2"
 
 Program_Path = os.path.split(sys.argv[0])[0]
 # cursors
@@ -692,7 +692,10 @@ class FigureInteraction(object):
         if self.image_popup_menu is None:
             menu = wx.Menu()
             self._append_menu_item(menu, None, "Export Image", self.saveImage)
-            self._append_menu_item(menu, None, "Export Data in Current View", self.exportData)
+            if "Allan Std Dev" in self.fig.viewer.traits_view.title:
+                self._append_menu_item(menu, None, "Export Data", self.exportAllanStdDev)
+            else:
+                self._append_menu_item(menu, None, "Export Data in Current View", self.exportData)
             if self.fig.displayMode != "XY":
                 self._append_menu_item(menu, None, "Export All Data in Current Time Range", self.exportDataAll)
             menu.AppendSeparator()
@@ -1059,6 +1062,33 @@ class FigureInteraction(object):
             self.fig.savefig(fname)
         
     @checkLock
+    def exportAllanStdDev(self, event): 
+        ax = self.fig.gca()
+        lines = ax.get_lines()
+        heading = []
+        dataset = []
+        format = []
+        for i in range(0, len(lines), 2):
+            label = lines[i].get_label()
+            xdata, ydata = lines[i].get_data()
+            dataset.extend([xdata, ydata])
+            heading.extend([("Time_" + label, type(xdata[0])), (label, type(ydata[0]))])
+            format.extend(["%-40s", "%-40s"]) 
+        data = zip(*dataset)
+        fd = wx.FileDialog(None, "Export data filename",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                           defaultFile=self.getDefaultName(),
+                           defaultDir="",
+                           wildcard="CSV file (*.csv)|*.csv")
+        if fd.ShowModal() == wx.ID_OK:
+            fname = fd.GetPath()
+            with open(fname, "w") as f:
+                r = range(len(format))
+                f.write(",".join(format[i] % heading[i][0] for i in r) + "\n")
+                for row in data:
+                    f.write(",".join(format[i] % row[i] for i in r) + "\n")
+        
+    @checkLock
     def exportData(self, event):
         ax = self.fig.gca()
         xdata, ydata = ax.get_lines()[0].get_data()
@@ -1078,7 +1108,7 @@ class FigureInteraction(object):
         elif self.fig.displayMode == 'Hour':
             heading = [('Hour', float32), (ylabel, type(ydata[0]))]
             format = "%-40d,%-40s\n"
-        elif self.fig.displayMode == 'XY':
+        elif self.fig.displayMode == "XY":
             heading = [(xlabel, type(xdata[0])), (ylabel, type(ydata[0]))]
             format = "%-40s,%-40s\n"
         data = zip(xdata, ydata)
@@ -1478,7 +1508,7 @@ class XyViewerHandler(Handler):
         obj = info.object
         obj.getSelection()
         sy = getStatistics(obj.yData)
-        obj.information = "y Min = %s\ny Max = %s\nPeak to peak = %s\n" % (sy.min, sy.max, sy.ptp)
+        obj.information = "Y Min = %s\nY Max = %s\nPeak to peak = %s\n" % (sy.min, sy.max, sy.ptp)
         obj.information += "Average = %s\nStd Dev = %s" % (sy.mean, sy.std)
         
     def onScreenShot(self, info):
@@ -1534,7 +1564,7 @@ class XyViewer(HasTraits):
         titleList = []
         for timeSeriesWindow in self.parent.parent.infoSet:
             for xyPlot in timeSeriesWindow.object.infoSet:
-                titleList.append(xyPlot.object.traits_view.title)
+                titleList.append(xyPlot.object.traits_view.title.split(":")[0])
         title = "XYPlot"
         i = 2
         while title in titleList:
@@ -1826,6 +1856,9 @@ class DatViewer(HasTraits):
                     viewer = self.PlotXY(fTime, fData, xLabel=self.plot.plot2dFigure.displayMode, yLabel=self.varName, enableAnalysis=True)
                     viewer.plot.axes.set_title("Block Average: size = %s minutes" % self.nAverage, fontdict = {'size': 18, 'weight': 'bold'})
                     viewer.plot.redraw()
+                    sy = getStatistics(fData)
+                    viewer.information = "Data number = %d\nY Min = %s\nY Max = %s\nPeak to peak = %s\n" % (len(fData), sy.min, sy.max, sy.ptp)
+                    viewer.information += "Average = %s\nStd Dev = %s" % (sy.mean, sy.std)
                 else:
                     xData = self.getXData()
                     values = self.runScript(self.expression)
@@ -1851,7 +1884,7 @@ class DatViewer(HasTraits):
         self.expression = scriptFile
         self.updatePlot()
         self.updateFigure = True
-        
+    
 class CorrelationPlotSelector(HasTraits):
     nViewers = CInt(3)
     instruction = CStr("Select 2 variables and make correlation plot.")
@@ -2078,14 +2111,14 @@ class SeriesWindowHandler(Handler):
                     raise
         if len(plotVariables) > 0:
             viewer = XyViewer(parent=obj, dataFile=obj.dataFile, plotVariables=plotVariables)
-            viewer.set(xLabel="Time (s)", yLabel='Allan Std Dev', xScale='log', yScale='log', 
+            viewer.set(xLabel="Second", yLabel='Allan Std Dev', xScale='log', yScale='log', 
                     xMin=1, xMax=xMax, yMin=yMin, yMax=yMax)
             viewer.update()
             viewer.plot.axes.grid(which='both')
             for i in range(0, len(plotVariables)/3, 2):
                 viewer.dataHandles[i].set_label(legends[i/2])
             viewer.plot.axes.legend(loc = 3) # location: lower left
-            viewer.plot.axes.set_title("Allen Standard Deviation Plot", fontdict = {'size': 18, 'weight': 'bold'})
+            viewer.plot.axes.set_title("Allan Standard Deviation Plot", fontdict = {'size': 18, 'weight': 'bold'})
             title = viewer.traits_view.title+": Allan Std Dev"
             viewer.traits_view.set(title=title)
             viewer.edit_traits(view=viewer.traits_view)
@@ -2162,12 +2195,14 @@ class SeriesWindow(Window):
                     VGroup(
                         Item("dataSetName", object="h%d" % i, editor=EnumEditor(name="dataSetNameList"), width=w),
                         Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
-                        HGroup(Item("expression", object="h%d" % i, width=w),
+                        HGroup(Item("expression", object="h%d" % i, width=-200),
                                Item("loadScript", object="h%d" % i, show_label=False, width=10)),
                         HGroup(Item("autoscaleY", object="h%d" % i), 
-                               Item("nAverage", object="h%d" % i, width=-30),
-                               Item("blockAverage", label="Block", object="h%d" % i),
-                               Item("doAverage", object="h%d" % i, show_label=False)),
+                               HGroup(
+                                   Item("nAverage", label="Size", object="h%d" % i, width=-30),
+                                   Item("blockAverage", label="Block", object="h%d" % i),
+                                   Item("doAverage", object="h%d" % i, show_label=False),
+                                   show_border=True, label="Average")),
                         Item("mean", object="h%d" % i, width=w),
                         Item("stdDev", object="h%d" % i, width=w),
                         Item("peakToPeak", object="h%d" % i, width=w),
