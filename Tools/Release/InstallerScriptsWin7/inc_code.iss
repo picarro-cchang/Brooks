@@ -1,5 +1,6 @@
 ; [Code] section common to all apps
-; Saves and restores the InstrConfig folder
+; Task 1: Kill Host software if it's running
+; Task 2: Saves and restores the InstrConfig folder
 
 [Code]
 var
@@ -13,6 +14,10 @@ var
     ResultCode : Integer;
 begin
     {MsgBox('MyBeforeInstall', mbInformation, MB_OK)}
+    if FileExists('C:\Picarro\G2000\HostExe\StopSupervisor.exe') = True then
+    begin
+        Exec('C:\Picarro\G2000\HostExe\StopSupervisor.exe', '-o 1', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+    end; 
     dateTime := GetDateTimeString('_yyyymmdd_hhnnss',#0,#0);
     app := ExpandConstant('{app}');
     savedInstrConfig := app+'\InstrConfig'+dateTime;

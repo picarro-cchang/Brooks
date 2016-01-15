@@ -262,7 +262,7 @@ if sys.platform == "win32":
         Log("Launching application", appName, 1)
         ##Used to do this with spawnv, but doing this causes the spawned apps to
         ##share the console with Supervisor.  This is normally ok, but if the
-        ##Supervisor is shut down, teh console disappears.  Then if any spawned app
+        ##Supervisor is shut down, the console disappears.  Then if any spawned app
         ##tries to use the console (eg: a print statement) the app process dies.
         #self._ProcessHandle = spawnv(P_NOWWAIT, exeName, exeArgs)
         #self._ProcessId = windll.kernel32.GetProcessId(self._ProcessHandle)
@@ -1425,8 +1425,15 @@ class Supervisor(object):
             # Kill all the processes with the specified name
             namesToBeKilled = [n.lower() for n in self.SpecialKilledByNameList]
             for p in psutil.process_iter():
-                if p.name.lower() in namesToBeKilled:
-                    p.kill()
+                try:
+                    if callable(p.name):
+                        name = p.name()
+                    else:   # name is not an instance method in psutil 1.2.1
+                        name = p.name
+                    if name.lower() in namesToBeKilled:
+                        p.kill()
+                except:
+                    pass
 
         self._ShutdownRequested = True
 
