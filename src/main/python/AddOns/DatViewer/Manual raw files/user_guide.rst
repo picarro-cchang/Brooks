@@ -145,7 +145,7 @@ Average
 ----------------------------
 If *Block* is checked, block average is calculated when *Do average* button is clicked. Otherwise moving average is calculated.
 
-For block average, *N average* specifies block size in unit of minute. For moving average, *N average* specifies subset size in unit of data points.
+For block average, *Size* specifies block size in unit of minute. For moving average, *Size* specifies subset size in unit of data points.
 
 .. note:: Averaging is performed after application of :ref:`Filter` and :ref:`Expression` fields.
 

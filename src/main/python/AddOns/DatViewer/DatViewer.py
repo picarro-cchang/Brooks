@@ -19,7 +19,8 @@
 # 2013-12-20 tw  v2.0.2: Removed prefs file code (unneeded experimental code, crashed WinXP)
 # 2013-12-23 tw  v2.0.3: Fixed bugs in spectrum ID filtering for Allan std. dev.
 # 2014-02-13 tw  v2.0.4: Concatenate Folder to H5 menu option uses new function (asks user for folder first then filename).
-# 2015-10-01 yuan  v3.0.0: 
+# 2015-12-01 yuan v3.0.0: Rewrote large portion of the program. Added many new features.
+# 2016-01-13 yuan v3.0.1: Plot multiple Allan std. dev. data in one figure; Add screenshot menu to XYPlot
 
 import wx
 import gettext
@@ -62,7 +63,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.0"
+APPVERSION = "3.0.2"
 
 Program_Path = os.path.split(sys.argv[0])[0]
 # cursors
@@ -691,7 +692,10 @@ class FigureInteraction(object):
         if self.image_popup_menu is None:
             menu = wx.Menu()
             self._append_menu_item(menu, None, "Export Image", self.saveImage)
-            self._append_menu_item(menu, None, "Export Data in Current View", self.exportData)
+            if "Allan Std Dev" in self.fig.viewer.traits_view.title:
+                self._append_menu_item(menu, None, "Export Data", self.exportAllanStdDev)
+            else:
+                self._append_menu_item(menu, None, "Export Data in Current View", self.exportData)
             if self.fig.displayMode != "XY":
                 self._append_menu_item(menu, None, "Export All Data in Current Time Range", self.exportDataAll)
             menu.AppendSeparator()
@@ -1058,6 +1062,33 @@ class FigureInteraction(object):
             self.fig.savefig(fname)
         
     @checkLock
+    def exportAllanStdDev(self, event): 
+        ax = self.fig.gca()
+        lines = ax.get_lines()
+        heading = []
+        dataset = []
+        format = []
+        for i in range(0, len(lines), 2):
+            label = lines[i].get_label()
+            xdata, ydata = lines[i].get_data()
+            dataset.extend([xdata, ydata])
+            heading.extend([("Time_" + label, type(xdata[0])), (label, type(ydata[0]))])
+            format.extend(["%-40s", "%-40s"]) 
+        data = zip(*dataset)
+        fd = wx.FileDialog(None, "Export data filename",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                           defaultFile=self.getDefaultName(),
+                           defaultDir="",
+                           wildcard="CSV file (*.csv)|*.csv")
+        if fd.ShowModal() == wx.ID_OK:
+            fname = fd.GetPath()
+            with open(fname, "w") as f:
+                r = range(len(format))
+                f.write(",".join(format[i] % heading[i][0] for i in r) + "\n")
+                for row in data:
+                    f.write(",".join(format[i] % row[i] for i in r) + "\n")
+        
+    @checkLock
     def exportData(self, event):
         ax = self.fig.gca()
         xdata, ydata = ax.get_lines()[0].get_data()
@@ -1077,7 +1108,7 @@ class FigureInteraction(object):
         elif self.fig.displayMode == 'Hour':
             heading = [('Hour', float32), (ylabel, type(ydata[0]))]
             format = "%-40d,%-40s\n"
-        elif self.fig.displayMode == 'XY':
+        elif self.fig.displayMode == "XY":
             heading = [(xlabel, type(xdata[0])), (ylabel, type(ydata[0]))]
             format = "%-40s,%-40s\n"
         data = zip(xdata, ydata)
@@ -1158,8 +1189,8 @@ class FigureInteraction(object):
         sel = (xData >= xLim[0]) & (xData <= xLim[1])
         boxsel = sel & (yData >= yLim[0]) & (yData <= yLim[1])
         s = getStatistics(yData[boxsel])
-        
-        dlg = FigureStats(stats=[s], Variables=[self.fig.viewer.varName])
+        varName = "XYPlot" if self.fig.displayMode == "XY" else self.fig.viewer.varName
+        dlg = FigureStats(stats=[s], Variables=[varName])
         dlg.configure_traits(view=dlg.traits_view)
 
 class _MPLFigureEditor(Editor):
@@ -1269,7 +1300,7 @@ class Plot2D(HasTraits):
         self.addText(0.05,0.9, info, bbox=dict(facecolor='white', alpha=1), transform=self.axes.transAxes)
         self.lock.release()
         return (n, bins)
-        
+    
     def addText(self, *a, **k):
         self.lock.acquire()
         handle = self.axes.text(*a, **k)
@@ -1476,9 +1507,15 @@ class XyViewerHandler(Handler):
     def onStatistics(self, info):
         obj = info.object
         obj.getSelection()
-        s = getStatistics(obj.yData)
-        obj.information = "Minimum = %s\nMaximum = %s\nPeak to peak = %s\n" % (s.min, s.max, s.ptp)
-        obj.information += "Average = %s\nStd Dev = %s" % (s.mean, s.std)
+        sy = getStatistics(obj.yData)
+        obj.information = "Y Min = %s\nY Max = %s\nPeak to peak = %s\n" % (sy.min, sy.max, sy.ptp)
+        obj.information += "Average = %s\nStd Dev = %s" % (sy.mean, sy.std)
+        
+    def onScreenShot(self, info):
+        time.sleep(0.3)
+        path = os.path.split(info.object.dataFile)[1]
+        filename = os.path.splitext(path)[0] + "_Screenshot"
+        TakeScreenShot(info.object.traits_view.title, filename)
         
     def onHelp(self, info):
         webbrowser.open(r'file:///' + Program_Path + r'/Manual/user_guide.html#correlation-xy-plot') 
@@ -1492,49 +1529,72 @@ class XyViewer(HasTraits):
     xMin = CFloat
     xMax = CFloat
     yMin = CFloat
-    yMin = CFloat
+    yMax = CFloat
     xScale = CStr('linear')
     yScale = CStr('linear')
     xLabel = CStr
     yLabel = CStr
     information = Str
     parent = Instance(object)
-    enableSaving = Bool(False)
-    saveConfig = Action(name="Save Configuration...", action="onSaveConfig", enabled_when="object.enableSaving")
-    linearFit = Action(name="Linear fit", action="onLinearFit")
-    quadraticFit = Action(name="Quadratic fit", action="onQuadraticFit") 
-    polyFit = Action(name="Polynomial fit", action="onPolyFit")  
-    curveFit = Action(name="Curve fit", action="onCurveFit")  
-    integrate = Action(name="Integration", action="onIntegrate")
-    statistics = Action(name="Statistics", action="onStatistics")
-    manual = Action(name="Help", action="onHelp")
-    
-    traits_view = View(VGroup(Item("plot", style="custom", height=0.8, show_label=False),
-                              Item("information", style='custom', height=0.2, show_label = False)
-                                    ),
-                       menubar=MenuBar(Menu(saveConfig, name='&File'),
-                                       Menu(Menu(linearFit, quadraticFit, polyFit, curveFit, name='Fitting'),
-                                            integrate, statistics, name='&Analysis'),
-                                       Menu(manual, name="&Help")),
-                       width=800, height=800,resizable=True, handler=XyViewerHandler())
+    enableAnalysis = Bool(False)
+    traits_view = View
 
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
-        self.dataHandle, self.fitHandle = self.plot.plotData([], [], '.', [], [], 'r-')
+        # Menu
+        saveConfig = Action(name="Save Configuration...", action="onSaveConfig")
+        linearFit = Action(name="Linear fit", action="onLinearFit")
+        quadraticFit = Action(name="Quadratic fit", action="onQuadraticFit") 
+        polyFit = Action(name="Polynomial fit", action="onPolyFit")  
+        curveFit = Action(name="Curve fit", action="onCurveFit")  
+        integrate = Action(name="Integration", action="onIntegrate")
+        statistics = Action(name="Statistics", action="onStatistics")
+        manual = Action(name="Help", action="onHelp")
+        screenshot = Action(name="Take ScreenShot", action="onScreenShot")
+        
+        window_items = [Item("plot", style="custom", height=0.8, show_label=False)]
+        if self.enableAnalysis: 
+            window_items.append(Item("information", style='custom', height=0.2, show_label = False))
+            menu = MenuBar(Menu(saveConfig, screenshot, name='&File'),
+                           Menu(Menu(linearFit, quadraticFit, polyFit, curveFit, name='Fitting'),
+                                integrate, statistics, name='&Analysis'),
+                           Menu(manual, name="&Help"))
+        else:
+            menu = None
+        titleList = []
+        for timeSeriesWindow in self.parent.parent.infoSet:
+            for xyPlot in timeSeriesWindow.object.infoSet:
+                titleList.append(xyPlot.object.traits_view.title.split(":")[0])
+        title = "XYPlot"
+        i = 2
+        while title in titleList:
+            title = "XYPlot " + str(i)
+            i += 1
+        self.traits_view = View(VGroup(*window_items),
+                               menubar=menu, width=800, height=800,resizable=True, handler=XyViewerHandler(), title=title)
+        if "plotVariables" in k:
+            plotVariables = k["plotVariables"]
+            self.dataHandles = self.plot.plotData(*plotVariables)
+            if len(self.dataHandles) == 2:
+                self.dataHandle = self.dataHandles[0]
+                self.fitHandle = self.dataHandles[1]
+            else:
+                self.dataHandle, self.fitHandle = None, None
         self.plot.plot2dFigure.displayMode = "XY"
         self.plot.plot2dFigure.viewer = self
-        #self.plot.axes.callbacks.connect("xlim_changed", self.notify)
-        #self.plot.axes.callbacks.connect("ylim_changed", self.notify)
         self.xlim = None
         self.ylim = None
         self.CurveFitting = ["p1, p2", "p1 * x + p2", "1, 1"]
     
     def update(self):
-        self.plot.updateData(self.dataHandle, self.xArray, self.yArray)
+        if self.dataHandle:
+            self.plot.updateData(self.dataHandle, self.xArray, self.yArray)
         self.plot.axes.set_xscale(self.xScale)
         self.plot.axes.set_yscale(self.yScale)
-        self.plot.axes.set_xlim((self.xMin, self.xMax))
-        self.plot.axes.set_ylim((self.yMin, self.yMax))
+        if self.xMin < self.xMax:
+            self.plot.axes.set_xlim((self.xMin, self.xMax))
+        if self.yMin < self.yMax:
+            self.plot.axes.set_ylim((self.yMin, self.yMax))
         self.plot.axes.set_xlabel(self.xLabel)
         self.plot.axes.set_ylabel(self.yLabel)
     
@@ -1546,7 +1606,7 @@ class XyViewer(HasTraits):
         self.boxSel = sel & (self.yArray >= self.yLim[0]) & (self.yArray <= self.yLim[1])
         self.xData = self.xArray[self.boxSel]
         self.yData = self.yArray[self.boxSel]
-
+     
 class DatViewer(HasTraits):
     plot = Instance(Plot2D, ())
     dataFile = CStr
@@ -1653,7 +1713,11 @@ class DatViewer(HasTraits):
             self.updatePlot()
             
     def PlotXY(self, xdata, ydata, **k):
-        viewer = XyViewer(parent=self.parent, dataFile=self.dataFile)
+        if "enableAnalysis" in k:
+            enableAnalysis = k["enableAnalysis"]
+        else:
+            enableAnalysis = False
+        viewer = XyViewer(parent=self.parent, dataFile=self.dataFile, plotVariables=[[], [], '.', [], [], 'r-'], enableAnalysis=enableAnalysis)
         if "xMin" not in k:
             k["xMin"] = min(xdata)
         if "xMax" not in k:
@@ -1665,7 +1729,7 @@ class DatViewer(HasTraits):
         viewer.set(xArray=array(xdata), yArray=array(ydata), **k)
         viewer.update()
         viewer.trait_view().set(title="XY Plot")
-        viewer.edit_traits()
+        viewer.edit_traits(view=viewer.traits_view)
         return viewer
             
     def VariableSelector(self, message):
@@ -1789,9 +1853,12 @@ class DatViewer(HasTraits):
                         fTime[-1] = (numP-1)/numP * fTime[-1] + t/numP
                         fData[-1] = (numP-1)/numP * fData[-1] + y/numP
                         numP += 1.0
-                    viewer = self.PlotXY(fTime, fData, xLabel=self.plot.plot2dFigure.displayMode, yLabel=self.varName)
+                    viewer = self.PlotXY(fTime, fData, xLabel=self.plot.plot2dFigure.displayMode, yLabel=self.varName, enableAnalysis=True)
                     viewer.plot.axes.set_title("Block Average: size = %s minutes" % self.nAverage, fontdict = {'size': 18, 'weight': 'bold'})
                     viewer.plot.redraw()
+                    sy = getStatistics(fData)
+                    viewer.information = "Data number = %d\nY Min = %s\nY Max = %s\nPeak to peak = %s\n" % (len(fData), sy.min, sy.max, sy.ptp)
+                    viewer.information += "Average = %s\nStd Dev = %s" % (sy.mean, sy.std)
                 else:
                     xData = self.getXData()
                     values = self.runScript(self.expression)
@@ -1817,7 +1884,7 @@ class DatViewer(HasTraits):
         self.expression = scriptFile
         self.updatePlot()
         self.updateFigure = True
-        
+    
 class CorrelationPlotSelector(HasTraits):
     nViewers = CInt(3)
     instruction = CStr("Select 2 variables and make correlation plot.")
@@ -1851,9 +1918,9 @@ class AnalysisSelector(HasTraits):
     nViewers = CInt(3)
     Variables = ListStr
     instruction = CStr("Select the Variable(s) for analysis:")
-    frame1 = Bool(False)
-    frame2 = Bool(False)
-    frame3 = Bool(False)
+    frame1 = Bool(True)
+    frame2 = Bool(True)
+    frame3 = Bool(True)
     traits_view = Instance(View)
     
     def __init__(self, *a, **k):
@@ -1873,7 +1940,67 @@ class AnalysisSelector(HasTraits):
         if self.nViewers > 2:
             sel.append(self.frame3)
         return sel
-                                
+
+def TakeScreenShot(windowTitle, fileName):
+    try:
+        import win32gui
+        hwnd = win32gui.FindWindow(None, windowTitle)
+        rect = win32gui.GetWindowRect(hwnd)
+        offsetX = rect[0]
+        offsetY = rect[1]
+        width = rect[2] - offsetX
+        height = rect[3] - offsetY
+    except:
+        offsetX = 0
+        offsetY = 0
+        width = rect[0]
+        height = rect[1]
+        
+    #Create a DC for the whole screen area
+    dcScreen = wx.ScreenDC()
+    rect = wx.GetDisplaySize()
+
+    #Create a Bitmap that will hold the screenshot image later on
+    #Note that the Bitmap must have a size big enough to hold the screenshot
+    #-1 means using the current default colour depth
+    bmp = wx.EmptyBitmap(width, height)
+
+    #Create a memory DC that will be used for actually taking the screenshot
+    memDC = wx.MemoryDC()
+
+    #Tell the memory DC to use our Bitmap
+    #all drawing action on the memory DC will go to the Bitmap now
+    memDC.SelectObject(bmp)
+
+    #Blit (in this case copy) the actual screen on the memory DC
+    #and thus the Bitmap
+    memDC.Blit( 0, #Copy to this X coordinate
+                0, #Copy to this Y coordinate
+                width, #Copy this width
+                height, #Copy this height
+                dcScreen, #From where do we copy?
+                offsetX, #What's the X offset in the original DC?
+                offsetY  #What's the Y offset in the original DC?
+                )
+
+    #Select the Bitmap out of the memory DC by selecting a new
+    #uninitialized Bitmap
+    memDC.SelectObject(wx.NullBitmap)
+    img = bmp.ConvertToImage()
+    
+    fd = wx.FileDialog(None, "Capture Screenshot",
+                   style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                   defaultFile=fileName,
+                   defaultDir="",
+                   wildcard="PNG Images (*.png)|*.png")
+    if fd.ShowModal() == wx.ID_OK:
+        fileName = fd.GetPath()
+    else:
+        fd.Destroy()
+        return
+    fd.Destroy()
+    img.SaveFile(fileName, wx.BITMAP_TYPE_PNG)
+        
 class SeriesWindowHandler(Handler):
     def init(self, info):
         info.object.parent.infoSet.add(info)
@@ -1891,67 +2018,10 @@ class SeriesWindowHandler(Handler):
     def onScreenShot(self, info):
         time.sleep(0.3)
         title = info.object.traits_view.title
-        try:
-            import win32gui
-            hwnd = win32gui.FindWindow(None, title)
-            rect = win32gui.GetWindowRect(hwnd)
-            offsetX = rect[0]
-            offsetY = rect[1]
-            width = rect[2] - offsetX
-            height = rect[3] - offsetY
-        except:
-            offsetX = 0
-            offsetY = 0
-            width = rect[0]
-            height = rect[1]
-            
-        #Create a DC for the whole screen area
-        dcScreen = wx.ScreenDC()
-        rect = wx.GetDisplaySize()
- 
-        #Create a Bitmap that will hold the screenshot image later on
-        #Note that the Bitmap must have a size big enough to hold the screenshot
-        #-1 means using the current default colour depth
-        bmp = wx.EmptyBitmap(width, height)
- 
-        #Create a memory DC that will be used for actually taking the screenshot
-        memDC = wx.MemoryDC()
- 
-        #Tell the memory DC to use our Bitmap
-        #all drawing action on the memory DC will go to the Bitmap now
-        memDC.SelectObject(bmp)
- 
-        #Blit (in this case copy) the actual screen on the memory DC
-        #and thus the Bitmap
-        memDC.Blit( 0, #Copy to this X coordinate
-                    0, #Copy to this Y coordinate
-                    width, #Copy this width
-                    height, #Copy this height
-                    dcScreen, #From where do we copy?
-                    offsetX, #What's the X offset in the original DC?
-                    offsetY  #What's the Y offset in the original DC?
-                    )
- 
-        #Select the Bitmap out of the memory DC by selecting a new
-        #uninitialized Bitmap
-        memDC.SelectObject(wx.NullBitmap)
-        img = bmp.ConvertToImage()
-        
         path = os.path.split(info.object.dataFile)[1]
-        filename = os.path.splitext(path)[0]
-        fd = wx.FileDialog(None, "Capture Screenshot",
-                       style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-                       defaultFile=filename+"_Screenshot",
-                       defaultDir="",
-                       wildcard="PNG Images (*.png)|*.png")
-        if fd.ShowModal() == wx.ID_OK:
-            fileName = fd.GetPath()
-        else:
-            fd.Destroy()
-            return
-        fd.Destroy()
-        img.SaveFile(fileName, wx.BITMAP_TYPE_PNG)
-        
+        filename = os.path.splitext(path)[0] + "_Screenshot" 
+        TakeScreenShot(title, filename)
+                
     def onXaxisInDateTime(self, info):
         for fr in info.object.viewers:
             fig = fr.plot.plot2dFigure
@@ -2022,18 +2092,37 @@ class SeriesWindowHandler(Handler):
             sel = a.getSelection()
         else:
             sel = [True]
+        plotVariables = []
+        legends = []
+        colors = ['b', 'r', 'y']
+        xMax, yMax, yMin = -1e10, -1e10, 1e10
         for i, fr in enumerate(obj.viewers):
             if sel[i]:
                 try:
                     n = len(fr.boxSel)
                     if n > 0:
-                        viewer = XyViewer(parent=obj, dataFile=obj.dataFile)
-                        viewer.trait_view().set(title="Allan Std Dev: %s" % (fr.varName), x=100*i+100, y=100*i+100)
-                        viewer.edit_traits()
-                        AllenStandardDeviation(fr, viewer)
+                        xArray, yArray, fit_xData, fit_yData = AllenStandardDeviation(fr)
+                        plotVariables.extend([xArray, yArray, colors[i]+'o', fit_xData, fit_yData, colors[i]+'-'])
+                        xMax = max(xMax, max(xArray))
+                        yMax = max(yMax, max(yArray))
+                        yMin = min(yMin, min(yArray))
+                        legends.append(fr.varName)
                 except:
                     raise
-    
+        if len(plotVariables) > 0:
+            viewer = XyViewer(parent=obj, dataFile=obj.dataFile, plotVariables=plotVariables)
+            viewer.set(xLabel="Second", yLabel='Allan Std Dev', xScale='log', yScale='log', 
+                    xMin=1, xMax=xMax, yMin=yMin, yMax=yMax)
+            viewer.update()
+            viewer.plot.axes.grid(which='both')
+            for i in range(0, len(plotVariables)/3, 2):
+                viewer.dataHandles[i].set_label(legends[i/2])
+            viewer.plot.axes.legend(loc = 3) # location: lower left
+            viewer.plot.axes.set_title("Allan Standard Deviation Plot", fontdict = {'size': 18, 'weight': 'bold'})
+            title = viewer.traits_view.title+": Allan Std Dev"
+            viewer.traits_view.set(title=title)
+            viewer.edit_traits(view=viewer.traits_view)
+   
     def onHistogram(self, info):
         obj = info.object
         if obj.nViewers > 1:
@@ -2106,12 +2195,14 @@ class SeriesWindow(Window):
                     VGroup(
                         Item("dataSetName", object="h%d" % i, editor=EnumEditor(name="dataSetNameList"), width=w),
                         Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
-                        HGroup(Item("expression", object="h%d" % i, width=w),
+                        HGroup(Item("expression", object="h%d" % i, width=-200),
                                Item("loadScript", object="h%d" % i, show_label=False, width=10)),
                         HGroup(Item("autoscaleY", object="h%d" % i), 
-                               Item("nAverage", object="h%d" % i, width=-30),
-                               Item("blockAverage", label="Block", object="h%d" % i),
-                               Item("doAverage", object="h%d" % i, show_label=False)),
+                               HGroup(
+                                   Item("nAverage", label="Size", object="h%d" % i, width=-30),
+                                   Item("blockAverage", label="Block", object="h%d" % i),
+                                   Item("doAverage", object="h%d" % i, show_label=False),
+                                   show_border=True, label="Average")),
                         Item("mean", object="h%d" % i, width=w),
                         Item("stdDev", object="h%d" % i, width=w),
                         Item("peakToPeak", object="h%d" % i, width=w),
@@ -2157,16 +2248,17 @@ class SeriesWindow(Window):
         xV = self.viewers[xView]
         yV = self.viewers[yView]
         try:
-            viewer = XyViewer(parent=self)
+            viewer = XyViewer(parent=self, plotVariables=[[], [], '.', [], [], 'r-'], enableAnalysis=True)
             if not (len(xV.yData[xV.sel]) > 0 and len(yV.yData[yV.sel]) > 0):
                 raise ValueError
             dataInfo = "%d;%d" % (xView, yView)
             viewer.set(xArray=xV.yData[xV.sel], yArray=yV.yData[yV.sel],
                        xLabel=xV.varName, yLabel=yV.varName, dataInfo=dataInfo, dataFile=self.dataFile,
-                       xMin=xV.yLim[0], xMax=xV.yLim[1], yMin=yV.yLim[0], yMax=yV.yLim[1], enableSaving=True)
+                       xMin=xV.yLim[0], xMax=xV.yLim[1], yMin=yV.yLim[0], yMax=yV.yLim[1])
             viewer.update()
-            viewer.trait_view().set(title=self.dataFile)
-            viewer.edit_traits()
+            title = viewer.traits_view.title + ": Correlation"
+            viewer.traits_view.set(title=title)
+            viewer.edit_traits(view=viewer.traits_view)
             return viewer
         except Exception, e:
             wx.MessageBox("No or incompatible data for correlation plot within window.\n%s" % e)
