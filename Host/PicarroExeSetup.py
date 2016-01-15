@@ -107,6 +107,8 @@ def _getOsType():
         osType = 'win7'
     elif osType == 'XP':
         osType = 'winxp'
+    elif platform.uname()[3].startswith("6.2"):
+		osType = 'win10'
     else:
         osType = 'unknown'
         print "Unexpected OS type!"
@@ -540,6 +542,8 @@ inclusionList = ["email",
                  "tables.*"]
 
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
+if osType == "win10":
+	dllexclusionList.append("msvcp90.dll")
 
 hex_images = glob.glob("../Firmware/CypressUSB/Drivers/*.*")
 hex_images = hex_images + [ "../Firmware/CypressUSB/analyzer/analyzerUsb.hex",
@@ -583,7 +587,7 @@ for d in cypressDriverDirs:
 
 if osType == "winxp":
     data_files.append("../Vendor/inpout/winxp/inpout32.dll")
-elif osType == "win7":
+elif osType in ["win7", "win10"]:
     data_files.append("../Vendor/inpout/win7/Win32/inpout32.dll")
 else:
     print "Failed to include inpout32.dll in build, OS is not supported! (osType='%s')" % osType

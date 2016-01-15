@@ -390,6 +390,8 @@ def makeExe(opts):
         osType = 'win7'
     elif osType == 'XP':
         osType = 'winxp'
+    elif (platform.uname()[3]).startswith("6.2"):
+		osType = 'win10'
     else:
         osType = 'unknown'
         print "Unexpected OS type!"
@@ -1494,7 +1496,7 @@ def _compileInstallers(product, osType, ver):
 
         isccApp = ISCC
 
-        if osType == 'win7':
+        if osType in ['win7', 'win10']:
             isccApp = ISCC_WIN7
 
         # Note: .iss files are coming from a subfolder under this release.py dir,
