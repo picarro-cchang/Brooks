@@ -11,12 +11,19 @@ procedure MyBeforeInstall();
 var
     dateTime : String;
     app : String;
+    StopSupervisor : String;
+    version : String;
     ResultCode : Integer;
 begin
     {MsgBox('MyBeforeInstall', mbInformation, MB_OK)}
-    if FileExists('C:\Picarro\G2000\HostExe\StopSupervisor.exe') = True then
+    StopSupervisor := ExpandConstant('{app}') + '\HostExe\StopSupervisor.exe';
+    if FileExists(StopSupervisor) then
     begin
-        Exec('C:\Picarro\G2000\HostExe\StopSupervisor.exe', '-o 1', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+        if GetVersionNumbersString(StopSupervisor, version) then
+            begin
+                if CompareText(version, '2.3.0.0') >= 0 then
+                    Exec(StopSupervisor, '-o 1', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+            end;
     end; 
     dateTime := GetDateTimeString('_yyyymmdd_hhnnss',#0,#0);
     app := ExpandConstant('{app}');
