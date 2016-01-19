@@ -94,6 +94,8 @@ class StopSupervisor(StopSupervisorFrame):
             os.system(r'taskkill.exe /IM QuickGui.exe /F')
             # Kill Controller if it isn't under Supervisor's supervision
             os.system(r'taskkill.exe /IM Controller.exe /F')
+            # Kill Serial2Socket.exe if it isn't under Supervisor's supervision
+            os.system(r'taskkill.exe /IM Serial2Socket.exe /F')
 
             if option is None:
                 sel = self.selectShutdownType.GetSelection()

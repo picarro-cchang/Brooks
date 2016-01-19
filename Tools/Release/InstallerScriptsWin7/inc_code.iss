@@ -7,6 +7,16 @@ var
     savedInstrConfig : String;
     instrConfig : String;
 
+procedure BeforeInstallStopSupervisor();
+var
+    handle : HWND
+begin
+    handle = FindWindowByWindowName('Stop CRDS Software');
+    if handle then
+        {Close StopSupervisor}
+        SendMessage(handle, 0x0112, 0xF060, 0);
+end;    
+    
 procedure MyBeforeInstall();
 var
     dateTime : String;
