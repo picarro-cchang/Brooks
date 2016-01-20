@@ -115,6 +115,15 @@ def _getOsType():
 
     return osType
 
+def compile_datviewer_source():
+    import py_compile
+    datviewer_dir = os.path.join('..','AddOns','DatViewer')
+    py_compile.compile(os.path.join(datviewer_dir, 'DatViewer.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'DateRangeSelectorFrame.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'Analysis.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'FileOperations.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'timestamp.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'CustomConfigObj.py'))
 
 def _runBatFile(batComponent, batFilename, batDir):
     """
@@ -484,6 +493,8 @@ osType = _getOsType()
 versionStr = _getBuildVersion()
 buildTypeStr = _getBuildType()
 
+# compile DatViewer
+compile_datviewer_source()
 
 # Build the various Host .pyd modules
 #
