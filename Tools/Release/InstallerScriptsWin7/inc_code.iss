@@ -6,15 +6,22 @@
 var
     savedInstrConfig : String;
     instrConfig : String;
+    hostExeExist : Boolean;
 
 procedure BeforeInstallStopSupervisor();
 var
-    handle : HWND
+    handle : Longint;
+    StopSupervisor : String;
 begin
-    handle = FindWindowByWindowName('Stop CRDS Software');
-    if handle then
+    StopSupervisor := ExpandConstant('{app}') + '\HostExe\StopSupervisor.exe';
+    hostExeExist := FileExists(StopSupervisor);
+    handle := FindWindowByWindowName('Stop CRDS Software');
+    if handle <> 0 then
+    begin
         {Close StopSupervisor}
-        SendMessage(handle, 0x0112, 0xF060, 0);
+        PostMessage(handle, $0010, 0, 0);
+        Sleep(1000);
+    end;
 end;    
     
 procedure MyBeforeInstall();
@@ -27,7 +34,7 @@ var
 begin
     {MsgBox('MyBeforeInstall', mbInformation, MB_OK)}
     StopSupervisor := ExpandConstant('{app}') + '\HostExe\StopSupervisor.exe';
-    if FileExists(StopSupervisor) then
+    if FileExists(StopSupervisor) and hostExeExist then
     begin
         if GetVersionNumbersString(StopSupervisor, version) then
             begin
