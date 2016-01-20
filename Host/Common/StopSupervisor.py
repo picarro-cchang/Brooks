@@ -6,19 +6,15 @@
 #
 import sys
 import os
- 
-try:
-    import wx
-    from Host.Common import CmdFIFO
-    from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
+import wx
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 
-    APP_NAME = "SupervisorTerminator"
+APP_NAME = "SupervisorTerminator"
 
-    CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                             APP_NAME,
-                                             IsDontCareConnection = False)
-except:
-    sys.exit(0)
+CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                         APP_NAME,
+                                         IsDontCareConnection = False)
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
