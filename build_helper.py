@@ -144,10 +144,6 @@ class BuildHelper(HasTraits):
     def list_formatter(self, lis):
         return ",".join(lis)
         
-    def getDir(self, attr):
-        if attr == "copy":
-            return self.copyDir
-
     def process_output(self, out):
         for line in iter(out.readline, ''):
             #wx.CallAfter(self.add_to_display, line)
@@ -183,7 +179,8 @@ class BuildHelper(HasTraits):
             command.extend(self.make_option("set_version"))
             command.extend(self.make_option("push"))
             command.extend(self.make_option("tag"))
-            command.extend(self.make_option("copy", self.getDir))
+            if self.copy:
+                command.extend(self.make_option("copyDir"))
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)

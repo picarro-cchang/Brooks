@@ -67,8 +67,8 @@ def initialize(project, logger):
     push = push.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("push", push)
     # copy determines if installer is to be copied to another folder after the build
-    copy = project.get_property("copy", "")
-    project.set_property("copy", copy)
+    copy = project.get_property("copyDir", "")
+    project.set_property("copyDir", copy)
     # force determines if we are to ignore version number ordering
     force = project.get_property("force", "False")
     force = force.lower() in ("yes", "y", "y", "true", "t", "1")
@@ -87,17 +87,17 @@ def initialize(project, logger):
 def after_prepare(project, logger):
     builder = project.get_property("builder")
     builder.after_prepare()
-
+    
 @task
 def compile_sources(project, logger):
     builder = project.get_property("builder")
     builder.compile_sources()
-
+    
 @task
 def publish(project, logger):
     builder = project.get_property("builder")
     builder.publish()
-
+    
 @task
 @depends('compile_sources')
 def copy_sources(project, logger):
@@ -115,7 +115,7 @@ def make_executables(project, logger):
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()
-
+    
 @after('make_installers')
 def tidy_repo(project, logger):
     builder = project.get_property("builder")

@@ -268,8 +268,7 @@ class Builder(object):
         """
         project = self.project
         logger = self.logger
-        dest_path = project.get_property('copy')
-        print dest_path, " LLLLLLLLL"
+        dest_path = project.get_property('copyDir')
         if len(dest_path) > 0:
             installer_version = project.get_property('installer_version')
             product = project.get_property('product')
