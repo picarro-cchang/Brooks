@@ -227,7 +227,7 @@ class Dat2h5():
                             if h == "EPOCH_TIME":
                                 when = float(a)
                         except:
-                            entry[h] = NaN
+                            entry[h] = np.NaN
                     entry["DATE_TIME"] = when
                     entry.append()
                 self.progress = int(i*100.0/length)
@@ -442,7 +442,7 @@ class ConcatenateZip2File():
                             if set(variableDict[k]).issubset(t.dtype.names):
                                 allData[k].append(t[variableDict[k]])
                     except:
-                        self.message = "Error reading file, possibly missing specified groups or variables: %s" % path
+                        self.message = "Error reading file, possibly missing specified groups or variables: %s" % zfname
                         self.progress = -1
                         self.fileHandle.close()
                         return 

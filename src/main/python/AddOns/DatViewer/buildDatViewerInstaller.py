@@ -10,18 +10,12 @@ from __future__ import with_statement
 import os
 import sys
 import shutil
-import subprocess
 import py_compile
-import re
+import subprocess
 import time
 import os.path
-import stat
 import platform
-import errno
-
-from distutils import dir_util
 from optparse import OptionParser
-
 from Host.Common import OS
 
 #SANDBOX_DIR = 'c:/temp/sandbox'
@@ -128,11 +122,7 @@ def _compileInstaller(osType, ver):
 
 def compileSource():
     py_compile.compile('DatViewer.py')
-    py_compile.compile('DateRangeSelectorFrame.py')
-    py_compile.compile('Analysis.py')
-    py_compile.compile('FileOperations.py')
-    py_compile.compile('timestamp.py')
-    py_compile.compile('CustomConfigObj.py')
+    runCommand("python setupforPyd.py build_ext --inplace")
 
 def main():
     usage = """

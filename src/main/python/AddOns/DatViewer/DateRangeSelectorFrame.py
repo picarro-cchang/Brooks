@@ -20,23 +20,23 @@ class DateRangeSelectorFrame(wx.Dialog):
         # begin wxGlade: DateRangeSelectorFrame.__init__
         kwds["style"] = wx.CAPTION | wx.CLOSE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU
         wx.Dialog.__init__(self, *args, **kwds)
-        self.label_1 = wx.StaticText(self, wx.ID_ANY, _("Start Date"))
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, "Start Date")
         self.StartDatePicker = wx.DatePickerCtrl(self, wx.ID_ANY)
-        self.label_2 = wx.StaticText(self, wx.ID_ANY, _("Start Time"))
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, "Start Time")
         self.StartTimeCtrl = masked.TimeCtrl(self, -1)
         self.spin_start = wx.SpinButton(self, wx.ID_ANY , style=wx.SP_VERTICAL)
-        self.sizer_15_staticbox = wx.StaticBox(self, wx.ID_ANY, _("Select Starting Point"))
-        self.label_4 = wx.StaticText(self, wx.ID_ANY, _("End Date"))
+        self.sizer_15_staticbox = wx.StaticBox(self, wx.ID_ANY, "Select Starting Point")
+        self.label_4 = wx.StaticText(self, wx.ID_ANY, "End Date")
         self.EndDatePicker = wx.DatePickerCtrl(self, wx.ID_ANY)
-        self.label_5 = wx.StaticText(self, wx.ID_ANY, _("End Time"))
+        self.label_5 = wx.StaticText(self, wx.ID_ANY, "End Time")
         self.EndTimeCtrl = masked.TimeCtrl(self, -1)
         self.spin_end = wx.SpinButton(self, wx.ID_ANY , style=wx.SP_VERTICAL)
-        self.sizer_10_staticbox = wx.StaticBox(self, wx.ID_ANY, _("Select Ending Point"))
-        self.label_3 = wx.StaticText(self, wx.ID_ANY, _("TimeZone"))
+        self.sizer_10_staticbox = wx.StaticBox(self, wx.ID_ANY, "Select Ending Point")
+        self.label_3 = wx.StaticText(self, wx.ID_ANY, "TimeZone")
         self.choiceTimeZone = wx.Choice(self, wx.ID_ANY, choices=[])
-        self.chkPrivateLog = wx.CheckBox(self, wx.ID_ANY, _("Data files are saved in directory trees named by date and time."))
-        self.btnOK = wx.Button(self, wx.ID_ANY, _("OK"))
-        self.btnCancel = wx.Button(self, wx.ID_ANY, _("Cancel"))
+        self.chkPrivateLog = wx.CheckBox(self, wx.ID_ANY, "Data files are saved in directory trees named by date and time.")
+        self.btnOK = wx.Button(self, wx.ID_ANY, "OK")
+        self.btnCancel = wx.Button(self, wx.ID_ANY, "Cancel")
 
         self.__set_properties()
         self.__do_layout()
@@ -49,7 +49,7 @@ class DateRangeSelectorFrame(wx.Dialog):
 
     def __set_properties(self):
         # begin wxGlade: DateRangeSelectorFrame.__set_properties
-        self.SetTitle(_("Select Date Range"))
+        self.SetTitle("Select Date Range")
         self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DLIGHT))
         self.label_1.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.label_2.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
