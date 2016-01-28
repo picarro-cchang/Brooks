@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>User’s Guide &mdash; DatViewer Manual</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DatViewer Manual" href="index.html" />
+    <link rel="next" title="Define Time Range" href="define_time_range.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+  </head>
+  <body role="document">
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html">
+<img src="_static/picarro-logo.png" border="0" alt="DatViewer"/>
+</a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="define_time_range.html" title="Define Time Range"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="user-s-guide">
+<span id="user-guide"></span><h1>User&#8217;s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
+<div class="figure">
+<img alt="_images/main_menu.jpg" src="_images/main_menu.jpg" />
+</div>
+<p><strong>Main menu of DatViewer</strong></p>
+<ul class="simple">
+<li><a class="reference internal" href="#file-menu"><span>File Menu</span></a></li>
+<li><a class="reference internal" href="#time-series-plot"><span>Time Series Plot</span></a></li>
+<li><a class="reference internal" href="#correlation-plot"><span>Correlation/XY Plot</span></a></li>
+</ul>
+<div class="section" id="file-menu">
+<span id="id1"></span><h2>File Menu<a class="headerlink" href="#file-menu" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="open-h5">
+<h3>Open H5<a class="headerlink" href="#open-h5" title="Permalink to this headline">¶</a></h3>
+<p>Open a Picarro data file (HDF5 format) for data analysis and visualization. After opening the data file, you may create new <a class="reference internal" href="#time-series-plot"><span>Time Series Plot</span></a>.</p>
+</div>
+<div class="section" id="load-config">
+<h3>Load Config<a class="headerlink" href="#load-config" title="Permalink to this headline">¶</a></h3>
+<p>Load a configuration file (ini format) to restore parameters of workplace. See <a class="reference internal" href="time_series_plot_menu.html#save-configuration"><span>Save configuration</span></a> for details.</p>
+</div>
+<div class="section" id="unpack-zip-file">
+<h3>Unpack Zip File<a class="headerlink" href="#unpack-zip-file" title="Permalink to this headline">¶</a></h3>
+<p>Unpack zip file and concatenate all H5 files inside into a single H5 file. See <a class="reference internal" href="#concatenate-file"><span>Concatenate H5 Files</span></a> for details.</p>
+</div>
+<div class="section" id="concatenate-h5-files">
+<span id="concatenate-file"></span><h3>Concatenate H5 Files<a class="headerlink" href="#concatenate-h5-files" title="Permalink to this headline">¶</a></h3>
+<p>Concatenate H5 files and zip archives of H5 files into into a single H5 file.
+After selecting path of data files, DatViewer will automatically search a H5 file in the zip/folder
+and look for all available variables in the H5 file. All these available variables are listed in the left panel,
+and users can use &#8220;&gt;&gt;&#8221; button to put variables to the right panel for concatenation.</p>
+<img alt="_images/save_variables.jpg" src="_images/save_variables.jpg" />
+<p><strong>Large dataset</strong>: see <a class="reference internal" href="getting_started.html#huge-files"><span>Concatenate huge volume of data files</span></a>.</p>
+<p><strong>See also:</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="define_time_range.html">Define Time Range</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="convert-dat-to-h5">
+<span id="dat-h5"></span><h3>Convert DAT to H5<a class="headerlink" href="#convert-dat-to-h5" title="Permalink to this headline">¶</a></h3>
+<p>Convert data file from DAT to HDF5 format. Details about these two formats are described below:</p>
+<p><strong>DAT format:</strong>
+DAT files accepted by DatViewer store tabular data (numbers and text) in plain text.</p>
+<ul class="simple">
+<li>Each line of the file is a data record. Each record consists of one or more fields, separated by whitespaces.</li>
+<li>The first line of data file indicates column names.</li>
+<li>There must be a field &#8220;EPOCH_TIME&#8221; storing acquisition epoch time (expressed as seconds since Jan 1, 1970) of the data. Otherwise the first and
+second fields must be &#8220;DATE&#8221; and &#8220;TIME&#8221;. The &#8220;DATE&#8221; field must have the format &#8220;mm/dd/yyyy&#8221; or &#8220;yyyy-mm-dd&#8221;,
+and the &#8220;TIME&#8221; field must have the format &#8220;HH:MM:SS(.sss)&#8221; where (.sss) means optional fraction of seconds.</li>
+</ul>
+<p><strong>HDF5 format:</strong>
+HDF5 is a data model, library, and file format for storing and managing data. Please visit <a class="reference external" href="https://www.hdfgroup.org/HDF5/">The HDF5 Home Page</a>
+When converting DAT to HDF5 format, DatViewer creates a table named &#8220;results&#8221; to contain data.</p>
+</div>
+<div class="section" id="convert-h5-to-dat">
+<h3>Convert H5 to DAT<a class="headerlink" href="#convert-h5-to-dat" title="Permalink to this headline">¶</a></h3>
+<p>Convert data file from HDF5 to DAT format. See <a class="reference internal" href="#dat-h5"><span>Convert DAT to H5</span></a> for details about these two formats.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When converting H5 to DAT format, each column has a fixed width of 26 characters. So if column headings are too long (more than 25 chars),
+DatViewer will convert or truncate them. For example, column name &#8220;fineLaserCurrent_1_controlOn&#8221; will be replaced by &#8220;fineLaserCurr_1_ctrlOn&#8221;.</p>
+</div>
+</div>
+<div class="section" id="interpolation">
+<h3>Interpolation<a class="headerlink" href="#interpolation" title="Permalink to this headline">¶</a></h3>
+<p>Perform interpolation on a time grid with a constant interval.</p>
+</div>
+<div class="section" id="block-average">
+<h3>Block Average<a class="headerlink" href="#block-average" title="Permalink to this headline">¶</a></h3>
+<p>Divide dataset into small blocks with block size specified by the user. Average is calculated for data in each block, and results are saved in a new H5 file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Block size needs to be much larger than average data interval.</p>
+</div>
+<p>As data interval is normally not a constant (unless interpolation is performed), fluctuation in data interval will affect block averaging if block size is comparable
+to average data interval.</p>
+</div>
+</div>
+<div class="section" id="time-series-plot">
+<span id="id2"></span><h2>Time Series Plot<a class="headerlink" href="#time-series-plot" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/time_series_plot.jpg" src="_images/time_series_plot.jpg" />
+<p><strong>See also:</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="time_series_plot_menu.html">Menus of Time Series Plot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="canvas.html">Canvas</a></li>
+</ul>
+</div>
+<div class="section" id="data-set-name-and-var-name">
+<h3>Data set name and Var name<a class="headerlink" href="#data-set-name-and-var-name" title="Permalink to this headline">¶</a></h3>
+<p>A HDF5 file can store one or more tables. Each of these table is called a <strong>Data set</strong>.
+A table can contain one or more columns. Each column is called a variable (<strong>Var</strong>).</p>
+</div>
+<div class="section" id="expression">
+<span id="id3"></span><h3>Expression<a class="headerlink" href="#expression" title="Permalink to this headline">¶</a></h3>
+<p><em>Expression</em> is a mathematical function that applies on the selected data and transforms the plot.
+Here is an example of expression:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">+</span> <span class="n">CO2</span>
+</pre></div>
+</div>
+<p>Here <em>y</em> is the data of selected variable (y-axis data of the plot) and <em>CO2</em> is the data of CO2 column in selected table.
+So this expression transforms the plot to be summation of selected variable and CO2 data.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All variables in the selected dataset can be used in the <em>Expression</em> field by calling the variable name.
+However, if variable name starts with a number, it needs to be called with a prefix of &#8220;dat&#8221;.
+For example, &#8220;12CO2&#8221; needs to be called as &#8220;dat12CO2&#8221; in the <em>Expression</em> field.
+Besides, <em>x</em> and <em>y</em> are defined as short-cuts for x-axis and y-axis data of the plot, correspondingly.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><em>Expression</em> field is applied after <a class="reference internal" href="#filter"><span>Filter</span></a> but before <a class="reference internal" href="#average"><span>Average</span></a>.</p>
+</div>
+</div>
+<div class="section" id="autoscale-y">
+<h3>Autoscale Y<a class="headerlink" href="#autoscale-y" title="Permalink to this headline">¶</a></h3>
+<p>When this option is selected, DatViewer will autoscale on <em>y</em> axis to make sure all data within the range of <em>x</em> axis
+is displayed.</p>
+</div>
+<div class="section" id="average">
+<span id="id4"></span><h3>Average<a class="headerlink" href="#average" title="Permalink to this headline">¶</a></h3>
+<p>If <em>Block</em> is checked, block average is calculated when <em>Do average</em> button is clicked. Otherwise moving average is calculated.</p>
+<p>For block average, <em>Size</em> specifies block size in unit of minute. For moving average, <em>Size</em> specifies subset size in unit of data points.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Averaging is performed after application of <a class="reference internal" href="#filter"><span>Filter</span></a> and <a class="reference internal" href="#expression"><span>Expression</span></a> fields.</p>
+</div>
+</div>
+<div class="section" id="mean-std-dev-and-peak-to-peak">
+<h3>Mean, Std dev, and Peak to peak<a class="headerlink" href="#mean-std-dev-and-peak-to-peak" title="Permalink to this headline">¶</a></h3>
+<p>Mean, Std dev (Standard deviation) and peak to peak are all statistical information of data in the current view.</p>
+</div>
+<div class="section" id="filter">
+<span id="id5"></span><h3>Filter<a class="headerlink" href="#filter" title="Permalink to this headline">¶</a></h3>
+<p><em>Filter</em> is a mathematical expression that specifies data to include or exclude from plot(s).
+Here is an example of filter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">CH4</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">CO2</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where CH4 and CO2 are both variable names in the selected data set.
+So this filter removes all rows with CH4 &gt;= 5 or CO2 &gt;= 10 from dataset.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All variables in the selected dataset can be used in the <em>Filter</em> field by calling the variable name.
+However, if variable name starts with a number, it needs to be called with a prefix of &#8220;dat&#8221;.
+For example, &#8220;12CO2&#8221; needs to be called as &#8220;dat12CO2&#8221; in the <em>Expression</em> field.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><em>Filter</em> field is applied before <a class="reference internal" href="#expression"><span>Expression</span></a> field.</p>
+</div>
+<p>Available logical operators in the <em>Filter</em> field:  <code class="docutils literal"><span class="pre">&amp;</span></code> (AND), <code class="docutils literal"><span class="pre">|</span></code> (OR), <code class="docutils literal"><span class="pre">~</span></code> (NOT) and <code class="docutils literal"><span class="pre">^</span></code> (XOR).</p>
+</div>
+</div>
+<div class="section" id="correlation-xy-plot">
+<span id="correlation-plot"></span><h2>Correlation/XY Plot<a class="headerlink" href="#correlation-xy-plot" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/correlation_plot.jpg" src="_images/correlation_plot.jpg" />
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<ul class="last simple">
+<li>For details about plot canvas, see <a class="reference internal" href="canvas.html#plotting-canvas"><span>Canvas</span></a></li>
+<li>For details about <em>File</em> menu, see <a class="reference internal" href="time_series_plot_menu.html#save-configuration"><span>Save configuration</span></a></li>
+</ul>
+</div>
+<div class="section" id="analysis-menu">
+<span id="analysis-menus-correlation"></span><h3>Analysis menu<a class="headerlink" href="#analysis-menu" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/analysis_menus_correlation_plot.jpg" src="_images/analysis_menus_correlation_plot.jpg" />
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fitting.html">Fitting</a></li>
+</ul>
+</div>
+<ul class="simple">
+<li>Integration: calculate area under the curve using the composite trapezoidal rule.</li>
+<li>Statistics: calculate mean, standard deviation and peak to peak for data in the current view.</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">User&#8217;s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-menu">File Menu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#time-series-plot">Time Series Plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#correlation-xy-plot">Correlation/XY Plot</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="define_time_range.html" title="Define Time Range"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             >previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2005 - 2016, Picarro Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

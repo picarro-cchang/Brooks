@@ -10,6 +10,9 @@
 ;        MyBeforeInstall for the InstrConfig folder install because it gets
 ;        called for *every* file installed.
 
+; StopSupervisor.exe
+Source: {#sandboxDir}\host\Host\dist\StopSupervisor.exe; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion; BeforeInstall: BeforeInstallStopSupervisor
+
 ; installerSignature.txt
 Source: {#configDir}\{#installerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall
 

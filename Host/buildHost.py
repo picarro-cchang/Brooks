@@ -38,6 +38,8 @@ def _getOsType():
         osType = 'win7'
     elif osType == 'XP':
         osType = 'winxp'
+    elif (platform.uname()[3]).startswith("6.2"):
+		osType = 'win10'
     else:
         osType = 'unknown'
         print "Unexpected OS type!"
