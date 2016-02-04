@@ -45,12 +45,11 @@ VersionInfoCopyright=Copyright (C) {#productYear} Picarro Inc.
 [Files]
 ; Program
 Source: {#sandboxDir}\AddOns\DatViewer\DatViewer.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\AddOns\DatViewer\DatViewerLib.pyd; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\AddOns\DatViewer\DateRangeSelectorFrame.pyd; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\AddOns\DatViewer\Analysis.pyd; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\AddOns\DatViewer\FileOperations.pyd; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\AddOns\DatViewer\timestamp.pyd; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
-Source: {#sandboxDir}\AddOns\DatViewer\CustomConfigObj.pyd; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\DateRangeSelectorFrame.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\Analysis.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\FileOperations.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\timestamp.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
+Source: {#sandboxDir}\AddOns\DatViewer\CustomConfigObj.pyc; DestDir: {app}\DatViewer; Flags: recursesubdirs replacesameversion
 ; Manual
 Source: {#sandboxDir}\AddOns\DatViewer\Manual\*; DestDir: {app}\DatViewer\Manual; Flags: recursesubdirs replacesameversion
 ; tzlocal

@@ -10,19 +10,25 @@ from __future__ import with_statement
 import os
 import sys
 import shutil
-import py_compile
 import subprocess
+import py_compile
+import re
 import time
 import os.path
+import stat
 import platform
+import errno
+
+from distutils import dir_util
 from optparse import OptionParser
+
 from Host.Common import OS
 
 #SANDBOX_DIR = 'c:/temp/sandbox'
 
 ISCC = 'c:/program files/Inno Setup 5/ISCC.exe'
 ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
-INSTALLER_SCRIPTS_DIR = 'InstallerScripts'
+INSTALLER_SCRIPTS_DIR = 'InstallerScriptsWin7'
 
 
 g_logMsgLevel = 0   # should be 0 for check-in
@@ -122,7 +128,11 @@ def _compileInstaller(osType, ver):
 
 def compileSource():
     py_compile.compile('DatViewer.py')
-    runCommand("python setupforPyd.py build_ext --inplace")
+    py_compile.compile('DateRangeSelectorFrame.py')
+    py_compile.compile('Analysis.py')
+    py_compile.compile('FileOperations.py')
+    py_compile.compile('timestamp.py')
+    py_compile.compile('CustomConfigObj.py')
 
 def main():
     usage = """
