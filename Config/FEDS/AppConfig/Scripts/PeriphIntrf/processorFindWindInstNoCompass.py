@@ -177,8 +177,7 @@ class GpsSource(RawSource):
         offset = self.getGpsTimeOffset()
         for (ts, valTuple) in reversed(self.oldData):
             GpsTime = valTuple.GPS_TIME * 1000 + offset + self.GpsBaseTime
-            thisTime = GpsTime if ts - GpsTime < 2 else ts
-            if thisTime < requestTs:
+            if ts < requestTs:
                 try:
                     alpha = float(requestTs - GpsTime) / (savedGpsTime - GpsTime)
                 except ZeroDivisionError:   # lose GPS signal so GPS time is not updated
