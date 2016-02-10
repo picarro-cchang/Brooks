@@ -432,6 +432,7 @@ class SampleManagerBaseMode(object):
         """Resume the pressure check in _Monitor()"""
         self._skipPressureCheck = False
         self._clearStatus( SAMPLEMGR_STATUS_STABLE )
+        self._status._Status |= SAMPLEMGR_STATUS_FLOW_STARTED
 
     def _RPC_ReadHardwarePresent(self):
         """Read hardware present bit mask"""
