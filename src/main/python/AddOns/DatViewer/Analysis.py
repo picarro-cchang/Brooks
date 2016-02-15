@@ -163,6 +163,10 @@ class AllanBin(object):
             
 def AllenStandardDeviation(datViewer):
     x_sel = datViewer.xData[datViewer.boxSel]
+    if datViewer.plot.plot2dFigure.displayMode == "Minute":
+        x_sel /= 1440.0
+    elif datViewer.plot.plot2dFigure.displayMode == "Hour":
+        x_sel /= 24.0
     y_sel = datViewer.yData[datViewer.boxSel]
     n = len(x_sel)
     # Find conversion from points to a time axis

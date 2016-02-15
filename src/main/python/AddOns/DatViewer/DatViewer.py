@@ -49,6 +49,8 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 from pandas import DataFrame
 
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'wx'
 # HasTraits, Float, Bool, Int, Long, Str
 from traits.api import *
 from traitsui.api import *
@@ -1298,7 +1300,9 @@ class Plot2D(HasTraits):
         self.axes = self.plot2dFigure.add_subplot(111)
         n, bins, patches = self.axes.hist(data, *a, **k)
         bin_centres = (bins[:-1] + bins[1:]) / 2.0
-        coeff, var_matrix = curve_fit(gauss, bin_centres, n, p0=[1., 0., 1.])
+        mu = average(bin_centres, weights=n)
+        sigma = sqrt(average((bin_centres - mu)**2, weights=n))
+        coeff, var_matrix = curve_fit(gauss, bin_centres, n, p0=[max(n), mu, sigma])
         hist_fit = gauss(bin_centres, *coeff)
         self.axes.plot(bin_centres, hist_fit, 'r-')
         info = u"\u03BC = %s\n\u03C3 = %s" % (coeff[1], coeff[2])
@@ -1592,7 +1596,7 @@ class XyViewer(HasTraits):
         self.CurveFitting = ["p1, p2", "p1 * x + p2", "1, 1"]
     
     def update(self):
-        if self.dataHandle:
+        if self.dataHandle and len(self.xArray) > 0:
             self.plot.updateData(self.dataHandle, self.xArray, self.yArray)
         self.plot.axes.set_xscale(self.xScale)
         self.plot.axes.set_yscale(self.yScale)
