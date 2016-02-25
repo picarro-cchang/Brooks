@@ -3,7 +3,7 @@ from scipy.optimize import curve_fit
 
 class PeakDection(object):
     def __init__(self):
-        self.concentration_threshold = 10.0 #ppm
+        self.concentration_threshold = 100.0 #ppm
         self.dynamic_threshold = self.concentration_threshold
         self.retention_time_tolerance = 7.5 #seconds... approximately 4x std of repeated measurements...
         self.peak_cnt = 0
@@ -36,10 +36,9 @@ class PeakDection(object):
         conc_subset = vars[conc_idx][range_for_average:last_data_point]
         delay_subset = vars[delay_idx][range_for_average:last_data_point]
         
-        ### only run the detectio algo if enought points exist
+        ### only run the detection algo if enough points exist
         if len(conc) > abs(range_for_average):
             moving_average = np.average(conc_subset)
-                        
             ### detect start of peak based on concentration threshold
             if moving_average > self.dynamic_threshold \
                 and not self.peak_flag and not self.slope_calc_flag:
@@ -67,8 +66,8 @@ class PeakDection(object):
 
             if self.peak_flag:
             ### scale concentration threshold for peak detection using
-            ### peak concentration of last peak... it the left bound doesn't exist,
-            ### then the dynamic_threshold is equal to the inital concentation_threshold
+            ### peak concentration of last peak... if the left bound doesn't exist,
+            ### then the dynamic_threshold is equal to the initial concentation_threshold
                 scalar_value = 20.0 # used to scale the threshold using the peak conc... set by hand
                 index_start = delay.index(self.current_peak_threshold_bounds[0])
                 dynamic_value = float(max(conc[index_start:]))/scalar_value
@@ -199,7 +198,7 @@ class PeakDection(object):
             scalar = scalar/5.0
         threshold = scalar*self.current_peak_max_concentration
         threshold = threshold/self.current_peak_approx_FWHM
-        return current_slope < threshold
+        return np.abs(current_slope) < threshold
 
     def search_for_left_bound(self,conc,delay,scalar):
         '''This method searches backward in time to find the correct

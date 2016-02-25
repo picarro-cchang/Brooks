@@ -29,6 +29,8 @@ class PlotAreaTwo(wx.Panel):
             self.canvas.mpl_connect('button_press_event',self.on_click)
         ### Setup Event Binding to Notebook selection changes
         self.setup_notebook_binding()
+        if self.main_frame.test_peak_detection:
+            self.peak_detector = self.main_frame.page_one.plot_area.peak_detector
 
     def setup_notebook_binding(self):
         self.sidebar.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED,
@@ -196,8 +198,11 @@ class PlotAreaTwo(wx.Panel):
                                                         self.species_selection)
                             self.report_table_data_to_sidebar(self.run_number,
                                                                 self.species_selection)
-                            self.clear_reprocessed_data()
-                            self.reset_flags()
+                            if not self.main_frame.test_peak_detection:
+                                self.clear_reprocessed_data()
+                                self.reset_flags()
+                            else:
+                                self.run_peak_detection(self.run_number, self.species_selection)
                             
                 else:
                     if self.species_selection != None:
@@ -210,8 +215,44 @@ class PlotAreaTwo(wx.Panel):
                             self.main_frame.status_bar_write(2,'Integration Bounds Not Unique...')
                     else:
                         self.clear_reprocessed_data()
-                    
-
+    
+    def run_peak_detection(self, run_number, species_selection):
+        time_data = self.series_data[self.s_run_time_index][run_number]
+        concentration_data = self.series_data[self.s_concentration_index][run_number]
+        delta_data = self.series_data[self.s_isotope_index][run_number]
+        series_variables = [[], [], []]
+        #self.peak_detector.reset_dynamic_threshold()
+        peak_index = 0
+        self.peak_detector.peak_cnt = 0
+        peak_selection = 0
+        for ii in range(1, species_selection+1):
+            if not np.isnan(self.peak_data[self.p_isotope_index][ii][run_number]):
+                peak_selection += 1
+        for t, conc, delta in zip(time_data, concentration_data, delta_data):
+            series_variables[0].append(t)
+            series_variables[1].append(conc)
+            series_variables[2].append(delta)
+            self.peak_detector.reset_dynamic_threshold()
+            self.peak_detector.detection_algo(series_variables)
+            
+            if self.peak_detector.current_peak_data_ready:
+                self.peak_detector.current_peak_data_ready = False
+                self.peak_detector.calculate_isotope_value(series_variables)
+                peak_index += 1
+                if peak_index == peak_selection:
+                    self.report_peak_data(run_number, species_selection)
+                    self.peak_detector.clear_current_peak_variables()
+    
+    def report_peak_data(self, run_number, species_selection):
+        reprocessed_data = [self.peak_detector.current_peak_isotope_value,
+                            self.peak_detector.current_peak_max_concentration,
+                            self.peak_detector.current_peak_retention_time,
+                            self.peak_detector.current_peak_integration_bounds]
+        self.sidebar.reprocess_area.set_reprocessed_string_items(reprocessed_data, run_number, species_selection)
+        self.left_bound, self.right_bound = self.peak_detector.current_peak_integration_bounds
+        self.left_bound_flag, self.right_bound_flag = True, True
+        self.calculate_and_show_users_bounds(None)
+    
     def report_table_data_to_sidebar(self,run_number,species_selection):
         self.sidebar.report_data_from_table(run_number,
                                                 species_selection)
@@ -285,7 +326,8 @@ class PlotAreaTwo(wx.Panel):
         shift_for_time_column = 1
         number_of_peaks = self.sidebar.page_one.data_grid.GetNumberCols() -\
             shift_for_time_column
-        self.calculate_point(self.run_number,x_data)
+        if x_data is not None:
+            self.calculate_point(self.run_number,x_data)
         self.plt_ctrl_two.display_new_integration_bounds(
             number_of_peaks,
             self.series_data[self.s_concentration_index][self.run_number],

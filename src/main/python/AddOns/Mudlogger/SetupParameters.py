@@ -33,8 +33,8 @@ class SetupParameters(wx.Frame):
             self.var_three  = wx.TextCtrl(self.setup_panel, -1, value='120', size = (50,20))
             #self.var_five   = wx.TextCtrl(self.setup_panel, -1, value='10', size = (50,20))
             #self.var_ten    = wx.TextCtrl(self.setup_panel, -1, value='0', size = (50,20))
-            self.var_six    = wx.TextCtrl(self.setup_panel, -1, value='3', size = (50,20))
-            self.var_seven  = wx.TextCtrl(self.setup_panel, -1, value='3', size = (50,20))
+            self.var_six    = wx.TextCtrl(self.setup_panel, -1, value='5', size = (50,20))
+            self.var_seven  = wx.TextCtrl(self.setup_panel, -1, value='5', size = (50,20))
             self.var_eight  = wx.TextCtrl(self.setup_panel, -1, value='10', size = (50,20))
             self.var_nine   = wx.TextCtrl(self.setup_panel, -1, value='0', size = (50,20))
             self.var_four   = wx.CheckBox(self.setup_panel, -1)
@@ -104,10 +104,11 @@ class SetupParameters(wx.Frame):
                 self.main_frame.page_one.plot_area.run_ctrl_params.run_duration = duration
                 #self.main_frame.page_one.plot_area.baseline_control.open_sample_valve_delay = valve_delay
                 #self.main_frame.page_one.plot_area.baseline_control.open_sample_valve_duration = valve_duration
-                if self.var_four.GetValue() == True:
-                    self.main_frame.page_one.plot_area.run_ctrl_params.max_runs = -1
-                elif self.var_four.GetValue() == False:
-                   self.main_frame.page_one.plot_area.run_ctrl_params.max_runs = max_run
+                if self.main_frame.read_data_file is None:
+                    if self.var_four.GetValue() == True:
+                        self.main_frame.page_one.plot_area.run_ctrl_params.max_runs = -1
+                    elif self.var_four.GetValue() == False:
+                       self.main_frame.page_one.plot_area.run_ctrl_params.max_runs = max_run
                    
                 self.main_frame.page_one.plot_area.run_ctrl_params.seq_lst = seq_lst
                 self.main_frame.page_one.plot_area.baseline_control.furnace_delay = transit_duration
