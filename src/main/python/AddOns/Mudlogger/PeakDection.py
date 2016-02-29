@@ -198,7 +198,7 @@ class PeakDection(object):
             scalar = scalar/5.0
         threshold = scalar*self.current_peak_max_concentration
         threshold = threshold/self.current_peak_approx_FWHM
-        return np.abs(current_slope) < threshold
+        return current_slope > -threshold
 
     def search_for_left_bound(self,conc,delay,scalar):
         '''This method searches backward in time to find the correct
