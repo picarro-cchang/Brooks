@@ -36,7 +36,8 @@ def removeFiles(pathToClean, exceptionList):
                     os.chmod(filepath, stat.S_IREAD | stat.S_IWRITE)
                     os.remove(filepath)
                 except OSError,errorMsg:
-                    self._writeToStatus('ERROR: %s' % (errorMsg))
+                    #self._writeToStatus('ERROR: %s' % (errorMsg))
+                    print 'ERROR: %s' % (errorMsg)
 
 def removeEmptyDirs(rootPath):
     emptyDirFound = False
@@ -288,7 +289,7 @@ class IntegrationBackup(IntegrationBackupFrame):
                          defaultPath=self.sourceDir)
         if d.ShowModal() == wx.ID_OK:
             self.sourceDir = d.GetPath()
-            self.sourceZipDir = os.path.join(sourceDir, "zip")
+            self.sourceZipDir = os.path.join(self.sourceDir, "zip")
             self.textCtrlSourceDir.SetValue(self.sourceDir)
             self.buttonSourceDir.SetBackgroundColour(STANDARD_BUTTON_COLOR)
             self.buttonStart.Enable(True)

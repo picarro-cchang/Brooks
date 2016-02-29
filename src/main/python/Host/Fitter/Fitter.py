@@ -30,6 +30,7 @@ import wx
 import wx.grid
 import wx.py
 import time
+import calendar
 import threading
 from wx import stc
 from wx.py import shell

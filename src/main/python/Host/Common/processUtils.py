@@ -18,6 +18,7 @@ import ctypes
 import os
 import sys
 import time
+from subprocess import call, Popen
 
 CONSOLE_MODE_OWN_WINDOW    = 1
 CONSOLE_MODE_NO_WINDOW     = 2

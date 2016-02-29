@@ -94,6 +94,11 @@ class RingdownPanel(RingdownPanelGui):
             print data.timestamp, data.uncorrectedAbsorbance
         def dataGood(data):
             return not (data.status & interface.RINGDOWN_STATUS_RingdownTimeout)
+        def  tunerVsRatio2(data):
+            if dataGood(data):
+                ratio2 = data.ratio2
+                vLaser = (data.laserUsed >> 2) & 7
+                waveforms["Ringdown"]["tuner"].Add(ratio2/32768.0, data.tunerValue,fillColours[vLaser])
 
         choice = self.graphTypeRadioBox.GetSelection()
         y = ""
@@ -205,11 +210,6 @@ class RingdownPanel(RingdownPanelGui):
             y = "Tuner"
             self.appendData = tunerVsRatio1
         elif choice == 8:
-            def  tunerVsRatio2(data):
-                if dataGood(data):
-                    ratio2 = data.ratio2
-                    vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["tuner"].Add(ratio2/32768.0, data.tunerValue,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(timeAxes=(False,False),xlabel='Ratio 2',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))

@@ -493,7 +493,7 @@ class BoardTest1(object):
         assert self.sender
         #BUFFIOB40-BUFFIOB63 are the valid LB inputs, so bitnum must be in 40..63
         bitnum = bitnum - 40
-        self.getDigIn()
+        bitvals = self.getDigIn()
         rslt = (bitvals >> bitnum) & 1
         return rslt
 
@@ -530,7 +530,7 @@ def handleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/BoardTest1.ini"
     if "-h" in options or "--help" in options:
-        printUsage()
+        #printUsage()
         sys.exit()
     if "-c" in options:
         configFile = options["-c"]

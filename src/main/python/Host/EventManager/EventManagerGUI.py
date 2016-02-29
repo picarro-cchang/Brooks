@@ -241,7 +241,7 @@ class MyFrame(wx.Frame):
         self.CurrentEventListEventLog = self.lstEventLog._DataSource[idx]
         evtLog = self.CurrentEventListEventLog
 
-        if 0: assert isinstance(evtLog, EventLogger.EventLog) #for Wing
+        if 0: assert isinstance(evtLog, EventManager.EventLogger.EventLog) #for Wing
         self.tlblEventTime.SetLabel(   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(evtLog.EventTime)))
         self.tlblEventCode.SetLabel(   str(evtLog.Event.Code))
         self.tlblEventID.SetLabel(     str(evtLog.Index))
@@ -310,7 +310,7 @@ class MyFrame(wx.Frame):
         eventDesc = random.choice(["This is a test!", "Unga bunga!", "I hope this worked!"])
         eventLevel = random.choice([0,1,2,3])
 
-        thisEvent = EventLogger.EventLog(eventSource, eventDesc, Data = "this is instance data", Level = eventLevel, Code = eventCode, Public = random.choice([True, False]), VerboseDescription = "this is for the verbose text")
+        thisEvent = EventManager.EventLogger.EventLog(eventSource, eventDesc, Data = "this is instance data", Level = eventLevel, Code = eventCode, Public = random.choice([True, False]), VerboseDescription = "this is for the verbose text")
         for i in range(100):
             self._EventList.append(thisEvent)
         #print "Count = ", len(self._EventList)

@@ -248,6 +248,7 @@ class MyFrame(wx.Frame):
 
     def _GetArgsFromDialog(self, FuncName, Args):
         argsOkay = True
+        argTuple = None
         dlg = wx.TextEntryDialog(
                 self, "The selected RPC function requires arguments of the form:"
                       "\n\n%s\n\n"
@@ -305,7 +306,7 @@ class MyFrame(wx.Frame):
         funcName = self.ButtonIDDict[str(event.GetId())]
         #set function method to what is in the choice box
         choiceStr = self.choice_1.GetStringSelection()
-	funcMethod = CmdTypeChoicesDict[choiceStr]
+        funcMethod = CmdTypeChoicesDict[choiceStr]
         if funcMethod == CmdFIFO.CMD_TYPE_Callback:
             self.Server.SetFunctionMode(funcName, funcMethod, self.CallbackTest)
         else:

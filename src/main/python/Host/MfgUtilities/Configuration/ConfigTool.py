@@ -1812,7 +1812,7 @@ class SandboxFrame(SandboxGUI):
     def OnViewTStatsbutton(self, event):
         print "In Event handler `OnViewTStatsbutton'..."
         self.TestResulttext_ctrl.Clear()
-        s='R:\NewUtilities\ThresholdViewerExe\\thresholdviewer.exe'
+        s=r'R:\NewUtilities\ThresholdViewerExe\thresholdviewer.exe'
         self.Output("Starting "+s+'\r\n')
         os.system(s)
         self.Output('\r\nFinished Viewing Threshold Stats\r\n')
