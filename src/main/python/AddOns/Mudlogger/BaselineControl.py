@@ -9,8 +9,10 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
 
 class BaselineControl(object):
     '''Control of the Baseline GC'''
-    def __init__(self):
+    def __init__(self, sidebar):
+        self.sidebar = sidebar
         self.furnace_delay = 120.0 #seconds, will be overwritten by setup parameters
+        self.connection = None
         self.connection = self.search_for_GCC_CRDS()
         self.monitor_flag = False
         self.warning_flag = False
@@ -49,7 +51,13 @@ class BaselineControl(object):
 
     def write(self, serial_connection, message, flag=False):
         self.flush_buffers(serial_connection)
-        bytes_written = serial_connection.write(message)
+        try:
+            bytes_written = serial_connection.write(message)
+        except:
+            if self.connection is None:
+                raise
+            else:
+                self.sidebar.write_alert_to_log('Error: Cannot write to GC.\n')
         if flag:
             print bytes_written
 

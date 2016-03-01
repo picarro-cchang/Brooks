@@ -37,7 +37,7 @@ class PlotAreaOne(wx.Panel):
         self.run_ctrl_params = RunCtrlParams()
         self.peak_detector = PeakDection()
         self.update_timer = self.setup_wx_timer()
-        self.baseline_control = BaselineControl()
+        self.baseline_control = BaselineControl(sidebar)
         self.serial_connection = self.baseline_control.get_device_port()
         
         if self.main_frame.generate_fake_data:
