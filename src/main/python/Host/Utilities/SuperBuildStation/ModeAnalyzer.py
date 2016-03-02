@@ -517,7 +517,7 @@ def HandleCommandSwitches():
 def main():
     app = wx.PySimpleApp()
     configFile = HandleCommandSwitches()
-    frame = ModeViewer(configFile)
+    frame = ModeAnalyzer(configFile)
     frame.Show()
     app.MainLoop()
 

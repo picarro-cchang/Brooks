@@ -161,7 +161,8 @@ class WorkerThread:
             while self._go.isSet():
                 self._fcts[1](*self._args)
         except Exception, excpt:
-            LOGGER.error("error: %s" % str(excpt))
+            #LOGGER.error("error: %s" % str(excpt))
+            print "error: %s" % str(excpt)
         finally:
             if self._fcts[2]:
                 self._fcts[2](*self._args)

@@ -327,6 +327,7 @@ class AnalyzerControl(Singleton):
         return "\n".join(usage)
 
     def standby(self):
+        pid = CRDS_Supervisor.CmdFIFO.GetProcessID()
         self.killUncontrolled()
         self.supervisor.TerminateApplications(False, False)
         # Kill supervisor by PID if it does not stop within 20 seconds

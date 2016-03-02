@@ -37,20 +37,43 @@ class PlotAreaOne(wx.Panel):
         self.run_ctrl_params = RunCtrlParams()
         self.peak_detector = PeakDection()
         self.update_timer = self.setup_wx_timer()
-        self.baseline_control = BaselineControl()
+        self.baseline_control = BaselineControl(sidebar)
         self.serial_connection = self.baseline_control.get_device_port()
         
-        self.faux_run_amplitude_1 = np.random.random()
-        self.faux_run_amplitude_2 = np.random.random()
-        self.faux_run_amplitude_3 = np.random.random()
+        if self.main_frame.generate_fake_data:
+            self.baseline_control.furnace_delay = 0
+            self.run_ctrl_params.run_duration = 10
+            self.main_frame.setup_parameters_flag = True
+            self.faux_run_amplitude_1 = np.random.random()
+            self.faux_run_amplitude_2 = np.random.random()
+            self.faux_run_amplitude_3 = np.random.random()
+        elif self.main_frame.read_data_file is not None:
+            self.baseline_control.furnace_delay = 0
+            self.run_ctrl_params.run_duration = 10
+            self.main_frame.setup_parameters_flag = True
+            self.input_dataset = {}
+            self.run_ctrl_params.max_runs = -1
+            with open(self.main_frame.read_data_file, "r") as fin:
+                content = fin.read().split('\n')
+                line_index = 0
+                while True:
+                    try:
+                        run_number = int(content[line_index])
+                        self.run_ctrl_params.max_runs = max(run_number-1, self.run_ctrl_params.max_runs)
+                        self.input_dataset[run_number] = {
+                                'time': content[line_index + 1].split('\t'),
+                                'concentration': content[line_index + 2].split('\t'),
+                                'delta': content[line_index + 3].split('\t')}
+                        line_index += 4
+                    except:
+                        break
         
         if self.serial_connection != None:
             self.baseline_control.set_monitor_flag()
-            message = '... GC Monitor found on %s' % self.serial_connection
+            self.sidebar.write_to_log('... GC Monitor found on %s\n' % self.serial_connection)
         else:
-            message = '... GC Monitor not found'
-        self.sidebar.write_to_log(message)
-
+            self.sidebar.write_alert_to_log('... GC Monitor not found\n')
+        
 
 
     def intialize_layout(self):
@@ -81,7 +104,8 @@ class PlotAreaOne(wx.Panel):
             if warnings is True:
                 self.stop_run_baseline_problems()
             elif warnings == None:
-                self.sidebar.write_to_log('...Serial Communication Error with Baseline Monitor...\n')
+                # Don't show error message for current version. - Yuan Ren
+                #self.sidebar.write_to_log('...Serial Communication Error with Baseline Monitor...\n')
                 self.stop_run()
             
             self.start_new_run()
@@ -201,8 +225,12 @@ class PlotAreaOne(wx.Panel):
     def collect_new_data_and_report_to_menubar(self):
         if self.is_ready_to_collect_data():
             self.data_ctrl_one.clear_queue()
-            #self.collect_new_faux_data()
-            self.collect_new_data()
+            if self.main_frame.generate_fake_data:
+                self.collect_new_faux_data()
+            elif self.main_frame.read_data_file is not None:
+                self.collect_new_record_data()
+            else:
+                self.collect_new_data()
             self.report_data_to_menubar()
 
 
@@ -213,16 +241,20 @@ class PlotAreaOne(wx.Panel):
              self.run_ctrl_params.run_duration,
              self.run_ctrl_params.max_runs]
         self.save_peak_data(data_param_lst)
-        self.faux_run_amplitude_1 = np.random.random()
-        self.faux_run_amplitude_2 = np.random.random()
-        self.faux_run_amplitude_3 = np.random.random()        ## only for faux data generation
+        if self.main_frame.generate_fake_data:
+            self.faux_run_amplitude_1 = np.random.random()
+            self.faux_run_amplitude_2 = np.random.random()
+            self.faux_run_amplitude_3 = np.random.random()        ## only for faux data generation
         self.start_new_run()
 
 
 
     def is_done_with_current_run(self):
-        time_elapsed = time.time() - self.run_ctrl_params.start_time
-        return time_elapsed > self.run_ctrl_params.run_duration + self.baseline_control.furnace_delay
+        if self.main_frame.read_data_file is not None:
+            return len(self.time) >= len(self.input_dataset[self.run_ctrl_params.run_cnt]['time'])
+        else:
+            time_elapsed = time.time() - self.run_ctrl_params.start_time
+            return time_elapsed > self.run_ctrl_params.run_duration + self.baseline_control.furnace_delay
 
 
 
@@ -246,7 +278,9 @@ class PlotAreaOne(wx.Panel):
                 self.collect_new_data_and_report_to_menubar()
             else:
                 self.save_peak_data_and_start_new_run()
-                self.peak_detector.reset_dynamic_threshold()
+                # Jeff's intention was to reset dynamic threshold after a peak is found rather than end of the run
+                # May need to move the line below to if self.peak_detector.current_peak_data_ready:
+                self.peak_detector.reset_dynamic_threshold() 
             
             if self.ready_to_update_plots():
                 self.clear_and_update_plots() 
@@ -263,8 +297,9 @@ class PlotAreaOne(wx.Panel):
                 self.peak_detector.current_peak_data_ready = False
                 self.peak_detector.calculate_isotope_value(self.series_variables)
                 # overrides integrated isotope value with calibrated one...
-                self.peak_detector.current_peak_isotope_value =\
-                        self.main_frame.m_current * self.peak_detector.current_peak_isotope_value + self.main_frame.b_current
+                if self.main_frame.m_current is not None and self.main_frame.b_current is not None:
+                    self.peak_detector.current_peak_isotope_value =\
+                            self.main_frame.m_current * self.peak_detector.current_peak_isotope_value + self.main_frame.b_current
                 self.check_against_retention_library()
                 self.sidebar.report_new_data(self.peak_detector.peak_assignment,
                                                 self.run_ctrl_params.run_cnt,
@@ -299,6 +334,14 @@ class PlotAreaOne(wx.Panel):
     def gaussian_faux(self, amplitude, center, time):
         return amplitude * np.exp(-(center - time) ** 2 / 15.0)
 
+    def collect_new_record_data(self):
+        index = len(self.time)
+        self.time.append(float(self.input_dataset[self.run_ctrl_params.run_cnt]['time'][index]))
+        self.concentration.append(float(self.input_dataset[self.run_ctrl_params.run_cnt]['concentration'][index]))
+        try:
+            self.delta.append(float(self.input_dataset[self.run_ctrl_params.run_cnt]['delta'][index]))
+        except:
+            self.delta.append(np.NaN)
 
     def collect_new_data(self):
         last_point = -1
@@ -345,6 +388,7 @@ class PlotAreaOne(wx.Panel):
         else:
             self.main_frame.SetStatusText('', 0)
         if self.methane_flag:
+            self.sidebar.write_alert_to_log("High methane concentration!!!\n")
             self.main_frame.SetStatusText('Warning...high methane', 0)
         self.main_frame.SetStatusText('[CO2]:  %13.2f' % round(self.concentration[-1], 2), 2)
         self.main_frame.SetStatusText('Delta 13C:  %4.2f' % round(self.delta[-1], 2), 3)

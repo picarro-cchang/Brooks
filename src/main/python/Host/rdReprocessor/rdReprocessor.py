@@ -81,7 +81,7 @@ class rdReprocessor(object):
                 elif index == 0:
                     step = 1
             elif self.loop == 2:    # loop
-                if index == funm-1:
+                if index == fnum-1:
                     index = -1
             index += step
             time.sleep(1.0)
@@ -95,7 +95,8 @@ Where the options can be a combination of the following:
 --loop2              process data files from the first to the last then back to the first. Repeat this procedure forever
 --loop               loop processing data files forever
 """
-
+def PrintUsage():
+    print HELP_STRING
 def HandleCommandSwitches():
     import getopt
 

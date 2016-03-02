@@ -54,13 +54,16 @@ class IsotopeScalingFrame(IsotopeScaling):
         self.Close()
     
 class MainFrame(wx.Frame):
-    def __init__(self,parent):
-        wx.Frame.__init__(self,parent)
+    def __init__(self, parent, generate_fake_data=False, read_data_file=None, test_peak_detection=False):
+        wx.Frame.__init__(self, parent)
         flag_for_page_one = 1
         flag_for_page_two = 2
         
         self.setup_parameters_flag = False
-
+        self.generate_fake_data = generate_fake_data
+        self.read_data_file = read_data_file
+        self.test_peak_detection = test_peak_detection
+        
         self.notebook = wx.Notebook(self)
         self.page_one = Page(self.notebook,self,flag_for_page_one)
         self.page_two = Page(self.notebook,self,flag_for_page_two)
@@ -181,8 +184,12 @@ class MainFrame(wx.Frame):
         sf.ShowModal()
         if sf.userOK:
             try:
-                self.m_current = float(sf.txtScale.GetValue())
-                self.b_current = float(sf.txtOffset.GetValue())
+                if sf.radio_scaling.GetValue():
+                    self.m_current = float(sf.txtScale.GetValue())
+                    self.b_current = float(sf.txtOffset.GetValue())
+                else:
+                    self.m_current = None
+                    self.b_current = None
             except:
                 pass
         sf.Destroy()

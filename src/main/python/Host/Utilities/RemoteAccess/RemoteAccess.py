@@ -129,7 +129,8 @@ def _time2ntp(t):
     s = int(t)
     return pack('!II',s+_UTIME1970,_L2U32((t-s)*0x100000000L))
 
-def _ntp2time((s,f)):
+def _ntp2time(arg):
+    s, f = arg
     return s-_TIME1970+float((f>>4)&0xfffffff)/0x10000000
 
 def sntp_time(server):

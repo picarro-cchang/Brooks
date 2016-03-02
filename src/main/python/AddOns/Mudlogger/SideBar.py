@@ -40,7 +40,7 @@ class SideBar(wx.Panel):
         if flag == flag_for_page_one:
             self.log_window = wx.TextCtrl(
                 self, wx.ID_ANY, size=(100,200),
-                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
+                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL | wx.TE_RICH)
             sizer.Add(self.log_window, 0, wx.EXPAND)
             self.write_to_log(
                 'Log...Session Started at...%s\n'%time.strftime(
@@ -55,6 +55,11 @@ class SideBar(wx.Panel):
     
     def write_to_log(self,text_str):
         self.log_window.WriteText(text_str)
+        
+    def write_alert_to_log(self, text_str):
+        self.log_window.SetDefaultStyle(wx.TextAttr(wx.RED, wx.WHITE))
+        self.log_window.AppendText(text_str)
+        self.log_window.SetDefaultStyle(wx.TextAttr(wx.BLACK, wx.WHITE))
 
     def add_row_to_tables(self,run_cnt):
         number_of_rows_to_add = 1

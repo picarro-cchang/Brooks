@@ -153,14 +153,8 @@ class MyPlotCanvas(plot.PlotCanvas):
     def SetXTickFormat(self,v):
         self.xTickFormat = v
 
-    def GetXTickFormat():
-        return self.xTickFormat
-
     def SetYTickFormat(self,v):
         self.yTickFormat = v
-
-    def GetYTickFormat():
-        return self.yTickFormat
 
     def SetTimeAxes(self,timeAxes):
         """ timeAxes is a tuple, first element is for X axis and second is for Y axis. If an element

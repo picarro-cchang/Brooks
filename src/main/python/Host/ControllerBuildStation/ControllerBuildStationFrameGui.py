@@ -180,12 +180,3 @@ class ControllerBuildStationFrameGui(wx.Frame):
         event.Skip()
 
 # end of class ControllerFrameGui
-
-
-if __name__ == "__main__":
-    app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
-    controllerFrameGui = ControllerFrameGui(None, -1, "")
-    app.SetTopWindow(controllerFrameGui)
-    controllerFrameGui.Show()
-    app.MainLoop()

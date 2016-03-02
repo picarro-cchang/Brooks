@@ -16,14 +16,27 @@ for data in matplotlib_data:
     dirname = os.path.join('matplotlib_data', data[len(matplotlib_data_dir)+1])
     matplotlib_data_files.append((os.path.split(dirname)[0],[data]))
 
+import zmq
+os.environ["PATH"] += os.path.pathsep + os.path.split(zmq.__file__)[0]
+
+data_files = matplotlib.get_py2exe_datafiles()
+for fileName in os.listdir("."):
+    if fileName.endswith(".pyd"):
+        data_files.append(fileName)
+
 setup(
-  console = ['main.py'],
+  windows = [{"script" : "Mudlogger.py",
+              "icon_resources" : [(1, "Mudlogger.ico")]}],
   options = {
     'py2exe' : {
+        'compressed' : 1,
+        'optimize' : 1,
         'packages' : [
             'matplotlib',
             'Pyro',
             'scipy.sparse.csgraph._validation',
+            'scipy.optimize',
+            r'scipy.special._ufuncs_cxx',
             'Host.Common'
             ],
         'dll_excludes' : [
@@ -44,5 +57,6 @@ setup(
             ]
     }
   },
-  data_files = matplotlib.get_py2exe_datafiles()
+  data_files = data_files,
+  zipfile = "lib/share"
 )

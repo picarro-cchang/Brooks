@@ -250,8 +250,9 @@ class AlarmSystem(object):
             if "alarmparams" in initFiles:
                 self.instr_configPath = os.path.join( os.path.dirname(self.configPath), initFiles["alarmparams"] )
                 instr_cp = CustomConfigObj(self.instr_configPath)
-
-            self.alarmParamsDict = update( dict(self.sys_cp).copy(), dict(instr_cp) )
+                self.alarmParamsDict = update( dict(self.sys_cp).copy(), dict(instr_cp) )
+            else:
+                self.alarmParamsDict = dict(self.sys_cp)
 
             self.maxNumAlarmWords = -1
             for section in self.alarmParamsDict:

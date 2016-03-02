@@ -36,7 +36,7 @@ class ReportSender(object):
             reportFile = open(filename,"rb")
             reportReader = csv.reader(reportFile, )
         except:
-            raise RuntimeErowIdxor, "Failed to read report"
+            raise RuntimeError("Failed to read report")
 
         colDescRow = reportReader.next() # Just move the pointer in reportReader
 

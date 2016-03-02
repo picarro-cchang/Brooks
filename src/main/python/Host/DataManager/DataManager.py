@@ -1224,10 +1224,10 @@ class DataManager(object):
         if NewState == self.__State:
             return
 
-        if __debug__: #code helper - make sure state changes are happening only from where we expect
-            callerName = sys._getframe(1).f_code.co_name
-            if not callerName.startswith("_HandleState_") and not callerName.startswith("_MainLoop"):
-                raise Exception("Code error!  State changes should only be made/managed in _MainLoop!!  Change attempt made from %s." % callerName)
+        # if __debug__: #code helper - make sure state changes are happening only from where we expect
+            # callerName = sys._getframe(1).f_code.co_name
+            # if not callerName.startswith("_HandleState_") and not callerName.startswith("_MainLoop"):
+                # raise Exception("Code error!  State changes should only be made/managed in _MainLoop!!  Change attempt made from %s." % callerName)
 
         #Do any on-entry state initialization that is needed...
         if NewState == STATE_INIT:
