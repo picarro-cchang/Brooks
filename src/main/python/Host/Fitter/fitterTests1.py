@@ -783,7 +783,7 @@ class GalatryBasisTestCase(unittest.TestCase):
         self.assertTrue(allclose(g.initialParams,[6514.252,1.74,1e-3,7e-4,1e-2]),'Check parameters')
         xVal = linspace(6513.5,6514.5,31)
         a = array([6514.252,1.74,1e-3,7e-4,1e-2],float_)
-        a[1:4] *= P
+        a[1:4] = a[1:4] * P
         y = a[1]*galatry((xVal-a[0])/a[4],a[2],a[3],a[1])
         self.assertTrue(allclose(self.model(xVal),y),'Check Galatry values')
     def testGalatryWithInitialValue1(self):

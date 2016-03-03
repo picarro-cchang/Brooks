@@ -117,7 +117,7 @@ def bspUpdate(N,x,y):
     W[:,0] = polyval(array([-1,3,-3,1],'d')/6,fx)
     for k in range(len(ix)):
         if ix[k]>=0 and ix[k]<N:
-            result[ix[k]:(ix[k]+4)] += y[k]*W[k,:]
+            result[ix[k]:(ix[k]+4)] = result[ix[k]:(ix[k]+4)] + y[k]*W[k,:]
     return result[1:-3]
 
 def bspInverse(p0,coeffs,y):
@@ -194,7 +194,7 @@ class BspInterp(object):
         for k in range(len(ix)):
             i = ix[k]
             if i>=0 and i<self.N:
-                self.coeffs[i:i+4] += relax*W[k,:]*(y[k]-dot(W[k,:],self.coeffs[i:i+4]))
+                self.coeffs[i:i+4] = self.coeffs[i:i+4] + relax*W[k,:]*(y[k]-dot(W[k,:],self.coeffs[i:i+4]))
 
     def intEval(self,x):
         """Evaluate the integral of the spline defined by coefficients "coeffs" at the position "x" """

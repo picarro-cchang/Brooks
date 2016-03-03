@@ -95,7 +95,7 @@ def bspUpdate(N,x,y):
     W[:,0] = polyval(array([-1,3,-3,1],'d')/6,fx)
     for k in range(len(ix)):
         if ix[k]>=0 and ix[k]<N-1:
-            result[ix[k]:(ix[k]+4)] += y[k]*W[k,:]
+            result[ix[k]:(ix[k]+4)] = result[ix[k]:(ix[k]+4)] + y[k]*W[k,:]
     return result[1:-2]
 
 def bspInverse(p0,coeffs,y):
