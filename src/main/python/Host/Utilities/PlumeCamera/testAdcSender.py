@@ -14,7 +14,7 @@ ADC_BROADCAST_PORT = 5202
 
 class TestAdc(unittest.TestCase):
     def setUp(self):
-    	self.zmqContext = zmq.Context()
+        self.zmqContext = zmq.Context()
         self.adcSender = subprocess.Popen(["python.exe",r".\adcSender.py"])
 
     def tearDown(self):
@@ -79,7 +79,6 @@ class TestAdc(unittest.TestCase):
         result = json.loads(cmdSocket.recv())
         print result
         cmdSocket.close()
-	pass
-
+    
 if __name__ == '__main__':
     unittest.main()

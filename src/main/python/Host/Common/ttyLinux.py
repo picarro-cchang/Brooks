@@ -33,11 +33,11 @@ def readLookAhead () :
     return sys.stdin.read(1)
 
 if __name__ == "__main__":
-	setSpecial()
-	for i in range(10) :
-		time.sleep(1)
-		keys = readLookAhead()
-		print "Got", [keys]
-	setNormal()
+    setSpecial()
+    for i in range(10) :
+        time.sleep(1)
+        keys = readLookAhead()
+        print "Got", [keys]
+    setNormal()
 #@-node:root.20080402111310.37:@thin Common/ttyLinux.py
 #@-leo
