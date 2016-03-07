@@ -120,6 +120,11 @@
         "NBDS": {
             "species": "H2O2",
             "installerSignature": "NBDS"
+        },
+        
+        "SADS": {
+            "species": "HCl",
+            "installerSignature": "SADS"
         }
 
     },
