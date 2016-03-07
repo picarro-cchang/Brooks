@@ -29,7 +29,7 @@ class BaselineControl(object):
         max_search_value = 100
         for port in range(min_search_value, max_search_value):
             try:
-                serial_connection = self.setup_serial(port)
+                serial_connection = self.setup_serial(port, timeout=5.0)
             except:
                 pass
         
