@@ -784,8 +784,9 @@ class SampleManager(object):
             scriptPath =  os.path.join(self.iniAbsBasePath, modePath)
             scriptFilename = os.path.join(scriptPath,modeFile).strip() + ".py"
 
-            exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
-            modeClass = locals()[modeFile]
+            env = globals().copy()
+            exec compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec") in env
+            modeClass = env[modeFile]
 
             self.modeName = modeName
             self.mode     = modeClass(self.defaultConfig + modeConfig)
