@@ -123,6 +123,10 @@ class PlotAreaTwo(wx.Panel):
         sizer_for_buttons = wx.BoxSizer(wx.HORIZONTAL)
         sizer_for_buttons.Add(left_button, 0, wx.ALIGN_TOP, 10)
         sizer_for_buttons.Add(right_button, 0, wx.ALIGN_TOP, 10)
+        
+        sizer_for_buttons.Add((20, 20), 1, 0, 0)
+        logoBmp = wx.Bitmap('logo.png', wx.BITMAP_TYPE_PNG)
+        sizer_for_buttons.Add(wx.StaticBitmap(self, -1, logoBmp), proportion=0, flag=wx.ALIGN_TOP,border = 10)
 
         sizer_main = wx.BoxSizer(wx.VERTICAL)
         sizer_main.Add(sizer_for_buttons, 0, wx.EXPAND)

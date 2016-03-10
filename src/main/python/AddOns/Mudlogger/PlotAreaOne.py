@@ -3,7 +3,6 @@ import wx
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigCanvas
 from PltCtrlOne import PltCtrlOne
 from DataCtrlOne import DataCtrlOne
-from MethaneMonitor import MethaneMonitor
 from RunCtrlParams import RunCtrlParams
 from PeakDection import PeakDection
 from BaselineControl import BaselineControl
@@ -29,10 +28,11 @@ class PlotAreaOne(wx.Panel):
         self.figure = self.plt_ctrl_one.initialize_plots(self.series_variables)
         self.canvas = FigCanvas(self, -1, self.figure)
         self.canvas.draw()
-        self.methane_monitor = MethaneMonitor()
+        self.methane_threshold = main_frame.config.getfloat("Alarm", "Methane_Threshold")
         self.methane_concentration = 0
         self.methane_concentration_previous = 0
-        self.methane_flag = False
+        self.water_threshold = main_frame.config.getfloat("Alarm", "Water_Threshold")
+        self.water_concentration = 0
         self.intialize_layout()
         self.run_ctrl_params = RunCtrlParams()
         self.peak_detector = PeakDection()
@@ -88,6 +88,9 @@ class PlotAreaOne(wx.Panel):
         sizer_for_buttons.Add(clear_button, 0, wx.ALIGN_TOP, 10)
         sizer_for_buttons.Add(start_button, 0, wx.ALIGN_TOP, 10)
         sizer_for_buttons.Add(stop_button, 0, wx.ALIGN_TOP, 10)
+        sizer_for_buttons.Add((20, 20), 1, 0, 0)
+        logoBmp = wx.Bitmap('logo.png', wx.BITMAP_TYPE_PNG)
+        sizer_for_buttons.Add(wx.StaticBitmap(self, -1, logoBmp), proportion=0, flag=wx.ALIGN_TOP,border = 10)
         sizer_main = wx.BoxSizer(wx.VERTICAL)
         sizer_main.Add(sizer_for_buttons, 0, wx.EXPAND)
         sizer_main.Add(self.canvas, 1, wx.EXPAND)
@@ -292,7 +295,6 @@ class PlotAreaOne(wx.Panel):
                 self.run_ctrl_params.run_duration += 15.0
                 self.sidebar.write_to_log('...Increased GC Run Duration:  %7.2f\n' % self.run_ctrl_params.run_duration)
             
-            self.methane_flag = self.methane_monitor.check_methane(self.methane_concentration)
             if self.peak_detector.current_peak_data_ready:
                 self.peak_detector.current_peak_data_ready = False
                 self.peak_detector.calculate_isotope_value(self.series_variables)
@@ -369,6 +371,7 @@ class PlotAreaOne(wx.Panel):
                 
             self.methane_concentration_previous = self.methane_concentration    
             self.methane_concentration = data['CH4']
+            self.water_concentration = data['H2O']
 
     def assign_nan_to_lsts(self,data):
         self.time.append(data['time'] - self.run_ctrl_params.plot_start_time)
@@ -387,9 +390,12 @@ class PlotAreaOne(wx.Panel):
             self.main_frame.SetStatusText('CO2 Peak Detected', 0)
         else:
             self.main_frame.SetStatusText('', 0)
-        if self.methane_flag:
+        if self.methane_concentration > self.methane_threshold:
             self.sidebar.write_alert_to_log("High methane concentration!!!\n")
             self.main_frame.SetStatusText('Warning...high methane', 0)
+        if self.water_concentration > self.water_threshold:
+            self.sidebar.write_alert_to_log("High water concentration!!!\n")
+            self.main_frame.SetStatusText('Warning...high water', 0)
         self.main_frame.SetStatusText('[CO2]:  %13.2f' % round(self.concentration[-1], 2), 2)
         self.main_frame.SetStatusText('Delta 13C:  %4.2f' % round(self.delta[-1], 2), 3)
 

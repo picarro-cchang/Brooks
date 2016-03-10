@@ -11,6 +11,7 @@ class Calibration(wx.Frame):
         self.main_frame = main_frame
         size = (325, 275)
         id_size = (75, -1)
+        title_size = (100, -1)
         number_of_standards = 4
         number_of_columns = 3
         isotope_index = 0
@@ -29,7 +30,7 @@ class Calibration(wx.Frame):
         self.st_1 = wx.StaticText(self.setup_ids_panel, -1, 'Standard 2:', size=id_size)
         self.st_2 = wx.StaticText(self.setup_ids_panel, -1, 'Standard 3:', size=id_size)
         self.id_title = wx.StaticText(self.setup_ids_panel, -1,
-                                      'Isotope Value', size=id_size)
+                                      u'Std \u03B4\u00B9\u00B3C Value', size=title_size)
         self.id_0 = wx.TextCtrl(self.setup_ids_panel, -1,
                                 value=self.main_frame.standards_library['Standard_1'][isotope_index],
                                 size=id_size)
@@ -40,7 +41,7 @@ class Calibration(wx.Frame):
                                 value=self.main_frame.standards_library['Standard_3'][isotope_index],
                                 size=id_size)
         self.rg_title = wx.StaticText(self.setup_ids_panel, -1,
-                                      'Standard Runs', size=id_size)
+                                      'Std Run #', size=title_size)
         self.rg_0 = wx.TextCtrl(self.setup_ids_panel, -1,
                                 value=self.main_frame.standards_library['Standard_1'][range_index],
                                 size=id_size)

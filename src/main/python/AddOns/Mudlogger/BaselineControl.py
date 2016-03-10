@@ -108,20 +108,3 @@ class BaselineControl(object):
             except:
                 pass
         return data_stream
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
