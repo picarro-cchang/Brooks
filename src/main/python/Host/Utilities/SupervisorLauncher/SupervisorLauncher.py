@@ -349,9 +349,10 @@ if __name__ == "__main__":
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
         frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "", mode=modeSpecified)
-        frame.initMode()
-        app.SetTopWindow(frame)
-        #frame.Show()
+        if not autoLaunch:
+            frame.initMode()
+            app.SetTopWindow(frame)
+            #frame.Show()
         app.MainLoop()
 #
 # SupervisorLauncher.py -d 3 -k -a -c c:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini
