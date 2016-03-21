@@ -120,15 +120,16 @@ class SerIntrf(object):
         self.ser.write(str + '\r')
 
     def getLine(self):
-        line = []
-        while True:
-            ch = self.ser.read()
-            if not ch:
-                raise TimeoutError
-            if ch != '\n':
-                line.append(ch)
-            else:
-                return ''.join(line)
+        # line = []
+        # while True:
+            # ch = self.ser.read()
+            # if not ch:
+                # raise TimeoutError
+            # if ch != '\n':
+                # line.append(ch)
+            # else:
+                # return ''.join(line)
+        return self.ser.readline()
 
 
 def waitForComplete(ser, pumpAddr, timeout = None):
@@ -204,7 +205,7 @@ if __name__ == '__main__':
     numPumps = len(portList)
     if startPump:
         dlg.Destroy()
-        pump = SerIntrf(port=serialPort, baudrate=9600, timeout=1, xonxoff=0)
+        pump = SerIntrf(port=serialPort, baudrate=9600, timeout=3, xonxoff=0)
         pump.open()
         for id in range(numPumps):
             pumpAddr = portList[id] + 1
