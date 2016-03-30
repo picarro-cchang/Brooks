@@ -34,8 +34,7 @@ for folder in includeFolderList:
 for file in includeFileList:    
     pySourceFiles.append(file)
 
-pySourceFiles = glob.glob(r"Host/SampleManager/*.py")    
-    
+  
 CanDelete = []
 for f in pySourceFiles:
     if "__init__.py" in f or "setup.py" in f:

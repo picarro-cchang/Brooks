@@ -64,12 +64,23 @@ def _getOsType():
         osType = 'win7'
     elif osType == 'XP':
         osType = 'winxp'
+    elif platform.uname()[3].startswith("6.2"):
+		osType = 'win10'
     else:
         osType = 'unknown'
         print "Unexpected OS type!"
 
     return osType
 
+def compile_datviewer_source():
+    import py_compile
+    datviewer_dir = os.path.join('..','AddOns','DatViewer')
+    py_compile.compile(os.path.join(datviewer_dir, 'DatViewer.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'DateRangeSelectorFrame.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'Analysis.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'FileOperations.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'timestamp.py'))
+    py_compile.compile(os.path.join(datviewer_dir, 'CustomConfigObj.py'))
 
 def _runBatFile(batComponent, batFilename, batDir):
     """
@@ -466,6 +477,9 @@ osType = _getOsType()
 versionStr = _getBuildVersion()
 buildTypeStr = _getBuildType()
 
+# compile DatViewer
+compile_datviewer_source()
+
 # Build the various Host .pyd modules
 #
 # Fitter: build cluster_analyzer.pyd and fitutils.pyd
@@ -555,6 +569,8 @@ inclusionList = ["email",
                  ]
 
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll', "mswsock.dll", "powrprof.dll" ]
+if osType == "win10":
+	dllexclusionList.append("msvcp90.dll")
 
 hex_images = glob.glob("../Firmware/CypressUSB/Drivers/*.*")
 hex_images = hex_images + [ "../Firmware/CypressUSB/analyzer/analyzerUsb.hex",
@@ -596,7 +612,7 @@ for d in cypressDriverDirs:
 
 if osType == "winxp":
     data_files.append("../Vendor/inpout/winxp/inpout32.dll")
-elif osType == "win7":
+elif osType in ["win7", "win10"]:
     data_files.append("../Vendor/inpout/win7/Win32/inpout32.dll")
 else:
     print "Failed to include inpout32.dll in build, OS is not supported! (osType='%s')" % osType
@@ -609,6 +625,7 @@ consoleList = [
     "pydCaller/CommandInterface.py",
     "pydCaller/DataLogger.py",
     "pydCaller/DataManager.py",
+    "pydCaller/DataManagerPublisher.py",
     "pydCaller/Driver.py",
     "pydCaller/ElectricalInterface.py",
     "pydCaller/EventManager.py",
@@ -621,11 +638,18 @@ consoleList = [
     "pydCaller/RestartSupervisor.py",
     "pydCaller/RunSerial2Socket.py",
     "pydCaller/SampleManager.py",
+    "pydCaller/SchemeProcessor.py",
     "pydCaller/SpectrumCollector.py",
     "pydCaller/Supervisor.py",
     "pydCaller/ValveSequencer.py",
     "ConfigMonitor/ConfigMonitor.py",
+    "ControlBridge/ControlBridge.py",
+    "Sensors/MobileKitMonitor.py",
+    "PeakAnalyzer/RunPeakAnalyzer.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
+    "Utilities/RestartSurveyor/RestartSurveyor.py",
+    "Utilities/IntegrationBackup/IntegrationBackup.py",
+    "Utilities/Restart/RestoreStartup.py",
     "MfgUtilities/CalibrateSystem.py",
     "MfgUtilities/CalibrateFsr.py",
     "MfgUtilities/AdjustWlmOffset.py",
