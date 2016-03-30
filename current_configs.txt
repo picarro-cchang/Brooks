@@ -36,7 +36,6 @@ FCDS/AppConfig, 1.0.0
 FCDS/InstrConfig, 1.0.0
 HBDS/AppConfig, 1.0.0
 HBDS/InstrConfig, 1.0.0
-HIDS/AppConfig, 1.0.3
 HIDS/InstrConfig, 1.0.2
 HKDS/InstrConfig, 1.0.3
 JFAADS/AppConfig, 1.0.4
@@ -45,4 +44,4 @@ MADS/AppConfig, 1.0.0
 MADS/InstrConfig, 1.0.0
 NBDS/AppConfig, 1.0.0
 NBDS/InstrConfig, 1.0.0
-SADS/InstrConfig, 1.0.0
+SADS/AppConfig, 1.0.1
