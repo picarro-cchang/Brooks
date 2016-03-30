@@ -67,9 +67,10 @@ class PeriphIntrf(object):
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         self.lastTimestamps = {}
         self.persistentDict = {}
-        self.parserVersion = None
+        self.parserVersion = {}
         for p in range(self.numChannels):
             self.persistentDict[p] = None
+            self.parserVersion[p] = 0.0
             self.sensorList.append(deque())
             parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
@@ -77,21 +78,17 @@ class PeriphIntrf(object):
             self.scriptFilenames.append(scriptFilename)
             if parserFunc.startswith("parse"):
                 scriptCodeObj = compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
-                try:
-                    exec scriptCodeObj in globals()
-                    if not self.parserVersion:
-                        self.parserVersion = PARSER_VERSION
-                    if self.parserVersion > 0.0:
-                        self.parserFuncCode.append(scriptCodeObj)
-                    else:
-                        self.parserFuncCode.append(eval(parserFunc))
-                except:
-                    self.parserFuncCode.append(eval(parserFunc))
+                dataEnviron = {}
+                exec scriptCodeObj in dataEnviron
+                if "PARSER_VERSION" in dataEnviron:
+                    self.parserVersion[p] = dataEnviron["PARSER_VERSION"]
+                if self.parserVersion[p] > 0.0:
+                    self.parserFuncCode.append(scriptCodeObj)
+                else:
+                    self.parserFuncCode.append(dataEnviron[parserFunc])
             else:
                 self.parserFuncCode.append(None)
-            if not self.parserVersion:
-                self.parserVersion = 0.0
-            print "Peripheral Interface parser version number: ", self.parserVersion
+            print "Peripheral Interface parser version number: ", self.parserVersion[p], parserFunc
             
             labelList = [i.strip() for i in co.get("PORT%d" % p, "DATALABELS").split(",")]
             if labelList[0]:
@@ -199,7 +196,7 @@ class PeriphIntrf(object):
                 counter += 1
                 if counter >= maxcount:
                     try:
-                        if self.parserVersion > 0.0:
+                        if self.parserVersion[port] > 0.0:
                             dataEnviron = {"_PERSISTENT_" : self.persistentDict[port], "_RAWSTRING_": newStr}
                             exec self.parserFuncCode[port] in dataEnviron
                             self.persistentDict[port] = dataEnviron["_PERSISTENT_"]
