@@ -13,7 +13,7 @@
 
 [AVAILABLE_MODES]
 ModeCount = 3
-Mode_1 = FBDS_mode
+Mode_1 = FEDS_mode
 Mode_2 = FBDS_InLab_mode
 Mode_3 = warming_mode
 
