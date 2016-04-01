@@ -646,6 +646,7 @@ consoleList = [
     "ControlBridge/ControlBridge.py",
     "Sensors/MobileKitMonitor.py",
     "PeakAnalyzer/RunPeakAnalyzer.py",
+    "Utilities/FlowController/FlowController.py",
     "Utilities/IntegrationTool/IntegrationTool.py",
     "Utilities/RestartSurveyor/RestartSurveyor.py",
     "Utilities/IntegrationBackup/IntegrationBackup.py",
