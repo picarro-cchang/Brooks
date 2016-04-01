@@ -66,10 +66,10 @@ class PeriphIntrf(object):
         self.offsets = []
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         self.lastTimestamps = {}
-        self.outputDict = {}
+        self.persistentDict = {}
         self.parserVersion = None
         for p in range(self.numChannels):
-            self.outputDict[p] = None
+            self.persistentDict[p] = None
             self.sensorList.append(deque())
             parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
@@ -200,9 +200,9 @@ class PeriphIntrf(object):
                 if counter >= maxcount:
                     try:
                         if self.parserVersion > 0.0:
-                            dataEnviron = {"_OUTPUT_" : self.outputDict[port], "_RAWSTRING_": newStr}
+                            dataEnviron = {"_PERSISTENT_" : self.persistentDict[port], "_RAWSTRING_": newStr}
                             exec self.parserFuncCode[port] in dataEnviron
-                            self.outputDict[port] = dataEnviron["_OUTPUT_"]
+                            self.persistentDict[port] = dataEnviron["_PERSISTENT_"]
                             parsedList = dataEnviron["_OUTPUT_"]
                         else:
                             # Make it backward compatibility

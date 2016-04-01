@@ -19,7 +19,7 @@ class DataManagerListener(object):
         print msg
                                           
     def dataFilter(self, rawData):
-        goodKeys = ['CO2_dry', 'Delta13C', 'CH4']
+        goodKeys = ['CO2_dry', 'Delta13C', 'CH4', 'H2O']
         if 'analyze_iCO2_lct' == rawData['source']:
             dataDict = rawData['data']
             goodData = {key:dataDict[key] for key in dataDict if key in goodKeys}

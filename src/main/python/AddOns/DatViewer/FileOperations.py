@@ -390,6 +390,7 @@ class ConcatenateZip2File():
         self.DateRange = self.variableDict.pop("user_DateRange", None)
         self.PrivateLog = self.variableDict.pop("user_PrivateLog", None)
         self.TimeZone = self.variableDict.pop("user_TimeZone", None)
+        self.largeFile = self.variableDict.pop("user_LargeDateset", False)
         if self.TimeZone is not None:
             self.TimeZone = pytz.timezone(self.TimeZone)
         self.progress = 0

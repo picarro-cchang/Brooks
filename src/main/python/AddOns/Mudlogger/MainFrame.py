@@ -6,6 +6,7 @@ from Page import Page
 from SetupParameters import SetupParameters
 from Calibration import Calibration
 from IsotopeScalingFrame import IsotopeScaling
+from Host.Common.CustomConfigObj import CustomConfigObj
 
 class IsotopeScalingFrame(IsotopeScaling):
     def __init__(self, *args, **kwds):
@@ -54,7 +55,7 @@ class IsotopeScalingFrame(IsotopeScaling):
         self.Close()
     
 class MainFrame(wx.Frame):
-    def __init__(self, parent, generate_fake_data=False, read_data_file=None, test_peak_detection=False):
+    def __init__(self, parent, configFile, generate_fake_data=False, read_data_file=None, test_peak_detection=False):
         wx.Frame.__init__(self, parent)
         flag_for_page_one = 1
         flag_for_page_two = 2
@@ -63,6 +64,12 @@ class MainFrame(wx.Frame):
         self.generate_fake_data = generate_fake_data
         self.read_data_file = read_data_file
         self.test_peak_detection = test_peak_detection
+        if os.path.exists(configFile):
+            self.config = CustomConfigObj(configFile)
+        else:
+            print "Configuration file not found: %s" % configFile
+            import sys
+            sys.exit()
         
         self.notebook = wx.Notebook(self)
         self.page_one = Page(self.notebook,self,flag_for_page_one)
@@ -159,9 +166,9 @@ class MainFrame(wx.Frame):
 
     def setup_defaults(self):
         self.retention_library={'Methane':'40'}
-        self.standards_library={'Standard_1':['-5.02','1,2,3'],
-                                'Standard_2':['-9.34','4,5,6'], 
-                                'Standard_3':['0.73','']}
+        self.standards_library={'Standard_1':['-25.0','3,4,5'],
+                                'Standard_2':['-69.0','8,9,10'], 
+                                'Standard_3':['','']}
         # if a peak is within this threshold in seconds to a
         # previously recorded peak, then it will be assigned
         # to that previous peak...

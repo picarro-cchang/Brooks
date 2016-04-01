@@ -6,10 +6,11 @@ from MainFrame import MainFrame
 
 HELP_STRING = \
 """\
-Mudlogger.py [-h] [--data<FILENAME>] [--test]
+Mudlogger.py [-h] [-c] [--data<FILENAME>] [--test]
 
 Where the options can be a combination of the following:
 -h              Print this help.
+-c              Specify another configuration file
 --data          Program reads data file for testing 
 --test          Program generates fake data for testing
 --test_peak_detection 
@@ -20,7 +21,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
     alarmConfigFile = None
-    shortOpts = 'h'
+    shortOpts = 'hc:'
     longOpts = ["help", "test", "data=", "test_peak_detection"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -40,7 +41,11 @@ def HandleCommandSwitches():
     else:
         if "--test" in options:
             executeTest = True
-
+            
+    configFile = "Mudlogger.ini"
+    if "-c" in options:
+        configFile = options["-c"]
+        
     if "--data" in options:
         dataFile = options["--data"]
         executeTest = False
@@ -52,13 +57,13 @@ def HandleCommandSwitches():
     else:
         test_peak_detection = False
 
-    return (executeTest, dataFile, test_peak_detection)
+    return (configFile, executeTest, dataFile, test_peak_detection)
 
 def main():
     #Get and handle the command line options...
-    test, dataFile, test_peak_detection = HandleCommandSwitches()
+    configFile, test, dataFile, test_peak_detection = HandleCommandSwitches()
     app = wx.App()
-    MainFrame(None, generate_fake_data=test, read_data_file=dataFile, test_peak_detection=test_peak_detection)
+    MainFrame(None, configFile, generate_fake_data=test, read_data_file=dataFile, test_peak_detection=test_peak_detection)
     app.MainLoop()
     
 if __name__ == '__main__':

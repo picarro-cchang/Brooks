@@ -2364,7 +2364,7 @@ class QuickGui(wx.Frame):
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
     def OnAbout(self,e):
-        v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-2011, Picarro Inc.\n\n"
+        v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-%d, Picarro Inc.\n\n" % time.localtime()[0]
         try:
             dV = self.driverRpc.allVersions()
             boldText = "SOFTWARE RELEASE VERSION : %s\n" % dV["host release"]

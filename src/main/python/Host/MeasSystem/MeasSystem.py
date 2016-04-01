@@ -41,8 +41,8 @@ File History:
 
 """
 
-if __name__ != "__main__":
-    raise Exception("%s is not importable!" % __file__)
+# if __name__ != "__main__":
+    # raise Exception("%s is not importable!" % __file__)
 
 APP_NAME = "MeasSystem"
 APP_VERSION = 1.0
