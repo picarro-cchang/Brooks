@@ -21,6 +21,17 @@
 # 2014-02-13 tw  v2.0.4: Concatenate Folder to H5 menu option uses new function (asks user for folder first then filename).
 # 2015-12-01 yuan v3.0.0: Rewrote large portion of the program. Added many new features.
 # 2016-01-13 yuan v3.0.1: Plot multiple Allan std. dev. data in one figure; Add screenshot menu to XYPlot
+msg = """
+  _____        ___      ___                        
+ |  __ \      | \ \    / (_)                       
+ | |  | | __ _| |\ \  / / _  _____      _____ _ __ 
+ | |  | |/ _` | __\ \/ / | |/ _ \ \ /\ / / _ \ '__|
+ | |__| | (_| | |_ \  /  | |  __/\ V  V /  __/ |   
+ |_____/ \__,_|\__| \/   |_|\___| \_/\_/ \___|_|   
+
+Loading program... 
+"""                                                   
+print msg
 
 import gettext
 import getopt
