@@ -16,8 +16,8 @@ from Host.Common.timestamp import getTimestamp, unixTime
 from Host.Common.MeasData import MeasData
 from Host.Common.Broadcaster import Broadcaster
 
-import Host.PeriphIntrf.Errors as Errors
-from Host.PeriphIntrf.PeriphProcessor import PeriphProcessor
+import Errors
+from PeriphProcessor import PeriphProcessor
 
 
 #Set up a useful AppPath reference...
@@ -40,9 +40,9 @@ from Host.PeriphIntrf.Interpolators import Interpolators
 
 EventManagerProxy_Init(APP_NAME)
 
-
+        
 class PeriphIntrf(object):
-
+    
     INTERPOLATORS = {
         'linear'    : Interpolators.linear,
         'max'       : Interpolators.max,
@@ -67,9 +67,10 @@ class PeriphIntrf(object):
         self.numChannels = len([s for s in co.list_sections() if s.startswith("PORT")])
         self.lastTimestamps = {}
         self.persistentDict = {}
-        self.parserVersion = None
+        self.parserVersion = {}
         for p in range(self.numChannels):
             self.persistentDict[p] = None
+            self.parserVersion[p] = 0.0
             self.sensorList.append(deque())
             parserFunc = co.get("PORT%d" % p, "SCRIPTFUNC").strip()
             scriptPath =  os.path.join(iniAbsBasePath, co.get("SETUP", "SCRIPTPATH"))
@@ -77,22 +78,18 @@ class PeriphIntrf(object):
             self.scriptFilenames.append(scriptFilename)
             if parserFunc.startswith("parse"):
                 scriptCodeObj = compile(file(scriptFilename,"r").read().replace("\r",""),scriptFilename,"exec")
-                try:
-                    exec scriptCodeObj in globals()
-                    if not self.parserVersion:
-                        self.parserVersion = PARSER_VERSION
-                    if self.parserVersion > 0.0:
-                        self.parserFuncCode.append(scriptCodeObj)
-                    else:
-                        self.parserFuncCode.append(eval(parserFunc))
-                except:
-                    self.parserFuncCode.append(eval(parserFunc))
+                dataEnviron = {}
+                exec scriptCodeObj in dataEnviron
+                if "PARSER_VERSION" in dataEnviron:
+                    self.parserVersion[p] = dataEnviron["PARSER_VERSION"]
+                if self.parserVersion[p] > 0.0:
+                    self.parserFuncCode.append(scriptCodeObj)
+                else:
+                    self.parserFuncCode.append(dataEnviron[parserFunc])
             else:
                 self.parserFuncCode.append(None)
-            if not self.parserVersion:
-                self.parserVersion = 0.0
-            print "Peripheral Interface parser version number: ", self.parserVersion
-
+            print "Peripheral Interface parser version number: ", self.parserVersion[p], parserFunc
+            
             labelList = [i.strip() for i in co.get("PORT%d" % p, "DATALABELS").split(",")]
             if labelList[0]:
                 self.dataLabels.append(labelList)
@@ -116,7 +113,7 @@ class PeriphIntrf(object):
 
             self.parsers.append(parserFunc)
             self.offsets.append(co.getfloat("PORT%d" % p, "OFFSET", 0.0))
-
+            
         # Set up the peripheral processor
         try:
             self.procInputPorts = [int(p) for p in co.get("PROCESSOR", "INPUTPORTS").split(",") if p.strip()]
@@ -129,13 +126,13 @@ class PeriphIntrf(object):
             print traceback.format_exc()
             self.procInputPorts = []
             self.periphProcessor = None
-
+        
         self.sensorLock = threading.Lock()
         self._shutdownRequested = False
         self.connect()
         self.startSocketThread()
         self.startStateMachineThread()
-
+    
     def connect(self):
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -143,13 +140,13 @@ class PeriphIntrf(object):
         except socket.error, msg:
             sys.stderr.write("[ERROR] %s\n" % msg[1])
             raise
-
+            
     def getFromSocket(self):
         try:
             while not self._shutdownRequested:
                 data = self.sock.recv(1024)
                 if len(data)>0:
-                    for c in data:
+                    for c in data: 
                         self.queue.put(c)
                 else:
                     time.sleep(0.01)
@@ -168,7 +165,7 @@ class PeriphIntrf(object):
             if state == "SYNC1":
                 if ord(c) == 0x5A: state = "SYNC2"
             elif state == "SYNC2":
-                if ord(c) == 0xA5:
+                if ord(c) == 0xA5: 
                     value, counter, maxcount = 0, 0, 8
                     state = "TIMESTAMP"
                 else:
@@ -193,13 +190,13 @@ class PeriphIntrf(object):
                     state = "DATA"
             elif state == "DATA":
                 newStr += c
-                if c not in ['\r','\n']:
+                if c not in ['\r','\n']: 
                     pass
                     #sys.stdout.write(c)
                 counter += 1
                 if counter >= maxcount:
                     try:
-                        if self.parserVersion > 0.0:
+                        if self.parserVersion[port] > 0.0:
                             dataEnviron = {"_PERSISTENT_" : self.persistentDict[port], "_RAWSTRING_": newStr}
                             exec self.parserFuncCode[port] in dataEnviron
                             self.persistentDict[port] = dataEnviron["_PERSISTENT_"]
@@ -224,7 +221,7 @@ class PeriphIntrf(object):
             self.sensorList[port].append((ts, parsedList))
             if len(self.sensorList[port]) > self.sensorQSize:
                 self.sensorList[port].popleft()
-
+                                
             measGood = True
             reportDict = dict(zip(self.dataLabels[port],parsedList))
             measData = MeasData(self.parsers[port], unixTime(ts), reportDict, measGood, port)
@@ -234,17 +231,17 @@ class PeriphIntrf(object):
             print "%r" % (err,)
         finally:
             self.sensorLock.release()
-
+                        
     def startSocketThread(self):
         appThread = threading.Thread(target = self.getFromSocket)
         appThread.setDaemon(True)
         appThread.start()
-
+        
     def startStateMachineThread(self):
         appThread = threading.Thread(target = self.sensorStateMachine)
         appThread.setDaemon(True)
         appThread.start()
-
+         
     def selectAllDataByTime(self, requestTime):
         sensorDataList = []
         for i in range(self.numChannels):
@@ -259,8 +256,8 @@ class PeriphIntrf(object):
                 ts, savedTs = None, None
                 valList, savedValList = None, None
                 for (tsRaw, valList) in reversed(self.sensorList[port]):
-                    # Apply the offset (in seconds) to the timestamp (in milliseconds) recorded for
-                    #  these data to compensate for the time taken for the sample to enter the cavity
+                    # Apply the offset (in seconds) to the timestamp (in milliseconds) recorded for 
+                    #  these data to compensate for the time taken for the sample to enter the cavity 
                     #  and be probed by the light.
                     # A negative offset for a port means that there the gas concentration is measured
                     #  AFTER the data are measured at the peripheral port. Since "requestTime" is the
@@ -285,7 +282,7 @@ class PeriphIntrf(object):
             print "%r" % (err,)
         self.sensorLock.release()
         return sensorDataList
-
+        
     def getDataByTime(self, requestTime, dataList):
         sensorDataList = self.selectAllDataByTime(requestTime)
         interpDict = {}
@@ -308,7 +305,7 @@ class PeriphIntrf(object):
             except:
                 retList.append(None)
         return retList
-
+        
     def shutdown(self):
         self._shutdownRequested = True
 
@@ -325,7 +322,7 @@ Where the options can be a combination of the following:
 
 def PrintUsage():
     print HELP_STRING
-
+    
 def HandleCommandSwitches():
     import getopt
 
@@ -350,9 +347,9 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-
+  
     return configFile
-
+    
 if __name__ == "__main__":
     from pylab import *
     from numpy import *
