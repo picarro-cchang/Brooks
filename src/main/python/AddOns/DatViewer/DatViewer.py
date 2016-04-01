@@ -66,7 +66,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.3"
+APPVERSION = "3.0.4"
 
 Program_Path = os.getcwd()
 # cursors
@@ -290,7 +290,20 @@ class H5File ( HasTraits ):
 
 class TreeEditHandler(Handler):
     def show_help(self, info, control=None):
-        webbrowser.open(r'file:///' + Program_Path + r'/Manual/user_guide.html#concatenate-h5-files')  
+        webbrowser.open(r'file:///' + Program_Path + r'/Manual/user_guide.html#concatenate-h5-files') 
+
+    def close(self, info, is_ok):
+        if is_ok:
+            obj = info.object
+            for g in obj.h5Right.groups:
+                for v in g.variables:
+                    if v.name in ["DATE_TIME", "timestamp", "time"]:
+                        break
+                else:
+                    d = wx.MessageDialog(None, "No time-related data is selected for " + g.name, "Error", style=wx.OK | wx.ICON_ERROR)
+                    d.ShowModal()
+                    return False
+        return True
        
 class TreeEdit(HasTraits):
     h5FileName = Str
@@ -382,7 +395,18 @@ class TreeEdit(HasTraits):
             self.selectedVar = ""
             
     def _move2Right_fired(self):
+        selectedVar, selectedGroup = self.selectedVar, self.selectedGroup
         self._moveVariables(self.h5Left, self.h5Right)
+        if len(selectedVar) > 0:   # a variable is selected, also move time related variables
+            g = self.h5Left.getGroup(selectedGroup)
+            timeVariables = []
+            for v in g.variables:
+                if v.name in ["DATE_TIME", "timestamp", "time"]:
+                    timeVariables.append(v.name)
+            for v in timeVariables:
+                self.selectedGroup = selectedGroup
+                self.selectedVar = v
+                self._moveVariables(self.h5Left, self.h5Right)
         
     def _move2Left_fired(self):
         self._moveVariables(self.h5Right, self.h5Left)    
