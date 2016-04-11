@@ -255,7 +255,7 @@ def HandleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
     else:
-        configFile = None
+        configFile = r"C:\Picarro\G2000\CommonConfig\Config\Utilities\InstrEEPROMAccess.ini"
 
     if "-d" in options:
         defaultChassis = options["-d"]
