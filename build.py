@@ -106,10 +106,16 @@ def copy_sources(project, logger):
 
 @task
 @depends('copy_sources')
+def cythonize_sources(project, logger):
+    builder = project.get_property("builder")
+    builder.cythonize_sources()
+    
+@task
+@depends('cythonize_sources')
 def make_executables(project, logger):
     builder = project.get_property("builder")
     builder.publish()
-
+   
 @task
 @depends('make_executables')
 def make_installers(project, logger):

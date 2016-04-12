@@ -5,6 +5,7 @@ from fnmatch import fnmatch
 from hashlib import sha1
 import json
 import os
+import sys
 import shutil
 import shlex
 import subprocess
@@ -141,6 +142,18 @@ class Builder(object):
 
     def compile_sources(self):
         return
+        
+    def cythonize_sources(self):
+        project = self.project
+        logger = self.logger
+        logger.info("Cythonizing modules")
+        out, retcode = run_command("python %s build_ext --inplace --basepath=%s" % 
+                    (r".\bldsup\setupforPyd.py", project.expand_path("$dir_dist")))
+        logger.info("Cleaning source code")
+        sys.path.append("bldsup")
+        from setupforPyd import get_source_list
+        for f in get_source_list(project.expand_path("$dir_dist")):
+            os.remove(f)
 
     def publish(self):
         return
