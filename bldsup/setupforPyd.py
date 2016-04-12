@@ -68,7 +68,7 @@ def get_source_list(base_path):
         pySourceFiles.remove(f)
     return pySourceFiles
 
-if __name__ == "__main__":    
+if __name__ == "__main__":   
     picarro_base_path = None
     for option in sys.argv:
         if '--basepath' in option:
