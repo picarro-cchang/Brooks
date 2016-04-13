@@ -37,6 +37,7 @@ class BuildHelper(HasTraits):
     copy = Bool(False, desc="Copy installers to folders", label="Copy installers")
     changeDir = Button
     product = Enum("g2000",
+                   "mobile",
                    "ai_autosampler",
                    "chem_correct",
                    "sdm",
@@ -52,10 +53,13 @@ class BuildHelper(HasTraits):
     task = Enum("make_installers", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
 
     text_display = Instance(TextDisplay)
-    types_available = List(Str)
-    types = List(editor = CheckListEditor(name = 'types_available', cols=4, format_func=lambda x: x))
-    types_e = Property(depends_on = ['product'])
-    types_toggle_button_label = Str('Set all types')
+    g2000_types_available = List(Str)
+    g2000_types = List(editor = CheckListEditor(name = 'g2000_types_available', cols=4, format_func=lambda x: x))
+    g2000_types_e = Property(depends_on = ['product'])
+    mobile_types_available = List(Str)
+    mobile_types = List(editor = CheckListEditor(name = 'mobile_types_available', cols=4, format_func=lambda x: x))
+    mobile_types_e = Property(depends_on = ['product'])
+    types_toggle_button_label = Str('Set all G2000 types')
     types_toggle = Button(editor = ButtonEditor(label_value = 'types_toggle_button_label'))
     view = View(
         HGroup(
@@ -65,9 +69,13 @@ class BuildHelper(HasTraits):
                 Item(name="official"),
                 Item(name="check_working_tree"),
                 Group(
-                    Item(name="types", style = "custom", show_label=False),
+                    Item(name="g2000_types", style = "custom", show_label=False),
                     Item(name="types_toggle", show_label=False),
-                    enabled_when="types_e"
+                    enabled_when="g2000_types_e", show_border=True, label='G2000'
+                ),
+                Group(
+                    Item(name="mobile_types", style = "custom", show_label=False),
+                    enabled_when="mobile_types_e", show_border=True, label='Mobile'
                 ),
                 Item(name="check_configs", enabled_when="check_configs_e"),
                 Item(name="version"),
@@ -90,17 +98,24 @@ class BuildHelper(HasTraits):
     )
 
     def __init__(self):
-        with open("versions/g2000_types.json","r") as inp:
-            config_info = json.load(inp)
-        self.types_available = sorted(config_info['buildTypes'].keys())
+        self.g2000_types_available = self.load_types_from_file("g2000")
+        self.mobile_types_available = self.load_types_from_file("mobile")
         self.text_display = TextDisplay()
         self.copyDir = ""
-
+        
+    def load_types_from_file(self, product):
+        with open("versions/%s_types.json" % product, "r") as inp:
+            config_info = json.load(inp)
+        return sorted(config_info['buildTypes'].keys())
+    
     def _get_check_configs_e(self):
-        return self.product=='g2000'
+        return self.product=='g2000' or self.product=='mobile'
 
-    def _get_types_e(self):
+    def _get_g2000_types_e(self):
         return self.product=='g2000'
+        
+    def _get_mobile_types_e(self):
+        return self.product=='mobile'
 
     def _get_incr_version_e(self):
         return self.version=='Increment'
@@ -109,12 +124,12 @@ class BuildHelper(HasTraits):
         return self.version=='Set'
 
     def _types_toggle_fired(self):
-        if self.types_toggle_button_label == 'Set all types':
-            self.types_toggle_button_label = 'Clear all types'
-            self.types = self.types_available
+        if self.types_toggle_button_label == 'Set all G2000 types':
+            self.types_toggle_button_label = 'Clear all G2000 types'
+            self.g2000_types = self.g2000_types_available
         else:
-            self.types_toggle_button_label = 'Set all types'
-            self.types = []
+            self.types_toggle_button_label = 'Set all G2000 types'
+            self.g2000_types = []
 
     def _official_changed(self):
         self.push = self.official
@@ -136,10 +151,15 @@ class BuildHelper(HasTraits):
     def make_option(self, attr, formatter=None):
         if formatter is None:
             formatter = lambda x : x
+        if attr == "types":
+            pybuilder_attr = "types"
+            attr = self.product + "_types"
+        else:
+            pybuilder_attr = attr
         if hasattr(self, attr + "_e") and not getattr(self, attr + "_e"):
             return []
         else:
-            return ["-P%s=%s" % (attr, formatter(getattr(self, attr)))]
+            return ["-P%s=%s" % (pybuilder_attr, formatter(getattr(self, attr)))]
 
     def list_formatter(self, lis):
         return ",".join(lis)

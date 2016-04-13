@@ -1,0 +1,17 @@
+{
+    "buildTypes": {
+        "FEDS": {
+            "species": "CH4_Surveyor",
+            "installerSignature": "FEDS",
+            "comment": "Standard Surveyor"
+        },
+        
+        "RFADS": {
+            "species": "CH4_C2H6_Surveyor",
+            "installerSignature": "RFADS",
+            "comment": "Ethane Surveyor"
+        }
+    },
+
+    "installerScriptsDir": "InstallerScriptsWin7"
+}

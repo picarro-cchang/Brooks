@@ -16,6 +16,7 @@ from Builder import run_command
 from BuildAiAutosampler import BuildAiAutosampler
 from BuildChemCorrect import BuildChemCorrect
 from BuildG2000 import BuildG2000
+from BuildMobile import BuildMobile
 from BuildSDM import BuildSDM
 from BuildSSIM import BuildSSIM
 from BuildVaporizerCleaner import BuildVaporizerCleaner
@@ -39,6 +40,7 @@ def initialize(project, logger):
     BuildClasses = dict(ai_autosampler = BuildAiAutosampler,
                         chem_correct = BuildChemCorrect,
                         g2000 = BuildG2000,
+                        mobile = BuildMobile,
                         sdm = BuildSDM,
                         ssim = BuildSSIM,
                         vaporizer_cleaner=BuildVaporizerCleaner,
