@@ -158,6 +158,10 @@ class AlarmOfInvalidData(BasicAlarm):
             return 0
             
 class AlarmGeneral:
+    """
+    This class does not set any alarm bit, but deals with some general stuffs 
+    necessary for processing other alarms or just for checking data
+    """
     def __init__(self):
         self.peakDetectState = deque(maxlen=50)
         self.variable = []
