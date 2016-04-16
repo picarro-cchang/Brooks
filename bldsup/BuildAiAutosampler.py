@@ -1,4 +1,4 @@
-from Builder import Builder, run_command
+from Builder import Builder
 import json
 import os
 from pybuilder.errors import BuildFailedException
@@ -38,7 +38,7 @@ class BuildAiAutosampler(Builder):
         with open(output_file_path, "a") as output_file:
             output_file.write("=== %s ===\n" % time.asctime())
             cmd = "doit dist_dir=%s build_ai_autosampler_exe" % project.expand_path("$dir_dist")
-            stdout, return_code = run_command(cmd, True)
+            stdout, return_code = self.run_command(cmd, True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while executing run_py2exe/build_ai_autosampler_exe")
@@ -111,7 +111,7 @@ class BuildAiAutosampler(Builder):
 
         output_file_path = self.get_report_file_path("make_ai_autosampler_installer")
         with open(output_file_path, "a") as output_file:
-            stdout, return_code = run_command(" ".join(args), True)
+            stdout, return_code = self.run_command(" ".join(args), True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while making AIAutosampler installer")

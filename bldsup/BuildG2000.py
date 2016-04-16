@@ -1,4 +1,4 @@
-from Builder import Builder, check_config_hashes, run_command
+from Builder import Builder, check_config_hashes
 import json
 import os
 from pybuilder.core import task
@@ -70,7 +70,7 @@ class BuildG2000(Builder):
         logger.info("Compiling source files")
         output_file_path = self.get_report_file_path("compile_sources")
         with open(output_file_path, "a") as output_file:
-            stdout, return_code = run_command("doit compile_sources", True)
+            stdout, return_code = self.run_command("doit compile_sources", True)
             output_file.write(stdout)
         if return_code != 0:
             raise BuildFailedException("Error while executing compile_sources")
@@ -82,7 +82,7 @@ class BuildG2000(Builder):
         output_file_path = self.get_report_file_path("build_hostexe")
         with open(output_file_path, "a") as output_file:
             cmd = "doit dist_dir=%s build_hostexe" % project.expand_path("$dir_dist")
-            stdout, return_code = run_command(cmd, True)
+            stdout, return_code = self.run_command(cmd, True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
@@ -161,7 +161,7 @@ class BuildG2000(Builder):
                     setup_file_path]
             with open(output_file_path, "a") as output_file:
                 output_file.write("=== %s ===\n" % time.asctime())
-                stdout, return_code = run_command(" ".join(args), True)
+                stdout, return_code = self.run_command(" ".join(args), True)
                 output_file.write(stdout)
                 if return_code != 0:
                     raise BuildFailedException("Error while making installer for %s" % installer_type)

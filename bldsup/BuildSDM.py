@@ -1,4 +1,4 @@
-from Builder import Builder, run_command
+from Builder import Builder
 import json
 import os
 from pybuilder.errors import BuildFailedException
@@ -42,7 +42,7 @@ class BuildSDM(Builder):
         output_file_path = self.get_report_file_path("build_sdm_exe")
         with open(output_file_path, "a") as output_file:
             cmd = "doit dist_dir=%s build_sdm_exe" % project.expand_path("$dir_dist")
-            stdout, return_code = run_command(cmd, True)
+            stdout, return_code = self.run_command(cmd, True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while executing run_py2exe/build_sdm_exe")
@@ -115,7 +115,7 @@ class BuildSDM(Builder):
 
         output_file_path = self.get_report_file_path("make_sdm_installer")
         with open(output_file_path, "a") as output_file:
-            stdout, return_code = run_command(" ".join(args), True)
+            stdout, return_code = self.run_command(" ".join(args), True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while making SDM installer")

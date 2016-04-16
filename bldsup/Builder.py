@@ -32,28 +32,37 @@ def is_contained_in(dcmp, logger):
             return False
     return True
 
-def run_command(command, ignore_status=False):
-    """
-    Run a command and return a string generated from its output streams and
-    the return code. If ignore_status is False, raise a RuntimeError if the
-    return code from the command is non-zero.
-    """
-    args = shlex.split(command, posix=False)
-    p = subprocess.Popen(args,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-
-    stdout_value, stderr_value = p.communicate()
-    if (not ignore_status) and p.returncode != 0:
-        raise RuntimeError("%s returned %d" % (command, p.returncode))
-    return stdout_value.replace('\r\n','\n').replace('\r','\n'), p.returncode
-
 class Builder(object):
     def __init__(self, project, logger):
         self.project = project
         self.logger = logger
         self.git_hash = None
-        
+        self.git_path = self.project.get_property("git", "")
+    
+    def run_command(self, command, ignore_status=False):
+        """
+        Run a command and return a string generated from its output streams and
+        the return code. If ignore_status is False, raise a RuntimeError if the
+        return code from the command is non-zero.
+        """
+        args = shlex.split(command, posix=False)
+        if args[0] == "git" and self.git_path:
+            args[0] = self.git_path
+                
+        p = subprocess.Popen(args,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+
+        stdout_value, stderr_value = p.communicate()
+        if (not ignore_status) and p.returncode != 0:
+            raise RuntimeError("%s returned %d" % (command, p.returncode))
+        return stdout_value.replace('\r\n','\n').replace('\r','\n'), p.returncode
+    
+    def is_working_tree_clean(self):
+        """Calls git to see if the working tree is clean (consistent with the repo)"""
+        output, retcode = self.run_command("git diff-index --quiet HEAD --", ignore_status=True)
+        return retcode==0
+     
     def _remove_python_version_files(self):
         project = self.project
         logger = self.logger
@@ -98,7 +107,7 @@ class Builder(object):
     def after_clean(self):
         logger = self.logger
         logger.info("Cleaning compiled sources")
-        stdout, return_code = run_command("doit clean", ignore_status=True)
+        stdout, return_code = self.run_command("doit clean", ignore_status=True)
         if return_code != 0:
             raise BuildFailedException("Error while executing doit clean")
 
@@ -147,7 +156,7 @@ class Builder(object):
         project = self.project
         logger = self.logger
         logger.info("Cythonizing modules")
-        out, retcode = run_command("python %s build_ext --inplace --basepath=%s" % 
+        out, retcode = self.run_command("python %s build_ext --inplace --basepath=%s" % 
                     (r".\bldsup\setupforPyd.py", project.expand_path("$dir_dist")))
         logger.info("Cleaning source code")
         sys.path.append("bldsup")
@@ -241,14 +250,14 @@ class Builder(object):
             new_version = self.handle_incr_version(project.get_property("incr_version"), version_file)
 
         if new_version is not None:
-            out, retcode = run_command("git add %s" % version_file, ignore_status=False)
+            out, retcode = self.run_command("git add %s" % version_file, ignore_status=False)
             raw_version = ("%s.%s.%s.%s" %
                 (new_version["major"], new_version["minor"], new_version["revision"], new_version["build"]))
-            out, retcode = run_command('git commit -m "Updating %s to version %s"' % (product, raw_version), ignore_status=False)
+            out, retcode = self.run_command('git commit -m "Updating %s to version %s"' % (product, raw_version), ignore_status=False)
             logger.info("Updating version on local git repository\n%s" % out)
 
         # At this point, no more changes can be made to the repository, so we get fetch the git hash
-        self.git_hash = run_command("git.exe log -1 --pretty=format:%H")[0]
+        self.git_hash = self.run_command("git.exe log -1 --pretty=format:%H")[0]
 
         with open(version_file,"r") as inp:
             ver = json.load(inp)
@@ -270,10 +279,10 @@ class Builder(object):
             installer_version = project.get_property('installer_version')
             product = project.get_property('product')
             tagname = '%s-%s' % (product, installer_version)
-            out, retcode = run_command('git tag -a %s -m %s"' % (tagname, tagname), ignore_status=False)
+            out, retcode = self.run_command('git tag -a %s -m %s"' % (tagname, tagname), ignore_status=False)
             logger.info('Tagged repository: %s' % tagname)
         if project.get_property('push'):
-            out, retcode = run_command('git push origin --tags', ignore_status=False)
+            out, retcode = self.run_command('git push origin --tags', ignore_status=False)
             logger.info('Pushed repository: %s' % out)
             
     def copy_installer(self):

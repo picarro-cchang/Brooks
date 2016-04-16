@@ -12,7 +12,6 @@ import sys
 
 use_bldsup(build_support_dir="bldsup")
 import Builder
-from Builder import run_command
 from BuildAiAutosampler import BuildAiAutosampler
 from BuildChemCorrect import BuildChemCorrect
 from BuildG2000 import BuildG2000
@@ -30,11 +29,6 @@ use_plugin("python.install_dependencies")
 
 default_task = "make_installers"
 
-def is_working_tree_clean():
-    """Calls git to see if the working tree is clean (consistent with the repo)"""
-    output, retcode = run_command("git diff-index --quiet HEAD --", ignore_status=True)
-    return retcode==0
-
 @init
 def initialize(project, logger):
     BuildClasses = dict(ai_autosampler = BuildAiAutosampler,
@@ -49,17 +43,17 @@ def initialize(project, logger):
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("official", official)
+    # product specifies which installer to produce, currently supported values are g2000
+    product = project.get_property("product", "g2000").strip().lower()
+    project.set_property("product", product)
+    builder = BuildClasses[product.lower()](project, logger)
     # check_woking_tree ensures working tree is clean before doing build
     check_working_tree = project.get_property("check_working_tree", "True")
     check_working_tree = check_working_tree.lower() in ("yes", "y", "true", "t", "1")
     if check_working_tree:
         logger.info("Calling git to check if working tree is clean")
-        if not is_working_tree_clean():
+        if not builder.is_working_tree_clean():
             raise RuntimeError("Working tree is not consistent with repository.")
-    # product specifies which installer to produce, currently supported values are g2000
-    product = project.get_property("product", "g2000").strip().lower()
-    project.set_property("product", product)
-    builder = BuildClasses[product.lower()](project, logger)
     # tag determines if the repository is to be tagged after the build
     tag = project.get_property("tag", "True" if official else "False")
     tag = tag.lower() in ("yes", "y", "true", "t", "1")
@@ -78,7 +72,7 @@ def initialize(project, logger):
     # branch, if specified, checks that the correct branch has been checked out
     if project.has_property("branch"):
         branch = project.get_property("branch").strip()
-        output, retcode = run_command("git symbolic-ref --short -q HEAD")
+        output, retcode = builder.run_command("git symbolic-ref --short -q HEAD")
         output = output.strip()
         if output != branch:
             raise RuntimeError("Incorrect branch: %s" % output)

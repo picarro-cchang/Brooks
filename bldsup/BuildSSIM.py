@@ -1,4 +1,4 @@
-from Builder import Builder, run_command
+from Builder import Builder
 import json
 import os
 from pybuilder.errors import BuildFailedException
@@ -34,7 +34,7 @@ class BuildSSIM(Builder):
         output_file_path = self.get_report_file_path("build_ssim")
         with open(output_file_path, "a") as output_file:
             cmd = "doit dist_dir=%s build_ssim" % project.expand_path("$dir_dist")
-            stdout, return_code = run_command(cmd, True)
+            stdout, return_code = self.run_command(cmd, True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while executing build_ssim")
@@ -107,7 +107,7 @@ class BuildSSIM(Builder):
                 setup_file_path]
         output_file_path = self.get_report_file_path("make_ssim_installer")
         with open(output_file_path, "a") as output_file:
-            stdout, return_code = run_command(" ".join(args), True)
+            stdout, return_code = self.run_command(" ".join(args), True)
             output_file.write(stdout)
             if return_code != 0:
                 raise BuildFailedException("Error while making SSIM installer")
