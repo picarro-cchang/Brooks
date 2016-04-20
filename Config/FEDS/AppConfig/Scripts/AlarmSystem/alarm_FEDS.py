@@ -74,7 +74,7 @@ class AlarmOfInterval(BasicAlarm):
         if CH4 > p.MethaneConcThreshold:
             dt = self.normalInterval
         average = expAverage(self.average, dt, dt, self.timeConstant)
-        self.average = min(newAvg, self.maximum)
+        self.average = min(average, self.maximum)
     
     def processBeforeCheckValue(self, value, *a):
         spectrumId, CH4 = a
@@ -137,6 +137,10 @@ class AlarmOfWlmShiftAdjustCorrelation(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
         return [np.absolute(value), np.absolute(a[0])]
         
+class AlarmOfInetialGPS(BasicAlarm):
+    def processBeforeCheckValue(self, value, *a):
+        return [value, a[0]]
+        
 class AlarmOfWlmTargetFreq(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
@@ -168,7 +172,7 @@ class AlarmGeneral:
         self.input = []
         self.inactiveForWind = False
         
-    def processAlarm(self):
+    def processAlarm(self, alarm):
         peakDetectState = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER') #integer value, see interface.py
         self.peakDetectState.append(peakDetectState)
         self.alarmActive = (int(_REPORT_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
@@ -197,9 +201,9 @@ if _GLOBALS_["init"]:
         if section.startswith("ALARM_"):
             a = _ALARM_PARAMS_[section]
             if "class" in a:
-                _GLOBALS_["alarms"][section] = eval(a["class"])(_ALARMS_, _ALARM_PARAMS_, section)
+                _GLOBALS_["alarms"][section] = eval(a["class"])(_ALARM_PARAMS_, section)
             else:
-                _GLOBALS_["alarms"][section] = BasicAlarm(_ALARMS_, _ALARM_PARAMS_, section)
+                _GLOBALS_["alarms"][section] = BasicAlarm(_ALARM_PARAMS_, section)
 
 p = _ALARM_FUNCTIONS_.loadAlarmParams(_ALARM_PARAMS_, "Params")
 
@@ -209,6 +213,7 @@ if "species" in _REPORT_:
             enableAlarm = True
             alarm = _GLOBALS_["alarms"][alarmName]
             for i, var in enumerate(alarm.variable):
+                var = var.strip()
                 if var.isdigit():
                     alarm.input[i] = _ALARMS_[int(var)]
                 else:
@@ -218,8 +223,8 @@ if "species" in _REPORT_:
                         enableAlarm = False
                         break
             if enableAlarm:
-                alarm.processAlarm(*alarm.input)
-           
+                alarm.processAlarm(_ALARMS_, *alarm.input)
+                
         _ALARM_REPORT_["SystemStatus"] = _ALARMS_[2]
         _ALARM_REPORT_["PeripheralStatus"] = _ALARMS_[1]
         _ALARM_REPORT_['AnalyzerStatus'] = _ALARMS_[0]
