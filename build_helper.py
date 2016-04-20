@@ -50,7 +50,7 @@ class BuildHelper(HasTraits):
     set_version_e = Property(depends_on = ['version'])
     version = Enum("Do not change", "Increment", "Set", desc="Version of installer", label="Version")
     tag = Bool(False, desc="Tag local repository", label="Tag repository")
-    task = Enum("make_installers", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
+    task = Enum("make_installers", "run_unit_tests", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
 
     text_display = Instance(TextDisplay)
     g2000_types_available = List(Str)
