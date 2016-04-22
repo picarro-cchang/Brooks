@@ -66,6 +66,12 @@
 #define flowSetpoint    (*(v->flowSetpoint_))
 #define flowControlGain (*(v->flowControlGain_))
 
+
+// Hard-wired constants for flow control when locked
+#define flowFractionalFlowTol (0.02)
+#define flowPressureTol       (1.0)
+#define flowControlLockedGain (0.4)
+
 ValveCntrl valveCntrl;
 
 void proportionalValveStep()
@@ -104,7 +110,8 @@ void proportionalValveStep()
         else if (flowState == FLOW_CNTRL_EnabledState) {
             // Use the inlet valve to control the flow
             flowGain = flowControlGain;
-            if (fabs(flow - flowSetpoint) < 5.0 && fabs(setpoint - cavityPressure) < 1.0) flowGain = 1.0;
+            if (fabs(flow - flowSetpoint) < flowFractionalFlowTol*flowSetpoint && \
+                fabs(setpoint - cavityPressure) < flowPressureTol) flowGain = flowControlLockedGain;
             delta = flowGain * (flowSetpoint - flow);
             if (delta < -inletMaxChange) delta = -inletMaxChange;
             else if (delta > inletMaxChange) delta = inletMaxChange;
@@ -169,6 +176,20 @@ void proportionalValveStep()
         }
         */
         break;
+    case VALVE_CNTRL_SaveAndCloseValvesState:
+        if (state != v->previousState) {
+            v->savedState = v->previousState;
+            v->savedInletValue = inlet;
+            v->savedOutletValue = outlet;
+        }
+        inlet = 0;
+        outlet = 0;
+        break;
+    case VALVE_CNTRL_RestoreValvesState:
+        inlet = v->savedInletValue;
+        outlet = v->savedOutletValue;
+        state = v->savedState;
+        break;
     }
     userInlet = inlet;
     userOutlet = outlet;
@@ -176,6 +197,7 @@ void proportionalValveStep()
         message_puts(LOG_LEVEL_STANDARD,"Check vacuum pump connection, valves closed to protect cavity.");
         state = VALVE_CNTRL_DisabledState;
     }
+    v->previousState = state; // Save the previous state to help detect changes
 }
 
 #define SWAP(a,b) { float temp=(a); (a)=(b); (b)=temp; }
@@ -327,6 +349,10 @@ int valveCntrlInit(void)
     v->lastPressure = INVALID_PRESSURE_VALUE;
     v->dwellCount = 0;
     v->nonDecreasingCount = 0;
+    v->previousState = state;
+    v->savedInletValue = 0;
+    v->savedOutletValue = 0;
+    v->savedState = VALVE_CNTRL_DisabledState;
 
     // modify_valve_pump_tec(0x7F,0);    // Close all valves, turn off pump
     return STATUS_OK;

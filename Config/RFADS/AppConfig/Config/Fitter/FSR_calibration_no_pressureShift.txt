@@ -1,0 +1,10 @@
+Fitted 5 CO2 reference lines -- standard fitter until now does not account for shift of line centers from 140 Torr air
+Wavenumber    FSR     rms
+6053.10178   21.183   0.192
+6054.81108  104.051   0.178
+6056.50781  186.315   2.269
+6058.19229  267.986   0.306
+6059.86482  349.072   0.171
+FSR = 0.0206259 wvn
+f(0) = 6052.66489 wvn
+RMS residual = 0.00003 wvn

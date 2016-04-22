@@ -60,6 +60,10 @@ typedef struct VALVE_CNTRL
     float *flow_;                       // Measured flow
     float *flowSetpoint_;               // Flow setpoint
     float *flowControlGain_;            // Flow controller gain
+    VALVE_CNTRL_StateType previousState; // Previous state of controller
+    float savedInletValue;              // Location to store inlet valve value when state is saved
+    float savedOutletValue;             // Location to store outlet valve value when state is saved
+    VALVE_CNTRL_StateType savedState;   // Saved state
 } ValveCntrl;
 
 int valveCntrlInit(void);
