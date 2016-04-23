@@ -503,6 +503,8 @@
             <enum_value ident="VALVE_CNTRL_OutletControlState" value="1" caption="Outlet control" />
             <enum_value ident="VALVE_CNTRL_InletControlState" value="2" caption="Inlet control" />
             <enum_value ident="VALVE_CNTRL_ManualControlState" value="3" caption="Manual control" />
+            <enum_value ident="VALVE_CNTRL_SaveAndCloseValvesState" value="4" caption="Save valve settings and close valves" />
+            <enum_value ident="VALVE_CNTRL_RestoreValvesState" value="5" caption="Restore valve settings and saved state" />
         </enum>
         <enum type="FLOW_CNTRL_StateType">
             <description>Flow control states</description>
@@ -526,6 +528,8 @@
             <enum_value ident="PEAK_DETECT_CNTRL_PrimingState" value="6" caption="Priming" />
             <enum_value ident="PEAK_DETECT_CNTRL_PurgingState" value="7" caption="Purging" />
             <enum_value ident="PEAK_DETECT_CNTRL_InjectionPendingState" value="8" caption="Injection Pending" />
+            <enum_value ident="PEAK_DETECT_CNTRL_TransitioningState" value="9" caption="Transitioning" />
+            <enum_value ident="PEAK_DETECT_CNTRL_HoldingState" value="10" caption="Holding" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description>
@@ -3046,6 +3050,12 @@
             <save/>
             <display format="%.3f" units="ppm/cm">Lower Threshold 2 (relative to background)</display>
         </register>
+        <register ident="PEAK_DETECT_CNTRL_THRESHOLD_FACTOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Threshold factor to apply to peak loss</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">Threshold factor to apply to peak</display>
+        </register>
         <register ident="PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Points in active buffer.</description>
             <initial>300</initial>
@@ -3076,11 +3086,35 @@
             <save/>
             <display format="%d" units="samples">Trigger delay (after trigger condition met)</display>
         </register>
-        <register ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Delay (in samples) before resetting.</description>
+        <register ident="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Triggered duration</description>
             <initial>2700</initial>
             <save/>
-            <display format="%d" units="samples">Reset delay (after trigger)</display>
+            <display format="%d" units="samples">Triggered duration (in samples)</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_TRANSITIONING_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Transitioning duration</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%d" units="samples">Transitioning duration (in samples)</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_TRANSITIONING_HOLDOFF_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Transitioning holdoff duration</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%d" units="samples">Transitioning holdoff duration (in samples)</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_HOLDING_MAX_LOSS_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Maximum loss during holding state</description>
+            <initial>4.0</initial>
+            <save/>
+            <display format="%.3f" units="ppm/cm">Maximum loss during holding state</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_HOLDING_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Holding duration</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%d" units="samples">Holding duration (in samples)</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Priming duration (in samples).</description>
@@ -3094,8 +3128,8 @@
             <save/>
             <display format="%d" units="samples">Purging duration</display>
         </register>
-        <register ident="PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER" type="uint32" minver="1.0" access="rw">
-            <description>Number of samples left in triggered mode.</description>
+        <register ident="PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER" type="int32" minver="1.0" access="rw">
+            <description>Number of samples left in capture mode.</description>
             <initial>0</initial>
         </register>
         <register ident="PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
@@ -3106,49 +3140,61 @@
         </register>
         <register ident="PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Armed state valve mask and value.</description>
-            <initial>0x1300</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Armed state valve mask and values</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Trigger pending state valve mask and value.</description>
-            <initial>0x1300</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Trigger pending state valve mask and values</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Triggered state valve mask and value.</description>
-            <initial>0x1303</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Triggered state valve mask and values</display>
         </register>
+        <register ident="PEAK_DETECT_CNTRL_TRANSITIONING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Transitioning state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Transitioning state valve mask and values</display>
+        </register>
+        <register ident="PEAK_DETECT_CNTRL_HOLDING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Holding state valve mask and value.</description>
+            <initial>0x0000</initial>
+            <save/>
+            <display format="$%04X">Holding state valve mask and values</display>
+        </register>
         <register ident="PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Inactive state valve mask and value.</description>
-            <initial>0x1310</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Inactive state valve mask and values</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Cancelling state valve mask and value.</description>
-            <initial>0x1310</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Cancelling state valve mask and values</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Priming state valve mask and value.</description>
-            <initial>0x1F14</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Priming state valve mask and values</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Purging state valve mask and value.</description>
-            <initial>0x1F10</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Purging state valve mask and values</display>
         </register>
         <register ident="PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Injection pending state valve mask and value.</description>
-            <initial>0x1310</initial>
+            <initial>0x0000</initial>
             <save/>
             <display format="$%04X">Injection pending state valve mask and values</display>
         </register>
@@ -4222,4 +4268,12 @@
         <action ident="ACTION_RDD_CNTRL_STEP">r_rdd_cntrl_step</action>
         <action ident="ACTION_RDD_CNTRL_DO_COMMAND">r_rdd_cntrl_do_command</action>
     </action_list>
+    <alias_list>
+        <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">
+            <description>Old name for number of samples spent in triggered state</description>
+        </alias>
+        <alias ident="PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER" value="PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER">
+            <description>Old name for register tracking number of samples left in capture mode</description>
+        </alias>
+    </alias_list>
 </Das_Interface>
