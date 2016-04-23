@@ -2,7 +2,9 @@ import json
 from Queue import Queue, Empty
 import shlex
 from subprocess import PIPE, Popen, STDOUT
+import os
 import sys
+import getopt
 from traits.api import *
 from traitsui.api import *
 from threading  import Thread
@@ -210,6 +212,82 @@ class BuildHelper(HasTraits):
         t.daemon = True
         t.start()
 
+def process_build_config_file(configFile):
+    if not os.path.exists(configFile):
+        raise("Configuration file not found: %s" % configFile)
+    else:
+        from Host.Common.CustomConfigObj import CustomConfigObj
+        config = CustomConfigObj(configFile)
+        if config.has_option("Setup", "git_path"):
+            git_path = config.get("Setup", "git_path", None)
+        else:
+            git_path = None
+        for section in config:
+            if section.startswith("Build"):
+                if config.getboolean(section, "enable"):
+                    product = config.get(section, "product")
+                    types = config.get(section, "types")
+                    version_inc = config.get(section, "version_increase")
+                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=False -Ptag=False -Pcheck_working_tree=False -Pcheck_configs=False" % (product, types)
+                    if git_path:
+                        command += ("-Pgit=%s" % git_path)
+                    command += " make_installers"
+                    print command
+                    args = shlex.split(command, posix=False)
+                    p = Popen(args, stdout=PIPE, stderr=STDOUT, bufsize=1, close_fds=ON_POSIX)
+                    while True:
+                        line = p.stdout.readline()
+                        if len(line) == 0:
+                            break
+                        else:
+                            print line
+        
+HELP_STRING = """\
+build_helper.py [-h] [-c<FILENAME>]
+
+Where the options can be a combination of the following:
+-h  Print this help.
+-c  Specify a build configuration file. Specified build process will be run automatically
+"""
+def printUsage():
+    print HELP_STRING
+
+def handleCommandSwitches():
+    shortOpts = 'hc:'
+    longOpts = ["help"]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    # assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    # support /? and /h for help
+    if "/?" in args or "/h" in args:
+        options["-h"] = ""
+
+    #executeTest = False
+    if "-h" in options or "--help" in options:
+        printUsage()
+        sys.exit(0)
+
+    # Start with option defaults...
+    configFile = ""
+
+    if "-c" in options:
+        configFile = options["-c"]
+        print "Config file specified at command line: %s" % configFile
+
+    return configFile
+        
 if __name__ == "__main__":
-    build_helper = BuildHelper()
-    build_helper.configure_traits()
+    configFile = handleCommandSwitches()
+    if len(configFile) > 0:
+        process_build_config_file(configFile)
+    else:
+        build_helper = BuildHelper()
+        build_helper.configure_traits()
