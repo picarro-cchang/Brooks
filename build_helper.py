@@ -216,21 +216,22 @@ def process_build_config_file(configFile):
     if not os.path.exists(configFile):
         raise("Configuration file not found: %s" % configFile)
     else:
-        from Host.Common.CustomConfigObj import CustomConfigObj
-        config = CustomConfigObj(configFile)
-        if config.has_option("Setup", "git_path"):
-            git_path = config.get("Setup", "git_path", None)
+        from configobj import ConfigObj
+        config = ConfigObj(configFile)
+        if "git_path" in config["Setup"]:
+            git_path = config["Setup"]["git_path"]
         else:
             git_path = None
         for section in config:
             if section.startswith("Build"):
-                if config.getboolean(section, "enable"):
-                    product = config.get(section, "product")
-                    types = config.get(section, "types")
-                    version_inc = config.get(section, "version_increase")
+                if bool(config[section]["enable"]):
+                    product = config[section]["product"]
+                    types = config[section]["types"]
+                    types = ",".join([type for type in types])
+                    version_inc = config[section]["version_increase"]
                     command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=False -Ptag=False -Pcheck_working_tree=False -Pcheck_configs=False" % (product, types)
                     if git_path:
-                        command += ("-Pgit=%s" % git_path)
+                        command += (" -Pgit=%s" % git_path)
                     command += " make_installers"
                     print command
                     args = shlex.split(command, posix=False)
