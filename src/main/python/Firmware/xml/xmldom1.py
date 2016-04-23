@@ -575,6 +575,28 @@ for i,a in enumerate(actionNames):
         raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (a,definitions[a],i+1)
     definitions[a] = i+1
 
+# Process any aliases
+
+aliasLists = docEl.getElementsByTagName('alias_list')
+aliasIdents = []
+aliasValues = []
+descriptions = []
+
+for aliasList in aliasLists:
+    for alias in aliasList.getElementsByTagName('alias'):
+        aliasIdent = alias.attributes['ident'].value
+        aliasIdents.append(aliasIdent)
+        aliasValue = alias.attributes['value'].value
+        aliasValues.append(aliasValue)
+        for descriptionElement in alias.getElementsByTagName('description'):
+            descriptions.append(descriptionElement.firstChild.data)
+
+printFp(intHFp,  "\n/* Aliases */")
+printFp(intPyFp, "\n# Aliases" )
+for i,a in enumerate(aliasIdents):
+    printFp(intHFp,  "#define %s (%s) // %s" % (a,aliasValues[i],descriptions[i]))
+    printFp(intPyFp, "%s = %s # %s" % (a,aliasValues[i],descriptions[i]))
+
 # Process the parameter pages XML file which defines the appearance of
 #  parameters on the controller GUI
 

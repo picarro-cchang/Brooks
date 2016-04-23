@@ -48,11 +48,11 @@ class DataManagerPublisher(object):
 
     def jsonifyMeasurements(self, entry):
         source = entry['source']
-        if source == 'Sensors' or source == 'analyze_FBDS':
+        if source == 'Sensors' or source in ['analyze_FBDS','analyze_RFADS']:
             if 'species' in entry['data'] and (entry['data']['species'] == 0.0 or entry['data']['species'] == "0.0"):
                 print "Rejected species 0"
                 return None
-            elif source == 'Sensors' and entry['mode'] == 'FBDS_mode':
+            elif source == 'Sensors' and entry['mode'] in ['FBDS_mode','RFADS_mode']:
                 # block these data during the measurement, otherwise non-cavity parameters will be treated as 0 by surveyor programs
                 # CH4 and flow values shown on tablet will jump between 0 and normal reading.
                 return None
