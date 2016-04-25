@@ -121,11 +121,13 @@ class ControlBridge(object):
     def _setToSurveyorMode(self):
         self.driver.openValves(0x20)   # open valve 6
 
+	def _setToSurveyorMode(self):
+        self.driver.openValves(0x20)   # open valve 6
+		
     def _setToEQMode(self):
         self.driver.closeValves(0x20)   # close valve 6
         
-    def _setToSurveyorMode(self):
-        self.driver.openValves(0x20)   # open valve 6
+    
         
 if __name__ == '__main__':
     bridge = ControlBridge()
