@@ -23,8 +23,7 @@ def loadAlarmParams(alarmParams, section):
     return Bunch({key:safe_eval(params[key]) for key in params})
     
 class Alarm(object):
-    def __init__(self, alarm, alarmParams, alarmName):
-        self.alarm = alarm
+    def __init__(self, alarmParams, alarmName):
         self.alarmName = alarmName
         self.params = alarmParams[alarmName]
         self.word = int(self.params["word"])
@@ -52,24 +51,24 @@ class Alarm(object):
                 pass
         return alarmResult
     
-    def setAlarm(self, value):
+    def setAlarm(self, alarm, value):
         """
         Set alarm bit when value is not None
         """
         if value is not None:
             if value:
-                self.alarm[self.word] |= self.mask
+                alarm[self.word] |= self.mask
             else:
-                self.alarm[self.word] &= ~self.mask
+                alarm[self.word] &= ~self.mask
     
-    def processAlarm(self, value, *a):
+    def processAlarm(self, alarm, value, *a):
         """
         Alarm bit is set when value meets conditions set forth in alarmParams[alarmName]
         """
         v = self.processBeforeCheckValue(value, *a)
         v1 = self.checkValue(v)
         v2 = self.processAfterCheckValue(v1, *a)
-        self.setAlarm(v2)
+        self.setAlarm(alarm, v2)
 
     def processBeforeCheckValue(self, value, *a):
         return value

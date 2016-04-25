@@ -59,7 +59,7 @@ REPORT_ID = "_REPORT_" #Report is an output from the data manager but is also an
 FORWARD_ID = "_ANALYZE_"
 MEAS_GOOD_ID = "_MEAS_GOOD_"
 SCRIPT_NAME_ID = "_SCRIPT_NAME_"
-
+ALARM_REPORT_ID = "_ALARM_REPORT_"
 ALARMS_ID = "_ALARMS_"
 
 OPTIONS_ID = "_OPTIONS_"
@@ -304,8 +304,8 @@ def RunAlarmScript(   ScriptCodeObj,
     # - portal for making Driver calls    (_DRIVER_RPC as CmdFIFOServerProxy)
     #Set up the dictionaries for use in the script environment...
     # - providing copies to make sure the script doesn't screw the data up
-
-    alarmGlobals = {"init": True}
+    if "init" not in alarmGlobals:
+        alarmGlobals["init"] = True
     dataEnviron = {"_GLOBALS_" : alarmGlobals }
 
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
@@ -314,6 +314,7 @@ def RunAlarmScript(   ScriptCodeObj,
     dataEnviron[REPORT_ID] = ReportDict.copy()
     dataEnviron[OLD_REPORTS_ID] = ReportHistory.copy()
     dataEnviron[OLD_SENSORS_ID] = SensorHistory.copy()
+    dataEnviron[ALARM_REPORT_ID] = {}
     dataEnviron[ALARMS_ID] = numAlarmWords*[0]
     dataEnviron[DRIVER_RPC_SERVER_ID] = DriverRpcServer
     dataEnviron[MEAS_SYS_RPC_SERVER_ID] = MeasSysRpcServer
@@ -343,7 +344,7 @@ def RunAlarmScript(   ScriptCodeObj,
     alarmGlobals = dataEnviron["_GLOBALS_"]
 
     #Now check for magic keywords created by the script...
-    alarmsData = {}
+    alarmsData = dataEnviron[ALARM_REPORT_ID]
     for i, value in enumerate(dataEnviron[ALARMS_ID]):
         alarmsData["ALARM_WORD_%d" % i] = value
 

@@ -11,7 +11,16 @@
  *  PEAK_DETECT_CNTRL_IdleState: Do not process contents of history buffer
  *  PEAK_DETECT_CNTRL_ArmedState: Process contents of history buffer
  *  PEAK_DETECT_CNTRL_TriggerPendingState: Peak has been found in history buffer
- *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found
+ *  PEAK_DETECT_CNTRL_TriggeredState: triggerDelay samples have arrived since peak was found. During this time
+ *   we can either have the reverse flow through the analyzer to replay the pulse, or we can shut off the valves
+ *   to allow the baseline to be measured. After triggeredDuration samples, either return to the idleState or enter
+ *   the transitioningState (if the transitioningDuration is nonzero)
+ *  PEAK_DETECT_CNTRL_TransitioningState: After triggeredDuration samples, enter this state . In this state,
+ *   the flow is reestablished, and the processed loss is monitored once the transitioningHoldoff has elapsed.
+ *   Once the processed loss starts falling, transition to the HoldingState. If no maximum in the processed loss
+ *   is found within transitioningDuration, return to the idle state.
+ *  PEAK_DETECT_CNTRL_HoldingState: Shut off the valves to trap the sample for holdingDuration, so that the
+ *   concentrations can be measured. After this time, return to the idle state.
  *  PEAK_DETECT_CNTRL_InactiveState: Do not process contents of history buffer, used to indicate
  *   non-survey mode for methane leak detection applications
  *  PEAK_DETECT_CNTRL_CancellingState: Used to return to IdleState if triggered state is cancelled.
@@ -52,15 +61,25 @@
  *  will enter the TriggerPending state
  *
  * After triggerDeleay samples in the TriggerPending state, the controller enters the Triggered state
- * After resetDelay samples in the Triggered state, the controller returns to the Idle state
+ * After triggeredDuration samples in the Triggered state, the controller returns to the Idle state, or enters the
+ *  Transitioning state.
+ *
+ * While in the Transitioning state, transitioningHoldoff samples are allowed to elapse, before the processed loss
+ *  is monitored. If the loss falls while it exceeds background+lowerThreshold2 and the value of the holdingDuration
+ *  is nonzero, the system transitions to the Holding state.
+ *
+ * It remains in this state for up to the contents of the holdingDuration register, and then returns to the
+ *  idle state.
  *
  * In each state, there is an associated valveMask. This is a sixteen bit integer, the top eight bits
  *  indicate which valves can be affected and the bottom eight bits indicate the value to which the 
  *  affected valves are to be set
  * Since there are only six solenoid valves, the high order 2 bits of the valve mask and value are used 
- *  for another purpose. If either of the two mask bits is one, the two value bits select which of four 
- *  flow rate setpoints the flow controller is placed in when that state is entered. If both mask bits are
- *  zero, the flow rate is not changed.
+ *  for another purpose if these (flow mask) bits are 00, the flow rate is not changed. If they are 01,
+ *  the proportional valve controller is instructed to save the values of the inlet and outlet valves and the
+ *  controller state, and then to close both valves. If they are 10, the proportional valve controller restores
+ *  a previously saved state, and  if the bits are 11, the corresponding value bits select which of four
+ *  flow rate setpoints the flow controller is placed in when that state is entered.
  
  * SEE ALSO:
  *   Specify any related information.
@@ -69,6 +88,7 @@
  *   11-Nov-2011  sze  Initial version.
  *   27-Jul-2012  sze  Introduced cancelling state and ability to examine remaining time in triggered state
  *   13-Mar-2013  sze  Added flow control setpoint adjustment
+ *   10-Feb-2016  sze  Added Transitioning and Holding states for ethane to methane ratio measurement
  *
  *  Copyright (c) 2011 Picarro, Inc. All rights reserved
  */
@@ -77,22 +97,29 @@
 
 typedef struct PEAK_DETECT_CNTRL
 {
-    PEAK_DETECT_CNTRL_StateType *state_; // Valve controller state
+    PEAK_DETECT_CNTRL_StateType *state_; // Peak controller state
+    VALVE_CNTRL_StateType *valve_state_; // Valve controller state
     float *processedLoss_;              // Processed loss
     unsigned int *backgroundSamples_;   // Number of samples for background calculation
     float *background_;                 // Background value
     float *upperThreshold_;             // Upper threshold
     float *lowerThreshold1_;            // Lower threshold 1
     float *lowerThreshold2_;            // Lower threshold 2
+    float *thresholdFactor_;            // Threshold factor
     unsigned int *postPeakSamples_;     // Required number of points after peak
     unsigned int *activeSize_;          // Size of active region to use for peak detection
     unsigned int *triggerCondition_;    // Specifies logical function for triggering
     unsigned int *triggerDelay_;        // Number of samples to delay when trigger conditions are met
-    unsigned int *resetDelay_;          // Number of samples after entering triggered state before resetting to idle state
-    unsigned int *cancellingDelay_;     // Number of samples after to remain in cancelling state before resetting to idle state
-    unsigned int *primingDuration_;     // Number of samples after to remain in priming state before entering purging state
-    unsigned int *purgingDuration_;     // Number of samples after to remain in purging state before entering injection pending state
-    unsigned int *samplesLeft_;         // Number of samples left for lengthy operations
+    unsigned int *triggeredDuration_;   // Number of samples to remain in triggered state
+    unsigned int *transitioningDuration_;    // Maximum number of samples to remain in transitioning state
+    unsigned int *transitioningHoldoff_;    // Number of samples to wait in transitioning state before looking for peak in processed loss
+    unsigned int *holdingDuration_;    // Number of samples to remain in holding state
+    float *holdingMaxLoss_;            // Loss at which to enter holding state, even if loss is not decreasing
+    unsigned int *cancellingDelay_;     // Number of samples to remain in cancelling state before resetting to idle state
+    unsigned int *primingDuration_;     // Number of samples to remain in priming state before entering purging state
+    unsigned int *purgingDuration_;     // Number of samples to remain in purging state before entering injection pending state
+    unsigned int *extendingDuration_;   // Number of samples to remain in the extending state. If this is zero, do not enter the extending state
+    int *samplesLeft_;                  // Number of samples left for lengthy operations
     unsigned int *idleValveMaskAndValue_;           // Valve mask and value for idle state
     unsigned int *armedValveMaskAndValue_;          // Valve mask and value for armed state
     unsigned int *triggerPendingValveMaskAndValue_; // Valve mask and value for trigger pending state
@@ -102,6 +129,8 @@ typedef struct PEAK_DETECT_CNTRL
     unsigned int *primingValveMaskAndValue_;        // Valve mask and value for priming state
     unsigned int *purgingValveMaskAndValue_;        // Valve mask and value for purging state
     unsigned int *injectionPendingValveMaskAndValue_;  // Valve mask and value for injection pending state
+    unsigned int *transitioningValveMaskAndValue_;  // Valve mask and value for transitioning state
+    unsigned int *holdingValveMaskAndValue_;  // Valve mask and value for holding state
     unsigned int *solenoidValves_;      // Solenoid valve mask
     float *flow0Setpoint_;              // Flow setpoint in state 0
     float *flow1Setpoint_;              // Flow setpoint in state 1
@@ -109,9 +138,10 @@ typedef struct PEAK_DETECT_CNTRL
     float *flow3Setpoint_;              // Flow setpoint in state 3
     float *flowCntrlSetpoint_;          // Flow control setpoint register
 
-    unsigned int historyTail;
+    int historyTail;
+    float minLossForHolding;
     unsigned int activeLength;
-    unsigned int triggerWait;
+    unsigned int stateCounter;
     PEAK_DETECT_CNTRL_StateType lastState;
     float historyBuffer[PEAK_DETECT_MAX_HISTORY_LENGTH];
 } PeakDetectCntrl;
