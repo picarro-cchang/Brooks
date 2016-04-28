@@ -22,6 +22,7 @@ from collections import deque
 from Host.Common.configobj import ConfigObj
 import Queue
 import time
+from datetime import datetime
 
 from numpy import angle, arcsin, arctan, arctan2, asarray, column_stack, concatenate, conj
 from numpy import cos, exp, floor, imag, isfinite, isnan, mod, pi, real, sin, sqrt, tan
@@ -122,22 +123,75 @@ class RawSource(object):
         valTuple, savedValTuple = None, None
         for (ts, valTuple) in reversed(self.oldData):
             if ts < requestTs:
-                alpha = float(requestTs - ts) / (savedTs - ts)
-                di = tuple([alpha * y + (1 - alpha) * y_p for y, y_p in zip(savedValTuple, valTuple)])
-                return SourceTuple(requestTs, self.DataTuple(*di))
+                try:
+                    alpha = float(requestTs - ts) / (savedTs - ts)
+                    di = tuple([alpha * y + (1 - alpha) * y_p for y, y_p in zip(savedValTuple, valTuple)])
+                    return SourceTuple(requestTs, self.DataTuple(*di))
+                except TypeError:   # requestTs is newer than the latest ts in oldData
+                    return None
             else:
                 savedTs = ts
                 savedValTuple = valTuple
         else:
             return self.oldData[0]
-            
 
 class GpsSource(RawSource):
-    """Source for GPS data.
-    """
-    pass
-    
-
+    def __init__(self, queue, maxStore=20):
+        RawSource.__init__(self, queue, maxStore)
+        self.weight = 1.0
+        self.offset = 0
+        self.oldGpsTime = -1
+        td = datetime.utcnow() - datetime(1,1,1,0,0,0,0)
+        self.GpsBaseTime = td.days * 86400000
+        
+    def getGpsTimeOffset(self):
+        ts, valTuple = self.oldData[-1]
+        GpsTime = valTuple.GPS_TIME * 1000
+        if GpsTime != self.oldGpsTime:
+            if GpsTime < self.oldGpsTime: # just pass GMT midnight
+                self.GpsBaseTime += 86400000
+            offset = (ts - GpsTime - self.GpsBaseTime) / self.weight + (1-1.0/self.weight) * self.offset
+            self.offset = offset
+            self.oldGpsTime = GpsTime
+            self.weight += 1 if self.weight < 50 else 0
+            return offset
+        else:  
+            return self.offset
+        
+    def getData(self, requestTs):
+        """Get data at specified timestamp using interpolation if needed.
+        
+        Args:
+            requestTs: Time stamp at which data are required.
+        Returns:
+            SourceTuple consisting of requestTs and the interpolated data.
+            None if no data are available.
+        """
+        assert isinstance(requestTs, (int, long, float))
+        while self.latestTimestamp < requestTs:
+            if not self.getFromQueue():
+                return None
+        ts, savedTs = None, None
+        savedGpsTime = None
+        valTuple, savedValTuple = None, None
+        offset = self.getGpsTimeOffset()
+        for (ts, valTuple) in reversed(self.oldData):
+            GpsTime = valTuple.GPS_TIME * 1000 + offset + self.GpsBaseTime
+            if ts < requestTs:
+                try:
+                    alpha = float(requestTs - GpsTime) / (savedGpsTime - GpsTime)
+                except ZeroDivisionError:   # lose GPS signal so GPS time is not updated
+                    alpha = float(requestTs - ts) / (savedTs - ts)
+                except TypeError:   # requestTs is newer than the latest time in oldData
+                    return None
+                di = tuple([alpha * y + (1 - alpha) * y_p for y, y_p in zip(savedValTuple, valTuple)])
+                return SourceTuple(requestTs, self.DataTuple(*di))
+            savedTs = ts
+            savedGpsTime = GpsTime
+            savedValTuple = valTuple
+        else:
+            return self.oldData[0]
+            
 class WsSource(RawSource):
     """Source for weather station data.
     """
