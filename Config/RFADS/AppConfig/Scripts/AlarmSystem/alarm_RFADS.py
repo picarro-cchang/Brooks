@@ -12,7 +12,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import Log
 
 # SpectrumIds used
-TARGET_SPECIES = [11, 25, 105, 106, 150, 153]
+TARGET_SPECIES = [170]
 # Buffer length
 WindSpeedHistoryBufferLen = 100
 WlmTargetFreqHistoryBufferLen = 6000
@@ -52,7 +52,7 @@ def alarmTestBit(word, bit):
 def GetBaselineCavityLoss():
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
     fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
-    return fitterConfig['CFADS_baseline']
+    return fitterConfig['CFADS_Baseline_level']
 
 class BasicAlarm(_ALARM_FUNCTIONS_.Alarm):
     def __init__(self, *a):
