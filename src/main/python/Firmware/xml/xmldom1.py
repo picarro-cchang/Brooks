@@ -18,7 +18,7 @@ def closeFp(fp):
         fp.close()
 
 regTypesLookUp = {"uint32":"uint_type","float":"float_type","int32":"int_type"}
-        
+
 typeToCtypeLookUp = {"long long":"c_longlong",
                      "uint32":"c_uint","int32":"c_int",
                      "uint16":"c_ushort","int16":"c_short",
@@ -303,7 +303,7 @@ for i2cList in i2cLists:
         printFp(intHFp,"#define %s %d" % (i2cIdent, i))
         printFp(intPyFp, "i2cByIndex[%d] = '%s'" % (i,i2cIdent))
     numI2C = i+1
-    
+
 printFp(intPyFp, "\n#i2cByIdent tuple is (index,chain,mux,address)\ni2cByIdent = {}" )
 printFp(dspHFp,"extern I2C_device i2c_devices[%d];\n" % numI2C)
 printFp(dspCFp,"\n/* I2C devices */\nI2C_device i2c_devices[%d] = {" % numI2C)
@@ -329,7 +329,7 @@ for i2cList in i2cLists:
         i2cIdent = i2c.attributes['ident'].value
         printFp(intPyFp, "I2C_%s = %d" % (i2cIdent,i))
 printFp(intPyFp, "\n")
-                        
+
 printFp(dspCFp,'void initRegisters() \n{\n    DataType d;')
 printFp(dspHFp,'void initRegisters(void);')
 printFp(dspHFp,'extern RegTypes regTypes[%d];' % (len(registerNames)))
@@ -355,7 +355,7 @@ for i,registerName in enumerate(registerNames):
     printFp(dspCFp,'    regTypes[%s] = %s;' % (registerName,regTypesLookUp.get(types[i],"uint_type")))
 printFp(dspCFp,'}')
 
-            
+
 fpgaBlockLists = docEl.getElementsByTagName('fpga_block_list')
 fpgaRegisterDescriptor = {}
 numRegistersByBlock = {}
@@ -405,7 +405,7 @@ for fpgaBlockList in fpgaBlockLists:
                 if blockName not in fpgaSaveRegByBlock:
                     fpgaSaveRegByBlock[blockName] = []
                 fpgaSaveRegByBlock[blockName].append(regName)
-                
+
             name = "_".join([blockName,regName])
             value = numRegisters
             descr = regDescription
@@ -460,7 +460,7 @@ for fpgaBlockList in fpgaBlockLists:
         numRegistersByBlock[blockName] = numRegisters
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
-    
+
 fpgaMapLists = docEl.getElementsByTagName('fpga_map_list')
 fpgaMapNames = []
 fpgaMapIndexByName = {}
@@ -488,7 +488,7 @@ for fpgaMapList in fpgaMapLists:
         fpgaBlockByMapName[name] = blockName
         if blockName in fpgaSaveRegByBlock:
             fpgaSaveRegList.append((name,[blockName + "_" + regName for regName in fpgaSaveRegByBlock[blockName]]))
-        
+
         for descriptionElement in fpgaMap.getElementsByTagName('description'):
             fpgaMapDescriptionsByName[name] = descriptionElement.firstChild.data
         fpgaMapIndexByName[name] = index
@@ -513,7 +513,7 @@ declPy = ["persistent_fpga_registers = []"]
 for f in fpgaSaveRegList:
     declPy.append("persistent_fpga_registers.append(%r)" % (f,))
 printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
-    
+
 # Process environment definitions, which are associated with a specific
 #  structure and an index. These are used to store the states of actions
 #  for more complex activities such as controllers, etc.
@@ -596,7 +596,8 @@ printFp(intPyFp, "\n# Aliases" )
 for i,a in enumerate(aliasIdents):
     printFp(intHFp,  "#define %s (%s) // %s" % (a,aliasValues[i],descriptions[i]))
     printFp(intPyFp, "%s = %s # %s" % (a,aliasValues[i],descriptions[i]))
-
+    printFp(intPyFp, 'registerByName["%s"] = %s' % (a, aliasValues[i]))
+    
 # Process the parameter pages XML file which defines the appearance of
 #  parameters on the controller GUI
 
@@ -640,7 +641,7 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                          'w' in access,
                          )
                     )
-                
+
             elif node.localName == 'register':
                 registerStr = node.firstChild.data
                 reg_index = definitions[registerStr]
