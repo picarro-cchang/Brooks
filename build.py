@@ -69,6 +69,10 @@ def initialize(project, logger):
     force = project.get_property("force", "False")
     force = force.lower() in ("yes", "y", "y", "true", "t", "1")
     project.set_property("force", force)
+    # upload determines if we are to upload installers to artifactory
+    upload = project.get_property("upload_artifactory", "False")
+    upload = upload.lower() in ("yes", "y", "y", "true", "t", "1")
+    project.set_property("upload_artifactory", upload)
     # branch, if specified, checks that the correct branch has been checked out
     if project.has_property("branch"):
         branch = project.get_property("branch").strip()
@@ -122,6 +126,7 @@ def make_installers(project, logger):
 @after('make_installers')
 def tidy_repo(project, logger):
     builder = project.get_property("builder")
+    builder.upload_to_artifactory()
     builder.copy_installer()
     builder.tidy_repo()
 

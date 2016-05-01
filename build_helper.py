@@ -228,8 +228,13 @@ def process_build_config_file(configFile):
                     product = config[section]["product"]
                     types = config[section]["types"]
                     types = ",".join([type for type in types])
+                    tag = config[section]["tag_github"]
+                    push = config[section]["push_github"]
+                    upload = config[section]["upload_artifactory"]
                     version_inc = config[section]["version_increase"]
-                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=False -Ptag=False -Pcheck_working_tree=False -Pcheck_configs=False" % (product, types)
+                    other_options = "-Pcheck_working_tree=False -Pcheck_configs=False"
+                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=%s -Ptag=%s -Pupload_artifactory=%s %s" % 
+                        (product, types, push, tag, upload, other_options)
                     if git_path:
                         command += (" -Pgit=%s" % git_path)
                     command += " make_installers"
