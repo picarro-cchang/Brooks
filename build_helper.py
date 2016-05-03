@@ -233,7 +233,7 @@ def process_build_config_file(configFile):
                     upload = config[section]["upload_artifactory"]
                     version_inc = config[section]["version_increase"]
                     other_options = "-Pcheck_working_tree=False -Pcheck_configs=False"
-                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=%s -Ptag=%s -Pupload_artifactory=%s %s" % 
+                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=%s -Ptag=%s -Pupload_artifactory=%s %s" % \
                         (product, types, push, tag, upload, other_options)
                     if git_path:
                         command += (" -Pgit=%s" % git_path)
