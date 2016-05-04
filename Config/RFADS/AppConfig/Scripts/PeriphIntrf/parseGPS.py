@@ -35,7 +35,7 @@ def syncData(oldData, newData):
     elif oldData[0] == "$GPGST" and newData[0] == "$GPGGA":
         GGAdata, GSTdata = newData, oldData
     else:   # if this is not iGPS, only $GPGGS is received.
-        return [newData[1], newData[2], 0, 0, newData[3], newData[4]]
+        return [newData[1], newData[2], newData[3], newData[4]]
         
     if oldData[4] != newData[4]:
         print "timestemp of old data (%s, %f) does not match new data (%s, %f)" % (oldData[0], oldData[4], newData[0], newData[4])
@@ -46,4 +46,5 @@ def syncData(oldData, newData):
 if "_RAWSTRING_" in dir():
     data = parseGPS(_RAWSTRING_)
     _OUTPUT_ = syncData(_PERSISTENT_, data)
-    _PERSISTENT_ = data if not _OUTPUT_ else None
+    if data:
+        _PERSISTENT_ = data if not _OUTPUT_ else None

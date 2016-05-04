@@ -298,7 +298,7 @@ class Builder(object):
                 if file.endswith('.exe'):
                     src_path = os.path.join(installer_folder, file)
                     dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/hostexe/" + installer_version + "/"
-                    cmd = "curl -u %s:%s -T %s %s" % ("yren", "3355o336", src_path, dest_path)
+                    cmd = "curl -u %s:%s -T %s %s" % ("ci-server", "ALGP@&gNR%h", src_path, dest_path)
                     self.run_command(cmd)
                     logger.info('Upload %s installer to Artifactory' % file)
     
