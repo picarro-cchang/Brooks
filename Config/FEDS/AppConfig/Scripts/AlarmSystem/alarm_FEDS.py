@@ -114,7 +114,8 @@ class AlarmOfWindSpeed(BasicAlarm):
         windSpeed = totalSpeed(value, a[0])
         self.history.append(windSpeed)
         windSpeedHistoryStd = np.std(self.history, ddof=1)
-        return windSpeed > (2.6 * windSpeedHistoryStd)
+        windSpeedHistoryAvg = np.mean(self.history)
+        return abs(windSpeed - windSpeedHistoryAvg) > (3.5 * windSpeedHistoryStd)
 
 class AlarmOfCavityBaselineLoss(BasicAlarm):
     def __init__(self, *a):
