@@ -1400,11 +1400,11 @@ class InstrumentConfig(SharedTypes.Singleton):
                 ri = interface.registerInfo[index]
                 if ri.writable:
                     if ri.type == ctypes.c_float:
-                        value = float(self.config["DAS_REGISTERS"][ri.name])
+                        value = float(self.config["DAS_REGISTERS"][name])
                         s.wrRegFloat(ri.name,value)
                     else:
                         value = ctypes.c_uint(
-                            int(self.config["DAS_REGISTERS"][ri.name])).value
+                            int(self.config["DAS_REGISTERS"][name])).value
                         s.wrRegUint(ri.name,value)
                 else:
                     Log("Unwritable register %s ignored during config file load" % name,Level=2)
