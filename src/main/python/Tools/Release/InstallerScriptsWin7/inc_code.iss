@@ -6,42 +6,21 @@
 var
     savedInstrConfig : String;
     instrConfig : String;
-    hostExeExist : Boolean;
-
-procedure BeforeInstallStopSupervisor();
-var
-    handle : Longint;
-    StopSupervisor : String;
-begin
-    StopSupervisor := ExpandConstant('{app}') + '\HostExe\StopSupervisor.exe';
-    hostExeExist := FileExists(StopSupervisor);
-    handle := FindWindowByWindowName('Stop CRDS Software');
-    if handle <> 0 then
-    begin
-        {Close StopSupervisor}
-        PostMessage(handle, $0010, 0, 0);
-        Sleep(1000);
-    end;
-end;    
     
 procedure MyBeforeInstall();
 var
     dateTime : String;
     app : String;
-    StopSupervisor : String;
+    PythonExe : String;
+    KillHostSoftware : String;
     version : String;
     ResultCode : Integer;
 begin
     {MsgBox('MyBeforeInstall', mbInformation, MB_OK)}
-    StopSupervisor := ExpandConstant('{app}') + '\HostExe\StopSupervisor.exe';
-    if FileExists(StopSupervisor) and hostExeExist then
-    begin
-        if GetVersionNumbersString(StopSupervisor, version) then
-            begin
-                if CompareText(version, '2.3.0.0') >= 0 then
-                    Exec(StopSupervisor, '-o 1', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
-            end;
-    end; 
+    PythonExe := 'C:\Python27\python.exe';
+    KillHostSoftware := ExpandConstant('{app}') + '\HostExe\KillHostSoftware.py';
+    Exec(PythonExe, KillHostSoftware, '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+    
     dateTime := GetDateTimeString('_yyyymmdd_hhnnss',#0,#0);
     app := ExpandConstant('{app}');
     savedInstrConfig := app+'\InstrConfig'+dateTime;

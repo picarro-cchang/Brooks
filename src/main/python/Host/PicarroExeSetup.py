@@ -600,6 +600,7 @@ data_files = [(".", ["pydCaller/Warning_16x16_32.ico",
                    "Utilities/SupervisorLauncher/Integration_icon.ico",
                    "Utilities/SupervisorLauncher/Picarro_icon.ico",
                    "Utilities/SupervisorLauncher/Utilities_icon.ico",
+                   "Utilities/KillHostSoftware.py",
                    "PeriphIntrf/Serial2Socket.exe"
                    ]),
             (r'mpl-data', glob.glob(r'C:\%s\Lib\site-packages\matplotlib\mpl-data\*.*' % pyDirname)),
