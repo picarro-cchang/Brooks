@@ -61,10 +61,15 @@ def get_source_list(base_path):
             pySourceFiles.append(path)
   
     CanDelete = []
+    DeleteFiles = [
+            "__init__.py", "setup.py",
+            r"GuiTools.py", "GuiWidgets.py"
+    ]
     for f in pySourceFiles:
-        if "__init__.py" in f or "setup.py" in f:
-            CanDelete.append(f)
-    CanDelete.extend([r"Host/Common/GuiTools.py"])
+        for df in DeleteFiles:
+            if df in f:
+                CanDelete.append(f)
+                break
     for f in CanDelete:
         pySourceFiles.remove(f)
     return pySourceFiles

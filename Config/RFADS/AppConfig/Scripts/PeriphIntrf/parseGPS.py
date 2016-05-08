@@ -21,7 +21,8 @@ def parseGPS(rawStr):
             sigmaLong = float(atomsGPS[7])
             retList = [sentence, sigmaLat, sigmaLong, 1, timeSinceMidnight]
     except Exception, err:
-        print "%r" % err, " from parseGPS"
+        pass
+        #print "%r" % err, " from parseGPS"
 
     return retList
     
