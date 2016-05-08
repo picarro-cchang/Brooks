@@ -64,10 +64,11 @@ def get_source_list(base_path):
     for f in pySourceFiles:
         if "__init__.py" in f or "setup.py" in f:
             CanDelete.append(f)
+    CanDelete.extend([r"Host/Common/GuiTools.py"])
     for f in CanDelete:
         pySourceFiles.remove(f)
     return pySourceFiles
-
+    
 if __name__ == "__main__":   
     picarro_base_path = None
     for option in sys.argv:
