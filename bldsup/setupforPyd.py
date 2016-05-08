@@ -63,11 +63,7 @@ def get_source_list(base_path):
     CanDelete = []
     DeleteFiles = [
             "__init__.py", "setup.py",
-<<<<<<< HEAD
             r"GuiTools.py", "GuiWidgets.py"
-=======
-            r"Host/Common/GuiTools.py"
->>>>>>> 20914974d3aa49c42c043c61fc9627c5d2a0ca59
     ]
     for f in pySourceFiles:
         for df in DeleteFiles:
