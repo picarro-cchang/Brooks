@@ -84,6 +84,8 @@ class StopSupervisor(StopSupervisorFrame):
         try:
             # Kill the RestartSurveyor (if it exists)
             os.system(r'taskkill.exe /IM RestartSurveyor.exe /F')
+            # Kill the RestartSupervisor (if it exists)
+            os.system(r'taskkill.exe /IM RestartSupervisor.exe /F')
             # Kill the startup splash screen as well (if it exists)
             os.system(r'taskkill.exe /IM HostStartup.exe /F')
             # Kill QuickGui if it isn't under Supervisor's supervision
@@ -92,6 +94,10 @@ class StopSupervisor(StopSupervisorFrame):
             os.system(r'taskkill.exe /IM Controller.exe /F')
             # Kill Serial2Socket.exe if it isn't under Supervisor's supervision
             os.system(r'taskkill.exe /IM Serial2Socket.exe /F')
+            # Kill ControlBridge.exe if it isn't under Supervisor's supervision
+            os.system(r'taskkill.exe /IM ControlBridge.exe /F')
+            # Kill DataManagerPublisher.exe if it isn't under Supervisor's supervision
+            os.system(r'taskkill.exe /IM DataManagerPublisher.exe /F')
 
             if option is None:
                 sel = self.selectShutdownType.GetSelection()
