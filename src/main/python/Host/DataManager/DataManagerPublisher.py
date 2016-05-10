@@ -30,7 +30,7 @@ class DataManagerPublisher(object):
             self.debug = config.getboolean("Main", "Debug_Mode")
         else:
             print "Configuration file not found %s" % configFile
-            return 0
+            sys.exit(1)
         self.context = zmq.Context()
 
         self.broadcastSocket = self.context.socket(zmq.PUB)
