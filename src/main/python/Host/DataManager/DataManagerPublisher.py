@@ -4,7 +4,8 @@ Copyright 2014, Picarro Inc.
 
 import calendar
 import time
-
+import sys
+import os
 import zmq
 import json
 
@@ -14,12 +15,22 @@ from Host.Common import SharedTypes
 from Host.Common import StringPickler
 from Host.Common import AppStatus
 from Host.Common import EventManagerProxy as EventManager
+from Host.Common.CustomConfigObj import CustomConfigObj
 
 EventManager.EventManagerProxy_Init('DataManagerPublisher')
 
 class DataManagerPublisher(object):
 
-    def __init__(self):
+    def __init__(self, configFile):
+        if os.path.exists(configFile):
+            print "Configuration file is loaded from %s" % configFile
+            config = CustomConfigObj(configFile)
+            self.measurement_source = config.get("Main", "Measurement_Source")
+            self.measurement_mode = config.get("Main", "Measurement_Mode")
+            self.debug = config.getboolean("Main", "Debug_Mode")
+        else:
+            print "Configuration file not found %s" % configFile
+            return 0
         self.context = zmq.Context()
 
         self.broadcastSocket = self.context.socket(zmq.PUB)
@@ -47,12 +58,15 @@ class DataManagerPublisher(object):
             self.listener.stop()
 
     def jsonifyMeasurements(self, entry):
+        if self.debug:
+            print entry
+            print "----------------------------------------"
         source = entry['source']
-        if source == 'Sensors' or source in ['analyze_FBDS','analyze_RFADS']:
+        if source == 'Sensors' or source == self.measurement_source:
             if 'species' in entry['data'] and (entry['data']['species'] == 0.0 or entry['data']['species'] == "0.0"):
                 print "Rejected species 0"
                 return None
-            elif source == 'Sensors' and entry['mode'] in ['FBDS_mode','RFADS_mode']:
+            elif source == 'Sensors' and entry['mode'] == self.measurement_mode:
                 # block these data during the measurement, otherwise non-cavity parameters will be treated as 0 by surveyor programs
                 # CH4 and flow values shown on tablet will jump between 0 and normal reading.
                 return None
@@ -76,6 +90,51 @@ class DataManagerPublisher(object):
         self.lastInstrumentStatus = entry.status
         return result
 
+HELP_STRING = \
+"""\
+DataManagerPublisher.py [-h] [-c<FILENAME>]
+
+Where the options can be a combination of the following:
+-h  Print this help.
+-c  Specify a different config file.  Default = "./DataManagerPublisher.ini"
+"""
+
+def PrintUsage():
+    print HELP_STRING
+def HandleCommandSwitches():
+    import getopt
+
+    shortOpts = 'hc:'
+    longOpts = ["help"]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    if "/?" in args or "/h" in args:
+        options["-h"] = ""
+
+    executeTest = False
+    if "-h" in options or "--help" in options:
+        PrintUsage()
+        sys.exit(0)
+    
+    #Start with option defaults...
+    configFile = "DataManagerPublisher.ini"
+
+    if "-c" in options:
+        configFile = options["-c"]
+        print "Config file specified at command line: %s" % configFile
+
+    return configFile
+    
 if __name__ == "__main__":
-    pub = DataManagerPublisher()
+    configFile = HandleCommandSwitches()
+    pub = DataManagerPublisher(configFile)
     pub.run()
