@@ -257,7 +257,7 @@ class Builder(object):
             logger.info("Updating version on local git repository\n%s" % out)
 
         # At this point, no more changes can be made to the repository, so we get fetch the git hash
-        self.git_hash = self.run_command("git.exe log -1 --pretty=format:%H")[0]
+        self.git_hash = self.run_command("git log -1 --pretty=format:%H")[0]
 
         with open(version_file,"r") as inp:
             ver = json.load(inp)
