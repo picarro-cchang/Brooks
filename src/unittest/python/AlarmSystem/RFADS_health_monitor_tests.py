@@ -89,7 +89,7 @@ class TestHealthMonitor(unittest.TestCase):
     def test_large_wlm_offset(self):
         for i in range(5):
             offset = i * 0.1
-            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "wlm6_offset": offset})
+            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "wlm8_offset": offset})
         self.assertTrue((status & self._get_alarm_mask("WlmTargetFreq")) > 0)
 
 ###################### measurement rate and results ############################################
@@ -97,13 +97,13 @@ class TestHealthMonitor(unittest.TestCase):
     def test_slow_data_rate(self):
         for _ in range(10):
             status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "CH4": 2.0, "interval": 10.0, "SpectrumID": 170})
-        self.assertTrue((status & self._get_alarm_mask("FastMethaneInterval")) > 0)
+        self.assertTrue((status & self._get_alarm_mask("MethaneInterval")) > 0)
         self.assertTrue((status & self._get_alarm_mask("InvalidData")) > 0)
 
     def test_slow_data_rate_at_high_ch4_concentration(self):
         for _ in range(10):
             status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "CH4": 10.0, "interval": 10.0, "SpectrumID": 170})
-        self.assertTrue((status & self._get_alarm_mask("FastMethaneInterval")) == 0)
+        self.assertTrue((status & self._get_alarm_mask("MethaneInterval")) == 0)
         self.assertTrue((status & self._get_alarm_mask("InvalidData")) == 0)
 
     def test_negative_ch4_concentration(self):
