@@ -5,7 +5,7 @@ here = os.path.split(os.path.abspath(inspect.getfile(inspect.currentframe())))[0
 if here not in sys.path:
     sys.path.append(here)
 import numpy as np
-from collections import deque
+from collections import deque, OrderedDict
 
 from Host import PeriphIntrf
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -47,7 +47,7 @@ def totalSpeed(vx, vy):
         
 def alarmTestBit(word, bit):
     mask = 1 << bit
-    return _ALARMS_[word] & mask
+    return word & mask
 
 def GetBaselineCavityLoss():
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
@@ -157,9 +157,9 @@ class AlarmOfWlmTargetFreq(BasicAlarm):
 
 class AlarmOfInvalidData(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
-        if _ALARMS_[0] > 0:
+        if value > 0:
             for b in p.InvalidDataBit:
-                if alarmTestBit(0, b): return 1
+                if alarmTestBit(int(value), b): return 1
         else:
             return 0
             
@@ -198,7 +198,7 @@ class AlarmGeneral:
 
 if _GLOBALS_["init"]:
     _GLOBALS_["init"] = False
-    _GLOBALS_['alarms'] = {"General" : AlarmGeneral()}
+    _GLOBALS_['alarms'] = OrderedDict({"General" : AlarmGeneral()})
     for section in _ALARM_PARAMS_:
         if section.startswith("ALARM_"):
             a = _ALARM_PARAMS_[section]
