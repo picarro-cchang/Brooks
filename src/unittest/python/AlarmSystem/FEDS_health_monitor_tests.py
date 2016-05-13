@@ -54,6 +54,7 @@ class TestHealthMonitor(unittest.TestCase):
     def test_large_cavity_baseline_loss(self):
         status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "CFADS_base": 1e6})
         self.assertTrue((status & self._get_alarm_mask("CavityBaselineLoss")) > 0)
+        self.assertTrue((status & self._get_alarm_mask("InvalidData")) == 0)
 
     def test_zero_cavity_baseline_loss(self):
         status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "CFADS_base": 0})
@@ -63,11 +64,13 @@ class TestHealthMonitor(unittest.TestCase):
         for _ in range(10):
             status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "CavityPressure": 150.0, "interval": 10.0})
         self.assertTrue((status & self._get_alarm_mask("CavityPressure")) > 0)
+        self.assertTrue((status & self._get_alarm_mask("InvalidData")) > 0)
 
     def test_high_cavity_temperature(self):
         for _ in range(10):
             status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "CavityTemp": 50.0, "interval": 10.0})
         self.assertTrue((status & self._get_alarm_mask("CavityTemperature")) > 0)
+        self.assertTrue((status & self._get_alarm_mask("InvalidData")) > 0)
         
 ###################### wlm ###############################################        
     

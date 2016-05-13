@@ -47,7 +47,7 @@ def totalSpeed(vx, vy):
         
 def alarmTestBit(word, bit):
     mask = 1 << bit
-    return _ALARMS_[word] | mask
+    return _ALARMS_[word] & mask
 
 def GetBaselineCavityLoss():
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
@@ -158,7 +158,8 @@ class AlarmOfWlmTargetFreq(BasicAlarm):
 class AlarmOfInvalidData(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
         if _ALARMS_[0] > 0:
-            return sum([int(alarmTestBit(0, b)) for b in p.InvalidDataBit])
+            for b in p.InvalidDataBit:
+                if alarmTestBit(0, b): return 1
         else:
             return 0
             

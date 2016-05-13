@@ -47,7 +47,7 @@ def totalSpeed(vx, vy):
         
 def alarmTestBit(word, bit):
     mask = 1 << bit
-    return _ALARMS_[word] | mask
+    return _ALARMS_[word] & mask
 
 def GetBaselineCavityLoss():
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
@@ -78,11 +78,8 @@ class AlarmOfInterval(BasicAlarm):
     
     def processBeforeCheckValue(self, value, *a):
         spectrumId, CH4 = a
-        if ("FastMethaneInterval" in self.alarmName) and (spectrumId == p.FastMethaneSpectrumId):
+        if spectrumId == p.EthaneSpectrumId:
             self.processData(value, CH4)
-        elif "IsotopicMethaneInterval" in self.alarmName and (spectrumId in p.IsotopicModeSpectrumIds):
-            if spectrumId == p.IsotopicMethaneSpectrumId:
-                self.processData(value, CH4)
         else:
             return None
         return self.average
@@ -100,6 +97,18 @@ class AlarmByBinaryExpAverage(BasicAlarm):
         interval = a[0]
         self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         return (self.average >= 0.5)
+        
+class AlarmOfFlowRate(BasicAlarm):
+    def __init__(self, *a):
+        BasicAlarm.__init__(self, *a)
+        self.timeConstant = float(self.params["timeConstant"])
+        self.average = 0.0
+        
+    def processAfterCheckValue(self, value, *a):
+        interval = a[0]
+        self.average = expAverage(self.average, int(value), interval, self.timeConstant)
+        g = _GLOBALS_['alarms']["General"]
+        return (self.average >= 0.5) and g.alarmActive
         
 class AlarmOfCarSpeed(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
@@ -124,11 +133,6 @@ class AlarmOfCavityBaselineLoss(BasicAlarm):
         
     def processBeforeCheckValue(self, value, *a):
         return value > p.CavityBaselineLossScaleFactor * self.baselineCavityLoss
-        
-class AlarmOfSamplingInterval(BasicAlarm):
-    def processAfterCheckValue(self, value, *a):
-        g = _GLOBALS_['alarms']["General"]
-        return value and (not g.alarmActive) and g.alarmActiveState 
         
 class AlarmOfWlm(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
@@ -158,7 +162,8 @@ class AlarmOfWlmTargetFreq(BasicAlarm):
 class AlarmOfInvalidData(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
         if _ALARMS_[0] > 0:
-            return sum([int(alarmTestBit(0, b)) for b in p.InvalidDataBit])
+            for b in p.InvalidDataBit:
+                if alarmTestBit(0, b): return 1
         else:
             return 0
             
@@ -168,16 +173,12 @@ class AlarmGeneral:
     necessary for processing other alarms or just for checking data
     """
     def __init__(self):
-        self.peakDetectState = deque(maxlen=50)
         self.variable = []
         self.input = []
         self.inactiveForWind = False
         
     def processAlarm(self, alarm):
-        peakDetectState = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER') #integer value, see interface.py
-        self.peakDetectState.append(peakDetectState)
         self.alarmActive = (int(_REPORT_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
-        self.alarmActiveState = np.sum( np.abs( np.diff(self.peakDetectState) ) ) < 1
         # Wind anomaly handling
         validWindCheck = True
         windFields = ['PERIPHERAL_STATUS', 'CAR_SPEED', 'GPS_FIT']
