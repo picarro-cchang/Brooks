@@ -199,13 +199,14 @@ class AlarmGeneral:
 if _GLOBALS_["init"]:
     _GLOBALS_["init"] = False
     _GLOBALS_['alarms'] = OrderedDict({"General" : AlarmGeneral()})
-    for section in _ALARM_PARAMS_:
-        if section.startswith("ALARM_"):
-            a = _ALARM_PARAMS_[section]
-            if "class" in a:
-                _GLOBALS_["alarms"][section] = eval(a["class"])(_ALARM_PARAMS_, section)
-            else:
-                _GLOBALS_["alarms"][section] = BasicAlarm(_ALARM_PARAMS_, section)
+    alarm_list = [[section, int(_ALARM_PARAMS_[section]['bit']), _ALARM_PARAMS_[section]] for section in _ALARM_PARAMS_ if section.startswith("ALARM_")]
+    # alarm must be processed in orders of word and bit
+    alarm_list_sorted = sorted(alarm_list, key=lambda k: (k[2]['word'], k[1]))
+    for section, bit, a in alarm_list_sorted:
+        if "class" in a:
+            _GLOBALS_["alarms"][section] = eval(a["class"])(_ALARM_PARAMS_, section)
+        else:
+            _GLOBALS_["alarms"][section] = BasicAlarm(_ALARM_PARAMS_, section)
 
 p = _ALARM_FUNCTIONS_.loadAlarmParams(_ALARM_PARAMS_, "Params")
 

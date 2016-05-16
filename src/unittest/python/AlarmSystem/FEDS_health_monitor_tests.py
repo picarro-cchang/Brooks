@@ -91,7 +91,13 @@ class TestHealthMonitor(unittest.TestCase):
             offset = i * 0.1
             status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "wlm6_offset": offset})
         self.assertTrue((status & self._get_alarm_mask("WlmTargetFreq")) > 0)
-
+        
+    def test_high_warmbox_temperature(self):
+        for _ in range(10):
+            status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "WarmBoxTemp": 52, "interval": 10.0})
+        self.assertTrue((status & self._get_alarm_mask("WarmBoxTemperature")) > 0)
+        self.assertTrue((status & self._get_alarm_mask("InvalidData")) > 0)
+        
 ###################### measurement rate and results ############################################
 
     def test_slow_data_rate(self):
