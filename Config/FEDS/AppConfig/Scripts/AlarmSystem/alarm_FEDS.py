@@ -101,6 +101,18 @@ class AlarmByBinaryExpAverage(BasicAlarm):
         self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         return (self.average >= 0.5)
         
+class AlarmOfFlowRate(BasicAlarm):
+    def __init__(self, *a):
+        BasicAlarm.__init__(self, *a)
+        self.timeConstant = float(self.params["timeConstant"])
+        self.average = 0.0
+        
+    def processAfterCheckValue(self, value, *a):
+        interval = a[0]
+        self.average = expAverage(self.average, int(value), interval, self.timeConstant)
+        g = _GLOBALS_['alarms']["General"]
+        return (self.average >= 0.5) and g.alarmActive and g.alarmActiveState
+        
 class AlarmOfCarSpeed(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
         return totalSpeed(value, a[0])
