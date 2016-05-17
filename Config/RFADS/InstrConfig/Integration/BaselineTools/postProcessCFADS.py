@@ -109,7 +109,7 @@ savefig(basename+'_misc.png')
 
 output = []
 output.append("# Fitter configuration parameters from methane baseline fit "+time.asctime())
-output.append("CFADS_baseline =  %.6f" % arrays['base0']['mean'])
+output.append("CFADS_Baseline_level =  %.6f" % arrays['base0']['mean'])
 output.append("CFADS_Baseline_slope = %.6f" % arrays['base1']['mean'])
 output.append("CFADS_Sine0_ampl =%.3f" % arrays['amp_ripp_1']['mean'])
 output.append("CFADS_Sine0_freq = %.3f" % arrays['center_ripp_1']['mean'])

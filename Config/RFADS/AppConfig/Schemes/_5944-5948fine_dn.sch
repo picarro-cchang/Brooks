@@ -2,10 +2,10 @@ $$$
 schemeVersion = 1
 repeat = 1
 schemeRows = []
-fmin = 6027.1
-fincr = 0.0005
-nfreq = 7500
-vLaser = 3
+fmin = 5948.0
+fincr = -0.0005
+nfreq = 8000
+vLaser = 0
 fit = 32768
 
 for i in range(nfreq+1):

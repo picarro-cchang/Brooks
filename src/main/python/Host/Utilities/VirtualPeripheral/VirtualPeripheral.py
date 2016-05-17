@@ -52,7 +52,16 @@ class VirturalPeripheral(object):
         port = chr(port)
         byteCount = pack('<H', dataLength)
         return "".join([id, timestamp, port, byteCount])
-        
+    
+    def getDataFromFile(self):
+        with open(self.dataFile, 'r') as f:
+            data = f.read().split('\n
+            self.data = []
+            for index in range(len(data)):
+                line = data[index]
+                if len(line) > 0:
+                    self.data.append(line.split(','))
+
     def run(self):
         co = CustomConfigObj(self.config)
         for section in co.list_sections():

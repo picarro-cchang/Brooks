@@ -6,14 +6,14 @@ Tuning = CavityLength
 #   - Never worry about what DAS table index is used - this is automatically taken
 #     care of (primarily for the background load/alternate scheme index stuff)
 SchemeCount = 1
-Scheme_1_Path = ../Schemes/_C2H6test_v8.sch
+Scheme_1_Path = ../Schemes/_C2H6test_v10.sch
 
 [SCHEME_CONFIG]
 # Define what schemes should be loaded and sequenced and in what order
 #   - Never worry about what DAS table index is used - this is automatically taken
 #     care of (primarily for the background load/alternate scheme index stuff)
 SchemeCount = 1
-Scheme_1_Path = ../Schemes/_C2H6test_v8.sch
+Scheme_1_Path = ../Schemes/_C2H6test_v10.sch
 #Scheme_2_Path = ../Schemes/_FB2xxx_high_CH4_conc_nocal_v26.sch
 
 [SPECTRUM_IDS]
