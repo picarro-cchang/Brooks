@@ -173,32 +173,37 @@ class AlarmGeneral:
     necessary for processing other alarms or just for checking data
     """
     def __init__(self):
-        self.variable = []
-        self.input = []
+        self.variable = ['ValveMask']
+        self.input = np.zeros(len(self.variable))
+        
+    def processAlarm(self, alarm, value):
+        valveMask = value
+        self.alarmActive = (int(valveMask) & VALVE_MASK_CHECK_ALARM) == 0
+       
+                    
+class AlarmOfWindCheck:
+    def __init__(self):
+        self.variable = ['PERIPHERAL_STATUS', 'CAR_SPEED', 'GPS_FIT']
+        self.input = np.zeros(len(self.variable))
         self.inactiveForWind = False
         
-    def processAlarm(self, alarm):
-        self.alarmActive = (int(_REPORT_['ValveMask']) & VALVE_MASK_CHECK_ALARM) == 0
+    def processAlarm(self, alarm, *values):
+        peripheralStatus, carSpeed, gpsFit = values
         # Wind anomaly handling
-        validWindCheck = True
-        windFields = ['PERIPHERAL_STATUS', 'CAR_SPEED', 'GPS_FIT']
-        for f in windFields:
-            validWindCheck &= (f in _REPORT_)
-        if validWindCheck:
-            if (int(_REPORT_['PERIPHERAL_STATUS']) & PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_ANOMALY) > 0:
-                if not np.isnan(_REPORT_['CAR_SPEED']) and _REPORT_['GPS_FIT'] >= 1:
-                    Log("Wind NaN due to anomaly")
-                    self.inactiveForWind = True
-                else:
-                    Log("Wind NaN due to GPS")
+        if (int(peripheralStatus) & PeriphIntrf.PeripheralStatus.PeripheralStatus.WIND_ANOMALY) > 0:
+            if not np.isnan(carSpeed) and gpsFit >= 1:
+                Log("Wind NaN due to anomaly")
+                self.inactiveForWind = True
             else:
-                if self.inactiveForWind:
-                    Log("Survey status back to active after wind anomaly")
-                    self.inactiveForWind = False
+                Log("Wind NaN due to GPS")
+        else:
+            if self.inactiveForWind:
+                Log("Survey status back to active after wind anomaly")
+                self.inactiveForWind = False
 
 if _GLOBALS_["init"]:
     _GLOBALS_["init"] = False
-    _GLOBALS_['alarms'] = OrderedDict({"General" : AlarmGeneral()})
+    _GLOBALS_['alarms'] = OrderedDict({"General" : AlarmGeneral(), "WindCheck" : AlarmOfWindCheck()})
     alarm_list = [[section, int(_ALARM_PARAMS_[section]['bit']), _ALARM_PARAMS_[section]] for section in _ALARM_PARAMS_ if section.startswith("ALARM_")]
     # alarm must be processed in orders of word and bit
     alarm_list_sorted = sorted(alarm_list, key=lambda k: (k[2]['word'], k[1]))

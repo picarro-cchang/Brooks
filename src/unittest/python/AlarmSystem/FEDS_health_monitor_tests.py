@@ -38,6 +38,12 @@ class TestHealthMonitor(unittest.TestCase):
         for _ in range(10):
             status = self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "MOBILE_FLOW": 0.0, "interval": 10.0})
         self.assertTrue((status & self._get_alarm_mask("IntakeFlowRate")) > 0)
+        
+    def test_zero_intake_flow_rate_in_isotopic_capture(self):
+        self._get_analyzer_status(0, {"species": 25, "ValveMask": 0, "MOBILE_FLOW": 4.0, "interval": 10.0})
+        for _ in range(10):
+            status = self._get_analyzer_status(0, {"species": 150, "ValveMask": 35, "MOBILE_FLOW": 0.0, "interval": 10.0})
+        self.assertTrue((status & self._get_alarm_mask("IntakeFlowRate")) == 0)
 
     def test_normal_intake_flow_rate(self):
         for _ in range(10):
