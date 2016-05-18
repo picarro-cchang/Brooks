@@ -233,6 +233,8 @@ if _GLOBALS_["init"]:
 
 p = _ALARM_FUNCTIONS_.loadAlarmParams(_ALARM_PARAMS_, "Params")
 _REPORT_["peakDetectState"] = _DRIVER_.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER') #integer value, see interface.py
+if 'PERIPHERAL_STATUS' in _REPORT_:
+    _ALARMS_[1] = _ALARMS_[1] | int(_REPORT_('PERIPHERAL_STATUS'))
 
 if "species" in _REPORT_:
     if _REPORT_["species"] in TARGET_SPECIES: 
