@@ -116,17 +116,10 @@ class ControlBridge(object):
         self.driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER", 0)
         
     def _setToEQMode(self):
-        self.driver.closeValves(0x20)   # close valve 6
+        self.driver.openValves(0x20)   # open valve 6
         
     def _setToSurveyorMode(self):
-        self.driver.openValves(0x20)   # open valve 6
-
-    def _setToSurveyorMode(self):
-        self.driver.openValves(0x20)   # open valve 6
-    
-    def _setToEQMode(self):
         self.driver.closeValves(0x20)   # close valve 6
-        
     
         
 if __name__ == '__main__':
