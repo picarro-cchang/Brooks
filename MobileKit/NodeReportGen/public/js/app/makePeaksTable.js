@@ -39,7 +39,7 @@ define(function(require, exports, module) {
                     row = Math.floor(report.suby*(lat - report.maxLat)/(report.minLat - report.maxLat));
                     if (report.inMap(lat,lng)) {
                         var des = anz + '_' + utils.getDateTime(new Date(1000*etm));
-                        var url = "http://maps.google.com?q=(" + lat + "," + lng + ")+(" + des + ")&z=" + zoom;
+						var url = "https://maps.google.com/maps?q=loc:" + lat +"" + "," + lng + "+(" + des + ")&t=m&z=" + zoom + "&output=html";
                         peaksTable.push('<tr>');
                         peaksTable.push('<td>' + report.peakLabels[i] + '</td>');
                         peaksTable.push('<td><a href="' + url + '" target="_blank">' +  des + '</a></td>');

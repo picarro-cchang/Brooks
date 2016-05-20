@@ -68,6 +68,7 @@ define(function(require, exports, module) {
 
         DASHBOARD.SubmittedJob = Backbone.Model.extend({
             defaults: {
+                flag: '',
                 hash: null,
                 directory: null,
                 title:"",
@@ -94,30 +95,35 @@ define(function(require, exports, module) {
                     done(null);
                 });
             },
-            analyzeStatus: function (err, status, msg)  {
+            analyzeStatus: function (err, result, msg)  {
                 var that = this;
-                if (!err) DASHBOARD.connectionErrors = 0;
-                if (status === rptGenStatus.TASK_NOT_FOUND) {
-                    this.set({'msg': P3TXT.dashboard.report_expired, 'status': status});
-                }
-                else if (status < 0) {
-                    this.set({'msg': msg, 'status': status});
-                }
-                else if (status >= rptGenStatus.DONE) {
-                    this.set({'status': status});
-                }
-                else if (err) {
+                if (err) {
                     DASHBOARD.connectionErrors += 1;
                     if (DASHBOARD.connectionErrors > 5) {
                         msg = 'Connection problem: Please reload page or retry in a few minutes';
                         // this.set({'msg': err, 'status': rptGenStatus.OTHER_ERROR});
-                        this.set({'msg': msg, 'status': rptGenStatus.OTHER_ERROR});                        
+                        this.set({'msg': msg, 'status': rptGenStatus.OTHER_ERROR, 'flag':flag});
                     }
                     else {
                         setTimeout(function () { that.updateStatus(); }, 5000);
                     }
                 }
-                else setTimeout(function () { that.updateStatus(); }, 5000);
+                else if (result) {
+                    var status = result.status;
+                    var flag = result.flag;
+                    if (!flag) flag = '';
+                    if (!err) DASHBOARD.connectionErrors = 0;
+                    if (status === rptGenStatus.TASK_NOT_FOUND) {
+                        this.set({'msg': P3TXT.dashboard.report_expired, 'status': status, 'flag': flag});
+                    }
+                    else if (status < 0) {
+                        this.set({'msg': msg, 'status': status, 'flag': flag});
+                    }
+                    else if (status >= rptGenStatus.DONE) {
+                        this.set({'status': status, 'flag':flag});
+                    }
+                    else setTimeout(function () { that.updateStatus(); }, 5000);
+                }
             },
             updateStatus: function () {
                 var that = this;
@@ -137,7 +143,7 @@ define(function(require, exports, module) {
                         msg = P3TXT.dashboard.send_code + code;
                     }
                     //that.analyzeStatus(null, result.status, result.msg);
-                    that.analyzeStatus(null, result.status, msg);
+                    that.analyzeStatus(null, result, msg);
                 });
             }
         });
@@ -319,11 +325,13 @@ define(function(require, exports, module) {
                 else if (status >= rptGenStatus.DONE) {
                     if (status === rptGenStatus.DONE_WITH_PDF) {
                         statusDisplay = '<a class="pdfLink btn btn-mini btn-inverse" href="#" data-hash="' + model.get('hash') +
-                                        '" data-directory="' + model.get('directory') + '">Download PDF</a>';
+                                        '" data-directory="' + model.get('directory') + '">Download PDF</a><b>' + 
+                                        model.get('flag') + '</b>';
                     }
                     else if (status === rptGenStatus.DONE_NO_PDF) {
                         statusDisplay = '<b><a class="viewLink" href="#" data-hash="' + model.get('hash') +
-                                        '" data-directory="' + model.get('directory') + '">View</a></b>';
+                                        '" data-directory="' + model.get('directory') + '">View</a>' +
+                                        model.get('flag') + '</b>';
                     }
                 }
                 else {
@@ -368,6 +376,7 @@ define(function(require, exports, module) {
                 },
                 function (status, data) {
                     console.log('While retrieving instructions from ' + url + ': ' + status);
+                    if (job.get("flag") !== '') data["force"] = true;
                     that.instrFileView.loadContents(cjs(data,null,2));
                     that.highLightJob(job);
                 });

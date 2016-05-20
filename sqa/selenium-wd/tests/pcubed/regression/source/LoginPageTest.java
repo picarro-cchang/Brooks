@@ -23,11 +23,13 @@ import common.source.TestSetup;
 /**
  * @author zlu
  * 
- *         For Login page, more test cases should be added later for the
- *         following categories: 1. right userName/wrong password 2. wrong
- *         userName 3. special chars as login name 4. some more negative test
- *         cases 5. etc.
- * 
+ * For Login page, more test cases should be added later for the following categories:
+	 * 1. right userName/wrong password
+	 * 2. wrong userName
+	 * 3. special chars as login name
+	 * 4. some more negative test cases
+	 * 5. etc.
+ *
  */
 public class LoginPageTest {
 	private static WebDriver driver;
@@ -35,7 +37,7 @@ public class LoginPageTest {
 	private static String baseURL;
 	private static String screenShotsDir;
 	private static boolean debug;
-
+	
 	private static LoginPage loginPage;
 
 	/**
@@ -46,15 +48,15 @@ public class LoginPageTest {
 		testSetup = new TestSetup();
 		driver = testSetup.getDriver();
 		baseURL = testSetup.getBaseUrl();
-		// screenShotsDir = ".\\screenshots\\";
+		//screenShotsDir = ".\\screenshots\\";
 		screenShotsDir = "./screenshots/";
 		debug = testSetup.isRunningDebug();
 		driver.manage().deleteAllCookies();
 		driver.manage().window().maximize();
-
+		
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
-	}
+	}	
 
 	/**
 	 * @throws java.lang.Exception
@@ -77,90 +79,58 @@ public class LoginPageTest {
 	@After
 	public void tearDown() throws Exception {
 	}
-
+	
 	/**
-	 * Test Case: loginPage_TC0001 Check if a user with right loginName and
-	 * password can successfully login and get to the home page Also check the
-	 * normal logout successful
+	 * Test Case: loginPage_TC0001
+	 * Check if a user with right loginName and password can successfully login and get to the home page
+	 * Also check the normal logout successful
 	 * 
 	 */
 	@Test
 	public void loginPage_TC0001() {
-		try {
-			loginPage.open();
-			if (debug) {
-				testSetup.slowdownInSeconds(3);
-			}
+		loginPage.open();
+		if (debug) { testSetup.slowdownInSeconds(3); }
+		
+		HomePage homePage = loginPage.loginNormalAs(testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
+		assertTrue(homePage != null);
+		PageFactory.initElements(driver, homePage);
+		loginPage = homePage.logout();
+		assertTrue(loginPage != null);
 
-			HomePage homePage = loginPage.loginNormalAs(
-					testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
-			assertTrue(homePage != null);
-			PageFactory.initElements(driver, homePage);
-			loginPage = homePage.logout();
-			assertTrue(loginPage != null);
-
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"login_TC0001");
-		} catch (Exception e) {
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"Exception_loginPage_TC0001");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
-		}
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "login_TC0001");
 	}
-
+	
 	/**
-	 * Test Case: loginPage_TC0002 Empty password and login should fail
+	 * Test Case: loginPage_TC0002
+	 * Empty password and login should fail
 	 */
 	@Test
 	public void loginPage_TC0002() {
-		try {
-			PageFactory.initElements(driver, loginPage);
-			loginPage.open();
-			if (debug) {
-				testSetup.slowdownInSeconds(3);
-			}
+		PageFactory.initElements(driver, loginPage);
+		loginPage.open();
+		if (debug) { testSetup.slowdownInSeconds(3); }
+		
+		assertTrue(loginPage.loginAsWrongPassword(testSetup.getLoginUser0000(), ""));
 
-			assertTrue(loginPage.loginUnsuccessfull(
-					testSetup.getLoginUser0000(), ""));
-
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"login_TC0002");
-
-			if (debug) {
-				testSetup.slowdownInSeconds(3);
-			}
-		} catch (Exception e) {
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"Exception_loginPage_TC0002");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
-		}
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "login_TC0002");
+		
+		if (debug) { testSetup.slowdownInSeconds(3); }		
 	}
-
+	
 	/**
-	 * Test Case: loginPage_TC0003 Wrong password and login should fail
+	 * Test Case: loginPage_TC0003
+	 * Wrong password and login should fail
 	 */
 	@Test
 	public void loginPage_TC0003() {
-		try {
-			PageFactory.initElements(driver, loginPage);
-			loginPage.open();
-			if (debug) {
-				testSetup.slowdownInSeconds(3);
-			}
-
-			assertTrue(loginPage.loginUnsuccessfull(
-					testSetup.getLoginUser0000(), "wrongPwd"));
-
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"login_TC0003");
-
-			if (debug) {
-				testSetup.slowdownInSeconds(3);
-			}
-		} catch (Exception e) {
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"Exception_loginPage_TC0003");
-			assertTrue("Exception Caught : " + e.getMessage(), false);
-		}
+		PageFactory.initElements(driver, loginPage);
+		loginPage.open();
+		if (debug) { testSetup.slowdownInSeconds(3); }
+		
+		assertTrue(loginPage.loginAsWrongPassword(testSetup.getLoginUser0000(), "wrongPwd"));
+		
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "login_TC0003");
+		
+		if (debug) { testSetup.slowdownInSeconds(3); }
 	}
 }

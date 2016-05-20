@@ -226,7 +226,7 @@ class P3ViewFrame(P3ViewFrameGui):
             
     def onSelectAnalyzer(self, event):
         analyzer = self.cbAnalyzerName.GetStringSelection()
-        self.dataModel.getAnalyzerLogs(analyzer)
+        self.dataModel.getAnalyzerLogs(analyzer, limit=20)
         
     def onSelectLog(self, event):
         logName = self.cbLogName.GetStringSelection()

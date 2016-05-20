@@ -3,21 +3,15 @@
  */
 package common.source;
 
-import java.util.Set;
-
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
  * @author zlu
  * 
- *         Add more general code later for pages
+ * Add more general code later for pages
  * 
  */
 public class BasePage {
@@ -26,9 +20,8 @@ public class BasePage {
 	protected String strPageURL;
 	protected WebDriver driver;
 	protected String pageTitle;
-	protected String parentWindow;
 
-	public BasePage(WebDriver driver, String pageTitle) {
+	public BasePage (WebDriver driver, String pageTitle) {
 		this.driver = driver;
 		this.pageTitle = pageTitle;
 	}
@@ -81,95 +74,5 @@ public class BasePage {
 
 	public WebElement getWebElement(By by) {
 		return driver.findElement(by);
-	}
-
-	/**
-	 * Method to find the element for provided time span
-	 * 
-	 * @param driver
-	 * @param by
-	 * @param timeoutInSeconds
-	 * @return
-	 */
-	public WebElement findElement(WebDriver driver, By by, int timeoutInSeconds) {
-		WebDriverWait wait = new WebDriverWait(driver, timeoutInSeconds);
-		/*
-		 * throws a timeout exception if element not present after waiting
-		 * <timeoutInSeconds> seconds
-		 */
-		wait.until(ExpectedConditions.presenceOfElementLocated(by));
-		return driver.findElement(by);
-	}
-
-	/**
-	 * Method to verify element is present
-	 * 
-	 * @param driver
-	 * @param by
-	 * @param timeoutInSeconds
-	 * @return
-	 */
-	public boolean isElementPresent(WebDriver driver, By by,
-			int timeoutInSeconds) {
-		try {
-			for (int i = 0; i < timeoutInSeconds;) {
-				if (findElement(driver, by, timeoutInSeconds) != null)
-					return true;
-				else
-					i++;
-			}
-		} catch (NoSuchElementException e) {
-			System.out.println("Element not found : " + by);
-			return false;
-		} catch (TimeoutException e) {
-			System.out.println("Element not found : " + by);
-			return false;
-		} catch (Exception e) {
-			System.out.println("Element not found : " + by);
-			return false;
-		}
-		return false;
-	}
-
-	/**
-	 * Method to switch the window focus on new window
-	 * 
-	 * @param driver
-	 * @return
-	 */
-	public void switchWindow() {
-		parentWindow = driver.getWindowHandle();
-		Set<String> handles = driver.getWindowHandles();
-		for (String windowHandle : handles) {
-			if (!windowHandle.equals(parentWindow)) {
-				driver.switchTo().window(windowHandle);
-			}
-		}
-	}
-
-	/**
-	 * Method to accept the alert generated
-	 * 
-	 * @param driver
-	 * @return
-	 */
-	public String acceptAlert() {
-		Alert alert = driver.switchTo().alert();
-		String alertMessage = alert.getText();
-		alert.accept();
-		return alertMessage;
-	}
-
-	/**
-	 * Method to cancel the alert
-	 * 
-	 * @param driver
-	 * @return
-	 */
-	public String cancelAlert() {
-		Alert alert = driver.switchTo().alert();
-		String alertMessage = alert.getText();
-		alert.dismiss();
-		return alertMessage;
 	}
 }

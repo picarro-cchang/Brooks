@@ -91,7 +91,7 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
                     debug: false};
     var p3AnzMeta = new p3nodeapi.p3NodeApi(initArgs);
 
-    var proxy = new httpProxy.RoutingProxy();
+    var proxy = new httpProxy.createProxyServer();
     var app = express();
 
     var logger = function() {
@@ -122,9 +122,11 @@ server. The proxy server also passes the AnzLogMeta call for finding the list of
         logger("forwardTheRequest", "debug");
         logger("forwardTheRequest req.url", req.url, "debug");
 
-        proxy.proxyRequest(req, res, {
-            port: SITECONFIG.reportport,
-            host: SITECONFIG.reporthost
+        proxy.web(req, res, {
+            target: {
+                port: SITECONFIG.reportport,
+                host: SITECONFIG.reporthost
+            }
         });
     }; // forwardTheRequest
 

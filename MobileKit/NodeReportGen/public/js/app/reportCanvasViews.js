@@ -205,8 +205,13 @@ define(function(require, exports, module) {
                                 var aspect = 1.2;
                                 var actualWidth = s.canvas.width  + 2 * padding[0];
                                 var actualHeight = s.canvas.height + 2 * padding[1];
-                                this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth,
-                                    0.95*aspect*this.docWidth/actualHeight]);
+                                if (REPORT.settings.get("magnify") === null) {
+                                    this.scaleFac = Math.min.apply(null,[0.95*this.docWidth/actualWidth,
+                                        0.95*aspect*this.docWidth/actualHeight]);
+                                }
+                                else {
+                                    this.scaleFac = 1
+                                }
                                 this.context.canvas.width  = this.scaleFac * actualWidth;
                                 this.context.canvas.height = this.scaleFac * actualHeight;
                                 init = true;

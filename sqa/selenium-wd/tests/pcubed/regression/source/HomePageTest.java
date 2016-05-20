@@ -25,7 +25,7 @@ import common.source.TestSetup;
 
 /**
  * @author zlu
- * 
+ *
  */
 public class HomePageTest {
 	private static WebDriver driver;
@@ -33,7 +33,7 @@ public class HomePageTest {
 	private static String baseURL;
 	private static String screenShotsDir;
 	private static boolean debug;
-
+	
 	private static LoginPage loginPage;
 	private static HomePage homePage;
 
@@ -45,18 +45,17 @@ public class HomePageTest {
 		testSetup = new TestSetup();
 		driver = testSetup.getDriver();
 		baseURL = testSetup.getBaseUrl();
-		// screenShotsDir = ".\\screenshots\\";
+		//screenShotsDir = ".\\screenshots\\";
 		screenShotsDir = "./screenshots/";
 		debug = testSetup.isRunningDebug();
 		driver.manage().deleteAllCookies();
 		driver.manage().window().maximize();
-
+		
 		loginPage = new LoginPage(driver, baseURL);
 		PageFactory.initElements(driver, loginPage);
 		loginPage.open();
-		loginPage.loginNormalAs(testSetup.getLoginUser0000(),
-				testSetup.getLoginPwd0000());
-
+		loginPage.loginNormalAs(testSetup.getLoginUser0000(), testSetup.getLoginPwd0000());
+		
 		homePage = new HomePage(driver, baseURL);
 		PageFactory.initElements(driver, homePage);
 	}
@@ -84,59 +83,42 @@ public class HomePageTest {
 	}
 
 	/**
-	 * Test Case: homePage_TC0001 Check the major links or accesses are
-	 * available if login as admin user When Bug 444 fixed, should check the
-	 * page title for each page Bug 444: Page Title is "Picarro P-Cubed" for all
-	 * the pages
+	 * Test Case: homePage_TC0001
+	 * Check the major links or accesses are available if login as admin user
+	 * When Bug 444 fixed, should check the page title for each page
+	 * Bug 444: Page Title is "Picarro P-Cubed" for all the pages
 	 */
 	@Test
 	public void homePage_TC0001() {
-		try {
-			homePage.open();
-			if (debug) {
-				testSetup.slowdownInSeconds(5);
-			}
-			assertTrue(homePage.isPageLoad());
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"homePage_TC0001");
-
-			NaturalGasLeaksPage pageNGL = homePage.goToNGLPage();
-			if (debug) {
-				testSetup.slowdownInSeconds(5);
-			}
-			assertTrue(driver.getCurrentUrl().equals(pageNGL.getStrPageURL()));
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"homePage_TC0001_NaturalGasLeaksPage");
-
-			PageFactory.initElements(driver, homePage);
-			ReportGenerationPortalPage pageRGP = homePage.goToRGPPage();
-			if (debug) {
-				testSetup.slowdownInSeconds(15);
-			}
-			assertTrue(driver.getCurrentUrl().equals(pageRGP.getStrPageURL()));
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"homePage_TC0001_ReportGenerationPortalPage");
-
-			PageFactory.initElements(driver, homePage);
-			HomePage pageHome = homePage.goBackToHomePage();
-			if (debug) {
-				testSetup.slowdownInSeconds(5);
-			}
-			assertTrue(driver.getCurrentUrl().equals(pageHome.getStrPageURL()));
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"homePage_TC0001_BackToHomePage");
-		} catch (Exception e) {
-			ImagingUtility.takeScreenShot(driver, screenShotsDir,
-					"Exception_homePage_TC0001");
-			assertTrue("Exception caught : " + e.getMessage(), false);
-		}
+		homePage.open();
+		if (debug) { testSetup.slowdownInSeconds(5);}
+		assertTrue(homePage.isPageLoad());
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "homePage_TC0001");
+		
+		NaturalGasLeaksPage pageNGL = homePage.goToNGLPage();
+		if (debug) { testSetup.slowdownInSeconds(5);}
+		assertTrue(driver.getCurrentUrl().equals(pageNGL.getStrPageURL()));
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "homePage_TC0001_NaturalGasLeaksPage");
+		
+		PageFactory.initElements(driver, homePage);
+		ReportGenerationPortalPage pageRGP = homePage.goToRGPPage();
+		if (debug) { testSetup.slowdownInSeconds(15);}
+		assertTrue(driver.getCurrentUrl().equals(pageRGP.getStrPageURL()));
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "homePage_TC0001_ReportGenerationPortalPage");
+		
+		PageFactory.initElements(driver, homePage);
+		HomePage pageHome = homePage.goBackToHomePage();
+		if (debug) { testSetup.slowdownInSeconds(5);}
+		assertTrue(driver.getCurrentUrl().equals(pageHome.getStrPageURL()));
+		ImagingUtility.takeScreenShot(driver, screenShotsDir, "homePage_TC0001_BackToHomePage");
 	}
-
+	
 	/**
-	 * Test Case: homePage_TC0002 Check logout and get to the login page
-	 */
+	 * Test Case: homePage_TC0002
+	 * Check logout and get to the login page
+	 */	
 	@Test
 	public void homePage_TC0002() {
-
+		
 	}
 }

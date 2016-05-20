@@ -32,6 +32,7 @@ else:
 """
 import peakF
 
+DEBUG = {"level": 0}
 NaN = 1e1000/1e1000
 
 def genLatestFiles(baseDir,pattern):
@@ -309,7 +310,7 @@ class PeakFinder(object):
         #  we are still the latest file. Raise StopIteration if a new file has become
         #  the live file.
         fp = file(fname,'rb')
-        print "\r\nOpening source stream %s\r\n" % fname
+        if DEBUG['level']>0: print "\r\nOpening source stream %s\r\n" % fname
         line = ""
         counter = 0
         while True:
@@ -323,17 +324,17 @@ class PeakFinder(object):
                     try:
                         if fname == os.path.join(self.file_path):
                             fp.close()
-                            print "\r\nClosing source stream %s\r\n" % self.fname
+                            if DEBUG['level']>0: print "\r\nClosing source stream %s\r\n" % self.fname
                             return
 
                         lastName = genLatestFiles(*os.path.split(self.userlogfiles)).next()
                         # Stop iteration if we are not the last file
                         if fname != lastName:
                             fp.close()
-                            print "\r\nClosing source stream\r\n"
+                            if DEBUG['level']>0: print "\r\nClosing source stream\r\n"
                             return
                     except:
-                        pass
+                        pass ###
                     counter = 0
                 time.sleep(0.1)
                 if self.debug: sys.stderr.write('-')
@@ -381,14 +382,14 @@ class PeakFinder(object):
                     else:
                         if "Log not found" in err_str:
                             if self.logname == lastlog:
-                                print "\r\nLog complete. Closing log stream\r\n"
+                                if DEBUG['level']>0: print "\r\nLog complete. Closing log stream\r\n"
                                 return
 
                         # We didn't find a log, so wait 5 seconds, and then see if there is a new lastlog
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
-                            print "\r\nClosing log stream\r\n"
+                            if DEBUG['level']>0: print "\r\nClosing log stream\r\n"
                             return
 
                         if self.debug == True:
@@ -397,7 +398,7 @@ class PeakFinder(object):
                         pass
 
                 except Exception, e:
-                    print '\nfollowLastUserLogDb failed \n%s\n' % e
+                    if DEBUG['level']>0: print '\nfollowLastUserLogDb failed \n%s\n' % e
                     time.sleep(1)
                     continue
 
@@ -419,7 +420,7 @@ class PeakFinder(object):
                         time.sleep(5)
                         newlastlog = self.getLastLog()
                         if not lastlog == newlastlog:
-                            print "\r\nClosing log stream\r\n"
+                            if DEBUG['level']>0: print "\r\nClosing log stream\r\n"
                             return
                 else:
                     if waitForRetry:
@@ -462,7 +463,7 @@ class PeakFinder(object):
                     pass
 
             except Exception, e:
-                print '\ngetLastLog failed \n%s\n' % e
+                if DEBUG['level']>0: print '\ngetLastLog failed \n%s\n' % e
 
                 time.sleep(2)
                 continue
@@ -479,7 +480,7 @@ class PeakFinder(object):
                             print "lastlog found: ", lastlog
                         return lastlog
 
-                print '\ngetLastLog failed \n%s\n' % "No LOGNAME found"
+                if DEBUG['level']>0: print '\ngetLastLog failed \n%s\n' % "No LOGNAME found"
                 time.sleep(2)
 
             if waitForRetry:
@@ -559,7 +560,7 @@ class PeakFinder(object):
                     pass
 
             except Exception, e:
-                print 'EXCEPTION in pushData\n%s\n' % e
+                if DEBUG['level']>0: print 'EXCEPTION in pushData\n%s\n' % e
                 pass
 
             if waitForRetry:
@@ -619,7 +620,7 @@ class PeakFinder(object):
                 else:
                     lat_ref, lng_ref = None, None
             except:
-                print traceback.format_exc()
+                if DEBUG['level']>0: print traceback.format_exc()
 
     def analyzerData(self,source):
         # Generates data from a minimal log file as a stream consisting
@@ -665,7 +666,7 @@ class PeakFinder(object):
                     else:
                         lat_ref, lng_ref = None, None
             except:
-                print traceback.format_exc()
+                if DEBUG['level']>0: print traceback.format_exc()
                 raise
 
     #######################################################################
@@ -774,7 +775,7 @@ class PeakFinder(object):
 
         params = {"qry": qry, "sys": sys, "identity": identity, "rprocs": rprocs}
         try:
-            print "ticket_url", self.ticket_url
+            if DEBUG['level']>0: print "ticket_url", self.ticket_url
             resp = urllib2.urlopen(self.ticket_url, data=urllib.urlencode(params))
             rtndata_str = resp.read()
             rtndata = json.loads(rtndata_str)
@@ -783,14 +784,14 @@ class PeakFinder(object):
 
         except urllib2.HTTPError, e:
             err_str = e.read()
-            print '\nissueTicket failed \n%s\n' % err_str
+            if DEBUG['level']>0: print '\nissueTicket failed \n%s\n' % err_str
 
         except Exception, e:
-            print '\nissueTicket failed \n%s\n' % e
+            if DEBUG['level']>0: print '\nissueTicket failed \n%s\n' % e
 
         if ticket:
             self.ticket = ticket
-            print "new ticket: ", self.ticket
+            if DEBUG['level']>0: print "new ticket: ", self.ticket
 
 
     def run(self):
@@ -823,7 +824,7 @@ class PeakFinder(object):
                 else:
                     fname = None
                     time.sleep(self.sleep_seconds)
-                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+                    if DEBUG['level']>0: print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
                 ##sys.exit()
             else:
@@ -836,7 +837,7 @@ class PeakFinder(object):
                 except:
                     fname = None
                     time.sleep(self.sleep_seconds)
-                    print "No files to process: sleeping for %s seconds" % self.sleep_seconds
+                    if DEBUG['level']>0: print "No files to process: sleeping for %s seconds" % self.sleep_seconds
 
             if fname:
                 headerWritten = False
@@ -954,7 +955,7 @@ def main(argv=None):
                       help="Authentication identity string.", metavar="<IDENTITY>")
     parser.add_option("-s", "--sys", dest="psys",
                       help="Authentication sys.", metavar="<SYS>")
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
+    parser.add_option("-d", "--debug", dest="debug", action="store_false",
                       help="Debug mode")
     parser.add_option("--calc-dx", dest="dx",
                       help="Default calc value for dx.", metavar="<CALC_dx>")
@@ -1041,7 +1042,7 @@ def main(argv=None):
             parser.error("Analyzer Name not provided, and could not be determined from logname or file-path.")
 
     for copt in class_opts:
-        print copt, class_opts[copt]
+        if DEBUG['level']>0: print copt, class_opts[copt]
 
     try:
         testf = open(class_opts["pid_path"], 'r')

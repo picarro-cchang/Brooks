@@ -266,8 +266,7 @@ class P3RestApi(object):
                                                      , self.version
                                                      , self.resource
                                                      , resourcePath)
-
-                    
+                  
                     if "qryobj" in params:
                         sep = "?"
                         for ky in params["qryobj"]:
@@ -306,11 +305,19 @@ class P3RestApi(object):
                     tkt_ok = True;
             
             if tkt_ok == True:
-                path = "/%s/rest/%s/%s/%s/%s" % (self.site
+                if not resourcePath:
+                    path = "/%s/rest/%s/%s/%s/%s" % (self.site
                                                  , self.svc
                                                  , self.api_ticket
                                                  , self.version
                                                  , self.resource)
+                else:
+                    path = "/%s/rest/%s/%s/%s/%s/%s" % (self.site
+                                                 , self.svc
+                                                 , self.api_ticket
+                                                 , self.version
+                                                 , self.resource
+                                                 , resourcePath)
                 
                 if "qryobj" in params:
                     sep = "?"
@@ -426,4 +433,3 @@ class P3RestApi(object):
             time.sleep(sleep_sec)
         
         return tkt_cntl_err
-            

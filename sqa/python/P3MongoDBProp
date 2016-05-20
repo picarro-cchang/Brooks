@@ -1,9 +1,0 @@
-dbName = main_sqa
-#dbName = main_stage
-#dbName = main_sqa_duprows
-collectionName = analyzer_peak_logs
-fnm = 41
-host = localhost
-port = 27017
-debug = True
-#debug = False

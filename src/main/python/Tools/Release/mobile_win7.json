@@ -1,0 +1,11 @@
+{
+    "buildTypes": {
+        "FEDS": {
+            "species": "Surveyor",
+            "installerSignature": "FEDS",
+            "configRepo": "git"
+        }
+    },
+
+    "installerScriptsDir": "InstallerScriptsWin7"
+}
