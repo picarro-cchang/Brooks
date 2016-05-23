@@ -77,7 +77,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.4"
+APPVERSION = "3.0.5"
 
 Program_Path = os.getcwd()
 # cursors
@@ -1794,6 +1794,7 @@ class DatViewer(HasTraits):
         env.update({"_Figure_": self.plot.plot2dFigure, 
                     "_PlotXY_": self.PlotXY, "_VariableSelector_": self.VariableSelector,
                     "_Panels_": self.parent.viewers,
+                    "_wx_": wx,
                     "y": array(self.tableFiltered[self.varName]),
                     "x": array(self.xData)})
         if script.endswith(".py"):
