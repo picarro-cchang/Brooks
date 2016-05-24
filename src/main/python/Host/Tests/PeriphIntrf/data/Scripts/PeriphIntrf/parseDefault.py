@@ -1,3 +1,0 @@
-
-def parseDefault(rawStr):
-    pass

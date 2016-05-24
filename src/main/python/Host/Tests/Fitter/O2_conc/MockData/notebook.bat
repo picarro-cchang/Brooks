@@ -1,1 +1,0 @@
-start /min ipython notebook --pylab inline 

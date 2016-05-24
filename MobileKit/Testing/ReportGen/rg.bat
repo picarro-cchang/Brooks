@@ -1,1 +1,0 @@
-redgreen -m . -m c:\Picarro\trunkDevel\MobileKit\ReportGen -d . -t py.test -- -s -v %*

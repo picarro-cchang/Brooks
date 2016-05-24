@@ -1,1 +1,0 @@
-http://localhost:5200/rest/getJsonReport?ticket=8c59e3268aca97dac0d6b5d65275a7a3&region=0

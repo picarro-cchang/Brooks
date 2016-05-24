@@ -1,2 +1,0 @@
-#!/bin/bash
-f2py peakF.pyf peakF.c -c

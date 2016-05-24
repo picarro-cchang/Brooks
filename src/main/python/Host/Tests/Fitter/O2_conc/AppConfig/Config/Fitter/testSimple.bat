@@ -1,1 +1,0 @@
-C:\Picarro\trunkDevel\Host\Fitter\Fitter.py -v -c SimpleFitter.ini

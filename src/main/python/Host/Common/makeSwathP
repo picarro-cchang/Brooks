@@ -1,2 +1,0 @@
-#!/bin/bash
-f2py swathP.pyf swathP.c -c
