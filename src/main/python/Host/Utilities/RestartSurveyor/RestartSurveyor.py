@@ -41,6 +41,8 @@ class RestartSurveyor(object):
                 ServerDescription=APP_DESCRIPTION,
                 ServerVersion=__version__,
                 threaded=True)
+                
+            self.rpcServer.register_function(self.restart)
 
             if configPath != None:
                 config = ConfigObj(configPath)
