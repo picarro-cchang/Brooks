@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Folder>
+    <name>Network Links</name>
+    <visibility>0</visibility>
+    <open>0</open>
+    <description>Methane Concentration Viewer</description>
+    <NetworkLink>
+      <name>Base Definition</name>
+      <flyToView>0</flyToView>
+      <Link>
+        <href>http://localhost:5100/static/base2.kml</href>
+      </Link>
+    </NetworkLink>
+    <NetworkLink>
+      <name>UpdateConcentration</name>
+      <flyToView>0</flyToView>
+      <Link>
+        <href>http://localhost:5100/updateData</href>
+        <refreshMode>onInterval</refreshMode>
+        <refreshInterval>2</refreshInterval>
+      </Link>
+    </NetworkLink>
+    <NetworkLink>
+      <name>UpdateView</name>
+      <flyToView>1</flyToView>
+      <Link>
+        <href>http://localhost:5100/updateView</href>
+        <refreshMode>onInterval</refreshMode>
+        <refreshInterval>5</refreshInterval>
+        <viewRefreshMode>onStop</viewRefreshMode>
+        <viewRefreshTime>1</viewRefreshTime>
+        <viewFormat>range=[lookatRange]&amp;tilt=[lookatTilt]&amp;heading=[lookatHeading]&amp;altitude=[lookatTerrainAlt]</viewFormat>
+      </Link>
+    </NetworkLink>
+  </Folder>
+</kml>

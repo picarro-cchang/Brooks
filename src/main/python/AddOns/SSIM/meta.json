@@ -1,0 +1,188 @@
+{
+    "CFIDS": {
+    "pressure": 148,
+    "columns": [
+        ["sampleNum", "Run Num", "%7s", "False", "False", "False"],
+        ["sampleBagNum", "Sample Bag", "%10d", "False", "False", "False"],
+        ["resultTime", "Date/Time", "%15s", "False", "False", "False"],
+        ["meanTime", "Timestamp", "%14.5f", "False", "False", "False"],
+        ["meanHRDeltaCH4", "HR Delta iCH4 Mean", "%17.3f", "True", "False", "False", 1],
+        ["stdHRDelta", "HR Delta iCH4 Std", "%17.3f", "False", "True", "False", 1],
+        ["meanHPDeltaCH4", "HP Delta iCH4 Mean", "%17.3f", "True", "False", "False", 0],
+        ["stdHPDelta", "HP Delta iCH4 Std", "%17.3f", "False", "True", "False", 0],
+        ["meanDelta", "Delta 13CO2 Mean", "%17.3f", "True", "False", "False", 2],
+        ["stdDelta", "Delta 13CO2 Std", "%16.3f", "False", "True", "False", 2],
+        ["meanHR12CH4", "HR 12CH4 Mean", "%17.3f", "True", "False", "False", 4],
+        ["stdHR12CH4", "HR 12CH4 Std", "%16.3f", "False", "True", "False", 4],
+        ["meanHR13CH4", "HR 13CH4 Mean", "%17.3f", "True", "False", "False", 6],
+        ["stdHR13CH4", "HR 13CH4 Std", "%16.3f", "False", "True", "False", 6],
+        ["meanHP12CH4", "HP 12CH4 Mean", "%17.3f", "True", "False", "False", 3],
+        ["stdHP12CH4", "HP 12CH4 Std", "%16.3f", "False", "True", "False", 3],
+        ["meanHP13CH4", "HP 13CH4 Mean", "%17.3f", "True", "False", "False", 5],
+        ["stdHP13CH4", "HP 13CH4 Std", "%16.3f", "False", "True", "False", 5],
+        ["mean12CO2", "12CO2 Mean", "%17.3f", "True", "False", "False", 7],
+        ["std12CO2", "12CO2 Std", "%16.3f", "False", "True", "False", 7],
+        ["mean13CO2", "13CO2 Mean", "%17.3f", "True", "False", "False", 8],
+        ["std13CO2", "13CO2 Std", "%16.3f", "False", "True", "False", 8],
+        ["meanH2O", "H2O Mean", "%17.3f", "True", "False", "False", 9],
+        ["stdH2O", "H2O Std", "%16.3f", "False", "True", "False", 9],
+        ["meanChemDetect", "ChemDetect Mean", "%17.3f", "True", "False", "False", 10],
+        ["valPos", "Valve Position", "%14s", "False", "False", "False"],
+        ["actualDeltaiCH4Standard", "Standard Delta iCH4", "%21.3f", "False", "False", "True"],
+        ["actualDeltaiCO2Standard", "Standard Delta iCO2", "%21.3f", "False", "False", "True"],
+        ["actual13CH4Standard", "Standard 13CH4", "%21.3f", "False", "False", "True"],
+        ["actual13CO2Standard", "Standard 13CO2", "%21.3f", "False", "False", "True"]
+    ],
+    "measBuffer": {
+        "analysis": "analyze_FBDS",
+        "columns": [
+        ["HP_Delta_iCH4_Raw", "HP_Delta_iCH4_Raw"],
+        ["HR_Delta_iCH4_Raw", "HR_Delta_iCH4_Raw"],
+        ["Delta_Raw_iCO2", "Delta_Raw_iCO2"],
+        ["HP_12CH4", "HP_12CH4"],
+        ["HR_12CH4", "HR_12CH4"],
+        ["HP_13CH4", "HP_13CH4"],
+        ["HR_13CH4", "HR_13CH4"],
+        ["12CO2", "12CO2"],
+        ["13CO2", "13CO2"],
+        ["H2O", "H2O"],
+        ["ChemDetect", "ChemDetect"]
+        ]
+    }
+    },
+
+    "CFFDS": {
+    "pressure": 140,
+    "columns": [
+        ["sampleNum", "Run Num", "%7s", "False", "False", "False"],
+        ["sampleBagNum", "Sample Bag", "%10d", "False", "False", "False"],
+        ["resultTime", "Date/Time", "%15s", "False", "False", "False"],
+        ["meanTime", "Timestamp", "%14.5f", "False", "False", "False"],
+        ["meanDelta", "Delta Mean", "%17.3f", "True", "False", "False", 0],
+        ["stdDelta", "Delta Std", "%16.3f", "False", "True", "False", 0],
+        ["mean12CO2", "12CO2 Mean", "%17.3f", "True", "False", "False", 1],
+        ["std12CO2", "12CO2 Std", "%16.3f", "False", "True", "False", 1],
+        ["mean13CO2", "13CO2 Mean", "%17.3f", "True", "False", "False", 2],
+        ["std13CO2", "13CO2 Std", "%16.3f", "False", "True", "False", 2],
+        ["meanH2O", "H2O Mean", "%17.3f", "True", "False", "False", 3],
+        ["stdH2O", "H2O Std", "%16.3f", "False", "True", "False", 3],
+        ["meanCH4", "CH4 Mean", "%17.3f", "True", "False", "False", 4],
+        ["stdCH4", "CH4 Std", "%16.3f", "False", "True", "False", 4],
+        ["valPos", "Valve Position", "%14s", "False", "False", "False"],
+        ["actualDeltaiCO2Standard", "Standard Delta iCO2", "%21.3f", "False", "False", "True"],
+        ["actual12CO2Standard", "Standard 12CO2", "%21.3f", "False", "False", "True"]
+    ],
+    "measBuffer": {
+        "analysis": "analyze_iCO2",
+        "columns": [
+        ["Delta", "Delta_Raw"],
+        ["12CO2", "12CO2"],
+        ["13CO2", "13CO2"],
+        ["H2O", "H2O"],
+        ["CH4", "CH4"]
+        ]
+    }
+    },
+
+    "CFGDS": {
+    "pressure": 140,
+    "columns": [
+        ["sampleNum", "Run Num", "%7s", "False", "False", "False"],
+        ["sampleBagNum", "Sample Bag", "%10d", "False", "False", "False"],
+        ["resultTime", "Date/Time", "%15s", "False", "False", "False"],
+        ["meanTime", "Timestamp", "%14.5f", "False", "False", "False"],
+        ["meanDelta", "Delta Mean", "%17.3f", "True", "False", "False", 0],
+        ["stdDelta", "Delta Std", "%16.3f", "False", "True", "False", 0],
+        ["mean12CO2", "12CO2 Mean", "%17.3f", "True", "False", "False", 1],
+        ["std12CO2", "12CO2 Std", "%16.3f", "False", "True", "False", 1],
+        ["mean13CO2", "13CO2 Mean", "%17.3f", "True", "False", "False", 2],
+        ["std13CO2", "13CO2 Std", "%16.3f", "False", "True", "False", 2],
+        ["meanH2O", "H2O Mean", "%17.3f", "True", "False", "False", 3],
+        ["stdH2O", "H2O Std", "%16.3f", "False", "True", "False", 3],
+        ["meanCH4", "CH4 Mean", "%17.3f", "True", "False", "False", 4],
+        ["stdCH4", "CH4 Std", "%16.3f", "False", "True", "False", 4],
+        ["valPos", "Valve Position", "%14s", "False", "False", "False"],
+        ["actualDeltaiCO2Standard", "Standard Delta iCO2", "%21.3f", "False", "False", "True"],
+        ["actual12CO2Standard", "Standard 12CO2", "%21.3f", "False", "False", "True"]
+    ],
+    "measBuffer": {
+        "analysis": "analyze_iCO2",
+        "columns": [
+        ["Delta", "Delta_Raw"],
+        ["12CO2", "12CO2"],
+        ["13CO2", "13CO2"],
+        ["H2O", "H2O"],
+        ["CH4", "CH4"]
+        ]
+    }
+    },
+
+    "FCDS": {
+    "pressure": 148,
+    "columns": [
+        ["sampleNum", "Run Num", "%7s", "False", "False", "False"],
+        ["sampleBagNum", "Sample Bag", "%10d", "False", "False", "False"],
+        ["resultTime", "Date/Time", "%15s", "False", "False", "False"],
+        ["meanTime", "Timestamp", "%14.5f", "False", "False", "False"],
+        ["meanHRDelta", "HR Delta Mean", "%17.3f", "True", "False", "False", 0],
+        ["stdHRDelta", "HR Delta Std", "%16.3f", "False", "True", "False", 0],
+        ["meanHR12CH4", "HR 12CH4 Mean", "%17.3f", "True", "False", "False", 1],
+        ["stdHR12CH4", "HR 12CH4 Std", "%16.3f", "False", "True", "False", 1],
+        ["meanHPDelta", "HP Delta Mean", "%17.3f", "True", "False", "False", 2],
+        ["stdHPDelta", "HP Delta Std", "%16.3f", "False", "True", "False", 2],
+        ["meanHP12CH4", "HP 12CH4 Mean", "%17.3f", "True", "False", "False", 3],
+        ["stdHP12CH4", "HP 12CH4 Std", "%16.3f", "False", "True", "False", 3],
+        ["mean13CH4", "13CH4 Mean", "%17.3f", "True", "False", "False", 4],
+        ["std13CH4", "13CH4 Std", "%16.3f", "False", "True", "False", 4],
+        ["meanCO2", "CO2 Mean", "%16.3f", "True", "False", "False", 5],
+        ["meanH2O", "H2O Mean", "%16.3f", "True", "False", "False", 6],
+        ["meanChemDetect", "ChemDetect Mean", "%17.3f", "True", "False", "False", 7],
+        ["actualDeltaiCH4Standard", "Standard Delta iCH4", "%21.3f", "False", "False", "True"],
+        ["actual13CH4Standard", "Standard 13CH4", "%21.3f", "False", "False", "True"],
+        ["valPos", "Valve Position", "%14s", "False", "False", "False"]
+    ],
+    "measBuffer": {
+        "analysis": "analyze_FBDS",
+        "columns": [
+        ["HP_Delta_iCH4_Raw", "HP_Delta_iCH4_Raw"],
+        ["HP_12CH4", "HP_12CH4"],
+        ["HR_Delta_iCH4_Raw", "HR_Delta_iCH4_Raw"],
+        ["HR_12CH4", "HR_12CH4"],
+        ["13CH4", "13CH4"],
+        ["CO2", "CO2"],
+        ["H2O", "H2O"],
+        ["ChemDetect", "ChemDetect"]
+        ]
+    }
+    },
+
+    "CBDS": {
+    "pressure": 140,
+    "columns": [
+        ["sampleNum", "Run Num", "%7s", "False", "False", "False"],
+        ["sampleBagNum", "Sample Bag", "%10d", "False", "False", "False"],
+        ["resultTime", "Date/Time", "%15s", "False", "False", "False"],
+        ["meanTime", "Timestamp", "%14.5f", "False", "False", "False"],
+        ["meanDelta", "Delta Mean", "%17.3f", "True", "False", "False", 0],
+        ["stdDelta", "Delta Std", "%16.3f", "False", "True", "False", 0],
+        ["mean12CO2", "12CO2 Mean", "%17.3f", "True", "False", "False", 1],
+        ["std12CO2", "12CO2 Std", "%16.3f", "False", "True", "False", 1],
+        ["mean13CO2", "13CO2 Mean", "%17.3f", "True", "False", "False", 2],
+        ["std13CO2", "13CO2 Std", "%16.3f", "False", "True", "False", 2],
+        ["meanH2O", "H2O Mean", "%17.3f", "True", "False", "False", 3],
+        ["stdH2O", "H2O Std", "%16.3f", "False", "True", "False", 3],
+        ["valPos", "Valve Position", "%14s", "False", "False", "False"],
+        ["actualDeltaiCO2Standard", "Standard Delta iCO2", "%21.3f", "False", "False", "True"],
+        ["actual12CO2Standard", "Standard 12CO2", "%21.3f", "False", "False", "True"]
+    ],
+    "measBuffer": {
+        "analysis": "analyze_iCO2",
+        "columns": [
+        ["Delta", "Delta_Raw"],
+        ["12CO2", "12CO2"],
+        ["13CO2", "13CO2"],
+        ["H2O", "H2O"]
+        ]
+    }
+    }
+}

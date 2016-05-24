@@ -1,0 +1,49 @@
+1. The utility c:/Picarro/G2000/AccessViaNet/AccessViaNet.exe provides limited remote access to the analyzer across a network. This utility should 
+    be started up when Windows starts up by placing a shortcut to the batch file c:/Picarro/G2000/AccessViaNet/AccessViaNetStarter.bat in the Windows 
+    startup folder. A configuration file, usually called c:/Picarro/G2000/AccessViaNet/AccessViaNet.ini is used to control the operation of the 
+    utility.
+
+2. To obtain data from the analyzer, connect via TCP/IP to port 8000. To issue analyzer commands, connect via TCP/IP to port 23. These ports and
+     the masks which specify which hosts which are allowed to connect to the analyzer may be specified using the TCPcontrol and TCPdata options 
+     in the [Addresses] section of the configuration file.
+
+3. The data consists of comma separated fields. The first three fields are fixed, but up to fourteen additional fields may be specified 
+    in the file AccessViaNet.ini. A typical output stream appears as follows:
+
+    PICARRO,20111216T190750.000,3,140.01273,45.00094,45.00106,40.31250,31000.00000,31998.91797,42851.18359,41398.55078,45.99374,15.76092,13.17571
+    PICARRO,20111216T190755.000,3,140.00650,45.00079,45.00115,40.31250,31000.00000,31997.85156,43101.12891,41423.71094,45.98952,15.75369,12.97711
+    PICARRO,20111216T190800.000,3,140.00607,45.00085,45.00103,40.31250,31000.00000,31999.25391,42907.09766,41532.25781,45.98537,15.80056,13.20892
+    PICARRO,20111216T190805.000,3,139.98329,45.00063,45.00115,40.31250,31000.00000,31991.97266,43201.66016,41442.14844,45.98116,15.76876,13.37075        
+    
+    The first field is the identification of the analyzer, which is specified by the Id option in the [InstrumentName] section of the configuration 
+        file.
+    The second field is the UTC (GMT) timestamp. The eight digits before the letter T denote the year, month and day, and the digits following denote
+        the hour, minute and seconds.
+    The third field consists of three bits. The least significant bit is always 1, indicating that the analyzer is turned on. The next bit (value 2)
+        is one when sensor data are being reported, while the bit with value 4 is one when concentration data are being reported. In the example, the
+        value 3 = 2+1 indicates that the analyzer is on and reporting sensor data.
+    The subsequent fields are specified by the sections [SensorReport] and [DataReport] in the configuration file. 
+        
+4. The analyzer can be in one of three operating states. 
+    During normal operation, it is in the measuring state, during which it reports concentration data.
+    Before measurements start, it is in the warming state, during which it reports sensor data, typically at a slow rate.
+    If the low-level analyzer software is not running, a one-second heartbeat is generated with only the three fixed fields available.
+    
+5. In the [DataReport] section of the configuration file, the Source option selects one of the data sources available in the analyzer. For the 
+    flux analyzer, the two sources available are analyze_flux and FluxSync. The first of these sources reports concentrations as soon as they 
+    become available, typically on an irregularly sampled grid of times. On the other hand, the FluxSync source reports concentrations linearly
+    interpolated onto a regular 10Hz grid. The options Data1, Data2 etc. specify which variables are to be output. The names of the variables 
+    available depends on the source. For example, if this section reads:
+    
+    [DataReport]
+    Source = FluxSync
+    Data1 = ch4_conc_sync
+    Data2 = co2_conc_sync
+    Data3 = h2o_conc_sync
+    
+    then the output stream when the instrument is in the measuring state might be:
+    
+    PICARRO,20111216T190750.000,5,1.89734,,1.627364
+    PICARRO,20111216T190750.100,5,
+    PICARRO,20111216T190750.200,5,
+    

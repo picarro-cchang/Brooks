@@ -1,0 +1,965 @@
+#!/usr/bin/python
+"""
+FILE:
+  analyzerServer.py
+
+DESCRIPTION:
+  Flask based REST/web server running on analyzer
+
+SEE ALSO:
+  Specify any related information.
+
+HISTORY:
+   3-Nov-2011  sze  Initial version
+   3-Dec-2013  sze  Added /utility route for anemometer calibration (calUtility)
+   9-Dec-2013  sze  Added /rest/spectrumCollectorRpc route to access Spectrum Collector
+
+ Copyright (c) 2013 Picarro, Inc. All rights reserved
+"""
+from flask import Flask
+from flask import make_response, render_template, request
+try:
+    import simplejson as json
+except:
+    import json
+from functools import wraps
+import fnmatch
+import itertools
+from LineCacheMmap import getSlice, getSliceIter
+import os
+import sys
+from threading import Thread
+import time
+import traceback
+import optparse
+import CmdFIFO
+from timestamp import getTimestamp
+from SharedTypes import RPC_PORT_DATALOGGER, RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER
+from SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SPECTRUM_COLLECTOR
+import math
+
+import Host.Common.SwathProcessor as sp
+from Host.autogen import interface
+
+DEBUG = {'level': 0}
+
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser(defaults={
+            'USERLOGFILES':'C:/UserData/AnalyzerServer/*.dat',
+            'PEAKFILES':'C:/UserData/AnalyzerServer/*.peaks',
+            'ANALYSISFILES':'C:/UserData/AnalyzerServer/*.analysis',
+            'SWATHFILES':'C:/UserData/AnalyzerServer/*.swath',
+              })
+parser.read('configAnalyzerServer.ini')
+
+VALVE_INLET_MASK = 0x20
+VALVE_CALIBRATION_MASK = 0x10
+
+debugSwath = False
+NaN = 1e1000/1e1000
+
+if debugSwath:
+    dbgSwathFp = file("c:/temp/swathDump.dat","wb")
+else:
+    dbgSwathFp = None
+
+def pFloat(x):
+    try:
+        return float(x)
+    except:
+        return NaN
+
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+
+def genLatestFiles(baseDir,pattern):
+    # Generate files in baseDir and its subdirectories which match pattern
+    for dirPath, dirNames, fileNames in os.walk(baseDir):
+        dirNames.sort(reverse=True)
+        fileNames.sort(reverse=True)
+        for name in fileNames:
+            if fnmatch.fnmatch(name,pattern):
+                yield os.path.join(dirPath,name)
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    appPath = sys.executable
+else:
+    appPath = sys.argv[0]
+appDir = os.path.split(appPath)[0]
+
+# configuration
+SECRET_KEY = 'development key'
+USERNAME = 'admin'
+PASSWORD = 'default'
+
+# The following are split into a path and a filename with unix style wildcards.
+#  We search for the filename in the specified path and its subdirectories.
+USERLOGFILES = parser.get('data_file', 'USERLOGFILES')
+PEAKFILES = parser.get('data_file', 'PEAKFILES')
+ANALYSISFILES = parser.get('data_file', 'ANALYSISFILES')
+SWATHFILES = parser.get('data_file', 'SWATHFILES')
+
+MAX_DATA_POINTS = 500
+
+STATICROOT = os.path.join(appDir,'static')
+
+app = Flask(__name__)
+app.config.from_object(__name__)
+
+class DataLoggerInterface(object):
+    """Interface to the data logger and archiver RPC"""
+    def __init__(self):
+        self.dataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "AnalyzerServer")
+        self.exception = None
+        self.rpcInProgress = False
+
+    def startUserLogs(self,userLogList,restart=False):
+        """Start a list of user logs by making a non-blocking RPC call"""
+        while self.rpcInProgress: time.sleep(0.5)
+        # if self.rpcInProgress: return False
+        self.exception = None
+        self.rpcInProgress = True
+        th = Thread(target=self._startUserLogs,args=(userLogList,restart))
+        th.setDaemon(True)
+        th.start()
+        return True
+
+    def _startUserLogs(self,userLogList,restart):
+        try:
+            for i in userLogList:
+                self.dataLoggerRpc.DATALOGGER_startLogRpc(i,restart)
+        except Exception,e:
+            self.exception = e
+        self.rpcInProgress = False
+
+def _getAnalysis(name,startRow):
+    #
+    # Gets data from the analyzer analysis file "name" starting  at the specified
+    #  "startRow" within the file. The result dictionary has keys:
+    #
+    header = getSlice(name,0,1)[0].line.split()
+    result = {}
+    for h in header: result[h] = []
+    for l in getSliceIter(name,startRow,startRow+50):
+        line = l.line
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        for col,val in zip(header,vals):
+            result[col].append(pFloat(val))
+        startRow += 1
+    result['nextRow'] = startRow
+    return result
+
+def _getPeaks(name,startRow,minAmp):
+    #
+    # Gets data from the analyzer peak parameters file "name" starting  at the specified
+    #  "startRow" within the file. Only peaks of amplitude no less than "minAmp" are
+    #  reported. The result dictionary has keys:
+    #
+    header = getSlice(name,0,1)[0].line.split()
+    amplCol = header.index("AMPLITUDE")
+    result = {}
+    for h in header: result[h] = []
+    if amplCol<0:
+        if DEBUG['level']>0: print "Cannot find AMPLITUDE column in peak file"
+        result['nextRow'] = startRow
+        return result
+    nresults = 0
+    for l in getSliceIter(name,startRow):
+        line = l.line
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        if pFloat(vals[amplCol]) >= minAmp:
+            nresults += 1
+            for col,val in zip(header,vals):
+                result[col].append(pFloat(val))
+            if nresults >= 50: break
+        startRow += 1
+    result['nextRow'] = startRow
+    return result
+
+def _getSwath(name,startRow,limit):
+    #
+    # Gets data from the analyzer peak parameters file "name" starting  at the specified
+    #  "startRow" within the file:
+    #
+    header = getSlice(name,0,1)[0].line.split()
+    result = {}
+    for h in header: result[h] = []
+    nresults = 0
+    for l in getSliceIter(name,startRow):
+        line = l.line
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        nresults += 1
+        for col,val in zip(header,vals):
+            result[col].append(pFloat(val))
+        if nresults >= limit: break
+        startRow += 1
+    result['nextRow'] = startRow
+    return result
+
+def _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams):
+    # Making a swath requires 2*nWindow+1 points centered about
+    #  each position, so to produce the swath at startRow, we need
+    #  to fetch rows startRow-nWindow through startRow+nWindow.
+    # We need to keep track of the rows that will have their swaths
+    #  calculated by this call, so that result['nextRow'] can be
+    #  filled up.
+    header = getSlice(name,0,1)[0].line.split()
+    result = {}
+    source = []     # This is the collection of rows to be processed
+    nresults = 0
+    firstRow = max(1,startRow-nWindow)
+    row = firstRow
+    for l in getSliceIter(name,firstRow):
+        line = l.line
+        if not line: break
+        vals = line.split()
+        if len(vals) != len(header): break
+        row += 1
+        if row >= firstRow+limit+2*nWindow: break
+        # source is a list of dictionaries, one for
+        #  each row of the data file
+        rowDict = {}
+        for col,val in zip(header,vals):
+            rowDict[col] = pFloat(val)
+        source.append(rowDict)
+    result = sp.process(source,nWindow,stabClass,minLeak,minAmp,astdParams,dbgSwathFp)
+    if debugSwath: dbgSwathFp.flush()
+    result['nextRow'] = row-nWindow
+    return result
+
+def _getData(name,startPos=None,varList=None,limit=MAX_DATA_POINTS):
+    #
+    # Gets data from the analyzer live archive file "name" starting  at the specified
+    #  line "startPos" within the file.
+    #
+    if varList is not None:
+        if "EPOCH_TIME" not in varList:
+            varList.append("EPOCH_TIME")
+    try:
+        header = getSlice(name,0,1)[0].line.split()
+        columns = [[] for i in range(len(header))]
+        if (startPos==0 or startPos is None): startPos = 1
+        if startPos<0:
+            endPos = None
+        else:
+            endPos = startPos + limit
+        lineNum = -1
+        for l in getSliceIter(name,startPos,endPos):
+            lineNum = l.lineNumber
+            line = l.line
+            if not line: break
+            vals = line.split()
+            if len(vals)!=len(header): break
+            for col,val in zip(columns,vals):
+                col.append(pFloat(val))
+        if lineNum < 0:
+            return {},1
+        nRows = len(columns[0])
+        result = {}
+        if nRows>=0:
+            for col,h in zip(columns,header):
+                if varList is None or h in varList:
+                    result[h] = col
+            lastPos = lineNum
+        else:
+            for col,h in zip(columns,header):
+                if varList is None or h in varList:
+                    result[h] = []
+            lastPos = startPos
+        epochTime = result['EPOCH_TIME']
+        # TODO Handle null epoch time
+        result['timeStrings'] = [time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(epochTime[-1]))]
+        return result, lastPos
+    except:
+        print traceback.format_exc()
+
+@app.route('/rest/getData')
+def rest_getData():
+    result = getDataEx(request.values)
+    # self.response.headers['Content-Type'] = "application/json"
+    # self.response.out.write(json.dumps(response))
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getDataEx(params):
+    try:
+        name = genLatestFiles(*os.path.split(USERLOGFILES)).next()
+    except:
+        return {'lastPos':"null", 'filename':''}
+
+    if 'startPos' in params and (params['startPos'] is not None) and (params['startPos'] != "null"):
+        try:
+            startPos = int(params['startPos'])
+        except:
+            startPos = None
+    else:
+        startPos = None
+
+    varList = json.loads(params['varList']) if 'varList' in params else None
+
+    try:
+        limit = int(params.get('limit',MAX_DATA_POINTS))
+    except:
+        limit = MAX_DATA_POINTS
+
+    try:
+        result,lastPos = _getData(name,startPos,varList,limit)
+    except:
+        return {'lastPos':"null", 'filename':''}
+
+    result['filename'] = os.path.basename(name)
+    result['lastPos'] = lastPos
+    return result
+
+@app.route('/rest/getPos')
+def rest_getPos():
+    result = getPosEx()
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getPosEx():
+    result = getDataEx({'startPos':-2,'varList':'["GPS_ABS_LONG","GPS_ABS_LAT"]'})
+    long = result['GPS_ABS_LONG'][-1]
+    lat = result['GPS_ABS_LAT'][-1]
+    return {'result':dict(GPS_ABS_LONG=long,GPS_ABS_LAT=lat)}
+
+@app.route('/rest/getPeaks')
+def rest_getPeaks():
+    result = getPeaksEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getPeaksEx(params):
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    minAmp = float(params.get('minAmp',0))
+    try:
+        name = genLatestFiles(*os.path.split(PEAKFILES)).next()
+    except:
+        return {'filename':''}
+    result = _getPeaks(name,startRow,minAmp)
+    result["filename"]=os.path.basename(name)
+    return result
+
+@app.route('/rest/getSwath')
+def rest_getSwath():
+    result = getSwathEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getSwathEx(params):
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    try:
+        limit = int(params.get('limit',MAX_DATA_POINTS))
+    except:
+        limit = MAX_DATA_POINTS
+    try:
+        name = genLatestFiles(*os.path.split(SWATHFILES)).next()
+    except:
+        return {'filename':''}
+    result = _getSwath(name,startRow,limit)
+    result["filename"]=os.path.basename(name)
+    return result
+
+@app.route('/rest/makeSwath')
+def rest_makeSwath():
+    result = makeSwathEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def makeSwathEx(params):
+    astdParams = dict(a=0.15*math.pi,b=0.25,c=0.0)
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    try:
+        limit = int(params.get('limit',MAX_DATA_POINTS))
+    except:
+        limit = MAX_DATA_POINTS
+    try:
+        nWindow = int(params.get('nWindow',10))
+    except:
+        nWindow = 10
+    try:
+        stabClass = params.get('stabClass','D')
+    except:
+        stabClass = 'D'
+    try:
+        minLeak = float(params.get('minLeak',1.0))
+    except:
+        minLeak = 1.0
+    try:
+        minAmp = float(params.get('minAmp',0.05))
+    except:
+        minAmp = 0.05
+    try:
+        astdParams['a'] = float(params.get('astd_a',0.15*math.pi))
+    except:
+        astdParams['a'] = 0.15*math.pi
+    try:
+        astdParams['b'] = float(params.get('astd_b',0.25))
+    except:
+        astdParams['b'] = 0.25
+    try:
+        astdParams['c'] = float(params.get('astd_c',0.0))
+    except:
+        astdParams['c'] = 0.0
+    try:
+        name = genLatestFiles(*os.path.split(USERLOGFILES)).next()
+    except:
+        return {'filename':''}
+    result = _makeSwath(name,startRow,limit,nWindow,stabClass,minLeak,minAmp,astdParams)
+    result["filename"]=os.path.basename(name)
+    return result
+
+@app.route('/rest/getAnalysis')
+def rest_getAnalysis():
+    result = getAnalysisEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getAnalysisEx(params):
+    try:
+        startRow = int(params.get('startRow',1))
+    except:
+        startRow = 1
+    try:
+        name = genLatestFiles(*os.path.split(ANALYSISFILES)).next()
+    except:
+        return {'filename':''}
+    result = _getAnalysis(name,startRow)
+    result["filename"]=os.path.basename(name)
+    return result
+
+@app.route('/rest/restartDatalog')
+def rest_restartDatalog():
+    if not app.config['onAnalyzer']:
+        result = "OK"
+    else:
+        result = restartDatalogEx(request.values)
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def restartDatalogEx(params):
+    if DEBUG['level']>0: print "<------------------ Restarting data log ------------------>"
+    dataLogger = DataLoggerInterface()
+    dataLogger.startUserLogs(['DataLog_User_Minimal'],restart=True)
+    if 'weatherCode' in params:
+        InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
+        try:
+            InstMgr.INSTMGR_ModifyAuxStatusRpc(int(params["weatherCode"]),0x3F)
+        except:
+            print traceback.format_exc()
+    return {}
+
+@app.route('/rest/shutdownAnalyzer')
+def rest_shutdownAnalyzer():
+    if not app.config['onAnalyzer']:
+        result = "OK"
+    else:
+        result = shutdownAnalyzerEx(request.values)
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def shutdownAnalyzerEx(params):
+    if DEBUG['level']>0: print "<------------------ Shut down analyzer in current state ------------------>"
+    InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "AnalyzerServer")
+    InstMgr.INSTMGR_ShutdownRpc(2)
+    return {}
+
+@app.route('/rest/driverRpc')
+def rest_driverRpc():
+    result = driverRpcEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+driverAvailable = True
+lastDriverCheck = None
+
+def driverRpcEx(params):
+    # Call any RPC function on the driver by passing
+    #  params['func'] = name of Driver RPC function to call (as a string)
+    #  params['args'] = string which evaluates to a list of positional arguments for the RPC function
+    #  params['kwargs'] = string which evaluates to a dictionary of keyword arguments for the RPC function
+    global driverAvailable, lastDriverCheck
+
+    if driverAvailable:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
+        try:
+            return dict(value=getattr(Driver,params['func'])(*eval(params.get('args','()'),{}),**eval(params.get('kwargs','{}'))))
+        except Exception,e:
+            if 'connection failed' in str(e):
+                driverAvailable = False
+                lastDriverCheck = time.clock()
+            return dict(error=traceback.format_exc())
+    else:
+        if time.clock() - lastDriverCheck > 60: driverAvailable = True
+        return(dict(error="No Driver"))
+
+@app.route('/rest/spectrumCollectorRpc')
+def rest_spectrumCollectorRpc():
+    result = spectrumCollectorRpcEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+spectrumCollectorAvailable = True
+lastSpectrumCollectorCheck = None
+
+def spectrumCollectorRpcEx(params):
+    # Call any RPC function on the spectrum collector by passing
+    #  params['func'] = name of spectrum collector RPC function to call (as a string)
+    #  params['args'] = string which evaluates to a list of positional arguments for the RPC function
+    #  params['kwargs'] = string which evaluates to a dictionary of keyword arguments for the RPC function
+    global spectrumCollectorAvailable, lastSpectrumCollectorCheck
+
+    if spectrumCollectorAvailable:
+        SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, ClientName = "AnalyzerServer")
+        try:
+            return dict(value=getattr(SpectrumCollector,params['func'])(*eval(params.get('args','()'),{}),**eval(params.get('kwargs','{}'))))
+        except Exception,e:
+            if 'connection failed' in str(e):
+                spectrumCollectorAvailable = False
+                lastSpectrumCollectorCheck = time.clock()
+            return dict(error=traceback.format_exc())
+    else:
+        if time.clock() - lastSpectrumCollectorCheck > 60: spectrumCollector = True
+        return(dict(error="No Spectrum Collector"))
+
+@app.route('/rest/getCurrentInlet')
+def rest_getCurrentInlet():
+    """
+    Get the current inlet state.
+    """
+
+    if not app.config['onAnalyzer']:
+        result = "Mast"
+    else:
+        Driver = CmdFIFO.CmdFIFOServerProxy(
+             "http://localhost:%d" % RPC_PORT_DRIVER,
+             ClientName='AnalyzerServer')
+        result = 'Unknown'
+
+        if (Driver.getValveMask() & VALVE_INLET_MASK) > 0:
+            result = 'Mast'
+        else:
+            result = 'Bumper'
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': result}) + ')')
+    else:
+        return make_response(json.dumps({'result': result}))
+
+@app.route('/rest/setCurrentInlet')
+def rest_setCurrentInlet():
+    """
+    Set the inlet to the 'inlet' param: MAST or BUMPER.
+    """
+
+    if app.config['onAnalyzer']:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
+                                            RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
+
+        inlet = request.args.get('inlet')
+
+        if inlet == 'MAST':
+            Driver.openValves(VALVE_INLET_MASK)
+        elif inlet == 'BUMPER':
+            Driver.closeValves(VALVE_INLET_MASK)
+        else:
+            if DEBUG['level']>0: print "Invalid inlet '%s' selected." % inlet
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': 'OK'}) + ')')
+    else:
+        return make_response(json.dumps({'result': 'OK'}))
+
+@app.route('/rest/getCurrentReference')
+def rest_getCurrentReference():
+    """
+    Get the current position of the reference gas control: ISOTOPIC or
+    CONCENTRATION.
+    """
+
+    if not app.config['onAnalyzer']:
+        result = 'CONCENTRATION'
+    else:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
+                                            RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
+
+        result = 'UNKNOWN'
+
+        if (Driver.getValveMask() & VALVE_CALIBRATION_MASK) > 0:
+            result = 'CONCENTRATION'
+        else:
+            result = 'ISOTOPIC'
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': result}) + ')')
+    else:
+        return make_response(json.dumps({'result': result}))
+
+@app.route('/rest/setCurrentReference')
+def rest_setCurrentReference():
+    """
+    Set the reference gas position to either ISOTOPIC or CONCENTRATION.
+    """
+
+    if app.config['onAnalyzer']:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
+                                            RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
+
+        reference = request.args.get('reference')
+
+        if reference == 'CONCENTRATION':
+            Driver.openValves(VALVE_CALIBRATION_MASK)
+        elif reference == 'ISOTOPIC':
+            Driver.closeValves(VALVE_CALIBRATION_MASK)
+        else:
+            if DEBUG['level']>0: print "Invalid reference gas position, '%s', selected." % reference
+
+
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': 'OK'}) + ')')
+    else:
+        return make_response(json.dumps({'result': 'OK'}))
+
+@app.route('/rest/startRefCalibrationShim')
+def rest_startRefCalibrationShim():
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' +
+                             json.dumps({'result': 'OK'}) + ')')
+    else:
+        return make_response(json.dumps({'result': 'OK'}))
+
+@app.route('/rest/startRefCalibration')
+def rest_startRefCalibration():
+    """
+    Starts the priming of the reference gas tube. The actual injection
+    will be done by /rest/tryInject if the priming is complete.
+
+    Query arguments:
+        valve (optional): The id of the valve connected to the reference gas.
+
+        injectDuration (optional): Amount of time to toggle the valve
+        for injection.
+
+        flagValve (optional): Physically unused valve used to aid in
+        debugging the displayed valve mask.
+
+        primeDuration (optional): Amount of time to prime tube.
+
+        purgeDuration (optional): Amount of time to purge the tube
+        after priming.
+
+        flagAssertDuration (optional): Amount of time to assert the
+        flag valve mask for display purposes.
+    """
+
+    valve = int(request.args.get('valve', default=3))
+    injectDuration = int(request.args.get('injectDuration', default=5))
+    flagValve = int(request.args.get('flagValve', default=4))
+    primeDuration = float(request.args.get('primeDuration', default=10.0))
+    purgeDuration = float(request.args.get('purgeDuration', default=20.0))
+    flagAssertDuration = float(request.args.get('flagAssertDuration',
+                                                default=2.0))
+
+    valveMask = 1 << (valve - 1)
+    flagValveMask = 1 << (flagValve - 1)
+    mask = valveMask | flagValveMask
+
+    # This sequence is for the entire process, but the gasInject phase
+    # won't execute until rest_tryInject() sees that the priming is
+    # done.
+    seq = [
+        # prime
+        [mask, mask, int(primeDuration / 0.2)],
+        [mask, 0x0, int(purgeDuration / 0.2)],
+        # primeDone
+        [0x0, 0x0, 0],
+        # gasInject
+        [mask, mask, injectDuration],
+        [mask, flagValveMask, int(flagAssertDuration / 0.2)],
+        [mask, 0x0, 1],
+        # gasInjectDone
+        [0x0, 0x0, 0]]
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    Driver.wrValveSequence(seq)
+    Driver.wrDasReg('VALVE_CNTRL_SEQUENCE_STEP_REGISTER', 0)
+
+    return make_response(
+        json.dumps({'result': {'value': 'OK'}}))
+
+@app.route('/rest/tryInject')
+def rest_tryInject():
+    """
+    Injects some calibration gas if the valve sequencer has finished
+    priming the tubing. Returns true if injection was completed
+    successfully, false if the injection was not performed.
+    """
+
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    step = Driver.rdDasReg('VALVE_CNTRL_SEQUENCE_STEP_REGISTER')
+
+    if step != 2:
+        # TODO Remove magic # for primeDone step. Perhaps set variable when
+        # sequence is initially created.
+        return make_response(
+            json.dumps({'result': {'injected': 'false'}}))
+
+    Driver.wrDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER', 1)
+    Driver.wrDasReg('VALVE_CNTRL_SEQUENCE_STEP_REGISTER', 3)
+
+    return make_response(
+        json.dumps({'result': {'injected': 'true'}}))
+
+@app.route('/rest/injectCal')
+def rest_injectCal():
+    result = injectCalEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def injectCalEx(params):
+    # Inject calibration gas using "valve" for a duration of length 0.2*samples seconds
+    #  An additional "flagValve" is opened for an extra 2s so that we have an indication of the calibration
+    #  in the data log
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AnalyzerServer")
+    try:
+        valve = int(params.get('valve',3))
+        valveMask = 1 << (valve-1)
+        flagValve = int(params.get('flagValve',4))
+        flagValveMask = 1 << (flagValve-1)
+        mask = valveMask | flagValveMask
+        samples = int(params.get('samples',5))
+        Driver.wrValveSequence([[mask,mask,samples],[mask,flagValveMask,10],[mask,0,1],[0,0,0]])
+        Driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER",0)
+        return dict(value='OK')
+    except:
+        return dict(error=traceback.format_exc())
+
+@app.route('/rest/cancelIsotopicCapture')
+def rest_cancelIsotopicCapture():
+    if app.config['onAnalyzer']:
+        _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_CancellingState)
+
+    result = {'result': 'OK'}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+@app.route('/rest/startTriggeredIsotopicCapture')
+def rest_startTriggeredIsotopicCapture():
+    if app.config['onAnalyzer']:
+        _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_ArmedState)
+
+    result = {'result': 'OK'}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+@app.route('/rest/startManualIsotopicCapture')
+def rest_startManualIsotopicCapture():
+    if app.config['onAnalyzer']:
+        _setPeakCntrlState(interface.PEAK_DETECT_CNTRL_TriggeredPendingState)
+
+    result = {'result': 'OK'}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+def _setPeakCntrlState(state):
+    Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                        ClientName='AnalyzerServer')
+    Driver.wrDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER', state)
+
+@app.route('/rest/getIsotopicCaptureState')
+def rest_getIsotopicCaptureState():
+    # These constants need to match Host.autogen.interface.
+    states = {0: 'IDLE',
+              1: 'ARMED',
+              2: 'TRIGGER_PENDING',
+              3: 'TRIGGERED',
+              4: 'INACTIVE',
+              5: 'CANCELLING',
+              6: 'PRIMING',
+              7: 'PURGING',
+              8: 'INJECTION_PENDING'}
+
+    if not app.config['onAnalyzer']:
+        result = {'result': states[0]}
+    else:
+        Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
+                                            ClientName='AnalyzerServer')
+        state = Driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
+
+        result = {'result': states[state]}
+
+    if 'callback' in request.values:
+        return make_response("%s(%s)" % (request.values['callback'],
+                                         json.dumps(result)))
+    else:
+        return make_response(json.dumps(result))
+
+@app.route('/rest/getDateTime')
+def rest_getDateTime():
+    result = getDateTimeEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getDateTimeEx(params):
+    if DEBUG['level']>0: print time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+    return(dict(dateTime=time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())))
+
+@app.route('/rest/getLastPeriphUpdate')
+def rest_getLastPeriphUpdate():
+    result = getLastPeriphUpdateEx(request.values)
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"result":result}) + ')')
+    else:
+        return make_response(json.dumps({"result":result}))
+
+def getLastPeriphUpdateEx(params):
+    # Get the last timestamps of peripheral data
+    DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "AnalyzerServer")
+    try:
+        lastTimestamps = DataManager.Periph_GetLastTimestamps()
+        currentTimestamp = getTimestamp()
+        if len(lastTimestamps) > 0:
+            for port in lastTimestamps:
+                lastTimestamps[port] = currentTimestamp - lastTimestamps[port]
+            return lastTimestamps
+        else:
+            return {}
+    except:
+        return dict(error=traceback.format_exc())
+
+@app.route('/rest/ping')
+@app.route('/rest/pimg')
+def ping():
+    return 'ping'
+
+@app.route('/rest/admin')
+def issueTicket():
+    if DEBUG['level']>0: print "Ticket:", request.values
+    ticket = 'abcdefghijkl'
+    if 'callback' in request.values:
+        return make_response(request.values['callback'] + '(' + json.dumps({"ticket":ticket}) + ')')
+    else:
+        return make_response(json.dumps({"ticket":ticket}))
+
+@app.route('/maps')
+def maps():
+    amplitude = float(request.values.get('amplitude',0.1))
+    do_not_follow = int('do_not_follow' in request.values)
+    follow = int('follow' in request.values or not do_not_follow)
+    center_longitude = float(request.values.get('center_longitude',-121.98432))
+    center_latitude = float(request.values.get('center_latitude',37.39604))
+    return render_template('maps.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
+                                       center_latitude=center_latitude,center_longitude=center_longitude)
+
+@app.route('/investigator')
+def investigator():
+    amplitude = float(request.values.get('amplitude',0.1))
+    do_not_follow = int('do_not_follow' in request.values)
+    follow = int('follow' in request.values or not do_not_follow)
+    center_longitude = float(request.values.get('center_longitude',-121.98432))
+    center_latitude = float(request.values.get('center_latitude',37.39604))
+    return render_template('investigator_ben.html',amplitude=amplitude,follow=follow,do_not_follow=do_not_follow,
+                                       center_latitude=center_latitude,center_longitude=center_longitude)
+
+@app.route('/public_url')
+def public_url():
+    return render_template('public_url.html')
+
+@app.route('/prototype')
+def prototype():
+    return render_template('prototype.html')
+
+@app.route('/load')
+def load():
+    return render_template('load.html')
+
+@app.route('/front_page')
+def front_page():
+    return render_template('front_page.html')
+
+@app.route('/plume')
+def plume():
+    return render_template('plume.html')
+
+@app.route('/test')
+def test():
+    return render_template('test.html')
+
+@app.route('/utility')
+def utility():
+    return render_template('calUtility.html')
+
+if __name__ == '__main__':
+    parser = optparse.OptionParser()
+    parser.add_option('--no-analyzer', dest='onAnalyzer', action='store_false',
+                      default=True)
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      default=False)
+    options, _ = parser.parse_args()
+    if options.debug:
+        DEBUG['level'] = 1
+    app.config['onAnalyzer'] = options.onAnalyzer
+
+    app.run(host='0.0.0.0', port=5000, debug=(DEBUG['level']>0))

@@ -1,0 +1,1 @@
+redgreen -m . -d . -- -s -d -v %*

@@ -1,0 +1,51 @@
+! File peakF.pyf
+python module peakF
+interface
+
+    double precision function test2d(twoD, nrows, ncols)
+        intent(c) test2d
+        intent(c)
+        double precision intent(in) :: twoD(nrows,ncols)
+        integer intent(in) :: nrows
+        integer intent(in) :: ncols
+    end function test2d
+
+    integer function checkPeak(ssbuff, nlevels, npoints, level, pos, minAmpl)
+        intent(c) checkPeak
+        intent(c)
+        double precision intent(in) :: ssbuff(nlevels,npoints)
+        integer intent(in) :: nlevels
+        integer intent(in) :: npoints
+        integer intent(in) :: level
+        integer intent(in) :: pos
+        double precision intent(in) :: minAmpl
+    end function checkPeak
+
+    subroutine findPeaks(data, hList, scaleList, kernels, ssbuff, cache, minAmpl, z, c, &
+                         concIndex, distIndex, etmIndex, valveIndex, peaks, npeaks, &
+                         dataLen, nlevels, npoints, maxKernel)
+        intent(c) findPeaks
+        intent(c)
+        double precision intent(in) :: data(dataLen)
+        integer intent(in) :: hList(nlevels)
+        double precision intent(in) :: scaleList(nlevels)
+        double precision intent(in) :: kernels(nlevels, maxKernel)
+        double precision intent(in) :: ssbuff(nlevels, npoints)
+        double precision intent(in) :: cache(dataLen, npoints)
+        double precision intent(in) :: minAmpl
+        integer intent(in) :: z
+        integer intent(in) :: c
+        integer intent(in) :: concIndex
+        integer intent(in) :: distIndex
+        integer intent(in) :: etmIndex
+        integer intent(in) :: valveIndex
+        double precision intent(out) :: peaks(nlevels, dataLen+2)
+        integer intent(out) :: npeaks(1)
+        integer intent(in) :: dataLen
+        integer intent(in) :: nlevels
+        integer intent(in) :: npoints
+        integer intent(in) :: maxKernel
+    end subroutine findPeaks
+
+end interface
+end python module peakF

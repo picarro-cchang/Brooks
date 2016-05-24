@@ -1,0 +1,34 @@
+// 8a8b75650a2f07cc1ea932a5f8e2fb80
+{
+    "regions": [
+        {
+            "baseType": "map",
+            "name": "Monterey1",
+            "swCorner": [
+                36.59447,
+                -121.89716
+            ],
+            "neCorner": [
+                36.60317,
+                -121.88729
+            ],
+            "comments": ""
+        }
+    ],
+    "runs": [
+        {
+            "analyzer": "DEMO2000",
+            "startEtm": "2012-06-10  00:00",
+            "endEtm": "2012-06-10  23:59",
+            "path": true,
+            "marker": "#00FFFF",
+            "wedges": "#FFFF00",
+            "swath": "#0000FF",
+            "minAmpl": 0.1,
+            "exclRadius": 10,
+            "stabClass": "*",
+            "comments": ""
+        }
+    ],
+    "markers": []
+}

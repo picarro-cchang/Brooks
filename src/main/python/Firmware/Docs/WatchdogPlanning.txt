@@ -1,0 +1,102 @@
+/*
+ * DESCRIPTION:
+ *   The watchdog mechanism consists of a low priority watchdog refresh task and a high priority watchdog bark
+ *   timer interrupt, which are responsible for recovering and diagnosing DSP and MCU hog, or infinite loop conditions.
+ *   
+ *   The watchdog refresh task, is responsible for resetting both the hardware watchdog timer and the watchdog
+ *   bark timer, every 100ms  Note:The hardware watchdog timer is setup to timeout at 167ms.  It also implements a software 
+ *   timer, which times out after 100 ms, which has to be refreshed by the ringdown handler.  If it doesn't 
+ *   get refreshed, the DSP is reset and the spectrum acquisition cycle is aborted.  The ringdown handler refreshes the timer 
+ *   by sending a message to the watchdog refresh task.
+ *   
+ *   The watchdog bark ISR, runs if the 32bit timer is not refreshed for 125ms.  If five consecutive watchdog barks occur, 
+ *   the event is logged and the MCU is reset.  The hardware watchdog timer times out, if it isn't refreshed for 125ms, 
+ *   and results in the MCU being reset.
+ *
+ *
+ * For cost-reduced platform we use a hardware timer interrupt (INT14 for TIMER0, INT15 for TIMER1) which expires every 
+ *  125ms. A low-priority task resets this counter periodically, so that the timer interrupt should normally not get called.
+ * Timer is clocked by half of SYSCLK2. Timer registers INCREMENT to the specified PERIOD register value.
+ 
+ 
+ * INCLUDE FILES:
+ *   Specify the header files that caller needs to include.
+ *
+ * SEE ALSO:
+ *   Specify any related information.
+ *  
+ * HISTORY:
+ *    2-Feb-2008  sze  Added debug LOG_printf to display maximum time without keepalive kick from DSP
+ */
+
+ 
+//-----------------------------------------------------------------------------
+// WATCHDOG_barkIsr
+//-----------------------------------------------------------------------------
+//
+// WATCHDOG bark ISR. This runs once every 125ms in response to expiry of CPU Timer 0.
+// It resets the DSP (i.e. a Watchdog bite occurs) if there are more than five barks.
+//
+// Returns: nothing.
+//
+void WATCHDOG_barkIsr ( void )
+{
+    if ( ++barkCount > WATCHDOG_BARK_TIMEOUT_COUNT )
+    {
+        // Signal occurrence of a watchdog bite and reset DSP
+        DIAG_updateEvent( DIAG_WatchdogBiteOccurred, NULL, 0 );
+        resetDsp();
+    }
+    else
+    {
+        // Signal occurrence of a watchdog bark
+        DIAG_updateEvent( DIAG_WatchdogBarkOccurred, NULL, 0 );
+     
+     // Reset the watchdog timer
+     KickDog();
+    
+     // Refresh WATCHDOG bark
+     ReloadCpuTimer0();
+     StartCpuTimer0();
+   }
+}
+ 
+ 
+ 
+ //---------------------------------------------------------------------------
+// KickDog: 
+//---------------------------------------------------------------------------
+// This function resets the watchdog timer.
+// Enable this function for using KickDog in the application 
+
+void KickDog(void)
+{
+    EALLOW;
+    SysCtrlRegs.WDKEY = 0x0055;
+    SysCtrlRegs.WDKEY = 0x00AA;
+    EDIS;
+}
+
+//---------------------------------------------------------------------------
+// DisableDog: 
+//---------------------------------------------------------------------------
+// This function disables the watchdog timer.
+
+void DisableDog(void)
+{
+    EALLOW;
+    SysCtrlRegs.WDCR= 0x0068;
+    EDIS;
+}
+
+//---------------------------------------------------------------------------
+// EnableDog: 
+//---------------------------------------------------------------------------
+// This function enables the watchdog timer.
+
+void EnableDog(void)
+{
+    EALLOW;
+    SysCtrlRegs.WDCR = 0x0028;
+    EDIS;
+}

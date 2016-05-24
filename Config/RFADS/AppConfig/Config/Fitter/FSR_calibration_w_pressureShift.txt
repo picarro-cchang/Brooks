@@ -1,0 +1,10 @@
+Fitted 5 CO2 reference lines -- experimental fitter uses line centers shifted according to Hitran2012 deltas and measured pressure
+Wavenumber    FSR     rms
+6053.10036   21.183   0.192
+6054.80968  104.051   0.178
+6056.50643  186.315   2.269
+6058.19093  267.986   0.306
+6059.86349  349.072   0.171
+FSR = 0.0206261 wvn
+f(0) = 6052.66346 wvn
+RMS residual = 0.00003 wvn

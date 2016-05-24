@@ -1,0 +1,61 @@
+[INSTRUMENT_MODE]
+Tuning = CavityLength
+
+[SCHEME_CONFIG]
+# Define what schemes should be loaded and sequenced and in what order
+#   - Never worry aboutywhat DAS table index is used - this is automatically taken
+#     care of (primarily for the background load/alternate scheme index stuff)
+
+SchemeCount = 2
+#Scheme_1_Path = ../../InstrConfig/Schemes/C13peak.sch
+#Scheme_1_Path = ../../InstrConfig/Schemes/CFEDS07_iso13CH4all_v0616a_calCO2.sch
+#Scheme_2_Path = ../../InstrConfig/Schemes/CFEDS07_iso13CH4all_v0616a_calCH4.sch
+#Scheme_3_Path = ../../InstrConfig/Schemes/CFEDS07_iso13CH4all_v0616a_calH2O.sch
+Scheme_1_Path = ../Schemes/_CFEDS2xxx_cal_v1.sch
+Scheme_2_Path = ../Schemes/_CFEDS2xxx_nocal_v1.sch
+
+[SPECTRUM_IDS]
+#Specify logical names for referencing each SubSchemeID...
+#SHOULD USUALLY BE IN _BaseDefinitions.ini - JUST HERE FOR REFERENCE
+
+############################################################################
+###
+# "Standard" Spectrum Processing and Analysis Instructions...
+###
+############################################################################
+[C12]
+Analyzer= ../Scripts/DataManager/analyze_isoCH4.py
+[C13]
+Analyzer= ../Scripts/DataManager/analyze_isoCH4.py
+[13CH4]
+Analyzer= ../Scripts/DataManager/analyze_isoCH4.py
+[iCH4_H2O]
+Analyzer= ../Scripts/DataManager/analyze_isoCH4.py
+[CH3D]
+Analyzer= ../Scripts/DataManager/analyze_isoCH4.py
+[Dummy]
+Analyzer= ../Scripts/DataManager/analyze_isoCH4.py
+
+############################################################################
+###
+# Synchronous Script Definitions
+#  - These are read and executed by the Data Manager
+###
+############################################################################
+[SYNC_SETUP]
+#Define synchronous executions to be run by the DataManager in this mode
+# - Note that these are in addition to any in _BaseDefinition.ini
+NumSyncAnalyzers = 0
+
+#Sync_1_Period_s = 30
+#Sync_1_ReportName = WLMCal
+#Sync_1_Script = ../Scripts/DataManager/update_cal.py
+
+# The following synchronous script is for updating the front panel
+#Sync_2_Period_s = 5
+#Sync_2_ReportName = SlowDisplay
+#Sync_2_Script = ../Scripts/DataManager/slow_display.py
+#A generic synchronizer...
+#Sync_2_Period_s = 1
+#Sync_2_ReportName = isoCH4Sync
+#Sync_2_Script = ../Scripts/DataManager/resyncAndFilter.py
