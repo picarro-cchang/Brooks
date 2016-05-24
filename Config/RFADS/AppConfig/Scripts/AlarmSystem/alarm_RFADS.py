@@ -106,9 +106,10 @@ class AlarmOfCaptureMode(BasicAlarm):
         
     def processAfterCheckValue(self, value, *a):
         interval = a[0]
-        self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         g = _GLOBALS_['alarms']["General"]
-        return (self.average >= 0.5) and g.alarmActive and g.alarmActiveState
+        if g.alarmActive and g.alarmActiveState:
+            self.average = expAverage(self.average, int(value), interval, self.timeConstant)
+        return (self.average >= 0.5)
         
 class AlarmOfCarSpeed(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
