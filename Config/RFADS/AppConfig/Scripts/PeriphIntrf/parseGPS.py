@@ -17,8 +17,14 @@ def parseGPS(rawStr):
             retList = [sentence, degLat, degLong, fit, timeSinceMidnight]
         elif sentence == "$GPGST":
             timeSinceMidnight = 60*(60*int(atomsGPS[1][:2])+int(atomsGPS[1][2:4]))+float(atomsGPS[1][4:])
-            sigmaLat = float(atomsGPS[6])
-            sigmaLong = float(atomsGPS[7])
+            try:
+                sigmaLat = float(atomsGPS[6])
+            except:
+                sigmaLat = -1
+            try:
+                sigmaLong = float(atomsGPS[7])
+            except:
+                sigmaLong = -1
             retList = [sentence, sigmaLat, sigmaLong, 1, timeSinceMidnight]
     except Exception, err:
         pass

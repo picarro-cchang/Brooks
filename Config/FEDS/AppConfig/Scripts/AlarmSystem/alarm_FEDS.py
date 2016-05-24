@@ -109,7 +109,7 @@ class AlarmByBinaryExpAverage(BasicAlarm):
         self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         return (self.average >= 0.5)
         
-class AlarmOfFlowRate(BasicAlarm):
+class AlarmOfCaptureMode(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
         self.timeConstant = float(self.params["timeConstant"])

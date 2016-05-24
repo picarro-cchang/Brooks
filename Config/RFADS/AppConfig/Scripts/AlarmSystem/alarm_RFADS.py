@@ -98,7 +98,7 @@ class AlarmByBinaryExpAverage(BasicAlarm):
         self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         return (self.average >= 0.5)
         
-class AlarmOfFlowRate(BasicAlarm):
+class AlarmOfCaptureMode(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
         self.timeConstant = float(self.params["timeConstant"])
@@ -108,7 +108,7 @@ class AlarmOfFlowRate(BasicAlarm):
         interval = a[0]
         self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         g = _GLOBALS_['alarms']["General"]
-        return (self.average >= 0.5) and g.alarmActive
+        return (self.average >= 0.5) and g.alarmActive and g.alarmActiveState
         
 class AlarmOfCarSpeed(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
@@ -173,13 +173,15 @@ class AlarmGeneral:
     necessary for processing other alarms or just for checking data
     """
     def __init__(self):
-        self.variable = ['ValveMask']
+        self.variable = ['peak_detector_state', 'ValveMask']
+        self.peakDetectState = deque(maxlen=50)
         self.input = np.zeros(len(self.variable))
         
-    def processAlarm(self, alarm, value):
-        valveMask = value
+    def processAlarm(self, alarm, *values):
+        peakDetectState, valveMask = values
+        self.peakDetectState.append(peakDetectState)
         self.alarmActive = (int(valveMask) & VALVE_MASK_CHECK_ALARM) == 0
-       
+        self.alarmActiveState = np.sum( np.abs( np.diff(self.peakDetectState) ) ) < 1       
                     
 class AlarmOfWindCheck:
     def __init__(self):
