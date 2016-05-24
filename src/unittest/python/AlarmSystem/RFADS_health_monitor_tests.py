@@ -36,17 +36,17 @@ class TestHealthMonitor(unittest.TestCase):
 
     def test_zero_intake_flow_rate(self):
         for _ in range(10):
-            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "MOBILE_FLOW": 0.0, "interval": 10.0})
+            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "peak_detector_state": 0, "MOBILE_FLOW": 0.0, "interval": 10.0})
         self.assertTrue((status & self._get_alarm_mask("IntakeFlowRate")) > 0)
 
     def test_normal_intake_flow_rate(self):
         for _ in range(10):
-            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "MOBILE_FLOW": 4.0, "interval": 10.0})
+            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "peak_detector_state": 0, "MOBILE_FLOW": 4.0, "interval": 10.0})
         self.assertTrue((status & self._get_alarm_mask("IntakeFlowRate")) == 0)
         self.assertTrue((status & self._get_alarm_mask("IntakeFlowDisconnected")) == 0)
 
     def test_intake_flow_disconnected(self):
-        status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "MOBILE_FLOW": -9999.0})
+        status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "peak_detector_state": 0, "MOBILE_FLOW": -9999.0})
         self.assertTrue((status & self._get_alarm_mask("IntakeFlowDisconnected")) > 0)
 
 ###################### cavity ###############################################
@@ -62,7 +62,7 @@ class TestHealthMonitor(unittest.TestCase):
 
     def test_high_cavity_pressure(self):
         for _ in range(10):
-            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "CavityPressure": 150.0, "interval": 10.0})
+            status = self._get_analyzer_status(0, {"species": 170, "ValveMask": 0, "peak_detector_state": 0, "CavityPressure": 150.0, "interval": 10.0})
         self.assertTrue((status & self._get_alarm_mask("CavityPressure")) > 0)
         self.assertTrue((status & self._get_alarm_mask("InvalidData")) > 0)
 
