@@ -49,7 +49,7 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.panel2 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.panel3 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
         self.SetTitle("Instrument EEPROM Access")
-        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panel3, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.panel2.SetBackgroundColour("#BDEDFF")
         self.panel3.SetBackgroundColour("#85B24A")
@@ -122,7 +122,26 @@ class InstrEEPROMAccessFrame(wx.Frame):
             self.textCtrlNewAnalyzer = wx.TextCtrl(self.panel2, -1, self.analyzerNum, size = (250, -1), style = wx.TE_PROCESS_ENTER)
         else:
             self.textCtrlNewAnalyzer = wx.TextCtrl(self.panel2, -1, "", size = (250, -1), style = wx.TE_PROCESS_ENTER)
-
+        # Hardware Capabilities
+        try:
+            curCapabilities = CRDS_Driver.fetchHardwareCapabilities()
+        except:
+            curCapabilities = {"Ethane": False, "iGPS": False, "iCH4": False, "EQ": False}
+        self.chkHardwareCapability = wx.CheckBox(self.panel2, -1, "Write hardware capabilities")
+        self.chkiGPS = wx.CheckBox(self.panel2, -1, "Inertial GPS")
+        self.chkiGPS.SetValue(curCapabilities["iGPS"])
+        self.chkiGPS.Disable()
+        self.chkEthane = wx.CheckBox(self.panel2, -1, "Ethane")
+        self.chkEthane.SetValue(curCapabilities["Ethane"])
+        self.chkEthane.Disable()
+        self.chkIsotopicMethane = wx.CheckBox(self.panel2, -1, "Isotopic Methane")
+        self.chkIsotopicMethane.SetValue(curCapabilities["iCH4"])
+        self.chkIsotopicMethane.Disable()
+        self.chkEQ = wx.CheckBox(self.panel2, -1, "EQ")
+        self.chkEQ.SetValue(curCapabilities["EQ"])
+        self.chkEQ.Disable()
+        self.sizer_2_1_staticbox = wx.StaticBox(self.panel2, wx.ID_ANY, "")
+        
         self.updateButton = wx.Button(self.panel3, -1, "Update EEPROM", size = (130, -1))
         self.updateButton.SetBackgroundColour(wx.Colour(237, 228, 199))
         self.closeButton = wx.Button(self.panel3, wx.ID_CLOSE, "Close", size = (130, -1))
@@ -157,6 +176,16 @@ class InstrEEPROMAccessFrame(wx.Frame):
         grid_sizer_2.Add(self.labelNewAnalyzer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer_2.Add(self.textCtrlNewAnalyzer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
         sizer_2.Add(grid_sizer_2, 0)
+        sizer_2.Add(self.chkHardwareCapability, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_LEFT, 10)
+        self.sizer_2_1_staticbox.Lower()
+        sizer_2_1 = wx.StaticBoxSizer(self.sizer_2_1_staticbox, wx.VERTICAL)
+        grid_sizer_2_1 = wx.FlexGridSizer(0, 2)
+        grid_sizer_2_1.Add(self.chkIsotopicMethane, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_2_1.Add(self.chkEthane, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_2_1.Add(self.chkiGPS, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_2_1.Add(self.chkEQ, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_2_1.Add(grid_sizer_2_1, 0)
+        sizer_2.Add(sizer_2_1, 0, wx.ALL, 10)
         sizer_2.Add((-1,10))
         self.panel2.SetSizer(sizer_2)
 
@@ -185,16 +214,32 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
         self.Bind(wx.EVT_MENU, self.onAboutMenu, self.iAbout)
         self.Bind(wx.EVT_BUTTON, self.onCloseButton, self.closeButton)
         self.Bind(wx.EVT_BUTTON, self.onUpdateButton, self.updateButton)
+        self.Bind(wx.EVT_CHECKBOX, self.onHardwareCapability, self.chkHardwareCapability)
 
     def onAboutMenu(self, event):
-        d = wx.MessageDialog(None, "Picarro tool to read/write instrument information in EEPROM\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Instrument EEPROM Access", wx.OK)
+        d = wx.MessageDialog(None, "Picarro tool to read/write instrument information in EEPROM\n\nCopyright 1999-%d Picarro Inc." % time.localtime()[0] +
+                " All rights reserved.\nVersion: 0.02\nThe copyright of this computer program belongs to Picarro Inc.\n" +
+                "Any reproduction or distribution of this program requires permission from Picarro Inc.", 
+                "About Instrument EEPROM Access", wx.OK)
         d.ShowModal()
         d.Destroy()
 
     def onCloseButton(self, event):
         sys.exit(0)
         self.Destroy()
-
+    
+    def onHardwareCapability(self, event):
+        if self.chkHardwareCapability.GetValue():
+            self.chkIsotopicMethane.Enable()
+            self.chkiGPS.Enable()
+            self.chkEthane.Enable()
+            self.chkEQ.Enable()
+        else:
+            self.chkIsotopicMethane.Disable()
+            self.chkiGPS.Disable()
+            self.chkEthane.Disable()
+            self.chkEQ.Disable()
+        
     def onUpdateButton(self, event):
         chassisNum = self.comboBoxChassis.GetValue()
         analyzerType = self.comboBoxType.GetValue()
@@ -213,9 +258,16 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
             d.ShowModal()
             d.Destroy()
             return
-
-        d = wx.MessageDialog(None, "New Chassis Number = %s\nNew Analyzer Type = %s\nNew Analyzer Number = %s\n\nAre you sure you want to change?"%\
-            (chassisNum,analyzerType,analyzerNum), "Write EEPROM Confirmation", wx.YES_NO|wx.ICON_EXCLAMATION)
+        
+        msg = "New Chassis Number = %s\nNew Analyzer Type = %s\nNew Analyzer Number = %s\n" % (chassisNum,analyzerType,analyzerNum)
+        if self.chkHardwareCapability.GetValue():
+            iCH4 = self.chkIsotopicMethane.GetValue()
+            Ethane = self.chkEthane.GetValue()
+            iGPS = self.chkiGPS.GetValue()
+            EQ = self.chkEQ.GetValue()
+            msg += "iCH4: %s, Ethane: %s, iGPS: %s, EQ: %s\n" % (iCH4, Ethane, iGPS, EQ)
+        msg += "\nAre you sure you want to change?"
+        d = wx.MessageDialog(None, msg, "Write EEPROM Confirmation", wx.YES_NO|wx.ICON_EXCLAMATION)
         if d.ShowModal() != wx.ID_YES:
             d.Destroy()
             return
@@ -225,6 +277,12 @@ class InstrEEPROMAccess(InstrEEPROMAccessFrame):
             CRDS_Driver.shelveObject("LOGIC_EEPROM",{'Chassis':chassisNum,'Analyzer':analyzerType,'AnalyzerNum':analyzerNum},0)
         except:
             return
+        time.sleep(1.0)
+        if self.chkHardwareCapability.GetValue():
+            try:
+                CRDS_Driver.shelveHardwareCapabilities({"iCH4": iCH4, "Ethane": Ethane, "iGPS": iGPS, "EQ": EQ})
+            except:
+                return
         time.sleep(1.0)
         try:
             curValDict = CRDS_Driver.fetchLogicEEPROM()[0]

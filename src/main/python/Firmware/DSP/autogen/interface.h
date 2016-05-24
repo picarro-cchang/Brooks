@@ -438,6 +438,8 @@ typedef struct {
 #define MAX_FITTERS (8)
 // Maximum number of samples in peak detection history buffer
 #define PEAK_DETECT_MAX_HISTORY_LENGTH (1024)
+// Size of EEPROM blocks. Objects saved in EEPROM use integer number of blocks
+#define EEPROM_BLOCK_SIZE (128)
 
 typedef enum {
     float_type = 0, // 

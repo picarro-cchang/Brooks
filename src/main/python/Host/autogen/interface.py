@@ -478,6 +478,8 @@ DSP_TIMER_DIVISOR = 56250
 MAX_FITTERS = 8
 # Maximum number of samples in peak detection history buffer
 PEAK_DETECT_MAX_HISTORY_LENGTH = 1024
+# Size of EEPROM blocks. Objects saved in EEPROM use integer number of blocks
+EEPROM_BLOCK_SIZE = 128
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint

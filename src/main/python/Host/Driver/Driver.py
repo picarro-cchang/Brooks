@@ -31,7 +31,7 @@ from Host.Driver.DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, ctypesToDict
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_RESTART_SUPERVISOR, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDatabase
 from Host.Common.SingleInstance import SingleInstance
@@ -848,6 +848,18 @@ class DriverRpcHandler(SharedTypes.Singleton):
         else:
             return None
 
+    def fetchHardwareCapabilities(self):
+        """Fetch hardware capabilities from LOGIC_EEPROM.
+        Returns a dictionary.
+        """
+        try:
+            return self.fetchObject("LOGIC_EEPROM", startAddress=interface.EEPROM_BLOCK_SIZE)[0]
+        except:
+            return None
+            
+    def shelveHardwareCapabilities(self, capabilityDict):
+        self.shelveObject("LOGIC_EEPROM", capabilityDict, startAddress=interface.EEPROM_BLOCK_SIZE)
+            
     def verifyInstallerId(self):
         return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
 
@@ -1097,6 +1109,7 @@ class Driver(SharedTypes.Singleton):
                                          self.dspFile,self.fpgaFile,sim)
         self.analogInterface = AnalogInterface(self,self.config)
         self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+        self.restartSurveyor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
         self.safeModeCount = 0
         try:
             self.maxSafeModeCount = int(self.config["Supervisor"]["maxSafeModeWarnings"])
@@ -1158,25 +1171,29 @@ class Driver(SharedTypes.Singleton):
 
         # Instruct the supervisor to shut down all applications except the driver, since the
         #  driver will be shutdown using self.looping.
-        self.supervisor.TerminateApplications(False, False)
-        DETACHED_PROCESS = 0x00000008
-        try:
-            Log("Forced restart via supervisor launcher")
-            if os.getcwd().lower().endswith("hostexe"):
-                subprocess.Popen([r"SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                  "-c", r"..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                 shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                 creationflags=DETACHED_PROCESS)
-            else:
-                subprocess.Popen([r"..\..\HostExe\SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                  "-c", r"..\..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                 shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                 creationflags=DETACHED_PROCESS)
-                #Log("Cannot invoke supervisor launcher from %s" % os.getcwd())
-        except:
-            Log("Cannot communicate with supervisor:\n%s" % traceback.format_exc())
-        finally:
+        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
+            self.restartSurveyor.restart()
             self.looping = False
+        else:
+            self.supervisor.TerminateApplications(False, False)
+            DETACHED_PROCESS = 0x00000008
+            try:
+                Log("Forced restart via supervisor launcher")
+                if os.getcwd().lower().endswith("hostexe"):
+                    subprocess.Popen([r"SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
+                                      "-c", r"..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
+                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
+                                     creationflags=DETACHED_PROCESS)
+                else:
+                    subprocess.Popen([r"..\..\HostExe\SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
+                                      "-c", r"..\..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
+                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
+                                     creationflags=DETACHED_PROCESS)
+                    #Log("Cannot invoke supervisor launcher from %s" % os.getcwd())
+            except:
+                Log("Cannot communicate with supervisor:\n%s" % traceback.format_exc())
+            finally:
+                self.looping = False
 
     def run(self):
         nudge = 0
