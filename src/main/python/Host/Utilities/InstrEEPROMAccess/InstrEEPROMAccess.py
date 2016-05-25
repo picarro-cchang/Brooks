@@ -123,10 +123,13 @@ class InstrEEPROMAccessFrame(wx.Frame):
         else:
             self.textCtrlNewAnalyzer = wx.TextCtrl(self.panel2, -1, "", size = (250, -1), style = wx.TE_PROCESS_ENTER)
         # Hardware Capabilities
+        defaultDict = {"Ethane": False, "iGPS": False, "iCH4": False, "EQ": False}
         try:
             curCapabilities = CRDS_Driver.fetchHardwareCapabilities()
         except:
-            curCapabilities = {"Ethane": False, "iGPS": False, "iCH4": False, "EQ": False}
+            curCapabilities = defaultDict
+        if curCapabilities is None:
+            curCapabilities = defaultDict
         self.chkHardwareCapability = wx.CheckBox(self.panel2, -1, "Write hardware capabilities")
         self.chkiGPS = wx.CheckBox(self.panel2, -1, "Inertial GPS")
         self.chkiGPS.SetValue(curCapabilities["iGPS"])
