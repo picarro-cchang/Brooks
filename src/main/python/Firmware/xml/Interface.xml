@@ -379,6 +379,7 @@
         <constant ident="DSP_TIMER_DIVISOR" description="Divisor to get 1ms for a 225MHz DSP clock">56250</constant>
         <constant ident="MAX_FITTERS" description="Maximum number of fitter processes">8</constant>
         <constant ident="PEAK_DETECT_MAX_HISTORY_LENGTH" description="Maximum number of samples in peak detection history buffer">1024</constant>
+        <constant ident="EEPROM_BLOCK_SIZE" description="Size of EEPROM blocks. Objects saved in EEPROM use integer number of blocks">128</constant>
     </constant_list>
     <union_list>
         <union type="DataType">

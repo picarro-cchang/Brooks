@@ -119,19 +119,24 @@ class TestHealthMonitor(unittest.TestCase):
 ###################### GPS ############################################
 
     def test_normal_GPS_uncertainty(self):
-        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 0.0, "GPS_UNC_LONG": 0.0})
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 0.0, "GPS_UNC_LONG": 0.0, "GPS_FIT": 6})
         self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) == 0)
         self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
 
     def test_moderate_GPS_uncertainty(self):
-        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 20.0, "GPS_UNC_LONG": 20.0})
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 20.0, "GPS_UNC_LONG": 20.0, "GPS_FIT": 6})
         self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) > 0)
         self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
 
     def test_large_GPS_uncertainty(self):
-        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 100.0, "GPS_UNC_LONG": 100.0})
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 100.0, "GPS_UNC_LONG": 100.0, "GPS_FIT": 6})
         self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) > 0)
         self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) > 0)
+        
+    def test_large_GPS_uncertainty_without_inertial_mode(self):
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 100.0, "GPS_UNC_LONG": 100.0, "GPS_FIT": 1})
+        self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) == 0)
+        self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
 
     def test_car_speed(self):
         # large car speed

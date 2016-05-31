@@ -30,7 +30,7 @@ class Alarm(object):
         bit = int(self.params["bit"])
         self.mask = 1 << bit
 
-    def checkValue(self, value):
+    def checkValue(self, value, *a):
         """
         Check whether value meets conditions set forth in alarmParams[alarmName]
         """
@@ -46,7 +46,11 @@ class Alarm(object):
         if "expression" in self.params:
             try:
                 expression = "lambda(x):" + self.params["expression"]
-                alarmResult |= eval(expression)(value)
+                if isinstance(value, list):
+                    args = value + list(a)
+                else:
+                    args = [value] + list(a)
+                alarmResult |= eval(expression)(args)
             except:
                 pass
         return alarmResult
@@ -66,7 +70,7 @@ class Alarm(object):
         Alarm bit is set when value meets conditions set forth in alarmParams[alarmName]
         """
         v = self.processBeforeCheckValue(value, *a)
-        v1 = self.checkValue(v)
+        v1 = self.checkValue(v, *a)
         v2 = self.processAfterCheckValue(v1, *a)
         self.setAlarm(alarm, v2)
 

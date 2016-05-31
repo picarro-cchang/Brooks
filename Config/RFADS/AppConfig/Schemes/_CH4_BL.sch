@@ -1,6 +1,6 @@
 $$$
 schemeVersion = 1
-repeat = 1
+repeat = 10
 schemeRows = []
 fmin = 6057.5
 fincr = 0.0000

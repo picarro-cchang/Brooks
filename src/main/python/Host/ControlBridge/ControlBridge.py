@@ -4,7 +4,7 @@ Copyright 2014, Picarro Inc.
 
 import time
 import threading
-
+import json
 import zmq
 
 from Host.Common import SharedTypes
@@ -51,7 +51,8 @@ class ControlBridge(object):
             "referenceGasPrime" : self._referenceGasPrime,
             "referenceGasInjection" : self._referenceGasInjection,
             "setToEQMode": self._setToEQMode,
-            "setToSurveyorMode": self._setToSurveyorMode
+            "setToSurveyorMode": self._setToSurveyorMode, 
+            "getHardwareCapabilities": self._getHardwareCapabilities
         }
  
     def run(self):
@@ -120,7 +121,12 @@ class ControlBridge(object):
         
     def _setToSurveyorMode(self):
         self.driver.closeValves(0x20)   # close valve 6
-    
+        
+    def _getHardwareCapabilities(self):
+        analyzerDict = self.driver.fetchLogicEEPROM()[0]
+        capabilityDict = self.driver.fetchHardwareCapabilities()
+        analyzerDict.update(capabilityDict)
+        return json.dumps(analyzerDict)    
         
 if __name__ == '__main__':
     bridge = ControlBridge()
