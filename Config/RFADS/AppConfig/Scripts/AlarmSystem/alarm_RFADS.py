@@ -142,11 +142,7 @@ class AlarmOfWlm(BasicAlarm):
 class AlarmOfWlmShiftAdjustCorrelation(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
         return [np.absolute(value), np.absolute(a[0])]
-        
-class AlarmOfInetialGPS(BasicAlarm):
-    def processBeforeCheckValue(self, value, *a):
-        return [value, a[0]]
-        
+       
 class AlarmOfWlmTargetFreq(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
