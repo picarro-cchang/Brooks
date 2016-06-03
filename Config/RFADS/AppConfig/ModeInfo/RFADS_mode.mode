@@ -6,7 +6,7 @@ Tuning = CavityLength
 #   - Never worry about what DAS table index is used - this is automatically taken
 #     care of (primarily for the background load/alternate scheme index stuff)
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SCHEME_CONFIG_ArmedState]
 # Define what schemes should be loaded and sequenced and in what order
@@ -14,27 +14,27 @@ Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
 #     care of (primarily for the background load/alternate scheme index stuff)
 #    scheme made the same as the _LOW_CH4 mode to start with the same schemne on 20120913 by Y.H.
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SCHEME_CONFIG_TriggerPendingState]
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SCHEME_CONFIG_TriggeredState]
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SCHEME_CONFIG_InjectionPendingState]
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SCHEME_CONFIG_PrimingState]
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SCHEME_CONFIG_PurgingState]
 SchemeCount = 1
-Scheme_1_Path = ../../InstrConfig/Schemes/_C2H6test_v10.sch
+Scheme_1_Path = ../../AppConfig/Schemes/_C2H6test_v12.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...

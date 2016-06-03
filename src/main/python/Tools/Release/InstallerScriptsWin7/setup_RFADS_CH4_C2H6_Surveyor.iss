@@ -41,7 +41,8 @@
 
 #include "inc_coordinator.iss"
 
-#include "inc_scripts.iss"
+Source: {#sandboxDir}\Tools\Scripts\UpdateHostSoftware.py; DestDir: {app}\HostExe; Flags: replacesameversion
+Source: {#configDir}\{#installerType}\AppConfig\Config\Utilities\UpdateMasterIni.ini; DestDir: {app}\AppConfig\Config\Utilities; Flags: replacesameversion
 
 ; Setup items unique to FEDS Surveyor are below:
 
@@ -52,7 +53,7 @@ Name: {userstartup}\Start Analyzer Service; Filename: {app}\Picarro.Surveyor.Ana
 Name: {userstartup}\Restart Surveyor; Filename: {app}\HostExe\RestartSupervisor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSupervisor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 [Run]
-Filename: C:\Python27\python.exe; Parameters: {app}\HostExe\UpdateMasterIni.py
+Filename: C:\Python27\python.exe; Parameters: {app}\HostExe\UpdateHostSoftware.py
 
 [InstallDelete]
 Type: files; Name: "{userstartup}\Start Analyzer Service"
