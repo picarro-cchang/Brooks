@@ -2,11 +2,12 @@
 Instruction:
 1)  Do not use _REPORT_ and other global variables in alarm classes and related functions. 
     Instead pass desired variables from main script into class methods.
-2)  Alarms need to be processed in certain order. In the alarm configuration file, alarms are
-    defined such that those needed to be processed first occupy lower word and lower bit.
+2)  Alarms will be sorted by their attributes "order" (default to 0 if not specified), "word" and "bit", 
+    and those with lower values will be processed first.
 """
 
 import inspect
+import time
 import os
 import sys
 here = os.path.split(os.path.abspath(inspect.getfile(inspect.currentframe())))[0]
@@ -61,6 +62,12 @@ def GetBaselineCavityLoss():
     fitterConfigFile = os.path.join(here, '..', '..', '..', 'InstrConfig', 'Calibration', 'InstrCal', 'FitterConfig.ini')
     fitterConfig = evalLeaves(CustomConfigObj(fitterConfigFile, list_values=False).copy())
     return fitterConfig['CFADS_baseline']
+    
+def getAlarmOrder(section):
+    if "order" in _ALARM_PARAMS_[section]:
+        return _ALARM_PARAMS_[section]["order"]
+    else:
+        return 0
 
 class BasicAlarm(_ALARM_FUNCTIONS_.Alarm):
     def __init__(self, *a):
@@ -174,11 +181,37 @@ class AlarmOfWlmTargetFreq(BasicAlarm):
 
 class AlarmOfInvalidData(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
-        if value > 0:
-            for b in p.InvalidDataBit:
-                if alarmTestBit(int(value), b): return 1
+        analyzerStatus = value
+        peripheralStatus = a[0]
+        if analyzerStatus > 0:
+            for b in p.AnalyzerStatusInvalidDataBits:
+                if alarmTestBit(int(analyzerStatus), b): return 1
+        if peripheralStatus > 0:
+            for b in p.PeripheralStatusInvalidDataBits:
+                if alarmTestBit(int(peripheralStatus), b): return 1
         else:
             return 0
+
+class AlarmOfPeripheralStatus(BasicAlarm):
+    def __init__(self, *a):
+        BasicAlarm.__init__(self, *a)
+        self.lastUpdated = -1
+        
+    def processBeforeCheckValue(self, value, *a):
+        current_time = time.time()
+        interval = (current_time - self.lastUpdated) if self.lastUpdated > 0 else 0
+        self.lastUpdated = current_time
+        return interval
+        
+class AlarmOfGpsUpdated(BasicAlarm):
+    def __init__(self, *a):
+        BasicAlarm.__init__(self, *a)
+        self.oldGpsTime = -1
+        
+    def processBeforeCheckValue(self, value, *a):
+        gpsNotUpdated = (value == self.oldGpsTime)
+        self.oldGpsTime = value
+        return gpsNotUpdated
             
 class AlarmGeneral:
     """
@@ -219,10 +252,9 @@ class AlarmOfWindCheck:
 if _GLOBALS_["init"]:
     _GLOBALS_["init"] = False
     _GLOBALS_['alarms'] = OrderedDict({"General" : AlarmGeneral(), "WindCheck" : AlarmOfWindCheck()})
-    alarm_list = [[section, int(_ALARM_PARAMS_[section]['bit']), _ALARM_PARAMS_[section]] for section in _ALARM_PARAMS_ if section.startswith("ALARM_")]
-    # alarm must be processed in orders of word and bit
-    alarm_list_sorted = sorted(alarm_list, key=lambda k: (k[2]['word'], k[1]))
-    for section, bit, a in alarm_list_sorted:
+    alarm_list = [[section, getAlarmOrder(section), _ALARM_PARAMS_[section]] for section in _ALARM_PARAMS_ if section.startswith("ALARM_")]
+    alarm_list_sorted = sorted(alarm_list, key=lambda k: (k[1], k[2]['word'], k[2]['bit']))
+    for section, order, a in alarm_list_sorted:
         if "class" in a:
             _GLOBALS_["alarms"][section] = eval(a["class"])(_ALARM_PARAMS_, section)
         else:
