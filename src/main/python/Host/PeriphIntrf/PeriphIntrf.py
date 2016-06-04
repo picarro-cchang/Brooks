@@ -197,7 +197,9 @@ class PeriphIntrf(object):
                 if counter >= maxcount:
                     try:
                         if self.parserVersion[port] > 0.0:
-                            dataEnviron = {"_PERSISTENT_" : self.persistentDict[port], "_RAWSTRING_": newStr}
+                            dataEnviron = {"_PERSISTENT_" : self.persistentDict[port], 
+                                           "_RAWSTRING_": newStr,
+                                           "_DATALABELS_": self.dataLabels[port]}
                             exec self.parserFuncCode[port] in dataEnviron
                             self.persistentDict[port] = dataEnviron["_PERSISTENT_"]
                             parsedList = dataEnviron["_OUTPUT_"]
