@@ -70,10 +70,10 @@ class DataManagerPublisher(object):
                 # block these data during the measurement, otherwise non-cavity parameters will be treated as 0 by surveyor programs
                 # CH4 and flow values shown on tablet will jump between 0 and normal reading.
                 return None
-            return json.dumps({'type': 'measurement', 'mode': entry['mode'], 'data': entry['data']})
+            return [{'type': 'measurement'}, {'mode': entry['mode']}, json.dumps(entry['data'])]
         elif source == 'parseGPS' or source == 'parseGillAnemometer':
             entry['data']['EPOCH_TIME'] = entry['time']
-            return json.dumps({'type': if source == 'parseGPS' else 'anemometer', 'data': entry['data']})
+            return [{'type': 'gps' if source == 'parseGPS' else 'anemometer' }, json.dumps(entry['data'])]
         else:
             #print "Skip %s" % entry['source']
             return None
