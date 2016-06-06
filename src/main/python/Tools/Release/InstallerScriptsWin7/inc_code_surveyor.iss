@@ -6,25 +6,23 @@
 var
     savedInstrConfig : String;
     instrConfig : String;
-    analyzerType: String;
+    analyzerType: AnsiString;
     UserSelectionPage: TInputOptionWizardPage;
 
 function InitializeSetup(): Boolean;
 var
     SignatureFile : String;
-    returnCode : Boolean
 begin
-    SignatureFile := ExpandConstant('{app}') + '\installerSignature.txt';
+    SignatureFile := 'C:\Picarro\G2000\installerSignature.txt';
     if FileExists(SignatureFile) then
         begin
-            returnCode := LoadStringFromFile(SignatureFile, analyzerType);
-            if (returnCode) then
+            if LoadStringFromFile(SignatureFile, analyzerType) then
                 analyzerType := Trim(analyzerType)
             else
-                analyzerType := "";
-        end;
+                analyzerType := '';
+        end
     else
-        analyzerType := "";
+        analyzerType := '';
     Result := True;
 end;
 
@@ -81,14 +79,21 @@ begin
     ewWaitUntilTerminated, ResultCode);
 end;
 
-function GetAnalyzerType(Param: String): String;
+function CheckForFEDS(): Boolean;
 begin
     if (UserSelectionPage.Values[0] = True) then
-        Result := 'FEDS'
+        Result := True
     else
-        Result := 'RFADS';
+        Result := False;
 end;
 
+function CheckForRFADS(): Boolean;
+begin
+    if (UserSelectionPage.Values[1] = True) then
+        Result := True
+    else
+        Result := False;
+end;
 [Files]
 
 ; Files section is needed so ISCC knows where the Code section ends

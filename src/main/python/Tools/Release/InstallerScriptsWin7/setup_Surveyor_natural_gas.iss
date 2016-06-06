@@ -31,20 +31,22 @@
 #include "inc_python.iss"
 #include "inc_digio.iss"
 
-[Files]
-
 ; Notes: Files are installed in the order they are listed below.
 
 ; KillHostSoftware.py
 Source: {#distDir}\HostExe\KillHostSoftware.py; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion;
 ; installerSignature.txt
-Source: {#configDir}\{code:GetAnalyzerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall
+Source: {#configDir}\FEDS\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall; Check: CheckForFEDS
+Source: {#configDir}\RFADS\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall; Check: CheckForRFADS
 ; InstrConfig
-Source: {#configDir}\{code:GetAnalyzerType}\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion
+Source: {#configDir}\FEDS\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion; Check: CheckForFEDS
+Source: {#configDir}\RFADS\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion; Check: CheckForRFADS
 ; AppConfig
-Source: {#configDir}\{code:GetAnalyzerType}\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion
+Source: {#configDir}\FEDS\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion; Check: CheckForFEDS
+Source: {#configDir}\RFADS\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion; Check: CheckForRFADS
 ; install the signature file a second time in order to call MyAfterInstall
-Source: {#configDir}\{code:GetAnalyzerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall
+Source: {#configDir}\FEDS\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall; Check: CheckForFEDS
+Source: {#configDir}\RFADS\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall; Check: CheckForRFADS
 ; CommonConfig
 Source: {#configDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
 ; HostExe executables (icons handled by inc_icons.iss)
@@ -54,7 +56,6 @@ Source: {#distDir}\HostExe\*; DestDir: {app}\HostExe; Flags: recursesubdirs repl
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
 #include "inc_coordinator.iss"
-#include "inc_scripts.iss"
 
 ; Setup items unique to FEDS Surveyor are below:
 
