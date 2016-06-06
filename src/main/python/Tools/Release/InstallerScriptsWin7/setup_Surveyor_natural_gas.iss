@@ -26,18 +26,34 @@
 ;
 #include "inc_icons.iss"
 #include "inc_setup.iss"
-#include "inc_code.iss"
+#include "inc_code_surveyor.iss"
 #include "inc_usb.iss"
 #include "inc_python.iss"
 #include "inc_digio.iss"
-#include "inc_ms.iss"
-#include "inc_exe_configs.iss"
+
+[Files]
+
+; Notes: Files are installed in the order they are listed below.
+
+; KillHostSoftware.py
+Source: {#distDir}\HostExe\KillHostSoftware.py; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion;
+; installerSignature.txt
+Source: {#configDir}\{code:GetAnalyzerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; BeforeInstall: MyBeforeInstall
+; InstrConfig
+Source: {#configDir}\{code:GetAnalyzerType}\InstrConfig\*; DestDir: {app}\InstrConfig; Flags: recursesubdirs replacesameversion
+; AppConfig
+Source: {#configDir}\{code:GetAnalyzerType}\AppConfig\*; DestDir: {app}\AppConfig; Flags: recursesubdirs replacesameversion
+; install the signature file a second time in order to call MyAfterInstall
+Source: {#configDir}\{code:GetAnalyzerType}\installerSignature.txt; DestDir: {app}; Flags: ignoreversion; AfterInstall: MyAfterInstall
+; CommonConfig
+Source: {#configDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
+; HostExe executables (icons handled by inc_icons.iss)
+Source: {#distDir}\HostExe\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
+
 #include "inc_datviewer.iss"
 #include "inc_desktop_shortcuts.iss"
 #include "inc_configtool.iss"
-
 #include "inc_coordinator.iss"
-
 #include "inc_scripts.iss"
 
 ; Setup items unique to FEDS Surveyor are below:
@@ -46,10 +62,10 @@
 ; Surveyor startup app is Picarro.Surveyor.Analyzer service
 Name: {userstartup}\Start Analyzer Service; Filename: {app}\Picarro.Surveyor.Analyzer\Picarro.Surveyor.Analyzer.exe; WorkingDir: {app}\Picarro.Surveyor.Analyzer; IconFilename: {app}\HostExe\{#picarroIcon}
 ; Restart surveyor is used when the supervisor becomes unresponsive
-Name: {userstartup}\Restart Surveyor; Filename: {app}\HostExe\RestartSupervisor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSupervisor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+Name: {userstartup}\Restart Surveyor; Filename: {app}\HostExe\RestartSurveyor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSurveyor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 [Run]
-Filename: {app}\HostExe\setvalvemasks.cmd
+Filename: C:\Python27\python.exe; Parameters: {app}\HostExe\UpdateHostSoftware.py
 
 [InstallDelete]
 Type: files; Name: "{userstartup}\Start Analyzer Service"
