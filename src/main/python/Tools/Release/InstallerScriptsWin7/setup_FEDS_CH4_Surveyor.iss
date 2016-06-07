@@ -46,7 +46,7 @@
 ; Surveyor startup app is Picarro.Surveyor.Analyzer service
 Name: {userstartup}\Start Analyzer Service; Filename: {app}\Picarro.Surveyor.Analyzer\Picarro.Surveyor.Analyzer.exe; WorkingDir: {app}\Picarro.Surveyor.Analyzer; IconFilename: {app}\HostExe\{#picarroIcon}
 ; Restart surveyor is used when the supervisor becomes unresponsive
-Name: {userstartup}\Restart Surveyor; Filename: {app}\HostExe\RestartSupervisor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSupervisor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
+Name: {userstartup}\Restart Surveyor; Filename: {app}\HostExe\RestartSurveyor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSurveyor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 [Run]
 Filename: {app}\HostExe\setvalvemasks.cmd
