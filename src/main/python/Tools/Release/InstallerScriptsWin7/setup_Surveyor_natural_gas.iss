@@ -51,6 +51,9 @@ Source: {#configDir}\RFADS\installerSignature.txt; DestDir: {app}; Flags: ignore
 Source: {#configDir}\CommonConfig\*; DestDir: {app}\CommonConfig; Flags: recursesubdirs replacesameversion
 ; HostExe executables (icons handled by inc_icons.iss)
 Source: {#distDir}\HostExe\*; DestDir: {app}\HostExe; Flags: recursesubdirs replacesameversion
+; Files needed for post-installation update
+Source: {#distDir}\Tools\Scripts\UpdateHostSoftware.py; DestDir: {app}\HostExe; Flags: replacesameversion; Check: CheckForRFADS
+Source: {#configDir}\RFADS\AppConfig\Config\Utilities\UpdateMasterIni.ini; DestDir: {app}\AppConfig\Config\Utilities; Flags: replacesameversion; Check: CheckForRFADS
 
 #include "inc_datviewer.iss"
 #include "inc_desktop_shortcuts.iss"
@@ -66,7 +69,7 @@ Name: {userstartup}\Start Analyzer Service; Filename: {app}\Picarro.Surveyor.Ana
 Name: {userstartup}\Restart Surveyor; Filename: {app}\HostExe\RestartSurveyor.exe; Parameters: -c ..\AppConfig\Config\Utilities\RestartSurveyor.ini; WorkingDir: {app}\HostExe; IconFilename: {app}\HostExe\{#picarroIcon}
 
 [Run]
-Filename: C:\Python27\python.exe; Parameters: {app}\HostExe\UpdateHostSoftware.py
+Filename: C:\Python27\python.exe; Parameters: {app}\HostExe\UpdateHostSoftware.py; Check: CheckForRFADS
 
 [InstallDelete]
 Type: files; Name: "{userstartup}\Start Analyzer Service"
