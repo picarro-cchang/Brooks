@@ -41,6 +41,7 @@
 
 #include "inc_coordinator.iss"
 
+[Files]
 Source: {#sandboxDir}\Tools\Scripts\UpdateHostSoftware.py; DestDir: {app}\HostExe; Flags: replacesameversion
 Source: {#configDir}\{#installerType}\AppConfig\Config\Utilities\UpdateMasterIni.ini; DestDir: {app}\AppConfig\Config\Utilities; Flags: replacesameversion
 
