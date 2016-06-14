@@ -34,11 +34,10 @@ def parseGPS(rawStr):
     
 def syncData(oldData, newData):
     try:
-        dataLabels = _DATALABELS_.split(',')
-        if len(dataLabels) == 4:  # regular GPS
+        if len(_DATALABELS_) == 4:  # regular GPS
             if newData[0] == "$GPGGA":
                 return [newData[1], newData[2], newData[3], newData[4]]
-        elif len(dataLabels) == 6: # iGPS
+        elif len(_DATALABELS_) == 6: # iGPS
             if oldData[0] == "$GPGGA" and newData[0] == "$GPGST":
                 GGAdata, GSTdata = oldData, newData
             elif oldData[0] == "$GPGST" and newData[0] == "$GPGGA":
