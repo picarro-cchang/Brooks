@@ -57,4 +57,4 @@ if "_RAWSTRING_" in dir():
     data = parseGPS(_RAWSTRING_)
     _OUTPUT_ = syncData(_PERSISTENT_, data)
     if data:
-        _PERSISTENT_ = data if not _OUTPUT_ else None
+        _PERSISTENT_ = data
