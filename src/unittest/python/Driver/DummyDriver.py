@@ -6,6 +6,7 @@ from Host.autogen import interface
 
 class Driver(object):
     def __init__(self, fileDasRegValue=None):
+        self.EEPROM = {"HardwareCapabilities": {}}
         self.DasRegValue = {}
         if fileDasRegValue:
             if os.path.exists(fileDasRegValue):
@@ -52,3 +53,12 @@ class Driver(object):
             self.DasRegValue[index] = float(value)
         else:
             raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
+            
+    def fetchHardwareCapabilities(self):
+        """Fetch hardware capabilities from LOGIC_EEPROM.
+        Returns a dictionary.
+        """
+        try:
+            return self.EEPROM["HardwareCapabilities"]
+        except:
+            return None

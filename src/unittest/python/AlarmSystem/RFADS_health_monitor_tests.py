@@ -166,6 +166,12 @@ class TestHealthMonitor(unittest.TestCase):
         status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 100.0, "GPS_UNC_LONG": 100.0, "GPS_FIT": 1})
         self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) == 0)
         self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
+        
+    def test_iGPS_configured_error(self):
+        self.tester.DriverProxy.EEPROM["HardwareCapabilities"]["iGPS"] = False
+        status = self._get_both_status(0, {"species": 25, "ValveMask": 0, "GPS_FIT": 6})
+        self.assertTrue((status & self._get_alarm_mask("iGPSConfigureError")) > 0
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
 
     def test_car_speed(self):
         # large car speed
