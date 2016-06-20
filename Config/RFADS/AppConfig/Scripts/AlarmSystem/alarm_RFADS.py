@@ -164,6 +164,15 @@ class AlarmOfInvalidData(BasicAlarm):
         else:
             return 0
             
+class AlarmOfIGpsError(BasicAlarm):
+    def __init__(self, *a):
+        BasicAlarm.__init__(self, *a)
+        self.iGPS_installed = _DRIVER_.fetchHardwareCapabilities()["iGPS"]
+    
+    def processAfterCheckValue(self, value, *a):
+        # value = True if GPS_FIT > 2
+        return value and (not self.iGPS_installed)
+            
 class AlarmGeneral:
     """
     This class does not set any alarm bit, but deals with some general stuffs 

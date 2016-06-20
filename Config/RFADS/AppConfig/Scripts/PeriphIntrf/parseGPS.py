@@ -46,7 +46,6 @@ def syncData(oldData, newData):
                 return [newData[1], newData[2], -1, -1, newData[3], newData[4]]
                 
             if oldData[4] != newData[4]:
-                print "timestemp of old data (%s, %f) does not match new data (%s, %f)" % (oldData[0], oldData[4], newData[0], newData[4])
                 return []
             else:
                 return [GGAdata[1], GGAdata[2], GSTdata[1], GSTdata[2], GGAdata[3], GGAdata[4]]
