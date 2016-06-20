@@ -259,13 +259,15 @@ def grabScreenshot(filename):
 ##########################
 # Get barometric pressure with Yahoo weather
 ##########################
-def getBarometricPressure(zipCode):
-    url = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=f' % zipCode
+def getBarometricPressure(woeId):
+    url = ("https://query.yahooapis.com/v1/public/yql?q=select%20atmosphere%20from%20weather.forecast" +
+           "%20where%20woeid%20%3D%20" + ("%d" % woeId) +
+           "&format=xml&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys")
     handler = urllib2.urlopen(url)
     dom = minidom.parse(handler)
-    element = dom.getElementsByTagNameNS('http://xml.weather.yahoo.com/ns/rss/1.0', 'atmosphere')[0]
+    element = dom.getElementsByTagNameNS("http://xml.weather.yahoo.com/ns/rss/1.0", 'atmosphere')[0]
     handler.close()
-    return 25.4*float(element.getAttribute('pressure'))
+    return 0.75006375541921*float(element.getAttribute('pressure'))
 
 ##########################
 # Fitter functions
