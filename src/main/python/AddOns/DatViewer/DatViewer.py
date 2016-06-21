@@ -2544,35 +2544,42 @@ class NotebookHandler(Handler):
                                wildcard="h5 files (*.h5)|*.h5")
 
             if fd.ShowModal() == wx.ID_OK:
-                concatenater.fileName = fd.GetPath()
-                
-                # TODO: assert that self.datDirName is set and folder exists
-                # if not self.datDirName:
-                #    self.datDirName = os.path.split(fname)[0]
-                
-                # test whether we can open and write to the output file
-                if concatenater.openFile():
-                    # succeeded with open, we have a valid output file and it is now open
-                    fValidFilename = True
+                path = fd.GetPath()
+                if os.path.split(path)[0] == self.datDirName:
+                    d = wx.MessageDialog(None, "Cannot concatenate files into the same directory\nPlease choose another output location.", 
+                                        style=wx.OK | wx.ICON_ERROR)
+                    d.ShowModal()
+                    d.Destroy()
                 else:
-                    retCode = wx.MessageBox("Cannot open %s. File may be in use.\n\nTry a different output filename?" % fname,
-                                            caption="Set concatenated output h5 filename",
-                                            style=wx.YES_NO | wx.ICON_ERROR)
-
-                    if retCode == wx.ID_YES:
-                        # user wants to specify a different output file
-                        # use the same folder as this problem output file to prompt again
-                        defaultOutputPath = os.path.split(concatenater.fileName)[0]
-
-                        # generate an output filename, use the selected folder name to generate
-                        # a name but this time append date/time info to it
-                        fnameBase = self.defaultFilenameFromDir(self.datDirName)
-                        fnameBase = os.path.splitext(fnameBase)[0]
-                        fnameSuffix = time.strftime("_%Y%m%d_%H%M%S.h5", time.localtime())
-                        fname = fnameBase + fnameSuffix
+                    concatenater = ConcatenateFolder2File(self.datDirName, path, variableDict)
+                
+                    # TODO: assert that self.datDirName is set and folder exists
+                    # if not self.datDirName:
+                    #    self.datDirName = os.path.split(fname)[0]
+                    
+                    # test whether we can open and write to the output file
+                    if concatenater.openFile():
+                        # succeeded with open, we have a valid output file and it is now open
+                        fValidFilename = True
                     else:
-                        # user doesn't want another prompt for a different filename (bailing out)
-                        fPromptForFilename = False
+                        retCode = wx.MessageBox("Cannot open %s. File may be in use.\n\nTry a different output filename?" % fname,
+                                                caption="Set concatenated output h5 filename",
+                                                style=wx.YES_NO | wx.ICON_ERROR)
+
+                        if retCode == wx.ID_YES:
+                            # user wants to specify a different output file
+                            # use the same folder as this problem output file to prompt again
+                            defaultOutputPath = os.path.split(concatenater.fileName)[0]
+
+                            # generate an output filename, use the selected folder name to generate
+                            # a name but this time append date/time info to it
+                            fnameBase = self.defaultFilenameFromDir(self.datDirName)
+                            fnameBase = os.path.splitext(fnameBase)[0]
+                            fnameSuffix = time.strftime("_%Y%m%d_%H%M%S.h5", time.localtime())
+                            fname = fnameBase + fnameSuffix
+                        else:
+                            # user doesn't want another prompt for a different filename (bailing out)
+                            fPromptForFilename = False
 
             else:
                 # user cancelled out of the file dialog, done prompting
@@ -2758,11 +2765,11 @@ class ViewNotebook(HasTraits):
         
         # File menu
         openAction = Action(name="&Open H5 File...\tCtrl+O", action="onOpen")
-        openConfigAction = Action(name="Load Config...\t", action="onLoadConfig")
-        openZipAction = Action(name="Unpack Zip File...\tZ", action="onConcatenateZip")
-        concatenateActionNew = Action(name="Concatenate H5 Files...\tF", action="onConcatenateFolder")
+        openConfigAction = Action(name="&Load Config...\tL", action="onLoadConfig")
+        openZipAction = Action(name="&Unpack Zip File...\tU", action="onConcatenateZip")
+        concatenateActionNew = Action(name="&catenate H5 Files...\tC", action="onConcatenateFolder")
         convertDatAction = Action(name="Convert &DAT to H5...\tAlt+Shift+C", action="onConvertDatToH5")
-        convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+C", action="onConvertH5ToDat")
+        convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+H", action="onConvertH5ToDat")
         batchConvertDatAction = Action(name="&Batch Convert DAT to H5...\tB", action="onBatchConvertDatToH5")
         batchConvertH5Action = Action(name="Batch &Convert H5 to DAT...\tC", action="onBatchConvertH5ToDat")
         interpolationAction = Action(name="Interpolation...", action="onInterpolation")
