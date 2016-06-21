@@ -208,7 +208,10 @@ class AlarmOfGpsUpdated(BasicAlarm):
 class AlarmOfIGpsError(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
-        self.iGPS_installed = _DRIVER_.fetchHardwareCapabilities()["iGPS"]
+        try:
+            self.iGPS_installed = _DRIVER_.fetchHardwareCapabilities()["iGPS"]
+        except:
+            self.iGPS_installed = False
     
     def processAfterCheckValue(self, value, *a):
         # value = True if GPS_FIT > 2
