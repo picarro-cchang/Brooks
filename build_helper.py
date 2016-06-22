@@ -227,7 +227,6 @@ def process_build_config_file(configFile):
                 if bool(config[section]["enable"]):
                     product = config[section]["product"]
                     types = config[section]["types"]
-                    types = ",".join([type for type in types])
                     official = config[section]["official_release"]
                     tag = config[section]["tag_github"]
                     push = config[section]["push_github"]
