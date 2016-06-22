@@ -58,7 +58,7 @@ mpl.rc('font', family='Arial')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
-from pandas import DataFrame
+from pandas import DataFrame, read_csv
 
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = 'wx'
@@ -77,7 +77,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.5"
+APPVERSION = "3.0.6"
 
 Program_Path = os.getcwd()
 # cursors
@@ -308,7 +308,7 @@ class TreeEditHandler(Handler):
             obj = info.object
             for g in obj.h5Right.groups:
                 for v in g.variables:
-                    if v.name in ["DATE_TIME", "timestamp", "time"]:
+                    if v.name in ["DATE_TIME", "timestamp", "time", "EPOCH_TIME"]:
                         break
                 else:
                     d = wx.MessageDialog(None, "No time-related data is selected for " + g.name, "Error", style=wx.OK | wx.ICON_ERROR)
@@ -377,19 +377,26 @@ class TreeEdit(HasTraits):
     
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
-        
-        h5 = tables.openFile(self.h5FileName)
         groupList = []
-        for k in h5.walkNodes("/"):
-            if isinstance(k, tables.Table):
-                table = h5.getNode(k._v_pathname)
+        if self.h5FileName.endswith(".h5"):
+            h5 = tables.openFile(self.h5FileName)
+            for k in h5.walkNodes("/"):
+                if isinstance(k, tables.Table):
+                    table = h5.getNode(k._v_pathname)
+                    varList = []
+                    for v in table.colnames:
+                        varList.append(Variable(name=v, group=k._v_pathname, fileName=self.h5FileName))
+                    groupList.append(DataGroup(name=k._v_pathname, variables=varList, fileName=self.h5FileName))
+            h5.close()
+        elif self.h5FileName.endswith(".dat"):
+            with open(self.h5FileName, 'r') as f:
                 varList = []
-                for v in table.colnames:
-                    varList.append(Variable(name=v, group=k._v_pathname, fileName=self.h5FileName))
-                groupList.append(DataGroup(name=k._v_pathname, variables=varList, fileName=self.h5FileName))
+                columns = f.readline().split()
+                for v in columns:
+                    varList.append(Variable(name=v, group="results", fileName=self.h5FileName))
+                groupList.append(DataGroup(name="results", variables=varList, fileName=self.h5FileName))
         self.h5Left = H5File(name=self.h5FileName, groups=groupList)
         self.h5Right = H5File(name="New File", groups=[])
-        h5.close()
     
     def _node_changed(self):
         if isinstance(self.node, Variable):
@@ -412,7 +419,7 @@ class TreeEdit(HasTraits):
             g = self.h5Left.getGroup(selectedGroup)
             timeVariables = []
             for v in g.variables:
-                if v.name in ["DATE_TIME", "timestamp", "time"]:
+                if v.name in ["DATE_TIME", "timestamp", "time", "EPOCH_TIME"]:
                     timeVariables.append(v.name)
             for v in timeVariables:
                 self.selectedGroup = selectedGroup
@@ -1720,7 +1727,7 @@ class DatViewer(HasTraits):
         self.dataSetName = ""
         self.varName = ""
         
-        if self.dataFile:
+        if self.dataFile.endswith(".h5"):
             self.ip = tables.openFile(self.dataFile)
             for n in self.ip.walkNodes("/"):
                 if isinstance(n, tables.Table):
@@ -1730,16 +1737,22 @@ class DatViewer(HasTraits):
                 # this triggers DatViewer::_dataSetName_changed()
                 # which populates the var name dropdown
                 self.dataSetName = self.dataSetNameList[0]
+        elif self.dataFile.endswith(".dat"):
+            self.dataSetNameList.append("results") 
+            self.dataSetName = "results"
     
     def _dataSetName_changed(self):
         if self.dataSetName:
-            # try:  # for pandas 0.16
-                # self.table = self.data.get(self.dataSetName)
-            # except:   # for old pandas
-                # table = getattr(self.data.handle.root, self.dataSetName)
-                # self.table = DataFrame.from_records(table.read())
-            table = self.ip.getNode(self.dataSetName)
-            self.table = DataFrame.from_records(table.read())
+            if self.dataFile.endswith(".h5"):
+                # try:  # for pandas 0.16
+                    # self.table = self.data.get(self.dataSetName)
+                # except:   # for old pandas
+                    # table = getattr(self.data.handle.root, self.dataSetName)
+                    # self.table = DataFrame.from_records(table.read())
+                table = self.ip.getNode(self.dataSetName)
+                self.table = DataFrame.from_records(table.read())
+            elif self.dataFile.endswith(".dat"):
+                self.table = read_csv(self.dataFile, delim_whitespace=True)
             self.table.fillna(0.0)
             self.varNameList = list(self.table.columns.values)
             if self.updateFigure:
@@ -1839,6 +1852,8 @@ class DatViewer(HasTraits):
             dateTime = [unixTime(int(t)) for t in self.tableFiltered["timestamp"]]
         elif "time" in self.tableFiltered:
             dateTime = self.tableFiltered["time"]
+        elif "EPOCH_TIME" in self.tableFiltered:
+            dateTime = self.tableFiltered["EPOCH_TIME"] 
         else:
             raise Exception("No time-related data is found in the data set!")
         if self.plot.plot2dFigure.displayMode == 'DateTime':
@@ -2324,7 +2339,8 @@ class NotebookHandler(Handler):
         wx.MessageBox(verMsg, APPNAME, wx.OK)
 
     def onOpen(self, info):
-        d = wx.FileDialog(None, "Open HDF5 file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="h5 files (*.h5)|*.h5")
+        d = wx.FileDialog(None, "Open HDF5 file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, 
+                          wildcard="h5 files (*.h5)|*.h5 | DAT files (*.dat)|*.dat")
         if d.ShowModal() == wx.ID_OK:
             info.object.dataFile = d.GetPath()
             #info.ui.title = "Viewing [" + info.object.dataFile + "]"
@@ -2418,18 +2434,18 @@ class NotebookHandler(Handler):
         else:
             wx.MessageBox("%s is not a .zip archive!" % os.path.split(zipname)[1])
 
-    def inspectZip(self, fileName):
+    def inspectZip(self, fileName, extension):
         zipArchive = zipfile.ZipFile(fileName, 'r')
         tmpDir = tempfile.gettempdir()
         try:
             zipfiles = zipArchive.namelist()
             # enumerate files in the .zip archive
             for zfname in zipfiles:
-                if zfname.endswith(".h5"):
+                if zfname.endswith(extension):
                     zf = zipArchive.extract(zfname, tmpDir)
                     te = TreeEdit(h5FileName=zf)
                     te.configure_traits()
-                    fname = os.path.splitext(fileName)[0] + ".h5"
+                    fname = os.path.splitext(fileName)[0] + extension
                     varDict = te.getSelectedDict()
                     zipArchive.close()
                     os.remove(zf)
@@ -2438,17 +2454,17 @@ class NotebookHandler(Handler):
             zipArchive.close()
         return None, None
             
-    def inspectFolder(self, dir):
+    def inspectFolder(self, dir, extension):
         # walk the tree, return the filename for the first H5 file we find
         for root, dirs, files in os.walk(dir):
             for name in files:
                 fname = os.path.join(root, name)
-                if name.endswith(".h5"):
+                if name.endswith(extension):
                     te = TreeEdit(h5FileName=fname)
                     te.configure_traits()
                     return fname, te.getSelectedDict()
                 elif name.endswith(".zip"):
-                    return self.inspectZip(fname)
+                    return self.inspectZip(fname, extension)
         return None, None
     
     def threadFileOperation(self, optClass, dlgTitle, dlgMsg, sleepTime=0.2):
@@ -2470,7 +2486,7 @@ class NotebookHandler(Handler):
             wx.MessageBox(optClass.message, caption="Error", style=wx.ICON_ERROR)
         pd.Destroy()
     
-    def onConcatenateFolder(self, info):
+    def _getInOutFileNames(self, extension):
         # dir must exist, this suppresses the Make New Folder button
         fValidDir = False
         fPromptForDir = True
@@ -2482,7 +2498,7 @@ class NotebookHandler(Handler):
         
         # get folder containing files to concatenate
         while fValidDir is False and fPromptForDir is True:
-            d = wx.DirDialog(None, "Select directory tree containing .h5 and/or zip archive of .h5 files",
+            d = wx.DirDialog(None, "Select directory tree containing %s and/or zip archive of %s files" % (extension, extension),
                              style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
                              defaultPath=defaultPath)
 
@@ -2491,7 +2507,7 @@ class NotebookHandler(Handler):
                 
                 # validate by generating a default output filename from the dir name
                 # if None is returned, then it didn't contain any .H5 or ZIPs with .H5 files
-                defaultOutputFilename, variableDict = self.inspectFolder(path)
+                defaultOutputFilename, variableDict = self.inspectFolder(path, extension)
                 if len(variableDict) == 1:
                     fPromptForDir = False
                 elif defaultOutputFilename is not None and variableDict is not None:
@@ -2499,8 +2515,9 @@ class NotebookHandler(Handler):
                 else:
                     # warn user that the folder doesn't contain any H5 or ZIP H5 archives
                     # let the user choose whether to select a different folder
-                    retCode = wx.MessageBox("Selected folder does not contain any .h5 files or zip archives of .h5 files.\n\nChoose a different folder?",
-                                            path, wx.YES_NO | wx.ICON_ERROR)
+                    retCode = wx.MessageBox(
+                            "Selected folder does not contain any %s files or zip archives of %s files.\n\nChoose a different folder?" % (extension, extension),
+                            path, wx.YES_NO | wx.ICON_ERROR)
 
                     if retCode == wx.ID_YES:
                         # use the parent folder for the last selected folder as a new default,
@@ -2523,7 +2540,7 @@ class NotebookHandler(Handler):
 
         # user cancelled if still don't have a valid dir, so bail out of concatenating
         if fValidDir is False:
-            return
+            return None
         # get output filename
         # initially use the default filename generated from the selected folder (from above)
         fname = os.path.split(defaultOutputFilename)[1]
@@ -2533,15 +2550,14 @@ class NotebookHandler(Handler):
         
         fValidFilename = False
         fPromptForFilename = True
-        concatenater = ConcatenateFolder2File(self.datDirName, defaultOutputFilename, variableDict)
-
+        
         while fValidFilename is False and fPromptForFilename is True:
             # prompt for the filename
-            fd = wx.FileDialog(None, "Concatenated output h5 filename",
+            fd = wx.FileDialog(None, "Concatenated output %s filename" % extension,
                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
                                defaultFile=fname,
                                defaultDir=defaultOutputPath,
-                               wildcard="h5 files (*.h5)|*.h5")
+                               wildcard="%s files (*.%s)|*.%s" % (extension, extension, extension))
 
             if fd.ShowModal() == wx.ID_OK:
                 path = fd.GetPath()
@@ -2589,12 +2605,15 @@ class NotebookHandler(Handler):
             fd.Destroy()
 
         if fValidFilename is False:
-            return
-
-        # now have a valid input folder and output filename (which is already open)
-        # do the concatenation
-        self.threadFileOperation(concatenater, "Concatenating files", "Preparing for file concatenation...", 0.5)
-        info.object.dataFile = concatenater.fileName
+            return None
+        else:
+            return concatenater
+            
+    def onConcatenateFolder(self, info):
+        concatenater = self._getInOutFileNames('.h5')
+        if concatenater is not None:
+            self.threadFileOperation(concatenater, "Concatenating files", "Preparing for file concatenation...", 0.5)
+            info.object.dataFile = concatenater.fileName
     
     def onBatchConvertDatToH5(self, info):
         d = wx.DirDialog(None, "Open directory with .dat files",
@@ -2606,6 +2625,12 @@ class NotebookHandler(Handler):
             self.threadFileOperation(c, "Batch Convert DAT to H5 files", "Preparing for file converting...", 0.5)
         d.Destroy()
 
+    def onCombineDat(self, info):
+        concatenater = self._getInOutFileNames('.dat')
+        if concatenater is not None:
+            self.threadFileOperation(concatenater, "Combine DAT together", "Preparing for file combination...", 0.5)
+            info.object.dataFile = concatenater.fileName
+        
     def onBatchConvertH5ToDat(self, info):
         d = wx.DirDialog(None, "Open directory with .h5 files",
                          style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
@@ -2764,14 +2789,15 @@ class ViewNotebook(HasTraits):
         self.infoSet = set()
         
         # File menu
-        openAction = Action(name="&Open H5 File...\tCtrl+O", action="onOpen")
+        openAction = Action(name="&Open File...\tCtrl+O", action="onOpen")
         openConfigAction = Action(name="&Load Config...\tL", action="onLoadConfig")
         openZipAction = Action(name="&Unpack Zip File...\tU", action="onConcatenateZip")
-        concatenateActionNew = Action(name="&catenate H5 Files...\tC", action="onConcatenateFolder")
+        concatenateActionNew = Action(name="&Concatenate H5 Files...\tC", action="onConcatenateFolder")
         convertDatAction = Action(name="Convert &DAT to H5...\tAlt+Shift+C", action="onConvertDatToH5")
         convertH5Action = Action(name="Convert &H5 to DAT...\tAlt+H", action="onConvertH5ToDat")
         batchConvertDatAction = Action(name="&Batch Convert DAT to H5...\tB", action="onBatchConvertDatToH5")
         batchConvertH5Action = Action(name="Batch &Convert H5 to DAT...\tC", action="onBatchConvertH5ToDat")
+        combineDatAction = Action(name="Concatenate DAT files...", action="onCombineDat")
         interpolationAction = Action(name="Interpolation...", action="onInterpolation")
         blockAverageAction = Action(name="Block Average...", action="onBlockAverage")
         exitAction = Action(name="E&xit", action="onExit")
@@ -2799,6 +2825,7 @@ class ViewNotebook(HasTraits):
                                                      Separator(),
                                                      openZipAction,
                                                      concatenateActionNew,
+                                                     combineDatAction,
                                                      Separator(),
                                                      convertDatAction,
                                                      convertH5Action,

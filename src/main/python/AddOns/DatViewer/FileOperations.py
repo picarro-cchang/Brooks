@@ -243,6 +243,40 @@ class Dat2h5():
             if fp is not None:
                 fp.close()
 
+class CombineDat():
+    def __init__(self, dirPath, fileName, variableDict):
+        self.dirPath = dirPath
+        self.fileName = fileName
+        self.variableDict = variableDict
+        self.message = ""
+        self.progress = 0
+        
+    def run(self):
+        with open(self.outFileName, 'w') as output:
+            columns = None
+            totalFile = 0
+            for root, dirs, files in os.walk(self.dirPath):
+                totalFile += len(files)
+            fileIndex = 0
+            for root, dirs, files in os.walk(self.dirPath):
+                for name in files:
+                    fileIndex += 1
+                    if name.endswith(".dat"):
+                        path = os.path.join(root, name)
+                        with open(path, 'r') as f:
+                            data = f.read().split('\n')
+                            if columns is None:
+                                columns = data[0]
+                                output.write(columns + "\n")
+                            elif columns != data[0]:
+                                self.message = "data columns are inconsistent"
+                                self.progress = -1
+                                return
+                            for ii in range(1, len(data)):
+                                output.write(data[ii] + "\n")
+                    self.progress = fileIndex * 100.0 / totalFile            
+                            
+                
 class h52DatBatchConvert():
     def __init__(self, dirPath):
         self.path = dirPath
@@ -474,6 +508,7 @@ class ConcatenateFolder2File():
     def __init__(self, dirPath, fileName, variableDict):
         self.dirPath = dirPath
         self.fileName = fileName
+        self.extension = os.path.splitext(fileName)[1]
         self.variableDict = variableDict
         self.DateRange = self.variableDict.pop("user_DateRange", None)
         self.PrivateLog = self.variableDict.pop("user_PrivateLog", None)
@@ -486,10 +521,15 @@ class ConcatenateFolder2File():
         
     def openFile(self):
         try:
-            self.fileHandle = tables.openFile(self.fileName, "w")
+            if self.extension == ".h5":
+                self.fileHandle = tables.openFile(self.fileName, "w")
+                return True
+            elif self.extension == ".dat":
+                self.fileHandle = open(self.fileName, "w")
+                return True
         except:
-            return False
-        return True
+            pass
+        return False
     
     def analyzeFileName(self, fileName):
         logName = fileName.split("/")[-1]
@@ -548,16 +588,16 @@ class ConcatenateFolder2File():
             for fname in files:
                 path = os.path.join(root, fname)
                 if self.DateRange is None:
-                    if fname.endswith('.h5') or fname.endswith('.zip'):
+                    if fname.endswith(self.extension) or fname.endswith('.zip'):
                         self.fileList.append(path)
                 else:
-                    if fname.endswith('.h5'):
+                    if fname.endswith(self.extension):
                         if self.analyzeFileName(fname):
                             self.fileList.append(path)
                     elif fname.endswith(".zip"):
                         self.zipFileDict[path] = []
                         with zipfile.ZipFile(path, 'r') as zfile:
-                            zlist = [zz for zz in zfile.namelist() if zz.lower().endswith(".h5")]
+                            zlist = [zz for zz in zfile.namelist() if zz.lower().endswith(self.extension)]
                             zlist.sort()
                             for zpath in zlist:    # search files in zip file
                                 if self.analyzeFileName(zpath):
@@ -566,10 +606,30 @@ class ConcatenateFolder2File():
                                 self.fileList.append(path)
     
     def run(self):
-        if self.largeFile:
-            self.run_largeFile()
-        else:
-            self.run_sort()
+        if self.extension == ".h5":
+            if self.largeFile:
+                self.run_largeFile()
+            else:
+                self.run_sort()
+        elif self.extension == ".dat":
+            self.run_dat()
+    
+    def run_dat(self):
+        import pandas as pd
+        
+        variableDict = self.variableDict
+        numCols = len(variableDict["results"])
+        headingFormat = "%-26s" * (numCols) + "\n"
+        dataFormat = "%-26f" * (numCols) + "\n"
+        self.getFileList()
+        totalFile = len(self.fileList)
+        self.fileHandle.write(headingFormat % tuple(variableDict["results"]))
+        for fileIndex, fname in enumerate(self.fileList):
+            if fname.endswith('.dat'):
+                df = pd.read_csv(fname, delim_whitespace=True)
+                for row in df[variableDict["results"]].values:
+                    self.fileHandle.write(dataFormat % tuple(row))
+            self.progress = fileIndex*100.0 / totalFile
     
     def run_sort(self):
         """
