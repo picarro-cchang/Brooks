@@ -77,7 +77,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.6"
+APPVERSION = "3.0.7"
 
 Program_Path = os.getcwd()
 # cursors
@@ -1720,40 +1720,10 @@ class DatViewer(HasTraits):
                 wx.CallAfter(self.parent.notify, self, self.xLim, self.yLim, tz=self.plot.plot2dFigure.tz)
             else:
                 wx.CallAfter(self.parent.notify, self, self.xLim, self.yLim)
-            
-    def _dataFile_changed(self):
-        # Figure out the tree of tables and arrays
-        self.dataSetNameList = []
-        self.dataSetName = ""
-        self.varName = ""
-        
-        if self.dataFile.endswith(".h5"):
-            self.ip = tables.openFile(self.dataFile)
-            for n in self.ip.walkNodes("/"):
-                if isinstance(n, tables.Table):
-                    self.dataSetNameList.append(n._v_pathname)
-
-            if 1 == len(self.dataSetNameList):
-                # this triggers DatViewer::_dataSetName_changed()
-                # which populates the var name dropdown
-                self.dataSetName = self.dataSetNameList[0]
-        elif self.dataFile.endswith(".dat"):
-            self.dataSetNameList.append("results") 
-            self.dataSetName = "results"
     
     def _dataSetName_changed(self):
         if self.dataSetName:
-            if self.dataFile.endswith(".h5"):
-                # try:  # for pandas 0.16
-                    # self.table = self.data.get(self.dataSetName)
-                # except:   # for old pandas
-                    # table = getattr(self.data.handle.root, self.dataSetName)
-                    # self.table = DataFrame.from_records(table.read())
-                table = self.ip.getNode(self.dataSetName)
-                self.table = DataFrame.from_records(table.read())
-            elif self.dataFile.endswith(".dat"):
-                self.table = read_csv(self.dataFile, delim_whitespace=True)
-            self.table.fillna(0.0)
+            self.table = self.parent.getDataSet(self.dataSetName)
             self.varNameList = list(self.table.columns.values)
             if self.updateFigure:
                 self.parent.filter = ""
@@ -2067,9 +2037,12 @@ class SeriesWindowHandler(Handler):
         Handler.init(self, info)
 
     def close(self, info, is_ok):
-        for i in info.object.infoSet:
+        obj = info.object
+        if hasattr(obj, "ip"):
+            obj.ip.close()
+        for i in obj.infoSet:
             i.ui.dispose()
-        info.object.parent.infoSet.discard(info)
+        obj.parent.infoSet.discard(info)
         info.ui.dispose()
         
     def onSaveConfig(self, info):
@@ -2232,6 +2205,7 @@ class SeriesWindow(Window):
         Window.__init__(self, *a, **k)
         self.infoSet = set()
         self.tz = k.get("tz", pytz.timezone("UTC"))
+        self.tables = {}
         for n in range(self.nViewers):
             self.viewers.append(DatViewer(parent=self, tz=self.tz, dataFile=self.dataFile))
         self.listening = True
@@ -2290,8 +2264,41 @@ class SeriesWindow(Window):
         self.listening = True
 
     def _dataFile_changed(self):
+        # Figure out the tree of tables and arrays
+        self.dataSetNameList = []
+        dataSetName = ""
+        
+        if self.dataFile.endswith(".h5"):
+            self.ip = tables.openFile(self.dataFile)
+            for n in self.ip.walkNodes("/"):
+                if isinstance(n, tables.Table):
+                    self.dataSetNameList.append(n._v_pathname)
+
+            if len(self.dataSetNameList) == 1:
+                dataSetName = self.dataSetNameList[0]
+        elif self.dataFile.endswith(".dat"):
+            self.dataSetNameList.append("results") 
+            dataSetName = "results"
+            
         for v in self.viewers:
-            v.set(dataFile=self.dataFile)   
+            v.dataSetNameList = self.dataSetNameList
+            if len(dataSetName) > 0:
+                v.dataSetName = dataSetName
+                
+    def getDataSet(self, dataSetName):
+        if dataSetName not in self.tables:
+            if self.dataFile.endswith(".h5"):
+                # try:  # for pandas 0.16
+                    # self.table = self.data.get(self.dataSetName)
+                # except:   # for old pandas
+                    # table = getattr(self.data.handle.root, self.dataSetName)
+                    # self.table = DataFrame.from_records(table.read())
+                table = self.ip.getNode(dataSetName)
+                self.tables[dataSetName] = DataFrame.from_records(table.read())
+            elif self.dataFile.endswith(".dat"):
+                self.tables[dataSetName] = read_csv(self.dataFile, delim_whitespace=True)
+            self.tables[dataSetName].fillna(0.0)
+        return self.tables[dataSetName]
             
     def _filter_changed(self):
         for v in self.viewers:
@@ -2339,8 +2346,8 @@ class NotebookHandler(Handler):
         wx.MessageBox(verMsg, APPNAME, wx.OK)
 
     def onOpen(self, info):
-        d = wx.FileDialog(None, "Open HDF5 file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, 
-                          wildcard="h5 files (*.h5)|*.h5 | DAT files (*.dat)|*.dat")
+        d = wx.FileDialog(None, "Open data file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, 
+                          wildcard="Data files (*.h5, *.dat)|*.h5;*.dat")
         if d.ShowModal() == wx.ID_OK:
             info.object.dataFile = d.GetPath()
             #info.ui.title = "Viewing [" + info.object.dataFile + "]"
@@ -2816,7 +2823,7 @@ class ViewNotebook(HasTraits):
         #title = "HDF5 File Viewer"
         title = "%s %s" % (FULLAPPNAME, APPVERSION)
 
-        self.traits_view = View(Item("dataFile", style="readonly", label="H5 file:", padding=10),
+        self.traits_view = View(Item("dataFile", style="readonly", label="Data file:", padding=10),
                                 buttons=NoButtons, title=title,
                                 menubar=MenuBar(Menu(exitAction,
                                                      Separator(),
