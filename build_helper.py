@@ -227,14 +227,14 @@ def process_build_config_file(configFile):
                 if bool(config[section]["enable"]):
                     product = config[section]["product"]
                     types = config[section]["types"]
-                    types = ",".join([type for type in types])
+                    official = config[section]["official_release"]
                     tag = config[section]["tag_github"]
                     push = config[section]["push_github"]
                     upload = config[section]["upload_artifactory"]
                     version_inc = config[section]["version_increase"]
                     other_options = "-Pcheck_working_tree=False -Pcheck_configs=False"
-                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Ppush=%s -Ptag=%s -Pupload_artifactory=%s %s" % \
-                        (product, types, push, tag, upload, other_options)
+                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Pofficial=%s -Ppush=%s -Ptag=%s -Pupload_artifactory=%s %s" % \
+                        (product, types, official, push, tag, upload, other_options)
                     if git_path:
                         command += (" -Pgit=%s" % git_path)
                     command += " make_installers"

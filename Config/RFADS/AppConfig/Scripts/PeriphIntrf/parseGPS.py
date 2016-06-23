@@ -33,25 +33,28 @@ def parseGPS(rawStr):
     return retList
     
 def syncData(oldData, newData):
-    if oldData is None:
-        return []
-    elif len(oldData) == 0 or len(newData) == 0:
-        return []
-    elif oldData[0] == "$GPGGA" and newData[0] == "$GPGST":
-        GGAdata, GSTdata = oldData, newData
-    elif oldData[0] == "$GPGST" and newData[0] == "$GPGGA":
-        GGAdata, GSTdata = newData, oldData
-    else:   # if this is not iGPS, only $GPGGS is received.
-        return [newData[1], newData[2], newData[3], newData[4]]
-        
-    if oldData[4] != newData[4]:
-        print "timestemp of old data (%s, %f) does not match new data (%s, %f)" % (oldData[0], oldData[4], newData[0], newData[4])
-        return []
-    else:
-        return [GGAdata[1], GGAdata[2], GSTdata[1], GSTdata[2], GGAdata[3], GGAdata[4]]
+    try:
+        if len(_DATALABELS_) == 4:  # regular GPS
+            if newData[0] == "$GPGGA":
+                return [newData[1], newData[2], newData[3], newData[4]]
+        elif len(_DATALABELS_) == 6: # iGPS
+            if oldData[0] == "$GPGGA" and newData[0] == "$GPGST":
+                GGAdata, GSTdata = oldData, newData
+            elif oldData[0] == "$GPGST" and newData[0] == "$GPGGA":
+                GGAdata, GSTdata = newData, oldData
+            elif oldData[0] == "$GPGGA" and newData[0] == "$GPGGA":
+                return [newData[1], newData[2], -1, -1, newData[3], newData[4]]
+                
+            if oldData[4] != newData[4]:
+                return []
+            else:
+                return [GGAdata[1], GGAdata[2], GSTdata[1], GSTdata[2], GGAdata[3], GGAdata[4]]
+    except:
+        pass
+    return []
 
 if "_RAWSTRING_" in dir():
     data = parseGPS(_RAWSTRING_)
     _OUTPUT_ = syncData(_PERSISTENT_, data)
     if data:
-        _PERSISTENT_ = data if not _OUTPUT_ else None
+        _PERSISTENT_ = data

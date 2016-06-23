@@ -52,7 +52,8 @@ class ControlBridge(object):
             "referenceGasInjection" : self._referenceGasInjection,
             "setToEQMode": self._setToEQMode,
             "setToSurveyorMode": self._setToSurveyorMode, 
-            "getHardwareCapabilities": self._getHardwareCapabilities
+            "getHardwareCapabilities": self._getHardwareCapabilities,
+            "getHostVersion": self._getHostVersion
         }
  
     def run(self):
@@ -126,7 +127,14 @@ class ControlBridge(object):
         analyzerDict = self.driver.fetchLogicEEPROM()[0]
         capabilityDict = self.driver.fetchHardwareCapabilities()
         analyzerDict.update(capabilityDict)
-        return json.dumps(analyzerDict)    
+        return json.dumps(analyzerDict)  
+
+    def _getHostVersion(self):
+        try:
+            dV = self.driver.allVersions()
+            return dV["host release"]
+        except:
+            return ""            
         
 if __name__ == '__main__':
     bridge = ControlBridge()

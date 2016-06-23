@@ -24,6 +24,10 @@ class TestHealthMonitor(unittest.TestCase):
         alarmDict = self.tester.runScript(timestamp, reportDict)
         return alarmDict["PeripheralStatus"]
 
+    def _get_both_status(self, timestamp, reportDict):
+        alarmDict = self.tester.runScript(timestamp, reportDict)
+        return (alarmDict["AnalyzerStatus"], alarmDict["PeripheralStatus"]) 
+
     def _get_alarm_mask(self, alarmName):
         alarm = "ALARM_" + alarmName
         if alarm in self.alarmConfig:
@@ -118,10 +122,39 @@ class TestHealthMonitor(unittest.TestCase):
     
 ###################### GPS ############################################
 
+    def test_GPS_disconnected(self):
+        self.tester.alarmParamsDict["ALARM_GPSDisconnected"]["above"] = -1
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_FIT": 1})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "GPS_FIT": 1})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSDisconnected")) > 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
+        
+    def test_GPS_connected(self):
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_FIT": 1})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "GPS_FIT": 1})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSDisconnected")) == 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
+
+    def test_GPS_not_updating(self):
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_Time": 0})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "GPS_Time": 0})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSNotUpdating")) > 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
+        
+    def test_GPS_updating(self):
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_Time": 0})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "GPS_Time": 1})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSNotUpdating")) == 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
+
     def test_normal_GPS_uncertainty(self):
-        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 0.0, "GPS_UNC_LONG": 0.0, "GPS_FIT": 6})
-        self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) == 0)
-        self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
+        self.tester.DriverProxy.EEPROM["HardwareCapabilities"]["iGPS"] = True
+        analyzerStatus, peripheralStatus  = self._get_both_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 0.0, "GPS_UNC_LONG": 0.0, "GPS_FIT": 6})
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("ModerateGpsUncertainty")) == 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("iGPSConfigureError")) == 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
+
 
     def test_moderate_GPS_uncertainty(self):
         status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 20.0, "GPS_UNC_LONG": 20.0, "GPS_FIT": 6})
@@ -137,6 +170,12 @@ class TestHealthMonitor(unittest.TestCase):
         status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "GPS_UNC_LAT": 100.0, "GPS_UNC_LONG": 100.0, "GPS_FIT": 1})
         self.assertTrue((status & self._get_alarm_mask("ModerateGpsUncertainty")) == 0)
         self.assertTrue((status & self._get_alarm_mask("LargeGpsUncertainty")) == 0)
+        
+    def test_iGPS_configured_error(self):
+        self.tester.DriverProxy.EEPROM["HardwareCapabilities"]["iGPS"] = False
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "GPS_FIT": 6})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("iGPSConfigureError")) > 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
 
     def test_car_speed(self):
         # large car speed
@@ -147,3 +186,16 @@ class TestHealthMonitor(unittest.TestCase):
         self.assertTrue((status & self._get_alarm_mask("LargeCarSpeed")) == 0)
 
 ###################### Anemometer ############################################
+
+    def test_anemometer_disconnected(self):
+        self.tester.alarmParamsDict["ALARM_WindSensorDisconnected"]["above"] = -1
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "WS_STATUS": 1})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "WS_STATUS": 1})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("WindSensorDisconnected")) > 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
+        
+    def test_anemometer_connected(self):
+        status = self._get_peripheral_status(0, {"species": 170, "ValveMask": 0, "WS_STATUS": 1})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "WS_STATUS": 1})
+        self.assertTrue((peripheralStatus & self._get_alarm_mask("WindSensorDisconnected")) == 0)
+        self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)

@@ -75,6 +75,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             hostDir = "Host"
         self.supervisorHostDir = os.path.join(apacheDir, hostDir)
         self.startupSupervisorIni = os.path.join(self.supervisorIniDir, self.co["Main"]["StartupSupervisorIni"].strip())
+        try:
+            self.timeBeforeKillApp = int(self.co["Main"]["timeBeforeKillApp"].strip())
+        except:
+            self.timeBeforeKillApp = 5000 # millisecond
 
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
@@ -115,7 +119,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         elif self.autoLaunch and self.delay == 0:    # auto launching by Start Instrument
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
-            wx.CallLater(3000, self.Destroy)
+            if self.timeBeforeKillApp > 0:
+              wx.CallLater(self.timeBeforeKillApp, self.Destroy)
         else:
             self.Show()
 
