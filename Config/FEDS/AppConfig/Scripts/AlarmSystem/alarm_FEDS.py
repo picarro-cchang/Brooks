@@ -73,7 +73,7 @@ class BasicAlarm(_ALARM_FUNCTIONS_.Alarm):
     def __init__(self, *a):
         _ALARM_FUNCTIONS_.Alarm.__init__(self, *a)
         self.variable = self.params["variable"].split(",")
-        self.input = np.zeros(len(self.variable))
+        self.input = [0 for i in range(len(self.variable))]
     
 class AlarmOfInterval(BasicAlarm):
     def __init__(self, *a):
@@ -196,11 +196,14 @@ class AlarmOfPeripheralStatus(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
         self.lastUpdated = -1
+        self.keyword = self.params["keyword"]
         
     def processBeforeCheckValue(self, value, *a):
-        current_time = time.time()
-        interval = (current_time - self.lastUpdated) if self.lastUpdated > 0 else 0
-        self.lastUpdated = current_time
+        interval = 0
+        if self.keyword in value:
+            current_time = time.time()
+            interval = (current_time - self.lastUpdated) if self.lastUpdated > 0 else 0
+            self.lastUpdated = current_time
         return interval
         
 class AlarmOfGpsUpdated(BasicAlarm):
@@ -284,8 +287,8 @@ if "species" in _REPORT_:
             alarm = _GLOBALS_["alarms"][alarmName]
             for i, var in enumerate(alarm.variable):
                 var = var.strip()
-                if var.isdigit():
-                    alarm.input[i] = _ALARMS_[int(var)]
+                if var.startswith("_"):
+                    alarm.input[i] = eval(var)
                 else:
                     if var in _REPORT_:
                         alarm.input[i] = _REPORT_[var]

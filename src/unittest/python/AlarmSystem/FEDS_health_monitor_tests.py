@@ -160,14 +160,14 @@ class TestHealthMonitor(unittest.TestCase):
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
 
     def test_GPS_not_updating(self):
-        status = self._get_peripheral_status(0, {"species": 25, "ValveMask": 0, "GPS_Time": 0})
-        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 25, "ValveMask": 0, "GPS_Time": 0})
+        status = self._get_peripheral_status(0, {"species": 25, "ValveMask": 0, "GPS_TIME": 0})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 25, "ValveMask": 0, "GPS_TIME": 0})
         self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSNotUpdating")) > 0)
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
         
     def test_GPS_updating(self):
-        status = self._get_peripheral_status(0, {"species": 25, "ValveMask": 0, "GPS_Time": 0})
-        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 25, "ValveMask": 0, "GPS_Time": 1})
+        status = self._get_peripheral_status(0, {"species": 25, "ValveMask": 0, "GPS_TIME": 0})
+        analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 25, "ValveMask": 0, "GPS_TIME": 1})
         self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSNotUpdating")) == 0)
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
 
