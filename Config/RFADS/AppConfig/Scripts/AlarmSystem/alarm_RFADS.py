@@ -187,14 +187,13 @@ class AlarmOfInvalidData(BasicAlarm):
 class AlarmOfPeripheralStatus(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
-        self.lastUpdated = -1
+        self.lastUpdated = time.time()
         self.keyword = self.params["keyword"]
         
     def processBeforeCheckValue(self, value, *a):
-        interval = 0
+        current_time = time.time()
+        interval = current_time - self.lastUpdated
         if self.keyword in value:
-            current_time = time.time()
-            interval = (current_time - self.lastUpdated) if self.lastUpdated > 0 else 0
             self.lastUpdated = current_time
         return interval
         
@@ -204,7 +203,7 @@ class AlarmOfGpsUpdated(BasicAlarm):
         self.oldGpsTime = -1
         
     def processBeforeCheckValue(self, value, *a):
-        gpsNotUpdated = (value == self.oldGpsTime)
+        gpsNotUpdated = True if np.absolute(value - self.oldGpsTime) < 1e-6 else False
         self.oldGpsTime = value
         return gpsNotUpdated
         

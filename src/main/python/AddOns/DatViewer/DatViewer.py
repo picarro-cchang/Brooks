@@ -2420,7 +2420,7 @@ class NotebookHandler(Handler):
         dz.Destroy()
 
         if zipfile.is_zipfile(zipname):
-            fname, variableDict = self.inspectZip(zipname)
+            fname, variableDict = self.inspectZip(zipname, ".h5")
             if len(variableDict) == 1: return
             # give the user a chance to change it and warn about overwrites
             fd = wx.FileDialog(None, "Output file",
