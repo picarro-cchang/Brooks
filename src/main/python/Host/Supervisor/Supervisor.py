@@ -80,7 +80,7 @@ from os import getpid as os_getpid
 from subprocess import Popen, call
 
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER
+from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER, RPC_PORT_RESTART_SUPERVISOR
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -604,7 +604,7 @@ class App(object):
                 ClientName = APP_NAME, \
                 CallbackURI = "", \
                 Timeout_s = self.MaxWait_ms/100)
-        if self.Mode in [0,1]:
+        if self.Mode in [0,1,4]:
             self._HasCmdFIFO = True
         return loadedOptions
 
@@ -667,8 +667,8 @@ class App(object):
         self._Stat_LaunchCount += 1 #we're tracking launch attempts, not successful launches
 
 
-        if self.VerifyTimeout_ms > 0 and self.Port > 0: # and self.Mode in [0,1]:
-            #mode 1 = normal apps to be monitored
+        if self.VerifyTimeout_ms > 0 and self.Port > 0: # and self.Mode in [0,1,4]:
+            #mode 1 & 4 = normal apps to be monitored
             #mode 0 = a unique mode for the backup supervisor app
             #we're supposed to verify that the application started successfully.  We'll do so with a FIFO ping..
             startTime = TimeStamp()
@@ -950,6 +950,7 @@ class Supervisor(object):
         self.RPCServer = None
         if 0: assert isinstance(self.RPCServer, CmdFIFO.CmdFIFOServer) #For Wing
         self.RPCServerProblem = False
+        self.restartSurveyor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
         self.AppMonitorCount = 0
         self.AppNameList = [] #keeps the app ordering intact
         self.AppDict = {}
@@ -1034,7 +1035,7 @@ class Supervisor(object):
                     if not a in self.AppNameList:
                         raise AppErr("Unrecognized dependency listed for application (D = '%s' for A = '%s')." % (a, appName))
 
-            if A.Mode in [0,1,3]:
+            if A.Mode in [0,1,3,4]:
                 self.AppMonitorCount += 1
 
             if A.Mode == 0:
@@ -1217,6 +1218,14 @@ class Supervisor(object):
                         restartApp = False
 
         if restartApp:
+            if self.AppDict[AppName].Mode == 4:
+                # Mode = 4 means the app communicates with P.S.A., so everything needs to be restarted and connections need to be re-established.
+                if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
+                    Log("About to restart the whole system")
+                    self.restartSurveyor.restart()  # call restartSurveyor to restart the whole system
+                    return 0
+                Log("RestartSurveyor is NOT running. Only %s and its dependents will be restarted." % AppName)
+                    
             appDependents = []
 
             #first get all the dependents shut (politely) down, if needed...
@@ -1339,7 +1348,7 @@ class Supervisor(object):
         terminates all monitored applications before exiting.
         """
         Log("Application monitoring loop started")
-        appsToMonitor = [self.AppDict[a] for a in self.AppNameList if self.AppDict[a].Mode in [0, 1, 3]]
+        appsToMonitor = [self.AppDict[a] for a in self.AppNameList if self.AppDict[a].Mode in [0, 1, 3, 4]]
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested): #we'll monitor until it is time to stop!
             sys.stdout.flush()
             for app in appsToMonitor:

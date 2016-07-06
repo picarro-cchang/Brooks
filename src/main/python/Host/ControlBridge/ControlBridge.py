@@ -1,5 +1,5 @@
 """
-Copyright 2014, Picarro Inc.
+Copyright 2016, Picarro Inc.
 """
 
 import time
@@ -8,10 +8,26 @@ import json
 import zmq
 
 from Host.Common import SharedTypes
-from Host.Common import EventManagerProxy as EventManager
+from Host.Common.EventManagerProxy import *
 from Host.Common import CmdFIFO
 
-EventManager.EventManagerProxy_Init('ControlBridge')
+APP_NAME = "ControlBridge"
+EventManagerProxy_Init(APP_NAME)
+
+class RpcServerThread(Thread):
+    def __init__(self, RpcServer, ExitFunction):
+        threading.Thread.__init__(self)
+        self.setDaemon(1) #THIS MUST BE HERE
+        self.RpcServer = RpcServer
+        self.ExitFunction = ExitFunction
+    def run(self):
+        self.RpcServer.serve_forever()
+        try: #it might be a threading.Event
+            if self.ExitFunction is not None:
+                self.ExitFunction()
+            Log("RpcServer exited and no longer serving.")
+        except:
+            LogExc("Exception raised when calling exit function at exit of RPC server.")
 
 class ControlBridge(object):
 
@@ -30,15 +46,19 @@ class ControlBridge(object):
     EXTRA_FLAG_SAMPLES = 50 # each is 0.2 seconds
 
     def __init__(self):
-        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
-                                                 ClientName = "ControlBridge")
-        EventManager.Log('Connected to Driver')
-        self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER,
-                                                  ClientName = "ControlBridge")
-        EventManager.Log('Connected to Instrument Manager')
+        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, ClientName = APP_NAME)
+        Log('Connected to Driver')
+        self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER, ClientName = APP_NAME)
+        Log('Connected to Instrument Manager')
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_CONTROL_BRIDGE),
+                                            ServerName = APP_NAME,
+                                            ServerDescription = "",
+                                            ServerVersion = "1.0.0",
+                                            threaded = True)
+        self.rpcThread = RpcServerThread(self.rpcServer, None)
+        self.rpcThread.start()
 
         self.context = zmq.Context()
-
         self.controlSocket = self.context.socket(zmq.REP)
         self.controlSocket.bind("tcp://127.0.0.1:%d" % SharedTypes.TCP_PORT_CONTROL_BRIDGE_ZMQ)
 
@@ -60,6 +80,7 @@ class ControlBridge(object):
         try:
             while True:
                 cmd = self.controlSocket.recv_string()
+                Log("Command received from ZMQ bridge: %s" % cmd)
                 ret = None
 
                 try:
@@ -68,10 +89,12 @@ class ControlBridge(object):
 
                 except KeyError:
                     response = ControlBridge.RESPONSE_STATUS["unknown"]
-
+                
+                Log("Command executed with return code = %s" % response)
                 self.controlSocket.send_string("%d,%s" % (response, ret))
 
         finally:
+            Log("ControlBridge is terminated.")
             self.controlSocket.close()
             self.context.term()
 
@@ -90,19 +113,12 @@ class ControlBridge(object):
     def _cancelIsotopicAnalysis(self):
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 5)
 
-        doneCount = 0
-
-        while True:
-            if doneCount == 600:
-                break
-
+        for _ in range(60):
             val = self.driver.rdDasReg('PEAK_DETECT_CNTRL_STATE_REGISTER')
-            EventManager.Log("Waiting for peak detector to return to Idle: %s" % val)
-
+            Log("Waiting for peak detector to return to Idle: %s" % val)
             if val == 0:
-                doneCount += 1
-
-            time.sleep(0.010)
+                break
+            time.sleep(1)
 
     def _referenceGasPrime(self):
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 6)
