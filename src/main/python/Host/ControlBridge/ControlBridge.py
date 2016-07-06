@@ -14,7 +14,7 @@ from Host.Common import CmdFIFO
 APP_NAME = "ControlBridge"
 EventManagerProxy_Init(APP_NAME)
 
-class RpcServerThread(Thread):
+class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
         self.setDaemon(1) #THIS MUST BE HERE
