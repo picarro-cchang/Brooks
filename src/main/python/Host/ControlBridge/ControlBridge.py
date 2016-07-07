@@ -75,12 +75,19 @@ class ControlBridge(object):
             "getHardwareCapabilities": self._getHardwareCapabilities,
             "getHostVersion": self._getHostVersion
         }
+        self.requestTime = 0
  
     def run(self):
         try:
             while True:
                 cmd = self.controlSocket.recv_string()
-                Log("Command received from ZMQ bridge: %s" % cmd)
+                if cmd == "getPeakDetectorState":
+                    current_time = time.time()
+                    if current_time > self.requestTime + 60: 
+                        Log("Command received from ZMQ bridge: %s" % cmd)
+                        self.requestTime = current_time
+                else:
+                    Log("Command received from ZMQ bridge: %s" % cmd)
                 ret = None
 
                 try:
@@ -90,7 +97,8 @@ class ControlBridge(object):
                 except KeyError:
                     response = ControlBridge.RESPONSE_STATUS["unknown"]
                 
-                Log("Command executed with return code = %s" % response)
+                if cmd != "getPeakDetectorState":
+                    Log("Command executed with return code = %s" % response)
                 self.controlSocket.send_string("%d,%s" % (response, ret))
 
         finally:
