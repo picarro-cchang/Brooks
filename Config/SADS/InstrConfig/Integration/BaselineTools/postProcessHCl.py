@@ -4,8 +4,11 @@ from struct import unpack
 from numpy import asarray, mean, std
 from pylab import *
 
+#  Post-processing script for HCl baseline calibration tool
+#  2016 0706 changed boilerplate to use calibration constants for 140 Torr and 80 C
+
 fname = 'FitterOutput.dat'
-basename = 'FitterConfig'
+basename = 'FitterConfig_HCl_140Torr'
 fp = file(fname,'rb')
 results = []
 while True:
@@ -128,10 +131,10 @@ output.append("HCl_Sine1_period = %.6f" % arrays['freq_ripp_2']['mean'])
 output.append("HCl_Sine1_phase = %.6f" % p2)
 output.append("")
 output.append("H2O_linear = 0.909")
-output.append("H2O_strength_linear = 0.0172")
-output.append("HCl_linear = 0.606             #   2 Nov 2015 calibration constant set from standard measurement of 20. Aug. 2015")
+output.append("H2O_strength_linear = 0.0036   #  18 Mar 2016 adjusted to match CFADS calibration (VIII.98) 19 May 2016 scaled to convert from 45 to 80 C operation (VIII.133)")
+output.append("HCl_linear = 0.352             #   2 Nov 2015 calibration constant set from standard measurement of 20. Aug. (Notebook VIII.40) 19 May 2016 scaled to convert from 45 to 80 C operation")
 output.append("H2O_to_HCl_linear = 0.0")
-output.append("CH4_to_HCl_linear = 0.0")
+output.append("CH4_to_HCl_linear = 0.363")
 
 print "\n".join(output)
 print>>file(basename+".ini","w"), "\n".join(output)
