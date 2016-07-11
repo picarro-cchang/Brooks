@@ -126,7 +126,7 @@ class AlarmOfCaptureMode(BasicAlarm):
             self.average = expAverage(self.average, int(value), interval, self.timeConstant)
         return (self.average >= 0.5)
         
-class AlarmOfCarSpeed(BasicAlarm):
+class AlarmOfSpeed(BasicAlarm):
     def processBeforeCheckValue(self, value, *a):
         return totalSpeed(value, a[0])
         
@@ -267,8 +267,8 @@ if _GLOBALS_["init"]:
             _GLOBALS_["alarms"][section] = BasicAlarm(_ALARM_PARAMS_, section)
 
 p = _ALARM_FUNCTIONS_.loadAlarmParams(_ALARM_PARAMS_, "Params")
-if 'PERIPHERAL_STATUS' in _REPORT_:
-    _ALARMS_[1] = _ALARMS_[1] | int(_REPORT_['PERIPHERAL_STATUS'])
+if 'WS_STATUS' in _REPORT_:
+    _ALARMS_[1] = _ALARMS_[1] | int(_REPORT_['WS_STATUS'])
 
 if "species" in _REPORT_:
     if _REPORT_["species"] in TARGET_SPECIES: 

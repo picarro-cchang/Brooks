@@ -27,8 +27,6 @@ from datetime import datetime
 from numpy import angle, arcsin, arctan, arctan2, asarray, column_stack, concatenate, conj
 from numpy import cos, exp, floor, imag, isfinite, isnan, mod, pi, real, sin, sqrt, tan
 
-from Host.PeriphIntrf.PeripheralStatus import PeripheralStatus
-
 
 NOT_A_NUMBER = 1e1000 / 1e1000
 SourceTuple = namedtuple('SourceTuple', ['ts', 'valTuple'])
@@ -417,7 +415,7 @@ def derivCdataSource(syncCdataSrc):
             yield DerivCdataTuple(*(d2 + (zVel, kappa)))
 
         
-def trueWindSource(derivCdataSrc, distFromAxle, speedFactor=1.0, maxTrueWindSpeed=20.0):
+def trueWindSource(derivCdataSrc, distFromAxle, speedFactor=0.96):
     """Calculates the true wind velocity and updates compass calibration.
 
     This simply subtracts the vehicle velocity from the anemometer velocity. The calculation is done 
@@ -430,18 +428,14 @@ def trueWindSource(derivCdataSrc, distFromAxle, speedFactor=1.0, maxTrueWindSpee
             zVel: Complex velocity of vehicle
         distFromAxle: Distance (m) that the GPS is in front of the rear axle of the vehicle
         speedFactor: Apparent wind velocity is multiplied by this factor before the car velocity is subtracted
-        maxTrueWindSpeed: If the calculated wind speed exceeds this quantity, it is replaced by NOT_A_NUMBER
         
     Yields:
         CalibCdataTuple objects consisting of the properties of derivCdataSrc, the calculated true wind,
         and a list of correlations between car speed and the apparent wind velocity.
     """
-    # If the reconstructed wind speed exceeds maxTrueWindSpeed, replace it with NaN since it is likely
-    #  that the anemometer has failed.
     
     assert isinstance(distFromAxle, (int, long, float))
     assert isinstance(speedFactor, (int, long, float))
-    assert isinstance(maxTrueWindSpeed, (int, long, float))
 
     rCorr = 0.0  # Rotation between axis of anemometer and axis of vehicle
     iCorr = 0.0
@@ -461,20 +455,16 @@ def trueWindSource(derivCdataSrc, distFromAxle, speedFactor=1.0, maxTrueWindSpee
         if isfinite(d.zVel):
             # Subtract velocity of vehicle
             cVel = speedFactor * sVel - abs(d.zVel) * exp(1j * axleCorr)
-            #
-            if abs(cVel) > maxTrueWindSpeed:
-                d = d._replace(status=int(d.status) | PeripheralStatus.WIND_ANOMALY)
-                tVel = NOT_A_NUMBER
+            
+            # Rotate back to geographic coordinates, using GPS direction if car is travelling
+            #  quickly or the previous direction if the speed falls below 1 m/s
+            if abs(d.zVel) > 1:
+                optAngle = angle(d.zVel)
+                
+            if optAngle is not None:
+                tVel = cVel * exp(1j * optAngle)
             else:
-                # Rotate back to geographic coordinates, using GPS direction if car is travelling
-                #  quickly or the previous direction if the speed falls below 1 m/s
-                if abs(d.zVel) > 1:
-                    optAngle = angle(d.zVel)
-                    
-                if optAngle is not None:
-                    tVel = cVel * exp(1j * optAngle)
-                else:
-                    tVel = NOT_A_NUMBER                    
+                tVel = NOT_A_NUMBER                    
         else:
             tVel = NOT_A_NUMBER
         
@@ -546,14 +536,13 @@ def runAsScript():
     gpsDelay_ms = 0
     anemDelay_ms = round(1000 * float(PARAMS.get("ANEMDELAY", 1.5)))
     distFromAxle = float(PARAMS.get("DISTFROMAXLE", 1.5))
-    speedFactor = float(PARAMS.get('SPEEDFACTOR', 1.0))
-    maxTrueWindSpeed = float(PARAMS.get('MAXTRUEWINDSPEED', 20.0))
+    speedFactor = float(PARAMS.get('SPEEDFACTOR', 0.96))
 
     msOffsets = [gpsDelay_ms, anemDelay_ms]  # ms offsets for GPS and anemometer
     syncDataSource = syncSources([gpsSource, wsSource], msOffsets, 1000)
     statsAvg = int(PARAMS.get("STATSAVG", 10))
     for d in windStatistics(trueWindSource(derivCdataSource(syncCdataSource(syncDataSource)), 
-                                           distFromAxle, speedFactor, maxTrueWindSpeed), statsAvg):
+                                           distFromAxle, speedFactor), statsAvg):
         rCorr, iCorr = d.wCorr
         vCar = abs(d.zVel)
         WRITEOUTPUT(d.ts, [float(real(d.wMean)), float(imag(d.wMean)),    # Mean wind N and E
@@ -561,8 +550,7 @@ def runAsScript():
                            float(real(d.zVel)), float(imag(d.zVel)),      # Car velocity N and E
                            float(real(d.tVel)), float(imag(d.tVel)),      # Instantaneous wind N and E
                            (180 / pi) * arctan2(iCorr, rCorr),            # Angle of anemometer from true
-                           vCar,                                          # Speed of car
-                           d.status
+                           vCar                                          # Speed of car
         ])
         
 
