@@ -77,7 +77,7 @@ from Analysis import *
 
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
-APPVERSION = "3.0.7"
+APPVERSION = "3.0.8"
 
 Program_Path = os.getcwd()
 # cursors
@@ -288,9 +288,15 @@ class DataGroup ( HasTraits ):
     name = Str( '<unknown>' )
     variables = List( Variable )
     fileName = Str('<unknown>')
+    def findVariable(self, varName):
+        for i, v in enumerate(self.variables):
+            if v.name == varName:
+                return i
+        else:
+            return None
     
 class H5File ( HasTraits ):
-    name        = Str( '<unknown>' )
+    name = Str( '<unknown>' )
     groups = List( DataGroup ) 
     def getGroup(self, name):
         for g in self.groups:
@@ -324,6 +330,7 @@ class TreeEdit(HasTraits):
     move2Left = Button(label="<<")
     move2Right = Button(label=">>")
     moveAll2Right = Button(label="All >>")
+    selectNextN = Int(0)
     defineDateRange = Button
     largeDataset = Bool(False)
     selectedVar = Str
@@ -364,6 +371,9 @@ class TreeEdit(HasTraits):
                        Item('h5Left', editor = tree_editor, resizable = True),
                        VGroup(Item('move2Right', show_label=False, width=30), 
                               Item('move2Left', show_label=False, width=30),
+                              Item(label='Select Next:'),
+                              Item('selectNextN', show_label=False, width=30,
+                                    editor=RangeEditor(low=0, high=1000, is_float=False, format='%d', mode='spinner')),
                               Item('moveAll2Right', show_label=False, width=30)),
                        Item('h5Right', editor = tree_editor, resizable = True),
                        show_labels = False)),
@@ -424,7 +434,7 @@ class TreeEdit(HasTraits):
             for v in timeVariables:
                 self.selectedGroup = selectedGroup
                 self.selectedVar = v
-                self._moveVariables(self.h5Left, self.h5Right)
+                self._moveVariables(self.h5Left, self.h5Right, rangeSelect=False)
         
     def _move2Left_fired(self):
         self._moveVariables(self.h5Right, self.h5Left)    
@@ -435,17 +445,20 @@ class TreeEdit(HasTraits):
         self.selectedVar = ""
         self._moveVariables(self.h5Left, self.h5Right)    
             
-    def _moveVariables(self, source, dest):
+    def _moveVariables(self, source, dest, rangeSelect=True):
         if self.selectedFile == dest.name:
             return
         if len(self.selectedVar) > 0:   # a variable is selected
             g = source.getGroup(self.selectedGroup)
-            g.variables = [v for v in g.variables if v.name != self.selectedVar]
+            select_start = g.findVariable(self.selectedVar)
+            select_end = select_start + self.selectNextN + 1 if rangeSelect else select_start + 1
+            select_vars = g.variables[select_start: select_end]
+            g.variables = g.variables[:select_start] + g.variables[select_end:]
             gr = dest.getGroup(self.selectedGroup)
+            varList = [Variable(name=v.name, group=self.selectedGroup, fileName=dest.name) for v in select_vars]
             if gr is not None:
-                gr.variables.append(Variable(name=self.selectedVar, group=self.selectedGroup, fileName=dest.name))
+                gr.variables.extend(varList)
             else:
-                varList = [Variable(name=self.selectedVar, group=self.selectedGroup, fileName=dest.name)]
                 dest.groups.append(DataGroup(name=self.selectedGroup, variables=varList, fileName=dest.name))
         elif len(self.selectedGroup) > 0:   # a group is selected
             gl = source.getGroup(self.selectedGroup) 
