@@ -1163,13 +1163,13 @@ class FigureInteraction(object):
             x0 = datenumToUnixTime(x0)
             x1 = datenumToUnixTime(x1)
             heading = [('time', float64), (ylabel, type(ydata[0]))]
-            format = "%-40d,%-40s\n"
+            format = "%-40s,%-40s\n"
         elif self.fig.displayMode == 'Minute':
             heading = [('Minute', float32), (ylabel, type(ydata[0]))]
-            format = "%-40d,%-40s\n"
+            format = "%-40s,%-40s\n"
         elif self.fig.displayMode == 'Hour':
             heading = [('Hour', float32), (ylabel, type(ydata[0]))]
-            format = "%-40d,%-40s\n"
+            format = "%-40s,%-40s\n"
         elif self.fig.displayMode == "XY":
             heading = [(xlabel, type(xdata[0])), (ylabel, type(ydata[0]))]
             format = "%-40s,%-40s\n"
