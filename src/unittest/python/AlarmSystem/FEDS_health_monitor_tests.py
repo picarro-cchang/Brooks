@@ -149,6 +149,7 @@ class TestHealthMonitor(unittest.TestCase):
     def test_GPS_disconnected(self):
         self.tester.alarmParamsDict["ALARM_GPSDisconnected"]["above"] = -1
         status = self._get_peripheral_status(0, {"species": 25, "ValveMask": 0, "GPS_FIT": 1})
+        self.assertTrue((status & self._get_alarm_mask("GPSDisconnected")) == 0)
         analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 25, "ValveMask": 0, "GPS_FIT": 1})
         self.assertTrue((peripheralStatus & self._get_alarm_mask("GPSDisconnected")) > 0)
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)
@@ -213,6 +214,7 @@ class TestHealthMonitor(unittest.TestCase):
     def test_anemometer_disconnected(self):
         self.tester.alarmParamsDict["ALARM_WindSensorDisconnected"]["above"] = -1
         status = self._get_peripheral_status(0, {"species": 25, "ValveMask": 0, "WS_STATUS": 0})
+        self.assertTrue((status & self._get_alarm_mask("WindSensorDisconnected")) == 0)
         analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 25, "ValveMask": 0, "WS_STATUS": 0})
         self.assertTrue((peripheralStatus & self._get_alarm_mask("WindSensorDisconnected")) > 0)
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) > 0)

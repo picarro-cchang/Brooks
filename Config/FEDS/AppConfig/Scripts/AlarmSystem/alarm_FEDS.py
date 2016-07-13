@@ -195,13 +195,15 @@ class AlarmOfInvalidData(BasicAlarm):
 class AlarmOfPeripheralStatus(BasicAlarm):
     def __init__(self, *a):
         BasicAlarm.__init__(self, *a)
-        self.lastUpdated = time.time()
+        self.lastUpdated = 0
         self.keyword = self.params["keyword"]
         
     def processBeforeCheckValue(self, value, *a):
-        current_time = time.time()
-        interval = current_time - self.lastUpdated
+        interval = -10
         if self.keyword in value:
+            current_time = time.time()
+            if self.lastUpdated > 0:
+                interval = current_time - self.lastUpdated
             self.lastUpdated = current_time
         return interval
         
