@@ -14,9 +14,6 @@ def parseGillAnemometer(rawStr):
     rawStr = rawStr.strip()
 
     if len(rawStr) != GILL_MSG_LEN:
-        import time
-        with open(r"C:\Picarro\G2000\Log\anemometer.txt", "a") as f:
-            f.write(time.time() + ": " + rawStr + "\n")
         status |= PeripheralStatus.MALFORMED_DATA_STRING
         return [0.0, 0.0, status]
 
