@@ -11,8 +11,6 @@
 # 12-12-06 Al   Added INST_ERROR_MEAS_SYS_RPC_FAILED
 # 12-12-20 Al   Added Cal manager and data manager errors
 
-import sys
-if "../Common" not in sys.path: sys.path.append("../Common")
 from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_CAL_MANAGER
 
 class ErrorInfo(object):

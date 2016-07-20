@@ -368,8 +368,12 @@ elif sys.platform == "linux2":
             Log("Parameter error while launching application", dict(appName=appName), 2)
             raise
         # Set the affinity
-        pAffinity = ctypes.c_int32()
-        sAffinity = ctypes.c_int32()
+        if sys.platform == 'win32':
+            pAffinity = ctypes.c_int32()
+            sAffinity = ctypes.c_int32()
+        else:
+            pAffinity = ctypes.c_int64()
+            sAffinity = ctypes.c_int64()
         if sched_getaffinity(process.pid,ctypes.sizeof(sAffinity),ctypes.byref(sAffinity)) == 0:
             mask = sAffinity.value & eval(affinity)
             if mask == 0: mask = sAffinity.value

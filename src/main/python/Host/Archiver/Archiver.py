@@ -17,6 +17,7 @@ File History:
     09-07-03 alex  Provide an option to construct the storage paths using local time (generally GMT is used)
     10-06-14 sze   Allow a timestamp to be specified when calling archiveData
     10-06-15 sze   New RPC function "DoesFileExist"
+    14-07-29 sze   Added conditionals for linux/windows
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -38,15 +39,16 @@ import Queue
 import zipfile
 from inspect import isclass
 from cStringIO import StringIO
-from win32file import CreateFile, WriteFile, CloseHandle, SetFilePointer, DeleteFile
-from win32file import FILE_BEGIN, FILE_END, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,\
-                      INVALID_HANDLE_VALUE
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 from Host.Common.timestamp import timestampToUtcDatetime, unixTime
 from Host.Common.S3Uploader import S3Uploader
+if sys.platform == 'win32':
+    from win32file import CreateFile, WriteFile, CloseHandle, SetFilePointer, DeleteFile
+    from win32file import FILE_BEGIN, FILE_END, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,\
+                          INVALID_HANDLE_VALUE
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
@@ -181,12 +183,19 @@ class LiveArchive(object):
 
     # Live updating for data logs
     def startUpdate(self):
-        self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
+        if sys.platform == 'win32':
+            self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
                                      FILE_SHARE_READ,None,CREATE_ALWAYS,
                                      FILE_ATTRIBUTE_NORMAL,0)
-        if self.destHandle == INVALID_HANDLE_VALUE:
-            Log('Cannot open live archive file %s' % self.destPathName, Level=2)
-            return False
+            if self.destHandle == INVALID_HANDLE_VALUE:
+                Log('Cannot open live archive file %s' % self.destPathName, Level=2)
+                return False
+        else:
+            self.destFp = file(self.destPathName,"w")
+            if not self.destFp:
+                Log('Cannot open live archive file %s' % self.destPathName, Level=2)
+                return False
+
         self.updating = True
         self.srcFp = open(self.srcPathName,'rb')
         if not self.srcFp:
@@ -206,12 +215,18 @@ class LiveArchive(object):
                 continue
             nBytes = len(data)
             self.archiveGroup.makeSpace(nBytes,0)
-            WriteFile(self.destHandle,data)
+            if sys.platform == 'win32':
+                WriteFile(self.destHandle,data)
+            else:
+                self.destFp.write(data)
             self.bytesCopied += nBytes
 
     def stopUpdate(self):
         self.updating = False
-        CloseHandle(self.destHandle)
+        if sys.platform == 'win32':
+            CloseHandle(self.destHandle)
+        else:
+            self.destFp.close()
         if self.srcFp:
             self.srcFp.close()
         self.updateThread.join(15.0)
@@ -220,12 +235,18 @@ class LiveArchive(object):
 
     # Live copying for coordinator output files
     def startCopy(self):
-        self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
+        if sys.platform == 'win32':
+            self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
                                      FILE_SHARE_READ,None,CREATE_ALWAYS,
                                      FILE_ATTRIBUTE_NORMAL,0)
-        if self.destHandle == INVALID_HANDLE_VALUE:
-            Log('Cannot open live archive file %s' % self.destPathName, Level=2)
-            return False
+            if self.destHandle == INVALID_HANDLE_VALUE:
+                Log('Cannot open live archive file %s' % self.destPathName, Level=2)
+                return False
+        else:
+            self.destFp = file(self.destPathName,"w")
+            if not self.destFp:
+                Log('Cannot open live archive file %s' % self.destPathName, Level=2)
+                return False
         self.updating = True
         self.oldNBytes = 0
         self.srcFp = open(self.srcPathName,'rb')
@@ -246,7 +267,10 @@ class LiveArchive(object):
         if deltaNBytes > 0:
             self.archiveGroup.makeSpace(deltaNBytes,0)
             SetFilePointer(self.destHandle, 0, FILE_BEGIN)
-            WriteFile(self.destHandle,data)
+            if sys.platform == 'win32':
+                WriteFile(self.destHandle,data)
+            else:
+                self.destFp.write(data)
             self.oldNBytes = nBytes
 
     def copier(self):
@@ -255,7 +279,10 @@ class LiveArchive(object):
             time.sleep(10.0)
         # Make the last copy before exiting
         self.makeCopy()
-        CloseHandle(self.destHandle)
+        if sys.platform == 'win32':
+            CloseHandle(self.destHandle)
+        else:
+            self.destFp.close()
         if self.srcFp:
             self.srcFp.close()
             deleteFile(self.srcPathName)
