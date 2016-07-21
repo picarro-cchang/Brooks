@@ -22,7 +22,7 @@ from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import timestamp
-from Host.Common.hostDasInterface import Operation, OperationGroup
+from Host.Common.SharedTypes import Operation, OperationGroup
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable

@@ -31,7 +31,7 @@ def loadUsbIfCode():
         logging.info("No blank Cypress FX2 detected, assuming already programmed.")
         return
     logging.info("Downloading USB code to Cypress FX2")
-    analyzerUsb.loadHexFile(file(usbFile,"r"))
+    analyzerUsb.loadHexFile(usbFile)
     analyzerUsb.disconnect()
     # Wait for renumeration
     while True:
@@ -48,3 +48,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     loadUsbIfCode()
     unittest.main()
+

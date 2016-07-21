@@ -6,6 +6,7 @@ from Host.Common.analyzerUsbIf import AnalyzerUsb
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
 from time import sleep, time
 from random import randrange
+from Host.Common.FpgaProgrammer import FpgaProgrammer
 
 usbFile  = "../../Firmware/CypressUSB/analyzer/analyzerUsb.hex"
 fpgaFile = "../../Firmware/MyHDL/Spartan3/top_io_map.bit"
@@ -36,7 +37,7 @@ def loadUsbIfCode():
     try: # connecting to a blank FX2 chip
         analyzerUsb.connect()
         logging.info("Downloading USB code to Cypress FX2")
-        analyzerUsb.loadHexFile(file(usbFile,"r"))
+        analyzerUsb.loadHexFile(usbFile)
         analyzerUsb.disconnect()
     except: # Assume code has already been loaded
         logging.info("Cypress FX2 is not blank")
@@ -48,39 +49,6 @@ def loadUsbIfCode():
             break
         except:
             sleep(1.0)
-
-def programFPGA():
-    analyzerUsb.resetHpidInFifo()
-    logging.info("Holding DSP in reset...")
-    analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
-    logging.info("Starting to program FPGA...")
-    logging.info(
-        "USB high-speed mode: %d" % (analyzerUsb.getUsbSpeed(),))
-    analyzerUsb.startFpgaProgram()
-    logging.info("Fpga status: %d" % analyzerUsb.getFpgaStatus())
-    while 0 == (1 & analyzerUsb.getFpgaStatus()):
-        pass
-    fp = file(fpgaFile,"rb")
-    s = fp.read(128)
-    f = s.find("\xff\xff\xff\xff\xaa\x99\x55\x66")
-    if f<0:
-        raise ValueError("Invalid FPGA bit file")
-    s = s[f:]
-    tStart = time()
-    lTot = 0
-    while len(s)>0:
-        lTot += len(s)
-        analyzerUsb.sendToFpga(s)
-        s = fp.read(64)
-    stat = analyzerUsb.getFpgaStatus()
-    if 0 != (2 & analyzerUsb.getFpgaStatus()):
-        logging.info("FPGA programming done")
-        logging.info("Bytes sent: %d" % lTot)
-    elif 0 == (1 & analyzerUsb.getFpgaStatus()):
-        logging.error(
-            "CRC error during FPGA load, bytes sent: %d" % (lTot,))
-    logging.info("Time to load: %.1fs" % (time() - tStart,))
-    sleep(0.2)
 
 def initEmif():
     EMIF_GCTL      = 0x01800000
@@ -232,7 +200,8 @@ def upload():
     logging.info("Holding DSP in reset...")
     analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
     logging.info("Starting to program FPGA...")
-    programFPGA()
+    fpgaProgrammer = FpgaProgrammer(analyzerUsb, logging.info)
+    fpgaProgrammer.program(self.fpgaFile)
     analyzerUsb.setDspControl(0)
     sleep(0.5)
     logging.info("Removed DSP reset, downloading code...")

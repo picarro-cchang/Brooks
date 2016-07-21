@@ -38,7 +38,7 @@ def loadUsbIfCode():
     try: # connecting to a blank FX2 chip
         analyzerUsb.connect()
         logging.info("Downloading USB code to Cypress FX2")
-        analyzerUsb.loadHexFile(file(usbFile,"r"))
+        analyzerUsb.loadHexFile(usbFile)
         analyzerUsb.disconnect()
     except: # Assume code has already been loaded
         logging.info("Cypress FX2 is not blank")

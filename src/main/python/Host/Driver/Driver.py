@@ -31,14 +31,17 @@ from Host.Driver.DriverAnalogInterface import AnalogInterface
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_RESTART_SUPERVISOR, ctypesToDict
+from Host.Common.AuxAccessor import AuxAccessor
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
-from Host.Common.hostDasInterface import DasInterface, HostToDspSender, StateDatabase
+from Host.Common.hostDasInterface import DasInterface
+from Host.Common.StateDatabase import StateDatabase
+from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.hostDasInterface import Operation
+from Host.Common.SharedTypes import Operation
 from Host.Common.InstErrors import INST_ERROR_OKAY
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 from Host.Common import SchemeProcessor
@@ -237,7 +240,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
         versionDict["interface"] = interface.interface_version
         import pprint
         Log("version = %s" % pprint.pformat(version))
-        versionDict["host release"] = version.versionString()
+        try:
+            versionDict["host release"] = version.versionString()
+        except:
+            versionDict["host release"] = "Experimental"
         if repoBzrVer:
             versionDict["host version id"] = repoBzrVer['revision_id']
             versionDict["host version no"] = repoBzrVer['revno']
@@ -311,9 +317,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def rdRegList(self,regList):
         result = []
         for regLoc,reg in regList:
-            if regLoc == "dsp": result.append(self.rdDasReg(reg))
-            elif regLoc == "fpga": result.append(self.rdFPGA(0,reg))
-            else: result.append(None)
+            if regLoc == "dsp":
+                result.append(self.rdDasReg(reg))
+            elif regLoc == "fpga":
+                result.append(self.rdFPGA(0, reg))
+            else:
+                result.append(None)
         return result
 
     def wrFPGA(self,base,reg,value,convert=True):
@@ -343,8 +352,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def wrRegList(self,regList,values):
         for (regLoc,reg),value in zip(regList,values):
-            if regLoc == "dsp": self.wrDasReg(reg,value)
-            elif regLoc == "fpga": self.wrFPGA(0,reg,value)
+            if regLoc == "dsp":
+                self.wrDasReg(reg, value)
+            elif regLoc == "fpga":
+                self.wrFPGA(0, reg, value)
 
     def wrDasReg(self,regIndexOrName,value,convert=True):
         """Writes to a DAS register, using either its index or symbolic name. If convert is True,
@@ -511,51 +522,35 @@ class DriverRpcHandler(SharedTypes.Singleton):
         sender = self.dasInterface.hostToDspSender
         sender.doOperation(Operation("ACTION_RDD_CNTRL_DO_COMMAND",[int(command) & 0xFF]))
 
-    #def wrAuxiliary(self,data):
-    #    """Writes the "data" string to the auxiliary board"""
-    #    self.dasInterface.hostToDspSender.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
-
-    #def getDacQueueFreeSlots(self):
-    #    return self.dasInterface.hostToDspSender.getDacQueueFreeSlots()
-
-    #def getDacQueueErrors(self):
-    #    return self.dasInterface.hostToDspSender.getDacQueueErrors()
-
-    #def setDacQueuePeriod(self,channel,period):
-    #    return self.dasInterface.hostToDspSender.setDacQueuePeriod(channel,period)
-
-    #def resetDacQueues(self):
-    #    return self.dasInterface.hostToDspSender.resetDacQueues()
-
-    #def serveDacQueues(self):
-    #    return self.dasInterface.hostToDspSender.serveDacQueues()
-
     def rdDspTimerRegisters(self):
         return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
 
     def resetDacQueue(self):
-        return self.dasInterface.hostToDspSender.resetDacQueue()
+        return self.driver.auxAccessor.resetDacQueue()
 
     def setDacTimestamp(self,timestamp):
-        return self.dasInterface.hostToDspSender.setDacTimestamp(timestamp)
+        return self.driver.auxAccessor.setDacTimestamp(timestamp)
 
     def setDacReloadCount(self,reloadCount):
-        return self.dasInterface.hostToDspSender.setDacReloadCount(reloadCount)
+        return self.driver.auxAccessor.setDacReloadCount(reloadCount)
 
     def getDacTimestamp(self):
-        return self.dasInterface.hostToDspSender.getDacTimestamp()
+        return self.driver.auxAccessor.getDacTimestamp()
 
     def getDacReloadCount(self):
-        return self.dasInterface.hostToDspSender.getDacReloadCount()
+        return self.driver.auxAccessor.getDacReloadCount()
 
     def getDacQueueFree(self):
-        return self.dasInterface.hostToDspSender.getDacQueueFree()
+        return self.driver.auxAccessor.getDacQueueFree()
 
     def getDacQueueErrors(self):
-        return self.dasInterface.hostToDspSender.getDacQueueErrors()
+        return self.driver.auxAccessor.getDacQueueErrors()
 
     def enqueueDacSamples(self,data):
-        return self.dasInterface.hostToDspSender.enqueueDacSamples(ctypes.create_string_buffer(data,len(data)))
+        return self.driver.auxAccessor.enqueueDacSamples(ctypes.create_string_buffer(data, len(data)))
+
+    def wrAuxiliary(self,data):
+        return self.driver.auxAccessor.wrAuxiliary(ctypes.create_string_buffer(data,len(data)))
 
     #def disableLaserCurrent(self,laserNum):
     #    # Turn off laser current for laserNum (0-index)
@@ -1088,7 +1083,7 @@ class StreamSaver(SharedTypes.Singleton):
 
 
 class Driver(SharedTypes.Singleton):
-    def __init__(self,sim,configFile):
+    def __init__(self, configFile):
         self.looping = True
         self.config = CustomConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
@@ -1105,9 +1100,9 @@ class Driver(SharedTypes.Singleton):
         self.usbFile  = os.path.join(basePath, self.config["Files"]["usbFileName"])
         self.dspFile  = os.path.join(basePath, self.config["Files"]["dspFileName"])
         self.fpgaFile = os.path.join(basePath, self.config["Files"]["fpgaFileName"])
-        self.dasInterface = DasInterface(self.stateDbFile,self.usbFile,
-                                         self.dspFile,self.fpgaFile,sim)
+        self.dasInterface = DasInterface(self.stateDbFile, self.usbFile, self.dspFile, self.fpgaFile)
         self.analogInterface = AnalogInterface(self,self.config)
+        self.auxAccessor = None
         self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
         self.restartSurveyor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
         self.safeModeCount = 0
@@ -1152,7 +1147,8 @@ class Driver(SharedTypes.Singleton):
             port=SharedTypes.BROADCAST_PORT_RDRESULTS,
             name="CRDI RD Results Broadcaster",logFunc=Log)
         self.lastSaveDasState = 0
-        if self.autoStreamFile: self.streamSaver.openStreamFile()
+        if self.autoStreamFile:
+            self.streamSaver.openStreamFile()
 
     def nudgeDasTimestamp(self):
         """Makes incremental change in DAS timestamp to bring it closer to the host timestamp,
@@ -1253,7 +1249,7 @@ class Driver(SharedTypes.Singleton):
                     time.sleep(0.5)
                     self.dasInterface.pingWatchdog()
                     Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                    self.dasInterface.upload()
+                self.dasInterface.programAll()
                     time.sleep(1.0) # For DSP code to initialize
                     self.dasInterface.pingWatchdog()
                     # Restore state from INI file
@@ -1278,6 +1274,7 @@ class Driver(SharedTypes.Singleton):
                 Log("Cannot connect to instrument - please check hardware",Verbose=traceback.format_exc(),Level=3)
                 raise RuntimeError("Cannot connect to instrument - please check hardware")
             # Initialize the analog interface
+            self.auxAccessor = AuxAccessor(self.dasInterface.analyzerUsb)
             analogInterfacePresent = 0 != (self.dasInterface.hostToDspSender.rdRegUint("HARDWARE_PRESENT_REGISTER") & (1 << interface.HARDWARE_PRESENT_AnalogInterface))
             print "Analog interface present: %s" % analogInterfacePresent
             if analogInterfacePresent:
@@ -1444,11 +1441,10 @@ class InstrumentConfig(SharedTypes.Singleton):
             fp.close
         return filename
 
-HELP_STRING = """Driver.py [-s|--simulation] [-c<FILENAME>] [-h|--help]
+HELP_STRING = """Driver.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following:
 -h, --help           print this help
--s, --simulation     run in simulation mode
 -c                   specify a config file:  default = "./Driver.ini"
 """
 
@@ -1456,8 +1452,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hsc:'
-    longOpts = ["help", "simulation"]
+    shortOpts = 'hc:'
+    longOpts = ["help"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -1471,24 +1467,21 @@ def handleCommandSwitches():
         options.setdefault('-h',"")
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/Driver.ini"
-    simulation = False
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
     if "-c" in options:
         configFile = options["-c"]
-    if "-s" in options or "--simulation" in options:
-        simulation = True
-    return (simulation, configFile)
+    return configFile
 
 if __name__ == "__main__":
     driverApp = SingleInstance("PicarroDriver")
     if driverApp.alreadyrunning():
         Log("Instance of driver us already running",Level=3)
     else:
-        sim, configFile = handleCommandSwitches()
-        Log("%s started." % APP_NAME, dict(Sim = sim, ConfigFile = configFile), Level = 0)
-        d = Driver(sim,configFile)
+        configFile = handleCommandSwitches()
+        Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
+        d = Driver(configFile)
         d.run()
     Log("Exiting program")
     time.sleep(1)

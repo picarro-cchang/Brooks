@@ -6,6 +6,7 @@ from Host.Common.analyzerUsbIf import AnalyzerUsb
 from ctypes import c_byte, c_uint, c_int, c_ushort, c_short, sizeof
 from time import sleep, time
 from random import randrange
+from Host.Common.FpgaProgrammer import FpgaProgrammer
 
 usbFile  = "../../Firmware/CypressUSB/analyzer/analyzerUsb.hex"
 fpgaFile = "../../Firmware/MyHDL/Spartan3/top_io_map.bit"
@@ -36,7 +37,7 @@ def loadUsbIfCode():
     try: # connecting to a blank FX2 chip
         analyzerUsb.connect()
         logging.info("Downloading USB code to Cypress FX2")
-        analyzerUsb.loadHexFile(file(usbFile,"r"))
+        analyzerUsb.loadHexFile(usbFile)
         analyzerUsb.disconnect()
     except: # Assume code has already been loaded
         logging.info("Cypress FX2 is not blank")
@@ -261,7 +262,8 @@ def upload():
     logging.info("Holding DSP in reset...")
     analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
     logging.info("Starting to program FPGA...")
-    programFPGA()
+    fpgaProgrammer = FpgaProgrammer(analyzerUsb, logging.info)
+    fpgaProgrammer.program(fpgaFile)    
     analyzerUsb.setDspControl(0)
     sleep(0.5)
     logging.info("Removed DSP reset, downloading code...")

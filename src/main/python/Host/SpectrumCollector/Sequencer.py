@@ -49,7 +49,15 @@ RDFreqConv = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CO
 
 class Sequencer(object):
 
-    "Supervises running of a sequence of schemes, using a block of four scheme table entries"
+    """Supervises running of a sequence of schemes, using a block of four scheme table entries. The sequences
+    are stored in self.sequences, keyed either by a numeric code (for sequences from the Master.ini file) or by
+    the name of the mode (for sequences in non-integration mode).
+
+    Each sequence is stored in self.sequences as a tuple (scheme, repetitions, freq_based). "scheme" is an 
+    instance of the Scheme class defined in Host.Common.SchemeProcessor, "repetitions" is the number of repetitions
+    of the scheme required and "freq_based" is True for a scheme containing ringdown frequencies and False for a
+    scheme consisting of wavelength monitor angles.
+    """
     IDLE = 0
     STARTUP = 1
     SEND_SCHEME = 2
@@ -57,7 +65,7 @@ class Sequencer(object):
 
     def __init__(self):
         self.state = Sequencer.IDLE
-        self.sequence = '1'
+        self.sequence = '1'  # Sequence to run (key in self.sequences)
         self.scheme = 1
         self.repeat = 1
         self.group = 1
@@ -91,6 +99,7 @@ class Sequencer(object):
             del self.sequences[key]
 
     def getSequences(self, configFile):
+        # Read sequences from configFile (typically Master.ini) into self.sequences
         basePath = os.path.split(configFile)[0]
         config = CustomConfigObj(configFile)
         self.removeNumericSequences()
@@ -150,6 +159,8 @@ class Sequencer(object):
             return self.inDas.get(active, None)
 
     def runFsm(self):
+        # This implements a state machine running in an infinite loop that supervises loading of schemes
+        #  by the driver
         scs = RDFreqConv.getShortCircuitSchemeStatus()
         baseSequenceName = self.sequence
         while True:
@@ -161,7 +172,8 @@ class Sequencer(object):
                     Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
                     self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
                     seqList = self.sequences[self.sequence]
-                    # seqList is a list of schemes
+                    # seqList is a list of tuples [(scheme,repetitions,freq_based),...] that define the
+                    #  sequence
                     if not seqList:
                         self.state = Sequencer.IDLE
                     elif isinstance(seqList[0], tuple):
@@ -198,29 +210,37 @@ class Sequencer(object):
                         self.loadSequencePending = False
                         self.loadSequenceLock.release()
 
+                    # Set "useIndex" to the next available index in the group of four
                     self.useIndex = (self.activeIndex + 1) % 4
                     schemes = self.sequences[self.sequence]
                     scheme, rep, freqBased = schemes[self.scheme - 1]
                     Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d, Table = %d"
                         % (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat, self.useIndex))
                     self.inDas[self.useIndex] = (self.sequence, self.scheme, self.repeat, scheme.fileName)
+                    # Increment repeat and scheme number as needed
                     self.repeat += 1
                     if self.repeat > rep:
                         self.repeat = 1
                         self.scheme += 1
                         if self.scheme > len(schemes):
                             self.scheme = 1
+                    # Frequency-based schemes need to be compiled, whereas angle-based schemes are sent directly
+                    #  to the DAS
                     if freqBased:
                         RDFreqConv.wrFreqScheme(self.useIndex, scheme)
                         RDFreqConv.convertScheme(self.useIndex)
                         RDFreqConv.uploadSchemeToDAS(self.useIndex)
                     else:
                         Driver.wrScheme(self.useIndex, *(scheme.repack()))
+                    # Specify the just-loaded scheme to be the next one to execute
                     Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER, self.useIndex)
                     if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
                         Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
                     self.state = Sequencer.WAIT_UNTIL_ACTIVE
                 elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
+                    # Loop around until the active scheme index is equal to the one we are expecting (in self.useIndex).
+                    #  When this is the case, we can send the next scheme or stop, if the SPECT_CNTRL_STATE_REGISTER
+                    #  is in the idle state
                     self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
                     next = Driver.rdDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
                     if next != self.useIndex:

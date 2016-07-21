@@ -48,7 +48,7 @@ class FX2Interface(Singleton):
                 except:
                     raise "Cannot connect to USB"
         logging.info("Downloading USB code to Picarro USB device")
-        analyzerUsb.loadHexFile(file(usbCodeFilename,"r"))
+        analyzerUsb.loadHexFile(usbCodeFilename)
         analyzerUsb.disconnect()
         # Wait for renumeration
         while True:
