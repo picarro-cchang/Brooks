@@ -283,10 +283,10 @@ def dictToCtypes(dictionary, cobject):
                     getattr(cobject, key)[i] = subTree
                 else:
                     dictToCtypes(subTree, getattr(cobject, key)[i])
-                else:
+        else:
             if hasattr(cobject, key):
                 setattr(cobject, key, dictionary[key])
-        else:
+            else:
                 raise ValueError, "Unknown structure field name %s" % key
 
 def lookup(symbol):
@@ -342,7 +342,7 @@ class OperationGroup(object):
         self.period = period
         if operationList == None:
             self.operationList = []
-            else:
+        else:
             self.operationList = operationList
 
     def addOperation(self, operation):

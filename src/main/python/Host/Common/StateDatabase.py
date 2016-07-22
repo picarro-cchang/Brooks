@@ -328,6 +328,7 @@ class StateDatabase(Singleton):
 
     def txQueueHandler(self):
         """Creates the connection to the database and services the queue of requests"""
+        
         self.con = sqlite3.connect(self.fileName)
         try:
             tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]

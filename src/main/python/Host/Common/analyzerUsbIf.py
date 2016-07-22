@@ -290,3 +290,10 @@ class AnalyzerUsb(Singleton):
                 raise ValueError("Invalid response in setDspControl")
         self.claimInterfaceWrapper(_setDspControl)
 
+
+    def pingWatchdog(self):
+        """Use vendor command to ping watchdog"""
+        def _pingWatchdog():
+            result = c_ubyte(0)
+            self.controlInTransaction(result,usbdefs.VENDOR_PING_WATCHDOG)
+        self.claimInterfaceWrapper(_pingWatchdog)

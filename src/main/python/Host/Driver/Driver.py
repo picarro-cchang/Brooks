@@ -32,7 +32,7 @@ from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common import CmdFIFO, StringPickler, timestamp
 from Host.Common.AuxAccessor import AuxAccessor
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, ctypesToDict
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_RESTART_SUPERVISOR, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface
 from Host.Common.StateDatabase import StateDatabase
@@ -1249,7 +1249,7 @@ class Driver(SharedTypes.Singleton):
                     time.sleep(0.5)
                     self.dasInterface.pingWatchdog()
                     Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                self.dasInterface.programAll()
+                    self.dasInterface.programAll()
                     time.sleep(1.0) # For DSP code to initialize
                     self.dasInterface.pingWatchdog()
                     # Restore state from INI file

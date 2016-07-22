@@ -272,3 +272,5 @@ class DasInterface(Singleton):
             except AttributeError:
                 print "Register %s in database is unrecognized" % name
 
+    def pingWatchdog(self):
+        self.analyzerUsb.pingWatchdog()
