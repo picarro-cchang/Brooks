@@ -173,7 +173,7 @@ class makeHandler(object):
     def __init__(self,readerFunc,processFunc):
         """
         Args:
-            readerFunc: Function which is called to read some data and which returns None 
+            readerFunc: Function which is called to read some data and which returns None
                 if none is available
             processFunc: Function which returns the number of entries successfully processed. For
                 backwards compatibility, returning None is equivalent to returning 1.
@@ -183,10 +183,10 @@ class makeHandler(object):
 
     def process(self,timeLimit):
         """Process until timeLimit or the reader returns None.
-        
+
         Args:
             timeLimit: Maximum number of seconds to call readerFunc
-            
+
         Returns: HandlerTuple with attributes
             duration: Time spent in this function
             nprocessed: Number of entries processed
@@ -214,7 +214,7 @@ class makeHandler(object):
 schemeTableClassMemo = {}
 def getSchemeTableClass(numRows):
     """Return a scheme table array class of type SchemeTableType*numRows.
-    
+
     Args:
         numRows: Number of rows in the scheme
 
@@ -239,12 +239,12 @@ def getSchemeTableClass(numRows):
 ################################################################################
 
 def ctypesToDict(structure):
-    """Either return argument unchanged or create a dictionary from a ctypes structure 
+    """Either return argument unchanged or create a dictionary from a ctypes structure
     where the keys are the field names.
-    
+
     Args:
         structure: primitive type or ctypes Structure object
-    
+
     Returns: Dictionary with structure which mirrors the original structure, or the
         argument itself.
     """
@@ -267,11 +267,11 @@ def ctypesToDict(structure):
 
 def dictToCtypes(dictionary, cobject):
     """Fill the ctypes object cobject with the contents of the dictionary
-    
+
     Args:
         dictionary: Dictionary whose keys are used to populate cobject
         cobject: Object into which the contents of the dictionary are to be placed
-    
+
     Raises: Value error if cobject does not have a field that is a key in the dictionary
     """
     for key in dictionary:
@@ -283,15 +283,15 @@ def dictToCtypes(dictionary, cobject):
                     getattr(cobject, key)[i] = subTree
                 else:
                     dictToCtypes(subTree, getattr(cobject, key)[i])
-                else:
+        else:
             if hasattr(cobject, key):
                 setattr(cobject, key, dictionary[key])
-        else:
+            else:
                 raise ValueError, "Unknown structure field name %s" % key
 
 def lookup(symbol):
     """Look up a string or unicode symbol in the interface module, if needed
-    
+
     Args:
         sym: String or unicode symbol to look up in interface. Int, float or long are passed through
     """
@@ -302,13 +302,13 @@ def lookup(symbol):
 
 class Operation(object):  # pylint: disable=R0903
     """An operation which can be executed using a DSP action.
-    
+
     Args:
         opcode: The code for the action to be executed
         operandList: List of operands associated with the action
         env: Start address of environment in DSP environment area for storing persistent information
             associated with this action
-    """    
+    """
     def __init__(self, opcode, operandList=None, env=0):
         assert isinstance(opcode, (int, long, str, unicode))
         assert isinstance(operandList, types.NoneType) or hasattr(operandList, '__iter__')
@@ -323,12 +323,12 @@ class Operation(object):  # pylint: disable=R0903
 
 class OperationGroup(object):
     """An collection of actions with associated priority and period that can be run by the DSP.
-    
+
     Args:
         priority: Priority associared with this group
         period: Period associated with this group (multiples of 100ms)
         operationList: List of Operation instances comprising this group
-    """    
+    """
     def __init__(self, priority, period, operationList=None):
         assert isinstance(priority, (int, long))
         assert isinstance(period, (int, long))
@@ -342,12 +342,12 @@ class OperationGroup(object):
         self.period = period
         if operationList == None:
             self.operationList = []
-            else:
+        else:
             self.operationList = operationList
 
     def addOperation(self, operation):
         """Add an operation to the group.
-        
+
         Args:
             operation: Instance of an Operation to add to the group
         """
@@ -355,7 +355,7 @@ class OperationGroup(object):
 
     def numOperations(self):
         """Get number of operations in the group.
-        
+
         Returns: Number of operations in the group
         """
         return len(self.operationList)

@@ -8,6 +8,8 @@ RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
 RUN useradd picarro -m
 RUN echo 'picarro:picarro' |chpasswd
 
+COPY Picarro.pth /opt/conda/lib/python2.7/site-packages/Picarro.pth
+
 RUN pip install Pyro
 
 EXPOSE 22

@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo docker run -d -P -p 0.0.0.0:2222:22 -v /home/g2000/Github/hostDocker:/hostRepo -v /home/g2000/Picarro/host:/Picarro/G2000 --privileged -v /dev/bus/usb:/dev/bus/usb g2000

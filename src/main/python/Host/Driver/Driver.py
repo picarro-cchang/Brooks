@@ -851,10 +851,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             return self.fetchObject("LOGIC_EEPROM", startAddress=interface.EEPROM_BLOCK_SIZE)[0]
         except:
             return None
-            
+
     def shelveHardwareCapabilities(self, capabilityDict):
         self.shelveObject("LOGIC_EEPROM", capabilityDict, startAddress=interface.EEPROM_BLOCK_SIZE)
-            
+
     def verifyInstallerId(self):
         return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
 
@@ -1249,7 +1249,7 @@ class Driver(SharedTypes.Singleton):
                     time.sleep(0.5)
                     self.dasInterface.pingWatchdog()
                     Log("USB enumerated at %s speed" % (("full","high")[usbSpeed]))
-                self.dasInterface.programAll()
+                    self.dasInterface.programAll()
                     time.sleep(1.0) # For DSP code to initialize
                     self.dasInterface.pingWatchdog()
                     # Restore state from INI file
