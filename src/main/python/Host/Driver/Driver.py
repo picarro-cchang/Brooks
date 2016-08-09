@@ -851,10 +851,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
             return self.fetchObject("LOGIC_EEPROM", startAddress=interface.EEPROM_BLOCK_SIZE)[0]
         except:
             return None
-            
+
     def shelveHardwareCapabilities(self, capabilityDict):
         self.shelveObject("LOGIC_EEPROM", capabilityDict, startAddress=interface.EEPROM_BLOCK_SIZE)
-            
+
     def verifyInstallerId(self):
         return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
 
