@@ -273,4 +273,5 @@ class DasInterface(Singleton):
                 print "Register %s in database is unrecognized" % name
 
     def pingWatchdog(self):
+        return
         self.analyzerUsb.pingWatchdog()
