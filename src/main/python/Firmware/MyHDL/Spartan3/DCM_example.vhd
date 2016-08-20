@@ -7,11 +7,11 @@
 -- \   \   \/     Version : 10.1.03
 --  \   \         Application : xaw2vhdl
 --  /   /         Filename : DCM_example.vhd
--- /___/   /\     Timestamp : 11/19/2012 16:58:56
+-- /___/   /\     Timestamp : 08/19/2016 19:26:28
 -- \   \  /  \ 
 --  \___\/\___\ 
 --
---Command: xaw2vhdl-intstyle C:/Picarro/trunk/Firmware/MyHDL/Spartan3/DCM_example.xaw -st DCM_example.vhd
+--Command: xaw2vhdl-intstyle C:/GitHub/host/src/main/python/Firmware/MyHDL/Spartan3/DCM_example.xaw -st DCM_example.vhd
 --Design Name: DCM_example
 --Device: xc3s1000-5ft256
 --
