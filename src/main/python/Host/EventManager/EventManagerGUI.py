@@ -31,6 +31,7 @@ if sys.platform == 'win32':
     threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
 
 from os.path import dirname as os_dirname
+from os.path import abspath
 
 MIN_REFRESH_PERIOD_s = 0.2
 
@@ -39,7 +40,7 @@ def GetSelfPath():
     if hasattr(sys, "frozen"): #we're running compiled with py2exe
         return sys.executable
     else:
-        return sys.argv[0]
+        return abspath(sys.argv[0])
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """ListCtrl that auto-sizes the right-most column to fit the width.

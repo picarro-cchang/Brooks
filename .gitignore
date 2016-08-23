@@ -7,3 +7,8 @@ src/main/python/Host/Fitter/cluster_analyzer.pyd
 src/main/python/Host/Fitter/fitutils.pyd
 src/main/python/Host/Utilities/SuperBuildStation/fastLomb.pyd
 src/main/python/Host/build_version.py
+src/main/python/AppConfig/
+src/main/python/InstrConfig/
+src/main/python/CommonConfig/
+src/main/python/Log/
+

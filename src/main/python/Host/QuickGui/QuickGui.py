@@ -1073,9 +1073,9 @@ class InstStatusPanel(wx.Panel):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
 
-        self.warmBoxTempLabel = wx.StaticText(self, -1, u"Warm Box Temp (\N{DEGREE SIGN}C)".encode("cp1252"))
+        self.warmBoxTempLabel = wx.StaticText(self, -1, "Warm Box Temp (degC)")
         setItemFont(self.warmBoxTempLabel,font)
-        self.cavityTempLabel = wx.StaticText(self, -1, u"Cavity Temperature (\N{DEGREE SIGN}C)".encode("cp1252"))
+        self.cavityTempLabel = wx.StaticText(self, -1, "Cavity Temperature (degC)")
         setItemFont(self.cavityTempLabel,font)
         self.cavityPressureLabel = wx.StaticText(self, -1, "Cavity Pressure (Torr)")
         setItemFont(self.cavityPressureLabel,font)

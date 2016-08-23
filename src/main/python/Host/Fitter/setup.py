@@ -4,7 +4,7 @@ def configuration(parent_package='',top_path=None):
     config = Configuration('',parent_package,top_path)
 
     config.add_extension('cluster_analyzer',
-                         sources = ['cluster_analyzer.pyf','cluster_analyzer.c','cutest.c'])
+                         sources = ['cluster_analyzer.pyf','cluster_analyzer.c','CuTest.c'])
     return config
 if __name__ == "__main__":
     from numpy.distutils.core import setup
