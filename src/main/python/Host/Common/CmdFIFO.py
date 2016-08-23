@@ -20,25 +20,22 @@
 #   18-Aug-2008  sze  Initial version to work with Pyro, almost totally rewritten
 #                      from Russ' XML/RPC based code which was having occasional
 #                      socket timeout errors.
+#   28-Jun-2014  sze  Ported to use Pyro4
 #
-#  Copyright (c) 2008 Picarro, Inc. All rights reserved
+#  Copyright (c) 2008-2014 Picarro, Inc. All rights reserved
 #
-import Pyro.core
-import Pyro.errors
+import Pyro4
 import logging
 import os
 import pydoc
+from select import select
 import threading
 import traceback
+import re
 import sys
 import time
 import types
-#from Host.Common.decorator import decorator
-
-if sys.platform == 'win32':
-    TimeStamp = time.clock
-else:
-    TimeStamp = time.time
+#from decorator import decorator
 
 ##### set some constants (using chars to make easier to decipher and avoid lookups)
 CMD_TYPE_Default     = "D" #0 #Block until complete, then return to client
@@ -55,6 +52,9 @@ CMD_Types = [
     CMD_TYPE_ERROR
     ]
 
+uriRegex = re.compile("http://(.*):(\d+)")
+Pyro4.config.SERIALIZER = 'pickle'
+Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
 class RemoteException(RuntimeError):
     pass
 
@@ -64,7 +64,7 @@ class RemoteException(RuntimeError):
 #        return func(*a, **k)
 #    except:
 #        raise RemoteException(traceback.format_exc())
-
+    
 def rpc_wrap(func):
     def wrapper(*a,**k):
         try:
@@ -137,12 +137,31 @@ class ShutdownInProgress(CmdFIFOError):
 
 class KillInProgress(ShutdownInProgress):
     pass
+
+class DummyDaemon(object):
+    """Stub for compatibility with Pyro3"""
+    def __init__(self, pyroDaemon):
+        self.pyroDaemon = pyroDaemon
+        self.mustShutdown = False
+    def handleRequests(self, timeout=0.5, others=None, callback_func=None):
+        rs = set(self.pyroDaemon.sockets)
+        if others is None:
+            others = []
+        others = set(others)
+        rs.update(others)
+        rr, _, _ = select(rs, [], [], timeout)
+        rPyro = rs.intersection(rr)
+        if rPyro:
+            self.pyroDaemon.events(rPyro)
+        rOthers = others.intersection(rr)
+        if rOthers and (callback_func is not None):
+            callback_func(list(rOthers))
+
 class CmdFIFOServer(object):
     loggerInst = 0
-    class CallbackObject(Pyro.core.CallbackObjBase):
+    class CallbackObject(object):
         """This class is used to instntiate an object which is accessible via the Pyro protocol. It contains a dispatch method which allows callback functions previously registered using register_callback_fuction to be executed"""
         def __init__(self,server):
-            Pyro.core.CallbackObjBase.__init__(self)
             self.server = server
             # Dictionary of callback functions indexed by name
             self.funcs = {}
@@ -154,9 +173,8 @@ class CmdFIFOServer(object):
             except KeyError:
                 raise CmdFIFOError('Callback method "%s" is not supported' % method)
             return func(*a,**k)
-    class ServerObject(Pyro.core.ObjBase):
+    class ServerObject(object):
         def __init__(self,server):
-            Pyro.core.ObjBase.__init__(self)
             self.instance = None
             self.server = server
             self.allowDottedNames = False
@@ -316,7 +334,14 @@ class CmdFIFOServer(object):
                 return "OK"
 
             else: # funcMode == CMD_TYPE_Callback
-                uri,callbackName = callbackInfo
+                uri, callbackName = callbackInfo
+                m = uriRegex.match(uri)
+                if m:
+                    address = m.group(1)
+                    port = int(m.group(2))
+                else:
+                    raise ValueError("Invalid callback URI %s (should be http://address:port)" % uri)
+                    
                 # Set the name and time attributes while the function is executing
                 self.server.CurrentCmd_RxTime     = rxTime
                 self.server.CurrentCmd_ClientName = client
@@ -339,12 +364,12 @@ class CmdFIFOServer(object):
                             # Loop around in case the callback server has gone down
                             #  and come up again
                             try:
-                                callbackObject = Pyro.core.getProxyForURI(uri + "/callbackObject")
-                                callbackObject._setOneway("_dispatch")
+                                callbackObject = Pyro4.core.Proxy("PYRO:callbackObject@%s:%d" % (address, port))
+                                callbackObject._pyroOneway.add("_dispatch")
                                 callbackObject._dispatch(callbackName,(result,faultString),{})
                                 break
-                            except Pyro.errors.ConnectionClosedError:
-                                callbackObject._release()
+                            except Pyro4.errors.ConnectionClosedError:
+                                pass
                     finally:
                         self.eventLock.acquire()
                         self.queueLength -= 1
@@ -352,7 +377,6 @@ class CmdFIFOServer(object):
                         self.eventLock.release()
                         # Allow next function to run by setting its event
                         nextEvent.set()
-                        callbackObject._release()
                 DaemonicThread(target=__waitDispatchAndCallback).start()
                 return "CB"
     def __init__(self, addr, ServerName, requestHandler = None,
@@ -413,8 +437,8 @@ class CmdFIFOServer(object):
         self.serverDescription = ServerDescription
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
-        Pyro.core.initServer()
-        self.daemon = Pyro.core.Daemon(host=self.hostName,port=self.port,norange=True)
+        self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
+        self.daemon = DummyDaemon(self.pyroDaemon)
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
         # The serverObject and calbackObject are the targets of all the RPC calls. Their
@@ -422,35 +446,45 @@ class CmdFIFOServer(object):
         self.serverObject = CmdFIFOServer.ServerObject(self)
         self.callbackObject = CmdFIFOServer.CallbackObject(self)
         # Register these objects will well-known names
-        self.daemon.connect(self.serverObject,"serverObject")
-        self.daemon.connect(self.callbackObject,"callbackObject")
+        self.pyroDaemon.register(self.serverObject,"serverObject")
+        self.pyroDaemon.register(self.callbackObject,"callbackObject")
         # Register built-in functions for the server
         self._register_cmdfifo_functions()
+        
     def handle_requests(self,*a,**k):
+        # Delegate to DummyDaemon for compatibility with Pyro3
         self.daemon.handleRequests(*a,**k)
+        
     def Launch(self):
         """Starts the server service loop within a daemonic thread"""
-        self.thread = DaemonicThread(target = self.serve_forever,kwargs=dict(timeout=.1))
+        self.thread = DaemonicThread(target = self.serve_forever)
         self.thread.start()
 
-    def serve_forever(self,timeout=3):
+    def serve_forever(self,timeout=0.5):
         """Calls the service loop function. This may be broken using the shutdown method
         of the daemon"""
-        self.daemon.requestLoop(timeout=timeout)
+        self.running = True
+        while self.running:
+            self.handle_requests(timeout=timeout)
+        if self.pyroDaemon is not None:
+            self.pyroDaemon.close()
+            self.pyroDaemon = None
+            
     def Stop(self):
         """Stops the thread running the server main loop, and wait for it to terminate"""
         self.stop_server()
         if self.thread != None:
             self.thread.join()
             self.thread = None
+            
     def stop_server(self):
         """Stops the service loop of the daemon, and delete the daemon so that the server
         port is released for future connections"""
-        self.daemon.shutdown(True)
+        self.running = False
+        self.daemon.mustShutdown = True
         if self.logger:
             self.logger.info("CmdFIFO %s terminated" % self.serverName)
-        # delete the daemon to release the TCP port
-        del self.daemon
+        
     def _CmdFIFO_GetDescription(self):
         """Gets the description of the rpc server."""
         return self.serverDescription
@@ -470,12 +504,12 @@ class CmdFIFOServer(object):
         """Gets the version of the rpc server."""
         return self.serverVersion
 
-    @rpc_wrap
+    @rpc_wrap    
     def _CmdFIFO_DebugDelay(self,sec):
         if sec>0: time.sleep(sec)
         else:
             raise ValueError("Invalid delay: %s" % sec)
-
+    
     def _CmdFIFO_KillServer(self,password):
         """Stops the server immediately"""
         if password == "please":
@@ -521,6 +555,8 @@ class CmdFIFOServer(object):
         Returns a string containing the argument list for the method, with
         optionals wrapped in square brackets."""
 
+        if method_name not in self.serverObject.funcs:
+             return "%s method not found" % method_name
         f = self.serverObject.funcs[method_name]
         argCount = getattr(f,"__wrapped_co_argcount",f.func_code.co_argcount)
         optionalCount = 0
@@ -568,7 +604,7 @@ class CmdFIFOServer(object):
             return "%s method not found" % method_name
         else:
             return getattr(method,"__wrapped_doc",pydoc.getdoc(method))
-
+            
     def register_function(self, function,name = None,DefaultMode = CMD_TYPE_Blocking,NameSlice = 0,EscapeDoubleUS = False):
         """Registers a function to respond to RPC requests.
 
@@ -735,6 +771,7 @@ class CmdFIFOSimpleCallbackServer(object):
             self.thread = None
     def stop_server(self,*a,**k):
         self.server.stop_server(*a,**k)
+        
 class CmdFIFOServerProxy(object):
     def __init__(self, uri, ClientName, CallbackURI = "",
                  IsDontCareConnection = False, Timeout_s = None):
@@ -750,24 +787,31 @@ class CmdFIFOServerProxy(object):
             Timeout_s:            used to specify a timeout, after which a TimeoutError
                                     is raised if no response is received
         """
-
         self.ClientName = ClientName
-        self.CallbackURI = CallbackURI.lower().replace("http:","PYROLOC:") # should be "http://address:port".  eg: "http://localhost:8000"
+        self.CallbackURI = CallbackURI.lower() # should be "http://address:port".  eg: "http://localhost:8000"
         self.IsDontCare = IsDontCareConnection
         # Following dictionaries are used by SetFunctionMode to specify that
         #  certain functions should be treated specially
         self._FuncModes = {}
         self._FuncCallbacks = {}
-        self.uri = uri.lower().replace("http:","PYROLOC:")
-        Pyro.core.initClient()
+        self.uri = uri.lower()
         self.timeout = Timeout_s
         self.setupRemoteObject()
     def setupRemoteObject(self):
-        self.remoteObject = Pyro.core.getProxyForURI(self.uri + "/serverObject")
+        m = uriRegex.match(self.uri)
+        if m:
+            address = m.group(1)
+            port = int(m.group(2))
+        else:
+            raise ValueError("Invalid RPC server URI %s (should be http://address:port)" % self.uri)
+        self.remoteObject = Pyro4.core.Proxy("PYRO:serverObject@%s:%d" % (address, port))
         self.setup = True
         self.SetTimeout(self.timeout)
         # Use Oneway function, if we do not care about the result
-        if self.IsDontCare: self.remoteObject._setOneway("_dispatch")
+        if self.IsDontCare: 
+            self.remoteObject._pyroOneway.add("_dispatch")
+        else:
+            self.remoteObject._pyroOneway.clear()
     def __getattr__(self,name):
         # Suppose that the proxy is called as proxy.system.test.func. This __getattr__ function
         #  will be called with "name" set to "system". It returns an object whose __call__ method
@@ -793,9 +837,9 @@ class CmdFIFOServerProxy(object):
             if not self.setup:
                 try:
                     self.setupRemoteObject()
-                except Pyro.errors.ProtocolError:
+                except Pyro4.errors.ProtocolError:
                     self.setup = False
-            if self.setup:
+            if self.setup:        
                 def curried():
                     try:
                         self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
@@ -811,16 +855,15 @@ class CmdFIFOServerProxy(object):
                 if self.setup:
                     try:
                         return self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
-                    except Pyro.errors.TimeoutError,e:
-                        self.remoteObject._release()
+                    except Pyro4.errors.TimeoutError,e:
                         raise TimeoutError("%s" % e)
-                    except Pyro.errors.ConnectionClosedError:
+                    except Pyro4.errors.ConnectionClosedError:
+                        pass
                         # print "Retrying proxy call: %s" % (dottedMethodName,)
-                        self.remoteObject._release()
                 time.sleep(1.0)
                 try:
                     self.setupRemoteObject()
-                except Pyro.errors.ProtocolError:
+                except Pyro4.errors.ProtocolError:
                     self.setup = False
 
     def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
@@ -848,12 +891,13 @@ class CmdFIFOServerProxy(object):
     def SetTimeout(self,sec):
         """Set the socket timeout for the proxy. Use None to remove timeout"""
         self.timeout = sec
-        self.remoteObject._setTimeout(self.timeout)
+        if sec is None:
+            Pyro4.config.COMMTIMEOUT = 0.0
+        else:    
+            Pyro4.config.COMMTIMEOUT = sec
     def GetTimeout(self):
         """Gets the socket timeout for the proxy."""
         return self.timeout
-
-
 
 class _Method:
     # some magic to bind an XML-RPC method to an RPC server.

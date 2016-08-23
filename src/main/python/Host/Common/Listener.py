@@ -15,10 +15,10 @@
 # 07-10-22 sze   Add a name and logFunc parameters to constructor so that we can log connections by name
 # 07-11-24 sze   If an error occurs in the processing (filtering) of a packet, break the connection and retry
 #                   (if this is requested)
-import select
-import socket
+# 14-06-29 sze   Use 0MQ PUB-SUB protocol instead of TCP Sockets
+import zmq
 import Queue
-import Host.Common.StringPickler as StringPickler
+import StringPickler
 import ctypes
 import threading
 import time
@@ -60,7 +60,6 @@ class Listener(threading.Thread):
         "logFunc", passing a string which includes "name". If "logFunc" is set to None, no logging takes place.
         """
         threading.Thread.__init__(self,name=name)
-        self.sock = None
         self._stopevent = threading.Event()
         self.data = ""
         self.queue = queue
@@ -80,6 +79,9 @@ class Listener(threading.Thread):
             pass
         if not self.IsArbitraryObject:
             self.recordLength = ctypes.sizeof(self.elementType)
+            
+        self.zmqContext = zmq.Context()
+        self.socket = None    
         self.setDaemon(True)
         self.start()
 
@@ -94,38 +96,44 @@ class Listener(threading.Thread):
         This blocks until the thread completes execution of its .run() implementation.
         """
         self._stopevent.set()
+        if self.socket is not None:
+            self.socket.close()
+            self.socket = None
+        self.zmqContext.term()
+        self.zmqContext = None
         threading.Thread.join(self,timeout)
-
+        
     def run(self):
+        poller = None
         while not self._stopevent.isSet():
             try:
-                if self.sock is None:
-                    self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                if self.socket is None:
                     try:
-                        self.sock.connect(("localhost",self.port))
-                        self.safeLog("Connection made by %s to port %d from %s." % (self.name,self.port,self.sock.getsockname()))
+                        poller = zmq.Poller()
+                        self.socket = self.zmqContext.socket(zmq.SUB)
+                        self.socket.connect ("tcp://localhost:%s" % self.port)
+                        self.socket.setsockopt(zmq.SUBSCRIBE, "")
+                        poller.register(self.socket, zmq.POLLIN)
+                        self.safeLog("Connection made by %s to port %d." % (self.name,self.port))
                     except Exception:
-                        self.sock = None
+                        self.socket = None
                         if self.notify is not None:
                             msg = "Attempt to connect port %d by %s failed." % (self.port, self.name)
                             self.safeLog(msg,Level=2)
                             self.notify(msg)
-                        time.sleep(1)
+                        time.sleep(1.0)
                         if self.retry: continue
                         else: return
-                    self.data = ''
+                    self.data = ""
                 try:
-                    [iw,ow,ew] = select.select([self.sock],[],[],1.0)
-                    if iw == []:
-                        continue # Timeout => no (more) data available
-                    r = self.sock.recv(1600)
-                    if len(r) == 0: raise Exception, "Null data invalid"
-                    self.data += r
+                    socks = dict(poller.poll(timeout=1000))
+                    if socks.get(self.socket) == zmq.POLLIN:
+                        self.data += self.socket.recv()
                 except Exception,e: # Error accessing or reading from socket
                     self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (self.port,self.name,e),Level=3)
-                    if self.sock != None:
-                        self.sock.close()
-                        self.sock = None
+                    if self.socket != None:
+                        self.socket.close()
+                        self.socket = None
                     continue
                 #endtry
                 # All received bytes are now appended to self.data
@@ -135,9 +143,9 @@ class Listener(threading.Thread):
                     self._ProcessCtypesStream()
             except Exception,e:
                 self.safeLog("Communication from %s to port %d disconnected." % (self.name,self.port),Verbose=traceback.format_exc(),Level=2)
-                if self.sock != None:
-                    self.sock.close()
-                    self.sock = None
+                if self.socket != None:
+                    self.socket.close()
+                    self.socket = None
                 if self.retry:
                     if self.notify is not None: self.notify(e)
                     continue
@@ -183,7 +191,7 @@ class Listener(threading.Thread):
 
 if __name__ == "__main__":
     import ctypes
-    import Host.Common.StringPickler as StringPickler
+    import StringPickler
 
     class MyTime(ctypes.Structure):
         _fields_ = [
