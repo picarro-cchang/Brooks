@@ -10,7 +10,7 @@ RUN echo 'picarro:picarro' |chpasswd
 
 COPY Picarro.pth /opt/conda/lib/python2.7/site-packages/Picarro.pth
 
-RUN pip install Pyro
+RUN pip install Pyro4==4.26
 
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
