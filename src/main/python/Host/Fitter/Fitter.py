@@ -1056,11 +1056,11 @@ class ResidualsPanel(object):
         self.graphPanel1 = GraphPanel(parent=self.panel,id=-1)
         self.graphPanel1.SetGraphProperties(ylabel='Data and Fit',grid=True,
                                            backgroundColour=bg,frameColour=bg)
-        self.graphPanel1.Update()
+        #self.graphPanel1.Update()
         self.graphPanel2 = GraphPanel(parent=self.panel,id=-1)
         self.graphPanel2.SetGraphProperties(ylabel='Residuals',grid=True,
                                            backgroundColour=bg,frameColour=bg)
-        self.graphPanel2.Update()
+        #self.graphPanel2.Update()
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.graphPanel1,proportion=1,flag=wx.GROW)
         vbox.Add(self.graphPanel2,proportion=1,flag=wx.GROW)

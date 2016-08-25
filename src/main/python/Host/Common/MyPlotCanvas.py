@@ -86,7 +86,7 @@ class MyPlotCanvas(plot.PlotCanvas):
     def OnKeyChange(self,event):
         mouseState = wx.GetMouseState()
         if self.inWindow and \
-           not(mouseState.LeftDown() or mouseState.MiddleDown() or mouseState.RightDown()):
+           not(mouseState.LeftIsDown() or mouseState.MiddleIsDown() or mouseState.RightIsDown()):
             self.SetZoomDrag()
         event.Skip()
 
@@ -96,7 +96,7 @@ class MyPlotCanvas(plot.PlotCanvas):
         self.inWindow = True
         mouseState = wx.GetMouseState()
         if self.inWindow and \
-           not(mouseState.LeftDown() or mouseState.MiddleDown() or mouseState.RightDown()):
+           not(mouseState.LeftIsDown() or mouseState.MiddleIsDown() or mouseState.RightIsDown()):
             self.SetZoomDrag()
         event.Skip()
 

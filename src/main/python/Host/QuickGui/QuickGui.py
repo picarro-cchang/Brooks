@@ -422,15 +422,15 @@ class AlarmViewListCtrl(wx.ListCtrl):
                              #| wx.LC_SINGLE_SEL
                          )
         self.parent = parent
-        # self.ilEventIcons = wx.ImageList(32, 16)
-        self.ilEventIcons = wx.ImageList(31, 16)
+        self.ilEventIcons = wx.ImageList(32, 32)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os_dirname(AppPath)
         self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LEDoff2.ico',
                                                      wx.BITMAP_TYPE_ICO))
-        self.IconAlarmSet     = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
+        self.IconAlarmSet    = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
                                                      wx.BITMAP_TYPE_ICO))
+
         self.dataStore = DataStore
         self._DataSource = DataSource
         self.InsertColumn(0,"Icon",width=40)
@@ -784,9 +784,11 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             lastVisible = True
         self.SetItemCount(self._DataSource.getEventCount())
         if lastVisible:
+            itemCount = self.GetItemCount()
             if self._DataSource.getEventCount() == self._DataSource.getMaxEvents():
-                self.RefreshItems(0,self.GetItemCount()-1)
-            self.EnsureVisible(self.GetItemCount()-1)
+                self.RefreshItems(0,itemCount-1)            
+            if itemCount > 0:
+                self.EnsureVisible(itemCount-1)
             self.firstItem = self._DataSource.getFirstEventIndex()
 
 class EventStore(object):
@@ -1495,7 +1497,8 @@ class QuickGui(wx.Frame):
                                    XTickFormat=self.config.get("Graph","TimeAxisFormat","%H:%M:%S\n%d-%b-%Y"),
                                    heightAdjustment = self.config.getfloat("Graph","HeightAdjustment",0.0),
                                    )
-            gp.Update()
+            #gp.Update()
+
             self.graphPanel.append(gp)
 
         # Define a gauge indicating the buffer level
@@ -1628,7 +1631,7 @@ class QuickGui(wx.Frame):
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
         disabled = wx.ListItemAttr(fgColour,bgColour,font)
-
+        
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataStore=self.dataStore, DataSource=self.alarmInterface,
                                            size=size, numAlarms=self.numAlarms)
@@ -1661,8 +1664,8 @@ class QuickGui(wx.Frame):
         # Combine system alarm with concentration alarms
         alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.VERTICAL)
         alarmBoxSizer.Add(self.sysAlarmView,proportion=0,flag=wx.EXPAND)
-        alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
-
+        alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)        
+        
         # Instrument status panel
         self.instStatusBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Instrument Status")
         size = self.config.getint("InstStatPanel","Width", 150),self.config.getint("InstStatPanel","Height", 70)
@@ -2484,7 +2487,7 @@ def HandleCommandSwitches():
     return (configFile, executeTest, defaultTitle)
 
 if __name__ == "__main__":
-    app = wx.PySimpleApp()
+    app = wx.PySimpleApp(False)
     configFile, test, defaultTitle = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     frame = QuickGui(configFile, defaultTitle)

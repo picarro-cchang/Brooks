@@ -91,7 +91,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
                          )
         self.parent = parent
         # self.ilEventIcons = wx.ImageList(32, 16)
-        self.ilEventIcons = wx.ImageList(31, 16)
+        self.ilEventIcons = wx.ImageList(32, 32)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os.path.dirname(AppPath)

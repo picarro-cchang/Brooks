@@ -5,6 +5,8 @@ from subprocess import PIPE, Popen, STDOUT
 import os
 import sys
 import getopt
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'wx'
 from traits.api import *
 from traitsui.api import *
 from threading  import Thread

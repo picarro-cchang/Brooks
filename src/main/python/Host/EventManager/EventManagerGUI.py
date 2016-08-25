@@ -111,8 +111,7 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         try:
             eventCount = len(self._DataSource)
             self.SetItemCount(eventCount)
-            if self.EnsureLatestEventOnscreen:
-                #print eventCount, "on screen!"
+            if self.EnsureLatestEventOnscreen and eventCount > 0:
                 self.EnsureVisible(eventCount - 1)
         except Exception, E:
             print "Exception trapped in _RefreshList: %r %s" % (E,E)

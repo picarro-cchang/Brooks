@@ -297,8 +297,8 @@ def excepthook(type,value,trace):
 
 if __name__ == "__main__":
     # sys.excepthook = excepthook
-    app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
+    app = wx.App(False)
+    #wx.InitAllImageHandlers() # this function is deprecated in wx 3.0
     controller = Controller(None, wx.ID_ANY, "")
     try:
         app.SetTopWindow(controller)

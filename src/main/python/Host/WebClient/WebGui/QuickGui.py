@@ -1128,7 +1128,7 @@ class RpcServerThread(threading.Thread):
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
 class QuickGui(wx.Frame):
-    def __init__(self, configFile):
+    def __init__(self, configFile, app):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700),
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
         self.commandQueue = Queue.Queue()
@@ -1230,6 +1230,8 @@ class QuickGui(wx.Frame):
         self.instStatCavityPressureKey = self.config.get("InstStatPanel", "CavityPressureKey", "CavityPressure")
         self.instStatCavityTempKey = self.config.get("InstStatPanel", "CavityTempKey", "CavityTemp")
         self.instStatWarmBoxTempKey = self.config.get("InstStatPanel", "WarmBoxTempKey", "WarmBoxTemp")
+        
+        app.SetTopWindow(self)
 
         self.layoutFrame()
         # Create the image panels with the frame as parent
@@ -2405,10 +2407,11 @@ def HandleCommandSwitches():
     return (configFile, executeTest)
 
 if __name__ == "__main__":
-    app = wx.PySimpleApp()
+    # app = wx.PySimpleApp()
+    app = wx.App(False)
     configFile, test = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = QuickGui(configFile)
+    frame = QuickGui(configFile,app)
     frame.Show()
     app.MainLoop()
     Log("Exiting program")

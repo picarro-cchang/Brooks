@@ -34,7 +34,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-DEFAULT_CONFIG_NAME = "..\..\AppConfig\Config\rdReprocessor\rdReprocessor.ini"
+DEFAULT_CONFIG_NAME = "../../AppConfig/Config/rdReprocessor/rdReprocessor.ini"
 
 def convHdf5ToDict(h5Filename, selfTiming):
     h5File = openFile(h5Filename, "r")
@@ -63,7 +63,7 @@ class rdReprocessor(object):
         broadcaster =  Broadcaster.Broadcaster(
                     port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
                     name="Spectrum Collector broadcaster",logFunc = Log)
-        self.files = sorted(glob(self.dirName + r'\*.h5'))
+        self.files = sorted(glob(self.dirName + r'/*.h5'))
         fnum = len(self.files)
         index = 0
         step = 1
