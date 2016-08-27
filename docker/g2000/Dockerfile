@@ -4,7 +4,7 @@ MAINTAINER Sze Tan <stan@picarro.com>
 RUN apt-get update
 
 RUN apt-get install -y fuse
-RUN pip install Pyro4==4.26
+RUN pip install Pyro4
 RUN pip install fusepy
 
 RUN echo 'root:bl52l21fbl52l21f' |chpasswd
