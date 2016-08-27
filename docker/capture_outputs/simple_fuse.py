@@ -95,7 +95,7 @@ class SimpleFuse(Operations):
             for line in lines[:-1]:
                 broadcast = "%s:%s\n" % (bytes(path), bytes(line))
                 self.publisher.send_string(broadcast)
-                print ("%s: %s" % (path, data))
+                # print ("%s: %s" % (path, data))
             self.data[path] = lines[-1]
         return len(data)
 
