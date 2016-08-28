@@ -18,5 +18,5 @@ COPY rc.local /etc/rc.local
 RUN chmod 755 /etc/rc.local
 RUN mkdir /mnt/applog
 
-EXPOSE 22
+EXPOSE 22 40000
 CMD /etc/rc.local && /usr/sbin/sshd -D

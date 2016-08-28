@@ -2,6 +2,7 @@
 *.bak
 target/
 .doit.db
+node_modules/
 src/main/python/Host/Common/swathP.pyd
 src/main/python/Host/Fitter/cluster_analyzer.pyd
 src/main/python/Host/Fitter/fitutils.pyd

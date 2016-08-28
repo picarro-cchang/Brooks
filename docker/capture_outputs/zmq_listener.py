@@ -1,6 +1,6 @@
 import zmq
 
-PORT = 40000
+PORT = 40005
 
 def main():
     """ main method """
