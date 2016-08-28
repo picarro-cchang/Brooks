@@ -13,6 +13,7 @@ app = Flask(__name__, static_url_path='', static_folder='../../js/Applog/src/', 
 socketio = SocketIO(app, async_mode="eventlet")
 app.add_url_rule('/', 'index', lambda: app.send_static_file('index.html'))
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0)
+thread = None
 
 def get_applog():
     context    = zmq.Context()
@@ -29,10 +30,12 @@ def get_applog():
             socketio.sleep(0.5)
 
 @socketio.on('connect')
-def test_connect():
+def on_connect():
+    global thread
     emit('socket_id', dict(socket_id=request.sid))
     print('web socket connected: ', request.sid)
-    socketio.start_background_task(get_applog)
+    if thread is None:
+        thread = socketio.start_background_task(get_applog)
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=int(os.environ.get("PORT", 3000)), debug=True)
