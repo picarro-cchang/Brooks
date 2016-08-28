@@ -9,7 +9,7 @@ import zmq
 
 from fuse import FUSE, FuseOSError, Operations
 
-PORT = 40000
+PORT = 40005
 
 if not hasattr(__builtins__, 'bytes'):
     bytes = str

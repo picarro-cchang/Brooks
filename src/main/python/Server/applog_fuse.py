@@ -12,6 +12,7 @@ from fuse import FUSE, FuseOSError, Operations
 
 PORT = 40005
 MOUNTPOINT = "~/temp/applog"
+MAXBLOCK = 256
 
 if not hasattr(__builtins__, 'bytes'):
     bytes = str
@@ -90,14 +91,18 @@ class SimpleFuse(Operations):
         self.files[path]['st_mtime'] = mtime
 
     def write(self, path, data, offset, fh):
-        self.data[path] = self.data[path][:offset] + data
+        all_data = self.data[path] + data
         self.files[path]['st_size'] = 0
-        if "\n" in self.data[path]:
-            lines = self.data[path].split("\n")
-            for line in lines[:-1]:
-                broadcast = "%s:%s\n" % (bytes(path), bytes(line))
-                self.publisher.send_string(broadcast)
-            self.data[path] = lines[-1]
+        while len(all_data) >= MAXBLOCK or "\n" in all_data:
+            block_end = (
+                all_data.index("\n")+1
+                if "\n" in all_data[:MAXBLOCK]
+                else MAXBLOCK
+            )
+            broadcast = "%s:%s" % (path, all_data[:block_end])
+            all_data = all_data[block_end:]
+            self.publisher.send_string(broadcast)
+        self.data[path] = all_data
         return len(data)
 
 if __name__ == '__main__':
