@@ -1,12 +1,14 @@
+import ApplogNotebook from "../components/ApplogNotebook";
 import ApplogStore from "../stores/ApplogStore";
 
-import React from "react";
+
+import React, {Component} from "react";
 import { Grid } from "react-bootstrap";
 
-export default class Applog extends React.Component {
+export default class Applog extends Component {
     constructor(props) {
         super(props);
-        this.state = { ApplogStore: null };
+        this.state = { ApplogStore: null, autoscroll: true };
         this.storeSubscriptions = [];
     }
 
@@ -21,13 +23,20 @@ export default class Applog extends React.Component {
     }
 
     handleApplogStoreChange() {
-        this.setState( {ApplogStore: ApplogStore.getState()} );
+        let storeData = ApplogStore.getState();
+        this.setState( {ApplogStore: storeData} );
     }
 
     render() {
         return (
             <Grid fluid={true}>
-                <h1>Hello Applog!</h1>
+                <h1>Application consoles</h1>
+                <ApplogNotebook
+                    autoscroll={this.state.autoscroll}
+                    data={this.state.ApplogStore.sourceData}
+                    names={this.state.ApplogStore.sourceNames}
+                    setAutoscroll={(autoscroll) => this.setState({autoscroll})}
+                />
             </Grid>
         );
     }
