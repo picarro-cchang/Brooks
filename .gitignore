@@ -1,5 +1,7 @@
 *.pyc
+*.pyo
 *.bak
+*~
 target/
 .doit.db
 node_modules/
