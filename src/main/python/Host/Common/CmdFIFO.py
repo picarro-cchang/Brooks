@@ -55,6 +55,25 @@ CMD_Types = [
 uriRegex = re.compile("http://(.*):(\d+)")
 Pyro4.config.SERIALIZER = 'pickle'
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
+
+# When the HOST code is shutdown it releases the sockets (ports) it uses
+# for IPC. However, Linux places the free'd port in a TIME_WAIT state for
+# 1-4 minutes. This is to allow any late packets to still make it to the
+# receiver.  While the port is in a TIME_WAIT state it is unavailable and
+# so if the HOST code is shutdown and quickly restarted not all the services
+# can be brought up.  The TIME_WAIT delay is not a "bug" but is part of
+# the TCP spec. I think the problem is with Pyro or how we are using Pyro.
+# When connections are closed, FIN and ACK packets are supposed to be
+# exchanged so that both client and server agree to free the port.  I
+# believe when the HOST processes are shutdown, the Pyro daemons aren't
+# doing this last bit, either not sending the last packets or not waiting
+# for the acknowledgement.
+#
+# If the socket is opened with SO_REUSEADDR it will bind to the port
+# even if in a TIME_WAIT state. Pyro's SOCK_REUSE will set this option.
+#
+Pyro4.config.SOCK_REUSE = True
+
 class RemoteException(RuntimeError):
     pass
 
