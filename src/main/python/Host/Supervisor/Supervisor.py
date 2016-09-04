@@ -62,6 +62,7 @@ if sys.platform == "win32":
     windll = ctypes.windll #to get access to GetProcessId() which is not in the win32 libraries
 elif sys.platform == "linux2":
     import ttyLinux
+    import signal # to handle SIGTERM
     libc = ctypes.CDLL("libc.so.6")
     sched_getaffinity = libc.sched_getaffinity
     sched_setaffinity = libc.sched_setaffinity
@@ -970,6 +971,12 @@ class Supervisor(object):
         self.powerDownAfterTermination = False
         self.appList = None
         self.messageQueue = Queue.Queue(100)
+        
+        # Linux helper:
+        # If there is no tty to use ^T, terminate Supervisor and its
+        # subprocesses with 'kill -USR1 <supervisor_pid>
+        signal.signal(signal.SIGUSR1, self.sigint_handler)
+        print("Supervisor PID:", os.getpid())
 
         # start to use CustomConfigObj
         try:
@@ -1305,21 +1312,37 @@ class Supervisor(object):
         except Exception, E:
             Log("Exception trapped when configuring and launching the Master RPC server", Verbose = "Exception = %s %r" % (E, E))
 
+    def sigint_handler(self, signum, frame):
+        self._TerminateAllRequested = True
+
     def CheckForStopRequests(self):
-        try:
-            start_rawkb()
-            while True:
-                key = read_rawkb()
-                if key == "": break
-                if ord(key) in [17, 24]: #ctrl-q and ctrl-x
-                    Log("Exit request received via keyboard input (Ctrl-X)")
-                    self._ShutdownRequested = True
-                elif ord(key) == 20: #ctrl-t
-                    Log("Terminate request received via keyboard input (Ctrl-T)")
-                    self._TerminateAllRequested = True
-                    self.powerDownAfterTermination = False
-        finally:
-            stop_rawkb()
+	"""
+	Set Ctrl-X to tell Supervisor to exit the code, Ctrl-T to terminate.
+	These two should shutdown all the other Host sub-processes.
+	Ctrl-C will kill the Supervisor and leave the sub-processes as
+	zombies you'll have to kill manually.
+
+	In Linux, the keyboard shortcut is set with ttyLinux.py which
+	requires to run in a valid tty terminal like x-term.  If the
+	code is run in an IDE with a pseudo terminal, ttyLinux will
+	throw an exception and terminate the Supervior.
+	"""
+
+        if sys.stdout.isatty():
+            try:
+                start_rawkb()
+                while True:
+                    key = read_rawkb()
+                    if key == "": break
+                    if ord(key) in [17, 24]: #ctrl-q and ctrl-x
+                        Log("Exit request received via keyboard input (Ctrl-X)")
+                        self._ShutdownRequested = True
+                    elif ord(key) == 20: #ctrl-t
+                        Log("Terminate request received via keyboard input (Ctrl-T)")
+                        self._TerminateAllRequested = True
+                        self.powerDownAfterTermination = False
+            finally:
+                stop_rawkb()
 
         if self._ShutdownRequested or self._TerminateAllRequested:
             #In addition to being set above, these could also have been set somewhere else (eg: RPC server)...
