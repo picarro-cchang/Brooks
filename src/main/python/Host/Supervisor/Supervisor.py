@@ -631,8 +631,13 @@ class App(object):
             launchArgs += "--restarted"
 
         if ext in [".py", ".pyc"]:
-            exeName = sys.executable #the python executable when py or pyc
+            # Set the python interpreter to use if we are running a
+            # *.py or *.pyc.  If the optimize flag is set (i.e. python -O Supervisor.py)
+            # use the optimize flag on the subprocesses.
+            exeName = sys.executable
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
+            if sys.flags.optimize:
+                exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
                 launchPath = "%s" % (self.Executable,)
             else:
