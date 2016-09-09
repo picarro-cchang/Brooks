@@ -357,11 +357,13 @@ elif sys.platform == "linux2":
         for arg in exeArgs[1:]:
             argList += arg.split()
         try:
+            time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
-                termList = ["xterm","-T",appName,"-e"]
-                process = Popen(termList+argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
+                termList = ["xterm","-hold","-T",appName,"-e"]
+                process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
+            time.sleep(1.0)
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
             raise
@@ -409,6 +411,7 @@ elif sys.platform == "linux2":
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
         os.kill(processHandle.pid,9)
+        # print("terminateProcess disabled by RSF")
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
@@ -711,8 +714,9 @@ class App(object):
         else:
             self._LaunchFailureCount += 1
             #Make sure that the application is completely gone...
-            self.ShutDown(_METHOD_DESTROYFIRST)
-            raise AppLaunchFailure("Application '%s' did not start within specified timeframe of %s ms." % (self._AppName, self.VerifyTimeout_ms))
+            # self.ShutDown(_METHOD_DESTROYFIRST)
+            # raise AppLaunchFailure("Application '%s' did not start within specified timeframe of %s ms." % (self._AppName, self.VerifyTimeout_ms))
+            print("Automatic shutdown of apps that don't ping disabled by RSF")
 
         self._LaunchTime = TimeStamp()
     def IsProcessActive(self):

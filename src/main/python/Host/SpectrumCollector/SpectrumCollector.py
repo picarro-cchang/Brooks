@@ -83,6 +83,11 @@ Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                     APP_NAME,
                                     IsDontCareConnection = False)
 
+print("Loading rpdb2")
+import rpdb2
+rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+print("rpdb2 loaded")
+
 class SpectrumCollectionTimeout(CrdsException):
     """Timed out while waiting for a ringdown to arrive."""
 

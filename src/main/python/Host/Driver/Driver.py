@@ -68,6 +68,12 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
+
+print("Loading rpdb2")
+import rpdb2
+rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+print("rpdb2 loaded")
+
 #
 # The driver provides a serialized RPC interface for accessing the DAS hardware.
 #
@@ -236,6 +242,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return result
 
     def allVersions(self):
+        print("In Driver::allVersions") # RSF debug
         versionDict = {}
         versionDict["interface"] = interface.interface_version
         import pprint
@@ -255,6 +262,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             versionDict["config - common version no"] = self.ver["commonVer"]
         except Exception, err:
             print err
+        print("In Driver::allVersions sending info") # RSF debug
         return versionDict
 
     def saveRegValues(self,regList):

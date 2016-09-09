@@ -171,6 +171,7 @@ class DummyDaemon(object):
         rr, _, _ = select(rs, [], [], timeout)
         rPyro = rs.intersection(rr)
         if rPyro:
+            print("rPyro defined:", rPyro)
             self.pyroDaemon.events(rPyro)
         rOthers = others.intersection(rr)
         if rOthers and (callback_func is not None):
@@ -457,7 +458,11 @@ class CmdFIFOServer(object):
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
         self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
-        self.daemon = DummyDaemon(self.pyroDaemon)
+        if len(self.pyroDaemon.sockets):
+            print("PD socket:", self.pyroDaemon.sockets) # RSF debug
+        else:
+            print("No sockets!")
+        self.daemon = DummyDaemon(self.pyroDaemon) 
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
         # The serverObject and calbackObject are the targets of all the RPC calls. Their
@@ -472,7 +477,8 @@ class CmdFIFOServer(object):
         
     def handle_requests(self,*a,**k):
         # Delegate to DummyDaemon for compatibility with Pyro3
-        self.daemon.handleRequests(*a,**k)
+        if self.pyroDaemon and self.pyroDaemon.sockets:
+            self.daemon.handleRequests(*a,**k)
         
     def Launch(self):
         """Starts the server service loop within a daemonic thread"""
@@ -542,6 +548,7 @@ class CmdFIFOServer(object):
         return "Ping OK"
     def _CmdFIFO_PingFIFO(self):
         """Enqueues a function that returns "Ping OK" on the FIFO"""
+        #print("In _CmdFIFO_PingFIFO ... Ping OK!")
         return "Ping OK"
     def _CmdFIFO_StopServer(self):
         """Stops the server once all entries in queue have completed"""
