@@ -411,7 +411,6 @@ elif sys.platform == "linux2":
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
         os.kill(processHandle.pid,9)
-        # print("terminateProcess disabled by RSF")
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
@@ -714,9 +713,8 @@ class App(object):
         else:
             self._LaunchFailureCount += 1
             #Make sure that the application is completely gone...
-            # self.ShutDown(_METHOD_DESTROYFIRST)
-            # raise AppLaunchFailure("Application '%s' did not start within specified timeframe of %s ms." % (self._AppName, self.VerifyTimeout_ms))
-            print("Automatic shutdown of apps that don't ping disabled by RSF")
+            self.ShutDown(_METHOD_DESTROYFIRST)
+            raise AppLaunchFailure("Application '%s' did not start within specified timeframe of %s ms." % (self._AppName, self.VerifyTimeout_ms))
 
         self._LaunchTime = TimeStamp()
     def IsProcessActive(self):

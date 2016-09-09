@@ -243,7 +243,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return result
 
     def allVersions(self):
-        print("In Driver::allVersions") # RSF debug
         versionDict = {}
         versionDict["interface"] = interface.interface_version
         import pprint
@@ -263,7 +262,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
             versionDict["config - common version no"] = self.ver["commonVer"]
         except Exception, err:
             print err
-        print("In Driver::allVersions sending info") # RSF debug
         return versionDict
 
     def saveRegValues(self,regList):

@@ -171,7 +171,6 @@ class DummyDaemon(object):
         rr, _, _ = select(rs, [], [], timeout)
         rPyro = rs.intersection(rr)
         if rPyro:
-            print("rPyro defined:", rPyro)
             self.pyroDaemon.events(rPyro)
         rOthers = others.intersection(rr)
         if rOthers and (callback_func is not None):
@@ -458,10 +457,6 @@ class CmdFIFOServer(object):
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
         self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
-        if len(self.pyroDaemon.sockets):
-            print("PD socket:", self.pyroDaemon.sockets) # RSF debug
-        else:
-            print("No sockets!")
         self.daemon = DummyDaemon(self.pyroDaemon) 
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
