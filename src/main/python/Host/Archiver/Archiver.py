@@ -59,10 +59,11 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
                                             APP_NAME,
                                             IsDontCareConnection = False)
 
-print("Loading rpdb2")
-import rpdb2
-rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-print("rpdb2 loaded")
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
 
 #
 # Functions
