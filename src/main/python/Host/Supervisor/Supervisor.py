@@ -78,6 +78,15 @@ import psutil
 from os import spawnv
 from os import P_NOWAIT
 from os import getpid as os_getpid
+
+# If we are using python 2.x on Linux, use the subprocess32
+# module which has many bug fixes and can prevent
+# subprocess deadlocks.
+#
+if os.name == 'posix' and sys.version_info[0] < 3:
+    import subprocess32 as subprocess
+else:
+    import subprocess
 from subprocess import Popen, call
 
 from Host.Common import CmdFIFO
@@ -357,13 +366,11 @@ elif sys.platform == "linux2":
         for arg in exeArgs[1:]:
             argList += arg.split()
         try:
-            time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
                 termList = ["xterm","-hold","-T",appName,"-e"]
                 process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
-            time.sleep(1.0)
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
             raise

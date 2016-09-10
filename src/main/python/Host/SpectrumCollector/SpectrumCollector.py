@@ -144,11 +144,13 @@ class SpectrumCollector(object):
                                                 ServerDescription = "Collect spectrum and related information",
                                                 threaded = True)
 
+
         # Register the rpc functions...
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not inspect.isclass(attr)):
                 self.rpcServer.register_function(attr, name=s, NameSlice = 4)
+
 
         # Sensor data handling
         self.sensorListener = Listener.Listener(None, # no queuing, we'll just be tracking the latest
@@ -164,6 +166,7 @@ class SpectrumCollector(object):
         self.sensorsUpdated = True
         self.cachedSensors = None
 
+
         # Processed RD data (frequency-based) handling
         self.rdQueue = Queue.Queue()
         self.processedRdListener = Listener.Listener(self.rdQueue,
@@ -171,6 +174,7 @@ class SpectrumCollector(object):
                                             self.rdEntryType,
                                             retry = True,
                                             name = "Spectrum collector listener",logFunc = Log)
+
 
         # Broadcaster for spectra
         self.spectrumBroadcaster = Broadcaster.Broadcaster(
@@ -205,6 +209,7 @@ class SpectrumCollector(object):
         self.useSequencer = True
         self.sequencer = None
         self.schemesUsed = {}
+
 
     def run(self):
         self.sequencer = Sequencer()
