@@ -74,7 +74,10 @@ class ValveSequencer(ValveSequencerFrame):
         except:
             pass
         numMaxSteps = self.co.getint("MAIN", "numMaxSteps", DEFAULT_MAX_VALVE_STEPS)
-        ValveSequencerFrame.__init__(self, self.numSolValves, numMaxSteps, *args, **kwds)
+        vsf = ValveSequencerFrame.__init__(self, self.numSolValves, numMaxSteps, *args, **kwds)
+        # ValveSequencerFrame.setScrollbars()
+        # vsf = ValveSequencerFrame(self.numSolValves, numMaxSteps, *args, **kwds)
+        vsf.setScrollbars()
         try:
             self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
             self.rotValveCtrl.open()
