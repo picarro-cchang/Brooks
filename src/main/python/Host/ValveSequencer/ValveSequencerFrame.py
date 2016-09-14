@@ -1,5 +1,6 @@
 # -*- coding: iso-8859-15 -*-
 import wx
+import wx.lib.scrolledpanel as scrolled
 from wx.lib.masked import TimeCtrl
 from datetime import datetime
 
@@ -15,7 +16,8 @@ class ValveSequencerFrame(wx.Frame):
         #kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         kwds["style"] = wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
-        self.panel = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
+        self.panel = scrolled.ScrolledPanel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
+        self.panel.SetAutoLayout(1)
 
         # Menu bar
         self.frameMenubar = wx.MenuBar()

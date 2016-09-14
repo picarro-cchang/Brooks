@@ -667,8 +667,9 @@ if __name__ == "__main__":
     #Get and handle the command line options...
     (configFile, showAtStart) = HandleCommandSwitches()
     Log("%s started." % APP_NAME, Level = 0)
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
+    # app = wx.PySimpleApp()
+    # wx.InitAllImageHandlers()
+    app = wx.App(False)
     frame = ValveSequencer(configFile, showAtStart, None, -1, "")
     app.SetTopWindow(frame)
     app.MainLoop()
