@@ -1,6 +1,5 @@
 # -*- coding: iso-8859-15 -*-
 import wx
-import wx.lib.scrolledpanel as scrolled
 from wx.lib.masked import TimeCtrl
 from datetime import datetime
 
@@ -16,8 +15,12 @@ class ValveSequencerFrame(wx.Frame):
         #kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         kwds["style"] = wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
-        self.panel = scrolled.ScrolledPanel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
-        self.panel.SetAutoLayout(1)
+
+        # The wx.ALWAYS_SHOW_SB option is broken in wxPython 3.0.0 on posix platforms.
+        # The hack is to turn on the scrollbars after the object is instantiated. See
+        # setScrollBars() below.
+        # self.panel = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
+        self.panel = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
 
         # Menu bar
         self.frameMenubar = wx.MenuBar()
@@ -135,6 +138,7 @@ class ValveSequencerFrame(wx.Frame):
         self.spinCtrlGoToStep.SetRange(1, self.numSteps)
         self.setPanelCtrl()
         self.doLayout()
+        return self
 
     def setNumSteps(self, numSteps):
         self.lastNumSteps = self.numSteps
@@ -375,5 +379,15 @@ class ValveSequencerFrame(wx.Frame):
         #sizerToplevel.Fit(self)
         sizerToplevel.FitInside(self)
         sizerPanel.FitInside(self.panel)
-        self.SetSize((760, 630))
+        
+        # I have to set the window larger because on Linux the automatic size 
+        # adjustment of the scroll panel is not working and it's pushing
+        # the last row of widgets off of the screen.
+        # self.SetSize((760, 630))
+        self.SetSize((760,700))
+
         #self.Layout()
+
+    def setScrollbars(self):
+        self.panel.ShowScrollbars(wx.SHOW_SB_ALWAYS,wx.SHOW_SB_ALWAYS)
+        return
