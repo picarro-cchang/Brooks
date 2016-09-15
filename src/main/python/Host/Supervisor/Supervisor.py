@@ -417,7 +417,8 @@ elif sys.platform == "linux2":
 
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
-        os.kill(processHandle.pid,9)
+        # print("TerminateProcess disabled") # RSF
+        os.kill(processHandle.pid,9) # Don't kill for debug RSF
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
