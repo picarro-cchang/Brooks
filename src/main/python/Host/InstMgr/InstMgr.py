@@ -188,6 +188,12 @@ EVENT_PARK = 12
 # Maximum number of entries in error list
 MAX_ERROR_LIST_NUM = 64
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 # including these error definitions will enable RPC calls to print out correct errors
 class CommandError(Exception):
     """Root of all exceptions caused by a bad/inappropriate command."""
