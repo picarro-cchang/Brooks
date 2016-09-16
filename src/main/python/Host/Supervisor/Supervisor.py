@@ -68,6 +68,7 @@ elif sys.platform == "linux2":
     sched_setaffinity = libc.sched_setaffinity
     setpriority = libc.setpriority
 import os
+import shlex
 import time
 import getopt
 import threading
@@ -364,7 +365,7 @@ elif sys.platform == "linux2":
         Log("Launching application", dict(appName=appName), 1)
         argList = [exeName]
         for arg in exeArgs[1:]:
-            argList += arg.split()
+            argList += shlex.split(arg)
         try:
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
