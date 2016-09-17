@@ -38,6 +38,12 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 
 HELP_STRING = \
 """\
