@@ -1,0 +1,17 @@
+#!/bin/bash
+
+BASE_PATH=/data/home
+for i in $BASE_PATH/* ;do
+	FNAME=$(basename $i)
+	echo "processing $i ..."
+	if [ $FNAME = "root" ]; then
+		echo "updating the root folder..."
+		cp -r $i/* $i/.* /$FNAME
+	else
+		echo "updating $FNAME folder..."
+		cp -r $i/* $i/.* /home/$FNAME
+		chown -R $FNAME:$FNAME /home/$FNAME
+	fi
+done
+echo "starting server ..."
+vncserver :1 -geometry 1280x800 -depth 24 && tail -F /root/.vnc/*.log
