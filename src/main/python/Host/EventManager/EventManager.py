@@ -92,6 +92,12 @@ CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.R
                                             APP_NAME,
                                             IsDontCareConnection = True)
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 class EventInfo(object):
     """The general class object for identifying event types - NOT discrete events.
 

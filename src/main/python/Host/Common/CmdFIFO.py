@@ -55,6 +55,25 @@ CMD_Types = [
 uriRegex = re.compile("http://(.*):(\d+)")
 Pyro4.config.SERIALIZER = 'pickle'
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
+
+# When the HOST code is shutdown it releases the sockets (ports) it uses
+# for IPC. However, Linux places the free'd port in a TIME_WAIT state for
+# 1-4 minutes. This is to allow any late packets to still make it to the
+# receiver.  While the port is in a TIME_WAIT state it is unavailable and
+# so if the HOST code is shutdown and quickly restarted not all the services
+# can be brought up.  The TIME_WAIT delay is not a "bug" but is part of
+# the TCP spec. I think the problem is with Pyro or how we are using Pyro.
+# When connections are closed, FIN and ACK packets are supposed to be
+# exchanged so that both client and server agree to free the port.  I
+# believe when the HOST processes are shutdown, the Pyro daemons aren't
+# doing this last bit, either not sending the last packets or not waiting
+# for the acknowledgement.
+#
+# If the socket is opened with SO_REUSEADDR it will bind to the port
+# even if in a TIME_WAIT state. Pyro's SOCK_REUSE will set this option.
+#
+Pyro4.config.SOCK_REUSE = True
+
 class RemoteException(RuntimeError):
     pass
 
@@ -438,7 +457,7 @@ class CmdFIFOServer(object):
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
         self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
-        self.daemon = DummyDaemon(self.pyroDaemon)
+        self.daemon = DummyDaemon(self.pyroDaemon) 
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
         # The serverObject and calbackObject are the targets of all the RPC calls. Their
@@ -453,7 +472,8 @@ class CmdFIFOServer(object):
         
     def handle_requests(self,*a,**k):
         # Delegate to DummyDaemon for compatibility with Pyro3
-        self.daemon.handleRequests(*a,**k)
+        if self.pyroDaemon and self.pyroDaemon.sockets:
+            self.daemon.handleRequests(*a,**k)
         
     def Launch(self):
         """Starts the server service loop within a daemonic thread"""
@@ -523,6 +543,7 @@ class CmdFIFOServer(object):
         return "Ping OK"
     def _CmdFIFO_PingFIFO(self):
         """Enqueues a function that returns "Ping OK" on the FIFO"""
+        #print("In _CmdFIFO_PingFIFO ... Ping OK!")
         return "Ping OK"
     def _CmdFIFO_StopServer(self):
         """Stops the server once all entries in queue have completed"""

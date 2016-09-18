@@ -69,6 +69,7 @@ class Scheme(object):
             schemePath = os.path.split(os.path.abspath(fileName))[0]
             def getConfig(relPath):
                 path = os.path.abspath(os.path.join(schemePath,relPath))
+                path = path.replace('\\','/')
                 if path not in configMemo:
                     fp = file(path,'r')
                     try:

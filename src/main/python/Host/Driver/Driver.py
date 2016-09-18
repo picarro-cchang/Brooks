@@ -18,13 +18,21 @@ import getopt
 import inspect
 import os
 import struct
-import subprocess
 import sys
 import tables
 import time
 import types
 import traceback
 from numpy import array
+
+# If we are using python 2.x on Linux, use the subprocess32
+# module which has many bug fixes and can prevent
+# subprocess deadlocks.
+#
+if os.name == 'posix' and sys.version_info[0] < 3:
+    import subprocess32 as subprocess
+else:
+    import subprocess
 
 from Host.Driver.DasConfigure import DasConfigure
 from Host.Driver.DriverAnalogInterface import AnalogInterface
@@ -68,6 +76,13 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
+
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 #
 # The driver provides a serialized RPC interface for accessing the DAS hardware.
 #

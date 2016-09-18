@@ -62,6 +62,7 @@ if sys.platform == "win32":
     windll = ctypes.windll #to get access to GetProcessId() which is not in the win32 libraries
 elif sys.platform == "linux2":
     import ttyLinux
+    import signal # to handle SIGTERM
     libc = ctypes.CDLL("libc.so.6")
     sched_getaffinity = libc.sched_getaffinity
     sched_setaffinity = libc.sched_setaffinity
@@ -77,6 +78,15 @@ import psutil
 from os import spawnv
 from os import P_NOWAIT
 from os import getpid as os_getpid
+
+# If we are using python 2.x on Linux, use the subprocess32
+# module which has many bug fixes and can prevent
+# subprocess deadlocks.
+#
+if os.name == 'posix' and sys.version_info[0] < 3:
+    import subprocess32 as subprocess
+else:
+    import subprocess
 from subprocess import Popen, call
 
 from Host.Common import CmdFIFO
@@ -359,8 +369,8 @@ elif sys.platform == "linux2":
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
-                termList = ["xterm","-T",appName,"-e"]
-                process = Popen(termList+argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
+                termList = ["xterm","-hold","-T",appName,"-e"]
+                process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
             raise
@@ -407,7 +417,8 @@ elif sys.platform == "linux2":
 
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
-        os.kill(processHandle.pid,9)
+        # print("TerminateProcess disabled") # RSF
+        os.kill(processHandle.pid,9) # Don't kill for debug RSF
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
@@ -630,8 +641,13 @@ class App(object):
             launchArgs += "--restarted"
 
         if ext in [".py", ".pyc"]:
-            exeName = sys.executable #the python executable when py or pyc
+            # Set the python interpreter to use if we are running a
+            # *.py or *.pyc.  If the optimize flag is set (i.e. python -O Supervisor.py)
+            # use the optimize flag on the subprocesses.
+            exeName = sys.executable
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
+            if sys.flags.optimize:
+                exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
                 launchPath = "%s" % (self.Executable,)
             else:
@@ -970,6 +986,12 @@ class Supervisor(object):
         self.powerDownAfterTermination = False
         self.appList = None
         self.messageQueue = Queue.Queue(100)
+        
+        # Linux helper:
+        # If there is no tty to use ^T, terminate Supervisor and its
+        # subprocesses with 'kill -USR1 <supervisor_pid>
+        signal.signal(signal.SIGUSR1, self.sigint_handler)
+        print("Supervisor PID:", os.getpid())
 
         # start to use CustomConfigObj
         try:
@@ -1305,21 +1327,37 @@ class Supervisor(object):
         except Exception, E:
             Log("Exception trapped when configuring and launching the Master RPC server", Verbose = "Exception = %s %r" % (E, E))
 
+    def sigint_handler(self, signum, frame):
+        self._TerminateAllRequested = True
+
     def CheckForStopRequests(self):
-        try:
-            start_rawkb()
-            while True:
-                key = read_rawkb()
-                if key == "": break
-                if ord(key) in [17, 24]: #ctrl-q and ctrl-x
-                    Log("Exit request received via keyboard input (Ctrl-X)")
-                    self._ShutdownRequested = True
-                elif ord(key) == 20: #ctrl-t
-                    Log("Terminate request received via keyboard input (Ctrl-T)")
-                    self._TerminateAllRequested = True
-                    self.powerDownAfterTermination = False
-        finally:
-            stop_rawkb()
+	"""
+	Set Ctrl-X to tell Supervisor to exit the code, Ctrl-T to terminate.
+	These two should shutdown all the other Host sub-processes.
+	Ctrl-C will kill the Supervisor and leave the sub-processes as
+	zombies you'll have to kill manually.
+
+	In Linux, the keyboard shortcut is set with ttyLinux.py which
+	requires to run in a valid tty terminal like x-term.  If the
+	code is run in an IDE with a pseudo terminal, ttyLinux will
+	throw an exception and terminate the Supervior.
+	"""
+
+        if sys.stdout.isatty():
+            try:
+                start_rawkb()
+                while True:
+                    key = read_rawkb()
+                    if key == "": break
+                    if ord(key) in [17, 24]: #ctrl-q and ctrl-x
+                        Log("Exit request received via keyboard input (Ctrl-X)")
+                        self._ShutdownRequested = True
+                    elif ord(key) == 20: #ctrl-t
+                        Log("Terminate request received via keyboard input (Ctrl-T)")
+                        self._TerminateAllRequested = True
+                        self.powerDownAfterTermination = False
+            finally:
+                stop_rawkb()
 
         if self._ShutdownRequested or self._TerminateAllRequested:
             #In addition to being set above, these could also have been set somewhere else (eg: RPC server)...

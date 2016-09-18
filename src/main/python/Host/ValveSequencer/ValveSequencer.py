@@ -47,6 +47,12 @@ EXE_INTERVAL = 60000 * DISP_TIME_PRECISION # in ms
 SKIP_INTERVAL = 1 # in ms
 DEFAULT_MAX_VALVE_STEPS = 300
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME)
 
 class RpcServerThread(threading.Thread):
@@ -74,7 +80,10 @@ class ValveSequencer(ValveSequencerFrame):
         except:
             pass
         numMaxSteps = self.co.getint("MAIN", "numMaxSteps", DEFAULT_MAX_VALVE_STEPS)
-        ValveSequencerFrame.__init__(self, self.numSolValves, numMaxSteps, *args, **kwds)
+        vsf = ValveSequencerFrame.__init__(self, self.numSolValves, numMaxSteps, *args, **kwds)
+        # ValveSequencerFrame.setScrollbars()
+        # vsf = ValveSequencerFrame(self.numSolValves, numMaxSteps, *args, **kwds)
+        vsf.setScrollbars()
         try:
             self.rotValveCtrl = RotValveCtrl(self.comPortRotValve)
             self.rotValveCtrl.open()
