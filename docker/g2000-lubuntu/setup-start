@@ -9,6 +9,7 @@ echo "20000 39999" > /proc/sys/net/ipv4/ip_local_port_range
 /usr/sbin/sshd
 echo "starting VNC server ..."
 rm -rf /tmp/.X*
-sudo -u picarro USER=picarro vncserver :1 -geometry 1280x800 -depth 24
+sleep 1
+USER=root vncserver :1 -geometry 1800x900 -depth 24
 # Tail the log so that the command does not terminate
-tail -f /home/picarro/.vnc/*:1.log
+tail -f /root/.vnc/*:1.log

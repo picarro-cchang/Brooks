@@ -1,7 +1,6 @@
 FROM picarrodocker/host_base:latest
 MAINTAINER Sze Tan <stan@picarro.com>
 
-
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get dist-upgrade -y
@@ -14,7 +13,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y lxde terminator
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tightvncserver
 RUN rm -rf /var/lib/apt/lists/*
 
+# Winpdb latest version (conda version for linux-64 is out of date)
+WORKDIR /home/G2000/resources
+RUN wget -O winpdb-1.4.8.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/winpdb/winpdb-1.4.8.tar.gz
+RUN tar -xzf winpdb-1.4.8.tar.gz
+WORKDIR /home/G2000/resources/winpdb-1.4.8
+RUN python setup.py install -f
 RUN apt-get update -y
+RUN apt-get install -y xterm
 
 # Libraries for VSCode
 RUN apt-get install -y libnspr4 libnss3
@@ -39,26 +45,17 @@ RUN mkdir /mnt/applog
 
 
 # VNC directories and files
-RUN mkdir /home/picarro/.vnc
-RUN mkdir /home/G2000/.vnc
 RUN mkdir /root/.vnc
 
-RUN echo 12345 | vncpasswd -f > /home/picarro/.vnc/passwd
-RUN chmod 600 /home/picarro/.vnc/passwd
+RUN echo 12345 | vncpasswd -f > /root/.vnc/passwd
+RUN chmod 600 /root/.vnc/passwd
 
-COPY xstartup /home/picarro/.vnc/xstartup
-RUN chmod 755 /home/picarro/.vnc/xstartup
-COPY xstartup /home/G2000/.vnc/xstartup
-RUN chmod 755 /home/G2000/.vnc/xstartup
 COPY xstartup /root/.vnc/xstartup
 RUN chmod 755 /root/.vnc/xstartup
 
-RUN chown -R picarro.picarro /home/picarro/.vnc
-RUN chown -R G2000.G2000 /home/G2000/.vnc
-
 COPY setup-start /usr/bin
 
-WORKDIR /home/picarro
+WORKDIR /root
 # Set up path to Anaconda Python
 ENV PATH /opt/conda/bin:$PATH
 CMD ["/usr/bin/setup-start"]
