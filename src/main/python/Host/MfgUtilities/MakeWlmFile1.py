@@ -172,13 +172,14 @@ class WlmFileMaker(object):
         self.serialTimeout = 10.0
         self.ser = None
         self.wavemeter = None
-        if self.ipAddr is None:
-            self.searchSerPort()
-        else:
-            try:
-                self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
-            except:
-                raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
+        if not self.simulation:
+            if self.ipAddr is None:
+                self.searchSerPort()
+            else:
+                try:
+                    self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
+                except:
+                    raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
 
     def searchSerPort(self):
         reply = None
@@ -474,7 +475,8 @@ class WlmFileMaker(object):
         finally:
             if self.fp:
                 self.fp.close()
-            self.wavemeter.Close()
+            if self.wavemeter:
+                self.wavemeter.Close()
             Driver.restoreRegValues(regVault)
             Driver.startEngine()
 
