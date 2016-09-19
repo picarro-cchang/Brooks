@@ -19,6 +19,7 @@ import os
 import pprint
 import sys
 import time
+import types
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -30,11 +31,11 @@ else:
     import subprocess
 
 from Host.autogen import interface
-from Host.Common import SharedTypes
-from Host.Common import CmdFIFO
+from Host.Common import CmdFIFO, SchemeProcessor, SharedTypes
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 from Host.Common.SingleInstance import SingleInstance
+from Host.DriverSimulator.DasSimulator import DasSimulator
 
 try:
     # Release build
@@ -60,6 +61,25 @@ if __debug__:
     rpdb2.start_embedded_debugger("hostdbg",timeout=0)
     print("rpdb2 loaded")
 
+def _reg_index(indexOrName):
+    """Convert a name or index into an integer index, raising an exception if the name is not found"""
+    if isinstance(indexOrName,types.IntType):
+        return indexOrName
+    else:
+        try:
+            return interface.registerByName[indexOrName.strip().upper()]
+        except KeyError:
+            raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
+
+def _value(valueOrName):
+    """Convert valueOrName into an value, raising an exception if the name is not found"""
+    if isinstance(valueOrName,types.StringType):
+        try:
+            valueOrName = getattr(interface,valueOrName)
+        except AttributeError:
+            raise AttributeError("Value identifier not recognized %r" % valueOrName)
+    return valueOrName
+
 #
 # The driver provides a serialized RPC interface for accessing the DAS hardware.
 #
@@ -72,6 +92,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.config = driver.config
         self.ver = driver.ver
         self.driver = driver
+        self.dasSimulator = driver.dasSimulator
         self._register_rpc_functions()
 
     def _register_rpc_functions_for_object(self, obj):
@@ -118,26 +139,25 @@ class DriverRpcHandler(SharedTypes.Singleton):
         except:
             return "undefined"
 
-    def rdDasReg(self,regIndexOrName):
-        """Reads a DAS register, using either its index or symbolic name"""
-        index = self._reg_index(regIndexOrName)
-        ri = interface.registerInfo[index]
-        if not ri.readable:
-            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
-        if ri.type == ctypes.c_float:
-            return self.dasInterface.hostToDspSender.rdRegFloat(index)
-        elif ri.type == ctypes.c_uint:
-            return self.dasInterface.hostToDspSender.rdRegUint(index)
-        else:
-            return ctypes.c_int32(self.dasInterface.hostToDspSender.rdRegUint(index)).value
+    def loadIniFile(self):
+        """Loads state from instrument configuration file"""
+        SchemeProcessor.clearMemo()
+        config = InstrumentConfig()
+        config.reloadFile()
+        config.loadPersistentRegistersFromConfig()
+        Log("Loaded instrument configuration from file %s" % \
+            config.filename,Level=1)
 
-    def rdDasRegList(self,regList):
+    def rdDasReg(self, regIndexOrName):
+        return self.driver.rdDasReg(regIndexOrName)
+
+    def rdDasRegList(self, regList):
         return [self.rdDasReg(reg) for reg in regList]
 
-    def rdFPGA(self,base,reg):
-        return self.dasInterface.hostToDspSender.rdFPGA(base,reg)
+    def rdFPGA(self, base, reg):
+        return self.driver.rdFPGA(base, reg)
 
-    def rdRegList(self,regList):
+    def rdRegList(self, regList):
         result = []
         for regLoc,reg in regList:
             if regLoc == "dsp":
@@ -148,30 +168,24 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 result.append(None)
         return result
 
-    def wrDasReg(self,regIndexOrName,value,convert=True):
-        """Writes to a DAS register, using either its index or symbolic name. If convert is True,
-            value is a symbolic string that is looked up in the interface definition file. """
-        if convert:
-            value = self._value(value)
-        index = self._reg_index(regIndexOrName)
-        ri = interface.registerInfo[index]
-        if not ri.writable:
-            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
-        if ri.type in [ctypes.c_uint,ctypes.c_int,ctypes.c_long]:
-            return self.dasInterface.hostToDspSender.wrRegUint(index,value)
-        elif ri.type == ctypes.c_float:
-            return self.dasInterface.hostToDspSender.wrRegFloat(index,value)
-        else:
-            raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
+    def wrDasReg(self, regIndexOrName, value, convert=True):
+        return self.driver.wrDasReg(regIndexOrName, value, convert)
 
-    def wrDasRegList(self,regList,values):
+    def wrDasRegList(self, regList, values):
         for r,value in zip(regList,values):
             self.wrDasReg(r,value)
 
-    def wrFPGA(self,base,reg,value,convert=True):
-        if convert:
-            value = self._value(value)
-        return self.dasInterface.hostToDspSender.wrFPGA(base,reg,value)
+    def wrFPGA(self, base, reg, value, convert=True):
+        return self.driver.wrFPGA(base, reg, value, convert)
+
+    def writeIniFile(self,filename=None):
+        """Writes out the current instrument configuration to the
+            specified filename, or to the one specified in the driver
+            configuration file"""
+        config = InstrumentConfig()
+        config.savePersistentRegistersToConfig()
+        name = config.writeConfig(filename)
+        Log("Saved instrument configuration to file %s" % (name,),Level=1)
 
     def wrRegList(self,regList,values):
         for (regLoc,reg),value in zip(regList,values):
@@ -180,29 +194,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
             elif regLoc == "fpga":
                 self.wrFPGA(0, reg, value)
 
-    def _reg_index(self,indexOrName):
-        """Convert a name or index into an integer index, raising an exception if the name is not found"""
-        if isinstance(indexOrName,types.IntType):
-            return indexOrName
-        else:
-            try:
-                return interface.registerByName[indexOrName.strip().upper()]
-            except KeyError:
-                raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
-
-    def _value(self,valueOrName):
-        """Convert valueOrName into an value, raising an exception if the name is not found"""
-        if isinstance(valueOrName,types.StringType):
-            try:
-                valueOrName = getattr(interface,valueOrName)
-            except AttributeError:
-                raise AttributeError("Value identifier not recognized %r" % valueOrName)
-        return valueOrName
-
 class DriverSimulator(SharedTypes.Singleton):
     def __init__(self, configFile):
         self.looping = True
         self.config = ConfigObj(configFile)
+        self.dasSimulator = DasSimulator()
         basePath = os.path.split(configFile)[0]
         # Get appConfig and instrConfig version number
         self.ver = {}
@@ -215,6 +211,17 @@ class DriverSimulator(SharedTypes.Singleton):
                 self.ver[ver] = "N/A"
         # Set up RPC handler
         self.rpcHandler = DriverRpcHandler(self)
+
+    def rdDasReg(self, regIndexOrName):
+        """Reads a DAS register, using either its index or symbolic name"""
+        index = _reg_index(regIndexOrName)
+        ri = interface.registerInfo[index]
+        if not ri.readable:
+            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
+        return self.dasSimulator.rdDasReg(regIndexOrName)
+
+    def rdFPGA(self, base, reg):
+        return self.dasSimulator.rdFPGA(base, reg)
 
     def run(self):
         try:
@@ -242,6 +249,89 @@ class DriverSimulator(SharedTypes.Singleton):
                     Verbose=traceback.format_exc(),Level=3)
         finally:
             self.rpcHandler.shutDown()
+
+    def wrDasReg(self, regIndexOrName, value, convert=True):
+        """Writes to a DAS register, using either its index or symbolic name. If convert is True,
+            value is a symbolic string that is looked up in the interface definition file. """
+        if convert:
+            value = _value(value)
+        index = _reg_index(regIndexOrName)
+        ri = interface.registerInfo[index]
+        if not ri.writable:
+            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
+        return self.dasSimulator.wrDasReg(regIndexOrName, value, convert)
+
+    def wrFPGA(self, base, reg, value, convert=True):
+        return self.dasSimulator.wrFPGA(base, reg, value, convert)
+
+class InstrumentConfig(object):
+    """Configuration of instrument (typically defined by a master.ini file)"""
+    def __init__(self, filename, rdDasReg, wrDasReg, rdFPGA, wrFPGA):
+        if filename is not None:
+            self.config = ConfigObj(filename)
+            self.filename = filename
+
+    def reloadFile(self):
+        self.config = ConfigObj(self.filename)
+
+    def savePersistentRegistersToConfig(self):
+        s = HostToDspSender()
+        if "DAS_REGISTERS" not in self.config:
+            self.config["DAS_REGISTERS"] = {}
+        for ri in interface.registerInfo:
+            if ri.persistence:
+                if ri.type == ctypes.c_float:
+                    self.config["DAS_REGISTERS"][ri.name]= \
+                        s.rdRegFloat(ri.name)
+                else:
+                    self.config["DAS_REGISTERS"][ri.name]= \
+                        ri.type(s.rdRegUint(ri.name)).value
+        for fpgaMap,regList in interface.persistent_fpga_registers:
+            self.config[fpgaMap] = {}
+            for r in regList:
+                try:
+                    self.config[fpgaMap][r] = s.rdFPGA(fpgaMap,r)
+                except:
+                    Log("Error reading FPGA register %s in %s" % (r,fpgaMap),Level=2)
+
+    def loadPersistentRegistersFromConfig(self):
+        s = HostToDspSender()
+        if "DAS_REGISTERS" not in self.config:
+            self.config["DAS_REGISTERS"] = {}
+        for name in self.config["DAS_REGISTERS"]:
+            if name not in interface.registerByName:
+                Log("Unknown register %s ignored during config file load" % name,Level=2)
+            else:
+                index = interface.registerByName[name]
+                ri = interface.registerInfo[index]
+                if ri.writable:
+                    if ri.type == ctypes.c_float:
+                        value = float(self.config["DAS_REGISTERS"][name])
+                        s.wrRegFloat(ri.name,value)
+                    else:
+                        value = ctypes.c_uint(
+                            int(self.config["DAS_REGISTERS"][name])).value
+                        s.wrRegUint(ri.name,value)
+                else:
+                    Log("Unwritable register %s ignored during config file load" % name,Level=2)
+        for fpgaMap in self.config:
+            if fpgaMap.startswith("FPGA"):
+                for name in self.config[fpgaMap]:
+                    value = int(self.config[fpgaMap][name])
+                    try:
+                        s.wrFPGA(fpgaMap,name,value)
+                    except:
+                        Log("Error writing FPGA register %s in %s" % (name,fpgaMap),Level=2)
+
+    def writeConfig(self,filename=None):
+        if filename is None:
+            filename = self.filename
+            self.config.write()
+        else:
+            fp = file(filename,"w")
+            self.config.write(fp)
+            fp.close
+        return filename
 
 HELP_STRING = """DriverSimulator.py [-c<FILENAME>] [-h|--help]
 
@@ -1539,7 +1629,7 @@ class Driver(SharedTypes.Singleton):
                         self.rpcHandler.readWlmDarkCurrents()
                     except:
                         Log("Cannot read dark currents from WLM EEPROM",Level=2)
-                    daemon = self.rpcHandler.server.daemon
+                    daemon = self.rpcHandler.serveInstrumentConfigr.daemon
                     Log("DAS firmware uploaded",Level=1)
                     break
                 except:
@@ -1560,7 +1650,7 @@ class Driver(SharedTypes.Singleton):
             self.validInstallerId = True
             if self.installerId != None:
                 try:
-                    self.analyzerType = self.rpcHandler.fetchInstrInfo("analyzer")
+                    self.analyzerType = self.rpcHaInstrumentConfigndler.fetchInstrInfo("analyzer")
                 except Exception, err:
                     print "%r" % err
                     self.analyzerType = None
@@ -1584,7 +1674,7 @@ class Driver(SharedTypes.Singleton):
                     self.dasInterface.pingWatchdog()
                     timeSoFar = 0
                     messages = messageHandler.process(0.02)
-                    timeSoFar += messages.duration
+                    timeSoFar += messages.durationInstrumentConfig
                     sensors = sensorHandler.process(max(0.02, 0.2 - timeSoFar))
                     timeSoFar += sensors.duration
                     ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))

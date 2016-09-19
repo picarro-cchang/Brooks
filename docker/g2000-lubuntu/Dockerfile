@@ -32,6 +32,7 @@ RUN sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/x86_64-linux-gnu/libxcb.so.1
 WORKDIR /home/G2000/resources
 RUN wget -O code.deb https://go.microsoft.com/fwlink/?LinkID=760868
 RUN dpkg -i code.deb
+RUN conda install flake8
 
 RUN echo 'root:bl52l21fbl52l21f' |chpasswd
 RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
