@@ -77,6 +77,12 @@ SAMPLEMGR_STATUS_VALVE_DAC_HIGH = 0x2000
 SAMPLEMGR_STATUS_FLOW_LOW       = 0x4000
 SAMPLEMGR_STATUS_FLOW_HIGH      = 0x8000
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 ###############################################################################
 class SampleManagerBaseMode(object):
     """ Base class for various Sample Manager modes. All 'scripts' must use this base class.

@@ -55,7 +55,8 @@ class SerialInterface(object):
 
 if __name__ == "__main__" :
     s = SerialInterface()
-    s.config( port='COM1', timeout=1 )
+    #s.config( port='COM1', timeout=1 )
+    s.config( port='/dev/ttyS1', timeout=1 )
     s.open()
     print s.write("Hello from PySerial\r\n")
     print s.read()

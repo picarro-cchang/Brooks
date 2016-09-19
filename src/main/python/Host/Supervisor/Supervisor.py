@@ -272,7 +272,7 @@ if sys.platform == "win32":
             return msvcrt.getch()
         return ""
 
-    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity):
+    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
         #launch the process...
         Log("Launching application", appName, 1)
         ##Used to do this with spawnv, but doing this causes the spawned apps to
@@ -298,7 +298,7 @@ if sys.platform == "win32":
         elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
             dwCreationFlags += win32process.CREATE_NEW_CONSOLE
         lpEnvironment = None
-        lpCurrentDirectory = None
+        lpCurrentDirectory = cwd
         lpStartupInfo = win32process.STARTUPINFO()
         hProcess, hThread, dwProcessId, dwThreadId =  win32process.CreateProcess(
             lpApplicationName,
@@ -360,7 +360,7 @@ elif sys.platform == "linux2":
     def read_rawkb():
         return ttyLinux.readLookAhead()
 
-    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity):
+    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
         #launch the process...
         Log("Launching application", dict(appName=appName), 1)
         argList = [exeName]
@@ -368,10 +368,10 @@ elif sys.platform == "linux2":
             argList += shlex.split(arg)
         try:
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
-                process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
+                process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
                 termList = ["xterm","-hold","-T",appName,"-e"]
-                process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
+                process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
             raise
@@ -653,7 +653,8 @@ class App(object):
                 launchPath = "%s" % (self.Executable,)
             else:
                 #The path will be relative to the location of the supervisor app...
-                launchPath = "%s/%s" % (os.path.dirname(AppPath), self.Executable)
+                launchPath = os.path.join(os.path.dirname(AppPath), self.Executable)
+            launchPath = os.path.normpath(launchPath)
             exeArgs.append(launchPath)
             exeArgs.append(launchArgs)
         else:
@@ -666,7 +667,8 @@ class App(object):
                 exeName = "%s" % (self.Executable,)
             else:
                 #The path will be relative to the location of the supervisor app...
-                exeName = "%s/%s" % (os.path.dirname(AppPath), self.Executable)
+                exeName = os.path.join(os.path.dirname(AppPath), self.Executable)
+            exeName = os.path.normpath(exeName)
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
             exeArgs.append(launchArgs)
 
@@ -675,7 +677,7 @@ class App(object):
         if supervisor.CheckForStopRequests():
             raise TerminationRequest
 
-        r = launchProcess(self._AppName,exeName,exeArgs,self.Priority,self.ConsoleMode,self.AffinityMask)
+        r = launchProcess(self._AppName,exeName,exeArgs,self.Priority,self.ConsoleMode,self.AffinityMask,os.path.dirname(AppPath))
         self._ProcessId, self._ProcessHandle, pAffinity = r
 
         #self._ProcessHandle = hProcess.handle
@@ -1049,8 +1051,9 @@ class Supervisor(object):
             A = self.AppDict[appName]
             assert isinstance(A, App) #for Wing
             #Make sure the executable exists!
-            if not os.path.exists(A.Executable):
-                raise AppErr("File '%s' does not exist for AppName '%s'." % (A.Executable, appName))
+            exePath = os.path.normpath(os.path.join(os.path.dirname(AppPath), A.Executable))
+            if not os.path.exists(exePath):
+                raise AppErr("File '%s' does not exist for AppName '%s'." % (exePath, appName))
 
             #Launch apps in virtual mode
             if self.virtualMode and appName in ["InstMgr", "RDFreqConverter"]:

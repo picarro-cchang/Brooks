@@ -14,7 +14,19 @@ src/main/python/Host/Fitter/fitutils.so
 src/main/python/Host/Utilities/SuperBuildStation/fastLomb.pyd
 src/main/python/Host/Utilities/SuperBuildStation/fastLomb.so
 src/main/python/Host/build_version.py
-src/main/python/AppConfig/
+#
+# Exclude AppConfig subdirectories, but include files associated
+#  with the DriverSimulator
+src/main/python/AppConfig/*.ini
+src/main/python/AppConfig/Config/*
+src/main/python/AppConfig/ModeInfo/*
+src/main/python/AppConfig/Schemes/*
+src/main/python/AppConfig/Scripts/*
+!src/main/python/AppConfig/Config/DriverSimulator
+!src/main/python/AppConfig/Config/Supervisor
+src/main/python/AppConfig/Config/Supervisor/*
+!src/main/python/AppConfig/Config/Supervisor/supervisor_sim*
+#
 src/main/python/InstrConfig/
 src/main/python/CommonConfig/
 src/main/python/Log/

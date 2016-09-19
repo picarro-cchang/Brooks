@@ -1,29 +1,24 @@
 #!/usr/bin/python
 #
 """
-File Name: Driver.py
-Purpose: Low-level communication with hardware via USB interface
+File Name: DriverSimulator.py
+Purpose: Simulation of Driver for diagnostic purposes
 
 File History:
-    07-Jan-2009  sze  Initial version.
+    18-Sep-2016  sze  Initial version.
 
-Copyright (c) 2010 Picarro, Inc. All rights reserved
+Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "Driver"
+APP_NAME = "DriverSimulator"
 
-import cPickle
-import ctypes
+from configobj import ConfigObj
 import getopt
 import inspect
 import os
-import struct
+import pprint
 import sys
-import tables
 import time
-import types
-import traceback
-from numpy import array
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -33,6 +28,272 @@ if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
 else:
     import subprocess
+
+from Host.autogen import interface
+from Host.Common import SharedTypes
+from Host.Common import CmdFIFO
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.SharedTypes import RPC_PORT_DRIVER
+from Host.Common.SingleInstance import SingleInstance
+
+try:
+    # Release build
+    from Host.Common import release_version as version
+except ImportError:
+    try:
+        # Internal build
+        from Host.Common import setup_version as version
+    except ImportError:
+        # Internal dev
+        from Host.Common import version
+
+EventManagerProxy_Init(APP_NAME)
+
+if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    AppPath = sys.executable
+else:
+    AppPath = sys.argv[0]
+
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
+#
+# The driver provides a serialized RPC interface for accessing the DAS hardware.
+#
+class DriverRpcHandler(SharedTypes.Singleton):
+    def __init__(self,driver):
+        self.server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DRIVER),
+                                            ServerName = "Driver",
+                                            ServerDescription = "Driver for CRDS hardware",
+                                            threaded = True)
+        self.config = driver.config
+        self.ver = driver.ver
+        self.driver = driver
+        self._register_rpc_functions()
+
+    def _register_rpc_functions_for_object(self, obj):
+        """ Registers the functions in DriverRpcHandler class which are accessible by XML-RPC
+
+        NOTE - this automatically registers ALL member functions that don't start with '_'.
+
+        i.e.:
+          - if adding new rpc calls, just define them (with no _) and you're done
+          - if putting helper calls in the class for some reason, use a _ prefix
+        """
+        classDir = dir(obj)
+        for s in classDir:
+            attr = obj.__getattribute__(s)
+            if callable(attr) and (not s.startswith("_")) and (not inspect.isclass(attr)):
+                self.server.register_function(attr,DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
+
+    def _register_rpc_functions(self):
+        """ Registers the functions accessible by XML-RPC """
+        #register the functions contained in this file...
+        self._register_rpc_functions_for_object( self )
+        Log("Registered RPC functions")
+
+    def allVersions(self):
+        versionDict = {}
+        versionDict["interface"] = interface.interface_version
+        try:
+            versionDict["host release"] = version.versionString()
+        except:
+            versionDict["host release"] = "Experimental"
+        try:
+            versionDict["config - app version no"] = self.ver["appVer"]
+            versionDict["config - instr version no"] = self.ver["instrVer"]
+            versionDict["config - common version no"] = self.ver["commonVer"]
+        except Exception, err:
+            print err
+        Log("version = %s" % pprint.pformat(versionDict))
+        return versionDict
+
+    def interfaceValue(self,valueOrName):
+        """Ask Driver to lookup a symbol in the context of the current interface"""
+        try:
+            return self._value(valueOrName)
+        except:
+            return "undefined"
+
+    def rdDasReg(self,regIndexOrName):
+        """Reads a DAS register, using either its index or symbolic name"""
+        index = self._reg_index(regIndexOrName)
+        ri = interface.registerInfo[index]
+        if not ri.readable:
+            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
+        if ri.type == ctypes.c_float:
+            return self.dasInterface.hostToDspSender.rdRegFloat(index)
+        elif ri.type == ctypes.c_uint:
+            return self.dasInterface.hostToDspSender.rdRegUint(index)
+        else:
+            return ctypes.c_int32(self.dasInterface.hostToDspSender.rdRegUint(index)).value
+
+    def rdDasRegList(self,regList):
+        return [self.rdDasReg(reg) for reg in regList]
+
+    def rdFPGA(self,base,reg):
+        return self.dasInterface.hostToDspSender.rdFPGA(base,reg)
+
+    def rdRegList(self,regList):
+        result = []
+        for regLoc,reg in regList:
+            if regLoc == "dsp":
+                result.append(self.rdDasReg(reg))
+            elif regLoc == "fpga":
+                result.append(self.rdFPGA(0, reg))
+            else:
+                result.append(None)
+        return result
+
+    def wrDasReg(self,regIndexOrName,value,convert=True):
+        """Writes to a DAS register, using either its index or symbolic name. If convert is True,
+            value is a symbolic string that is looked up in the interface definition file. """
+        if convert:
+            value = self._value(value)
+        index = self._reg_index(regIndexOrName)
+        ri = interface.registerInfo[index]
+        if not ri.writable:
+            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
+        if ri.type in [ctypes.c_uint,ctypes.c_int,ctypes.c_long]:
+            return self.dasInterface.hostToDspSender.wrRegUint(index,value)
+        elif ri.type == ctypes.c_float:
+            return self.dasInterface.hostToDspSender.wrRegFloat(index,value)
+        else:
+            raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
+
+    def wrDasRegList(self,regList,values):
+        for r,value in zip(regList,values):
+            self.wrDasReg(r,value)
+
+    def wrFPGA(self,base,reg,value,convert=True):
+        if convert:
+            value = self._value(value)
+        return self.dasInterface.hostToDspSender.wrFPGA(base,reg,value)
+
+    def wrRegList(self,regList,values):
+        for (regLoc,reg),value in zip(regList,values):
+            if regLoc == "dsp":
+                self.wrDasReg(reg, value)
+            elif regLoc == "fpga":
+                self.wrFPGA(0, reg, value)
+
+    def _reg_index(self,indexOrName):
+        """Convert a name or index into an integer index, raising an exception if the name is not found"""
+        if isinstance(indexOrName,types.IntType):
+            return indexOrName
+        else:
+            try:
+                return interface.registerByName[indexOrName.strip().upper()]
+            except KeyError:
+                raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
+
+    def _value(self,valueOrName):
+        """Convert valueOrName into an value, raising an exception if the name is not found"""
+        if isinstance(valueOrName,types.StringType):
+            try:
+                valueOrName = getattr(interface,valueOrName)
+            except AttributeError:
+                raise AttributeError("Value identifier not recognized %r" % valueOrName)
+        return valueOrName
+
+class DriverSimulator(SharedTypes.Singleton):
+    def __init__(self, configFile):
+        self.looping = True
+        self.config = ConfigObj(configFile)
+        basePath = os.path.split(configFile)[0]
+        # Get appConfig and instrConfig version number
+        self.ver = {}
+        for ver in ["appVer", "instrVer", "commonVer"]:
+            try:
+                fPath = os.path.join(basePath, self.config["Files"][ver])
+                co = ConfigObj(fPath)
+                self.ver[ver] = co["Version"]["revno"]
+            except Exception, err:
+                self.ver[ver] = "N/A"
+        # Set up RPC handler
+        self.rpcHandler = DriverRpcHandler(self)
+
+    def run(self):
+        try:
+            daemon = self.rpcHandler.server.daemon
+            Log("Starting main driver loop", Level=1)
+            maxRpcTime = 0.5
+            rpcTime = 0.0
+            try:
+                while self.looping and not daemon.mustShutdown:
+                    rpcTime = maxRpcTime
+                    requestTimeout = rpcTime
+                    now = time.time()
+                    doneTime = now + rpcTime
+                    rpcLoops = 0
+                    # Keep handling RPC requests for a duration up to "rpcTime"
+                    while now < doneTime:
+                        rpcLoops += 1
+                        daemon.handleRequests(requestTimeout)
+                        now = time.time()
+                        requestTimeout = doneTime - now
+                Log("Driver RPC handler shut down")
+            except:
+                type,value,trace = sys.exc_info()
+                Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
+                    Verbose=traceback.format_exc(),Level=3)
+        finally:
+            self.rpcHandler.shutDown()
+
+HELP_STRING = """DriverSimulator.py [-c<FILENAME>] [-h|--help]
+
+Where the options can be a combination of the following:
+-h, --help           print this help
+-c                   specify a config file:  default = "./Driver.ini"
+"""
+
+def printUsage():
+    print HELP_STRING
+
+def handleCommandSwitches():
+    shortOpts = 'hc:'
+    longOpts = ["help"]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, E:
+        print "%s %r" % (E, E)
+        sys.exit(1)
+    #assemble a dictionary where the keys are the switches and values are switch args...
+    options = {}
+    for o,a in switches:
+        options.setdefault(o,a)
+    if "/?" in args or "/h" in args:
+        options.setdefault('-h',"")
+    #Start with option defaults...
+    configFile = os.path.dirname(AppPath) + "/DriverSimulator.ini"
+    if "-h" in options or "--help" in options:
+        printUsage()
+        sys.exit()
+    if "-c" in options:
+        configFile = options["-c"]
+    return configFile
+
+if __name__ == "__main__":
+    try:
+        print "Hello from DriverSimulator"
+        driverApp = SingleInstance("DriverSimulator")
+        if driverApp.alreadyrunning():
+            Log("Instance of driver simulator us already running",Level=3)
+        else:
+            configFile = handleCommandSwitches()
+            Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
+            d = DriverSimulator(configFile)
+            d.run()
+        Log("Exiting program")
+    except Exception, e:
+        LogExc("Unhandled exception trapped by last chance handler",
+            Data = dict(Source = "DriverSimulator"), Level = 3)
+    time.sleep(1)
+'''
+
 
 from Host.Driver.DasConfigure import DasConfigure
 from Host.Driver.DriverAnalogInterface import AnalogInterface
@@ -832,8 +1093,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
         nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
-        if nBytes < 0 or nBytes > 1024:
-            raise ValueError("Cannot read invalid object from EEPROM.")
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
 
@@ -972,7 +1231,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return DasConfigure().parameter_forms
 
     def shutDown(self):
-        '''Place instrument in idle state for shutdown'''
+        """Place instrument in idle state for shutdown"""
         # Disable spectrum controller
         self.wrDasReg('SPECT_CNTRL_STATE_REGISTER','SPECT_CNTRL_IdleState')
         # Wait for all current controllers to leave automatic state
@@ -1320,12 +1579,6 @@ class Driver(SharedTypes.Singleton):
             Log("Starting main driver loop", Level=1)
             maxRpcTime = 0.5
             rpcTime = 0.0
-            # We need to determine how much time we should dedicate to serving rpc calls (up to maxRpcTime) 
-            #  as compared to handling messages, sensor and ringdown data from the DSP. On each loop,
-            #  - messages are handled for up to the first 20ms
-            #  - sensor data are handled for up to the first 200ms
-            #  - ringdowns are handled for up to the first 500ms
-            # However, to ensure that the processes are not starved, we reserve at least 20ms for each handler
             try:
                 while self.looping and not daemon.mustShutdown:
                     self.dasInterface.pingWatchdog()
@@ -1336,9 +1589,6 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensors.duration
                     ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))
                     timeSoFar += ringdowns.duration
-                    # We update the time for dealing with RPC by increasing it slightly if all handlers completed
-                    #  and reducing it if they did not. This is because the data accumulate during the time in 
-                    #  which RPCs are being processed
                     if sensors.finished and ringdowns.finished and messages.finished:
                         rpcTime += 0.01
                         if rpcTime > maxRpcTime:
@@ -1351,7 +1601,6 @@ class Driver(SharedTypes.Singleton):
                     now = time.time()
                     doneTime = now + rpcTime
                     rpcLoops = 0
-                    # Keep handling RPC requests for a duration up to "rpcTime"
                     while now < doneTime:
                         rpcLoops += 1
                         daemon.handleRequests(requestTimeout)
@@ -1512,3 +1761,4 @@ if __name__ == "__main__":
         d.run()
     Log("Exiting program")
     time.sleep(1)
+'''

@@ -99,6 +99,13 @@ StateName[STATE_SHUTDOWN] = "SHUTDOWN"
 ## Some debugging/development helpers...
 ####
 if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
+####
+if __debug__:
     from pprint import pprint
     #verify that we have text names for each state...
     __localsNow = {}

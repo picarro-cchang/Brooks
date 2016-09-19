@@ -83,7 +83,7 @@ class RemoteException(RuntimeError):
 #        return func(*a, **k)
 #    except:
 #        raise RemoteException(traceback.format_exc())
-    
+
 def rpc_wrap(func):
     def wrapper(*a,**k):
         try:
@@ -178,13 +178,14 @@ class DummyDaemon(object):
 
 class CmdFIFOServer(object):
     loggerInst = 0
+    @Pyro4.expose
     class CallbackObject(object):
         """This class is used to instntiate an object which is accessible via the Pyro protocol. It contains a dispatch method which allows callback functions previously registered using register_callback_fuction to be executed"""
         def __init__(self,server):
             self.server = server
             # Dictionary of callback functions indexed by name
             self.funcs = {}
-        def _dispatch(self,dottedMethodName,a,k):
+        def __dispatch__(self,dottedMethodName,a,k):
             """Dispatches the dottedMethodName applied to the arguments *a, **k."""
             method = dottedMethodName
             try:
@@ -192,6 +193,7 @@ class CmdFIFOServer(object):
             except KeyError:
                 raise CmdFIFOError('Callback method "%s" is not supported' % method)
             return func(*a,**k)
+    @Pyro4.expose
     class ServerObject(object):
         def __init__(self,server):
             self.instance = None
@@ -204,7 +206,7 @@ class CmdFIFOServer(object):
             self.event = threading.Event()
             self.queueLength = 0
             self.event.set()
-        def _dispatch(self,dottedMethodName,client,modeOverride,callbackInfo,a,k):
+        def __dispatch__(self,dottedMethodName,client,modeOverride,callbackInfo,a,k):
             """Dispatches the dottedMethodName applied to the arguments *a, **k.
             The method may be a registered function, or a method of the registered
             instance. Depending on whether the method is registered as a priority
@@ -255,9 +257,9 @@ class CmdFIFOServer(object):
                 # Use an method of the registered instance
                 funcMode = CMD_TYPE_Blocking
                 if self.instance is not None:
-                    # check for a _dispatch method
-                    if hasattr(self.instance, '_dispatch'):
-                        func = lambda *a, **k: self.instance._dispatch(method,a,k)
+                    # check for a __dispatch__ method
+                    if hasattr(self.instance, '__dispatch__'):
+                        func = lambda *a, **k: self.instance.__dispatch__(method,a,k)
                     else:
                         # call instance method directly
                         try:
@@ -360,7 +362,7 @@ class CmdFIFOServer(object):
                     port = int(m.group(2))
                 else:
                     raise ValueError("Invalid callback URI %s (should be http://address:port)" % uri)
-                    
+
                 # Set the name and time attributes while the function is executing
                 self.server.CurrentCmd_RxTime     = rxTime
                 self.server.CurrentCmd_ClientName = client
@@ -384,8 +386,8 @@ class CmdFIFOServer(object):
                             #  and come up again
                             try:
                                 callbackObject = Pyro4.core.Proxy("PYRO:callbackObject@%s:%d" % (address, port))
-                                callbackObject._pyroOneway.add("_dispatch")
-                                callbackObject._dispatch(callbackName,(result,faultString),{})
+                                callbackObject._pyroOneway.add("__dispatch__")
+                                callbackObject.__dispatch__(callbackName,(result,faultString),{})
                                 break
                             except Pyro4.errors.ConnectionClosedError:
                                 pass
@@ -457,11 +459,11 @@ class CmdFIFOServer(object):
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
         self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
-        self.daemon = DummyDaemon(self.pyroDaemon) 
+        self.daemon = DummyDaemon(self.pyroDaemon)
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
         # The serverObject and calbackObject are the targets of all the RPC calls. Their
-        #  activity is carried out in their _dispatch methods.
+        #  activity is carried out in their __dispatch__ methods.
         self.serverObject = CmdFIFOServer.ServerObject(self)
         self.callbackObject = CmdFIFOServer.CallbackObject(self)
         # Register these objects will well-known names
@@ -469,12 +471,12 @@ class CmdFIFOServer(object):
         self.pyroDaemon.register(self.callbackObject,"callbackObject")
         # Register built-in functions for the server
         self._register_cmdfifo_functions()
-        
+
     def handle_requests(self,*a,**k):
         # Delegate to DummyDaemon for compatibility with Pyro3
         if self.pyroDaemon and self.pyroDaemon.sockets:
             self.daemon.handleRequests(*a,**k)
-        
+
     def Launch(self):
         """Starts the server service loop within a daemonic thread"""
         self.thread = DaemonicThread(target = self.serve_forever)
@@ -489,14 +491,14 @@ class CmdFIFOServer(object):
         if self.pyroDaemon is not None:
             self.pyroDaemon.close()
             self.pyroDaemon = None
-            
+
     def Stop(self):
         """Stops the thread running the server main loop, and wait for it to terminate"""
         self.stop_server()
         if self.thread != None:
             self.thread.join()
             self.thread = None
-            
+
     def stop_server(self):
         """Stops the service loop of the daemon, and delete the daemon so that the server
         port is released for future connections"""
@@ -504,7 +506,7 @@ class CmdFIFOServer(object):
         self.daemon.mustShutdown = True
         if self.logger:
             self.logger.info("CmdFIFO %s terminated" % self.serverName)
-        
+
     def _CmdFIFO_GetDescription(self):
         """Gets the description of the rpc server."""
         return self.serverDescription
@@ -524,12 +526,12 @@ class CmdFIFOServer(object):
         """Gets the version of the rpc server."""
         return self.serverVersion
 
-    @rpc_wrap    
+    @rpc_wrap
     def _CmdFIFO_DebugDelay(self,sec):
         if sec>0: time.sleep(sec)
         else:
             raise ValueError("Invalid delay: %s" % sec)
-    
+
     def _CmdFIFO_KillServer(self,password):
         """Stops the server immediately"""
         if password == "please":
@@ -561,10 +563,10 @@ class CmdFIFOServer(object):
                 methods = remove_duplicates(
                         methods + self.serverObject.instance._listMethods()
                     )
-            # if the instance has a _dispatch method then we
+            # if the instance has a __dispatch__ method then we
             # don't have enough information to provide a list
             # of methods
-            elif not hasattr(self.serverObject.instance, '_dispatch'):
+            elif not hasattr(self.serverObject.instance, '__dispatch__'):
                 methods = remove_duplicates(
                         methods + list_public_methods(self.serverObject.instance)
                     )
@@ -607,9 +609,9 @@ class CmdFIFOServer(object):
             # Instance can implement _methodHelp to return help for a method
             if hasattr(self.serverObject.instance, '_methodHelp'):
                 return self.serverObject.instance._methodHelp(method_name)
-            # if the instance has a _dispatch method then we
+            # if the instance has a __dispatch__ method then we
             # don't have enough information to provide help
-            elif not hasattr(self.serverObject.instance, '_dispatch'):
+            elif not hasattr(self.serverObject.instance, '__dispatch__'):
                 try:
                     method = resolve_dotted_attribute(
                                 self.serverObject.instance,
@@ -625,7 +627,7 @@ class CmdFIFOServer(object):
             return "%s method not found" % method_name
         else:
             return getattr(method,"__wrapped_doc",pydoc.getdoc(method))
-            
+
     def register_function(self, function,name = None,DefaultMode = CMD_TYPE_Blocking,NameSlice = 0,EscapeDoubleUS = False):
         """Registers a function to respond to RPC requests.
 
@@ -680,12 +682,12 @@ class CmdFIFOServer(object):
         mthods are always called with CMD_TYPE_Blocking as the
         default FIFO mode.
 
-        If the registered instance has a _dispatch method then that
+        If the registered instance has a __dispatch__ method then that
         method will be called with the name of the RPC method and
         its parameters as a tuple
-        e.g. instance._dispatch('add',(2,3))
+        e.g. instance.__dispatch__('add',(2,3))
 
-        If the registered instance does not have a _dispatch method
+        If the registered instance does not have a __dispatch__ method
         then the instance will be searched to find a matching method
         and, if found, will be called. Methods beginning with an '_'
         are considered private and will not be called by
@@ -695,7 +697,7 @@ class CmdFIFOServer(object):
         will be called instead of the registered instance.
 
         If the optional allow_dotted_names argument is true and the
-        instance does not have a _dispatch method, method names
+        instance does not have a __dispatch__ method, method names
         containing dots are supported and resolved, as long as none of
         the name segments start with an '_'.
 
@@ -792,7 +794,7 @@ class CmdFIFOSimpleCallbackServer(object):
             self.thread = None
     def stop_server(self,*a,**k):
         self.server.stop_server(*a,**k)
-        
+
 class CmdFIFOServerProxy(object):
     def __init__(self, uri, ClientName, CallbackURI = "",
                  IsDontCareConnection = False, Timeout_s = None):
@@ -829,8 +831,8 @@ class CmdFIFOServerProxy(object):
         self.setup = True
         self.SetTimeout(self.timeout)
         # Use Oneway function, if we do not care about the result
-        if self.IsDontCare: 
-            self.remoteObject._pyroOneway.add("_dispatch")
+        if self.IsDontCare:
+            self.remoteObject._pyroOneway.add("__dispatch__")
         else:
             self.remoteObject._pyroOneway.clear()
     def __getattr__(self,name):
@@ -840,7 +842,7 @@ class CmdFIFOServerProxy(object):
         #  execute self.applyRemoteFunction("system.test.func",positional args-tuple,kwd args-dict)
         return _Method(self.applyRemoteFunction,name)
     def applyRemoteFunction(self,dottedMethodName,a,k):
-        # Calls the _dispatch function of the remote object to apply a method
+        # Calls the __dispatch__ function of the remote object to apply a method
         #  to some arguments.
         # The additional parameters client, modeOverride and callbackInfo are
         #  also sent to the remote object
@@ -860,10 +862,10 @@ class CmdFIFOServerProxy(object):
                     self.setupRemoteObject()
                 except Pyro4.errors.ProtocolError:
                     self.setup = False
-            if self.setup:        
+            if self.setup:
                 def curried():
                     try:
-                        self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                        self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
                     except:
                         self.setup = False
                 DaemonicThread(target=curried).start()
@@ -875,7 +877,7 @@ class CmdFIFOServerProxy(object):
                 # Perform command and re-establish connection if necessary
                 if self.setup:
                     try:
-                        return self.remoteObject._dispatch(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                        return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
                     except Pyro4.errors.TimeoutError,e:
                         raise TimeoutError("%s" % e)
                     except Pyro4.errors.ConnectionClosedError:
@@ -914,7 +916,7 @@ class CmdFIFOServerProxy(object):
         self.timeout = sec
         if sec is None:
             Pyro4.config.COMMTIMEOUT = 0.0
-        else:    
+        else:
             Pyro4.config.COMMTIMEOUT = sec
     def GetTimeout(self):
         """Gets the socket timeout for the proxy."""

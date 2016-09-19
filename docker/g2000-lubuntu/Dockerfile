@@ -1,0 +1,63 @@
+FROM picarrodocker/host_base:latest
+MAINTAINER Sze Tan <stan@picarro.com>
+
+RUN apt-get update -y
+RUN apt-get upgrade -y
+RUN apt-get dist-upgrade -y
+
+RUN apt-get install -y fuse
+RUN pip install Pyro4
+RUN pip install fusepy
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y lxde terminator
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tightvncserver
+RUN rm -rf /var/lib/apt/lists/*
+
+# Winpdb latest version (conda version for linux-64 is out of date)
+WORKDIR /home/G2000/resources
+RUN wget -O winpdb-1.4.8.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/winpdb/winpdb-1.4.8.tar.gz
+RUN tar -xzf winpdb-1.4.8.tar.gz
+WORKDIR /home/G2000/resources/winpdb-1.4.8
+RUN python setup.py install -f
+RUN apt-get update -y
+RUN apt-get install -y xterm
+
+# Libraries for VSCode
+RUN apt-get install -y libnspr4 libnss3
+# Patch (see https://github.com/Microsoft/vscode/issues/3451)
+WORKDIR /usr/lib/x86_64-linux-gnu/
+RUN cp libxcb.so.1 libxcb.so.1.orig
+RUN sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/x86_64-linux-gnu/libxcb.so.1
+# Install VSCode
+WORKDIR /home/G2000/resources
+RUN wget -O code.deb https://go.microsoft.com/fwlink/?LinkID=760868
+RUN dpkg -i code.deb
+
+RUN echo 'root:bl52l21fbl52l21f' |chpasswd
+RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
+
+RUN useradd picarro -m -s /bin/bash
+RUN echo 'picarro:picarro' |chpasswd
+
+COPY Picarro.pth /opt/conda/lib/python2.7/site-packages/Picarro.pth
+# Make a mount point for the FUSE based logger
+RUN mkdir /mnt/applog
+
+
+# VNC directories and files
+RUN mkdir /root/.vnc
+
+RUN echo 12345 | vncpasswd -f > /root/.vnc/passwd
+RUN chmod 600 /root/.vnc/passwd
+
+COPY xstartup /root/.vnc/xstartup
+RUN chmod 755 /root/.vnc/xstartup
+
+COPY setup-start /usr/bin
+
+WORKDIR /root
+# Set up path to Anaconda Python
+ENV PATH /opt/conda/bin:$PATH
+CMD ["/usr/bin/setup-start"]
+
+EXPOSE 22 5901 40000

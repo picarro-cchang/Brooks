@@ -77,6 +77,12 @@ else:
 if os.path.split(AppPath)[0] not in sys.path: sys.path.append(os.path.split(AppPath)[0])
 sys.path.append("CommandInterface")
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 class CommandInterface(object):
     interfaceClass = dict(SerialInterface=SerialInterface, SocketInterface=SocketInterface)
     def __init__(self):

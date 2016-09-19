@@ -1,0 +1,15 @@
+#!/bin/bash
+# Script to run for Docker g2000-lubuntu container
+
+# Need to define SHELL so the lxterminal works correctly
+export SHELL=/bin/bash
+# Sets up the ephemeral ports for the CRDS software
+echo "20000 39999" > /proc/sys/net/ipv4/ip_local_port_range
+# Start up ssh daemon
+/usr/sbin/sshd
+echo "starting VNC server ..."
+rm -rf /tmp/.X*
+sleep 1
+USER=root vncserver :1 -geometry 1800x900 -depth 24
+# Tail the log so that the command does not terminate
+tail -f /root/.vnc/*:1.log
