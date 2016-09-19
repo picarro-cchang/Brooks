@@ -1,7 +1,10 @@
 FROM continuumio/anaconda:latest
 MAINTAINER Sze Tan <stan@picarro.com>
 
-RUN apt-get update
+RUN apt-get update -y
+RUN apt-get upgrade -y
+RUN apt-get dist-upgrade -y
+
 RUN apt-get install -y openssh-server
 RUN apt-get install -y build-essential
 RUN apt-get install -y nano
@@ -10,8 +13,11 @@ RUN apt-get install -y nodejs
 RUN apt-get install -y libudev-dev
 RUN apt-get install -y usbutils
 RUN conda install wxpython
+RUN conda install pyserial
+RUN pip install subprocess32
+
 RUN mkdir /var/run/sshd
-RUN useradd G2000 -m
+RUN useradd G2000 -m -s /bin/bash
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 ENV NOTVISIBLE "in users profile"
