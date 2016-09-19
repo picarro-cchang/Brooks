@@ -7,7 +7,6 @@ File History:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-import sys
 import time
 import serial
 
@@ -30,9 +29,6 @@ class SerialInterface(object):
       timeout=None,                  #set a timeout value, None for waiting forever
       xonxoff=0,                     #enable software flow control
       rtscts=0):                     #enable RTS/CTS flow control
-        if sys.platform.startswith("linux"):
-            portnum = int(port[3:])
-            port = "/dev/ttyS%d" % (portnum-1)
         self.serial = serial.Serial ( port, baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts )
 
     def open( self ):
