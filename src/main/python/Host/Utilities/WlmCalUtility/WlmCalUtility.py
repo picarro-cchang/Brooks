@@ -31,7 +31,7 @@ from optparse import OptionParser
 import time
 import wx
 import csv
-from PIL import ImageGrab
+import pyscreenshot as ImageGrab
 
 from Host.Utilities.WlmCalUtility.WlmCalUtilityGui import WlmCalUtilityGui
 

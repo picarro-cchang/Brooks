@@ -27,8 +27,6 @@ from Host.Coordinator.CoordinatorScripts import calcInjectDateTime, formatOutput
 from Host.Coordinator.CoordinatorScripts import getValveStep, setValveStep, sendValveSequence
 from Host.Coordinator.CoordinatorScripts import dummyGetLog, DummyAutosampler
 import Host.Coordinator.CoordinatorScripts as CoordinatorScripts
-from Host.Coordinator.Autosampler import Autosampler
-from Host.Coordinator.IsotechGC import GC
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_SAMPLE_MGR, RPC_PORT_DATA_MANAGER, \
@@ -37,8 +35,22 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_MEAS_SYSTEM, \
                                     RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_VALVE_SEQUENCER, \
                                     RPC_PORT_AUTOSAMPLER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SerIntrf import SerIntrf
-from Host.Utilities.ModbusIntrf.ModbusIntrf import ModbusIntrf
+try:
+    from Host.Coordinator.Autosampler import Autosampler
+except:
+    Autosampler = DummyAutosampler
+try:
+    from Host.Coordinator.IsotechGC import GC
+except:
+    GC = None
+try:
+    from Host.Common.SerIntrf import SerIntrf
+except:
+    SerIntrf = None
+try:
+    from Host.Utilities.ModbusIntrf.ModbusIntrf import ModbusIntrf
+except:
+    ModbusIntrf = None
 
 OK = 1
 EXCEPTION = 2

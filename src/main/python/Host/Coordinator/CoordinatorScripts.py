@@ -37,12 +37,12 @@ from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
 import urllib2
 from xml.dom import minidom
-import ImageGrab
+import pyscreenshot as ImageGrab
 from shutil import move
 from glob import glob
 #import pytz
 
-import Pyro.errors
+import Pyro4.errors
 
 from Host.Common.CubicSpline import CubicSpline
 from Host.Common import CmdFIFO
@@ -124,7 +124,7 @@ def pulseAnalyzerMakeSafe(func):
             PULSE_ANALYZER.setActive(False)
             PULSE_ANALYZER.setNextDataBad()
             return False
-        except Pyro.errors.ProtocolError:
+        except Pyro4.errors.ProtocolError:
             if logPulseAnalyzer & PA_LOG_MASK_Exceptions:
                 LOGFUNC("  %s: ProtocolError\n" % func.__name__)
             PULSE_ANALYZER.setActive(False)
@@ -448,7 +448,7 @@ def pulseAnalyzerReset():
             # DataManager shutting down, allow some time to come back up
             delay = 8
 
-        except Pyro.errors.ProtocolError:
+        except Pyro4.errors.ProtocolError:
             # DataMgr is not running.
             # TODO: Wait several seconds and try to restart the pulse analyzer
             if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
@@ -529,7 +529,7 @@ def _reinit_pulseAnalyzer():
                 PULSE_ANALYZER.setActive(False)
                 PULSE_ANALYZER.setNextDataBad()
 
-            except Pyro.errors.ProtocolError:
+            except Pyro4.errors.ProtocolError:
                 if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
                     LOGFUNC("_reinit_pulseAnalyzer: ProtocolError on PulseAnalyzer_Reset\n")
                 PULSE_ANALYZER.setActive(False)
@@ -553,7 +553,7 @@ def _reinit_pulseAnalyzer():
         PULSE_ANALYZER.setNextDataBad()
         retVal = False
 
-    except Pyro.errors.ProtocolError:
+    except Pyro4.errors.ProtocolError:
         if logPulseAnalyzer & PA_LOG_MASK_ResetAttempts:
             LOGFUNC("_reinit_pulseAnalyzer: ProtocolError\n")
         PULSE_ANALYZER.setActive(False)
@@ -635,7 +635,7 @@ def measGetBufferFirst():
         LOGFUNC("DataManager shutdown in progress\n")
         return None
 
-    except Pyro.errors.ProtocolError:
+    except Pyro4.errors.ProtocolError:
         MEAS_BUFFER.active = False
         MEAS_BUFFER.setNextDataBad()
         LOGFUNC("DataManager not running\n")
