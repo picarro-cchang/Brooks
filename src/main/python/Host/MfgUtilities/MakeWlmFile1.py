@@ -30,7 +30,6 @@ from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.scanSerialPorts import scanSerialPorts
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -182,6 +181,7 @@ class WlmFileMaker(object):
                     raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
 
     def searchSerPort(self):
+        from Host.Common.scanSerialPorts import scanSerialPorts
         reply = None
         for p in scanSerialPorts():
             if self.wavemeter:
