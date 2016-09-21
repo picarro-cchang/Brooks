@@ -120,6 +120,12 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                             APP_NAME,
                                             IsDontCareConnection = True)
