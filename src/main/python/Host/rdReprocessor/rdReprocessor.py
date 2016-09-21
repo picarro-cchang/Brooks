@@ -53,6 +53,16 @@ def convHdf5ToDict(h5Filename, selfTiming):
     h5File.close()
     return retDict
 
+# Read in one or more *.h5 ringdown files.  Each file is one scheme that is composed
+# of one or more sub-schemes.  Sub-schemes are collected into a spectrum that are
+# broadcast to a Fitter instance.  A scheme/h5 file will have one or more spectrum
+# to fit.
+#
+# Each h5 file is converted to a nested dictionary.  The top level key "controlData"
+# contains a tabulation of ringdowns by fit, the RDDataSize key.  The Fitter
+# decomposes this scheme's worth of data into individual spectra using
+# RdfData::getSpectraDict() in fitterCoreWithFortran.py.
+#
 class rdReprocessor(object):
     def __init__(self, configFile, loop=0):
         config = CustomConfigObj(configFile)  # 2nd argument (list_values=True) removed
