@@ -10,15 +10,25 @@ File History:
 Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "DriverSimulator"
-
 from configobj import ConfigObj
+import ctypes
 import getopt
 import inspect
 import os
 import pprint
 import sys
+import tables
 import time
+import types
+
+from Host.autogen import interface
+from Host.Common import CmdFIFO, SchemeProcessor, SharedTypes, timestamp
+from Host.Common.Broadcaster import Broadcaster
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.SharedTypes import RPC_PORT_DRIVER
+from Host.Common.SingleInstance import SingleInstance
+from Host.Driver.DasConfigure import DasConfigure
+from Host.DriverSimulator.DasSimulator import DasSimulator
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -29,13 +39,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-from Host.autogen import interface
-from Host.Common import SharedTypes
-from Host.Common import CmdFIFO
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import RPC_PORT_DRIVER
-from Host.Common.SingleInstance import SingleInstance
-
+APP_NAME = "DriverSimulator"
 try:
     # Release build
     from Host.Common import release_version as version
@@ -49,7 +53,7 @@ except ImportError:
 
 EventManagerProxy_Init(APP_NAME)
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  # we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -60,18 +64,41 @@ if __debug__:
     rpdb2.start_embedded_debugger("hostdbg",timeout=0)
     print("rpdb2 loaded")
 
+
+def _reg_index(indexOrName):
+    """Convert a name or index into an integer index, raising an exception if the name is not found"""
+    if isinstance(indexOrName, types.IntType):
+        return indexOrName
+    else:
+        try:
+            return interface.registerByName[indexOrName.strip().upper()]
+        except KeyError:
+            raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
+
+
+def _value(valueOrName):
+    """Convert valueOrName into an value, raising an exception if the name is not found"""
+    if isinstance(valueOrName,types.StringType):
+        try:
+            valueOrName = getattr(interface,valueOrName)
+        except AttributeError:
+            raise AttributeError("Value identifier not recognized %r" % valueOrName)
+    return valueOrName
+
+
 #
 # The driver provides a serialized RPC interface for accessing the DAS hardware.
 #
 class DriverRpcHandler(SharedTypes.Singleton):
-    def __init__(self,driver):
+    def __init__(self, driver):
         self.server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DRIVER),
-                                            ServerName = "Driver",
-                                            ServerDescription = "Driver for CRDS hardware",
-                                            threaded = True)
+                                            ServerName="Driver",
+                                            ServerDescription="Driver for CRDS hardware",
+                                            threaded=True)
         self.config = driver.config
         self.ver = driver.ver
         self.driver = driver
+        self.dasSimulator = driver.dasSimulator
         self._register_rpc_functions()
 
     def _register_rpc_functions_for_object(self, obj):
@@ -87,12 +114,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         for s in classDir:
             attr = obj.__getattribute__(s)
             if callable(attr) and (not s.startswith("_")) and (not inspect.isclass(attr)):
-                self.server.register_function(attr,DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
+                self.server.register_function(attr, DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
 
     def _register_rpc_functions(self):
         """ Registers the functions accessible by XML-RPC """
-        #register the functions contained in this file...
-        self._register_rpc_functions_for_object( self )
+        # register the functions contained in this file...
+        self._register_rpc_functions_for_object(self)
         Log("Registered RPC functions")
 
     def allVersions(self):
@@ -111,35 +138,45 @@ class DriverRpcHandler(SharedTypes.Singleton):
         Log("version = %s" % pprint.pformat(versionDict))
         return versionDict
 
-    def interfaceValue(self,valueOrName):
+    def getConfigFile(self):
+        configFile = os.path.normpath(os.path.abspath(self.driver.instrConfig.filename))
+        return configFile
+
+    def getParameterForms(self):
+        """Returns the dictionary of parameter forms for the controller GUI"""
+        return interface.parameter_forms
+
+    def hostGetTicks(self):
+        return timestamp.getTimestamp()
+
+    def interfaceValue(self, valueOrName):
         """Ask Driver to lookup a symbol in the context of the current interface"""
         try:
             return self._value(valueOrName)
         except:
             return "undefined"
 
-    def rdDasReg(self,regIndexOrName):
-        """Reads a DAS register, using either its index or symbolic name"""
-        index = self._reg_index(regIndexOrName)
-        ri = interface.registerInfo[index]
-        if not ri.readable:
-            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
-        if ri.type == ctypes.c_float:
-            return self.dasInterface.hostToDspSender.rdRegFloat(index)
-        elif ri.type == ctypes.c_uint:
-            return self.dasInterface.hostToDspSender.rdRegUint(index)
-        else:
-            return ctypes.c_int32(self.dasInterface.hostToDspSender.rdRegUint(index)).value
+    def loadIniFile(self):
+        """Loads state from instrument configuration file"""
+        SchemeProcessor.clearMemo()
+        config = self.driver.instrConfig
+        config.reloadFile()
+        config.loadPersistentRegistersFromConfig()
+        Log("Loaded instrument configuration from file %s" %
+            config.filename, Level=1)
 
-    def rdDasRegList(self,regList):
+    def rdDasReg(self, regIndexOrName):
+        return self.driver.rdDasReg(regIndexOrName)
+
+    def rdDasRegList(self, regList):
         return [self.rdDasReg(reg) for reg in regList]
 
-    def rdFPGA(self,base,reg):
-        return self.dasInterface.hostToDspSender.rdFPGA(base,reg)
+    def rdFPGA(self, base, reg):
+        return self.driver.rdFPGA(base, reg)
 
-    def rdRegList(self,regList):
+    def rdRegList(self, regList):
         result = []
-        for regLoc,reg in regList:
+        for regLoc, reg in regList:
             if regLoc == "dsp":
                 result.append(self.rdDasReg(reg))
             elif regLoc == "fpga":
@@ -148,62 +185,53 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 result.append(None)
         return result
 
-    def wrDasReg(self,regIndexOrName,value,convert=True):
-        """Writes to a DAS register, using either its index or symbolic name. If convert is True,
-            value is a symbolic string that is looked up in the interface definition file. """
-        if convert:
-            value = self._value(value)
-        index = self._reg_index(regIndexOrName)
-        ri = interface.registerInfo[index]
-        if not ri.writable:
-            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
-        if ri.type in [ctypes.c_uint,ctypes.c_int,ctypes.c_long]:
-            return self.dasInterface.hostToDspSender.wrRegUint(index,value)
-        elif ri.type == ctypes.c_float:
-            return self.dasInterface.hostToDspSender.wrRegFloat(index,value)
-        else:
-            raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
+    def stopScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
 
-    def wrDasRegList(self,regList,values):
-        for r,value in zip(regList,values):
-            self.wrDasReg(r,value)
+    def wrDasReg(self, regIndexOrName, value, convert=True):
+        return self.driver.wrDasReg(regIndexOrName, value, convert)
 
-    def wrFPGA(self,base,reg,value,convert=True):
-        if convert:
-            value = self._value(value)
-        return self.dasInterface.hostToDspSender.wrFPGA(base,reg,value)
+    def wrDasRegList(self, regList, values):
+        for r, value in zip(regList,values):
+            self.wrDasReg(r, value)
 
-    def wrRegList(self,regList,values):
-        for (regLoc,reg),value in zip(regList,values):
+    def wrFPGA(self, base, reg, value, convert=True):
+        return self.driver.wrFPGA(base, reg, value, convert)
+
+    def writeIniFile(self, filename=None):
+        """Writes out the current instrument configuration to the
+            specified filename, or to the one specified in the driver
+            configuration file"""
+        config = self.driver.instrConfig
+        config.savePersistentRegistersToConfig()
+        name = config.writeConfig(filename)
+        Log("Saved instrument configuration to file %s" % (name,),Level=1)
+
+    def wrRegList(self, regList, values):
+        for (regLoc, reg), value in zip(regList, values):
             if regLoc == "dsp":
                 self.wrDasReg(reg, value)
             elif regLoc == "fpga":
                 self.wrFPGA(0, reg, value)
 
-    def _reg_index(self,indexOrName):
-        """Convert a name or index into an integer index, raising an exception if the name is not found"""
-        if isinstance(indexOrName,types.IntType):
-            return indexOrName
-        else:
-            try:
-                return interface.registerByName[indexOrName.strip().upper()]
-            except KeyError:
-                raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
-
-    def _value(self,valueOrName):
-        """Convert valueOrName into an value, raising an exception if the name is not found"""
-        if isinstance(valueOrName,types.StringType):
-            try:
-                valueOrName = getattr(interface,valueOrName)
-            except AttributeError:
-                raise AttributeError("Value identifier not recognized %r" % valueOrName)
-        return valueOrName
 
 class DriverSimulator(SharedTypes.Singleton):
     def __init__(self, configFile):
         self.looping = True
         self.config = ConfigObj(configFile)
+        self.dasSimulator = DasSimulator()
         basePath = os.path.split(configFile)[0]
+        # Set up automatic streaming file for sensors, if startStreamFile
+        # option in the [Config] section is present. Also allow the maximum
+        # number of lines in the stream file to be set
+        self.autoStreamFile = False
+        maxStreamLines = 0
+        try:
+            if int(self.config["Config"]["startStreamFile"]):
+                self.autoStreamFile = True
+            maxStreamLines = int(self.config["Config"]["maxStreamLines"])
+        except KeyError:
+            pass
         # Get appConfig and instrConfig version number
         self.ver = {}
         for ver in ["appVer", "instrVer", "commonVer"]:
@@ -213,10 +241,40 @@ class DriverSimulator(SharedTypes.Singleton):
                 self.ver[ver] = co["Version"]["revno"]
             except Exception, err:
                 self.ver[ver] = "N/A"
+        self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
         # Set up RPC handler
         self.rpcHandler = DriverRpcHandler(self)
+        # Set up object to access master.ini file
+        self.instrConfig = InstrumentConfig(self.instrConfigFile, self.rdDasReg,
+                                            self.wrDasReg, self.rdFPGA, self.wrFPGA)
+        # Set up object for streaming sensor data
+        self.streamSaver = StreamSaver(self.config, basePath, maxStreamLines)
+        self.rpcHandler._register_rpc_functions_for_object(self.streamSaver)
+        # Set up the broadcasters for the sensor stream and the ringdown result stream
+        self.streamCast = Broadcaster(
+            port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
+            name="CRDI Stream Broadcaster", logFunc=Log)
+        self.resultsCast = Broadcaster(
+            port=SharedTypes.BROADCAST_PORT_RDRESULTS,
+            name="CRDI RD Results Broadcaster", logFunc=Log)
+        self.lastSaveDasState = 0
+        if self.autoStreamFile:
+            self.streamSaver.openStreamFile()
+
+    def rdDasReg(self, regIndexOrName):
+        """Reads a DAS register, using either its index or symbolic name"""
+        index = _reg_index(regIndexOrName)
+        ri = interface.registerInfo[index]
+        if not ri.readable:
+            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
+        return self.dasSimulator.rdDasReg(regIndexOrName)
+
+    def rdFPGA(self, base, reg):
+        return self.dasSimulator.rdFPGA(base, reg)
 
     def run(self):
+        self.instrConfig.loadPersistentRegistersFromConfig()
+        DasConfigure(self.dasSimulator, self.instrConfig.config, self.config).run()
         try:
             daemon = self.rpcHandler.server.daemon
             Log("Starting main driver loop", Level=1)
@@ -237,11 +295,184 @@ class DriverSimulator(SharedTypes.Singleton):
                         requestTimeout = doneTime - now
                 Log("Driver RPC handler shut down")
             except:
-                type,value,trace = sys.exc_info()
-                Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
-                    Verbose=traceback.format_exc(),Level=3)
+                type, value, trace = sys.exc_info()
+                Log("Unhandled Exception in main loop: %s: %s" % (str(type), str(value)),
+                    Verbose=traceback.format_exc(), Level=3)
         finally:
             self.rpcHandler.shutDown()
+
+    def wrDasReg(self, regIndexOrName, value, convert=True):
+        """Writes to a DAS register, using either its index or symbolic name. If convert is True,
+            value is a symbolic string that is looked up in the interface definition file. """
+        if convert:
+            value = _value(value)
+        index = _reg_index(regIndexOrName)
+        ri = interface.registerInfo[index]
+        if not ri.writable:
+            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
+        return self.dasSimulator.wrDasReg(regIndexOrName, value, convert)
+
+    def wrFPGA(self, base, reg, value, convert=True):
+        return self.dasSimulator.wrFPGA(base, reg, value, convert)
+
+
+class InstrumentConfig(object):
+    """Configuration of instrument (typically defined by a master.ini file)"""
+    def __init__(self, filename, rdDasReg, wrDasReg, rdFPGA, wrFPGA):
+        self.config = ConfigObj(filename)
+        self.filename = os.path.abspath(os.path.normpath(filename))
+        self.rdDasReg = rdDasReg
+        self.wrDasReg = wrDasReg
+        self.rdFPGA = rdFPGA
+        self.wrFPGA = wrFPGA
+
+    def reloadFile(self):
+        self.config = ConfigObj(self.filename)
+
+    def savePersistentRegistersToConfig(self):
+        if "DAS_REGISTERS" not in self.config:
+            self.config["DAS_REGISTERS"] = {}
+        for ri in interface.registerInfo:
+            if ri.persistence:
+                self.config["DAS_REGISTERS"][ri.name]=self.rdDasReg(ri.name)
+        for fpgaMap, regList in interface.persistent_fpga_registers:
+            self.config[fpgaMap] = {}
+            for r in regList:
+                try:
+                    self.config[fpgaMap][r] = self.rdFPGA(fpgaMap, r)
+                except:
+                    Log("Error reading FPGA register %s in %s" % (r, fpgaMap), Level=2)
+
+    def loadPersistentRegistersFromConfig(self):
+        if "DAS_REGISTERS" not in self.config:
+            self.config["DAS_REGISTERS"] = {}
+        for name in self.config["DAS_REGISTERS"]:
+            if name not in interface.registerByName:
+                Log("Unknown register %s ignored during config file load" % name, Level=2)
+            else:
+                index = interface.registerByName[name]
+                ri = interface.registerInfo[index]
+                if ri.writable:
+                    if ri.type == ctypes.c_float:
+                        value = float(self.config["DAS_REGISTERS"][name])
+                    else:
+                        value = int(self.config["DAS_REGISTERS"][name])
+                    self.wrDasReg(ri.name, value)
+                else:
+                    Log("Unwritable register %s ignored during config file load" % name, Level=2)
+        for fpgaMap in self.config:
+            if fpgaMap.startswith("FPGA"):
+                for name in self.config[fpgaMap]:
+                    value = int(self.config[fpgaMap][name])
+                    try:
+                        self.wrFPGA(fpgaMap, name, value)
+                    except:
+                        Log("Error writing FPGA register %s in %s" % (name,fpgaMap), Level=2)
+
+    def writeConfig(self, filename=None):
+        if filename is None:
+            filename = self.filename
+            self.config.write()
+        else:
+            fp = file(filename, "w")
+            self.config.write(fp)
+            fp.close
+        return filename
+
+
+class StreamTableType(tables.IsDescription):
+    time = tables.Int64Col()
+    streamNum = tables.Int32Col()
+    value = tables.Float32Col()
+
+
+class StreamSaver(SharedTypes.Singleton):
+    initialized = False
+
+    def __init__(self, config=None, basePath="", maxStreamLines=0):
+        if not self.initialized:
+            self.fileName = ""
+            self.table = None
+            self.h5 = None
+            self.config = config
+            self.basePath = basePath
+            self.lastWrite = 0
+            self.initialized = True
+            self.observerAccess = {}
+            self.streamLines = 0
+            self.maxStreamLines = maxStreamLines
+
+    # Observers can register to be notified whenever a stream file is opened or
+    #  closed. On such an event an RPC call is made to the "notify" method
+    #  of an RPC handler at "observerRpcPort", passing the "observerToken"
+    #  to this method. 
+    def registerStreamStatusObserver(self, observerRpcPort, observerToken):
+        if not(observerRpcPort in self.observerAccess):
+            serverURI = "http://%s:%d" % ("localhost", observerRpcPort)
+            proxy = CmdFIFO.CmdFIFOServerProxy(serverURI,
+                                               ClientName="StreamStatusNotifier")
+        else:
+            proxy = self.observerAccess[observerRpcPort][0]
+        self.observerAccess[observerRpcPort] = (proxy, observerToken)
+        proxy.SetFunctionMode("notify", CmdFIFO.CMD_TYPE_VerifyOnly)
+
+    def unregisterStreamStatusObserver(self, observerRpcPort):
+        del self.observerAccess[observerRpcPort]
+
+    def _informObservers(self):
+        for o in self.observerAccess:
+            proxy, observerToken = self.observerAccess[o]
+            proxy.notify(observerToken)
+
+    def openStreamFile(self):
+        if self.h5:
+            self.closeStreamFile()
+        try:
+            f = time.strftime(self.config["Files"]["streamFileName"])
+        except:
+            Log("Config option streamFileName not found in [Files] section. Using default.", Level=2)
+            f = time.strftime("Sensors_%Y%m%d_%H%M%S.h5")
+        self.fileName = os.path.join(self.basePath, f)
+        Log("Opening stream file %s" % self.fileName)
+        self.streamLines = 0
+        self.lastWrite = 0
+        handle = tables.openFile(self.fileName, mode="w", title="CRDS Sensor Stream File")
+        filters = tables.Filters(complevel=1, fletcher32=True)
+        self.table = handle.createTable(handle.root, "sensors", StreamTableType, filters=filters)
+        if handle:
+            self.h5 = handle
+        else:
+            self.fileName = ""
+        self._informObservers()
+        return self.fileName
+
+    def closeStreamFile(self):
+        if self.h5:
+            self.table.flush()
+            self.h5.close()
+            Log("Closing stream file %s" % self.fileName)
+            self.h5, self.fileName = None, ""
+        self._informObservers()
+
+    def getStreamFileStatus(self):
+        status = "open" if self.h5 else "closed"
+        return dict(status=status,filename=self.fileName)
+
+    def _writeData(self,data):
+        if self.h5:
+            row = self.table.row
+            row["time"] = data.timestamp
+            row["streamNum"] = data.streamNum
+            row["value"] = data.value
+            row.append()
+            self.streamLines += 1
+            if data.timestamp-self.lastWrite > 5000:
+                self.table.flush()
+                self.lastWrite = data.timestamp
+            if self.maxStreamLines > 0 and self.streamLines >= self.maxStreamLines:
+                self.closeStreamFile()
+                self.openStreamFile()
+
 
 HELP_STRING = """DriverSimulator.py [-c<FILENAME>] [-h|--help]
 
@@ -250,8 +481,10 @@ Where the options can be a combination of the following:
 -c                   specify a config file:  default = "./Driver.ini"
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
@@ -261,13 +494,13 @@ def handleCommandSwitches():
     except getopt.GetoptError, E:
         print "%s %r" % (E, E)
         sys.exit(1)
-    #assemble a dictionary where the keys are the switches and values are switch args...
+    # assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
+    for o, a in switches:
         options.setdefault(o,a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
-    #Start with option defaults...
+        options.setdefault('-h', "")
+    # Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/DriverSimulator.ini"
     if "-h" in options or "--help" in options:
         printUsage()
@@ -281,7 +514,7 @@ if __name__ == "__main__":
         print "Hello from DriverSimulator"
         driverApp = SingleInstance("DriverSimulator")
         if driverApp.alreadyrunning():
-            Log("Instance of driver simulator us already running",Level=3)
+            Log("Instance of driver simulator us already running", Level=3)
         else:
             configFile = handleCommandSwitches()
             Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
@@ -290,7 +523,7 @@ if __name__ == "__main__":
         Log("Exiting program")
     except Exception, e:
         LogExc("Unhandled exception trapped by last chance handler",
-            Data = dict(Source = "DriverSimulator"), Level = 3)
+               Data=dict(Source="DriverSimulator"), Level=3)
     time.sleep(1)
 '''
 
@@ -1539,7 +1772,7 @@ class Driver(SharedTypes.Singleton):
                         self.rpcHandler.readWlmDarkCurrents()
                     except:
                         Log("Cannot read dark currents from WLM EEPROM",Level=2)
-                    daemon = self.rpcHandler.server.daemon
+                    daemon = self.rpcHandler.serveInstrumentConfigr.daemon
                     Log("DAS firmware uploaded",Level=1)
                     break
                 except:
@@ -1560,7 +1793,7 @@ class Driver(SharedTypes.Singleton):
             self.validInstallerId = True
             if self.installerId != None:
                 try:
-                    self.analyzerType = self.rpcHandler.fetchInstrInfo("analyzer")
+                    self.analyzerType = self.rpcHaInstrumentConfigndler.fetchInstrInfo("analyzer")
                 except Exception, err:
                     print "%r" % err
                     self.analyzerType = None
@@ -1584,7 +1817,7 @@ class Driver(SharedTypes.Singleton):
                     self.dasInterface.pingWatchdog()
                     timeSoFar = 0
                     messages = messageHandler.process(0.02)
-                    timeSoFar += messages.duration
+                    timeSoFar += messages.durationInstrumentConfig
                     sensors = sensorHandler.process(max(0.02, 0.2 - timeSoFar))
                     timeSoFar += sensors.duration
                     ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))

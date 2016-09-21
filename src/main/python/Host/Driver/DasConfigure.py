@@ -45,7 +45,7 @@ class DasConfigure(SharedTypes.Singleton):
     initialized = False
     def __init__(self,dasInterface=None,instrConfig=None,driverConfig=None):
         if not self.initialized:
-            assert isinstance(dasInterface, hostDasInterface.DasInterface)
+            # assert isinstance(dasInterface, hostDasInterface.DasInterface)
             if dasInterface is None or instrConfig is None:
                 raise ValueError("DasConfigure has not been initialized correctly")
             self.i2cConfig = {} # Indicates if I2C associated with specific index was detected

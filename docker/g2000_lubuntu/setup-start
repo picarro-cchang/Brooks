@@ -10,6 +10,6 @@ echo "20000 39999" > /proc/sys/net/ipv4/ip_local_port_range
 echo "starting VNC server ..."
 rm -rf /tmp/.X*
 sleep 1
-USER=root vncserver :1 -geometry 1800x900 -depth 24
+USER=root vncserver :1 -geometry 1600x900 -depth 24
 # Tail the log so that the command does not terminate
 tail -f /root/.vnc/*:1.log

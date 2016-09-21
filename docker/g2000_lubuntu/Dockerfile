@@ -1,4 +1,8 @@
-FROM picarrodocker/host_base:latest
+# This produces g2000_lubuntu from host_lubuntu by adding
+#  Picarro specific utilities, libraries etc.
+#  DO NOT PUSH TO DOCKERHUB
+
+FROM picarrodocker/host_lubuntu:latest
 MAINTAINER Sze Tan <stan@picarro.com>
 
 RUN apt-get update -y
@@ -8,10 +12,6 @@ RUN apt-get dist-upgrade -y
 RUN apt-get install -y fuse
 RUN pip install Pyro4
 RUN pip install fusepy
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y lxde terminator
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tightvncserver
-RUN rm -rf /var/lib/apt/lists/*
 
 # Winpdb latest version (conda version for linux-64 is out of date)
 WORKDIR /home/G2000/resources
@@ -32,6 +32,7 @@ RUN sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/x86_64-linux-gnu/libxcb.so.1
 WORKDIR /home/G2000/resources
 RUN wget -O code.deb https://go.microsoft.com/fwlink/?LinkID=760868
 RUN dpkg -i code.deb
+RUN conda install flake8
 
 RUN echo 'root:bl52l21fbl52l21f' |chpasswd
 RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
@@ -42,7 +43,6 @@ RUN echo 'picarro:picarro' |chpasswd
 COPY Picarro.pth /opt/conda/lib/python2.7/site-packages/Picarro.pth
 # Make a mount point for the FUSE based logger
 RUN mkdir /mnt/applog
-
 
 # VNC directories and files
 RUN mkdir /root/.vnc
