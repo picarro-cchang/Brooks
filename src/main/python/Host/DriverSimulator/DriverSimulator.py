@@ -22,7 +22,7 @@ import time
 import types
 
 from Host.autogen import interface
-from Host.Common import CmdFIFO, SchemeProcessor, SharedTypes
+from Host.Common import CmdFIFO, SchemeProcessor, SharedTypes, timestamp
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
@@ -137,9 +137,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
         Log("version = %s" % pprint.pformat(versionDict))
         return versionDict
 
+    def getConfigFile(self):
+        configFile = os.path.normpath(os.path.abspath(self.driver.instrConfig.filename))
+        return configFile
+
     def getParameterForms(self):
         """Returns the dictionary of parameter forms for the controller GUI"""
         return interface.parameter_forms
+
+    def hostGetTicks(self):
+        return timestamp.getTimestamp()
 
     def interfaceValue(self, valueOrName):
         """Ask Driver to lookup a symbol in the context of the current interface"""
@@ -176,6 +183,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
             else:
                 result.append(None)
         return result
+
+    def stopScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
 
     def wrDasReg(self, regIndexOrName, value, convert=True):
         return self.driver.wrDasReg(regIndexOrName, value, convert)
