@@ -27,6 +27,7 @@ from Host.Common.Broadcaster import Broadcaster
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 from Host.Common.SingleInstance import SingleInstance
+from Host.Driver.DasConfigure import DasConfigure
 from Host.DriverSimulator.DasSimulator import DasSimulator
 
 # If we are using python 2.x on Linux, use the subprocess32
@@ -273,6 +274,7 @@ class DriverSimulator(SharedTypes.Singleton):
 
     def run(self):
         self.instrConfig.loadPersistentRegistersFromConfig()
+        DasConfigure(self.dasSimulator, self.instrConfig.config, self.config).run()
         try:
             daemon = self.rpcHandler.server.daemon
             Log("Starting main driver loop", Level=1)
@@ -318,7 +320,7 @@ class InstrumentConfig(object):
     """Configuration of instrument (typically defined by a master.ini file)"""
     def __init__(self, filename, rdDasReg, wrDasReg, rdFPGA, wrFPGA):
         self.config = ConfigObj(filename)
-        self.filename = filename
+        self.filename = os.path.abspath(os.path.normpath(filename))
         self.rdDasReg = rdDasReg
         self.wrDasReg = wrDasReg
         self.rdFPGA = rdFPGA
