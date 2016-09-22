@@ -19,13 +19,15 @@ import pprint
 import sys
 import tables
 import time
+import traceback
 import types
 
 from Host.autogen import interface
-from Host.Common import CmdFIFO, SchemeProcessor, SharedTypes, timestamp
+from Host.Common import (
+    CmdFIFO, SchemeProcessor, SharedTypes, StringPickler, timestamp)
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import RPC_PORT_DRIVER
+from Host.Common.SharedTypes import Operation, RPC_PORT_DRIVER
 from Host.Common.SingleInstance import SingleInstance
 from Host.Driver.DasConfigure import DasConfigure
 from Host.DriverSimulator.DasSimulator import DasSimulator
@@ -137,6 +139,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
             print err
         Log("version = %s" % pprint.pformat(versionDict))
         return versionDict
+
+    def dasGetTicks(self):
+        sender = self.dasSimulator.hostToDspSender
+        sender.doOperation(Operation("ACTION_GET_TIMESTAMP", ["TIMESTAMP_LSB_REGISTER","TIMESTAMP_MSB_REGISTER"]))
+        return self.rdDasReg("TIMESTAMP_MSB_REGISTER")<<32L | self.rdDasReg("TIMESTAMP_LSB_REGISTER")
 
     def getConfigFile(self):
         configFile = os.path.normpath(os.path.abspath(self.driver.instrConfig.filename))
@@ -273,6 +280,20 @@ class DriverSimulator(SharedTypes.Singleton):
         return self.dasSimulator.rdFPGA(base, reg)
 
     def run(self):
+        def messageProcessor(data):
+            ts, msg = data
+            if len(msg) > 2 and msg[1] == ':':
+                level = int(msg[0])
+                Log("%s" % (msg[2:],), Level=level)
+            else:
+                Log("%s" % (msg,))
+
+        def sensorProcessor(data):
+            self.streamCast.send(StringPickler.ObjAsString(data))
+
+        messageHandler = SharedTypes.makeHandler(self.dasSimulator.getMessage, messageProcessor)
+        sensorHandler = SharedTypes.makeHandler(self.dasSimulator.getSensorData,  sensorProcessor)
+
         self.instrConfig.loadPersistentRegistersFromConfig()
         DasConfigure(self.dasSimulator, self.instrConfig.config, self.config).run()
         try:
@@ -280,8 +301,14 @@ class DriverSimulator(SharedTypes.Singleton):
             Log("Starting main driver loop", Level=1)
             maxRpcTime = 0.5
             rpcTime = 0.0
+            sim = self.dasSimulator
             try:
                 while self.looping and not daemon.mustShutdown:
+                    timeSoFar = 0
+                    messages = messageHandler.process(0.02)
+                    timeSoFar += messages.duration
+                    sensors = sensorHandler.process(max(0.02, 0.2 - timeSoFar))
+                    timeSoFar += sensors.duration
                     rpcTime = maxRpcTime
                     requestTimeout = rpcTime
                     now = time.time()
@@ -293,6 +320,7 @@ class DriverSimulator(SharedTypes.Singleton):
                         daemon.handleRequests(requestTimeout)
                         now = time.time()
                         requestTimeout = doneTime - now
+                    sim.scheduler.execUntil(sim.getDasTimestamp())
                 Log("Driver RPC handler shut down")
             except:
                 type, value, trace = sys.exc_info()
@@ -1817,7 +1845,7 @@ class Driver(SharedTypes.Singleton):
                     self.dasInterface.pingWatchdog()
                     timeSoFar = 0
                     messages = messageHandler.process(0.02)
-                    timeSoFar += messages.durationInstrumentConfig
+                    timeSoFar += messages.duration
                     sensors = sensorHandler.process(max(0.02, 0.2 - timeSoFar))
                     timeSoFar += sensors.duration
                     ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))

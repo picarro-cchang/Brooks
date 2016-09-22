@@ -634,6 +634,9 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_Flow1","FLOW1_REGISTER"]))
 
+        self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+            Operation("ACTION_TEST_SCHEDULER", [1, 2, 3, 4]))
+
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
         # Schedule operation groups which are non-empty
@@ -722,8 +725,7 @@ class DasConfigure(SharedTypes.Singleton):
         runCont = (1<<interface.DYNAMICPWM_CS_RUN_B) | (1<<interface.DYNAMICPWM_CS_CONT_B) | (1<<interface.DYNAMICPWM_CS_PWM_ENABLE_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_INLET","DYNAMICPWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_OUTLET","DYNAMICPWM_CS"]))
-
         time.sleep(2)
         sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         # Set the scheduler running
-        sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1);
+        sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1)
