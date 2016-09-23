@@ -77,7 +77,7 @@ class ActionHandler(object):
             self.sim.wrDasReg(params[4], result)
         else:
             self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_CRITICAL, "Bad resistance in resistanceToTemperature"))
-        return interface.STATUS_OK
+        return interface.STATUS_OKLASER1_TEMPCNTRLUSER_SETPOINT_REGISTER
 
     def setTimestamp(self, params, env, when, command):
         # Timestamp is an integer number of ms 
@@ -122,6 +122,7 @@ class ActionHandler(object):
         for i in range(len(params)-1):
             self.sim.sharedMem[offset + i] = params[i + 1]
         return interface.STATUS_OK
+
 
 class DasSimulator(object):
     class HostToDspSender(object):
@@ -296,3 +297,150 @@ class Scheduler(object):
             for operation in group.operationList:
                 self.doOperation(operation, when)
 
+
+def das_register_getter(index):
+    def fget(self):
+        return self.das_registers[index]
+    return fget
+
+
+def das_register_setter(index):
+    def fset(self, value):
+        self.das_registers[index] = value
+    return fset
+
+
+def prop(index):
+    return property(das_register_getter(index), das_register_setter(index))
+
+
+class TempControl(object):
+    # Base class for temperature controllers
+    # The following are properties in the subclasses
+    r = None
+    b = None
+    c = None
+    h = None
+    K = Noneprop(interface.LASER1_MANUAL_TEC_REGISTER)
+    Ti = None
+    Td = None
+    N = None
+    S = None
+    Imax = None
+    Amin = None
+    Amax = None
+    ffwd = None
+    userSetpoint = None
+    state = None
+    tol = None
+    swpMin = None
+    swpMax = None
+    swpInc = None
+    prbsAmp = None
+    prbsMean = None
+    prbsGen = None
+    temp = None
+    dasTemp = None
+    tec = None
+    manualTec = Noneprop(interface.LASER1_MANUAL_TEC_REGISTER)
+
+    def __init__(self, das_registers):
+        self.das_registers = das_registers
+        self.disabledValue = 0x8000
+        self.extMax = 0
+        self.extTemp = 0
+        self.swpDir = 1
+        self.state = interface.TEMP_CNTRL_DisabledState
+        self.lockCount = 0
+        self.unlockCount = 0
+        self.firstIteration = True
+        self.perr = 0
+        self.derr1 = 0
+        self.derr2 = 0
+        self.Dincr = 0
+        self.tec = self.disabledValue
+        self.lastTec = self.disabledValue
+        self.a = self.disabledValue
+        self.u = self.disabledValue
+        self.r = self.userSetpoint
+        self.prbsReg = 0
+        self.activeBit = None
+        self.lockBit = None
+
+    def resetDasStatusBit(self, bitnum):
+        mask = 1 << bitnum
+        self.das_registers[interface.DAS_STATUS_REGISTER] &= (~mask)
+
+    def setDasStatusBit(self, bitnum):
+        mask = 1 << bitnum
+        self.das_registers[interface.DAS_STATUS_REGISTER] |= mask
+
+    def getDasStatusBit(self, bitnum):
+        mask = 1 << bitnum
+        return 0 != (self.das_registers[interface.DAS_STATUS_REGISTER] & mask)
+
+    def step(self):
+        if self.state == interface.TEMP_CNTRL_DisabledState:
+            self.resetDasStatusBit(self.activeBit)
+            self.resetDasStatusBit(self.lockBit)
+            self.tec = self.disabledValue
+            self.prbsReg = 0x1
+        elif self.state == interface.TEMP_CNTRL_ManualState:
+            self.setDasStatusBit(self.activeBit)
+            self.resetDasStatusBit(self.lockBit)
+            if self.manualTec > self.Amax:
+                self.manualTec = self.Amax
+            if self.manualTec < self.Amin:
+                self.manualTec = self.Amin
+            self.tec = self.manualTec
+            self.prbsReg = 0x1
+        elif self.state == interface.TEMP_CNTRL_EnabledState:
+            self.r = self.userSetpoint
+        elif self.state == interface.TEMP_CNTRL_AutomaticState:
+            self.setDasStatusBit(self.activeBit)
+            error = self.r - self.temp
+            inRange = (error >= -self.tol) and (error <= self.tol)
+            if self.firstIteration:
+                self.firstIteration = False
+                self.pidBumplessRestart()
+            else:
+                self.pidStep()
+
+
+            
+
+        
+
+class Laser1TempControl(TempControl):
+    r = prop(interface.LASER1_TEMP_CNTRL_SETPOINT_REGISTER)
+    b = prop(interface.LASER1_TEMP_CNTRL_B_REGISTER)
+    c = prop(interface.LASER1_TEMP_CNTRL_C_REGISTER)
+    h = prop(interface.LASER1_TEMP_CNTRL_H_REGISTER)
+    K = prop(interface.LASER1_TEMP_CNTRL_K_REGISTER)
+    Ti = prop(interface.LASER1_TEMP_CNTRL_TI_REGISTER)
+    Td = prop(interface.LASER1_TEMP_CNTRL_TD_REGISTER)
+    N = prop(interface.LASER1_TEMP_CNTRL_N_REGISTER)
+    S = prop(interface.LASER1_TEMP_CNTRL_S_REGISTER)
+    Imax = prop(interface.LASER1_TEMP_CNTRL_IMAX_REGISTER)
+    Amin = prop(interface.LASER1_TEMP_CNTRL_AMIN_REGISTER)
+    Amax = prop(interface.LASER1_TEMP_CNTRL_AMAX_REGISTER)
+    ffwd = prop(interface.LASER1_TEMP_CNTRL_FFWD_REGISTER)
+    userSetpoint = prop(interface.LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER)
+    state = prop(interface.LASER1_TEMP_CNTRL_STATE_REGISTER)
+    tol = prop(interface.LASER1_TEMP_CNTRL_TOLERANCE_REGISTER)
+    swpMin = prop(interface.LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER)
+    swpMax = prop(interface.LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER)
+    swpInc = prop(interface.LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER)
+    prbsAmp = prop(interface.LASER1_TEC_PRBS_AMPLITUDE_REGISTER)
+    prbsMean = prop(interface.LASER1_TEC_PRBS_MEAN_REGISTER)
+    prbsGen = prop(interface.LASER1_TEC_PRBS_GENPOLY_REGISTER)
+    temp = prop(interface.LASER1_TEMPERATURE_REGISTER)
+    dasTemp = prop(interface.DAS_TEMPERATURE_REGISTER)
+    tec = prop(interface.LASER1_TEC_REGISTER)
+    manualTec = prop(interface.LASER1_MANUAL_TEC_REGISTER)
+
+    def __init__(self, *args, **kwargs):
+        super(Laser1TempControl, self).__init__(*args, **kwargs)
+        self.activeBit = interface.DAS_STATUS_Laser1TempCntrlActiveBit
+        self.lockBit = interface.DAS_STATUS_Laser1TempCntrlLockedBit
+        self.resetDasStatusBit(self.lockBit)

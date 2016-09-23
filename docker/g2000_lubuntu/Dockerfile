@@ -10,6 +10,7 @@ RUN apt-get upgrade -y
 RUN apt-get dist-upgrade -y
 
 RUN apt-get install -y fuse
+RUN apt-get install -y gfortran
 RUN pip install Pyro4
 RUN pip install fusepy
 
