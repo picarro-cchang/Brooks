@@ -37,8 +37,8 @@ class ActionHandler(object):
             interface.ACTION_RESISTANCE_TO_TEMPERATURE: self.resistanceToTemperature,
             interface.ACTION_TEMP_CNTRL_SET_COMMAND: self.unknownAction,
             interface.ACTION_APPLY_PID_STEP: self.unknownAction,
-            #interface.ACTION_TEMP_CNTRL_LASER1_INIT: self.tempCntrlLaser1Init,
-            #interface.ACTION_TEMP_CNTRL_LASER1_STEP: self.tempCntrlLaser1Step,
+            interface.ACTION_TEMP_CNTRL_LASER1_INIT: self.tempCntrlLaser1Init,
+            interface.ACTION_TEMP_CNTRL_LASER1_STEP: self.tempCntrlLaser1Step,
         }
 
     def doAction(self, command, params, env, when):
@@ -48,7 +48,7 @@ class ActionHandler(object):
             print "Unimplemented action: %d" % command 
 
     def getTimestamp(self, params, env, when, command):
-        # Timestamp is an integer number of ms 
+        # Timestamp is an integer number of ms
         if 2 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         ts = self.sim.getDasTimestamp()
@@ -77,7 +77,7 @@ class ActionHandler(object):
             self.sim.wrDasReg(params[4], result)
         else:
             self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_CRITICAL, "Bad resistance in resistanceToTemperature"))
-        return interface.STATUS_OKLASER1_TEMPCNTRLUSER_SETPOINT_REGISTER
+        return interface.STATUS_OK
 
     def setTimestamp(self, params, env, when, command):
         # Timestamp is an integer number of ms 
@@ -112,6 +112,17 @@ class ActionHandler(object):
         message = "At %d testScheduler %s" % (when, " ".join(["%d" % param for param in params]))
         self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_STANDARD, message))
         return interface.STATUS_OK
+
+    def tempCntrlLaser1Init(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        self.sim.laser1TempControl = Laser1TempControl(self.sim.das_registers)
+        return interface.STATUS_OK
+
+    def tempCntrlLaser1Step(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.laser1TempControl.step()
 
     def unknownAction(self, params, env, when, command):
         self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_CRITICAL, "Unknown action code %d" % command))
@@ -168,7 +179,12 @@ class DasSimulator(object):
         # The following attributes are associated with the scheduler
         self.operationGroups = []
         self.scheduler = None
-
+        # The following will contain the temperature controller objects
+        self.laser1TempControl = None
+        self.laser2TempControl = None
+        self.laser3TempControl = None
+        self.laser4TempControl = None
+        #
         self.ts_offset = 0  # Timestamp offset in ms
         self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
 
@@ -321,7 +337,7 @@ class TempControl(object):
     b = None
     c = None
     h = None
-    K = Noneprop(interface.LASER1_MANUAL_TEC_REGISTER)
+    K = None
     Ti = None
     Td = None
     N = None
@@ -342,7 +358,9 @@ class TempControl(object):
     temp = None
     dasTemp = None
     tec = None
-    manualTec = Noneprop(interface.LASER1_MANUAL_TEC_REGISTER)
+    manualTec = None
+    extMax = None
+    extTemp = None
 
     def __init__(self, das_registers):
         self.das_registers = das_registers
@@ -394,9 +412,10 @@ class TempControl(object):
                 self.manualTec = self.Amin
             self.tec = self.manualTec
             self.prbsReg = 0x1
-        elif self.state == interface.TEMP_CNTRL_EnabledState:
-            self.r = self.userSetpoint
-        elif self.state == interface.TEMP_CNTRL_AutomaticState:
+        elif self.state in [interface.TEMP_CNTRL_EnabledState,
+                            interface.TEMP_CNTRL_AutomaticState]:
+            if self.state == interface.TEMP_CNTRL_EnabledState:
+                self.r = self.userSetpoint
             self.setDasStatusBit(self.activeBit)
             error = self.r - self.temp
             inRange = (error >= -self.tol) and (error <= self.tol)
@@ -405,11 +424,109 @@ class TempControl(object):
                 self.pidBumplessRestart()
             else:
                 self.pidStep()
+            if self.getDasStatusBit(self.lockBit):
+                if not inRange:
+                    self.unlockCount += 1
+                else:
+                    self.unlockCount = 0
+                if self.unlockCount > interface.TEMP_CNTRL_UNLOCK_COUNT:
+                    self.resetDasStatusBit(self.lockBit)
+            else:
+                if inRange:
+                    self.lockCount += 1
+                else:
+                    self.lockCount = 0
+                if self.lockCount > interface.TEMP_CNTRL_LOCK_COUNT:
+                    self.setDasStatusBit(self.lockBit)
+            self.tec = self.a
+            self.prbsReg = 0x1
+        elif self.state == interface.TEMP_CNTRL_SweepingState:
+            self.setDasStatusBit(self.activeBit)
+            self.resetDasStatusBit(self.lockBit)
+            self.r += self.swpDir * self.swpInc
+            if self.r >= self.swpMax:
+                self.r = self.swpMax
+                self.swpDir = -1
+            elif self.r <= self.swpMin:
+                self.r = self.swpMin
+                self.swpDir = 1
+            self.pidStep()
+            self.tec = self.a
+            self.prbsReg = 0x1
+        elif self.state == interface.TEMP_CNTRL_SendPrbsState:
+            self.setDasStatusBit(self.activeBit)
+            self.resetDasStatusBit(self.lockBit)
+            if self.prbsReg & 0x1:
+                tecNext = self.prbsMean + self.prbsAmp
+                self.prbsReg ^= self.prbsGen
+            else:
+                tecNext = self.prbsMean - self.prbsAmp
+            if tecNext > self.Amax:
+                tecNext = self.Amax
+            if tecNext < self.Amin:
+                tecNext = self.Amin
+            self.tec = tecNext
+            self.prbsReg >>= 1
+        # If there is a heatsink temperature sensor whose value should
+        #  not exceed self.extMax, move the tec towards self.disabledValue
+        if (self.extMax is not None) and (self.extTemp is not None):
+            if self.extTemp > self.extMax:
+                change = self.disabledValue - self.lastTec
+                if change > self.Imax:
+                    change = self.Imax
+                if change < -self.Imax:
+                    change = -self.Imax
+                self.tec = self.lastTec + change
+                self.a = self.tec
+        self.lastTec = self.tec
+        return interface.STATUS_OK
 
+    def pidBumplessRestart(self):
+        perr = self.b * self.r - self.temp
+        derr = self.c * self.r - self.temp
+        self.perr = perr
+        self.derr1 = derr
+        self.derr2 = derr
+        self.Dincr = 0
+        self.u = self.a
 
-            
+    def pidStep(self):
+        # Implement PID controller by calculating the change of the
+        #  actuator necessary on a timestep
 
-        
+        # Compute integral, proportional and derivative error terms
+        err = self.r - self.temp
+        perr = self.b * self.r - self.temp
+        derr = self.c * self.r - self.temp
+        # The feedforward term is added to the actuator value directly
+        #  and bypasses the loop, This is done by initializing the change
+        #  variable with this term
+        change = self.ffwd * (self.temp - self.dasTemp)
+        # Calculate contributions to the change of the actuator value
+        # self.u is the actuator value calculated by PID algorithm
+        # self.a is the constrained actuator value, limited by 
+        # self.Amin, self.Amax and self.Imax
+        Pincr = self.K * (perr - self.perr)
+        Iincr = (self.K * self.h / self.Ti) * err + (self.a - self.u - change) / self.S
+        Dincr = self.Td / (self.Td + self.N * self.h) * (self.Dincr + self.K * self.N * (derr - 2 * self.derr1 + self.derr2))
+        self.u = self.u + Pincr + Iincr + Dincr
+        # Now apply constraints on actuator
+        change = self.u - self.a
+        if change > self.Imax:
+            change = self.Imax
+        if change < -self.Imax:
+            change = -self.Imax
+        self.a = self.a + change
+        if self.a > self.Amax:
+            self.a = self.Amax
+        if self.a < self.Amin:
+            self.a = self.Amin
+        # Update the state of the pid variables
+        self.Dincr = Dincr
+        self.derr2 = self.derr1
+        self.derr1 = derr
+        self.perr = perr
+
 
 class Laser1TempControl(TempControl):
     r = prop(interface.LASER1_TEMP_CNTRL_SETPOINT_REGISTER)
@@ -438,6 +555,8 @@ class Laser1TempControl(TempControl):
     dasTemp = prop(interface.DAS_TEMPERATURE_REGISTER)
     tec = prop(interface.LASER1_TEC_REGISTER)
     manualTec = prop(interface.LASER1_MANUAL_TEC_REGISTER)
+    extMax = None
+    extTemp = None
 
     def __init__(self, *args, **kwargs):
         super(Laser1TempControl, self).__init__(*args, **kwargs)
