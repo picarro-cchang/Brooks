@@ -11,25 +11,10 @@ Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.DriverSimulator.Utilities import prop_das, prop_fpga
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
-
-
-def das_register_getter(index):
-    def fget(self):
-        return self.das_registers[index]
-    return fget
-
-
-def das_register_setter(index):
-    def fset(self, value):
-        self.das_registers[index] = value
-    return fset
-
-
-def prop(index):
-    return property(das_register_getter(index), das_register_setter(index))
 
 
 class TempControl(object):
@@ -64,8 +49,10 @@ class TempControl(object):
     extMax = None
     extTemp = None
 
-    def __init__(self, das_registers):
-        self.das_registers = das_registers
+    def __init__(self, sim):
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        self.fpga_registers = sim.fpga_registers
         self.disabledValue = 0x8000
         self.extMax = 0
         self.extTemp = 0
@@ -238,32 +225,32 @@ class TempControl(object):
 
 
 class Laser1TempControl(TempControl):
-    r = prop(interface.LASER1_TEMP_CNTRL_SETPOINT_REGISTER)
-    b = prop(interface.LASER1_TEMP_CNTRL_B_REGISTER)
-    c = prop(interface.LASER1_TEMP_CNTRL_C_REGISTER)
-    h = prop(interface.LASER1_TEMP_CNTRL_H_REGISTER)
-    K = prop(interface.LASER1_TEMP_CNTRL_K_REGISTER)
-    Ti = prop(interface.LASER1_TEMP_CNTRL_TI_REGISTER)
-    Td = prop(interface.LASER1_TEMP_CNTRL_TD_REGISTER)
-    N = prop(interface.LASER1_TEMP_CNTRL_N_REGISTER)
-    S = prop(interface.LASER1_TEMP_CNTRL_S_REGISTER)
-    Imax = prop(interface.LASER1_TEMP_CNTRL_IMAX_REGISTER)
-    Amin = prop(interface.LASER1_TEMP_CNTRL_AMIN_REGISTER)
-    Amax = prop(interface.LASER1_TEMP_CNTRL_AMAX_REGISTER)
-    ffwd = prop(interface.LASER1_TEMP_CNTRL_FFWD_REGISTER)
-    userSetpoint = prop(interface.LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER)
-    state = prop(interface.LASER1_TEMP_CNTRL_STATE_REGISTER)
-    tol = prop(interface.LASER1_TEMP_CNTRL_TOLERANCE_REGISTER)
-    swpMin = prop(interface.LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER)
-    swpMax = prop(interface.LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER)
-    swpInc = prop(interface.LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER)
-    prbsAmp = prop(interface.LASER1_TEC_PRBS_AMPLITUDE_REGISTER)
-    prbsMean = prop(interface.LASER1_TEC_PRBS_MEAN_REGISTER)
-    prbsGen = prop(interface.LASER1_TEC_PRBS_GENPOLY_REGISTER)
-    temp = prop(interface.LASER1_TEMPERATURE_REGISTER)
-    dasTemp = prop(interface.DAS_TEMPERATURE_REGISTER)
-    tec = prop(interface.LASER1_TEC_REGISTER)
-    manualTec = prop(interface.LASER1_MANUAL_TEC_REGISTER)
+    r = prop_das(interface.LASER1_TEMP_CNTRL_SETPOINT_REGISTER)
+    b = prop_das(interface.LASER1_TEMP_CNTRL_B_REGISTER)
+    c = prop_das(interface.LASER1_TEMP_CNTRL_C_REGISTER)
+    h = prop_das(interface.LASER1_TEMP_CNTRL_H_REGISTER)
+    K = prop_das(interface.LASER1_TEMP_CNTRL_K_REGISTER)
+    Ti = prop_das(interface.LASER1_TEMP_CNTRL_TI_REGISTER)
+    Td = prop_das(interface.LASER1_TEMP_CNTRL_TD_REGISTER)
+    N = prop_das(interface.LASER1_TEMP_CNTRL_N_REGISTER)
+    S = prop_das(interface.LASER1_TEMP_CNTRL_S_REGISTER)
+    Imax = prop_das(interface.LASER1_TEMP_CNTRL_IMAX_REGISTER)
+    Amin = prop_das(interface.LASER1_TEMP_CNTRL_AMIN_REGISTER)
+    Amax = prop_das(interface.LASER1_TEMP_CNTRL_AMAX_REGISTER)
+    ffwd = prop_das(interface.LASER1_TEMP_CNTRL_FFWD_REGISTER)
+    userSetpoint = prop_das(interface.LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER)
+    state = prop_das(interface.LASER1_TEMP_CNTRL_STATE_REGISTER)
+    tol = prop_das(interface.LASER1_TEMP_CNTRL_TOLERANCE_REGISTER)
+    swpMin = prop_das(interface.LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER)
+    swpMax = prop_das(interface.LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER)
+    swpInc = prop_das(interface.LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER)
+    prbsAmp = prop_das(interface.LASER1_TEC_PRBS_AMPLITUDE_REGISTER)
+    prbsMean = prop_das(interface.LASER1_TEC_PRBS_MEAN_REGISTER)
+    prbsGen = prop_das(interface.LASER1_TEC_PRBS_GENPOLY_REGISTER)
+    temp = prop_das(interface.LASER1_TEMPERATURE_REGISTER)
+    dasTemp = prop_das(interface.DAS_TEMPERATURE_REGISTER)
+    tec = prop_das(interface.LASER1_TEC_REGISTER)
+    manualTec = prop_das(interface.LASER1_MANUAL_TEC_REGISTER)
     extMax = None
     extTemp = None
 
@@ -275,32 +262,32 @@ class Laser1TempControl(TempControl):
 
 
 class Laser2TempControl(TempControl):
-    r = prop(interface.LASER2_TEMP_CNTRL_SETPOINT_REGISTER)
-    b = prop(interface.LASER2_TEMP_CNTRL_B_REGISTER)
-    c = prop(interface.LASER2_TEMP_CNTRL_C_REGISTER)
-    h = prop(interface.LASER2_TEMP_CNTRL_H_REGISTER)
-    K = prop(interface.LASER2_TEMP_CNTRL_K_REGISTER)
-    Ti = prop(interface.LASER2_TEMP_CNTRL_TI_REGISTER)
-    Td = prop(interface.LASER2_TEMP_CNTRL_TD_REGISTER)
-    N = prop(interface.LASER2_TEMP_CNTRL_N_REGISTER)
-    S = prop(interface.LASER2_TEMP_CNTRL_S_REGISTER)
-    Imax = prop(interface.LASER2_TEMP_CNTRL_IMAX_REGISTER)
-    Amin = prop(interface.LASER2_TEMP_CNTRL_AMIN_REGISTER)
-    Amax = prop(interface.LASER2_TEMP_CNTRL_AMAX_REGISTER)
-    ffwd = prop(interface.LASER2_TEMP_CNTRL_FFWD_REGISTER)
-    userSetpoint = prop(interface.LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER)
-    state = prop(interface.LASER2_TEMP_CNTRL_STATE_REGISTER)
-    tol = prop(interface.LASER2_TEMP_CNTRL_TOLERANCE_REGISTER)
-    swpMin = prop(interface.LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER)
-    swpMax = prop(interface.LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER)
-    swpInc = prop(interface.LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER)
-    prbsAmp = prop(interface.LASER2_TEC_PRBS_AMPLITUDE_REGISTER)
-    prbsMean = prop(interface.LASER2_TEC_PRBS_MEAN_REGISTER)
-    prbsGen = prop(interface.LASER2_TEC_PRBS_GENPOLY_REGISTER)
-    temp = prop(interface.LASER2_TEMPERATURE_REGISTER)
-    dasTemp = prop(interface.DAS_TEMPERATURE_REGISTER)
-    tec = prop(interface.LASER2_TEC_REGISTER)
-    manualTec = prop(interface.LASER2_MANUAL_TEC_REGISTER)
+    r = prop_das(interface.LASER2_TEMP_CNTRL_SETPOINT_REGISTER)
+    b = prop_das(interface.LASER2_TEMP_CNTRL_B_REGISTER)
+    c = prop_das(interface.LASER2_TEMP_CNTRL_C_REGISTER)
+    h = prop_das(interface.LASER2_TEMP_CNTRL_H_REGISTER)
+    K = prop_das(interface.LASER2_TEMP_CNTRL_K_REGISTER)
+    Ti = prop_das(interface.LASER2_TEMP_CNTRL_TI_REGISTER)
+    Td = prop_das(interface.LASER2_TEMP_CNTRL_TD_REGISTER)
+    N = prop_das(interface.LASER2_TEMP_CNTRL_N_REGISTER)
+    S = prop_das(interface.LASER2_TEMP_CNTRL_S_REGISTER)
+    Imax = prop_das(interface.LASER2_TEMP_CNTRL_IMAX_REGISTER)
+    Amin = prop_das(interface.LASER2_TEMP_CNTRL_AMIN_REGISTER)
+    Amax = prop_das(interface.LASER2_TEMP_CNTRL_AMAX_REGISTER)
+    ffwd = prop_das(interface.LASER2_TEMP_CNTRL_FFWD_REGISTER)
+    userSetpoint = prop_das(interface.LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER)
+    state = prop_das(interface.LASER2_TEMP_CNTRL_STATE_REGISTER)
+    tol = prop_das(interface.LASER2_TEMP_CNTRL_TOLERANCE_REGISTER)
+    swpMin = prop_das(interface.LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER)
+    swpMax = prop_das(interface.LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER)
+    swpInc = prop_das(interface.LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER)
+    prbsAmp = prop_das(interface.LASER2_TEC_PRBS_AMPLITUDE_REGISTER)
+    prbsMean = prop_das(interface.LASER2_TEC_PRBS_MEAN_REGISTER)
+    prbsGen = prop_das(interface.LASER2_TEC_PRBS_GENPOLY_REGISTER)
+    temp = prop_das(interface.LASER2_TEMPERATURE_REGISTER)
+    dasTemp = prop_das(interface.DAS_TEMPERATURE_REGISTER)
+    tec = prop_das(interface.LASER2_TEC_REGISTER)
+    manualTec = prop_das(interface.LASER2_MANUAL_TEC_REGISTER)
     extMax = None
     extTemp = None
 
@@ -312,32 +299,32 @@ class Laser2TempControl(TempControl):
 
 
 class Laser3TempControl(TempControl):
-    r = prop(interface.LASER3_TEMP_CNTRL_SETPOINT_REGISTER)
-    b = prop(interface.LASER3_TEMP_CNTRL_B_REGISTER)
-    c = prop(interface.LASER3_TEMP_CNTRL_C_REGISTER)
-    h = prop(interface.LASER3_TEMP_CNTRL_H_REGISTER)
-    K = prop(interface.LASER3_TEMP_CNTRL_K_REGISTER)
-    Ti = prop(interface.LASER3_TEMP_CNTRL_TI_REGISTER)
-    Td = prop(interface.LASER3_TEMP_CNTRL_TD_REGISTER)
-    N = prop(interface.LASER3_TEMP_CNTRL_N_REGISTER)
-    S = prop(interface.LASER3_TEMP_CNTRL_S_REGISTER)
-    Imax = prop(interface.LASER3_TEMP_CNTRL_IMAX_REGISTER)
-    Amin = prop(interface.LASER3_TEMP_CNTRL_AMIN_REGISTER)
-    Amax = prop(interface.LASER3_TEMP_CNTRL_AMAX_REGISTER)
-    ffwd = prop(interface.LASER3_TEMP_CNTRL_FFWD_REGISTER)
-    userSetpoint = prop(interface.LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER)
-    state = prop(interface.LASER3_TEMP_CNTRL_STATE_REGISTER)
-    tol = prop(interface.LASER3_TEMP_CNTRL_TOLERANCE_REGISTER)
-    swpMin = prop(interface.LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER)
-    swpMax = prop(interface.LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER)
-    swpInc = prop(interface.LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER)
-    prbsAmp = prop(interface.LASER3_TEC_PRBS_AMPLITUDE_REGISTER)
-    prbsMean = prop(interface.LASER3_TEC_PRBS_MEAN_REGISTER)
-    prbsGen = prop(interface.LASER3_TEC_PRBS_GENPOLY_REGISTER)
-    temp = prop(interface.LASER3_TEMPERATURE_REGISTER)
-    dasTemp = prop(interface.DAS_TEMPERATURE_REGISTER)
-    tec = prop(interface.LASER3_TEC_REGISTER)
-    manualTec = prop(interface.LASER3_MANUAL_TEC_REGISTER)
+    r = prop_das(interface.LASER3_TEMP_CNTRL_SETPOINT_REGISTER)
+    b = prop_das(interface.LASER3_TEMP_CNTRL_B_REGISTER)
+    c = prop_das(interface.LASER3_TEMP_CNTRL_C_REGISTER)
+    h = prop_das(interface.LASER3_TEMP_CNTRL_H_REGISTER)
+    K = prop_das(interface.LASER3_TEMP_CNTRL_K_REGISTER)
+    Ti = prop_das(interface.LASER3_TEMP_CNTRL_TI_REGISTER)
+    Td = prop_das(interface.LASER3_TEMP_CNTRL_TD_REGISTER)
+    N = prop_das(interface.LASER3_TEMP_CNTRL_N_REGISTER)
+    S = prop_das(interface.LASER3_TEMP_CNTRL_S_REGISTER)
+    Imax = prop_das(interface.LASER3_TEMP_CNTRL_IMAX_REGISTER)
+    Amin = prop_das(interface.LASER3_TEMP_CNTRL_AMIN_REGISTER)
+    Amax = prop_das(interface.LASER3_TEMP_CNTRL_AMAX_REGISTER)
+    ffwd = prop_das(interface.LASER3_TEMP_CNTRL_FFWD_REGISTER)
+    userSetpoint = prop_das(interface.LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER)
+    state = prop_das(interface.LASER3_TEMP_CNTRL_STATE_REGISTER)
+    tol = prop_das(interface.LASER3_TEMP_CNTRL_TOLERANCE_REGISTER)
+    swpMin = prop_das(interface.LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER)
+    swpMax = prop_das(interface.LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER)
+    swpInc = prop_das(interface.LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER)
+    prbsAmp = prop_das(interface.LASER3_TEC_PRBS_AMPLITUDE_REGISTER)
+    prbsMean = prop_das(interface.LASER3_TEC_PRBS_MEAN_REGISTER)
+    prbsGen = prop_das(interface.LASER3_TEC_PRBS_GENPOLY_REGISTER)
+    temp = prop_das(interface.LASER3_TEMPERATURE_REGISTER)
+    dasTemp = prop_das(interface.DAS_TEMPERATURE_REGISTER)
+    tec = prop_das(interface.LASER3_TEC_REGISTER)
+    manualTec = prop_das(interface.LASER3_MANUAL_TEC_REGISTER)
     extMax = None
     extTemp = None
 
@@ -349,32 +336,32 @@ class Laser3TempControl(TempControl):
 
 
 class Laser4TempControl(TempControl):
-    r = prop(interface.LASER4_TEMP_CNTRL_SETPOINT_REGISTER)
-    b = prop(interface.LASER4_TEMP_CNTRL_B_REGISTER)
-    c = prop(interface.LASER4_TEMP_CNTRL_C_REGISTER)
-    h = prop(interface.LASER4_TEMP_CNTRL_H_REGISTER)
-    K = prop(interface.LASER4_TEMP_CNTRL_K_REGISTER)
-    Ti = prop(interface.LASER4_TEMP_CNTRL_TI_REGISTER)
-    Td = prop(interface.LASER4_TEMP_CNTRL_TD_REGISTER)
-    N = prop(interface.LASER4_TEMP_CNTRL_N_REGISTER)
-    S = prop(interface.LASER4_TEMP_CNTRL_S_REGISTER)
-    Imax = prop(interface.LASER4_TEMP_CNTRL_IMAX_REGISTER)
-    Amin = prop(interface.LASER4_TEMP_CNTRL_AMIN_REGISTER)
-    Amax = prop(interface.LASER4_TEMP_CNTRL_AMAX_REGISTER)
-    ffwd = prop(interface.LASER4_TEMP_CNTRL_FFWD_REGISTER)
-    userSetpoint = prop(interface.LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER)
-    state = prop(interface.LASER4_TEMP_CNTRL_STATE_REGISTER)
-    tol = prop(interface.LASER4_TEMP_CNTRL_TOLERANCE_REGISTER)
-    swpMin = prop(interface.LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER)
-    swpMax = prop(interface.LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER)
-    swpInc = prop(interface.LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER)
-    prbsAmp = prop(interface.LASER4_TEC_PRBS_AMPLITUDE_REGISTER)
-    prbsMean = prop(interface.LASER4_TEC_PRBS_MEAN_REGISTER)
-    prbsGen = prop(interface.LASER4_TEC_PRBS_GENPOLY_REGISTER)
-    temp = prop(interface.LASER4_TEMPERATURE_REGISTER)
-    dasTemp = prop(interface.DAS_TEMPERATURE_REGISTER)
-    tec = prop(interface.LASER4_TEC_REGISTER)
-    manualTec = prop(interface.LASER4_MANUAL_TEC_REGISTER)
+    r = prop_das(interface.LASER4_TEMP_CNTRL_SETPOINT_REGISTER)
+    b = prop_das(interface.LASER4_TEMP_CNTRL_B_REGISTER)
+    c = prop_das(interface.LASER4_TEMP_CNTRL_C_REGISTER)
+    h = prop_das(interface.LASER4_TEMP_CNTRL_H_REGISTER)
+    K = prop_das(interface.LASER4_TEMP_CNTRL_K_REGISTER)
+    Ti = prop_das(interface.LASER4_TEMP_CNTRL_TI_REGISTER)
+    Td = prop_das(interface.LASER4_TEMP_CNTRL_TD_REGISTER)
+    N = prop_das(interface.LASER4_TEMP_CNTRL_N_REGISTER)
+    S = prop_das(interface.LASER4_TEMP_CNTRL_S_REGISTER)
+    Imax = prop_das(interface.LASER4_TEMP_CNTRL_IMAX_REGISTER)
+    Amin = prop_das(interface.LASER4_TEMP_CNTRL_AMIN_REGISTER)
+    Amax = prop_das(interface.LASER4_TEMP_CNTRL_AMAX_REGISTER)
+    ffwd = prop_das(interface.LASER4_TEMP_CNTRL_FFWD_REGISTER)
+    userSetpoint = prop_das(interface.LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER)
+    state = prop_das(interface.LASER4_TEMP_CNTRL_STATE_REGISTER)
+    tol = prop_das(interface.LASER4_TEMP_CNTRL_TOLERANCE_REGISTER)
+    swpMin = prop_das(interface.LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER)
+    swpMax = prop_das(interface.LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER)
+    swpInc = prop_das(interface.LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER)
+    prbsAmp = prop_das(interface.LASER4_TEC_PRBS_AMPLITUDE_REGISTER)
+    prbsMean = prop_das(interface.LASER4_TEC_PRBS_MEAN_REGISTER)
+    prbsGen = prop_das(interface.LASER4_TEC_PRBS_GENPOLY_REGISTER)
+    temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
+    dasTemp = prop_das(interface.DAS_TEMPERATURE_REGISTER)
+    tec = prop_das(interface.LASER4_TEC_REGISTER)
+    manualTec = prop_das(interface.LASER4_MANUAL_TEC_REGISTER)
     extMax = None
     extTemp = None
 

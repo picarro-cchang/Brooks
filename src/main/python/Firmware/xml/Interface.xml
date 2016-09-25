@@ -2,11 +2,11 @@
 <!DOCTYPE Das_Interface SYSTEM "Interface.dtd">
 <Das_Interface>
     <files>
-        <file ident="usbPy">../../host/autogen/usbdefs.py</file>
+        <file ident="usbPy">../../Host/autogen/usbdefs.py</file>
         <file ident="usbH">../CypressUSB/autogen/usbdefs.h</file>
         <file ident="usbA51">../CypressUSB/autogen/usbdefs.inc</file>
         <file ident="intH">../DSP/autogen/interface.h</file>
-        <file ident="intPy">../../host/autogen/interface.py</file>
+        <file ident="intPy">../../Host/autogen/interface.py</file>
         <file ident="dspC">../DSP/autogen/dspAutogen.c</file>
         <file ident="dspH">../DSP/autogen/dspAutogen.h</file>
     </files>
@@ -4178,7 +4178,7 @@
         <action ident="ACTION_STREAM_FPGA_REGISTER_ASFLOAT">streamFpgaRegisterAsFloat</action>
         <action ident="ACTION_RESISTANCE_TO_TEMPERATURE">r_resistanceToTemperature</action>
         <action ident="ACTION_TEMP_CNTRL_SET_COMMAND">r_tempCntrlSetCommand</action>
-        <action ident="ACTION_APPLY_PID_STEP">r_applyPidStep</action>
+        <action ident="ACTION_STEP_SIMULATORS">r_stepSimulators</action>
         <action ident="ACTION_TEMP_CNTRL_LASER1_INIT">r_tempCntrlLaser1Init</action>
         <action ident="ACTION_TEMP_CNTRL_LASER1_STEP">r_tempCntrlLaser1Step</action>
         <action ident="ACTION_TEMP_CNTRL_LASER2_INIT">r_tempCntrlLaser2Init</action>

@@ -35,7 +35,7 @@ class ActionHandler(object):
             interface.ACTION_STREAM_FPGA_REGISTER_ASFLOAT: self.streamFpgaRegisterAsFloat,
             interface.ACTION_RESISTANCE_TO_TEMPERATURE: self.resistanceToTemperature,
             interface.ACTION_TEMP_CNTRL_SET_COMMAND: self.unknownAction,
-            interface.ACTION_APPLY_PID_STEP: self.unknownAction,
+            interface.ACTION_STEP_SIMULATORS: self.stepSimulators,
             interface.ACTION_TEMP_CNTRL_LASER1_INIT: self.tempCntrlLaser1Init,
             interface.ACTION_TEMP_CNTRL_LASER1_STEP: self.tempCntrlLaser1Step,
             interface.ACTION_TEMP_CNTRL_LASER2_INIT: self.tempCntrlLaser2Init,
@@ -63,7 +63,7 @@ class ActionHandler(object):
     def currentCntrlLaser1Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser1CurrentControl = Laser1CurrentControl(self.sim.das_registers, self.sim)
+        self.sim.laser1CurrentControl = Laser1CurrentControl(self.sim)
         return interface.STATUS_OK
 
     def currentCntrlLaser1Step(self, params, env, when, command):
@@ -74,7 +74,7 @@ class ActionHandler(object):
     def currentCntrlLaser2Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser2CurrentControl = Laser2CurrentControl(self.sim.das_registers, self.sim)
+        self.sim.laser2CurrentControl = Laser2CurrentControl(self.sim)
         return interface.STATUS_OK
 
     def currentCntrlLaser2Step(self, params, env, when, command):
@@ -85,7 +85,7 @@ class ActionHandler(object):
     def currentCntrlLaser3Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser3CurrentControl = Laser3CurrentControl(self.sim.das_registers, self.sim)
+        self.sim.laser3CurrentControl = Laser3CurrentControl(self.sim)
         return interface.STATUS_OK
 
     def currentCntrlLaser3Step(self, params, env, when, command):
@@ -96,7 +96,7 @@ class ActionHandler(object):
     def currentCntrlLaser4Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser4CurrentControl = Laser4CurrentControl(self.sim.das_registers, self.sim)
+        self.sim.laser4CurrentControl = Laser4CurrentControl(self.sim)
         return interface.STATUS_OK
 
     def currentCntrlLaser4Step(self, params, env, when, command):
@@ -214,7 +214,14 @@ class ActionHandler(object):
         current = 0.00036*dac
         self.sim.wrDasReg(params[1], current)
         return interface.STATUS_OK
- 
+
+    def stepSimulators(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        for simulator in self.sim.simulators:
+            simulator.step()
+        return interface.STATUS_OK
+
     def streamFpgaRegisterAsFloat(self, params, env, when, command):
         """This action streams the value of an FPGA register. The first parameter
             is the stream number, the second is the location in the FPGA map and
@@ -244,25 +251,25 @@ class ActionHandler(object):
     def tempCntrlLaser1Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser1TempControl = Laser1TempControl(self.sim.das_registers)
+        self.sim.laser1TempControl = Laser1TempControl(self.sim)
         return interface.STATUS_OK
 
     def tempCntrlLaser2Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser2TempControl = Laser2TempControl(self.sim.das_registers)
+        self.sim.laser2TempControl = Laser2TempControl(self.sim)
         return interface.STATUS_OK
 
     def tempCntrlLaser3Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser3TempControl = Laser3TempControl(self.sim.das_registers)
+        self.sim.laser3TempControl = Laser3TempControl(self.sim)
         return interface.STATUS_OK
 
     def tempCntrlLaser4Init(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
-        self.sim.laser4TempControl = Laser4TempControl(self.sim.das_registers)
+        self.sim.laser4TempControl = Laser4TempControl(self.sim)
         return interface.STATUS_OK
 
     def tempCntrlLaser1Step(self, params, env, when, command):

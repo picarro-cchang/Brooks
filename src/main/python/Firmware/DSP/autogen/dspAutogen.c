@@ -1415,8 +1415,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_resistanceToTemperature(numInt,params,env);
         case ACTION_TEMP_CNTRL_SET_COMMAND:
             return r_tempCntrlSetCommand(numInt,params,env);
-        case ACTION_APPLY_PID_STEP:
-            return r_applyPidStep(numInt,params,env);
+        case ACTION_STEP_SIMULATORS:
+            return r_stepSimulators(numInt,params,env);
         case ACTION_TEMP_CNTRL_LASER1_INIT:
             return r_tempCntrlLaser1Init(numInt,params,env);
         case ACTION_TEMP_CNTRL_LASER1_STEP:

@@ -36,7 +36,7 @@ schedulerPriorities = dict(SENSOR_READ=1,SENSOR_CONVERT=2,
                            SENSOR_PROCESSING=3,
                            CONTROLLER=4,ACTUATOR_CONVERT=5,
                            ACTUATOR_WRITE=6,STREAMER=7,
-                           MODEL=8)
+                           MODEL=8, SIMULATOR=9)
 
 # Periods are expressed in tenths of a second
 schedulerPeriods = dict(FAST=2, MEDIUM=10, SLOW=50)
@@ -603,6 +603,10 @@ class DasConfigure(SharedTypes.Singleton):
         # Update the laser temperature register of the WLM simulator
         self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_UPDATE_WLMSIM_LASER_TEMP"))
+
+        # Run the simulators (NOOP for real analyzer)
+        self.opGroups["FAST"]["SIMULATOR"].addOperation(
+            Operation("ACTION_STEP_SIMULATORS"))
 
         # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
