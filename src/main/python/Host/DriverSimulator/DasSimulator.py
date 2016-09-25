@@ -574,6 +574,7 @@ class TempControl(object):
             self.resetDasStatusBit(self.activeBit)
             self.resetDasStatusBit(self.lockBit)
             self.tec = self.disabledValue
+            self.firstIteration = True
             self.prbsReg = 0x1
         elif self.state == interface.TEMP_CNTRL_ManualState:
             self.setDasStatusBit(self.activeBit)
@@ -583,6 +584,7 @@ class TempControl(object):
             if self.manualTec < self.Amin:
                 self.manualTec = self.Amin
             self.tec = self.manualTec
+            self.firstIteration = True
             self.prbsReg = 0x1
         elif self.state in [interface.TEMP_CNTRL_EnabledState,
                             interface.TEMP_CNTRL_AutomaticState]:
@@ -622,7 +624,11 @@ class TempControl(object):
             elif self.r <= self.swpMin:
                 self.r = self.swpMin
                 self.swpDir = 1
-            self.pidStep()
+            if self.firstIteration:
+                self.firstIteration = False
+                self.pidBumplessRestart()
+            else:
+                self.pidStep()
             self.tec = self.a
             self.prbsReg = 0x1
         elif self.state == interface.TEMP_CNTRL_SendPrbsState:
@@ -639,6 +645,7 @@ class TempControl(object):
                 tecNext = self.Amin
             self.tec = tecNext
             self.prbsReg >>= 1
+            self.firstIteration = True
         # If there is a heatsink temperature sensor whose value should
         #  not exceed self.extMax, move the tec towards self.disabledValue
         if (self.extMax is not None) and (self.extTemp is not None):
@@ -966,9 +973,12 @@ class LaserDacSimulator(object):
     def current_from_dac(self, coarse, fine):
         return self.offset + self.coarse_sens * coarse + self.fine_sens * fine
 
+
 class WlmSimulator(object):
     # This code simulates the behavior of the wavelength monitor. The wavelength monitor
     #  angle is theta and the etalon reflectivity factor is rho.
-    # eta1 = rho * I1 * (1-sin(theta)) / (1 - rho*sin(theta)) + eta1_offset
-    # ref1 = I1 * (1-rho)/ (1 - rho*sin(theta)) + ref1_offset
-    
+    # eta1 = rho * Ieta1 * (1 + cos(theta)) / (1 + rho * cos(theta)) + eta1_offset
+    # ref1 = Iref1 * (1 - rho)/ (1 + rho * cos(theta)) + ref1_offset
+    # eta2 = rho * Ieta2 * (1 + sin(theta + epsilon)) / (1 + rho * sin(theta + epsilon)) + eta2_offset
+    # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
+    pass
