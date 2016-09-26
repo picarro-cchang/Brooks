@@ -222,6 +222,7 @@ class ActionHandler(object):
             return interface.ERROR_BAD_NUM_PARAMS
         for simulator in self.sim.simulators:
             simulator.step()
+        self.sim.injectionSimulator.step()
         return interface.STATUS_OK
 
     def streamFpgaRegisterAsFloat(self, params, env, when, command):
@@ -307,6 +308,7 @@ class ActionHandler(object):
             return interface.ERROR_BAD_NUM_PARAMS
         for simulator in self.sim.simulators:
             simulator.update()
+        self.sim.injectionSimulator.update()
         return interface.STATUS_OK
 
     def unknownAction(self, params, env, when, command):

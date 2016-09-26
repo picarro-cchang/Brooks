@@ -25,10 +25,10 @@ def fpga_register_getter(base, reg, lsb=0, width=16):
     def fget(self):
         current = self.fpga_registers[base + reg]
         if lsb == 0 and width == 16:
-            return current
+            return int(current)
         else:
             mask = ((1 << width) - 1) << lsb
-            return (current & mask) >> lsb
+            return int((current & mask) >> lsb)
     return fget
 
 
@@ -40,7 +40,7 @@ def fpga_register_setter(base, reg, lsb=0, width=16):
             current = self.fpga_registers[base + reg] 
             mask = ((1 << width) - 1) << lsb
             current = (current & ~mask) | ((value << lsb) & mask)
-        self.fpga_registers[base + reg] = current
+        self.fpga_registers[base + reg] = int(current)
     return fset
 
 

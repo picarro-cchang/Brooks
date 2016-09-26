@@ -19,6 +19,7 @@ from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
+from Host.DriverSimulator.Simulators import InjectionSimulator
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
@@ -100,6 +101,8 @@ class DasSimulator(object):
         self.laser2Simulator = None
         self.laser3Simulator = None
         self.laser4Simulator = None
+        #
+        self.injectionSimulator = InjectionSimulator(self)
         #
         self.simulators = set()
         #

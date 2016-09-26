@@ -143,7 +143,7 @@ class WlmModel(object):
     # ref1 = Iref1 * (1 - rho)/ (1 + rho * cos(theta)) + ref1_offset
     # eta2 = rho * Ieta2 * (1 + sin(theta + epsilon)) / (1 + rho * sin(theta + epsilon)) + eta2_offset
     # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
-    def __init__(self, rho=0.2, Ieta1fac=1500, Ieta2fac=1500, Iref1fac=1500, Iref2fac=1500,
+    def __init__(self, rho=0.2, Ieta1fac=3000, Ieta2fac=3000, Iref1fac=1500, Iref2fac=1500,
                  eta1_offset=6000, eta2_offset=6000, ref1_offset=6000, ref2_offset=6000, epsilon=0,
                  fsr=1.66782):
         self.rho = rho
@@ -158,8 +158,8 @@ class WlmModel(object):
         self.epsilon = epsilon
         self.fsr = fsr
 
-    def calcOutputs(self, waveNum, power):
-        theta = 2 * math.pi * waveNum / self.fsr
+    def calcOutputs(self, wavenumber, power):
+        theta = 2 * math.pi * wavenumber / self.fsr
         ct = math.cos(theta)
         ste = math.sin(theta + self.epsilon)
         eta1 = self.rho * self.Ieta1fac * power * (1 + ct) / (1 + self.rho * ct) + self.eta1_offset
@@ -167,6 +167,58 @@ class WlmModel(object):
         eta2 = self.rho * self.Ieta2fac * power * (1 + ste) / (1 + self.rho * ste) + self.eta2_offset
         ref2 = self.Iref2fac * power * (1 - self.rho) / (1 + self.rho * ste) + self.ref2_offset
         return eta1, ref1, eta2, ref2
+
+
+class InjectionSimulator(Simulator):
+    eta1Offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA1_OFFSET)
+    ref1Offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF1_OFFSET)
+    eta2Offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA2_OFFSET)
+    ref2Offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF2_OFFSET)
+    eta1 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA1)
+    ref1 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF1)
+    eta2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA2)
+    ref2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF2)
+    ratio1 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO1)
+    ratio2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO2)
+    laserIndex = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W)
+
+    def __init__(self, sim, wlmModel=None):
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        self.fpga_registers = sim.fpga_registers
+        if wlmModel is None:
+            wlmModel = WlmModel()
+        assert isinstance(wlmModel, WlmModel)
+        self.wlmModel = wlmModel
+        self.nextEta1 = None
+        self.nextEta2 = None
+        self.nextRef1 = None
+        self.nextRef2 = None
+        self.nextRatio1 = None
+        self.nextRatio2 = None
+
+    def step(self):
+        laserNum = self.laserIndex + 1
+        laserSimulator = [self.sim.laser1Simulator, self.sim.laser2Simulator, self.sim.laser3Simulator, self.sim.laser4Simulator][laserNum - 1]
+        wavenumber = laserSimulator.opticalModel.calcWavenumber(laserSimulator.nextTemp, laserSimulator.nextCurrentMonitor)
+        power = laserSimulator.opticalModel.calcPower(laserSimulator.nextTemp, laserSimulator.nextCurrentMonitor)
+        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(wavenumber, power)
+        self.nextRatio1 = 32768 * float(self.nextEta1 - self.eta1Offset) / (self.nextRef1 - self.ref1Offset)
+        self.nextRatio2 = 32768 * float(self.nextEta2 - self.eta2Offset) / (self.nextRef2 - self.ref2Offset)
+
+    def update(self):
+        if self.nextEta1 is not None:
+            self.eta1 = self.nextEta1
+        if self.nextEta2 is not None:
+            self.eta2 = self.nextEta2
+        if self.nextRef1 is not None:
+            self.ref1 = self.nextRef1
+        if self.nextRef2 is not None:
+            self.ref2 = self.nextRef2
+        if self.nextRatio1 is not None:
+            self.ratio1 = self.nextRatio1
+        if self.nextRatio2 is not None:
+            self.ratio2 = self.nextRatio2
 
 
 class LaserSimulator(Simulator):
@@ -196,17 +248,18 @@ class LaserSimulator(Simulator):
         assert isinstance(thermalModel, LaserThermalModel)
         self.thermalModel = thermalModel
         self.nextCurrentMonitor = None
+        self.nextTemp = None
         self.nextThermRes = None
 
     def step(self):
-        nextTemp = self.thermalModel.tecToTemp(self.tec)
-        self.nextThermRes = self.thermalModel.tempToResistance(nextTemp)
+        self.nextTemp = self.thermalModel.tecToTemp(self.tec)
+        self.nextThermRes = self.thermalModel.tempToResistance(self.nextTemp)
         laserOn = self.currentEnable and self.laserEnable
         self.nextCurrentMonitor = self.dacModel.dacToCurrent(self.fpgaCoarse, self.fpgaFine) if laserOn else 0.0
-        nextWavenumber = self.opticalModel.calcWavenumber(nextTemp, self.nextCurrentMonitor)
-        nextPower = self.opticalModel.calcPower(nextTemp, self.nextCurrentMonitor)
+        nextWavenumber = self.opticalModel.calcWavenumber(self.nextTemp, self.nextCurrentMonitor)
+        nextPower = self.opticalModel.calcPower(self.nextTemp, self.nextCurrentMonitor)
         print "Laser %d, nextTemp %.3f, nextCurrent %.3f, nextWavenumber %.3f nextPower %.1f" % (
-            self.laserNum, nextTemp, self.nextCurrentMonitor, nextWavenumber, nextPower)
+            self.laserNum, self.nextTemp, self.nextCurrentMonitor, nextWavenumber, nextPower)
 
     def update(self):
         if self.nextCurrentMonitor is not None:
@@ -257,8 +310,3 @@ class Laser4Simulator(LaserSimulator):
     currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_W)
     laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_W)
     laserNum = 4
-
-
-class InjectionSimulator(object):
-    pass
-
