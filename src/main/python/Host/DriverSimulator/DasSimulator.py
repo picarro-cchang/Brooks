@@ -9,27 +9,30 @@ File History:
 
 Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
+from collections import deque
 import ctypes
+import heapq
+import math
 import types
 
 from Host.autogen import interface
+from Host.Common import timestamp
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.DriverSimulator.ActionHandler import ActionHandler
+from Host.DriverSimulator.Simulators import InjectionSimulator
+
+APP_NAME = "DriverSimulator"
+EventManagerProxy_Init(APP_NAME)
 
 
-class ActionHandler(object):
-    def __init__(self, sim):
-        self.sim = sim
-        self.action = {
-            interface.ACTION_WRITE_BLOCK: self.writeBlock,
-        }
-
-    def doAction(self, command, params, env):
-        return self.action[command](params, env)
-
-    def writeBlock(self, params, env):
-        offset = params[0]
-        for i in range(len(params)-1):
-            self.sim.sharedMem[offset + i] = params[i + 1]
-        return interface.STATUS_OK
+def _value(valueOrName):
+    """Convert valueOrName into an value, raising an exception if the name is not found"""
+    if isinstance(valueOrName, types.StringType):
+        try:
+            valueOrName = getattr(interface, valueOrName)
+        except AttributeError:
+            raise AttributeError("Value identifier not recognized %r" % valueOrName)
+    return valueOrName
 
 
 class DasSimulator(object):
@@ -37,8 +40,14 @@ class DasSimulator(object):
         def __init__(self, sim):
             self.sim = sim
 
-        def doOperation(self, operation):
-            return self.sim.actionHandler.doAction(operation.opcode, operation.operandList, operation.env)
+        def doOperation(self, operation, when=None):
+            if when is None:
+                when = self.sim.getDasTimestamp()
+            return self.sim.actionHandler.doAction(operation.opcode, operation.operandList, operation.env, when)
+
+        def rdEnv(self, addressOrName, envClass):
+            address = _value(addressOrName)
+            return self.sim.envStore[address]
 
         def rdRegFloat(self, regIndexOrName):
             return self.sim.rdDasReg(regIndexOrName)
@@ -49,8 +58,9 @@ class DasSimulator(object):
         def rdFPGA(self, base, reg):
             return self.sim.rdFPGA(base, reg)
 
-        def wrEnv(self, *args, **kwargs):
-            print "wrEnv called: %s, %s" % (args, kwargs)
+        def wrEnv(self, addressOrName, env):
+            address = _value(addressOrName)
+            self.sim.envStore[address] = env
 
         def wrFPGA(self, base, reg, value, convert=True):
             return self.sim.wrFPGA(base, reg, value, convert)
@@ -64,10 +74,66 @@ class DasSimulator(object):
     def __init__(self):
         self.das_registers = interface.INTERFACE_NUMBER_OF_REGISTERS * [0]
         self.fpga_registers = 512*[0]
+        self.dsp_message_queue = deque(maxlen=interface.NUM_MESSAGES)
+        self.sensor_queue = deque(maxlen=interface.NUM_SENSOR_ENTRIES)
+        self.ringdown_queue = deque(maxlen=interface.NUM_RINGDOWN_ENTRIES)
+        # shared_mem is an array of 32-bit unsigned integers
         self.shared_mem = interface.SHAREDMEM_SIZE * [0]
         self.hostToDspSender = DasSimulator.HostToDspSender(self)
         self.actionHandler = ActionHandler(self)
+        # The following attributes are associated with the scheduler
+        self.operationGroups = []
+        self.scheduler = None
+        # The following stores environment structures
+        self.envStore = {}
+        # The following will contain the temperature controller objects
+        self.laser1TempControl = None
+        self.laser2TempControl = None
+        self.laser3TempControl = None
+        self.laser4TempControl = None
+        # and the laser current controllers
+        self.laser1CurrentControl = None
+        self.laser2CurrentControl = None
+        self.laser3CurrentControl = None
+        self.laser4CurrentControl = None
+        #
+        self.laser1Simulator = None
+        self.laser2Simulator = None
+        self.laser3Simulator = None
+        self.laser4Simulator = None
+        #
+        self.injectionSimulator = InjectionSimulator(self)
+        #
+        self.simulators = set()
+        #
+        self.ts_offset = 0  # Timestamp offset in ms
         self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
+
+    def addSimulator(self, simulator):
+        self.simulators.add(simulator)
+
+    def getDasTimestamp(self):
+        # Get ms DAS timestamp
+        return self.ts_offset + timestamp.getTimestamp()
+
+    def getMessage(self):
+        if len(self.dsp_message_queue) > 0:
+            ts, logLevel, message = self.dsp_message_queue.popleft()
+            return ts, message
+        else:
+            return None
+
+    def getSensorData(self):
+        if len(self.sensor_queue) > 0:
+            data = interface.SensorEntryType()
+            data.timestamp, data.streamNum, data.value = self.sensor_queue.popleft() 
+            return data
+        else:
+            return None
+
+    def initScheduler(self):
+        now = self.getDasTimestamp()
+        self.scheduler = Scheduler(self.operationGroups, now, self.hostToDspSender.doOperation)
 
     def rdDasReg(self, regIndexOrName):
         index = self._reg_index(regIndexOrName)
@@ -80,6 +146,15 @@ class DasSimulator(object):
         base = self._value(baseIndexOrName)
         reg = self._value(regIndexOrName)
         return self.fpga_registers[base + reg]
+
+    def readBitsFPGA(self, regNum, lsb, width):
+        current = self.fpga_registers[regNum]
+        mask = ((1 << width) - 1) << lsb
+        return (current & mask) >> lsb
+
+    def setDasTimestamp(self, ts):
+        # Set ms DAS timestamp
+        self.ts_offset = ts - timestamp.getTimestamp()
 
     def uploadSchedule(self, groups):
         self.operationGroups = groups
@@ -125,3 +200,45 @@ class DasSimulator(object):
                 raise AttributeError("Value identifier not recognized %s" % valueOrName)
         return valueOrName
 
+
+class Scheduler(object):
+    def __init__(self, operationGroups, ts, doOperation):
+        # Within the constructor a runqueue is initialized
+        #  with groups of operations which have to be performed
+        #  at times starting with ts (ms). Groups are scheduled
+        #  at times which are integer multiples of their periods.
+        #  They are further ordered by group
+        # Note that the periods are specified in units of 100ms.
+        self.operationGroups = operationGroups
+        self.startTimestamp = ts
+        self.doOperation = doOperation
+        # The run queue is a minqueue with entries
+        # (when, priority, what)
+        self.runqueue = [] 
+        self.initRunqueue()
+
+    def initRunqueue(self):
+        for group in self.operationGroups:
+            period_ms = 100*group.period
+            when = int(period_ms * math.ceil(float(self.startTimestamp) / period_ms))
+            item = (when, group.priority, group)
+            heapq.heappush(self.runqueue, item)
+        print "Initial runqueue"
+        for when, priority, group in sorted(self.runqueue):
+            print when, priority, group
+
+    def execUntil(self, ts):
+        while self.runqueue:
+
+            # Get the next action to perform
+            when, priority, group = self.runqueue[0]
+            if when > ts:
+                return
+            heapq.heappop(self.runqueue)
+            # Enqueue next time this is to be performed
+            period_ms = 100*group.period
+            item = (when + period_ms, group.priority, group)
+            heapq.heappush(self.runqueue, item)
+            # Carry out the actions in the list
+            for operation in group.operationList:
+                self.doOperation(operation, when)

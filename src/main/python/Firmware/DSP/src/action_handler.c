@@ -271,12 +271,12 @@ int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env)
+int r_updateFromSimulators(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
 
-int r_applyPidStep(unsigned int numInt,void *params,void *env)
+int r_stepSimulators(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
