@@ -320,6 +320,11 @@ class Fitter(object):
                     self.state = FITTER_STATE_READY # Repository has been exhausted
 
         if self.state == FITTER_STATE_PROC:
+            # You can get here if you are reprocessing ringdown *.h5 files
+            # with the VirtualAnalyzer.
+            # This goes through one scheme's worth of ringdown data, fitting
+            # any and all spectra in it.
+            #
             try:
                 spect = self.spectQueue.get(timeout=DATA_AVAIL_EVENT_TIMEOUT)
                 if self.compiledScriptsAndEnvironments:

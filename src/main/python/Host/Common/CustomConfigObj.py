@@ -13,6 +13,27 @@
 #
 # File History:
 # 08-09-16  Alex  Created file
+#
+# 25Sep2016 Ray   Restored % interpolation.
+#
+# configobj supported % interpolation with keys set in the [DEFAULT] section of an
+# ini file like that below but this capability was not working in CustomConfigObj.
+# I have restored this feature with a small change in the get() method to call
+# configobj.get() when needed.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# [DEFAULT]
+# path = /home/rsf/git/host/src/main/python/Host
+#
+# [EventManager]
+# Executable = %(path)s/EventManager/EventManager.py
+# LaunchArgs = --viewer -c %(path)s/AppConfig/Config/EventManager/EventManager.ini
+#
+# [Driver]
+# Executable = %(path)s/Driver/Driver.py
+# LaunchArgs = -c %(path)s/AppConfig/Config/Driver/Driver_lct.ini
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#
 
 """Customized configuration file parser using ConfigObj.
 
@@ -156,7 +177,14 @@ class CustomConfigObj(configobj.ConfigObj):
                     newDict[k.lower()] = (v,k)
         return newDict
 
-    def get(self, section, option, default=None):
+    # This get() overrides the configobj.get().  However, to use the 
+    # DEFAULT section we make a direct call to configobj.get() with
+    # the super method.  Without this, configobj interpolation causes
+    # a fatal exception.  See the notes above.
+    #
+    def get(self, section, option='', default=None):
+        if not option:
+            return super(CustomConfigObj, self).get(section)
         if default is None:
             if not self.ignoreOptionCase:
                 return self[section][option]
@@ -174,6 +202,7 @@ class CustomConfigObj(configobj.ConfigObj):
             except KeyError:
                 self._add_value(section, option, default)
                 return default
+
 
     def getint(self, section, option, default=None):
         try:
