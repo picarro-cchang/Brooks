@@ -96,20 +96,18 @@ class DasSimulator(object):
         self.laser3CurrentControl = None
         self.laser4CurrentControl = None
         #
+        self.laser1Simulator = None
+        self.laser2Simulator = None
+        self.laser3Simulator = None
+        self.laser4Simulator = None
+        #
         self.simulators = set()
         #
         self.ts_offset = 0  # Timestamp offset in ms
         self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
 
-    def changeBitsFPGA(self, regNum, lsb, width, value):
-        current = self.fpga_registers[regNum]
-        mask = ((1 << width) - 1) << lsb
-        current = (current & ~mask) | ((value << lsb) & mask)
-        self.fpga_registers[regNum] = current
-
-    def changeInMaskFPGA(self, regNum, mask, value):
-        current = self.fpga_registers[regNum]
-        self.fpga_registers[regNum] = (current & ~mask) | (value & mask)
+    def addSimulator(self, simulator):
+        self.simulators.add(simulator)
 
     def getDasTimestamp(self):
         # Get ms DAS timestamp

@@ -32,10 +32,10 @@ else:
 
 EventManagerProxy_Init("Driver")
 
-schedulerPriorities = dict(SENSOR_READ=1,SENSOR_CONVERT=2,
+schedulerPriorities = dict(UPDATE=0, SENSOR_READ=1, SENSOR_CONVERT=2,
                            SENSOR_PROCESSING=3,
-                           CONTROLLER=4,ACTUATOR_CONVERT=5,
-                           ACTUATOR_WRITE=6,STREAMER=7,
+                           CONTROLLER=4, ACTUATOR_CONVERT=5,
+                           ACTUATOR_WRITE=6, STREAMER=7,
                            MODEL=8, SIMULATOR=9)
 
 # Periods are expressed in tenths of a second
@@ -605,6 +605,8 @@ class DasConfigure(SharedTypes.Singleton):
             Operation("ACTION_UPDATE_WLMSIM_LASER_TEMP"))
 
         # Run the simulators (NOOP for real analyzer)
+        self.opGroups["FAST"]["UPDATE"].addOperation(
+            Operation("ACTION_UPDATE_FROM_SIMULATORS"))
         self.opGroups["FAST"]["SIMULATOR"].addOperation(
             Operation("ACTION_STEP_SIMULATORS"))
 

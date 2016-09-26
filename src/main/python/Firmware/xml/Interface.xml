@@ -4177,7 +4177,7 @@
         <action ident="ACTION_STREAM_REGISTER_ASFLOAT">streamRegisterAsFloat</action>
         <action ident="ACTION_STREAM_FPGA_REGISTER_ASFLOAT">streamFpgaRegisterAsFloat</action>
         <action ident="ACTION_RESISTANCE_TO_TEMPERATURE">r_resistanceToTemperature</action>
-        <action ident="ACTION_TEMP_CNTRL_SET_COMMAND">r_tempCntrlSetCommand</action>
+        <action ident="ACTION_UPDATE_FROM_SIMULATORS">r_updateFromSimulators</action>
         <action ident="ACTION_STEP_SIMULATORS">r_stepSimulators</action>
         <action ident="ACTION_TEMP_CNTRL_LASER1_INIT">r_tempCntrlLaser1Init</action>
         <action ident="ACTION_TEMP_CNTRL_LASER1_STEP">r_tempCntrlLaser1Step</action>

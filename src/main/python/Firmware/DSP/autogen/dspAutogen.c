@@ -1413,8 +1413,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return streamFpgaRegisterAsFloat(numInt,params,env);
         case ACTION_RESISTANCE_TO_TEMPERATURE:
             return r_resistanceToTemperature(numInt,params,env);
-        case ACTION_TEMP_CNTRL_SET_COMMAND:
-            return r_tempCntrlSetCommand(numInt,params,env);
+        case ACTION_UPDATE_FROM_SIMULATORS:
+            return r_updateFromSimulators(numInt,params,env);
         case ACTION_STEP_SIMULATORS:
             return r_stepSimulators(numInt,params,env);
         case ACTION_TEMP_CNTRL_LASER1_INIT:

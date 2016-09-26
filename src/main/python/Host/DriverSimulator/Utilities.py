@@ -34,7 +34,7 @@ def fpga_register_getter(base, reg, lsb=0, width=16):
 
 def fpga_register_setter(base, reg, lsb=0, width=16):
     def fset(self, value):
-        if lsb == 0 or width == 16:
+        if lsb == 0 and width == 16:
             current = value
         else:
             current = self.fpga_registers[base + reg] 

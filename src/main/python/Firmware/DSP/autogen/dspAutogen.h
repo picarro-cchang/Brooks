@@ -29,7 +29,7 @@ int testScheduler(unsigned int numInt,void *params,void *env);
 int streamRegisterAsFloat(unsigned int numInt,void *params,void *env);
 int streamFpgaRegisterAsFloat(unsigned int numInt,void *params,void *env);
 int r_resistanceToTemperature(unsigned int numInt,void *params,void *env);
-int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env);
+int r_updateFromSimulators(unsigned int numInt,void *params,void *env);
 int r_stepSimulators(unsigned int numInt,void *params,void *env);
 int r_tempCntrlLaser1Init(unsigned int numInt,void *params,void *env);
 int r_tempCntrlLaser1Step(unsigned int numInt,void *params,void *env);
