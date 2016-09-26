@@ -136,6 +136,39 @@ class LaserThermalModel(object):
         return math.exp(cubeRoot(x - 0.5*y) - cubeRoot(x + 0.5*y))
 
 
+class WlmModel(object):
+    # This code simulates the behavior of the wavelength monitor. The wavelength monitor
+    #  angle is theta and the etalon reflectivity factor is rho.
+    # eta1 = rho * Ieta1 * (1 + cos(theta)) / (1 + rho * cos(theta)) + eta1_offset
+    # ref1 = Iref1 * (1 - rho)/ (1 + rho * cos(theta)) + ref1_offset
+    # eta2 = rho * Ieta2 * (1 + sin(theta + epsilon)) / (1 + rho * sin(theta + epsilon)) + eta2_offset
+    # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
+    def __init__(self, rho=0.2, Ieta1fac=1500, Ieta2fac=1500, Iref1fac=1500, Iref2fac=1500,
+                 eta1_offset=6000, eta2_offset=6000, ref1_offset=6000, ref2_offset=6000, epsilon=0,
+                 fsr=1.66782):
+        self.rho = rho
+        self.Ieta1fac = Ieta1fac
+        self.Ieta2fac = Ieta2fac
+        self.Iref1fac = Iref1fac
+        self.Iref2fac = Iref2fac
+        self.eta1_offset = eta1_offset
+        self.eta2_offset = eta2_offset
+        self.ref1_offset = ref1_offset
+        self.ref2_offset = ref2_offset
+        self.epsilon = epsilon
+        self.fsr = fsr
+
+    def calcOutputs(self, waveNum, power):
+        theta = 2 * math.pi * waveNum / self.fsr
+        ct = math.cos(theta)
+        ste = math.sin(theta + self.epsilon)
+        eta1 = self.rho * self.Ieta1fac * power * (1 + ct) / (1 + self.rho * ct) + self.eta1_offset
+        ref1 = self.Iref1fac * power * (1 - self.rho) / (1 + self.rho * ct) + self.ref1_offset
+        eta2 = self.rho * self.Ieta2fac * power * (1 + ste) / (1 + self.rho * ste) + self.eta2_offset
+        ref2 = self.Iref2fac * power * (1 - self.rho) / (1 + self.rho * ste) + self.ref2_offset
+        return eta1, ref1, eta2, ref2
+
+
 class LaserSimulator(Simulator):
     tec = None
     thermRes = None
@@ -229,11 +262,3 @@ class Laser4Simulator(LaserSimulator):
 class InjectionSimulator(object):
     pass
 
-class WlmModel(object):
-    # This code simulates the behavior of the wavelength monitor. The wavelength monitor
-    #  angle is theta and the etalon reflectivity factor is rho.
-    # eta1 = rho * Ieta1 * (1 + cos(theta)) / (1 + rho * cos(theta)) + eta1_offset
-    # ref1 = Iref1 * (1 - rho)/ (1 + rho * cos(theta)) + ref1_offset
-    # eta2 = rho * Ieta2 * (1 + sin(theta + epsilon)) / (1 + rho * sin(theta + epsilon)) + eta2_offset
-    # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
-    pass
