@@ -107,6 +107,12 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
+
 #Global constants...
 APP_NAME = "Supervisor"
 MAX_LAUNCH_COUNT = 1
@@ -366,6 +372,12 @@ elif sys.platform == "linux2":
         for arg in exeArgs[1:]:
             argList += arg.split()
         try:
+            # There seems to be some strange interaction between Pyro4, threading,
+            # Popen, and rpdb2 causing a race condition where process creation sometimes
+            # locks up the code.  A tip on StackOverflow (can't find the link)
+            # said sleep() before each Popen made the problem go away.
+            #
+            time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
@@ -418,7 +430,7 @@ elif sys.platform == "linux2":
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
         # print("TerminateProcess disabled") # RSF
-        os.kill(processHandle.pid,9) # Don't kill for debug RSF
+        #os.kill(processHandle.pid,9) # Don't kill for debug RSF
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
@@ -525,6 +537,16 @@ class App(object):
         self.KillByName = True
         self.ShowDispatcherWarning = 1
 
+        # DebugMode == False runs interpreted python code with the -OO option.
+        # DebugMode == True runs without -OO and sets __debug__.  In some codes
+        #               this will load the rpdb2 debugger so the code can be run
+        #               in winpdb.
+        # DebugMode can be set for individual processes in supervisor.ini. It
+        # can be set globally in [GlobalDefaults] in supervisor.ini. If the key
+        # is missing debug mode is off.
+        #
+        self.DebugMode = False
+
         #now override any defaults with the passed in dictionary values...
         if DefaultSettings:
             assert isinstance(DefaultSettings, dict)
@@ -582,10 +604,10 @@ class App(object):
         for optionName in settableOptions:
             try:
                 option = CO.get(self._AppName, optionName)
-                if isinstance(self.__getattribute__(optionName), int):
-                    option = int(option)
-                elif isinstance(self.__getattribute__(optionName), bool):
+                if isinstance(self.__getattribute__(optionName), bool):
                     option = bool(option)
+                elif isinstance(self.__getattribute__(optionName), int):
+                    option = int(option)
                 self.__setattr__(optionName, option)
                 #add it to the dictionary we're using to keep track of what was loaded...
                 loadedOptions[optionName] = option
@@ -647,7 +669,8 @@ class App(object):
             exeName = sys.executable
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
             if sys.flags.optimize:
-                exeArgs.append("-OO")
+                if not self.DebugMode:
+                    exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
                 launchPath = "%s" % (self.Executable,)
             else:
