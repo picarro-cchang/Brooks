@@ -25,7 +25,6 @@ import struct
 import time
 from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
-from Host.Common.hostDasInterface import Operation, OperationGroup
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.WlmCalUtilities import WlmFile
 
