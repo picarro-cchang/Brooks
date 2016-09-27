@@ -76,7 +76,7 @@ class WlmFileMaker(object):
 
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
-        self.port = 'COM1'
+        self.port = None
         self.ipAddr = None
 
         if "-a" in options:
@@ -173,7 +173,20 @@ class WlmFileMaker(object):
         self.wavemeter = None
         if not self.simulation:
             if self.ipAddr is None:
-                self.searchSerPort()
+                if self.port is None:
+                    self.searchSerPort()
+                else:
+                    try:
+                        self.ser = serial.Serial(self.port, 19200, timeout=0)
+                        self.wavemeter = BurleighReply(self.ser,0.02)
+                        time.sleep(2)
+                        print "Testing serial %s..." % (p)
+                        self.wavemeter.PutString("\n");
+                        time.sleep(1.0)
+                        self.wavemeter.PutString("*IDN?\n");
+                        reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+                    except:
+                        raise Exception("Cannot open connect to wavemeter at %s" % self.port)
             else:
                 try:
                     self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
