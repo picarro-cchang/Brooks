@@ -111,7 +111,7 @@ class SpectrumControl(object):
                 self.switchToRampMode()
                 self.laserShutdownEnabled = 1
                 self.soaShutdownEnabled = 1
-                self.sim.startRdCycle = True
+                self.sim.startRdcycle = True
         elif self.state == interface.SPECT_CNTRL_IdleState:
             if self.prevState != interface.SPECT_CNTRL_IdleState:
                 self.switchToRampMode()

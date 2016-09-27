@@ -72,7 +72,8 @@ class DasSimulator(object):
         def wrRegUint(self, regIndexOrName, value, convert=True):
             return self.sim.wrDasReg(regIndexOrName, value, convert)
 
-    def __init__(self):
+    def __init__(self, driver):
+        self.driver = driver
         self.das_registers = interface.INTERFACE_NUMBER_OF_REGISTERS * [0]
         self.fpga_registers = 512*[0]
         self.dsp_message_queue = deque(maxlen=interface.NUM_MESSAGES)

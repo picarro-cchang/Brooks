@@ -52,7 +52,7 @@ class LaserCurrentControl(object):
             self.coarse = self.manualCoarse
             fine = 32768
             self.currentEnable = 1
-            self.laserEnable = 0
+            self.laserEnable = 1 # 0 In reality, the laser is turned on by the FPGA
         elif self.state == interface.LASER_CURRENT_CNTRL_ManualState:
             self.coarse = self.manualCoarse
             fine = self.manualFine

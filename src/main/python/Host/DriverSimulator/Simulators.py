@@ -14,7 +14,7 @@ import math
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.Utilities import prop_das, prop_fpga
-
+from Host.Common.SharedTypes import ctypesToDict
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
 
@@ -311,13 +311,59 @@ class Laser4Simulator(LaserSimulator):
 
 
 class SpectrumSimulator(Simulator):
+    state = prop_das(interface.SPECT_CNTRL_STATE_REGISTER)
+    mode = prop_das(interface.SPECT_CNTRL_MODE_REGISTER)
+    active = prop_das(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
+    next = prop_das(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
+    iter = prop_das(interface.SPECT_CNTRL_SCHEME_ITER_REGISTER)
+    row = prop_das(interface.SPECT_CNTRL_SCHEME_ROW_REGISTER)
+    dwell = prop_das(interface.SPECT_CNTRL_DWELL_COUNT_REGISTER)
+    defaultThreshold = prop_das(interface.SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER)
+    analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
+
     def __init__(self, sim):
         self.sim = sim
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
+        self.spectrumControl = sim.spectrumControl
+        self.incrFlag = 0
 
     def step(self):
-        print "In spectrum simulator:", self.sim.startRdcycle
+        if self.state != interface.SPECT_CNTRL_RunningState:
+            return
+        print "Scheme %d: iter %d, row %d, dwell %d" % (self.active, self.iter, self.row, self.dwell)
+        self.scheme = self.sim.driver.schemeTables[self.active]
+        self.incrFlag = self.scheme.rows[self.row].subschemeId & interface.SUBSCHEME_ID_IncrMask
+        print ctypesToDict(self.scheme.rows[self.row])
+        self.advanceSchemeRow()
+
+    def advanceSchemeRow(self):
+        self.row += 1
+        # TODO: Check fit flag
+        if self.incrFlag:
+            self.spectrumControl.incrCounterNext = self.spectrumControl.incrCounter
+            self.incrFlag = 0
+        if self.row >= self.scheme.numRows:
+            self.advanceSchemeIteration()
+        else:
+            self.dwell = 0
+
+    def advanceSchemeIteration(self):
+        self.iter += 1
+        if self.iter >= self.scheme.numRepeats or self.mode == interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode:
+            self.advanceScheme()
+        else:
+            self.row = 0
+            self.dwell = 0
+
+    def advanceScheme(self):
+        self.iter = 0
+        self.dwell = 0
+        self.row = 0
+        if self.mode == interface.SPECT_CNTRL_SchemeSingleMode:
+            self.state = interface.SPECT_CNTRL_IdleState
+        # The next line causes the sequencer to load another scheme
+        self.active = self.next
 
     def update(self):
         print "Updating spectrum simulator"
