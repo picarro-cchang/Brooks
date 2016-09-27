@@ -43,7 +43,6 @@ class LaserCurrentControl(object):
         self.laserNum = None
 
     def step(self):
-        print "Before step", self.laserNum, self.sim.rdFPGA("FPGA_INJECT", "INJECT_CONTROL")
         if self.state == interface.LASER_CURRENT_CNTRL_DisabledState:
             self.coarse = 0
             fine = 0
@@ -74,7 +73,6 @@ class LaserCurrentControl(object):
             self.automatic = 0
         self.fpgaCoarse = self.coarse
         self.fpgaFine = fine
-        print "After step", self.laserNum, self.sim.rdFPGA("FPGA_INJECT", "INJECT_CONTROL")
         return interface.STATUS_OK
 
 

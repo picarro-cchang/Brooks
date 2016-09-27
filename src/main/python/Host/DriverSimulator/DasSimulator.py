@@ -19,7 +19,8 @@ from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
-from Host.DriverSimulator.Simulators import InjectionSimulator
+from Host.DriverSimulator.Simulators import InjectionSimulator, SpectrumSimulator
+from Host.DriverSimulator.SpectrumControl import SpectrumControl
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
@@ -96,6 +97,8 @@ class DasSimulator(object):
         self.laser2CurrentControl = None
         self.laser3CurrentControl = None
         self.laser4CurrentControl = None
+        # and the spectrum controller
+        self.spectrumControl = SpectrumControl(self)
         #
         self.laser1Simulator = None
         self.laser2Simulator = None
@@ -103,9 +106,13 @@ class DasSimulator(object):
         self.laser4Simulator = None
         #
         self.injectionSimulator = InjectionSimulator(self)
+        self.spectrumSimulator = SpectrumSimulator(self)
         #
         self.simulators = set()
+        # Here follow the semaphores used in the DSP code
+        self.startRdcycle = False  # Allow ringdowns to occur
         #
+        self.initDasRegisters()
         self.ts_offset = 0  # Timestamp offset in ms
         self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
 
@@ -130,6 +137,11 @@ class DasSimulator(object):
             return data
         else:
             return None
+
+    def initDasRegisters(self):
+        for ri in interface.registerInfo:
+            if ri.initial is not None:
+                self.wrDasReg(ri.name, ri.initial)
 
     def initScheduler(self):
         now = self.getDasTimestamp()

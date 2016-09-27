@@ -640,9 +640,6 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_Flow1","FLOW1_REGISTER"]))
 
-        self.opGroups["MEDIUM"]["STREAMER"].addOperation(
-            Operation("ACTION_TEST_SCHEDULER", [1, 2, 3, 4]))
-
         # Stop the scheduler before loading new schedule
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
         # Schedule operation groups which are non-empty

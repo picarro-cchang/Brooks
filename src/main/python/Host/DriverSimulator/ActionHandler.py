@@ -60,6 +60,8 @@ class ActionHandler(object):
             interface.ACTION_CURRENT_CNTRL_LASER4_STEP: self.currentCntrlLaser4Step,
             interface.ACTION_SIMULATE_LASER_CURRENT_READING: self.simulateLaserCurrentReading,
             interface.ACTION_UPDATE_WLMSIM_LASER_TEMP: self.updateWlmsimLaserTemp,
+            interface.ACTION_SPECTRUM_CNTRL_INIT: self.spectCntrlInit,
+            interface.ACTION_SPECTRUM_CNTRL_STEP: self.spectCntrlStep,
         }
 
     def currentCntrlLaser1Init(self, params, env, when, command):
@@ -217,12 +219,21 @@ class ActionHandler(object):
         self.sim.wrDasReg(params[1], current)
         return interface.STATUS_OK
 
+    def spectCntrlInit(self, params, env, when, command):
+        pass
+
+    def spectCntrlStep(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.spectrumControl.step()
+
     def stepSimulators(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         for simulator in self.sim.simulators:
             simulator.step()
         self.sim.injectionSimulator.step()
+        self.sim.spectrumSimulator.step()
         return interface.STATUS_OK
 
     def streamFpgaRegisterAsFloat(self, params, env, when, command):
@@ -309,6 +320,7 @@ class ActionHandler(object):
         for simulator in self.sim.simulators:
             simulator.update()
         self.sim.injectionSimulator.update()
+        self.sim.spectrumSimulator.update()
         return interface.STATUS_OK
 
     def unknownAction(self, params, env, when, command):
@@ -330,7 +342,6 @@ class ActionHandler(object):
             2 * self.sim.rdFPGA(
             "FPGA_INJECT", 
             "INJECT_LASER%d_FINE_CURRENT" % laserNum))
-        print "Laser %d, Temp %.3f, Current %.3f" % (laserNum, laserTemp, laserCurrent)
         return interface.STATUS_OK
 
     def writeBlock(self, params, env, when, command):

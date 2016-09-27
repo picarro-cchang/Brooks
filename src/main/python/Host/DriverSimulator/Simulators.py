@@ -258,8 +258,6 @@ class LaserSimulator(Simulator):
         self.nextCurrentMonitor = self.dacModel.dacToCurrent(self.fpgaCoarse, self.fpgaFine) if laserOn else 0.0
         nextWavenumber = self.opticalModel.calcWavenumber(self.nextTemp, self.nextCurrentMonitor)
         nextPower = self.opticalModel.calcPower(self.nextTemp, self.nextCurrentMonitor)
-        print "Laser %d, nextTemp %.3f, nextCurrent %.3f, nextWavenumber %.3f nextPower %.1f" % (
-            self.laserNum, self.nextTemp, self.nextCurrentMonitor, nextWavenumber, nextPower)
 
     def update(self):
         if self.nextCurrentMonitor is not None:
@@ -310,3 +308,16 @@ class Laser4Simulator(LaserSimulator):
     currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_W)
     laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_W)
     laserNum = 4
+
+
+class SpectrumSimulator(Simulator):
+    def __init__(self, sim):
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        self.fpga_registers = sim.fpga_registers
+
+    def step(self):
+        print "In spectrum simulator:", self.sim.startRdcycle
+
+    def update(self):
+        print "Updating spectrum simulator"

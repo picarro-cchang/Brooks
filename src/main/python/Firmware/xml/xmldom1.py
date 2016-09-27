@@ -336,8 +336,6 @@ printFp(dspHFp,'extern RegTypes regTypes[%d];' % (len(registerNames)))
 
 for i,registerName in enumerate(registerNames):
     printFp(intPyFp, 'registerByName["%s"] = %s' % (registerName,registerName))
-    printFp(intPyFp, 'registerInfo.append(RegInfo("%s",%s,%d,%s,"%s"))' % \
-     (registerName,typeToCtype(types[i]),registerPersistence[i],registerMinVer[i],registerAccess[i]))
     iv = initialValues[i]
     if iv != None:
         if types[i] == "float":
@@ -349,6 +347,8 @@ for i,registerName in enumerate(registerNames):
         else:
             # Unknown types are assumed to be enumerations
             printFp(dspCFp,'    d.asUint = %s;\n    writeRegister(%s,d);' % (iv,registerName))
+    printFp(intPyFp, 'registerInfo.append(RegInfo("%s",%s,%d,%s,"%s",%s))' % \
+     (registerName,typeToCtype(types[i]),registerPersistence[i],registerMinVer[i],registerAccess[i],iv))
 
 
 for i,registerName in enumerate(registerNames):
