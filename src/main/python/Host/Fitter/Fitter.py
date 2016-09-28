@@ -752,8 +752,21 @@ class FitViewer(wx.Frame):
         self.fitterThread = threading.Thread(target=fitterMain,args=(configFile,self.fitQueue,useViewer))
         self.fitterThread.setDaemon(True)
         self.fitterThread.start()
-        if "-o" in options: self.fitterRpc.FITTER_setOption(options["-o"])
-        if "-d" in options: self.fitterRpc.FITTER_setInputFile(options["-d"])
+        # sometimes RPC functions are called when fitter thread hasn't been started yet
+        # so try calling RPC function several times
+        counts = 0
+        while True:
+            try:
+                if "-o" in options: self.fitterRpc.FITTER_setOption(options["-o"])
+                if "-d" in options: self.fitterRpc.FITTER_setInputFile(options["-d"])
+                break
+            except:
+                counts += 1
+                if counts < 10:
+                    time.sleep(0.2)
+                    continue
+                else:
+                    raise
 
         self.updateTimer.Start(200)
 
