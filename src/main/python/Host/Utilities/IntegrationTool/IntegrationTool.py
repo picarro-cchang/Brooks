@@ -37,124 +37,6 @@ ANALY_INFO_LIST = ["Name", "Warm Box", "WLM", "Laser(s)", "Hot Box", "Cavity"]
 TEST_LIST = ["Write Instrument Name", "Make Integration INI Files", "Calibrate WB Laser/WLM",
              "Update Laser/WLM EEPROM", "Create WB Cal Table", "Run Calibrate FSR", "Run Calibrate System",
              "Calculate WLM Offset", "Run Threshold Stats", "Run Flow Control", "Write Software Version"]
-HOSTEXE_DIR = r"C:\Picarro\G2000\HostExe"
-INTEGRATION_DIR = r"C:\Picarro\G2000\InstrConfig\Integration"
-COMMON_CONFIG_DIR = r"C:\Picarro\G2000\CommonConfig\Config"
-CAL_DIR = r"C:\Picarro\G2000\InstrConfig\Calibration\InstrCal"
-WARMBOX_CAL = "Beta2000_WarmBoxCal"
-WARMBOX_CAL_ACTIVE = "Beta2000_WarmBoxCal_active"
-HOTBOX_CAL = "Beta2000_HotBoxCal"
-HOTBOX_CAL_ACTIVE = "Beta2000_HotBoxCal_active"
-
-LASER_TYPE_DICT = {"1603.2": "CO2", "1651.0": "CH4", "1599.6": "iCO2", "1392.0": "iH2O", "1389.0": "iH2O",
-                   "1567.9": "CO", "1527.0": "NH3", "1554.7": "iH2O", "1521.1": "C2H2", "1574.5": "H2S",
-                   "1658.7": "iCH4", "1278.0": "HF"}
-
-THRESHOLD_STATS_SCHEMES = {
-              "HBDS":
-              { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
-                "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
-                "O16"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak16O.sch",
-                "dH"       : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_PeakD.sch"
-              },
-              "HIDS":
-              { "O18"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak18O.sch",
-                "Baseline" : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Baseline.sch",
-                "O16"      : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_Peak16O.sch",
-                "dH"       : r"C:\Picarro\G2000\InstrConfig\Schemes\HBDSxx_Fixed_PeakD.sch"
-              },
-              "CFADS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
-              },
-              "CFBDS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
-              },
-              "CFDDS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
-              },
-              "CFEDS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
-              },
-              "CBDS":
-              { "Baseline": r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
-                "C12Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
-                "C13Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
-              },
-              "CHADS":
-              { "Baseline": r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
-                "C12Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
-                "C13Peak":  r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
-              },
-              "CFKADS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
-                "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
-              },
-              "CFKBDS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
-                "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
-              },
-              "AEDS":
-              { "NH3_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_BL.sch",
-                "NH3_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\NH3_PK.sch"
-              },
-              "CKADS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CO_BL"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CO_PK"    : r"C:\Picarro\G2000\InstrConfig\Schemes\CO_PK.sch"
-              },
-              "CFFDS":
-              { "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
-                "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_Baseline.sch",
-                "C12Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C12Peak.sch",
-                "C13Peak"  : r"C:\Picarro\G2000\InstrConfig\Schemes\CBDSxx_C13Peak.sch"
-              },
-              "CFHADS":
-              { "CO2_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "H2O_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_BL.sch",
-                "CO2_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CO2_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch",
-                "H2O_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2O_PK.sch"
-              },
-              "BFADS":
-              { "H2S_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_BL.sch",
-                "CH4_BL"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_BL.sch",
-                "H2S_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\H2S_PK.sch",
-                "CH4_PK"   : r"C:\Picarro\G2000\InstrConfig\Schemes\CH4_PK.sch"
-              },
-              "FCDS":
-              { "iCH4_BL"       : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineiCH4.sch",
-                "C12_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_12C-iCH4.sch",
-                "C13_iCH4_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\_13C-iCH4.sch",
-                "CH4_BL"        : r"C:\Picarro\G2000\AppConfig\Schemes\_BaseLineCFADS.sch"
-              },
-              "MADS":
-              { "HF_BL"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_baseline.sch",
-                "HF_PK"   : r"C:\Picarro\G2000\AppConfig\Schemes\HF_peak.sch",
-              },
-             }
 
 # Connect to database
 try:
@@ -277,27 +159,31 @@ class IntegrationToolFrame(wx.Frame):
 class IntegrationTool(IntegrationToolFrame):
     def __init__(self, configFile, *args, **kwds):
         IntegrationToolFrame.__init__(self, *args, **kwds)
-        self.LaserTypeDict = LASER_TYPE_DICT
-        self.allSchemes = THRESHOLD_STATS_SCHEMES
-        try:
+        if not os.path.exists(configFile):
+            raise Exception("Config file not found: %s" % configFile)
+        else:
             self.cp = CustomConfigObj(configFile)
-            self.LaserTypeDict.update(self.cp["LASER_TYPE_DICT"])
+            self.LaserTypeDict = self.cp["LASER_TYPE_DICT"]
             for aType in self.cp["THRESHOLD_STATS_SCHEMES"]:
                 for sName in self.cp["THRESHOLD_STATS_SCHEMES"][aType]:
                     newStr = r"%s" % self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName]
                     self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName] = newStr
-            self.allSchemes.update(self.cp["THRESHOLD_STATS_SCHEMES"])
+            self.allSchemes = self.cp["THRESHOLD_STATS_SCHEMES"]
+            
+            WARMBOX_CAL = self.cp.get("Main", "WARMBOX_CAL")
+            WARMBOX_CAL_ACTIVE = self.cp.get("Main", "WARMBOX_CAL")
+            HOTBOX_CAL = self.cp.get("Main", "HOTBOX_CAL")
+            HOTBOX_CAL_ACTIVE = self.cp.get("Main", "WARMBOX_CAL_ACTIVE")
+            CAL_DIR = self.cp.get("Main", "INSTR_CAL_DIR")
+            self.INTEGRATION_DIR = self.cp.get("Main", "INTEGRATION_DIR")
+            self.wbCalFile = os.path.join(CAL_DIR, WARMBOX_CAL)
+            self.wbCalBackup = os.path.join(CAL_DIR, (WARMBOX_CAL+"_Backup"))
+            self.wbCalDuplicate = os.path.join(self.INTEGRATION_DIR, WARMBOX_CAL)
+            self.wbCalActive = os.path.join(CAL_DIR, WARMBOX_CAL_ACTIVE)
+            self.hbCalFile = os.path.join(CAL_DIR, HOTBOX_CAL)
+            self.hbCalActive = os.path.join(CAL_DIR, HOTBOX_CAL_ACTIVE)
+            
             self.textCtrlIntegration.SetValue("Config file specified at command line: %s" % configFile)
-        except Exception, err:
-            #print traceback.format_exc()
-            self.textCtrlIntegration.SetValue("Config file not used")
-
-        self.wbCalFile = os.path.join(CAL_DIR, WARMBOX_CAL)
-        self.wbCalBackup = os.path.join(CAL_DIR, (WARMBOX_CAL+"_Backup"))
-        self.wbCalDuplicate = os.path.join(INTEGRATION_DIR, WARMBOX_CAL)
-        self.wbCalActive = os.path.join(CAL_DIR, WARMBOX_CAL_ACTIVE)
-        self.hbCalFile = os.path.join(CAL_DIR, HOTBOX_CAL)
-        self.hbCalActive = os.path.join(CAL_DIR, HOTBOX_CAL_ACTIVE)
         self.display = ""
         self.analyzer = ""
         self.analyzerType = ""
@@ -428,7 +314,11 @@ class IntegrationTool(IntegrationToolFrame):
         self.textCtrlAnalyzerInfoList[0].SetValue(self.name)
 
     def onAboutMenu(self, event):
-        d = wx.MessageDialog(None, "Integration tool for calibrating and verifying Picarro G2000 instruments\n\nCopyright 1999-2010 Picarro Inc. All rights reserved.\nVersion: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Integration Tool", wx.OK)
+        msg = "Integration tool for calibrating and verifying Picarro G2000 instruments\n\n" + \
+            "Copyright 1999-%d Picarro Inc. All rights reserved.\n" % time.localtime()[0] + \
+            "Version: 0.01\nThe copyright of this computer program belongs to Picarro Inc.\n" + \
+            "Any reproduction or distribution of this program requires permission from Picarro Inc."
+        d = wx.MessageDialog(None, msg, "About Integration Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
 
@@ -437,36 +327,39 @@ class IntegrationTool(IntegrationToolFrame):
         self.Destroy()
 
     def onWriteInstrName(self, event):
-        info = subprocess.STARTUPINFO()
-        iniFile = os.path.join(COMMON_CONFIG_DIR, r"Utilities\InstrEEPROMAccess.ini")
-        if os.path.isfile(iniFile):
-            commandList = [os.path.join(HOSTEXE_DIR, "InstrEEPROMAccess.exe")] + ["-c", iniFile] + ["-d", self.analyzer.split("CHAS2K")[1]]
-        else:
-            commandList = [os.path.join(HOSTEXE_DIR, "InstrEEPROMAccess.exe")] + ["-d", self.analyzer.split("CHAS2K")[1]]
+        try:
+            info = subprocess.STARTUPINFO()
+        except:
+            info = None
+        executable = self.cp.get("InstrEEPROMAccess", "Executable")
+        args = self.cp.get("InstrEEPROMAccess", "LaunchArgs")
+        commandList = executable.split() + args.split() + ["-d", self.analyzer.split("CHAS2K")[1]]
         subprocess.Popen(commandList, startupinfo=info)
         self.showAnalyzerName()
 
     def onMakeIniFiles(self, event):
         try:
-            wlmEepromCo = ConfigObj(os.path.join(INTEGRATION_DIR, "writeWlmEeprom.ini"), raise_errors=True)
-            makeWarmBoxCalCo = ConfigObj(os.path.join(INTEGRATION_DIR, "MakeWarmBoxCalFile.ini"), raise_errors=True)
-            makeEepromCalCo = ConfigObj(os.path.join(INTEGRATION_DIR, "MakeCalFromEeproms.ini"), raise_errors=True)
-            iniList = ["writeWlmEeprom.ini", "MakeWarmBoxCalFile.ini", "MakeCalFromEeproms.ini"]
+            writeWlmEeprom_ini = self.cp.get("MakeIniFiles", "writeWlmEeprom_ini")
+            makeWarmBoxCalFile_ini = self.cp.get("MakeIniFiles", "makeWarmBoxCalFile_ini")
+            makeCalFromEeproms_ini = self.cp.get("MakeIniFiles", "makeCalFromEeproms_ini")
+            wlmEepromCo = ConfigObj(os.path.join(self.INTEGRATION_DIR, writeWlmEeprom_ini), raise_errors=True)
+            makeWarmBoxCalCo = ConfigObj(os.path.join(self.INTEGRATION_DIR, makeWarmBoxCalFile_ini), raise_errors=True)
+            makeEepromCalCo = ConfigObj(os.path.join(self.INTEGRATION_DIR, makeCalFromEeproms_ini), raise_errors=True)
+            iniList = [writeWlmEeprom_ini, makeWarmBoxCalFile_ini, makeCalFromEeproms_ini]
         except Exception, err:
             print err
         for idx in range(self.numLasers):
             laserNum = idx+1
             laserFilename = "Laser_%s_%s" % self.laserSerNumDict[laserNum]
-            co = ConfigObj(os.path.join(INTEGRATION_DIR, "MakeWlmFileLaser%d.ini" % laserNum), raise_errors=True)
-            co["SETTINGS"]["FILENAME"] = os.path.join(INTEGRATION_DIR, laserFilename)
+            co = ConfigObj(os.path.join(self.INTEGRATION_DIR, "MakeWlmFileLaser%d.ini" % laserNum), raise_errors=True)
+            co["SETTINGS"]["FILENAME"] = os.path.join(self.INTEGRATION_DIR, laserFilename)
             co.write()
-            co = ConfigObj(os.path.join(INTEGRATION_DIR, "writeLaserEeprom%d.ini" % laserNum), raise_errors=True)
-            co["SETTINGS"]["FILENAME"] = os.path.join(INTEGRATION_DIR, laserFilename)
+            co = ConfigObj(os.path.join(self.INTEGRATION_DIR, "writeLaserEeprom%d.ini" % laserNum), raise_errors=True)
             co["SETTINGS"]["SERIAL"] = self.laserSerNumDict[laserNum][0]
             co.write()
             key = "LASER%d" % laserNum
-            wlmEepromCo["FILES"][key] = os.path.join(INTEGRATION_DIR, laserFilename)
-            makeWarmBoxCalCo["FILES"][key] = os.path.join(INTEGRATION_DIR, laserFilename)
+            wlmEepromCo["FILES"][key] = os.path.join(self.INTEGRATION_DIR, laserFilename)
+            makeWarmBoxCalCo["FILES"][key] = os.path.join(self.INTEGRATION_DIR, laserFilename)
             iniList = iniList + [("MakeWlmFileLaser%d.ini" % laserNum), ("writeLaserEeprom%d.ini" % laserNum)]
         wlmEepromCo["SETTINGS"]["SERIAL"] = self.wlm
         makeWarmBoxCalCo["FILES"]["OUTPUT"] = self.wbCalBackup
@@ -483,7 +376,7 @@ class IntegrationTool(IntegrationToolFrame):
 
     def onLaserWlmCal(self, event):
         d = wx.MessageDialog(None,"Is Burleigh wavemeter connected?", "Check Burleigh wavemeter", \
-        style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+            style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
         burleighConnected = (d.ShowModal() == wx.ID_YES)
         d.Destroy()
         if not burleighConnected:
@@ -506,13 +399,15 @@ class IntegrationTool(IntegrationToolFrame):
         newThread.start()
 
     def _onLaserWlmCal(self, timeDelay):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
+        executable = self.cp.get("MakeWlmFile1", "Executable")
+        iniFile = self.cp.get("MakeWlmFile1", "ConfigFileBase")        
         try:
             for idx in range(self.numLasers):
                 laserNum = idx+1
-                cmd = "%s -w %.1f -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWlmFile1.exe"), timeDelay, "MakeWlmFileLaser%d.ini" % laserNum)
-                print cmd
-                os.system(cmd)
+                cmd = executable.split() + ["-w", "%.1f" % timeDelay, "-c", "%s%d.ini" % (iniFile,laserNum)]
+                print " ".join(cmd)
+                subprocess.Popen(cmd)
                 self.display += "WLM file for laser %d created\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
@@ -525,27 +420,31 @@ class IntegrationTool(IntegrationToolFrame):
 
     def _onEEPROM(self):
         # Need to use blocking calls to serialize the events
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
+        executable = self.cp.get("UpdateEEPROM", "WriteLaserEeprom_Executable")
+        iniFile = self.cp.get("UpdateEEPROM", "WriteLaserEeprom_ConfigFileBase")
         try:
             for idx in range(self.numLasers):
                 laserNum = idx+1
-                cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteLaserEeprom.exe"), "WriteLaserEeprom%d.ini" % laserNum)
-                print cmd
-                os.system(cmd)
+                cmd = executable.split() + ["-c", "%s%d.ini" % (iniFile, laserNum)]
+                print " ".join(cmd)
+                subprocess.Popen(cmd).wait()
                 self.display += "EEPROM for laser %d written.\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
         try:
-            cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "WriteWlmEeprom.exe"), "WriteWlmEeprom.ini")
-            print cmd
-            os.system(cmd)
+            executable = self.cp.get("UpdateEEPROM", "WriteWlmEeprom_Executable")
+            args = self.cp.get("UpdateEEPROM", "WriteWlmEeprom_LaunchArgs")
+            cmd = executable.split() + args.split()
+            print " ".join(cmd)
+            subprocess.Popen(cmd).wait()
             self.display += "EEPROM for WLM written.\n"
         except Exception, err:
             self.display += "%s\n" % err
         try:
-            cmd = os.path.join(HOSTEXE_DIR, "DumpEeproms.exe")
-            print cmd
-            os.system(cmd)
+            executable = self.cp.get("UpdateEEPROM", "DumpEeproms_Executable")
+            print executable
+            subprocess.Popen(executable.split()).wait()
             self.display += "Dump EEPROMs.\n"
         except Exception, err:
             self.display += "%s\n" % err
@@ -557,19 +456,23 @@ class IntegrationTool(IntegrationToolFrame):
         newThread.start()
 
     def _onMakeWbCal(self):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
         try:
-            cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeCalFromEeproms.exe"), "MakeCalFromEeproms.ini")
-            print cmd
-            os.system(cmd)
+            executable = self.cp.get("MakeWbCal", "MakeCalFromEeproms_Executable")
+            args = self.cp.get("MakeWbCal", "MakeCalFromEeproms_LaunchArgs")
+            cmd = executable.split() + args.split()
+            print " ".join(cmd)
+            subprocess.call(cmd)
             self.display += "WB calibration table created from EEPROMs.\n"
         except Exception, err:
             self.display += "%s\n" % err
         try:
-            cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "MakeWarmBoxCalFile.exe"), "MakeWarmBoxCalFile.ini")
-            print cmd
-            os.system(cmd)
-            self.display += ("WB calibration plots created by MakeWarmBoxCalFile.\nCheck %s for plots.\n" % INTEGRATION_DIR)
+            executable = self.cp.get("MakeWbCal", "MakeWarmBoxCalFile_Executable")
+            args = self.cp.get("MakeWbCal", "MakeWarmBoxCalFile_LaunchArgs")
+            cmd = executable.split() + args.split()
+            print " ".join(cmd)
+            subprocess.call(cmd)
+            self.display += ("WB calibration plots created by MakeWarmBoxCalFile.\nCheck %s for plots.\n" % self.INTEGRATION_DIR)
         except Exception, err:
             self.display += "%s\n" % err
         # Make copy to integration directory
@@ -581,7 +484,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.textCtrlIntegration.SetValue(self.display)
 
     def onCalibrateFSR(self, event):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateFSR") and ini.endswith(".ini"))]
         dlg = wx.SingleChoiceDialog(self, "Select FSR calibration to perform","Cavity FSR calibration",
                 iniList,wx.CHOICEDLG_STYLE)
@@ -603,17 +506,18 @@ class IntegrationTool(IntegrationToolFrame):
         newThread.start()
 
     def _onCalibrateFSR(self,ini,spectrumFile,fitIni):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
-        newDir = time.strftime(INTEGRATION_DIR + "/CalibrateFSR/%Y%m%d_%H%M%S")
+        newDir = time.strftime(self.INTEGRATION_DIR + "/CalibrateFSR/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
             os.chdir(newDir)
-            cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateFsr.exe"), ini)
-            print cmd
-            os.system(cmd)
+            executable = self.cp.get("CalibrateFSR", "CalibrateFSR_Executable")
+            cmd = executable.split() + ["-c", ini]
+            print " ".join(cmd)
+            subprocess.call(cmd)
             time.sleep(2.0)
             src = spectrumFile
             dest = os.path.join(newDir,os.path.split(src)[1])
@@ -628,11 +532,10 @@ class IntegrationTool(IntegrationToolFrame):
                     nAttempts += 1
             if nAttempts >= 10:
                 raise RuntimeError("Cannot move file %s to result directory" % src)
-            # FITTER_CONFIG_DIR = "c:/Picarro/G2000/AppConfig/Config/Fitter"
-            # fitIni = os.path.join(FITTER_CONFIG_DIR,"Fitter_CO2_freq_cal.ini")
-            cmd = "%s -c %s -d %s" % (os.path.join(HOSTEXE_DIR, "Fitter.exe"), fitIni, dest)
-            print cmd
-            os.system(cmd)
+            executable = self.cp.get("CalibrateFSR", "Fitter_Executable")
+            cmd = executable.split() + ["-c", fitIni, "-d", dest]
+            print " ".join(cmd)
+            subprocess.call(cmd)
             # Read output file to find FSR and check quality
             fp = file('FSR_calibration.txt','r')
             for line in fp:
@@ -658,7 +561,8 @@ class IntegrationTool(IntegrationToolFrame):
             self.display += traceback.format_exc()
 
         self.textCtrlIntegration.SetValue(self.display)
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
+        print "Task done\n" + '-'*35
 
     def onCalibrateSystem(self, event):
         newThread = threading.Thread(target = self._onCalibrateSystem)
@@ -666,19 +570,20 @@ class IntegrationTool(IntegrationToolFrame):
         newThread.start()
 
     def _onCalibrateSystem(self):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("CalibrateSystem") and ini.endswith(".ini"))]
-        newDir = time.strftime(INTEGRATION_DIR + "/CalibrateSystem/%Y%m%d_%H%M%S")
+        newDir = time.strftime(self.INTEGRATION_DIR + "/CalibrateSystem/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
             os.chdir(newDir)
+            executable = self.cp.get("CalibrateSystem", "Executable")
             for ini in iniList:
-                cmd = "%s -c %s" % (os.path.join(HOSTEXE_DIR, "CalibrateSystem.exe"), ini)
-                print cmd
-                os.system(cmd)
+                cmd = executable.split() + ["-c", ini]
+                print " ".join(cmd)
+                subprocess.call(cmd)
             self.display += "Calibrate System finished.\n"
             # Move the current active files to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
@@ -691,7 +596,8 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
+        print "Task done\n" + '-'*35
 
     def onWlmOffset(self, event):
         newThread = threading.Thread(target = self._onWlmOffset)
@@ -699,19 +605,20 @@ class IntegrationTool(IntegrationToolFrame):
         newThread.start()
 
     def _onWlmOffset(self):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
         iniList = [os.path.abspath(ini) for ini in os.listdir(".") if (ini.startswith("FindWlmOffset") and ini.endswith(".ini"))]
-        newDir = time.strftime(INTEGRATION_DIR + "\FindWlmOffset\%Y%m%d_%H%M%S")
+        newDir = time.strftime(self.INTEGRATION_DIR + "/FindWlmOffset/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
             os.chdir(newDir)
+            executable = self.cp.get("FindWlmOffset", "Executable")
             for ini in iniList:
-                cmd = "%s -a -t 2e-4 -c %s" % (os.path.join(HOSTEXE_DIR, "FindWlmOffset.exe"), ini)
-                print cmd
-                os.system(cmd)
+                cmd = executable.split() + ["-a", "-t", "2e-4", "-c", ini]
+                print " ".join(cmd)
+                subprocess.call(cmd)
             # Move the current active WB file to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
@@ -721,7 +628,8 @@ class IntegrationTool(IntegrationToolFrame):
         except Exception, err:
             self.display += "WLM Offset failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
+        print "Task done\n" + '-'*35
 
     def onThresholdStats(self, event):
         newThread = threading.Thread(target = self._onThresholdStats)
@@ -729,10 +637,10 @@ class IntegrationTool(IntegrationToolFrame):
         newThread.start()
 
     def _onThresholdStats(self):
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
         FreqConverter.loadWarmBoxCal(self.wbCalFile+".ini")
         FreqConverter.loadHotBoxCal(self.hbCalFile+".ini")
-        newDir = time.strftime(INTEGRATION_DIR + "\ThresholdStats\%Y%m%d_%H%M%S")
+        newDir = time.strftime(self.INTEGRATION_DIR + "/ThresholdStats/%Y%m%d_%H%M%S")
         try:
             if not os.path.isdir(newDir):
                 os.makedirs(newDir)
@@ -742,29 +650,32 @@ class IntegrationTool(IntegrationToolFrame):
             instrName = instrType + analyzerId["AnalyzerNum"]
             schemeDict = self.allSchemes[instrType]
             start, end, increment = [2000, 16000, 1000]
+            executable = self.cp.get("ThresholdStats", "Executable")
             for schKey in schemeDict:
                 schemeFileName = schemeDict[schKey]
                 if not os.path.isfile(schemeFileName):
                     raise Exception, "Scheme file does not exist: %s"  % schemeFileName
                 print "Running scheme %s" % schemeFileName
                 currTime = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-                exePath = os.path.join(HOSTEXE_DIR, "ThresholdStats.exe")
-                cmd = "%s %s %d %d %d %s" % (exePath, (instrName+"_"+schKey), start, end, increment, schemeFileName)
-                print cmd
-                os.system(cmd)
+                cmd = executable.split() + [instrName+"_"+schKey, str(start), str(end), str(increment), schemeFileName]
+                print " ".join(cmd)
+                subprocess.Popen(cmd).wait()
                 print "Finished scheme %s" % schemeFileName
             self.display += "Threshold Stats finished.\n"
         except Exception, err:
             self.display += "Threshold Stats failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
-        os.chdir(INTEGRATION_DIR)
+        os.chdir(self.INTEGRATION_DIR)
+        print "Task done\n" + '-'*35
 
     def onFlowControl(self, event):
         try:
-            cmd = os.path.join(HOSTEXE_DIR, "FlowController.exe")
+            cmd = self.cp.get("FlowControl", "Executable")
             print cmd
-            #os.system(cmd)
-            info = subprocess.STARTUPINFO()
+            try:
+                info = subprocess.STARTUPINFO()
+            except:
+                info = None
             subprocess.Popen(cmd.split(" "), startupinfo=info)
             self.display += "Starting Flow Control ...\n"
         except Exception, err:
@@ -806,8 +717,7 @@ def handleCommandSwitches():
     return configFile
 
 if __name__ == "__main__":
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
+    app = wx.App(False)
     configFile = handleCommandSwitches()
     frame = IntegrationTool(configFile, None, -1, "")
     app.SetTopWindow(frame)
