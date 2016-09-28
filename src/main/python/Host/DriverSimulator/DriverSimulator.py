@@ -27,7 +27,7 @@ from Host.Common import (
     CmdFIFO, SchemeProcessor, SharedTypes, StringPickler, timestamp)
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import Operation, RPC_PORT_DRIVER
+from Host.Common.SharedTypes import getSchemeTableClass, Operation, RPC_PORT_DRIVER
 from Host.Common.SingleInstance import SingleInstance
 from Host.Driver.DasConfigure import DasConfigure
 from Host.DriverSimulator.DasSimulator import DasSimulator
@@ -153,6 +153,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Returns the dictionary of parameter forms for the controller GUI"""
         return interface.parameter_forms
 
+    def getSpectCntrlMode(self):
+        return self.rdDasReg(interface.SPECT_CNTRL_MODE_REGISTER)
+
     def hostGetTicks(self):
         return timestamp.getTimestamp()
 
@@ -192,6 +195,86 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 result.append(None)
         return result
 
+    def rdScheme(self, schemeNum):
+        """Read a scheme into a scheme table in the DSP.
+
+        Args:
+            schemeNum: Scheme table number (0 origin)
+        Returns:
+            A dictionary with numRepeats as the number of repetitions and schemeRows as a list of
+            7-tuples containing:
+            (setpoint, dwellCount, subschemeId, virtualLaser, threshold, pztSetpoint, laserTemp)
+
+        """
+        assert isinstance(schemeNum, (int, long))
+        schemeTable = self.driver.schemeTables[schemeNum]
+        # Read from scheme table schemeNum
+        return {"numRepeats": schemeTable.numRepeats,
+                "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser,
+                               row.threshold, row.pztSetpoint, 0.001 * row.laserTemp) for row in schemeTable.rows]}
+
+    def wrScheme(self, schemeNum, numRepeats, schemeRows):
+        """Write a scheme into a scheme table.
+            Args:
+            schemeNum: Scheme table number (0 origin)
+            numRepeats: Number of repetitions of the scheme
+            schemeRows: A list of rows, where each row has up to 7 entries
+        """
+        assert isinstance(schemeNum, (int, long))
+        assert isinstance(numRepeats, (int, long))
+        assert hasattr(schemeRows, '__iter__')
+        schemeTable = getSchemeTableClass(len(schemeRows))()
+        schemeTable.numRepeats = numRepeats
+        schemeTable.numRows = len(schemeRows)
+        for i, row in enumerate(schemeRows):
+            schemeTable.rows[i].setpoint = float(row[0])
+            schemeTable.rows[i].dwellCount = int(row[1])
+            schemeTable.rows[i].subschemeId = int(row[2]) if len(row) >= 3 else 0
+            schemeTable.rows[i].virtualLaser = int(row[3]) if len(row) >= 4 else 0
+            schemeTable.rows[i].threshold = int(row[4]) if len(row) >= 5 else 0
+            schemeTable.rows[i].pztSetpoint = int(row[5]) if len(row) >= 6 else 0
+            schemeTable.rows[i].laserTemp = int(1000 * row[6]) if len(row) >= 7 else 0
+        self.driver.schemeTables[schemeNum] = schemeTable
+
+    def saveWlmHist(self, wlmHist):
+        pass
+
+    def scanIdle(self):
+        return self.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState
+
+    def setMultipleNoRepeatScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER, interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode)
+
+    def setMultipleScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER, interface.SPECT_CNTRL_SchemeMultipleMode)
+
+    def setSingleScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER, interface.SPECT_CNTRL_SchemeSingleMode)
+
+    def startScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
+
+    def stopScan(self):
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
+
+    def startEngine(self):
+        # Turn on lasers, warm box and cavity thermal control followed by
+        #  laser current sources
+        for laserNum in xrange(1, interface.MAX_LASERS + 1):
+            if self.driver.dasConfigure.installCheck("LASER%d_PRESENT" % laserNum) or \
+               (laserNum == 4 and self.driver.dasConfigure.installCheck("SOA_PRESENT")):
+                self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
+        self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
+        self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
+        if self.driver.dasConfigure.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_DELTA_TEMP,interface.HEATER_CNTRL_MODE_TEC_TARGET]:
+            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
+        elif self.driver.dasConfigure.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
+            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_ManualState)
+        self.wrDasReg("TEC_CNTRL_REGISTER", interface.TEC_CNTRL_Enabled)
+        for laserNum in xrange(1, interface.MAX_LASERS+1):
+            if self.driver.dasConfigure. installCheck("LASER%d_PRESENT" % laserNum):
+                self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum,interface.LASER_CURRENT_CNTRL_ManualState)
+
     def stopScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
 
@@ -221,12 +304,21 @@ class DriverRpcHandler(SharedTypes.Singleton):
             elif regLoc == "fpga":
                 self.wrFPGA(0, reg, value)
 
+    def wrVirtualLaserParams(self,vLaserNum,laserParams):
+        """Wites the virtual laser parameters (specified as a dictionary) associated with
+           virtual laser vLaserNum (ONE-based).
+           N.B. The "actualLaser" field within the VirtualLaserParams structure is ZERO-based
+           for compatibility with the DAS software
+        """
+        self.driver.virtualLaserParams[vLaserNum] = laserParams
+        Log("Virtual laser %d" % vLaserNum, Data=laserParams)
+
 
 class DriverSimulator(SharedTypes.Singleton):
     def __init__(self, configFile):
         self.looping = True
         self.config = ConfigObj(configFile)
-        self.dasSimulator = DasSimulator()
+        self.dasSimulator = DasSimulator(self)
         basePath = os.path.split(configFile)[0]
         # Set up automatic streaming file for sensors, if startStreamFile
         # option in the [Config] section is present. Also allow the maximum
@@ -235,7 +327,7 @@ class DriverSimulator(SharedTypes.Singleton):
         maxStreamLines = 0
         try:
             if int(self.config["Config"]["startStreamFile"]):
-                self.autoStreamFile = True
+                self.autoStreamFiledasConfigure = True
             maxStreamLines = int(self.config["Config"]["maxStreamLines"])
         except KeyError:
             pass
@@ -249,6 +341,9 @@ class DriverSimulator(SharedTypes.Singleton):
             except Exception, err:
                 self.ver[ver] = "N/A"
         self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
+        self.dasConfigure = None
+        self.schemeTables = {}
+        self.virtualLaserParams = {}
         # Set up RPC handler
         self.rpcHandler = DriverRpcHandler(self)
         # Set up object to access master.ini file
@@ -295,7 +390,8 @@ class DriverSimulator(SharedTypes.Singleton):
         sensorHandler = SharedTypes.makeHandler(self.dasSimulator.getSensorData,  sensorProcessor)
 
         self.instrConfig.loadPersistentRegistersFromConfig()
-        DasConfigure(self.dasSimulator, self.instrConfig.config, self.config).run()
+        self.dasConfigure = DasConfigure(self.dasSimulator, self.instrConfig.config, self.config)
+        self.dasConfigure.run()
         try:
             daemon = self.rpcHandler.server.daemon
             Log("Starting main driver loop", Level=1)
@@ -708,7 +804,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def getPressureReading(self):
         """Fetches the current cavity pressure.
-        """
+        """rdScheme
         return self.rdDasReg("CAVITY_PRESSURE_REGISTER")
 
     def getProportionalValves(self):
@@ -727,7 +823,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
                CavityTemperature=(self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")),
                CavityPressure=(self.rdDasReg("CAVITY_PRESSURE_REGISTER"),self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")))
 
-    def getValveCtrlState(self):
+    def getValveCtrlState(selfrdScheme):
         """Get the current valve control state. Valid values are:
             0: Disabled (=VALVE_CNTRL_DisabledState)
             1: Outlet control (=VALVE_CNTRL_OutletControlState)
@@ -764,7 +860,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_InletControlState:
             self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
         self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_InletControlState")
-        if outletValve is not None:
+        if outletValve is not rdSchemeNone:
             self.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",outletValve)
         else:
             outletValve = self.rdDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER")
@@ -779,7 +875,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         Log("version = %s" % pprint.pformat(version))
         try:
             versionDict["host release"] = version.versionString()
-        except:
+        except:rdScheme
             versionDict["host release"] = "Experimental"
         if repoBzrVer:
             versionDict["host version id"] = repoBzrVer['revision_id']
@@ -798,7 +894,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         # Save the values of the registers specified in regList into a "vault" which can later
         #  be used to restore them with restoreRegValues. The elements of regList can be integers
         #  representing DSP registers or tuples of integers representing FPGA registers in
-        #  (block,offset) pairs. These integers may be referred to symbolically by passing strings
+        #  (block,offset) pairrdSchemes. These integers may be referred to symbolically by passing strings
         #  which are looked up in the interface file.
         vault = []
         for reg in regList:
@@ -814,7 +910,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def restoreRegValues(self,vault):
         # Restore register values stored in the vault (produced by saveRegValues)
         for reg,value in vault:
-            if isinstance(reg,(tuple,list)):
+            if isinstance(reg,rdScheme(tuple,list)):
                 if len(reg) != 2:
                     raise ValueError("An FPGA register description tuple must have two elements")
                 else:
@@ -833,7 +929,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
 
     def rdDasReg(self,regIndexOrName):
-        """Reads a DAS register, using either its index or symbolic name"""
+        """Reads a DAS registerdSchemer, using either its index or symbolic name"""
         index = self._reg_index(regIndexOrName)
         ri = interface.registerInfo[index]
         if not ri.readable:
