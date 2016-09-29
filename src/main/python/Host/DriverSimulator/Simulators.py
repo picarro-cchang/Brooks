@@ -20,7 +20,7 @@ EventManagerProxy_Init(APP_NAME)
 
 class Simulator(object):
     # Base class for simulators that are stepped by the scheduler. The step
-    #  method of the simulator is run with lowest priority to compute all the 
+    #  method of the simulator is run with lowest priority to compute all the
     #  values of the sensors on the next cycle. The update method is run with
     #  highest priority to place these values in the sensor registers
 
@@ -321,7 +321,17 @@ class SpectrumSimulator(Simulator):
     defaultThreshold = prop_das(interface.SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER)
     analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
     virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
-
+    ambientPressure = prop_das(interface.AMBIENT_PRESSURE_REGISTER)
+    cavityPressure = prop_das(interface.CAVITY_PRESSURE_REGISTER)
+    etalonTemperature = prop_das(interface.ETALON_TEMPERATURE_REGISTER)
+    laser1Temp = prop_das(interface.LASER1_TEMPERATURE_REGISTER)
+    laser2Temp = prop_das(interface.LASER2_TEMPERATURE_REGISTER)
+    laser3Temp = prop_das(interface.LASER3_TEMPERATURE_REGISTER)
+    laser4Temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
+    laser1CoarseCurrent = prop_das(interface.LASER1_MANUAL_COARSE_CURRENT_REGISTER)
+    laser2CoarseCurrent = prop_das(interface.LASER2_MANUAL_COARSE_CURRENT_REGISTER)
+    laser3CoarseCurrent = prop_das(interface.LASER3_MANUAL_COARSE_CURRENT_REGISTER)
+    laser4CoarseCurrent = prop_das(interface.LASER4_MANUAL_COARSE_CURRENT_REGISTER)
     def __init__(self, sim):
         self.sim = sim
         self.das_registers = sim.das_registers
@@ -345,6 +355,8 @@ class SpectrumSimulator(Simulator):
                 self.doRingdown()
 
     def doRingdown(self):
+        self.advanceDwellCounter()
+        self.virtualTime += 10 # ms between ringdowns
         print "Performing ringdown"
 
     def setupNextRdParams(self):
@@ -366,20 +378,53 @@ class SpectrumSimulator(Simulator):
 
         self.scheme = self.sim.driver.schemeTables[self.active]
         schemeRow = self.scheme.rows[self.row]
-        self.virtLaser = schemeRow.virtualLaser
-        vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser]
+        self.virtLaser = schemeRow.virtualLaser  # zero-origin
+        vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
         setpoint = schemeRow.setpoint
-        laserNum = vlaserParams.actualLaser & 3
-        # We record the loss directly in a special set of 8 registers if the least-significant 
+        laserNum = vlaserParams["actualLaser"] & 3  # zero-origin
+        # We record the loss directly in a special set of 8 registers if the least-significant
         #  bits in the pztSetpoint field of the scheme are set appropriately
         lossTag = schemeRow.pztSetpoint & 7
         # Start filling out the ringdown result structure
         r = interface.RingdownParamsType()
+        r.injectionSettings = ((lossTag << interface.INJECTION_SETTINGS_lossTagShift) |
+                               (self.virtLaser << interface.INJECTION_SETTINGS_virtualLaserShift) |
+                               (laserNum << interface.INJECTION_SETTINGS_actualLaserShift))
+        r.laserTemperature = [self.laser1Temp, self.laser2Temp, self.laser3Temp, self.laser4Temp][laserNum]
+        r.coarseLaserCurrent = int([self.laser1CoarseCurrent, self.laser2CoarseCurrent, self.laser3CoarseCurrent, self.laser4CoarseCurrent][laserNum])
+        r.etalonTemperature = self.etalonTemperature
+        r.cavityPressure = self.cavityPressure
+        r.ambientPressure = self.ambientPressure
+        r.schemeTableAndRow = (self.active << 16) | (self.row & 0xFFFF)
+        laserTempAsInt = int(1000*r.laserTemperature)
+        # Check IncrMask in subscheme ID. If it is set, we should increment incrCounter
+        #  (in spectrumControl) the next time we advance to the next scheme row
+        self.incrFlag = schemeRow.subschemeId & interface.SUBSCHEME_ID_IncrMask
+        r.countAndSubschemeId = (self.sim.spectrumControl.incrCounter << 16) | (schemeRow.subschemeId & 0xFFFF)
+        r.ringdownThreshold = schemeRow.threshold
+        if r.ringdownThreshold == 0:
+            r.ringdownThreshold = self.defaultThreshold
+        r.status = self.sim.spectrumControl.schemeCounter & interface.RINGDOWN_STATUS_SequenceMask
+        if self.mode in [interface.SPECT_CNTRL_SchemeSingleMode,
+                         interface.SPECT_CNTRL_SchemeMultipleMode,
+                         interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode]:
+            r.status |= interface.RINGDOWN_STATUS_SchemeActiveMask
+        # Determine if this is the last ringdown of a scheme and set flags appropriately
+        if ((self.iter >= self.scheme.numRepeats - 1 or self.mode == interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode) and
+            (self.row >= self.scheme.numRows - 1) and
+            (self.dwell >= schemeRow.dwellCount -1)):
+            # We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
+            #  if we are running a non-looping sequence and have reached the last scheme in the sequence
+            if self.mode == interface.SPECT_CNTRL_SchemeSingleMode:
+                self.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask
+            elif self.mode in [interface.SPECT_CNTRL_SchemeMultipleMode, interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode]:
+                self.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask
 
 
     def advanceDwellCounter(self):
         self.dwell += 1
-        if self.dwell >= self.scheme.dwellCount:
+        schemeRow = self.scheme.rows[self.row]
+        if self.dwell >= schemeRow.dwellCount:
             self.advanceSchemeRow()
 
     def advanceSchemeRow(self):
@@ -413,15 +458,11 @@ class SpectrumSimulator(Simulator):
         print "Updating spectrum simulator"
 
 
-class TunerSimulator(self):
+class TunerSimulator(Simulator):
     sweepRampLow = prop_das(interface.TUNER_SWEEP_RAMP_LOW_REGISTER)
     sweepRampHigh = prop_das(interface.TUNER_SWEEP_RAMP_HIGH_REGISTER)
     windowRampLow = prop_das(interface.TUNER_WINDOW_RAMP_LOW_REGISTER)
     windowRampHigh = prop_das(interface.TUNER_WINDOW_RAMP_HIGH_REGISTER)
-    sweepDitherLow = prop_das(interface.TUNER_SWEEP_DITHER_LOW_REGISTER)
-    sweepDitherHigh = prop_das(interface.TUNER_SWEEP_DITHER_HIGH_REGISTER)
-    windowDitherLow = prop_das(interface.TUNER_WINDOW_DITHER_LOW_REGISTER)
-    windowDitherHigh = prop_das(interface.TUNER_WINDOW_DITHER_HIGH_REGISTER)
     sweepDitherLowOffset = prop_das(interface.TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER)
     sweepDitherHighOffset = prop_das(interface.TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER)
     windowDitherLowOffset = prop_das(interface.TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER)
@@ -475,7 +516,7 @@ class TunerSimulator(self):
             self.sweepHigh = sweepHigh
             self.windowLow = windowLow
             self.windowHigh = windowHigh
-            self.rdTimeout = self.ditherModeTimeout            
+            self.rdTimeout = self.ditherModeTimeout
             self.rampDitherMode = 1
 
     def setCavityLengthTuningMode(self):
@@ -487,9 +528,8 @@ class TunerSimulator(self):
         self.laserLockerTuningOffsetSelect = 1  # Use tuner
         self.directTune = 0  # Use laser locker for laser current control
         self.tunePzt = 0  # Disconnect PZT from tuner
-        
+
     def setFsrHoppingMode(self):
         self.laserLockerTuningOffsetSelect = 1  # Use tuner
         self.directTune = 1  # Use tuner for laser current control
         self.tunePzt = 0  # Disconnect PZT from tuner
-        

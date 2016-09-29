@@ -40,6 +40,8 @@ class SpectrumControl(object):
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.schemeCounter = 0
+        # incrCounter increments to incicate where a spectrum ends and a fit should take place. It interacts
+        #  with the fit flag in schemes
         self.incrCounter = 0
         self.incrCounterNext = 0
         self.useMemo = 0
