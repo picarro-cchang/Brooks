@@ -19,7 +19,7 @@ from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
-from Host.DriverSimulator.Simulators import InjectionSimulator, SpectrumSimulator
+from Host.DriverSimulator.Simulators import InjectionSimulator, SpectrumSimulator, TunerSimulator
 from Host.DriverSimulator.SpectrumControl import SpectrumControl
 
 APP_NAME = "DriverSimulator"
@@ -109,9 +109,12 @@ class DasSimulator(object):
         self.injectionSimulator = InjectionSimulator(self)
         self.spectrumSimulator = SpectrumSimulator(self)
         #
+        self.tunerSimulator = TunerSimulator(self)
+        # self.pztSimulator = PztSimulator(self)
+        # self.laserLockerSimulator = LaserLockerSimulator(self)
+        # self.cavitySimulator = CavitySimulator(self)
+        #
         self.simulators = set()
-        # Here follow the semaphores used in the DSP code
-        self.startRdcycle = False  # Allow ringdowns to occur
         #
         self.initDasRegisters()
         self.ts_offset = 0  # Timestamp offset in ms

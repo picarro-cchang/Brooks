@@ -40,7 +40,6 @@ class SpectrumControl(object):
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.schemeCounter = 0
-        self.incrFlag = 0
         self.incrCounter = 0
         self.incrCounterNext = 0
         self.useMemo = 0
@@ -127,4 +126,4 @@ class SpectrumControl(object):
         return interface.STATUS_OK
 
     def switchToRampMode(self):
-        self.rampDitherMode = 0
+        self.sim.tunerSimulator.switchToRampMode()

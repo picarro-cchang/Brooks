@@ -320,6 +320,7 @@ class SpectrumSimulator(Simulator):
     dwell = prop_das(interface.SPECT_CNTRL_DWELL_COUNT_REGISTER)
     defaultThreshold = prop_das(interface.SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER)
     analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
+    virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
 
     def __init__(self, sim):
         self.sim = sim
@@ -327,19 +328,62 @@ class SpectrumSimulator(Simulator):
         self.fpga_registers = sim.fpga_registers
         self.spectrumControl = sim.spectrumControl
         self.incrFlag = 0
+        self.iter = 0
+        self.dwell = 0
+        self.row = 0
+        self.virtualTime = None
 
     def step(self):
         if self.state != interface.SPECT_CNTRL_RunningState:
             return
+        now = self.sim.getDasTimestamp()
+        if self.virtualTime is None:
+            self.virtualTime = now
+        else:
+            while self.virtualTime < now:
+                self.setupNextRdParams()
+                self.doRingdown()
+
+    def doRingdown(self):
+        print "Performing ringdown"
+
+    def setupNextRdParams(self):
         print "Scheme %d: iter %d, row %d, dwell %d" % (self.active, self.iter, self.row, self.dwell)
+
+        while True:
+            #  This loop allows for zero-dwell rows in a scheme which just set the temperature
+            #  of a laser without causing a ringdown
+
+            # self.setupLaserTemperatureAndPztOffset(self.sim.spectrumControl.useMemo)
+            self.sim.spectrumControl.useMemo = 1
+            self.scheme = self.sim.driver.schemeTables[self.active]
+            schemeRow = self.scheme.rows[self.row]
+            if schemeRow.dwellCount > 0:
+                break
+            self.incrFlag = self.scheme.rows[self.row].subschemeId & interface.SUBSCHEME_ID_IncrMask
+            self.advanceSchemeRow()
+            self.sim.spectrumControl.incrCounter = self.sim.spectrumControl.incrCounterNext
+
         self.scheme = self.sim.driver.schemeTables[self.active]
-        self.incrFlag = self.scheme.rows[self.row].subschemeId & interface.SUBSCHEME_ID_IncrMask
-        print ctypesToDict(self.scheme.rows[self.row])
-        self.advanceSchemeRow()
+        schemeRow = self.scheme.rows[self.row]
+        self.virtLaser = schemeRow.virtualLaser
+        vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser]
+        setpoint = schemeRow.setpoint
+        laserNum = vlaserParams.actualLaser & 3
+        # We record the loss directly in a special set of 8 registers if the least-significant 
+        #  bits in the pztSetpoint field of the scheme are set appropriately
+        lossTag = schemeRow.pztSetpoint & 7
+        # Start filling out the ringdown result structure
+        r = interface.RingdownParamsType()
+
+
+    def advanceDwellCounter(self):
+        self.dwell += 1
+        if self.dwell >= self.scheme.dwellCount:
+            self.advanceSchemeRow()
 
     def advanceSchemeRow(self):
         self.row += 1
-        # TODO: Check fit flag
         if self.incrFlag:
             self.spectrumControl.incrCounterNext = self.spectrumControl.incrCounter
             self.incrFlag = 0
@@ -367,3 +411,85 @@ class SpectrumSimulator(Simulator):
 
     def update(self):
         print "Updating spectrum simulator"
+
+
+class TunerSimulator(self):
+    sweepRampLow = prop_das(interface.TUNER_SWEEP_RAMP_LOW_REGISTER)
+    sweepRampHigh = prop_das(interface.TUNER_SWEEP_RAMP_HIGH_REGISTER)
+    windowRampLow = prop_das(interface.TUNER_WINDOW_RAMP_LOW_REGISTER)
+    windowRampHigh = prop_das(interface.TUNER_WINDOW_RAMP_HIGH_REGISTER)
+    sweepDitherLow = prop_das(interface.TUNER_SWEEP_DITHER_LOW_REGISTER)
+    sweepDitherHigh = prop_das(interface.TUNER_SWEEP_DITHER_HIGH_REGISTER)
+    windowDitherLow = prop_das(interface.TUNER_WINDOW_DITHER_LOW_REGISTER)
+    windowDitherHigh = prop_das(interface.TUNER_WINDOW_DITHER_HIGH_REGISTER)
+    sweepDitherLowOffset = prop_das(interface.TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER)
+    sweepDitherHighOffset = prop_das(interface.TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER)
+    windowDitherLowOffset = prop_das(interface.TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER)
+    windowDitherHighOffset = prop_das(interface.TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER)
+    ditherModeTimeout = prop_das(interface.SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER)
+    rampModeTimeout = prop_das(interface.SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER)
+    ditherModeTimeout = prop_das(interface.SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER)
+    analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
+    virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
+
+    sweepLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_LOW)
+    sweepHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_HIGH)
+    windowLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_LOW)
+    windowHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_HIGH)
+    rampDitherMode = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_CONTROL, interface.RDMAN_CONTROL_RAMP_DITHER_B, interface.RDMAN_CONTROL_RAMP_DITHER_W)
+    rdTimeout = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_TIMEOUT_DURATION)
+
+    laserLockerTuningOffsetSelect = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_CS, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_B, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_W)
+    directTune = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_OPTIONS, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_B, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_W)
+    tunePzt = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_CS, interface.TWGEN_CS_TUNE_PZT_B, interface.TWGEN_CS_TUNE_PZT_W)
+
+    def __init__(self, sim):
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        self.fpga_registers = sim.fpga_registers
+        self.spectrumControl = sim.spectrumControl
+
+    def switchToRampMode(self):
+        self.sweepLow = self.sweepRampLow
+        self.sweepHigh = self.sweepRampHigh
+        self.windowLow = self.windowRampLow
+        self.windowHigh = self.windowRampHigh
+        self.rdTimeout = self.rampModeTimeout
+        self.rampDitherMode = 0
+
+    def switchToDitherMode(self, center):
+        # Switch to dither mode centered about the given value, if this is possible. Otherwise
+        #  go to ramp mode in the hope that a ringdown will then occur.
+        sweepLow = int(center -  self.sweepDitherLowOffset) & 0xFFFF
+        sweepHigh = int(center +  self.sweepDitherHighOffset) & 0xFFFF
+        windowLow = int(center -  self.windowDitherLowOffset) & 0xFFFF
+        windowHigh = int(center +  self.windowDitherHighOffset) & 0xFFFF
+        if windowHigh > sweepHigh:
+            windowHigh = sweepHigh
+        if windowLow < sweepLow:
+            windowLow = sweepLow
+        if sweeepHigh > self.sweepRampHigh or sweepLow < self.sweepRampLow:
+            self.switchToDitherMode()
+        else:
+            self.sweepLow = sweepLow
+            self.sweepHigh = sweepHigh
+            self.windowLow = windowLow
+            self.windowHigh = windowHigh
+            self.rdTimeout = self.ditherModeTimeout            
+            self.rampDitherMode = 1
+
+    def setCavityLengthTuningMode(self):
+        self.laserLockerTuningOffsetSelect = 0  # Use register
+        self.directTune = 0  # Use laser locker for laser current control
+        self.tunePzt = 1  # Connect PZT to tuner
+
+    def setLaserCurrentTuningMode(self):
+        self.laserLockerTuningOffsetSelect = 1  # Use tuner
+        self.directTune = 0  # Use laser locker for laser current control
+        self.tunePzt = 0  # Disconnect PZT from tuner
+        
+    def setFsrHoppingMode(self):
+        self.laserLockerTuningOffsetSelect = 1  # Use tuner
+        self.directTune = 1  # Use tuner for laser current control
+        self.tunePzt = 0  # Disconnect PZT from tuner
+        
