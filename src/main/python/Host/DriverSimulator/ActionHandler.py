@@ -16,7 +16,7 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.LaserCurrentControl import (
     Laser1CurrentControl, Laser2CurrentControl, Laser3CurrentControl, Laser4CurrentControl)
 from Host.DriverSimulator.Simulators import (
-    Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator)
+    Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator, LaserOpticalModel)
 from Host.DriverSimulator.TempControl import (
     Laser1TempControl, Laser2TempControl, Laser3TempControl, Laser4TempControl)
 
@@ -266,7 +266,7 @@ class ActionHandler(object):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         self.sim.laser1TempControl = Laser1TempControl(self.sim)
-        self.sim.laser1Simulator = Laser1Simulator(self.sim)
+        self.sim.laser1Simulator = Laser1Simulator(self.sim, opticalModel=LaserOpticalModel(nominal_wn=6237.0))
         self.sim.addSimulator(self.sim.laser1Simulator)
         return interface.STATUS_OK
 
@@ -274,7 +274,7 @@ class ActionHandler(object):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         self.sim.laser2TempControl = Laser2TempControl(self.sim)
-        self.sim.laser2Simulator = Laser2Simulator(self.sim)
+        self.sim.laser2Simulator = Laser2Simulator(self.sim, opticalModel=LaserOpticalModel(nominal_wn=6058.0))
         self.sim.addSimulator(self.sim.laser2Simulator)
         return interface.STATUS_OK
 
@@ -321,7 +321,7 @@ class ActionHandler(object):
             simulator.update()
         self.sim.injectionSimulator.update()
         self.sim.spectrumSimulator.update()
-        return interface.STATUS_OK
+        return interface.STATUS_OKsimula
 
     def unknownAction(self, params, env, when, command):
         self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_CRITICAL, "Unknown action code %d" % command))

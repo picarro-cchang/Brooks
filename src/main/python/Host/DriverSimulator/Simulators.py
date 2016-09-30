@@ -250,14 +250,16 @@ class LaserSimulator(Simulator):
         self.nextCurrentMonitor = None
         self.nextTemp = None
         self.nextThermRes = None
+        self.power = None
+        self.wavenumber = None
 
     def step(self):
         self.nextTemp = self.thermalModel.tecToTemp(self.tec)
         self.nextThermRes = self.thermalModel.tempToResistance(self.nextTemp)
         laserOn = self.currentEnable and self.laserEnable
         self.nextCurrentMonitor = self.dacModel.dacToCurrent(self.fpgaCoarse, self.fpgaFine) if laserOn else 0.0
-        nextWavenumber = self.opticalModel.calcWavenumber(self.nextTemp, self.nextCurrentMonitor)
-        nextPower = self.opticalModel.calcPower(self.nextTemp, self.nextCurrentMonitor)
+        self.wavenumber = self.opticalModel.calcWavenumber(self.nextTemp, self.nextCurrentMonitor)
+        self.power = self.opticalModel.calcPower(self.nextTemp, self.nextCurrentMonitor)
 
     def update(self):
         if self.nextCurrentMonitor is not None:
@@ -337,11 +339,13 @@ class SpectrumSimulator(Simulator):
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.spectrumControl = sim.spectrumControl
+        self.rdParams = None
         self.incrFlag = 0
         self.iter = 0
         self.dwell = 0
         self.row = 0
         self.virtualTime = None
+        self.wlmAngleSetpoint = None
 
     def step(self):
         if self.state != interface.SPECT_CNTRL_RunningState:
@@ -357,6 +361,31 @@ class SpectrumSimulator(Simulator):
     def doRingdown(self):
         self.advanceDwellCounter()
         self.virtualTime += 10 # ms between ringdowns
+        rdResult = interface.RingdownEntryType()
+        rdResult.timestamp = int(self.virtualTime)
+        rdResult.wlmAngle = self.wlmAngleSetpoint  # Perfect targetting for now
+        rdResult.uncorrectedAbsorbance = 0.9  # ppm/cm
+        rdResult.correctedAbsorbance = 0.89  # ppm/cm
+        rdResult.status = self.rdParams.status
+        rdResult.count = self.rdParams.countAndSubschemeId >> 16
+        rdResult.tunerValue = 32768
+        rdResult.pztValue = 32768
+        rdResult.laserUsed = self.rdParams.injectionSettings & (interface.INJECTION_SETTINGS_virtualLaserMask | interface.INJECTION_SETTINGS_actualLaserMask)
+        rdResult.ringdownThreshold = self.rdParams.ringdownThreshold
+        rdResult.subschemeId = self.rdParams.countAndSubschemeId & 0xFFFF
+        rdResult.schemeVersionAndTable = self.rdParams.schemeTableAndRow >> 16
+        rdResult.schemeRow = self.rdParams.schemeTableAndRow & 0xFFFF
+        rdResult.ratio1 = 12345
+        rdResult.ratio2 = 54321
+        rdResult.fineLaserCurrent = 40000
+        rdResult.coarseLaserCurrent = self.rdParams.coarseLaserCurrent
+        rdResult.fitAmplitude = 50000
+        rdResult.fitBackground = 100
+        rdResult.fitRmsResidual = 10
+        rdResult.laserTemperature = self.rdParams.laserTemperature
+        rdResult.etalonTemperature = self.rdParams.etalonTemperature
+        rdResult.cavityPressure = self.rdParams.cavityPressure
+        self.sim.ringdown_queue.append(rdResult)
         print "Performing ringdown"
 
     def setupNextRdParams(self):
@@ -380,12 +409,12 @@ class SpectrumSimulator(Simulator):
         schemeRow = self.scheme.rows[self.row]
         self.virtLaser = schemeRow.virtualLaser  # zero-origin
         vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
-        setpoint = schemeRow.setpoint
+        self.wlmAngleSetpoint = schemeRow.setpoint
         laserNum = vlaserParams["actualLaser"] & 3  # zero-origin
         # We record the loss directly in a special set of 8 registers if the least-significant
         #  bits in the pztSetpoint field of the scheme are set appropriately
         lossTag = schemeRow.pztSetpoint & 7
-        # Start filling out the ringdown result structure
+        # Start filling out the ringdown parameters structure
         r = interface.RingdownParamsType()
         r.injectionSettings = ((lossTag << interface.INJECTION_SETTINGS_lossTagShift) |
                                (self.virtLaser << interface.INJECTION_SETTINGS_virtualLaserShift) |
@@ -416,10 +445,10 @@ class SpectrumSimulator(Simulator):
             # We need to decide if acquisition is continuing or not. Acquisition stops if the scheme is run in Single mode, or
             #  if we are running a non-looping sequence and have reached the last scheme in the sequence
             if self.mode == interface.SPECT_CNTRL_SchemeSingleMode:
-                self.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask
+                r.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask
             elif self.mode in [interface.SPECT_CNTRL_SchemeMultipleMode, interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode]:
-                self.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask
-
+                r.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask
+        self.rdParams = r
 
     def advanceDwellCounter(self):
         self.dwell += 1

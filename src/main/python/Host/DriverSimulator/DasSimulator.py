@@ -142,6 +142,12 @@ class DasSimulator(object):
         else:
             return None
 
+    def getRingdownData(self):
+        if len(self.ringdown_queue) > 0:
+            return self.ringdown_queue.popleft() 
+        else:
+            return None
+
     def initDasRegisters(self):
         for ri in interface.registerInfo:
             if ri.initial is not None:

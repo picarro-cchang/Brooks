@@ -386,8 +386,12 @@ class DriverSimulator(SharedTypes.Singleton):
         def sensorProcessor(data):
             self.streamCast.send(StringPickler.ObjAsString(data))
 
+        def ringdownProcessor(data):
+            self.resultsCast.send(StringPickler.ObjAsString(data))
+
         messageHandler = SharedTypes.makeHandler(self.dasSimulator.getMessage, messageProcessor)
         sensorHandler = SharedTypes.makeHandler(self.dasSimulator.getSensorData,  sensorProcessor)
+        ringdownHandler = SharedTypes.makeHandler(self.dasSimulator.getRingdownData, ringdownProcessor)
 
         self.instrConfig.loadPersistentRegistersFromConfig()
         self.dasConfigure = DasConfigure(self.dasSimulator, self.instrConfig.config, self.config)
@@ -405,7 +409,18 @@ class DriverSimulator(SharedTypes.Singleton):
                     timeSoFar += messages.duration
                     sensors = sensorHandler.process(max(0.02, 0.2 - timeSoFar))
                     timeSoFar += sensors.duration
-                    rpcTime = maxRpcTime
+                    ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))
+                    timeSoFar += ringdowns.duration
+                    # Adjust the time spent doing rpc calls for the next iteration
+                    #  so that we just finish handling all the streams
+                    if sensors.finished and ringdowns.finished and messages.finished:
+                        rpcTime += 0.01
+                        if rpcTime > maxRpcTime:
+                            rpcTime = maxRpcTime
+                    else:
+                        rpcTime = 0.9 * rpcTime
+                        if rpcTime < 0.01:
+                            rpcTime = 0.01
                     requestTimeout = rpcTime
                     now = time.time()
                     doneTime = now + rpcTime
