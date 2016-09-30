@@ -28,6 +28,8 @@ EventManagerProxy_Init(APP_NAME)
 
 def _value(valueOrName):
     """Convert valueOrName into an value, raising an exception if the name is not found"""
+    if isinstance(valueOrName, types.UnicodeType):
+        valueOrName = str(valueOrName)
     if isinstance(valueOrName, types.StringType):
         try:
             valueOrName = getattr(interface, valueOrName)
@@ -205,6 +207,8 @@ class DasSimulator(object):
 
     def _reg_index(self, indexOrName):
         """Convert a name or index into an integer index, raising an exception if the name is not found"""
+        if isinstance(indexOrName, types.UnicodeType):
+            indexOrName = str(indexOrName)
         if isinstance(indexOrName, types.IntType):
             return indexOrName
         else:
@@ -215,6 +219,8 @@ class DasSimulator(object):
 
     def _value(self, valueOrName):
         """Convert valueOrName into an value, raising an exception if the name is not found"""
+        if isinstance(valueOrName, types.UnicodeType):
+            valueOrName = str(valueOrName)
         if isinstance(valueOrName, types.StringType):
             try:
                 valueOrName = getattr(interface, valueOrName)

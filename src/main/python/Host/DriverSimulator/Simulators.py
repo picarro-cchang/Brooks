@@ -330,10 +330,32 @@ class SpectrumSimulator(Simulator):
     laser2Temp = prop_das(interface.LASER2_TEMPERATURE_REGISTER)
     laser3Temp = prop_das(interface.LASER3_TEMPERATURE_REGISTER)
     laser4Temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
+    laser1TempSetpoint = prop_das(interface.LASER1_TEMP_CNTRL_SETPOINT_REGISTER)
+    laser2TempSetpoint = prop_das(interface.LASER2_TEMP_CNTRL_SETPOINT_REGISTER)
+    laser3TempSetpoint = prop_das(interface.LASER3_TEMP_CNTRL_SETPOINT_REGISTER)
+    laser4TempSetpoint = prop_das(interface.LASER4_TEMP_CNTRL_SETPOINT_REGISTER)
     laser1CoarseCurrent = prop_das(interface.LASER1_MANUAL_COARSE_CURRENT_REGISTER)
     laser2CoarseCurrent = prop_das(interface.LASER2_MANUAL_COARSE_CURRENT_REGISTER)
     laser3CoarseCurrent = prop_das(interface.LASER3_MANUAL_COARSE_CURRENT_REGISTER)
     laser4CoarseCurrent = prop_das(interface.LASER4_MANUAL_COARSE_CURRENT_REGISTER)
+    pztOffsetVL1 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER1)
+    pztOffsetVL2 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER2)
+    pztOffsetVL3 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER3)
+    pztOffsetVL4 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER4)
+    pztOffsetVL5 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER5)
+    pztOffsetVL6 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER6)
+    pztOffsetVL7 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER7)
+    pztOffsetVL8 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER8)
+    schemeOffsetVL1 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER1)
+    schemeOffsetVL2 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER2)
+    schemeOffsetVL3 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER3)
+    schemeOffsetVL4 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER4)
+    schemeOffsetVL5 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER5)
+    schemeOffsetVL6 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER6)
+    schemeOffsetVL7 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER7)
+    schemeOffsetVL8 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER8)
+    fpgaPztOffset = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_PZT_OFFSET)
+
     def __init__(self, sim):
         self.sim = sim
         self.das_registers = sim.das_registers
@@ -346,6 +368,8 @@ class SpectrumSimulator(Simulator):
         self.row = 0
         self.virtualTime = None
         self.wlmAngleSetpoint = None
+        self.activeMemo = None
+        self.rowMemo = None
 
     def step(self):
         if self.state != interface.SPECT_CNTRL_RunningState:
@@ -388,6 +412,64 @@ class SpectrumSimulator(Simulator):
         self.sim.ringdown_queue.append(rdResult)
         print "Performing ringdown"
 
+    def setupLaserTemperatureAndPztOffset(self, useMemo):
+        # The memo is used to bypass the setup if the scheme table and row have
+        #  not changed since the last time ther laser temperature and PZT offset
+        #  were set
+        if self.mode == interface.SPECT_CNTRL_ContinuousMode:
+            vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
+            pztOffset = [self.pztOffsetVL1,
+                         self.pztOffsetVL2,
+                         self.pztOffsetVL3,
+                         self.pztOffsetVL4,
+                         self.pztOffsetVL5,
+                         self.pztOffsetVL6,
+                         self.pztOffsetVL7,
+                         self.pztOffsetVL8][self.virtLaser]
+            self.fpgaPztOffset = pztOffset % 65536
+        elif self.mode == interface.SPECT_CNTRL_ContinuousManualTempMode:
+            self.fpgaPztOffset = 0
+        else:
+            if (self.sim.spectrumControl.useMemo and
+                self.active == self.activeMemo and
+                self.row == self.rowMemo):
+                return
+            scheme = self.sim.driver.schemeTables[self.active]
+            schemeRow = scheme.rows[self.row]
+            self.virtLaser = schemeRow.virtualLaser  # zero-origin
+            vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
+            laserTemp = 0.001 * schemeRow.laserTemp  # scheme temperatures are in milli-degrees C
+            aLaserNum = 1 + vlaserParams["actualLaser"] & 3 
+            if laserTemp != 0:
+                schemeOffset = [self.schemeOffsetVL1,
+                                self.schemeOffsetVL2,
+                                self.schemeOffsetVL3,
+                                self.schemeOffsetVL4,
+                                self.schemeOffsetVL5,
+                                self.schemeOffsetVL6,
+                                self.schemeOffsetVL7,
+                                self.schemeOffsetVL8][self.virtLaser]
+                if aLaserNum == 1: self.laser1TempSetpoint = laserTemp + schemeOffset
+                elif aLaserNum == 2: self.laser2TempSetpoint = laserTemp + schemeOffset
+                elif aLaserNum == 3: self.laser3TempSetpoint = laserTemp + schemeOffset
+                elif aLaserNum == 4: self.laser4TempSetpoint = laserTemp + schemeOffset
+    
+            # The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
+            #  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
+    
+            pztOffset = [self.pztOffsetVL1,
+                         self.pztOffsetVL2,
+                         self.pztOffsetVL3,
+                         self.pztOffsetVL4,
+                         self.pztOffsetVL5,
+                         self.pztOffsetVL6,
+                         self.pztOffsetVL7,
+                         self.pztOffsetVL8][self.virtLaser] + schemeRow.pztSetpoint
+            self.fpgaPztOffset = pztOffset % 65536
+            
+            self.activeMemo = self.active
+            self.rowMemo = self.row
+
     def setupNextRdParams(self):
         print "Scheme %d: iter %d, row %d, dwell %d" % (self.active, self.iter, self.row, self.dwell)
 
@@ -395,7 +477,7 @@ class SpectrumSimulator(Simulator):
             #  This loop allows for zero-dwell rows in a scheme which just set the temperature
             #  of a laser without causing a ringdown
 
-            # self.setupLaserTemperatureAndPztOffset(self.sim.spectrumControl.useMemo)
+            self.setupLaserTemperatureAndPztOffset(self.sim.spectrumControl.useMemo)
             self.sim.spectrumControl.useMemo = 1
             self.scheme = self.sim.driver.schemeTables[self.active]
             schemeRow = self.scheme.rows[self.row]

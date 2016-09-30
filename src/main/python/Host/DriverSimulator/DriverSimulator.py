@@ -80,7 +80,9 @@ def _reg_index(indexOrName):
 
 def _value(valueOrName):
     """Convert valueOrName into an value, raising an exception if the name is not found"""
-    if isinstance(valueOrName,types.StringType):
+    if isinstance(valueOrName, types.UnicodeType):
+        valueOrName = str(valueOrName)
+    if isinstance(valueOrName, types.StringType):
         try:
             valueOrName = getattr(interface,valueOrName)
         except AttributeError:
