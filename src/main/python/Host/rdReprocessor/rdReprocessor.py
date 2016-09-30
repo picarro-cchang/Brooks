@@ -94,7 +94,7 @@ class rdReprocessor(object):
                 if index == fnum-1:
                     index = -1
             index += step
-            time.sleep(1.0)
+            time.sleep(2.0)
 
 HELP_STRING = \
 """ rdReprocessor.py [-c<FILENAME>] [-h|--help]
