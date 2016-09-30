@@ -321,7 +321,7 @@ class ActionHandler(object):
             simulator.update()
         self.sim.injectionSimulator.update()
         self.sim.spectrumSimulator.update()
-        return interface.STATUS_OKsimula
+        return interface.STATUS_OK
 
     def unknownAction(self, params, env, when, command):
         self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_CRITICAL, "Unknown action code %d" % command))

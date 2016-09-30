@@ -68,7 +68,6 @@ elif sys.platform == "linux2":
     sched_setaffinity = libc.sched_setaffinity
     setpriority = libc.setpriority
 import os
-import shlex
 import time
 import getopt
 import threading
@@ -107,12 +106,6 @@ if sys.platform == 'win32':
     from time import clock as TimeStamp
 else:
     from time import time as TimeStamp
-
-if __debug__:
-    print("Loading rpdb2")
-    import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-    print("rpdb2 loaded")
 
 #Global constants...
 APP_NAME = "Supervisor"
@@ -278,7 +271,7 @@ if sys.platform == "win32":
             return msvcrt.getch()
         return ""
 
-    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
+    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity):
         #launch the process...
         Log("Launching application", appName, 1)
         ##Used to do this with spawnv, but doing this causes the spawned apps to
@@ -304,7 +297,7 @@ if sys.platform == "win32":
         elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
             dwCreationFlags += win32process.CREATE_NEW_CONSOLE
         lpEnvironment = None
-        lpCurrentDirectory = cwd
+        lpCurrentDirectory = None
         lpStartupInfo = win32process.STARTUPINFO()
         hProcess, hThread, dwProcessId, dwThreadId =  win32process.CreateProcess(
             lpApplicationName,
@@ -366,24 +359,18 @@ elif sys.platform == "linux2":
     def read_rawkb():
         return ttyLinux.readLookAhead()
 
-    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
+    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity):
         #launch the process...
         Log("Launching application", dict(appName=appName), 1)
         argList = [exeName]
         for arg in exeArgs[1:]:
-            argList += shlex.split(arg)
+            argList += arg.split()
         try:
-            # There seems to be some strange interaction between Pyro4, threading,
-            # Popen, and rpdb2 causing a race condition where process creation sometimes
-            # locks up the code.  A tip on StackOverflow (can't find the link)
-            # said sleep() before each Popen made the problem go away.
-            #
-            time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
-                process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
+                process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
                 termList = ["xterm","-hold","-T",appName,"-e"]
-                process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
+                process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'))
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
             raise
@@ -431,7 +418,7 @@ elif sys.platform == "linux2":
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
         # print("TerminateProcess disabled") # RSF
-        #os.kill(processHandle.pid,9) # Don't kill for debug RSF
+        os.kill(processHandle.pid,9) # Don't kill for debug RSF
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
@@ -538,16 +525,6 @@ class App(object):
         self.KillByName = True
         self.ShowDispatcherWarning = 1
 
-        # DebugMode == False runs interpreted python code with the -OO option.
-        # DebugMode == True runs without -OO and sets __debug__.  In some codes
-        #               this will load the rpdb2 debugger so the code can be run
-        #               in winpdb.
-        # DebugMode can be set for individual processes in supervisor.ini. It
-        # can be set globally in [GlobalDefaults] in supervisor.ini. If the key
-        # is missing debug mode is off.
-        #
-        self.DebugMode = False
-
         #now override any defaults with the passed in dictionary values...
         if DefaultSettings:
             assert isinstance(DefaultSettings, dict)
@@ -605,10 +582,10 @@ class App(object):
         for optionName in settableOptions:
             try:
                 option = CO.get(self._AppName, optionName)
-                if isinstance(self.__getattribute__(optionName), bool):
-                    option = bool(option)
-                elif isinstance(self.__getattribute__(optionName), int):
+                if isinstance(self.__getattribute__(optionName), int):
                     option = int(option)
+                elif isinstance(self.__getattribute__(optionName), bool):
+                    option = bool(option)
                 self.__setattr__(optionName, option)
                 #add it to the dictionary we're using to keep track of what was loaded...
                 loadedOptions[optionName] = option
@@ -670,14 +647,12 @@ class App(object):
             exeName = sys.executable
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
             if sys.flags.optimize:
-                if not self.DebugMode:
-                    exeArgs.append("-OO")
+                exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
                 launchPath = "%s" % (self.Executable,)
             else:
                 #The path will be relative to the location of the supervisor app...
-                launchPath = os.path.join(os.path.dirname(AppPath), self.Executable)
-            launchPath = os.path.normpath(launchPath)
+                launchPath = "%s/%s" % (os.path.dirname(AppPath), self.Executable)
             exeArgs.append(launchPath)
             exeArgs.append(launchArgs)
         else:
@@ -690,8 +665,7 @@ class App(object):
                 exeName = "%s" % (self.Executable,)
             else:
                 #The path will be relative to the location of the supervisor app...
-                exeName = os.path.join(os.path.dirname(AppPath), self.Executable)
-            exeName = os.path.normpath(exeName)
+                exeName = "%s/%s" % (os.path.dirname(AppPath), self.Executable)
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
             exeArgs.append(launchArgs)
 
@@ -700,7 +674,7 @@ class App(object):
         if supervisor.CheckForStopRequests():
             raise TerminationRequest
 
-        r = launchProcess(self._AppName,exeName,exeArgs,self.Priority,self.ConsoleMode,self.AffinityMask,os.path.dirname(AppPath))
+        r = launchProcess(self._AppName,exeName,exeArgs,self.Priority,self.ConsoleMode,self.AffinityMask)
         self._ProcessId, self._ProcessHandle, pAffinity = r
 
         #self._ProcessHandle = hProcess.handle
@@ -1074,9 +1048,8 @@ class Supervisor(object):
             A = self.AppDict[appName]
             assert isinstance(A, App) #for Wing
             #Make sure the executable exists!
-            exePath = os.path.normpath(os.path.join(os.path.dirname(AppPath), A.Executable))
-            if not os.path.exists(exePath):
-                raise AppErr("File '%s' does not exist for AppName '%s'." % (exePath, appName))
+            if not os.path.exists(A.Executable):
+                raise AppErr("File '%s' does not exist for AppName '%s'." % (A.Executable, appName))
 
             #Launch apps in virtual mode
             if self.virtualMode and appName in ["InstMgr", "RDFreqConverter"]:
