@@ -770,8 +770,7 @@ if __name__ == "__main__":
     else:
         fOpenFileDialog = True
 
-    appConfigManager = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
+    appConfigManager = wx.App(False)
     frameMain = ConfigManager(None, -1, "")
     appConfigManager.SetTopWindow(frameMain)
 

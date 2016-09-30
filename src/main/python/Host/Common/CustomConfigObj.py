@@ -13,6 +13,27 @@
 #
 # File History:
 # 08-09-16  Alex  Created file
+#
+# 25Sep2016 Ray   Restored % interpolation.
+#
+# configobj supported % interpolation with keys set in the [DEFAULT] section of an
+# ini file like that below but this capability was not working in CustomConfigObj.
+# I have restored this feature with a small change in the get() method to call
+# configobj.get() when needed.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# [DEFAULT]
+# path = /home/rsf/git/host/src/main/python/Host
+#
+# [EventManager]
+# Executable = %(path)s/EventManager/EventManager.py
+# LaunchArgs = --viewer -c %(path)s/AppConfig/Config/EventManager/EventManager.ini
+#
+# [Driver]
+# Executable = %(path)s/Driver/Driver.py
+# LaunchArgs = -c %(path)s/AppConfig/Config/Driver/Driver_lct.ini
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#
 
 """Customized configuration file parser using ConfigObj.
 
@@ -156,13 +177,34 @@ class CustomConfigObj(configobj.ConfigObj):
                     newDict[k.lower()] = (v,k)
         return newDict
 
-    def get(self, section, option, default=None):
+    # This get() overrides the configobj.get().  However, to use the 
+    # DEFAULT section we make a direct call to configobj.get() with
+    # the super method.  Without this, configobj interpolation causes
+    # a fatal exception.  See the notes above.
+    #
+    # In several programs, the list of allowed keys (the 'option'
+    # field) is hardcoded and in their __init__ it will loop through
+    # all the keys and check the ini file for settings.  As not all
+    # keys are mandatory and are missing in a few ini files, a
+    # call to 'self.shadow[section][option.lower()]' would throw an
+    # unhandled 'KeyError' and stop the code.  Here I added a try/except
+    # block to propagate the KeyError exception up.  At the top level
+    # there needs to be an exception handler that can either assign
+    # a useful default value or stop the code if the missing key
+    # needs to be manually assigned in an ini file.
+    #
+    def get(self, section, option='', default=None):
+        if not option:
+            return super(CustomConfigObj, self).get(section)
         if default is None:
             if not self.ignoreOptionCase:
                 return self[section][option]
             else:
-                v,origKey = self.shadow[section][option.lower()]
-                return v
+                try:
+                    v,origKey = self.shadow[section][option.lower()]
+                    return v
+                except KeyError:
+                    raise KeyError
         else:
             default = str(default)
             try:
@@ -175,11 +217,22 @@ class CustomConfigObj(configobj.ConfigObj):
                 self._add_value(section, option, default)
                 return default
 
+
+    # Raise KeyError: Thrown if option is an invalid key. It the key
+    # was missing or invalid, the return from get() would cause int()
+    # to raise a TypeError exception and the code would crash right
+    # here.  Now we propagate up the KeyError and the calling code
+    # can decide the appropriate thing to do since it's there where
+    # context of the getint() is usually understood well enough to
+    # pick the right action.
+    #
     def getint(self, section, option, default=None):
         try:
             return int(self.get(section, option, default))
         except ValueError:
             return int(float(self.get(section, option, default)))
+        except KeyError:
+            raise KeyError
 
     def getfloat(self, section, option, default=None):
         return float(self.get(section, option, default))

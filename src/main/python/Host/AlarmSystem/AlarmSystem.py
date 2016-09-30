@@ -92,7 +92,7 @@ def main():
     try:
         DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
                                                  APP_NAME, IsDontCareConnection=False)
-        assert DataManager.SetLegacyAlarmConfig(configFile) == interface.STATUS_OK
+        DataManager.SetLegacyAlarmConfig(configFile)
         Log("Exiting program")
     except Exception, E:
         if __debug__: raise

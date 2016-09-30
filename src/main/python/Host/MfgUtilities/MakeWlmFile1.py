@@ -30,7 +30,6 @@ from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.scanSerialPorts import scanSerialPorts
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -77,7 +76,7 @@ class WlmFileMaker(object):
 
     def __init__(self,configFile,options):
         self.config = ConfigObj(configFile)
-        self.port = 'COM1'
+        self.port = None
         self.ipAddr = None
 
         if "-a" in options:
@@ -172,15 +171,30 @@ class WlmFileMaker(object):
         self.serialTimeout = 10.0
         self.ser = None
         self.wavemeter = None
-        if self.ipAddr is None:
-            self.searchSerPort()
-        else:
-            try:
-                self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
-            except:
-                raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
+        if not self.simulation:
+            if self.ipAddr is None:
+                if self.port is None:
+                    self.searchSerPort()
+                else:
+                    try:
+                        self.ser = serial.Serial(self.port, 19200, timeout=0)
+                        self.wavemeter = BurleighReply(self.ser,0.02)
+                        time.sleep(2)
+                        print "Testing serial %s..." % (p)
+                        self.wavemeter.PutString("\n");
+                        time.sleep(1.0)
+                        self.wavemeter.PutString("*IDN?\n");
+                        reply = self.WaitForString(self.serialTimeout,"Timeout waiting for response to *IDN?")
+                    except:
+                        raise Exception("Cannot open connect to wavemeter at %s" % self.port)
+            else:
+                try:
+                    self.wavemeter = WavemeterTelnetClient(self.ipAddr,1.0)
+                except:
+                    raise Exception("Cannot open TCP connection to %s, Aborting." % self.ipAddr)
 
     def searchSerPort(self):
+        from Host.Common.scanSerialPorts import scanSerialPorts
         reply = None
         for p in scanSerialPorts():
             if self.wavemeter:
@@ -474,7 +488,8 @@ class WlmFileMaker(object):
         finally:
             if self.fp:
                 self.fp.close()
-            self.wavemeter.Close()
+            if self.wavemeter:
+                self.wavemeter.Close()
             Driver.restoreRegValues(regVault)
             Driver.startEngine()
 

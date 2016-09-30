@@ -287,6 +287,15 @@ class SpectrumCollector(object):
                     endOfSpectrum = True
                     endOfScheme = True
 
+            # A spectrum is composed of one or more sub-schemes.
+            # As each spectrum is collected, broadcast them to the fitters, collecting them
+            # into spectraInScheme as the code works its way through a scheme.
+            # After all the sub-schemes of the scheme have been collected, save the
+            # scheme's worth of RD and sensor data to a RD*.h5 file for reprocessing.
+            #
+            # If the *.h5 is reprocessed, the fitter will split it into individual
+            # spectra and fit them in order.
+            #
             if endOfSpectrum:
                 spectrum = self.packageSpectrum()
                 self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))

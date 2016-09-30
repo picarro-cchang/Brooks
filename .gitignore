@@ -6,9 +6,13 @@ target/
 .doit.db
 node_modules/
 src/main/python/Host/Common/swathP.pyd
+src/main/python/Host/Common/swathP.so
 src/main/python/Host/Fitter/cluster_analyzer.pyd
+src/main/python/Host/Fitter/cluster_analyzer.so
 src/main/python/Host/Fitter/fitutils.pyd
+src/main/python/Host/Fitter/fitutils.so
 src/main/python/Host/Utilities/SuperBuildStation/fastLomb.pyd
+src/main/python/Host/Utilities/SuperBuildStation/fastLomb.so
 src/main/python/Host/build_version.py
 #
 # Exclude AppConfig subdirectories, but include files associated

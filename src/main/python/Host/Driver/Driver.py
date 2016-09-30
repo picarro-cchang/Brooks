@@ -832,6 +832,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
         nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        if nBytes < 0 or nBytes > 32768:
+            raise ValueError("Cannot read invalid object from EEPROM.")
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
 
