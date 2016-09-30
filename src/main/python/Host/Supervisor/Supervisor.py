@@ -108,11 +108,11 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
-if __debug__:
-    print("Loading rpdb2")
-    import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-    print("rpdb2 loaded")
+#if __debug__:
+    #print("Loading rpdb2")
+    #import rpdb2
+    #rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    #print("rpdb2 loaded")
 
 #Global constants...
 APP_NAME = "Supervisor"
@@ -431,7 +431,7 @@ elif sys.platform == "linux2":
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
         # print("TerminateProcess disabled") # RSF
-        #os.kill(processHandle.pid,9) # Don't kill for debug RSF
+        os.kill(processHandle.pid,9) # Don't kill for debug RSF
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
