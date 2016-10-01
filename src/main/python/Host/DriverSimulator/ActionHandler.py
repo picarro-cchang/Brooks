@@ -233,7 +233,9 @@ class ActionHandler(object):
         for simulator in self.sim.simulators:
             simulator.step()
         self.sim.injectionSimulator.step()
-        self.sim.spectrumSimulator.step()
+        # The following collects ringdowns in virtual time and is called at the 
+        #  of end of a timeslice
+        self.sim.spectrumControl.collectSpectrum()
         return interface.STATUS_OK
 
     def streamFpgaRegisterAsFloat(self, params, env, when, command):
@@ -320,7 +322,6 @@ class ActionHandler(object):
         for simulator in self.sim.simulators:
             simulator.update()
         self.sim.injectionSimulator.update()
-        self.sim.spectrumSimulator.update()
         return interface.STATUS_OK
 
     def unknownAction(self, params, env, when, command):
