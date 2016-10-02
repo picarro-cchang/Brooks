@@ -714,8 +714,8 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER", 39538.5)
         sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",41217.0)
 
-        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
-        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
+        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER", 10977899)
+        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER", 2022245)
 
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)

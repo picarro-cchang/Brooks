@@ -62,7 +62,18 @@ class ActionHandler(object):
             interface.ACTION_UPDATE_WLMSIM_LASER_TEMP: self.updateWlmsimLaserTemp,
             interface.ACTION_SPECTRUM_CNTRL_INIT: self.spectCntrlInit,
             interface.ACTION_SPECTRUM_CNTRL_STEP: self.spectCntrlStep,
+            interface.ACTION_ADC_TO_PRESSURE: self.adcToPressure,
         }
+
+    def adcToPressure(self, params, env, when, command):
+        if 4 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        adcVal = self.sim.rdDasReg(params[0])
+        slope = self.sim.rdDasReg(params[1])
+        offset = self.sim.rdDasReg(params[2])
+        result = adcVal * slope + offset
+        self.sim.wrDasReg(params[3], result)
+        return interface.STATUS_OK
 
     def currentCntrlLaser1Init(self, params, env, when, command):
         if 0 != len(params):
@@ -112,7 +123,8 @@ class ActionHandler(object):
         if command in self.action:
             return self.action[command](params, env, when, command)
         else:
-            print "Unimplemented action: %d" % command
+            # print "Unimplemented action: %d" % command
+            pass
 
     def filter(self, params, env, when, command):
         if 2 != len(params):

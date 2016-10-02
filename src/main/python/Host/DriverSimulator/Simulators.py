@@ -145,7 +145,8 @@ class WlmModel(object):
     # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
     def __init__(self, rho=0.2, Ieta1fac=3000, Ieta2fac=3000, Iref1fac=1500, Iref2fac=1500,
                  eta1_offset=6000, eta2_offset=6000, ref1_offset=6000, ref2_offset=6000, epsilon=0,
-                 fsr=1.66782):
+                 fsr=1.66782, cal_temp=45, temp_sensitivity=-0.19, cal_pressure=760,
+                 pressureC0=0.0, pressureC1=0.0, pressureC2=0.0, pressureC3=0.0):
         self.rho = rho
         self.Ieta1fac = Ieta1fac
         self.Ieta2fac = Ieta2fac
@@ -157,9 +158,24 @@ class WlmModel(object):
         self.ref2_offset = ref2_offset
         self.epsilon = epsilon
         self.fsr = fsr
+        self.cal_temp = cal_temp
+        self.temp_sensitivity = temp_sensitivity
+        self.cal_pressure = cal_pressure
+        self.pressureC0 = pressureC0
+        self.pressureC1 = pressureC1
+        self.pressureC2 = pressureC2
+        self.pressureC3 = pressureC3
 
-    def calcOutputs(self, wavenumber, power):
-        theta = 2 * math.pi * wavenumber / self.fsr
+    def getWlmAngle(self, wavenumber, etalonTemp, ambientPressure):
+        dP = ambientPressure - self.cal_pressure
+        # Calculate the wavelength monitor angle corrected by the etalon temperature and ambient pressure
+        return (2 * math.pi * wavenumber / self.fsr -
+                self.temp_sensitivity * (etalonTemp - self.cal_temp) -
+                (self.pressureC0 + dP * (self.pressureC1 + dP * (self.pressureC2 + dP * self.pressureC3))))
+
+    def calcOutputs(self, wavenumber, power, etalonTemp, ambientPressure):
+        # Get the wavelength monitor angle
+        theta = self.getWlmAngle(wavenumber, etalonTemp, ambientPressure)
         ct = math.cos(theta)
         ste = math.sin(theta + self.epsilon)
         eta1 = self.rho * self.Ieta1fac * power * (1 + ct) / (1 + self.rho * ct) + self.eta1_offset
@@ -181,6 +197,8 @@ class InjectionSimulator(Simulator):
     ratio1 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO1)
     ratio2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO2)
     laserIndex = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W)
+    etalonTemp = prop_das(interface.ETALON_TEMPERATURE_REGISTER)
+    ambientPressure = prop_das(interface.AMBIENT_PRESSURE_REGISTER)
 
     def __init__(self, sim, wlmModel=None):
         self.sim = sim
@@ -200,9 +218,8 @@ class InjectionSimulator(Simulator):
     def step(self):
         laserNum = self.laserIndex + 1
         laserSimulator = [self.sim.laser1Simulator, self.sim.laser2Simulator, self.sim.laser3Simulator, self.sim.laser4Simulator][laserNum - 1]
-        wavenumber = laserSimulator.opticalModel.calcWavenumber(laserSimulator.nextTemp, laserSimulator.nextCurrentMonitor)
-        power = laserSimulator.opticalModel.calcPower(laserSimulator.nextTemp, laserSimulator.nextCurrentMonitor)
-        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(wavenumber, power)
+        wavenumber, power = laserSimulator.getLaserOutput()
+        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(wavenumber, power, self.etalonTemp, self.ambientPressure)
         self.nextRatio1 = 32768 * float(self.nextEta1 - self.eta1Offset) / (self.nextRef1 - self.ref1Offset)
         self.nextRatio2 = 32768 * float(self.nextEta2 - self.eta2Offset) / (self.nextRef2 - self.ref2Offset)
 
@@ -223,6 +240,7 @@ class InjectionSimulator(Simulator):
 
 class LaserSimulator(Simulator):
     tec = None
+    temp = None
     thermRes = None
     currentMonitor = None
     fpgaCoarse = None
@@ -250,16 +268,45 @@ class LaserSimulator(Simulator):
         self.nextCurrentMonitor = None
         self.nextTemp = None
         self.nextThermRes = None
-        self.power = None
-        self.wavenumber = None
+
+    def getLaserCurrent(self, coarse=None, fine=None, laserOn=None):
+        # Get the laser current for specified coarse and fine DAC settings and
+        #  state of laserOn. If any argument is omitted, use the values presently
+        #  found in the DAS registers.
+        if laserOn is None:
+            laserOn = self.isLaserOn()
+        if coarse is None:
+            coarse = self.fpgaCoarse
+        if fine is None:
+            fine = self.fpgaFine
+        return self.dacModel.dacToCurrent(coarse, fine) if laserOn else 0.0
+
+    def getLaserOutput(self, temp=None, current=None):
+        # Return laser wavenumber and power for specified laser temperature
+        #  and current. If any argument is omitted, use the values presently
+        #  found in the DAS registers.
+        if temp is None:
+            temp = self.getLaserTemp()
+        if current is None:
+            current = self.getLaserCurrent()
+        wavenumber = self.opticalModel.calcWavenumber(temp, current)
+        power = self.opticalModel.calcPower(temp, current)
+        return wavenumber, power
+
+    def getLaserTemp(self):
+        # Return current value of laser temperature
+        return self.temp
+
+    def isLaserOn(self):
+        # Return if currently selected laser is on
+        return self.currentEnable and self.laserEnable
 
     def step(self):
+        # Note that we can only call tecToTemp once per step, since this 
+        #  advances the thermal model
         self.nextTemp = self.thermalModel.tecToTemp(self.tec)
         self.nextThermRes = self.thermalModel.tempToResistance(self.nextTemp)
-        laserOn = self.currentEnable and self.laserEnable
-        self.nextCurrentMonitor = self.dacModel.dacToCurrent(self.fpgaCoarse, self.fpgaFine) if laserOn else 0.0
-        self.wavenumber = self.opticalModel.calcWavenumber(self.nextTemp, self.nextCurrentMonitor)
-        self.power = self.opticalModel.calcPower(self.nextTemp, self.nextCurrentMonitor)
+        self.nextCurrentMonitor = self.getLaserCurrent()
 
     def update(self):
         if self.nextCurrentMonitor is not None:
@@ -270,6 +317,7 @@ class LaserSimulator(Simulator):
 
 class Laser1Simulator(LaserSimulator):
     tec = prop_das(interface.LASER1_TEC_REGISTER)
+    temp = prop_das(interface.LASER1_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER1_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER1_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_COARSE_CURRENT)
@@ -281,6 +329,7 @@ class Laser1Simulator(LaserSimulator):
 
 class Laser2Simulator(LaserSimulator):
     tec = prop_das(interface.LASER2_TEC_REGISTER)
+    temp = prop_das(interface.LASER2_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER2_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER2_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER2_COARSE_CURRENT)
@@ -292,6 +341,7 @@ class Laser2Simulator(LaserSimulator):
 
 class Laser3Simulator(LaserSimulator):
     tec = prop_das(interface.LASER3_TEC_REGISTER)
+    temp = prop_das(interface.LASER3_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER3_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER3_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER3_COARSE_CURRENT)
@@ -303,6 +353,7 @@ class Laser3Simulator(LaserSimulator):
 
 class Laser4Simulator(LaserSimulator):
     tec = prop_das(interface.LASER4_TEC_REGISTER)
+    temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER4_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER4_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER4_COARSE_CURRENT)

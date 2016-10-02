@@ -9,6 +9,8 @@ File History:
 
 Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
+import math
+
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.Utilities import prop_das, prop_fpga
@@ -41,6 +43,7 @@ class SpectrumControl(object):
     laser4CoarseCurrent = prop_das(interface.LASER4_MANUAL_COARSE_CURRENT_REGISTER)
     laser4Temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
     laser4TempSetpoint = prop_das(interface.LASER4_TEMP_CNTRL_SETPOINT_REGISTER)
+    laserSelect = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W) 
     laserShutdownEnabled = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, interface.INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W)
     lockEnabled = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_OPTIONS, interface.RDMAN_OPTIONS_LOCK_ENABLE_B, interface.RDMAN_OPTIONS_LOCK_ENABLE_W)
 
@@ -55,6 +58,7 @@ class SpectrumControl(object):
     pztOffsetVL7 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER7)
     pztOffsetVL8 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER8)
     rampDitherMode = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_CONTROL, interface.RDMAN_CONTROL_RAMP_DITHER_B, interface.RDMAN_CONTROL_RAMP_DITHER_W)
+    ringdownThreshold = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_THRESHOLD)
     row = prop_das(interface.SPECT_CNTRL_SCHEME_ROW_REGISTER)
     schemeOffsetVL1 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER1)
     schemeOffsetVL2 = prop_das(interface.SCHEME_OFFSET_VIRTUAL_LASER2)
@@ -67,6 +71,11 @@ class SpectrumControl(object):
     soaShutdownEnabled = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, interface.INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W)
     state = prop_das(interface.SPECT_CNTRL_STATE_REGISTER)
     virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
+
+    eta1_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA1_OFFSET)
+    ref1_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF1_OFFSET)
+    eta2_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA2_OFFSET)
+    ref2_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF2_OFFSET)
 
     def __init__(self, sim):
         self.sim = sim
@@ -88,6 +97,10 @@ class SpectrumControl(object):
         self.wlmAngleSetpoint = None
         self.activeMemo = None
         self.rowMemo = None
+        self.ratio1Center = None
+        self.ratio2Center = None
+        self.ratio1Multiplier = None
+        self.ratio2Multiplier = None
 
     def setAutomaticLaserCurrentControl(self):
         self.sim.wrDasReg("LASER1_CURRENT_CNTRL_STATE_REGISTER", "LASER_CURRENT_CNTRL_AutomaticState")
@@ -174,6 +187,7 @@ class SpectrumControl(object):
 
     def collectSpectrum(self):
         if self.state != interface.SPECT_CNTRL_RunningState:
+            self.virtualTime = None
             return
         now = self.sim.getDasTimestamp()
         if self.virtualTime is None:
@@ -186,11 +200,60 @@ class SpectrumControl(object):
     def doRingdown(self):
         self.advanceDwellCounter()
         self.virtualTime += 10  # ms between ringdowns
+        #
+        # We need to find the laser wavenumber range that can be achieved on the basis
+        #  of the laser temperature, laser current and the specified
+        #  wavelength monitor angle setpoint
+        #
+        etalonTemp = self.rdParams.etalonTemperature
+        aLaserNum = 1 + ((self.rdParams.injectionSettings & interface.INJECTION_SETTINGS_actualLaserMask) >> interface.INJECTION_SETTINGS_actualLaserShift)
+        coarseLaserCurrent = self.rdParams.coarseLaserCurrent
+        laserSimulator = [
+            self.sim.laser1Simulator,
+            self.sim.laser2Simulator,
+            self.sim.laser3Simulator,
+            self.sim.laser4Simulator
+        ][aLaserNum - 1]
+        minCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=10000, laserOn=True)
+        maxCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=55000, laserOn=True)
+        maxWavenumber, _ = laserSimulator.getLaserOutput(current=minCurrent)
+        minWavenumber, _ = laserSimulator.getLaserOutput(current=maxCurrent)
+        wlmModel = self.sim.injectionSimulator.wlmModel
+        minAngle = wlmModel.getWlmAngle(minWavenumber, etalonTemp, self.ambientPressure)
+        maxAngle = wlmModel.getWlmAngle(maxWavenumber, etalonTemp, self.ambientPressure)
+        # Need to determine if the wlmAngleSetpoint is within the angle range. Find wavenumber
+        #  corresponding to the target angle
+        print "MinAngle %.3f, MaxAngle %.3f, AngleDiff %.3f, TargetAngle %.3f" % (minAngle, maxAngle, maxAngle-minAngle, self.wlmAngleSetpoint)
+        #
+        fine = 32768
+        for _ in range(8):
+            laserCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=fine, laserOn=True)
+            wavenumber, power = laserSimulator.getLaserOutput(current=laserCurrent)
+            wlmModel = self.sim.injectionSimulator.wlmModel
+            eta1, ref1, eta2, ref2 = wlmModel.calcOutputs(wavenumber, power, etalonTemp, self.ambientPressure)
+            ratio1 = (eta1 - self.eta1_offset) / (ref1 - self.ref1_offset)
+            ratio2 = (eta2 - self.eta2_offset) / (ref2 - self.ref2_offset)
+            lockError = self.ratio1Multiplier * (ratio1 - self.ratio1Center) + self.ratio2Multiplier * (ratio2 - self.ratio2Center)
+            # print "Fine", fine, "LockError", lockError
+            fine += 20000 * lockError
+            if fine < 0 or fine > 65535:
+                print "Lock failed"
+                return False
+
+        vLaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
+        # Calculate the angle in the WLM plane, corrected by the ambient pressure and etalon temperature
+        arctanvar1 = (vLaserParams["ratio1Scale"] * (ratio2 - vLaserParams["ratio2Center"]) -
+                      vLaserParams["ratio2Scale"] * (ratio1 - vLaserParams["ratio1Center"]) * math.sin(vLaserParams["phase"]))
+        arctanvar2 = vLaserParams["ratio2Scale"] * (ratio1 - vLaserParams["ratio1Center"]) * math.cos(vLaserParams["phase"])
+        # TODO: Add pressure correction
+        thetaC = vLaserParams["tempSensitivity"] * (self.rdParams.etalonTemperature - vLaserParams["calTemp"]) + math.atan2(arctanvar1,arctanvar2)
+
+        loss = 1.0 + 0.8 / (1 + ((wavenumber - 6237.408)/0.02) ** 2)
         rdResult = interface.RingdownEntryType()
         rdResult.timestamp = int(self.virtualTime)
-        rdResult.wlmAngle = self.wlmAngleSetpoint  # Perfect targetting for now
-        rdResult.uncorrectedAbsorbance = 0.9  # ppm/cm
-        rdResult.correctedAbsorbance = 0.89  # ppm/cm
+        rdResult.wlmAngle = thetaC
+        rdResult.uncorrectedAbsorbance = loss  # ppm/cm
+        rdResult.correctedAbsorbance = loss  # ppm/cm
         rdResult.status = self.rdParams.status
         rdResult.count = self.rdParams.countAndSubschemeId >> 16
         rdResult.tunerValue = 32768
@@ -200,9 +263,9 @@ class SpectrumControl(object):
         rdResult.subschemeId = self.rdParams.countAndSubschemeId & 0xFFFF
         rdResult.schemeVersionAndTable = self.rdParams.schemeTableAndRow >> 16
         rdResult.schemeRow = self.rdParams.schemeTableAndRow & 0xFFFF
-        rdResult.ratio1 = 12345
-        rdResult.ratio2 = 54321
-        rdResult.fineLaserCurrent = 40000
+        rdResult.ratio1 = int(32768 * ratio1)
+        rdResult.ratio2 = int(32768 * ratio2)
+        rdResult.fineLaserCurrent = int(fine)
         rdResult.coarseLaserCurrent = self.rdParams.coarseLaserCurrent
         rdResult.fitAmplitude = 50000
         rdResult.fitBackground = 100
@@ -212,13 +275,14 @@ class SpectrumControl(object):
         rdResult.cavityPressure = self.rdParams.cavityPressure
         self.sim.ringdown_queue.append(rdResult)
         print "Performing ringdown"
+        return True
 
     def setupLaserTemperatureAndPztOffset(self, useMemo):
         # The memo is used to bypass the setup if the scheme table and row have
         #  not changed since the last time ther laser temperature and PZT offset
         #  were set
         if self.mode == interface.SPECT_CNTRL_ContinuousMode:
-            vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
+            vLaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
             pztOffset = [self.pztOffsetVL1,
                          self.pztOffsetVL2,
                          self.pztOffsetVL3,
@@ -236,9 +300,9 @@ class SpectrumControl(object):
             scheme = self.sim.driver.schemeTables[self.active]
             schemeRow = scheme.rows[self.row]
             self.virtLaser = schemeRow.virtualLaser  # zero-origin
-            vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
+            vLaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
             laserTemp = 0.001 * schemeRow.laserTemp  # scheme temperatures are in milli-degrees C
-            aLaserNum = 1 + vlaserParams["actualLaser"] & 3 
+            aLaserNum = 1 + vLaserParams["actualLaser"] & 3
             if laserTemp != 0:
                 schemeOffset = [self.schemeOffsetVL1,
                                 self.schemeOffsetVL2,
@@ -290,9 +354,9 @@ class SpectrumControl(object):
         self.scheme = self.sim.driver.schemeTables[self.active]
         schemeRow = self.scheme.rows[self.row]
         self.virtLaser = schemeRow.virtualLaser  # zero-origin
-        vlaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
+        vLaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
         self.wlmAngleSetpoint = schemeRow.setpoint
-        laserNum = vlaserParams["actualLaser"] & 3  # zero-origin
+        laserNum = vLaserParams["actualLaser"] & 3  # zero-origin
         # We record the loss directly in a special set of 8 registers if the least-significant
         #  bits in the pztSetpoint field of the scheme are set appropriately
         lossTag = schemeRow.pztSetpoint & 7
@@ -307,9 +371,8 @@ class SpectrumControl(object):
         r.cavityPressure = self.cavityPressure
         r.ambientPressure = self.ambientPressure
         r.schemeTableAndRow = (self.active << 16) | (self.row & 0xFFFF)
-        laserTempAsInt = int(1000 * r.laserTemperature)
         # Check IncrMask in subscheme ID. If it is set, we should increment incrCounter
-        #  (in spectrumControl) the next time we advance to the next scheme row
+        #  the next time we advance to the next scheme row
         self.incrFlag = schemeRow.subschemeId & interface.SUBSCHEME_ID_IncrMask
         r.countAndSubschemeId = (self.incrCounter << 16) | (schemeRow.subschemeId & 0xFFFF)
         r.ringdownThreshold = schemeRow.threshold
@@ -330,6 +393,19 @@ class SpectrumControl(object):
                 r.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask
             elif self.mode in [interface.SPECT_CNTRL_SchemeMultipleMode, interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode]:
                 r.status |= interface.RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask
+        # Correct the setpoint angle for temperature
+        theta = schemeRow.setpoint - vLaserParams["tempSensitivity"] * (r.etalonTemperature - vLaserParams["calTemp"])
+        # TODO: Add pressure dependence if needed
+        # Compute ratio multipliers and ratio centers for laser locking
+        minScale = min(vLaserParams["ratio1Scale"], vLaserParams["ratio2Scale"])
+        self.ratio1Multiplier = -minScale * math.sin(theta + vLaserParams["phase"]) / vLaserParams["ratio1Scale"] 
+        self.ratio2Multiplier = minScale * math.cos(theta) / vLaserParams["ratio2Scale"] 
+        self.ratio1Center = vLaserParams["ratio1Center"]
+        self.ratio2Center = vLaserParams["ratio2Center"]
+
+        self.laserSelect = laserNum
+        self.ringdownThreshold = r.ringdownThreshold
+
         self.rdParams = r
 
     def advanceDwellCounter(self):
@@ -341,7 +417,7 @@ class SpectrumControl(object):
     def advanceSchemeRow(self):
         self.row += 1
         if self.incrFlag:
-            self.spectrumControl.incrCounterNext = self.spectrumControl.incrCounter
+            self.incrCounterNext = self.incrCounter
             self.incrFlag = 0
         if self.row >= self.scheme.numRows:
             self.advanceSchemeIteration()
