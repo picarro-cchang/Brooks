@@ -669,9 +669,11 @@ class App(object):
             # use the optimize flag on the subprocesses.
             exeName = sys.executable
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
-            if sys.flags.optimize:
-                if not self.DebugMode:
-                    exeArgs.append("-OO")
+            #if sys.flags.optimize:
+            #    if not self.DebugMode:
+            #        exeArgs.append("-OO")
+            if not self.DebugMode and sys.flags.optimize:
+                exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
                 launchPath = "%s" % (self.Executable,)
             else:
