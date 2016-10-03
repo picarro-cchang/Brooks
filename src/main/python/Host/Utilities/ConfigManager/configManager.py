@@ -10,6 +10,8 @@ import compiler
 import optparse
 import sys
 
+# Flag used to set the default view of the config file tree widget
+_areFilesMissing = False
 
 def evalStringLit(s):
     return compiler.parse(s,mode='eval').node.value
@@ -61,6 +63,7 @@ class ConfigNode(object):
         self.absPath = os.path.abspath(fileName)
         self.basePath,n = os.path.split(self.absPath)
         self.fileName = n
+        self.fileExists = True
         self.childRefs = []
         self.children = []
         self.parent = kwargs.get('parent',None)
@@ -250,6 +253,8 @@ class SupervisorConfigNode(ConfigNode):
         else: return DefIniConfigNode
 
 class ConfigManager(ConfigManagerGui):
+    global _areFilesMissing
+
     def __init__(self,*a,**k):
         ConfigManagerGui.__init__(self,*a,**k)
         # self.Bind(wx.EVT_TREE_ITEM_EXPANDED,self.onItemExpanded,self.treeCtrlFiles)
@@ -284,6 +289,19 @@ class ConfigManager(ConfigManagerGui):
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
         self.updateTimer.Start(milliseconds=2000)
+
+        # The tree widget starts out collapsed at the root node.
+        # Children are added to the internal data structure as the
+        # user clicks around, diving into child nodes.
+        # Tell the GUI to display the tree expanded so it will
+        # traverse the entire tree once through.
+        #
+        # If no files are missing, display the tree collapse to retain
+        # the usual behavior.
+        #
+        self.treeCtrlFiles.ExpandAll()
+        if not _areFilesMissing:
+            self.treeCtrlFiles.CollapseAll()
 
     def traverse(self, traverseroot, function):
         function(traverseroot)
@@ -352,6 +370,7 @@ class ConfigManager(ConfigManagerGui):
                 self.notebookEditorFileMtimes.append(os.stat(selNode.absPath).st_mtime)
             except:
                 print "Cannot find file"
+                _areFilesMissing = True
                 self.notebookEditorFileMtimes.append(None)
             finally:
                 if f: f.close()
@@ -359,6 +378,8 @@ class ConfigManager(ConfigManagerGui):
         self.notebookEditors.SetSelection(i)
         self.treeCtrlFiles.SetFocus()
 
+    # Construct the part of the tree widget.  As we go test if each file
+    # exists and display the missing files in bold text for easy identification.
     def addTreeNodes(self,parentItem):
         top = self.treeCtrlFiles.GetItemPyData(parentItem)
         for c in top.children:
@@ -369,6 +390,13 @@ class ConfigManager(ConfigManagerGui):
             self.treeNodesByFileAbsPath[c.absPath].append(node)
             self.treeCtrlFiles.SetItemPyData(node,c)
             self.treeCtrlFiles.SetItemHasChildren(node,bool(c.children))
+            try:
+                f = open(c.absPath,"r")
+                f.close()
+                self.treeCtrlFiles.SetItemBold(node,False)
+            except:
+                _areFilesMissing = True
+                self.treeCtrlFiles.SetItemBold(node,True)
 
     def onEditorSelected(self,evt):
         # Place absolute path name in status bar
@@ -778,7 +806,8 @@ if __name__ == "__main__":
     if fOpenFileDialog is True:
         dlg = wx.FileDialog(None,
                             "Select Supervisor Configuration File",
-                            "C:/Picarro/G2000/AppConfig/Config/Supervisor",
+                            #"C:/Picarro/G2000/AppConfig/Config/Supervisor",
+                            "/home/rsf/git/host/Config/AMADS/AppConfig/Config/Supervisor",
                             "",
                             "*.ini",
                             wx.OPEN)
