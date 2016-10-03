@@ -1,13 +1,21 @@
 import wx
 import re
 import os
-import subprocess
-
-# begin wxGlade: dependencies
+import sys
 import gettext
-# end wxGlade
 
-SUPERVISORLAUNCHER_PATH = r'C:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini'
+if os.name == 'posix' and sys.version_info[0] < 3:
+    import subprocess32 as subprocess
+else:
+    import subprocess
+
+#SUPERVISORLAUNCHER_PATH = r'C:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini'
+
+# Linux RSF
+DEV_DIR = r'/home/rsf/git/host/src/main/python/'
+SUPERVISORLAUNCHERINI_PATH = DEV_DIR + r'/AppConfig/Config/Utilities/SupervisorLauncher.ini'
+SUPERVISOR_PATH = r'/Host/Supervisor/'
+SUPERVISOREXE_PATH = 'Supervisor.py'
 
 class SupervisorModeDlg(wx.Dialog):
     def __init__(self, *args, **kwds):
@@ -22,10 +30,10 @@ class SupervisorModeDlg(wx.Dialog):
 
         self.Bind(wx.EVT_BUTTON, self.OnNextDlgClicked, self.btnNext)
         # end wxGlade
-        
-        if not os.path.exists(SUPERVISORLAUNCHER_PATH):
-            raise Exception("Config file for supervisorLauncher not found: '%s'" % SUPERVISORLAUNCHER_PATH)
-        with open(SUPERVISORLAUNCHER_PATH) as f:
+
+        if not os.path.exists(SUPERVISORLAUNCHERINI_PATH):
+            raise Exception("Config file for supervisorLauncher not found: '%s'" % SUPERVISORLAUNCHERINI_PATH)
+        with open(SUPERVISORLAUNCHERINI_PATH) as f:
             self.config = []
             self.selection = None
             content = f.read()
@@ -59,20 +67,35 @@ class SupervisorModeDlg(wx.Dialog):
         self.Centre()
         # end wxGlade
 
+#    def OnNextDlgClicked(self, event):
+#        index = self.choice_mode.GetCurrentSelection()
+#        ini = os.path.join(r"..\AppConfig\Config\Supervisor", self.config[index])
+#        os.chdir("HostExe")
+#        args = [r'Supervisor.exe', '--vi', r'..\rdReprocessor.ini', '-c', ini]
+#        subprocess.Popen(args)
+#        self.Destroy()
+
+    # Linux version, hardcoded for git
+    #
+
     def OnNextDlgClicked(self, event):
         index = self.choice_mode.GetCurrentSelection()
-        ini = os.path.join(r"..\AppConfig\Config\Supervisor", self.config[index])
-        os.chdir("HostExe")
-        args = [r'Supervisor.exe', '--vi', r'..\rdReprocessor.ini', '-c', ini]
-        subprocess.Popen(args)
-        self.Destroy()
+        ini = os.path.join(DEV_DIR + r"/AppConfig/Config/Supervisor", self.config[index])
+        os.chdir(DEV_DIR + SUPERVISOR_PATH)
+        rdReprocessorIni = '/home/rsf/git/host/src/main/python/Host/Utilities/VirtualAnalyzer/rdReprocessor.ini'
+        args = ['python','Supervisor.py', '--vi', rdReprocessorIni, '-c', ini]
+        termList = ['xterm','-hold','-T','Supervisor','-e']
+        print(termList + args)
+        #subprocess.Popen(termList + args)
+        #self.Destroy()
 
 # end of class SupervisorModeDlg
 if __name__ == "__main__":
     gettext.install("app") # replace with the appropriate catalog name
 
-    app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
+    # app = wx.PySimpleApp(0)
+    app = wx.App(False)
+    # wx.InitAllImageHandlers()
     SupervisorMode = SupervisorModeDlg(None, wx.ID_ANY, "")
     app.SetTopWindow(SupervisorMode)
     SupervisorMode.Show()

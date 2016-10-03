@@ -4,13 +4,15 @@
 # a packaged environment like Anaconda so that you have better
 # control over the package versions.
 PYTHON=$HOME/anaconda2/bin/python2.7
+OPT=-O
 
 # Define the top level of the AppConfig, InstrConfig, CommonConfig
 # directories for the desired analyzer type.
-CONFIGDIR=$HOME/git/host/src/main/python
+#CONFIGDIR=$HOME/git/host/src/main/python
+CONFIGDIR=$HOME/git/host/Config/AMADS
 
 # Top level directory for all *.py files
-PYDIR=$CONFIGDIR/Host
+PYDIR=$HOME/git/host/src/main/python/Host
 
 # In virtual analyzer mode, the Supervisor creates the rdReprocessor
 # in place of the Driver.  This ini tells the Supervisor how to
@@ -27,6 +29,6 @@ SUPINI=$CONFIGDIR/AppConfig/Config/Supervisor/supervisorEXE_AMADS_LCT.ini
 # files that have relative paths that assume the code is started in
 # that directory.
 cd $PYDIR/Supervisor
-$PYTHON $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
+$PYTHON $OPT $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
 #rpdb2 --debugee $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
 
