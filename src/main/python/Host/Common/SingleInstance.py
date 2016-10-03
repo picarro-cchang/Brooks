@@ -55,7 +55,8 @@ elif sys.platform == "linux2":
 
         def __del__(self):
             if not self.lasterror:
-                os.unlink(self.name)
+                if os.path.exists(self.name):
+                    os.unlink(self.name)                
 
 if __name__ == "__main__":
     myapp = SingleInstance("Example")
