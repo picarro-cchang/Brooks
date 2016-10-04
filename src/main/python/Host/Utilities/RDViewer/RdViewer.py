@@ -15,6 +15,7 @@ from scipy.signal import lfilter, butter
 
 import wx
 import matplotlib
+matplotlib.use('WXAgg')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
@@ -37,12 +38,14 @@ except:
 import threading
 from numpy import *
 from tables import *
-from enthought.traits.api import *
-from enthought.traits.api import File as EnthoughtFile
-from enthought.traits.ui.api import *
-from enthought.traits.ui.menu import *
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.table_column import *
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'wx'
+from traits.api import *
+from traits.api import File as EnthoughtFile
+from traitsui.api import *
+from traitsui.menu import *
+from traitsui.wx.editor import Editor
+from traitsui.table_column import *
 from traceback import format_exc
 from numpy.linalg import solve
 from Host.Utilities.RDViewer.FigureInteraction import FigureInteraction
