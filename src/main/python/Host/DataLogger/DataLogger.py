@@ -265,7 +265,10 @@ class DataLog(object):
         self.PrintTimeInHalfSecond = ConfigParser.getboolean(self.LogName, "printTimeInHalfSecond", False)
         self.WriteEpochTime = ConfigParser.getboolean(self.LogName, "writeEpochTime", True)
         self.WriteJulianDays = ConfigParser.getboolean(self.LogName, "writeJulianDays", True)
-        relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        if sys.platform == "win32":
+            relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        else:
+            relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
         self.srcDir = os.path.join(basePath, relDir)
         if self.liveArchive and self.useHdf5:
             raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
