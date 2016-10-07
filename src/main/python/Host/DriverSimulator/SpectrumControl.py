@@ -43,7 +43,7 @@ class SpectrumControl(object):
     laser4CoarseCurrent = prop_das(interface.LASER4_MANUAL_COARSE_CURRENT_REGISTER)
     laser4Temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
     laser4TempSetpoint = prop_das(interface.LASER4_TEMP_CNTRL_SETPOINT_REGISTER)
-    laserSelect = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W) 
+    laserSelect = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W)
     laserShutdownEnabled = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, interface.INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W)
     lockEnabled = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_OPTIONS, interface.RDMAN_OPTIONS_LOCK_ENABLE_B, interface.RDMAN_OPTIONS_LOCK_ENABLE_W)
 
@@ -248,6 +248,12 @@ class SpectrumControl(object):
         # TODO: Add pressure correction
         thetaC = vLaserParams["tempSensitivity"] * (self.rdParams.etalonTemperature - vLaserParams["calTemp"]) + math.atan2(arctanvar1,arctanvar2)
 
+        # Model the PZT
+        cavityFsr = 0.0206
+        pztThrow = 1.5*1.5e-4  # Maximum PZT motion in cm
+        alpha = wavenumber / cavityFsr
+        dz = 1.0 / (2 * cavityFsr * alpha * pztThrow)  # Separation between resonances in normalized PZT units
+        z = dz * (math.ceil(alpha) - alpha)  # Smallest non-negative normalized PZT position for resonance
         loss = 1.0 + 0.8 / (1 + ((wavenumber - 6237.408)/0.02) ** 2)
         rdResult = interface.RingdownEntryType()
         rdResult.timestamp = int(self.virtualTime)
@@ -256,8 +262,8 @@ class SpectrumControl(object):
         rdResult.correctedAbsorbance = loss  # ppm/cm
         rdResult.status = self.rdParams.status
         rdResult.count = self.rdParams.countAndSubschemeId >> 16
-        rdResult.tunerValue = 32768
-        rdResult.pztValue = 32768
+        rdResult.tunerValue = int(65536.0 * z)
+        rdResult.pztValue = int(65536.0 * z)
         rdResult.laserUsed = self.rdParams.injectionSettings & (interface.INJECTION_SETTINGS_virtualLaserMask | interface.INJECTION_SETTINGS_actualLaserMask)
         rdResult.ringdownThreshold = self.rdParams.ringdownThreshold
         rdResult.subschemeId = self.rdParams.countAndSubschemeId & 0xFFFF
@@ -295,7 +301,7 @@ class SpectrumControl(object):
         elif self.mode == interface.SPECT_CNTRL_ContinuousManualTempMode:
             self.fpgaPztOffset = 0
         else:
-            if (self.useMemo and self.active == self.activeMemo and self.row == self.rowMemo): 
+            if (self.useMemo and self.active == self.activeMemo and self.row == self.rowMemo):
                 return
             scheme = self.sim.driver.schemeTables[self.active]
             schemeRow = scheme.rows[self.row]
@@ -312,13 +318,13 @@ class SpectrumControl(object):
                                 self.schemeOffsetVL6,
                                 self.schemeOffsetVL7,
                                 self.schemeOffsetVL8][self.virtLaser]
-                if aLaserNum == 1: 
+                if aLaserNum == 1:
                     self.laser1TempSetpoint = laserTemp + schemeOffset
-                elif aLaserNum == 2: 
+                elif aLaserNum == 2:
                     self.laser2TempSetpoint = laserTemp + schemeOffset
-                elif aLaserNum == 3: 
+                elif aLaserNum == 3:
                     self.laser3TempSetpoint = laserTemp + schemeOffset
-                elif aLaserNum == 4: 
+                elif aLaserNum == 4:
                     self.laser4TempSetpoint = laserTemp + schemeOffset
             # The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
             #  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
@@ -398,8 +404,8 @@ class SpectrumControl(object):
         # TODO: Add pressure dependence if needed
         # Compute ratio multipliers and ratio centers for laser locking
         minScale = min(vLaserParams["ratio1Scale"], vLaserParams["ratio2Scale"])
-        self.ratio1Multiplier = -minScale * math.sin(theta + vLaserParams["phase"]) / vLaserParams["ratio1Scale"] 
-        self.ratio2Multiplier = minScale * math.cos(theta) / vLaserParams["ratio2Scale"] 
+        self.ratio1Multiplier = -minScale * math.sin(theta + vLaserParams["phase"]) / vLaserParams["ratio1Scale"]
+        self.ratio2Multiplier = minScale * math.cos(theta) / vLaserParams["ratio2Scale"]
         self.ratio1Center = vLaserParams["ratio1Center"]
         self.ratio2Center = vLaserParams["ratio2Center"]
 
