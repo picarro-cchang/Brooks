@@ -53,8 +53,8 @@ if sys.version_info[:2] == (2, 7):
     def dependencies_for_myprogram():
         from scipy.sparse.csgraph import _validation
 
-import fitutils
-from cluster_analyzer import find_clusters
+from Host.Fitter import fitutils
+from Host.Fitter.cluster_analyzer import find_clusters
 
 # import wingdbstub
 
