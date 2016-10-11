@@ -26,6 +26,7 @@ class SpectrumControl(object):
     cavityPressure = prop_das(interface.CAVITY_PRESSURE_REGISTER)
     dasStatus = prop_das(interface.DAS_STATUS_REGISTER)
     defaultThreshold = prop_das(interface.SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER)
+    ditherTimeout = prop_das(interface.SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER)
     dwell = prop_das(interface.SPECT_CNTRL_DWELL_COUNT_REGISTER)
     etalonTemperature = prop_das(interface.ETALON_TEMPERATURE_REGISTER)
     fpgaPztOffset = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_PZT_OFFSET)
@@ -46,9 +47,12 @@ class SpectrumControl(object):
     laserSelect = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W)
     laserShutdownEnabled = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, interface.INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W)
     lockEnabled = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_OPTIONS, interface.RDMAN_OPTIONS_LOCK_ENABLE_B, interface.RDMAN_OPTIONS_LOCK_ENABLE_W)
+    rampTimeout = prop_das(interface.SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER)
 
     mode = prop_das(interface.SPECT_CNTRL_MODE_REGISTER)
     next = prop_das(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
+    pztIncrPerFsr = prop_das(interface.PZT_INCR_PER_CAVITY_FSR)
+    pztOffsetUpdateFactor = prop_das(interface.PZT_OFFSET_UPDATE_FACTOR) 
     pztOffsetVL1 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER1)
     pztOffsetVL2 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER2)
     pztOffsetVL3 = prop_das(interface.PZT_OFFSET_VIRTUAL_LASER3)
@@ -72,6 +76,7 @@ class SpectrumControl(object):
     state = prop_das(interface.SPECT_CNTRL_STATE_REGISTER)
     virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
 
+    allowDither = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_OPTIONS, interface.RDMAN_OPTIONS_DITHER_ENABLE_B, interface.RDMAN_OPTIONS_DITHER_ENABLE_W)
     eta1_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA1_OFFSET)
     ref1_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF1_OFFSET)
     eta2_offset = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_ETA2_OFFSET)
@@ -195,11 +200,10 @@ class SpectrumControl(object):
         else:
             while self.virtualTime < now:
                 self.setupNextRdParams()
-                self.doRingdown()
+                self.virtualTime = self.doRingdown()
 
     def doRingdown(self):
         self.advanceDwellCounter()
-        self.virtualTime += 10  # ms between ringdowns
         #
         # We need to find the laser wavenumber range that can be achieved on the basis
         #  of the laser temperature, laser current and the specified
@@ -223,7 +227,7 @@ class SpectrumControl(object):
         maxAngle = wlmModel.getWlmAngle(maxWavenumber, etalonTemp, self.ambientPressure)
         # Need to determine if the wlmAngleSetpoint is within the angle range. Find wavenumber
         #  corresponding to the target angle
-        print "MinAngle %.3f, MaxAngle %.3f, AngleDiff %.3f, TargetAngle %.3f" % (minAngle, maxAngle, maxAngle-minAngle, self.wlmAngleSetpoint)
+        # print "MinAngle %.3f, MaxAngle %.3f, AngleDiff %.3f, TargetAngle %.3f" % (minAngle, maxAngle, maxAngle-minAngle, self.wlmAngleSetpoint)
         #
         fine = 32768
         for _ in range(8):
@@ -253,18 +257,40 @@ class SpectrumControl(object):
         pztThrow = 1.5*1.5e-4  # Maximum PZT motion in cm
         alpha = wavenumber / cavityFsr
         dz = 1.0 / (2 * cavityFsr * alpha * pztThrow)  # Separation between resonances in normalized PZT units
-        z = dz * (math.ceil(alpha) - alpha)  # Smallest non-negative normalized PZT position for resonance
+        z0 = dz * (math.ceil(alpha) - alpha)  # Smallest non-negative normalized PZT position for resonance
+        z = z0
+        # Calculate allowed tuner values that will lead to ringdowns
+        allowedValues = []
+        while z < 1.0:
+            allowedValues.append(int(65536*z - self.fpgaPztOffset) % 65536)
+            z += dz
+        #
+        # Find when the ringdown will occur
+        result = self.sim.tunerSimulator.getNextAt(allowedValues, ["up"])
+        if result is None:
+            self.sim.tunerSimulator.switchToRampMode()
+            print "Allowed values", allowedValues
+            print "Dither timeout"
+            return self.virtualTime + 0.001 * self.ditherTimeout
+        else:
+            tunerValue, slope, ts = result
+            self.sim.tunerSimulator.value = tunerValue
+            self.sim.tunerSimulator.slope = slope
+            self.sim.tunerSimulator.timestamp = ts
+
         loss = 1.0 + 0.8 / (1 + ((wavenumber - 6237.408)/0.02) ** 2)
         rdResult = interface.RingdownEntryType()
-        rdResult.timestamp = int(self.virtualTime)
+        rdResult.timestamp = int(ts)
         rdResult.wlmAngle = thetaC
         rdResult.uncorrectedAbsorbance = loss  # ppm/cm
         rdResult.correctedAbsorbance = loss  # ppm/cm
         rdResult.status = self.rdParams.status
         rdResult.count = self.rdParams.countAndSubschemeId >> 16
-        rdResult.tunerValue = int(65536.0 * z)
-        rdResult.pztValue = int(65536.0 * z)
-        rdResult.laserUsed = self.rdParams.injectionSettings & (interface.INJECTION_SETTINGS_virtualLaserMask | interface.INJECTION_SETTINGS_actualLaserMask)
+        rdResult.tunerValue = tunerValue
+        rdResult.pztValue = (tunerValue + self.fpgaPztOffset) % 65536
+        rdResult.laserUsed = self.rdParams.injectionSettings & (
+            interface.INJECTION_SETTINGS_virtualLaserMask | 
+            interface.INJECTION_SETTINGS_actualLaserMask)
         rdResult.ringdownThreshold = self.rdParams.ringdownThreshold
         rdResult.subschemeId = self.rdParams.countAndSubschemeId & 0xFFFF
         rdResult.schemeVersionAndTable = self.rdParams.schemeTableAndRow >> 16
@@ -280,8 +306,43 @@ class SpectrumControl(object):
         rdResult.etalonTemperature = self.rdParams.etalonTemperature
         rdResult.cavityPressure = self.rdParams.cavityPressure
         self.sim.ringdown_queue.append(rdResult)
-        print "Performing ringdown"
-        return True
+        # Check for transition to dither mode
+        if self.allowDither:
+            self.sim.tunerSimulator.switchToDitherMode(tunerValue)
+        # Update the PZT centering if requested
+        if (self.analyzerTuningMode == interface.ANALYZER_TUNING_CavityLengthTuningMode and
+            0 != (rdResult.subschemeId & interface.SUBSCHEME_ID_RecenterMask)):
+            pztOffset = [self.pztOffsetVL1,
+                         self.pztOffsetVL2,
+                         self.pztOffsetVL3,
+                         self.pztOffsetVL4,
+                         self.pztOffsetVL5,
+                         self.pztOffsetVL6,
+                         self.pztOffsetVL7,
+                         self.pztOffsetVL8][self.virtLaser]
+            pztOffset += self.pztOffsetUpdateFactor * (tunerValue - 32768)
+            if pztOffset > 0.6 * self.pztIncrPerFsr:
+                pztOffset -= self.pztIncrPerFsr
+            elif pztOffset < -0.6 * self.pztIncrPerFsr:
+                pztOffset += self.pztIncrPerFsr
+            # print "pztOffset [VL %d] = %d" % (self.virtLaser+1, pztOffset)
+            if self.virtLaser == 0:
+                self.pztOffsetVL1 = pztOffset
+            elif self.virtLaser == 1:
+                self.pztOffsetVL2 = pztOffset
+            elif self.virtLaser == 2:
+                self.pztOffsetVL3 = pztOffset
+            elif self.virtLaser == 3:
+                self.pztOffsetVL4 = pztOffset
+            elif self.virtLaser == 4:
+                self.pztOffsetVL5 = pztOffset
+            elif self.virtLaser == 5:
+                self.pztOffsetVL6 = pztOffset
+            elif self.virtLaser == 6:
+                self.pztOffsetVL7 = pztOffset
+            elif self.virtLaser == 7:
+                self.pztOffsetVL8 = pztOffset
+        return ts
 
     def setupLaserTemperatureAndPztOffset(self, useMemo):
         # The memo is used to bypass the setup if the scheme table and row have
@@ -341,7 +402,7 @@ class SpectrumControl(object):
             self.rowMemo = self.row
 
     def setupNextRdParams(self):
-        print "Scheme %d: iter %d, row %d, dwell %d" % (self.active, self.iter, self.row, self.dwell)
+        # print "Scheme %d: iter %d, row %d, dwell %d" % (self.active, self.iter, self.row, self.dwell)
 
         while True:
             #  This loop allows for zero-dwell rows in a scheme which just set the temperature

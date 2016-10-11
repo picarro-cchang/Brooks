@@ -302,7 +302,7 @@ class LaserSimulator(Simulator):
         return self.currentEnable and self.laserEnable
 
     def step(self):
-        # Note that we can only call tecToTemp once per step, since this 
+        # Note that we can only call tecToTemp once per step, since this
         #  advances the thermal model
         self.nextTemp = self.thermalModel.tecToTemp(self.tec)
         self.nextThermRes = self.thermalModel.tempToResistance(self.nextTemp)
@@ -378,6 +378,8 @@ class TunerSimulator(Simulator):
     analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
     virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
 
+    slopeUp = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SLOPE_UP)
+    slopeDown = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SLOPE_DOWN)
     sweepLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_LOW)
     sweepHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_HIGH)
     windowLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_LOW)
@@ -388,12 +390,16 @@ class TunerSimulator(Simulator):
     laserLockerTuningOffsetSelect = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_CS, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_B, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_W)
     directTune = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_OPTIONS, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_B, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_W)
     tunePzt = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_CS, interface.TWGEN_CS_TUNE_PZT_B, interface.TWGEN_CS_TUNE_PZT_W)
+    fpgaPztOffset = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_PZT_OFFSET)
 
     def __init__(self, sim):
         self.sim = sim
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.spectrumControl = sim.spectrumControl
+        self.timestamp = sim.getDasTimestamp()
+        self.slope = "up"  # or "down"
+        self.value = (self.windowLow + self.windowHigh) // 2
 
     def switchToRampMode(self):
         self.sweepLow = self.sweepRampLow
@@ -406,16 +412,16 @@ class TunerSimulator(Simulator):
     def switchToDitherMode(self, center):
         # Switch to dither mode centered about the given value, if this is possible. Otherwise
         #  go to ramp mode in the hope that a ringdown will then occur.
-        sweepLow = int(center -  self.sweepDitherLowOffset) & 0xFFFF
-        sweepHigh = int(center +  self.sweepDitherHighOffset) & 0xFFFF
-        windowLow = int(center -  self.windowDitherLowOffset) & 0xFFFF
-        windowHigh = int(center +  self.windowDitherHighOffset) & 0xFFFF
+        sweepLow = int(center - self.sweepDitherLowOffset) & 0xFFFF
+        sweepHigh = int(center + self.sweepDitherHighOffset) & 0xFFFF
+        windowLow = int(center - self.windowDitherLowOffset) & 0xFFFF
+        windowHigh = int(center + self.windowDitherHighOffset) & 0xFFFF
         if windowHigh > sweepHigh:
             windowHigh = sweepHigh
         if windowLow < sweepLow:
             windowLow = sweepLow
-        if sweeepHigh > self.sweepRampHigh or sweepLow < self.sweepRampLow:
-            self.switchToDitherMode()
+        if sweepHigh > self.sweepRampHigh or sweepLow < self.sweepRampLow:
+            self.switchToRampMode()
         else:
             self.sweepLow = sweepLow
             self.sweepHigh = sweepHigh
@@ -438,3 +444,115 @@ class TunerSimulator(Simulator):
         self.laserLockerTuningOffsetSelect = 1  # Use tuner
         self.directTune = 1  # Use tuner for laser current control
         self.tunePzt = 0  # Disconnect PZT from tuner
+
+    def valueChange(self, slope, timeMs):
+        """Find change in tuner value after `timeMs` ms at the given `slope`"""
+        # Tuner accumulator has 9 extra bits of precision (512 times superresolution)
+        # Each step takes 0.01ms
+        return slope * timeMs * 100.0 / 512
+
+    def timeRequired(self, change, slope):
+        """Find time required (in ms) to change in tuner value by `change` at
+         the given `slope`"""
+        # Tuner accumulator has 9 extra bits of precision (512 times superresolution)
+        # Each step takes 0.01ms
+        return change * 512 * 0.01 / slope
+
+    def getStateAt(self, ts):
+        """Get tuner value and slope at the specified timestamp `ts` in ms
+            Note that the value of ts may be non-integral
+        """
+        sweep = self.sweepHigh - self.sweepLow
+        sweepUpMs = self.timeRequired(sweep, self.slopeUp)
+        sweepDownMs = self.timeRequired(sweep, self.slopeDown)
+        periodMs = sweepUpMs + sweepDownMs
+        #
+        # Calculate the interval to the time requested modulo the period of the tuner
+        #  waveform, giving a remainder
+        #
+        durationMs = ts - self.timestamp
+        remainderMs = durationMs % periodMs
+        if self.slope == "up":
+            #
+            #  If we are currently on the up slope, we hit sweepHigh after hitHighMs and
+            #      sweepLow after hitHighMs + sweepDownMs.
+            #
+            #  ______________ sweepHigh
+            #     /\
+            #       \  /
+            #  ______\/______ sweepLow
+            #
+            hitHighMs = self.timeRequired(self.sweepHigh - self.value, self.slopeUp)
+            if remainderMs < hitHighMs:
+                return self.value + self.valueChange(self.slopeUp, remainderMs), "up"
+            elif remainderMs < hitHighMs + sweepDownMs:
+                return self.sweepHigh - self.valueChange(self.slopeDown, remainderMs - hitHighMs), "down"
+            else:
+                return self.sweepLow + self.valueChange(self.slopeUp, remainderMs - hitHighMs - sweepDownMs), "up"
+        else:
+            #
+            #  If we are currently on the down slope, we hit sweepLow after hitLowMs and
+            #      sweepHigh after hitLowMs + sweepUpMs.
+            #
+            #  ______________ sweepHigh
+            #       /\
+            #      /  \
+            #  __\/__________ sweepLow
+            #
+            hitLowMs = self.timeRequired(self.value - self.sweepLow, self.slopeDown)
+            if remainderMs < hitLowMs:
+                return self.value - self.valueChange(self.slopeDown, remainderMs), "down"
+            elif remainderMs < hitLowMs + sweepUpMs:
+                return self.sweepLow + self.valueChange(self.slopeUp, remainderMs - hitLowMs), "up"
+            else:
+                return self.sweepHigh - self.valueChange(self.slopeDown, remainderMs - hitLowMs - sweepUpMs), "down"
+
+    def getNextAt(self, allowedValues, allowedSlopes, ts=None):
+        """Find the timestamp (milliseconds) after ts (or the current time) when the tuner is next at one of the
+            values in `allowedValues` with a slope in `allowedSlopes`. Return the timestamp, value and slope
+            or None if the tuner will never reach this.
+        """
+        # Remove all values not within the window
+        allowedValues = sorted([value for value in allowedValues if self.windowLow <= value <= self.windowHigh])
+        if allowedValues and allowedSlopes:
+            # Start the evolution from `value` and `slope` at the specified timestamp `ts`
+            if ts is None:
+                ts = self.timestamp
+                slope = self.slope
+                value = self.value
+            else:
+                value, slope = self.getStateAt(ts)
+            #
+            # Find first allowed value above and below the current value
+            nextUp = None
+            for av in allowedValues:
+                if av > value:
+                    nextUp = av
+                    break
+            nextDown = None
+            for av in reversed(allowedValues):
+                if av < value:
+                    nextDown = av
+                    break
+            #
+            sweep = self.sweepHigh - self.sweepLow
+            if slope == "up":
+                if "up" in allowedSlopes and nextUp is not None:
+                    return nextUp, "up", ts + self.timeRequired(nextUp - value, self.slopeUp)
+                hitHighMs = self.timeRequired(self.sweepHigh - value, self.slopeUp)
+                if "down" in allowedSlopes:
+                    return allowedValues[-1], "down", ts + hitHighMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
+                elif "up" in allowedSlopes:
+                    sweepDownMs = self.timeRequired(sweep, self.slopeDown)
+                    return allowedValues[0], "up", ts + hitHighMs + sweepDownMs + self.timeRequired(allowedValues[0] - self.sweepLow, self.slopeUp)
+            elif slope == "down":
+                if "down" in allowedSlopes and nextDown is not None:
+                    return nextDown, "down", ts + self.timeRequired(value - nextDown, self.slopeDown)
+                hitLowMs = self.timeRequired(value - self.sweepLow, self.slopeDown)
+                if "up" in allowedSlopes:
+                    return allowedValues[0], "up", ts + hitLowMs + self.timeRequired(allowedValues[0] - self.sweepLow, self.slopeUp)
+                elif "down" in allowedSlopes:
+                    sweepUpMs = self.timeRequired(sweep, self.slopeUp)
+                    return allowedValues[-1], "down", ts + hitLowMs + sweepUpMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
+        print "New allowed values", allowedValues, "window", self.windowLow, self.windowHigh
+        return None

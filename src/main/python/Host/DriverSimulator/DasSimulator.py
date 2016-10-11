@@ -81,6 +81,11 @@ class DasSimulator(object):
         self.dsp_message_queue = deque(maxlen=interface.NUM_MESSAGES)
         self.sensor_queue = deque(maxlen=interface.NUM_SENSOR_ENTRIES)
         self.ringdown_queue = deque(maxlen=interface.NUM_RINGDOWN_ENTRIES)
+        #
+        self.simulators = set()
+        self.initDasRegisters()
+        self.ts_offset = 0  # Timestamp offset in ms
+        self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
         # shared_mem is an array of 32-bit unsigned integers
         self.shared_mem = interface.SHAREDMEM_SIZE * [0]
         self.hostToDspSender = DasSimulator.HostToDspSender(self)
@@ -113,12 +118,6 @@ class DasSimulator(object):
         # self.pztSimulator = PztSimulator(self)
         # self.laserLockerSimulator = LaserLockerSimulator(self)
         # self.cavitySimulator = CavitySimulator(self)
-        #
-        self.simulators = set()
-        #
-        self.initDasRegisters()
-        self.ts_offset = 0  # Timestamp offset in ms
-        self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
 
     def addSimulator(self, simulator):
         self.simulators.add(simulator)
