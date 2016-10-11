@@ -5,7 +5,9 @@ agnostic API and the utility figures out the right thing to do
 based upon its environment.
 """
 
-import os, sys
+import os
+import sys
+import signal
 import re
 
 def fixpath(path, operatingsystem = sys.platform):
@@ -38,7 +40,6 @@ def fixpath(path, operatingsystem = sys.platform):
 		if path.startswith("C:"):
 			path = path[2:]
 
-	
 	# Make posix path work on Windows.  If the path doesn't
 	# start with ~ or .. we assume an absolute path on C:
 	#
@@ -73,6 +74,61 @@ def __path_test():
 	print("Windows in:", windowspath, "Unix out:", newpath)
 
 	return
+
+# Notify the Supervisor of a catastrophic failure.  This can be used as a backup
+# to RPC. This code can send Unix user defined signals SIGUSR1 or SIGUSR2.
+#
+# In the subprocess put signalFlare() at any critical points of the code such as
+# where its RPC daemon is started, ini files are read, hardware resources are
+# requested, directories and files are created, etc.  In other words, anywhere there
+# is a failure immediate attention is mandatory.
+#
+# In the Supervisor add a signal handler after Supervisor's __init__ has finished.
+#
+#     signal.signal(signal.SIGUSR1, self.sigint_handler)
+#     writeSupervisorPidFile()
+#
+#     def sigint_handler(self. signum, frame):
+#         if signum == signal.SIGUSR1:
+#             ...take emergency action...
+#         if signum == signal.SIGUSR2:
+#             ...take other actions...
+#
+#
+# writeSupervisorPidFile() saves the current Supervisor PID to a file so that any
+# subprocess can send a signal to the right destination.  The default action is to
+# write the PID to ~/supervisor.pid.
+#
+# writeSupervisorPidFile() doesn't grant an exclusive lock so if Supervisor is
+# accidentally started twice the second instance will overwrite the PID of the first.
+# 
+# writeSupervisorPidFile() doesn't delete the file when Supervisor is gracefully or
+# abruptly killed.
+#
+def signalFlare(userSignal = 1):
+    supervisorPID = getSupervisorPid()
+    if userSignal == 1:
+        print("Sending SIGUSR1 to Supervisor:", supervisorPID)
+        os.kill(supervisorPID, signal.SIGUSR1)
+    else:
+        print("Sending SIGUSR2 to Supervisor:", supervisorPID)
+        os.kill(supervisorPID, signal.SIGUSR2)
+
+def writeSupervisorPidFile(pidFileName = 'supervisor.pid', pidFilePath = None):
+    if pidFilePath == None:
+        pidFilePath = os.path.expanduser('~')
+    pid = str(os.getpid())
+    f = open(os.path.join(pidFilePath, pidFileName), 'w')
+    f.write(pid)
+    f.close()
+
+def getSupervisorPid(pidFileName = 'supervisor.pid', pidFilePath = None):
+    if pidFilePath == None:
+        pidFilePath = os.path.expanduser('~')
+    f = open(os.path.join(pidFilePath, pidFileName), 'r')
+    pidStr = f.readline()
+    f.close()
+    return int(pidStr)
 
 
 if __name__ == '__main__':
