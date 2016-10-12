@@ -397,7 +397,7 @@ class TunerSimulator(Simulator):
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.spectrumControl = sim.spectrumControl
-        self.timestamp = sim.getDasTimestamp()
+        self.timestamp = None
         self.slope = "up"  # or "down"
         self.value = (self.windowLow + self.windowHigh) // 2
 
@@ -554,5 +554,4 @@ class TunerSimulator(Simulator):
                 elif "down" in allowedSlopes:
                     sweepUpMs = self.timeRequired(sweep, self.slopeUp)
                     return allowedValues[-1], "down", ts + hitLowMs + sweepUpMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
-        print "New allowed values", allowedValues, "window", self.windowLow, self.windowHigh
         return None

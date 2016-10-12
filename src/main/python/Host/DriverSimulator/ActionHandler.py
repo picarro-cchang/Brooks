@@ -205,7 +205,7 @@ class ActionHandler(object):
         return interface.STATUS_OK
 
     def setTimestamp(self, params, env, when, command):
-        # Timestamp is an integer number of ms 
+        # Timestamp is an integer number of ms
         if 2 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         ts = params[0] + (params[1] << 32)
@@ -245,9 +245,9 @@ class ActionHandler(object):
         for simulator in self.sim.simulators:
             simulator.step()
         self.sim.injectionSimulator.step()
-        # The following collects ringdowns in virtual time and is called at the 
+        # The following collects ringdowns in virtual time and is called at the
         #  of end of a timeslice
-        self.sim.spectrumControl.collectSpectrum()
+        self.sim.spectrumControl.collectSpectrum(when)
         return interface.STATUS_OK
 
     def streamFpgaRegisterAsFloat(self, params, env, when, command):
@@ -342,18 +342,18 @@ class ActionHandler(object):
 
     def updateWlmsimLaserTemp(self, params, env, when, command):
         # In the simulator, this action has been hijacked to also compute the
-        #  wavelength monitor outputs and the ratios based on the temperature 
+        #  wavelength monitor outputs and the ratios based on the temperature
         #  and current of the selected laser
         laserNum = self.sim.readBitsFPGA(
             interface.FPGA_INJECT + interface.INJECT_CONTROL,
-            interface.INJECT_CONTROL_LASER_SELECT_B, 
+            interface.INJECT_CONTROL_LASER_SELECT_B,
             interface.INJECT_CONTROL_LASER_SELECT_W) + 1
         laserTemp = self.sim.rdDasReg("LASER%d_TEMPERATURE_REGISTER" % laserNum)
         laserCurrent = 0.00036 * (10 * self.sim.rdFPGA(
-            "FPGA_INJECT", 
-            "INJECT_LASER%d_COARSE_CURRENT" % laserNum) + 
+            "FPGA_INJECT",
+            "INJECT_LASER%d_COARSE_CURRENT" % laserNum) +
             2 * self.sim.rdFPGA(
-            "FPGA_INJECT", 
+            "FPGA_INJECT",
             "INJECT_LASER%d_FINE_CURRENT" % laserNum))
         return interface.STATUS_OK
 
