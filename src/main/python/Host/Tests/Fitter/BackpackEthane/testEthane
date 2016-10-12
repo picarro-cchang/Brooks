@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+python -O ../../../Fitter/Fitter.py -v -c AppConfig/Config/Fitter/Fitter_c2h6+ch4_FSR.ini
