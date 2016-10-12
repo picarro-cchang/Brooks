@@ -270,6 +270,16 @@ class DataLog(object):
         else:
             relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
         self.srcDir = os.path.join(basePath, relDir)
+
+        # Handle Linux if we want the log in the default user home directory.
+        # If in the ini we have 'srcfolder = ~/Picarro/Log', expand the '~' to
+        # the home directory of the user running the code.
+        # If the directories don't exist they are created in _Create().
+        #
+        if relDir.startswith("~"):
+            relDir = os.path.expanduser(relDir)
+            self.srcDir = relDir
+
         if self.liveArchive and self.useHdf5:
             raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
 
