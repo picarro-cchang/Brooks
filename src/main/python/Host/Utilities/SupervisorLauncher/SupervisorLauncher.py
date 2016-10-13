@@ -13,7 +13,6 @@ import subprocess
 import wx
 import time
 import threading
-import win32gui
 import shutil
 from configobj import ConfigObj
 from Host.Utilities.SupervisorLauncher.SupervisorLauncherFrame import (SupervisorLauncherFrame,
@@ -52,7 +51,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         try:
             self.launchType = self.co["Main"]["Type"].strip().lower()
         except:
-            self.launchType = "exe"
+            self.launchType = "exe" if sys.platform == "win32" else "py"
         self.notificationsFrame = None
         self.startSupervisorThread = None
         self.delay = delay
@@ -67,8 +66,8 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         except:
             self.consoleMode = 2
         apacheDir = self.co["Main"]["APACHEDir"].strip()
-        self.supervisorIniDir = os.path.join(apacheDir, r"AppConfig\Config\Supervisor")
-        quickGuiIniFile = os.path.join(apacheDir, r"AppConfig\Config\QuickGui\QuickGui.ini")
+        self.supervisorIniDir = os.path.join(apacheDir, r"AppConfig/Config/Supervisor")
+        quickGuiIniFile = os.path.join(apacheDir, r"AppConfig/Config/QuickGui/QuickGui.ini")
         try:
             hostDir = self.co["Main"]["HostDir"].strip()
         except:
@@ -161,12 +160,13 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     restart = (d.ShowModal() == wx.ID_YES)
                     d.Destroy()
                 if restart:
-                    # Kill the startup splash screen
-                    os.system(r'taskkill.exe /IM HostStartup.exe /F')
-                    # Kill QuickGui if it isn't under Supervisor's supervision
-                    os.system(r'taskkill.exe /IM QuickGui.exe /F')
-                    # Kill Controller if it isn't under Supervisor's supervision
-                    os.system(r'taskkill.exe /IM Controller.exe /F')
+                    killList = ["HostStartup", "QuickGui", "Controller"]
+                    for proc in psutil.process_iter():
+                        cmd = " ".join(proc.cmdline())
+                        for kp in killList:
+                            if kp in cmd:
+                                proc.kill()
+                                break
                     if self.killAll:
                         CRDS_Supervisor.TerminateApplications(False, True)
                     else:
@@ -178,7 +178,14 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     for k in range(5):
                         p = CRDS_Supervisor.CmdFIFO.GetProcessID()
                         if p == pid: time.sleep(1.0)
-                    os.system(r'taskkill /F /PID %d' % pid)
+                    if sys.platform == "win32":
+                        os.system(r'taskkill /F /PID %d' % pid)
+                    else:
+                        try:
+                            proc = psutil.Process(pid)
+                            proc.kill()
+                        except:
+                            pass
                 except:
                     time.sleep(2.0)
                     pass
@@ -188,7 +195,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         except:
             pass
 
-        if (not self.forcedLaunch) and (self.launchType == "exe"):
+        if (not self.forcedLaunch): #and (self.launchType == "exe"):
             try:
                 shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
                 startupIni = ConfigObj(self.startupSupervisorIni, list_values=False)
@@ -222,8 +229,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         #         break
 
         if self.launchType != "exe":
-            info = subprocess.STARTUPINFO()
-            proc = subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
+            if sys.platform == "win32":
+                info = subprocess.STARTUPINFO()
+                proc = subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
+            elif sys.platform == "linux2":
+                cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.py","-c",self.supervisorIni]
+                proc = subprocess.Popen(cmd)
         else:
             backupSupervisorRunning = False
             for loops in range(5):
@@ -340,19 +351,21 @@ if __name__ == "__main__":
     supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
 
     if supervisorLauncherApp.alreadyrunning() and not (autoLaunch or modeSpecified!=None):
-        try:
-            handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
-            win32gui.SetForegroundWindow(handle)
-        except:
-            pass
+        if sys.platform == "win32":
+            import win32gui
+            try:
+                handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
+                win32gui.SetForegroundWindow(handle)
+            except:
+                pass
     else:
-        try:
-            handle = win32gui.FindWindowEx(0, 0, None, "Picarro Mode Switcher")
-            win32gui.CloseWindow(handle)
-        except:
-            pass
-        app = wx.PySimpleApp()
-        wx.InitAllImageHandlers()
+        myPid = os.getpid()
+        for proc in psutil.process_iter():
+            if "SupervisorLauncher" in " ".join(proc.cmdline()) and (proc.pid != myPid):
+                proc.kill()
+                break
+
+        app = wx.App(False)
         frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "", mode=modeSpecified)
         if not autoLaunch:
             frame.initMode()

@@ -832,6 +832,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
         if not DasConfigure().i2cConfig[whichEeprom]:
             raise ValueError("%s is not available" % whichEeprom)
         nBytes, = struct.unpack("=I","".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress,4)]))
+        if nBytes < 0 or nBytes > 32768:
+            raise ValueError("Cannot read invalid object from EEPROM.")
         return (cPickle.loads("".join([chr(c) for c in self.rdEeprom(whichEeprom,startAddress+4,nBytes)])),
                 startAddress + 4*((nBytes+3)//4))
 
@@ -1318,6 +1320,12 @@ class Driver(SharedTypes.Singleton):
             Log("Starting main driver loop", Level=1)
             maxRpcTime = 0.5
             rpcTime = 0.0
+            # We need to determine how much time we should dedicate to serving rpc calls (up to maxRpcTime) 
+            #  as compared to handling messages, sensor and ringdown data from the DSP. On each loop,
+            #  - messages are handled for up to the first 20ms
+            #  - sensor data are handled for up to the first 200ms
+            #  - ringdowns are handled for up to the first 500ms
+            # However, to ensure that the processes are not starved, we reserve at least 20ms for each handler
             try:
                 while self.looping and not daemon.mustShutdown:
                     self.dasInterface.pingWatchdog()
@@ -1328,6 +1336,9 @@ class Driver(SharedTypes.Singleton):
                     timeSoFar += sensors.duration
                     ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))
                     timeSoFar += ringdowns.duration
+                    # We update the time for dealing with RPC by increasing it slightly if all handlers completed
+                    #  and reducing it if they did not. This is because the data accumulate during the time in 
+                    #  which RPCs are being processed
                     if sensors.finished and ringdowns.finished and messages.finished:
                         rpcTime += 0.01
                         if rpcTime > maxRpcTime:
@@ -1340,6 +1351,7 @@ class Driver(SharedTypes.Singleton):
                     now = time.time()
                     doneTime = now + rpcTime
                     rpcLoops = 0
+                    # Keep handling RPC requests for a duration up to "rpcTime"
                     while now < doneTime:
                         rpcLoops += 1
                         daemon.handleRequests(requestTimeout)

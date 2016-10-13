@@ -18,13 +18,14 @@ from ctypes import c_longlong, c_float, c_double, Structure, Union, sizeof
 
 class RegInfo(object):
     "Class to store register access information"
-    def __init__(self,name,type,persistence,firstVersion,access):
+    def __init__(self, name, type, persistence, firstVersion, access, initial=None):
         self.name = name
         self.type = type
         self.persistence = persistence
         self.firstVersion = firstVersion
         self.readable = "r" in access
         self.writable = "w" in access
+        self.initial = initial
 
 
 # Interface Version
@@ -1603,927 +1604,927 @@ I2C_CHAIN1_MUX = 34
 
 
 registerByName["NOOP_REGISTER"] = NOOP_REGISTER
-registerInfo.append(RegInfo("NOOP_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("NOOP_REGISTER",c_uint,0,1.0,"rw",0xABCD1234))
 registerByName["VERIFY_INIT_REGISTER"] = VERIFY_INIT_REGISTER
-registerInfo.append(RegInfo("VERIFY_INIT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("VERIFY_INIT_REGISTER",c_uint,0,1.0,"r",0x19680511))
 registerByName["COMM_STATUS_REGISTER"] = COMM_STATUS_REGISTER
-registerInfo.append(RegInfo("COMM_STATUS_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("COMM_STATUS_REGISTER",c_uint,0,1.0,"r",None))
 registerByName["TIMESTAMP_LSB_REGISTER"] = TIMESTAMP_LSB_REGISTER
-registerInfo.append(RegInfo("TIMESTAMP_LSB_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("TIMESTAMP_LSB_REGISTER",c_uint,0,1.0,"r",None))
 registerByName["TIMESTAMP_MSB_REGISTER"] = TIMESTAMP_MSB_REGISTER
-registerInfo.append(RegInfo("TIMESTAMP_MSB_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("TIMESTAMP_MSB_REGISTER",c_uint,0,1.0,"r",None))
 registerByName["SCHEDULER_CONTROL_REGISTER"] = SCHEDULER_CONTROL_REGISTER
-registerInfo.append(RegInfo("SCHEDULER_CONTROL_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEDULER_CONTROL_REGISTER",c_uint,0,1.0,"rw",0))
 registerByName["HARDWARE_PRESENT_REGISTER"] = HARDWARE_PRESENT_REGISTER
-registerInfo.append(RegInfo("HARDWARE_PRESENT_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("HARDWARE_PRESENT_REGISTER",c_uint,0,1.0,"rw",0))
 registerByName["RD_IRQ_COUNT_REGISTER"] = RD_IRQ_COUNT_REGISTER
-registerInfo.append(RegInfo("RD_IRQ_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("RD_IRQ_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["ACQ_DONE_COUNT_REGISTER"] = ACQ_DONE_COUNT_REGISTER
-registerInfo.append(RegInfo("ACQ_DONE_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("ACQ_DONE_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["RD_DATA_MOVING_COUNT_REGISTER"] = RD_DATA_MOVING_COUNT_REGISTER
-registerInfo.append(RegInfo("RD_DATA_MOVING_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("RD_DATA_MOVING_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["RD_QDMA_DONE_COUNT_REGISTER"] = RD_QDMA_DONE_COUNT_REGISTER
-registerInfo.append(RegInfo("RD_QDMA_DONE_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("RD_QDMA_DONE_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["RD_FITTING_COUNT_REGISTER"] = RD_FITTING_COUNT_REGISTER
-registerInfo.append(RegInfo("RD_FITTING_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("RD_FITTING_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["RD_INITIATED_COUNT_REGISTER"] = RD_INITIATED_COUNT_REGISTER
-registerInfo.append(RegInfo("RD_INITIATED_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("RD_INITIATED_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["DAS_STATUS_REGISTER"] = DAS_STATUS_REGISTER
-registerInfo.append(RegInfo("DAS_STATUS_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("DAS_STATUS_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["DAS_TEMPERATURE_REGISTER"] = DAS_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("DAS_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("DAS_TEMPERATURE_REGISTER",c_float,0,1.0,"r",20.0))
 registerByName["HEATER_CNTRL_SENSOR_REGISTER"] = HEATER_CNTRL_SENSOR_REGISTER
-registerInfo.append(RegInfo("HEATER_CNTRL_SENSOR_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("HEATER_CNTRL_SENSOR_REGISTER",c_float,0,1.0,"r",0.0))
 registerByName["CONVERSION_LASER1_THERM_CONSTA_REGISTER"] = CONVERSION_LASER1_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_LASER1_THERM_CONSTB_REGISTER"] = CONVERSION_LASER1_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_LASER1_THERM_CONSTC_REGISTER"] = CONVERSION_LASER1_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER1_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["CONVERSION_LASER1_CURRENT_SLOPE_REGISTER"] = CONVERSION_LASER1_CURRENT_SLOPE_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER1_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER1_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw",7.62939e-3))
 registerByName["CONVERSION_LASER1_CURRENT_OFFSET_REGISTER"] = CONVERSION_LASER1_CURRENT_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER1_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER1_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_RESISTANCE_REGISTER"] = LASER1_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER1_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER1_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER1_TEMPERATURE_REGISTER"] = LASER1_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER1_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER1_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = LASER1_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER1_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["LASER1_TEC_REGISTER"] = LASER1_TEC_REGISTER
-registerInfo.append(RegInfo("LASER1_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER1_TEC_REGISTER",c_float,0,1.0,"r",32768.0))
 registerByName["LASER1_MANUAL_TEC_REGISTER"] = LASER1_MANUAL_TEC_REGISTER
-registerInfo.append(RegInfo("LASER1_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw",32768.0))
 registerByName["LASER1_TEMP_CNTRL_STATE_REGISTER"] = LASER1_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["LASER1_TEMP_CNTRL_SETPOINT_REGISTER"] = LASER1_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",25.0))
 registerByName["LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["LASER1_TEMP_CNTRL_TOLERANCE_REGISTER"] = LASER1_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",30.0))
 registerByName["LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",20.0))
 registerByName["LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.05))
 registerByName["LASER1_TEMP_CNTRL_H_REGISTER"] = LASER1_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",0.2))
 registerByName["LASER1_TEMP_CNTRL_K_REGISTER"] = LASER1_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_TEMP_CNTRL_TI_REGISTER"] = LASER1_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["LASER1_TEMP_CNTRL_TD_REGISTER"] = LASER1_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_TEMP_CNTRL_B_REGISTER"] = LASER1_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER1_TEMP_CNTRL_C_REGISTER"] = LASER1_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER1_TEMP_CNTRL_N_REGISTER"] = LASER1_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["LASER1_TEMP_CNTRL_S_REGISTER"] = LASER1_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER1_TEMP_CNTRL_FFWD_REGISTER"] = LASER1_TEMP_CNTRL_FFWD_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_TEMP_CNTRL_AMIN_REGISTER"] = LASER1_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER1_TEMP_CNTRL_AMAX_REGISTER"] = LASER1_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",55000.0))
 registerByName["LASER1_TEMP_CNTRL_IMAX_REGISTER"] = LASER1_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["LASER1_TEC_PRBS_GENPOLY_REGISTER"] = LASER1_TEC_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("LASER1_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["LASER1_TEC_PRBS_AMPLITUDE_REGISTER"] = LASER1_TEC_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("LASER1_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["LASER1_TEC_PRBS_MEAN_REGISTER"] = LASER1_TEC_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("LASER1_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["LASER1_TEC_MONITOR_REGISTER"] = LASER1_TEC_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER1_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["LASER1_CURRENT_CNTRL_STATE_REGISTER"] = LASER1_CURRENT_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER1_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw",LASER_CURRENT_CNTRL_DisabledState))
 registerByName["LASER1_MANUAL_COARSE_CURRENT_REGISTER"] = LASER1_MANUAL_COARSE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER1_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_MANUAL_FINE_CURRENT_REGISTER"] = LASER1_MANUAL_FINE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER1_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_CURRENT_SWEEP_MIN_REGISTER"] = LASER1_CURRENT_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER1_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_CURRENT_SWEEP_MAX_REGISTER"] = LASER1_CURRENT_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER1_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_CURRENT_SWEEP_INCR_REGISTER"] = LASER1_CURRENT_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER1_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER1_CURRENT_MONITOR_REGISTER"] = LASER1_CURRENT_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER1_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER1_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["CONVERSION_LASER2_THERM_CONSTA_REGISTER"] = CONVERSION_LASER2_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER2_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER2_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_LASER2_THERM_CONSTB_REGISTER"] = CONVERSION_LASER2_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER2_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER2_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_LASER2_THERM_CONSTC_REGISTER"] = CONVERSION_LASER2_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER2_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER2_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["CONVERSION_LASER2_CURRENT_SLOPE_REGISTER"] = CONVERSION_LASER2_CURRENT_SLOPE_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER2_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER2_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw",7.62939e-3))
 registerByName["CONVERSION_LASER2_CURRENT_OFFSET_REGISTER"] = CONVERSION_LASER2_CURRENT_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER2_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER2_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_RESISTANCE_REGISTER"] = LASER2_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER2_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER2_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER2_TEMPERATURE_REGISTER"] = LASER2_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER2_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER2_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = LASER2_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER2_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["LASER2_TEC_REGISTER"] = LASER2_TEC_REGISTER
-registerInfo.append(RegInfo("LASER2_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER2_TEC_REGISTER",c_float,0,1.0,"r",32768.0))
 registerByName["LASER2_MANUAL_TEC_REGISTER"] = LASER2_MANUAL_TEC_REGISTER
-registerInfo.append(RegInfo("LASER2_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw",32768.0))
 registerByName["LASER2_TEMP_CNTRL_STATE_REGISTER"] = LASER2_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["LASER2_TEMP_CNTRL_SETPOINT_REGISTER"] = LASER2_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",25.0))
 registerByName["LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["LASER2_TEMP_CNTRL_TOLERANCE_REGISTER"] = LASER2_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",30.0))
 registerByName["LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",20.0))
 registerByName["LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.05))
 registerByName["LASER2_TEMP_CNTRL_H_REGISTER"] = LASER2_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",0.2))
 registerByName["LASER2_TEMP_CNTRL_K_REGISTER"] = LASER2_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_TEMP_CNTRL_TI_REGISTER"] = LASER2_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["LASER2_TEMP_CNTRL_TD_REGISTER"] = LASER2_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_TEMP_CNTRL_B_REGISTER"] = LASER2_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER2_TEMP_CNTRL_C_REGISTER"] = LASER2_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER2_TEMP_CNTRL_N_REGISTER"] = LASER2_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["LASER2_TEMP_CNTRL_S_REGISTER"] = LASER2_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER2_TEMP_CNTRL_FFWD_REGISTER"] = LASER2_TEMP_CNTRL_FFWD_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_TEMP_CNTRL_AMIN_REGISTER"] = LASER2_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER2_TEMP_CNTRL_AMAX_REGISTER"] = LASER2_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",55000.0))
 registerByName["LASER2_TEMP_CNTRL_IMAX_REGISTER"] = LASER2_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["LASER2_TEC_PRBS_GENPOLY_REGISTER"] = LASER2_TEC_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("LASER2_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["LASER2_TEC_PRBS_AMPLITUDE_REGISTER"] = LASER2_TEC_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("LASER2_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["LASER2_TEC_PRBS_MEAN_REGISTER"] = LASER2_TEC_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("LASER2_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["LASER2_TEC_MONITOR_REGISTER"] = LASER2_TEC_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER2_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["LASER2_CURRENT_CNTRL_STATE_REGISTER"] = LASER2_CURRENT_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER2_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw",LASER_CURRENT_CNTRL_DisabledState))
 registerByName["LASER2_MANUAL_COARSE_CURRENT_REGISTER"] = LASER2_MANUAL_COARSE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER2_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_MANUAL_FINE_CURRENT_REGISTER"] = LASER2_MANUAL_FINE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER2_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_CURRENT_SWEEP_MIN_REGISTER"] = LASER2_CURRENT_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_CURRENT_SWEEP_MAX_REGISTER"] = LASER2_CURRENT_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_CURRENT_SWEEP_INCR_REGISTER"] = LASER2_CURRENT_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER2_CURRENT_MONITOR_REGISTER"] = LASER2_CURRENT_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER2_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER2_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["CONVERSION_LASER3_THERM_CONSTA_REGISTER"] = CONVERSION_LASER3_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER3_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER3_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_LASER3_THERM_CONSTB_REGISTER"] = CONVERSION_LASER3_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER3_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER3_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_LASER3_THERM_CONSTC_REGISTER"] = CONVERSION_LASER3_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER3_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER3_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["CONVERSION_LASER3_CURRENT_SLOPE_REGISTER"] = CONVERSION_LASER3_CURRENT_SLOPE_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER3_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER3_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw",7.62939e-3))
 registerByName["CONVERSION_LASER3_CURRENT_OFFSET_REGISTER"] = CONVERSION_LASER3_CURRENT_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER3_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER3_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_RESISTANCE_REGISTER"] = LASER3_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER3_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER3_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER3_TEMPERATURE_REGISTER"] = LASER3_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER3_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER3_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = LASER3_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER3_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["LASER3_TEC_REGISTER"] = LASER3_TEC_REGISTER
-registerInfo.append(RegInfo("LASER3_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER3_TEC_REGISTER",c_float,0,1.0,"r",32768.0))
 registerByName["LASER3_MANUAL_TEC_REGISTER"] = LASER3_MANUAL_TEC_REGISTER
-registerInfo.append(RegInfo("LASER3_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw",32768.0))
 registerByName["LASER3_TEMP_CNTRL_STATE_REGISTER"] = LASER3_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["LASER3_TEMP_CNTRL_SETPOINT_REGISTER"] = LASER3_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",25.0))
 registerByName["LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["LASER3_TEMP_CNTRL_TOLERANCE_REGISTER"] = LASER3_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",30.0))
 registerByName["LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",20.0))
 registerByName["LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.05))
 registerByName["LASER3_TEMP_CNTRL_H_REGISTER"] = LASER3_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",0.2))
 registerByName["LASER3_TEMP_CNTRL_K_REGISTER"] = LASER3_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_TEMP_CNTRL_TI_REGISTER"] = LASER3_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["LASER3_TEMP_CNTRL_TD_REGISTER"] = LASER3_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_TEMP_CNTRL_B_REGISTER"] = LASER3_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER3_TEMP_CNTRL_C_REGISTER"] = LASER3_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER3_TEMP_CNTRL_N_REGISTER"] = LASER3_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["LASER3_TEMP_CNTRL_S_REGISTER"] = LASER3_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER3_TEMP_CNTRL_FFWD_REGISTER"] = LASER3_TEMP_CNTRL_FFWD_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_TEMP_CNTRL_AMIN_REGISTER"] = LASER3_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER3_TEMP_CNTRL_AMAX_REGISTER"] = LASER3_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",55000.0))
 registerByName["LASER3_TEMP_CNTRL_IMAX_REGISTER"] = LASER3_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["LASER3_TEC_PRBS_GENPOLY_REGISTER"] = LASER3_TEC_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("LASER3_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["LASER3_TEC_PRBS_AMPLITUDE_REGISTER"] = LASER3_TEC_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("LASER3_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["LASER3_TEC_PRBS_MEAN_REGISTER"] = LASER3_TEC_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("LASER3_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["LASER3_TEC_MONITOR_REGISTER"] = LASER3_TEC_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER3_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["LASER3_CURRENT_CNTRL_STATE_REGISTER"] = LASER3_CURRENT_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER3_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw",LASER_CURRENT_CNTRL_DisabledState))
 registerByName["LASER3_MANUAL_COARSE_CURRENT_REGISTER"] = LASER3_MANUAL_COARSE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER3_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_MANUAL_FINE_CURRENT_REGISTER"] = LASER3_MANUAL_FINE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER3_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_CURRENT_SWEEP_MIN_REGISTER"] = LASER3_CURRENT_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER3_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_CURRENT_SWEEP_MAX_REGISTER"] = LASER3_CURRENT_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER3_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_CURRENT_SWEEP_INCR_REGISTER"] = LASER3_CURRENT_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER3_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER3_CURRENT_MONITOR_REGISTER"] = LASER3_CURRENT_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER3_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER3_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["CONVERSION_LASER4_THERM_CONSTA_REGISTER"] = CONVERSION_LASER4_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER4_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER4_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_LASER4_THERM_CONSTB_REGISTER"] = CONVERSION_LASER4_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER4_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER4_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_LASER4_THERM_CONSTC_REGISTER"] = CONVERSION_LASER4_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER4_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER4_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["CONVERSION_LASER4_CURRENT_SLOPE_REGISTER"] = CONVERSION_LASER4_CURRENT_SLOPE_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER4_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER4_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"rw",7.62939e-3))
 registerByName["CONVERSION_LASER4_CURRENT_OFFSET_REGISTER"] = CONVERSION_LASER4_CURRENT_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_LASER4_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_LASER4_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_RESISTANCE_REGISTER"] = LASER4_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER4_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER4_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER4_TEMPERATURE_REGISTER"] = LASER4_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER4_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["LASER4_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = LASER4_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("LASER4_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["LASER4_TEC_REGISTER"] = LASER4_TEC_REGISTER
-registerInfo.append(RegInfo("LASER4_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LASER4_TEC_REGISTER",c_float,0,1.0,"r",32768.0))
 registerByName["LASER4_MANUAL_TEC_REGISTER"] = LASER4_MANUAL_TEC_REGISTER
-registerInfo.append(RegInfo("LASER4_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw",32768.0))
 registerByName["LASER4_TEMP_CNTRL_STATE_REGISTER"] = LASER4_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["LASER4_TEMP_CNTRL_SETPOINT_REGISTER"] = LASER4_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",25.0))
 registerByName["LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["LASER4_TEMP_CNTRL_TOLERANCE_REGISTER"] = LASER4_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",30.0))
 registerByName["LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",20.0))
 registerByName["LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.05))
 registerByName["LASER4_TEMP_CNTRL_H_REGISTER"] = LASER4_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",0.2))
 registerByName["LASER4_TEMP_CNTRL_K_REGISTER"] = LASER4_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_TEMP_CNTRL_TI_REGISTER"] = LASER4_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["LASER4_TEMP_CNTRL_TD_REGISTER"] = LASER4_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_TEMP_CNTRL_B_REGISTER"] = LASER4_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER4_TEMP_CNTRL_C_REGISTER"] = LASER4_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["LASER4_TEMP_CNTRL_N_REGISTER"] = LASER4_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["LASER4_TEMP_CNTRL_S_REGISTER"] = LASER4_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER4_TEMP_CNTRL_FFWD_REGISTER"] = LASER4_TEMP_CNTRL_FFWD_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_TEMP_CNTRL_AMIN_REGISTER"] = LASER4_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["LASER4_TEMP_CNTRL_AMAX_REGISTER"] = LASER4_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",55000.0))
 registerByName["LASER4_TEMP_CNTRL_IMAX_REGISTER"] = LASER4_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["LASER4_TEC_PRBS_GENPOLY_REGISTER"] = LASER4_TEC_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("LASER4_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["LASER4_TEC_PRBS_AMPLITUDE_REGISTER"] = LASER4_TEC_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("LASER4_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["LASER4_TEC_PRBS_MEAN_REGISTER"] = LASER4_TEC_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("LASER4_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["LASER4_TEC_MONITOR_REGISTER"] = LASER4_TEC_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER4_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_TEC_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["LASER4_CURRENT_CNTRL_STATE_REGISTER"] = LASER4_CURRENT_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("LASER4_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_CURRENT_CNTRL_STATE_REGISTER",LASER_CURRENT_CNTRL_StateType,0,1.0,"rw",LASER_CURRENT_CNTRL_DisabledState))
 registerByName["LASER4_MANUAL_COARSE_CURRENT_REGISTER"] = LASER4_MANUAL_COARSE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER4_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_MANUAL_COARSE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_MANUAL_FINE_CURRENT_REGISTER"] = LASER4_MANUAL_FINE_CURRENT_REGISTER
-registerInfo.append(RegInfo("LASER4_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_MANUAL_FINE_CURRENT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_CURRENT_SWEEP_MIN_REGISTER"] = LASER4_CURRENT_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("LASER4_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_CURRENT_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_CURRENT_SWEEP_MAX_REGISTER"] = LASER4_CURRENT_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("LASER4_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_CURRENT_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_CURRENT_SWEEP_INCR_REGISTER"] = LASER4_CURRENT_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("LASER4_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_CURRENT_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["LASER4_CURRENT_MONITOR_REGISTER"] = LASER4_CURRENT_MONITOR_REGISTER
-registerInfo.append(RegInfo("LASER4_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("LASER4_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["CONVERSION_ETALON_THERM_CONSTA_REGISTER"] = CONVERSION_ETALON_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_ETALON_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_ETALON_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_ETALON_THERM_CONSTB_REGISTER"] = CONVERSION_ETALON_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_ETALON_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_ETALON_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_ETALON_THERM_CONSTC_REGISTER"] = CONVERSION_ETALON_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_ETALON_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_ETALON_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["ETALON_RESISTANCE_REGISTER"] = ETALON_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("ETALON_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("ETALON_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["ETALON_TEMPERATURE_REGISTER"] = ETALON_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("ETALON_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("ETALON_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("ETALON_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER"] = CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_WARM_BOX_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER"] = CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_WARM_BOX_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER"] = CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_WARM_BOX_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["WARM_BOX_RESISTANCE_REGISTER"] = WARM_BOX_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("WARM_BOX_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["WARM_BOX_TEMPERATURE_REGISTER"] = WARM_BOX_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("WARM_BOX_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["WARM_BOX_TEC_REGISTER"] = WARM_BOX_TEC_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("WARM_BOX_TEC_REGISTER",c_float,0,1.0,"r",32768.0))
 registerByName["WARM_BOX_MANUAL_TEC_REGISTER"] = WARM_BOX_MANUAL_TEC_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw",32768.0))
 registerByName["WARM_BOX_TEMP_CNTRL_STATE_REGISTER"] = WARM_BOX_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER"] = WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",25.0))
 registerByName["WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER"] = WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",30.0))
 registerByName["WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",20.0))
 registerByName["WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.05))
 registerByName["WARM_BOX_TEMP_CNTRL_H_REGISTER"] = WARM_BOX_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",0.2))
 registerByName["WARM_BOX_TEMP_CNTRL_K_REGISTER"] = WARM_BOX_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["WARM_BOX_TEMP_CNTRL_TI_REGISTER"] = WARM_BOX_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["WARM_BOX_TEMP_CNTRL_TD_REGISTER"] = WARM_BOX_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["WARM_BOX_TEMP_CNTRL_B_REGISTER"] = WARM_BOX_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["WARM_BOX_TEMP_CNTRL_C_REGISTER"] = WARM_BOX_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["WARM_BOX_TEMP_CNTRL_N_REGISTER"] = WARM_BOX_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["WARM_BOX_TEMP_CNTRL_S_REGISTER"] = WARM_BOX_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["WARM_BOX_TEMP_CNTRL_FFWD_REGISTER"] = WARM_BOX_TEMP_CNTRL_FFWD_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["WARM_BOX_TEMP_CNTRL_AMIN_REGISTER"] = WARM_BOX_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["WARM_BOX_TEMP_CNTRL_AMAX_REGISTER"] = WARM_BOX_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",55000.0))
 registerByName["WARM_BOX_TEMP_CNTRL_IMAX_REGISTER"] = WARM_BOX_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["WARM_BOX_TEC_PRBS_GENPOLY_REGISTER"] = WARM_BOX_TEC_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER"] = WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["WARM_BOX_TEC_PRBS_MEAN_REGISTER"] = WARM_BOX_TEC_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["WARM_BOX_MAX_HEATSINK_TEMP_REGISTER"] = WARM_BOX_MAX_HEATSINK_TEMP_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_MAX_HEATSINK_TEMP_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_MAX_HEATSINK_TEMP_REGISTER",c_float,1,1.0,"rw",70.0))
 registerByName["CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER"] = CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.00112789997365))
 registerByName["CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER"] = CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000234289997024))
 registerByName["CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER"] = CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_WARM_BOX_HEATSINK_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",8.72979981636e-008))
 registerByName["WARM_BOX_HEATSINK_RESISTANCE_REGISTER"] = WARM_BOX_HEATSINK_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["WARM_BOX_HEATSINK_TEMPERATURE_REGISTER"] = WARM_BOX_HEATSINK_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_HEATSINK_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("WARM_BOX_HEATSINK_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("WARM_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",30000))
 registerByName["CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER"] = CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.000847030023579))
 registerByName["CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER"] = CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000205610005651))
 registerByName["CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER"] = CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",9.26699996739e-008))
 registerByName["HOT_BOX_HEATSINK_RESISTANCE_REGISTER"] = HOT_BOX_HEATSINK_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"] = HOT_BOX_HEATSINK_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("HOT_BOX_HEATSINK_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("HOT_BOX_HEATSINK_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",124000))
 registerByName["CONVERSION_CAVITY_THERM_CONSTA_REGISTER"] = CONVERSION_CAVITY_THERM_CONSTA_REGISTER
-registerInfo.append(RegInfo("CONVERSION_CAVITY_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_CAVITY_THERM_CONSTA_REGISTER",c_float,1,1.0,"rw",0.000847030023579))
 registerByName["CONVERSION_CAVITY_THERM_CONSTB_REGISTER"] = CONVERSION_CAVITY_THERM_CONSTB_REGISTER
-registerInfo.append(RegInfo("CONVERSION_CAVITY_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_CAVITY_THERM_CONSTB_REGISTER",c_float,1,1.0,"rw",0.000205610005651))
 registerByName["CONVERSION_CAVITY_THERM_CONSTC_REGISTER"] = CONVERSION_CAVITY_THERM_CONSTC_REGISTER
-registerInfo.append(RegInfo("CONVERSION_CAVITY_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_CAVITY_THERM_CONSTC_REGISTER",c_float,1,1.0,"rw",9.26699996739e-008))
 registerByName["CAVITY_RESISTANCE_REGISTER"] = CAVITY_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("CAVITY_RESISTANCE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("CAVITY_RESISTANCE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["CAVITY_TEMPERATURE_REGISTER"] = CAVITY_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("CAVITY_TEMPERATURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER"] = CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER
-registerInfo.append(RegInfo("CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER",c_float,1,1.0,"rw",124000))
 registerByName["CAVITY_TEC_REGISTER"] = CAVITY_TEC_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("CAVITY_TEC_REGISTER",c_float,0,1.0,"r",32768.0))
 registerByName["CAVITY_MANUAL_TEC_REGISTER"] = CAVITY_MANUAL_TEC_REGISTER
-registerInfo.append(RegInfo("CAVITY_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw",32768.0))
 registerByName["CAVITY_TEMP_CNTRL_STATE_REGISTER"] = CAVITY_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["CAVITY_TEMP_CNTRL_SETPOINT_REGISTER"] = CAVITY_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",25.0))
 registerByName["CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER"] = CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",30.0))
 registerByName["CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",20.0))
 registerByName["CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.05))
 registerByName["CAVITY_TEMP_CNTRL_H_REGISTER"] = CAVITY_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["CAVITY_TEMP_CNTRL_K_REGISTER"] = CAVITY_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["CAVITY_TEMP_CNTRL_TI_REGISTER"] = CAVITY_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["CAVITY_TEMP_CNTRL_TD_REGISTER"] = CAVITY_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["CAVITY_TEMP_CNTRL_B_REGISTER"] = CAVITY_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["CAVITY_TEMP_CNTRL_C_REGISTER"] = CAVITY_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["CAVITY_TEMP_CNTRL_N_REGISTER"] = CAVITY_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["CAVITY_TEMP_CNTRL_S_REGISTER"] = CAVITY_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["CAVITY_TEMP_CNTRL_FFWD_REGISTER"] = CAVITY_TEMP_CNTRL_FFWD_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_FFWD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["CAVITY_TEMP_CNTRL_AMIN_REGISTER"] = CAVITY_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["CAVITY_TEMP_CNTRL_AMAX_REGISTER"] = CAVITY_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",55000.0))
 registerByName["CAVITY_TEMP_CNTRL_IMAX_REGISTER"] = CAVITY_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["CAVITY_TEC_PRBS_GENPOLY_REGISTER"] = CAVITY_TEC_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["CAVITY_TEC_PRBS_AMPLITUDE_REGISTER"] = CAVITY_TEC_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["CAVITY_TEC_PRBS_MEAN_REGISTER"] = CAVITY_TEC_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("CAVITY_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["CAVITY_MAX_HEATSINK_TEMP_REGISTER"] = CAVITY_MAX_HEATSINK_TEMP_REGISTER
-registerInfo.append(RegInfo("CAVITY_MAX_HEATSINK_TEMP_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CAVITY_MAX_HEATSINK_TEMP_REGISTER",c_float,1,1.0,"rw",70.0))
 registerByName["HEATER_MARK_REGISTER"] = HEATER_MARK_REGISTER
-registerInfo.append(RegInfo("HEATER_MARK_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("HEATER_MARK_REGISTER",c_float,0,1.0,"r",0.0))
 registerByName["HEATER_MANUAL_MARK_REGISTER"] = HEATER_MANUAL_MARK_REGISTER
-registerInfo.append(RegInfo("HEATER_MANUAL_MARK_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_MANUAL_MARK_REGISTER",c_float,1,1.0,"rw",4000.0))
 registerByName["HEATER_TEMP_CNTRL_STATE_REGISTER"] = HEATER_TEMP_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw",TEMP_CNTRL_DisabledState))
 registerByName["HEATER_TEMP_CNTRL_SETPOINT_REGISTER"] = HEATER_TEMP_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["HEATER_TEMP_CNTRL_TOLERANCE_REGISTER"] = HEATER_TEMP_CNTRL_TOLERANCE_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw",0.1))
 registerByName["HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw",2.0))
 registerByName["HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw",-2.0))
 registerByName["HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw",0.01))
 registerByName["HEATER_TEMP_CNTRL_H_REGISTER"] = HEATER_TEMP_CNTRL_H_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["HEATER_TEMP_CNTRL_K_REGISTER"] = HEATER_TEMP_CNTRL_K_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["HEATER_TEMP_CNTRL_TI_REGISTER"] = HEATER_TEMP_CNTRL_TI_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["HEATER_TEMP_CNTRL_TD_REGISTER"] = HEATER_TEMP_CNTRL_TD_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["HEATER_TEMP_CNTRL_B_REGISTER"] = HEATER_TEMP_CNTRL_B_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["HEATER_TEMP_CNTRL_C_REGISTER"] = HEATER_TEMP_CNTRL_C_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["HEATER_TEMP_CNTRL_N_REGISTER"] = HEATER_TEMP_CNTRL_N_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw",100.0))
 registerByName["HEATER_TEMP_CNTRL_S_REGISTER"] = HEATER_TEMP_CNTRL_S_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["HEATER_TEMP_CNTRL_AMIN_REGISTER"] = HEATER_TEMP_CNTRL_AMIN_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["HEATER_TEMP_CNTRL_AMAX_REGISTER"] = HEATER_TEMP_CNTRL_AMAX_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw",30000.0))
 registerByName["HEATER_TEMP_CNTRL_IMAX_REGISTER"] = HEATER_TEMP_CNTRL_IMAX_REGISTER
-registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["HEATER_PRBS_GENPOLY_REGISTER"] = HEATER_PRBS_GENPOLY_REGISTER
-registerInfo.append(RegInfo("HEATER_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw",0x481))
 registerByName["HEATER_PRBS_AMPLITUDE_REGISTER"] = HEATER_PRBS_AMPLITUDE_REGISTER
-registerInfo.append(RegInfo("HEATER_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw",5000.0))
 registerByName["HEATER_PRBS_MEAN_REGISTER"] = HEATER_PRBS_MEAN_REGISTER
-registerInfo.append(RegInfo("HEATER_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw",40000.0))
 registerByName["HEATER_CUTOFF_REGISTER"] = HEATER_CUTOFF_REGISTER
-registerInfo.append(RegInfo("HEATER_CUTOFF_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("HEATER_CUTOFF_REGISTER",c_float,1,1.0,"rw",45.1))
 registerByName["CAVITY_PRESSURE_ADC_REGISTER"] = CAVITY_PRESSURE_ADC_REGISTER
-registerInfo.append(RegInfo("CAVITY_PRESSURE_ADC_REGISTER",c_int,0,1.0,"r"))
+registerInfo.append(RegInfo("CAVITY_PRESSURE_ADC_REGISTER",c_int,0,1.0,"r",32768))
 registerByName["CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER"] = CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER
-registerInfo.append(RegInfo("CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER",c_float,1,1.0,"rw",1.5258789E-2))
 registerByName["CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER"] = CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["CAVITY_PRESSURE_REGISTER"] = CAVITY_PRESSURE_REGISTER
-registerInfo.append(RegInfo("CAVITY_PRESSURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("CAVITY_PRESSURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["AMBIENT_PRESSURE_ADC_REGISTER"] = AMBIENT_PRESSURE_ADC_REGISTER
-registerInfo.append(RegInfo("AMBIENT_PRESSURE_ADC_REGISTER",c_int,0,1.0,"r"))
+registerInfo.append(RegInfo("AMBIENT_PRESSURE_ADC_REGISTER",c_int,0,1.0,"r",32768))
 registerByName["CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER"] = CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER
-registerInfo.append(RegInfo("CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",c_float,1,1.0,"rw",1.5258789E-2))
 registerByName["CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER"] = CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["AMBIENT_PRESSURE_REGISTER"] = AMBIENT_PRESSURE_REGISTER
-registerInfo.append(RegInfo("AMBIENT_PRESSURE_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("AMBIENT_PRESSURE_REGISTER",c_float,0,1.0,"r",None))
 registerByName["ANALYZER_TUNING_MODE_REGISTER"] = ANALYZER_TUNING_MODE_REGISTER
-registerInfo.append(RegInfo("ANALYZER_TUNING_MODE_REGISTER",ANALYZER_TUNING_ModeType,1,1.0,"rw"))
+registerInfo.append(RegInfo("ANALYZER_TUNING_MODE_REGISTER",ANALYZER_TUNING_ModeType,1,1.0,"rw",ANALYZER_TUNING_CavityLengthTuningMode))
 registerByName["TUNER_SWEEP_RAMP_HIGH_REGISTER"] = TUNER_SWEEP_RAMP_HIGH_REGISTER
-registerInfo.append(RegInfo("TUNER_SWEEP_RAMP_HIGH_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_SWEEP_RAMP_HIGH_REGISTER",c_float,1,1.0,"rw",50000.0))
 registerByName["TUNER_SWEEP_RAMP_LOW_REGISTER"] = TUNER_SWEEP_RAMP_LOW_REGISTER
-registerInfo.append(RegInfo("TUNER_SWEEP_RAMP_LOW_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_SWEEP_RAMP_LOW_REGISTER",c_float,1,1.0,"rw",10000.0))
 registerByName["TUNER_WINDOW_RAMP_HIGH_REGISTER"] = TUNER_WINDOW_RAMP_HIGH_REGISTER
-registerInfo.append(RegInfo("TUNER_WINDOW_RAMP_HIGH_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_WINDOW_RAMP_HIGH_REGISTER",c_float,1,1.0,"rw",48000.0))
 registerByName["TUNER_WINDOW_RAMP_LOW_REGISTER"] = TUNER_WINDOW_RAMP_LOW_REGISTER
-registerInfo.append(RegInfo("TUNER_WINDOW_RAMP_LOW_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_WINDOW_RAMP_LOW_REGISTER",c_float,1,1.0,"rw",12000.0))
 registerByName["TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER"] = TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER
-registerInfo.append(RegInfo("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",c_float,1,1.0,"rw",1500.0))
 registerByName["TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER"] = TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER
-registerInfo.append(RegInfo("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",c_float,1,1.0,"rw",1500.0))
 registerByName["TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER"] = TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER
-registerInfo.append(RegInfo("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",c_float,1,1.0,"rw",1250.0))
 registerByName["TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER"] = TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER
-registerInfo.append(RegInfo("TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",c_float,1,1.0,"rw",1250.0))
 registerByName["TUNER_DITHER_MEDIAN_COUNT_REGISTER"] = TUNER_DITHER_MEDIAN_COUNT_REGISTER
-registerInfo.append(RegInfo("TUNER_DITHER_MEDIAN_COUNT_REGISTER",TUNER_DITHER_MEDIAN_CountType,1,1.0,"rw"))
+registerInfo.append(RegInfo("TUNER_DITHER_MEDIAN_COUNT_REGISTER",TUNER_DITHER_MEDIAN_CountType,1,1.0,"rw",9))
 registerByName["RDFITTER_MINLOSS_REGISTER"] = RDFITTER_MINLOSS_REGISTER
-registerInfo.append(RegInfo("RDFITTER_MINLOSS_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_MINLOSS_REGISTER",c_float,1,1.0,"rw",0.2))
 registerByName["RDFITTER_MAXLOSS_REGISTER"] = RDFITTER_MAXLOSS_REGISTER
-registerInfo.append(RegInfo("RDFITTER_MAXLOSS_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_MAXLOSS_REGISTER",c_float,1,1.0,"rw",50.0))
 registerByName["RDFITTER_LATEST_LOSS_REGISTER"] = RDFITTER_LATEST_LOSS_REGISTER
-registerInfo.append(RegInfo("RDFITTER_LATEST_LOSS_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("RDFITTER_LATEST_LOSS_REGISTER",c_float,0,1.0,"r",None))
 registerByName["RDFITTER_IMPROVEMENT_STEPS_REGISTER"] = RDFITTER_IMPROVEMENT_STEPS_REGISTER
-registerInfo.append(RegInfo("RDFITTER_IMPROVEMENT_STEPS_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_IMPROVEMENT_STEPS_REGISTER",c_uint,1,1.0,"rw",1))
 registerByName["RDFITTER_START_SAMPLE_REGISTER"] = RDFITTER_START_SAMPLE_REGISTER
-registerInfo.append(RegInfo("RDFITTER_START_SAMPLE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_START_SAMPLE_REGISTER",c_uint,1,1.0,"rw",10))
 registerByName["RDFITTER_FRACTIONAL_THRESHOLD_REGISTER"] = RDFITTER_FRACTIONAL_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("RDFITTER_FRACTIONAL_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_FRACTIONAL_THRESHOLD_REGISTER",c_float,1,1.0,"rw",0.85))
 registerByName["RDFITTER_ABSOLUTE_THRESHOLD_REGISTER"] = RDFITTER_ABSOLUTE_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("RDFITTER_ABSOLUTE_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_ABSOLUTE_THRESHOLD_REGISTER",c_float,1,1.0,"rw",13000))
 registerByName["RDFITTER_NUMBER_OF_POINTS_REGISTER"] = RDFITTER_NUMBER_OF_POINTS_REGISTER
-registerInfo.append(RegInfo("RDFITTER_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_NUMBER_OF_POINTS_REGISTER",c_uint,1,1.0,"rw",3500))
 registerByName["RDFITTER_MAX_E_FOLDINGS_REGISTER"] = RDFITTER_MAX_E_FOLDINGS_REGISTER
-registerInfo.append(RegInfo("RDFITTER_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_MAX_E_FOLDINGS_REGISTER",c_float,1,1.0,"rw",8.0))
 registerByName["RDFITTER_META_BACKOFF_REGISTER"] = RDFITTER_META_BACKOFF_REGISTER
-registerInfo.append(RegInfo("RDFITTER_META_BACKOFF_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_META_BACKOFF_REGISTER",c_uint,1,1.0,"rw",2))
 registerByName["RDFITTER_META_SAMPLES_REGISTER"] = RDFITTER_META_SAMPLES_REGISTER
-registerInfo.append(RegInfo("RDFITTER_META_SAMPLES_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDFITTER_META_SAMPLES_REGISTER",c_uint,1,1.0,"rw",6))
 registerByName["SPECT_CNTRL_STATE_REGISTER"] = SPECT_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_StateType,0,1.0,"rw",SPECT_CNTRL_IdleState))
 registerByName["SPECT_CNTRL_MODE_REGISTER"] = SPECT_CNTRL_MODE_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_ModeType,1,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_MODE_REGISTER",SPECT_CNTRL_ModeType,1,1.0,"rw",SPECT_CNTRL_SchemeSingleMode))
 registerByName["SPECT_CNTRL_ACTIVE_SCHEME_REGISTER"] = SPECT_CNTRL_ACTIVE_SCHEME_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_ACTIVE_SCHEME_REGISTER",c_uint,0,1.0,"rw",0))
 registerByName["SPECT_CNTRL_NEXT_SCHEME_REGISTER"] = SPECT_CNTRL_NEXT_SCHEME_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_NEXT_SCHEME_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_NEXT_SCHEME_REGISTER",c_uint,0,1.0,"rw",0))
 registerByName["SPECT_CNTRL_SCHEME_ITER_REGISTER"] = SPECT_CNTRL_SCHEME_ITER_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_SCHEME_ITER_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("SPECT_CNTRL_SCHEME_ITER_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["SPECT_CNTRL_SCHEME_ROW_REGISTER"] = SPECT_CNTRL_SCHEME_ROW_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_SCHEME_ROW_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("SPECT_CNTRL_SCHEME_ROW_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["SPECT_CNTRL_DWELL_COUNT_REGISTER"] = SPECT_CNTRL_DWELL_COUNT_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_DWELL_COUNT_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("SPECT_CNTRL_DWELL_COUNT_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER"] = SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER",c_uint,1,1.0,"rw",15000))
 registerByName["SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw",100000))
 registerByName["SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER"] = SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER
-registerInfo.append(RegInfo("SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER",c_uint,1,1.0,"rw",1000000))
 registerByName["VIRTUAL_LASER_REGISTER"] = VIRTUAL_LASER_REGISTER
-registerInfo.append(RegInfo("VIRTUAL_LASER_REGISTER",VIRTUAL_LASER_Type,0,1.0,"rw"))
+registerInfo.append(RegInfo("VIRTUAL_LASER_REGISTER",VIRTUAL_LASER_Type,0,1.0,"rw",VIRTUAL_LASER_3))
 registerByName["PZT_INCR_PER_CAVITY_FSR"] = PZT_INCR_PER_CAVITY_FSR
-registerInfo.append(RegInfo("PZT_INCR_PER_CAVITY_FSR",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_INCR_PER_CAVITY_FSR",c_float,1,1.0,"rw",16400))
 registerByName["PZT_OFFSET_UPDATE_FACTOR"] = PZT_OFFSET_UPDATE_FACTOR
-registerInfo.append(RegInfo("PZT_OFFSET_UPDATE_FACTOR",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_UPDATE_FACTOR",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER1"] = PZT_OFFSET_VIRTUAL_LASER1
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER1",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER1",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER2"] = PZT_OFFSET_VIRTUAL_LASER2
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER2",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER2",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER3"] = PZT_OFFSET_VIRTUAL_LASER3
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER3",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER3",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER4"] = PZT_OFFSET_VIRTUAL_LASER4
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER4",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER4",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER5"] = PZT_OFFSET_VIRTUAL_LASER5
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER5",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER5",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER6"] = PZT_OFFSET_VIRTUAL_LASER6
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER6",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER6",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER7"] = PZT_OFFSET_VIRTUAL_LASER7
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER7",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER7",c_float,1,1.0,"rw",0))
 registerByName["PZT_OFFSET_VIRTUAL_LASER8"] = PZT_OFFSET_VIRTUAL_LASER8
-registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER8",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PZT_OFFSET_VIRTUAL_LASER8",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER1"] = SCHEME_OFFSET_VIRTUAL_LASER1
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER1",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER1",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER2"] = SCHEME_OFFSET_VIRTUAL_LASER2
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER2",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER2",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER3"] = SCHEME_OFFSET_VIRTUAL_LASER3
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER3",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER3",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER4"] = SCHEME_OFFSET_VIRTUAL_LASER4
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER4",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER4",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER5"] = SCHEME_OFFSET_VIRTUAL_LASER5
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER5",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER5",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER6"] = SCHEME_OFFSET_VIRTUAL_LASER6
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER6",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER6",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER7"] = SCHEME_OFFSET_VIRTUAL_LASER7
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER7",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER7",c_float,1,1.0,"rw",0))
 registerByName["SCHEME_OFFSET_VIRTUAL_LASER8"] = SCHEME_OFFSET_VIRTUAL_LASER8
-registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER8",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SCHEME_OFFSET_VIRTUAL_LASER8",c_float,1,1.0,"rw",0))
 registerByName["VALVE_CNTRL_STATE_REGISTER"] = VALVE_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_STATE_REGISTER",VALVE_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_STATE_REGISTER",VALVE_CNTRL_StateType,0,1.0,"rw",VALVE_CNTRL_DisabledState))
 registerByName["VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER"] = VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",c_float,1,1.0,"rw",140.0))
 registerByName["VALVE_CNTRL_USER_INLET_VALVE_REGISTER"] = VALVE_CNTRL_USER_INLET_VALVE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER"] = VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["VALVE_CNTRL_INLET_VALVE_REGISTER"] = VALVE_CNTRL_INLET_VALVE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_REGISTER",c_float,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_REGISTER",c_float,0,1.0,"rw",0.0))
 registerByName["VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER"] = VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER"] = VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER",c_float,1,1.0,"rw",50.0))
 registerByName["VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER"] = VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER",c_float,1,1.0,"rw",50.0))
 registerByName["VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER"] = VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER",c_float,1,1.0,"rw",0.5))
 registerByName["VALVE_CNTRL_INLET_VALVE_MIN_REGISTER"] = VALVE_CNTRL_INLET_VALVE_MIN_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_MIN_REGISTER",c_float,1,1.0,"rw",20000.0))
 registerByName["VALVE_CNTRL_INLET_VALVE_MAX_REGISTER"] = VALVE_CNTRL_INLET_VALVE_MAX_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_MAX_REGISTER",c_float,1,1.0,"rw",65000.0))
 registerByName["VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER"] = VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER"] = VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER",c_float,1,1.0,"rw",50.0))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER",c_float,1,1.0,"rw",0.5))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER",c_float,1,1.0,"rw",20000.0))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER",c_float,1,1.0,"rw",65000.0))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER"] = VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER",c_float,1,1.0,"rw",1000.0))
 registerByName["VALVE_CNTRL_THRESHOLD_STATE_REGISTER"] = VALVE_CNTRL_THRESHOLD_STATE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_THRESHOLD_STATE_REGISTER",VALVE_CNTRL_THRESHOLD_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_THRESHOLD_STATE_REGISTER",VALVE_CNTRL_THRESHOLD_StateType,0,1.0,"rw",VALVE_CNTRL_THRESHOLD_DisabledState))
 registerByName["VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER"] = VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER",c_float,1,1.0,"rw",2000.0))
 registerByName["VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER"] = VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER",c_float,1,1.0,"rw",0))
 registerByName["VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER"] = VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER",c_float,1,1.0,"rw",0))
 registerByName["VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER"] = VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER",c_float,1,1.0,"rw",0))
 registerByName["VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER"] = VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER",c_uint,1,1.0,"rw",0x3F))
 registerByName["VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER"] = VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER",c_uint,1,1.0,"rw",0x0))
 registerByName["VALVE_CNTRL_SEQUENCE_STEP_REGISTER"] = VALVE_CNTRL_SEQUENCE_STEP_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_SEQUENCE_STEP_REGISTER",c_int,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_SEQUENCE_STEP_REGISTER",c_int,0,1.0,"rw",-1))
 registerByName["VALVE_CNTRL_SOLENOID_VALVES_REGISTER"] = VALVE_CNTRL_SOLENOID_VALVES_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_SOLENOID_VALVES_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_SOLENOID_VALVES_REGISTER",c_uint,0,1.0,"rw",0x0))
 registerByName["VALVE_CNTRL_MPV_POSITION_REGISTER"] = VALVE_CNTRL_MPV_POSITION_REGISTER
-registerInfo.append(RegInfo("VALVE_CNTRL_MPV_POSITION_REGISTER",c_uint,0,1.0,"rw"))
+registerInfo.append(RegInfo("VALVE_CNTRL_MPV_POSITION_REGISTER",c_uint,0,1.0,"rw",0x0))
 registerByName["TEC_CNTRL_REGISTER"] = TEC_CNTRL_REGISTER
-registerInfo.append(RegInfo("TEC_CNTRL_REGISTER",TEC_CNTRL_Type,0,1.0,"rw"))
+registerInfo.append(RegInfo("TEC_CNTRL_REGISTER",TEC_CNTRL_Type,0,1.0,"rw",TEC_CNTRL_Disabled))
 registerByName["SENTRY_UPPER_LIMIT_TRIPPED_REGISTER"] = SENTRY_UPPER_LIMIT_TRIPPED_REGISTER
-registerInfo.append(RegInfo("SENTRY_UPPER_LIMIT_TRIPPED_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("SENTRY_UPPER_LIMIT_TRIPPED_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["SENTRY_LOWER_LIMIT_TRIPPED_REGISTER"] = SENTRY_LOWER_LIMIT_TRIPPED_REGISTER
-registerInfo.append(RegInfo("SENTRY_LOWER_LIMIT_TRIPPED_REGISTER",c_uint,0,1.0,"r"))
+registerInfo.append(RegInfo("SENTRY_LOWER_LIMIT_TRIPPED_REGISTER",c_uint,0,1.0,"r",0))
 registerByName["SENTRY_LASER1_TEMPERATURE_MIN_REGISTER"] = SENTRY_LASER1_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER1_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER1_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_LASER1_TEMPERATURE_MAX_REGISTER"] = SENTRY_LASER1_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER1_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER1_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",52.0))
 registerByName["SENTRY_LASER2_TEMPERATURE_MIN_REGISTER"] = SENTRY_LASER2_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER2_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER2_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_LASER2_TEMPERATURE_MAX_REGISTER"] = SENTRY_LASER2_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER2_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER2_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",52.0))
 registerByName["SENTRY_LASER3_TEMPERATURE_MIN_REGISTER"] = SENTRY_LASER3_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER3_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER3_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_LASER3_TEMPERATURE_MAX_REGISTER"] = SENTRY_LASER3_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER3_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER3_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",52.0))
 registerByName["SENTRY_LASER4_TEMPERATURE_MIN_REGISTER"] = SENTRY_LASER4_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER4_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER4_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_LASER4_TEMPERATURE_MAX_REGISTER"] = SENTRY_LASER4_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER4_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER4_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",52.0))
 registerByName["SENTRY_ETALON_TEMPERATURE_MIN_REGISTER"] = SENTRY_ETALON_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_ETALON_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_ETALON_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_ETALON_TEMPERATURE_MAX_REGISTER"] = SENTRY_ETALON_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_ETALON_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_ETALON_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",52.0))
 registerByName["SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER"] = SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER"] = SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",52.0))
 registerByName["SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER"] = SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER"] = SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",80.0))
 registerByName["SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER"] = SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER"] = SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",85.0))
 registerByName["SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER"] = SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",3.0))
 registerByName["SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER"] = SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",95.0))
 registerByName["SENTRY_DAS_TEMPERATURE_MIN_REGISTER"] = SENTRY_DAS_TEMPERATURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_DAS_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_DAS_TEMPERATURE_MIN_REGISTER",c_float,1,1.0,"rw",5.0))
 registerByName["SENTRY_DAS_TEMPERATURE_MAX_REGISTER"] = SENTRY_DAS_TEMPERATURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_DAS_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_DAS_TEMPERATURE_MAX_REGISTER",c_float,1,1.0,"rw",55.0))
 registerByName["SENTRY_LASER1_CURRENT_MIN_REGISTER"] = SENTRY_LASER1_CURRENT_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER1_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER1_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw",-5.0))
 registerByName["SENTRY_LASER1_CURRENT_MAX_REGISTER"] = SENTRY_LASER1_CURRENT_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER1_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER1_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw",180.0))
 registerByName["SENTRY_LASER2_CURRENT_MIN_REGISTER"] = SENTRY_LASER2_CURRENT_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER2_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER2_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw",-5.0))
 registerByName["SENTRY_LASER2_CURRENT_MAX_REGISTER"] = SENTRY_LASER2_CURRENT_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER2_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER2_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw",180.0))
 registerByName["SENTRY_LASER3_CURRENT_MIN_REGISTER"] = SENTRY_LASER3_CURRENT_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER3_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER3_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw",-5.0))
 registerByName["SENTRY_LASER3_CURRENT_MAX_REGISTER"] = SENTRY_LASER3_CURRENT_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER3_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER3_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw",180.0))
 registerByName["SENTRY_LASER4_CURRENT_MIN_REGISTER"] = SENTRY_LASER4_CURRENT_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER4_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER4_CURRENT_MIN_REGISTER",c_float,1,1.0,"rw",-5.0))
 registerByName["SENTRY_LASER4_CURRENT_MAX_REGISTER"] = SENTRY_LASER4_CURRENT_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_LASER4_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_LASER4_CURRENT_MAX_REGISTER",c_float,1,1.0,"rw",180.0))
 registerByName["SENTRY_CAVITY_PRESSURE_MIN_REGISTER"] = SENTRY_CAVITY_PRESSURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_CAVITY_PRESSURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_CAVITY_PRESSURE_MIN_REGISTER",c_float,1,1.0,"rw",-5.0))
 registerByName["SENTRY_CAVITY_PRESSURE_MAX_REGISTER"] = SENTRY_CAVITY_PRESSURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_CAVITY_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_CAVITY_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw",900.0))
 registerByName["SENTRY_AMBIENT_PRESSURE_MIN_REGISTER"] = SENTRY_AMBIENT_PRESSURE_MIN_REGISTER
-registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MIN_REGISTER",c_float,1,1.0,"rw",200.0))
 registerByName["SENTRY_AMBIENT_PRESSURE_MAX_REGISTER"] = SENTRY_AMBIENT_PRESSURE_MAX_REGISTER
-registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("SENTRY_AMBIENT_PRESSURE_MAX_REGISTER",c_float,1,1.0,"rw",900.0))
 registerByName["FAN_CNTRL_STATE_REGISTER"] = FAN_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("FAN_CNTRL_STATE_REGISTER",FAN_CNTRL_StateType,0,1.0,"rw",FAN_CNTRL_OnState))
 registerByName["FAN_CNTRL_TEMPERATURE_REGISTER"] = FAN_CNTRL_TEMPERATURE_REGISTER
-registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FAN_CNTRL_TEMPERATURE_REGISTER",c_float,1,1.0,"rw",25.0))
 registerByName["KEEP_ALIVE_REGISTER"] = KEEP_ALIVE_REGISTER
-registerInfo.append(RegInfo("KEEP_ALIVE_REGISTER",c_int,0,1.0,"rw"))
+registerInfo.append(RegInfo("KEEP_ALIVE_REGISTER",c_int,0,1.0,"rw",-300))
 registerByName["LOSS_BUFFER_0_REGISTER"] = LOSS_BUFFER_0_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_0_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_0_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_1_REGISTER"] = LOSS_BUFFER_1_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_1_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_1_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_2_REGISTER"] = LOSS_BUFFER_2_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_2_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_2_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_3_REGISTER"] = LOSS_BUFFER_3_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_3_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_3_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_4_REGISTER"] = LOSS_BUFFER_4_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_4_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_4_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_5_REGISTER"] = LOSS_BUFFER_5_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_5_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_5_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_6_REGISTER"] = LOSS_BUFFER_6_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_6_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_6_REGISTER",c_float,0,1.0,"r",0))
 registerByName["LOSS_BUFFER_7_REGISTER"] = LOSS_BUFFER_7_REGISTER
-registerInfo.append(RegInfo("LOSS_BUFFER_7_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("LOSS_BUFFER_7_REGISTER",c_float,0,1.0,"r",0))
 registerByName["PROCESSED_LOSS_1_REGISTER"] = PROCESSED_LOSS_1_REGISTER
-registerInfo.append(RegInfo("PROCESSED_LOSS_1_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("PROCESSED_LOSS_1_REGISTER",c_float,0,1.0,"r",0))
 registerByName["PROCESSED_LOSS_2_REGISTER"] = PROCESSED_LOSS_2_REGISTER
-registerInfo.append(RegInfo("PROCESSED_LOSS_2_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("PROCESSED_LOSS_2_REGISTER",c_float,0,1.0,"r",0))
 registerByName["PROCESSED_LOSS_3_REGISTER"] = PROCESSED_LOSS_3_REGISTER
-registerInfo.append(RegInfo("PROCESSED_LOSS_3_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("PROCESSED_LOSS_3_REGISTER",c_float,0,1.0,"r",0))
 registerByName["PROCESSED_LOSS_4_REGISTER"] = PROCESSED_LOSS_4_REGISTER
-registerInfo.append(RegInfo("PROCESSED_LOSS_4_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("PROCESSED_LOSS_4_REGISTER",c_float,0,1.0,"r",0))
 registerByName["PEAK_DETECT_CNTRL_STATE_REGISTER"] = PEAK_DETECT_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_STATE_REGISTER",PEAK_DETECT_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_STATE_REGISTER",PEAK_DETECT_CNTRL_StateType,0,1.0,"rw",PEAK_DETECT_CNTRL_InactiveState))
 registerByName["PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER"] = PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER",c_uint,1,1.0,"rw",200))
 registerByName["PEAK_DETECT_CNTRL_BACKGROUND_REGISTER"] = PEAK_DETECT_CNTRL_BACKGROUND_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_BACKGROUND_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_BACKGROUND_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER"] = PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER",c_float,1,1.0,"rw",0.3))
 registerByName["PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER"] = PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER",c_float,1,1.0,"rw",0.15))
 registerByName["PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER"] = PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER",c_float,1,1.0,"rw",0.15))
 registerByName["PEAK_DETECT_CNTRL_THRESHOLD_FACTOR_REGISTER"] = PEAK_DETECT_CNTRL_THRESHOLD_FACTOR_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_THRESHOLD_FACTOR_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_THRESHOLD_FACTOR_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER"] = PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER",c_uint,1,1.0,"rw",300))
 registerByName["PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER"] = PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER",c_uint,1,1.0,"rw",100))
 registerByName["PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER"] = PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER",c_uint,1,1.0,"rw",25))
 registerByName["PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER"] = PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER",c_uint,1,1.0,"rw",0xA800))
 registerByName["PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER"] = PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER",c_uint,1,1.0,"rw",0))
 registerByName["PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER"] = PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER",c_uint,1,1.0,"rw",2700))
 registerByName["PEAK_DETECT_CNTRL_TRANSITIONING_DURATION_REGISTER"] = PEAK_DETECT_CNTRL_TRANSITIONING_DURATION_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRANSITIONING_DURATION_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRANSITIONING_DURATION_REGISTER",c_uint,1,1.0,"rw",0))
 registerByName["PEAK_DETECT_CNTRL_TRANSITIONING_HOLDOFF_REGISTER"] = PEAK_DETECT_CNTRL_TRANSITIONING_HOLDOFF_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRANSITIONING_HOLDOFF_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRANSITIONING_HOLDOFF_REGISTER",c_uint,1,1.0,"rw",0))
 registerByName["PEAK_DETECT_CNTRL_HOLDING_MAX_LOSS_REGISTER"] = PEAK_DETECT_CNTRL_HOLDING_MAX_LOSS_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_HOLDING_MAX_LOSS_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_HOLDING_MAX_LOSS_REGISTER",c_float,1,1.0,"rw",4.0))
 registerByName["PEAK_DETECT_CNTRL_HOLDING_DURATION_REGISTER"] = PEAK_DETECT_CNTRL_HOLDING_DURATION_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_HOLDING_DURATION_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_HOLDING_DURATION_REGISTER",c_uint,1,1.0,"rw",0))
 registerByName["PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER"] = PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER",c_uint,1,1.0,"rw",100))
 registerByName["PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER"] = PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER",c_uint,1,1.0,"rw",100))
 registerByName["PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER"] = PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER",c_int,0,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER",c_int,0,1.0,"rw",0))
 registerByName["PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_TRANSITIONING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_TRANSITIONING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRANSITIONING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_TRANSITIONING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_HOLDING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_HOLDING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_HOLDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_HOLDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER"] = PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER
-registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER",c_uint,1,1.0,"rw",0x0000))
 registerByName["FLOW1_REGISTER"] = FLOW1_REGISTER
-registerInfo.append(RegInfo("FLOW1_REGISTER",c_float,0,1.0,"r"))
+registerInfo.append(RegInfo("FLOW1_REGISTER",c_float,0,1.0,"r",None))
 registerByName["CONVERSION_FLOW1_SCALE_REGISTER"] = CONVERSION_FLOW1_SCALE_REGISTER
-registerInfo.append(RegInfo("CONVERSION_FLOW1_SCALE_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_FLOW1_SCALE_REGISTER",c_float,1,1.0,"rw",1.0))
 registerByName["CONVERSION_FLOW1_OFFSET_REGISTER"] = CONVERSION_FLOW1_OFFSET_REGISTER
-registerInfo.append(RegInfo("CONVERSION_FLOW1_OFFSET_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("CONVERSION_FLOW1_OFFSET_REGISTER",c_float,1,1.0,"rw",0.0))
 registerByName["RDD_BALANCE_REGISTER"] = RDD_BALANCE_REGISTER
-registerInfo.append(RegInfo("RDD_BALANCE_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDD_BALANCE_REGISTER",c_uint,1,1.0,"rw",0))
 registerByName["RDD_GAIN_REGISTER"] = RDD_GAIN_REGISTER
-registerInfo.append(RegInfo("RDD_GAIN_REGISTER",c_uint,1,1.0,"rw"))
+registerInfo.append(RegInfo("RDD_GAIN_REGISTER",c_uint,1,1.0,"rw",128))
 registerByName["FLOW_CNTRL_STATE_REGISTER"] = FLOW_CNTRL_STATE_REGISTER
-registerInfo.append(RegInfo("FLOW_CNTRL_STATE_REGISTER",FLOW_CNTRL_StateType,0,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_CNTRL_STATE_REGISTER",FLOW_CNTRL_StateType,0,1.0,"rw",FLOW_CNTRL_DisabledState))
 registerByName["FLOW_CNTRL_SETPOINT_REGISTER"] = FLOW_CNTRL_SETPOINT_REGISTER
-registerInfo.append(RegInfo("FLOW_CNTRL_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_CNTRL_SETPOINT_REGISTER",c_float,1,1.0,"rw",100))
 registerByName["FLOW_CNTRL_GAIN_REGISTER"] = FLOW_CNTRL_GAIN_REGISTER
-registerInfo.append(RegInfo("FLOW_CNTRL_GAIN_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_CNTRL_GAIN_REGISTER",c_float,1,1.0,"rw",20))
 registerByName["FLOW_0_SETPOINT_REGISTER"] = FLOW_0_SETPOINT_REGISTER
-registerInfo.append(RegInfo("FLOW_0_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_0_SETPOINT_REGISTER",c_float,1,1.0,"rw",400))
 registerByName["FLOW_1_SETPOINT_REGISTER"] = FLOW_1_SETPOINT_REGISTER
-registerInfo.append(RegInfo("FLOW_1_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_1_SETPOINT_REGISTER",c_float,1,1.0,"rw",400))
 registerByName["FLOW_2_SETPOINT_REGISTER"] = FLOW_2_SETPOINT_REGISTER
-registerInfo.append(RegInfo("FLOW_2_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_2_SETPOINT_REGISTER",c_float,1,1.0,"rw",400))
 registerByName["FLOW_3_SETPOINT_REGISTER"] = FLOW_3_SETPOINT_REGISTER
-registerInfo.append(RegInfo("FLOW_3_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInfo.append(RegInfo("FLOW_3_SETPOINT_REGISTER",c_float,1,1.0,"rw",400))
 
 # FPGA block definitions
 
@@ -2911,8 +2912,8 @@ ACTION_TEST_SCHEDULER = 5
 ACTION_STREAM_REGISTER_ASFLOAT = 6
 ACTION_STREAM_FPGA_REGISTER_ASFLOAT = 7
 ACTION_RESISTANCE_TO_TEMPERATURE = 8
-ACTION_TEMP_CNTRL_SET_COMMAND = 9
-ACTION_APPLY_PID_STEP = 10
+ACTION_UPDATE_FROM_SIMULATORS = 9
+ACTION_STEP_SIMULATORS = 10
 ACTION_TEMP_CNTRL_LASER1_INIT = 11
 ACTION_TEMP_CNTRL_LASER1_STEP = 12
 ACTION_TEMP_CNTRL_LASER2_INIT = 13

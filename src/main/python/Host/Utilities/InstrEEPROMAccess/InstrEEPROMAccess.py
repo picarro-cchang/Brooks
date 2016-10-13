@@ -10,7 +10,6 @@ import wx
 import sys
 import os
 import time
-import win32gui
 from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
@@ -331,13 +330,13 @@ if __name__ == "__main__":
     eepromAccessApp = SingleInstance("InstrEEPROMAccess")
     if eepromAccessApp.alreadyrunning():
         try:
+            import win32gui
             handle = win32gui.FindWindowEx(0, 0, None, "Instrument EEPROM Access")
             win32gui.SetForegroundWindow(handle)
         except:
             pass
     else:
-        app = wx.PySimpleApp()
-        wx.InitAllImageHandlers()
+        app = wx.App(False)
         frame = InstrEEPROMAccess(configFile, defaultChassis, None, -1, "")
         app.SetTopWindow(frame)
         frame.Show()

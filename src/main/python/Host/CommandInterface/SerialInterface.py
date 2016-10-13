@@ -7,7 +7,6 @@ File History:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
 import time
 import serial
 

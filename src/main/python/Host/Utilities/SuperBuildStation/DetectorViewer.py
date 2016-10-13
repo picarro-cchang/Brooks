@@ -110,12 +110,12 @@ class ScopePanel(wx.Panel):
         self.graphPanel1 = GraphPanel(parent=self,id=-1)
         self.graphPanel1.SetGraphProperties(xlabel='Time (ms)',timeAxes=(False,False),ylabel='Detector output',
             grid=True,frameColour=bg,backgroundColour=bg)
-        self.graphPanel1.Update()
+        #self.graphPanel1.Update()
         self.graphPanel2 = GraphPanel(parent=self,id=-1)
         self.graphPanel2.SetGraphProperties(xlabel='Time (ms)',timeAxes=(False,False),ylabel='PZT Voltage',
             grid=True,frameColour=bg,backgroundColour=bg)
-        self.graphPanel1.Update()
-        self.graphPanel2.Update()
+        #self.graphPanel1.Update()
+        #self.graphPanel2.Update()
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.graphPanel1,proportion=1,flag=wx.GROW)
         vbox.Add(self.graphPanel2,proportion=1,flag=wx.GROW)

@@ -138,7 +138,7 @@ class FsmThread(threading.Thread):
             self.logFunc("\nFSM thread exception %s" % e)
 
     def stop(self):
-        if self.fsm.isRunning():
+        if self.fsm and self.fsm.isRunning():
             self.fsm.stop()
             self.logFunc("\nFSM thread stopped by request")
 
@@ -266,6 +266,13 @@ class CoordinatorFrame(CoordinatorFrameGui):
         else:
             ret = None
         return ret
+        
+    def popTextEntry(self, msg, title="", defaultValue=""):
+        d = wx.TextEntryDialog(None, msg, title, defaultValue)
+        d.ShowModal()
+        ret = d.GetValue()
+        d.Destroy()
+        return ret
 
     def shutdown(self):
         self.rpcServer.stop_server()
@@ -317,10 +324,17 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.setStatusText("")
         self.manual = True
         try:
-            if self.config["Mode"]["inject_mode"].lower() != "manual":
+            inject_mode = self.config.get("Mode", "inject_mode", "automatic").lower()
+            self.manual = ( inject_mode == "manual")
+            if not self.manual:
                 self.panel_1.GetSizer().Hide(2)
                 self.panel_1.GetSizer().Layout()
-                self.manual = False
+            if inject_mode == "none":
+                self.panel_1.GetSizer().Hide(0)
+                sizer_window_1 = self.window_1_pane_1.GetSizer()
+                sizer_window_1.Hide(0)
+                sizer_window_1.Layout()
+                self.panel_1.GetSizer().Layout()
         except Exception,e:
             print "Run exception: %s" % e
             pass
@@ -338,9 +352,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def makeFilename(self, fileType = "save"):
         if fileType == "log":
-            (dirName, baseName) = os.path.split(self.config.get("Files", "log", "C:/CoordinatorData/Log/"))
+            (dirName, baseName) = os.path.split(self.config.get("Files", "log", "/CoordinatorData/Log/"))
         else:
-            (dirName, baseName) = os.path.split(self.config.get("Files", "output", "C:/CoordinatorData/"))
+            (dirName, baseName) = os.path.split(self.config.get("Files", "output", "/CoordinatorData/"))
         if not os.path.isdir(dirName):
             os.makedirs(dirName)
         if self.fileTime == "local":
@@ -499,13 +513,14 @@ class CoordinatorFrame(CoordinatorFrameGui):
             #print ""
 
             head = []
-            for k in self.config["Output"]:
-                t, f = self.config["Output"][k]
-                m = self.widthRe.match(f.strip())
-                if m:
-                    head.append(("%%%ss" % (m.group(1),)) % t)
-                else:
-                    raise ValueError("Format %s does not have a valid width specification" % f.strip())
+            if "Output" in self.config:
+                for k in self.config["Output"]:
+                    t, f = self.config["Output"][k]
+                    m = self.widthRe.match(f.strip())
+                    if m:
+                        head.append(("%%%ss" % (m.group(1),)) % t)
+                    else:
+                        raise ValueError("Format %s does not have a valid width specification" % f.strip())
 
             #print 'Preparing to insert columns, head='
             #pprint.pprint(head)

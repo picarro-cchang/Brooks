@@ -20,11 +20,12 @@ from ctypes import c_longlong, c_float, c_double, Structure, Union, sizeof
 
 class RegInfo(object):
     "Class to store register access information"
-    def __init__(self,name,type,persistence,firstVersion,access):
+    def __init__(self, name, type, persistence, firstVersion, access, initial=None):
         self.name = name
         self.type = type
         self.persistence = persistence
         self.firstVersion = firstVersion
         self.readable = "r" in access
         self.writable = "w" in access
+        self.initial = initial
 """

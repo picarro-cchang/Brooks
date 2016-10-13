@@ -808,7 +808,7 @@ if __name__ == "__main__":
     else:
         fOpenFileDialog = True
 
-    appConfigManager = wx.App(0)
+    appConfigManager = wx.App(False)
     frameMain = ConfigManager(None, -1, "")
     appConfigManager.SetTopWindow(frameMain)
 

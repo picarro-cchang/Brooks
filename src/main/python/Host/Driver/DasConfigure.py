@@ -32,11 +32,11 @@ else:
 
 EventManagerProxy_Init("Driver")
 
-schedulerPriorities = dict(SENSOR_READ=1,SENSOR_CONVERT=2,
+schedulerPriorities = dict(UPDATE=0, SENSOR_READ=1, SENSOR_CONVERT=2,
                            SENSOR_PROCESSING=3,
-                           CONTROLLER=4,ACTUATOR_CONVERT=5,
-                           ACTUATOR_WRITE=6,STREAMER=7,
-                           MODEL=8)
+                           CONTROLLER=4, ACTUATOR_CONVERT=5,
+                           ACTUATOR_WRITE=6, STREAMER=7,
+                           MODEL=8, SIMULATOR=9)
 
 # Periods are expressed in tenths of a second
 schedulerPeriods = dict(FAST=2, MEDIUM=10, SLOW=50)
@@ -45,7 +45,7 @@ class DasConfigure(SharedTypes.Singleton):
     initialized = False
     def __init__(self,dasInterface=None,instrConfig=None,driverConfig=None):
         if not self.initialized:
-            assert isinstance(dasInterface, hostDasInterface.DasInterface)
+            # assert isinstance(dasInterface, hostDasInterface.DasInterface)
             if dasInterface is None or instrConfig is None:
                 raise ValueError("DasConfigure has not been initialized correctly")
             self.i2cConfig = {} # Indicates if I2C associated with specific index was detected
@@ -604,6 +604,12 @@ class DasConfigure(SharedTypes.Singleton):
         self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
             Operation("ACTION_UPDATE_WLMSIM_LASER_TEMP"))
 
+        # Run the simulators (NOOP for real analyzer)
+        self.opGroups["FAST"]["UPDATE"].addOperation(
+            Operation("ACTION_UPDATE_FROM_SIMULATORS"))
+        self.opGroups["FAST"]["SIMULATOR"].addOperation(
+            Operation("ACTION_STEP_SIMULATORS"))
+
         # Streaming outputs of wavelength monitor
         self.opGroups["FAST"]["STREAMER"].addOperation(
             Operation("ACTION_STREAM_FPGA_REGISTER_ASFLOAT",
@@ -722,8 +728,7 @@ class DasConfigure(SharedTypes.Singleton):
         runCont = (1<<interface.DYNAMICPWM_CS_RUN_B) | (1<<interface.DYNAMICPWM_CS_CONT_B) | (1<<interface.DYNAMICPWM_CS_PWM_ENABLE_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_INLET","DYNAMICPWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_OUTLET","DYNAMICPWM_CS"]))
-
         time.sleep(2)
         sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         # Set the scheduler running
-        sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1);
+        sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",1)
