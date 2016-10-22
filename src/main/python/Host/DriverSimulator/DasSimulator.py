@@ -248,9 +248,6 @@ class Scheduler(object):
             when = int(period_ms * math.ceil(float(self.startTimestamp) / period_ms))
             item = (when, group.priority, group)
             heapq.heappush(self.runqueue, item)
-        print "Initial runqueue"
-        for when, priority, group in sorted(self.runqueue):
-            print when, priority, group
 
     def execUntil(self, ts):
         while self.runqueue:

@@ -302,12 +302,12 @@ class SpectrumControl(object):
             result = self.sim.tunerSimulator.getNextAt(allowedValues, ["up"], self.virtualTime + 0.001 * self.ditherTimeout)
             if result is None:
                 print "Ramp mode timeout"
-                return self.virtualTime + 0.001 * (self.ditherTimeout + self.rampTimeout) 
+                return self.virtualTime + 0.001 * (self.ditherTimeout + self.rampTimeout)
         tunerValue, slope, ts = result
         self.sim.tunerSimulator.value = tunerValue
         self.sim.tunerSimulator.slope = slope
         self.sim.tunerSimulator.timestamp = ts
-
+        # Compute the loss using the spectral model here
         loss = 1.0 + 0.8 / (1 + ((wavenumber - 6237.408)/0.02) ** 2)
         rdResult = interface.RingdownEntryType()
         rdResult.timestamp = int(ts)

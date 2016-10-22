@@ -31,6 +31,7 @@ from Host.Common.SharedTypes import getSchemeTableClass, Operation, RPC_PORT_DRI
 from Host.Common.SingleInstance import SingleInstance
 from Host.Driver.DasConfigure import DasConfigure
 from Host.DriverSimulator.DasSimulator import DasSimulator
+from Host.DriverSimulator.SpectraSimulator import SpectraSimulator
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -357,7 +358,7 @@ class DriverSimulator(SharedTypes.Singleton):
         self.looping = True
         self.config = ConfigObj(configFile)
         self.dasSimulator = DasSimulator(self)
-        basePath = os.path.split(configFile)[0]
+        basePath = os.path.split(os.path.normpath(os.path.abspath(configFile)))[0]
         # Set up automatic streaming file for sensors, if startStreamFile
         # option in the [Config] section is present. Also allow the maximum
         # number of lines in the stream file to be set
@@ -400,6 +401,9 @@ class DriverSimulator(SharedTypes.Singleton):
         self.lastSaveDasState = 0
         if self.autoStreamFile:
             self.streamSaver.openStreamFile()
+        # Process the spectra simulator definition file
+        self.spectraFile = os.path.join(basePath, self.config["Files"]["spectraFileName"])
+        self.spectraSimulator = SpectraSimulator(self.spectraFile)
 
     def rdDasReg(self, regIndexOrName):
         """Reads a DAS register, using either its index or symbolic name"""
@@ -582,7 +586,7 @@ class StreamSaver(SharedTypes.Singleton):
     # Observers can register to be notified whenever a stream file is opened or
     #  closed. On such an event an RPC call is made to the "notify" method
     #  of an RPC handler at "observerRpcPort", passing the "observerToken"
-    #  to this method. 
+    #  to this method.
     def registerStreamStatusObserver(self, observerRpcPort, observerToken):
         if not(observerRpcPort in self.observerAccess):
             serverURI = "http://%s:%d" % ("localhost", observerRpcPort)
