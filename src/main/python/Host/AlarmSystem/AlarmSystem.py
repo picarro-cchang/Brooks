@@ -42,7 +42,7 @@ if __debug__:
     print("Loading rpdb2")
     import rpdb2
     rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-    print("rpdb2 loaded")
+    print("Loaded rpdb2")
 
 
 HELP_STRING = \
@@ -50,7 +50,7 @@ HELP_STRING = \
 AlarmSystem.py [-h] [-c<FILENAME>]
 
 Where the options can be a combination of the following:
--h  Print this help.
+-h  Print this help
 -c  Specify a different alarm config file.  Default = "./AlarmSystem.ini"
 """
 
@@ -92,7 +92,8 @@ def main():
     try:
         DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
                                                  APP_NAME, IsDontCareConnection=False)
-        DataManager.SetLegacyAlarmConfig(configFile)
+        rtn = DataManager.SetLegacyAlarmConfig(configFile)
+        assert(rtn == interface.STATUS_OK)
         Log("Exiting program")
     except Exception, E:
         if __debug__: raise

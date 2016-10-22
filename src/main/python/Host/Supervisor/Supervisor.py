@@ -108,6 +108,12 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
+#if __debug__:
+    #print("Loading rpdb2")
+    #import rpdb2
+    #rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    #print("rpdb2 loaded")
+
 #Global constants...
 APP_NAME = "Supervisor"
 MAX_LAUNCH_COUNT = 1
@@ -647,7 +653,10 @@ class App(object):
             # use the optimize flag on the subprocesses.
             exeName = sys.executable
             exeArgs.append(exeName) #first arg must be the appname as in sys.argv[0]
-            if sys.flags.optimize:
+            #if sys.flags.optimize:
+            #    if not self.DebugMode:
+            #        exeArgs.append("-OO")
+            if not self.DebugMode and sys.flags.optimize:
                 exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
                 launchPath = "%s" % (self.Executable,)

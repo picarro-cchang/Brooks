@@ -13,6 +13,9 @@ RUN apt-get install -y fuse
 RUN apt-get install -y gfortran
 RUN pip install Pyro4
 RUN pip install fusepy
+RUN pip install pyscreenshot
+RUN pip install traits
+RUN pip install traitsui
 
 # Winpdb latest version (conda version for linux-64 is out of date)
 WORKDIR /home/G2000/resources
@@ -35,6 +38,15 @@ RUN wget -O code.deb https://go.microsoft.com/fwlink/?LinkID=760868
 RUN dpkg -i code.deb
 RUN conda install flake8
 
+# Install other 3rd party tools
+RUN apt-get install -y meld
+RUN apt-get install -y vitables
+
+# Install desktop icons
+COPY install_desktop_icon.py /home/G2000/resources
+WORKDIR /home/G2000/resources
+RUN python install_desktop_icon.py
+
 RUN echo 'root:bl52l21fbl52l21f' |chpasswd
 RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
 
@@ -47,10 +59,8 @@ RUN mkdir /mnt/applog
 
 # VNC directories and files
 RUN mkdir /root/.vnc
-
 RUN echo 12345 | vncpasswd -f > /root/.vnc/passwd
 RUN chmod 600 /root/.vnc/passwd
-
 COPY xstartup /root/.vnc/xstartup
 RUN chmod 755 /root/.vnc/xstartup
 

@@ -4,6 +4,7 @@
 *~
 target/
 .doit.db
+.vscode/
 node_modules/
 src/main/python/Host/Common/swathP.pyd
 src/main/python/Host/Common/swathP.so

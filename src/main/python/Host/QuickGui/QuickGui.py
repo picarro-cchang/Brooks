@@ -87,7 +87,7 @@ else:
 if __debug__:
     print("Loading rpdb2")
     import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    rpdb2.start_embedded_debugger("hostdbg",timeout=36000)
     print("rpdb2 loaded")
 
 class ImageDatabase(object):
@@ -465,7 +465,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
     def OnLeftDown(self,evt):
         pos = evt.GetPositionTuple()
         item,flags = self.HitTest(pos)
-        if self.tipWindow:
+        if self.tipWindow and self.tipWindow.IsShown():
             self.tipWindow.Close()
         if self._DataSource.alarmData:
             name,mode,enabled,alarm1,clear1,alarm2,clear2 = self._DataSource.alarmData[item]
@@ -487,7 +487,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
         pos = evt.GetPositionTuple()
         item,flags = self.HitTest(pos)
         if item>=0:
-            if self.tipWindow:
+            if self.tipWindow and self.tipWindow.IsShown():
                 self.tipWindow.Close()
             rect = self.GetItemRect(item)
             left, top = self.ClientToScreenXY(rect.x, rect.y)
