@@ -10,15 +10,20 @@ File History:
 Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
 import math
-import numpy as np
 import operator
 import os
 
+import numpy as np
+
 from Host.autogen import interface
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Fitter.fitterCoreWithFortran import (
-    BiSpline, FrequencySquish, loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary, 
-    Galatry, Model, Quadratic, Sinusoid, Spline)
+from Host.Fitter.fitterCoreWithFortran import (BiSpline, FrequencySquish,
+                                               Galatry, Model, Quadratic,
+                                               Sinusoid, Spline,
+                                               loadPhysicalConstants,
+                                               loadSpectralLibrary,
+                                               loadSplineLibrary)
+
 
 class Spectrum(object):
     def __init__(self,name,config,basePath,env):
@@ -109,29 +114,23 @@ class SpectraSimulator(object):
     def __init__(self, filename):
         self.basePath = os.path.split(os.path.normpath(os.path.abspath(filename)))[0]
         self.config = CustomConfigObj(filename)
-        env = {}
+        self.env = {}
         if "CODE" in self.config:
             code = compile(self.config["CODE"]["code"], "CODE", "exec")
-            exec code in env
+            exec code in self.env
         if "VARIABLES" in self.config:
-            constants, sequences = self.findVariables(self.config["VARIABLES"], env)
-
-        self.spectra = {}
-        self.spectrumNamesById = {}
+            constants, sequences = self.findVariables(self.config["VARIABLES"])
+        self.env.update(dict(constants))
+        self.spectra = []
         for secName in self.config:
             if secName.startswith("SPECTRUM"):
-                sp = Spectrum(secName, self.config[secName], self.basePath, env)
-                for id in sp.spectrumIds:
-                    if id not in self.spectrumNamesById:
-                        self.spectrumNamesById[id] = []
-                    self.spectrumNamesById[id].append(secName)
-                self.spectra[secName] = sp
-        print self.spectra
-        for spectName in self.spectra:
-            spectrum = self.spectra[spectName]
-            spectrum.setupModel(dict(constants))
+                sp = Spectrum(secName, self.config[secName], self.basePath, self.env)
+                self.spectra.append(sp)
+        for spectrum in self.spectra:
+            spectrum.setupModel(self.env)
+        self.centerWavenumbers = np.asarray([spectrum.centerFrequency for spectrum in self.spectra])
 
-    def findVariables(self, variables, env={}):
+    def findVariables(self, variables):
         # Find entries in the variables dictionary which have values that evaluate to sequences
         #  and those which evaluate to constants. The result is the pair constants, sequences
         #  where constants is a list with (name,value) pairs and sequences is a list of
@@ -140,9 +139,22 @@ class SpectraSimulator(object):
         constants, sequences = [], []
         for k in variables:
             v = variables[k]
-            e = eval(v,env)
+            e = eval(v, self.env)
             if operator.isSequenceType(e):
                 sequences.append((k,e))
             else:
                 constants.append((k,e))
         return constants, sequences
+
+    def __call__(self, wavenumber, pressure, temperature):
+        """Find the spectrum whose center wavenumber is closest to the value given
+            and evaluate it for the specified pressure and temperature"""
+        spectrum = self.spectra[np.argmin(abs(np.mean(wavenumber) - self.centerWavenumbers))]
+        if pressure != self.env["pressure"] or temperature != self.env["temperature"]:
+            self.env["pressure"] = pressure
+            self.env["temperature"] = temperature
+            spectrum.updateModel(self.env)
+        if np.isscalar(wavenumber):
+            return spectrum.model(np.asarray([wavenumber]))[0]
+        else:
+            return spectrum.model(np.asarray(wavenumber))

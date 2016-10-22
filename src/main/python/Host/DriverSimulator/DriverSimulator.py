@@ -32,6 +32,7 @@ from Host.Common.SingleInstance import SingleInstance
 from Host.Driver.DasConfigure import DasConfigure
 from Host.DriverSimulator.DasSimulator import DasSimulator
 from Host.DriverSimulator.SpectraSimulator import SpectraSimulator
+from Host.Common.InstErrors import INST_ERROR_OKAY
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -126,6 +127,121 @@ class DriverRpcHandler(SharedTypes.Singleton):
         # register the functions contained in this file...
         self._register_rpc_functions_for_object(self)
         Log("Registered RPC functions")
+
+    def DAS_GetState(self, stateMachineIndex):
+        """Need to be implemented"""
+        return 1
+
+    def getLockStatus(self):
+        """Need to be implemented"""
+        hardwarePresent = self.rdDasReg("HARDWARE_PRESENT_REGISTER")
+        lockStatus = self.rdDasReg("DAS_STATUS_REGISTER")
+        allLasersTempLocked = True
+        if hardwarePresent & (1 << interface.HARDWARE_PRESENT_Laser1Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1 << interface.DAS_STATUS_Laser1TempCntrlLockedBit))
+        if hardwarePresent & (1 << interface.HARDWARE_PRESENT_Laser2Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1 << interface.DAS_STATUS_Laser2TempCntrlLockedBit))
+        if hardwarePresent & (1 << interface.HARDWARE_PRESENT_Laser3Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1 << interface.DAS_STATUS_Laser3TempCntrlLockedBit))
+        if hardwarePresent & (1 << interface.HARDWARE_PRESENT_Laser4Bit):
+            allLasersTempLocked = allLasersTempLocked and (lockStatus & (1 << interface.DAS_STATUS_Laser4TempCntrlLockedBit))
+
+        laserTempLockStatus = "Locked" if allLasersTempLocked else "Unlocked"
+        warmChamberTempLockStatus = "Locked" # if (lockStatus & (1 << interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
+        cavityTempLockStatus = "Locked" # if (lockStatus & (1 << interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
+        result = dict(laserTempLockStatus=laserTempLockStatus, warmChamberTempLockStatus=warmChamberTempLockStatus, cavityTempLockStatus = cavityTempLockStatus)
+        # Override lock status if this is specified in the config file
+        if "LockStatusOverride" in self.config:
+            section = self.config["LockStatusOverride"]
+            for key in section:
+                key = key.strip()
+                if key in result:
+                    result[key] = section[key].strip()
+        return result
+
+    def startTempControl(self):
+        """Need to be implemented"""
+        return INST_ERROR_OKAY
+
+    def startLaserControl(self):
+        """Need to be implemented"""
+        return INST_ERROR_OKAY
+
+    def hostReady(self, ready):
+        """Set or clear HOST_READY register"""
+        pass
+
+    def getPressureReading(self):
+        """Fetches the current cavity pressure.
+        """
+        return self.rdDasReg("CAVITY_PRESSURE_REGISTER")
+
+    def getProportionalValves(self):
+        """Fetches settings of inlet and output proportional valves.
+        """
+        return self.rdDasReg("VALVE_CNTRL_INLET_VALVE_REGISTER"),self.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_REGISTER")
+
+    def getCavityTemperatureAndSetpoint(self):
+        """Fetches cavity temperature and setpoint
+        """
+        return self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+
+    def getWarmingState(self):
+        """Fetches warm box temperature, cavity temperature and cavity pressure with their setpoints"""
+        return dict(WarmBoxTemperature=(
+            self.rdDasReg("WARM_BOX_TEMPERATURE_REGISTER"),
+            self.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")),
+            CavityTemperature=(
+                self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),
+                self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")),
+            CavityPressure=(
+                self.rdDasReg("CAVITY_PRESSURE_REGISTER"),
+                self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")))
+
+    def getValveCtrlState(self):
+        """Get the current valve control state. Valid values are:
+            0: Disabled (=VALVE_CNTRL_DisabledState)
+            1: Outlet control (=VALVE_CNTRL_OutletControlState)
+            2: Inlet control (=VALVE_CNTRL_InletControlState)
+            3: Manual control (=VALVE_CNTRL_ManualControlState)
+        """
+        return self.rdDasReg("VALVE_CNTRL_STATE_REGISTER")
+
+    def startOutletValveControl(self, pressureSetpoint=None, inletValve=None):
+        """ Start outlet valve control with the specified pressure setpoint and inlet valve settings, or using values in the configuration registers if the parameters are omitted """
+        result = {}
+        if pressureSetpoint is not None:
+            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",pressureSetpoint)
+        else:
+            pressureSetpoint = self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
+        if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_OutletControlState:
+            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
+        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_OutletControlState")
+        if inletValve is not None:
+            self.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",inletValve)
+        else:
+            inletValve = self.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")
+        result["cavityPressureSetpoint"] = pressureSetpoint
+        result["inletValve"] = inletValve
+        return result
+
+    def startInletValveControl(self, pressureSetpoint=None, outletValve=None):
+        """ Start inlet valve control with the specified pressure setpoint and outlet valve settings, or using values in the configuration registers if the parameters are omitted """
+        result = {}
+        if pressureSetpoint is not None:
+            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",pressureSetpoint)
+        else:
+            pressureSetpoint = self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
+        if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_InletControlState:
+            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
+        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_InletControlState")
+        if outletValve is not None:
+            self.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",outletValve)
+        else:
+            outletValve = self.rdDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER")
+        result["cavityPressureSetpoint"] = pressureSetpoint
+        result["outletValve"] = outletValve
+        return result
 
     def allVersions(self):
         versionDict = {}
@@ -294,6 +410,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def stopScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
 
+    def verifyInstallerId(self):
+        return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
+
     def wrDasReg(self, regIndexOrName, value, convert=True):
         return self.driver.wrDasReg(regIndexOrName, value, convert)
 
@@ -379,6 +498,21 @@ class DriverSimulator(SharedTypes.Singleton):
                 self.ver[ver] = co["Version"]["revno"]
             except Exception, err:
                 self.ver[ver] = "N/A"
+        # Get installer ID
+        try:
+            signaturePath = os.path.join(basePath, self.config.get("Files", "SignaturePath", "../../../installerSignature.txt"))
+        except:
+            signaturePath = os.path.join(basePath, "../../../installerSignature.txt")
+        try:
+            sigFd = open(signaturePath, "r")
+            self.installerId = sigFd.readline().strip()
+            sigFd.close()
+        except Exception, err:
+            print "%r" % err
+            self.installerId = None
+        self.analyzerType = self.installerId  # TODO: Read from configuration file
+        self.validInstallerId = True
+
         self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
         self.dasConfigure = None
         self.schemeTables = {}

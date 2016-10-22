@@ -24,6 +24,7 @@ class SpectrumControl(object):
     ambientPressure = prop_das(interface.AMBIENT_PRESSURE_REGISTER)
     analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
     cavityPressure = prop_das(interface.CAVITY_PRESSURE_REGISTER)
+    cavityTemperature = prop_das(interface.CAVITY_TEMPERATURE_REGISTER)
     dasStatus = prop_das(interface.DAS_STATUS_REGISTER)
     defaultThreshold = prop_das(interface.SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER)
     ditherTimeout = prop_das(interface.SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER)
@@ -308,7 +309,7 @@ class SpectrumControl(object):
         self.sim.tunerSimulator.slope = slope
         self.sim.tunerSimulator.timestamp = ts
         # Compute the loss using the spectral model here
-        loss = 1.0 + 0.8 / (1 + ((wavenumber - 6237.408)/0.02) ** 2)
+        loss = 0.001 * self.sim.driver.spectraSimulator(wavenumber, self.cavityPressure, self.cavityTemperature)
         rdResult = interface.RingdownEntryType()
         rdResult.timestamp = int(ts)
         rdResult.wlmAngle = thetaC
