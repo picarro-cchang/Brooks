@@ -373,6 +373,12 @@ elif sys.platform == "linux2":
         for arg in exeArgs[1:]:
             argList += shlex.split(arg)
         try:
+            # There seems to be some strange interaction between Pyro4, threading,
+            # Popen, and rpdb2 causing a race condition where process creation sometimes
+            # locks up the code.  A tip on StackOverflow (can't find the link)
+            # said sleep() before each Popen made the problem go away.
+            #
+            time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
@@ -532,6 +538,16 @@ class App(object):
         self.KillByName = True
         self.ShowDispatcherWarning = 1
 
+        # DebugMode == False runs interpreted python code with the -OO option.
+        # DebugMode == True runs without -OO and sets __debug__.  In some codes
+        #               this will load the rpdb2 debugger so the code can be run
+        #               in winpdb.
+        # DebugMode can be set for individual processes in supervisor.ini. It
+        # can be set globally in [GlobalDefaults] in supervisor.ini. If the key
+        # is missing debug mode is off.
+        #
+        self.DebugMode = False
+
         #now override any defaults with the passed in dictionary values...
         if DefaultSettings:
             assert isinstance(DefaultSettings, dict)
@@ -589,10 +605,10 @@ class App(object):
         for optionName in settableOptions:
             try:
                 option = CO.get(self._AppName, optionName)
-                if isinstance(self.__getattribute__(optionName), int):
-                    option = int(option)
-                elif isinstance(self.__getattribute__(optionName), bool):
+                if isinstance(self.__getattribute__(optionName), bool):
                     option = bool(option)
+                elif isinstance(self.__getattribute__(optionName), int):
+                    option = int(option)
                 self.__setattr__(optionName, option)
                 #add it to the dictionary we're using to keep track of what was loaded...
                 loadedOptions[optionName] = option
@@ -1362,6 +1378,7 @@ class Supervisor(object):
                 while True:
                     key = read_rawkb()
                     if key == "": break
+                    if len(key) > 1: break
                     if ord(key) in [17, 24]: #ctrl-q and ctrl-x
                         Log("Exit request received via keyboard input (Ctrl-X)")
                         self._ShutdownRequested = True

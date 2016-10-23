@@ -309,7 +309,7 @@ class SpectrumControl(object):
         self.sim.tunerSimulator.slope = slope
         self.sim.tunerSimulator.timestamp = ts
         # Compute the loss using the spectral model here
-        loss = 0.001 * self.sim.driver.spectraSimulator(wavenumber, self.cavityPressure, self.cavityTemperature)
+        loss = 0.001 * self.sim.driver.spectraSimulator(wavenumber, self.cavityPressure, 273.15 + self.cavityTemperature)
         rdResult = interface.RingdownEntryType()
         rdResult.timestamp = int(ts)
         rdResult.wlmAngle = thetaC
@@ -552,7 +552,7 @@ class SpectrumControl(object):
     def advanceSchemeRow(self):
         self.row += 1
         if self.incrFlag:
-            self.incrCounterNext = self.incrCounter
+            self.incrCounterNext = self.incrCounter + 1
             self.incrFlag = 0
         if self.row >= self.scheme.numRows:
             self.advanceSchemeIteration()
@@ -568,6 +568,8 @@ class SpectrumControl(object):
             self.dwell = 0
 
     def advanceScheme(self):
+        self.schemeCounter += 1
+        self.incrCounterNext = self.incrCounter + 1
         self.iter = 0
         self.dwell = 0
         self.row = 0
