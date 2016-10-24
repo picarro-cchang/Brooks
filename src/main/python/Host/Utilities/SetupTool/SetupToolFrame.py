@@ -1,6 +1,7 @@
 # -*- coding: iso-8859-15 -*-
 import os
 import sys
+import time
 import wx
 import wx.lib.agw.aui as aui
 from Host.Utilities.SetupTool.SetupToolPages import *
@@ -79,7 +80,7 @@ class SetupToolFrame(wx.Frame):
 
         # Overall properties
         self.SetTitle("Picarro Analyzer Setup Tool")
-        self.labelFooter = wx.StaticText(self.panelBottom, -1, "Copyright Picarro, Inc. 1999-2010", style=wx.ALIGN_CENTER)
+        self.labelFooter = wx.StaticText(self.panelBottom, -1, "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0], style=wx.ALIGN_CENTER)
 
         # Mode selection
         self.labelMode = wx.StaticText(self.panelBottom, -1, "Mode")

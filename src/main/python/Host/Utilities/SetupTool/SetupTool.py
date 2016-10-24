@@ -333,8 +333,7 @@ def handleCommandSwitches():
 
 if __name__ == "__main__":
     setupToolIni = handleCommandSwitches()
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
+    app = wx.App(False)
     frame = SetupTool(setupToolIni, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()
