@@ -1,5 +1,38 @@
 #!/bin/bash
 
+# Parse shell script arguments.
+#
+# -d    Run the code with the rpdb2 debugger enabled
+#
+getopt --test > /dev/null
+if [[ $? != 4 ]]; then
+    echo "getopt not installed"
+    exit 1
+fi
+SHORT=d::
+LONG=debug
+PARSED=`getopt --options d:: --longoptions $LONG --name "$0" -- "$@"`
+DEBUG=false
+if [[ $? != 0 ]]; then
+    exit 2
+fi
+eval set -- "$PARSED"
+while true; do
+    case "$1" in
+        -d|--debug)
+            echo "debug mode"
+            DEBUG=true
+            shift
+            break
+            ;;
+        # handle the missing or unknow opt
+        *)
+            echo "unknow opt"
+            break
+            ;;
+    esac
+done
+
 # Set the version of python to use. The preference is to use
 # a packaged environment like Anaconda so that you have better
 # control over the package versions.
@@ -29,6 +62,11 @@ SUPINI=$CONFIGDIR/AppConfig/Config/Supervisor/supervisorEXE_AMADS_LCT.ini
 # files that have relative paths that assume the code is started in
 # that directory.
 cd $PYDIR/Supervisor
-$PYTHON $OPT $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
+#$PYTHON $OPT $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
 #rpdb2 --debugee $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
 
+if [ "$DEBUG" = true ]; then
+    rpdb2 --debugee $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
+else
+    $PYTHON $OPT $PYDIR/Supervisor/Supervisor.py --vi $RDINI -c $SUPINI
+fi
