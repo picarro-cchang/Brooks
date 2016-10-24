@@ -19,8 +19,10 @@ from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
-from Host.DriverSimulator.Simulators import InjectionSimulator, TunerSimulator
+from Host.DriverSimulator.Simulators import (
+    InjectionSimulator, PressureSimulator, TunerSimulator)
 from Host.DriverSimulator.SpectrumControl import SpectrumControl
+from Host.DriverSimulator.ValveControl import ValveControl
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
@@ -107,6 +109,8 @@ class DasSimulator(object):
         self.laser4CurrentControl = None
         # and the spectrum controller
         self.spectrumControl = SpectrumControl(self)
+        # and the valve controller
+        self.valveControl = ValveControl(self)
         #
         self.laser1Simulator = None
         self.laser2Simulator = None
@@ -114,10 +118,8 @@ class DasSimulator(object):
         self.laser4Simulator = None
         #
         self.injectionSimulator = InjectionSimulator(self)
+        self.pressureSimulator = PressureSimulator(self)
         self.tunerSimulator = TunerSimulator(self)
-        # self.pztSimulator = PztSimulator(self)
-        # self.laserLockerSimulator = LaserLockerSimulator(self)
-        # self.cavitySimulator = CavitySimulator(self)
 
     def addSimulator(self, simulator):
         self.simulators.add(simulator)
@@ -155,6 +157,10 @@ class DasSimulator(object):
     def initScheduler(self):
         now = self.getDasTimestamp()
         self.scheduler = Scheduler(self.operationGroups, now, self.hostToDspSender.doOperation)
+
+    def message_puts(self, level, message):
+        ts = self.getDasTimestamp()
+        self.dsp_message_queue.append((ts, level, message))
 
     def rdDasReg(self, regIndexOrName):
         index = self._reg_index(regIndexOrName)

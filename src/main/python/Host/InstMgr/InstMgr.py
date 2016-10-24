@@ -373,7 +373,7 @@ class InstMgr(object):
         self.DisplayBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_INSTMGR_DISPLAY)
     def _SendDisplayMessage(self, msg):
         try:
-            Log(msg, Level = 1.5)
+            Log(msg)
             formatString=">%ds" %(len(msg)+1)  #Initial format string: - '>' for big endian(labview GUI uses big endian byte order)
                                                #                       - +1 for null terminator
             # add null termination before broadcasting.

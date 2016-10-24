@@ -2,7 +2,7 @@
 #
 """
 File Name: SpectrumControl.py
-Purpose: Classes for temperature controllers
+Purpose: Controller for collecting and assembling spectra
 
 File History:
     26-Sep-2016  sze  Initial version.
@@ -10,6 +10,7 @@ File History:
 Copyright (c) 2016 Picarro, Inc. All rights reserved
 """
 import math
+import random
 
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
@@ -87,6 +88,8 @@ class SpectrumControl(object):
         self.sim = sim
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
+
+    def init(self):
         self.schemeCounter = 0
         # incrCounter increments to incicate where a spectrum ends and a fit should take place. It interacts
         #  with the fit flag in schemes
@@ -262,11 +265,11 @@ class SpectrumControl(object):
                 ratio1 = (eta1 - self.eta1_offset) / (ref1 - self.ref1_offset)
                 ratio2 = (eta2 - self.eta2_offset) / (ref2 - self.ref2_offset)
                 lockError = self.ratio1Multiplier * (ratio1 - self.ratio1Center) + self.ratio2Multiplier * (ratio2 - self.ratio2Center)
-                # print "Fine", fine, "LockError", lockError
                 fine += 20000 * lockError
                 if fine < 0 or fine > 65535:
                     print "Lock failed"
                     return None
+            # print "Fine", fine, "LockError", lockError
         else:
             laserCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=fine, laserOn=True)
             wavenumber, power = laserSimulator.getLaserOutput(current=laserCurrent)
@@ -310,6 +313,7 @@ class SpectrumControl(object):
         self.sim.tunerSimulator.timestamp = ts
         # Compute the loss using the spectral model here
         loss = 0.001 * self.sim.driver.spectraSimulator(wavenumber, self.cavityPressure, 273.15 + self.cavityTemperature)
+        loss *= (1.0 + 2e-4*random.gauss(0.0,1.0))
         rdResult = interface.RingdownEntryType()
         rdResult.timestamp = int(ts)
         rdResult.wlmAngle = thetaC

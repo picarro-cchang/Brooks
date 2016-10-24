@@ -363,6 +363,43 @@ class Laser4Simulator(LaserSimulator):
     laserNum = 4
 
 
+class PressureSimulator(Simulator):
+    cavityPressure = prop_das(interface.CAVITY_PRESSURE_REGISTER)
+    cavityPressureAdc = prop_das(interface.CAVITY_PRESSURE_ADC_REGISTER)
+    flow = prop_das(interface.FLOW1_REGISTER)
+    inlet = prop_das(interface.VALVE_CNTRL_INLET_VALVE_REGISTER)
+    outlet = prop_das(interface.VALVE_CNTRL_OUTLET_VALVE_REGISTER)
+
+    def __init__(self, sim):
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        self.fpga_registers = sim.fpga_registers
+        self.inletPressure = 760
+        self.outletPressure = 5  # Pump base pressure
+        self.inletMaxConductance = 0.3
+        self.outletMaxConductance = 2.0
+        self.nextFlow = 0.0
+        self.nextPressure = 760
+        self.dt = 0.2
+        self.adcScale = 6.92300018272e-05
+        self.adcOffset = 0.0
+
+    def valveModel(self, value, maxConductance, center=32768, range=4096):
+        return 0.5*maxConductance*(1.0 + math.tanh(float((value - center) / range)))
+
+    def step(self):
+        inConductance = self.valveModel(self.inlet, self.inletMaxConductance)
+        outConductance = self.valveModel(self.outlet, self.outletMaxConductance)
+        inFlow = (self.inletPressure - self.cavityPressure) * inConductance
+        outFlow = (self.cavityPressure - self.outletPressure) * outConductance
+        self.nextFlow = inFlow
+        self.nextPressure = self.cavityPressure + (inFlow - outFlow)*self.dt
+
+    def update(self):
+        self.flow = self.nextFlow
+        self.cavityPressureAdc = (self.nextPressure - self.adcOffset)/self.adcScale
+
+
 class TunerSimulator(Simulator):
     sweepRampLow = prop_das(interface.TUNER_SWEEP_RAMP_LOW_REGISTER)
     sweepRampHigh = prop_das(interface.TUNER_SWEEP_RAMP_HIGH_REGISTER)

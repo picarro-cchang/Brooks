@@ -18,7 +18,7 @@ from Host.DriverSimulator.LaserCurrentControl import (
 from Host.DriverSimulator.Simulators import (
     Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator, LaserOpticalModel)
 from Host.DriverSimulator.TempControl import (
-    Laser1TempControl, Laser2TempControl, Laser3TempControl, Laser4TempControl)
+    CavityTempControl, Laser1TempControl, Laser2TempControl, Laser3TempControl, Laser4TempControl, WarmBoxTempControl)
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
@@ -46,6 +46,10 @@ class ActionHandler(object):
             interface.ACTION_TEMP_CNTRL_LASER3_STEP: self.tempCntrlLaser3Step,
             interface.ACTION_TEMP_CNTRL_LASER4_INIT: self.tempCntrlLaser4Init,
             interface.ACTION_TEMP_CNTRL_LASER4_STEP: self.tempCntrlLaser4Step,
+            interface.ACTION_TEMP_CNTRL_CAVITY_INIT: self.tempCntrlCavityInit,
+            interface.ACTION_TEMP_CNTRL_CAVITY_STEP: self.tempCntrlCavityStep,
+            interface.ACTION_TEMP_CNTRL_WARM_BOX_INIT: self.tempCntrlWarmBoxInit,
+            interface.ACTION_TEMP_CNTRL_WARM_BOX_STEP: self.tempCntrlWarmBoxStep,            
             interface.ACTION_FILTER: self.filter,
             interface.ACTION_FLOAT_REGISTER_TO_FPGA: self.floatRegisterToFpga,
             interface.ACTION_FPGA_TO_FLOAT_REGISTER: self.fpgaToFloatRegister,
@@ -63,6 +67,8 @@ class ActionHandler(object):
             interface.ACTION_SPECTRUM_CNTRL_INIT: self.spectCntrlInit,
             interface.ACTION_SPECTRUM_CNTRL_STEP: self.spectCntrlStep,
             interface.ACTION_ADC_TO_PRESSURE: self.adcToPressure,
+            interface.ACTION_VALVE_CNTRL_INIT: self.valveCntrlInit,
+            interface.ACTION_VALVE_CNTRL_STEP: self.valveCntrlStep,
         }
 
     def adcToPressure(self, params, env, when, command):
@@ -232,7 +238,9 @@ class ActionHandler(object):
         return interface.STATUS_OK
 
     def spectCntrlInit(self, params, env, when, command):
-        pass
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.spectrumControl.init()
 
     def spectCntrlStep(self, params, env, when, command):
         if 0 != len(params):
@@ -245,6 +253,7 @@ class ActionHandler(object):
         for simulator in self.sim.simulators:
             simulator.step()
         self.sim.injectionSimulator.step()
+        self.sim.pressureSimulator.step()
         # The following collects ringdowns in virtual time and is called at the
         #  of end of a timeslice
         self.sim.spectrumControl.collectSpectrum(when)
@@ -275,6 +284,11 @@ class ActionHandler(object):
         message = "At %d testScheduler %s" % (when, " ".join(["%d" % param for param in params]))
         self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_STANDARD, message))
         return interface.STATUS_OK
+
+    def tempCntrlCavityInit(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        self.sim.CavityTempControl = CavityTempControl(self.sim)
 
     def tempCntrlLaser1Init(self, params, env, when, command):
         if 0 != len(params):
@@ -308,6 +322,16 @@ class ActionHandler(object):
         self.sim.addSimulator(self.sim.laser4Simulator)
         return interface.STATUS_OK
 
+    def tempCntrlWarmBoxInit(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        self.sim.WarmBoxTempControl = WarmBoxTempControl(self.sim)
+
+    def tempCntrlCavityStep(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.CavityTempControl.step()
+
     def tempCntrlLaser1Step(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
@@ -328,12 +352,18 @@ class ActionHandler(object):
             return interface.ERROR_BAD_NUM_PARAMS
         return self.sim.laser4TempControl.step()
 
+    def tempCntrlWarmBoxStep(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.WarmBoxTempControl.step()
+
     def updateFromSimulators(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         for simulator in self.sim.simulators:
             simulator.update()
         self.sim.injectionSimulator.update()
+        self.sim.pressureSimulator.update()
         return interface.STATUS_OK
 
     def unknownAction(self, params, env, when, command):
@@ -356,6 +386,16 @@ class ActionHandler(object):
             "FPGA_INJECT",
             "INJECT_LASER%d_FINE_CURRENT" % laserNum))
         return interface.STATUS_OK
+
+    def valveCntrlInit(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.valveControl.init()
+
+    def valveCntrlStep(self, params, env, when, command):
+        if 0 != len(params):
+            return interface.ERROR_BAD_NUM_PARAMS
+        return self.sim.valveControl.step()
 
     def writeBlock(self, params, env, when, command):
         offset = params[0]

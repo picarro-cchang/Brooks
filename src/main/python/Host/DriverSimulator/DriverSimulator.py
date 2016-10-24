@@ -147,8 +147,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
             allLasersTempLocked = allLasersTempLocked and (lockStatus & (1 << interface.DAS_STATUS_Laser4TempCntrlLockedBit))
 
         laserTempLockStatus = "Locked" if allLasersTempLocked else "Unlocked"
-        warmChamberTempLockStatus = "Locked" # if (lockStatus & (1 << interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
-        cavityTempLockStatus = "Locked" # if (lockStatus & (1 << interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
+        warmChamberTempLockStatus = "Locked" if (lockStatus & (1 << interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
+        cavityTempLockStatus = "Locked" if (lockStatus & (1 << interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
         result = dict(laserTempLockStatus=laserTempLockStatus, warmChamberTempLockStatus=warmChamberTempLockStatus, cavityTempLockStatus = cavityTempLockStatus)
         # Override lock status if this is specified in the config file
         if "LockStatusOverride" in self.config:
@@ -256,7 +256,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             versionDict["config - common version no"] = self.ver["commonVer"]
         except Exception, err:
             print err
-        Log("version = %s" % pprint.pformat(versionDict))
+        Log("version = %s" % versionDict)
         return versionDict
 
     def dasGetTicks(self):
@@ -332,6 +332,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser,
                                row.threshold, row.pztSetpoint, 0.001 * row.laserTemp) for row in schemeTable.rows]}
 
+    def rdValveSequence(self):
+        """Reads the valve sequence table"""
+        sequenceRows = []
+        for i in range(interface.NUM_VALVE_SEQUENCE_ENTRIES):
+            entry = self.driver.valveSequence[i]
+            sequenceRows.append(((entry.maskAndValue >> 8) & 0xFF, entry.maskAndValue & 0xFF, entry.dwell))
+        return sequenceRows
+
     def restoreRegValues(self,vault):
         # Restore register values stored in the vault (produced by saveRegValues)
         for reg, value in vault:
@@ -385,6 +393,46 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def setSingleScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER, interface.SPECT_CNTRL_SchemeSingleMode)
+
+    def shutDown(self):
+        '''Place instrument in idle state for shutdown'''
+        # Disable spectrum controller
+        self.wrDasReg('SPECT_CNTRL_STATE_REGISTER','SPECT_CNTRL_IdleState')
+        # Wait for all current controllers to leave automatic state
+        auto = interface.LASER_CURRENT_CNTRL_AutomaticState
+        while True:
+            if self.rdDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
+               self.rdDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
+               self.rdDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
+               self.rdDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER')!=auto:
+                break
+            else:
+                time.sleep(0.1)
+        # Close all solenoid valves
+        self.wrDasReg('VALVE_CNTRL_SOLENOID_VALVES_REGISTER',0)
+        # Close proportional valves
+        self.wrDasReg('VALVE_CNTRL_STATE_REGISTER','VALVE_CNTRL_DisabledState')
+        # Disable laser current control loops
+        self.wrDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        # Ensure SOA is shorted and turn off laser currents in FPGA
+        self.wrFPGA('FPGA_INJECT','INJECT_CONTROL',0)
+        # Disable all temperature controllers
+        self.wrDasReg('LASER1_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER2_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER3_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER4_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('HEATER_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        # Disable drive to warm box and hot box TECs
+        self.wrDasReg('TEC_CNTRL_REGISTER','TEC_CNTRL_Disabled')
+        # Disable proportional valve PWM
+        self.wrFPGA('FPGA_DYNAMICPWM_INLET','DYNAMICPWM_CS',0)
+        self.wrFPGA('FPGA_DYNAMICPWM_OUTLET','DYNAMICPWM_CS',0)
+        # Turn off voltage to PZT
+        self.wrDasReg('ANALYZER_TUNING_MODE_REGISTER','ANALYZER_TUNING_LaserCurrentTuningMode')
+        self.wrFPGA('FPGA_TWGEN','TWGEN_PZT_OFFSET',0)
 
     def startScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
@@ -462,6 +510,20 @@ class DriverRpcHandler(SharedTypes.Singleton):
             schemeTable.rows[i].laserTemp = int(1000 * row[6]) if len(row) >= 7 else 0
         self.driver.schemeTables[schemeNum] = schemeTable
 
+    def wrValveSequence(self,sequenceRows):
+        """Writes a valve sequence"""
+        if len(sequenceRows) > interface.NUM_VALVE_SEQUENCE_ENTRIES:
+            raise ValueError("Maximum number of rows in a valve sequence is %d" % interface.NUM_VALVE_SEQUENCE_ENTRIES)
+        for i, (mask, value, dwell) in enumerate(sequenceRows):
+            if mask < 0 or mask > 0xFF:
+                raise ValueError("Mask in valve sequence is eight bits wide")
+            if value < 0 or value > 0xFF:
+                raise ValueError("Value in valve sequence is eight bits wide")
+            if dwell < 0 or dwell > 0xFFFF:
+                raise ValueError("Dwell in valve sequence is sixteen bits wide")
+            self.driver.valveSequence[i].maskAndValue = (mask << 8) | (value & 0xFF)
+            self.driver.valveSequence[i].dwell = dwell
+
     def wrVirtualLaserParams(self, vLaserNum, laserParams):
         """Wites the virtual laser parameters (specified as a dictionary) associated with
            virtual laser vLaserNum (ONE-based).
@@ -515,6 +577,7 @@ class DriverSimulator(SharedTypes.Singleton):
 
         self.instrConfigFile = os.path.join(basePath, self.config["Files"]["instrConfigFileName"])
         self.dasConfigure = None
+        self.valveSequence = (interface.ValveSequenceEntryType * interface.NUM_VALVE_SEQUENCE_ENTRIES)()
         self.schemeTables = {}
         self.virtualLaserParams = {}
         # Set up RPC handler
@@ -826,7 +889,6 @@ def handleCommandSwitches():
 
 if __name__ == "__main__":
     try:
-        print "Hello from DriverSimulator"
         driverApp = SingleInstance("DriverSimulator")
         if driverApp.alreadyrunning():
             Log("Instance of driver simulator us already running", Level=3)
