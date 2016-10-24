@@ -867,7 +867,8 @@ class Archiver(object):
                 if analyzerId == None:
                     analyzerId = "Unknown"
             except Exception, err:
-                print err
+                print("Link to CRDS_Driver not established, analyzer ID unknown.")
+                print("You can ignore this error if running in virtual mode.")
                 analyzerId = "Unknown"
             self.uploader = S3Uploader(uploadBucketName, analyzerId)
             self.retryUploadInterval = self.config.getfloat(_MAIN_CONFIG_SECTION, "RetryUploadInterval", 30.0)
@@ -1042,10 +1043,16 @@ def main():
     ar = Archiver(configFile)
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     if test:
-        fname = "c:/temp/AADS06wlm.dat"
+        if sys.platform == "win32":
+            fname = "c:/temp/AADS06wlm.dat"
+        else:
+            fname = "/var/temp/AADS06wlm.dat"
         seqnum = 0
         while True:
-            tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
+            if sys.platform == "win32":
+                tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
+            else:
+                tmpName = "/var/temp/seq%07d.dat" % (seqnum,)
             seqnum += 1
             shutil.copy2(fname,tmpName)
             ar.RPC_ArchiveFile("Spectra",tmpName,True)
