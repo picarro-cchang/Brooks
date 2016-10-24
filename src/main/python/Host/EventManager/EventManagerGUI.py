@@ -122,13 +122,14 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             if col == 0: #idx
                 return "%s" % (self._DataSource[item].Index,)
             elif col == 1: #time
+                retStr = ""
                 if self.ShowEventDate:
-                    ret = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._DataSource[item].EventTime))
+                    retStr = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._DataSource[item].EventTime))
                 else:
-                    ret = time.strftime("%H:%M:%S", time.localtime(self._DataSource[item].EventTime))
+                    retStr = time.strftime("%H:%M:%S", time.localtime(self._DataSource[item].EventTime))
                 ms = int(self._DataSource[item].EventTime * 1000) % 1000
-                ret += ".%03d" % ms
-                return ret
+                retStr += ".%03d" % ms
+                return retStr
             elif col == 2: #source
                 return "%s" % self._DataSource[item].Source
             elif col == 3: #code
@@ -154,6 +155,14 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             elif evtLevel == 2:
                 return self.IconIndex_Warning
             elif evtLevel == 3: #Major
+                return self.IconIndex_Critical
+            else:
+                # If level is not 0, 1, 2, 3 there is a bug so flag the message
+                # with a critical icon.
+                print("Event message number %s: Incorrect event level %s from %s"
+                        %(self._DataSource[item].Index,
+                            evtLevel,
+                            self._DataSource[item].Source))
                 return self.IconIndex_Critical
         except IndexError:
             #Likely due to the EventList getting shrunk behind the scenes so our item index is now too big.
@@ -501,9 +510,11 @@ class MyFrame(wx.Frame):
         RootSizer.Fit(self)
         RootSizer.SetSizeHints(self)
         self.Layout()
-class EventViewerApp(wx.PySimpleApp):
+
+class EventViewerApp(wx.App):
     def OnExit(self):
         print "App exited!"
+
 class LogViewer(object):
     def __init__(self, EventDataSource, EventSourceCounter, EventSourceList, debug = False):
         self._EventDataSource = EventDataSource
@@ -511,7 +522,6 @@ class LogViewer(object):
         self._EventSourceList = EventSourceList
         self.commandQueue = Queue.Queue(0)
         self.app = EventViewerApp(0)
-        wx.InitAllImageHandlers()
         self.frame_1 = MyFrame(None, -1, "", size=(900,700))
         self.frame_1.debug_mode = debug
         self.frame_1.Initialize(DataSource = EventDataSource, \
