@@ -286,12 +286,12 @@ class SpectrumControl(object):
         # TODO: Add pressure correction
         thetaC = vLaserParams["tempSensitivity"] * (self.rdParams.etalonTemperature - vLaserParams["calTemp"]) + math.atan2(arctanvar1,arctanvar2)
 
-        # Model the PZT
+        # Model the PZT. Note that increasing the PZT value DECREASES the cavity length.
         cavityFsr = 0.0206
         pztThrow = 1.5*1.5e-4  # Maximum PZT motion in cm
         alpha = wavenumber / cavityFsr
         dz = 1.0 / (2 * cavityFsr * alpha * pztThrow)  # Separation between resonances in normalized PZT units
-        z0 = dz * (math.ceil(alpha) - alpha)  # Smallest non-negative normalized PZT position for resonance
+        z0 = dz * (alpha - math.floor(alpha))  # Smallest non-negative normalized PZT position for resonance
         z = z0
         # Calculate allowed tuner values that will lead to ringdowns
         allowedValues = []
