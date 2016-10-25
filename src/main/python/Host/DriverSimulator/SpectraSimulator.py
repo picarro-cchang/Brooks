@@ -33,7 +33,6 @@ class Spectrum(object):
         self.splineLibrary = loadSplineLibrary(libName)
         self.physicalConstants = loadPhysicalConstants(libName)
         self.config = config
-        self.spectrumIds = np.asarray(eval(config["SpectrumId"]+",",env))
 
     def setupModel(self, env):
         config = self.config

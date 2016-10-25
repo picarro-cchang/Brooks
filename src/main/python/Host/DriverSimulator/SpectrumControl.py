@@ -261,7 +261,7 @@ class SpectrumControl(object):
                 laserCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=fine, laserOn=True)
                 wavenumber, power = laserSimulator.getLaserOutput(current=laserCurrent)
                 wlmModel = self.sim.injectionSimulator.wlmModel
-                eta1, ref1, eta2, ref2 = wlmModel.calcOutputs(wavenumber, power, etalonTemp, self.ambientPressure)
+                eta1, ref1, eta2, ref2 = wlmModel.calcOutputs(wavenumber + random.gauss(0.0,7e-5), power, etalonTemp, self.ambientPressure)
                 ratio1 = (eta1 - self.eta1_offset) / (ref1 - self.ref1_offset)
                 ratio2 = (eta2 - self.eta2_offset) / (ref2 - self.ref2_offset)
                 lockError = self.ratio1Multiplier * (ratio1 - self.ratio1Center) + self.ratio2Multiplier * (ratio2 - self.ratio2Center)
@@ -274,7 +274,7 @@ class SpectrumControl(object):
             laserCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=fine, laserOn=True)
             wavenumber, power = laserSimulator.getLaserOutput(current=laserCurrent)
             wlmModel = self.sim.injectionSimulator.wlmModel
-            eta1, ref1, eta2, ref2 = wlmModel.calcOutputs(wavenumber, power, etalonTemp, self.ambientPressure)
+            eta1, ref1, eta2, ref2 = wlmModel.calcOutputs(wavenumber + random.gauss(0.0,7e-5), power, etalonTemp, self.ambientPressure)
             ratio1 = (eta1 - self.eta1_offset) / (ref1 - self.ref1_offset)
             ratio2 = (eta2 - self.eta2_offset) / (ref2 - self.ref2_offset)
 
@@ -290,7 +290,7 @@ class SpectrumControl(object):
         cavityFsr = 0.0206
         pztThrow = 1.5*1.5e-4  # Maximum PZT motion in cm
         alpha = wavenumber / cavityFsr
-        dz = 1.0 / (2 * cavityFsr * alpha * pztThrow)  # Separation between resonances in normalized PZT units
+        dz = 1.0 / (2 * wavenumber * pztThrow)  # Separation between resonances in normalized PZT units
         z0 = dz * (alpha - math.floor(alpha))  # Smallest non-negative normalized PZT position for resonance
         z = z0
         # Calculate allowed tuner values that will lead to ringdowns

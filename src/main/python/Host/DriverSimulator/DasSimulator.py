@@ -257,7 +257,6 @@ class Scheduler(object):
 
     def execUntil(self, ts):
         while self.runqueue:
-
             # Get the next action to perform
             when, priority, group = self.runqueue[0]
             if when > ts:
