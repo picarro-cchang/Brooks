@@ -150,15 +150,18 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             evtLevel = self._DataSource[item].Event.Level
             if evtLevel == 0: #debug
                 return self.IconIndex_Info
-            elif evtLevel == 1:
+            elif evtLevel == 1 or evtLevel == 1.5:
                 return -1
             elif evtLevel == 2:
                 return self.IconIndex_Warning
             elif evtLevel == 3: #Major
                 return self.IconIndex_Critical
             else:
-                # If level is not 0, 1, 2, 3 there is a bug so flag the message
+                # If level is not 0, 1, 1.5, 2, 3 there is a bug so flag the message
                 # with a critical icon.
+                # Level 1.5 is a special case from InstrMgr to show the hardware
+                # status on the QuickGUI status panel.
+                # 
                 print("Event message number %s: Incorrect event level %s from %s"
                         %(self._DataSource[item].Index,
                             evtLevel,
