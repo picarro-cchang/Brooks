@@ -573,6 +573,8 @@
                                     <choice>IL(fine) vs Wavenumber</choice>
                                     <choice>IL(fine) vs Time</choice>
                                     <choice>Loss vs IL(fine)</choice>
+                                    <choice>Laser Temp vs Wavenumber</choice>
+                                    <choice>Laser Temp vs Time</choice>
                                 </choices>
                                 <events>
                                     <handler event="EVT_RADIOBOX">onSelectGraphType</handler>

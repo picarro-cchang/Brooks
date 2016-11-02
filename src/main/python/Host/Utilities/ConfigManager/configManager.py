@@ -10,6 +10,8 @@ import compiler
 import optparse
 import sys
 
+# Flag used to set the default view of the config file tree widget
+_areFilesMissing = False
 
 def evalStringLit(s):
     return compiler.parse(s,mode='eval').node.value
@@ -61,6 +63,7 @@ class ConfigNode(object):
         self.absPath = os.path.abspath(fileName)
         self.basePath,n = os.path.split(self.absPath)
         self.fileName = n
+        self.fileExists = True
         self.childRefs = []
         self.children = []
         self.parent = kwargs.get('parent',None)
@@ -250,6 +253,7 @@ class SupervisorConfigNode(ConfigNode):
         else: return DefIniConfigNode
 
 class ConfigManager(ConfigManagerGui):
+
     def __init__(self,*a,**k):
         ConfigManagerGui.__init__(self,*a,**k)
         # self.Bind(wx.EVT_TREE_ITEM_EXPANDED,self.onItemExpanded,self.treeCtrlFiles)
@@ -285,6 +289,18 @@ class ConfigManager(ConfigManagerGui):
         self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
         self.updateTimer.Start(milliseconds=2000)
 
+        # The tree widget starts out collapsed at the root node.
+        # Children are added to the internal data structure as the
+        # user clicks around, diving into child nodes.
+        # Tell the GUI to display the tree expanded so it will
+        # traverse the entire tree once through.
+        #
+        # If no files are missing, display the tree collapse to retain
+        # the usual behavior. The call to CollapseAll() is in main
+        # after wx.Show().
+        #
+        self.treeCtrlFiles.ExpandAll()
+
     def traverse(self, traverseroot, function):
         function(traverseroot)
         child, cookie = self.treeCtrlFiles.GetFirstChild(traverseroot)
@@ -308,6 +324,7 @@ class ConfigManager(ConfigManagerGui):
         self.addTreeNodes(evt.GetItem())
 
     def onSelChanged(self,evt):
+        global _areFilesMissing
         selNode = self.treeCtrlFiles.GetItemPyData(evt.GetItem())
         # If node is not currently open, open in a new tab
         for i,n in enumerate(self.notebookEditorFileAbsPaths):
@@ -352,6 +369,7 @@ class ConfigManager(ConfigManagerGui):
                 self.notebookEditorFileMtimes.append(os.stat(selNode.absPath).st_mtime)
             except:
                 print "Cannot find file"
+                _areFilesMissing = True
                 self.notebookEditorFileMtimes.append(None)
             finally:
                 if f: f.close()
@@ -359,7 +377,10 @@ class ConfigManager(ConfigManagerGui):
         self.notebookEditors.SetSelection(i)
         self.treeCtrlFiles.SetFocus()
 
+    # Construct the part of the tree widget.  As we go test if each file
+    # exists and display the missing files in bold text for easy identification.
     def addTreeNodes(self,parentItem):
+        global _areFilesMissing
         top = self.treeCtrlFiles.GetItemPyData(parentItem)
         for c in top.children:
             c.findChildren()
@@ -369,6 +390,13 @@ class ConfigManager(ConfigManagerGui):
             self.treeNodesByFileAbsPath[c.absPath].append(node)
             self.treeCtrlFiles.SetItemPyData(node,c)
             self.treeCtrlFiles.SetItemHasChildren(node,bool(c.children))
+            try:
+                f = open(c.absPath,"r")
+                f.close()
+                self.treeCtrlFiles.SetItemBold(node,False)
+            except:
+                _areFilesMissing = True
+                self.treeCtrlFiles.SetItemBold(node,True)
 
     def onEditorSelected(self,evt):
         # Place absolute path name in status bar
@@ -735,38 +763,48 @@ Displays the file open dialog to prompt for a filename by default.
                       default=None,
                       help=('Open the specified Supervisor Launcher file to display a list of configurations to choose from.'))
 
+    parser.add_option('-i', dest='supervisorIniFilename', default=None,
+            help=('Open a Supervisor ini file and display the config file dependency tree.'))
+
+    parser.add_option('-n', '--no-gui', action='store_true', dest='noGui',
+            help=('Traverse the supervisor ini file and determine if any files are missing.'))
+
     options, _ = parser.parse_args()
 
     return options
 
 
 if __name__ == "__main__":
+    #_areFilesMissing = False
     options = parseOptions()
-
     fname = ""
     dname = ""
     fSelectFromLauncher = False
     fOpenFileDialog = False
+    fOpenIniFile = False
 
-    print options.launcherFilename
+    displayGui = True
+    if options.noGui is True:
+        displayGui = False
 
     if options.configFilename is not None:
         if not os.path.isfile(options.configFilename):
             print "File '%s' does not exist!" % options.configFilename
             sys.exit(1)
-
         fname = os.path.split(options.configFilename)
         dname = os.path.dirname(options.configFilename)
         if dname == "":
             dname = os.getcwd()
-
     elif options.launcherFilename is not None:
         if not os.path.isfile(options.launcherFilename):
             print "File '%s' does not exist!" % options.launcherFilename
             sys.exit(1)
-
         fSelectFromLauncher = True
-
+    elif options.supervisorIniFilename is not None:
+        if not os.path.isfile(options.supervisorIniFilename):
+            print "file '%s' does not exist!" % options.supervisorIniFilename
+            sys.exit(1)
+        fOpenIniFile = True
     else:
         fOpenFileDialog = True
 
@@ -777,7 +815,8 @@ if __name__ == "__main__":
     if fOpenFileDialog is True:
         dlg = wx.FileDialog(None,
                             "Select Supervisor Configuration File",
-                            "C:/Picarro/G2000/AppConfig/Config/Supervisor",
+                            #"C:/Picarro/G2000/AppConfig/Config/Supervisor",
+                            "/home/rsf/git/host/Config/AMADS/AppConfig/Config/Supervisor",
                             "",
                             "*.ini",
                             wx.OPEN)
@@ -790,12 +829,15 @@ if __name__ == "__main__":
             dname = ""
 
         dlg.Destroy()
-
+        superConfig = os.path.join(dname, fname)
     elif fSelectFromLauncher is True:
         # prompt user to select a configuration, returns the dir and filename
         dname, fname = getConfigFromSupervisorLauncherIni(options.launcherFilename)
-
-    superConfig = os.path.join(dname, fname)
+        superConfig = os.path.join(dname, fname)
+    elif fOpenIniFile:
+        fname = options.supervisorIniFilename
+        dname = ""
+        superConfig = options.supervisorIniFilename
 
     # superConfig will be an empty string if the user canceled out
     # of selecting a mode (-l option) so proceed only if the file exists
@@ -815,5 +857,21 @@ if __name__ == "__main__":
         childBasePath = os.path.join(rootDir,"HostExe") if nexe>npy else os.path.join(rootDir,"Host/Supervisor")
         r = SupervisorConfigNode(os.path.join(dname,fname),childBasePath=childBasePath)
         frameMain.run(r)
-        frameMain.Show()
-        appConfigManager.MainLoop()
+
+        # Run in a GUI for inspection and manipulation of files.
+        # Or run as a command that returns 1 if any config files are
+        # are missing, 0 if all files are present.  0 is the Unix
+        # standard return code for 'no errors'.
+        #
+        if displayGui:
+            frameMain.Show()
+            if _areFilesMissing:
+                frameMain.treeCtrlFiles.ExpandAll()
+            else:
+                frameMain.treeCtrlFiles.CollapseAll()
+            appConfigManager.MainLoop()
+        else:
+            if _areFilesMissing:
+                sys.exit(1)
+            else:
+                sys.exit(0)

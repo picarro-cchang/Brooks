@@ -1014,7 +1014,7 @@ class Supervisor(object):
         self.powerDownAfterTermination = False
         self.appList = None
         self.messageQueue = Queue.Queue(100)
-        
+
         # Linux helper:
         # If there is no tty to use ^T, terminate Supervisor and its
         # subprocesses with 'kill -USR1 <supervisor_pid>
@@ -1280,7 +1280,7 @@ class Supervisor(object):
                     self.restartSurveyor.restart()  # call restartSurveyor to restart the whole system
                     return 0
                 Log("RestartSurveyor is NOT running. Only %s and its dependents will be restarted." % AppName)
-                    
+
             appDependents = []
 
             #first get all the dependents shut (politely) down, if needed...
@@ -1378,6 +1378,7 @@ class Supervisor(object):
                 while True:
                     key = read_rawkb()
                     if key == "": break
+                    if len(key) > 1: break
                     if ord(key) in [17, 24]: #ctrl-q and ctrl-x
                         Log("Exit request received via keyboard input (Ctrl-X)")
                         self._ShutdownRequested = True

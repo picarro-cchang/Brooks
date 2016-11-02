@@ -295,6 +295,17 @@ class InstMgr(object):
         self.Config = ConfigurationOptions()
         self.diableDataManager = False
 
+        # Most of the internal vars are first defined in INSTR_Start
+        # instead of in the constructor.  This can cause errors
+        # or exceptions if restartCount or ErrorList is accessed
+        # early.
+        #
+        # Hack here to prevent undefine attribute error if these are
+        # accessed before the start/restart command is run.
+        #
+        self.restartCount = 0
+        self.ErrorList = []
+
         if __debug__: Log("Setting up RPC connections.")
         #set up a connections to other apps
         self.DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
@@ -373,7 +384,7 @@ class InstMgr(object):
         self.DisplayBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_INSTMGR_DISPLAY)
     def _SendDisplayMessage(self, msg):
         try:
-            Log(msg, Level = 1.5)
+            Log(msg, Level = 2)
             formatString=">%ds" %(len(msg)+1)  #Initial format string: - '>' for big endian(labview GUI uses big endian byte order)
                                                #                       - +1 for null terminator
             # add null termination before broadcasting.
@@ -429,8 +440,6 @@ class InstMgr(object):
                     self.measRestartCount = self.measRestartCount + 1
                 else:
                     self._StateHandler(EVENT_STOP_MEAS)
-            #not supported yet
-            # else if errorRec == SELF_DIAG:
 
         # Add to error list
         if len(self.ErrorList) >= MAX_ERROR_LIST_NUM:
@@ -1099,8 +1108,23 @@ class InstMgr(object):
         self._Monitor()
 
     def INSTMGR_Start_virtualMode(self):
-        self._SendDisplayMessage("Starting")
+        self._SendDisplayMessage("Starting Instrument Manager in virtual mode")
         self._LoadConfigFile(self.configPath)
+        self.flowStarted = False
+        self.restartCount = 0
+        self.dasRestartCount = 0
+        self.measRestartCount = 0
+        self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
+        self._ClearStatus(INSTMGR_STATUS_CLEAR_MASK)
+        self.ErrorList = []
+        self.State = INSTMGR_STATE_RESET
+        self.MeasuringState = MEAS_STATE_UNDEFINED
+        self.WarmingState = WARMING_STATE_UNDEFINED
+        self.InstrumentMode = {}
+        self.cavityTempLockCount = 0
+        self.warmChamberTempLockCount = 0
+        self.pressureLockCount = 0
+
         # settings for DataManager
         self.DataMgrRpc.StartInstMgrListener()
         self.DataMgrRpc.Mode_Set(self.Config.measMode)

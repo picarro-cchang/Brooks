@@ -20,7 +20,7 @@ EventManagerProxy_Init(APP_NAME)
 
 class Simulator(object):
     # Base class for simulators that are stepped by the scheduler. The step
-    #  method of the simulator is run with lowest priority to compute all the 
+    #  method of the simulator is run with lowest priority to compute all the
     #  values of the sensors on the next cycle. The update method is run with
     #  highest priority to place these values in the sensor registers
 
@@ -145,7 +145,8 @@ class WlmModel(object):
     # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
     def __init__(self, rho=0.2, Ieta1fac=3000, Ieta2fac=3000, Iref1fac=1500, Iref2fac=1500,
                  eta1_offset=6000, eta2_offset=6000, ref1_offset=6000, ref2_offset=6000, epsilon=0,
-                 fsr=1.66782):
+                 fsr=1.66782, cal_temp=45, temp_sensitivity=-0.19, cal_pressure=760,
+                 pressureC0=0.0, pressureC1=0.0, pressureC2=0.0, pressureC3=0.0):
         self.rho = rho
         self.Ieta1fac = Ieta1fac
         self.Ieta2fac = Ieta2fac
@@ -157,9 +158,24 @@ class WlmModel(object):
         self.ref2_offset = ref2_offset
         self.epsilon = epsilon
         self.fsr = fsr
+        self.cal_temp = cal_temp
+        self.temp_sensitivity = temp_sensitivity
+        self.cal_pressure = cal_pressure
+        self.pressureC0 = pressureC0
+        self.pressureC1 = pressureC1
+        self.pressureC2 = pressureC2
+        self.pressureC3 = pressureC3
 
-    def calcOutputs(self, wavenumber, power):
-        theta = 2 * math.pi * wavenumber / self.fsr
+    def getWlmAngle(self, wavenumber, etalonTemp, ambientPressure):
+        dP = ambientPressure - self.cal_pressure
+        # Calculate the wavelength monitor angle corrected by the etalon temperature and ambient pressure
+        return (2 * math.pi * wavenumber / self.fsr -
+                self.temp_sensitivity * (etalonTemp - self.cal_temp) -
+                (self.pressureC0 + dP * (self.pressureC1 + dP * (self.pressureC2 + dP * self.pressureC3))))
+
+    def calcOutputs(self, wavenumber, power, etalonTemp, ambientPressure):
+        # Get the wavelength monitor angle
+        theta = self.getWlmAngle(wavenumber, etalonTemp, ambientPressure)
         ct = math.cos(theta)
         ste = math.sin(theta + self.epsilon)
         eta1 = self.rho * self.Ieta1fac * power * (1 + ct) / (1 + self.rho * ct) + self.eta1_offset
@@ -181,6 +197,8 @@ class InjectionSimulator(Simulator):
     ratio1 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO1)
     ratio2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO2)
     laserIndex = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W)
+    etalonTemp = prop_das(interface.ETALON_TEMPERATURE_REGISTER)
+    ambientPressure = prop_das(interface.AMBIENT_PRESSURE_REGISTER)
 
     def __init__(self, sim, wlmModel=None):
         self.sim = sim
@@ -200,9 +218,8 @@ class InjectionSimulator(Simulator):
     def step(self):
         laserNum = self.laserIndex + 1
         laserSimulator = [self.sim.laser1Simulator, self.sim.laser2Simulator, self.sim.laser3Simulator, self.sim.laser4Simulator][laserNum - 1]
-        wavenumber = laserSimulator.opticalModel.calcWavenumber(laserSimulator.nextTemp, laserSimulator.nextCurrentMonitor)
-        power = laserSimulator.opticalModel.calcPower(laserSimulator.nextTemp, laserSimulator.nextCurrentMonitor)
-        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(wavenumber, power)
+        wavenumber, power = laserSimulator.getLaserOutput()
+        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(wavenumber, power, self.etalonTemp, self.ambientPressure)
         self.nextRatio1 = 32768 * float(self.nextEta1 - self.eta1Offset) / (self.nextRef1 - self.ref1Offset)
         self.nextRatio2 = 32768 * float(self.nextEta2 - self.eta2Offset) / (self.nextRef2 - self.ref2Offset)
 
@@ -223,6 +240,7 @@ class InjectionSimulator(Simulator):
 
 class LaserSimulator(Simulator):
     tec = None
+    temp = None
     thermRes = None
     currentMonitor = None
     fpgaCoarse = None
@@ -251,13 +269,44 @@ class LaserSimulator(Simulator):
         self.nextTemp = None
         self.nextThermRes = None
 
+    def getLaserCurrent(self, coarse=None, fine=None, laserOn=None):
+        # Get the laser current for specified coarse and fine DAC settings and
+        #  state of laserOn. If any argument is omitted, use the values presently
+        #  found in the DAS registers.
+        if laserOn is None:
+            laserOn = self.isLaserOn()
+        if coarse is None:
+            coarse = self.fpgaCoarse
+        if fine is None:
+            fine = self.fpgaFine
+        return self.dacModel.dacToCurrent(coarse, fine) if laserOn else 0.0
+
+    def getLaserOutput(self, temp=None, current=None):
+        # Return laser wavenumber and power for specified laser temperature
+        #  and current. If any argument is omitted, use the values presently
+        #  found in the DAS registers.
+        if temp is None:
+            temp = self.getLaserTemp()
+        if current is None:
+            current = self.getLaserCurrent()
+        wavenumber = self.opticalModel.calcWavenumber(temp, current)
+        power = self.opticalModel.calcPower(temp, current)
+        return wavenumber, power
+
+    def getLaserTemp(self):
+        # Return current value of laser temperature
+        return self.temp
+
+    def isLaserOn(self):
+        # Return if currently selected laser is on
+        return self.currentEnable and self.laserEnable
+
     def step(self):
+        # Note that we can only call tecToTemp once per step, since this
+        #  advances the thermal model
         self.nextTemp = self.thermalModel.tecToTemp(self.tec)
         self.nextThermRes = self.thermalModel.tempToResistance(self.nextTemp)
-        laserOn = self.currentEnable and self.laserEnable
-        self.nextCurrentMonitor = self.dacModel.dacToCurrent(self.fpgaCoarse, self.fpgaFine) if laserOn else 0.0
-        nextWavenumber = self.opticalModel.calcWavenumber(self.nextTemp, self.nextCurrentMonitor)
-        nextPower = self.opticalModel.calcPower(self.nextTemp, self.nextCurrentMonitor)
+        self.nextCurrentMonitor = self.getLaserCurrent()
 
     def update(self):
         if self.nextCurrentMonitor is not None:
@@ -268,6 +317,7 @@ class LaserSimulator(Simulator):
 
 class Laser1Simulator(LaserSimulator):
     tec = prop_das(interface.LASER1_TEC_REGISTER)
+    temp = prop_das(interface.LASER1_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER1_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER1_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_COARSE_CURRENT)
@@ -279,6 +329,7 @@ class Laser1Simulator(LaserSimulator):
 
 class Laser2Simulator(LaserSimulator):
     tec = prop_das(interface.LASER2_TEC_REGISTER)
+    temp = prop_das(interface.LASER2_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER2_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER2_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER2_COARSE_CURRENT)
@@ -290,6 +341,7 @@ class Laser2Simulator(LaserSimulator):
 
 class Laser3Simulator(LaserSimulator):
     tec = prop_das(interface.LASER3_TEC_REGISTER)
+    temp = prop_das(interface.LASER3_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER3_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER3_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER3_COARSE_CURRENT)
@@ -301,6 +353,7 @@ class Laser3Simulator(LaserSimulator):
 
 class Laser4Simulator(LaserSimulator):
     tec = prop_das(interface.LASER4_TEC_REGISTER)
+    temp = prop_das(interface.LASER4_TEMPERATURE_REGISTER)
     thermRes = prop_das(interface.LASER4_RESISTANCE_REGISTER)
     currentMonitor = prop_das(interface.LASER4_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER4_COARSE_CURRENT)
@@ -310,60 +363,232 @@ class Laser4Simulator(LaserSimulator):
     laserNum = 4
 
 
-class SpectrumSimulator(Simulator):
-    state = prop_das(interface.SPECT_CNTRL_STATE_REGISTER)
-    mode = prop_das(interface.SPECT_CNTRL_MODE_REGISTER)
-    active = prop_das(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
-    next = prop_das(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
-    iter = prop_das(interface.SPECT_CNTRL_SCHEME_ITER_REGISTER)
-    row = prop_das(interface.SPECT_CNTRL_SCHEME_ROW_REGISTER)
-    dwell = prop_das(interface.SPECT_CNTRL_DWELL_COUNT_REGISTER)
-    defaultThreshold = prop_das(interface.SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER)
+class PressureSimulator(Simulator):
+    cavityPressure = prop_das(interface.CAVITY_PRESSURE_REGISTER)
+    cavityPressureAdc = prop_das(interface.CAVITY_PRESSURE_ADC_REGISTER)
+    flow = prop_das(interface.FLOW1_REGISTER)
+    inlet = prop_das(interface.VALVE_CNTRL_INLET_VALVE_REGISTER)
+    outlet = prop_das(interface.VALVE_CNTRL_OUTLET_VALVE_REGISTER)
+
+    def __init__(self, sim):
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        self.fpga_registers = sim.fpga_registers
+        self.inletPressure = 760
+        self.outletPressure = 5  # Pump base pressure
+        self.inletMaxConductance = 0.3
+        self.outletMaxConductance = 2.0
+        self.nextFlow = 0.0
+        self.nextPressure = 760
+        self.dt = 0.2
+        self.adcScale = 6.92300018272e-05
+        self.adcOffset = 0.0
+
+    def valveModel(self, value, maxConductance, center=32768, range=4096):
+        return 0.5*maxConductance*(1.0 + math.tanh(float((value - center) / range)))
+
+    def step(self):
+        inConductance = self.valveModel(self.inlet, self.inletMaxConductance)
+        outConductance = self.valveModel(self.outlet, self.outletMaxConductance)
+        inFlow = (self.inletPressure - self.cavityPressure) * inConductance
+        outFlow = (self.cavityPressure - self.outletPressure) * outConductance
+        self.nextFlow = inFlow
+        self.nextPressure = self.cavityPressure + (inFlow - outFlow)*self.dt
+
+    def update(self):
+        self.flow = self.nextFlow
+        self.cavityPressureAdc = (self.nextPressure - self.adcOffset)/self.adcScale
+
+
+class TunerSimulator(Simulator):
+    sweepRampLow = prop_das(interface.TUNER_SWEEP_RAMP_LOW_REGISTER)
+    sweepRampHigh = prop_das(interface.TUNER_SWEEP_RAMP_HIGH_REGISTER)
+    windowRampLow = prop_das(interface.TUNER_WINDOW_RAMP_LOW_REGISTER)
+    windowRampHigh = prop_das(interface.TUNER_WINDOW_RAMP_HIGH_REGISTER)
+    sweepDitherLowOffset = prop_das(interface.TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER)
+    sweepDitherHighOffset = prop_das(interface.TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER)
+    windowDitherLowOffset = prop_das(interface.TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER)
+    windowDitherHighOffset = prop_das(interface.TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER)
+    ditherModeTimeout = prop_das(interface.SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER)
+    rampModeTimeout = prop_das(interface.SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER)
+    ditherModeTimeout = prop_das(interface.SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER)
     analyzerTuningMode = prop_das(interface.ANALYZER_TUNING_MODE_REGISTER)
+    virtLaser = prop_das(interface.VIRTUAL_LASER_REGISTER)
+
+    slopeUp = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SLOPE_UP)
+    slopeDown = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SLOPE_DOWN)
+    sweepLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_LOW)
+    sweepHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_HIGH)
+    windowLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_LOW)
+    windowHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_HIGH)
+    rampDitherMode = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_CONTROL, interface.RDMAN_CONTROL_RAMP_DITHER_B, interface.RDMAN_CONTROL_RAMP_DITHER_W)
+    rdTimeout = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_TIMEOUT_DURATION)
+
+    laserLockerTuningOffsetSelect = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_CS, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_B, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_W)
+    directTune = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_OPTIONS, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_B, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_W)
+    tunePzt = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_CS, interface.TWGEN_CS_TUNE_PZT_B, interface.TWGEN_CS_TUNE_PZT_W)
+    fpgaPztOffset = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_PZT_OFFSET)
 
     def __init__(self, sim):
         self.sim = sim
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.spectrumControl = sim.spectrumControl
-        self.incrFlag = 0
+        self.timestamp = None
+        self.slope = "up"  # or "down"
+        self.value = (self.windowLow + self.windowHigh) // 2
 
-    def step(self):
-        if self.state != interface.SPECT_CNTRL_RunningState:
-            return
-        print "Scheme %d: iter %d, row %d, dwell %d" % (self.active, self.iter, self.row, self.dwell)
-        self.scheme = self.sim.driver.schemeTables[self.active]
-        self.incrFlag = self.scheme.rows[self.row].subschemeId & interface.SUBSCHEME_ID_IncrMask
-        print ctypesToDict(self.scheme.rows[self.row])
-        self.advanceSchemeRow()
+    def switchToRampMode(self):
+        self.sweepLow = self.sweepRampLow
+        self.sweepHigh = self.sweepRampHigh
+        self.windowLow = self.windowRampLow
+        self.windowHigh = self.windowRampHigh
+        self.rdTimeout = self.rampModeTimeout
+        self.rampDitherMode = 0
 
-    def advanceSchemeRow(self):
-        self.row += 1
-        # TODO: Check fit flag
-        if self.incrFlag:
-            self.spectrumControl.incrCounterNext = self.spectrumControl.incrCounter
-            self.incrFlag = 0
-        if self.row >= self.scheme.numRows:
-            self.advanceSchemeIteration()
+    def switchToDitherMode(self, center):
+        # Switch to dither mode centered about the given value, if this is possible. Otherwise
+        #  go to ramp mode in the hope that a ringdown will then occur.
+        sweepLow = int(center - self.sweepDitherLowOffset) & 0xFFFF
+        sweepHigh = int(center + self.sweepDitherHighOffset) & 0xFFFF
+        windowLow = int(center - self.windowDitherLowOffset) & 0xFFFF
+        windowHigh = int(center + self.windowDitherHighOffset) & 0xFFFF
+        if windowHigh > sweepHigh:
+            windowHigh = sweepHigh
+        if windowLow < sweepLow:
+            windowLow = sweepLow
+        if sweepHigh > self.sweepRampHigh or sweepLow < self.sweepRampLow:
+            self.switchToRampMode()
         else:
-            self.dwell = 0
+            self.sweepLow = sweepLow
+            self.sweepHigh = sweepHigh
+            self.windowLow = windowLow
+            self.windowHigh = windowHigh
+            self.rdTimeout = self.ditherModeTimeout
+            self.rampDitherMode = 1
 
-    def advanceSchemeIteration(self):
-        self.iter += 1
-        if self.iter >= self.scheme.numRepeats or self.mode == interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode:
-            self.advanceScheme()
+    def setCavityLengthTuningMode(self):
+        self.laserLockerTuningOffsetSelect = 0  # Use register
+        self.directTune = 0  # Use laser locker for laser current control
+        self.tunePzt = 1  # Connect PZT to tuner
+
+    def setLaserCurrentTuningMode(self):
+        self.laserLockerTuningOffsetSelect = 1  # Use tuner
+        self.directTune = 0  # Use laser locker for laser current control
+        self.tunePzt = 0  # Disconnect PZT from tuner
+
+    def setFsrHoppingMode(self):
+        self.laserLockerTuningOffsetSelect = 1  # Use tuner
+        self.directTune = 1  # Use tuner for laser current control
+        self.tunePzt = 0  # Disconnect PZT from tuner
+
+    def valueChange(self, slope, timeMs):
+        """Find change in tuner value after `timeMs` ms at the given `slope`"""
+        # Tuner accumulator has 9 extra bits of precision (512 times superresolution)
+        # Each step takes 0.01ms
+        return slope * timeMs * 100.0 / 512
+
+    def timeRequired(self, change, slope):
+        """Find time required (in ms) to change in tuner value by `change` at
+         the given `slope`"""
+        # Tuner accumulator has 9 extra bits of precision (512 times superresolution)
+        # Each step takes 0.01ms
+        return change * 512 * 0.01 / slope
+
+    def getStateAt(self, ts):
+        """Get tuner value and slope at the specified timestamp `ts` in ms
+            Note that the value of ts may be non-integral
+        """
+        sweep = self.sweepHigh - self.sweepLow
+        sweepUpMs = self.timeRequired(sweep, self.slopeUp)
+        sweepDownMs = self.timeRequired(sweep, self.slopeDown)
+        periodMs = sweepUpMs + sweepDownMs
+        #
+        # Calculate the interval to the time requested modulo the period of the tuner
+        #  waveform, giving a remainder
+        #
+        durationMs = ts - self.timestamp
+        remainderMs = durationMs % periodMs
+        if self.slope == "up":
+            #
+            #  If we are currently on the up slope, we hit sweepHigh after hitHighMs and
+            #      sweepLow after hitHighMs + sweepDownMs.
+            #
+            #  ______________ sweepHigh
+            #     /\
+            #       \  /
+            #  ______\/______ sweepLow
+            #
+            hitHighMs = self.timeRequired(self.sweepHigh - self.value, self.slopeUp)
+            if remainderMs < hitHighMs:
+                return self.value + self.valueChange(self.slopeUp, remainderMs), "up"
+            elif remainderMs < hitHighMs + sweepDownMs:
+                return self.sweepHigh - self.valueChange(self.slopeDown, remainderMs - hitHighMs), "down"
+            else:
+                return self.sweepLow + self.valueChange(self.slopeUp, remainderMs - hitHighMs - sweepDownMs), "up"
         else:
-            self.row = 0
-            self.dwell = 0
+            #
+            #  If we are currently on the down slope, we hit sweepLow after hitLowMs and
+            #      sweepHigh after hitLowMs + sweepUpMs.
+            #
+            #  ______________ sweepHigh
+            #       /\
+            #      /  \
+            #  __\/__________ sweepLow
+            #
+            hitLowMs = self.timeRequired(self.value - self.sweepLow, self.slopeDown)
+            if remainderMs < hitLowMs:
+                return self.value - self.valueChange(self.slopeDown, remainderMs), "down"
+            elif remainderMs < hitLowMs + sweepUpMs:
+                return self.sweepLow + self.valueChange(self.slopeUp, remainderMs - hitLowMs), "up"
+            else:
+                return self.sweepHigh - self.valueChange(self.slopeDown, remainderMs - hitLowMs - sweepUpMs), "down"
 
-    def advanceScheme(self):
-        self.iter = 0
-        self.dwell = 0
-        self.row = 0
-        if self.mode == interface.SPECT_CNTRL_SchemeSingleMode:
-            self.state = interface.SPECT_CNTRL_IdleState
-        # The next line causes the sequencer to load another scheme
-        self.active = self.next
-
-    def update(self):
-        print "Updating spectrum simulator"
+    def getNextAt(self, allowedValues, allowedSlopes, ts=None):
+        """Find the timestamp (milliseconds) after ts (or the current time) when the tuner is next at one of the
+            values in `allowedValues` with a slope in `allowedSlopes`. Return the timestamp, value and slope
+            or None if the tuner will never reach this.
+        """
+        # Remove all values not within the window
+        allowedValues = sorted([value for value in allowedValues if self.windowLow <= value <= self.windowHigh])
+        if allowedValues and allowedSlopes:
+            # Start the evolution from `value` and `slope` at the specified timestamp `ts`
+            if ts is None:
+                ts = self.timestamp
+                slope = self.slope
+                value = self.value
+            else:
+                value, slope = self.getStateAt(ts)
+            #
+            # Find first allowed value above and below the current value
+            nextUp = None
+            for av in allowedValues:
+                if av > value:
+                    nextUp = av
+                    break
+            nextDown = None
+            for av in reversed(allowedValues):
+                if av < value:
+                    nextDown = av
+                    break
+            #
+            sweep = self.sweepHigh - self.sweepLow
+            if slope == "up":
+                if "up" in allowedSlopes and nextUp is not None:
+                    return nextUp, "up", ts + self.timeRequired(nextUp - value, self.slopeUp)
+                hitHighMs = self.timeRequired(self.sweepHigh - value, self.slopeUp)
+                if "down" in allowedSlopes:
+                    return allowedValues[-1], "down", ts + hitHighMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
+                elif "up" in allowedSlopes:
+                    sweepDownMs = self.timeRequired(sweep, self.slopeDown)
+                    return allowedValues[0], "up", ts + hitHighMs + sweepDownMs + self.timeRequired(allowedValues[0] - self.sweepLow, self.slopeUp)
+            elif slope == "down":
+                if "down" in allowedSlopes and nextDown is not None:
+                    return nextDown, "down", ts + self.timeRequired(value - nextDown, self.slopeDown)
+                hitLowMs = self.timeRequired(value - self.sweepLow, self.slopeDown)
+                if "up" in allowedSlopes:
+                    return allowedValues[0], "up", ts + hitLowMs + self.timeRequired(allowedValues[0] - self.sweepLow, self.slopeUp)
+                elif "down" in allowedSlopes:
+                    sweepUpMs = self.timeRequired(sweep, self.slopeUp)
+                    return allowedValues[-1], "down", ts + hitLowMs + sweepUpMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
+        return None

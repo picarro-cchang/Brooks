@@ -341,6 +341,7 @@ class Fitter(object):
                             Data = dict(Note = "<See verbose for debug info>"),
                             Level = 3,
                             Verbose = tbMsg)
+                        print tbMsg
                 else:
                     Log("Error fitter is not initialized")
             except:
@@ -366,7 +367,7 @@ class Fitter(object):
                     RESULTS["spect_latency"] = getattr(self.spectrum,"spectLatency")
                     RESULTS["spect_duration"] = getattr(self.spectrum,"spectDuration")
             except:
-                pass
+                print "Warning: spectrum does not have spectLatency or spectDuration attributes"
         self.fitViewer([DATA,ANALYSES,RESULTS])
         return (DATA.avgTimestamp,RESULTS,DATA["spectrumid"])
 
@@ -384,6 +385,7 @@ class Fitter(object):
                     Data = dict(Note = "<See verbose for debug info>"),
                     Level = 3,
                     Verbose = tbMsg)
+                print tbMsg
                 if self.stopOnError:
                     self.fitQueue.put((3,tbMsg))
                     self.loadRepository = True
@@ -414,6 +416,7 @@ class RpcServerThread(Thread):
                 Data = dict(Note = "<See verbose for debug info>"),
                 Level = 3,
                 Verbose = tbMsg)
+            print tbMsg
 
 def main(configFile,queue,useViewer):
     fitter = Fitter(configFile)
@@ -426,6 +429,7 @@ def main(configFile,queue,useViewer):
                 Data = dict(Note = "<See verbose for debug info>"),
                 Level = 3,
                 Verbose = tbMsg)
+            print tbMsg
             fitter.fitQueue.put((3,tbMsg))
     finally:
         fitter.fitQueue.put((2,None)) # Shut down the fit viewer

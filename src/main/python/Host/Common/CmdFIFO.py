@@ -858,7 +858,7 @@ class CmdFIFOServerProxy(object):
             elif modeOverride == "V": return "OK"
             else: return "CB"
         else:
-            while True:
+            for _ in range(2):
                 # Perform command and re-establish connection if necessary
                 if self.setup:
                     try:
@@ -868,11 +868,12 @@ class CmdFIFOServerProxy(object):
                     except Pyro4.errors.ConnectionClosedError:
                         pass
                         # print "Retrying proxy call: %s" % (dottedMethodName,)
-                time.sleep(1.0)
+                time.sleep(0.5)
                 try:
                     self.setupRemoteObject()
                 except Pyro4.errors.ProtocolError:
                     self.setup = False
+            raise RemoteException("Remote cannot be reached for RPC")
 
     def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
         """Sets how the client would like a registered server function to behave.

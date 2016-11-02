@@ -51,15 +51,14 @@ class Spectrum(object):
         self.physicalConstants = loadPhysicalConstants(libName)
         self.config = config
         self.spectrumIds = asarray(eval(config["SpectrumId"]+",",env))
-    def setupModel(self,env):
+
+    def setupModel(self, env):
         config = self.config
         self.basisArray = asarray(eval(config["identification"]+",",env))
         self.centerFrequency = eval(config["center"],env) if "center" in config else 0
         self.basisFunctions = {}
         m = Model()
         m.setAttributes(x_center=self.centerFrequency)
-        if "pressure" in env: m.setAttributes(pressure = env["pressure"])
-        if "temperature" in env: m.setAttributes(temperature = env["temperature"])
         m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
         m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
         m.addDummyParameter(sum(self.basisArray<1000))
@@ -90,6 +89,16 @@ class Spectrum(object):
                                                   splineIndexB=int(ndx[1]))),index=i)
                 else:
                     raise ValueError("Unimplemented functional form: %s" % form)
+        self.model = m
+        self.updateModel(env)
+
+    def updateModel(self, env):
+        config = self.config
+        m = self.model
+        if "pressure" in env:
+            m.setAttributes(pressure = env["pressure"])
+        if "temperature" in env:
+            m.setAttributes(temperature = env["temperature"])
         m.createParamVector()
         # Modify parameter values according to [base] and [peak] sections
         for basisName in config:
