@@ -261,7 +261,7 @@ class DspAccessor(object):
             self.hpiWrite(addr, c_int(value))
 
         self.hpicWrite(0x00010001)
-        writeMem(EMIF_GCTL, 0x00000068)
+        writeMem(EMIF_GCTL, 0x00000060)     # Disable CLKOUT2 signal
         writeMem(EMIF_CE0, 0xffffbf33)      # CE0 SDRAM
         writeMem(EMIF_CE1, 0x02208802)      # CE1 Flash 8-bit
         writeMem(EMIF_CE2, 0x22a28a22)      # CE2 Daughtercard 32-bit async
@@ -307,7 +307,7 @@ class DspAccessor(object):
 
         writeMem(PLL_DIV0, DIV_ENABLE + 0)
         writeMem(PLL_MULT, 9)
-        writeMem(PLL_OSCDIV1, DIV_ENABLE + 4)
+        writeMem(PLL_OSCDIV1,0) # Disable 10MHz CLKOUT3
 
         # Program in reverse order.
         # DSP requires that pheripheral clocks be less then

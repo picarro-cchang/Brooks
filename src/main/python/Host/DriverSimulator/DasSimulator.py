@@ -19,8 +19,10 @@ from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
-from Host.DriverSimulator.Simulators import InjectionSimulator, SpectrumSimulator
+from Host.DriverSimulator.Simulators import (
+    InjectionSimulator, PressureSimulator, TunerSimulator)
 from Host.DriverSimulator.SpectrumControl import SpectrumControl
+from Host.DriverSimulator.ValveControl import ValveControl
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
@@ -28,6 +30,8 @@ EventManagerProxy_Init(APP_NAME)
 
 def _value(valueOrName):
     """Convert valueOrName into an value, raising an exception if the name is not found"""
+    if isinstance(valueOrName, types.UnicodeType):
+        valueOrName = str(valueOrName)
     if isinstance(valueOrName, types.StringType):
         try:
             valueOrName = getattr(interface, valueOrName)
@@ -79,6 +83,11 @@ class DasSimulator(object):
         self.dsp_message_queue = deque(maxlen=interface.NUM_MESSAGES)
         self.sensor_queue = deque(maxlen=interface.NUM_SENSOR_ENTRIES)
         self.ringdown_queue = deque(maxlen=interface.NUM_RINGDOWN_ENTRIES)
+        #
+        self.simulators = set()
+        self.initDasRegisters()
+        self.ts_offset = 0  # Timestamp offset in ms
+        self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
         # shared_mem is an array of 32-bit unsigned integers
         self.shared_mem = interface.SHAREDMEM_SIZE * [0]
         self.hostToDspSender = DasSimulator.HostToDspSender(self)
@@ -100,6 +109,8 @@ class DasSimulator(object):
         self.laser4CurrentControl = None
         # and the spectrum controller
         self.spectrumControl = SpectrumControl(self)
+        # and the valve controller
+        self.valveControl = ValveControl(self)
         #
         self.laser1Simulator = None
         self.laser2Simulator = None
@@ -107,15 +118,8 @@ class DasSimulator(object):
         self.laser4Simulator = None
         #
         self.injectionSimulator = InjectionSimulator(self)
-        self.spectrumSimulator = SpectrumSimulator(self)
-        #
-        self.simulators = set()
-        # Here follow the semaphores used in the DSP code
-        self.startRdcycle = False  # Allow ringdowns to occur
-        #
-        self.initDasRegisters()
-        self.ts_offset = 0  # Timestamp offset in ms
-        self.wrDasReg("VERIFY_INIT_REGISTER", 0x19680511)
+        self.pressureSimulator = PressureSimulator(self)
+        self.tunerSimulator = TunerSimulator(self)
 
     def addSimulator(self, simulator):
         self.simulators.add(simulator)
@@ -139,6 +143,12 @@ class DasSimulator(object):
         else:
             return None
 
+    def getRingdownData(self):
+        if len(self.ringdown_queue) > 0:
+            return self.ringdown_queue.popleft() 
+        else:
+            return None
+
     def initDasRegisters(self):
         for ri in interface.registerInfo:
             if ri.initial is not None:
@@ -147,6 +157,10 @@ class DasSimulator(object):
     def initScheduler(self):
         now = self.getDasTimestamp()
         self.scheduler = Scheduler(self.operationGroups, now, self.hostToDspSender.doOperation)
+
+    def message_puts(self, level, message):
+        ts = self.getDasTimestamp()
+        self.dsp_message_queue.append((ts, level, message))
 
     def rdDasReg(self, regIndexOrName):
         index = self._reg_index(regIndexOrName)
@@ -196,6 +210,8 @@ class DasSimulator(object):
 
     def _reg_index(self, indexOrName):
         """Convert a name or index into an integer index, raising an exception if the name is not found"""
+        if isinstance(indexOrName, types.UnicodeType):
+            indexOrName = str(indexOrName)
         if isinstance(indexOrName, types.IntType):
             return indexOrName
         else:
@@ -206,6 +222,8 @@ class DasSimulator(object):
 
     def _value(self, valueOrName):
         """Convert valueOrName into an value, raising an exception if the name is not found"""
+        if isinstance(valueOrName, types.UnicodeType):
+            valueOrName = str(valueOrName)
         if isinstance(valueOrName, types.StringType):
             try:
                 valueOrName = getattr(interface, valueOrName)
@@ -236,13 +254,9 @@ class Scheduler(object):
             when = int(period_ms * math.ceil(float(self.startTimestamp) / period_ms))
             item = (when, group.priority, group)
             heapq.heappush(self.runqueue, item)
-        print "Initial runqueue"
-        for when, priority, group in sorted(self.runqueue):
-            print when, priority, group
 
     def execUntil(self, ts):
         while self.runqueue:
-
             # Get the next action to perform
             when, priority, group = self.runqueue[0]
             if when > ts:

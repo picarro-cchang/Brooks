@@ -144,7 +144,8 @@ class Controller(ControllerFrameGui):
             tuner=self.ringdownPanel.ringdownWfms[0],
             pzt=self.ringdownPanel.ringdownWfms[0],
             wavenumber=self.ringdownPanel.ringdownWfms[0],
-            fineCurrent=self.ringdownPanel.ringdownWfms[0])
+            fineCurrent=self.ringdownPanel.ringdownWfms[0],
+            laserTemp=self.ringdownPanel.ringdownWfms[0])
 
     def setupParameterDialogs(self):
         idmin = None

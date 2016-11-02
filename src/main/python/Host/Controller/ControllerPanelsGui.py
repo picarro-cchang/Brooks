@@ -241,7 +241,7 @@ class RingdownPanelGui(wx.Panel):
         self.uncorrectedCheckBox = wx.CheckBox(self.panel_1, -1, "Uncorrected")
         self.correctedCheckBox = wx.CheckBox(self.panel_1, -1, "Corrected")
         self.sizer_4_staticbox = wx.StaticBox(self.panel_1, -1, "Loss Type")
-        self.graphTypeRadioBox = wx.RadioBox(self.panel_1, -1, "Select Graph Type", choices=["Loss vs Wavenumber", "Loss vs Time", "Loss vs Ratio 1", "Loss vs Ratio 2", "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1", "Tuner vs Ratio 2", "PZT vs Wavenumber", "PZT vs Time", "PZT vs Ratio 1", "PZT vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber", "IL(fine) vs Time", "Loss vs IL(fine)"], majorDimension=4, style=wx.RA_SPECIFY_ROWS)
+        self.graphTypeRadioBox = wx.RadioBox(self.panel_1, -1, "Select Graph Type", choices=["Loss vs Wavenumber", "Loss vs Time", "Loss vs Ratio 1", "Loss vs Ratio 2", "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1", "Tuner vs Ratio 2", "PZT vs Wavenumber", "PZT vs Time", "PZT vs Ratio 1", "PZT vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber", "IL(fine) vs Time", "Loss vs IL(fine)", "Laser Temp vs Wavenumber", "Laser Temp vs Time"], majorDimension=4, style=wx.RA_SPECIFY_ROWS)
         self.panel_2 = wx.Panel(self.panel_1, -1)
 
         self.__set_properties()

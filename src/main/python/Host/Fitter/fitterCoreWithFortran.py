@@ -53,8 +53,8 @@ if sys.version_info[:2] == (2, 7):
     def dependencies_for_myprogram():
         from scipy.sparse.csgraph import _validation
 
-import fitutils
-from cluster_analyzer import find_clusters
+from Host.Fitter import fitutils
+from Host.Fitter.cluster_analyzer import find_clusters
 
 # import wingdbstub
 
@@ -348,7 +348,7 @@ def sigmaFilter(x,threshold,minPoints=2):
     until there is no change or unless there are minPoints or fewer remaining"""
     good = ones(x.shape,bool_)
     nIter = 0
-    while True:
+    while nIter<20:
         mu = mean(x[good])
         sigma = std(x[good])
         new_good = abs(x-mu)<=(threshold*sigma)
@@ -366,11 +366,13 @@ def outlierFilter(x,threshold,minPoints=2):
     until there is no change or unless there are minPoints or fewer remaining"""
     good = ones(x.shape,bool_)
     order = list(x.argsort())
-    while len(order)>minPoints:
+    nIter = 0
+    while nIter<20 and len(order)>minPoints:
         maxIndex = order.pop()
         good[maxIndex] = 0
         mu = mean(x[good])
         sigma = std(x[good])
+        nIter += 1
         if abs(x[maxIndex]-mu)>=(threshold*sigma):
             continue
         good[maxIndex] = 1
@@ -393,7 +395,7 @@ def sigmaFilterMedian(x,threshold,minPoints=2):
     until there is no change or unless there are minPoints or fewer remaining"""
     new_good = good = ones(x.shape,bool_)
     nIter = 0
-    while new_good.sum()>1 and len(x)>1:
+    while nIter<20 and new_good.sum()>1 and len(x)>1:
         med = median(x[good])
         sigma = std(x[good])
         new_good = abs(x-med)<=(threshold*sigma)

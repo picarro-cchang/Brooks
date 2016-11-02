@@ -708,14 +708,14 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("LASER3_CURRENT_MONITOR_REGISTER",130.0)
         sender.wrRegFloat("LASER4_CURRENT_MONITOR_REGISTER",140.0)
 
-        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER",5800.0)
-        sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER",5900.0)
-        sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
-        sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
-        sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
+        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER", 4368.475)
+        sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER", 4351.434)
+        sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER", 4201.435)
+        sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER", 39538.5)
+        sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",41217.0)
 
-        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
-        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
+        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER", 10977899)
+        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER", 2022245)
 
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)

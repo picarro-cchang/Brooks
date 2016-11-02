@@ -293,8 +293,6 @@ class RingdownPanel(RingdownPanelGui):
             def  fineCurrentVsTime(data):
                 if dataGood(data):
                     utime = timestamp.unixTime(data.timestamp)
-                    #wavenumber = data.wlmAngle
-                    wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["fineCurrent"].Add(utime, data.fineLaserCurrent,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='',
@@ -316,6 +314,30 @@ class RingdownPanel(RingdownPanelGui):
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Loss"
             self.appendData = lossVsFineCurrent
+        elif choice == 17:
+            def  laserTempVsWavenumber(data):
+                if dataGood(data):
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["laserTemp"].Add(wavenumber, data.laserTemperature,fillColours[vLaser])
+            self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
+            timeAxes=(False,False),ylabel='Laser Temperature',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "LaserTemp"
+            self.appendData = laserTempVsWavenumber
+        elif choice == 18:
+            def  laserTempVsTime(data):
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["laserTemp"].Add(utime, data.laserTemperature,fillColours[vLaser])
+            self.ringdownGraph.SetGraphProperties(xlabel='',
+            timeAxes=(True,False),ylabel='Laser Temperature',grid=True,
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "LaserTemp"
+            self.appendData = laserTempVsTime
 
         self.ringdownGraph.RemoveAllSeries()
 
@@ -359,6 +381,11 @@ class RingdownPanel(RingdownPanelGui):
                 waveforms["Ringdown"]["ratio2"],
                 colour='green',fillcolour='green',marker='square',
                 size=1,width=1)
+        elif y == "LaserTemp":
+                self.ringdownGraph.AddSeriesAsPoints(
+                    waveforms["Ringdown"]["laserTemp"],
+                    marker='square',
+                    size=1,width=1)
         for w in self.ringdownWfms:
             w.Clear()
 
