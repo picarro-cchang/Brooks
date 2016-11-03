@@ -43,7 +43,6 @@ from Host.Common.AuxAccessor import AuxAccessor
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_RESTART_SUPERVISOR, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface
-from Host.Common.StateDatabase import StateDatabase
 from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -511,18 +510,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
         config.savePersistentRegistersToConfig()
         name = config.writeConfig(filename)
         Log("Saved instrument configuration to file %s" % (name,),Level=1)
-
-    def getHistory(self,streamNum):
-        """Get historical data associated with streamNum from the database"""
-        return StateDatabase().getHistory(streamNum)
-
-    def getHistoryByCommand(self, command, args=None):
-        """Get historical data associated with given command from the database"""
-        return StateDatabase().getHistoryByCommand(command, args)
-
-    def saveWlmHist(self,wlmHist):
-        """Save WLM history in database"""
-        StateDatabase().saveWlmHist(wlmHist)
 
     def getConfigFile(self):
         configFile = os.path.abspath(InstrumentConfig().filename)
@@ -1284,6 +1271,7 @@ class Driver(SharedTypes.Singleton):
                     Log("DAS firmware uploaded",Level=1)
                     break
                 except:
+                    LogExc("Problem loading firmware",Level=2)
                     time.sleep(1.0)
                     continue
             else:
@@ -1390,14 +1378,9 @@ class Driver(SharedTypes.Singleton):
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
         finally:
-            try:
-                self.dasInterface.saveDasState()
-            except:
-                pass
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
             self.streamSaver.closeStreamFile()
-            self.dasInterface.stateDatabase.close()
 
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""

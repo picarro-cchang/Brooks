@@ -59,6 +59,8 @@ class Spectrum(object):
         self.basisFunctions = {}
         m = Model()
         m.setAttributes(x_center=self.centerFrequency)
+        if "pressure" in env: m.setAttributes(pressure = env["pressure"])
+        if "temperature" in env: m.setAttributes(temperature = env["temperature"])
         m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
         m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
         m.addDummyParameter(sum(self.basisArray<1000))
