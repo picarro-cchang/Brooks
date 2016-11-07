@@ -376,9 +376,10 @@ class Page1(wx.Panel):
 
 #----------------------------------------------------------------------------------------------------------------------------------------#
 class Page2(wx.Panel):
-    def __init__(self, comPortList, coordinatorPortList, hasReadGPSWS, *args, **kwds):
+    def __init__(self, comPortList, comPortMapping, coordinatorPortList, hasReadGPSWS, *args, **kwds):
         wx.Panel.__init__(self, *args, **kwds)
         self.coordinatorPortList = coordinatorPortList
+        self.comPortMapping = comPortMapping
         self.keyLabelStrings = ["Data Streaming", "Valve Sequencer MPV", "Command Interface"]
         self.choiceLists = [comPortList, comPortList, comPortList[:-1]+["TCP"]+[comPortList[-1]]]
         for i in range(len(coordinatorPortList)):
@@ -437,6 +438,18 @@ class Page2(wx.Panel):
         if type(self.coordinatorIni) != type([]):
             self.coordinatorIni = [self.coordinatorIni]
 
+    def mapRealPort2Display(self, realPortName):
+        if self.comPortMapping:
+            return self.comPortMapping.keys()[self.comPortMapping.values().index(realPortName)]
+        else:
+            return realPortName
+
+    def mapDisplay2RealPort(self, displayName):
+        if self.comPortMapping:
+            return self.comPortMapping[displayName]
+        else:
+            return displayName
+
     def showCurValues(self):
         try:
             cp = CustomConfigObj(self.dataMgrIni)
@@ -445,7 +458,7 @@ class Page2(wx.Panel):
                 self.comboBoxList[0].Enable(False)
             else:
                 if cp.getboolean("SerialOutput", "Enable"):
-                    setVal = cp.get("SerialOutput", "Port")
+                    setVal = self.mapRealPort2Display(cp.get("SerialOutput", "Port"))
                 else:
                     setVal = "OFF"
         except Exception, err:
@@ -458,7 +471,7 @@ class Page2(wx.Panel):
             cp = CustomConfigObj(self.valveIni)
             setVal = cp.get("MAIN", "comPortRotValve")
             try:
-                setVal = "COM%d" % (int(setVal)+1)
+                setVal = self.mapRealPort2Display( "COM%d" % (int(setVal)+1) )
             except:
                 pass
         except Exception, err:
@@ -470,11 +483,7 @@ class Page2(wx.Panel):
         try:
             cp = CustomConfigObj(self.cmdIni)
             if cp.get("HEADER", "interface") == "SerialInterface":
-                setVal = cp.get("SERIALINTERFACE", "port")
-                try:
-                    setVal = eval(setVal) # In case setVal = "'COM1'" etc
-                except:
-                    pass
+                setVal = self.mapRealPort2Display(cp.get("SERIALINTERFACE", "port"))                
             elif cp.get("HEADER", "interface") == "SocketInterface":
                 setVal = "TCP"
             else:
@@ -491,7 +500,7 @@ class Page2(wx.Panel):
                 cp = CustomConfigObj(coorIni, list_values = True)
                 for coorPortName in self.coordinatorPortList:
                     try:
-                        setVal = cp.get("SerialPorts", coorPortName)
+                        setVal = self.mapRealPort2Display(cp.get("SerialPorts", coorPortName))
                         if coorPortName not in portDict:
                             portDict[coorPortName] = setVal
                         elif portDict[coorPortName] != setVal:
@@ -509,11 +518,11 @@ class Page2(wx.Panel):
             try:
                 cp = CustomConfigObj(self.readGPSWSIni)
                 if cp.getboolean("Enable", "enableGPS"):
-                    gpsPort = cp.get("Serial", "portGPS")
+                    gpsPort = self.mapRealPort2Display(cp.get("Serial", "portGPS"))
                 else:
                     gpsPort = "OFF"
                 if cp.getboolean("Enable", "enableWS"):
-                    wsPort = cp.get("Serial", "portWS")
+                    wsPort = self.mapRealPort2Display(cp.get("Serial", "portWS"))
                 else:
                     wsPort = "OFF"
             except Exception, err:
@@ -541,7 +550,7 @@ class Page2(wx.Panel):
             if not yesClicked:
                 return False
 
-        streamPort = self.comboBoxList[0].GetValue()
+        streamPort = self.mapDisplay2RealPort(self.comboBoxList[0].GetValue())
         try:
             cp = CustomConfigObj(self.dataMgrIni)
             if cp.has_section("SerialOutput") and streamPort != "":
@@ -556,7 +565,7 @@ class Page2(wx.Panel):
         except Exception, err:
             print "Data streaming port Exception: %r" % err
 
-        mpvPort = self.comboBoxList[1].GetValue()
+        mpvPort = self.mapDisplay2RealPort(self.comboBoxList[1].GetValue())
         if mpvPort != "":
             try:
                 cp = CustomConfigObj(self.valveIni)
@@ -565,17 +574,17 @@ class Page2(wx.Panel):
             except Exception, err:
                 print "MPV port Exception: %r" % err
 
-        cmdPort = self.comboBoxList[2].GetValue()
+        cmdPort = self.mapDisplay2RealPort(self.comboBoxList[2].GetValue())
         if cmdPort != "":
             try:
                 cp = CustomConfigObj(self.cmdIni)
-                if cmdPort.startswith("COM"):
+                if cmdPort == "TCP":
+                    cp.set("HEADER", "interface", "SocketInterface")
+                elif comPort == "OFF":
+                    cp.set("HEADER", "interface", "OFF")
+                else:
                     cp.set("HEADER", "interface", "SerialInterface")
                     cp.set("SERIALINTERFACE", "port", cmdPort)
-                elif cmdPort == "TCP":
-                    cp.set("HEADER", "interface", "SocketInterface")
-                else:
-                    cp.set("HEADER", "interface", "OFF")
                 cp.write()
             except Exception, err:
                  print "Command interface port Exception: %r" % err
@@ -589,6 +598,7 @@ class Page2(wx.Panel):
                     coorPortName = self.coordinatorPortList[i]
                     try:
                         port = self.comboBoxList[3+i].GetStringSelection()
+                        port = self.mapDisplay2RealPort(port)
                         if coorPortName in cp["SerialPorts"]:
                             cp["SerialPorts"][coorPortName] = port
                     except:
@@ -598,7 +608,7 @@ class Page2(wx.Panel):
                  print "Coordinator port Exception: %r" % err
 
         if self.readGPSWSIni:
-            gpsPort = self.comboBoxList[-2].GetValue()
+            gpsPort = self.mapDisplay2RealPort(self.comboBoxList[-2].GetValue())
             if gpsPort != "":
                 try:
                     cp = CustomConfigObj(self.readGPSWSIni)
@@ -610,7 +620,7 @@ class Page2(wx.Panel):
                     cp.write()
                 except Exception, err:
                      print "GPS port Exception: %r" % err
-            wsPort = self.comboBoxList[-1].GetValue()
+            wsPort = self.mapDisplay2RealPort(self.comboBoxList[-1].GetValue())
             if wsPort != "":
                 try:
                     cp = CustomConfigObj(self.readGPSWSIni)

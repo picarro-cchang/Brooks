@@ -72,6 +72,12 @@ class SetupTool(SetupToolFrame):
             self.appIniDirDict["readGPSWS"] = readGPSWSDir
 
         comPortList = self.setupCp.get("Setup", "comPortList")
+        comPortMapping = {}
+        # Example: comPortMapping = COM1:/dev/ttyS0, COM2:/dev/ttyS1, OFF:OFF
+        if "comPortMapping" in self.setupCp["Setup"]:
+            mapping = self.setupCp["Setup"]["comPortMapping"]
+            comPortMapping = {p.split(":")[0]:p.split(":")[1] for p in mapping}
+
         self._getCoordinatorPathAndPortList()
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
         try:
@@ -82,7 +88,7 @@ class SetupTool(SetupToolFrame):
             self.setupCp.write()
         self.modeList = self.setupCp.list_sections()
         self.modeList.remove("Setup")
-        SetupToolFrame.__init__(self, comPortList, CRDS_QuickGui, CRDS_Driver, *args, **kwds)
+        SetupToolFrame.__init__(self, comPortList, comPortMapping, CRDS_QuickGui, CRDS_Driver, *args, **kwds)
         self.onModeComboBox(None)
         self.bindEvents()
         self.fullInterface = False
