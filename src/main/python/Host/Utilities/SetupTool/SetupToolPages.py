@@ -580,14 +580,14 @@ class Page2(wx.Panel):
                 cp = CustomConfigObj(self.cmdIni)
                 if cmdPort == "TCP":
                     cp.set("HEADER", "interface", "SocketInterface")
-                elif comPort == "OFF":
+                elif cmdPort == "OFF":
                     cp.set("HEADER", "interface", "OFF")
                 else:
                     cp.set("HEADER", "interface", "SerialInterface")
                     cp.set("SERIALINTERFACE", "port", cmdPort)
                 cp.write()
             except Exception, err:
-                 print "Command interface port Exception: %r" % err
+                print "Command interface port Exception: %r" % err
 
         for ini in self.coordinatorIni:
             try:
