@@ -24,7 +24,7 @@ File History:
     10-01-22  sze  Changed date format display to ISO standard
     10-07-05  alex Add the function to change line/marker color at a specified time
     14-05-20  tw   Fixed bug in Win7 alarm box height calc, bumped max alarms in box to 5 before shows scrollbars.
-
+    16-11-09  wenting Implemented three user levels on GUI mode: Operator mode, Service Technician mode and Expert mode.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -1200,7 +1200,7 @@ class QuickGui(wx.Frame):
         self.source = [None]*self.numGraphs
         self.dataKey = [None]*self.numGraphs
         self.logo = None
-        self.fullInterface = False
+        self.userLevel = 1
         self.showStat = False
         self.showInstStat = False
         self.serviceModeOnlyControls = []
@@ -1272,16 +1272,25 @@ class QuickGui(wx.Frame):
             self.imageDatabase.setImagePanel(key,self)
 
         self.menuBar = wx.MenuBar()
-        self.iSettings = wx.Menu()
+        self.iUserSettings = wx.Menu()
         self.iView = wx.Menu()
         self.iTools = wx.Menu()
         self.iHelp = wx.Menu()
 
-        self.menuBar.Append(self.iSettings,"Settings")
-        self.idGUIMODE = wx.NewId()
-        self.iGuiMode = wx.MenuItem(self.iSettings, self.idGUIMODE, "Change GUI mode from Standard to Service", "", wx.ITEM_NORMAL)
-        self.iSettings.AppendItem(self.iGuiMode)
+        #user level setting manu
+        self.menuBar.Append(self.iUserSettings,"User Level Settings")
+        self.idGUIMODE1 = wx.NewId()
+        self.idGUIMODE2 = wx.NewId()
+        self.idGUIMODE3 = wx.NewId()
+        self.iGuiMode1 = wx.MenuItem(self.iUserSettings, self.idGUIMODE1, "Operator", "", wx.ITEM_NORMAL)
+        self.iGuiMode2 = wx.MenuItem(self.iUserSettings, self.idGUIMODE2, "Service technician", "", wx.ITEM_NORMAL)
+        self.iGuiMode3 = wx.MenuItem(self.iUserSettings, self.idGUIMODE3, "Expert", "", wx.ITEM_NORMAL)
 
+
+        self.iUserSettings.AppendItem(self.iGuiMode1)
+        self.iUserSettings.AppendItem(self.iGuiMode2)
+        self.iUserSettings.AppendItem(self.iGuiMode3)
+        self.iGuiMode1.Enable(False)
         self.menuBar.Append(self.iView,"View")
         self.idLockTime = wx.NewId()
         self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_NORMAL)
@@ -1319,7 +1328,11 @@ class QuickGui(wx.Frame):
 
         self.SetMenuBar(self.menuBar)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.idABOUT)
-        self.Bind(wx.EVT_MENU, self.OnGuiMode, id=self.idGUIMODE)
+
+        self.Bind(wx.EVT_MENU, self.OnGuiMode1, id=self.idGUIMODE1)
+        self.Bind(wx.EVT_MENU, self.OnGuiMode2, id=self.idGUIMODE2)
+        self.Bind(wx.EVT_MENU, self.OnGuiMode3, id=self.idGUIMODE3)
+
         self.Bind(wx.EVT_MENU, self.OnLockTime, id=self.idLockTime)
         self.iLockTime.Enable(self.numGraphs>1)
         self.Bind(wx.EVT_MENU, self.OnStatDisplay, id=self.idStatDisplay)
@@ -1539,6 +1552,7 @@ class QuickGui(wx.Frame):
         self.autoY = []
         self.autoYIdList = []
         self.zoomedList = []
+        self.clearButton = None
         choiceSizer = wx.BoxSizer(wx.VERTICAL)
 
         for idx in range(self.numGraphs):
@@ -1605,13 +1619,13 @@ class QuickGui(wx.Frame):
             toolSizer.Add((20,10),proportion=0)
             choiceSizer.Add(toolSizer,proportion=1)
 
-        clearButton = wx.Button(parent=toolPanel,id=-1,label="Reset buffers")
-        setItemFont(clearButton,self.getFontFromIni('GraphButton'))
-        self.Bind(wx.EVT_BUTTON,self.OnResetBuffers,clearButton)
+        self.clearButton = wx.Button(parent=toolPanel,id=-1,label="Reset buffers")
+        setItemFont(self.clearButton,self.getFontFromIni('GraphButton'))
+        self.Bind(wx.EVT_BUTTON,self.OnResetBuffers,self.clearButton)
 
         combToolSizer = wx.BoxSizer(wx.HORIZONTAL)
         combToolSizer.Add(choiceSizer,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
-        combToolSizer.Add(clearButton,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
+        combToolSizer.Add(self.clearButton,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
         combToolSizer.Add((10,10),proportion=0)
         toolPanel.SetSizer(combToolSizer)
 
@@ -1831,13 +1845,50 @@ class QuickGui(wx.Frame):
         self.SetSizer(box)
         self.modifyInterface()
 
+    #user levels setting
     def modifyInterface(self):
-        if self.fullInterface:
-            for c in self.serviceModeOnlyControls:
-                c.Show(True)
+        #Operator level
+        if self.userLevel == 1:
+            self.shutdownButton.Enable(False)
+            self.userLogButton.Disable()
+            for sc in self.sourceChoice:
+                sc.Enable(False)
+            for kc in self.keyChoice:
+                kc.Enable(False)
+            for pc in self.precisionChoice:
+                pc.Enable(False)
+            for ayb in self.autoY:
+                ayb.Enable(False)
+            self.clearButton.Enable(False)
+
+
         else:
-            for c in self.serviceModeOnlyControls:
-                c.Show(False)
+            self.shutdownButton.Enable(True)
+            self.userLogButton.Enable(True)
+            for sc in self.sourceChoice:
+                sc.Enable(True)
+            for kc in self.keyChoice:
+                kc.Enable(True)
+            for pc in self.precisionChoice:
+                pc.Enable(True)
+            for ayb in self.autoY:
+                ayb.Enable(True)
+            self.clearButton.Enable(True)
+            
+            #Technician Level
+            if self.userLevel == 2:
+                for c in self.serviceModeOnlyControls:
+                    c.Show(False)
+                #self.iGuiMode1.Enable(True)
+                #self.iGuiMode2.Enable(False)
+                #self.iGuiMode3.Enable(True)
+            #Expert
+            else:
+                for c in self.serviceModeOnlyControls:
+                    c.Show(True)
+                #self.iGuiMode1.Enable(True)
+                #self.iGuiMode2.Enable(True)
+                #self.iGuiMode3.Enable(False)
 
         if self.showStat:
             for c in self.statControls:
@@ -1855,7 +1906,7 @@ class QuickGui(wx.Frame):
 
     def getSourcesbyMode(self):
         s = self.dataStore.getSources()
-        if not self.fullInterface:
+        if self.userLevel != 3:
             if self.sourceStandardModeDatabase != None:
                 s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
             else:
@@ -1864,7 +1915,7 @@ class QuickGui(wx.Frame):
 
     def getKeysbyMode(self,source):
         k = self.dataStore.getKeys(source)
-        if not self.fullInterface:
+        if self.userLevel != 3:
             if self.keyStandardModeDatabase != None:
                 k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
             else:
@@ -2401,41 +2452,76 @@ class QuickGui(wx.Frame):
             d.SetSize((currSize[0]+40, currSize[1]))
         d.ShowModal()
         d.Destroy()
-    def OnGuiMode(self,e):
-        if self.fullInterface:
-            # change GUI mode to standard
-            self.fullInterface = False
-            self.modifyInterface()
-            self.measPanelSizer.Layout()
-            self.Refresh()
-            d = OKDialog(self,"Standard GUI mode selected",None,-1,"CRDS Data Viewer")
+
+    def OnGuiMode1(self,e):
+        # change GUI mode to operator
+        self.userLevel = 1
+        self.modifyInterface()
+        self.measPanelSizer.Layout()
+        self.Refresh()
+        d = OKDialog(self,"Operator GUI mode selected",None,-1,"CRDS Data Viewer")
+
+        d.ShowModal()
+        d.Destroy()
+        self.iGuiMode1.Enable(False)
+        self.iGuiMode2.Enable(True)
+        self.iGuiMode3.Enable(True)
+
+    def OnGuiMode2(self,e):
+        # change GUI mode to technician (if password matched)
+        d = wx.TextEntryDialog(self, 'Service Technician Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        setItemFont(d,self.getFontFromIni("Dialogs"))
+        try:
+            password = getInnerStr(self.config.get("Authorization","password"))
+        except:
+            password = "picarro"
+        okClicked = d.ShowModal() == wx.ID_OK
+
+        if okClicked and (d.GetValue() == password):
+            self.userLevel = 2
+        d.Destroy()
+
+        if okClicked:
+            if self.userLevel == 2:
+                self.modifyInterface()
+                self.measPanelSizer.Layout()
+                self.Refresh()
+                d = OKDialog(self,"Standard technician GUI mode selected",None,-1,"CRDS Data Viewer")
+                self.iGuiMode1.Enable(True)
+                self.iGuiMode2.Enable(False)
+                self.iGuiMode3.Enable(True)
+            else:
+                d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
             d.ShowModal()
             d.Destroy()
-            # update the "Change GUI mode" menu label
-            self.iSettings.SetLabel(self.idGUIMODE,"Change GUI mode from Standard to Service")
-        else:
-            # try to change GUI mode to service (if password matched)
-            d = wx.TextEntryDialog(self, 'Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-            setItemFont(d,self.getFontFromIni("Dialogs"))
-            try:
-                password = getInnerStr(self.config.get("Authorization","password"))
-            except:
-                password = "picarro"
-            okClicked = d.ShowModal() == wx.ID_OK
-            self.fullInterface = okClicked and (d.GetValue() == password)
+
+    def OnGuiMode3(self,e):
+        # try to change GUI mode to expert (if password matched)
+        d = wx.TextEntryDialog(self, 'Expert Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        setItemFont(d,self.getFontFromIni("Dialogs"))
+        try:
+            password = getInnerStr(self.config.get("Authorization","password"))
+        except:
+            password = "picarropicarro"
+        okClicked = d.ShowModal() == wx.ID_OK
+
+        if okClicked and (d.GetValue() == password):
+            self.userLevel = 3
+        d.Destroy()
+
+        if okClicked:
+            if self.userLevel == 3:
+                self.modifyInterface()
+                self.measPanelSizer.Layout()
+                self.Refresh()
+                d = OKDialog(self,"Expert GUI mode selected",None,-1,"CRDS Data Viewer")
+                self.iGuiMode1.Enable(True)
+                self.iGuiMode2.Enable(True)
+                self.iGuiMode3.Enable(False)
+            else:
+                d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
+            d.ShowModal()
             d.Destroy()
-            if okClicked:
-                if self.fullInterface:
-                    self.modifyInterface()
-                    self.measPanelSizer.Layout()
-                    self.Refresh()
-                    d = OKDialog(self,"Service GUI mode selected",None,-1,"CRDS Data Viewer")
-                    # update the "Change GUI mode" menu option
-                    self.iSettings.SetLabel(self.idGUIMODE,"Change GUI mode from Service to Standard")
-                else:
-                    d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
-                d.ShowModal()
-                d.Destroy()
 
 #end of class QuickGui
 HELP_STRING = \
