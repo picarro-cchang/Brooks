@@ -709,3 +709,69 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
                                    [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.dspAccessor.hpiRead(virtualLaserParamsAddr, vLaserParams)
         return vLaserParams
+
+    @usbLockProtect
+    def wrDac(self,channel,value):
+        self.dspAccessor.wrDac(channel,value)
+
+    @usbLockProtect
+    def wrAuxiliary(self,data):
+        self.dspAccessor.wrAuxiliary(data)
+
+    # @usbLockProtect
+    # def getDacQueueFreeSlots(self):
+        # return self.dspAccessor.getDacQueueFreeSlots()
+
+    # @usbLockProtect
+    # def getDacQueueErrors(self):
+        # return self.dspAccessor.getDacQueueErrors()
+
+    # @usbLockProtect
+    # def setDacQueuePeriod(self,channel,period):
+        # return self.dspAccessor.setDacQueuePeriod(channel,period)
+
+    # @usbLockProtect
+    # def resetDacQueues(self):
+        # return self.dspAccessor.resetDacQueues()
+
+    # @usbLockProtect
+    # def serveDacQueues(self):
+        # return self.dspAccessor.serveDacQueues()
+
+    @usbLockProtect
+    def rdDspTimerRegisters(self):
+        timerRegs = (c_uint*3)()
+        self.dspAccessor.hpiRead(interface.DSP_TIMER0_BASE,timerRegs)
+        return [x for x in timerRegs]
+
+    @usbLockProtect
+    def resetDacQueue(self):
+        return self.dspAccessor.resetDacQueue()
+
+    @usbLockProtect
+    def setDacTimestamp(self,timestamp):
+        return self.dspAccessor.setDacTimestamp(timestamp)
+
+    @usbLockProtect
+    def setDacReloadCount(self,reloadCount):
+        return self.dspAccessor.setDacReloadCount(reloadCount)
+
+    @usbLockProtect
+    def getDacTimestamp(self):
+        return self.dspAccessor.getDacTimestamp()
+
+    @usbLockProtect
+    def getDacReloadCount(self):
+        return self.dspAccessor.getDacReloadCount()
+
+    @usbLockProtect
+    def getDacQueueFree(self):
+        return self.dspAccessor.getDacQueueFree()
+
+    @usbLockProtect
+    def getDacQueueErrors(self):
+        return self.dspAccessor.getDacQueueErrors()
+
+    @usbLockProtect
+    def enqueueDacSamples(self,data):
+        return self.dspAccessor.enqueueDacSamples(data)
