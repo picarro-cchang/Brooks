@@ -1627,12 +1627,14 @@ class QuickGui(wx.Frame):
         boxWidth = self.config.getint("AlarmBox","Width")
         if self.platform == "Windows-XP":
             boxHeight = 10 + self.numAlarmsDisplay * 15
+        elif "Linux" in self.platform:
+            boxHeight = 10 + self.numAlarmsDisplay * 30
         else:
             # for the height computation we ought to use font height + padding
             boxHeight = self.numAlarmsDisplay * 20
 
         size = boxWidth,boxHeight
-
+        
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','enabledFont')
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
@@ -1647,7 +1649,7 @@ class QuickGui(wx.Frame):
 
         # numSysAlarms = 1 will hide IPV Connectivity, default is 1 (hide IPV)
         numSysAlarms = min(2, self.config.getint("AlarmBox", "NumSysAlarms", 1))
-
+        
         # System Alarm view
         # Define box height automatically
         boxWidth = self.config.getint("AlarmBox","Width")
@@ -1655,13 +1657,15 @@ class QuickGui(wx.Frame):
         if self.platform == "Windows-XP":
             boxHeight = numSysAlarms * 17
             #size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
+        elif "Linux" in self.platform:
+            boxHeight = 10+numSysAlarms * 30
         else:
             # Windows 7
             boxHeight = numSysAlarms * 20
             #size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",40)
 
         size = boxWidth,boxHeight
-
+        
         self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.sysAlarmInterface,
                                            size=size, numAlarms=numSysAlarms)
