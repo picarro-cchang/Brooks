@@ -1013,7 +1013,8 @@ class Supervisor(object):
         # Linux helper:
         # If there is no tty to use ^T, terminate Supervisor and its
         # subprocesses with 'kill -USR1 <supervisor_pid>
-        signal.signal(signal.SIGUSR1, self.sigint_handler)
+        if sys.platform == "linux2":
+            signal.signal(signal.SIGUSR1, self.sigint_handler)
         print("Supervisor PID:", os.getpid())
 
         # start to use CustomConfigObj
