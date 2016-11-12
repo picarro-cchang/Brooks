@@ -382,7 +382,7 @@ elif sys.platform == "linux2":
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
-                termList = ["xterm","-hold","-T",appName,"-e"]
+                termList = ["xterm","+hold","-T",appName,"-e"]
                 process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
@@ -420,13 +420,7 @@ elif sys.platform == "linux2":
             if result == None:
                 return True
         else:
-            try:
-                retval = os.waitpid(processHandle.pid,os.WNOHANG)
-                return retval[0] == 0   # This means that wait would have blocked
-            except OSError:
-                return False
-            except Exception,e:
-                print "Unexpected exception: %s" % e
+            return psutil.pid_exists(processHandle.pid)
 
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
@@ -436,7 +430,8 @@ elif sys.platform == "linux2":
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
         [base,ext] = os.path.splitext(filename)
-        Log("terminateProcessByName not implemented")
+        Log("Terminating process %s using pkill" % base)
+        call(["pkill", "-f", base],stderr=file("NUL","w"))
 
     def getProcessHandle(pid):
         class ProcessHandle(object):
@@ -845,7 +840,7 @@ class App(object):
                     appLives = False
 
         # Try killing by process name as a last resort, if this option is selected
-        if self.KillByName and not NoKillByName:
+        if appLives and self.KillByName and not NoKillByName:
             print "Calling KillByName for application %s (appLives = %s)" % (self.Executable,appLives)
             terminateProcessByName(self.Executable)
             if NoWait: return
