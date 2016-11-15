@@ -388,6 +388,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         else:
             raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
 
+    def rdRingdownMem(self, offset, numWords):
+        return [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(offset,numWords)]
+        
+    def wrRingdownMem(self, offset, listOfUint32):
+        self.dasInterface.hostToDspSender.wrRingdownMemArray(offset,listOfUint32)
+    
     def rdRingdown(self,bank):
         """Fetches the contents of ringdown memory from the specified bank"""
         dataBase = (0x0, 0x4000)
@@ -1381,7 +1387,7 @@ class Driver(SharedTypes.Singleton):
                         else:
                             self.invokeSupervisorLauncher()
                             sys.looping = False
-                        self.dasInterface.saveDasState()
+                        #self.dasInterface.saveDasState()
                         self.lastSaveDasState = now
 
                 Log("Driver RPC handler shut down")
@@ -1391,7 +1397,8 @@ class Driver(SharedTypes.Singleton):
                     Verbose=traceback.format_exc(),Level=3)
         finally:
             try:
-                self.dasInterface.saveDasState()
+                #self.dasInterface.saveDasState()
+                pass
             except:
                 pass
             self.rpcHandler.shutDown()
