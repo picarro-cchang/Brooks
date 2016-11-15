@@ -43,7 +43,6 @@ from Host.Common.AuxAccessor import AuxAccessor
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_RESTART_SUPERVISOR, ctypesToDict
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface
-from Host.Common.StateDatabase import StateDatabase
 from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -388,12 +387,6 @@ class DriverRpcHandler(SharedTypes.Singleton):
         else:
             raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
 
-    def rdRingdownMem(self, offset, numWords):
-        return [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(offset,numWords)]
-        
-    def wrRingdownMem(self, offset, listOfUint32):
-        self.dasInterface.hostToDspSender.wrRingdownMemArray(offset,listOfUint32)
-    
     def rdRingdown(self,bank):
         """Fetches the contents of ringdown memory from the specified bank"""
         dataBase = (0x0, 0x4000)
@@ -518,25 +511,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         name = config.writeConfig(filename)
         Log("Saved instrument configuration to file %s" % (name,),Level=1)
 
-    def getHistory(self,streamNum):
-        """Get historical data associated with streamNum from the database"""
-        return StateDatabase().getHistory(streamNum)
-
-    def getHistoryByCommand(self, command, args=None):
-        """Get historical data associated with given command from the database"""
-        return StateDatabase().getHistoryByCommand(command, args)
-
-    def saveWlmHist(self,wlmHist):
-        """Save WLM history in database"""
-        StateDatabase().saveWlmHist(wlmHist)
-
     def getConfigFile(self):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile
 
     def wrDac(self,channel,value):
         """Writes "value" to the specified analog interface DAC channel. """
-        self.driver.auxAccessor.wrDac(channel,value)
+        self.dasInterface.hostToDspSender.wrDac(channel,value)
 
     def rddCommand(self,command):
         """Issues command for ringdown detector variable gain board"""
@@ -1278,7 +1259,6 @@ class Driver(SharedTypes.Singleton):
                     # Restore state from INI file
                     ic = InstrumentConfig()
                     ic.loadPersistentRegistersFromConfig()
-                    # self.dasInterface.loadDasState() # Restore DAS state
                     Log("Configuring scheduler",Level=1)
                     self.dasInterface.pingWatchdog()
                     DasConfigure(self.dasInterface,ic.config,self.config).run()
@@ -1290,6 +1270,7 @@ class Driver(SharedTypes.Singleton):
                     Log("DAS firmware uploaded",Level=1)
                     break
                 except:
+                    LogExc("Problem loading firmware",Level=2)
                     time.sleep(1.0)
                     continue
             else:
@@ -1326,7 +1307,7 @@ class Driver(SharedTypes.Singleton):
             Log("Starting main driver loop", Level=1)
             maxRpcTime = 0.5
             rpcTime = 0.0
-            # We need to determine how much time we should dedicate to serving rpc calls (up to maxRpcTime) 
+            # We need to determine how much time we should dedicate to serving rpc calls (up to maxRpcTime)
             #  as compared to handling messages, sensor and ringdown data from the DSP. On each loop,
             #  - messages are handled for up to the first 20ms
             #  - sensor data are handled for up to the first 200ms
@@ -1343,7 +1324,7 @@ class Driver(SharedTypes.Singleton):
                     ringdowns = ringdownHandler.process(max(0.02, 0.5 - timeSoFar))
                     timeSoFar += ringdowns.duration
                     # We update the time for dealing with RPC by increasing it slightly if all handlers completed
-                    #  and reducing it if they did not. This is because the data accumulate during the time in 
+                    #  and reducing it if they did not. This is because the data accumulate during the time in
                     #  which RPCs are being processed
                     if sensors.finished and ringdowns.finished and messages.finished:
                         rpcTime += 0.01
@@ -1387,7 +1368,6 @@ class Driver(SharedTypes.Singleton):
                         else:
                             self.invokeSupervisorLauncher()
                             sys.looping = False
-                        #self.dasInterface.saveDasState()
                         self.lastSaveDasState = now
 
                 Log("Driver RPC handler shut down")
@@ -1396,15 +1376,9 @@ class Driver(SharedTypes.Singleton):
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
         finally:
-            try:
-                #self.dasInterface.saveDasState()
-                pass
-            except:
-                pass
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
             self.streamSaver.closeStreamFile()
-            self.dasInterface.stateDatabase.close()
 
 class InstrumentConfig(SharedTypes.Singleton):
     """Configuration of instrument."""
