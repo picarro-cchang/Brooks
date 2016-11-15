@@ -210,6 +210,7 @@ class SpectrumCollector(object):
         self.sequencer = None
         self.schemesUsed = {}
 
+        self.fsrModeBoundaries = {}
 
     def run(self):
         self.sequencer = Sequencer()
@@ -416,6 +417,21 @@ class SpectrumCollector(object):
             spectrumDict["rdData"][fname] = numpy.asarray(data, ctypes2numpy[dtype])
         spectrumDict["rdData"]["pztValue"] = numpy.asarray(spectrumDict["rdData"]["pztValue"], dtype='float32')
         spectrumDict["rdData"]["tunerValue"] = numpy.asarray(spectrumDict["rdData"]["tunerValue"], dtype='float32')
+        # Append a mode number to each ringdown if the mode boundaries have been set up for the laser in
+        # FSR hopping mode
+        if self.fsrModeBoundaries:
+            laserUsed = (spectrumDict["rdData"]["laserUsed"] & 3) + 1
+            fineLaserCurrent = spectrumDict["rdData"]["fineLaserCurrent"]
+            modeNum = -999999 * numpy.ones_like(fineLaserCurrent, dtype=int)
+            for aLaserNum in range(1, interface.MAX_LASERS + 1):
+                sel = (laserUsed == aLaserNum)
+                if numpy.any(sel):
+                    if aLaserNum in self.fsrModeBoundaries:
+                        bins = self.fsrModeBoundaries[aLaserNum].copy()
+                        modeNum[sel] = numpy.digitize(fineLaserCurrent[sel], bins)
+            spectrumDict["rdData"]["fsrIndex"] = modeNum
+        else:
+            spectrumDict["rdData"]["fsrIndex"] = -999999 * numpy.ones_like(spectrumDict["rdData"]["timestamp"], dtype=int)
 
         # Append averaged sensor data
         for s in self.avgSensors:
@@ -590,6 +606,11 @@ class SpectrumCollector(object):
     @CmdFIFO.rpc_wrap
     def RPC_archiveSpectrumFile(self, fileName, auxSpectrumFile):
         self.archiveSpectrumFile(fileName, auxSpectrumFile)
+
+    @CmdFIFO.rpc_wrap
+    def RPC_setFsrModeBoundaries(self, aLaserNum, modeBoundaries):
+        Log("Received mode boundaries for laser %d" % aLaserNum)
+        self.fsrModeBoundaries[aLaserNum] = modeBoundaries.copy()
 
 
 HELP_STRING = """SpectrumCollector.py [-c<FILENAME>] [-h|--help]
