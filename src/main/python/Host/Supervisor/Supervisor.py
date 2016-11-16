@@ -1023,7 +1023,7 @@ class Supervisor(object):
                         return line.split()[1]
                         
             hostIp = getHostIp()
-            self.ContainerServer = CmdFIFOServerProxy(
+            self.ContainerServer = CmdFIFO.CmdFIFOServerProxy(
                 "http://%s:%d" % (hostIp, RPC_PORT_CONTAINER), 
                 "Container Client", IsDontCareConnection=False)
         print("Supervisor PID:", os.getpid())
@@ -1521,7 +1521,7 @@ class Supervisor(object):
         if self.powerDownAfterTermination:
             if sys.platform == "linux2":
                 self.ContainerServer.shutdown()
-            elif if sys.platform == "win32":
+            elif sys.platform == "win32":
                 os.system("shutdown -f -s -t 20")
         #Now shut applications down in the reverse order of launching...
         #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
