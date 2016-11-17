@@ -1291,6 +1291,7 @@ class QuickGui(wx.Frame):
         self.iUserSettings.AppendItem(self.iGuiMode2)
         self.iUserSettings.AppendItem(self.iGuiMode3)
         self.iGuiMode1.Enable(False)
+        
         self.menuBar.Append(self.iView,"View")
         self.idLockTime = wx.NewId()
         self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_NORMAL)
@@ -1306,6 +1307,8 @@ class QuickGui(wx.Frame):
         self.idUserCal = wx.NewId()
         self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
         self.iTools.AppendItem(self.iUserCal)
+        self.menuBar.EnableTop(1, False)
+        self.menuBar.EnableTop(2, False)
         try:
             self.pulseSource = self.config.get("PulseAnalyzer", "Source")
             self.idPulseAnalyzerParam = wx.NewId()
@@ -1850,6 +1853,7 @@ class QuickGui(wx.Frame):
         #Operator level
         if self.userLevel == 1:
             self.shutdownButton.Enable(False)
+            
             self.userLogButton.Disable()
             for sc in self.sourceChoice:
                 sc.Enable(False)
@@ -1864,6 +1868,7 @@ class QuickGui(wx.Frame):
 
         else:
             self.shutdownButton.Enable(True)
+
             self.userLogButton.Enable(True)
             for sc in self.sourceChoice:
                 sc.Enable(True)
@@ -2466,6 +2471,9 @@ class QuickGui(wx.Frame):
         self.iGuiMode1.Enable(False)
         self.iGuiMode2.Enable(True)
         self.iGuiMode3.Enable(True)
+        self.menuBar.EnableTop(1, False)
+        self.menuBar.EnableTop(2, False)
+
 
     def OnGuiMode2(self,e):
         # change GUI mode to technician (if password matched)
@@ -2490,6 +2498,12 @@ class QuickGui(wx.Frame):
                 self.iGuiMode1.Enable(True)
                 self.iGuiMode2.Enable(False)
                 self.iGuiMode3.Enable(True)
+                self.menuBar.EnableTop(1, True)
+                self.menuBar.EnableTop(2, True)
+#                self.iLockTime.Enable(True)
+#                self.iStatDisplay.Enable(True)
+#                self.iInstStatDisplay.Enable(True)
+            
             else:
                 d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
             d.ShowModal()
@@ -2518,6 +2532,9 @@ class QuickGui(wx.Frame):
                 self.iGuiMode1.Enable(True)
                 self.iGuiMode2.Enable(True)
                 self.iGuiMode3.Enable(False)
+                self.menuBar.EnableTop(1, True)
+                self.menuBar.EnableTop(2, True)
+
             else:
                 d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
             d.ShowModal()
