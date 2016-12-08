@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2016 Picarro, Inc. All rights reserved
  */
 #ifndef _DSP_AUTOGEN_H
 #define _DSP_AUTOGEN_H
@@ -16,10 +16,10 @@
 #include "interface.h"
 
 typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
-extern I2C_device i2c_devices[35];
+extern I2C_device i2c_devices[33];
 
 void initRegisters(void);
-extern RegTypes regTypes[461];
+extern RegTypes regTypes[505];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -29,8 +29,8 @@ int testScheduler(unsigned int numInt,void *params,void *env);
 int streamRegisterAsFloat(unsigned int numInt,void *params,void *env);
 int streamFpgaRegisterAsFloat(unsigned int numInt,void *params,void *env);
 int r_resistanceToTemperature(unsigned int numInt,void *params,void *env);
-int r_updateFromSimulators(unsigned int numInt,void *params,void *env);
-int r_stepSimulators(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env);
+int r_applyPidStep(unsigned int numInt,void *params,void *env);
 int r_tempCntrlLaser1Init(unsigned int numInt,void *params,void *env);
 int r_tempCntrlLaser1Step(unsigned int numInt,void *params,void *env);
 int r_tempCntrlLaser2Init(unsigned int numInt,void *params,void *env);
@@ -101,4 +101,11 @@ int r_read_flow_sensor(unsigned int numInt,void *params,void *env);
 int r_rdd_cntrl_init(unsigned int numInt,void *params,void *env);
 int r_rdd_cntrl_step(unsigned int numInt,void *params,void *env);
 int r_rdd_cntrl_do_command(unsigned int numInt,void *params,void *env);
+int r_batt_mon_write_byte(unsigned int numInt,void *params,void *env);
+int r_batt_mon_read_regs(unsigned int numInt,void *params,void *env);
+int r_acc_read_reg(unsigned int numInt,void *params,void *env);
+int r_acc_write_reg(unsigned int numInt,void *params,void *env);
+int r_acc_read_accel(unsigned int numInt,void *params,void *env);
+int r_read_thermistor_resistance_16bit(unsigned int numInt,void *params,void *env);
+int r_average_float_registers(unsigned int numInt,void *params,void *env);
 #endif

@@ -22,7 +22,9 @@
 #include "i2c_dsp.h"
 #include "registers.h"
 #include "dspAutogen.h"
+#include "ltc2451.h"
 #include "ltc2485.h"
+#include "adxl345.h"
 
 #define I2C_MAXLOOPS (300)
 
@@ -541,6 +543,19 @@ done:
     return result;
 }
 /*----------------------------------------------------------------------------*/
+int ltc2451_read(int ident)
+// Read 16-bit ADC associated with "ident". Returns I2C_READ_ERROR on an I2C error.
+{
+    int result, loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    result = ltc2451_getData(d);
+    if (result == I2C_READ_ERROR) return result;
+    return result;
+}
+/*----------------------------------------------------------------------------*/
 int ltc2485_read(int ident)
 // Read 24-bit ADC associated with "ident". Returns I2C_READ_ERROR on an I2C error.
 {
@@ -603,3 +618,82 @@ void rdd_write(int ident, int data, int nbytes)
     I2C_sendStop(hI2C[d->chain]);
 }
 /*----------------------------------------------------------------------------*/
+int i2c_register_read(int ident, int reg, Uint8 *buffer, int nbytes)
+/* Read nbytes bytes into buffer starting from I2C register reg. This first
+   writes reg to the I2C and then performs nbytes I2C reads */
+{
+    int loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    if (I2C_write_bytes(hI2C[d->chain],d->addr,(Uint8*)&reg,1) != 0) return I2C_READ_ERROR;
+    if (I2C_read_bytes(hI2C[d->chain],d->addr,buffer,nbytes) != 0) return I2C_READ_ERROR;
+    return 0;
+}
+/*----------------------------------------------------------------------------*/
+int i2c_register_write(int ident, int reg, Uint8 *buffer, int nbytes)
+/* Writes nbytes bytes into buffer starting from I2C register reg. This first
+   writes reg to the I2C and then performs nbytes I2C writes */
+{
+    int i, loops;
+	Uint8 temp_buff[9];
+	I2C_device *d = &i2c_devices[ident];
+
+	if (nbytes <= 8) {
+		temp_buff[0] = reg;
+		for (i=0; i<nbytes; i++) temp_buff[i+1] = buffer[i];
+	    if (d->chain) setI2C1Mux(d->mux);
+	    else setI2C0Mux(d->mux);
+	    for (loops=0;loops<1000;loops++);
+	    if (I2C_write_bytes(hI2C[d->chain],d->addr,temp_buff,nbytes+1) != 0) return I2C_READ_ERROR;
+	    I2C_sendStop(hI2C[d->chain]);
+	    return 0;
+	}
+	else return -1;
+}
+/*----------------------------------------------------------------------------*/
+int accel_getDeviceId(int ident)
+// Get the accelerometer identification code
+{
+    int loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    return adxl345_read_register(d, 0x0, 1);
+}
+/*----------------------------------------------------------------------------*/
+int accel_read_reg(int ident, int reg)
+// Get a byte from the accelerometer register "reg"
+{
+    int loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    return adxl345_read_register(d, reg, 1);
+}
+/*----------------------------------------------------------------------------*/
+int accel_write_reg(int ident, int reg, int value)
+// Write a byte to the accelerometer register "reg"
+{
+    int loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    return adxl345_write_register(d, reg, value, 1);
+}
+/*----------------------------------------------------------------------------*/
+int accel_read_accel(int ident, short int *ax, short int *ay, short int *az)
+// Read accelerations along three axes as short ints
+{
+    int loops;
+    I2C_device *d = &i2c_devices[ident];
+    if (d->chain) setI2C1Mux(d->mux);
+    else setI2C0Mux(d->mux);
+    for (loops=0;loops<1000;loops++);
+    return adxl345_read_accel(d, ax, ay, az);
+}
+

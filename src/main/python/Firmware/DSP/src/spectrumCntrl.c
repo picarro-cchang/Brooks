@@ -129,14 +129,14 @@ int spectCntrlStep(void)
     SpectCntrlParams *s=&spectCntrlParams;
     static SPECT_CNTRL_StateType prevState = SPECT_CNTRL_IdleState;
     SPECT_CNTRL_StateType stateAtStart;
-    
+
     stateAtStart = *(s->state_);
     if (SPECT_CNTRL_StartingState == *(s->state_))
     {
         s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
- 
+
         setAutomaticLaserTemperatureControl();
         setAutomaticLaserCurrentControl();
         *(s->state_) = SPECT_CNTRL_RunningState;
@@ -163,7 +163,7 @@ int spectCntrlStep(void)
         s->useMemo_ = 0;
         s->incrCounterNext_ = s->incrCounter_ + 1;
         s->schemeCounter_++;
-        
+
         *(s->mode_) = SPECT_CNTRL_ContinuousManualTempMode;
         setAutomaticLaserCurrentControl(); // To allow ringdowns
         *(s->state_) = SPECT_CNTRL_RunningState;
@@ -211,10 +211,10 @@ void spectCntrl(void)
     int bank, status, nloops;
     int *counter = (int*)(REG_BASE+4*RD_INITIATED_COUNT_REGISTER);
 
-    nloops = 0;
     while (1)
     {
         SEM_pendBinary(&SEM_startRdCycle,SYS_FOREVER);
+        nloops = 0;
         (*counter)++;
         
         // The next while loop periodically checks to see if we are allowed
@@ -235,17 +235,12 @@ void spectCntrl(void)
                 {
                     if ( !(status & 1<<RDMAN_STATUS_BANK1_IN_USE_B) ) break;
                 }
-                if (nloops == 0) message_puts(LOG_LEVEL_INFO,"Waiting for bank to become available");
-            }
-            else
-            {
-                if (nloops == 0) message_puts(LOG_LEVEL_INFO,"Ringdown manager busy");
             }
             // Wait around for another ms and recheck. Reset manager if busy for more
-            //  than 50ms.
+            //  than 5s.
             nloops++;
             SEM_pendBinary(&SEM_waitForRdMan,SYS_FOREVER);
-            if (nloops > 50) {
+            if (nloops > 5000) {
                 changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK0_CLEAR_B,
                        RDMAN_CONTROL_BANK0_CLEAR_W,1);
                 changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_BANK1_CLEAR_B,
@@ -274,7 +269,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     volatile VirtualLaserParamsType *vLaserParams;
     int pztOffset;
     float laserTemp;
-    
+
     if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
     {
         vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
@@ -287,9 +282,9 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
     {   // With manual temperature control, the PZT offset is zero
-        writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,0);    
+        writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,0);
     }
-    else {    
+    else {
         if (useMemo && *(s->active_) == activeMemo && *(s->row_) == rowMemo) return;
         *(s->virtLaser_) = (VIRTUAL_LASER_Type) schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
@@ -300,13 +295,13 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         {
             *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp + *(s->schemeOffsetByVirtualLaser_[vLaserNum - 1]);
         }
-    
+
         // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
         //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
-    
+
         pztOffset = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) + schemeTable->rows[*(s->row_)].pztSetpoint;
         writeFPGA(FPGA_TWGEN+TWGEN_PZT_OFFSET,pztOffset % 65536);
-    
+
         activeMemo = *(s->active_);
         rowMemo = *(s->row_);
     }
@@ -385,8 +380,8 @@ void setupNextRdParams(void)
         laserNum = vLaserParams->actualLaser & 0x3;
         // The loss tag is used to classify ringdowns for storage in the LOSS_BUFFER_n registers
         lossTag = schemeTable->rows[*(s->row_)].pztSetpoint & 0x7;
-        r->injectionSettings = (lossTag << INJECTION_SETTINGS_lossTagShift) | 
-                               (*(s->virtLaser_) << INJECTION_SETTINGS_virtualLaserShift) | 
+        r->injectionSettings = (lossTag << INJECTION_SETTINGS_lossTagShift) |
+                               (*(s->virtLaser_) << INJECTION_SETTINGS_virtualLaserShift) |
                                (laserNum << INJECTION_SETTINGS_actualLaserShift);
         r->laserTemperature = *(s->laserTemp_[laserNum]);
         r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
@@ -488,7 +483,7 @@ unsigned int getSpectCntrlSchemeCount(void)
 void setAutomaticLaserTemperatureControl(void)
 {
     DataType data;
-    
+
     data.asInt = TEMP_CNTRL_AutomaticState;
     writeRegister(LASER1_TEMP_CNTRL_STATE_REGISTER,data);
     writeRegister(LASER2_TEMP_CNTRL_STATE_REGISTER,data);
@@ -524,7 +519,7 @@ void setManualControl(void)
 
     // The FPGA optical injection block is placed in manual mode
     // when any laser current controller is in the manual state
-    
+
     data.asInt = LASER_CURRENT_CNTRL_ManualState;
     writeRegister(LASER1_CURRENT_CNTRL_STATE_REGISTER,data);
     writeRegister(LASER2_CURRENT_CNTRL_STATE_REGISTER,data);
@@ -592,7 +587,7 @@ void advanceSchemeIteration(void)
 {
     SpectCntrlParams *s=&spectCntrlParams;
     *(s->iter_) = *(s->iter_) + 1;
-    if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats || 
+    if (*(s->iter_) >= schemeTables[*(s->active_)].numRepeats ||
         SPECT_CNTRL_SchemeMultipleNoRepeatMode == *(s->mode_))
     {
         advanceScheme();

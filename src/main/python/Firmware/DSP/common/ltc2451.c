@@ -19,7 +19,7 @@
 #include "i2c_dsp.h"
 #include "ltc2451.h"
 
-int ltc2451_read(I2C_device *i2c)
+int ltc2451_getData(I2C_device *i2c)
 /* Read 2 bytes in high-endian order. Return I2C_READ_ERROR on I2C error. */
 {
     Uint8 reply[2];

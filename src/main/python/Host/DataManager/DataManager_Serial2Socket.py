@@ -101,7 +101,7 @@ from Host.Common import AppStatus
 from Host.Common import timestamp
 from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
 from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER,RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DATALOGGER
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DATALOGGER, RPC_PORT_FSR_HOPPING_CONTROLLER
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_FITTER_BASE
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
 from Host.Common.SharedTypes import CrdsException
@@ -182,7 +182,9 @@ CRDS_SpecColl =  CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPE
 CRDS_DataLogger =  CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER,
                                          APP_NAME,
                                          IsDontCareConnection = False)
-
+CRDS_FsrHoppingController =  CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FSR_HOPPING_CONTROLLER,
+                                         APP_NAME,
+                                         IsDontCareConnection = False)
 ####
 ## Custom exceptions...
 ####
@@ -1702,6 +1704,7 @@ class DataManager(object):
                                              FreqConvRpcServer = CRDS_FreqConv,
                                              SpecCollRpcServer = CRDS_SpecColl,
                                              DataLoggerRpcServer = CRDS_DataLogger,
+                                             FsrHoppingControllerRpcServer = CRDS_FsrHoppingController,
                                              PeriphIntrfFunc = periphIntrfFunc,
                                              PeriphIntrfCols = self.periphIntrfCols,
                                              SerialInterface = self.serial,

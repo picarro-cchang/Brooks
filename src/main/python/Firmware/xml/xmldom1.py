@@ -284,8 +284,8 @@ for i,registerName in enumerate(registerNames):
         raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (registerName,definitions[registerName],i)
     definitions[registerName] = i
 
-printFp(intPyFp, "\n# Dictionary for accessing registers by name and list of register information" )
-printFp(intPyFp, "registerByName = {}\nregisterInfo = []" )
+printFp(intPyFp, "\n# Dictionary for accessing registers by name, list of register information and dictionary of register initial values" )
+printFp(intPyFp, "registerByName = {}\nregisterInfo = []\nregisterInitialValue={}" )
 
 printFp(dspCFp,'extern int writeRegister(unsigned int regNum,DataType data);')
 
@@ -336,8 +336,11 @@ printFp(dspHFp,'extern RegTypes regTypes[%d];' % (len(registerNames)))
 
 for i,registerName in enumerate(registerNames):
     printFp(intPyFp, 'registerByName["%s"] = %s' % (registerName,registerName))
+    printFp(intPyFp, 'registerInfo.append(RegInfo("%s",%s,%d,%s,"%s"))' % \
+     (registerName,typeToCtype(types[i]),registerPersistence[i],registerMinVer[i],registerAccess[i]))
     iv = initialValues[i]
     if iv != None:
+        printFp(intPyFp,'registerInitialValue["%s"] = %s' % (registerName, iv))
         if types[i] == "float":
             printFp(dspCFp,'    d.asFloat = %s;\n    writeRegister(%s,d);' % (iv,registerName))
         elif types[i] == "uint32":
@@ -347,8 +350,6 @@ for i,registerName in enumerate(registerNames):
         else:
             # Unknown types are assumed to be enumerations
             printFp(dspCFp,'    d.asUint = %s;\n    writeRegister(%s,d);' % (iv,registerName))
-    printFp(intPyFp, 'registerInfo.append(RegInfo("%s",%s,%d,%s,"%s",%s))' % \
-     (registerName,typeToCtype(types[i]),registerPersistence[i],registerMinVer[i],registerAccess[i],iv))
 
 
 for i,registerName in enumerate(registerNames):
@@ -461,6 +462,17 @@ for fpgaBlockList in fpgaBlockLists:
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
 
+declPy = ["# FPGA registers by name\nfpgaRegByName = {}"]
+
+for fpgaBlockList in fpgaBlockLists:
+    for fpgaBlock in fpgaBlockList.getElementsByTagName('fpga_block'):
+        blockName = fpgaBlock.attributes['ident'].value
+        for reg in fpgaBlock.getElementsByTagName('reg'):
+            regName = reg.attributes['ident'].value
+            name = "_".join([blockName,regName])
+            declPy.append('fpgaRegByName["%s"] = %s' % (name, name))
+    printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
+
 fpgaMapLists = docEl.getElementsByTagName('fpga_map_list')
 fpgaMapNames = []
 fpgaMapIndexByName = {}
@@ -503,9 +515,14 @@ for fpgaMapList in fpgaMapLists:
         if name in definitions:
             raise ValueError, "Redefinition of %s: Old value %s, New value %s" % (name,definitions[name],index)
         definitions[name] = index
-
     printFp(intHFp, "\n%s" % ("\n".join(declC),))
     printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
+
+    declPy = ["# FPGA map dictionary\nfpgaMapByName = {}"]
+    for name in fpgaMapNames:
+        declPy.append('fpgaMapByName["%s"] = %s' % (name,name))
+    printFp(intPyFp, "\n%s" % ("\n".join(declPy),))
+
 
 # Figure out which FPGA registers are to be saved
 declPy = ["# FPGA registers to load and save\n"]
@@ -597,7 +614,7 @@ for i,a in enumerate(aliasIdents):
     printFp(intHFp,  "#define %s (%s) // %s" % (a,aliasValues[i],descriptions[i]))
     printFp(intPyFp, "%s = %s # %s" % (a,aliasValues[i],descriptions[i]))
     printFp(intPyFp, 'registerByName["%s"] = %s' % (a, aliasValues[i]))
-    
+
 # Process the parameter pages XML file which defines the appearance of
 #  parameters on the controller GUI
 

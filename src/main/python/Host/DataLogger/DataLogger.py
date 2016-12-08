@@ -265,6 +265,15 @@ class DataLog(object):
         self.PrintTimeInHalfSecond = ConfigParser.getboolean(self.LogName, "printTimeInHalfSecond", False)
         self.WriteEpochTime = ConfigParser.getboolean(self.LogName, "writeEpochTime", True)
         self.WriteJulianDays = ConfigParser.getboolean(self.LogName, "writeJulianDays", True)
+        delimiter = ConfigParser.get(self.LogName, "delimiter", "")
+        pattern = r"\s*\"(.*)\"\s*"
+        pattern2 = r"\s*'(.*)'\s*"
+        if re.match(pattern, delimiter):
+            self.delimiter = re.sub(pattern, r'\1', delimiter)
+        elif re.match(pattern2, delimiter):
+            self.delimiter = re.sub(pattern2, r'\1', delimiter)
+        else:
+            self.delimiter = delimiter
         if sys.platform == "win32":
             relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
         else:
@@ -396,7 +405,10 @@ class DataLog(object):
         self.LogPath = os.path.abspath(os.path.join(self.srcDir, self.Fname))
 
     def _WriteEntry(self, string):
-        self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
+        if self.delimiter:
+            self.fp.write(string + self.delimiter)
+        else:   # write data into columns with fixed width
+            self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
 
     def _WriteHeader(self,DataList):
         if not self.BareTime:

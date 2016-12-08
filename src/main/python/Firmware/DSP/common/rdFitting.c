@@ -487,7 +487,7 @@ void rdFitting(void)
     // double si, si2, six;
     int wrapped;
     int *counter = (int*)(REG_BASE+4*RD_FITTING_COUNT_REGISTER);
-    
+
     while (1)
     {
         SEM_pend(&SEM_rdFitting,SYS_FOREVER);
@@ -513,8 +513,14 @@ void rdFitting(void)
             ringdownEntry->laserUsed = rdParams->injectionSettings;
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-            ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;
-            ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
+            if (*(int*)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_FsrHoppingTuningMode) {
+                ringdownEntry->schemeRow = 0;
+                ringdownEntry->schemeVersionAndTable = 0;
+            }
+            else {
+                ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
+                ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;
+            }
             ringdownEntry->ratio1 = 0;
             ringdownEntry->ratio2 = 0;
             ringdownEntry->fineLaserCurrent = 0;
@@ -536,10 +542,10 @@ void rdFitting(void)
                                      &amplitude, &background, &rmsResidual, 0);
             data.asFloat = uncorrectedLoss;
             writeRegister(RDFITTER_LATEST_LOSS_REGISTER,data);
-            
+
             rdParams = &(ringdownBuffer->parameters);
             lossTag = (rdParams->injectionSettings & INJECTION_SETTINGS_lossTagMask) >> INJECTION_SETTINGS_lossTagShift;
-            
+
             writeRegister(LOSS_BUFFER_0_REGISTER+lossTag,medianFiltBank(lossTag,data));
 
             // We need to find position of metadata just before ringdown. We have a modified circular
@@ -609,8 +615,14 @@ void rdFitting(void)
             ringdownEntry->laserUsed = rdParams->injectionSettings & (INJECTION_SETTINGS_virtualLaserMask | INJECTION_SETTINGS_actualLaserMask);
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-            ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;
-            ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
+            if (*(int*)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_FsrHoppingTuningMode) {
+                ringdownEntry->schemeRow = rdParams->extLaserLevelCounter;
+                ringdownEntry->schemeVersionAndTable = rdParams->extLaserSequenceId;
+            }
+            else {
+                ringdownEntry->schemeRow   = rdParams->schemeTableAndRow & 0xFFFF;
+                ringdownEntry->schemeVersionAndTable = rdParams->schemeTableAndRow >> 16;
+            }
             ringdownEntry->ratio1 = metaDouble.ratio1;
             ringdownEntry->ratio2 = metaDouble.ratio2;
             ringdownEntry->fineLaserCurrent = metaDouble.fineLaserCurrent;

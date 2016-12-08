@@ -113,7 +113,6 @@ int tempCntrlStep(TempCntrl *t)
         resetDasStatusBit(lockBit);
         tec = disabledValue;
         prbsReg = 0x1;
-        firstIteration = TRUE;
         break;
     case TEMP_CNTRL_ManualState:
         setDasStatusBit(activeBit);
@@ -122,7 +121,6 @@ int tempCntrlStep(TempCntrl *t)
         if (manualTec < Amin) manualTec = Amin;
         tec = manualTec;
         prbsReg = 0x1;
-        firstIteration = TRUE;
         break;
     case TEMP_CNTRL_EnabledState:
         // Start or step the controller
@@ -170,15 +168,7 @@ int tempCntrlStep(TempCntrl *t)
             r = swpMin;
             swpDir = 1;
         }
-        if (firstIteration)
-        {
-            firstIteration = FALSE;
-            pid_bumpless_restart(temp,pidState->a,pidState,pidParams);
-        }
-        else
-        {
-            pid_step(temp,dasTemp,pidState,pidParams);
-        }
+        pid_step(temp,dasTemp,pidState,pidParams);
         tec = pidState->a;
         prbsReg = 0x1;
         break;
@@ -198,7 +188,6 @@ int tempCntrlStep(TempCntrl *t)
         if (tecNext < Amin) tecNext = Amin;
         tec = tecNext;
         prbsReg >>= 1;
-        firstIteration = TRUE;
         break;
     }
     if (hasExt)

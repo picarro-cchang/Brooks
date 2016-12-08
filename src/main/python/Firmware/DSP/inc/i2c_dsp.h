@@ -57,9 +57,15 @@ int fetchI2C1Mux();
 int getI2C1Mux();
 int getI2CMode(I2C_Handle hI2c);
 int getI2CStatus(I2C_Handle hI2c);
+int ltc2451_read(int ident);
 int ltc2485_read(int ident);
 int read_flow_sensor(int ident);
 int rdd_read(int ident);
 void rdd_write(int ident, int data, int nbytes);
-
+int i2c_register_read(int ident, int reg, Uint8 *buffer, int nbytes);
+int i2c_register_write(int ident, int reg, Uint8 *buffer, int nbytes);
+int accel_getDeviceId(int ident);
+int accel_read_reg(int ident, int reg);
+int accel_write_reg(int ident, int reg, int value);
+int accel_read_accel(int ident, short int *ax, short int *ay, short int *az);
 #endif

@@ -1,3 +1,6 @@
+import datetime
+now = datetime.datetime.now()
+
 # Boilerplate code for dsp C output file
 
 header = """/*
@@ -10,10 +13,10 @@ header = """/*
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-%d Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
 #include "dspAutogen.h"
 #include "interface.h"
-"""
+""" % (now.year, )

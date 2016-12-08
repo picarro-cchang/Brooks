@@ -6,7 +6,7 @@ REM #
 REM #	Copyright (c) 2000 Cypress Semiconductor, Inc. All rights reserved
 REM #--------------------------------------------------------------------------
 
-set EZTARGET=C:\GitHub\host\src\main\python\Firmware\CypressUSB
+set EZTARGET=C:\Picarro\trunk\Firmware\CypressUSB
 set C51INC=C:\Keil\C51\INC;%EZTARGET%\INC
 
 REM ### Compile code ###

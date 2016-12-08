@@ -101,7 +101,7 @@ class AuxAccessor(object):
         Args:
             timestamp: Timestamp to write
         """
-        assert isinstance(timestamp, int)
+        timestamp = int(timestamp)
         if timestamp < 0 or timestamp >= 65536:
             raise ValueError('Only timestamps in range 0..65535 are valid')
 

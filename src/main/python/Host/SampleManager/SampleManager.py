@@ -58,6 +58,7 @@ DEFAULT_INI_FILE         = 'SampleManager.ini'
 DEFAULT_CONFIGS          = 'DEFAULT_CONFIGS'
 INLETVALVE               = 0
 OUTLETVALVE              = 1
+OUTLETONLY               = 2
 
 DEFAULT_SLEEP_INTERVAL   = 1
 
@@ -297,6 +298,8 @@ class SampleManagerBaseMode(object):
                 inRangeCount=0
             time.sleep(checkInterval)
             index+=1
+            if index % 100 == 0:
+                Log("Pressure not stable. Please check pump.", Level=2)
             if inRangeCount >= lockCount:
                 break
         if self.debug==True:
@@ -494,7 +497,10 @@ class SampleManagerBaseMode(object):
 
             if self._status._Status & SAMPLEMGR_STATUS_FLOWING:
                 valveInRange = False
-                if self._flowCtrl == interface.FLOW_CNTRL_DisabledState:
+                if self.valve_mode == OUTLETONLY:
+                    valveOpened = True
+                    valveInRange = True
+                elif self._flowCtrl == interface.FLOW_CNTRL_DisabledState:
                     # Check control valve
                     valveInRange = False
                     if self.valve_mode == INLETVALVE:

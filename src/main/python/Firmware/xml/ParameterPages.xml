@@ -45,7 +45,7 @@
             <fpga_register offset="FPGA_KERNEL">CONFIG</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DOUT_HI</fpga_register>
             <fpga_register offset="FPGA_KERNEL">DOUT_LO</fpga_register>
-            <fpga_register offset="FPGA_KERNEL">DIN</fpga_register>            
+            <fpga_register offset="FPGA_KERNEL">DIN</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_CLKSEL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_2</fpga_register>
@@ -82,6 +82,9 @@
             <register>LASER1_CURRENT_SWEEP_MIN_REGISTER</register>
             <register>LASER1_CURRENT_SWEEP_MAX_REGISTER</register>
             <register>LASER1_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER1_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER1_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER1_EXTRA_OFFSET_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Laser 2 Parameters</title>
@@ -114,6 +117,9 @@
             <register>LASER2_CURRENT_SWEEP_MIN_REGISTER</register>
             <register>LASER2_CURRENT_SWEEP_MAX_REGISTER</register>
             <register>LASER2_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER2_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER2_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER2_EXTRA_OFFSET_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Laser 3 Parameters</title>
@@ -146,6 +152,9 @@
             <register>LASER3_CURRENT_SWEEP_MIN_REGISTER</register>
             <register>LASER3_CURRENT_SWEEP_MAX_REGISTER</register>
             <register>LASER3_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER3_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER3_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER3_EXTRA_OFFSET_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Laser 4 Parameters</title>
@@ -178,6 +187,9 @@
             <register>LASER4_CURRENT_SWEEP_MIN_REGISTER</register>
             <register>LASER4_CURRENT_SWEEP_MAX_REGISTER</register>
             <register>LASER4_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER4_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER4_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER4_EXTRA_OFFSET_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Warm Box Temperature Parameters</title>
@@ -423,8 +435,6 @@
             <title>Spectrum Controller Parameters</title>
             <register>SPECT_CNTRL_STATE_REGISTER</register>
             <register>SPECT_CNTRL_MODE_REGISTER</register>
-            <register>SPECT_CNTRL_ACTIVE_SCHEME_REGISTER</register>
-            <register>SPECT_CNTRL_NEXT_SCHEME_REGISTER</register>
             <register>SPECT_CNTRL_SCHEME_ITER_REGISTER</register>
             <register>SPECT_CNTRL_SCHEME_ROW_REGISTER</register>
             <register>SPECT_CNTRL_DWELL_COUNT_REGISTER</register>
@@ -458,6 +468,8 @@
             <fpga_register offset="FPGA_RDMAN">THRESHOLD</fpga_register>
             <fpga_register offset="FPGA_RDMAN">LOCK_DURATION</fpga_register>
             <fpga_register offset="FPGA_RDMAN">PRECONTROL_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">OFF_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">EXTRA_DURATION</fpga_register>
             <fpga_register offset="FPGA_RDMAN">TIMEOUT_DURATION</fpga_register>
             <fpga_register offset="FPGA_RDMAN">TUNER_AT_RINGDOWN</fpga_register>
             <fpga_register offset="FPGA_RDMAN">METADATA_ADDR_AT_RINGDOWN</fpga_register>

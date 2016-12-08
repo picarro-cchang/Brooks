@@ -22,6 +22,7 @@ from MyHDL.Common.dsp_interface import Dsp_interface
 from MyHDL.Common.DynamicPwm import DynamicPwm
 from MyHDL.Common.Inject import Inject
 from MyHDL.Common.Kernel import Kernel
+from MyHDL.Common.LaserCurrentGenerator import LaserCurrentGenerator
 from MyHDL.Common.LaserLocker import LaserLocker
 from MyHDL.Common.Ltc2604DacD import Ltc2604DacD
 from MyHDL.Common.Pwm1 import Pwm
@@ -43,7 +44,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          dsp_emif_ddir, dsp_emif_be, dsp_emif_ce,
          dsp_eclk,
          lsr1_0, lsr1_1, lsr2_0, lsr2_1, lsr3_0, lsr3_1, lsr4_0, lsr4_1,
-         lc1, lc2, lc3, lc4, 
+         lc1, lc2, lc3, lc4,
          lsr1_sck,lsr1_ss,lsr1_rd,lsr1_mosi,lsr1_disable,
          lsr2_sck,lsr2_ss,lsr2_rd,lsr2_mosi,lsr2_disable,
          lsr3_sck,lsr3_ss,lsr3_rd,lsr3_mosi,lsr3_disable,
@@ -70,7 +71,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     counter = Signal(intbv(0)[NSTAGES:])
 
     aux_pzt_dac_sck, aux_pzt_dac_sdi, aux_pzt_dac_ld = [Signal(LOW) for i in range(3)]
-    
+
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
@@ -79,6 +80,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_dynamicpwm_outlet = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_inject      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_kernel      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_lasercurrentgenerator = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laserlocker = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_heater  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_hotbox  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
@@ -95,7 +97,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_pwm_warmbox = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_wlmsim      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_scaler      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    
+
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     pwm_laser1_out, pwm_laser1_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser2_out, pwm_laser2_inv_out = [Signal(LOW) for i in range(2)]
@@ -107,7 +109,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     warm_box_pwm_out = Signal(LOW)
     engine1_pwm_out = Signal(LOW)
     engine2_pwm_out = Signal(LOW)
-    
+
     heater_pwm_inv = Signal(LOW)
     hot_box_pwm_inv = Signal(LOW)
     warm_box_pwm_inv = Signal(LOW)
@@ -115,7 +117,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     engine2_pwm_inv = Signal(LOW)
 
     wmm_rd_out = Signal(LOW)
-                        
+
     data_we,adc_clk = [Signal(LOW) for i in range(2)]
 
     bank = Signal(LOW)
@@ -154,9 +156,9 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     laser_tuning_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_locking_pid = Signal(intbv(0)[FPGA_REG_WIDTH:])
     lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])    
+    pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])
     pzt_scaled = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
+
     sel_laser = Signal(intbv(0)[2:])
     sel_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sel_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -169,35 +171,35 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     meta5 = lock_error
     meta6 = laser_locking_pid
     meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
+
     rdsim_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_trig = Signal(LOW)
 
     wlm_sim_actual = Signal(LOW)
-    
+
     data_available_actual = Signal(LOW)
     eta1_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref2_actual = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
+
     data_available_sim = Signal(LOW)
     eta1_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref2_sim = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
+
     wlm_data_available = Signal(LOW)
     eta1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     eta2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ref2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
+
     z0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     sim_loss = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sim_pzt = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    
+
     laser_freq_ok = Signal(LOW)
     acc_en = Signal(LOW)
     rd_irq = Signal(LOW)
@@ -205,7 +207,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     metadata_strobe = Signal(LOW)
     laser_locked = Signal(LOW)
     i2c_reset = Signal(LOW)
-    
+
     inlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
     outlet_valve_dac = Signal(intbv(0)[FPGA_REG_WIDTH:])
     chanC_data_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -221,7 +223,18 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     lsr2_mosi_temp = Signal(LOW)
     lsr3_mosi_temp = Signal(LOW)
     lsr4_mosi_temp = Signal(LOW)
-    
+
+    laser_extra = Signal(LOW)
+
+    extended_current_mode = Signal(LOW)
+    laser1_fine_ext = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser2_fine_ext = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser3_fine_ext = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    laser4_fine_ext = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ext_laser_current_in_window = Signal(LOW)
+    ext_laser_level_counter = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ext_laser_sequence_id = Signal(intbv(0)[FPGA_REG_WIDTH:])
+
     dsp_interface = Dsp_interface(clk=clk0, reset=reset, addr=dsp_emif_ea,
                                   to_dsp=dsp_emif_din, re=dsp_emif_re,
                                   we=dsp_emif_we, oe=dsp_emif_oe,
@@ -245,6 +258,11 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     laser_shutdown_in=rd_trig,
                     soa_shutdown_in=rd_trig,
                     fiber_amp_pwm_in=pwm_laser4_out,
+                    laser_extra_in=laser_extra,
+                    laser1_fine_ext_in=laser1_fine_ext,
+                    laser2_fine_ext_in=laser2_fine_ext,
+                    laser3_fine_ext_in=laser3_fine_ext,
+                    laser4_fine_ext_in=laser4_fine_ext,
                     laser1_dac_sync_out=lsr1_ss_temp,
                     laser2_dac_sync_out=lsr2_ss_temp,
                     laser3_dac_sync_out=lsr3_ss_temp,
@@ -268,6 +286,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     optical_switch1_out=sw1,
                     optical_switch2_out=sw2,
                     optical_switch4_out=sw4,
+                    ext_mode_out=extended_current_mode,
                     map_base=FPGA_INJECT)
 
     kernel = Kernel( clk=clk0, reset=reset, dsp_addr=dsp_addr,
@@ -278,7 +297,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      intronix_clksel_out=intronix_clksel,
                      intronix_1_out=intronix_1,
                      intronix_2_out=intronix_2,
-                     intronix_3_out=intronix_3, 
+                     intronix_3_out=intronix_3,
                      overload_in=overload_in,
                      overload_out=overload_out,
                      i2c_reset_out=i2c_reset,
@@ -286,25 +305,40 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      dout_out=dout,
                      din_in=din,
                      map_base=FPGA_KERNEL )
-   
-    laserlocker = LaserLocker( clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                               dsp_data_out=dsp_data_out,
-                               dsp_data_in=dsp_data_in_laserlocker, dsp_wr=dsp_wr,
-                               eta1_in=eta1, ref1_in=ref1,
-                               eta2_in=eta2, ref2_in=ref2,
-                               tuning_offset_in=tuner_value,
-                               acc_en_in=acc_en,
-                               adc_strobe_in=wlm_data_available,
-                               ratio1_out=ratio1,
-                               ratio2_out=ratio2,
-                               lock_error_out=lock_error,
-                               fine_current_out=laser_fine_current,
-                               tuning_offset_out=laser_tuning_offset,
-                               pid_out=laser_locking_pid,
-                               laser_freq_ok_out=laser_freq_ok,
-                               current_ok_out=metadata_strobe,
-                               sim_actual_out=wlm_sim_actual,
-                               map_base=FPGA_LASERLOCKER )
+
+    laserCurrentGenerator = LaserCurrentGenerator(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                                                  dsp_data_out=dsp_data_out,
+                                                  dsp_data_in=dsp_data_in_lasercurrentgenerator,
+                                                  dsp_wr=dsp_wr,
+                                                  strobe_in=pulse_100k,
+                                                  sel_laser_in=sel_laser,
+                                                  laser1_fine_current_out=laser1_fine_ext,
+                                                  laser2_fine_current_out=laser2_fine_ext,
+                                                  laser3_fine_current_out=laser3_fine_ext,
+                                                  laser4_fine_current_out=laser4_fine_ext,
+                                                  laser_current_in_window_out=ext_laser_current_in_window,
+                                                  level_counter_out=ext_laser_level_counter,
+                                                  sequence_id_out=ext_laser_sequence_id,
+                                                  map_base=FPGA_LASERCURRENTGENERATOR)
+
+    laserlocker = LaserLocker(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                              dsp_data_out=dsp_data_out,
+                              dsp_data_in=dsp_data_in_laserlocker, dsp_wr=dsp_wr,
+                              eta1_in=eta1, ref1_in=ref1,
+                              eta2_in=eta2, ref2_in=ref2,
+                              tuning_offset_in=tuner_value,
+                              acc_en_in=acc_en,
+                              adc_strobe_in=wlm_data_available,
+                              ratio1_out=ratio1,
+                              ratio2_out=ratio2,
+                              lock_error_out=lock_error,
+                              fine_current_out=laser_fine_current,
+                              tuning_offset_out=laser_tuning_offset,
+                              pid_out=laser_locking_pid,
+                              laser_freq_ok_out=laser_freq_ok,
+                              current_ok_out=metadata_strobe,
+                              sim_actual_out=wlm_sim_actual,
+                              map_base=FPGA_LASERLOCKER )
 
     pwm_laser1 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
               dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_laser1,
@@ -340,7 +374,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                       pwm_out=warm_box_pwm_out,
                       pwm_inv_out=warm_box_pwm_inv,
                       map_base=FPGA_PWM_WARMBOX)
-    
+
     pwm_hotbox = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_hotbox,
                      dsp_wr=dsp_wr,
@@ -354,14 +388,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      pwm_out=engine1_pwm_out,
                      pwm_inv_out=engine1_pwm_inv,
                      map_base=FPGA_PWM_ENGINE1)
-                     
+
     pwm_engine2 = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_engine2,
                      dsp_wr=dsp_wr,
                      pwm_out=engine2_pwm_out,
                      pwm_inv_out=engine2_pwm_inv,
                      map_base=FPGA_PWM_ENGINE2)
-                     
+
     pwm_heater = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_heater,
                      dsp_wr=dsp_wr,
@@ -382,7 +416,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    tuner_window_in=tuner_in_window,
                    laser_freq_ok_in=laser_freq_ok,
                    metadata_strobe_in=metadata_strobe,
-                   rd_trig_out=rd_trig, acc_en_out=acc_en,
+                   ext_mode_in=extended_current_mode,
+                   sel_fine_current_in=sel_fine_current,
+                   ext_laser_current_in_window_in=ext_laser_current_in_window,
+                   ext_laser_level_counter_in=ext_laser_level_counter,
+                   ext_laser_sequence_id_in=ext_laser_sequence_id,
+                   rd_trig_out=rd_trig,
+                   laser_extra_out=laser_extra,
+                   acc_en_out=acc_en,
                    rd_irq_out=rd_irq,
                    acq_done_irq_out=acq_done_irq,
                    rd_adc_clk_out=adc_clk, bank_out=bank,
@@ -415,7 +456,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                   dsp_wr=dsp_wr, synth_step_in=pulse_100k,
                   value_out=tuner_value, pzt_out=pzt, slope_out=tuner_slope,
                   in_window_out=tuner_in_window,map_base=FPGA_TWGEN)
-    
+
     wlmadcreader = WlmAdcReader(clk=clk0, reset=reset, adc_clock_in=clk_2M5,
                                 strobe_in=pulse_100k, eta1_in=wmm_refl1,
                                 ref1_in=wmm_tran1, eta2_in=wmm_refl2,
@@ -423,7 +464,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                 adc_convst_out=wmm_convst, data_available_out=data_available_actual,
                                 eta1_out=eta1_actual, ref1_out=ref1_actual,
                                 eta2_out=eta2_actual, ref2_out=ref2_actual)
-    
+
     wlmsim = WlmSim( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_wlmsim,
                      dsp_wr=dsp_wr, start_in=pulse_100k,
@@ -442,7 +483,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     data_available_actual_in=data_available_actual,
                     eta1_out=eta1, ref1_out=ref1, eta2_out=eta2, ref2_out=ref2,
                     data_available_out=wlm_data_available)
-    
+
     #pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
     #                         chanA_data_in=inlet_valve_dac,
     #                         chanB_data_in=outlet_valve_dac,
@@ -467,19 +508,19 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                                  comparator_in=inlet_valve_comparator,
                                  update_in=pulse_100k, pwm_out=inlet_valve_pwm,
                                  value_out=inlet_valve_dac, map_base=FPGA_DYNAMICPWM_INLET, MIN_WIDTH=1000,MAX_WIDTH=64535)
-    
+
     dynamicPwmOutlet = DynamicPwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                                 dsp_data_out=dsp_data_out,
-                                 dsp_data_in=dsp_data_in_dynamicpwm_outlet, dsp_wr=dsp_wr,
-                                 comparator_in=outlet_valve_comparator,
-                                 update_in=pulse_100k, pwm_out=outlet_valve_pwm,
-                                 value_out=outlet_valve_dac, map_base=FPGA_DYNAMICPWM_OUTLET, MIN_WIDTH=1000,MAX_WIDTH=64535)
-                                 
-    scaler = Scaler( clk=clk0, reset=reset, dsp_addr=dsp_addr,
-                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_scaler,
-                     dsp_wr=dsp_wr, x1_in=pzt, y1_out=pzt_scaled,
-                     map_base=FPGA_SCALER )
-                                 
+                                  dsp_data_out=dsp_data_out,
+                                  dsp_data_in=dsp_data_in_dynamicpwm_outlet, dsp_wr=dsp_wr,
+                                  comparator_in=outlet_valve_comparator,
+                                  update_in=pulse_100k, pwm_out=outlet_valve_pwm,
+                                  value_out=outlet_valve_dac, map_base=FPGA_DYNAMICPWM_OUTLET, MIN_WIDTH=1000,MAX_WIDTH=64535)
+
+    scaler = Scaler(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_scaler,
+                    dsp_wr=dsp_wr, x1_in=pzt, y1_out=pzt_scaled,
+                    map_base=FPGA_SCALER)
+
     @instance
     def  logic():
         while True:
@@ -577,7 +618,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_1.next = pwm_signals
                 else:
                     channel_1.next = i2c_signals
-                    
+
                 if intronix_2 == 0:
                     channel_2.next = tuner_low
                 elif intronix_2 == 1:
@@ -634,7 +675,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_2.next = pwm_signals
                 else:
                     channel_2.next = i2c_signals
-                    
+
                 if intronix_3 == 0:
                     channel_3.next = tuner_low
                 elif intronix_3 == 1:
@@ -691,42 +732,43 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                     channel_3.next = pwm_signals
                 else:
                     channel_3.next = i2c_signals
-        
+
                 channel_4.next = concat(rd_trig,diag_1[4:],bank,laser_locked,acc_en,tuner_in_window)
-        
+
 
     @always_comb
     def  comb():
-        dsp_data_in.next = \
-                   dsp_data_in_dynamicpwm_inlet  | \
-                   dsp_data_in_dynamicpwm_outlet | \
-                   dsp_data_in_inject            | \
-                   dsp_data_in_kernel            | \
-                   dsp_data_in_laserlocker       | \
-                   dsp_data_in_pwm_heater        | \
-                   dsp_data_in_pwm_hotbox        | \
-                   dsp_data_in_pwm_engine1       | \
-                   dsp_data_in_pwm_engine2       | \
-                   dsp_data_in_pwm_laser1        | \
-                   dsp_data_in_pwm_laser2        | \
-                   dsp_data_in_pwm_laser3        | \
-                   dsp_data_in_pwm_laser4        | \
-                   dsp_data_in_rdman             | \
-                   dsp_data_in_rdmemory          | \
-                   dsp_data_in_rdsim             | \
-                   dsp_data_in_twGen             | \
-                   dsp_data_in_pwm_warmbox       | \
-                   dsp_data_in_wlmsim            | \
-                   dsp_data_in_scaler
+        dsp_data_in.next = (
+                   dsp_data_in_dynamicpwm_inlet |
+                   dsp_data_in_dynamicpwm_outlet |
+                   dsp_data_in_inject |
+                   dsp_data_in_kernel |
+                   dsp_data_in_lasercurrentgenerator |
+                   dsp_data_in_laserlocker |
+                   dsp_data_in_pwm_heater |
+                   dsp_data_in_pwm_hotbox |
+                   dsp_data_in_pwm_engine1 |
+                   dsp_data_in_pwm_engine2 |
+                   dsp_data_in_pwm_laser1 |
+                   dsp_data_in_pwm_laser2 |
+                   dsp_data_in_pwm_laser3 |
+                   dsp_data_in_pwm_laser4 |
+                   dsp_data_in_rdman |
+                   dsp_data_in_rdmemory |
+                   dsp_data_in_rdsim |
+                   dsp_data_in_twGen |
+                   dsp_data_in_pwm_warmbox |
+                   dsp_data_in_wlmsim |
+                   dsp_data_in_scaler)
 
         overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload
         overload_in.next[OVERLOAD_HotBoxTecBit]  = hot_box_tec_overload
-        
+
         intronix.next[8:] = channel_1
         intronix.next[16:8] = channel_2
         intronix.next[24:16] = channel_3
         intronix.next[33:24] = channel_4
-        
+
         # Use intronix_clksel to control clocking of Intronix display
         if intronix_clksel == 0:
             intronix.next[33] = clk0
@@ -737,7 +779,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         monitor.next = rd_trig
         aux_din[3].next = rd_trig
-        
+
         ce2.next = dsp_emif_ce[2]
         lsr1_0.next = pwm_laser1_out
         lsr1_1.next = pwm_laser1_inv_out
@@ -751,15 +793,15 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         warm_box_pwm.next = warm_box_pwm_out
         hot_box_pwm.next = hot_box_pwm_out
         heater_pwm.next = heater_pwm_out
-        
+
         wmm_rd.next = wmm_rd_out
-        
+
         rd_adc_clk.next = adc_clk
         rd_adc_oe.next = 1
         fpga_led.next = counter[NSTAGES:NSTAGES-4]
         i2c_rst0.next = i2c_reset
         i2c_rst1.next = i2c_reset
-        
+
         dsp_ext_int4.next = rd_irq
         dsp_ext_int5.next = acq_done_irq
         dsp_ext_int6.next = 0
@@ -774,7 +816,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         lsr2_ss.next = lsr2_ss_temp and not diag_1[5]
         lsr3_ss.next = lsr3_ss_temp and not diag_1[6]
         lsr4_ss.next = lsr4_ss_temp and not diag_1[7]
-        
+
         lsr1_mosi.next = lsr1_mosi_temp and not diag_1[4]
         lsr2_mosi.next = lsr2_mosi_temp and not diag_1[5]
         lsr3_mosi.next = lsr3_mosi_temp and not diag_1[6]
@@ -790,14 +832,14 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
         if config[KERNEL_CONFIG_ENGINE1_TEC_B]:
             aux_din[2].next = engine1_pwm_out
-            
+
         if config[KERNEL_CONFIG_ENGINE2_TEC_B]:
             aux_din[3].next = engine2_pwm_out
-        
+
         fpga_program_enable.next = 1
         ## Do not reset Cypress
         cyp_reset.next = 0
-        
+
     return instances()
 
 # Clock generator

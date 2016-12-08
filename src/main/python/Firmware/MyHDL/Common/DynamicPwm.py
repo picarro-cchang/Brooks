@@ -9,11 +9,11 @@
 #  the output of a DAC. The comparator output is fed to this block to adjust the
 #  pulse width dynamically. The pulse width is stored in a register which is either
 #  incremented or decremented by +/- a specified (signed) amount "delta" depending
-#  on the comparator value. The comparator signal is sampled and the pulse width 
+#  on the comparator value. The comparator signal is sampled and the pulse width
 #  register is updated on each occurrence of the "update" pulse.
 #   The block also generates a triangular waveform for the DAC in order to support
 #  dithering of the valve current. The registers DYNAMICPWM_HIGH, DYNAMICPWM_LOW and
-#  DYNAMICPWM_SLOPE specify the limits of the dither waveform and the slope 
+#  DYNAMICPWM_SLOPE specify the limits of the dither waveform and the slope
 #  respectively.
 #
 # SEE ALSO:
@@ -41,7 +41,7 @@ from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_ENABLE_B, DYNAMICPWM_CS_PWM_ENABLE_W
 from Host.autogen.interface import DYNAMICPWM_CS_USE_COMPARATOR_B, DYNAMICPWM_CS_USE_COMPARATOR_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_OUT_B, DYNAMICPWM_CS_PWM_OUT_W
-
+from Host.autogen.interface import DYNAMICPWM_CS_PWM_INVERT_B, DYNAMICPWM_CS_PWM_INVERT_W
 
 LOW, HIGH = bool(0), bool(1)
 def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
@@ -65,7 +65,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     main_width          -- Number of bits for coarse (main) PWM counter
     MIN_WIDTH           -- Minimum value of pulse_width
     MAX_WIDTH           -- Maximum value of pulse_width
-    
+
     Registers:
     DYNAMICPWM_CS       -- Control/status register
     DYNAMICPWM_DELTA    -- Signed quantity added or subtracted from pulse width on each update
@@ -83,6 +83,8 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     DYNAMICPWM_CS_USE_COMPARATOR -- 0 to set pulse width directly from accumulator
                                     1 to use comparator input to update mark-space ratio
     DYNAMICPWM_CS_PWM_OUT -- A (read-only) copy of the output of the PWM.
+    DYNAMICPWM_CS_PWM_INVERT -- 1 to invert sense of DYNAMICPWM_CS_PWM_OUT
+
     """
     dynamicpwm_cs_addr = map_base + DYNAMICPWM_CS
     dynamicpwm_delta_addr = map_base + DYNAMICPWM_DELTA
@@ -106,7 +108,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     pwm = Signal(LOW)
     up = Signal(LOW) # Current sign of slope
     extra0 = Signal(intbv(0)[extra:])
-    
+
     mod_emif_data = 1 << EMIF_DATA_WIDTH
 
     @always_comb
@@ -116,7 +118,7 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         else:
             pwm_out.next = 0
         temp.next = dither_cntr + pulse_width[dither_width:0]
-    
+
     @instance
     def logic():
         while True:
@@ -163,9 +165,9 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     value = acc[FPGA_REG_WIDTH+extra:extra]
                     # Handle update of accumulator by adding or subtracting the slope, depending
                     #  on the state of "up".
-                    # If comparator is used, handle update of width by adding or subtracting delta, 
-                    #  depending on the value of comparator_in. We want the width to saturate at 
-                    #  MIN_WIDTH and MAX_WIDTH and not to wrap around. Delta can be of either sign, 
+                    # If comparator is used, handle update of width by adding or subtracting delta,
+                    #  depending on the value of comparator_in. We want the width to saturate at
+                    #  MIN_WIDTH and MAX_WIDTH and not to wrap around. Delta can be of either sign,
                     #  depending on the sense of the comparator.
                     # If comparator is not used, set the pulse width directly on basis of accumulator
                     #
@@ -217,18 +219,21 @@ def DynamicPwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         pulse_width.next = MAX_WIDTH
                     if pulse_width < MIN_WIDTH:
                         pulse_width.next = MIN_WIDTH
-                            
-                    # The pwm_out is high unconditionally if the main_cntr is less
-                    #  than the width.
-                    pwm.next = 0
+
+                    # The pwm_out is active unconditionally if the main_cntr is less
+                    #  than the width. The active level is obtained by using
+                    #    not cs[DYNAMICPWM_CS_PWM_INVERT_B]
+                    # while the inactive level is obtained
+                    #    cs[DYNAMICPWM_CS_PWM_INVERT_B]
+                    #
+                    pwm.next = cs[DYNAMICPWM_CS_PWM_INVERT_B]
                     if main_cntr < pulse_width[width:width-main_width]:
-                        pwm.next = 1
+                        pwm.next = not cs[DYNAMICPWM_CS_PWM_INVERT_B]
                     # When main_cntr is equal to the width, we need to look at dither_cntr
                     #  and increment the dither counter appropriately
                     elif main_cntr == pulse_width[width:dither_width]:
                         if temp >= mod_dither:
-                            pwm.next = 1
-                            cs.next[DYNAMICPWM_CS_PWM_OUT_B] = 1
+                            pwm.next = not cs[DYNAMICPWM_CS_PWM_INVERT_B]
                             dither_cntr.next = temp - mod_dither
                         else:
                             dither_cntr.next = temp

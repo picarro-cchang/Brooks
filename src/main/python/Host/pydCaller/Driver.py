@@ -11,9 +11,9 @@ if __name__ == "__main__":
     if driverApp.alreadyrunning():
         Log("Instance of driver us already running",Level=3)
     else:
-        sim, configFile = handleCommandSwitches()
-        Log("%s started." % APP_NAME, dict(Sim = sim, ConfigFile = configFile), Level = 0)
-        d = Driver(sim,configFile)
+        configFile = handleCommandSwitches()
+        Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
+        d = Driver(configFile)
         d.run()
     Log("Exiting program")
     time.sleep(1)

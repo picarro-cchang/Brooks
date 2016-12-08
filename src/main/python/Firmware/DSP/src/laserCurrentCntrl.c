@@ -22,14 +22,18 @@
 #include "fpga.h"
 #include <math.h>
 
+#define min(x,y) ((x)<(y) ? (x):(y))
 #define state             (*(c->state_))
 #define manualCoarse      (*(c->manual_coarse_))
 #define manualFine        (*(c->manual_fine_))
+#define coarse            (c->coarse)
 #define swpMin            (*(c->swpMin_))
 #define swpMax            (*(c->swpMax_))
 #define swpInc            (*(c->swpInc_))
-#define coarse            (c->coarse)
 #define swpDir            (c->swpDir)
+#define extraCoarseScale  (*(c->extra_coarse_scale_))
+#define extraFineScale    (*(c->extra_fine_scale_))
+#define extraOffset       (*(c->extra_offset_))
 
 int laserCurrentCntrlStep(LaserCurrentCntrl *c)
 /*
@@ -100,8 +104,13 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
                          current_enable_mask | laser_enable_mask );
         break;
     }
-    writeFPGA(c->fpga_coarse,(unsigned short)coarse);
-    writeFPGA(c->fpga_fine,  (unsigned short)fine);
+    writeFPGA(c->fpga_coarse, (unsigned short)coarse);
+    writeFPGA(c->fpga_fine, (unsigned short)fine);
+
+    writeFPGA(c->fpga_extra_coarse_scale, (unsigned short)min(65535.0, 32768.0*extraCoarseScale));
+    writeFPGA(c->fpga_extra_fine_scale, (unsigned short)min(65535.0, 65536.0*extraFineScale));
+    writeFPGA(c->fpga_extra_offset, (short)extraOffset);
+    
     return STATUS_OK;
 }
 
@@ -113,6 +122,9 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
 #undef swpMax
 #undef swpInc
 #undef swpDir
+#undef extraCoarseScale
+#undef extraFineScale
+#undef extraOffset
 
 LaserCurrentCntrl currentCntrlLaser1;
 LaserCurrentCntrl currentCntrlLaser2;
@@ -128,12 +140,20 @@ int currentCntrlLaser1Init(void)
     c->swpMin_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER1_CURRENT_SWEEP_INCR_REGISTER);
+    c->extra_coarse_scale_ =  (float *)registerAddr(LASER1_EXTRA_COARSE_SCALE_REGISTER);
+    c->extra_fine_scale_ =  (float *)registerAddr(LASER1_EXTRA_FINE_SCALE_REGISTER);
+    c->extra_offset_ =  (int *)registerAddr(LASER1_EXTRA_OFFSET_REGISTER);
+
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
     c->fpga_coarse = FPGA_INJECT + INJECT_LASER1_COARSE_CURRENT;
     c->fpga_fine   = FPGA_INJECT + INJECT_LASER1_FINE_CURRENT;
     c->fpga_control = FPGA_INJECT + INJECT_CONTROL;
+    c->fpga_extra_coarse_scale = FPGA_INJECT + INJECT_LASER1_EXTRA_COARSE_SCALE;
+    c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER1_EXTRA_FINE_SCALE;
+    c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER1_EXTRA_OFFSET;
+
     c->laserNum = 1;
     return STATUS_OK;
 }
@@ -152,12 +172,18 @@ int currentCntrlLaser2Init(void)
     c->swpMin_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER2_CURRENT_SWEEP_INCR_REGISTER);
+    c->extra_coarse_scale_ =  (float *)registerAddr(LASER2_EXTRA_COARSE_SCALE_REGISTER);
+    c->extra_fine_scale_ =  (float *)registerAddr(LASER2_EXTRA_FINE_SCALE_REGISTER);
+    c->extra_offset_ =  (int *)registerAddr(LASER2_EXTRA_OFFSET_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
     c->fpga_coarse = FPGA_INJECT + INJECT_LASER2_COARSE_CURRENT;
     c->fpga_fine   = FPGA_INJECT + INJECT_LASER2_FINE_CURRENT;
     c->fpga_control = FPGA_INJECT + INJECT_CONTROL;
+    c->fpga_extra_coarse_scale = FPGA_INJECT + INJECT_LASER2_EXTRA_COARSE_SCALE;
+    c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER2_EXTRA_FINE_SCALE;
+    c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER2_EXTRA_OFFSET;
     c->laserNum = 2;
     return STATUS_OK;
 }
@@ -176,12 +202,18 @@ int currentCntrlLaser3Init(void)
     c->swpMin_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER3_CURRENT_SWEEP_INCR_REGISTER);
+    c->extra_coarse_scale_ =  (float *)registerAddr(LASER3_EXTRA_COARSE_SCALE_REGISTER);
+    c->extra_fine_scale_ =  (float *)registerAddr(LASER3_EXTRA_FINE_SCALE_REGISTER);
+    c->extra_offset_ =  (int *)registerAddr(LASER3_EXTRA_OFFSET_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
     c->fpga_coarse = FPGA_INJECT + INJECT_LASER3_COARSE_CURRENT;
     c->fpga_fine   = FPGA_INJECT + INJECT_LASER3_FINE_CURRENT;
     c->fpga_control = FPGA_INJECT + INJECT_CONTROL;
+    c->fpga_extra_coarse_scale = FPGA_INJECT + INJECT_LASER3_EXTRA_COARSE_SCALE;
+    c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER3_EXTRA_FINE_SCALE;
+    c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER3_EXTRA_OFFSET;
     c->laserNum = 3;
     return STATUS_OK;
 }
@@ -200,12 +232,18 @@ int currentCntrlLaser4Init(void)
     c->swpMin_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_MIN_REGISTER);
     c->swpMax_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_MAX_REGISTER);
     c->swpInc_ = (float *)registerAddr(LASER4_CURRENT_SWEEP_INCR_REGISTER);
+    c->extra_coarse_scale_ =  (float *)registerAddr(LASER4_EXTRA_COARSE_SCALE_REGISTER);
+    c->extra_fine_scale_ =  (float *)registerAddr(LASER4_EXTRA_FINE_SCALE_REGISTER);
+    c->extra_offset_ =  (int *)registerAddr(LASER4_EXTRA_OFFSET_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
     c->fpga_coarse = FPGA_INJECT + INJECT_LASER4_COARSE_CURRENT;
     c->fpga_fine   = FPGA_INJECT + INJECT_LASER4_FINE_CURRENT;
     c->fpga_control = FPGA_INJECT + INJECT_CONTROL;
+    c->fpga_extra_coarse_scale = FPGA_INJECT + INJECT_LASER4_EXTRA_COARSE_SCALE;
+    c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER4_EXTRA_FINE_SCALE;
+    c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER4_EXTRA_OFFSET;
     c->laserNum = 4;
     return STATUS_OK;
 }
@@ -227,6 +265,6 @@ int read_laser_current_adc(int laserNum)
 
     setI2C0Mux(devices[laserNum-1]->mux);
     for (loops=0;loops<1000;loops++);
-    result = ltc2451_read(devices[laserNum-1]);
+    result = ltc2451_getData(devices[laserNum-1]);
     return result;
 }
