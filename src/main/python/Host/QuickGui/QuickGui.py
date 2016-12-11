@@ -1137,8 +1137,17 @@ class RpcServerThread(threading.Thread):
 
 class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
-        wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700),
-                          style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
+
+        # fullScreen sets the main view with no border and full screen.
+        fullScreen = False
+
+        if(fullScreen):
+            styleSettings = (wx.CAPTION|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
+            wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer', style = styleSettings)
+        else:
+            wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700),
+                              style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
+
         self.commandQueue = Queue.Queue()
         self.defaultTitle = defaultTitle
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
@@ -1333,6 +1342,10 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_PAINT,self.OnPaint)
 
         self.startServer()
+
+        if(fullScreen):
+            self.Maximize(True)
+            self.ShowFullScreen(True, style = wx.FULLSCREEN_NOBORDER)
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
