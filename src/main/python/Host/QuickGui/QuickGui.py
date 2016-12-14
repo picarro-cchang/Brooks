@@ -1139,7 +1139,7 @@ class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
 
         # fullScreen sets the main view with no border and full screen.
-        fullScreen = False
+        fullScreen = True
 
         if(fullScreen):
             styleSettings = (wx.CAPTION|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)

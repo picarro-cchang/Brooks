@@ -1508,6 +1508,7 @@ class Supervisor(object):
             self.BackupApp.ShutDown(_METHOD_KILLFIRST,NoKillByName=True,NoWait=True)
         # Initiate system shutdown
         if self.powerDownAfterTermination:
+            print("In Supervisor.py calling OS shutdown utility")
             os.system("shutdown -f -s -t 20")
         #Now shut applications down in the reverse order of launching...
         #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
