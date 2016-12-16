@@ -1201,6 +1201,7 @@ class QuickGui(wx.Frame):
         self.dataKey = [None]*self.numGraphs
         self.logo = None
         self.userLevel = 1
+        self.userLevelChange = False
         self.showStat = False
         self.showInstStat = False
         self.serviceModeOnlyControls = []
@@ -1859,20 +1860,24 @@ class QuickGui(wx.Frame):
             self.shutdownButton.Enable(False)
             
             self.userLogButton.Disable()
-            for sc in self.sourceChoice:
-                sc.Enable(False)
+
+            for idx in range(len(self.sourceChoice)):
+                self.sourceChoice[idx].SetSelection(0)
+                self.sourceChoice[idx].Enable(False)
             for kc in self.keyChoice:
                 kc.Enable(False)
             for pc in self.precisionChoice:
                 pc.Enable(False)
             for ayb in self.autoY:
                 ayb.Enable(False)
+            for c in self.serviceModeOnlyControls:
+                c.Show(False)
             self.clearButton.Enable(False)
 
 
         else:
             self.shutdownButton.Enable(True)
-
+                        
             self.userLogButton.Enable(True)
             for sc in self.sourceChoice:
                 sc.Enable(True)
@@ -2095,8 +2100,10 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface.getDataLoggerInfo()
         # Update the combo box of sources with source names translated via the sourceSubstDatabase
         #  The actual sources are stored in the ClientData area of the control
-        if self.sourceChoices != sources:
+        #if self.sourceChoices != sources:
+        if (self.userLevelChange) or (self.sourceChoices != sources) : 
             # The renamed source is the 0'th element of the list of substituted strings
+            #self.userLevelChange = False
             renamedSources = [self.sourceSubstDatabase.applySubstitution(source)[0] for source in sources]
             # Sort the sources into alphabetical order for the combo box
             decoratedSources = zip(renamedSources,sources)
@@ -2128,7 +2135,7 @@ class QuickGui(wx.Frame):
                     if s.lower() == d.lower(): # We have found the source in the default list
                         defaultSourceIndex = j
                 keyChoices = self.getKeysbyMode(self.source[idx])
-                if self.keyChoices[idx] != keyChoices:
+                if (self.keyChoices[idx] != keyChoices) or self.userLevelChange:
                     # The renamed key is the 0'th element of the list of substituted strings
                     renamedKeys = [self.keySubstDatabase.applySubstitution(key)[0] for key in keyChoices]
                     # Sort the renamed keys into alphabetical order for the combo box
@@ -2142,13 +2149,15 @@ class QuickGui(wx.Frame):
                             try:
                                 if k.lower() == self.defaultKeys[idx].getString(defaultSourceIndex).lower():
                                     self.dataKey[idx] = k
+                                    #print "keychange = ", k
                                     self.keyChoice[idx].SetSelection(i)
                             except:
                                 self.dataKey[idx] = decoratedKeys[0][1]
                                 self.keyChoice[idx].SetSelection(0)
                     self.keyChoices[idx] = keyChoices
                     self.dataKeyUpdateAction(idx)
-
+        if (self.userLevelChange): 
+            self.userLevelChange = False
         axisChanged = False
         if self.lockTime:
             for idx in range(self.numGraphs):
@@ -2464,7 +2473,9 @@ class QuickGui(wx.Frame):
 
     def OnGuiMode1(self,e):
         # change GUI mode to operator
+        
         self.userLevel = 1
+        self.userLevelChange = True
         self.modifyInterface()
         self.measPanelSizer.Layout()
         self.Refresh()
@@ -2491,6 +2502,7 @@ class QuickGui(wx.Frame):
 
         if okClicked and (d.GetValue() == password):
             self.userLevel = 2
+            self.userLevelChange = True
         d.Destroy()
 
         if okClicked:
@@ -2525,6 +2537,7 @@ class QuickGui(wx.Frame):
 
         if okClicked and (d.GetValue() == password):
             self.userLevel = 3
+            self.userLevelChange = True
         d.Destroy()
 
         if okClicked:
