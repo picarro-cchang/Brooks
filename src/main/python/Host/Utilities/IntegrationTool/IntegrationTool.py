@@ -407,7 +407,7 @@ class IntegrationTool(IntegrationToolFrame):
                 laserNum = idx+1
                 cmd = executable.split() + ["-w", "%.1f" % timeDelay, "-c", "%s%d.ini" % (iniFile,laserNum)]
                 print " ".join(cmd)
-                subprocess.Popen(cmd)
+                subprocess.Popen(cmd).wait()
                 self.display += "WLM file for laser %d created\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err

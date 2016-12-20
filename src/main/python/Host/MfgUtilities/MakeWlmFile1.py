@@ -318,6 +318,8 @@ class WlmFileMaker(object):
                                              "LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.laserNum,
                                              "LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.laserNum,
                                              ("FPGA_INJECT","INJECT_CONTROL")])
+            for aLaserNum in range(1,5):
+                Driver.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % aLaserNum, "LASER_CURRENT_CNTRL_DisabledState")                                 
 
             if self.waitTime > 0:
                 print "Waiting for %.1f minutes" % self.waitTime
