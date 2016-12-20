@@ -541,9 +541,9 @@ class RDFrequencyConverter(Singleton):
         ringdown queue.
         """
         # Start the thread for saving WLM history into database
-        saveWlmThread = threading.Thread(target = self.runSaveWlmHistory)
-        saveWlmThread.setDaemon(True)
-        saveWlmThread.start()
+        # saveWlmThread = threading.Thread(target = self.runSaveWlmHistory)
+        # saveWlmThread.setDaemon(True)
+        # saveWlmThread.start()
 
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
