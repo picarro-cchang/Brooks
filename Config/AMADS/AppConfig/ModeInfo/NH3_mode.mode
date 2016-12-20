@@ -7,7 +7,6 @@ Tuning = CavityLength
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 1
-#Scheme_1_Path = ../Schemes/_AEDS NH3 FSR and Water FSR.sch
 Scheme_1_Path = ../Schemes/_AEDS-xx NH3+H2O v01.sch
 
 [SPECTRUM_IDS]

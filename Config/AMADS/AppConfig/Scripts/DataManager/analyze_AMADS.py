@@ -35,6 +35,8 @@ if _PERSISTENT_["init"]:
     cp.close()
     _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
+exec _PERSISTENT_["adjustOffsetScript"] in globals()
+
 # REPORT_UPPER_LIMIT = 5000.0
 # REPORT_LOWER_LIMIT = -5000.0
 

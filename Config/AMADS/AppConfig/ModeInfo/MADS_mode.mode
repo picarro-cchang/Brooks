@@ -7,8 +7,6 @@ Tuning = CavityLength
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 2
-#Scheme_1_Path = ../Schemes/_MADS_HF_H2O_NoCal.sch
-#Scheme_2_Path = ../Schemes/_MADS_HF_H2O_Cal.sch
 Scheme_1_Path = ../Schemes/_MADS_HF_H2O_NoCal_v2_1.sch
 Scheme_2_Path = ../Schemes/_MADS_HF_H2O_Cal_v2_1.sch
 
