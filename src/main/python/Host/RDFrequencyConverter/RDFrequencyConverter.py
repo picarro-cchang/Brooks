@@ -38,8 +38,8 @@ import threading
 import time
 import datetime
 import traceback
-from numpy import arctan2, array, argsort, concatenate, cos, cumsum, diff, floor, int_, mean, median, mod
-from numpy import pi, round_, sin, std, zeros
+from numpy import arctan2, array, argsort, asarray, concatenate, cos, cumsum, diff, floor, int_, mean, median, mod
+from numpy import pi, round_, sin, std, zeros, linspace, sum, argmin, polyfit
 from cStringIO import StringIO
 from binascii import crc32
 
@@ -53,7 +53,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 EventManagerProxy_Init(APP_NAME)
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  # we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -61,16 +61,17 @@ else:
 MIN_SIZE = 30
 
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                    APP_NAME, IsDontCareConnection = False)
+                                    APP_NAME, IsDontCareConnection=False)
 
 Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
-                                    APP_NAME, IsDontCareConnection = True)
+                                      APP_NAME, IsDontCareConnection=True)
 
 if __debug__:
     print("Loading rpdb2")
     import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    rpdb2.start_embedded_debugger("hostdbg", timeout=0)
     print("rpdb2 loaded")
+
 
 class CalibrationDataInRow(object):
     """Structure for collecting ringdown metadata for calibration ringdowns associated with a scheme row.
@@ -79,6 +80,7 @@ class CalibrationDataInRow(object):
     This structure stores the laser temperature, PZT and WLM angles at such points, for updating
     the wavelength monitor calibration, since they are known to be separated by the cavity FSR.
     """
+
     def __init__(self):
         self.tunerVals = []
         self.pztVals = []
@@ -90,6 +92,9 @@ class CalibrationDataInRow(object):
         self.laserTempMed = None
         self.vLaserNum = None
         self.count = 0
+        self.wlmAngle = []
+        self.waveNumber = []
+
 
 class SchemeBasedCalibrator(object):
     """Calibrator for WLM splines based on scheme rows marked as calibration points.
@@ -97,13 +102,15 @@ class SchemeBasedCalibrator(object):
     We update the calibration of each virtual laser individually, based on the calibration points
         which involve that virtual laser.
     """
+
     def __init__(self):
         # Calibration points are stored in a dictionary keyed by the row number in the scheme
         #  schemeNum is the scheme table index in the DAS
         self.calDataByRow = {}
         self.schemeNum = None
         self.rdFreqConv = RDFrequencyConverter()
-        self.calibrationDone = [False for _ in range(interface.NUM_VIRTUAL_LASERS)]
+        self.calibrationDone = [
+            False for _ in range(interface.NUM_VIRTUAL_LASERS)]
 
     def clear(self):
         self.calDataByRow.clear()
@@ -117,7 +124,7 @@ class SchemeBasedCalibrator(object):
 
         Returns: List of Boolean results
         """
-        return [self.calibrationDone[vLaserNum-1] for vLaserNum in vLaserNumList]
+        return [self.calibrationDone[vLaserNum - 1] for vLaserNum in vLaserNumList]
 
     def clearCalibrationDone(self, vLaserNumList):
         """Clear calibration done flag for the specified list of virtual lasers.
@@ -126,7 +133,7 @@ class SchemeBasedCalibrator(object):
             vLaserNumList: List of integer virtual laser indexes (1-origin)
         """
         for vLaserNum in vLaserNumList:
-            self.calibrationDone[vLaserNum-1] = False
+            self.calibrationDone[vLaserNum - 1] = False
 
     def processCalRingdownEntry(self, entry):
         """Process a ringdown entry which is marked as a calibration row.
@@ -137,12 +144,13 @@ class SchemeBasedCalibrator(object):
         the WLM splines. These ojects are stored in a hash table keyed by the scheme row.
 
         Args:
-            entry: RingdownEntryType object corresponding to a ringdown marked with the calibration flag
+            entry: ProcessedRingdownEntryType object corresponding to a ringdown marked with the calibration flag
         """
-        assert isinstance(entry, interface.RingdownEntryType)
 
+        assert isinstance(entry, interface.ProcessedRingdownEntryType)
         row = entry.schemeRow
-        # At this stage entry.schemeVersionAndTable is the scheme table index (version is added later)
+        # At this stage entry.schemeVersionAndTable is the scheme table index
+        # (version is added later)
         table = entry.schemeVersionAndTable
         if row not in self.calDataByRow:  # Make new entry in the hash table
             self.calDataByRow[row] = CalibrationDataInRow()
@@ -151,7 +159,7 @@ class SchemeBasedCalibrator(object):
             else:
                 if self.schemeNum != table:
                     Log("Scheme table mismatch while processing calibration row",
-                        dict(expectedScheme=self.schemeNum,schemeFound=table), Level=2)
+                        dict(expectedScheme=self.schemeNum, schemeFound=table), Level=2)
                     self.clear()
                     return
         # Update the metadata
@@ -159,6 +167,8 @@ class SchemeBasedCalibrator(object):
         calDataForRow.count += 1
         # We separately deal with sin and cos to avoid 2*pi ambiguity for angles which mess up median
         #  calculation
+        calDataForRow.wlmAngle.append(entry.wlmAngle)
+        calDataForRow.waveNumber.append(entry.waveNumber)
         calDataForRow.thetaCalCos.append(cos(entry.wlmAngle))
         calDataForRow.thetaCalSin.append(sin(entry.wlmAngle))
         calDataForRow.laserTempVals.append(entry.laserTemperature)
@@ -181,13 +191,13 @@ class SchemeBasedCalibrator(object):
             vLaserNum: Virtual laser index (1-origin) for failed calibration attempt
         """
         scs = self.rdFreqConv.shortCircuitSchemes
-        self.rdFreqConv.calFailed[vLaserNum-1] += 1
-        self.rdFreqConv.calSucceeded[vLaserNum-1] = 0
-        if self.rdFreqConv.calFailed[vLaserNum-1] >= int(scs['failureThreshold']):
+        self.rdFreqConv.calFailed[vLaserNum - 1] += 1
+        self.rdFreqConv.calSucceeded[vLaserNum - 1] = 0
+        if self.rdFreqConv.calFailed[vLaserNum - 1] >= int(scs['failureThreshold']):
             if Driver.getSpectCntrlMode() != interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode:
                 Driver.setMultipleNoRepeatScan()
                 Log("Setting multiple scheme no repeat mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
-                calFailed=self.rdFreqConv.calFailed))
+                                                                   calFailed=self.rdFreqConv.calFailed))
 
     def calSucceeded(self, vLaserNum):
         """Mark a calibration attempt as having succeeded.
@@ -201,28 +211,104 @@ class SchemeBasedCalibrator(object):
             vLaserNum: Virtual laser index (1-origin) for successful calibration attempt
         """
         scs = self.rdFreqConv.shortCircuitSchemes
-        self.rdFreqConv.calFailed[vLaserNum-1] = 0
-        self.rdFreqConv.calSucceeded[vLaserNum-1] += 1
+        self.rdFreqConv.calFailed[vLaserNum - 1] = 0
+        self.rdFreqConv.calSucceeded[vLaserNum - 1] += 1
         valid = (self.rdFreqConv.calSucceeded != 0)
-        if all(self.rdFreqConv.calFailed==0) and all(self.rdFreqConv.calSucceeded[valid]>=int(scs['successThreshold'])):
+        if all(self.rdFreqConv.calFailed == 0) and all(self.rdFreqConv.calSucceeded[valid] >= int(scs['successThreshold'])):
             if Driver.getSpectCntrlMode() != interface.SPECT_CNTRL_SchemeMultipleMode:
                 Driver.setMultipleScan()
                 Log("Setting multiple scheme mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
-                calFailed=self.rdFreqConv.calFailed))
+                                                         calFailed=self.rdFreqConv.calFailed))
 
-    def applySchemeBasedCalibration(self):
-        """Called after a scheme is completed to process data from calibration rows.
-        """
+    def misfit(self, xi, waveNumber, fsr):
+        return sum(abs((waveNumber / fsr - round_((waveNumber - xi * fsr) / fsr) - xi)))
+
+    def laserCurrentTuningCalibration(self):
         scs = self.rdFreqConv.shortCircuitSchemes
         calDataByRow = self.calDataByRow
-        if len(calDataByRow) < int(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MIN_CALROWS")):
-            return
+        # Process the data one virtual laser at a time
+        for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
+            # Get scheme rows involving this virtual laser.
+            rows = [k for k in calDataByRow if (
+                calDataByRow[k].vLaserNum == vLaserNum)]
+            if len(rows) >= 2:
+
+                # Apply LCT algr
+                wlmAngle = concatenate(
+                    [calDataByRow[k].wlmAngle for k in rows])
+                freqConverter = self.rdFreqConv.freqConverter[vLaserNum - 1]
+                # throtation
+                waveNumber_meas = concatenate(
+                    [calDataByRow[k].waveNumber for k in rows])
+                laserTempVals = concatenate(
+                    [calDataByRow[k].laserTempVals for k in rows])
+                tunerVals = concatenate(
+                    [calDataByRow[k].tunerVals for k in rows])
+
+                thetaHat = freqConverter.laserTemp2ThetaCal(laserTempVals)
+
+                wlmAngle += 2 * pi * \
+                    floor((thetaHat - wlmAngle) / (2 * pi) + 0.5)
+
+                fsr = float(self.rdFreqConv.hotBoxCal["AUTOCAL"]["CAVITY_FSR"])
+                numpts = 50
+                xiRange = linspace(0, 1, numpts)
+                misfitRange = array(
+                    [self.misfit(xi, waveNumber_meas, fsr) for xi in xiRange])
+
+                idx = argmin(misfitRange)
+
+                # using parabolic fitting to find the minimum
+                indices = [(idx + i) % numpts for i in range(-2, 3)]
+                polyPars = polyfit(xiRange[indices], misfitRange[indices], 2)
+                xi_fit = -polyPars[1] / (2 * polyPars[0])
+
+                # using sufficient points to find the minimum
+                #xi_fit = xiRange[idx]
+
+                # check max deviation to continue calibration
+                if max(abs((waveNumber_meas / fsr - round_((waveNumber_meas - xi_fit * fsr) / fsr) - xi_fit))) > 0.4:  # not well fitted
+                    Log("Calibration not done, max deviation greater than 0.4: tuner std = %.1f " % std(
+                        tunerVals))
+                    if scs:
+                        self.calFailed(vLaserNum)
+                else:
+                    # get the wn list on the comb
+                    waveNumber = fsr * \
+                        asarray([(xi_fit + num)
+                                 for num in round_(waveNumber_meas / fsr - xi_fit)])
+
+                    try:
+                        maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                            "AUTOCAL", "MAX_WAVENUM_DIFF"))
+                    except KeyError:
+                        maxDiff = 0.4
+                    wlmAngle = asarray(wlmAngle)
+                    perm = argsort(wlmAngle)
+                    self.rdFreqConv.RPC_updateWlmCal(
+                        vLaserNum, wlmAngle, waveNumber, max(
+                            1.0, len(waveNumber) / 500.0),
+                        float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                            "AUTOCAL", "RELAX")), True,
+                        float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                            "AUTOCAL", "RELAX_DEFAULT")),
+                        float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                            "AUTOCAL", "RELAX_ZERO")),
+                        maxDiff)
+                    print "Laser Current Tuning: vLaser=%d, xi_fit=%s" % (vLaserNum, xi_fit)
+                    Log("WLM Cal for virtual laser %d done: tuner std = %.1f" %
+                        (vLaserNum, std(tunerVals)))
+
+    def cavityLengthTuningCalibration(self):
+        scs = self.rdFreqConv.shortCircuitSchemes
+        calDataByRow = self.calDataByRow
         for row in calDataByRow:
             # Find median WlmAngles, tuner values and laser temperatures
             #  N.B. We must deal with the sine and cosine parts separately
             calData = calDataByRow[row]
             assert(isinstance(calData, CalibrationDataInRow))
-            calData.thetaCalMed = arctan2(median(calData.thetaCalSin), median(calData.thetaCalCos))
+            calData.thetaCalMed = arctan2(
+                median(calData.thetaCalSin), median(calData.thetaCalCos))
             calData.tunerMed = median(calData.tunerVals)
             calData.pztMed = median(calData.pztVals)
             calData.laserTempMed = median(calData.laserTempVals)
@@ -230,45 +316,55 @@ class SchemeBasedCalibrator(object):
         for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
             # Get scheme rows involving this virtual laser. If the calibration were correct, the PZT values for all
             # ringdowns associated with the rows would be equal. We find medians of the metadata for each row
-            # and look at the variation between the rows to derive the corrections.
-            rows = [k for k in calDataByRow if (calDataByRow[k].vLaserNum == vLaserNum)]
+            # and look at the variation between the rows to derive the
+            # corrections.
+            rows = [k for k in calDataByRow if (
+                calDataByRow[k].vLaserNum == vLaserNum)]
             if len(rows) >= 2:
                 # Find the WLM angles for these ringdowns by using the laser temperature to rotate the
                 #  WLM angles (thetaCal) to the correct revolution
                 laserTemp = array([calDataByRow[k].laserTempMed for k in rows])
-                thetaCal  = array([calDataByRow[k].thetaCalMed  for k in rows])
-                # thetaHat are WLM angles associated with the measured laser temperatures
-                thetaHat  = self.rdFreqConv.RPC_laserTemperatureToAngle(vLaserNum, laserTemp)
-                thetaCal  +=  2*pi*floor((thetaHat-thetaCal)/(2*pi) + 0.5) # Apply correction for revolution
-                tuner     = array([calDataByRow[k].tunerMed for k in rows])
-                pzt       = array([calDataByRow[k].pztMed for k in rows])
+                thetaCal = array([calDataByRow[k].thetaCalMed for k in rows])
+                # thetaHat are WLM angles associated with the measured laser
+                # temperatures
+                thetaHat = self.rdFreqConv.RPC_laserTemperatureToAngle(
+                    vLaserNum, laserTemp)
+                # Apply correction for revolution
+                thetaCal += 2 * pi * \
+                    floor((thetaHat - thetaCal) / (2 * pi) + 0.5)
+                tuner = array([calDataByRow[k].tunerMed for k in rows])
+                pzt = array([calDataByRow[k].pztMed for k in rows])
                 # Ideally, PZT values for all rows should be close together. We check for large jumps and forgo
                 #  calibration in such cases
                 jump = abs(diff(pzt)).max()
-                if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","MAX_JUMP")):
-                    Log("Calibration not done, maximum jump between calibration rows: %.1f" % (jump,))
-                    if scs: # If short circuit schemes are enabled, this should be counted as a failed calibration
+                if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_JUMP")):
+                    Log("Calibration not done, maximum jump between calibration rows: %.1f" % (
+                        jump,))
+                    if scs:  # If short circuit schemes are enabled, this should be counted as a failed calibration
                         self.calFailed(vLaserNum)
                     continue
                 # We find the deviation of the tuner values for each calibration row from the weighted average
-                #  over all caliibration rows. This is used to center the tuner values.
+                # over all caliibration rows. This is used to center the tuner
+                # values.
                 count = array([calDataByRow[k].count for k in rows])
-                tunerMean = float(sum(tuner*count))/sum(count)
-                tunerDev  = tuner - tunerMean
+                tunerMean = float(sum(tuner * count)) / sum(count)
+                tunerDev = tuner - tunerMean
                 # Use the median with useAverage=False to center the tuner. This always returns one of the tuner
                 #  values that actually occured.
-                tunerCenter = float(self.medianHist(tuner, count, useAverage=False))
+                tunerCenter = float(self.medianHist(
+                    tuner, count, useAverage=False))
                 # Center the tuner ramp waveform about the median tuner value at the calibration rows
                 #  Since this can get stuck behind scheme uploads due to Driver command serialization,
                 #  we do it in a separate thread
-                tunerCenteringThread = threading.Thread(target = self.centerTuner, args=(tunerCenter,))
+                tunerCenteringThread = threading.Thread(
+                    target=self.centerTuner, args=(tunerCenter,))
                 tunerCenteringThread.setDaemon(True)
                 tunerCenteringThread.start()
 
                 # The deviation of the PZT values from their weighted average is used to adjust the wavelength
                 #  monitor spline calibration
-                pztMean = float(sum(pzt*count))/sum(count)
-                pztDev  = pzt - pztMean
+                pztMean = float(sum(pzt * count)) / sum(count)
+                pztDev = pzt - pztMean
                 # If pztDev is not all zeros, this indicates that the collection of WLM angles which was
                 #  used by the laser frequency locker do not correspond precisely to frequencies separated
                 #  by the cavity FSR. We use the values in the deviations to adjust the WLM angles by
@@ -279,9 +375,10 @@ class SchemeBasedCalibrator(object):
                 #  a digitizer unit of PZT. This provides a degree of under-relaxation and filtering.
                 #
                 thetaShifted = thetaCal - (float(
-                    self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL","ADJUST_FACTOR")) * pztDev)
+                    self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "ADJUST_FACTOR")) * pztDev)
                 # Elements in thetaShifted should correspond to a set of frequencies separated by
-                #  multiples of the cavity FSR. We now need to determine what these multiples are
+                # multiples of the cavity FSR. We now need to determine what
+                # these multiples are
                 perm = thetaShifted.argsort()
                 thetaShifted = thetaShifted[perm]
                 dtheta = diff(thetaShifted)
@@ -297,46 +394,59 @@ class SchemeBasedCalibrator(object):
                 #  on the offgrid parameter calculated later). The scheme is used to determine the frequencies
                 #  associated with the WLM angles.
                 fsrJump = round_(dtheta / float(self.rdFreqConv.RPC_getHotBoxCalParam(
-                    "AUTOCAL","APPROX_WLM_ANGLE_PER_FSR")))
+                    "AUTOCAL", "APPROX_WLM_ANGLE_PER_FSR")))
 
                 dthetaSel = dtheta[fsrJump == 1]
                 if len(dthetaSel) >= 1:
                     anglePerFsr = mean(dthetaSel)
-                    fsrJumpRevised = round_(dtheta/anglePerFsr) # Quantize fsrJump to indicate multiples of the FSR
+                    # Quantize fsrJump to indicate multiples of the FSR
+                    fsrJumpRevised = round_(dtheta / anglePerFsr)
                     if (fsrJump != fsrJumpRevised).any():
                         Log("During WLM calibration, counting of FSRs may have been inaccurate. vLaserNum: %d" % vLaserNum)
                     fsrJump = fsrJumpRevised
                     # Ensure that the differences between the WLM angles at the calibration rows are close
                     #  to multiples of the FSR before we do the calibration. This prevents calibrations from
                     #  occurring if the pressure is changing, etc.
-                    devs = abs(dtheta/anglePerFsr - fsrJump)
+                    devs = abs(dtheta / anglePerFsr - fsrJump)
                     offGrid = devs.max()
                     if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_OFFGRID")):
                         Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" %
-                            (std(pztDev), offGrid, sum(devs>0.25)/float(len(devs))))
+                            (std(pztDev), offGrid, sum(devs > 0.25) / float(len(devs))))
                         if scs:
                             self.calFailed(vLaserNum)
                     else:
-                        #Update the live copy of the polar<->freq coefficients...
-                        waveNumberSetpoints = zeros(len(rows), dtype=float) #pre-allocate space
+                        # Update the live copy of the polar<->freq
+                        # coefficients...
+                        waveNumberSetpoints = zeros(
+                            len(rows), dtype=float)  # pre-allocate space
                         # Get the wavenumber setpoints from the scheme rows
+                        schemeNum = self.schemeNum & self.rdFreqConv.schemeTableMask
                         for i, calRow in enumerate(rows):
-                            waveNumberSetpoints[i] = self.rdFreqConv.freqScheme[self.schemeNum].setpoint[calRow]
-                        waveNumberSetpoints = waveNumberSetpoints[perm] #sorts in the same way that thetaShifted was
-                        #Calculate number of calibration points at each FSR, so they may be weighted properly
-                        weights = self.calcWeights(cumsum(concatenate(([0], fsrJump))))
-                        #Now do the actual updating of the conversion coefficients...
+                            waveNumberSetpoints[i] = self.rdFreqConv.freqScheme[
+                                schemeNum].setpoint[calRow]
+                        # sorts in the same way that thetaShifted was
+                        waveNumberSetpoints = waveNumberSetpoints[perm]
+                        # Calculate number of calibration points at each FSR,
+                        # so they may be weighted properly
+                        weights = self.calcWeights(
+                            cumsum(concatenate(([0], fsrJump))))
+                        # Now do the actual updating of the conversion
+                        # coefficients...
                         try:
-                            maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_WAVENUM_DIFF"))
+                            maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                                "AUTOCAL", "MAX_WAVENUM_DIFF"))
                         except KeyError:
                             maxDiff = 0.4
                         self.rdFreqConv.RPC_updateWlmCal(
                             vLaserNum, thetaShifted, waveNumberSetpoints, weights,
-                            float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "RELAX")),True,
-                            float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "RELAX_DEFAULT")),
-                            float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "RELAX_ZERO")),
+                            float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                                "AUTOCAL", "RELAX")), True,
+                            float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                                "AUTOCAL", "RELAX_DEFAULT")),
+                            float(self.rdFreqConv.RPC_getHotBoxCalParam(
+                                "AUTOCAL", "RELAX_ZERO")),
                             maxDiff)
-                        self.calibrationDone[vLaserNum-1] = True
+                        self.calibrationDone[vLaserNum - 1] = True
                         stdTuner = std(tunerDev)
                         stdPzt = std(pztDev)
                         if scs:
@@ -346,6 +456,17 @@ class SchemeBasedCalibrator(object):
                                 self.calSucceeded(vLaserNum)
                         Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" %
                             (vLaserNum, anglePerFsr, stdPzt))
+
+    def applySchemeBasedCalibration(self):
+        """Called after a scheme is completed to process data from calibration rows.
+        """
+        if len(self.calDataByRow) < int(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MIN_CALROWS")):
+            return
+
+        if self.rdFreqConv.tuningMode == interface.ANALYZER_TUNING_LaserCurrentTuningMode:
+            self.laserCurrentTuningCalibration()
+        else:
+            self.cavityLengthTuningCalibration()
 
     def centerTuner(self, tunerCenter):
         self.rdFreqConv.RPC_centerTuner(tunerCenter)
@@ -358,7 +479,7 @@ class SchemeBasedCalibrator(object):
         kprev = 0
         counter = 1
         for k in range(1, len(intData)):
-            if intData[k] != intData[k-1]:
+            if intData[k] != intData[k - 1]:
                 weights[kprev:k] = counter
                 kprev = k
                 counter = 1
@@ -377,33 +498,38 @@ class SchemeBasedCalibrator(object):
         Returns: Median of the data set
         """
         if len(values) != len(freqs):
-            raise ValueError("Lengths of values and freqs must be equal in medianHist")
+            raise ValueError(
+                "Lengths of values and freqs must be equal in medianHist")
         perm = argsort(values)
         csum = cumsum(freqs[perm])
         if useAverage and (csum[-1] % 2 == 0):
-            mid2 = csum[-1]/2
+            mid2 = csum[-1] / 2
             mid1 = mid2 - 1
-            return 0.5*(values[perm[sum(mid1 >= csum)]]+values[perm[sum(mid2 >= csum)]])
+            return 0.5 * (values[perm[sum(mid1 >= csum)]] + values[perm[sum(mid2 >= csum)]])
         else:
-            mid = (csum[-1]-1)/2
+            mid = (csum[-1] - 1) / 2
             return values[perm[sum(mid >= csum)]]
 
+
 class RpcServerThread(threading.Thread):
+
     def __init__(self, rpcServer, exitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  # THIS MUST BE HERE
         self.rpcServer = rpcServer
         self.exitFunction = exitFunction
+
     def run(self):
         self.rpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  # it might be a threading.Event
             self.exitFunction()
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
+
 def validateChecksum(fname):
-    filePtr = file(fname,'rb')
+    filePtr = file(fname, 'rb')
     try:
         calStr = filePtr.read()
         cPos = calStr.find("#checksum=")
@@ -411,7 +537,7 @@ def validateChecksum(fname):
             raise ValueError("No checksum in file")
         else:
             try:
-                csum1 = int(calStr[cPos+10:])
+                csum1 = int(calStr[cPos + 10:])
                 csum2 = crc32(calStr[:cPos], 0)
             except Exception, exc:
                 raise ValueError("Error calculating checksum %r" % exc)
@@ -422,8 +548,10 @@ def validateChecksum(fname):
     finally:
         filePtr.close()
 
+
 class RDFrequencyConverter(Singleton):
     initialized = False
+
     def __init__(self, configPath=None, virtualMode=False):
         if not self.initialized:
             self.tunerCenter = None
@@ -433,11 +561,14 @@ class RDFrequencyConverter(Singleton):
                 # Read from .ini file
                 config = CustomConfigObj(configPath)
                 basePath = os.path.split(configPath)[0]
-                self.saveWlmHistPeriod_s = config.getfloat("MainConfig", "saveWlmHistPeriod_s", "120")
-                self.wbCalUpdatePeriod_s = config.getfloat("MainConfig", "wbCalUpdatePeriod_s", "1800")
-                self.hbCalUpdatePeriod_s = config.getfloat("MainConfig", "hbCalUpdatePeriod_s", "1800")
-                self.wbArchiveGroup = config.get("MainConfig", "wbArchiveGroup", "WBCAL")
-                self.hbArchiveGroup = config.get("MainConfig", "hbArchiveGroup", "HBCAL")
+                self.wbCalUpdatePeriod_s = config.getfloat(
+                    "MainConfig", "wbCalUpdatePeriod_s", "1800")
+                self.hbCalUpdatePeriod_s = config.getfloat(
+                    "MainConfig", "hbCalUpdatePeriod_s", "1800")
+                self.wbArchiveGroup = config.get(
+                    "MainConfig", "wbArchiveGroup", "WBCAL")
+                self.hbArchiveGroup = config.get(
+                    "MainConfig", "hbArchiveGroup", "HBCAL")
                 self.warmBoxCalFilePathActive = os.path.abspath(os.path.join(
                     basePath, config.get("CalibrationPath", "warmboxCalActive", "")))
                 self.warmBoxCalFilePathFactory = os.path.abspath(os.path.join(
@@ -447,14 +578,17 @@ class RDFrequencyConverter(Singleton):
                 self.hotBoxCalFilePathFactory = os.path.abspath(os.path.join(
                     basePath, config.get("CalibrationPath", "hotboxCalFactory", "")))
                 if "ShortCircuitSchemes" in config:
-                    self.shortCircuitSchemes = dict(config["ShortCircuitSchemes"])
+                    self.shortCircuitSchemes = dict(
+                        config["ShortCircuitSchemes"])
                 else:
                     self.shortCircuitSchemes = {}
 
                 if config.has_option('MainConfig', 'tunerCenter'):
-                    self.tunerCenter = config.getint('MainConfig', 'tunerCenter')
+                    self.tunerCenter = config.getint(
+                        'MainConfig', 'tunerCenter')
             else:
-                raise ValueError("Configuration file must be specified to initialize RDFrequencyConverter")
+                raise ValueError(
+                    "Configuration file must be specified to initialize RDFrequencyConverter")
 
             self.numLasers = interface.NUM_VIRTUAL_LASERS
             self.rdQueue = Queue.Queue()
@@ -463,22 +597,23 @@ class RDFrequencyConverter(Singleton):
             self.rpcThread = None
             self._shutdownRequested = False
             self.freqConvertersLoaded = False
-            # Ensure no ringdowns are being collected when the RDFrequencyConverter starts up
+            # Ensure no ringdowns are being collected when the
+            # RDFrequencyConverter starts up
             if not virtualMode:
                 Driver.stopScan()
             self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FREQ_CONVERTER),
-                                                    ServerName = "FrequencyConverter",
-                                                    ServerDescription = "Frequency Converter for CRDS hardware",
-                                                    threaded = True)
-            #Register the rpc functions...
+                                                   ServerName="FrequencyConverter",
+                                                   ServerDescription="Frequency Converter for CRDS hardware",
+                                                   threaded=True)
+            # Register the rpc functions...
             for attrName in dir(self):
                 attr = self.__getattribute__(attrName)
                 if callable(attr) and attrName.startswith("RPC_") and (not inspect.isclass(attr)):
-                    self.rpcServer.register_function(attr, NameSlice = 4)
+                    self.rpcServer.register_function(attr, NameSlice=4)
 
             self.processedRdBroadcaster = Broadcaster.Broadcaster(
-                                        port=BROADCAST_PORT_RD_RECALC,
-                                        name="Ringdown frequency converter broadcaster",logFunc = Log)
+                port=BROADCAST_PORT_RD_RECALC,
+                name="Ringdown frequency converter broadcaster", logFunc=Log)
 
             self.freqScheme = {}
             self.angleScheme = {}
@@ -503,8 +638,10 @@ class RDFrequencyConverter(Singleton):
             self.calFailed = zeros(interface.NUM_VIRTUAL_LASERS)
             self.calSucceeded = zeros(interface.NUM_VIRTUAL_LASERS)
             self.rdListener = None
+            self.schemeTableMask = (0xffff >> (
+                16 - interface.SCHEME_VersionShift))
 
-    def rdFilter(self, entry):
+    def rd_Processor(self, entry):
         """Filter applied to RingdownEntryType objects obtained from Driver. Within this filter, the
         scheme calibration rows are pulled out and used to run the WLM calibration. The entries are
         then placed onto the ringdown queue.
@@ -512,26 +649,31 @@ class RDFrequencyConverter(Singleton):
         Args:
             entry: RingdownEntryType obtained from Listener to Driver
         """
-        assert isinstance(entry, interface.RingdownEntryType)
-        if (entry.status & interface.RINGDOWN_STATUS_SequenceMask) != self.lastSchemeCount:
-            # We have got to a new scheme
-            if self.sbc.calDataByRow:
-                self.sbc.applySchemeBasedCalibration()
-            self.sbc.clear()
-            self.lastSchemeCount = (entry.status & interface.RINGDOWN_STATUS_SequenceMask)
-        # Check if this is a calibration row and process it accordingly
-        if entry.subschemeId & interface.SUBSCHEME_ID_IsCalMask:
-            rowNum = entry.schemeRow
-            # The scheme version has not yet been placed in schemeVersionAndTable
-            schemeTable = entry.schemeVersionAndTable
-            angleError = mod(entry.wlmAngle - self.angleScheme[schemeTable].setpoint[rowNum], 2 * pi)
-            tempError  = entry.laserTemperature - self.angleScheme[schemeTable].laserTemp[rowNum]
-            if (min(angleError, 2 * pi - angleError) < self.dthetaMax) and (abs(tempError) < self.dtempMax):
-                # The spectral point is close to the setpoint
-                self.sbc.processCalRingdownEntry(entry)
-            else:
-                Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %
-                    (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
+        assert isinstance(entry, interface.ProcessedRingdownEntryType)
+        if (self.tuningMode != interface.ANALYZER_TUNING_FsrHoppingTuningMode):
+            if (entry.status & interface.RINGDOWN_STATUS_SequenceMask) != self.lastSchemeCount:
+                # We have got to a new scheme
+                if self.sbc.calDataByRow:
+                    self.sbc.applySchemeBasedCalibration()
+                self.sbc.clear()
+                self.lastSchemeCount = (
+                    entry.status & interface.RINGDOWN_STATUS_SequenceMask)
+            # Check if this is a calibration row and process it accordingly
+            if entry.subschemeId & interface.SUBSCHEME_ID_IsCalMask:
+                rowNum = entry.schemeRow
+                # The scheme version has not yet been placed in
+                # schemeVersionAndTable
+                schemeTable = entry.schemeVersionAndTable & self.schemeTableMask
+                angleError = mod(
+                    entry.wlmAngle - self.angleScheme[schemeTable].setpoint[rowNum], 2 * pi)
+                tempError = entry.laserTemperature - \
+                    self.angleScheme[schemeTable].laserTemp[rowNum]
+                if (min(angleError, 2 * pi - angleError) < self.dthetaMax) and (abs(tempError) < self.dtempMax):
+                    # The spectral point is close to the setpoint
+                    self.sbc.processCalRingdownEntry(entry)
+                else:
+                    Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %
+                        (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
         return entry
 
     def run(self):
@@ -540,11 +682,6 @@ class RDFrequencyConverter(Singleton):
         Ringdowns from the driver are passed through the ringdown filter and are then placed onto the
         ringdown queue.
         """
-        # Start the thread for saving WLM history into database
-        # saveWlmThread = threading.Thread(target = self.runSaveWlmHistory)
-        # saveWlmThread.setDaemon(True)
-        # saveWlmThread.start()
-
         # Start the rpc server on another thread...
         self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
         self.rpcThread.start()
@@ -556,11 +693,13 @@ class RDFrequencyConverter(Singleton):
 
         self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
         while not self._shutdownRequested:
-            # Check if it's time to update and archive the warmbox calibration file
+            # Check if it's time to update and archive the warmbox calibration
+            # file
             if self.timeToUpdateWarmBoxCal():
                 Log("Time to update warm box calibration file")
-                #  we'll do it in a separate thread in case it takes too long to write the new calibration file to disk
-                updateWarmBoxCalThread = threading.Thread(target = self.updateWarmBoxCal,
+                # we'll do it in a separate thread in case it takes too long to
+                # write the new calibration file to disk
+                updateWarmBoxCalThread = threading.Thread(target=self.updateWarmBoxCal,
                                                           args=(self.warmBoxCalFilePathActive,))
                 updateWarmBoxCalThread.setDaemon(True)
                 updateWarmBoxCalThread.start()
@@ -568,23 +707,29 @@ class RDFrequencyConverter(Singleton):
                 rdQueueSize = self.rdQueue.qsize()
                 if rdQueueSize > self.rdQueueMaxLevel:
                     self.rdQueueMaxLevel = rdQueueSize
-                    Log("rdQueueSize reaches new peak level %d" % self.rdQueueMaxLevel)
-                if rdQueueSize > MIN_SIZE or time.time()-startTime > timeout:
+                    Log("rdQueueSize reaches new peak level %d" %
+                        self.rdQueueMaxLevel)
+                if rdQueueSize > MIN_SIZE or time.time() - startTime > timeout:
+                    self.tuningMode = Driver.rdDasReg(
+                        "ANALYZER_TUNING_MODE_REGISTER")
                     self._batchConvert()
                     startTime = time.time()
-                    self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
                 else:
                     time.sleep(0.02)
                     continue
                 while self.rdProcessedCache:
                     try:
                         rdProcessedData = self.rdProcessedCache.pop(0)
-                        self.processedRdBroadcaster.send(StringPickler.ObjAsString(rdProcessedData))
+                        # self_calaberition
+                        self.rd_Processor(rdProcessedData)
+                        self.processedRdBroadcaster.send(
+                            StringPickler.ObjAsString(rdProcessedData))
                     except IndexError:
                         break
             except:
                 excType, value, _trace = sys.exc_info()
-                Log("Error: %s: %s" % (str(excType), str(value)), Verbose=traceback.format_exc(), Level=3)
+                Log("Error: %s: %s" % (str(excType), str(value)),
+                    Verbose=traceback.format_exc(), Level=3)
                 while not self.rdQueue.empty():
                     self.rdQueue.get(False)
                 self.rdProcessedCache = []
@@ -611,114 +756,102 @@ class RDFrequencyConverter(Singleton):
                     if name != "padToCacheLine":
                         setattr(rdProcessedData, name, getattr(rdData, name))
                 self.rdProcessedCache.append(rdProcessedData)
-                vLaserNum = 1 + ((rdData.laserUsed >> 2) & 0x7) # 1-based virtual laser number
-                wlmAngle[vLaserNum-1].append(rdData.wlmAngle)
-                laserTemperature[vLaserNum-1].append(rdData.laserTemperature)
-                cacheIndex[vLaserNum-1].append(index)
+                # 1-based virtual laser number
+                vLaserNum = 1 + ((rdData.laserUsed >> 2) & 0x7)
+                wlmAngle[vLaserNum - 1].append(rdData.wlmAngle)
+                laserTemperature[vLaserNum - 1].append(rdData.laserTemperature)
+                cacheIndex[vLaserNum - 1].append(index)
                 index += 1
             except Queue.Empty:
                 break
         # Do the angle to wavenumber conversions for each available laser
-        for vLaserNum in range(1, self.numLasers+1):
-            if cacheIndex[vLaserNum-1]: # There are angles to convert for this laser
+        for vLaserNum in range(1, self.numLasers + 1):
+            if cacheIndex[vLaserNum - 1]:  # There are angles to convert for this laser
                 self._assertVLaserNum(vLaserNum)
-                freqConv = self.freqConverter[vLaserNum-1]
-                waveNumbers = freqConv.thetaCalAndLaserTemp2WaveNumber(array(wlmAngle[vLaserNum-1]),
-                                                            array(laserTemperature[vLaserNum-1]))
+                freqConv = self.freqConverter[vLaserNum - 1]
+                waveNumbers = freqConv.thetaCalAndLaserTemp2WaveNumber(array(wlmAngle[vLaserNum - 1]),
+                                                                       array(laserTemperature[vLaserNum - 1]))
                 for i, waveNumber in enumerate(waveNumbers):
-                    index = cacheIndex[vLaserNum-1][i]
+                    index = cacheIndex[vLaserNum - 1][i]
                     rdProcessedData = self.rdProcessedCache[index]
                     rdProcessedData.waveNumber = waveNumber
-                    # At this point schemeVersionAndTable only has the scheme table
-                    schemeTable = rdProcessedData.schemeVersionAndTable
-                    if schemeTable in self.freqScheme:
-                        freqScheme = self.freqScheme[schemeTable]
-                        # Here we prepend the version to schemeVersionAndTable
-                        shiftedVersion = (freqScheme.version << interface.SCHEME_VersionShift)
-                        rdProcessedData.schemeVersionAndTable = schemeTable | shiftedVersion
-                        schemeRow = rdProcessedData.schemeRow
-                        rdProcessedData.waveNumberSetpoint = freqScheme.setpoint[schemeRow]
-                        rdProcessedData.extra1 = freqScheme.extra1[schemeRow]
-                        rdProcessedData.extra2 = freqScheme.extra2[schemeRow]
-                        rdProcessedData.extra3 = freqScheme.extra3[schemeRow]
-                        rdProcessedData.extra4 = freqScheme.extra4[schemeRow]
-                    else:
-                        rdProcessedData.waveNumberSetpoint = 0
+                    # At this point schemeVersionAndTable only has the scheme
+                    # table
+                    rdProcessedData.waveNumberSetpoint = 0
+                    if (self.tuningMode != interface.ANALYZER_TUNING_FsrHoppingTuningMode):
+                        schemeTable = rdProcessedData.schemeVersionAndTable
+                        if (schemeTable in self.freqScheme):
+                            freqScheme = self.freqScheme[schemeTable]
+                            # Here we prepend the version to
+                            # schemeVersionAndTable
+                            shiftedVersion = (
+                                freqScheme.version << interface.SCHEME_VersionShift)
+                            rdProcessedData.schemeVersionAndTable = schemeTable | shiftedVersion
+                            schemeRow = rdProcessedData.schemeRow
+                            rdProcessedData.waveNumberSetpoint = freqScheme.setpoint[
+                                schemeRow]
+                            rdProcessedData.extra1 = freqScheme.extra1[
+                                schemeRow]
+                            rdProcessedData.extra2 = freqScheme.extra2[
+                                schemeRow]
+                            rdProcessedData.extra3 = freqScheme.extra3[
+                                schemeRow]
+                            rdProcessedData.extra4 = freqScheme.extra4[
+                                schemeRow]
 
     def _assertVLaserNum(self, vLaserNum):
-        if (vLaserNum-1 not in self.freqConverter) or self.freqConverter[vLaserNum-1] is None:
-            raise ValueError("No frequency converter is present for virtual laser %d." % vLaserNum)
+        if (vLaserNum - 1 not in self.freqConverter) or self.freqConverter[vLaserNum - 1] is None:
+            raise ValueError(
+                "No frequency converter is present for virtual laser %d." % vLaserNum)
 
     def updateWarmBoxCal(self, warmBoxCalFilePathActive):
         self.resetWarmBoxCalTime()
         self.RPC_updateWarmBoxCal(warmBoxCalFilePathActive)
 
-    def runSaveWlmHistory(self):
-        while True:
-            self._saveWlmHistory()
-            #Log("WLM history saved in database")
-            time.sleep(self.saveWlmHistPeriod_s)
-
-    def _saveWlmHistory(self):
-        """Save WLM history to the state database"""
-        for i in self.freqConverter:
-            try:
-                freqConv = self.freqConverter[i]
-                if freqConv is not None:
-                    vLaserNum = i+1
-                    wlmOffset = freqConv.offset
-                    deltaCoeffs = freqConv.coeffs - freqConv.coeffsOrig
-                    valMin = deltaCoeffs.min()
-                    valMax = deltaCoeffs.max()
-                    freqMin = freqConv.sLinear[1] + deltaCoeffs.argmin()*freqConv.sLinear[0]
-                    freqMax = freqConv.sLinear[1] + deltaCoeffs.argmax()*freqConv.sLinear[0]
-                    timestamp = Driver.hostGetTicks()
-                    wlmHist = (timestamp, vLaserNum, wlmOffset, freqMin, valMin, freqMax, valMax)
-                    Driver.saveWlmHist(wlmHist)
-            except Exception, exc:
-                Log("Exception in saveWlmHistory: %s" % exc)
-
     def resetWarmBoxCalTime(self):
         self.warmBoxCalUpdateTime = Driver.hostGetTicks()
 
     def timeToUpdateWarmBoxCal(self):
-        return (Driver.hostGetTicks() - self.warmBoxCalUpdateTime) > (self.wbCalUpdatePeriod_s*1000)
+        return (Driver.hostGetTicks() - self.warmBoxCalUpdateTime) > (self.wbCalUpdatePeriod_s * 1000)
 
     def resetHotBoxCalTime(self):
         self.hotBoxCalUpdateTime = Driver.hostGetTicks()
 
     def timeToUpdateHotBoxCal(self):
-        return (Driver.hostGetTicks() - self.hotBoxCalUpdateTime) > (self.hbCalUpdatePeriod_s*1000)
+        return (Driver.hostGetTicks() - self.hotBoxCalUpdateTime) > (self.hbCalUpdatePeriod_s * 1000)
 
     def RPC_getShortCircuitSchemeStatus(self):
         """Returns True if a nonempty [ShortCircuitSchemes] section is in this INI file. When this is True,
         sequences start with the spectrum collector in SchemeMultipleNoRepeatMode, rather than in
         SchemeMultipleMode"""
-        return len(self.shortCircuitSchemes)>0
+        return len(self.shortCircuitSchemes) > 0
 
     def RPC_angleToLaserTemperature(self, vLaserNum, angles):
         self._assertVLaserNum(vLaserNum)
-        return self.freqConverter[vLaserNum-1].thetaCal2LaserTemp(angles)
+        return self.freqConverter[vLaserNum - 1].thetaCal2LaserTemp(angles)
 
     def RPC_angleToWaveNumber(self, vLaserNum, angles):
         self._assertVLaserNum(vLaserNum)
-        return self.freqConverter[vLaserNum-1].thetaCal2WaveNumber(angles)
+        return self.freqConverter[vLaserNum - 1].thetaCal2WaveNumber(angles)
 
     def RPC_setCavityLengthTuning(self):
         """ Set the instrument to use cavity length tuning, and load up DAS registers appropriately """
-        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_CavityLengthTuningMode)
+        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",
+                        interface.ANALYZER_TUNING_CavityLengthTuningMode)
         self.tuningMode = interface.ANALYZER_TUNING_CavityLengthTuningMode
         self.cavityLengthTunerAdjuster.setTunerRegisters(self.tunerCenter)
 
     def RPC_setLaserCurrentTuning(self):
         """ Set the instrument to use laser current tuning, and load up DAS registers appropriately """
-        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_LaserCurrentTuningMode)
+        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",
+                        interface.ANALYZER_TUNING_LaserCurrentTuningMode)
         self.tuningMode = interface.ANALYZER_TUNING_LaserCurrentTuningMode
         self.laserCurrentTunerAdjuster.setTunerRegisters(centerValue=32768)
 
     def RPC_setFsrHoppingTuning(self):
         """ Set the instrument to use FSR Hopping tuning, and load up DAS registers appropriately """
-        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER", interface.ANALYZER_TUNING_FsrHoppingTuningMode)
+        Driver.wrDasReg("ANALYZER_TUNING_MODE_REGISTER",
+                        interface.ANALYZER_TUNING_FsrHoppingTuningMode)
         self.tuningMode = interface.ANALYZER_TUNING_FsrHoppingTuningMode
 
     def RPC_centerTuner(self, tunerCenter):
@@ -751,14 +884,14 @@ class RDFrequencyConverter(Singleton):
             dataByLaser[vLaserNum][1].append(waveNum)
         for vLaserNum in dataByLaser:
             self._assertVLaserNum(vLaserNum)
-            freqConv = self.freqConverter[vLaserNum-1]
+            freqConv = self.freqConverter[vLaserNum - 1]
             waveNum = array(dataByLaser[vLaserNum][1])
             wlmAngle = freqConv.waveNumber2ThetaCal(waveNum)
             laserTemp = freqConv.thetaCal2LaserTemp(wlmAngle)
             for j, i in enumerate(dataByLaser[vLaserNum][0]):
                 angleScheme.setpoint[i] = wlmAngle[j]
                 # Add in scheme.laserTemp as an offset to the value calculated
-                angleScheme.laserTemp[i]= laserTemp[j] + scheme.laserTemp[i]
+                angleScheme.laserTemp[i] = laserTemp[j] + scheme.laserTemp[i]
         self.isAngleSchemeConverted[schemeNum] = True
 
     def RPC_getHotBoxCalFilePath(self):
@@ -771,12 +904,13 @@ class RDFrequencyConverter(Singleton):
         return self.warmBoxCalFilePath
 
     def RPC_isCalibrationDone(self, vLaserNumList):
-        # Check if calibration has been done for the specified list of virtual lasers
+        # Check if calibration has been done for the specified list of virtual
+        # lasers
         return self.sbc.isCalibrationDone(vLaserNumList)
 
     def RPC_laserTemperatureToAngle(self, vLaserNum, laserTemperatures):
         self._assertVLaserNum(vLaserNum)
-        return self.freqConverter[vLaserNum-1].laserTemp2ThetaCal(laserTemperatures)
+        return self.freqConverter[vLaserNum - 1].laserTemp2ThetaCal(laserTemperatures)
 
     def RPC_loadHotBoxCal(self, hotBoxCalFilePath=""):
         self.hotBoxCalUpdateTime = Driver.hostGetTicks()
@@ -798,23 +932,29 @@ class RDFrequencyConverter(Singleton):
             raise ValueError("Hot box calibration must contain at least one of " +
                              "CAVITY_LENGTH_TUNING or LASER_CURRENT_TUNING sections.")
         if "CAVITY_LENGTH_TUNING" in self.hotBoxCal:
-            self.cavityLengthTunerAdjuster = TunerAdjuster("CAVITY_LENGTH_TUNING")
+            self.cavityLengthTunerAdjuster = TunerAdjuster(
+                "CAVITY_LENGTH_TUNING")
         else:
             self.cavityLengthTunerAdjuster = None
         if "LASER_CURRENT_TUNING" in self.hotBoxCal:
-            self.laserCurrentTunerAdjuster = TunerAdjuster("LASER_CURRENT_TUNING")
+            self.laserCurrentTunerAdjuster = TunerAdjuster(
+                "LASER_CURRENT_TUNING")
         else:
             self.laserCurrentTunerAdjuster = None
-        self.dthetaMax = float(self.hotBoxCal["AUTOCAL"]["MAX_ANGLE_TARGETTING_ERROR"])
-        self.dtempMax  = float(self.hotBoxCal["AUTOCAL"]["MAX_TEMP_TARGETTING_ERROR"])
+        self.dthetaMax = float(self.hotBoxCal["AUTOCAL"][
+                               "MAX_ANGLE_TARGETTING_ERROR"])
+        self.dtempMax = float(self.hotBoxCal["AUTOCAL"][
+                              "MAX_TEMP_TARGETTING_ERROR"])
         # Set up the PZT scaling register
         if "PZT_SCALE_FACTOR" in self.hotBoxCal["CAVITY_LENGTH_TUNING"]:
-            pztScale = int(self.hotBoxCal["CAVITY_LENGTH_TUNING"]["PZT_SCALE_FACTOR"])
+            pztScale = int(self.hotBoxCal["CAVITY_LENGTH_TUNING"][
+                           "PZT_SCALE_FACTOR"])
         else:
             pztScale = 0xFFFF
-        Driver.wrFPGA("FPGA_SCALER","SCALER_SCALE1", int(pztScale))
+        Driver.wrFPGA("FPGA_SCALER", "SCALER_SCALE1", int(pztScale))
         # Set up the PZT_INCR_PER_CAVITY_FSR register
-        fsr = float(self.hotBoxCal["CAVITY_LENGTH_TUNING"]["FREE_SPECTRAL_RANGE"])
+        fsr = float(self.hotBoxCal["CAVITY_LENGTH_TUNING"][
+                    "FREE_SPECTRAL_RANGE"])
         Driver.wrDasReg("PZT_INCR_PER_CAVITY_FSR", fsr)
 
         return "OK"
@@ -831,7 +971,8 @@ class RDFrequencyConverter(Singleton):
         #
         # When a non-empty file name is passed for warmBoxCalFilePath,
         #  Checksums are ignored and the specified file is used unconditionally. Any errors in the
-        #   file or the non-existence of the file will cause an exception. The active file name is
+        # file or the non-existence of the file will cause an exception. The
+        # active file name is
 
         if not self.virtualMode:
             self.warmBoxCalUpdateTime = Driver.hostGetTicks()
@@ -841,37 +982,40 @@ class RDFrequencyConverter(Singleton):
                     validateChecksum(self.warmBoxCalFilePathActive)
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
                 except ValueError:
-                    Log('Bad checksum in active warm box calibration file, using factory file', Level = 2)
+                    Log('Bad checksum in active warm box calibration file, using factory file', Level=2)
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
             else:
-                Log('No active warm box calibration file, using factory file', Level = 0)
+                Log('No active warm box calibration file, using factory file', Level=0)
                 self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
         else:
             self.warmBoxCalFilePath = os.path.abspath(warmBoxCalFilePath)
 
         # Load up the frequency converters for each laser in the DAS...
         ini = CustomConfigObj(self.warmBoxCalFilePath)
-        for vLaserNum in range(1, self.numLasers + 1): # N.B. In AutoCal, laser indices are 1 based
+        # N.B. In AutoCal, laser indices are 1 based
+        for vLaserNum in range(1, self.numLasers + 1):
             freqConv = AutoCal()
-            self.freqConverter[vLaserNum-1] = freqConv.loadFromIni(ini, vLaserNum)
+            self.freqConverter[vLaserNum -
+                               1] = freqConv.loadFromIni(ini, vLaserNum)
             # Send the virtual laser information to the DAS
             paramSec = "VIRTUAL_PARAMS_%d" % vLaserNum
             if paramSec in ini:
                 param = ini[paramSec]
-                aLaserNum = int(ini["LASER_MAP"]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum])
-                laserParams = { 'actualLaser':     aLaserNum-1,
-                                'ratio1Center':    float(param['RATIO1_CENTER']),
-                                'ratio1Scale':     float(param['RATIO1_SCALE']),
-                                'ratio2Center':    float(param['RATIO2_CENTER']),
-                                'ratio2Scale':     float(param['RATIO2_SCALE']),
-                                'phase':           float(param['PHASE']),
-                                'tempSensitivity': float(param['TEMP_SENSITIVITY']),
-                                'calTemp':         float(param['CAL_TEMP']),
-                                'calPressure':     float(param['CAL_PRESSURE']),
-                                'pressureC0':      float(param['PRESSURE_C0']),
-                                'pressureC1':      float(param['PRESSURE_C1']),
-                                'pressureC2':      float(param['PRESSURE_C2']),
-                                'pressureC3':      float(param['PRESSURE_C3'])}
+                aLaserNum = int(ini["LASER_MAP"][
+                                "ACTUAL_FOR_VIRTUAL_%d" % vLaserNum])
+                laserParams = {'actualLaser':     aLaserNum - 1,
+                               'ratio1Center':    float(param['RATIO1_CENTER']),
+                               'ratio1Scale':     float(param['RATIO1_SCALE']),
+                               'ratio2Center':    float(param['RATIO2_CENTER']),
+                               'ratio2Scale':     float(param['RATIO2_SCALE']),
+                               'phase':           float(param['PHASE']),
+                               'tempSensitivity': float(param['TEMP_SENSITIVITY']),
+                               'calTemp':         float(param['CAL_TEMP']),
+                               'calPressure':     float(param['CAL_PRESSURE']),
+                               'pressureC0':      float(param['PRESSURE_C0']),
+                               'pressureC1':      float(param['PRESSURE_C1']),
+                               'pressureC2':      float(param['PRESSURE_C2']),
+                               'pressureC3':      float(param['PRESSURE_C3'])}
                 if pCalOffset is not None:
                     laserParams['calPressure'] = 760.0
                     laserParams['pressureC0'] = pCalOffset
@@ -880,36 +1024,38 @@ class RDFrequencyConverter(Singleton):
                     laserParams['pressureC3'] = 0.0
                 if not self.virtualMode:
                     Driver.wrVirtualLaserParams(vLaserNum, laserParams)
-        # Start the ringdown listener only once there are frequency converters available to do the conversion
+        # Start the ringdown listener only once there are frequency converters
+        # available to do the conversion
         if not self.freqConvertersLoaded:
             self.rdListener = Listener.Listener(self.rdQueue,
-                                        BROADCAST_PORT_RDRESULTS,
-                                        interface.RingdownEntryType,
-                                        streamFilter = self.rdFilter,
-                                        retry = True,
-                                        name = "Ringdown frequency converter listener",logFunc = Log)
+                                                BROADCAST_PORT_RDRESULTS,
+                                                interface.RingdownEntryType,
+                                                retry=True,
+                                                name="Ringdown frequency converter listener", logFunc=Log)
             self.freqConvertersLoaded = True
         return "OK"
 
     def RPC_replaceOriginalWlmCal(self, vLaserNum):
         # Copy current spline coefficients to original coefficients
         self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].replaceOriginal()
+        self.freqConverter[vLaserNum - 1].replaceOriginal()
 
     def RPC_restoreOriginalWlmCal(self, vLaserNum):
         # Replace current spline coefficients with original spline coefficients
         self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].replaceCurrent()
+        self.freqConverter[vLaserNum - 1].replaceCurrent()
 
     def RPC_ignoreSpline(self, vLaserNum):
-        # Do not use cubic spline corrections for angle to frequency transformations for virtual laser vLaserNum
-        if (vLaserNum-1 in self.freqConverter) and self.freqConverter[vLaserNum-1] is not None:
-            self.freqConverter[vLaserNum-1].ignoreSpline = True
+        # Do not use cubic spline corrections for angle to frequency
+        # transformations for virtual laser vLaserNum
+        if (vLaserNum - 1 in self.freqConverter) and self.freqConverter[vLaserNum - 1] is not None:
+            self.freqConverter[vLaserNum - 1].ignoreSpline = True
 
     def RPC_useSpline(self, vLaserNum):
-        # Do use cubic spline corrections for angle to frequency transformations for virtual laser vLaserNum
-        if (vLaserNum-1 in self.freqConverter) and self.freqConverter[vLaserNum-1] is not None:
-            self.freqConverter[vLaserNum-1].ignoreSpline = False
+        # Do use cubic spline corrections for angle to frequency
+        # transformations for virtual laser vLaserNum
+        if (vLaserNum - 1 in self.freqConverter) and self.freqConverter[vLaserNum - 1] is not None:
+            self.freqConverter[vLaserNum - 1].ignoreSpline = False
 
     def RPC_setHotBoxCalParam(self, secName, optName, optValue):
         self.hotBoxCal[secName][optName] = optValue
@@ -923,28 +1069,28 @@ class RDFrequencyConverter(Singleton):
         Returns offset in wavenumbers.
         """
         self._assertVLaserNum(vLaserNum)
-        return self.freqConverter[vLaserNum-1].getOffset()
+        return self.freqConverter[vLaserNum - 1].getOffset()
 
     def RPC_setWlmOffset(self, vLaserNum, offset):
         """Updates the offset in the WLM calibration by the specified value.
         vLaserNum is 1-based. offset is in wavenumbers.
         """
         self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].setOffset(offset)
+        self.freqConverter[vLaserNum - 1].setOffset(offset)
 
     def RPC_getLaserTempOffset(self, vLaserNum):
         """Fetches the temp offset for the virtual laser. vLaserNum is 1-based.
         Returns offset in degrees.
         """
         self._assertVLaserNum(vLaserNum)
-        return self.freqConverter[vLaserNum-1].getTempOffset()
+        return self.freqConverter[vLaserNum - 1].getTempOffset()
 
     def RPC_setLaserTempOffset(self, vLaserNum, offset):
         """Updates the Temp offset for the virtual laser.
         vLaserNum is 1-based. offset is in degrees.
         """
         self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].setTempOffset(offset)
+        self.freqConverter[vLaserNum - 1].setTempOffset(offset)
 
     def RPC_shutdown(self):
         self._shutdownRequested = True
@@ -953,11 +1099,14 @@ class RDFrequencyConverter(Singleton):
         """
         Write calibration back to the file with a new checksum.
         """
-        # Archive the current HotBoxCal first (add timestamp to the filename too)
+        # Archive the current HotBoxCal first (add timestamp to the filename
+        # too)
         timeStamp = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
-        hotBoxCalFilePathWithTime = self.hotBoxCalFilePath.replace(".ini", "_%s.ini" % timeStamp)
+        hotBoxCalFilePathWithTime = self.hotBoxCalFilePath.replace(
+            ".ini", "_%s.ini" % timeStamp)
         shutil.copy2(self.hotBoxCalFilePath, hotBoxCalFilePathWithTime)
-        Archiver.ArchiveFile(self.hbArchiveGroup, hotBoxCalFilePathWithTime, True)
+        Archiver.ArchiveFile(self.hbArchiveGroup,
+                             hotBoxCalFilePathWithTime, True)
         Log("Archived %s" % hotBoxCalFilePathWithTime)
 
         fp = None
@@ -986,21 +1135,25 @@ class RDFrequencyConverter(Singleton):
         for i in self.freqConverter.keys():
             freqConv = self.freqConverter[i]
             if freqConv is not None:
-                freqConv.updateIni(config, i+1) # Note: In Autocal1, laser indices are 1 based
+                # Note: In Autocal1, laser indices are 1 based
+                freqConv.updateIni(config, i + 1)
         return config
 
     def RPC_updateWarmBoxCal(self, fileName=None):
         """
         Write calibration back to the file with a new checksum.
         """
-        # Archive the current WarmBoxCal file if this is not null, first adding timestamp to the filename)
+        # Archive the current WarmBoxCal file if this is not null, first adding
+        # timestamp to the filename)
         if not self.warmBoxCalFilePath:
             return
 
         timeStamp = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
-        warmBoxCalFilePathWithTime = self.warmBoxCalFilePath.replace(".ini", "_%s.ini" % timeStamp)
+        warmBoxCalFilePathWithTime = self.warmBoxCalFilePath.replace(
+            ".ini", "_%s.ini" % timeStamp)
         shutil.copy2(self.warmBoxCalFilePath, warmBoxCalFilePathWithTime)
-        Archiver.ArchiveFile(self.wbArchiveGroup, warmBoxCalFilePathWithTime, True)
+        Archiver.ArchiveFile(self.wbArchiveGroup,
+                             warmBoxCalFilePathWithTime, True)
         Log("Archived %s" % warmBoxCalFilePathWithTime)
 
         filePtr = None
@@ -1008,7 +1161,8 @@ class RDFrequencyConverter(Singleton):
         for i in self.freqConverter.keys():
             freqConv = self.freqConverter[i]
             if freqConv is not None:
-                freqConv.updateIni(config, i+1) # Note: In Autocal1, laser indices are 1 based
+                # Note: In Autocal1, laser indices are 1 based
+                freqConv.updateIni(config, i + 1)
         try:
             config["timestamp"] = Driver.hostGetTicks()
             calStrIO = StringIO()
@@ -1032,8 +1186,8 @@ class RDFrequencyConverter(Singleton):
            map to the specified list of waveNumbers. Also relax the calibration towards the default using
            Laplacian regularization and the specified value of relaxDefault."""
         self._assertVLaserNum(vLaserNum)
-        self.freqConverter[vLaserNum-1].updateWlmCal(thetaCal, waveNumbers, weights, relax,
-                                                     relative, relaxDefault, relaxZero, maxDiff)
+        self.freqConverter[vLaserNum - 1].updateWlmCal(thetaCal, waveNumbers, weights, relax,
+                                                       relative, relaxDefault, relaxZero, maxDiff)
 
     def RPC_uploadSchemeToDAS(self, schemeNum):
         # Upload angle scheme to DAS
@@ -1044,7 +1198,7 @@ class RDFrequencyConverter(Singleton):
 
     def RPC_waveNumberToAngle(self, vLaserNum, waveNumbers):
         self._assertVLaserNum(vLaserNum)
-        return self.freqConverter[vLaserNum-1].waveNumber2ThetaCal(waveNumbers)
+        return self.freqConverter[vLaserNum - 1].waveNumber2ThetaCal(waveNumbers)
 
     def RPC_wrFreqScheme(self, schemeNum, freqScheme):
         self.freqScheme[schemeNum] = freqScheme
@@ -1053,24 +1207,32 @@ class RDFrequencyConverter(Singleton):
 
 
 class TunerAdjuster(object):
+
     def __init__(self, section):
         rdFreqConv = RDFrequencyConverter()
-        self.ditherAmplitude   = float(rdFreqConv.RPC_getHotBoxCalParam(section,"DITHER_AMPLITUDE"))
-        self.freeSpectralRange = float(rdFreqConv.RPC_getHotBoxCalParam(section,"FREE_SPECTRAL_RANGE"))
-        self.minValue          = float(rdFreqConv.RPC_getHotBoxCalParam(section,"MIN_VALUE"))
-        self.maxValue          = float(rdFreqConv.RPC_getHotBoxCalParam(section,"MAX_VALUE"))
-        self.upSlope           = float(rdFreqConv.RPC_getHotBoxCalParam(section,"UP_SLOPE"))
-        self.downSlope         = float(rdFreqConv.RPC_getHotBoxCalParam(section,"DOWN_SLOPE"))
+        self.ditherAmplitude = float(
+            rdFreqConv.RPC_getHotBoxCalParam(section, "DITHER_AMPLITUDE"))
+        self.freeSpectralRange = float(
+            rdFreqConv.RPC_getHotBoxCalParam(section, "FREE_SPECTRAL_RANGE"))
+        self.minValue = float(
+            rdFreqConv.RPC_getHotBoxCalParam(section, "MIN_VALUE"))
+        self.maxValue = float(
+            rdFreqConv.RPC_getHotBoxCalParam(section, "MAX_VALUE"))
+        self.upSlope = float(
+            rdFreqConv.RPC_getHotBoxCalParam(section, "UP_SLOPE"))
+        self.downSlope = float(
+            rdFreqConv.RPC_getHotBoxCalParam(section, "DOWN_SLOPE"))
+
     def findCenter(self, value, minCen, maxCen, fsr):
         """Finds the best center value for the tuner, given that the mean over the current scan
         is value, and the minimum and maximum allowed center values are given. We preferentially
         choose a value close to minCen."""
         if maxCen < minCen:
             Log("Invalid minCen and maxCen in findCenter",
-                dict(minCen = minCen, maxCen = maxCen), Level=2)
+                dict(minCen=minCen, maxCen=maxCen), Level=2)
         #
-        n1 = floor((minCen-value)/fsr)
-        n2 = floor((maxCen-value)/fsr)
+        n1 = floor((minCen - value) / fsr)
+        n2 = floor((maxCen - value) / fsr)
         # In the best case, we can find a value which falls between minCen and maxCen and which
         #  is separated from the initial value by a multiple of the FSR
         #
@@ -1083,8 +1245,8 @@ class TunerAdjuster(object):
         #  value -----
         # The condition for this to be the case is that (n1+1)<=n2. We return
         #  value+(n1+1)*fsr to be closest to minCen
-        if (n1+1) <= n2:  # There is enough of a gap between minCen and maxCen
-            return value + (n1+1)*fsr
+        if (n1 + 1) <= n2:  # There is enough of a gap between minCen and maxCen
+            return value + (n1 + 1) * fsr
         else:
             # In the other case, maxCen and minCen are so close together that there is no
             #  value+n*fsr (for integral n) lying between them
@@ -1096,10 +1258,11 @@ class TunerAdjuster(object):
             # We return either maxCen or minCen depending on which is closer to the grid of
             #  value+n*fsr
             #
-            if abs(value + n1*fsr - minCen) < abs(value + (n2+1)*fsr - maxCen):
+            if abs(value + n1 * fsr - minCen) < abs(value + (n2 + 1) * fsr - maxCen):
                 return minCen
             return maxCen
-    def setTunerRegisters(self, centerValue=None, fsrFactor = 1.3, windowFactor = 0.9):
+
+    def setTunerRegisters(self, centerValue=None, fsrFactor=1.3, windowFactor=0.9):
         """Sets up the tuner values to center the tuner waveform around centerValue, using data
         contained in the TunerAdjuster object.
 
@@ -1120,28 +1283,37 @@ class TunerAdjuster(object):
         FPGA_TWGEN, TWGEN_SLOPE_UP    <- self.upSlope
         FPGA_TWGEN, TWGEN_SLOPE_DOWN  <- self.downSlope
         """
-        rampAmpl = float(0.5* fsrFactor * self.freeSpectralRange)
+        rampAmpl = float(0.5 * fsrFactor * self.freeSpectralRange)
         ditherPeakToPeak = 2 * self.ditherAmplitude
         centerMax = self.maxValue - ditherPeakToPeak // 2 - rampAmpl
         centerMin = self.minValue + ditherPeakToPeak // 2 + rampAmpl
         if centerMin > centerMax:
             # We need to use the maximum range available
-            centerValue = 0.5*(self.minValue + self.maxValue)
+            centerValue = 0.5 * (self.minValue + self.maxValue)
             rampAmpl = self.maxValue - centerValue - ditherPeakToPeak // 2
-            if 2*rampAmpl < self.freeSpectralRange:
+            if 2 * rampAmpl < self.freeSpectralRange:
                 Log("Insufficient PZT range to cover cavity FSR",
-                    dict(fsr = self.freeSpectralRange, rampAmpl = rampAmpl), Level=2)
+                    dict(fsr=self.freeSpectralRange, rampAmpl=rampAmpl), Level=2)
         else:
-            centerValue = self.findCenter(centerValue, centerMin, centerMax, self.freeSpectralRange)
+            centerValue = self.findCenter(
+                centerValue, centerMin, centerMax, self.freeSpectralRange)
 
-        Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER", centerValue + rampAmpl)
-        Driver.wrDasReg("TUNER_WINDOW_RAMP_LOW_REGISTER", centerValue - rampAmpl)
-        Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER", centerValue + rampAmpl + ditherPeakToPeak // 2)
-        Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",  centerValue - rampAmpl - ditherPeakToPeak // 2)
-        Driver.wrDasReg("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER", ditherPeakToPeak // 2)
-        Driver.wrDasReg("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER", ditherPeakToPeak // 2)
-        Driver.wrDasReg("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER", (windowFactor * ditherPeakToPeak) // 2)
-        Driver.wrDasReg("TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER", (windowFactor * ditherPeakToPeak) // 2)
+        Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER",
+                        centerValue + rampAmpl)
+        Driver.wrDasReg("TUNER_WINDOW_RAMP_LOW_REGISTER",
+                        centerValue - rampAmpl)
+        Driver.wrDasReg("TUNER_SWEEP_RAMP_HIGH_REGISTER",
+                        centerValue + rampAmpl + ditherPeakToPeak // 2)
+        Driver.wrDasReg("TUNER_SWEEP_RAMP_LOW_REGISTER",
+                        centerValue - rampAmpl - ditherPeakToPeak // 2)
+        Driver.wrDasReg("TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",
+                        ditherPeakToPeak // 2)
+        Driver.wrDasReg("TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",
+                        ditherPeakToPeak // 2)
+        Driver.wrDasReg("TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",
+                        (windowFactor * ditherPeakToPeak) // 2)
+        Driver.wrDasReg("TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",
+                        (windowFactor * ditherPeakToPeak) // 2)
         Driver.wrFPGA("FPGA_TWGEN", "TWGEN_SLOPE_UP", int(self.upSlope))
         Driver.wrFPGA("FPGA_TWGEN", "TWGEN_SLOPE_DOWN", int(self.downSlope))
 
@@ -1154,8 +1326,10 @@ settings in the configuration file:
 -c                   specify a config file:  default = "./RDFrequencyConverter.ini"
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
@@ -1165,13 +1339,14 @@ def handleCommandSwitches():
     except getopt.GetoptError, exc:
         print "%s %r" % (exc, exc)
         sys.exit(1)
-    #assemble a dictionary where the keys are the switches and values are switch args...
+    # assemble a dictionary where the keys are the switches and values are
+    # switch args...
     opts = {}
     for opt, arg in switches:
         opts.setdefault(opt, arg)
     if "/?" in args or "/h" in args:
-        opts.setdefault('-h',"")
-    #Start with option defaults...
+        opts.setdefault('-h', "")
+    # Start with option defaults...
     configFile = os.path.splitext(AppPath)[0] + ".ini"
     if "-h" in opts or "--help" in opts:
         printUsage()
@@ -1187,6 +1362,6 @@ def handleCommandSwitches():
 if __name__ == "__main__":
     configFilename, virtualMode, options = handleCommandSwitches()
     rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFilename), Level = 0)
+    Log("%s started." % APP_NAME, dict(ConfigFile=configFilename), Level=0)
     rdFreqConvertApp.run()
     Log("Exiting program")
