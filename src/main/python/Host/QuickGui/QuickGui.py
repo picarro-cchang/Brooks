@@ -1889,28 +1889,33 @@ class QuickGui(wx.Frame):
         return k
 
     def OnShutdownButton(self,evt):
-        #dialog = ShutdownDialog(self,None,-1)
-        dialog = wx.MessageDialog(self, "Do you really want to shut down the analyzer?", "Analyzer Shut Down", style=wx.YES_NO | wx.ICON_QUESTION)
+        # Shutdown Modes (modes are defined in InstMgr.py)
+        # mode == 0 shutdown all processes and power off the analyzer
+        # mode == 1 shutdown all process and exit to the desktop
+        # mode == 2 shutdown host, leave driver running, exit to desktop
+        #
+        # click ShutDown button -> mode 0
+        # click Shutdown button while holding down SHIFT -> mode 1
+        # click Shutdown button while holding down SHIFT + CTRL -> mode 2
+        #
+        shutdownMode = 0
+        message = "Do you really want to shutdown the analyzer?"
+        if wx.GetKeyState(wx.WXK_SHIFT) and wx.GetKeyState(wx.WXK_CONTROL):
+            shutdownMode = 2
+        elif wx.GetKeyState(wx.WXK_SHIFT):
+            shutdownMode = 1
+
+        dialog = wx.MessageDialog(self, message, "Analyzer Shut Down", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()
         if retCode == wx.ID_YES:
             try:
                 self.setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "%r" % err
-            self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
-            # type = dialog.getShutdownType()
-            # Call appropriate shutdown RPC routine on the instrument manager
-            # if type == 0:
-                # try:
-                    # self.setDisplayedSource(self.shutdownShippingSource)
-                # except Exception, err:
-                    # print "%r" % err
-                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(0)
-            # elif type == 1:
-                # self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(2)
-            # elif type == 2:
-                # self.SupervisorRpc.TerminateApplications(powerDown=False,stopProtected=True)
+
+            self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
         dialog.Destroy()
+
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
             self.dataStore.getDataSequence(s,'time').Clear()

@@ -1165,12 +1165,7 @@ class InstMgr(object):
             return INSTMGR_RPC_SUCCESS
     def INSTMGR_ShutdownRpc(self, shutdownType):
 
-        #try:
-            ## disable Keepalive to prevent DAS from continuously resetting
-            #self.DriverRpc.disableKeepalive()
-        #except:
-            #tbMsg = traceback.format_exc()
-            #Log("INSTMGR_ShutdownRpc:Disable keepalive error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+        powerOff = True
 
         # stop measuring
         if shutdownType == INSTMGR_SHUTDOWN_PREP_SHIPMENT:
@@ -1198,10 +1193,13 @@ class InstMgr(object):
 
         elif shutdownType == INSTMGR_SHUTDOWN_HOST:
             # shutdown Host only
+            # Since the Driver is still running we assume the user doesn't want the computer
+            # to power down.
             status = self._StateHandler(EVENT_SHUTDOWN_INST)
+            powerOff = False;
 
         # ask supervisor to terminate all applications including INSTMGR
-        self.SupervisorRpc.TerminateApplications(True)
+        self.SupervisorRpc.TerminateApplications(powerOff)
 
         if status != INST_ERROR_OKAY:
             self._HandleError(status)
