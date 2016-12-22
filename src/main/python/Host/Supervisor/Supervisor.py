@@ -1511,7 +1511,7 @@ class Supervisor(object):
         # If running on Linux, OS shutdown is managed by a script
         # that starts the Supervisor.
         if self.powerDownAfterTermination:
-            if sys.platform == "win32"
+            if sys.platform == "win32":
                 os.system("shutdown -f -s -t 20")
             else:
                 pass
