@@ -418,14 +418,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
-                             #| wx.BORDER_SUNKEN
-                             | wx.BORDER_NONE
-                             # wx.LC_EDIT_LABELS
-                             #| wx.LC_SORT_ASCENDING
                              | wx.LC_NO_HEADER
-                             #| wx.LC_VRULES
-                             #| wx.LC_HRULES
-                             #| wx.LC_SINGLE_SEL
                          )
         self.parent = parent
         self.ilEventIcons = wx.ImageList(32, 32)
@@ -1640,9 +1633,12 @@ class QuickGui(wx.Frame):
         boxWidth = self.config.getint("AlarmBox","Width")
         if self.platform == "Windows-XP":
             boxHeight = 10 + self.numAlarmsDisplay * 15
-        else:
-            # for the height computation we ought to use font height + padding
+        elif self.platform == "win32":
+            # Win7
             boxHeight = self.numAlarmsDisplay * 20
+        else:
+            # Xubuntu
+            boxHeight = self.numAlarmsDisplay * 40
 
         size = boxWidth,boxHeight
 
@@ -1663,15 +1659,16 @@ class QuickGui(wx.Frame):
 
         # System Alarm view
         # Define box height automatically
-        boxWidth = self.config.getint("AlarmBox","Width")
+        #boxWidth = self.config.getint("AlarmBox","Width")
 
         if self.platform == "Windows-XP":
             boxHeight = numSysAlarms * 17
-            #size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",34)
-        else:
+        elif self.platform == "win32":
             # Windows 7
             boxHeight = numSysAlarms * 20
-            #size = self.config.getint("AlarmBox","Width"),self.config.getint("SysAlarmBox","Height",40)
+        else:
+            # Xubuntu
+            boxHeight = numSysAlarms * 40
 
         size = boxWidth,boxHeight
 
@@ -1801,13 +1798,15 @@ class QuickGui(wx.Frame):
         logoBmp = wx.Bitmap(os_dirname(AppPath)+'/logo.png',wx.BITMAP_TYPE_PNG)
         logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp),proportion=0, flag=wx.TOP,border = 15)
         self.measPanelSizer.Add(logoSizer,proportion=0,flag=wx.ALIGN_CENTER|wx.BOTTOM,border = 5)
-        self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
+        #self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
+        self.measPanelSizer.Add(alarmBoxSizer,proportion=1,flag=wx.ALIGN_CENTER)
         self.measPanelSizer.Add((panelWidth,10),proportion=0)
         self.measPanelSizer.Add(measDisplaySizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
         self.measPanelSizer.Add(instStatusBoxSizer,proportion=0,flag=wx.ALIGN_CENTER | wx.ALL,border = 5)
         self.measPanelSizer.Add(self.shutdownButton,proportion=0,flag=wx.GROW | wx.ALL,border = 10)
         self.measPanelSizer.Add(self.userLogButton,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
-        self.measPanelSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
+        #self.measPanelSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
+        self.measPanelSizer.Add(self.userLogTextCtrl,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
         #measPanelSizer.Add((-1,1),proportion=1,flag=wx.GROW)
 
         self.measPanel.SetSizer(self.measPanelSizer)

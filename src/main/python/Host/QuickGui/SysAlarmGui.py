@@ -80,17 +80,9 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
-                             #| wx.BORDER_SUNKEN
-                             | wx.BORDER_NONE
-                             # wx.LC_EDIT_LABELS
-                             #| wx.LC_SORT_ASCENDING
                              | wx.LC_NO_HEADER
-                             #| wx.LC_VRULES
-                             #| wx.LC_HRULES
-                             #| wx.LC_SINGLE_SEL
                          )
         self.parent = parent
-        # self.ilEventIcons = wx.ImageList(32, 16)
         self.ilEventIcons = wx.ImageList(32, 32)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
@@ -100,13 +92,13 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.IconAlarmSet     = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
                                                      wx.BITMAP_TYPE_ICO))
         self._DataSource = DataSource
+        self.dataStore = None
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
-        self.InsertColumn(1,"Name",width=sx-40)
+        self.InsertColumn(1,"Name",width=sx-40-17)
         self.attrib = attrib
         self.SetItemCount(numAlarms)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
-        #self.Bind(wx.EVT_RIGHT_DOWN,self.OnMouseDown)
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
         self.tipWindow = None
         self.tipItem = None
