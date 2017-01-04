@@ -87,9 +87,9 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os.path.dirname(AppPath)
-        self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LEDoff2.ico',
+        self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
-        self.IconAlarmSet     = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
+        self.IconAlarmSet     = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidRed_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
         self._DataSource = DataSource
         self.dataStore = None
@@ -156,8 +156,18 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         else:
             return self.IconAlarmSet
 
+    def Defocus(self):
+        """
+        GTK version of ListCtrl automatically sets the focus rectangle on
+        a list item even if the focus is on an entirely different widget.
+        This will remove the focus state.
+        Note that this needs to be called after every screen redraw.
+        """
+        self.SetItemState(self.GetFocusedItem(), 0, wx.LIST_STATE_FOCUSED)
+
     def RefreshList(self):
         self.RefreshItems(0,self.GetItemCount()-1)
+        self.Defocus()
 
 class SysAlarmInterface(object):
     """Interface to the alarm system RPC and status ports"""

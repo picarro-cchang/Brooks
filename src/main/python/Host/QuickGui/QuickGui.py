@@ -425,9 +425,9 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os_dirname(AppPath)
-        self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LEDoff2.ico',
+        self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
-        self.IconAlarmSet    = myIL.Add(wx.Bitmap(thisDir + '/LEDred2.ico',
+        self.IconAlarmSet    = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidRed_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
 
         self.dataStore = DataStore
@@ -522,8 +522,18 @@ class AlarmViewListCtrl(wx.ListCtrl):
         else:
             return self.IconAlarmSet
 
+    def Defocus(self):
+        """
+        GTK version of ListCtrl automatically sets the focus rectangle on
+        a list item even if the focus is on an entirely different widget.
+        This will remove the focus state.
+        Note that this needs to be called after every screen redraw.
+        """
+        self.SetItemState(self.GetFocusedItem(), 0, wx.LIST_STATE_FOCUSED)
+
     def RefreshList(self):
         self.RefreshItems(0,self.GetItemCount()-1)
+        self.Defocus()
 
 class AlarmInterface(object):
     """Interface to the alarm system RPC and status ports"""
@@ -1336,9 +1346,22 @@ class QuickGui(wx.Frame):
 
         self.startServer()
 
+        # The GTK has some graphics artifacts that can only be cleaned up after the
+        # initial show event.  One clear example is the wx.ListCtrl automatic focus
+        # which draws a rectangle around the first alarm LED + label.  The focus
+        # rectangle can be removed with a call to Defocus() but this only works after
+        # the entire QuickGui is shown.
+        # Do one graphics refresh right after the window is fully drawn to clean
+        # things up.
+        self.OneShotTimer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.OnTimer, self.OneShotTimer)
+        self.OneShotTimer.Start(100, True)
+
+        # Full screen for the Linux industrial platform.
         if(fullScreen):
             self.Maximize(True)
             self.ShowFullScreen(True, style = wx.FULLSCREEN_NOBORDER)
+
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI

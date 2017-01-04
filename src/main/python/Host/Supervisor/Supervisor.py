@@ -382,7 +382,7 @@ elif sys.platform == "linux2":
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
-                termList = ["xterm","+hold","-T",appName,"-e"]
+                termList = ["xterm","-hold","-T",appName,"-e"]
                 process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
