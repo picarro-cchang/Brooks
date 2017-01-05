@@ -419,6 +419,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
                              | wx.LC_NO_HEADER
+                             | wx.NO_BORDER
                          )
         self.parent = parent
         self.ilEventIcons = wx.ImageList(32, 32)
@@ -1669,7 +1670,7 @@ class QuickGui(wx.Frame):
         enabled = wx.ListItemAttr(fgColour,bgColour,font)
         font,fgColour,bgColour = self.getFontFromIni('AlarmBox','disabledFont')
         disabled = wx.ListItemAttr(fgColour,bgColour,font)
-        
+
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataStore=self.dataStore, DataSource=self.alarmInterface,
                                            size=size, numAlarms=self.numAlarms)
@@ -1699,12 +1700,13 @@ class QuickGui(wx.Frame):
                                            DataSource=self.sysAlarmInterface,
                                            size=size, numAlarms=numSysAlarms)
         self.sysAlarmView.SetMainForm(self)
+        setItemFont(self.sysAlarmView,self.getFontFromIni('AlarmBox'))
 
         # Combine system alarm with concentration alarms
         alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.VERTICAL)
         alarmBoxSizer.Add(self.sysAlarmView,proportion=0,flag=wx.EXPAND)
-        alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)        
-        
+        alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
+
         # Instrument status panel
         self.instStatusBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Instrument Status")
         size = self.config.getint("InstStatPanel","Width", 150),self.config.getint("InstStatPanel","Height", 70)

@@ -81,6 +81,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
                              | wx.LC_NO_HEADER
+                             | wx.NO_BORDER
                          )
         self.parent = parent
         self.ilEventIcons = wx.ImageList(32, 32)
