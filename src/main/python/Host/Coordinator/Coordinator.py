@@ -23,6 +23,7 @@ import sys
 import time
 import getopt
 import csv
+#import ctypes
 import re
 import threading
 #import pprint
@@ -241,14 +242,16 @@ class CoordinatorFrame(CoordinatorFrameGui):
         self.rpcThread.start()
 
     def popWarning(self, msg, title=""):
-        warningThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_WARNING))
-        warningThread.setDaemon(True)
-        warningThread.start()
+        wx.CallAfter(self._showMessage, msg, title, wx.ICON_WARNING)
+        #warningThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_WARNING))
+        #warningThread.setDaemon(True)
+        #warningThread.start()
 
     def popInfo(self, msg, title=""):
-        infoThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_INFORMATION))
-        infoThread.setDaemon(True)
-        infoThread.start()
+        wx.CallAfter(self._showMessage, msg, title, wx.ICON_INFORMATION)
+        #infoThread = threading.Thread(target=self._showMessage, args = (msg,title,wx.ICON_INFORMATION))
+        #infoThread.setDaemon(True)
+        #infoThread.start()
 
     def popPause(self, msg, title=""):
         self._showMessage(msg,title,wx.ICON_WARNING)
@@ -704,6 +707,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
                     self.replyQueue.put((OK,result))
                 except Exception,e:
                     self.replyQueue.put((EXCEPTION,e))
+            # time.sleep(0.1)
         if self.saveFp != None:
             self.saveFp.close()
             self.saveFp = None
@@ -711,7 +715,7 @@ class CoordinatorFrame(CoordinatorFrameGui):
             self.logFp.close()
             self.logFp = None
         event.Skip()
-
+        
     def onClose(self,event):
         if self.hasCloseOpt:
             dlg = wx.SingleChoiceDialog(self,"It may take longer to finish current state and run final state before closing.",
@@ -816,6 +820,9 @@ class App(wx.App):
         return True
 
 if __name__ == "__main__":
+    #if sys.platform.startswith('linux'):
+    #    x11 = ctypes.cdll.LoadLibrary('libX11.so')
+    #    x11.XInitThreads()
     app = App(False)
     app.MainLoop()
     Log("Exiting program")
