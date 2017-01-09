@@ -2,11 +2,11 @@
 <!DOCTYPE Das_Interface SYSTEM "Interface.dtd">
 <Das_Interface>
     <files>
-        <file ident="usbPy">../../host/autogen/usbdefs.py</file>
+        <file ident="usbPy">../../Host/autogen/usbdefs.py</file>
         <file ident="usbH">../CypressUSB/autogen/usbdefs.h</file>
         <file ident="usbA51">../CypressUSB/autogen/usbdefs.inc</file>
         <file ident="intH">../DSP/autogen/interface.h</file>
-        <file ident="intPy">../../host/autogen/interface.py</file>
+        <file ident="intPy">../../Host/autogen/interface.py</file>
         <file ident="dspC">../DSP/autogen/dspAutogen.c</file>
         <file ident="dspH">../DSP/autogen/dspAutogen.h</file>
     </files>
@@ -4615,6 +4615,8 @@
         <action ident="ACTION_ACC_READ_ACCEL">r_acc_read_accel</action>
         <action ident="ACTION_READ_THERMISTOR_RESISTANCE_16BIT">r_read_thermistor_resistance_16bit</action>
         <action ident="ACTION_AVERAGE_FLOAT_REGISTERS">r_average_float_registers</action>
+        <action ident="ACTION_UPDATE_FROM_SIMULATORS">r_update_from_simulators</action>
+        <action ident="ACTION_STEP_SIMULATORS">r_step_simulators</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

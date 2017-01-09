@@ -10,7 +10,7 @@
 # SEE ALSO:
 #   Specify any related information.
 #
-#  Copyright (c) 2008-2016 Picarro, Inc. All rights reserved
+#  Copyright (c) 2008-2017 Picarro, Inc. All rights reserved
 #
 
 from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
@@ -3838,6 +3838,8 @@ ACTION_ACC_WRITE_REG = 84
 ACTION_ACC_READ_ACCEL = 85
 ACTION_READ_THERMISTOR_RESISTANCE_16BIT = 86
 ACTION_AVERAGE_FLOAT_REGISTERS = 87
+ACTION_UPDATE_FROM_SIMULATORS = 88
+ACTION_STEP_SIMULATORS = 89
 
 # Aliases
 PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER = PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER # Old name for number of samples spent in triggered state
