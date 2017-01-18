@@ -6,9 +6,9 @@ Tuning = CavityLength
 #   - Never worry about what DAS table index is used - this is automatically taken
 #     care of (primarily for the background load/alternate scheme index stuff)
 
-SchemeCount = 2
+SchemeCount = 1
 Scheme_1_Path = ../Schemes/_CavityTempCycleHF.sch
-Scheme_2_Path = ../Schemes/_CavityTempCycleNH3.sch
+#Scheme_2_Path = ../Schemes/_CavityTempCycleNH3.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...

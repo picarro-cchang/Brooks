@@ -6,4 +6,4 @@ Name=ConfigManager_Integration
 Icon=/Picarro/G2000/Assets/icons/Integration_icon.ico
 Exec=bash -c 'cd /Picarro/G2000/Host/Utilities/ConfigManager;python -O configManager.py -l ../../../AppConfig/Config/Utilities/SupervisorLauncher_Integration.ini'
 Terminal=true
-Name[C]=ConfigManager_Integration
+Name[C]=Integration ConfigManager
