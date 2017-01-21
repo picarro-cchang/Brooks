@@ -59,6 +59,7 @@ COPY Picarro.pth /opt/conda/lib/python2.7/site-packages/Picarro.pth
 RUN mkdir /mnt/applog
 
 # VNC directories and files
+RUN apt-get install -y autocutsel
 RUN mkdir /root/.vnc
 RUN echo 12345 | vncpasswd -f > /root/.vnc/passwd
 RUN chmod 600 /root/.vnc/passwd
