@@ -515,7 +515,10 @@ class AlarmViewListCtrl(wx.ListCtrl):
             return self.attrib[0]
 
     def OnGetItemImage(self, item):
-        pass
+        """
+        When the list is refreshed with RefreshList() (are we sure?) it comes here
+        to figure out what LED light to display.
+        """
         status = int(self.dataStore.alarmStatus) & (1 << item)
         enabled = (self._DataSource.alarmData and self._DataSource.alarmData[item][2])
         if (status == 0) or (not enabled):
@@ -1008,7 +1011,12 @@ class FontDatabase(object):
     def getDefault(self):
         return self.default.copy()
 #end of class FontDatabase
+
+
 class DataStore(object):
+    """
+    Holds the data queried by AlarmViewListCtrl to update the alarm LEDs and names.
+    """
     def __init__(self,config):
         self.config = config
         self.loadConfig()
