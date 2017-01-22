@@ -1,0 +1,480 @@
+#!/usr/bin/python
+
+import pdb
+
+import sys
+import os
+import time
+import pprint
+import random
+import itertools
+from copy import copy
+from time import sleep
+from collections import Counter, deque
+from Host.Common.CustomConfigObj import CustomConfigObj
+
+
+class SingleAlarmMonitor:
+    """
+    Contains the low/high rule for one alarm sensor.
+
+    The problem:
+    When reporting alarm events or degradation of the health of the analyzer we need to
+    avoid false alarms and information overload. When the condition is near the transition
+    from green to yellow or red the indicator may flicker due to stochastic and temporary
+    processes.  This condition is considered noise because in a large control room with
+    many systems reporting it because difficult to identify the true urgencies.
+
+    To only report yellow (may need service soon) or red (need service now or operational
+    failure) conditions that are "real", a common practice is track the individual alarm
+    events and only report a problem if a minimum number events occur in a specified time
+    period.  Below is how we implement this idea.
+
+    a) Input raw data. These data come out at irregular intervals depending on the source,
+       ini settings, schemes, scripts, etc.  Some data is updated more than once per second
+       with irregular spacing, others are only updated every few seconds.  Instead of
+       counting individual alarm events and trying to decide if enough have occured, we
+       instead bin the data into buckets of a few seconds worth of data.  In this example
+       we have data coming at 1Hz and we bin them into 5 second chunks.
+
+    b) Each input data is compared to a specified alarm condition and flagged green, yellow,
+       or red.  The first bin has 5 green reports, the last has 4 green and one red.
+
+    c) For each bin find the worst report and save it.
+
+    a) ddddd|ddddd|ddddd|ddddd|ddddd|ddddd|
+     t=0     5     10
+
+    b) ggggg|ggggg|ggYgY|RRRgg|ggggg|ggRgg|
+     t=0     5     10
+
+    c)   g     g     Y     R     g     R
+     t=  0     5     10    15
+
+    """
+    def __init__(self, settings=None):
+
+        # How long in time is a bin
+        # units are seconds
+        self.binInterval = 0.0
+
+        # t_0 for determining if latest data belongs in the current
+        # bin or the next one. Set to -1 if t_0 hasn't been set.
+        self.binStartTime = -1
+
+
+        # List that holds the alarm status.  Each element
+        # holds a list that can have one or more states.
+        # Valid states are LowRed, LowYellow, Green, HighYellow, HighRed.
+        # If the rule is populate to check if the value crosses the
+        # yellow or red threshold. If it the value is varying alot
+        # e.g. swinging between HighRed and LowRed, set both
+        # [HighRed, LowRed].
+        # If the value is swinging between HighRed and LowYellow,
+        # set [HighRed, LowYellow]
+        # If the value is swinging between HighRed and HighYellow,
+        # only set [HighRed].
+        # If neither red or yellow is indicated, the set [Green].
+        #
+        self.LOW_RED = -2
+        self.LOW_YELLOW = -1
+        self.GREEN = 0
+        self.HIGH_YELLOW = 1
+        self.HIGH_RED = 2
+        self.NONE = None
+        self.alarmStateAccumulator = [] # collect alarm states for the current bin
+        self.alarmStateBinnedDeque = deque(maxlen = 30)
+
+        # Thresholds for each data input comparison
+        #
+        self.lowYellowThreshold = 0.0
+        self.lowRedThreshold = 0.0
+        self.highYellowThreshold = 0.0
+        self.highRedThreshold = 0.0
+
+        # Alarm persistence
+        #
+        # As alarms are accumulated we have to report an alarm to the outside
+        # world.  We'll call this the "public alarm".
+        #
+        # To figure out what alarm to report to the world, we looked at the
+        # latest binned alarms in alarmStateBinnedDeque[].  The number of bins
+        # too look at is set in the *BinCountWindow var below.  To decide if
+        # the public alarm is red, we see if the number of red alarm states
+        # seen in the bin count window exceeds redTotalCountThreshold.
+        #
+        # If the public alarm isn't red, we check for in a similar manner counting
+        # the total number of occurances of red AND yellow alarms in the bin
+        # count window.
+        #
+        self.shortBinCountWindow = 0 # will be 5 minutes
+        self.longBinCountWindow = 0 # will be 60 minutes
+        self.yellowTotalCountThreshold = 0
+        self.redTotalCountThreshold = 0
+        self.shortPublicAlarm = self.NONE
+        self.longPublicAlarm = self.NONE
+        self.shortPublicAlarmHistory = []
+        self.longPublicAlarmHistory = []
+
+        # name - Human readable name for this alarm.
+        # dataSourceKey - The DataManager key for the monitored data source.
+        # func - Special alarm functions (TBD). None selects the default function.
+        #
+        self.name = None
+        self.dataSourceKey = None
+        self.func = None
+
+        # Override the constructor variable settings with the input from the
+        # alarm ini file.
+        # The try block tests to see if the input key exists.  This prevents
+        # mis-typed keys from creating new variables.
+        #
+        if settings:
+            for key in settings:
+                try:
+                    getattr(self, key)
+                    setattr(self, key, settings[key])
+                except AttributeError:
+                    raise
+
+        if self.dataSourceKey is None:
+            raise AttributeError("dataSourceKey not defined in SingleAlarmMonitor.")
+
+
+    #-----------------------------------------------------------------------------------
+    def setTestState(self):
+        """
+        Set a basic test state so we don't need to read an ini.
+        This test assumes the input data spans 0 - 10.
+        """
+        self.binInterval = 10.0 # 10 seconds
+        self.lowRedThreshold = 1.0
+        self.lowYellowThreshold = 2.0
+        self.highYellowThreshold = 8.0
+        self.highRedThreshold = 9.0
+
+        self.shortBinCountWindow = 10
+        self.longBinCountWindow = 30
+        self.yellowTotalCountThreshold = 3
+        self.redTotalCountThreshold = 3
+
+    def setData(self, timestamp, inputData):
+        """
+        Store the latest data and timestamp for one monitor.
+        """
+
+        # Set the current state. Initialize to None incase the filter
+        # or input data is broken and we fall through the tests.
+        # We assume that all the thresholds are unique and properly
+        # ordered.
+        currentAlarmState = self.NONE
+        if inputData < self.lowRedThreshold:
+            currentAlarmState = self.LOW_RED
+        elif inputData < self.lowYellowThreshold:
+            currentAlarmState = self.LOW_YELLOW
+        elif inputData > self.highRedThreshold:
+            currentAlarmState = self.HIGH_RED
+        elif inputData > self.highYellowThreshold:
+            currentAlarmState = self.HIGH_YELLOW
+        else:
+            currentAlarmState = self.GREEN
+
+        # Set in the current bin
+        # If the bin is full, process it (get the most severe alarm seen, save it,
+        # empty the accumulator, reset the bin start timestamp).
+        # If there is no accumulator because this is the first time through, make
+        # a new one.
+        delta = timestamp - self.binStartTime
+        #if timestamp - self.binStartTime >= self.binInterval:
+        #    print("The test is true")
+        #print("Time check:", timestamp, self.binStartTime, self.binInterval, delta)
+        if self.binStartTime < 0 or  timestamp - self.binStartTime >= self.binInterval:
+            if self.binStartTime >= 0:
+        #        print("-------------------In processAccumulator check")
+                self.processAccumulator()
+            self.binStartTime = timestamp
+        self.alarmStateAccumulator.append(currentAlarmState)
+
+        #print("Input: time=%d data=%.2f" %(timestamp, inputData))
+        return
+
+    def processAccumulator(self):
+        """
+        Process a full alarm state accumulator.
+
+        Analyze the accumulated alarm states for a single bin time period.
+        The accumulated list contains 0 or more GREEN, YELLOW, and RED alarm
+        states.
+        If there are any red, report the greatest (low or high) red. If the
+        high/low reds are equal, report high red since (I assume) the high alarm
+        condition for most parameters are the more critical case.
+        If there are no reds, check yellow with the same conditions.
+        And if there are no yellow, report green.
+
+        FYI...
+        l[:] = [] is the Python2 way to empty a list,
+        l = [] instead will rebind and may leave a memory leak
+
+        """
+        stateToSave = self.NONE
+        if not self.alarmStateAccumulator:
+            return
+
+        c = Counter(self.alarmStateAccumulator)
+
+        # Check to see if we have any RED alarms states
+        if c[self.LOW_RED] > 0 or c[self.HIGH_RED] > 0:
+            if c[self.HIGH_RED] > c[self.LOW_RED]:
+                stateToSave = self.HIGH_RED
+            elif c[self.LOW_RED] > c[self.HIGH_RED]:
+                stateToSave = self.LOW_RED
+            else:
+                stateToSave = self.HIGH_RED
+        # Check to see if we have any YELLOW alarms states
+        elif c[self.LOW_YELLOW] > 0 or c[self.HIGH_YELLOW] > 0:
+            if c[self.HIGH_YELLOW] > c[self.LOW_YELLOW]:
+                stateToSave = self.HIGH_YELLOW
+            elif c[self.LOW_YELLOW] > c[self.HIGH_YELLOW]:
+                stateToSave = self.LOW_YELLOW
+            else:
+                stateToSave = self.HIGH_YELLOW
+        # No red or yellow seen we must be ok.
+        else:
+            stateToSave = self.GREEN
+        # Save the most severe alarm seen in this time interval.
+        self.alarmStateBinnedDeque.append(stateToSave)
+
+        # Clear out to start looking at alarms in the next time interval.
+        self.alarmStateAccumulator[:] = []
+
+        # Update public alarms
+        self._updatePublicAlarm()
+        return
+
+    def _updatePublicAlarm(self):
+        # Get the last set of elements set by the programmed window width or use what
+        # is available if there aren't enough elements to fill an entire window.
+        startIdx = len(self.alarmStateBinnedDeque) - self.shortBinCountWindow
+        if startIdx < 0:
+            startIdx = 0
+        print("short idx:", startIdx)
+        shortInspectionWindow = list(itertools.islice(self.alarmStateBinnedDeque, startIdx, None))
+
+        startIdx = len(self.alarmStateBinnedDeque) - self.longBinCountWindow
+        if startIdx < 0:
+            startIdx = 0
+        print("long idx:", startIdx)
+        longInspectionWindow = list(itertools.islice(self.alarmStateBinnedDeque, startIdx, None))
+
+        sc = Counter(shortInspectionWindow) # sc = short counter
+        lc = Counter(longInspectionWindow)  # lc = long counter
+
+        src = sc[self.LOW_RED] + sc[self.HIGH_RED]
+        lrc = lc[self.LOW_RED] + lc[self.HIGH_RED]
+        syc = sc[self.LOW_YELLOW] + sc[self.HIGH_YELLOW]
+        lyc = lc[self.LOW_YELLOW] + lc[self.HIGH_YELLOW]
+
+        # Set the short public alarm
+        if src >= self.redTotalCountThreshold:
+            if sc[self.LOW_RED] > sc[self.HIGH_RED]:
+                self.shortPublicAlarm = self.LOW_RED
+            else:
+                self.shortPublicAlarm = self.HIGH_RED
+        elif src + syc >= self.yellowTotalCountThreshold:
+            if sc[self.LOW_YELLOW] > sc[self.HIGH_YELLOW]:
+                self.shortPublicAlarm = self.LOW_YELLOW
+            else:
+                self.shortPublicAlarm = self.HIGH_YELLOW
+        else:
+            self.shortPublicAlarm = self.GREEN
+
+        # Set the long public alarm
+        if lrc >= self.redTotalCountThreshold:
+            if lc[self.LOW_RED] > lc[self.HIGH_RED]:
+                self.longPublicAlarm = self.LOW_RED
+            else:
+                self.longPublicAlarm = self.HIGH_RED
+        elif lrc + lyc >= self.yellowTotalCountThreshold:
+            if lc[self.LOW_YELLOW] > lc[self.HIGH_YELLOW]:
+                self.longPublicAlarm = self.LOW_YELLOW
+            else:
+                self.longPublicAlarm = self.HIGH_YELLOW
+        else:
+            self.longPublicAlarm = self.GREEN
+
+        print("SIW:", shortInspectionWindow, " src:", src, " SPA:", self.shortPublicAlarm)
+        print("LIW:", longInspectionWindow, " lrc:", lrc, " SPA:", self.longPublicAlarm)
+
+        self.shortPublicAlarmHistory.append(self.shortPublicAlarm)
+        self.longPublicAlarmHistory.append(self.longPublicAlarm)
+        return
+
+
+class AlarmSystemV3:
+    """
+    Class to manage multiple alarm monitors.  Monitors are stored in alarms dict
+    where the keys are the "dataSourceKey" specified in the alarm ini file. The
+    dataSourceKey should be a valid DataManager key.
+
+    """
+    def __init__(self, iniFile):
+        self.alarms = {}
+        self.iniFile = iniFile
+        settings = self._readIni()
+        for sectionKey in settings.keys():
+            try:
+                a = SingleAlarmMonitor(settings[sectionKey])
+                self.alarms[getattr(a, "dataSourceKey")] = a
+            except Exception as error:
+                raise
+
+    def _readIni(self):
+        """
+        Read the ini that configures this object.
+
+        [Alarm_Globals]
+        binInterval = 10
+        shortBinCountWindow = 10
+        longBinCountWindow = 30
+        yelloTotalCountThreshold = 3
+        redTotalCountThreshold = 3
+        func = Default
+
+        [Alarm_Test_0]
+        name = "Test Alarm 0"
+        dataSource = NH3
+        lowRedThreshold = 1.0
+        lowYellowThreshold = 2.0
+        highYellowThreshold = 8.0
+        highRedThreshold = 9.0
+
+        [Alarm_Test_1]
+        name = "Test Alarm 1"
+        dataSource = HCl
+        lowRedThreshold = 1.5
+        lowYellowThreshold = 2.0
+        highYellowThreshold = 7.5
+        highRedThreshold = 8.5
+
+        Section "Alarm_Globals" is optional.
+        All other section names are freeform and define specific alarms.
+        Specific alarm options can override global options for that alarm.
+        The options name variables in the class SingleAlarmMonitor so see
+        that class's documentation for appropriate values.
+
+        """
+        if sys.platform == 'win32':
+            # Win7 location for ini files
+            pass
+        else:
+            # Linux paths
+            try:
+                # harded coded ini location in my dev environment
+                ini = CustomConfigObj(os.path.expanduser('~') + "/git/host/Config/AMADS/AppConfig/Config/DataManager/AlarmSystemV3.ini")
+                ini.ignore_option_case_off()
+            except Exception as e:
+                print("Exception::", e)
+                raise
+
+        # Make a list of ini sections and see if a global settings section
+        # exists. If it does, make a dict of its options.
+        alarmSections = ini.list_sections()
+        alarmGlobals = {}
+        if "Alarm_Globals" in alarmSections:
+            alarmSections.remove("Alarm_Globals")
+            alarmGlobals = dict(ini.list_items("Alarm_Globals"))
+
+        # Go through the remaining sections that define specific alarms.
+        # Use the global settings as a start and add new options, overriding
+        # any globals that have been previously set.  Use copy() to ensure
+        # all alarms have their own settings.
+        alarmSettings = {}
+        for section in alarmSections:
+            settings = copy(alarmGlobals)
+            settings.update(dict(ini.list_items(section)))
+            alarmSettings[section] = settings
+
+        # Convert all number strings to floats or ints
+        for section in alarmSettings:
+            for key, value in alarmSettings[section].items():
+                try:
+                    alarmSettings[section][key] = float(value)
+                except:
+                    pass
+                print("key value", key, value)
+
+        return alarmSettings
+
+    def updateAllMonitors(self, time, inputDataDict):
+        """
+        Take data from the DataManager and update all monitors with a key
+        that matches a DataManager key. Time is a Unix timestamp.
+        """
+        try:
+            for key, value in inputDataDict.items():
+                if key in self.alarms:
+                    self.alarms[key].setData(int(time), value)
+        except KeyError as e:
+            print("AlarmSystemV3::updateAllMonitors KeyError", e)
+        except Exception as e:
+            print("AlarmSystemV3::updateAllMonitors unhandled exception", e)
+        return
+
+    def getAllMonitorStatus(self):
+        """
+        Return dict with red, yellow, green status for each key.
+        """
+        try:
+            for key, value in self.alarms.items():
+                alarmColor = value.shortPublicAlarm
+                print("Getting monitor status with key: %s, color: %s" % (key, alarmColor))
+        except KeyError as e:
+            print("AlarmSystemV3::getAllMonitorStatus", e)
+        except:
+            print("AlarmSystemV3::getAllMonitorStatus unhandled exception ", e)
+        return
+
+    def getAllMonitorDiagnostics(self):
+        try:
+            for key, value in self.alarms.items():
+                print("Key:", key, " ASBA:", self.alarms[key].alarmStateBinnedDeque)
+                print("Key:", key, " Short:", self.alarms[key].shortPublicAlarmHistory)
+                print("Key:", key, " Long:", self.alarms[key].longPublicAlarmHistory)
+        except:
+            print("AlarmSystemV3::getAllMonitorDiagnostics unhandled exception ", e)
+        return
+
+#-----------------------------------------------------------------------------------
+def main():
+    #pdb.set_trace()
+    singleAlarmTest = False
+
+    # Test the single alarm class with random data.
+    if singleAlarmTest:
+        oneAlarm = SingleAlarmMonitor()
+        oneAlarm.setTestState()
+        for t in xrange(1, 201):
+            data = 3.0 + random.gauss(0, 0.5)
+            oneAlarm.setData(t, data)
+        oneAlarm.processAccumulator()
+        print("ASBA:", oneAlarm.alarmStateBinnedDeque)
+        print("Short:", oneAlarm.shortPublicAlarmHistory)
+
+    # Test the alarm manager which will read an ini to create
+    # two monitors.
+    print("Creating Alarm Manager")
+    alarmManager = AlarmSystemV3("test_ini")
+
+    dataDict = {}
+
+    for i in xrange(3600):
+        #dataDict["HCl"] = 4.0
+        dataDict["NH3"] = 6.0
+        if i%100 == 0:
+            dataDict["NH3"] = 9.5
+        alarmManager.updateAllMonitors(i, dataDict)
+
+    alarmManager.getAllMonitorDiagnostics()
+
+if __name__ == '__main__':
+    main()
