@@ -1,0 +1,7 @@
+#!usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Controller
+Icon=/Picarro/G2000/Assets/icons/Controller_icon.ico
+Exec=bash -c 'python -O /Picarro/G2000/Host/Controller/Controller.py'
+Terminal=false

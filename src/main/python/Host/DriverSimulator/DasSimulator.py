@@ -151,8 +151,8 @@ class DasSimulator(object):
 
     def initDasRegisters(self):
         for ri in interface.registerInfo:
-            if ri.initial is not None:
-                self.wrDasReg(ri.name, ri.initial)
+            if ri.name in interface.registerInitialValue:
+                self.wrDasReg(ri.name, interface.registerInitialValue[ri.name])
 
     def initScheduler(self):
         now = self.getDasTimestamp()

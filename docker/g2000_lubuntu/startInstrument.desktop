@@ -1,0 +1,7 @@
+#!usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Start Instrument
+Icon=/Picarro/G2000/Assets/icons/Picarro_icon.ico
+Exec=bash -c 'cd /Picarro/G2000/Host/Utilities/SupervisorLauncher;python -O SupervisorLauncher.py -a -c ../../../AppConfig/Config/Utilities/SupervisorLauncher.ini'
+Terminal=false

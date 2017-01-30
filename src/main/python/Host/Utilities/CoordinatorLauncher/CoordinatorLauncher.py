@@ -98,7 +98,7 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         self.Destroy()
 
     def _launchCoordinator(self):
-        info = subprocess.STARTUPINFO()
+        #info = subprocess.STARTUPINFO()
         argList = self.coordinatorArgs.split(" ")
         while "" in argList:
             argList.remove("")
@@ -107,7 +107,7 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
                 info = subprocess.STARTUPINFO()
                 proc = subprocess.Popen(["python.exe", "Coordinator.py"] + argList + ["-c",self.coordinatorIni], startupinfo=info)
             elif sys.platform == "linux2":
-                cmd = ["python", "-O", "Coordinator.py"] + argList + ["-c",self.supervisorIni]
+                cmd = ["python", "-O", "/Picarro/G2000/Host/Coordinator/Coordinator.py"] + argList + ["-c",self.coordinatorIni] #self.supervisorIni]
                 proc = subprocess.Popen(cmd)
 
 HELP_STRING = \
