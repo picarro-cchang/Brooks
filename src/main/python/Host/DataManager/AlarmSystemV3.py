@@ -82,8 +82,30 @@ class SingleAlarmMonitor:
         self.HIGH_YELLOW = 1
         self.HIGH_RED = 2
         self.NONE = None
+
+        # This is a short accumulator collecting the (approximately) 1Hz data for about
+        # ten seconds.  The specific amount to accumulate is set in the ini file with
+        # the key "binInterval".
         self.alarmStateAccumulator = [] # collect alarm states for the current bin
-        self.alarmStateBinnedDeque = deque(maxlen = 30)
+
+        # Accumulate the worst alarm from the alarmStateAccumulator (10s summary) and store
+        # 5min worth of results here.  Each datum is about 10s apart.  Once 5 minutes is accumulated,
+        # count the alarms in this interval and save the counts in a dict stored in the
+        # 5min history array. Each time the data is counted and put into the 5min history array,
+        # clear the 5min accumulator.
+        # Do the same for 1hr intervals.
+        self.fiveMinAccumulator = { "TIME":[], "ALARM_STATE":[] }
+        self.sixtyMinAccumulator = { "TIME":[], "ALARM_STATE":[] }
+        self.fiveMinHistory = {
+                "TIME":[],
+                "ALARM_COUNT":[],
+                "LED_COLOR":[]
+                }
+        self.sixtyMinHistory = {
+                "TIME":[],
+                "ALARM_COUNT":[],
+                "LED_COLOR":[]
+                }
 
         # Thresholds for each data input comparison
         #
@@ -190,7 +212,6 @@ class SingleAlarmMonitor:
         #print("Time check:", timestamp, self.binStartTime, self.binInterval, delta)
         if self.binStartTime < 0 or  timestamp - self.binStartTime >= self.binInterval:
             if self.binStartTime >= 0:
-        #        print("-------------------In processAccumulator check")
                 self.processAccumulator()
             self.binStartTime = timestamp
         self.alarmStateAccumulator.append(currentAlarmState)
@@ -241,73 +262,84 @@ class SingleAlarmMonitor:
         # No red or yellow seen we must be ok.
         else:
             stateToSave = self.GREEN
+
         # Save the most severe alarm seen in this time interval.
-        self.alarmStateBinnedDeque.append(stateToSave)
+        self.fiveMinAccumulator["TIME"].append(self.binStartTime)
+        self.fiveMinAccumulator["ALARM_STATE"].append(stateToSave)
+        self.sixtyMinAccumulator["TIME"].append(self.binStartTime)
+        self.sixtyMinAccumulator["ALARM_STATE"].append(stateToSave)
 
         # Clear out to start looking at alarms in the next time interval.
         self.alarmStateAccumulator[:] = []
 
         # Update public alarms
-        self._updatePublicAlarm()
+        if self._updatePublicAlarm():
+            print("history 5:", self.fiveMinHistory["ALARM_COUNT"])
+            print("history60:", self.sixtyMinHistory["ALARM_COUNT"])
         return
 
     def _updatePublicAlarm(self):
-        # Get the last set of elements set by the programmed window width or use what
-        # is available if there aren't enough elements to fill an entire window.
-        startIdx = len(self.alarmStateBinnedDeque) - self.shortBinCountWindow
-        if startIdx < 0:
-            startIdx = 0
-        print("short idx:", startIdx)
-        shortInspectionWindow = list(itertools.islice(self.alarmStateBinnedDeque, startIdx, None))
 
-        startIdx = len(self.alarmStateBinnedDeque) - self.longBinCountWindow
-        if startIdx < 0:
-            startIdx = 0
-        print("long idx:", startIdx)
-        longInspectionWindow = list(itertools.islice(self.alarmStateBinnedDeque, startIdx, None))
+        # Return code.
+        # 0 if the accumulator isn't full and nothing is done.
+        # 1 if one accumulator was processed, 2 if both were done
+        rtn = 0
 
-        sc = Counter(shortInspectionWindow) # sc = short counter
-        lc = Counter(longInspectionWindow)  # lc = long counter
-
-        src = sc[self.LOW_RED] + sc[self.HIGH_RED]
-        lrc = lc[self.LOW_RED] + lc[self.HIGH_RED]
-        syc = sc[self.LOW_YELLOW] + sc[self.HIGH_YELLOW]
-        lyc = lc[self.LOW_YELLOW] + lc[self.HIGH_YELLOW]
-
-        # Set the short public alarm
-        if src >= self.redTotalCountThreshold:
-            if sc[self.LOW_RED] > sc[self.HIGH_RED]:
-                self.shortPublicAlarm = self.LOW_RED
+        for outputInterval in ["FiveMin", "SixtyMin"]:
+            if outputInterval == "FiveMin":
+                accumulator = self.fiveMinAccumulator
+                history = self.fiveMinHistory
+                binCountWindow = self.shortBinCountWindow
             else:
-                self.shortPublicAlarm = self.HIGH_RED
-        elif src + syc >= self.yellowTotalCountThreshold:
-            if sc[self.LOW_YELLOW] > sc[self.HIGH_YELLOW]:
-                self.shortPublicAlarm = self.LOW_YELLOW
-            else:
-                self.shortPublicAlarm = self.HIGH_YELLOW
-        else:
-            self.shortPublicAlarm = self.GREEN
+                accumulator = self.sixtyMinAccumulator
+                history = self.sixtyMinHistory
+                binCountWindow = self.longBinCountWindow
 
-        # Set the long public alarm
-        if lrc >= self.redTotalCountThreshold:
-            if lc[self.LOW_RED] > lc[self.HIGH_RED]:
-                self.longPublicAlarm = self.LOW_RED
-            else:
-                self.longPublicAlarm = self.HIGH_RED
-        elif lrc + lyc >= self.yellowTotalCountThreshold:
-            if lc[self.LOW_YELLOW] > lc[self.HIGH_YELLOW]:
-                self.longPublicAlarm = self.LOW_YELLOW
-            else:
-                self.longPublicAlarm = self.HIGH_YELLOW
-        else:
-            self.longPublicAlarm = self.GREEN
+            if len(accumulator["TIME"]) >= binCountWindow:
 
-        print("SIW:", shortInspectionWindow, " src:", src, " SPA:", self.shortPublicAlarm)
-        print("LIW:", longInspectionWindow, " lrc:", lrc, " SPA:", self.longPublicAlarm)
+                # Use the time stamp of the most recent datum
+                time = accumulator["TIME"][-1]
 
-        self.shortPublicAlarmHistory.append(self.shortPublicAlarm)
-        self.longPublicAlarmHistory.append(self.longPublicAlarm)
-        return
+                # c - counter
+                # rc - total red state count
+                # yc - total yellow state count
+                # alarmCount - If the alarm is red, sum of all high & low red alarms. If the alarm
+                #      is yellow or green, sum of all high & low red and yellows.  We report alarm
+                #      count for green so that we can (hopefully) spot a problem early on.
+                #
+                alarmColor = self.GREEN
+                c = Counter(accumulator["ALARM_STATE"])
+                rc = c[self.LOW_RED] + c[self.HIGH_RED]
+                yc = c[self.LOW_YELLOW] + c[self.HIGH_YELLOW]
+                alarmCount = 0
+
+                if rc >= self.redTotalCountThreshold:
+                    alarmCount = rc
+                    if c[self.LOW_RED] > c[self.HIGH_RED]:
+                        alarmColor = self.LOW_RED
+                    else:
+                        alarmColor = self.HIGH_RED
+                elif rc + yc >= self.yellowTotalCountThreshold:
+                    alarmCount = rc + yc
+                    if c[self.LOW_YELLOW] > c[self.HIGH_YELLOW]:
+                        alarmColor = self.LOW_YELLOW
+                    else:
+                        alarmColor = self.HIGH_YELLOW
+                else:
+                    alarmCount = rc + yc
+                    alarmColor = self.GREEN
+
+
+                history["TIME"].append(time)
+                history["ALARM_COUNT"].append(alarmCount)
+                history["LED_COLOR"].append(alarmColor)
+
+                accumulator["TIME"][:] = []
+                accumulator["ALARM_STATE"][:] = []
+
+                rtn += 1
+
+        return rtn
 
 
 class AlarmSystemV3:
@@ -437,10 +469,14 @@ class AlarmSystemV3:
     def getAllMonitorDiagnostics(self):
         try:
             for key, value in self.alarms.items():
-                print("Key:", key, " ASBA:", self.alarms[key].alarmStateBinnedDeque)
-                print("Key:", key, " Short:", self.alarms[key].shortPublicAlarmHistory)
-                print("Key:", key, " Long:", self.alarms[key].longPublicAlarmHistory)
-        except:
+                colorHistory = []
+                #print("Key:", key, " Short:", self.alarms[key].shortPublicAlarmHistory[0]["LED_COLOR"])
+                #if key == "NH3":
+                #    print("Key:", key, " Long:", self.alarms[key].longPublicAlarmHistory[0]["LED_COLOR"])
+                for localDict in self.alarms[key].longPublicAlarmHistory:
+                    colorHistory.append(localDict["LED_COLOR"])
+                print("LED History:", colorHistory)
+        except Exception as e:
             print("AlarmSystemV3::getAllMonitorDiagnostics unhandled exception ", e)
         return
 
@@ -457,7 +493,6 @@ def main():
             data = 3.0 + random.gauss(0, 0.5)
             oneAlarm.setData(t, data)
         oneAlarm.processAccumulator()
-        print("ASBA:", oneAlarm.alarmStateBinnedDeque)
         print("Short:", oneAlarm.shortPublicAlarmHistory)
 
     # Test the alarm manager which will read an ini to create
@@ -467,14 +502,14 @@ def main():
 
     dataDict = {}
 
-    for i in xrange(3600):
+    for i in xrange(3601):
         #dataDict["HCl"] = 4.0
         dataDict["NH3"] = 6.0
-        if i%100 == 0:
-            dataDict["NH3"] = 9.5
+        if i%20 == 0:
+            dataDict["NH3"] = 5.0 + 9.5 #+ random.gauss(0, 2.5)
         alarmManager.updateAllMonitors(i, dataDict)
 
-    alarmManager.getAllMonitorDiagnostics()
+    #alarmManager.getAllMonitorDiagnostics()
 
 if __name__ == '__main__':
     main()
