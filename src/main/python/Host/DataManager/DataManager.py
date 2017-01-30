@@ -87,6 +87,8 @@ import string
 from inspect import isclass
 from collections import deque
 import Host.DataManager.ScriptRunner as ScriptRunner
+from Host.DataManager.AlarmSystemV3 import *
+import pprint
 import heapq
 
 from Host.DataManager.PulseAnalyzer import PulseAnalyzer
@@ -841,8 +843,22 @@ class DataManager(object):
         if name in self.InstrData:
             self.InstrData[name] = target
 
+    # This code is a bit dangerous and confusing (and should go away).
+    # Why?
+    # When DataManager is instantiated self.alarmSystem is set as either
+    # AlarmSystemV2 or AlarmSystemV3.  These objects are instantiated in main()
+    # and passed to the DataManager __init()__.
+    # However, here self.alarmSystem can be set to the legacy alarm system.
+    # If this object is needed, it should be set in the __init()__.
+    # You get to this method with an external RPC call so tracing the execution
+    # to here is very difficult.
+    #
     @CmdFIFO.rpc_wrap
     def RPC_SetLegacyAlarmConfig(self, alarmConfigFile):
+        # We don't really want to use the legacy alarm system anymore so
+        # raise a ruckus if execution ends up here.
+        raise AssertionError()
+
         assert self.legacyAlarmSystem
         alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=True)
         alarmSystem.ALARMSYSTEM_start_inthread()
@@ -1952,14 +1968,23 @@ class DataManager(object):
                                     and (not systemError)
             else:
                 measGood = 1
-            
-            #Broadcast the result data...
-            if self.alarmSystem is not None:
+
+            resultDict = {}
+            # Broadcast the result data...
+            #
+            # This block of code is used for the QuickGUI alarm panel (I think).
+            # But if _MeasDataListener() is bypassed the QuickGUI alarm panel
+            # seems to still work?!
+            #
+            try:
                 resultDict = self.alarmSystem._MeasDataListener(reportSource_out, reportDict, measGood)
-            else:
+            except:
                 resultDict = reportDict
 
-            if (not self.legacyAlarmSystem) and (self.alarmSystem.alarmScriptCodeObj is not None):
+            #if (not self.legacyAlarmSystem) and (self.alarmSystem.alarmScriptCodeObj is not None):
+            if hasattr(self.alarmSystem, "alarmScriptCodeObj") \
+                    and (self.alarmSystem.alarmScriptCodeObj is not None):
+                print("Running alarm script")
                 alarmsDict = ScriptRunner.RunAlarmScript(   ScriptCodeObj = self.alarmSystem.alarmScriptCodeObj,
                                                             SourceTime_s = SourceTime_s,
                                                             AlarmParamsDict = self.alarmSystem.alarmParamsDict,
@@ -1977,6 +2002,11 @@ class DataManager(object):
                                                             numAlarmWords = self.alarmSystem.maxNumAlarmWords)
 
                 resultDict.update(alarmsDict)
+            elif isinstance(self.alarmSystem, AlarmSystemV3):
+                self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
+                self.alarmSystem.getAllMonitorStatus()
+            else:
+                print("AlarmSystem doesn't have a script defined")
 
             measData = MeasData(reportSource_out, rptSourceTime_s, resultDict, measGood, self.RPC_Mode_Get())
             pickleMeasData = measData.dumps()
@@ -2056,6 +2086,7 @@ Where the options can be a combination of the following:
 -c              Specify a different config file.  Default = "./DataManager.ini"
 -o              Specify option(s) to be passed to data manager script
 --no_inst_mgr   Run this application without Instrument Manager.
+-b<ini>         V3 alarm settings for SI-2000
 
 """
 
@@ -2064,7 +2095,8 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
     alarmConfigFile = None
-    shortOpts = 'hc:o:a:'
+    alarmSystemV3ConfigFile = None
+    shortOpts = 'hc:o:a:b:'
     longOpts = ["help", "test", "no_inst_mgr"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -2093,37 +2125,58 @@ def HandleCommandSwitches():
 
     if "-c" in options:
         configFile = options["-c"]
-        print "Config file specified at command line: %s" % configFile
+        print("-c Config file specified at command line: %s" % configFile)
         Log("Config file specified at command line", configFile)
 
     if "-a" in options:
         alarmConfigFile = options["-a"]
+        print("-a Config file specified at command line: %s" % alarmConfigFile)
         Log("Alarm system configuration file is", alarmConfigFile)
+
+    if "-b" in options:
+        alarmSystemV3ConfigFile = options["-b"]
+        print("-b V3 alarm ini file: %s" % alarmSystemV3ConfigFile)
+        Log("V3 Alarm system configuration file is:", alarmSystemV3ConfigFile)
 
     if "--no_inst_mgr" in options:
         noInstMgr = True
     else:
         noInstMgr = False
 
-    return (configFile, alarmConfigFile, noInstMgr, executeTest, options)
+    return (configFile, alarmConfigFile, alarmSystemV3ConfigFile, noInstMgr, executeTest, options)
+
 def ExecuteTest(DM):
     """A self test executed via the --test command-line switch."""
     print "No self test implemented yet!"
+
 def main():
     #Get and handle the command line options...
-    configFile, alarmConfigFile, noInstMgr, test, options = HandleCommandSwitches()
+    configFile, alarmConfigFile, alarmSystemV3ConfigFile, noInstMgr, test, options = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    print("0")
     try:
+        print("1a")
         alarmSystem = None
-        if alarmConfigFile is not None:
+        print("1aa")
+        if alarmSystemV3ConfigFile is not None:
+            print("1b")
+            alarmSystem = AlarmSystemV3(alarmSystemV3ConfigFile)
+        elif alarmConfigFile is not None:
+            print("1c")
             alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=False)
             alarmSystem.ALARMSYSTEM_start_inthread()
+        else:
+            print("No config file specified")
 
+        print("1d")
         app = DataManager(configFile, alarmSystem, noInstMgr, options)
+        print("1e")
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
+        print("1f")
         app.Start()
     except:
+        print("5")
         if __debug__: raise
         LogExc("Exception trapped outside DataManager execution")
 

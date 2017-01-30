@@ -470,9 +470,6 @@ class AlarmSystemV3:
         try:
             for key, value in self.alarms.items():
                 colorHistory = []
-                #print("Key:", key, " Short:", self.alarms[key].shortPublicAlarmHistory[0]["LED_COLOR"])
-                #if key == "NH3":
-                #    print("Key:", key, " Long:", self.alarms[key].longPublicAlarmHistory[0]["LED_COLOR"])
                 for localDict in self.alarms[key].longPublicAlarmHistory:
                     colorHistory.append(localDict["LED_COLOR"])
                 print("LED History:", colorHistory)
