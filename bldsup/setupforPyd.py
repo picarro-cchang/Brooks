@@ -20,7 +20,7 @@ class cythonize_picarro_code(build_ext):
     def get_ext_fullpath(self, ext_name):
         if self.basepath:
             modpath = ext_name.split('.')
-            return os.path.join(self.basepath, *modpath) + ".pyd"
+            return os.path.join(self.basepath, *modpath) + ".so"
         else:
             return build_ext.get_ext_fullpath(self, ext_name)
 

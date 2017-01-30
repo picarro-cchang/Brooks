@@ -48,7 +48,7 @@ def initialize(project, logger):
     project.set_property("product", product)
     builder = BuildClasses[product.lower()](project, logger)
     # check_woking_tree ensures working tree is clean before doing build
-    check_working_tree = project.get_property("check_working_tree", "True")
+    check_working_tree = project.get_property("check_working_tree", "False")
     check_working_tree = check_working_tree.lower() in ("yes", "y", "true", "t", "1")
     if check_working_tree:
         logger.info("Calling git to check if working tree is clean")
@@ -99,8 +99,8 @@ def publish(project, logger):
     builder.publish()
     
 @task
-#@depends('compile_sources')
-@depends('run_unit_tests')
+@depends('compile_sources')
+#@depends('run_unit_tests')
 def copy_sources(project, logger):
     builder = project.get_property("builder")
     builder.copy_sources()

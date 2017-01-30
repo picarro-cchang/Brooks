@@ -157,7 +157,7 @@ class Builder(object):
         logger = self.logger
         logger.info("Cythonizing modules")
         out, retcode = self.run_command("python %s build_ext --inplace --basepath=%s" % 
-                    (r".\bldsup\setupforPyd.py", project.expand_path("$dir_dist")))
+                    (r"./bldsup/setupforPyd.py", project.expand_path("$dir_dist")))
         logger.info("Cleaning source code")
         sys.path.append("bldsup")
         from setupforPyd import get_source_list
