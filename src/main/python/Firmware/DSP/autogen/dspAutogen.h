@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2016 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2017 Picarro, Inc. All rights reserved
  */
 #ifndef _DSP_AUTOGEN_H
 #define _DSP_AUTOGEN_H
@@ -108,4 +108,6 @@ int r_acc_write_reg(unsigned int numInt,void *params,void *env);
 int r_acc_read_accel(unsigned int numInt,void *params,void *env);
 int r_read_thermistor_resistance_16bit(unsigned int numInt,void *params,void *env);
 int r_average_float_registers(unsigned int numInt,void *params,void *env);
+int r_update_from_simulators(unsigned int numInt,void *params,void *env);
+int r_step_simulators(unsigned int numInt,void *params,void *env);
 #endif

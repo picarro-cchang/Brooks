@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2016 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2017 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
@@ -1679,6 +1679,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_read_thermistor_resistance_16bit(numInt,params,env);
         case ACTION_AVERAGE_FLOAT_REGISTERS:
             return r_average_float_registers(numInt,params,env);
+        case ACTION_UPDATE_FROM_SIMULATORS:
+            return r_update_from_simulators(numInt,params,env);
+        case ACTION_STEP_SIMULATORS:
+            return r_step_simulators(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }
