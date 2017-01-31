@@ -2153,30 +2153,21 @@ def main():
     #Get and handle the command line options...
     configFile, alarmConfigFile, alarmSystemV3ConfigFile, noInstMgr, test, options = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    print("0")
     try:
-        print("1a")
         alarmSystem = None
-        print("1aa")
         if alarmSystemV3ConfigFile is not None:
-            print("1b")
             alarmSystem = AlarmSystemV3(alarmSystemV3ConfigFile)
         elif alarmConfigFile is not None:
-            print("1c")
             alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=False)
             alarmSystem.ALARMSYSTEM_start_inthread()
         else:
             print("No config file specified")
 
-        print("1d")
         app = DataManager(configFile, alarmSystem, noInstMgr, options)
-        print("1e")
         if test:
             threading.Timer(2, ExecuteTest(app)).start()
-        print("1f")
         app.Start()
     except:
-        print("5")
         if __debug__: raise
         LogExc("Exception trapped outside DataManager execution")
 

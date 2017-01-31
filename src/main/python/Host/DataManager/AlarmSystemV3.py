@@ -263,6 +263,7 @@ class SingleAlarmMonitor:
         else:
             stateToSave = self.GREEN
 
+        #print("Process accumulator source: %s LED: %s" % (self.dataSourceKey, stateToSave))
         # Save the most severe alarm seen in this time interval.
         self.fiveMinAccumulator["TIME"].append(self.binStartTime)
         self.fiveMinAccumulator["ALARM_STATE"].append(stateToSave)
@@ -274,8 +275,11 @@ class SingleAlarmMonitor:
 
         # Update public alarms
         if self._updatePublicAlarm():
-            print("history 5:", self.fiveMinHistory["ALARM_COUNT"])
-            print("history60:", self.sixtyMinHistory["ALARM_COUNT"])
+            print("History of %s" % self.dataSourceKey)
+            print("history 5 count:", self.fiveMinHistory["ALARM_COUNT"])
+            print("history 5 state:", self.fiveMinHistory["LED_COLOR"])
+            print("history 60 count:", self.sixtyMinHistory["ALARM_COUNT"])
+            print("history 60 state:", self.sixtyMinHistory["LED_COLOR"])
         return
 
     def _updatePublicAlarm(self):
@@ -402,7 +406,10 @@ class AlarmSystemV3:
             # Linux paths
             try:
                 # harded coded ini location in my dev environment
-                ini = CustomConfigObj(os.path.expanduser('~') + "/git/host/Config/AMADS/AppConfig/Config/DataManager/AlarmSystemV3.ini")
+                #ini = CustomConfigObj(os.path.expanduser('~') + "/git/host/Config/AMADS/AppConfig/Config/DataManager/AlarmSystemV3.ini")
+                #ini = CustomConfigObj(os.path.expanduser('~') + "/git/host/Config/CFADS_Simulation/AppConfig/Config/DataManager/AlarmSystemV3.ini")
+                #print("IniFile: %s" % self.iniFile)
+                ini = CustomConfigObj(self.iniFile)
                 ini.ignore_option_case_off()
             except Exception as e:
                 print("Exception::", e)
@@ -433,7 +440,7 @@ class AlarmSystemV3:
                     alarmSettings[section][key] = float(value)
                 except:
                     pass
-                print("key value", key, value)
+                #print("key value", key, value)
 
         return alarmSettings
 
@@ -445,6 +452,7 @@ class AlarmSystemV3:
         try:
             for key, value in inputDataDict.items():
                 if key in self.alarms:
+                    #print("K: %s V: %s" % (key,value))
                     self.alarms[key].setData(int(time), value)
         except KeyError as e:
             print("AlarmSystemV3::updateAllMonitors KeyError", e)
@@ -459,7 +467,7 @@ class AlarmSystemV3:
         try:
             for key, value in self.alarms.items():
                 alarmColor = value.shortPublicAlarm
-                print("Getting monitor status with key: %s, color: %s" % (key, alarmColor))
+                #print("Getting monitor status with key: %s, color: %s" % (key, alarmColor))
         except KeyError as e:
             print("AlarmSystemV3::getAllMonitorStatus", e)
         except:
