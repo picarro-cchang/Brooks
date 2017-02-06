@@ -163,6 +163,8 @@ class Builder(object):
         from setupforPyd import get_source_list
         for f in get_source_list(project.expand_path("$dir_dist")):
             os.remove(f)
+            fc = os.path.splitext(f)[0] + ".c"
+            os.remove(fc)
 
     def publish(self):
         return

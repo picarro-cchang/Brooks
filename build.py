@@ -14,7 +14,7 @@ use_bldsup(build_support_dir="bldsup")
 import Builder
 from BuildAiAutosampler import BuildAiAutosampler
 from BuildChemCorrect import BuildChemCorrect
-from BuildG2000 import BuildG2000
+from BuildSI2000 import BuildSI2000
 from BuildMobile import BuildMobile
 from BuildSDM import BuildSDM
 from BuildSSIM import BuildSSIM
@@ -33,7 +33,7 @@ default_task = "make_installers"
 def initialize(project, logger):
     BuildClasses = dict(ai_autosampler = BuildAiAutosampler,
                         chem_correct = BuildChemCorrect,
-                        g2000 = BuildG2000,
+                        si2000 = BuildSI2000,
                         mobile = BuildMobile,
                         sdm = BuildSDM,
                         ssim = BuildSSIM,
@@ -43,8 +43,8 @@ def initialize(project, logger):
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("official", official)
-    # product specifies which installer to produce, currently supported values are g2000
-    product = project.get_property("product", "g2000").strip().lower()
+    # product specifies which installer to produce, currently supported values are si2000
+    product = project.get_property("product", "si2000").strip().lower()
     project.set_property("product", product)
     builder = BuildClasses[product.lower()](project, logger)
     # check_woking_tree ensures working tree is clean before doing build
@@ -112,13 +112,13 @@ def cythonize_sources(project, logger):
     builder.cythonize_sources()
     
 @task
-@depends('cythonize_sources')
+#@depends('cythonize_sources')
 def make_executables(project, logger):
     builder = project.get_property("builder")
     builder.publish()
    
 @task
-@depends('make_executables')
+@depends('cythonize_sources')
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()

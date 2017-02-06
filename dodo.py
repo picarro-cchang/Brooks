@@ -80,7 +80,7 @@ def task_compile_fastLomb():
     src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
     return {
         'actions':[
-            r'cd %s && if [ -f fastLomb.so ]; then rm fastLomb.pyd; fi' % (src_dir,),
+            r'cd %s && if [ -f fastLomb.so ]; then rm fastLomb.so; fi' % (src_dir,),
             r'cd %s && python setup.py build_src build_ext --inplace' % (src_dir,),
             r'cd %s && rm fastLombmodule.c' % (src_dir,),
             r'cd %s && rm -rf build' % (src_dir,)

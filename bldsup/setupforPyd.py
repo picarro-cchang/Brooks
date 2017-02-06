@@ -20,21 +20,24 @@ class cythonize_picarro_code(build_ext):
     def get_ext_fullpath(self, ext_name):
         if self.basepath:
             modpath = ext_name.split('.')
-            return os.path.join(self.basepath, *modpath) + ".so"
+            # Need to add 'Host' below for Linux
+            return os.path.join(self.basepath, 'Host', *modpath) + ".so"
         else:
             return build_ext.get_ext_fullpath(self, ext_name)
 
-def get_source_list(base_path):
+def get_raw_source_list(base_path):
     pySourceFiles = []
     includeFolderList = [
             r"Host/AlarmSystem/*.py",
             r"Host/autogen/*.py",
             r"Host/Archiver/*.py",
+            r"Host/Common/*.py"
             r"Host/CommandInterface/*.py",
             r"Host/DataLogger/*.py",
             r"Host/DataManager/*.py",
             r"Host/Driver/*.py",
             r"Host/ElectricalInterface/*.py",
+            r"Host/EventManager/*.py",
             r"Host/Fitter/*.py",
             r"Host/InstMgr/*.py",
             r"Host/MeasSystem/*.py",
@@ -47,23 +50,20 @@ def get_source_list(base_path):
             r"Host/SpectrumCollector/*.py",
             r"Host/Supervisor/*.py",
             r"Host/ValveSequencer/*.py",
-            r"Host/Common/*.py"
-    ]
-    includeFileList = [
-            r"Host/EventManager/EventManager.py"
     ]
     if base_path:
         for folder in includeFolderList:
             path = os.path.join(base_path, folder)
             pySourceFiles.extend(glob.glob(path))
-        for file in includeFileList:
-            path = os.path.join(base_path, file)
-            pySourceFiles.append(path)
-  
+    return pySourceFiles
+
+def get_source_list(base_path):
+    pySourceFiles = get_raw_source_list(base_path)
     CanDelete = []
     DeleteFiles = [
             "__init__.py", "setup.py",
-            r"GuiTools.py", "GuiWidgets.py"
+            "EventManagerGUI.py",
+            "GuiTools.py", "GuiWidgets.py"
     ]
     for f in pySourceFiles:
         for df in DeleteFiles:
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             picarro_base_path = option.split("=")[1]
             
     setup(
-      name = "G2000",
+      name = "PicarroHost",
       cmdclass={'build_ext': cythonize_picarro_code},
       ext_modules = cythonize(get_source_list(picarro_base_path))  
     )
