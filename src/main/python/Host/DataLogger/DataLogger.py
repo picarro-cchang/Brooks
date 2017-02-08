@@ -247,6 +247,8 @@ class DataLog(object):
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
         self.UpdateInterval = ConfigParser.getfloat(self.LogName, "updateInterval", 10.0)
 
+        print("LogName: %s MaxLogDuration in seconds: %s" % (LogName, self.MaxLogDuration))
+
         # Add peripheral columns if available
         try:
             if self.PeriphDictTuple:
@@ -487,7 +489,9 @@ class DataLog(object):
             else:
                 #if DEBUG: Log("Not24Incr Log Duration =%f. MaxLogDuration=%f" % (logDuration, self.MaxLogDuration))
                 # MaxLogDuration is not a 24 increment therefore wait for LogDuration to be >= MaxLogDuration
+                print("LogName: %s logDuration: %s MaxLogDuration: %s Time: %s CreateLogTime %s" % (self.LogName, logDuration, self.MaxLogDuration, Time, self.CreateLogTime))
                 if logDuration >= self.MaxLogDuration:
+                    print("logDuration: %s MaxLogDuration: %s" % (logDuration, self.MaxLogDuration))
                     self._Create(DataList)
                     self.oldDataList = DataList
 
