@@ -38,6 +38,7 @@ MEAS_SYS_RPC_SERVER_ID = "_MEAS_SYS_" # provides tagalong data calls
 FREQ_CONV_RPC_SERVER_ID = "_FREQ_CONV_" # provides getWlmOffset and setWlmOffset calls
 SPEC_COLL_RPC_SERVER_ID = "_SPEC_COLL_" # provides getSequenceNames and setSequence calls
 DATA_LOGGER_RPC_SERVER_ID = "_DATA_LOGGER_" # provides DATALOGGER_stopLogRpc and DATALOGGER_startLogRpc calls
+FSR_HOPPING_CONTROLLER_RPC_SERVER_ID = "_FSR_HOPPING_CONTROLLER_"
 PERIPH_INTRF_ID = "_PERIPH_INTRF_"
 PERIPH_INTRF_COLS_ID = "_PERIPH_INTRF_COLS_"
 NEW_DATA_ID = "_NEW_DATA_"
@@ -65,16 +66,16 @@ ALARMS_ID = "_ALARMS_"
 OPTIONS_ID = "_OPTIONS_"
 
 persistentDict = {}
-globals = {}
+globalsDict = {}
 
 alarmGlobals = {}
 
 class Synchronizer(object):
     def __init__(self,analyzer,varList=[],syncInterval=100,syncLatency=500,processInterval=500,maxDelay=2000):
-        if "synchronizer" not in globals: globals["synchronizer"] = {}
-        if analyzer in globals["synchronizer"]:
+        if "synchronizer" not in globalsDict: globalsDict["synchronizer"] = {}
+        if analyzer in globalsDict["synchronizer"]:
             raise ValueError("Synchronizer %s already exists" % analyzer)
-        globals["synchronizer"][analyzer] = dict(varList=varList,syncInterval=syncInterval,
+        globalsDict["synchronizer"][analyzer] = dict(varList=varList,syncInterval=syncInterval,
                                                  syncLatency=syncLatency,processInterval=processInterval,maxDelay=maxDelay)
         self.analyzer = analyzer
         self.processInterval = processInterval
@@ -153,7 +154,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dictionaries, rather than a bunch of single variables.
 
     """
-    global persistentDict, globals
+    global persistentDict, globalsDict
 
     #need to support inputs (given to the script):
     # - cal data from provided files (INSTR_DATA)
@@ -171,7 +172,7 @@ def RunAnalysisScript(ScriptCodeObj,
 
     if ScriptName not in persistentDict:
         persistentDict[ScriptName] = {"init": True}
-    dataEnviron = {"_GLOBALS_" : globals, "_PERSISTENT_" : persistentDict[ScriptName], "Synchronizer" : Synchronizer }
+    dataEnviron = {"_GLOBALS_" : globalsDict, "_PERSISTENT_" : persistentDict[ScriptName], "Synchronizer" : Synchronizer }
 
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
     dataEnviron[SOURCE_TIMESTAMP_ID] = timestamp.unixTimeToTimestamp(SourceTime_s)
@@ -189,6 +190,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[FREQ_CONV_RPC_SERVER_ID] = FreqConvRpcServer
     dataEnviron[SPEC_COLL_RPC_SERVER_ID] = SpecCollRpcServer
     dataEnviron[DATA_LOGGER_RPC_SERVER_ID] = DataLoggerRpcServer
+    dataEnviron[FSR_HOPPING_CONTROLLER_RPC_SERVER_ID] = FsrHoppingControllerRpcServer
     dataEnviron[PERIPH_INTRF_ID] = PeriphIntrfFunc
     dataEnviron[PERIPH_INTRF_COLS_ID] = PeriphIntrfCols
     dataEnviron[NEW_DATA_ID] = NewDataDict(dataEnviron[DATA_ID])
@@ -256,6 +258,8 @@ def RunAlarmScript(   ScriptCodeObj,
                       MeasSysRpcServer,
                       FreqConvRpcServer,
                       SpecCollRpcServer,
+                      DataLoggerRpcServer,
+                      FsrHoppingControllerRpcServer,
                       PeriphIntrfFunc,
                       PeriphIntrfCols,
                       ExcLogFunc,

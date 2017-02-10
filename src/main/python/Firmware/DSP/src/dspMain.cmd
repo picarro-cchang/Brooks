@@ -5,7 +5,7 @@ SECTIONS {
    .printf:  {}                      > IRAM
    .iram:    {}                      > IRAM
    .const:   {}                      > SDRAM
-   .far:     {}                      > IRAM
+   .far:     {}                      > SDRAM
    .pinit:   {}                      > SDRAM
    .switch:  {}                      > SDRAM
    .interface: {}                    > IINT

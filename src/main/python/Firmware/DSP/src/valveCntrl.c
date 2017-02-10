@@ -105,6 +105,47 @@ void proportionalValveStep()
         inlet = userInlet;
         outlet = userOutlet;
         break;
+    case VALVE_CNTRL_OutletOnlyControlState:
+        // Gain2 sets how the pressure rate setpoint depends on the pressure error
+        dpdtSet = outletGain2 * error;
+        // Limit rate setpoint to maximum allowed rate of change
+        if (dpdtSet < -dpdtMax) dpdtSet = -dpdtMax;
+        else if (dpdtSet > dpdtMax) dpdtSet = dpdtMax;
+        // Following implements an integral controller for the rate of change of pressure
+        // Gain1 sets the integral gain
+        dError = dpdtSet - dpdt;
+        delta = -outletGain1 * dError;  // -ve because opening outlet decreases pressure
+        // Limit change of valve value
+        if (delta < -outletMaxChange) delta = -outletMaxChange;
+        else if (delta > outletMaxChange) delta = outletMaxChange;
+        valveValue = outlet + delta;
+        // Limit absolute valve value
+        if (valveValue < outletMin) valveValue = outletMin;
+        else if (valveValue > outletMax) {
+            valveValue = outletMax;
+            state = VALVE_CNTRL_OutletOnlyRecoveryState;
+        }
+        outlet = valveValue;
+        break;
+    case VALVE_CNTRL_OutletOnlyRecoveryState:
+        // Gain2 sets how the pressure rate setpoint depends on the pressure error
+        dpdtSet = dpdtMax;
+        // Following implements an integral controller for the rate of change of pressure
+        // Gain1 sets the integral gain
+        dError = dpdtSet - dpdt;
+        delta = -outletGain1 * dError;  // -ve because opening outlet decreases pressure
+        // Limit change of valve value
+        if (delta < -outletMaxChange) delta = -outletMaxChange;
+        else if (delta > outletMaxChange) delta = outletMaxChange;
+        valveValue = outlet + delta;
+        // Limit absolute valve value
+        if (valveValue < outletMin) {
+            valveValue = outletMin;            
+            state = VALVE_CNTRL_OutletOnlyControlState;
+        }
+        else if (valveValue > outletMax) valveValue = outletMax;
+        outlet = valveValue;
+        break;        
     case VALVE_CNTRL_OutletControlState:
         if (flowState == FLOW_CNTRL_DisabledState) inlet = userInlet;
         else if (flowState == FLOW_CNTRL_EnabledState) {
@@ -137,6 +178,10 @@ void proportionalValveStep()
         if (valveValue < outletMin) valveValue = outletMin;
         else if (valveValue > outletMax) valveValue = outletMax;
         outlet = valveValue;
+        if (outlet >= outletMax && v->nonDecreasingCount>10) {
+            message_puts(LOG_LEVEL_STANDARD,"Check vacuum pump connection, valves closed to protect cavity.");
+            state = VALVE_CNTRL_DisabledState;
+        }
         break;
     case VALVE_CNTRL_InletControlState:
         if (flowState == FLOW_CNTRL_DisabledState) outlet = userOutlet;
@@ -193,10 +238,6 @@ void proportionalValveStep()
     }
     userInlet = inlet;
     userOutlet = outlet;
-    if (outlet >= outletMax && v->nonDecreasingCount>10) {
-        message_puts(LOG_LEVEL_STANDARD,"Check vacuum pump connection, valves closed to protect cavity.");
-        state = VALVE_CNTRL_DisabledState;
-    }
     v->previousState = state; // Save the previous state to help detect changes
 }
 

@@ -47,11 +47,8 @@ class DataManagerPublisher(object):
     def run(self):
         try:
             while True:
-                msgs = self.queue.get()
-                for m in msgs:
-                    #print m
-                    self.broadcastSocket.send_string("%s" % m)
-
+                msg = self.queue.get()
+                self.broadcastSocket.send_string("%s" % msg)
         finally:
             self.broadcastSocket.close()
             self.context.term()
@@ -70,10 +67,10 @@ class DataManagerPublisher(object):
                 # block these data during the measurement, otherwise non-cavity parameters will be treated as 0 by surveyor programs
                 # CH4 and flow values shown on tablet will jump between 0 and normal reading.
                 return None
-            return [{'type': 'measurement'}, {'mode': entry['mode']}, json.dumps(entry['data'])]
+            return json.dumps({'type': 'measurement', 'mode': entry['mode'], 'data': entry['data']})
         elif source == 'parseGPS' or source == 'parseGillAnemometer':
             entry['data']['EPOCH_TIME'] = entry['time']
-            return [{'type': 'gps' if source == 'parseGPS' else 'anemometer' }, json.dumps(entry['data'])]
+            return json.dumps({'type': 'gps' if source == 'parseGPS' else 'anemometer', 'data': entry['data']})
         else:
             #print "Skip %s" % entry['source']
             return None

@@ -407,7 +407,7 @@ class IntegrationTool(IntegrationToolFrame):
                 laserNum = idx+1
                 cmd = executable.split() + ["-w", "%.1f" % timeDelay, "-c", "%s%d.ini" % (iniFile,laserNum)]
                 print " ".join(cmd)
-                subprocess.Popen(cmd)
+                subprocess.Popen(cmd).wait()
                 self.display += "WLM file for laser %d created\n" % laserNum
         except Exception, err:
             self.display += "%s\n" % err
@@ -588,11 +588,11 @@ class IntegrationTool(IntegrationToolFrame):
             # Move the current active files to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
-            if os.path.isfile(self.hbCalActive+".ini"):
-                savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.move(self.hbCalActive+".ini", savedHbCalActive)
-            self.display += "Archived active WB and HB files.\n"
+                shutil.copy(self.wbCalActive+".ini", savedWbCalActive)
+            #if os.path.isfile(self.hbCalActive+".ini"):
+            #    savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
+            #    shutil.copy(self.hbCalActive+".ini", savedHbCalActive)
+            self.display += "Archived active WB file.\n"
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
         self.textCtrlIntegration.SetValue(self.display)
@@ -622,7 +622,7 @@ class IntegrationTool(IntegrationToolFrame):
             # Move the current active WB file to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
+                shutil.copy(self.wbCalActive+".ini", savedWbCalActive)
             self.display += "Archived active WB file.\n"
             self.display += "WLM Offset finished.\n"
         except Exception, err:

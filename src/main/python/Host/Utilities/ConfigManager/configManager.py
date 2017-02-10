@@ -732,7 +732,7 @@ def getConfigFromSupervisorLauncherIni(launcherFilename):
         dname = os.path.dirname(fname)
 
         if dname == "":
-            dname = "C:/Picarro/G2000/AppConfig/Config/Supervisor"
+            dname = "/Picarro/G2000/AppConfig/Config/Supervisor"
     dlg.Destroy()
 
     return dname, fname
@@ -838,10 +838,11 @@ if __name__ == "__main__":
         fname = options.supervisorIniFilename
         dname = ""
         superConfig = options.supervisorIniFilename
-
+    
+    print superConfig
     # superConfig will be an empty string if the user canceled out
     # of selecting a mode (-l option) so proceed only if the file exists
-    if os.path.isfile(superConfig):
+    if (os.path.isfile(superConfig)):
         # Use heuristic to determine directory of supervisor
         ini = ConfigObj(superConfig, list_values=False)
         npy, nexe = 0, 0

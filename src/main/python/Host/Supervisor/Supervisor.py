@@ -92,7 +92,7 @@ from subprocess import Popen, call
 
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER, RPC_PORT_RESTART_SUPERVISOR
-from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP, RPC_PORT_CONTAINER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
@@ -419,6 +419,8 @@ elif sys.platform == "linux2":
             result = processHandle.poll()
             if result == None:
                 return True
+        elif isinstance(processHandle, int):
+            return psutil.pid_exists(processHandle)
         else:
             return psutil.pid_exists(processHandle.pid)
 
@@ -1015,6 +1017,17 @@ class Supervisor(object):
         # subprocesses with 'kill -USR1 <supervisor_pid>
         if sys.platform == "linux2":
             signal.signal(signal.SIGUSR1, self.sigint_handler)
+            # initialize utility for shutting down container
+            def getHostIp():
+                """Within a docker container, get the IP of the host (for bridge networking)"""
+                for line in subprocess.check_output(["netstat", "-nr"]).split("\n"):
+                    if line.startswith('0.0.0.0'):
+                        return line.split()[1]
+
+            hostIp = getHostIp()
+            self.ContainerServer = CmdFIFO.CmdFIFOServerProxy(
+                "http://%s:%d" % (hostIp, RPC_PORT_CONTAINER),
+                "Container Client", IsDontCareConnection=False)
         print("Supervisor PID:", os.getpid())
 
         # start to use CustomConfigObj
@@ -1356,17 +1369,17 @@ class Supervisor(object):
         self._TerminateAllRequested = True
 
     def CheckForStopRequests(self):
-	"""
-	Set Ctrl-X to tell Supervisor to exit the code, Ctrl-T to terminate.
-	These two should shutdown all the other Host sub-processes.
-	Ctrl-C will kill the Supervisor and leave the sub-processes as
-	zombies you'll have to kill manually.
+        """
+        Set Ctrl-X to tell Supervisor to exit the code, Ctrl-T to terminate.
+        These two should shutdown all the other Host sub-processes.
+        Ctrl-C will kill the Supervisor and leave the sub-processes as
+        zombies you'll have to kill manually.
 
-	In Linux, the keyboard shortcut is set with ttyLinux.py which
-	requires to run in a valid tty terminal like x-term.  If the
-	code is run in an IDE with a pseudo terminal, ttyLinux will
-	throw an exception and terminate the Supervior.
-	"""
+        In Linux, the keyboard shortcut is set with ttyLinux.py which
+        requires to run in a valid tty terminal like x-term.  If the
+        code is run in an IDE with a pseudo terminal, ttyLinux will
+        throw an exception and terminate the Supervior.
+        """
 
         if sys.stdout.isatty():
             try:

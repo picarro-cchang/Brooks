@@ -1,7 +1,7 @@
 ; Code Composer Project File, Version 2.0 (do not modify or remove this line)
 
 [Project Settings]
-ProjectDir="C:\Picarro\G2000\Firmware\DSP\src\"
+ProjectDir="C:\GitHub\host\src\main\python\Firmware\DSP\src\"
 ProjectType=Executable
 CPUFamily=TMS320C67XX
 Tool="Compiler"
@@ -13,6 +13,7 @@ Config="Release"
 
 [Source Files]
 Source="..\autogen\dspAutogen.c"
+Source="..\common\adxl345.c"
 Source="..\common\configDsp.c"
 Source="..\common\crc.c"
 Source="..\common\ds1631.c"

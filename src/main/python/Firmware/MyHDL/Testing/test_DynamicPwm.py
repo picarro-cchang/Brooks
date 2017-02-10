@@ -27,6 +27,7 @@ from Host.autogen.interface import DYNAMICPWM_CS_CONT_B, DYNAMICPWM_CS_CONT_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_ENABLE_B, DYNAMICPWM_CS_PWM_ENABLE_W
 from Host.autogen.interface import DYNAMICPWM_CS_USE_COMPARATOR_B, DYNAMICPWM_CS_USE_COMPARATOR_W
 from Host.autogen.interface import DYNAMICPWM_CS_PWM_OUT_B, DYNAMICPWM_CS_PWM_OUT_W
+from Host.autogen.interface import DYNAMICPWM_CS_PWM_INVERT_B, DYNAMICPWM_CS_PWM_INVERT_W
 
 from MyHDL.Common.DynamicPwm import DynamicPwm
 from MyHDL.Common.ClkGen import ClkGen
@@ -106,7 +107,7 @@ def bench():
         reset.next = 0
         yield clk.negedge
 
-    # N.B. If there are several blocks configured, ensure that dsp_data_in is 
+    # N.B. If there are several blocks configured, ensure that dsp_data_in is
     #  derived as the OR of the data buses from the individual blocks.
     dynamicpwm = DynamicPwm( clk=clk, reset=reset, dsp_addr=dsp_addr,
                              dsp_data_out=dsp_data_out,
@@ -117,7 +118,7 @@ def bench():
 
     clkGen = ClkGen(clk=clk, reset=reset, clk_10M=clk_10M, clk_5M=clk_5M,
                     clk_2M5=clk_2M5, pulse_1M=strobe_1M, pulse_100k=update_in)
-    
+
     @instance
     def stimulus():
         locals = dynamicpwm[1].gen.gi_frame.f_locals
@@ -134,7 +135,7 @@ def bench():
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_HIGH,high)
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_LOW,low)
         yield writeFPGA(FPGA_DYNAMICPWM_INLET+DYNAMICPWM_SLOPE,slope)
-        
+
         control = (1 << DYNAMICPWM_CS_RUN_B) | \
                   (1 << DYNAMICPWM_CS_CONT_B) | \
                   (1 << DYNAMICPWM_CS_USE_COMPARATOR_B)
@@ -169,8 +170,8 @@ def bench():
             if startWidth+delta != locals['pulse_width']: break
             startWidth += delta
         assert locals['pulse_width'] == MIN_WIDTH
-        
-        
+
+
         yield delay(1000*PERIOD)
         raise StopSimulation
     return instances()

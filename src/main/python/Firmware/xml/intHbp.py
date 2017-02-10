@@ -1,3 +1,6 @@
+import datetime
+now = datetime.datetime.now()
+
 # Boilerplate code for interface.h output file
 
 header = """/*
@@ -5,13 +8,13 @@ header = """/*
  *   interface.h
  *
  * DESCRIPTION:
- *   Automatically generated interface H file for Picarro gas analyzer. 
+ *   Automatically generated interface H file for Picarro gas analyzer.
  *    DO NOT EDIT.
  *
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-%d Picarro, Inc. All rights reserved
  */
 #ifndef _INTERFACE_H
 #define _INTERFACE_H
@@ -31,6 +34,6 @@ typedef int bool;
     #define TRUE  (1)
 #endif
 
-"""
+""" % (now.year, )
 
 trailer = "#endif"

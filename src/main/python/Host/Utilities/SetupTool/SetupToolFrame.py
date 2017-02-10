@@ -16,7 +16,7 @@ BACKGROUND_COLOR_7 = "#F9B7FF"
 BACKGROUND_COLOR_BOTTOM = "#43C6DB"
 
 class SetupToolFrame(wx.Frame):
-    def __init__(self, comPortList, quickGuiRpc, driverRpc, *args, **kwds):
+    def __init__(self, comPortList, comPortMapping, quickGuiRpc, driverRpc, *args, **kwds):
         #kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
@@ -53,7 +53,7 @@ class SetupToolFrame(wx.Frame):
         # Pages
         self.pages = []
         self.pages.append(Page1(self, quickGuiRpc, self.panel1, -1))
-        self.pages.append(Page2(comPortList, self.coordinatorPortList, self.hasReadGPSWS, self.panel2, -1))
+        self.pages.append(Page2(comPortList, comPortMapping, self.coordinatorPortList, self.hasReadGPSWS, self.panel2, -1))
         self.pages.append(Page3(driverRpc, self.panel3, -1))
         self.pages.append(Page4(self.panel4, -1))
         self.pages.append(Page5(self, self.panel5, -1))
@@ -128,8 +128,7 @@ class SetupToolFrame(wx.Frame):
         self.Layout()
 
 if __name__ == "__main__":
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
+    app = wx.App(False)
     frame = SetupToolFrame(["CFADS"], ["COM1", "COM2"], None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()

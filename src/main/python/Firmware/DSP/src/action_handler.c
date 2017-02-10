@@ -46,6 +46,7 @@
 #include "fpga.h"
 #include "i2cEeprom.h"
 #include "rddCntrl.h"
+#include "adxl345.h"
 
 static char message[120];
 
@@ -255,6 +256,16 @@ int r_wbInvCache(unsigned int numInt,void *params,void *env)
     return STATUS_OK;
 }
 
+int r_update_from_simulators(unsigned int numInt,void *params,void *env)
+{
+    return STATUS_OK;
+}
+
+int r_step_simulators(unsigned int numInt,void *params,void *env)
+{
+    return STATUS_OK;
+}
+
 int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
 {
     float resistance, constA, constB, constC, result;
@@ -271,12 +282,12 @@ int r_resistanceToTemperature(unsigned int numInt,void *params,void *env)
     return status;
 }
 
-int r_updateFromSimulators(unsigned int numInt,void *params,void *env)
+int r_tempCntrlSetCommand(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
 
-int r_stepSimulators(unsigned int numInt,void *params,void *env)
+int r_applyPidStep(unsigned int numInt,void *params,void *env)
 {
     return STATUS_OK;
 }
@@ -599,6 +610,20 @@ int r_read_thermistor_resistance(unsigned int numInt,void *params,void *env)
     READ_REG(reg[2],Rseries);
     result = ltc2485_read(reg[0]);
     Vfrac = result/33554432.0;
+    if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
+    WRITE_REG(reg[1],(Rseries*Vfrac)/(1.0-Vfrac));
+    return STATUS_OK;
+}
+
+int r_read_thermistor_resistance_16bit(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    float result;
+    float Vfrac, Rseries;
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[2],Rseries);
+    result = ltc2451_read(reg[0]);
+    Vfrac = (result-32768.0)/32768.0;
     if (Vfrac<=0.0 || Vfrac>=1.0) return ERROR_BAD_VALUE;
     WRITE_REG(reg[1],(Rseries*Vfrac)/(1.0-Vfrac));
     return STATUS_OK;
@@ -1093,4 +1118,85 @@ int r_rdd_cntrl_do_command(unsigned int numInt,void *params,void *env)
     unsigned int *reg = (unsigned int *) params;
     if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
     return rddCntrlDoCommand(reg[0]);
+}
+
+int r_batt_mon_read_regs(unsigned int numInt,void *params,void *env)
+/* Read the following from the battery monitor:
+    Status: into DSP register reg[0]
+    Accumulated charge: into DSP register reg[1]
+    Voltage: into DSP register reg[2]
+    Current: into DSP register reg[3]
+    Temperature: into DSP register reg[4] */
+{
+    int status;
+    Uint8 reply[2] = {0, 0};
+    unsigned int *reg = (unsigned int *) params;
+    double r_sense = 0.018; // Sense resistor value
+    if (5 != numInt) return ERROR_BAD_NUM_PARAMS;
+    if (0 > (status = i2c_register_read(BATTERY_MONITOR, 0x0, reply, 1))) return status;
+    WRITE_REG(reg[0], reply[0]);
+    if (0 > (status = i2c_register_read(BATTERY_MONITOR, 0x2, reply, 2))) return status;
+    WRITE_REG(reg[1], (0.340*3.6*0.05/r_sense)*(256*reply[0] + reply[1])); // in Coulombs
+    if (0 > (status = i2c_register_read(BATTERY_MONITOR, 0x8, reply, 2))) return status;
+    WRITE_REG(reg[2], (23.6/65535.0) * (256*reply[0] + reply[1])); // in Volts
+    if (0 > (status = i2c_register_read(BATTERY_MONITOR, 0xE, reply, 2))) return status;
+    WRITE_REG(reg[3], (0.06/(32767.0*r_sense)) * (256*reply[0] + reply[1] - 32767));
+    if (0 > (status = i2c_register_read(BATTERY_MONITOR, 0x14, reply, 2))) return status;
+    WRITE_REG(reg[4], (510.0/65535.0) * (256*reply[0] + reply[1]) - 273.15);
+    return 0;
+}
+
+int r_batt_mon_write_byte(unsigned int numInt,void *params,void *env)
+/* Write a byte (params[1]) into the specified (params[0]) battery monitor register */
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return i2c_register_write(BATTERY_MONITOR, reg[0], (Uint8 *)(&reg[1]), 1);
+}
+int r_acc_read_reg(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (1 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return accel_read_reg(ACCELEROMETER, reg[0]);
+}
+
+int r_acc_write_reg(unsigned int numInt,void *params,void *env)
+{
+    unsigned int *reg = (unsigned int *) params;
+    if (2 != numInt) return ERROR_BAD_NUM_PARAMS;
+    return accel_write_reg(ACCELEROMETER, reg[0], reg[1]);
+}
+
+int r_acc_read_accel(unsigned int numInt,void *params,void *env)
+{
+    float ax, ay, az;
+	float acc_sensitivity = 0.03831; // m/s^2 per digitizer unit
+    short int ax_raw, ay_raw, az_raw;
+    unsigned int *reg = (unsigned int *) params;
+    int status;
+    if (3 != numInt) return ERROR_BAD_NUM_PARAMS;
+    status = accel_read_accel(ACCELEROMETER, &ax_raw, &ay_raw, &az_raw);
+    ax = ax_raw * acc_sensitivity;
+    ay = ay_raw * acc_sensitivity;
+    az = az_raw * acc_sensitivity;
+    WRITE_REG(reg[0], ax);
+    WRITE_REG(reg[1], ay);
+    WRITE_REG(reg[2], az);
+    return status;
+}
+
+int r_average_float_registers(unsigned int numInt,void *params,void *env)
+{
+    int i;
+    unsigned int *reg = (unsigned int *) params;
+    float x, sum = 0.0;
+    // numInt is the number of registers to average + 1, since the destination
+    // register is specified last
+    if (2 > numInt) return ERROR_BAD_NUM_PARAMS;
+    for (i=0; i<numInt-1; i++) {
+        READ_REG(reg[i],x);
+        sum += x;
+    }
+    WRITE_REG(reg[numInt - 1], sum/(numInt - 1));
+    return STATUS_OK;
 }

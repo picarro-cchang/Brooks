@@ -31,6 +31,8 @@ from Host.autogen.interface import RDMAN_PARAM_ADDRCNTR, RDMAN_DIVISOR
 from Host.autogen.interface import RDMAN_NUM_SAMP, RDMAN_THRESHOLD
 from Host.autogen.interface import RDMAN_LOCK_DURATION
 from Host.autogen.interface import RDMAN_PRECONTROL_DURATION
+from Host.autogen.interface import RDMAN_OFF_DURATION
+from Host.autogen.interface import RDMAN_EXTRA_DURATION
 from Host.autogen.interface import RDMAN_TIMEOUT_DURATION
 from Host.autogen.interface import RDMAN_TUNER_AT_RINGDOWN
 from Host.autogen.interface import RDMAN_METADATA_ADDR_AT_RINGDOWN
@@ -93,7 +95,13 @@ tuner_slope_in = Signal(LOW)
 tuner_window_in = Signal(LOW)
 laser_freq_ok_in = Signal(LOW)
 metadata_strobe_in = Signal(LOW)
+ext_mode_in = Signal(LOW)
+sel_fine_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+ext_laser_current_in_window_in = Signal(intbv(0)[4:])
+ext_laser_level_counter_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+ext_laser_sequence_id_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rd_trig_out = Signal(LOW)
+laser_extra_out = Signal(LOW)
 acc_en_out = Signal(LOW)
 rd_irq_out = Signal(LOW)
 acq_done_irq_out = Signal(LOW)
@@ -189,7 +197,7 @@ def bench():
     # N.B. If there are several blocks configured, ensure that dsp_data_in is
     #  derived as the OR of the data buses from the individual blocks.
     rdman = RdMan( clk=clk, reset=reset, dsp_addr=dsp_addr,
-                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdman,
+                   dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
                    dsp_wr=dsp_wr, pulse_100k_in=pulse_100k_in,
                    pulse_1M_in=pulse_1M_in,
                    tuner_value_in=tuner_value_in, meta0_in=meta0_in,
@@ -201,8 +209,14 @@ def bench():
                    tuner_window_in=tuner_window_in,
                    laser_freq_ok_in=laser_freq_ok_in,
                    metadata_strobe_in=metadata_strobe_in,
-                   rd_trig_out=rd_trig_out, acc_en_out=acc_en_out,
-                   rd_irq_out=rd_irq_out,
+                   ext_mode_in=ext_mode_in,
+                   sel_fine_current_in=sel_fine_current_in,
+                   ext_laser_current_in_window_in=ext_laser_current_in_window_in,
+                   ext_laser_level_counter_in=ext_laser_level_counter_in,
+                   ext_laser_sequence_id_in=ext_laser_sequence_id_in,
+                   rd_trig_out=rd_trig_out,
+                   laser_extra_out=laser_extra_out,
+                   acc_en_out=acc_en_out, rd_irq_out=rd_irq_out,
                    acq_done_irq_out=acq_done_irq_out,
                    rd_adc_clk_out=rd_adc_clk_out, bank_out=bank_out,
                    laser_locked_out=laser_locked_out,
@@ -242,10 +256,12 @@ def bench():
             assert result == v
         print "Passed readback of parameter registers"
         # Check injection is off
-        assert rd_trig_out == 1
+        #assert rd_trig_out == 1
         yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
-        assert result[RDMAN_STATUS_SHUTDOWN_B] == 1
-        print "Passed check that injection is off"
+        #assert result[RDMAN_STATUS_SHUTDOWN_B] == 1
+        #print "Passed check that injection is off"
+        yield writeFPGA(FPGA_RDMAN+RDMAN_OFF_DURATION,400)
+        yield writeFPGA(FPGA_RDMAN+RDMAN_EXTRA_DURATION, 100)
         # Write timeout duration in microseconds and check that
         #  a 32 bit number can be stored
         yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,0xAAAA5555)
@@ -265,6 +281,12 @@ def bench():
         yield writeFPGA(FPGA_RDMAN+RDMAN_NUM_SAMP,2048)
 
         for iter in range(2):
+            # Wait for not busy
+            while True:
+                yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
+                if not result[RDMAN_STATUS_BUSY_B]:
+                    break
+                yield delay(50 *PERIOD)
             yield readFPGA(FPGA_RDMAN+RDMAN_CONTROL,result)
             # Assert the CONT START_RD bit in the control register
             control = result | (1 << RDMAN_CONTROL_RUN_B) | \
@@ -305,9 +327,16 @@ def bench():
             assert result[RDMAN_STATUS_TIMEOUT_B] == 1
 
         yield writeFPGA(FPGA_RDMAN+RDMAN_TIMEOUT_DURATION,1000)
+        # Wait for not busy
+        while True:
+            yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
+            if not result[RDMAN_STATUS_BUSY_B]:
+                break
+            yield delay(50 *PERIOD)
         yield readFPGA(FPGA_RDMAN+RDMAN_CONTROL,result)
         options = (1 << RDMAN_OPTIONS_LOCK_ENABLE_B) | \
-                  (1 << RDMAN_OPTIONS_UP_SLOPE_ENABLE_B)
+                  (1 << RDMAN_OPTIONS_UP_SLOPE_ENABLE_B) | \
+                  (1 << RDMAN_OPTIONS_SIM_ACTUAL_B)
         yield writeFPGA(FPGA_RDMAN+RDMAN_OPTIONS,options)
         # Assert the CONT START_RD bit in the control register
         control = result | (1 << RDMAN_CONTROL_RUN_B) | \
@@ -343,14 +372,22 @@ def bench():
         filling = False
 
         # We should now be acquiring metadata each time the metadata strobe occurs
+        #for i in range(2):
+        #    yield negedge(metadata_strobe_in)
+        #    start = int(meta_addr_out)  # Get start of metadata block
+        #    yield negedge(meta_we_out)
+        #    # There should be metadata stored in ringdown memory
+        #    for addr in range(start,start+8):
+        #        yield rdRingdownMem((0x5000 if bank_out else 0x1000)+addr,result)
+        #        assert (addr & 7) == (result & 7)
+
+        # Wait for not busy
         while True:
-            yield negedge(metadata_strobe_in)
-            start = int(meta_addr_out)  # Get start of metadata block
-            yield negedge(meta_we_out)
-            # There should be metadata stored in ringdown memory
-            for addr in range(start,start+8):
-                yield rdRingdownMem((0x5000 if bank_out else 0x1000)+addr,result)
-                assert (addr & 7) == (result & 7)
+            yield readFPGA(FPGA_RDMAN+RDMAN_STATUS,result)
+            if not result[RDMAN_STATUS_BUSY_B]:
+                break
+            yield delay(50 *PERIOD)
+        raise StopSimulation
 
     @instance
     def rdSim():
@@ -362,10 +399,10 @@ def bench():
                 rd_data_in.next = int(0.9995*rd_data_in)
 
 
-    @instance
-    def stopSimulation():
-        yield delay(20000*PERIOD)
-        raise StopSimulation
+    #@instance
+    #def stopSimulation():
+    #    yield delay(200000*PERIOD)
+    #    raise StopSimulation
 
     METADATA_PERIOD = 2000  # 500kHz clock
     @instance

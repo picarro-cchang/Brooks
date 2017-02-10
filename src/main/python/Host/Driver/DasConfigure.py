@@ -32,10 +32,10 @@ else:
 
 EventManagerProxy_Init("Driver")
 
-schedulerPriorities = dict(UPDATE=0, SENSOR_READ=1, SENSOR_CONVERT=2,
+schedulerPriorities = dict(UPDATE=0,SENSOR_READ=1,SENSOR_CONVERT=2,
                            SENSOR_PROCESSING=3,
-                           CONTROLLER=4, ACTUATOR_CONVERT=5,
-                           ACTUATOR_WRITE=6, STREAMER=7,
+                           CONTROLLER=4,ACTUATOR_CONVERT=5,
+                           ACTUATOR_WRITE=6,STREAMER=7,
                            MODEL=8, SIMULATOR=9)
 
 # Periods are expressed in tenths of a second
@@ -45,7 +45,6 @@ class DasConfigure(SharedTypes.Singleton):
     initialized = False
     def __init__(self,dasInterface=None,instrConfig=None,driverConfig=None):
         if not self.initialized:
-            # assert isinstance(dasInterface, hostDasInterface.DasInterface)
             if dasInterface is None or instrConfig is None:
                 raise ValueError("DasConfigure has not been initialized correctly")
             self.i2cConfig = {} # Indicates if I2C associated with specific index was detected
@@ -58,6 +57,11 @@ class DasConfigure(SharedTypes.Singleton):
                 self.installed[key] = int(instrConfig["CONFIGURATION"][key])
             self.enableInterpolation = self.installed.get("ENABLE_INTERPOLATION",1)
             self.heaterCntrlMode = self.installed.get("HEATER_CONTROL_MODE",0)
+            self.batteryMonitorPresent = self.installed.get("BATTERY_MONITOR_PRESENT", 0)
+            # CAVITY_THERMISTOR_CONFIG = 0 for single 24-bit cavity thermistor ADC
+            # CAVITY_THERMISTOR_CONFIG = 1 for four separate 24-bit cavity thermistor ADC and
+            #  a 16-bit hot box heatsink thermistor
+            self.cavityThermistorConfig = self.installed.get("CAVITY_THERMISTOR_CONFIG", 0)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
             self.extraSchedule = None
@@ -91,6 +95,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("FAN_CONTROL_DISABLED", 1<<interface.HARDWARE_PRESENT_FanCntrlDisabledBit),
                    ("FLOW_SENSOR_PRESENT",  1<<interface.HARDWARE_PRESENT_FlowSensorBit),
                    ("RDD_VAR_GAIN_PRESENT", 1<<interface.HARDWARE_PRESENT_RddVarGainBit),
+                   ("ACCELEROMETER_PRESENT",1<<interface.HARDWARE_PRESENT_AccelerometerBit),
                    ]
         mask = 0
         for key, bit in mapping:
@@ -395,25 +400,124 @@ class DasConfigure(SharedTypes.Singleton):
         if present:
             # Hot box temperatures
             if present > 0:
-                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                    Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                        ["I2C_CAVITY_THERMISTOR_ADC",
-                         "CAVITY_RESISTANCE_REGISTER",
-                         "CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
+                if self.cavityThermistorConfig == 0:
+                    # This represents the legacy mode in which the hot box heatsink thermistor is connected
+                    #  to CAVITY_THERMISTOR_1_ADC and the combined cavity thermistor is connected to
+                    #  CAVITY_THERMISTOR_1_ADC
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                      ["I2C_CAVITY_THERMISTOR_2_ADC",
+                             "CAVITY_RESISTANCE_REGISTER",
+                             "CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
 
-                self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                    Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                      ["I2C_CAVITY_THERMISTOR_1_ADC",
+                                       "HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
+                                       "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
+                else:
+                    # This represents the new mode in which there are four cavity thermistors
+                    # with 24-bit ADCs and a hot box heatsink thermistor with a 16-bit ADC
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                  ["I2C_CAVITY_THERMISTOR_1_ADC",
+                                   "CAVITY_RESISTANCE1_REGISTER",
+                                   "CAVITY_THERMISTOR1_SERIES_RESISTANCE_REGISTER"]))
+
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                  ["I2C_CAVITY_THERMISTOR_2_ADC",
+                                   "CAVITY_RESISTANCE2_REGISTER",
+                                   "CAVITY_THERMISTOR2_SERIES_RESISTANCE_REGISTER"]))
+
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                  ["I2C_CAVITY_THERMISTOR_3_ADC",
+                                   "CAVITY_RESISTANCE3_REGISTER",
+                                   "CAVITY_THERMISTOR3_SERIES_RESISTANCE_REGISTER"]))
+
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                  ["I2C_CAVITY_THERMISTOR_4_ADC",
+                                   "CAVITY_RESISTANCE4_REGISTER",
+                                   "CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER"]))
+
+                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE_16BIT",
                         ["I2C_HOT_BOX_HEATSINK_THERMISTOR_ADC",
                          "HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
                          "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
 
-            self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                    ["CAVITY_RESISTANCE_REGISTER",
-                     "CONVERSION_CAVITY_THERM_CONSTA_REGISTER",
-                     "CONVERSION_CAVITY_THERM_CONSTB_REGISTER",
-                     "CONVERSION_CAVITY_THERM_CONSTC_REGISTER",
-                     "CAVITY_TEMPERATURE_REGISTER"]))
+            if self.cavityThermistorConfig == 0:
+                # This represents the legacy mode in which the hot box heatsink thermistor is connected
+                #  to CAVITY_THERMISTOR_1_ADC and the combined cavity thermistor is connected to
+                #  CAVITY_THERMISTOR_1_ADC
+                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                        ["CAVITY_RESISTANCE_REGISTER",
+                         "CONVERSION_CAVITY_THERM_CONSTA_REGISTER",
+                         "CONVERSION_CAVITY_THERM_CONSTB_REGISTER",
+                         "CONVERSION_CAVITY_THERM_CONSTC_REGISTER",
+                         "CAVITY_TEMPERATURE_REGISTER"]))
+
+            else:
+                # This represents the new mode in which there are four cavity thermistors
+                # with 24-bit ADCs and a hot box heatsink thermistor with a 16-bit ADC
+                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                              ["CAVITY_RESISTANCE1_REGISTER",
+                               "CONVERSION_CAVITY_THERM1_CONSTA_REGISTER",
+                               "CONVERSION_CAVITY_THERM1_CONSTB_REGISTER",
+                               "CONVERSION_CAVITY_THERM1_CONSTC_REGISTER",
+                               "CAVITY_TEMPERATURE1_REGISTER"]))
+                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                              ["CAVITY_RESISTANCE2_REGISTER",
+                               "CONVERSION_CAVITY_THERM2_CONSTA_REGISTER",
+                               "CONVERSION_CAVITY_THERM2_CONSTB_REGISTER",
+                               "CONVERSION_CAVITY_THERM2_CONSTC_REGISTER",
+                               "CAVITY_TEMPERATURE2_REGISTER"]))
+                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                              ["CAVITY_RESISTANCE3_REGISTER",
+                               "CONVERSION_CAVITY_THERM3_CONSTA_REGISTER",
+                               "CONVERSION_CAVITY_THERM3_CONSTB_REGISTER",
+                               "CONVERSION_CAVITY_THERM3_CONSTC_REGISTER",
+                               "CAVITY_TEMPERATURE3_REGISTER"]))
+                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                              ["CAVITY_RESISTANCE4_REGISTER",
+                               "CONVERSION_CAVITY_THERM4_CONSTA_REGISTER",
+                               "CONVERSION_CAVITY_THERM4_CONSTB_REGISTER",
+                               "CONVERSION_CAVITY_THERM4_CONSTC_REGISTER",
+                               "CAVITY_TEMPERATURE4_REGISTER"]))
+                # We average the individual temperatures to give the reported cavity temperature
+                self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
+                    Operation("ACTION_AVERAGE_FLOAT_REGISTERS",
+                              ["CAVITY_TEMPERATURE1_REGISTER",
+                               "CAVITY_TEMPERATURE2_REGISTER",
+                               "CAVITY_TEMPERATURE3_REGISTER",
+                               "CAVITY_TEMPERATURE4_REGISTER",
+                               "CAVITY_TEMPERATURE_REGISTER"]))
+                # Stream the individual cavity temperature readings
+                self.opGroups["SLOW"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_CavityTemp1","CAVITY_TEMPERATURE1_REGISTER"]))
+                self.opGroups["SLOW"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_CavityTemp2","CAVITY_TEMPERATURE2_REGISTER"]))
+                self.opGroups["SLOW"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_CavityTemp3","CAVITY_TEMPERATURE3_REGISTER"]))
+                self.opGroups["SLOW"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_CavityTemp4","CAVITY_TEMPERATURE4_REGISTER"]))
+
+            # The following is either from the measurement of a single ADC or from the average
+            #  readings of the four thermistors
+            self.opGroups["SLOW"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                          ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
 
             self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                 Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
@@ -422,10 +526,6 @@ class DasConfigure(SharedTypes.Singleton):
                      "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTB_REGISTER",
                      "CONVERSION_HOT_BOX_HEATSINK_THERM_CONSTC_REGISTER",
                      "HOT_BOX_HEATSINK_TEMPERATURE_REGISTER"]))
-
-            self.opGroups["SLOW"]["STREAMER"].addOperation(
-                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                    ["STREAM_CavityTemp","CAVITY_TEMPERATURE_REGISTER"]))
 
             self.opGroups["SLOW"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
@@ -587,6 +687,22 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["FAST"]["CONTROLLER"].addOperation(
                 Operation("ACTION_VALVE_CNTRL_STEP"))
 
+        # Accelerometer handling
+        accelerometerPresent = self.installCheck("ACCELEROMETER_PRESENT")
+        if accelerometerPresent:
+            self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                Operation("ACTION_ACC_READ_ACCEL",
+                          ["ACCELEROMETER_X_REGISTER","ACCELEROMETER_Y_REGISTER","ACCELEROMETER_Z_REGISTER"]))
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                          ["STREAM_AccelX","ACCELEROMETER_X_REGISTER"]))
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                          ["STREAM_AccelY","ACCELEROMETER_Y_REGISTER"]))
+            self.opGroups["FAST"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                          ["STREAM_AccelZ","ACCELEROMETER_Z_REGISTER"]))
+
         # Ringdown detector variable gain control
 
         rddVarGainPresent = self.installCheck("RDD_VAR_GAIN_PRESENT")
@@ -640,8 +756,29 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                     ["STREAM_Flow1","FLOW1_REGISTER"]))
 
+        if self.batteryMonitorPresent:
+            self.opGroups["MEDIUM"]["SENSOR_READ"].addOperation(
+                Operation("ACTION_BATTERY_MONITOR_READ_REGS",
+                          ["BATTERY_MONITOR_STATUS_REGISTER",
+                           "BATTERY_MONITOR_CHARGE_REGISTER",
+                           "BATTERY_MONITOR_VOLTAGE_REGISTER",
+                           "BATTERY_MONITOR_CURRENT_REGISTER",
+                           "BATTERY_MONITOR_TEMPERATURE_REGISTER"]))
+            self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_Battery_Voltage","BATTERY_MONITOR_VOLTAGE_REGISTER"]))
+            self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_Battery_Current","BATTERY_MONITOR_CURRENT_REGISTER"]))
+            self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_Battery_Charge","BATTERY_MONITOR_CHARGE_REGISTER"]))
+            self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_Battery_Temperature","BATTERY_MONITOR_TEMPERATURE_REGISTER"]))
+
         # Stop the scheduler before loading new schedule
-        sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0);
+        sender.wrRegUint("SCHEDULER_CONTROL_REGISTER",0)
         # Schedule operation groups which are non-empty
         groups = [g for c in self.opGroups.values()
                     for g in c.values() if g]
@@ -695,6 +832,23 @@ class DasConfigure(SharedTypes.Singleton):
             self.i2cConfig[ident] = (status >= 0)
             print "%s present: %s" % (ident,"True" if self.i2cConfig[ident] else "False")
 
+        if accelerometerPresent:
+            ADXL345_REG_DEVID = 0
+            ADXL345_REG_BW_RATE = 0x2C
+            ADXL345_REG_POWER_CTL = 0x2D
+            ADXL345_REG_DATA_FORMAT = 0x31
+            print "Accelerometer ID: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG",[ADXL345_REG_DEVID])),)
+            sender.doOperation(Operation("ACTION_ACC_WRITE_REG",[ADXL345_REG_BW_RATE, 9]))
+            print "Data rate code: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG",[ADXL345_REG_BW_RATE])),)
+            data_format_and_range = sender.doOperation(Operation("ACTION_ACC_READ_REG",[ADXL345_REG_DATA_FORMAT]))
+            data_format_and_range &= ~0x0F
+            data_format_and_range |= 0x3 # 0=2g, 1=4g, 2=8g, 3=16g
+            data_format_and_range |= 0x8
+            sender.doOperation(Operation("ACTION_ACC_WRITE_REG",[ADXL345_REG_DATA_FORMAT, data_format_and_range]))
+            print "Data format and range code: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG",[ADXL345_REG_DATA_FORMAT])),)
+            sender.doOperation(Operation("ACTION_ACC_WRITE_REG",[ADXL345_REG_POWER_CTL, 0x08]))
+
+
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
@@ -708,14 +862,14 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("LASER3_CURRENT_MONITOR_REGISTER",130.0)
         sender.wrRegFloat("LASER4_CURRENT_MONITOR_REGISTER",140.0)
 
-        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER", 4368.475)
-        sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER", 4351.434)
-        sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER", 4201.435)
-        sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER", 39538.5)
-        sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",41217.0)
+        sender.wrRegFloat("ETALON_RESISTANCE_REGISTER",5800.0)
+        sender.wrRegFloat("WARM_BOX_RESISTANCE_REGISTER",5900.0)
+        sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
+        sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
+        sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
 
-        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER", 10977899)
-        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER", 2022245)
+        sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
+        sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)
 
         # Start the ringdown manager
         runCont = (1<<interface.RDMAN_CONTROL_RUN_B) | (1<<interface.RDMAN_CONTROL_CONT_B)
@@ -728,6 +882,10 @@ class DasConfigure(SharedTypes.Singleton):
         runCont = (1<<interface.DYNAMICPWM_CS_RUN_B) | (1<<interface.DYNAMICPWM_CS_CONT_B) | (1<<interface.DYNAMICPWM_CS_PWM_ENABLE_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_INLET","DYNAMICPWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_DYNAMICPWM_OUTLET","DYNAMICPWM_CS"]))
+
+        sender.doOperation(Operation("ACTION_BATTERY_MONITOR_WRITE_BYTE",
+                                     [1, 0xFC]))
+
         time.sleep(2)
         sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         # Set the scheduler running

@@ -29,9 +29,10 @@ RUN apt-get install -y xterm
 # Libraries for VSCode
 RUN apt-get install -y libnspr4 libnss3
 # Patch (see https://github.com/Microsoft/vscode/issues/3451)
-WORKDIR /usr/lib/x86_64-linux-gnu/
-RUN cp libxcb.so.1 libxcb.so.1.orig
-RUN sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/x86_64-linux-gnu/libxcb.so.1
+RUN mkdir /root/lib
+RUN cp /usr/lib/x86_64-linux-gnu/libxcb.so.1 /root/lib/libxcb.so.1
+RUN sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /root/lib/libxcb.so.1
+RUN apt-get update -y
 # Install VSCode
 WORKDIR /home/G2000/resources
 RUN wget -O code.deb https://go.microsoft.com/fwlink/?LinkID=760868
@@ -58,6 +59,7 @@ COPY Picarro.pth /opt/conda/lib/python2.7/site-packages/Picarro.pth
 RUN mkdir /mnt/applog
 
 # VNC directories and files
+RUN apt-get install -y autocutsel
 RUN mkdir /root/.vnc
 RUN echo 12345 | vncpasswd -f > /root/.vnc/passwd
 RUN chmod 600 /root/.vnc/passwd
@@ -65,6 +67,10 @@ COPY xstartup /root/.vnc/xstartup
 RUN chmod 755 /root/.vnc/xstartup
 
 COPY setup-start /usr/bin
+
+# Copy code.desktop file to use modified libxcb.so library
+RUN mkdir -p /root/.local/share/applications
+COPY code.desktop /root/.local/share/applications/code.desktop
 
 WORKDIR /root
 # Set up path to Anaconda Python

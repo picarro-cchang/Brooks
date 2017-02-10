@@ -387,6 +387,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         else:
             raise SharedTypes.DasException("Type %s of register %s is not known" % (ri.type,regIndexOrName,))
 
+    def rdRingdownMem(self, offset, numWords):
+        return [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(offset,numWords)]
+
+    def wrRingdownMem(self, offset, listOfUint32):
+        self.dasInterface.hostToDspSender.wrRingdownMemArray(offset,listOfUint32)
+
     def rdRingdown(self,bank):
         """Fetches the contents of ringdown memory from the specified bank"""
         dataBase = (0x0, 0x4000)
@@ -511,13 +517,17 @@ class DriverRpcHandler(SharedTypes.Singleton):
         name = config.writeConfig(filename)
         Log("Saved instrument configuration to file %s" % (name,),Level=1)
 
+    def getHistoryByCommand(self, command, args=None):
+        """Not implemented"""
+        return []
+
     def getConfigFile(self):
         configFile = os.path.abspath(InstrumentConfig().filename)
         return configFile
 
     def wrDac(self,channel,value):
         """Writes "value" to the specified analog interface DAC channel. """
-        self.dasInterface.hostToDspSender.wrDac(channel,value)
+        self.driver.auxAccessor.wrDac(channel,value)
 
     def rddCommand(self,command):
         """Issues command for ringdown detector variable gain board"""

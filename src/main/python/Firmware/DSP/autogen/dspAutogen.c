@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2017 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
@@ -16,10 +16,10 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[461];
+RegTypes regTypes[505];
 
 /* I2C devices */
-I2C_device i2c_devices[35] = {
+I2C_device i2c_devices[33] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -37,22 +37,20 @@ I2C_device i2c_devices[35] = {
     {1, 0, 0x26},
     {1, 0, 0x15},
     {1, 0, 0x50},
+    {0, 7, 0x53},
     {0, 7, 0x27},
     {0, 7, 0x26},
     {0, 7, 0x24},
     {0, 7, 0x17},
     {0, 7, 0x14},
     {0, 7, 0x15},
+    {0, 7, 0x54},
     {0, 7, 0x2c},
-    {1, 4, 0x14},
-    {1, 4, 0x15},
-    {1, 4, 0x24},
-    {1, 4, 0x26},
-    {1, 4, 0x50},
     {0, 7, 0x49},
     {0, -1, 0x4e},
     {1, 4, 0x70},
     {0, 4, 0x10},
+    {0, 5, 0x64},
     {0, -1, 0x70},
     {1, -1, 0x71}};
 
@@ -161,6 +159,12 @@ void initRegisters()
     writeRegister(LASER1_CURRENT_SWEEP_INCR_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(LASER1_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(LASER1_EXTRA_COARSE_SCALE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER1_EXTRA_FINE_SCALE_REGISTER,d);
+    d.asInt = 0;
+    writeRegister(LASER1_EXTRA_OFFSET_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER2_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -237,6 +241,12 @@ void initRegisters()
     writeRegister(LASER2_CURRENT_SWEEP_INCR_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(LASER2_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(LASER2_EXTRA_COARSE_SCALE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER2_EXTRA_FINE_SCALE_REGISTER,d);
+    d.asInt = 0;
+    writeRegister(LASER2_EXTRA_OFFSET_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER3_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -313,6 +323,12 @@ void initRegisters()
     writeRegister(LASER3_CURRENT_SWEEP_INCR_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(LASER3_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(LASER3_EXTRA_COARSE_SCALE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER3_EXTRA_FINE_SCALE_REGISTER,d);
+    d.asInt = 0;
+    writeRegister(LASER3_EXTRA_OFFSET_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER4_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -389,6 +405,12 @@ void initRegisters()
     writeRegister(LASER4_CURRENT_SWEEP_INCR_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(LASER4_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(LASER4_EXTRA_COARSE_SCALE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER4_EXTRA_FINE_SCALE_REGISTER,d);
+    d.asInt = 0;
+    writeRegister(LASER4_EXTRA_OFFSET_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_ETALON_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -479,6 +501,38 @@ void initRegisters()
     writeRegister(CONVERSION_CAVITY_THERM_CONSTC_REGISTER,d);
     d.asFloat = 124000;
     writeRegister(CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY_THERM1_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY_THERM1_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY_THERM1_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY_THERMISTOR1_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY_THERM2_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY_THERM2_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY_THERM2_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY_THERMISTOR2_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY_THERM3_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY_THERM3_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY_THERM3_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY_THERMISTOR3_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY_THERM4_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY_THERM4_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY_THERM4_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(CAVITY_TEC_REGISTER,d);
     d.asFloat = 32768.0;
@@ -931,6 +985,16 @@ void initRegisters()
     writeRegister(FLOW_2_SETPOINT_REGISTER,d);
     d.asFloat = 400;
     writeRegister(FLOW_3_SETPOINT_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(BATTERY_MONITOR_STATUS_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(BATTERY_MONITOR_CHARGE_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(BATTERY_MONITOR_VOLTAGE_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(BATTERY_MONITOR_CURRENT_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(BATTERY_MONITOR_TEMPERATURE_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -987,6 +1051,9 @@ void initRegisters()
     regTypes[LASER1_CURRENT_SWEEP_MAX_REGISTER] = float_type;
     regTypes[LASER1_CURRENT_SWEEP_INCR_REGISTER] = float_type;
     regTypes[LASER1_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[LASER1_EXTRA_COARSE_SCALE_REGISTER] = float_type;
+    regTypes[LASER1_EXTRA_FINE_SCALE_REGISTER] = float_type;
+    regTypes[LASER1_EXTRA_OFFSET_REGISTER] = int_type;
     regTypes[CONVERSION_LASER2_THERM_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_LASER2_THERM_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_LASER2_THERM_CONSTC_REGISTER] = float_type;
@@ -1027,6 +1094,9 @@ void initRegisters()
     regTypes[LASER2_CURRENT_SWEEP_MAX_REGISTER] = float_type;
     regTypes[LASER2_CURRENT_SWEEP_INCR_REGISTER] = float_type;
     regTypes[LASER2_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[LASER2_EXTRA_COARSE_SCALE_REGISTER] = float_type;
+    regTypes[LASER2_EXTRA_FINE_SCALE_REGISTER] = float_type;
+    regTypes[LASER2_EXTRA_OFFSET_REGISTER] = int_type;
     regTypes[CONVERSION_LASER3_THERM_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_LASER3_THERM_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_LASER3_THERM_CONSTC_REGISTER] = float_type;
@@ -1067,6 +1137,9 @@ void initRegisters()
     regTypes[LASER3_CURRENT_SWEEP_MAX_REGISTER] = float_type;
     regTypes[LASER3_CURRENT_SWEEP_INCR_REGISTER] = float_type;
     regTypes[LASER3_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[LASER3_EXTRA_COARSE_SCALE_REGISTER] = float_type;
+    regTypes[LASER3_EXTRA_FINE_SCALE_REGISTER] = float_type;
+    regTypes[LASER3_EXTRA_OFFSET_REGISTER] = int_type;
     regTypes[CONVERSION_LASER4_THERM_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_LASER4_THERM_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_LASER4_THERM_CONSTC_REGISTER] = float_type;
@@ -1107,6 +1180,9 @@ void initRegisters()
     regTypes[LASER4_CURRENT_SWEEP_MAX_REGISTER] = float_type;
     regTypes[LASER4_CURRENT_SWEEP_INCR_REGISTER] = float_type;
     regTypes[LASER4_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[LASER4_EXTRA_COARSE_SCALE_REGISTER] = float_type;
+    regTypes[LASER4_EXTRA_FINE_SCALE_REGISTER] = float_type;
+    regTypes[LASER4_EXTRA_OFFSET_REGISTER] = int_type;
     regTypes[CONVERSION_ETALON_THERM_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_ETALON_THERM_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_ETALON_THERM_CONSTC_REGISTER] = float_type;
@@ -1162,6 +1238,30 @@ void initRegisters()
     regTypes[CAVITY_RESISTANCE_REGISTER] = float_type;
     regTypes[CAVITY_TEMPERATURE_REGISTER] = float_type;
     regTypes[CAVITY_THERMISTOR_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM1_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM1_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM1_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY_RESISTANCE1_REGISTER] = float_type;
+    regTypes[CAVITY_TEMPERATURE1_REGISTER] = float_type;
+    regTypes[CAVITY_THERMISTOR1_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM2_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM2_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM2_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY_RESISTANCE2_REGISTER] = float_type;
+    regTypes[CAVITY_TEMPERATURE2_REGISTER] = float_type;
+    regTypes[CAVITY_THERMISTOR2_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM3_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM3_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM3_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY_RESISTANCE3_REGISTER] = float_type;
+    regTypes[CAVITY_TEMPERATURE3_REGISTER] = float_type;
+    regTypes[CAVITY_THERMISTOR3_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM4_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM4_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY_THERM4_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY_RESISTANCE4_REGISTER] = float_type;
+    regTypes[CAVITY_TEMPERATURE4_REGISTER] = float_type;
+    regTypes[CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER] = float_type;
     regTypes[CAVITY_TEC_REGISTER] = float_type;
     regTypes[CAVITY_MANUAL_TEC_REGISTER] = float_type;
     regTypes[CAVITY_TEMP_CNTRL_STATE_REGISTER] = uint_type;
@@ -1392,6 +1492,14 @@ void initRegisters()
     regTypes[FLOW_1_SETPOINT_REGISTER] = float_type;
     regTypes[FLOW_2_SETPOINT_REGISTER] = float_type;
     regTypes[FLOW_3_SETPOINT_REGISTER] = float_type;
+    regTypes[BATTERY_MONITOR_STATUS_REGISTER] = float_type;
+    regTypes[BATTERY_MONITOR_CHARGE_REGISTER] = float_type;
+    regTypes[BATTERY_MONITOR_VOLTAGE_REGISTER] = float_type;
+    regTypes[BATTERY_MONITOR_CURRENT_REGISTER] = float_type;
+    regTypes[BATTERY_MONITOR_TEMPERATURE_REGISTER] = float_type;
+    regTypes[ACCELEROMETER_X_REGISTER] = float_type;
+    regTypes[ACCELEROMETER_Y_REGISTER] = float_type;
+    regTypes[ACCELEROMETER_Z_REGISTER] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1413,10 +1521,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return streamFpgaRegisterAsFloat(numInt,params,env);
         case ACTION_RESISTANCE_TO_TEMPERATURE:
             return r_resistanceToTemperature(numInt,params,env);
-        case ACTION_UPDATE_FROM_SIMULATORS:
-            return r_updateFromSimulators(numInt,params,env);
-        case ACTION_STEP_SIMULATORS:
-            return r_stepSimulators(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SET_COMMAND:
+            return r_tempCntrlSetCommand(numInt,params,env);
+        case ACTION_APPLY_PID_STEP:
+            return r_applyPidStep(numInt,params,env);
         case ACTION_TEMP_CNTRL_LASER1_INIT:
             return r_tempCntrlLaser1Init(numInt,params,env);
         case ACTION_TEMP_CNTRL_LASER1_STEP:
@@ -1557,6 +1665,24 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_rdd_cntrl_step(numInt,params,env);
         case ACTION_RDD_CNTRL_DO_COMMAND:
             return r_rdd_cntrl_do_command(numInt,params,env);
+        case ACTION_BATTERY_MONITOR_WRITE_BYTE:
+            return r_batt_mon_write_byte(numInt,params,env);
+        case ACTION_BATTERY_MONITOR_READ_REGS:
+            return r_batt_mon_read_regs(numInt,params,env);
+        case ACTION_ACC_READ_REG:
+            return r_acc_read_reg(numInt,params,env);
+        case ACTION_ACC_WRITE_REG:
+            return r_acc_write_reg(numInt,params,env);
+        case ACTION_ACC_READ_ACCEL:
+            return r_acc_read_accel(numInt,params,env);
+        case ACTION_READ_THERMISTOR_RESISTANCE_16BIT:
+            return r_read_thermistor_resistance_16bit(numInt,params,env);
+        case ACTION_AVERAGE_FLOAT_REGISTERS:
+            return r_average_float_registers(numInt,params,env);
+        case ACTION_UPDATE_FROM_SIMULATORS:
+            return r_update_from_simulators(numInt,params,env);
+        case ACTION_STEP_SIMULATORS:
+            return r_step_simulators(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

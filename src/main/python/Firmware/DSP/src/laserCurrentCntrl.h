@@ -25,10 +25,16 @@ typedef struct LASER_CURRENT_CNTRL
     float *swpMin_;   // Minimum sweep value
     float *swpMax_;   // Maximum sweep value
     float *swpInc_;   // Sweep increment
+    float *extra_coarse_scale_; // Scale factor for coarse current when applying extra current
+    float *extra_fine_scale_; // Scale factor for fine current when applying extra current
+    int *extra_offset_; // Offset when applying extra current
     // FPGA register indices
     unsigned int fpga_control;
     unsigned int fpga_coarse;
     unsigned int fpga_fine;
+    unsigned int fpga_extra_coarse_scale;
+    unsigned int fpga_extra_fine_scale;
+    unsigned int fpga_extra_offset;
     // Local variables for controller
     unsigned int laserNum; // Laser number (1-origin)
     float coarse;

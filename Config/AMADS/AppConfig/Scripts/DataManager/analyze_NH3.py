@@ -34,7 +34,7 @@ if _PERSISTENT_["init"]:
     cp.close()
     _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
-exec _PERSISTENT_["adjustOffsetScript"] in globals()
+#exec _PERSISTENT_["adjustOffsetScript"] in globals()
 
 
 REPORT_UPPER_LIMIT = 5000.0
@@ -136,6 +136,8 @@ if _DATA_["species"] == 2:
         pass
 
 max_adjust = 5.0e-5
+
+exec _PERSISTENT_["adjustOffsetScript"] in globals()
 
 # Check instrument status and do not do any updates if any parameters are unlocked
 

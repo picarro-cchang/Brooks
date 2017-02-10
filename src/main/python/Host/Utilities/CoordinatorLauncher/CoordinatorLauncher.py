@@ -12,9 +12,7 @@ import subprocess
 import wx
 import time
 import threading
-import win32api
-import win32process
-import win32con
+import psutil
 from configobj import ConfigObj
 from Host.Utilities.CoordinatorLauncher.CoordinatorLauncherFrame import CoordinatorLauncherFrame
 from Host.Common import CmdFIFO
@@ -32,18 +30,6 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-def getWinProcessListStr():
-    pList = win32process.EnumProcesses()
-    moduleList = []
-    for p in pList:
-        try:
-            h = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ,0,p)
-            moduleList.append(win32process.GetModuleFileNameEx(h,None))
-        except Exception,e:
-            print "Cannot fetch information for %s: %s" % (p,e)
-    processListStr = "\n".join(moduleList)
-    return processListStr
-
 class CoordinatorLauncher(CoordinatorLauncherFrame):
     def __init__(self, configFile, *args, **kwds):
         self.co = ConfigObj(configFile)
@@ -51,7 +37,10 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         coorChoices.remove("Main")
         CoordinatorLauncherFrame.__init__(self, coorChoices, *args, **kwds)
         apacheDir = self.co["Main"]["APACHEDir"].strip()
-        self.coordinatorExe = os.path.join(apacheDir, "HostExe/Coordinator.exe")
+        try:
+            self.launchType = self.co["Main"]["Type"].strip().lower()
+        except:
+            self.launchType = "exe" if sys.platform == "win32" else "py"
         self.coordinatorIniDir = os.path.join(apacheDir, "AppConfig/Config/Coordinator")
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
@@ -73,17 +62,18 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
 
     def onLaunch(self, event):
         try:
-            winProcessListStr = getWinProcessListStr()
-            if "Coordinator.exe" in winProcessListStr:
-                d = wx.MessageDialog(None,"Coordinator is currently running.\nDo you want to re-start the Coordinator now?", "Re-start Coordinator Confirmation", \
-                style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
-                restart = (d.ShowModal() == wx.ID_YES)
-                d.Destroy()
-                if restart:
-                    os.system("C:/WINDOWS/system32/taskkill.exe /IM Coordinator.exe /F")
-                    time.sleep(1)
-                else:
-                    return
+            myPid = os.getpid()
+            for proc in psutil.process_iter():
+                if "Coordinator." in " ".join(proc.cmdline()) and (proc.pid != myPid):
+                    d = wx.MessageDialog(None,"Coordinator is currently running.\nDo you want to re-start the Coordinator now?", "Re-start Coordinator Confirmation", \
+                        style=wx.YES_NO | wx.ICON_INFORMATION | wx.STAY_ON_TOP | wx.YES_DEFAULT)
+                    restart = (d.ShowModal() == wx.ID_YES)
+                    d.Destroy()
+                    if restart:
+                        proc.kill()
+                        time.sleep(1)
+                    else:
+                        return
         except Exception, err:
             print "%r" % err
 
@@ -108,11 +98,17 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         self.Destroy()
 
     def _launchCoordinator(self):
-        info = subprocess.STARTUPINFO()
+        #info = subprocess.STARTUPINFO()
         argList = self.coordinatorArgs.split(" ")
         while "" in argList:
             argList.remove("")
-        subprocess.Popen([self.coordinatorExe] + argList + ["-c", self.coordinatorIni], startupinfo=info)
+        if self.launchType != "exe":
+            if sys.platform == "win32":
+                info = subprocess.STARTUPINFO()
+                proc = subprocess.Popen(["python.exe", "Coordinator.py"] + argList + ["-c",self.coordinatorIni], startupinfo=info)
+            elif sys.platform == "linux2":
+                cmd = ["python", "-O", "/Picarro/G2000/Host/Coordinator/Coordinator.py"] + argList + ["-c",self.coordinatorIni] #self.supervisorIni]
+                proc = subprocess.Popen(cmd)
 
 HELP_STRING = \
 """
@@ -157,8 +153,7 @@ def HandleCommandSwitches():
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
-    app = wx.PySimpleApp()
-    wx.InitAllImageHandlers()
+    app = wx.App(False)
     frame = CoordinatorLauncher(configFile, None, -1, "")
     app.SetTopWindow(frame)
     frame.Show()

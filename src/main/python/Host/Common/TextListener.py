@@ -17,6 +17,7 @@ import zmq
 import Queue
 import threading
 import time
+import traceback
 
 class TextListener(threading.Thread):
     """ Listener object which allows access to line-oriented text broadcasts via INET sockets """

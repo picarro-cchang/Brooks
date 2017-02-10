@@ -7,39 +7,46 @@ import os
 import sys
 import inspect
 from math import exp
-from numpy import mean
+from numpy import mean, sqrt
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 from Host.Common.InstMgrInc import INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, INSTMGR_STATUS_PRESSURE_LOCKED
 # Need to find path to the translation table
 here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
 if here not in sys.path: sys.path.append(here)
 from translate import newname
-from scipy import stats
+from DynamicNoiseFilter import variableExpAverage,negative_number_filter 
+# for the simulation of noise
 # Static variables used for wlm offsets, bookending and averaging
-sigma = 0.10
 
 if _PERSISTENT_["init"]:
     _PERSISTENT_["wlm1_offset"] = 0.0
     _PERSISTENT_["wlm2_offset"] = 0.0
-    _PERSISTENT_["pzt1_offset"] = 0.0 # _DRIVER_.rdDasReg("PZT_OFFSET_VIRTUAL_LASER1")
-    _PERSISTENT_["pzt2_offset"] = 0.0 # _DRIVER_.rdDasReg("PZT_OFFSET_VIRTUAL_LASER2")
+    _PERSISTENT_["pzt1_offset"] = _DRIVER_.rdDasReg("PZT_OFFSET_VIRTUAL_LASER1")
+    _PERSISTENT_["pzt2_offset"] = _DRIVER_.rdDasReg("PZT_OFFSET_VIRTUAL_LASER2")
     _PERSISTENT_["bufferHF30"]  = []
-    _PERSISTENT_["bufferHF30_NZ"]  = []
+    #_PERSISTENT_["bufferHF30_NZ"]  = []
     _PERSISTENT_["bufferHF120"] = []
     _PERSISTENT_["bufferHF300"] = []
-    _PERSISTENT_["bufferNH330_NZ"]  = []
+    #_PERSISTENT_["bufferNH330_NZ"]  = []
     _PERSISTENT_["bufferNH330"]  = []
     _PERSISTENT_["bufferNH3120"] = []
     _PERSISTENT_["bufferNH3300"] = []
     
     _PERSISTENT_["bufferExpAvg_HF"] = []
     _PERSISTENT_["bufferExpAvg_NH3"] = []
-    _PERSISTENT_["bootstrapcounter_HF"]=0.0
-    _PERSISTENT_["bootstrapcounter_NH3"]=0.0
-    _PERSISTENT_["previousY_HF"]=0.0
-    _PERSISTENT_["previousY_NH3"]=0.0
+
+    _PERSISTENT_["bufferZZ_HF"] = []
+    _PERSISTENT_["bufferZZ_NH3"] = []
+    
+    _PERSISTENT_["previousNoise_HF"]=0.0
+    _PERSISTENT_["previousNoise_NH3"]=0.0
     _PERSISTENT_["previousS_HF"]=0.0
     _PERSISTENT_["previousS_NH3"]=0.0
+    _PERSISTENT_["tau_HF"]=0.0
+    _PERSISTENT_["tau_NH3"]=0.0
+    _PERSISTENT_["HF_filter"]=0.0
+    _PERSISTENT_["NH3_filter"]=0.0
+    _PERSISTENT_["Pressure_save"]= 140.0
     
     _PERSISTENT_["ignore_count"] = 5
     _PERSISTENT_["init"] = False
@@ -56,106 +63,6 @@ TARGET_SPECIES = [2, 4, 60, 61]
         # return REPORT_LOWER_LIMIT
     # else:
         # return value
- 
-
-#
-#
-# EWMA - Exponential Weighted Moving Average
-#
-# From http://www.itl.nist.gov/div898/handbook/pmc/section4/pmc431.htm
-#
-# Single Exponential Smoothing general formula for t >= 3
-#
-# S(t) = a*y(t-1) + (1 - a)*S(t-1)
-#
-# with a = alpha, y = input raw signal, S = output smoothed signal
-#
-# Bootstrapping the series
-# t=0
-# S(0) = y(0)
-#
-# t=1
-# S(1) = y(0)
-#
-# t=2
-# S(2) = y(1)
-#
-# t=3
-# S(3) = a*y(2) + (1-a)*S(2)
-#
-#class SingleExponentialSmoother(object):
-
- #   def __init__(self):
- #       self.__bootstrapcounter = 0
- #       self.__alpha = 0.5
- #       self.__previousS = 0
- #       self.__previousY = 0
-
-    # Smooth the current input data. The alpha_factor allows dynamic
-    # adjustment of the smoothing time constant.
-    #
-    # Allowed values of 0.0 < alpha_factor <= 2.0
-    # alpha_factor = 2.0 smoothing is disabled
-    # alpha_factor < 1.0 more smoothing and slower rise/fall response.
-    #
-    # Inputs:
-    # y - (double) Unfiltered datum
-    # alpha_factor - (double) scale the alpha smoothing factor
-    #
-    # Outputs:
-    # (double) The smooth datum
-    #
-
-def smooth(y, alpha_factor,__bootstrapcounter,__previousS,__previousY):
-    current_s = 0
-    __alpha = 0.5
-    #print y, __bootstrapcounter, __previousS, __previousY
-    # t = 0
-    if __bootstrapcounter == 0:
-        __previousY = y
-        current_s = y
-        __previousS = current_s
-
-    # t = 1, t = 2
-    elif __bootstrapcounter == 1 or __bootstrapcounter == 2:
-        current_s = __previousY
-        __previousS = current_s
-        __previousY = y
-
-    # t >= 3, general case
-    elif __bootstrapcounter > 2:
-        f = alpha_factor
-        current_s = __alpha*f*__previousY + (1-__alpha*f)*__previousS
-        __previousY = y
-        __previousS = current_s
-        
-    __bootstrapcounter += 1
-    #print y, __bootstrapcounter, __previousS, __previousY
-    return current_s, __bootstrapcounter, __previousS, __previousY
-
-def variableExpAverage(buffer, y, t, length, bootstrapcounter,previousS,previousY):
-    buffer.append((y,t))
-    
-    while t-buffer[0][1] > length:
-        buffer.pop(0)
-
-    alpha_factor = 1.0
-
-    if(len(buffer) >= length):
-        y_array = [y1[0] for y1 in buffer]
-        x_array = range(len(y_array))
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x_array, y_array)
-        if abs(slope) < 1.0:
-            if alpha_factor > 1.0:
-                alpha_factor = 1.0
-            if alpha_factor < 0.01:
-                alpha_factor = 0.01
-        else:
-            alpha_factor = 1.0
-    #print "input.....",y, bootstrapcounter,previousS,previousY        
-    sm,b,pS,pY = smooth(y,alpha_factor,bootstrapcounter,previousS,previousY)
-    #print "output...", sm,b,pS,pY
-    return sm,b,pS,pY
     
 def applyLinear(value,xform):
     return xform[0]*value + xform[1]
@@ -196,28 +103,54 @@ H1 = _INSTR_["water_crosstalk_linear"]
 A1H1 = _INSTR_["water_crossbroadening_linear"]
 A1H2 = _INSTR_["water_crossbroadening_quadratic"]
 
+# Check instrument status and do not do any updates if any parameters are unlocked
+
+pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
+cavityTempLocked =  _INSTR_STATUS_ & INSTMGR_STATUS_CAVITY_TEMP_LOCKED
+warmboxTempLocked = _INSTR_STATUS_ & INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+warmingUp =         _INSTR_STATUS_ & INSTMGR_STATUS_WARMING_UP
+systemError =       _INSTR_STATUS_ & INSTMGR_STATUS_SYSTEM_ERROR
+good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
+if abs(_DATA_["CavityPressure"]-140.0) > 0.1:
+    good = False
+
 try:
     temp = applyLinear(_DATA_["nh3_conc_ave"],NH3_CONC)
     _NEW_DATA_["NH3_uncorrected"] = temp
-    now = _OLD_DATA_["NH3_uncorrected"][-2].time
     h2o_actual = Hlin*_DATA_["peak15"] + Hquad*_DATA_["peak15"]**2
     str15 = 1.1794*_DATA_["peak15"] + 0.001042*_DATA_["peak15"]**2
     corrected = (temp + H1*_DATA_["peak15"])/(1.0 + A1H1*str15 + A1H2*str15**2)
     dry = corrected/(1.0-0.01*h2o_actual)
+    now = _OLD_DATA_["NH3_uncorrected"][-2].time
+    #add spikes
+    
+    #if ((now-_PERSISTENT_["TimeS"])> 200*(1.0+random.random())) and (_DATA_["species"]==4):
+    #    dry = dry + 10*random.random()
+    #    _PERSISTENT_["TimeS"] = now 
+    
     _NEW_DATA_["NH3_broadeningCorrected"] = corrected
     _NEW_DATA_["NH3_dry"] = dry
-    _NEW_DATA_["NH3"] = dry
-    #print dry
-    _NEW_DATA_["NH3_ExpAvg"],_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"] = variableExpAverage(_PERSISTENT_["bufferExpAvg_NH3"],dry,now,12,_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"])
+    _NEW_DATA_["NH3_raw"] = dry
+    
+    if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
+        _PERSISTENT_["NH3_filter"] = dry 
+        _PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"],_PERSISTENT_["tau_NH3"] = variableExpAverage(_PERSISTENT_["bufferZZ_NH3"],_PERSISTENT_["bufferExpAvg_NH3"],dry,now,1100,1,_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"])
+    _PERSISTENT_["Pressure_save"]=_DATA_["CavityPressure"]
+    _NEW_DATA_["NH3_sigma"]=_PERSISTENT_["previousNoise_NH3"]*1.5*sqrt(2)
+    _NEW_DATA_["NH3_ExpAvg"]=_PERSISTENT_["previousS_NH3"]
+    _NEW_DATA_["NH3_tau"]=_PERSISTENT_["tau_NH3"]
+    _NEW_DATA_["NH3_filter"] = _PERSISTENT_["NH3_filter"]
+    _NEW_DATA_["NH3raw-NH3expavg"] = _NEW_DATA_["NH3_filter"] - _NEW_DATA_["NH3_ExpAvg"]
+    _NEW_DATA_["NH3_ExpAvg_NZ"] = negative_number_filter("NH3",_NEW_DATA_["NH3_ExpAvg"])
+    _NEW_DATA_["NH3"] =_NEW_DATA_["NH3_ExpAvg_NZ"]
     #print "final=",_NEW_DATA_["NH3_ExpAvg"],_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"]
     NH330s= boxAverage(_PERSISTENT_["bufferNH330"],dry,now,30)
     _NEW_DATA_["NH3_30s"] = NH330s
     _NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["bufferNH3120"],dry,now,120)
     _NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["bufferNH3300"],dry,now,300)
-    if(dry <= 0.0):
-            dry = dry + abs(NH330s) + sigma	
-    _NEW_DATA_["NH3_30s_NZ"] = boxAverage(_PERSISTENT_["bufferNH330_NZ"],dry,now,30)
+   
 except:
+    _NEW_DATA_["NH3"] = dry
     pass
 
 try:
@@ -234,23 +167,30 @@ except:
     pass
 
 try:   
+    
     temp = applyLinear(_DATA_["hf_ppbv_ave"],HF_CONC)
-    _NEW_DATA_["HF"] = temp
-    now = _OLD_DATA_["HF"][-2].time
-    #print temp
+    _NEW_DATA_["HF_raw"] = temp
+    now = _OLD_DATA_["HF_raw"][-2].time
     HF30s = boxAverage(_PERSISTENT_["bufferHF30"],temp,now,30)
     _NEW_DATA_["HF_30sec"] = HF30s
     _NEW_DATA_["HF_2min"] = boxAverage(_PERSISTENT_["bufferHF120"],temp,now,120)
     _NEW_DATA_["HF_5min"] = boxAverage(_PERSISTENT_["bufferHF300"],temp,now,300)
-    _NEW_DATA_["HF_ExpAvg"],_PERSISTENT_["bootstrapcounter_HF"],_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousY_HF"] = variableExpAverage(_PERSISTENT_["bufferExpAvg_HF"],temp,now,12,_PERSISTENT_["bootstrapcounter_HF"],_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousY_HF"])
-    
+    if ((_DATA_["species"]==60)and (abs(_DATA_["CavityPressure"]-140.0) < 2.0)):
+        _PERSISTENT_["HF_filter"] = temp
+        _PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"], _PERSISTENT_["tau_HF"] = variableExpAverage(_PERSISTENT_["bufferZZ_HF"],_PERSISTENT_["bufferExpAvg_HF"],temp,now,1100,0,_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"])
+    _NEW_DATA_["HF_sigma"]=_PERSISTENT_["previousNoise_HF"]*1.5*sqrt(2)
+    _NEW_DATA_["HF_ExpAvg"]=_PERSISTENT_["previousS_HF"]
+    _NEW_DATA_["HF_tau"]=_PERSISTENT_["tau_HF"]
+    _NEW_DATA_["HF_filter"] = _PERSISTENT_["HF_filter"]
+    _NEW_DATA_["HFraw-HFexpavg"] = _NEW_DATA_["HF_filter"] - _PERSISTENT_["previousS_HF"]
+    _NEW_DATA_["HF_ExpAvg_NZ"] = negative_number_filter("HF",_NEW_DATA_["HF_ExpAvg"])
+    _NEW_DATA_["HF"] =_NEW_DATA_["HF_ExpAvg_NZ"]
     #_NEW_DATA_["HF_ExpAvg"] = temp 
     ##variableExpAverage(_PERSISTENT_["bufferExp_HF"],temp,now,12)
     #print _NEW_DATA_["HF_ExpAvg"]
-    if(temp <= 0.0):
-            temp = temp + abs(HF30s) + sigma/4.0	
-    _NEW_DATA_["HF_30sec_NZ"] = boxAverage(_PERSISTENT_["bufferHF30_NZ"],temp,now,30)   
+  
 except Exception, e:
+    _NEW_DATA_["HF"]=temp
     print "Exception: %s, %r" % (e,e)
     pass
 
@@ -262,16 +202,7 @@ except:
 max_adjust = 5.0e-5
 PZTgain = 0.05
 
-# Check instrument status and do not do any updates if any parameters are unlocked
 
-pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
-cavityTempLocked =  _INSTR_STATUS_ & INSTMGR_STATUS_CAVITY_TEMP_LOCKED
-warmboxTempLocked = _INSTR_STATUS_ & INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
-warmingUp =         _INSTR_STATUS_ & INSTMGR_STATUS_WARMING_UP
-systemError =       _INSTR_STATUS_ & INSTMGR_STATUS_SYSTEM_ERROR
-good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
-if abs(_DATA_["CavityPressure"]-140.0) > 0.1:
-    good = False
 if not good:
     print "Updating WLM offset not done because of bad instrument status"
 else:
@@ -301,7 +232,7 @@ else:
         if _PERSISTENT_["pzt2_offset"] > 32768 + 1.2*FSR:
             _PERSISTENT_["pzt2_offset"] -= FSR                    
         _NEW_DATA_["pzt2_offset"] = _PERSISTENT_["pzt2_offset"]
-        # _DRIVER_.wrDasReg("PZT_OFFSET_VIRTUAL_LASER2",_PERSISTENT_["pzt2_offset"])
+        _DRIVER_.wrDasReg("PZT_OFFSET_VIRTUAL_LASER2",_PERSISTENT_["pzt2_offset"])
 
     if _DATA_["species"] == 61: # Update the offset for virtual laser 1
         try:
@@ -328,7 +259,7 @@ else:
         if _PERSISTENT_["pzt1_offset"] > 32768 + 1.2*FSR:
             _PERSISTENT_["pzt1_offset"] -= FSR                    
         _NEW_DATA_["pzt1_offset"] = _PERSISTENT_["pzt1_offset"]
-        # _DRIVER_.wrDasReg("PZT_OFFSET_VIRTUAL_LASER1",_PERSISTENT_["pzt1_offset"])
+        _DRIVER_.wrDasReg("PZT_OFFSET_VIRTUAL_LASER1",_PERSISTENT_["pzt1_offset"])
             
 if _PERSISTENT_["ignore_count"] > 0:
     _PERSISTENT_["ignore_count"] = _PERSISTENT_["ignore_count"] - 1
