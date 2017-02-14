@@ -1308,8 +1308,8 @@ class QuickGui(wx.Frame):
         self.idUserCal = wx.NewId()
         self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
         self.iTools.AppendItem(self.iUserCal)
-        self.menuBar.EnableTop(1, False)
-        self.menuBar.EnableTop(2, False)
+        #self.menuBar.EnableTop(1, False)
+        #self.menuBar.EnableTop(2, False)
         try:
             self.pulseSource = self.config.get("PulseAnalyzer", "Source")
             self.idPulseAnalyzerParam = wx.NewId()

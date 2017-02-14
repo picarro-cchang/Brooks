@@ -419,6 +419,8 @@ elif sys.platform == "linux2":
             result = processHandle.poll()
             if result == None:
                 return True
+        elif isinstance(processHandle, int):
+            return psutil.pid_exists(processHandle)
         else:
             return psutil.pid_exists(processHandle.pid)
 
@@ -1021,10 +1023,10 @@ class Supervisor(object):
                 for line in subprocess.check_output(["netstat", "-nr"]).split("\n"):
                     if line.startswith('0.0.0.0'):
                         return line.split()[1]
-                        
+
             hostIp = getHostIp()
             self.ContainerServer = CmdFIFO.CmdFIFOServerProxy(
-                "http://%s:%d" % (hostIp, RPC_PORT_CONTAINER), 
+                "http://%s:%d" % (hostIp, RPC_PORT_CONTAINER),
                 "Container Client", IsDontCareConnection=False)
         print("Supervisor PID:", os.getpid())
 
