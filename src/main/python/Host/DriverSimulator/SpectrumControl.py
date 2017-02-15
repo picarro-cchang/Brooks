@@ -13,6 +13,7 @@ import math
 import random
 
 from Host.autogen import interface
+from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.Utilities import prop_das, prop_fpga
 
@@ -308,6 +309,8 @@ class SpectrumControl(object):
                 print "Ramp mode timeout"
                 return self.virtualTime + 0.001 * (self.ditherTimeout + self.rampTimeout)
         tunerValue, slope, ts = result
+        #if ts not None:
+        #    ts = timestamp.getTimestamp()
         self.sim.tunerSimulator.value = tunerValue
         self.sim.tunerSimulator.slope = slope
         self.sim.tunerSimulator.timestamp = ts
@@ -315,7 +318,21 @@ class SpectrumControl(object):
         loss = 0.001 * self.sim.driver.spectraSimulator(wavenumber, self.cavityPressure, 273.15 + self.cavityTemperature)
         loss *= (1.0 + 2e-4*random.gauss(0.0,1.0))
         rdResult = interface.RingdownEntryType()
-        rdResult.timestamp = int(ts)
+
+        #rdResult.timestamp = int(ts)
+        #
+        # The above method of computing the timestamp is very inaccurate
+        # (the output time lags significantly). This is manifested as the
+        # reported gas concentrations minutes or longer behind the system
+        # clock and new dat files are not created at the program intervals
+        # because the DataLogger new file clock starts with negative time.
+        #
+        # Below we override the computed timestamp and use the current time
+        # with the recorded simulation data.
+        # RSF 15Feb2017
+        #
+        rdResult.timestamp = timestamp.getTimestamp()
+
         rdResult.wlmAngle = thetaC
         rdResult.uncorrectedAbsorbance = loss  # ppm/cm
         rdResult.correctedAbsorbance = loss  # ppm/cm

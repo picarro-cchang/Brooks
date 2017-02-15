@@ -493,7 +493,12 @@ class TunerSimulator(Simulator):
          the given `slope`"""
         # Tuner accumulator has 9 extra bits of precision (512 times superresolution)
         # Each step takes 0.01ms
-        return change * 512 * 0.01 / slope
+        #
+        # Added the factor 0.25 to speed up the simulator for testing purposes.
+        # See the Scheduler in DasSimulator.py.
+        # RSF 15Feb2017
+        #
+        return 0.25 * change * 512 * 0.01 / slope
 
     def getStateAt(self, ts):
         """Get tuner value and slope at the specified timestamp `ts` in ms

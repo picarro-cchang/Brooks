@@ -233,6 +233,14 @@ class DasSimulator(object):
 
 
 class Scheduler(object):
+    # Sze wrote the period_ms multiplier as 100.
+    # With this setting the CFADS simulator runs close to real-time.
+    #
+    # For testing code I need it to run faster.
+    # I changed it to 25 and the TunerSimulator::timeRequired()
+    # multiplier to 0.25.  This sped up the simulator about 4x.
+    # RSF 15Feb2017
+    #
     def __init__(self, operationGroups, ts, doOperation):
         # Within the constructor a runqueue is initialized
         #  with groups of operations which have to be performed
@@ -250,7 +258,7 @@ class Scheduler(object):
 
     def initRunqueue(self):
         for group in self.operationGroups:
-            period_ms = 100*group.period
+            period_ms = 25*group.period # Originally 100, 25 makes the simulator faster
             when = int(period_ms * math.ceil(float(self.startTimestamp) / period_ms))
             item = (when, group.priority, group)
             heapq.heappush(self.runqueue, item)
@@ -263,7 +271,7 @@ class Scheduler(object):
                 return
             heapq.heappop(self.runqueue)
             # Enqueue next time this is to be performed
-            period_ms = 100*group.period
+            period_ms = 25*group.period # Originally 100, 25 makes the simulator faster
             item = (when + period_ms, group.priority, group)
             heapq.heappush(self.runqueue, item)
             # Carry out the actions in the list
