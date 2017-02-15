@@ -30,8 +30,8 @@ class TextDisplay(HasTraits):
 class BuildHelper(HasTraits):
     build = Button(label="Start Build")
     build_e = Bool(True)
-    check_working_tree = Bool(True, desc="Ensure that working tree is consistent with repository", label="Check working tree")
-    check_configs = Bool(True, desc="Check configuration directory versions are up-to-date", label="Check configurations")
+    check_working_tree = Bool(False, desc="Ensure that working tree is consistent with repository", label="Check working tree")
+    check_configs = Bool(False, desc="Check configuration directory versions are up-to-date", label="Check configurations")
     check_configs_e = Property(depends_on = ['product'])
     incr_version = Enum("major", "minor", "revision", "build", desc="Version field to increment", label="Increment Version",
                         visible_when="version=='Increment'")
@@ -40,7 +40,7 @@ class BuildHelper(HasTraits):
     push = Bool(False, desc="Push repository back to GitHub", label="Push repository")
     copy = Bool(False, desc="Copy installers to folders", label="Copy installers")
     changeDir = Button
-    product = Enum("g2000",
+    product = Enum("si2000",
                    "mobile",
                    "ai_autosampler",
                    "chem_correct",
@@ -57,13 +57,13 @@ class BuildHelper(HasTraits):
     task = Enum("make_installers", "run_unit_tests", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
 
     text_display = Instance(TextDisplay)
-    g2000_types_available = List(Str)
-    g2000_types = List(editor = CheckListEditor(name = 'g2000_types_available', cols=4, format_func=lambda x: x))
-    g2000_types_e = Property(depends_on = ['product'])
+    si2000_types_available = List(Str)
+    si2000_types = List(editor = CheckListEditor(name = 'si2000_types_available', cols=4, format_func=lambda x: x))
+    si2000_types_e = Property(depends_on = ['product'])
     mobile_types_available = List(Str)
     mobile_types = List(editor = CheckListEditor(name = 'mobile_types_available', cols=4, format_func=lambda x: x))
     mobile_types_e = Property(depends_on = ['product'])
-    types_toggle_button_label = Str('Set all G2000 types')
+    types_toggle_button_label = Str('Set all SI2000 types')
     types_toggle = Button(editor = ButtonEditor(label_value = 'types_toggle_button_label'))
     view = View(
         HGroup(
@@ -73,9 +73,9 @@ class BuildHelper(HasTraits):
                 Item(name="official"),
                 Item(name="check_working_tree"),
                 Group(
-                    Item(name="g2000_types", style = "custom", show_label=False),
+                    Item(name="si2000_types", style = "custom", show_label=False),
                     Item(name="types_toggle", show_label=False),
-                    enabled_when="g2000_types_e", show_border=True, label='G2000'
+                    enabled_when="si2000_types_e", show_border=True, label='si2000'
                 ),
                 Group(
                     Item(name="mobile_types", style = "custom", show_label=False),
@@ -102,7 +102,7 @@ class BuildHelper(HasTraits):
     )
 
     def __init__(self):
-        self.g2000_types_available = self.load_types_from_file("g2000")
+        self.si2000_types_available = self.load_types_from_file("si2000")
         self.mobile_types_available = self.load_types_from_file("mobile")
         self.text_display = TextDisplay()
         self.copyDir = ""
@@ -113,10 +113,10 @@ class BuildHelper(HasTraits):
         return sorted(config_info['buildTypes'].keys())
     
     def _get_check_configs_e(self):
-        return self.product=='g2000' or self.product=='mobile'
+        return self.product=='si2000' or self.product=='mobile'
 
-    def _get_g2000_types_e(self):
-        return self.product=='g2000'
+    def _get_si2000_types_e(self):
+        return self.product=='si2000'
         
     def _get_mobile_types_e(self):
         return self.product=='mobile'
@@ -128,12 +128,12 @@ class BuildHelper(HasTraits):
         return self.version=='Set'
 
     def _types_toggle_fired(self):
-        if self.types_toggle_button_label == 'Set all G2000 types':
-            self.types_toggle_button_label = 'Clear all G2000 types'
-            self.g2000_types = self.g2000_types_available
+        if self.types_toggle_button_label == 'Set all si2000 types':
+            self.types_toggle_button_label = 'Clear all si2000 types'
+            self.si2000_types = self.si2000_types_available
         else:
-            self.types_toggle_button_label = 'Set all G2000 types'
-            self.g2000_types = []
+            self.types_toggle_button_label = 'Set all si2000 types'
+            self.si2000_types = []
 
     def _official_changed(self):
         self.push = self.official
@@ -142,7 +142,7 @@ class BuildHelper(HasTraits):
     def _copy_changed(self):
         if self.copy:
             if self.copyDir == "":
-                defaultPath = r'S:\CRDS\CRD Engineering\Software\G2000'
+                defaultPath = r'S:\CRDS\CRD Engineering\Software\si2000'
             else:
                 defaultPath = self.copyDir
             d = wx.DirDialog(None, r"Select root directory and installers will be copied into subfolders named with analyzer species",

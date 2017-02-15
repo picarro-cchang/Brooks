@@ -6,21 +6,22 @@ from pybuilder.errors import BuildFailedException
 import shutil
 import textwrap
 import time
+import setupforPyd as setup
+import buildUtils
 
-ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
 INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'Tools', 'Release', 'InstallerScriptsWin7')
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
 
-class BuildG2000(Builder):
+class BuildSI2000(Builder):
     def __init__(self, project, logger):
-        super(BuildG2000, self).__init__(project, logger)
-        logger.info("Instantiating BuildG2000")
+        super(BuildSI2000, self).__init__(project, logger)
+        logger.info("Instantiating BuildSI2000")
 
     def initialize(self, product):
         project = self.project
         logger = self.logger
-        assert product.lower() == "g2000"
+        assert product.lower() == "si2000"
         version_file = os.path.join("versions","%s_version.json" % product)
         self.handle_version(version_file)
 
@@ -75,6 +76,27 @@ class BuildG2000(Builder):
         if return_code != 0:
             raise BuildFailedException("Error while executing compile_sources")
 
+    def copy_sources(self):
+        """
+        Copy selected files to sandbox. Existing files will be overwritten.
+        """
+        project = self.project
+        logger = self.logger
+        python_source =  project.expand_path("$dir_source_main_python")
+        python_target = project.expand_path("$dir_dist")
+        source_list = setup.get_raw_source_list(python_source)
+        source_list.extend(buildUtils.get_package_resource(python_source))
+        for f in source_list:
+            if not os.path.exists(f):
+                raise BuildFailedException("File not found: %s" % f)
+            else:
+                relative_path = os.path.relpath(f, python_source)
+                dist_file = os.path.join(python_target, relative_path)
+                dist_folder = os.path.dirname(dist_file)
+                if not os.path.exists(dist_folder):
+                    os.makedirs(dist_folder)
+                shutil.copyfile(f, dist_file)
+
     def publish(self):
         project = self.project
         logger = self.logger
@@ -121,50 +143,94 @@ class BuildG2000(Builder):
         logger.info("Writing version files into source tree")
         self._make_python_version_files()
 
+    def make_control_file(self, debian_dir, analyzer_type):
+        raw_version = self.project.get_property('raw_version')
+        with open(os.path.join(debian_dir, "control"), "w") as f:
+            f.write(
+"""\
+Package: SI2000
+Version: %s
+Section: science
+Priority: required
+Architecture: all
+Depends: 
+Maintainer: Yuan Ren <yren@picarro.com>
+Description: Picarro Host Software for Semiconductor Industry 
+ %s Analyzer
+ Version: %s
+"""           % (
+                raw_version, analyzer_type, raw_version
+                )
+            )
+
     def make_installers(self):
+        """
+        Make debian package from the sandbox.
+        """
         project = self.project
         logger = self.logger
         raw_version = project.get_property('raw_version')
+        project_full_name = '%s-%s' % (project.name, raw_version)
         config_info = project.get_property('config_info')
         sandbox_dir = project.expand_path('$dir_source_main_python')
-        resource_dir = project.expand_path('$dir_target/Installers/%s-%s' % (project.name, raw_version))
+        output_file_path = self.get_report_file_path("make_SI2000_installers")
         dist_dir = project.expand_path('$dir_dist')
-        output_file_path = self.get_report_file_path("make_g2000_installers")
+        dist_dir_temp = dist_dir + "_temp"
+        dist_dir_home = os.path.join(dist_dir, 'home')
+        dist_dir_new = os.path.join(dist_dir, 'home', 'picarro', 'SI2000')
+        # delete home folder that is possibly left from the last build
+        if os.path.isdir(dist_dir_home):
+            shutil.rmtree(dist_dir_home)
+        # create the desired directory tree: home/picarro/SI2000
+        os.rename(dist_dir, dist_dir_temp)
+        os.makedirs(os.path.join(dist_dir, 'home', 'picarro'))
+        os.rename(dist_dir_temp, dist_dir_new)
+        config_dir = os.path.join(os.getcwd(),'Config')
+        # copy commonconfig
+        common_config_dir = os.path.join(dist_dir_new, "CommonConfig")
+        if os.path.isdir(common_config_dir):
+            shutil.rmtree(common_config_dir)
+        shutil.copytree(os.path.join(config_dir, "CommonConfig"), common_config_dir)
+        # create launchers
+        buildUtils.make_xubuntu_launchers(dist_dir)
+        # make debian folder
+        debian_dir = os.path.join(dist_dir, "DEBIAN")
+        if not os.path.isdir(debian_dir):
+            os.makedirs(debian_dir)
+        shutil.copyfile("./bldsup/preinst", os.path.join(debian_dir, "preinst"))
+        shutil.copyfile("./bldsup/postinst", os.path.join(debian_dir, "postinst"))
+        os.system("chmod 755 %s" % os.path.join(debian_dir, "preinst"))
+        os.system("chmod 755 %s" % os.path.join(debian_dir, "postinst"))
+        # make installer directory
+        resource_dir = project.expand_path('$dir_target/Installers/%s' % project_full_name)
+        if not os.path.exists(resource_dir):
+            os.makedirs(resource_dir)
         for installer_type in project.get_property('types_to_build'):
-            species = config_info[installer_type]['species']
-            iss_filename = "setup_%s_%s.iss" % (installer_type, species)
-            setup_file_path = os.path.join(*(INSTALLER_SCRIPTS_DIR + (iss_filename,)))
-            logger.info("Building from %s" % setup_file_path)
-            config_dir = os.path.join(os.getcwd(),'Config')
-            #
-            # Build a fully qualified path for the scripts folder, so ISCC can find
-            # the include files (can't find them using a relative path here)
-            # Notes:
-            #
-            # installerVersion: must be of the form x.x.x.x, for baking version number
-            #                   into setup_xxx.exe metadata (for Explorer properties)
-            # hostVersion:      e.g., g2000_win7-x.x.x-x, displayed in the installer UI
-            # productVersion:   used for displaying Product version in Explorer properties
-            current_year = time.strftime("%Y")
+            logger.info("Building debian package for %s" % installer_type)
+            # copy config files
+            instr_config_dir = os.path.join(dist_dir_new, "InstrConfig")
+            if os.path.isdir(instr_config_dir):
+                shutil.rmtree(instr_config_dir)
+            shutil.copytree(os.path.join(config_dir, installer_type, "InstrConfig"), instr_config_dir)
+            app_config_dir = os.path.join(dist_dir_new, "AppConfig")
+            if os.path.isdir(app_config_dir):
+                shutil.rmtree(app_config_dir)
+            shutil.copytree(os.path.join(config_dir, installer_type, "AppConfig"), app_config_dir)
+            # make control file
+            self.make_control_file(debian_dir, installer_type)
             logger.info('Project version: %s' % project.version)
-            args = [ISCC_WIN7, "/dinstallerType=%s" % installer_type,
-                    "/dhostVersion=%s" % raw_version,
-                    "/dinstallerVersion=%s" % project.get_property('installer_version'),
-                    "/dproductVersion=%s" % project.version,
-                    "/dproductYear=%s" % current_year,
-                    "/dsandboxDir=%s" % sandbox_dir,
-                    "/dconfigDir=%s" % config_dir,
-                    "/dcommonName=%s" % species,
-                    "/ddistDir=%s" % dist_dir,
-                    "/v9",
-                    "/O%s" % resource_dir,
-                    setup_file_path]
             with open(output_file_path, "a") as output_file:
                 output_file.write("=== %s ===\n" % time.asctime())
-                stdout, return_code = self.run_command(" ".join(args), True)
+                stdout, return_code = self.run_command("dpkg-deb --build %s" % dist_dir)
                 output_file.write(stdout)
                 if return_code != 0:
-                    raise BuildFailedException("Error while making installer for %s" % installer_type)
+                    raise BuildFailedException("Error while making debian package for %s" % installer_type)
+            # move package to installer folder
+            species = config_info[installer_type]['species']
+            os.rename(dist_dir+".deb", 
+                os.path.join(resource_dir, 
+                    '%s_%s_%s_%s.deb' % (project.name, installer_type, species, raw_version) )
+                )
 
 def get_dir_hash(root):
     s = sha1()

@@ -34,64 +34,58 @@ def task_make_sources_from_xml():
         'targets':[os.path.join(python_dir,fname) for fname in ['interface.py', 'usbdefs.py']] + \
                   [os.path.join(usb_dir,fname) for fname in ['usbdefs.h', 'usbdefs.inc']] + \
                   [os.path.join(dsp_dir,fname) for fname in ['dspAutogen.c', 'dspAutogen.h', 'interface.h']],
-        'file_dep':[os.path.join(src_dir,fname) for fname in ['interface.xml', 'Interface.dtd', 'ParameterPages.xml']],
+        'file_dep':[os.path.join(src_dir,fname) for fname in ['Interface.xml', 'Interface.dtd', 'ParameterPages.xml']],
         'clean': True
     }
 
 def task_compile_fitutils():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Fitter')
-    f2py = os.path.join(python_scripts_dir, 'f2py.py')
     return {
         'actions':[
-            r'cd %s && if exist fitutils.pyd del fitutils.pyd' % src_dir,
-            r'cd %s && python %s -c -m fitutils fitutils.f --compiler=mingw32' % (src_dir, f2py),
+            r'cd %s && if [-f fitutils.so ]; then rm fitutils.so; fi' % src_dir,
+            r'cd %s && f2py -c -m fitutils fitutils.f' % (src_dir),
         ],
-        'targets':[os.path.join(src_dir,'fitutils.pyd')],
+        'targets':[os.path.join(src_dir,'fitutils.so')],
         'file_dep':[os.path.join(src_dir,'fitutils.f')],
         'clean':True
     }
 
 def task_compile_cluster_analyzer():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Fitter')
     return {
         'actions':[
-            r'cd %s && if exist cluster_analyzer.pyd del cluster_analyzer.pyd' % (src_dir,),
-            r'cd %s && python setup.py build_src build_ext --inplace -c mingw32' % (src_dir,),
-            r'cd %s && del cluster_analyzermodule.c' % (src_dir,),
-            r'cd %s && rd/s/q build' % (src_dir,)
+            r'cd %s && if [-f cluster_analyzer.so ]; then rm cluster_analyzer.so; fi' % (src_dir,),
+            r'cd %s && python setup.py build_src build_ext --inplace' % (src_dir,),
+            r'cd %s && rm cluster_analyzermodule.c' % (src_dir,),
+            r'cd %s && rm -rf build' % (src_dir,)
         ],
-        'targets':[os.path.join(src_dir,'cluster_analyzer.pyd')],
+        'targets':[os.path.join(src_dir,'cluster_analyzer.so')],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['cluster_analyzer.c', 'cluster_analyzer.h']],
         'clean':True
     }
 
 def task_compile_swathP():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Common')
-    f2py = os.path.join(python_scripts_dir, 'f2py.py')
     return {
         'actions':[
-            r'cd %s && if exist swathP.pyd del swathP.pyd' % src_dir,
-            r'cd %s && python %s swathP.pyf swathP.c -c --compiler=mingw32' % (src_dir, f2py),
+            r'cd %s && if [ -f swathP.so ]; then rm swathP.so; fi' % src_dir,
+            r'cd %s && f2py swathP.pyf swathP.c -c' % (src_dir),
         ],
-        'targets':[os.path.join(src_dir,'swathP.pyd')],
+        'targets':[os.path.join(src_dir,'swathP.so')],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['swathP.c', 'swathP.pyf']],
         'clean':True
     }
 
 def task_compile_fastLomb():
-    python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
     src_dir = os.path.join('src','main','python','Host','Utilities','SuperBuildStation')
     return {
         'actions':[
-            r'cd %s && if exist fastLomb.pyd del fastLomb.pyd' % (src_dir,),
-            r'cd %s && setup.py build_src build_ext --inplace -c mingw32' % (src_dir,),
-            r'cd %s && del fastLombmodule.c' % (src_dir,),
-            r'cd %s && rd/s/q build' % (src_dir,)
+            r'cd %s && if [ -f fastLomb.so ]; then rm fastLomb.so; fi' % (src_dir,),
+            r'cd %s && python setup.py build_src build_ext --inplace' % (src_dir,),
+            r'cd %s && rm fastLombmodule.c' % (src_dir,),
+            r'cd %s && rm -rf build' % (src_dir,)
         ],
-        'targets':[os.path.join(src_dir,'fastLomb.pyd')],
+        'targets':[os.path.join(src_dir,'fastLomb.so')],
         'file_dep':[os.path.join(src_dir,fname) for fname in ['fastLomb.c', 'fastLomb.pyf']],
         'clean':True
     }
