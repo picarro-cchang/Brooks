@@ -470,7 +470,7 @@ class AlarmSystemV3:
                 #print("Getting monitor status with key: %s, color: %s" % (key, alarmColor))
         except KeyError as e:
             print("AlarmSystemV3::getAllMonitorStatus", e)
-        except:
+        except Exception as e:
             print("AlarmSystemV3::getAllMonitorStatus unhandled exception ", e)
         return
 

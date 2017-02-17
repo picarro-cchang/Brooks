@@ -1,6 +1,7 @@
 *.pyc
 *.pyo
 *.bak
+*.so
 *~
 target/
 .doit.db

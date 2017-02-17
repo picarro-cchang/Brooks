@@ -1,0 +1,24 @@
+{
+    "buildTypes": {
+        "AHDS": {
+            "species": "NH3",
+            "installerSignature": "AEDS"
+        },
+
+        "AMADS": {
+            "species": "NH3_HF",
+            "installerSignature": "AMADS"
+        },  
+
+        "MBDS": {
+            "species": "HF",
+            "installerSignature": "MADS"
+        },
+        
+        "SADS": {
+            "species": "HCl",
+            "installerSignature": "SADS"
+        }
+
+    }
+}
