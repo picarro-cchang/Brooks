@@ -90,6 +90,8 @@ import Host.DataManager.ScriptRunner as ScriptRunner
 from Host.DataManager.AlarmSystemV3 import *
 import pprint
 import heapq
+import OutputFile
+from datetime import datetime, date
 
 from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
@@ -466,6 +468,14 @@ class DataManager(object):
         self.pulseAnalyzer = None
         self.runPulseAnalyzer = False
         self.addToPulseAnalyzer = False
+
+        # New file output system for SI-2000
+        self.healthMonitorOutputFile = OutputFile.OutputFile(
+                analyzerType = "AMADS",
+                newFileInterval = 60,
+                fileType = "DAT"
+                )
+        self.healthMonitorOutputFile.start()
 
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
@@ -1985,6 +1995,7 @@ class DataManager(object):
                 resultDict = reportDict
 
             #if (not self.legacyAlarmSystem) and (self.alarmSystem.alarmScriptCodeObj is not None):
+            testAlarmMessage = ""
             if hasattr(self.alarmSystem, "alarmScriptCodeObj") \
                     and (self.alarmSystem.alarmScriptCodeObj is not None):
                 print("Running alarm script")
@@ -2008,8 +2019,13 @@ class DataManager(object):
 
                 resultDict.update(alarmsDict)
             elif isinstance(self.alarmSystem, AlarmSystemV3):
-                self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
-                self.alarmSystem.getAllMonitorStatus()
+                #print("Updating all AlarmSystemV3 monitors %s" % (str(datetime.now())))
+                (five, sixty) = self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
+                if five:
+                    print("%s In DM, five processed. 5 5" % datetime.now())
+                if sixty:
+                    print("%s In DM, sixty processed. 60 60" % datetime.now())
+                testAlarmMessage = self.alarmSystem.getAllMonitorStatus()
             else:
                 print("AlarmSystem doesn't have a script defined")
 
@@ -2020,6 +2036,10 @@ class DataManager(object):
             self._SendSerial(measData)
             # Add to the internal measBuffer for Coordinator
             self._AddToMeasBuffer(measData)
+
+            # Mine - rsf
+            self.healthMonitorOutputFile.writeData("%s: %s\n" %(str(datetime.now()), testAlarmMessage))
+
             # Use data for Pulse Analyzer
             if self.pulseAnalyzer != None:
                 if self.runPulseAnalyzer:

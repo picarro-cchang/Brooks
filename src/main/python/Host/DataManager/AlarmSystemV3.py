@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 
 import pdb
 
@@ -8,6 +9,7 @@ import time
 import pprint
 import random
 import itertools
+from datetime import datetime
 from copy import copy
 from time import sleep
 from collections import Counter, deque
@@ -185,6 +187,9 @@ class SingleAlarmMonitor:
         Store the latest data and timestamp for one monitor.
         """
 
+        fiveMinProcessed = False
+        sixtyMinProcessed = False
+
         # Set the current state. Initialize to None incase the filter
         # or input data is broken and we fall through the tests.
         # We assume that all the thresholds are unique and properly
@@ -212,12 +217,11 @@ class SingleAlarmMonitor:
         #print("Time check:", timestamp, self.binStartTime, self.binInterval, delta)
         if self.binStartTime < 0 or  timestamp - self.binStartTime >= self.binInterval:
             if self.binStartTime >= 0:
-                self.processAccumulator()
+                (fiveMinProcessed, sixtyMinProcessed) = self.processAccumulator()
             self.binStartTime = timestamp
         self.alarmStateAccumulator.append(currentAlarmState)
 
-        #print("Input: time=%d data=%.2f" %(timestamp, inputData))
-        return
+        return (fiveMinProcessed, sixtyMinProcessed)
 
     def processAccumulator(self):
         """
@@ -273,23 +277,37 @@ class SingleAlarmMonitor:
         # Clear out to start looking at alarms in the next time interval.
         self.alarmStateAccumulator[:] = []
 
+        #for i in xrange(len(self.fiveMinAccumulator["TIME"])):
+        #    print(" 5-> %s Time: %s State: %s" % (i, self.fiveMinAccumulator["TIME"][i], self.fiveMinAccumulator["ALARM_STATE"][i]), end = " ")
+        #    print("60-> %s Time: %s State: %s" % (i, self.sixtyMinAccumulator["TIME"][i], self.sixtyMinAccumulator["ALARM_STATE"][i]))
+        #print("########### %s" % str(datetime.now()))
+
         # Update public alarms
-        if self._updatePublicAlarm():
+        (fiveMinProcessed, sixtyMinProcessed) = self._updatePublicAlarm()
+        if False and fiveMinProcessed:
+            print("Time: %s" % str(datetime.now()))
             print("History of %s" % self.dataSourceKey)
             print("history 5 count:", self.fiveMinHistory["ALARM_COUNT"])
             print("history 5 state:", self.fiveMinHistory["LED_COLOR"])
-            print("history 60 count:", self.sixtyMinHistory["ALARM_COUNT"])
-            print("history 60 state:", self.sixtyMinHistory["LED_COLOR"])
-        return
+        if False and sixtyMinProcessed:
+            print("---> Time: %s" % str(datetime.now()))
+            print("---> History of %s" % self.dataSourceKey)
+            print("---> history 60 count:", self.sixtyMinHistory["ALARM_COUNT"])
+            print("---> history 60 state:", self.sixtyMinHistory["LED_COLOR"])
+
+        return (fiveMinProcessed, sixtyMinProcessed)
 
     def _updatePublicAlarm(self):
 
-        # Return code.
-        # 0 if the accumulator isn't full and nothing is done.
-        # 1 if one accumulator was processed, 2 if both were done
-        rtn = 0
+        # Return is a tuple.
+        # fiveMinProcessed [True|False]
+        # sixtyMinProcessed [True|False]
+        #
+        fiveMinProcessed = False
+        sixtyMinProcessed = False
 
         for outputInterval in ["FiveMin", "SixtyMin"]:
+        #for outputInterval in ["SixtyMin"]:
             if outputInterval == "FiveMin":
                 accumulator = self.fiveMinAccumulator
                 history = self.fiveMinHistory
@@ -341,9 +359,12 @@ class SingleAlarmMonitor:
                 accumulator["TIME"][:] = []
                 accumulator["ALARM_STATE"][:] = []
 
-                rtn += 1
+                if outputInterval == "FiveMin":
+                    fiveMinProcessed = True
+                if outputInterval == "SixtyMin":
+                    sixtyMinProcessed = True
 
-        return rtn
+        return (fiveMinProcessed, sixtyMinProcessed)
 
 
 class AlarmSystemV3:
@@ -449,16 +470,22 @@ class AlarmSystemV3:
         Take data from the DataManager and update all monitors with a key
         that matches a DataManager key. Time is a Unix timestamp.
         """
+        fiveMinProcessed = False
+        sixtyMinProcessed = False
         try:
             for key, value in inputDataDict.items():
                 if key in self.alarms:
                     #print("K: %s V: %s" % (key,value))
-                    self.alarms[key].setData(int(time), value)
+                    (five, sixty) = self.alarms[key].setData(int(time), value)
+                    if five:
+                        fiveMinProcessed = True
+                    if sixty:
+                        sixtyMinProcessed = True
         except KeyError as e:
             print("AlarmSystemV3::updateAllMonitors KeyError", e)
         except Exception as e:
             print("AlarmSystemV3::updateAllMonitors unhandled exception", e)
-        return
+        return (fiveMinProcessed, sixtyMinProcessed)
 
     def getAllMonitorStatus(self):
         """
@@ -472,7 +499,7 @@ class AlarmSystemV3:
             print("AlarmSystemV3::getAllMonitorStatus", e)
         except Exception as e:
             print("AlarmSystemV3::getAllMonitorStatus unhandled exception ", e)
-        return
+        return "Return data from AlarmSystemV3"
 
     def getAllMonitorDiagnostics(self):
         try:
