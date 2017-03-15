@@ -491,15 +491,25 @@ class AlarmSystemV3:
         """
         Return dict with red, yellow, green status for each key.
         """
+        alarmFiveMinColorDict = {}
+        alarmSixtyMinColorDict = {}
+        def alarmCodeToStr(code):
+            str = "GREEN"
+            if abs(code) == 2:
+                str = "RED"
+            elif abs(code) == 1:
+                str = "YELLOW"
+            return str
+
         try:
             for key, value in self.alarms.items():
-                alarmColor = value.shortPublicAlarm
-                #print("Getting monitor status with key: %s, color: %s" % (key, alarmColor))
+                alarmFiveMinColorDict[key] = alarmCodeToStr(value.fiveMinHistory["LED_COLOR"][-1])
+                alarmSixtyMinColorDict[key] = alarmCodeToStr(value.sixtyMinHistory["LED_COLOR"][-1])
         except KeyError as e:
             print("AlarmSystemV3::getAllMonitorStatus", e)
         except Exception as e:
             print("AlarmSystemV3::getAllMonitorStatus unhandled exception ", e)
-        return "Return data from AlarmSystemV3"
+        return (alarmFiveMinColorDict, alarmSixtyMinColorDict)
 
     def getAllMonitorDiagnostics(self):
         try:
