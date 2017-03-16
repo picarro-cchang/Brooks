@@ -3,8 +3,9 @@ import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
+
+from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 import threading
-from itertools import chain
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -19,62 +20,78 @@ class Four220Server(object):
         else:
             raise Exception("Configuration file not found: %s" % configFile)
         
+        self.port = self.config.get('SERIAL_PORT_SETUP', 'Port')
+        
         if simulation:
             self.data_thread = threading.Thread(target=self.simulate_data)
             self.data_thread.daemon = True
             self.data_thread.start()
         else:
-            print "not in simulation mode."
-            pass
+            self.get_channel_info()
+            print self.channel_par
+            self.data_thread = Listener.Listener(None, 
+                                        SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                        StringPicker.ArbitraryObject,
+                                        self._streamFilter,
+                                        retry = True,
+                                        name = APP_NAME)
         
-            
     def simulate_data(self):
         self.simulation_env = {}
-        self.simulation_env['is_logScale'] = self.config.getboolean('Simulation', 'LogScale')
-        self.simulation_env['data_min'] = self.config.getfloat('Simulation', 'Min')
-        self.simulation_env['data_max'] = self.config.getfloat('Simulation', 'Max')
-        x = 0.0
-        if self.simulation_env['is_logScale']:
-            print "Concentration Simulation in LogScale..."
-            points = (0.0001*i*10**exp for exp in range(1,7) for i in range(1,10))
-            sample_points = chain(points, (i*100 for i in range(9,21)))
-            while True:
-                try:
-                    data = sample_points.next()
-                    print "simulated concentration: ", data, 'ppb'
-                    try:
-                        self.data_processor(data)
-                    except:
-                        print "Can not send to serial port."
-                except:
-                    print "End of simulated sample points."
-                    break
-                time.sleep(5)
-        else:
-            for i in range(1001):
-                data = i 
-                print "simulated concentration: ", i, 'ppb'
-                self.data_processor(data)
+        self.simulation_env['Slope'] = self.config.getfloat('Simulation', 'SLOPE')
+        self.simulation_env['Offset'] = self.config.getfloat('Simulation', 'OFFSET')
         
-        
-    def data_processor(self, data):
-        self.slope = self.config.getfloat('Channel1', 'SLOPE')
-        self.offset = self.config.getfloat('Channel1', 'OFFSET')
-
-        cur = float(self.slope * math.log(data,10) + self.offset)
-        try:
-            ser = serial.Serial('COM3')
+        for i in range(1,401):
+            data = i * 2
+            print "simulated concentration: ", i, 'ppb'
+            try:
+                self.data_processor(data, self.simulation_env['Slope'], self.simulation_env['Offset'], 0)
+            except:
+                print "Can not send to serial port."
+                break 
+            time.sleep(5)
+    
+    def _streamFilter(self, streamOut):
+        try: 
+            raw_data = streamOut["data"]
+            for channel in self.channel_par:
+                channel_num = int(channel[-1])
+                data = raw_data[self.channel_par[channel]["SOURCE"]]
+                #get slope and offset from ini
+                if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
+                    slope = float(self.channel_par[channel]["SLOPE"])
+                    offset = float(self.channel_par[channel]["OFFSET"])
+                elif self.channel_par[channel]["SOURCE_MIN"] != '' and self.channel_par[channel]["SOURCE_MAX"] != '':
+                    slope = 16.0/(float(self.channel_par[channel]["SOURCE_MAX"]) + float(self.channel_par[channel]["SOURCE_MIN"]))
+                    offset = 4.0 - slope*float(self.channel_par[channel]["SOURCE_MIN"])
+                else:
+                    print "Configuration Error: Please input valid SLOPE, OFFSET or SOURCE_MIN, SOURCE_MAX values in ini file."
+                print "Slope and Offset: ", slope, offset
+                
+                self.data_processor(data, slope, offset, channel_num)
         except:
-            print "Can not connect to COM3 port."
-        if cur < 10.0:
+            print "Error in streamFilter"
+            
+    def data_processor(self, data, slope, offset, channel_num):
+        
+        cur = float(slope * data + offset)
+        
+        try:
+            ser = serial.Serial(self.port)
+        except:
+            print "Can not connect to %s port."% self.port
+
+        if cur < 0.0 or cur > 20.0:
+            print "Cur out of range."
+        elif cur < 10.0:
             cur_str = '0'+ format(cur, '.3f')
         else:
             cur_str = format(cur, '.3f')
-        cmd_str = '#010+' + cur_str
+        cmd_str = '#0'+ str(channel_num + 1) + '0+' + cur_str
         try:
             ser.write(cmd_str + '\r')
             ser.close()
-            print "Write current %f to serial port COM3."%cur
+            print "Write current %f to serial port %s."%(cur,self.port)
             print "Write cur_str", cmd_str
         except:
             "Failed to write to serial port."
@@ -82,9 +99,17 @@ class Four220Server(object):
         
         
     def run(self):
-        while True:
+        while True: 
             time.sleep(10)
-        
+    
+    def get_channel_info(self):
+        self.channel_par = {}
+        for s in self.config:
+            if s.startswith("OUTPUT_CHANNEL"):
+                if self.config[s]["SOURCE"] != '':
+                    self.channel_par[s] = self.config[s]
+                    
+                    
         
         
         
@@ -115,7 +140,7 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "\\4to20Server.ini"
+    configFile = os.path.dirname(AppPath) + "4to20Server.ini"
     simulation = False
     if "-h" in options or "--help" in options:
         printUsage()
