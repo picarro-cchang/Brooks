@@ -2020,16 +2020,13 @@ class DataManager(object):
                 resultDict.update(alarmsDict)
             elif isinstance(self.alarmSystem, AlarmSystemV3):
                 (five, sixty) = self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
-                #if five:
-                #    print("%s In DM, five processed. 5 5" % datetime.now())
-                #if sixty:
-                #    print("%s In DM, sixty processed. 60 60" % datetime.now())
                 if five or sixty:
                     (ad5, ad60) = self.alarmSystem.getAllMonitorStatus()
+                    #print("HEADER:", self.alarmSystem.getAllMonitorStatusHeader())
                     if five:
-                        print("AD5:", str(datetime.now()), ad5)
+                        print("AD5:", ad5)
                     if sixty:
-                        print("--> AD60:", str(datetime.now()), ad60)
+                        print("--> AD60:", ad60)
             else:
                 print("AlarmSystem doesn't have a script defined")
 

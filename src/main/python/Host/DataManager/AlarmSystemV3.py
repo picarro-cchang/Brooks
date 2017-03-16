@@ -182,7 +182,7 @@ class SingleAlarmMonitor:
         self.yellowTotalCountThreshold = 3
         self.redTotalCountThreshold = 3
 
-    def setData(self, timestamp, inputData):
+    def setData(self, timestamp, inputData = None):
         """
         Store the latest data and timestamp for one monitor.
         """
@@ -194,15 +194,25 @@ class SingleAlarmMonitor:
         # or input data is broken and we fall through the tests.
         # We assume that all the thresholds are unique and properly
         # ordered.
+        #
+        # We use inputNone in the situation where we don't have data
+        # but the analyzer is working and we want to increment the
+        # counter.  The state is set to green because we assume this
+        # is a normal/predicted event such as during warm up when not
+        # all data streams are yet producing data.
+        #
         currentAlarmState = self.NONE
-        if inputData < self.lowRedThreshold:
-            currentAlarmState = self.LOW_RED
-        elif inputData < self.lowYellowThreshold:
-            currentAlarmState = self.LOW_YELLOW
-        elif inputData > self.highRedThreshold:
-            currentAlarmState = self.HIGH_RED
-        elif inputData > self.highYellowThreshold:
-            currentAlarmState = self.HIGH_YELLOW
+        if inputData is not None:
+            if inputData < self.lowRedThreshold:
+                currentAlarmState = self.LOW_RED
+            elif inputData < self.lowYellowThreshold:
+                currentAlarmState = self.LOW_YELLOW
+            elif inputData > self.highRedThreshold:
+                currentAlarmState = self.HIGH_RED
+            elif inputData > self.highYellowThreshold:
+                currentAlarmState = self.HIGH_YELLOW
+            else:
+                currentAlarmState = self.GREEN
         else:
             currentAlarmState = self.GREEN
 
@@ -212,16 +222,12 @@ class SingleAlarmMonitor:
         # If there is no accumulator because this is the first time through, make
         # a new one.
         delta = timestamp - self.binStartTime
-        #if timestamp - self.binStartTime >= self.binInterval:
-        #    print("The test is true")
-        #print("Time check:", timestamp, self.binStartTime, self.binInterval, delta)
         if self.binStartTime < 0 or  timestamp - self.binStartTime >= self.binInterval:
             if self.binStartTime >= 0:
                 (fiveMinProcessed, sixtyMinProcessed) = self.processAccumulator()
             self.binStartTime = timestamp
         self.alarmStateAccumulator.append(currentAlarmState)
-
-        return (fiveMinProcessed, sixtyMinProcessed)
+        return fiveMinProcessed, sixtyMinProcessed
 
     def processAccumulator(self):
         """
@@ -276,11 +282,6 @@ class SingleAlarmMonitor:
 
         # Clear out to start looking at alarms in the next time interval.
         self.alarmStateAccumulator[:] = []
-
-        #for i in xrange(len(self.fiveMinAccumulator["TIME"])):
-        #    print(" 5-> %s Time: %s State: %s" % (i, self.fiveMinAccumulator["TIME"][i], self.fiveMinAccumulator["ALARM_STATE"][i]), end = " ")
-        #    print("60-> %s Time: %s State: %s" % (i, self.sixtyMinAccumulator["TIME"][i], self.sixtyMinAccumulator["ALARM_STATE"][i]))
-        #print("########### %s" % str(datetime.now()))
 
         # Update public alarms
         (fiveMinProcessed, sixtyMinProcessed) = self._updatePublicAlarm()
@@ -472,15 +473,51 @@ class AlarmSystemV3:
         """
         fiveMinProcessed = False
         sixtyMinProcessed = False
+
+        listOfAlarmKeys = self.alarms.keys()
+        listOfInputDataKeys = inputDataDict.keys()
+
+        # See if there are any keys in common between the input data dict
+        # and the list of monitors.  If there aren't, return without any
+        # calls to setData() otherwise it will mess up the counters.
+        #
+        # We end up in this situation in at least two ways.
+        # 1) When not in measurement mode, the input dict doesn't have any
+        #   keys/value pairs for gas measurements.  If the monitors are
+        #   only set for gas concentrations, durning the lengthy warm up
+        #   phase there will be a number of setData() calls with no matching
+        #   keys.
+        # 2) Once in measurment mode, periodically the input dict is missing
+        #   the concentration key/value pairs.  Or at least that's what it's
+        #   doing in the CFADS simulator.  I don't know if this is a bug or
+        #   by design, perhaps related to how the scheme is set.  Either way,
+        #   the missing concentrations, when that's all the monitors are set
+        #   for, causes errors in the monitor counters.
+        #
+        sa = set(listOfAlarmKeys)
+        sb = set(listOfInputDataKeys)
+        c = sa.intersection(sb)
+        if not c:
+            return False, False
+
+        # If there is at least one input key that matches a monitor key then
+        # update the monitor(s). If some keys are missing in the input data,
+        # like in the warm up mode where we have keys for pressure and temperature
+        # but not gas concentrations, update the monitors with missing keys with
+        # fake (harmless) data so that all monitors' counters are in sync.
+        #
         try:
             for key, value in inputDataDict.items():
-                if key in self.alarms:
-                    #print("K: %s V: %s" % (key,value))
-                    (five, sixty) = self.alarms[key].setData(int(time), value)
+                if key in listOfAlarmKeys:
+                    five, sixty = self.alarms[key].setData(int(time), value)
                     if five:
                         fiveMinProcessed = True
                     if sixty:
                         sixtyMinProcessed = True
+                    listOfAlarmKeys.remove(key)
+            # Finish up monitors that didn't have data this time around.
+            for key in listOfAlarmKeys:
+                self.alarms[key].setData(int(time))
         except KeyError as e:
             print("AlarmSystemV3::updateAllMonitors KeyError", e)
         except Exception as e:
@@ -489,27 +526,66 @@ class AlarmSystemV3:
 
     def getAllMonitorStatus(self):
         """
-        Return dict with red, yellow, green status for each key.
+        Return single line strings with red, yellow, green status for each key.
         """
-        alarmFiveMinColorDict = {}
-        alarmSixtyMinColorDict = {}
+
+        # Go through each alarm and make a single string with the format
+        #
+        # <timestamp>, color_0, color_1, color_2, etc.
+        #
+        # Not all data sources start at the same time, e.g. gas concentrations don't
+        # report until after warm up, so uninitialized alarms are designated with 'N'.
+        # For the timestamp, we just use the first valid time source and ignore small
+        # time differences between sources since we are polling the results every
+        # few minutes to every few hours.
+        #
+        # If there is no valid timestamp because the code polls too early, the timestamp
+        # is denoted with 'NA'.
+        #
+        alarmFiveMinList = []
+        alarmSixtyMinList = []
+        timestamp = "NA"
+
         def alarmCodeToStr(code):
-            str = "GREEN"
+            str = "G"
             if abs(code) == 2:
-                str = "RED"
+                str = "R"
             elif abs(code) == 1:
-                str = "YELLOW"
+                str = "Y"
             return str
 
         try:
+            firstTime = True
             for key, value in self.alarms.items():
-                alarmFiveMinColorDict[key] = alarmCodeToStr(value.fiveMinHistory["LED_COLOR"][-1])
-                alarmSixtyMinColorDict[key] = alarmCodeToStr(value.sixtyMinHistory["LED_COLOR"][-1])
+                #if value.fiveMinHistory["TIME"]:
+                #    timestamp = value.fiveMinHistory["TIME"][-1]
+                timestamp = str(datetime.now())
+                if value.fiveMinHistory["LED_COLOR"]:
+                    alarmFiveMinList.append(alarmCodeToStr(value.fiveMinHistory["LED_COLOR"][-1]))
+                else:
+                    alarmFiveMinList.append('N')
+                if value.sixtyMinHistory["LED_COLOR"]:
+                    alarmSixtyMinList.append(alarmCodeToStr(value.sixtyMinHistory["LED_COLOR"][-1]))
+                else:
+                    alarmSixtyMinList.append('N')
+            alarmFiveMinList.insert(0, str(timestamp))
+            alarmSixtyMinList.insert(0, str(timestamp))
         except KeyError as e:
             print("AlarmSystemV3::getAllMonitorStatus", e)
         except Exception as e:
             print("AlarmSystemV3::getAllMonitorStatus unhandled exception ", e)
-        return (alarmFiveMinColorDict, alarmSixtyMinColorDict)
+        return (','.join(alarmFiveMinList), ','.join(alarmSixtyMinList))
+
+    def getAllMonitorStatusHeader(self):
+        """
+        Column definition of getAllMonitorStatus().
+        """
+        keyList = []
+        try:
+            keyList = self.alarms.items().keys()
+        except:
+            keyList.append("fail!")
+        return ','.join(keyList)
 
     def getAllMonitorDiagnostics(self):
         try:
