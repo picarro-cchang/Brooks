@@ -2019,6 +2019,8 @@ class DataManager(object):
 
                 resultDict.update(alarmsDict)
             elif isinstance(self.alarmSystem, AlarmSystemV3):
+                # Add PID and status as discrete dictionary entries.
+                resultDict.update(InstMgrInc.binaryToDictionary(currentInstMgrStatus))
                 (five, sixty) = self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
                 if five or sixty:
                     (ad5, ad60) = self.alarmSystem.getAllMonitorStatus()
