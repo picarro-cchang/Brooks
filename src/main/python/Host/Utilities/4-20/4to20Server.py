@@ -20,8 +20,13 @@ class Four220Server(object):
         else:
             raise Exception("Configuration file not found: %s" % configFile)
         
-        self.port = self.config.get('SERIAL_PORT_SETUP', 'Port')
-        
+        self.port = self.config.get('SERIAL_PORT_SETUP', 'PORT')
+        self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
+        try:
+            self.ser = serial.Serial(self.port)
+        except:
+            print "Can not connect to %s port."% self.port
+            
         if simulation:
             self.data_thread = threading.Thread(target=self.simulate_data)
             self.data_thread.daemon = True
@@ -31,7 +36,7 @@ class Four220Server(object):
             print self.channel_par
             self.data_thread = Listener.Listener(None, 
                                         SharedTypes.BROADCAST_PORT_DATA_MANAGER,
-                                        StringPicker.ArbitraryObject,
+                                        StringPickler.ArbitraryObject,
                                         self._streamFilter,
                                         retry = True,
                                         name = APP_NAME)
@@ -52,34 +57,31 @@ class Four220Server(object):
             time.sleep(5)
     
     def _streamFilter(self, streamOut):
-        try: 
-            raw_data = streamOut["data"]
-            for channel in self.channel_par:
-                channel_num = int(channel[-1])
-                data = raw_data[self.channel_par[channel]["SOURCE"]]
-                #get slope and offset from ini
-                if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
-                    slope = float(self.channel_par[channel]["SLOPE"])
-                    offset = float(self.channel_par[channel]["OFFSET"])
-                elif self.channel_par[channel]["SOURCE_MIN"] != '' and self.channel_par[channel]["SOURCE_MAX"] != '':
-                    slope = 16.0/(float(self.channel_par[channel]["SOURCE_MAX"]) + float(self.channel_par[channel]["SOURCE_MIN"]))
-                    offset = 4.0 - slope*float(self.channel_par[channel]["SOURCE_MIN"])
-                else:
-                    print "Configuration Error: Please input valid SLOPE, OFFSET or SOURCE_MIN, SOURCE_MAX values in ini file."
-                print "Slope and Offset: ", slope, offset
-                
-                self.data_processor(data, slope, offset, channel_num)
-        except:
-            print "Error in streamFilter"
+        try:
+            if streamOut["source"] == self.analyzer_source:
+                raw_data = streamOut["data"]
+                for channel in self.channel_par:
+                    channel_num = int(channel[-1])
+                    data = raw_data[self.channel_par[channel]["SOURCE"]]
+                    #get slope and offset from ini
+                    if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
+                        slope = float(self.channel_par[channel]["SLOPE"])
+                        offset = float(self.channel_par[channel]["OFFSET"])
+                    elif self.channel_par[channel]["SOURCE_MIN"] != '' and self.channel_par[channel]["SOURCE_MAX"] != '':
+                        slope = 16.0/(float(self.channel_par[channel]["SOURCE_MAX"]) + float(self.channel_par[channel]["SOURCE_MIN"]))
+                        offset = 4.0 - slope*float(self.channel_par[channel]["SOURCE_MIN"])
+                    else:
+                        print "Configuration Error: Please input valid SLOPE, OFFSET or SOURCE_MIN, SOURCE_MAX values in ini file."
+                    print "Slope and Offset: ", slope, offset
+                    
+                    self.data_processor(data, slope, offset, channel_num)
+        except Exception, err:
+            print "Error in streamFilter. Wrong values in ini file..."
+            print err, "   ****"
             
     def data_processor(self, data, slope, offset, channel_num):
         
         cur = float(slope * data + offset)
-        
-        try:
-            ser = serial.Serial(self.port)
-        except:
-            print "Can not connect to %s port."% self.port
 
         if cur < 0.0 or cur > 20.0:
             print "Cur out of range."
@@ -89,8 +91,8 @@ class Four220Server(object):
             cur_str = format(cur, '.3f')
         cmd_str = '#0'+ str(channel_num + 1) + '0+' + cur_str
         try:
-            ser.write(cmd_str + '\r')
-            ser.close()
+            self.ser.write(cmd_str + '\r')
+            #ser.close()
             print "Write current %f to serial port %s."%(cur,self.port)
             print "Write cur_str", cmd_str
         except:
