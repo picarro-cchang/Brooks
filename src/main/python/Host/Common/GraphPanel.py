@@ -283,7 +283,11 @@ class GraphPanel(wx.Panel):
         if len(x)>0:
             mu = numpy.mean(y)
             sigma = numpy.std(y)
-            if len(x)>=2: slope = numpy.polyfit(x,y,1)[0]
+            # Due to the nature of the data, the polyfit will emit numpy RankWarnings
+            # while the analyzer is warming up.  The warnings are not emitted if we
+            # wait until we have at least three data points.
+            if len(x)>=3 and len(y)>=3:
+                slope = numpy.polyfit(x,y,1)[0]
         return (mu, sigma, slope)
 
     def GetIsNewXAxis(self):

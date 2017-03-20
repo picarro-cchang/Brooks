@@ -56,7 +56,7 @@ from Host.QuickGui.PulseAnalyzerGui import PulseAnalyzerGui
 from Host.QuickGui.UserCalGui import UserCalGui
 from Host.QuickGui.SysAlarmGui import *
 from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
-from Host.Common import plot
+#from Host.Common import plot
 from Host.Common import GraphPanel
 from Host.Common import AppStatus
 from Host.Common import SharedTypes

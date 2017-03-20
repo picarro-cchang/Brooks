@@ -2040,9 +2040,6 @@ class DataManager(object):
             # Add to the internal measBuffer for Coordinator
             self._AddToMeasBuffer(measData)
 
-            # Mine - rsf
-            self.healthMonitorOutputFile.writeData("%s: %s\n" %(str(datetime.now()), testAlarmMessage))
-
             # Use data for Pulse Analyzer
             if self.pulseAnalyzer != None:
                 if self.runPulseAnalyzer:
