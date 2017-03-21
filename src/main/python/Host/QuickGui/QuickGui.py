@@ -1277,7 +1277,7 @@ class QuickGui(wx.Frame):
             selectAll = self.config.getboolean("PeriphIntrf", "showAll", False)
             (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig,selectAll)
         except Exception, err:
-            print "%r" % err
+            print "1280 %r Exception parsing peripheral interface config." % err
 
         # Add peripheral interface columns (if available) in standard mode
         if self.rawPeriphDict:
@@ -1400,7 +1400,7 @@ class QuickGui(wx.Frame):
                 for i in sourceIdxList:
                     self.standardModeKeysDict[i].addString(newCol)
         except Exception, err:
-            print "%r" % err
+            print "1403 %r" % err
 
     def enqueueViewerCommand(self, command, *args, **kwargs):
         self.commandQueue.put((command, args, kwargs))
@@ -2000,7 +2000,7 @@ class QuickGui(wx.Frame):
             try:
                 self.setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
-                print "%r" % err
+                print "2003 %r" % err
 
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
         dialog.Destroy()
@@ -2625,7 +2625,7 @@ def HandleCommandSwitches():
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
-        print "%s %r" % (data, data)
+        print "2628 %s %r" % (data, data)
         sys.exit(1)
 
     #assemble a dictionary where the keys are the switches and values are switch args...
