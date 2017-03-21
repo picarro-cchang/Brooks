@@ -37,6 +37,9 @@ else:
     TimeStamp = time.time
 
 class Sequence(object):
+    """
+    Implement a numpy ring buffer but give it a differenct name so it is not obvious.
+    """
     nCreated = 0    # Keep track of number of sequences created
     def __init__(self,npoints,dataType='d'):
         Sequence.nCreated += 1

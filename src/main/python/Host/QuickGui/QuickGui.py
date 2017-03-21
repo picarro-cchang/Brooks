@@ -47,6 +47,7 @@ import string
 import time
 import threading
 from threading import Thread
+import pprint
 import traceback
 from platform import platform
 import wx.lib.mixins.listctrl as listmix
@@ -1031,6 +1032,49 @@ class DataStore(object):
         self.seqPoints = self.config.getint('DataManagerStream','Points')
 
     def getQueuedData(self):
+        """
+        Get data from a queue.  The queue'd data is captured from the DataManager broadcast.
+        The format is a dict of dicts.
+        The top level dict keys are "data", "good", "mode", "source", "time", and "ver". See
+        the MeasData.py wrapper class.
+
+        good - True or 0.  Does this flag "measurement mode"?
+        mode - warming_mode, CFADS_mode, etc. (Don't know where the definitions are nor how the
+                value is set.
+        source - sensors, analyze_CFADS.  Appears to contain a DataManager script name when there
+                is a valid measurement.
+        time - Unix timestamp. Source of timestamp...???
+        ver - ???
+
+        The value associated with the "data" key is a dict of hardware readings, fit parameters,
+        and gas concentrations from DataManager.  For example. obj["data"]["CO2"] contains
+        the CO2 gas concentration.
+
+        What is happening below is not obvious.  To plot the data in a time series, we need several
+        hundreds of points per data stream.  As there are at least several 10's of steams that can be
+        selected for plotting we would have to push a lot of data through the RPC pipe if the QuickGui
+        had to get all that data for each plot update.
+
+        The data is collected in self.sourceDict and self.oldData.  When working with self.sourceDict
+        it is bound to 'd'.
+
+            d = self.sourceDict[source]
+
+        When starting out self.sourceDict is empty so we initialize it with ring buffers n elements long.
+
+            d[k] = GraphPanel.Sequence(n)
+
+        Yes, Sequence is a ring buffer, not a Python sequence.
+        As new data comes in, it is pushed, or added, to the ring buffer if it's not full, or overwrites
+        an old value if we have reached capacity.
+
+            d[k].Add(obj['data'][k])
+
+        GetPointers() return the indicies of where the next data is added.  We track the pointers outside
+        of the Sequence class so that we can advance the indices of ring buffers that don't receive new
+        data in the current update event.  This is necessary keep all data on the same time axis range
+        in the plots.
+        """
         n = self.seqPoints
         while True:
             try:
