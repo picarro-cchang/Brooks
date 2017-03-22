@@ -13,6 +13,22 @@ else:
     AppPath = sys.argv[0]
 APP_NAME = "4to20Server"
 
+class RpcServerThread(threading.Thread):
+    def __init__(self, RpcServer, ExitFunction):
+        threading.Thread.__init__(self)
+        self.setDaemon(1) #THIS MUST BE HERE
+        self.RpcServer = RpcServer
+        self.ExitFunction = ExitFunction
+    def run(self):
+        self.RpcServer.serve_forever()
+        try: #it might be a threading.Event
+            if self.ExitFunction is not None:
+                self.ExitFunction()
+            Log("RpcServer exited and no longer serving.")
+        except:
+            LogExc("Exception raised when calling exit function at exit of RPC server.")
+
+
 class Four220Server(object):
     def __init__(self, configFile, simulation):
         if os.path.exists(configFile):
@@ -21,11 +37,14 @@ class Four220Server(object):
             raise Exception("Configuration file not found: %s" % configFile)
         
         self.port = self.config.get('SERIAL_PORT_SETUP', 'PORT')
+        self.baudrate = self.config.getint('SERIAL_PORT_SETUP', 'BAUDRATE')
+        self.timeout = self.config.getfloat('SERIAL_PORT_SETUP', 'TIMEOUT')
+        
         self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
         try:
-            self.ser = serial.Serial(self.port)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
         except:
-            print "Can not connect to %s port."% self.port
+            print "Can not connect to %s port. Please check the SERIAL_PORT_SETUP configuration. "% self.port
             
         if simulation:
             self.data_thread = threading.Thread(target=self.simulate_data)
@@ -34,8 +53,9 @@ class Four220Server(object):
         else:
             self.get_channel_info()
             print self.channel_par
+            self.startServer()
             self.data_thread = Listener.Listener(None, 
-                                        SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                        SharedTypes.BROADCAST_PORT_DATA_MANAGER, 
                                         StringPickler.ArbitraryObject,
                                         self._streamFilter,
                                         retry = True,
@@ -43,18 +63,39 @@ class Four220Server(object):
         
     def simulate_data(self):
         self.simulation_env = {}
-        self.simulation_env['Slope'] = self.config.getfloat('Simulation', 'SLOPE')
-        self.simulation_env['Offset'] = self.config.getfloat('Simulation', 'OFFSET')
-        
-        for i in range(1,401):
-            data = i * 2
-            print "simulated concentration: ", i, 'ppb'
-            try:
-                self.data_processor(data, self.simulation_env['Slope'], self.simulation_env['Offset'], 0)
-            except:
-                print "Can not send to serial port."
-                break 
-            time.sleep(5)
+        self.simulation_env['min'] = self.config.getfloat('Simulation', 'MIN')
+        self.simulation_env['max'] = self.config.getfloat('Simulation', 'MAX')
+        self.simulation_env['Test_mode'] = self.config.getboolean('Simulation', 'TEST_MODE')
+        self.simulation_env['Test_num'] = self.config.getint('Simulation', 'TEST_NUM')
+        self.simulation_env['channel'] = self.config.getint('Simulation', 'CHANNEL')
+        if self.simulation_env['min'] != '' and self.simulation_env['max'] != '':
+            slope = 16.0/(float(self.simulation_env['max']) - float(self.simulation_env['min']))
+            offset = 4.0 - slope*float(self.simulation_env['min'])
+        else:
+            print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in Simulation section ini file."
+
+        if self.simulation_env['Test_mode']:
+            for i in range(self.simulation_env['Test_num']):
+                print "Enter a concentration value:"
+                data = float(raw_input().strip() )
+                try:
+                    self.data_processor(data, slope, offset, self.simulation_env['channel'])
+                except:
+                    print "Can not send to serial port."
+                    break 
+                time.sleep(1)
+            
+        else:
+            for i in range(201):
+                data = float(i * 4)
+                print "simulated concentration: ", data, 'ppb'
+                
+                try:
+                    self.data_processor(data, slope, offset, self.simulation_env['channel'])
+                except:
+                    print "Can not send to serial port."
+                    break 
+                time.sleep(5)
     
     def _streamFilter(self, streamOut):
         try:
@@ -62,16 +103,21 @@ class Four220Server(object):
                 raw_data = streamOut["data"]
                 for channel in self.channel_par:
                     channel_num = int(channel[-1])
-                    data = raw_data[self.channel_par[channel]["SOURCE"]]
+                    try:
+                        data = raw_data[self.channel_par[channel]["SOURCE"]]
+                    except:
+                        print "SOURCE value in configuration file is not valid. " 
+                        sys.exit(1)
                     #get slope and offset from ini
-                    if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
-                        slope = float(self.channel_par[channel]["SLOPE"])
-                        offset = float(self.channel_par[channel]["OFFSET"])
-                    elif self.channel_par[channel]["SOURCE_MIN"] != '' and self.channel_par[channel]["SOURCE_MAX"] != '':
-                        slope = 16.0/(float(self.channel_par[channel]["SOURCE_MAX"]) + float(self.channel_par[channel]["SOURCE_MIN"]))
+                    # if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
+                        # slope = float(self.channel_par[channel]["SLOPE"])
+                        # offset = float(self.channel_par[channel]["OFFSET"])
+                    if float(self.channel_par[channel]["SOURCE_MIN"]) <= float(self.channel_par[channel]["SOURCE_MAX"]):
+                        slope = 16.0/(float(self.channel_par[channel]["SOURCE_MAX"]) - float(self.channel_par[channel]["SOURCE_MIN"]))
                         offset = 4.0 - slope*float(self.channel_par[channel]["SOURCE_MIN"])
                     else:
-                        print "Configuration Error: Please input valid SLOPE, OFFSET or SOURCE_MIN, SOURCE_MAX values in ini file."
+                        print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in ini file. Make sure min you put is less than max."
+                        sys.exit(1)
                     print "Slope and Offset: ", slope, offset
                     
                     self.data_processor(data, slope, offset, channel_num)
@@ -82,7 +128,7 @@ class Four220Server(object):
     def data_processor(self, data, slope, offset, channel_num):
         
         cur = float(slope * data + offset)
-
+        
         if cur < 0.0 or cur > 20.0:
             print "Cur out of range."
         elif cur < 10.0:
@@ -93,8 +139,10 @@ class Four220Server(object):
         try:
             self.ser.write(cmd_str + '\r')
             #ser.close()
-            print "Write current %f to serial port %s."%(cur,self.port)
-            print "Write cur_str", cmd_str
+            print "Gas Concentration: ", data
+            print "Write current %f mA to serial port %s."%(cur,self.port)
+            print "-------------------"
+            
         except:
             "Failed to write to serial port."
         
@@ -108,12 +156,26 @@ class Four220Server(object):
         self.channel_par = {}
         for s in self.config:
             if s.startswith("OUTPUT_CHANNEL"):
-                if self.config[s]["SOURCE"] != '':
-                    self.channel_par[s] = self.config[s]
-                    
-                    
-        
-        
+                if self.config[s]["SOURCE"] != '': 
+                    if self.config[s]["SOURCE_MIN"] != '' and self.config[s]["SOURCE_MAX"] != '':
+                        if float(self.config[s]["SOURCE_MIN"]) < 0:
+                            self.config[s]["SOURCE_MIN"] = 0
+                        if float(self.config[s]["SOURCE_MAX"]) > 2000:
+                            self.config[s]["SOURCE_MAX"] = 2000
+                        
+                        self.channel_par[s] = self.config[s]
+                    else:
+                        print "Please check configuration file. Make sure you set the SOURCE_MIN and SOURCE_MAX in", s
+                        sys.exit(1)
+
+    def startServer(self):
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_4to20_SERVER),
+                                            ServerName = APP_NAME,
+                                            ServerDescription = "",
+                                            ServerVersion = "1.0.0",
+                                            threaded = True)
+        self.rpcThread = RpcServerThread(self.rpcServer, None)
+        self.rpcThread.start()                        
         
         
 HELP_STRING = """Four220Server.py [-c<FILENAME>] [-h|--help]
@@ -142,8 +204,9 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "4to20Server.ini"
+    configFile = os.path.join(os.path.dirname(AppPath), "4to20Server.ini")
     simulation = False
+    
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
@@ -151,6 +214,7 @@ def handleCommandSwitches():
         configFile = options["-c"]
     if "-s" in options:
         simulation = True
+
     return (configFile, simulation)
 
 if __name__ == "__main__":

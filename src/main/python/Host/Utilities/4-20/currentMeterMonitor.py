@@ -24,7 +24,7 @@ class MyFrame(wx.Frame):
         self.SetTitle("4-20 Current Meter ")
         self.SetSize((703, 300))
         self.SetBackgroundColour(wx.Colour(180, 255, 201))
-        self.Current.SetMinSize((350, 200))
+        self.Current.SetMinSize((450, 200))
         self.Current.SetBackgroundColour(wx.Colour(217, 255, 255))
         self.Current.SetFont(wx.Font(28, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         # end wxGlade
@@ -43,7 +43,7 @@ class CurrentMeter(MyFrame):
         MyFrame.__init__(self, *args, **kwds)
         
         try:
-            self.ser = serial.Serial('COM8', timeout = 5)
+            self.ser = serial.Serial('COM10', timeout = 5)
         except:
             print "Can not connect to the port."
             
@@ -55,7 +55,7 @@ class CurrentMeter(MyFrame):
             bytesToRead = self.ser.inWaiting()
             s = self.ser.read(bytesToRead)
             if s != '':
-                self.Current.SetLabel(s[:18])
+                self.Current.SetLabel(s[:18] + ' ')
             time.sleep(1)
         
     
