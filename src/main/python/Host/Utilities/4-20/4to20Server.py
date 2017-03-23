@@ -71,18 +71,23 @@ class Four220Server(object):
         if self.simulation_env['min'] != '' and self.simulation_env['max'] != '':
             slope = 16.0/(float(self.simulation_env['max']) - float(self.simulation_env['min']))
             offset = 4.0 - slope*float(self.simulation_env['min'])
+            print "Simulation: Slope and Offset: ", slope, offset
         else:
             print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in Simulation section ini file."
 
         if self.simulation_env['Test_mode']:
             for i in range(self.simulation_env['Test_num']):
-                print "Enter a concentration value:"
-                data = float(raw_input().strip() )
+                print "********\n Enter a concentration value:"
+                input = raw_input()
+                if not input.isdigit():
+                    print "What you entered is not a number. Enter again."
+                    continue
+                data = float(input.strip())
                 try:
                     self.data_processor(data, slope, offset, self.simulation_env['channel'])
                 except:
                     print "Can not send to serial port."
-                    break 
+                    continue 
                 time.sleep(1)
             
         else:
