@@ -84,6 +84,7 @@ class ValveControl(object):
         self.savedOutletValue = 0
         self.savedState = interface.VALVE_CNTRL_DisabledState
         self.last5 = deque()
+        self.valveSequence = [] # ???
         return interface.STATUS_OK
 
     def proportionalValveStep(self):
@@ -224,8 +225,8 @@ class ValveControl(object):
     def valveSequencerStep(self):
         if self.sequenceStep >= 0:
             if self.sequenceStep < interface.NUM_VALVE_SEQUENCE_ENTRIES:
-                maskAndValue = valveSequence[sequenceStep].maskAndValue
-                dwell = valveSequence[sequenceStep].dwell
+                maskAndValue = self.valveSequence[self.sequenceStep].maskAndValue
+                dwell = self.valveSequence[self.sequenceStep].dwell
                 # Zero mask and value means we should stay at the present step
                 if maskAndValue != 0:
                     value = maskAndValue & 0xFF

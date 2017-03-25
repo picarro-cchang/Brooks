@@ -6,7 +6,7 @@ import shutil
 
 # Kill host software if it's running
 host_software_components = ["AlarmSystem", "Archiver", "Controller", "ControlBridge", \
-                            "DataLogger", "DataManager", "DataManagerPublisher", "Driver", \
+                            "DataLogger", "DataManager", "DataManagerPublisher", "Driver", "DriverSimulator", \
                             "EventManager", "Fitter", "HostStartup", "InstMgr", "MobileKitMonitor", \
                             "MeasSystem", "QuickGui", "RDFreqConverter", "RestartSurveyor", "RestartSupervisor", "SampleManager", \
                             "Serial2Socket", "SpectrumCollector", "StopSupervisor", "Supervisor", "SupervisorLauncher" \

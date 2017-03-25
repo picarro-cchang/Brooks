@@ -88,6 +88,7 @@ class LaserThermalModel(object):
             num = [0.00000000e+00, -2.98418514e-05, -1.01071361e-04, 6.39149028e-05,
                    5.23341031e-05, 2.66718772e-05, -1.01386506e-05, -9.73607948e-06]
         self.num = num
+        self.thermA = thermA
         if den is None:
             den = [1.00000000e+00, -1.37628382e+00, 2.19598434e-02, 1.01673929e-01,
                    2.99996581e-01, 2.93872141e-02, -7.45088401e-02, -1.42310788e-04]
@@ -117,7 +118,7 @@ class LaserThermalModel(object):
         self.state[degree - 1] = (self.num[degree] * (tec + self.offset) - self.den[degree]*temp) / divisor
         return temp
 
-    def tempToResistance(temp):
+    def tempToResistance(self, temp):
         def cubeRoot(x):
             return x ** (1.0/3.0)
         y = (self.thermA-1.0/(temp + 273.15))/self.thermC

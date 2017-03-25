@@ -36,6 +36,7 @@ def get_raw_source_list(base_path):
             r"Host/DataLogger/*.py",
             r"Host/DataManager/*.py",
             r"Host/Driver/*.py",
+            r"Host/DriverSimulator/*.py",
             r"Host/ElectricalInterface/*.py",
             r"Host/EventManager/*.py",
             r"Host/Fitter/*.py",

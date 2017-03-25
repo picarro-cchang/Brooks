@@ -15,7 +15,7 @@ def get_package_resource(base_path):
         "Host/Coordinator/*.py",
         "Host/MfgUtilities/*.py",
         "Host/pydCaller/*.*",
-        "Host/QuickGUI/*.*",
+        "Host/QuickGui/*.*",
         "Host/Utilities/ConfigManager/*.py",
         "Host/Utilities/CoordinatorLauncher/*.py",
         "Host/Utilities/DataRecal/*.py",

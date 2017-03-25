@@ -442,6 +442,7 @@ class IntervalTimer(threading.Thread):
         self._n = n
         self._keepRunning = True
         self._callback = callback
+        self._timerName = timerName
 
     def run(self):
         while self._keepRunning and self._n > 0:
@@ -452,7 +453,7 @@ class IntervalTimer(threading.Thread):
                 if self._callback:
                     self._callback()
                 else:
-                    print("Ping from timer %s", timerName)
+                    print("Ping from timer %s", self._timerName)
         return
 
     def stop(self):
