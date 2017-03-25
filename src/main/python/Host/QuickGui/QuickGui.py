@@ -1080,6 +1080,9 @@ class DataStore(object):
             try:
                 obj = self.queue.get_nowait()
                 if "data" in obj and "ALARM_STATUS" in obj["data"]:
+                    # diagnostics
+                    #pprint.pprint(obj)
+                    #time.sleep(1000)
                     self.alarmStatus = obj["data"]["ALARM_STATUS"]
                 source = obj['source']
                 if source not in self.oldData:

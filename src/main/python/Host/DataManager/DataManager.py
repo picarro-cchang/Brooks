@@ -2021,14 +2021,18 @@ class DataManager(object):
             elif isinstance(self.alarmSystem, AlarmSystemV3):
                 # Add PID and status as discrete dictionary entries.
                 resultDict.update(InstMgrInc.binaryToDictionary(currentInstMgrStatus))
-                (five, sixty) = self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
+                (five, sixty, leds) = self.alarmSystem.updateAllMonitors(SourceTime_s, resultDict)
+                pprint.pprint(leds)
                 if five or sixty:
-                    (ad5, ad60) = self.alarmSystem.getAllMonitorStatus()
+                    (ad5, ad60, leds) = self.alarmSystem.getAllMonitorStatus()
                     #print("HEADER:", self.alarmSystem.getAllMonitorStatusHeader())
                     if five:
                         print("AD5:", ad5)
                     if sixty:
                         print("--> AD60:", ad60)
+                    #pprint.pprint(leds)
+                resultDict["ALARM_STATUS"] = False
+                resultDict["FRONT_PANEL_LED"] = 1
             else:
                 print("AlarmSystem doesn't have a script defined")
 
