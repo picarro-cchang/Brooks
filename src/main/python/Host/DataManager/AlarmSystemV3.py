@@ -227,7 +227,7 @@ class SingleAlarmMonitor:
                 (fiveMinProcessed, sixtyMinProcessed) = self.processAccumulator()
             self.binStartTime = timestamp
         self.alarmStateAccumulator.append(currentAlarmState)
-        return fiveMinProcessed, sixtyMinProcessed
+        return fiveMinProcessed, sixtyMinProcessed, currentAlarmState
 
     def processAccumulator(self):
         """
@@ -506,10 +506,11 @@ class AlarmSystemV3:
         # but not gas concentrations, update the monitors with missing keys with
         # fake (harmless) data so that all monitors' counters are in sync.
         #
+        latestLedStatus = {}
         try:
             for key, value in inputDataDict.items():
                 if key in listOfAlarmKeys:
-                    five, sixty = self.alarms[key].setData(int(time), value)
+                    five, sixty, latestLedStatus[key] = self.alarms[key].setData(int(time), value)
                     if five:
                         fiveMinProcessed = True
                     if sixty:
@@ -522,7 +523,7 @@ class AlarmSystemV3:
             print("AlarmSystemV3::updateAllMonitors KeyError", e)
         except Exception as e:
             print("AlarmSystemV3::updateAllMonitors unhandled exception", e)
-        return (fiveMinProcessed, sixtyMinProcessed)
+        return (fiveMinProcessed, sixtyMinProcessed, latestLedStatus)
 
     def getAllMonitorStatus(self):
         """
@@ -545,6 +546,7 @@ class AlarmSystemV3:
         alarmFiveMinList = []
         alarmSixtyMinList = []
         timestamp = "NA"
+        latestCodeDict = {}
 
         def alarmCodeToStr(code):
             str = "G"
@@ -568,13 +570,14 @@ class AlarmSystemV3:
                     alarmSixtyMinList.append(alarmCodeToStr(value.sixtyMinHistory["LED_COLOR"][-1]))
                 else:
                     alarmSixtyMinList.append('N')
+                latestCodeDict[key] = value.fiveMinHistory["LED_COLOR"][-1]
             alarmFiveMinList.insert(0, str(timestamp))
             alarmSixtyMinList.insert(0, str(timestamp))
         except KeyError as e:
             print("AlarmSystemV3::getAllMonitorStatus", e)
         except Exception as e:
             print("AlarmSystemV3::getAllMonitorStatus unhandled exception ", e)
-        return (','.join(alarmFiveMinList), ','.join(alarmSixtyMinList))
+        return (','.join(alarmFiveMinList), ','.join(alarmSixtyMinList), latestCodeDict)
 
     def getAllMonitorStatusHeader(self):
         """
