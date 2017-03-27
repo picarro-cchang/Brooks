@@ -114,15 +114,13 @@ class MFC:
         bytesize=serial.EIGHTBITS
     )"""
     ser = serial.Serial(
-        0,
+        #0,
+        port = '/dev/ttyS0',
         baudrate=9600,
         parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS
     )
-    ser.open()
-    #print ser.getSettingsDict()
-    ser.isOpen()
     def __init__(self):
         self.setRanges()
 
