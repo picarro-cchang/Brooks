@@ -1998,7 +1998,6 @@ class DataManager(object):
             testAlarmMessage = ""
             if hasattr(self.alarmSystem, "alarmScriptCodeObj") \
                     and (self.alarmSystem.alarmScriptCodeObj is not None):
-                print("Running alarm script")
                 alarmsDict = ScriptRunner.RunAlarmScript(   ScriptCodeObj = self.alarmSystem.alarmScriptCodeObj,
                                                             SourceTime_s = SourceTime_s,
                                                             AlarmParamsDict = self.alarmSystem.alarmParamsDict,
@@ -2025,10 +2024,10 @@ class DataManager(object):
                 if five or sixty:
                     (ad5, ad60) = self.alarmSystem.getAllMonitorStatus()
                     #print("HEADER:", self.alarmSystem.getAllMonitorStatusHeader())
-                    if five:
-                        print("AD5:", ad5)
-                    if sixty:
-                        print("--> AD60:", ad60)
+                    #if five:
+                    #    print("AD5:", ad5)
+                    #if sixty:
+                    #    print("--> AD60:", ad60)
             else:
                 print("AlarmSystem doesn't have a script defined")
 

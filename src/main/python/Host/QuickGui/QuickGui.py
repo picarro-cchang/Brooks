@@ -1195,13 +1195,13 @@ class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
 
         # fullScreen sets the main view with no border and full screen.
-        fullScreen = True
+        fullScreen = False
 
         if(fullScreen):
             styleSettings = (wx.CAPTION|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
             wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer', style = styleSettings)
         else:
-            wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700),
+            wx.Frame.__init__(self,parent=None,id=-1,title='CRDS_Data_Viewer',size=(1200,700),
                               style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
 
         self.commandQueue = Queue.Queue()

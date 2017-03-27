@@ -28,6 +28,8 @@ import getopt
 import re
 import threading
 import Queue
+import pprint
+import __builtin__
 from inspect import isclass
 from numpy import *
 
@@ -79,8 +81,8 @@ sys.path.append("CommandInterface")
 
 if __debug__:
     print("Loading rpdb2")
-    import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    #import rpdb2
+    #rpdb2.start_embedded_debugger("hostdbg",timeout=0)
     print("rpdb2 loaded")
 
 class CommandInterface(object):
@@ -171,7 +173,10 @@ class CommandInterface(object):
         # Create error constants from config
         for name in self.errorList:
             args = tuple(self.errorList[name].split(',',1))
-            setattr(__builtins__, name.upper(), "%s    %s" % args )
+            setattr(__builtin__, name.upper(), "%s    %s" % args )
+        #pprint.pprint(self.__dict__)
+        #print(__builtin__.name)
+        pprint.pprint(__builtin__.__dict__)
 
         # Setup response LF/CR
         self.append = ''

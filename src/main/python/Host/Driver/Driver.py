@@ -268,7 +268,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             versionDict["config - instr version no"] = self.ver["instrVer"]
             versionDict["config - common version no"] = self.ver["commonVer"]
         except Exception, err:
-            print err
+            print "Driver 217:", err
         return versionDict
 
     def saveRegValues(self,regList):
@@ -1133,7 +1133,7 @@ class Driver(SharedTypes.Singleton):
                 co = CustomConfigObj(fPath)
                 self.ver[ver] = co["Version"]["revno"]
             except Exception, err:
-                print err
+                print "Driver 1136:", err
                 self.ver[ver] = "N/A"
         # Get installer ID
         try:
@@ -1145,7 +1145,7 @@ class Driver(SharedTypes.Singleton):
             self.installerId = sigFd.readline().strip()
             sigFd.close()
         except Exception, err:
-            print "%r" % err
+            print "Driver 1175, can't load %s: %r" % (signaturePath, err)
             self.installerId = None
         self.analyzerType = None # Will be retrieved from EEPROM in run() function
         self.validInstallerId = True
@@ -1300,7 +1300,7 @@ class Driver(SharedTypes.Singleton):
                 try:
                     self.analyzerType = self.rpcHandler.fetchInstrInfo("analyzer")
                 except Exception, err:
-                    print "%r" % err
+                    print "Driver 1303: %r" % err
                     self.analyzerType = None
 
                 if self.analyzerType != None:
@@ -1475,7 +1475,7 @@ def handleCommandSwitches():
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
-        print "%s %r" % (E, E)
+        print "Driver 1478: %s %r" % (E, E)
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}

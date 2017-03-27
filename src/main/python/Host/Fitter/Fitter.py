@@ -1034,7 +1034,11 @@ class FitViewer(wx.Frame):
             fitterState = self.fitterRpc.FITTER_getFitterStateRpc()
             self.process.Enable(fitterState == FITTER_STATE_READY)
         except:
-            print "Fitter thread not communicating (ok during shutdown)"
+            pass
+            # Disable err msg because it fills the terminal and won't
+            # let me see the error message that cause the code to
+            # get here.
+            #print "Fitter thread not communicating (ok during shutdown)"
         self.reset.Enable(bool(self.filePaths))
         self.batchMode.Enable(self.inputSelect.GetSelection() != 0)
 

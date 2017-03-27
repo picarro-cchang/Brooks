@@ -179,6 +179,9 @@ Description: Picarro Host Software for Semiconductor Industry
         dist_dir_home = os.path.join(dist_dir, 'home')
         dist_dir_new = os.path.join(dist_dir, 'home', 'picarro', 'SI2000')
         # delete home folder that is possibly left from the last build
+        #
+        # RSF - seeing if this leaves behind files neede to speed up
+        # the build when on a few files have changed.
         if os.path.isdir(dist_dir_home):
             shutil.rmtree(dist_dir_home)
         # create the desired directory tree: home/picarro/SI2000
