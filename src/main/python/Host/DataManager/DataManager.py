@@ -2025,20 +2025,13 @@ class DataManager(object):
                 if five or sixty:
                     (ad5, ad60, leds) = self.alarmSystem.getAllMonitorStatus()
                     #print("HEADER:", self.alarmSystem.getAllMonitorStatusHeader())
-<<<<<<< HEAD
                     #if five:
                     #    print("AD5:", ad5)
                     #if sixty:
                     #    print("--> AD60:", ad60)
-=======
-                    if five:
-                        print("AD5:", ad5)
-                    if sixty:
-                        print("--> AD60:", ad60)
                     #pprint.pprint(leds)
                 resultDict["ALARM_STATUS"] = False
                 resultDict["FRONT_PANEL_LED"] = 1
->>>>>>> 44115534f5024d5327ad52495da4c5dbf1cc7c88
             else:
                 print("AlarmSystem doesn't have a script defined")
 
