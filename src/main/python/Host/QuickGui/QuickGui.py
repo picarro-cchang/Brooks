@@ -34,11 +34,14 @@ __version__ = 1.0
 _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
+FLASK_SERVER_URL = "http://127.0.0.1:3000/api/v1.0/"
 
 import sys
 import wx
+from wx.lib import sized_controls
 import Queue
 import numpy
+import requests
 import os
 from os.path import dirname as os_dirname
 import re
@@ -407,6 +410,9 @@ class AlarmDialog(wx.Dialog):
                 wx.MessageBox("In %s mode, Alarm threshold 1 must be above Alarm threshold 2" % mode,"Error")
                 return False
         return True
+
+
+
 
 class AlarmViewListCtrl(wx.ListCtrl):
     """ListCtrl to display alarm status
@@ -1135,6 +1141,44 @@ class RpcServerThread(threading.Thread):
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
+class LoginDialog(wx.Dialog):
+    def __init__(self, parent, title="Login"):
+        super(LoginDialog, self).__init__(parent, title = title)
+        
+        self._user = wx.TextCtrl(self)
+        self._pass = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        
+        self.__DoLayout()
+        self.SetInitialSize((400, 300))
+        
+    def __DoLayout(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        fieldSz = wx.FlexGridSizer(2,2,5,8)
+        fieldSz.AddGrowableCol(1,1)
+        userLbl = wx.StaticText(self, label= "User email:")
+        fieldSz.Add(userLbl, 0, wx.ALIGN_CENTER_VERTICAL)
+        fieldSz.Add(self._user, 1, wx.EXPAND)
+        passLbl = wx.StaticText(self, label= "Password:")
+        fieldSz.Add(passLbl, 0, wx.ALIGN_CENTER_VERTICAL)
+        fieldSz.Add(self._pass, 1, wx.EXPAND)
+        
+        sizer.Add((10,10))
+        sizer.Add(fieldSz, 1, wx.ALL|wx.EXPAND, 5)
+        btnSz = self.CreateButtonSizer(wx.OK|wx.CANCEL)
+        sizer.Add(btnSz, 0, wx.EXPAND|wx.BOTTOM|wx.TOP, 5)
+        
+        self.Sizer = sizer
+        
+    @property
+    def Username(self):
+        return self._user.Value
+            
+    @property
+    def Password(self):
+        return self._pass.Value
+
+
 class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS Data Viewer',size=(1200,700),
@@ -1202,6 +1246,7 @@ class QuickGui(wx.Frame):
         self.logo = None
         self.userLevel = 1
         self.userLevelChange = False
+        self.userSession = None
         self.showStat = False
         self.showInstStat = False
         self.serviceModeOnlyControls = []
@@ -1277,20 +1322,24 @@ class QuickGui(wx.Frame):
         self.iView = wx.Menu()
         self.iTools = wx.Menu()
         self.iHelp = wx.Menu()
-
+        
         #user level setting manu
         self.menuBar.Append(self.iUserSettings,"User Level Settings")
         self.idGUIMODE1 = wx.NewId()
         self.idGUIMODE2 = wx.NewId()
         self.idGUIMODE3 = wx.NewId()
+        self.idGUIMODE4 = wx.NewId()
+
         self.iGuiMode1 = wx.MenuItem(self.iUserSettings, self.idGUIMODE1, "Operator", "", wx.ITEM_NORMAL)
         self.iGuiMode2 = wx.MenuItem(self.iUserSettings, self.idGUIMODE2, "Service technician", "", wx.ITEM_NORMAL)
-        self.iGuiMode3 = wx.MenuItem(self.iUserSettings, self.idGUIMODE3, "Expert", "", wx.ITEM_NORMAL)
-
+        self.iGuiMode3 = wx.MenuItem(self.iUserSettings, self.idGUIMODE3, "Expert(Admin)", "", wx.ITEM_NORMAL)
+        self.iGuiMode4 = wx.MenuItem(self.iUserSettings, self.idGUIMODE4, "Manage Users(Admin)", "", wx.ITEM_NORMAL)
 
         self.iUserSettings.AppendItem(self.iGuiMode1)
         self.iUserSettings.AppendItem(self.iGuiMode2)
         self.iUserSettings.AppendItem(self.iGuiMode3)
+        self.iUserSettings.AppendItem(self.iGuiMode4)
+
         self.iGuiMode1.Enable(False)
         
         self.menuBar.Append(self.iView,"View")
@@ -1308,8 +1357,8 @@ class QuickGui(wx.Frame):
         self.idUserCal = wx.NewId()
         self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
         self.iTools.AppendItem(self.iUserCal)
-        #self.menuBar.EnableTop(1, False)
-        #self.menuBar.EnableTop(2, False)
+        self.menuBar.EnableTop(1, False)
+        self.menuBar.EnableTop(2, False)
         try:
             self.pulseSource = self.config.get("PulseAnalyzer", "Source")
             self.idPulseAnalyzerParam = wx.NewId()
@@ -1336,6 +1385,7 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnGuiMode1, id=self.idGUIMODE1)
         self.Bind(wx.EVT_MENU, self.OnGuiMode2, id=self.idGUIMODE2)
         self.Bind(wx.EVT_MENU, self.OnGuiMode3, id=self.idGUIMODE3)
+        self.Bind(wx.EVT_MENU, self.OnGuiMode4, id=self.idGUIMODE4)
 
         self.Bind(wx.EVT_MENU, self.OnLockTime, id=self.idLockTime)
         self.iLockTime.Enable(self.numGraphs>1)
@@ -1871,6 +1921,7 @@ class QuickGui(wx.Frame):
             for ayb in self.autoY:
                 ayb.Enable(False)
             for c in self.serviceModeOnlyControls:
+                print "************", c, "type: ", type(c)
                 c.Show(False)
             self.clearButton.Enable(False)
 
@@ -1892,6 +1943,7 @@ class QuickGui(wx.Frame):
             #Technician Level
             if self.userLevel == 2:
                 for c in self.serviceModeOnlyControls:
+                    print "AAAAAAAAAAAAA"
                     c.Show(False)
                 #self.iGuiMode1.Enable(True)
                 #self.iGuiMode2.Enable(False)
@@ -2479,28 +2531,56 @@ class QuickGui(wx.Frame):
         self.modifyInterface()
         self.measPanelSizer.Layout()
         self.Refresh()
-        d = OKDialog(self,"Operator GUI mode selected",None,-1,"CRDS Data Viewer")
+        d = OKDialog(self,"Operator GUI mode selected",None,-1,"User Authentication")
 
         d.ShowModal()
         d.Destroy()
+        
+        #payload = {'command': 'get_current_user'}
+        #with requests.Session() as session:
+        #    r_account = session.get(FLASK_SERVER_URL + "account", data = payload )
+        #    print r_account.json()
+        #print r_account.json()
+        #if 'email' in r_account.json():
+        #    with requests.Session() as session:
+        #        req_dict = {'email': r_account.json['email'], 'password': r_account.json['password'], 'command': 'log_out_user'}
+        #        r_logout = session.post(FLASK_SERVER_URL + "account", data = payload )
+        #    print "log out msg:", r_logout.json()['msg']        
+        #update the menu tabs in the GUI
         self.iGuiMode1.Enable(False)
         self.iGuiMode2.Enable(True)
         self.iGuiMode3.Enable(True)
+        self.iGuiMode4.Enable(True)
+
         self.menuBar.EnableTop(1, False)
-        self.menuBar.EnableTop(2, False)
+        self.menuBar.EnableTop(2, False) 
 
 
     def OnGuiMode2(self,e):
         # change GUI mode to technician (if password matched)
-        d = wx.TextEntryDialog(self, 'Service Technician Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        setItemFont(d,self.getFontFromIni("Dialogs"))
-        try:
-            password = getInnerStr(self.config.get("Authorization","password"))
-        except:
-            password = "picarro"
+        #d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        #setItemFont(d,self.getFontFromIni("Dialogs"))
+        d = LoginDialog(self, title = "Authorization required")
+        d.Show()
+        
+        
         okClicked = d.ShowModal() == wx.ID_OK
 
-        if okClicked and (d.GetValue() == password):
+        print "email: ", d.Username, ", password: ", d.Password
+        payload = {'email': d.Username, 'password': d.Password, 'command': 'log_in_user'}
+        print "payload: ", payload
+
+        with requests.Session() as session:
+                r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
+        session.close()
+        print "session: ", session
+        print "The Http request response: ", r_account.text 
+        print "response code:  ", r_account.status_code
+        
+        authorized = "roles" in r_account.json()
+        print "authorized: ", authorized
+
+        if okClicked and authorized:
             self.userLevel = 2
             self.userLevelChange = True
         d.Destroy()
@@ -2510,10 +2590,13 @@ class QuickGui(wx.Frame):
                 self.modifyInterface()
                 self.measPanelSizer.Layout()
                 self.Refresh()
-                d = OKDialog(self,"Standard technician GUI mode selected",None,-1,"CRDS Data Viewer")
+                d = OKDialog(self,"Standard technician GUI mode selected",None,-1,"User Authentication")
+
+                #update GUI
                 self.iGuiMode1.Enable(True)
                 self.iGuiMode2.Enable(False)
                 self.iGuiMode3.Enable(True)
+                self.iGuiMode4.Enable(True)
                 self.menuBar.EnableTop(1, True)
                 self.menuBar.EnableTop(2, True)
 #                self.iLockTime.Enable(True)
@@ -2521,21 +2604,34 @@ class QuickGui(wx.Frame):
 #                self.iInstStatDisplay.Enable(True)
             
             else:
-                d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
+                d = OKDialog(self,"Authentication failed, mode not changed.",None,-1,"User Authentication")
             d.ShowModal()
             d.Destroy()
 
     def OnGuiMode3(self,e):
         # try to change GUI mode to expert (if password matched)
-        d = wx.TextEntryDialog(self, 'Expert Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        setItemFont(d,self.getFontFromIni("Dialogs"))
-        try:
-            password = getInnerStr(self.config.get("Authorization","password"))
-        except:
-            password = "picarropicarro"
+        #d = wx.TextEntryDialog(self, 'Expert Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        #setItemFont(d,self.getFontFromIni("Dialogs"))
+        d = LoginDialog(self, title = "Authorization required")
+        d.Show()
+        
         okClicked = d.ShowModal() == wx.ID_OK
 
-        if okClicked and (d.GetValue() == password):
+        print "email: ", d.Username, ", password: ", d.Password
+        payload = {'email': d.Username, 'password': d.Password, 'command': 'log_in_user'}
+        print "payload: ", payload
+
+        with requests.Session() as session:
+                r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
+        session.close()
+        print "session: ", session
+        print "The Http request response: ", r_account.text 
+        print "response code:  ", r_account.status_code
+        
+        authorized = "roles" in r_account.json() and 'Admin' in r_account.json()["roles"]
+        print "authorized: ", authorized
+
+        if okClicked and authorized:
             self.userLevel = 3
             self.userLevelChange = True
         d.Destroy()
@@ -2545,17 +2641,49 @@ class QuickGui(wx.Frame):
                 self.modifyInterface()
                 self.measPanelSizer.Layout()
                 self.Refresh()
-                d = OKDialog(self,"Expert GUI mode selected",None,-1,"CRDS Data Viewer")
+                d = OKDialog(self,"Expert GUI mode selected",None,-1,"User Authentication")
                 self.iGuiMode1.Enable(True)
                 self.iGuiMode2.Enable(True)
                 self.iGuiMode3.Enable(False)
+                self.iGuiMode4.Enable(True)
                 self.menuBar.EnableTop(1, True)
                 self.menuBar.EnableTop(2, True)
 
             else:
-                d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
+                d = OKDialog(self,"Authentication failed, mode not changed.",None,-1,"User Authentication")
             d.ShowModal()
             d.Destroy()
+
+    def OnGuiMode4(self,e):
+        print "User Management tab clicked."
+        d = LoginDialog(self, title = "Authorization required")
+        d.Show()
+        
+        okClicked = d.ShowModal() == wx.ID_OK
+        print "email: ", d.Username, ", password: ", d.Password
+        payload = {'email': d.Username, 'password': d.Password, 'command': 'log_in_user'}
+        print "payload: ", payload
+
+        with requests.Session() as session:
+            r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
+            authorized = "roles" in r_account.json() and 'Admin' in r_account.json()["roles"]
+            if okClicked:
+                if authorized:
+                    d = OKDialog(self,"Users management mode selected",None,-1,"User Authentication")
+                    self.iGuiMode1.Enable(True)
+                    self.iGuiMode2.Enable(True)
+                    self.iGuiMode3.Enable(True)
+                    self.iGuiMode4.Enable(False)
+                    print "User management authorized."
+                    #user management panel 
+                    
+                else:
+                    d = OKDialog(self,"Authentication failed, Can not enter user management mode.",None,-1,"User Authentication")
+                d.ShowModal()
+                d.Destroy()
+
+        session.close()
+        
 
 #end of class QuickGui
 HELP_STRING = \
