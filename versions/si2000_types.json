@@ -1,0 +1,26 @@
+{
+    "buildTypes": {
+        "AEDS": {
+            "species": "NH3",
+            "installerSignature": "AEDS"
+        },
+
+        "MADS": {
+            "species": "HF",
+            "installerSignature": "MADS"
+        },
+
+        "NBDS": {
+            "species": "H2O2",
+            "installerSignature": "NBDS"
+        },
+        
+        "SADS": {
+            "species": "HCl",
+            "installerSignature": "SADS"
+        }
+
+    },
+
+    "installerScriptsDir": "InstallerScriptsWin7"
+}

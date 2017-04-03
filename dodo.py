@@ -223,6 +223,23 @@ def task_build_ai_autosampler_exe():
             'verbosity': 2
     }
 
+def task_cythonization():
+    targets = []
+    dist_dir = get_var('dist_dir', '')
+    if len(dist_dir) > 0:
+        bldsup_path = os.path.join(os.getcwd(), "bldsup")
+        if bldsup_path not in sys.path:
+            sys.path.append(bldsup_path)
+        from setupforPyd import get_source_list
+        targets = [f[:-2] + "so" for f in get_source_list(dist_dir)]
+
+    return {'actions': [
+                'python %s build_ext --inplace --basepath=%s' % (r"./bldsup/setupforPyd.py", dist_dir)
+            ],
+           'targets' : targets,
+           'verbosity': 2
+    }
+
 def task_build_hostexe():
     dist_dir = get_var('dist_dir', '.')
 
@@ -277,40 +294,42 @@ def task_build_ssim():
 
     dist_dir = get_var('dist_dir')
     if dist_dir is not None:
-        with open(os.path.join(dist_dir, "AddOns", "SSIM", COORDINATOR_METADATA), 'r') as metaFp:
-            meta = json.load(metaFp)
-        targets = [COORDINATOR_FILE_FORMAT % analyzer_type for analyzer_type in meta]
+        meta_file = os.path.join(dist_dir, "AddOns", "SSIM", COORDINATOR_METADATA)
+        if os.path.exists(meta_file):
+            with open(meta_file, 'r') as metaFp:
+                meta = json.load(metaFp)
+            targets = [COORDINATOR_FILE_FORMAT % analyzer_type for analyzer_type in meta]
 
-        def python_build_ssim(dist_dir, meta):
-            build_dir = os.path.join(dist_dir, "AddOns", "SSIM")
-            old_dir = os.getcwd()
-            os.chdir(build_dir)
-            try:
-                # Get the current dir. Expect that we are in the SSIM folder.
-                cur_dir_path = os.getcwd()
-                cur_dir = os.path.split(cur_dir_path)[1]
-                # Windows dirs are not case-sensitive.
-                # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
-                if cur_dir.lower() != "ssim":
-                    raise ValueError("Not running in expected folder 'SSIM'.")
-                env = jinja2.Environment(loader=jinja2.FileSystemLoader(
-                        os.path.join('.', 'templates')))
-                t = env.get_template('Coordinator_SSIM.ini.j2')
-                for k in meta:
-                    print "Generating coordinator for '%s'." % k
-                    standards = [col for col in meta[k]['columns'] if col[5] == 'True']
-                    with open(COORDINATOR_FILE_FORMAT % k, 'w') as coordFp:
-                        coordFp.write(t.render(analyzer=meta[k],
-                                               standards=standards))
-            finally:
-                os.chdir(old_dir)
+            def python_build_ssim(dist_dir, meta):
+                build_dir = os.path.join(dist_dir, "AddOns", "SSIM")
+                old_dir = os.getcwd()
+                os.chdir(build_dir)
+                try:
+                    # Get the current dir. Expect that we are in the SSIM folder.
+                    cur_dir_path = os.getcwd()
+                    cur_dir = os.path.split(cur_dir_path)[1]
+                    # Windows dirs are not case-sensitive.
+                    # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
+                    if cur_dir.lower() != "ssim":
+                        raise ValueError("Not running in expected folder 'SSIM'.")
+                    env = jinja2.Environment(loader=jinja2.FileSystemLoader(
+                            os.path.join('.', 'templates')))
+                    t = env.get_template('Coordinator_SSIM.ini.j2')
+                    for k in meta:
+                        print "Generating coordinator for '%s'." % k
+                        standards = [col for col in meta[k]['columns'] if col[5] == 'True']
+                        with open(COORDINATOR_FILE_FORMAT % k, 'w') as coordFp:
+                            coordFp.write(t.render(analyzer=meta[k],
+                                                standards=standards))
+                finally:
+                    os.chdir(old_dir)
 
-        yield {'actions': [(python_build_ssim,(dist_dir, meta))],
-               'name':dist_dir,
-               'targets' : targets,
-               'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
-               'verbosity': 2
-               }
+            yield {'actions': [(python_build_ssim,(dist_dir, meta))],
+                'name':dist_dir,
+                'targets' : targets,
+                'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
+                'verbosity': 2
+                }
 
 def task_build_chem_correct_exe():
     dist_dir = get_var('dist_dir', '.')
