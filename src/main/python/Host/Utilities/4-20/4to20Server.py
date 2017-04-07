@@ -1,3 +1,17 @@
+#!/usr/bin/python
+"""
+File Name: 4to20Server.py
+Purpose: 4-20 mA back end. It takes data obj from data manager, 
+map the consentration to the 0-40 mA value and send to COM port 
+on the mother board.  
+
+File History:
+    17-04-03  Wenting   Created file
+
+Copyright 2017 Picarro, Inc. 
+"""
+
+
 import sys,time,os
 import math
 import serial
@@ -45,7 +59,7 @@ class Four220Server(object):
             self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
         except:
             print "Can not connect to %s port. Please check the SERIAL_PORT_SETUP configuration. "% self.port
-            
+        #simulation mode or execution mode    
         if simulation:
             self.data_thread = threading.Thread(target=self.simulate_data)
             self.data_thread.daemon = True
@@ -62,6 +76,11 @@ class Four220Server(object):
                                         name = APP_NAME)
         
     def simulate_data(self):
+        """
+        Simulate the concentration data. Send mapped current value to COM port.
+        """
+        
+        
         self.simulation_env = {}
         self.simulation_env['min'] = self.config.getfloat('Simulation', 'MIN')
         self.simulation_env['max'] = self.config.getfloat('Simulation', 'MAX')
@@ -75,6 +94,7 @@ class Four220Server(object):
         else:
             print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in Simulation section ini file."
 
+        #Test mode will let you enter a concentration value manually and send the current to COM port.
         if self.simulation_env['Test_mode']:
             for i in range(self.simulation_env['Test_num']):
                 print "********\n Enter a concentration value:"
@@ -101,9 +121,10 @@ class Four220Server(object):
                     print "Can not send to serial port."
                     break 
                 time.sleep(5)
-    
+    #this fun is called every time when the listener gets data obj from data manager.
     def _streamFilter(self, streamOut):
         try:
+            #get the concentration indicated in the ini file as source. 
             if streamOut["source"] == self.analyzer_source:
                 raw_data = streamOut["data"]
                 for channel in self.channel_par:
@@ -131,7 +152,10 @@ class Four220Server(object):
             print err, "   ****"
             
     def data_processor(self, data, slope, offset, channel_num):
+        """
+        It takes the concentration (data), map to 4-20 mA, and send to command to the designated COM port.  
         
+        """
         cur = float(slope * data + offset)
         
         if cur < 0.0 or cur > 20.0:
@@ -154,10 +178,16 @@ class Four220Server(object):
         
         
     def run(self):
+        """
+        Main loop.
+        """
         while True: 
             time.sleep(10)
     
     def get_channel_info(self):
+        """
+        config parse. get parameters in each channel 
+        """
         self.channel_par = {}
         for s in self.config:
             if s.startswith("OUTPUT_CHANNEL"):
@@ -174,6 +204,9 @@ class Four220Server(object):
                         sys.exit(1)
 
     def startServer(self):
+        """
+        Start rpc server thread.  
+        """
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_4to20_SERVER),
                                             ServerName = APP_NAME,
                                             ServerDescription = "",

@@ -11,17 +11,19 @@ def get_package_resource(base_path):
     sourceFiles = []
     includeFolderList = [
         "Assets/icons/*.ico",
+        "Host/__init__.py",
         "Host/Controller/*.py",
         "Host/Coordinator/*.py",
         "Host/MfgUtilities/*.py",
         "Host/pydCaller/*.*",
-        "Host/QuickGUI/*.*",
+        "Host/QuickGui/*.*",
         "Host/Utilities/ConfigManager/*.py",
         "Host/Utilities/CoordinatorLauncher/*.py",
         "Host/Utilities/DataRecal/*.py",
         "Host/Utilities/FlowController/*.py",
         "Host/Utilities/InstrEEPROMAccess/*.py",
         "Host/Utilities/IntegrationTool/*.py",
+        "Host/Utilities/RestartSupervisor/*.py",
         "Host/Utilities/SetupTool/*.py",
         "Host/Utilities/SupervisorLauncher/*.py"
     ]

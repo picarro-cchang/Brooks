@@ -20,8 +20,7 @@ class cythonize_picarro_code(build_ext):
     def get_ext_fullpath(self, ext_name):
         if self.basepath:
             modpath = ext_name.split('.')
-            # Need to add 'Host' below for Linux
-            return os.path.join(self.basepath, 'Host', *modpath) + ".so"
+            return os.path.join(self.basepath, *modpath) + ".so"
         else:
             return build_ext.get_ext_fullpath(self, ext_name)
 
@@ -31,7 +30,7 @@ def get_raw_source_list(base_path):
             r"Host/AlarmSystem/*.py",
             r"Host/autogen/*.py",
             r"Host/Archiver/*.py",
-            r"Host/Common/*.py"
+            r"Host/Common/*.py",
             r"Host/CommandInterface/*.py",
             r"Host/DataLogger/*.py",
             r"Host/DataManager/*.py",
@@ -44,12 +43,11 @@ def get_raw_source_list(base_path):
             r"Host/PortListerner/*.py",
             r"Host/RDFrequencyConverter/*.py",
             r"Host/rdReprocessor/*.py",
-            r"Host/Utilities/RestartSupervisor/*.py",
             r"Host/PeriphIntrf/*.py",
             r"Host/SampleManager/*.py",
             r"Host/SpectrumCollector/*.py",
             r"Host/Supervisor/*.py",
-            r"Host/ValveSequencer/*.py",
+            r"Host/ValveSequencer/*.py"
     ]
     if base_path:
         for folder in includeFolderList:
