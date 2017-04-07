@@ -86,6 +86,12 @@ class BuildSI2000(Builder):
         python_target = project.expand_path("$dir_dist")
         source_list = setup.get_raw_source_list(python_source)
         source_list.extend(buildUtils.get_package_resource(python_source))
+        # if there is a Host folder from last build, move it to target/dist/
+        old_host = os.path.join(python_target, "home", "picarro", "SI2000", "Host")
+        if os.path.exists(old_host):
+            logger.info("Found Host folder in sandbox.")
+            os.rename(old_host, os.path.join(python_target, "Host"))
+        logger.info("Copying sources to {0}".format(python_target))
         for f in source_list:
             if not os.path.exists(f):
                 raise BuildFailedException("File not found: %s" % f)
@@ -96,19 +102,6 @@ class BuildSI2000(Builder):
                 if not os.path.exists(dist_folder):
                     os.makedirs(dist_folder)
                 shutil.copyfile(f, dist_file)
-
-    def publish(self):
-        project = self.project
-        logger = self.logger
-        logger.info("Running py2exe in %s", project.expand_path("$dir_dist"))
-        output_file_path = self.get_report_file_path("build_hostexe")
-        with open(output_file_path, "a") as output_file:
-            cmd = "doit dist_dir=%s build_hostexe" % project.expand_path("$dir_dist")
-            stdout, return_code = self.run_command(cmd, True)
-            output_file.write(stdout)
-            if return_code != 0:
-                raise BuildFailedException("Error while executing run_py2exe/build_hostexe")
-
 
     def _make_python_version_files(self):
         project = self.project
@@ -193,6 +186,11 @@ Description: Picarro Host Software for Semiconductor Industry
         shutil.copytree(os.path.join(config_dir, "CommonConfig"), common_config_dir)
         # create launchers
         buildUtils.make_xubuntu_launchers(dist_dir)
+        # create python path file
+        pth_file_dir = os.path.join(dist_dir, 'home', 'picarro', 'anaconda2','lib','python2.7','site-packages')
+        os.makedirs(pth_file_dir)
+        with open(os.path.join(pth_file_dir, 'Picarro.pth'), 'w') as f:
+            f.write("/home/picarro/SI2000")
         # make debian folder
         debian_dir = os.path.join(dist_dir, "DEBIAN")
         if not os.path.isdir(debian_dir):

@@ -94,11 +94,6 @@ def compile_sources(project, logger):
     builder.compile_sources()
     
 @task
-def publish(project, logger):
-    builder = project.get_property("builder")
-    builder.publish()
-    
-@task
 @depends('compile_sources')
 #@depends('run_unit_tests')
 def copy_sources(project, logger):

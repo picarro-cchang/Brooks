@@ -159,9 +159,11 @@ class Builder(object):
         logger.info("Cythonizing modules")
         with open(output_file_path, "a") as output_file:
             output_file.write("=== %s ===\n" % time.asctime())
-            out, retcode = self.run_command("doit dist_dir=%s cythonization" % project.expand_path("$dir_dist"))
+            #stdout, retcode = self.run_command("doit dist_dir=%s cythonization" % project.expand_path("$dir_dist"))
+            stdout, retcode = self.run_command(
+                "python %s build_ext --inplace --basepath=%s" % (r"./bldsup/setupforPyd.py", project.expand_path("$dir_dist")))
             output_file.write(stdout)
-            if return_code != 0:
+            if retcode != 0:
                 raise BuildFailedException("Error while cythonizing sources")
         logger.info("Cleaning source code")
         sys.path.append("bldsup")

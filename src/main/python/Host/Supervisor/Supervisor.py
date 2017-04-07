@@ -660,7 +660,7 @@ class App(object):
                 launchArgs += " "
             launchArgs += "--restarted"
 
-        if ext in [".py", ".pyc"]:
+        if ext in [".py", ".pyc", ".pyo"]:
             # Set the python interpreter to use if we are running a
             # *.py or *.pyc.  If the optimize flag is set (i.e. python -O Supervisor.py)
             # use the optimize flag on the subprocesses.
