@@ -413,7 +413,10 @@ class DataLog(object):
             self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
 
     def _WriteHeader(self,DataList):
-        if not self.BareTime:
+        if self.BareTime:
+            # ISO8601 UTC time
+            self._WriteEntry("DATETIME (ISO8601 UTC)")
+        else:
             self._WriteEntry("DATE")
             self._WriteEntry("TIME")
             self._WriteEntry("FRAC_DAYS_SINCE_JAN1")
@@ -535,7 +538,14 @@ class DataLog(object):
                     self.table.flush()
                     self.lastFlush = now
             else:
-                if not self.BareTime:
+                if self.BareTime:
+                    # ISO8601 UTC date and time with fractional seconds
+                    timeStr = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(Time))
+                    fracSec = Time - int(Time)
+                    timeStr += (".%03d" % int(1000*fracSec))
+                    timeStr += "Z"
+                    self._WriteEntry(timeStr)
+                else:
                     #write DATE
                     self._WriteEntry(time.strftime("%Y-%m-%d",currentTime))
                     #write TIME
