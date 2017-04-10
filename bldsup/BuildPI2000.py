@@ -13,15 +13,15 @@ INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'Tools', 'Release', 'Installer
 RELEASE_VERSION_FILE = ('src', 'main', 'python', 'Host', 'Common', 'release_version.py')
 INTERNAL_VERSION_FILE = ('src', 'main', 'python', 'Host', 'build_version.py')
 
-class BuildSI2000(Builder):
+class BuildPI2000(Builder):
     def __init__(self, project, logger):
-        super(BuildSI2000, self).__init__(project, logger)
-        logger.info("Instantiating BuildSI2000")
+        super(BuildPI2000, self).__init__(project, logger)
+        logger.info("Instantiating BuildPI2000")
 
     def initialize(self, product):
         project = self.project
         logger = self.logger
-        assert product.lower() == "si2000"
+        assert product.lower() == "pi2000"
         version_file = os.path.join("versions","%s_version.json" % product)
         self.handle_version(version_file)
 
@@ -87,7 +87,7 @@ class BuildSI2000(Builder):
         source_list = setup.get_raw_source_list(python_source)
         source_list.extend(buildUtils.get_package_resource(python_source))
         # if there is a Host folder from last build, move it to target/dist/
-        old_host = os.path.join(python_target, "home", "picarro", "SI2000", "Host")
+        old_host = os.path.join(python_target, "home", "picarro", "PI2000", "Host")
         if os.path.exists(old_host):
             logger.info("Found Host folder in sandbox.")
             os.rename(old_host, os.path.join(python_target, "Host"))
@@ -141,7 +141,7 @@ class BuildSI2000(Builder):
         with open(os.path.join(debian_dir, "control"), "w") as f:
             f.write(
 """\
-Package: SI2000
+Package: PI2000
 Version: %s
 Section: science
 Priority: required
@@ -166,15 +166,15 @@ Description: Picarro Host Software for Semiconductor Industry
         project_full_name = '%s-%s' % (project.name, raw_version)
         config_info = project.get_property('config_info')
         sandbox_dir = project.expand_path('$dir_source_main_python')
-        output_file_path = self.get_report_file_path("make_SI2000_installers")
+        output_file_path = self.get_report_file_path("make_PI2000_installers")
         dist_dir = project.expand_path('$dir_dist')
         dist_dir_temp = dist_dir + "_temp"
         dist_dir_home = os.path.join(dist_dir, 'home')
-        dist_dir_new = os.path.join(dist_dir, 'home', 'picarro', 'SI2000')
+        dist_dir_new = os.path.join(dist_dir, 'home', 'picarro', 'PI2000')
         # delete home folder that is possibly left from the last build
         if os.path.isdir(dist_dir_home):
             shutil.rmtree(dist_dir_home)
-        # create the desired directory tree: home/picarro/SI2000
+        # create the desired directory tree: home/picarro/PI2000
         os.rename(dist_dir, dist_dir_temp)
         os.makedirs(os.path.join(dist_dir, 'home', 'picarro'))
         os.rename(dist_dir_temp, dist_dir_new)
@@ -190,7 +190,7 @@ Description: Picarro Host Software for Semiconductor Industry
         pth_file_dir = os.path.join(dist_dir, 'home', 'picarro', 'anaconda2','lib','python2.7','site-packages')
         os.makedirs(pth_file_dir)
         with open(os.path.join(pth_file_dir, 'Picarro.pth'), 'w') as f:
-            f.write("/home/picarro/SI2000")
+            f.write("/home/picarro/PI2000")
         # make debian folder
         debian_dir = os.path.join(dist_dir, "DEBIAN")
         if not os.path.isdir(debian_dir):
