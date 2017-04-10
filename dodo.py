@@ -225,17 +225,20 @@ def task_build_ai_autosampler_exe():
 
 def task_cythonization():
     targets = []
+    file_deps = []
     dist_dir = get_var('dist_dir', '')
     if len(dist_dir) > 0:
         bldsup_path = os.path.join(os.getcwd(), "bldsup")
         if bldsup_path not in sys.path:
             sys.path.append(bldsup_path)
         from setupforPyd import get_source_list
-        targets = [f[:-2] + "so" for f in get_source_list(dist_dir)]
+        file_deps = get_source_list(dist_dir)
+        targets = [f[:-2] + "so" for f in file_deps]
 
     return {'actions': [
                 'python %s build_ext --inplace --basepath=%s' % (r"./bldsup/setupforPyd.py", dist_dir)
             ],
+           'file_dep': file_deps,
            'targets' : targets,
            'verbosity': 2
     }
