@@ -15,8 +15,9 @@ import math
 import random
 from struct import pack, unpack
 import threading
+from Queue import Queue
 from contextlib import contextmanager
-from pymodbus.server.sync import StartSerialServer
+from pymodbus.server.sync import ModbusSerialServer
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock
 from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
@@ -31,19 +32,15 @@ else:
     AppPath = sys.argv[0]
 APP_NAME = "ModbusServer"
 
-# Uncomment these lines for debugging
-# import logging
-# logging.basicConfig()
-# log = logging.getLogger()
-# log.setLevel(logging.DEBUG)
-
 COIL = 1
 DISCRETE_INPUT = 2
 HOLDING_REGISTER = 3
 INPUT_REGISTER = 4
 
 struct_type_map = {
+    "int_16"  :  "h",
     "int_32"  :  "i",
+    "int_64"  :  "q",
     "float_32":  "f",
     "float_64":  "d"
 }
@@ -52,6 +49,15 @@ def get_variable_type(bit, type):
         return "%ds" % (bit/8)
     else:
         return struct_type_map["%s_%s" % (type.strip().lower(), bit)]
+        
+def StartSerialServer(context=None, framer=None, identity=None, **kwargs):
+    ''' 
+    This is a bug in pyModbus that only allows framer=ModbusAsciiFramer
+    The bug is already fixed in pymodbus github repository
+    But new code has not been released, so it still exists in pymodbus 1.2.0
+    '''    
+    server = ModbusSerialServer(context, framer, identity, **kwargs)
+    server.serve_forever()
         
 
 class ReadWriteLock(object):
@@ -195,21 +201,57 @@ class ThreadSafeDataBlock(object):
         with self.rwlock.get_writer_lock():
             return self.block.setValues(address, values)
       
+
+class CallbackDataBlock(ModbusSequentialDataBlock):
+    ''' 
+    Write requests are used to trigger callback functions (data will NOT be written)
+    Synchronous callbacks will be executed immediately, otherwise requests will be
+    put into a queue.
+    '''
+    def __init__(self, queue, sync_bits, *args, **kwargs):
+        super(CallbackDataBlock, self).__init__(*args, **kwargs)
+        self.sync_bits = sync_bits
+        self.queue = queue
+        self.lock = False   # lock=True when sync script is running
         
+    def setValues(self, address, value):
+        if value > 0:
+            if address in self.sync_bits and (not self.lock):
+                func = self.sync_bits[address]
+                self.lock = True
+                ret = func()
+                self.lock = False
+            else:
+                self.queue.put(address)
+      
 class ModbusServer(object):
-    def __init__(self, configFile, simulation):
+    def __init__(self, configFile, simulation, debug):
         if os.path.exists(configFile):
             self.config = CustomConfigObj(configFile)
         else:
             raise Exception("Configuration file not found: %s" % configFile) 
+        if debug:
+            import logging
+            logging.basicConfig()
+            log = logging.getLogger()
+            log.setLevel(logging.DEBUG)
+        self.debug = debug
         self.get_register_info()
-        # if the block size is set to the desired size, I find that only size-1 can be read, at least on my laptop.
-        # so I set the block to be size + 1     (Yuan 2017)
+        self.queue = Queue()
+        sync_bits = {}
+        r = self.register_variables
+        for v in r[COIL-1]['variables']:
+            if self.variable_params[v]['sync'] and ("function" in self.variable_params[v]):
+                sync_bits[self.variable_params[v]['address']] = self.variable_params[v]['function']
         store = ModbusSlaveContext(
-            di = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+self.register_variables[0]['size']))),
-            co = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+self.register_variables[1]['size']))),
-            hr = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+self.register_variables[2]['size']))),
-            ir = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+self.register_variables[3]['size'])))
+            # read-only status and alarm bits
+            di = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[DISCRETE_INPUT-1]['size']))),
+            # remote control bits
+            co = ThreadSafeDataBlock(CallbackDataBlock(self.queue, sync_bits, 0x00, [0]*(1+r[COIL-1]['size']))),
+            # remote control parameters
+            hr = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[HOLDING_REGISTER-1]['size']))),
+            # read-only output variables
+            ir = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[INPUT_REGISTER-1]['size'])))
         )
         self.context = ModbusServerContext(slaves=store, single=True)
 
@@ -303,6 +345,7 @@ class ModbusServer(object):
                     d["register"] = HOLDING_REGISTER
             elif s.startswith("Bit_"):
                 name = s[4:]
+                d["sync"] = self.config.getboolean(s, "Sync", False)
                 if self.config.getboolean(s, "ReadOnly"):
                     d["register"] = DISCRETE_INPUT
                 else:
@@ -353,7 +396,7 @@ class ModbusServer(object):
     def get_simulation_params(self):
         self.simulation_dict = {}
         for s in self.config:
-            if s.startswith("Variable_"):
+            if s.startswith("Variable_") and self.config.getboolean(s, "ReadOnly"):
                 self.simulation_dict[s[9:]] = self.config.get("Simulation", s)
         self.simulation_env = {func: getattr(math, func) for func in dir(math) if not func.startswith("__")}
         self.simulation_env.update({'random':  random.random, 'time': time, 'x': 0})
@@ -367,12 +410,10 @@ class ModbusServer(object):
                 str = pack(self.register_variables[3]['format'], *values)
                 value_to_write = list( unpack('%s%dH' % (self.endian, self.register_variables[3]['size']), str) )
                 self.context[0].setValues(INPUT_REGISTER, 0, value_to_write)
-                #print "ir=", values
             # write di bits
             values = [value_dict[v] for v in self.register_variables[DISCRETE_INPUT-1]["variables"]]
             if len(values) > 0:
                 self.context[0].setValues(DISCRETE_INPUT, 0, values)
-                #print "di=", values
         except KeyError:
             pass
         
@@ -381,9 +422,11 @@ class ModbusServer(object):
             if streamOut["source"] == self.source:
                 data = streamOut["data"]
                 result = self.process_data(data)
+                if self.debug:
+                    print "Processed data: ", result
                 self.write_readonly_registers(result)
-        except:
-            pass
+        except Exception, err:
+            print "Error: %s" % err
             
     def process_data(self, data_dict):
         result = {}
@@ -419,25 +462,15 @@ class ModbusServer(object):
             return 0.0
             
     def controller(self):
-        """
-        Periodically read coil. If a bit is set to 1, execute corresponding function.
-        After execution, set all bits to 0 
-        
-        Note: functions are executed sequentially and controller waits until all functions 
-        are finished before proceeding. If a function takes long time to finish, user need
-        to start a new thread in python script.
-        """
-        bits_to_read = self.register_variables[COIL-1]['size']
+        addr_func_map = {}
+        for v in self.register_variables[COIL-1]['variables']:
+            if "function" in self.variable_params[v]:
+                addr_func_map[self.variable_params[v]['address']] = self.variable_params[v]['function']
         while True:
             time.sleep(1)
-            result = self.context[0].getValues(COIL, 0, bits_to_read)
-            print "co=", result
-            for bit, variable in zip(result, self.register_variables[COIL-1]['variables']):
-                if bit: # execute predefined function if the bit is set
-                    if "function" in self.variable_params[variable]:
-                        ret = self.variable_params[variable]["function"]()
-            if sum(result) > 0:
-                self.context[0].setValues(COIL, 0, [0]*bits_to_read)
+            while not self.queue.empty():
+                addr = self.queue.get(timeout=1)
+                ret = addr_func_map[addr]()
         
     def run(self):
         self.control_thread.start()
@@ -449,6 +482,7 @@ Where the options can be a combination of the following:
 -h, --help           print this help
 -c                   specify a config file:  default = "./ModbusServer.ini"
 -s                   simulation mode
+--debug              debug mode
 """
 
 def printUsage():
@@ -456,7 +490,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'hc:s'
-    longOpts = ["help"]
+    longOpts = ["help", "debug"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -471,6 +505,7 @@ def handleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/ModbusServer.ini"
     simulation = False
+    debug = False
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
@@ -478,7 +513,9 @@ def handleCommandSwitches():
         configFile = options["-c"]
     if "-s" in options:
         simulation = True
-    return (configFile, simulation)
+    if "--debug" in options:
+        debug = True
+    return (configFile, simulation, debug)
 
 if __name__ == "__main__":
     server = ModbusServer(*handleCommandSwitches())
