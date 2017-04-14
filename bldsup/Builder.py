@@ -155,16 +155,36 @@ class Builder(object):
     def cythonize_sources(self):
         project = self.project
         logger = self.logger
+        output_file_path = self.get_report_file_path("cythonize_sources")
         logger.info("Cythonizing modules")
-        out, retcode = self.run_command("python %s build_ext --inplace --basepath=%s" % 
-                    (r"./bldsup/setupforPyd.py", project.expand_path("$dir_dist")))
+        with open(output_file_path, "a") as output_file:
+            output_file.write("=== %s ===\n" % time.asctime())
+            stdout, retcode = self.run_command("doit dist_dir=%s cythonization" % project.expand_path("$dir_dist"))
+            output_file.write(stdout)
+            if retcode != 0:
+                raise BuildFailedException("Error while cythonizing sources")
         logger.info("Cleaning source code")
         sys.path.append("bldsup")
         from setupforPyd import get_source_list
         for f in get_source_list(project.expand_path("$dir_dist")):
-            os.remove(f)
+            if os.path.exists(f):
+                os.remove(f)
             fc = os.path.splitext(f)[0] + ".c"
-            os.remove(fc)
+            if os.path.exists(fc):
+                os.remove(fc)
+        self.compile_sources_to_pyo()
+
+    def compile_sources_to_pyo(self):
+        self.logger.info("Compiling remaining python sources to pyo files")
+        path = os.path.join(self.project.expand_path("$dir_dist"), "Host")
+        self.run_command("python -O -m compileall -x '__init__.py' %s" % path)
+        # delete python source files
+        for root, dirs, files in os.walk(path, topdown=False):
+            for fname in files:
+                if fname.endswith(".py") and fname != "__init__.py":
+                    fp = os.path.join(root, fname)
+                    os.remove(fp)
+
 
     def publish(self):
         return

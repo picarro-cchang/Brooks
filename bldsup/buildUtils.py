@@ -3,25 +3,29 @@ import glob
 
 def get_package_resource(base_path):
     """
-    Return a list of python files and other resources that 
+    Return a list of python files and other resources that
     will be distributed. Note that this list does NOT include
-    python files that are cythonized (list of cythonized modules 
+    python files that are cythonized (list of cythonized modules
     can be obtained from get_raw_source_list in setupforPyd.py)
     """
     sourceFiles = []
     includeFolderList = [
         "Assets/icons/*.ico",
+        "Host/__init__.py",
         "Host/Controller/*.py",
         "Host/Coordinator/*.py",
         "Host/MfgUtilities/*.py",
         "Host/pydCaller/*.*",
         "Host/QuickGui/*.*",
+        "Host/Utilities/__init__.py",
         "Host/Utilities/ConfigManager/*.py",
         "Host/Utilities/CoordinatorLauncher/*.py",
         "Host/Utilities/DataRecal/*.py",
         "Host/Utilities/FlowController/*.py",
         "Host/Utilities/InstrEEPROMAccess/*.py",
         "Host/Utilities/IntegrationTool/*.py",
+        "Host/Utilities/ModbusServer/*.py",
+        "Host/Utilities/RestartSupervisor/*.py",
         "Host/Utilities/SetupTool/*.py",
         "Host/Utilities/SupervisorLauncher/*.py"
     ]
@@ -61,38 +65,38 @@ def make_xubuntu_launchers(base_path):
     directory_folder = os.path.join(base_path, "usr", "share", "desktop-directories")
     if not os.path.exists(directory_folder):
         os.makedirs(directory_folder)
-    
+
     # directories
-    write_xubuntu_desktop_file("%s/picarro.directory" % directory_folder, 
+    write_xubuntu_desktop_file("%s/picarro.directory" % directory_folder,
                             "Directory", "Picarro", "",
                             "/home/picarro/SI2000/Assets/icons/Picarro_icon.ico")
 
-    write_xubuntu_desktop_file("%s/picarro-diagnostics.directory" % directory_folder, 
+    write_xubuntu_desktop_file("%s/picarro-diagnostics.directory" % directory_folder,
                             "Directory", "Picarro-Diagnostics", "",
                             "/home/picarro/SI2000/Assets/icons/Diagnostics_icon.ico")
 
-    write_xubuntu_desktop_file("%s/picarro-utilities.directory" % directory_folder, 
+    write_xubuntu_desktop_file("%s/picarro-utilities.directory" % directory_folder,
                             "Directory", "Picarro-Utilities", "",
-                            "/home/picarro/SI2000/Assets/icons/Utilities_icon.ico")                        
+                            "/home/picarro/SI2000/Assets/icons/Utilities_icon.ico")
 
     # icons    
-    write_xubuntu_desktop_file("%s/modeSwitcher.desktop" % icon_folder, 
-                            "Application", "Picarro Mode Switcher", 
+    write_xubuntu_desktop_file("%s/modeSwitcher.desktop" % icon_folder,
+                            "Application", "Picarro Mode Switcher",
                             "bash -c 'cd /home/picarro/SI2000/Host/Utilities/SupervisorLauncher;python -O SupervisorLauncher.py -v -k -c ../../../AppConfig/Config/Utilities/SupervisorLauncher.ini'",
                             "/home/picarro/SI2000/Assets/icons/Picarro_icon.ico", "picarro")
     write_xubuntu_desktop_file("%s/startInstrument.desktop" % icon_folder,
-                            "Application", "Start Instrument", 
+                            "Application", "Start Instrument",
                             "bash -c 'cd /home/picarro/SI2000/Host/Utilities/SupervisorLauncher;python -O SupervisorLauncher.py -a -c ../../../AppConfig/Config/Utilities/SupervisorLauncher.ini'",
                             "/home/picarro/SI2000/Assets/icons/Picarro_icon.ico", "picarro")
-    write_xubuntu_desktop_file("%s/stopInstrument.desktop" % icon_folder, 
-                            "Application", "Stop Instrument", 
+    write_xubuntu_desktop_file("%s/stopInstrument.desktop" % icon_folder,
+                            "Application", "Stop Instrument",
                             "bash -c 'python /home/picarro/SI2000/Host/Common/StopSupervisor.py'",
                             "/home/picarro/SI2000/Assets/icons/Cancel.ico", "picarro-diagnostics")
-    write_xubuntu_desktop_file("%s/integrationTool.desktop" % icon_folder, 
-                            "Application", "Integration Tool", 
+    write_xubuntu_desktop_file("%s/integrationTool.desktop" % icon_folder,
+                            "Application", "Integration Tool",
                             "bash -c 'cd /home/picarro/SI2000/Host/Utilities/IntegrationTool;python -O IntegrationTool.py -c ../../../CommonConfig/Config/Utilities/IntegrationTool.ini'",
                             "/home/picarro/SI2000/Assets/icons/Integration_icon.ico", "picarro-diagnostics", True)
     write_xubuntu_desktop_file("%s/controller.desktop" % icon_folder,
-                            "Application", "Controller", 
+                            "Application", "Controller",
                             "bash -c 'python -O /home/picarro/SI2000/Host/Controller/Controller.py'",
                             "/home/picarro/SI2000/Assets/icons/Controller_icon.ico", "picarro")
