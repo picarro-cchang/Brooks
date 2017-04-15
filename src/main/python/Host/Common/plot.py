@@ -278,6 +278,16 @@ class PolyMarker(PolyPoints):
                 - 'plus'
         """
 
+        # This is a kludge to bypass a bug to big to fix.
+        # The QuickGui doesn't pass the marker attribute settings in the QuickGui.ini
+        # properly. It ties together the line and marker attributes so that you can't do
+        # things like have different colors for lines and markers.
+        #
+        # I want blue lines and black markers so here I override any passed in
+        # attribute and force the marker to be black and transparent.
+        attr["colour"] = 'black'
+        attr["fillstyle"] = wx.TRANSPARENT
+
         PolyPoints.__init__(self, points, attr)
 
     def draw(self, dc, printerScale, coord= None):
