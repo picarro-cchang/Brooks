@@ -16,6 +16,7 @@ src/main/python/Host/Fitter/fitutils.so
 src/main/python/Host/Utilities/SuperBuildStation/fastLomb.pyd
 src/main/python/Host/Utilities/SuperBuildStation/fastLomb.so
 src/main/python/Host/build_version.py
+src/main/python/Host/Supervisor/PicarroDriver
 #
 # Exclude AppConfig subdirectories, but include files associated
 #  with the DriverSimulator

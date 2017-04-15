@@ -88,6 +88,7 @@ class BuildPI2000(Builder):
         source_list.extend(buildUtils.get_package_resource(python_source))
         # if there is a Host folder from last build, move it to target/dist/
         old_host = os.path.join(python_target, "home", "picarro", "PI2000", "Host")
+        #old_host = os.path.join(python_target, "home", "picarro", "SI2000", "Host")
         if os.path.exists(old_host):
             logger.info("Found Host folder in sandbox.")
             os.rename(old_host, os.path.join(python_target, "Host"))
@@ -194,6 +195,7 @@ Description: Picarro Host Software for Semiconductor Industry
         os.makedirs(pth_file_dir)
         with open(os.path.join(pth_file_dir, 'Picarro.pth'), 'w') as f:
             f.write("/home/picarro/PI2000")
+            #f.write("/home/picarro/SI2000")
         # make debian folder
         debian_dir = os.path.join(dist_dir, "DEBIAN")
         if not os.path.isdir(debian_dir):

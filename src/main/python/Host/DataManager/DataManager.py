@@ -869,12 +869,12 @@ class DataManager(object):
     def RPC_SetLegacyAlarmConfig(self, alarmConfigFile):
         # We don't really want to use the legacy alarm system anymore so
         # raise a ruckus if execution ends up here.
-        raise AssertionError()
+        #raise AssertionError()
 
-        assert self.legacyAlarmSystem
-        alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=True)
-        alarmSystem.ALARMSYSTEM_start_inthread()
-        self.alarmSystem = alarmSystem
+        #assert self.legacyAlarmSystem
+        #alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=True)
+        #alarmSystem.ALARMSYSTEM_start_inthread()
+        #self.alarmSystem = alarmSystem
         return interface.STATUS_OK
 
     ###############################
