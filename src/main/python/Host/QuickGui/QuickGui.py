@@ -435,9 +435,13 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os_dirname(AppPath)
-        self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
+        self.IconAlarmOff  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
-        self.IconAlarmSet    = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidRed_32x32.png',
+        self.IconAlarmGreen  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidGreen_32x32.png',
+                                                     wx.BITMAP_TYPE_ICO))
+        self.IconAlarmYellow  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidYellow_32x32.png',
+                                                     wx.BITMAP_TYPE_ICO))
+        self.IconAlarmRed    = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidRed_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
 
         self.dataStore = DataStore
@@ -514,7 +518,8 @@ class AlarmViewListCtrl(wx.ListCtrl):
     def OnGetItemText(self,item,col):
         if col==1 and self._DataSource.alarmData:
             return self._DataSource.alarmData[item][0]
-        else: return ""
+        else:
+            return ""
 
     def OnGetItemAttr(self,item):
         # Use appropriate attributes for enabled and disabled items
@@ -528,12 +533,21 @@ class AlarmViewListCtrl(wx.ListCtrl):
         When the list is refreshed with RefreshList() (are we sure?) it comes here
         to figure out what LED light to display.
         """
+        alarmColor = self.IconAlarmRed
         status = int(self.dataStore.alarmStatus) & (1 << item)
         enabled = (self._DataSource.alarmData and self._DataSource.alarmData[item][2])
-        if (status == 0) or (not enabled):
-            return self.IconAlarmClear
+        itemText = self.OnGetItemText(item,1)
+
+        if not enabled:
+            alarmColor = self.IconAlarmOff
+        elif len(self.dataStore.mode) == 0 or "warming_mode" in self.dataStore.mode:
+            alarmColor = self.IconAlarmOff
+        elif status == 0:
+            alarmColor = self.IconAlarmGreen
         else:
-            return self.IconAlarmSet
+            alarmColor = self.IconAlarmRed
+
+        return alarmColor
 
     def Defocus(self):
         """
@@ -1035,6 +1049,7 @@ class DataStore(object):
         self.sourceDict = {}
         self.oldData = {}
         self.alarmStatus = 0
+        self.mode = ""
 
     def loadConfig(self):
         self.seqPoints = self.config.getint('DataManagerStream','Points')
@@ -1087,6 +1102,9 @@ class DataStore(object):
         while True:
             try:
                 obj = self.queue.get_nowait()
+                if "mode" in obj:
+                    self.mode = obj["mode"]
+                    print("mode", self.mode)
                 if "data" in obj and "ALARM_STATUS" in obj["data"]:
                     # diagnostics
                     #pprint.pprint(obj)

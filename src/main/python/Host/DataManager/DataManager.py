@@ -2030,7 +2030,7 @@ class DataManager(object):
                     #if sixty:
                     #    print("--> AD60:", ad60)
                     #pprint.pprint(leds)
-                resultDict["ALARM_STATUS"] = False
+                resultDict["ALARM_STATUS"] = 0
                 resultDict["FRONT_PANEL_LED"] = 1
             else:
                 print("AlarmSystem doesn't have a script defined")

@@ -88,10 +88,15 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
         thisDir = os.path.dirname(AppPath)
-        self.IconAlarmClear  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
+        self.IconAlarmOff  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
-        self.IconAlarmSet     = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidRed_32x32.png',
+        self.IconAlarmGreen  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidGreen_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
+        self.IconAlarmYellow  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidYellow_32x32.png',
+                                                     wx.BITMAP_TYPE_ICO))
+        self.IconAlarmRed     = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidRed_32x32.png',
+                                                     wx.BITMAP_TYPE_ICO))
+        self.currentAlarmColor = ["RED","RED"]
         self._DataSource = DataSource
         self.dataStore = None
         self.InsertColumn(0,"Icon",width=40)
@@ -150,12 +155,29 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
             return self.attrib[0]
 
     def OnGetItemImage(self, item):
+        alarmColor = self.IconAlarmRed
         goodStatus, descr = self._DataSource.getStatus(item)
         enabled = self._DataSource.alarmData[item][1]
-        if (goodStatus) or (not enabled):
-            return self.IconAlarmClear
+        if goodStatus == 3: # green condition
+            alarmColor = self.IconAlarmGreen
+            self.currentAlarmColor[item] = "GREEN"
+        elif goodStatus == 2: # blinking yellow
+            if "YELLOW" in self.currentAlarmColor[item]:
+                alarmColor = self.IconAlarmOff
+                self.currentAlarmColor[item] = "OFF"
+            else:
+                alarmColor = self.IconAlarmYellow
+                self.currentAlarmColor[item] = "YELLOW"
+        elif goodStatus == 1: # solid yellow
+            alarmColor = self.IconAlarmYellow
+            self.currentAlarmColor[item] = "YELLOW"
+        elif not enabled:
+            alarmColor = self.IconAlarmOff
+            self.currentAlarmColor[item] = "OFF"
         else:
-            return self.IconAlarmSet
+            alarmColor = self.IconAlarmRed
+            self.currentAlarmColor[item] = "RED"
+        return alarmColor
 
     def Defocus(self):
         """
@@ -208,6 +230,23 @@ class SysAlarmInterface(object):
         self.alarmData[index][1] = enable
 
     def getStatus(self, index):
+        # Big hack here (RSF 04/16/2017)
+        #
+        # Code used to return 'good' as a bool.
+        # Now we need to go to a 5 state system which is
+        #
+        # Off - no reading
+        # Green - all ok
+        # Yellow - warning or maintenance needed soon
+        # Blinking yellow - all ok but we are warming up or in service/calibration mode
+        # Red - error condition, data bad or not reporting
+        #
+        # 0 - red
+        # 1 - yellow
+        # 2 - blinking yellow
+        # 3 - green
+        # 4 - off
+        good = 0 # default to red
         if index == 0:
             descr = "System Status: Good"
             pressureLocked = self.latestInstMgrStatus & INSTMGR_STATUS_PRESSURE_LOCKED
@@ -216,11 +255,13 @@ class SysAlarmInterface(object):
             measActive = self.latestInstMgrStatus & INSTMGR_STATUS_MEAS_ACTIVE
             warmingUp = self.latestInstMgrStatus & INSTMGR_STATUS_WARMING_UP
             systemError = self.latestInstMgrStatus & INSTMGR_STATUS_SYSTEM_ERROR
-            good = pressureLocked and cavityTempLocked and warmboxTempLocked and measActive and (not warmingUp) and (not systemError)
-            if not good:
+            if pressureLocked and cavityTempLocked and warmboxTempLocked and measActive and (not warmingUp) and (not systemError):
+                good = 3 # green
+            if good != 3:
                 descr = "System Status:"
                 if warmingUp:
                     descr += "\n* Warming Up"
+                    good = 2 # blinking yellow
                 if systemError:
                     descr += "\n* System Error"
                 if not pressureLocked:
@@ -231,6 +272,7 @@ class SysAlarmInterface(object):
                     descr += "\n* Warm Box Temp Unlocked"
                 if not measActive:
                     descr += "\n* Measurement Not Active"
+                    good = 2
             return good, descr
         elif index == 1:
             ipvStatus, timestamp = self.latestIPVStatus.split(",")
