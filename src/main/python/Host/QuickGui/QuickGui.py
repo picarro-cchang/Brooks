@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 """
 File Name: QuickGui.py
@@ -39,6 +40,7 @@ FLASK_SERVER_URL = "http://127.0.0.1:3000/api/v1.0/"
 import sys
 import wx
 from wx.lib import sized_controls
+import wx.lib.fancytext
 import Queue
 import numpy
 import requests
@@ -1862,6 +1864,11 @@ class QuickGui(wx.Frame):
 
             measLabel = wx.StaticText(parent=self.measPanel,id=-1,style=wx.ALIGN_CENTER,
                                        label='')
+
+            # See the comments below in dataKeyUpdateAction() to understand why this code is here.
+            #
+            #measLabel = wx.lib.fancytext.StaticFancyText(self.measPanel,-1," ",wx.Brush("white", wx.TRANSPARENT))
+
             setItemFont(measLabel,self.getFontFromIni('MeasurementLabel'))
             self.measLabel.append(measLabel)
 
@@ -2158,6 +2165,14 @@ class QuickGui(wx.Frame):
             measLabelString = renamedKey
         self.graphPanel[idx].SetGraphProperties(ylabel=measLabelString)
         self.measLabel[idx].SetLabel(measLabelString)
+
+        # If measLabel[] is a wx StaticFancyText, you can use fancytext to render text with XML tags
+        # like <sup> for superscript.  It works but unfortunately whatever text you assign to
+        # a label here is also passed to the plot widget.  In the plot widget it uses rotated
+        # text that can accept fancytext.  The result is you see the XML tags in the plot labels.
+        #
+        #self.measLabel[idx].SetBitmap(wx.lib.fancytext.renderToBitmap("<font weight='bold'>" + measLabelString + "</font>"))
+
         self.measTextCtrl[idx].Clear()
         # N.B. Following line allows the measurement label string to be recentered after its label
         #  is changed. It effectively sends a resize event that forces a recalculation of the position
