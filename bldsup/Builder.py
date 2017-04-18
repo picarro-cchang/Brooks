@@ -172,7 +172,7 @@ class Builder(object):
             fc = os.path.splitext(f)[0] + ".c"
             if os.path.exists(fc):
                 os.remove(fc)
-        self.compile_sources_to_pyo()
+        #self.compile_sources_to_pyo()
 
     def compile_sources_to_pyo(self):
         self.logger.info("Compiling remaining python sources to pyo files")
@@ -180,10 +180,13 @@ class Builder(object):
         self.run_command("python -O -m compileall -x '__init__.py' %s" % path)
         # delete python source files
         for root, dirs, files in os.walk(path, topdown=False):
-            for fname in files:
-                if fname.endswith(".py") and fname != "__init__.py":
-                    fp = os.path.join(root, fname)
-                    os.remove(fp)
+            if "pydCaller" in root:
+                pass
+            else:
+                for fname in files:
+                    if fname.endswith(".py") and fname != "__init__.py":
+                        fp = os.path.join(root, fname)
+                        os.remove(fp)
 
 
     def publish(self):
