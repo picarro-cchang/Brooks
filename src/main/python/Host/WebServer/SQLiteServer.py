@@ -27,6 +27,14 @@ app.config['SECURITY_PASSWORD_SALT'] = 'xxxxxxxxxxxxxxxxxx'
 
 db = SQLAlchemy(app)
 
+# A base model for other database tables to inherit
+class Base(db.Model):
+    __abstract__ = True
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    modified_at = db.Column(db.DateTime, default=db.func.current_timestamp(),
+                            onupdate=db.func.current_timestamp())
+
 roles_users = db.Table(
     'roles_users',
     db.Column('user_name', db.Integer(), db.ForeignKey('user.username')),
@@ -41,12 +49,12 @@ class SystemVariable(db.Model):
         self.name = name
         self.value = value
 
-class Role(db.Model, RoleMixin):
-    name = db.Column(db.String(64), unique=True, primary_key=True)
+class Role(Base, RoleMixin):
+    name = db.Column(db.String(64), unique=True)
     description = db.Column(db.String(255))
 
-class User(db.Model, UserMixin):
-    username = db.Column(db.String(64), unique=True, primary_key=True)
+class User(Base, UserMixin):
+    username = db.Column(db.String(64), unique=True)
     password = db.Column(db.String(255))
     first_name = db.Column(db.String(64))
     last_name = db.Column(db.String(64))
@@ -58,6 +66,9 @@ class User(db.Model, UserMixin):
         secondary=roles_users,
         backref=db.backref('users', lazy='dynamic')
     )
+    
+    def get_id(self):
+        return self.username
 
 # Initialization
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -158,10 +169,15 @@ db_server = SQLiteServer(*HandleCommandSwitches())
 
 @api.route('/system')
 class SystemAPI(Resource):
+    get_parser = reqparse.RequestParser()
+    get_parser.add_argument('command', type=str, required=True)
+    post_parser = reqparse.RequestParser()
+    post_parser.add_argument(
+        '_', type=str, required=False, location='form',
+        help='Dictionary containing name-value pairs.')
+    @api.expect(get_parser)
     def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('command', type=str, required=True)
-        request_dict = parser.parse_args()
+        request_dict = self.get_parser.parse_args()
         cmd = request_dict["command"]
         if cmd == "get_all_variables":
             vars = SystemVariable.query.all()
@@ -170,12 +186,6 @@ class SystemAPI(Resource):
     @auth_token_required
     @any_role_required("Admin")
     def post(self):
-        # this parser is for api-doc, not for parsing data
-        parser = reqparse.RequestParser()
-        parser.add_argument(
-            '_', type=str, required=False, location='form',
-            help='Dictionary containing name-value pairs.')
-        
         request_dict = request.form
         for name in request_dict:
             var = SystemVariable.query.filter_by(name=name).first()
@@ -212,6 +222,7 @@ class AccountAPI(Resource):
     @api.expect(post_parser)            
     def post(self):
         request_dict = self.post_parser.parse_args()
+        print request_dict, "  ************"
         cmd = request_dict["command"]
         if cmd == "log_in_user":
             user = User.query.filter_by(username=request_dict["username"]).first()
@@ -234,14 +245,25 @@ class AccountAPI(Resource):
 
 @api.route('/users')
 class UsersAPI(Resource):
-    @auth_token_required
-    @any_role_required("Admin")
+    get_parser = reqparse.RequestParser()
+    get_parser.add_argument('command', type=str, required=True)
+    post_parser = reqparse.RequestParser()
+    post_parser.add_argument('command', type=str, required=True)
+    post_parser.add_argument('username', type=str, required=True)
+    post_parser.add_argument('last_name', type=str, required=False)
+    post_parser.add_argument('first_name', type=str, required=False)
+    post_parser.add_argument('last_name', type=str, required=False)
+    post_parser.add_argument('employee_id', type=str, required=False)
+    post_parser.add_argument('phone_number', type=str, required=False)
+    post_parser.add_argument('password', type=str, required=False)
+    post_parser.add_argument('roles', type=str, required=False)
+    post_parser.add_argument('active', type=int, required=False)
+    # @auth_token_required
+    # @any_role_required("Admin")
+    @api.expect(get_parser)
     def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('command', type=str, required=True)
-        request_dict = parser.parse_args()
+        request_dict = self.get_parser.parse_args()
         cmd = request_dict["command"]
-        
         def get_item(foo, item_name):
             res = getattr(foo, item_name)
             return res if res is not None else ""
@@ -261,21 +283,11 @@ class UsersAPI(Resource):
             roles = Role.query.all()
             return [role.name for role in roles]
 
-    @auth_token_required
-    @any_role_required("Admin")
+    # @auth_token_required
+    # @any_role_required("Admin")
+    @api.expect(post_parser)
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('command', type=str, required=True)
-        parser.add_argument('username', type=str, required=True)
-        parser.add_argument('last_name', type=str, required=False)
-        parser.add_argument('first_name', type=str, required=False)
-        parser.add_argument('last_name', type=str, required=False)
-        parser.add_argument('employee_id', type=str, required=False)
-        parser.add_argument('phone_number', type=str, required=False)
-        parser.add_argument('password', type=str, required=False)
-        parser.add_argument('roles', type=str, required=False)
-        parser.add_argument('active', type=int, required=False)
-        request_dict = parser.parse_args()
+        request_dict = self.post_parser.parse_args()
         cmd = request_dict["command"]
         if cmd == "delete":
             user = user_datastore.find_user(username=request_dict["username"])
