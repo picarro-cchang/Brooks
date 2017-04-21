@@ -24,8 +24,9 @@ from Host.autogen.interface import PWM_CS_RUN_B, PWM_CS_CONT_B, PWM_CS_PWM_OUT_B
 
 LOW, HIGH = bool(0), bool(1)
 
-def Pwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,pwm_out,pwm_inv_out,map_base,
-        width=16,main_width=8):
+
+def Pwm(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr, pwm_out, pwm_inv_out, map_base,
+        width=16, main_width=8):
     """Pulse generator with variable mark-space ratio
     clk                 -- Clock input
     reset               -- Reset input
@@ -55,7 +56,7 @@ def Pwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,pwm_out,pwm_inv_out,m
     is high, pwm_inv_out is the inverse of pwm_out.
     """
 
-    dither_width = width-main_width
+    dither_width = width - main_width
     mod_dither = 2**dither_width
     mod_main = 2**main_width
 
@@ -67,7 +68,7 @@ def Pwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,pwm_out,pwm_inv_out,m
 
     main_cntr = Signal(intbv(0)[main_width:])
     dither_cntr = Signal(intbv(0)[dither_width:])
-    temp = Signal(intbv(0)[dither_width+1:])
+    temp = Signal(intbv(0)[dither_width + 1:])
     pwm = Signal(LOW)
 
     @always_comb
@@ -86,13 +87,16 @@ def Pwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,pwm_out,pwm_inv_out,m
                 main_cntr.next = 0
                 dither_cntr.next = 0
             else:
-                if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
-                    if False: pass
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == pwm_cs_addr:
-                        if dsp_wr: cs.next = dsp_data_out
+                if dsp_addr[EMIF_ADDR_WIDTH - 1] == FPGA_REG_MASK:
+                    if False:
+                        pass
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == pwm_cs_addr:
+                        if dsp_wr:
+                            cs.next = dsp_data_out
                         dsp_data_in.next = cs
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == pwm_pulse_width_addr:
-                        if dsp_wr: pulse_width.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == pwm_pulse_width_addr:
+                        if dsp_wr:
+                            pulse_width.next = dsp_data_out
                         dsp_data_in.next = pulse_width
                     else:
                         dsp_data_in.next = 0
@@ -106,7 +110,7 @@ def Pwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,pwm_out,pwm_inv_out,m
                     # The pwm_out is high unconditionally if the main_cntr is less
                     #  than the width.
                     pwm.next = 0
-                    if main_cntr < pulse_width[width:width-main_width]:
+                    if main_cntr < pulse_width[width:width - main_width]:
                         pwm.next = 1
                     # When main_cntr is equal to the width, we need to look at dither_cntr
                     #  and increment the dither counter appropriately
@@ -124,9 +128,9 @@ def Pwm(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,pwm_out,pwm_inv_out,m
 if __name__ == "__main__":
     dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in  = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_wr, clk, reset, pwm_out, pwm_inv_out = [Signal(LOW) for i in range(5)]
-    map_base = FPGA_PWMA
+    map_base = 0
 
     toVHDL(Pwm, clk=clk, reset=reset, dsp_addr=dsp_addr, dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
-                pwm_out=pwm_out, pwm_inv_out=pwm_inv_out, map_base=map_base, width=16, main_width=8)
+           pwm_out=pwm_out, pwm_inv_out=pwm_inv_out, map_base=map_base, width=16, main_width=8)

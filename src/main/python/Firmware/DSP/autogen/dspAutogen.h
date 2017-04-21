@@ -16,10 +16,10 @@
 #include "interface.h"
 
 typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
-extern I2C_device i2c_devices[33];
+extern I2C_device i2c_devices[34];
 
 void initRegisters(void);
-extern RegTypes regTypes[505];
+extern RegTypes regTypes[538];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -108,6 +108,6 @@ int r_acc_write_reg(unsigned int numInt,void *params,void *env);
 int r_acc_read_accel(unsigned int numInt,void *params,void *env);
 int r_read_thermistor_resistance_16bit(unsigned int numInt,void *params,void *env);
 int r_average_float_registers(unsigned int numInt,void *params,void *env);
-int r_update_from_simulators(unsigned int numInt,void *params,void *env);
-int r_step_simulators(unsigned int numInt,void *params,void *env);
+int r_tempCntrlFilterHeaterInit(unsigned int numInt,void *params,void *env);
+int r_tempCntrlFilterHeaterStep(unsigned int numInt,void *params,void *env);
 #endif

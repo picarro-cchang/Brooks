@@ -2,11 +2,11 @@
 <!DOCTYPE Das_Interface SYSTEM "Interface.dtd">
 <Das_Interface>
     <files>
-        <file ident="usbPy">../../Host/autogen/usbdefs.py</file>
+        <file ident="usbPy">../../host/autogen/usbdefs.py</file>
         <file ident="usbH">../CypressUSB/autogen/usbdefs.h</file>
         <file ident="usbA51">../CypressUSB/autogen/usbdefs.inc</file>
         <file ident="intH">../DSP/autogen/interface.h</file>
-        <file ident="intPy">../../Host/autogen/interface.py</file>
+        <file ident="intPy">../../host/autogen/interface.py</file>
         <file ident="dspC">../DSP/autogen/dspAutogen.c</file>
         <file ident="dspH">../DSP/autogen/dspAutogen.h</file>
     </files>
@@ -452,6 +452,8 @@
             <enum_value ident="STREAM_CavityTemp2" />
             <enum_value ident="STREAM_CavityTemp3" />
             <enum_value ident="STREAM_CavityTemp4" />
+            <enum_value ident="STREAM_FilterHeaterTemp" />
+            <enum_value ident="STREAM_FilterHeater" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -582,6 +584,8 @@
             <enum_value ident="DAS_STATUS_CavityTempCntrlActiveBit" value="11" caption="Cavity Temperature Controller On" />
             <enum_value ident="DAS_STATUS_HeaterTempCntrlLockedBit" value="12" caption="Heater Control Locked" />
             <enum_value ident="DAS_STATUS_HeaterTempCntrlActiveBit" value="13" caption="Heater Controller On" />
+            <enum_value ident="DAS_STATUS_FilterHeaterTempCntrlLockedBit" value="14" caption="Filter Heater Control Locked" />
+            <enum_value ident="DAS_STATUS_FilterHeaterTempCntrlActiveBit" value="15" caption="Filter Heater Controller On" />
         </enum>
         <enum type="TEC_CNTRL_Type">
             <description>Warm box and hot box TEC control</description>
@@ -617,6 +621,7 @@
             <enum_value ident="SENTRY_Laser4CurrentBit" value="13" caption="Laser 4 Current" />
             <enum_value ident="SENTRY_CavityPressureBit" value="14" caption="Cavity Pressure" />
             <enum_value ident="SENTRY_AmbientPressureBit" value="15" caption="Ambient Pressure" />
+            <enum_value ident="SENTRY_FilterHeaterTemperatureBit" value="16" caption="Filter Heater Temperature" />
         </enum>
         <enum type="HARDWARE_PRESENT_BitType">
             <description>Bit positions indicating hardware configuration</description>
@@ -635,6 +640,7 @@
             <enum_value ident="HARDWARE_PRESENT_FlowSensorBit"     value="12" caption="Flow Sensor" />
             <enum_value ident="HARDWARE_PRESENT_RddVarGainBit"     value="13" caption="Variable gain ringdown detector" />
             <enum_value ident="HARDWARE_PRESENT_AccelerometerBit"  value="14" caption="Accelerometer" />
+            <enum_value ident="HARDWARE_PRESENT_FilterHeaterBit"   value="15" caption="Filter Heater" />
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description>
@@ -2432,6 +2438,175 @@
             <display format="%.0f">Heater manual mode mark</display>
         </register>
         </!-->
+        <register ident="CONVERSION_FILTER_HEATER_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater thermistor constant A</description>
+            <initial>0.00112789997365</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_FILTER_HEATER_THERM_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater thermistor constant B</description>
+            <initial>0.000234289997024</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_FILTER_HEATER_THERM_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater thermistor constant C</description>
+            <initial>8.72979981636e-008</initial>
+            <save/>
+        </register>
+        <register ident="FILTER_HEATER_RESISTANCE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Filter Heater thermistor resistance</description>
+        </register>
+        <register ident="FILTER_HEATER_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Filter Heater temperature</description>
+        </register>
+        <register ident="FILTER_HEATER_THERMISTOR_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater thermistor series resistance</description>
+            <initial>30000</initial>
+            <save/>
+        </register>
+        <register ident="FILTER_HEATER_REGISTER" type="float" minver="1.0" access="r">
+            <description>Filter Heater TEC value</description>
+            <initial>32768.0</initial>
+        </register>
+        <register ident="FILTER_HEATER_MANUAL_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater manual TEC value</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature Control app user setpoint in degC.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Setpoint</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app proportional constant.</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control derivative time constant</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app proportional setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app derivative setpoint gain</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app derivative regularization</description>
+            <initial>100.0</initial>
+            <save/>
+            <display format="%.2f">Derivative regularization (N)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app saturation regularization</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.2f">Saturation regularization (S)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater DAS temperature feed forward coefficient</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">DAS temperature feed forward coefficient</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app minimum heater value</description>
+            <initial>5.0</initial>
+            <save/>
+            <display format="%.0f">Minimum heater value (Amin)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app maximum heater value</description>
+            <initial>55000.0</initial>
+            <save/>
+            <display format="%.0f">Maximum heater value (Amax)</display>
+        </register>
+        <register ident="FILTER_HEATER_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Temperature control app maximum heater change/step</description>
+            <initial>10000.0</initial>
+            <save/>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="FILTER_HEATER_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Filter Heater PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="FILTER_HEATER_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="FILTER_HEATER_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="FILTER_HEATER_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter Heater Current Monitor</description>
+            <initial>0.0</initial>
+        </register>
         <register ident="CAVITY_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
             <description>Cavity pressure ADC register</description>
             <initial>32768</initial>
@@ -3133,6 +3308,18 @@
             <save/>
             <display format="%.1f" units="torr">Ambient maximum pressure</display>
         </register>
+        <register ident="SENTRY_FILTER_HEATER_TEMPERATURE_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter heater minimum temperature sentry</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.1f" units="degC">Filter heater minimum temperature sentry</display>
+        </register>
+        <register ident="SENTRY_FILTER_HEATER_TEMPERATURE_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Filter heater maximum temperature sentry</description>
+            <initial>60.0</initial>
+            <save/>
+            <display format="%.1f" units="degC">Filter heater maximum temperature sentry</display>
+        </register>
         <register ident="FAN_CNTRL_STATE_REGISTER" type="FAN_CNTRL_StateType" minver="1.0" access="rw">
             <description>State of fans</description>
             <initial>FAN_CNTRL_OnState</initial>
@@ -3515,6 +3702,8 @@
         <i2c ident="AMBIENT_PRESSURE_ADC" chain="0" mux="7" address="0x17" />
         <i2c ident="CAVITY_THERMISTOR_3_ADC" chain="0" mux="7" address="0x14" />
         <i2c ident="CAVITY_THERMISTOR_4_ADC" chain="0" mux="7" address="0x15" />
+        <i2c ident="FILTER_HEATER_THERMISTOR_ADC" chain="0" mux="5" address="0x26" />
+
         <i2c ident="HOT_BOX_HEATSINK_THERMISTOR_ADC" chain="0" mux="7" address="0x54" />
         <i2c ident="RDD_POTENTIOMETERS" chain="0" mux="7" address="0x2C" />
         <i2c ident="FLOW1_SENSOR" chain="0" mux="7" address="0x49" />
@@ -3710,6 +3899,26 @@
             </reg>
             <reg type="uint32" ident="DIN" description="FPGA DIN 63-40" access="r">
                 <display format="$%X">FPGA digital inputs (bits 63-40)</display>
+            </reg>
+            <reg type="mask" ident="STATUS_LED" description="State of tricolor LED" access="rw">
+                <bitfield ident="RED" description="State of Red LED" lsb="0" width="1">
+                    <fielddef value="0">Red LED OFF</fielddef>
+                    <fielddef value="1">Red LED ON</fielddef>
+                </bitfield>
+                <bitfield ident="GREEN" description="State of green LED" lsb="1" width="1">
+                    <fielddef value="0">Green LED OFF</fielddef>
+                    <fielddef value="1">Green LED ON</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="mask" ident="FAN" description="State of fans" access="rw">
+                <bitfield ident="FAN1" description="State of fan1" lsb="0" width="1">
+                    <fielddef value="0">Fan1 OFF</fielddef>
+                    <fielddef value="1">Fan1 ON</fielddef>
+                </bitfield>
+                <bitfield ident="FAN2" description="State of fan2" lsb="1" width="1">
+                    <fielddef value="0">Fan2 OFF</fielddef>
+                    <fielddef value="1">Fan2 ON</fielddef>
+                </bitfield>
             </reg>
         </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">
@@ -4463,7 +4672,9 @@
         <fpga_map ident="FPGA_PWM_HEATER" block="PWM">
             <description>Heater pulse width modulator registers</description>
         </fpga_map>
-
+        <fpga_map ident="FPGA_PWM_FILTER_HEATER" block="PWM">
+            <description>Filter Heater pulse width modulator registers</description>
+        </fpga_map>
         <fpga_map ident="FPGA_RDSIM" block="RDSIM">
             <description>Ringdown simulator registers</description>
         </fpga_map>
@@ -4615,8 +4826,8 @@
         <action ident="ACTION_ACC_READ_ACCEL">r_acc_read_accel</action>
         <action ident="ACTION_READ_THERMISTOR_RESISTANCE_16BIT">r_read_thermistor_resistance_16bit</action>
         <action ident="ACTION_AVERAGE_FLOAT_REGISTERS">r_average_float_registers</action>
-        <action ident="ACTION_UPDATE_FROM_SIMULATORS">r_update_from_simulators</action>
-        <action ident="ACTION_STEP_SIMULATORS">r_step_simulators</action>
+        <action ident="ACTION_TEMP_CNTRL_FILTER_HEATER_INIT">r_tempCntrlFilterHeaterInit</action>
+        <action ident="ACTION_TEMP_CNTRL_FILTER_HEATER_STEP">r_tempCntrlFilterHeaterStep</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

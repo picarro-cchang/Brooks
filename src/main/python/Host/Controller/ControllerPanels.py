@@ -32,6 +32,8 @@ from Host.Controller.ControllerModels import ringdowns, ringdownLock
 from Host.Controller.ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from Host.Controller.ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from Host.Controller.ControllerPanelsGui import WlmPanelGui, ProcessedLossPanelGui, StatsPanelGui
+from Host.Controller.ControllerPanelsGui import AccelerometerPanelGui
+from Host.Controller.ControllerPanelsGui import FilterHeaterPanelGui
 
 from Host.autogen import interface
 from Host.Common.Allan import AllanVar
@@ -293,6 +295,8 @@ class RingdownPanel(RingdownPanelGui):
             def  fineCurrentVsTime(data):
                 if dataGood(data):
                     utime = timestamp.unixTime(data.timestamp)
+                    #wavenumber = data.wlmAngle
+                    wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["fineCurrent"].Add(utime, data.fineLaserCurrent,fillColours[vLaser])
             self.ringdownGraph.SetGraphProperties(xlabel='',
@@ -314,30 +318,6 @@ class RingdownPanel(RingdownPanelGui):
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Loss"
             self.appendData = lossVsFineCurrent
-        elif choice == 17:
-            def  laserTempVsWavenumber(data):
-                if dataGood(data):
-                    wavenumber = data.waveNumber
-                    vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["laserTemp"].Add(wavenumber, data.laserTemperature,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
-            timeAxes=(False,False),ylabel='Laser Temperature',grid=True,
-            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-            y = "LaserTemp"
-            self.appendData = laserTempVsWavenumber
-        elif choice == 18:
-            def  laserTempVsTime(data):
-                if dataGood(data):
-                    utime = timestamp.unixTime(data.timestamp)
-                    vLaser = (data.laserUsed >> 2) & 7
-                    waveforms["Ringdown"]["laserTemp"].Add(utime, data.laserTemperature,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='',
-            timeAxes=(True,False),ylabel='Laser Temperature',grid=True,
-            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-            y = "LaserTemp"
-            self.appendData = laserTempVsTime
 
         self.ringdownGraph.RemoveAllSeries()
 
@@ -381,11 +361,6 @@ class RingdownPanel(RingdownPanelGui):
                 waveforms["Ringdown"]["ratio2"],
                 colour='green',fillcolour='green',marker='square',
                 size=1,width=1)
-        elif y == "LaserTemp":
-                self.ringdownGraph.AddSeriesAsPoints(
-                    waveforms["Ringdown"]["laserTemp"],
-                    marker='square',
-                    size=1,width=1)
         for w in self.ringdownWfms:
             w.Clear()
 
@@ -484,6 +459,51 @@ class LaserPanel(LaserPanelGui):
         for w in waveforms["Laser%d" % self.laserNum].values():
             w.Clear()
 
+class AccelerometerPanel(AccelerometerPanelGui):
+    def __init__(self,*a,**k):
+        AccelerometerPanelGui.__init__(self,*a,**k)
+        self.accelxGraph.SetGraphProperties(
+            ylabel='AccelX()',
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.accelyGraph.SetGraphProperties(
+            ylabel='AccelY()',grid=True,
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.accelzGraph.SetGraphProperties(
+            ylabel='AccelZ()',grid=True,
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.accelxWfm = Series(wfmPoints)
+        self.accelxGraph.AddSeriesAsLine(self.accelxWfm,
+            colour='red',width=2)
+        self.accelyWfm = Series(wfmPoints)
+        self.accelyGraph.AddSeriesAsLine(self.accelyWfm,
+            colour='red',width=2)
+        self.accelzWfm = Series(wfmPoints)
+        self.accelzGraph.AddSeriesAsLine(self.accelzWfm,
+            colour='red',width=2)
+        #self.laserNum = None
+
+    #def setLaserNum(self,laserNum):
+    #    self.laserNum = laserNum
+
+    def update(self):
+        self.accelxGraph.Update(delay=0)
+        self.accelyGraph.Update(delay=0)
+        self.accelzGraph.Update(delay=0)
+
+    def onClear(self,evt):
+        for w in waveforms["Accelerometer"].values():
+            w.Clear()
+
+
 class PressurePanel(PressurePanelGui):
     def __init__(self,*a,**k):
         PressurePanelGui.__init__(self,*a,**k)
@@ -566,7 +586,7 @@ class WarmBoxPanel(WarmBoxPanelGui):
             grid=True,backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.tecGraph.SetGraphProperties(
-            ylabel='TEC Current',grid=True,
+            ylabel='TEC PWM (digU)',grid=True,
             timeAxes=(True,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(
@@ -614,13 +634,13 @@ class HotBoxPanel(HotBoxPanelGui):
             grid=True,backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.tecGraph.SetGraphProperties(
-            ylabel='TEC Current',grid=True,
+            ylabel='TEC PWM (digU)',grid=True,
             timeAxes=(True,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.heaterGraph.SetGraphProperties(
-            ylabel='Heater Current',grid=True,
+            ylabel='Heater PWM (digU)',grid=True,
             timeAxes=(True,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(
@@ -628,6 +648,20 @@ class HotBoxPanel(HotBoxPanelGui):
         self.cavityTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.cavityTemperatureWfm,
             colour='red',width=2)
+
+        self.cavityTemperature1Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature1Wfm,
+            colour='yellow',width=2)
+        self.cavityTemperature2Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature2Wfm,
+            colour='black',width=2)
+        self.cavityTemperature3Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature3Wfm,
+            colour='cyan',width=2)
+        self.cavityTemperature4Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature4Wfm,
+            colour='magenta',width=2)
+
         self.heatsinkTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
             colour='blue',width=2)
@@ -655,12 +689,59 @@ class HotBoxPanel(HotBoxPanelGui):
         if self.cavityTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.cavityTemperatureWfm,
                 colour='red',width=2)
+
+        if self.cavityTemperatureCheckbox_1.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature1Wfm,
+                colour='yellow',width=2)
+
+        if self.cavityTemperatureCheckbox_2.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature2Wfm,
+                colour='black',width=2)
+
+        if self.cavityTemperatureCheckbox_3.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature3Wfm,
+                colour='cyan',width=2)
+
+        if self.cavityTemperatureCheckbox_4.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature4Wfm,
+                colour='blue',width=2)
+
         if self.heatsinkTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
                 colour='blue',width=2)
         if self.dasTemperatureCheckbox.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.dasTemperatureWfm,
                 colour='green',width=2)
+
+class FilterHeaterPanel(FilterHeaterPanelGui):
+    def __init__(self,*a,**k):
+        FilterHeaterPanelGui.__init__(self,*a,**k)
+        self.temperatureGraph.SetGraphProperties(
+            ylabel='Temperature (degC)',
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+        self.heaterGraph.SetGraphProperties(
+            ylabel='Heater PWM (digU)',grid=True,
+            timeAxes=(True,False),
+            frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+            backgroundColour=wx.SystemSettings_GetColour(
+                wx.SYS_COLOUR_3DFACE))
+
+        self.temperatureWfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.temperatureWfm,
+            colour='red',width=2)
+        self.heaterWfm = Series(wfmPoints)
+        self.heaterGraph.AddSeriesAsLine(self.heaterWfm, colour='red',width=2)
+
+    def update(self):
+        self.temperatureGraph.Update(delay=0)
+        self.heaterGraph.Update(delay=0)
+
+    def onClear(self,evt):
+        for w in waveforms["FilterHeater"].values():
+            w.Clear()
 
 class ProcessedLossPanel(ProcessedLossPanelGui):
     def __init__(self,*a,**k):

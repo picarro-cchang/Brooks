@@ -53,7 +53,7 @@ entity top_block is
            usb_internal_connected    : in std_logic;
            usb_rear_connected        : in std_logic;
            fpga_program_enable       : out std_logic;
-           
+
            cyp_reset        : out std_logic;
            cyp_pc           : in unsigned(7 downto 0);
            dsp_ext_int4     : out std_logic;
@@ -127,7 +127,7 @@ entity top_block is
            lsr3_1           : out std_logic;
            lsr4_0           : out std_logic;
            lsr4_1           : out std_logic;
-           
+
            lc1              : in std_logic;
            lc2              : in std_logic;
            lc3              : in std_logic;
@@ -143,7 +143,7 @@ entity top_block is
            i2c_sda0         : in std_logic;
            i2c_scl1         : in std_logic;
            i2c_sda1         : in std_logic;
-           
+
            pzt_valve_dac_ld   : out std_logic;
            pzt_valve_dac_sck  : out std_logic;
            pzt_valve_dac_sdi  : out std_logic;
@@ -152,13 +152,13 @@ entity top_block is
            outlet_valve_pwm   : out std_logic;
            inlet_valve_comparator  : in std_logic;
            outlet_valve_comparator : in std_logic;
-       
+
            heater_pwm         : out std_logic;
            hot_box_pwm        : out std_logic;
            hot_box_tec_overload    : in std_logic;
            warm_box_pwm       : out std_logic;
            warm_box_tec_overload   : in std_logic;
-           
+
            dout_man           : out std_logic;
            dout               : out unsigned(39 downto 0);
            din                : in unsigned(23 downto 0)
@@ -252,6 +252,9 @@ begin
         i2c_sda0 => i2c_sda0,
         i2c_scl1 => i2c_scl1,
         i2c_sda1 => i2c_sda1,
+        fp_lcd => fp_lcd,
+        fp_led => fp_led,
+        fp_rs_n => fp_rs_n,
         rd_adc => rd_adc,
         rd_adc_clk => rd_adc_clk,
         rd_adc_oe => rd_adc_oe,
@@ -264,7 +267,7 @@ begin
         usb_rear_connected => usb_rear_connected,
         fpga_program_enable => fpga_program_enable,
         cyp_reset => cyp_reset,
-        
+
         pzt_valve_dac_ld        => pzt_valve_dac_ld,
         pzt_valve_dac_sck       => pzt_valve_dac_sck,
         pzt_valve_dac_sdi       => pzt_valve_dac_sdi,
@@ -273,13 +276,13 @@ begin
         outlet_valve_pwm        => outlet_valve_pwm,
         inlet_valve_comparator  => inlet_valve_comparator,
         outlet_valve_comparator => outlet_valve_comparator,
-       
+
         heater_pwm              => heater_pwm,
         hot_box_pwm             => hot_box_pwm,
         hot_box_tec_overload    => hot_box_tec_overload,
         warm_box_pwm            => warm_box_pwm,
         warm_box_tec_overload   => warm_box_tec_overload,
-       
+
         wmm_refl1               => wmm_refl1,
         wmm_refl2               => wmm_refl2,
         wmm_tran1               => wmm_tran1,
@@ -289,12 +292,12 @@ begin
         wmm_rd                  => wmm_rd,
         wmm_convst              => wmm_convst,
         wmm_clk                 => wmm_clk,
-        
+
         dout_man                => dout_man,
         dout                    => dout,
         din                     => din,
 
         aux_din                 => aux_din,
-        aux_dout                => aux_dout        
+        aux_dout                => aux_dout
     );
 end behavioral;
