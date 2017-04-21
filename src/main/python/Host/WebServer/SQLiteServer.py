@@ -88,6 +88,9 @@ def before_first_request():
             password=utils.encrypt_password('picarro'),
             phone_number='1-408-962-3900')
         user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
+        technician = user_datastore.create_user(username='samsung',\
+            password=utils.encrypt_password('samsung'))
+        user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
         operator = user_datastore.create_user(username='someone', \
             password=utils.encrypt_password('someone'))
         user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
