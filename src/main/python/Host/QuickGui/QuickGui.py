@@ -36,6 +36,7 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
+INACTIVE_SESSION_TIMEOUT = 10
 
 import sys
 import wx
@@ -1335,7 +1336,7 @@ class QuickGui(wx.Frame):
         self.fullInterface = False
         self.userLevel = 1
         self.userLoggedIn = False
-        self.userSession = None
+        
         self.showStat = False
         self.showInstStat = False
         self.serviceModeOnlyControls = []
@@ -1475,6 +1476,13 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_IDLE,self.OnIdle)
         self.Bind(wx.EVT_SIZE,self.OnSize)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
+
+        #Add session timer for inactive session timeout function of higher user level GUI mode
+        self.sessionTimer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER,self.OnSessionTimer,self.sessionTimer)
+        
+        self.session_time = 0
+
 
         self.startServer()
 
@@ -2042,7 +2050,6 @@ class QuickGui(wx.Frame):
             #Technician Level
             if self.userLevel == 2:
                 for c in self.serviceModeOnlyControls:
-                    print "AAAAAAAAAAAAA"
                     c.Show(False)
             #Expert
             else:
@@ -2670,6 +2677,11 @@ class QuickGui(wx.Frame):
                         self.menuBar.EnableTop(2, True)
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
+                        self.mainPanel.Bind(wx.EVT_MOTION,self.SessionRefresher)
+                        self.instStatusPanel.Bind(wx.EVT_MOTION,self.SessionRefresher)
+                        for idx in range(self.numGraphs):
+                            self.graphPanel[idx].Bind(wx.EVT_MOTION,self.SessionRefresher)
+                        self.sessionTimer.Start(5000) # 5 second interval
                                     
                 else:
                     d = OKDialog(self,"Authentication failed.",None,-1,"User Authentication")
@@ -2684,9 +2696,37 @@ class QuickGui(wx.Frame):
             self.menuBar.EnableTop(1, False)
             self.menuBar.EnableTop(2, False)
             self.userLoggedIn = False
-            self.iGuiMode.SetItemLabel("User Login") 
+            self.iGuiMode.SetItemLabel("User Login")
+            self.mainPanel.Unbind(wx.EVT_MOTION)
+            self.instStatusPanel.Unbind(wx.EVT_MOTION)
+            for idx in range(self.numGraphs):
+                self.graphPanel[idx].Unbind(wx.EVT_MOTION)
+            self.sessionTimer.Stop()
             
+    def SessionRefresher(self, e):
+        if self.sessionTimer.IsRunning():
+            self.session_time = 0
+        print "My XY:", e.GetX(), e.GetY()
 
+    def OnSessionTimer(self, event):
+        if self.session_time >= INACTIVE_SESSION_TIMEOUT:
+            self.userLevel = 1
+            self.modifyInterface()
+            self.measPanelSizer.Layout()
+            self.Refresh()
+            self.menuBar.EnableTop(1, False)
+            self.menuBar.EnableTop(2, False)
+            self.userLoggedIn = False
+            self.iGuiMode.SetItemLabel("User Login")
+            self.mainPanel.Unbind(wx.EVT_MOTION)
+            self.instStatusPanel.Unbind(wx.EVT_MOTION)
+            for idx in range(self.numGraphs):
+                self.graphPanel[idx].Unbind(wx.EVT_MOTION)
+            self.sessionTimer.Stop()
+        else:
+            #timer runs every 5 secs
+            self.session_time += 5
+            
 
 #end of class QuickGui
 HELP_STRING = \
