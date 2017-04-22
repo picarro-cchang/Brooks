@@ -1685,7 +1685,7 @@ class QuickGui(wx.Frame):
                               size=(10,-1))
 
         # Define the status log window
-        statusBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="")
+        statusBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="Status Box Title")
         #self.statusLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,style=wx.TE_MULTILINE,size=(-1,150))
         height = self.config.getint("StatusBox","Height")
         if self.numGraphs > 2:
@@ -1694,9 +1694,19 @@ class QuickGui(wx.Frame):
                                                   DataSource=self.eventStore,size=(-1,height))
         setItemFont(self.eventViewControl,self.getFontFromIni('StatusBox'))
         setItemFont(statusBox,self.getFontFromIni('Panel'))
-        statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
+
+        # RSF Changes
+        #
+        self.userLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,size=(-1,120),
+                                        style=wx.TE_READONLY|wx.TE_RICH2|wx.TE_MULTILINE,
+                                        value="No log file")
+        setItemFont(self.userLogTextCtrl,self.getFontFromIni('UserLogBox'))
+
+        #statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
+        statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.HORIZONTAL)
         #statusBoxSizer.Add(self.statusLogTextCtrl,proportion=1,flag=wx.EXPAND)
-        statusBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
+        statusBoxSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT)
+        statusBoxSizer.Add(self.eventViewControl,proportion=2,flag=wx.EXPAND)
 
         # Define the data selection tools
         toolPanel = wx.Panel(parent=self.mainPanel,id=-1)
@@ -1959,10 +1969,10 @@ class QuickGui(wx.Frame):
 
         self.Bind(wx.EVT_BUTTON,self.OnUserLogButton,self.userLogButton)
 
-        self.userLogTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(-1,120),
-                                        style=wx.TE_READONLY|wx.TE_RICH2|wx.TE_MULTILINE,
-                                        value="No log file")
-        setItemFont(self.userLogTextCtrl,self.getFontFromIni('UserLogBox'))
+        #self.userLogTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(-1,120),
+        #                                style=wx.TE_READONLY|wx.TE_RICH2|wx.TE_MULTILINE,
+        #                                value="No log file")
+        #setItemFont(self.userLogTextCtrl,self.getFontFromIni('UserLogBox'))
 
         self.measPanelSizer = wx.BoxSizer(wx.VERTICAL)
         # Next line defines width of panel
@@ -1980,10 +1990,17 @@ class QuickGui(wx.Frame):
         self.measPanelSizer.Add(self.shutdownButton,proportion=0,flag=wx.GROW | wx.ALL,border = 10)
         self.measPanelSizer.Add(self.userLogButton,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
         #self.measPanelSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
-        self.measPanelSizer.Add(self.userLogTextCtrl,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
+
+        # RSF remove here to move elsewhere
+        #self.measPanelSizer.Add(self.userLogTextCtrl,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
+        
         #measPanelSizer.Add((-1,1),proportion=1,flag=wx.GROW)
 
         self.measPanel.SetSizer(self.measPanelSizer)
+
+        # RSF
+        graphBox = wx.StaticBox(parent=self.mainPanel, id=-1, label="Graph Box Title")
+        setItemFont(graphBox,self.getFontFromIni('Panel'))
 
         # Construct the layout using sizers
         graphPanelSizer = wx.BoxSizer(wx.VERTICAL)
@@ -1994,12 +2011,17 @@ class QuickGui(wx.Frame):
         sizer.Add(graphPanelSizer,proportion=1,flag=wx.GROW)
         sizer.Add(self.gauge,proportion=0,flag=wx.GROW)
 
+        innerVSizer = wx.StaticBoxSizer(graphBox,wx.VERTICAL)
+        innerVSizer.Add(sizer,proportion=1,flag=wx.GROW|wx.LEFT)
+        innerVSizer.Add(toolPanel,proportion=0,flag=wx.GROW)
+
         vsizer2 = wx.BoxSizer(wx.VERTICAL)
         titleSizer = wx.BoxSizer(wx.VERTICAL)
         titleSizer.Add(self.titleLabel,proportion=0,flag=wx.ALIGN_CENTER)
         vsizer2.Add(titleSizer,proportion=0,flag= wx.GROW | wx.ALL,border=10)
-        vsizer2.Add(sizer,proportion=1,flag=wx.GROW)
-        vsizer2.Add(toolPanel,proportion=0,flag=wx.GROW)
+        #vsizer2.Add(sizer,proportion=1,flag=wx.GROW)
+        #vsizer2.Add(toolPanel,proportion=0,flag=wx.GROW)
+        vsizer2.Add(innerVSizer,proportion=1,flag=wx.GROW)
         vsizer2.Add(statusBoxSizer,proportion=0,flag=wx.GROW)
 
         hsizer1 = wx.BoxSizer(wx.HORIZONTAL)
