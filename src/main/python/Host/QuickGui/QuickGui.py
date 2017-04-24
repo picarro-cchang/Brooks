@@ -26,6 +26,7 @@ File History:
     10-07-05  alex Add the function to change line/marker color at a specified time
     14-05-20  tw   Fixed bug in Win7 alarm box height calc, bumped max alarms in box to 5 before shows scrollbars.
     16-11-09  wenting Implemented three user levels on GUI mode: Operator mode, Service Technician mode and Expert mode.
+    17-04-21  wenting Implemented users inactive session timeout function.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -2644,13 +2645,17 @@ class QuickGui(wx.Frame):
             d.Destroy()
             payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user'}
 
-            with requests.Session() as session:
-                    r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
-
-            print "The Http request response: ", r_account.text 
-            print "response code:  ", r_account.status_code
-
-            authorized = "roles" in r_account.json()
+            #with requests.Session() as session:
+            try:    
+                r_account = requests.post(FLASK_SERVER_URL + "account", data = payload )
+                #print "The Http request response: ", r_account.text 
+                #print "response code:  ", r_account.status_code
+                authorized = "roles" in r_account.json()
+                connectionErrMsg = None
+            except:
+                authorized = False
+                connectionErrMsg = "Failed to connect to authentication server. Please check whether the server is running."
+                
             print "authorized: ", authorized
             
             if okClicked: 
@@ -2683,6 +2688,8 @@ class QuickGui(wx.Frame):
                             self.graphPanel[idx].Bind(wx.EVT_MOTION,self.SessionRefresher)
                         self.sessionTimer.Start(5000) # 5 second interval
                                     
+                elif connectionErrMsg:
+                    d = OKDialog(self,connectionErrMsg,None,-1,"User Authentication Server Connection")
                 else:
                     d = OKDialog(self,"Authentication failed.",None,-1,"User Authentication")
 
