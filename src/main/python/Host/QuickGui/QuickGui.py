@@ -1685,7 +1685,8 @@ class QuickGui(wx.Frame):
                               size=(10,-1))
 
         # Define the status log window
-        statusBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="Status Box Title")
+        logFileBox = wx.StaticBox(parent=self.mainPanel,id=1,label="Log file")
+        eventLogBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="Status Box Title")
         #self.statusLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,style=wx.TE_MULTILINE,size=(-1,150))
         height = self.config.getint("StatusBox","Height")
         if self.numGraphs > 2:
@@ -1693,7 +1694,8 @@ class QuickGui(wx.Frame):
         self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,id=-1,config=self.config,
                                                   DataSource=self.eventStore,size=(-1,height))
         setItemFont(self.eventViewControl,self.getFontFromIni('StatusBox'))
-        setItemFont(statusBox,self.getFontFromIni('Panel'))
+        setItemFont(eventLogBox,self.getFontFromIni('Panel'))
+        setItemFont(logFileBox,self.getFontFromIni('Panel'))
 
         # RSF Changes
         #
@@ -1703,10 +1705,19 @@ class QuickGui(wx.Frame):
         setItemFont(self.userLogTextCtrl,self.getFontFromIni('UserLogBox'))
 
         #statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
-        statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.HORIZONTAL)
         #statusBoxSizer.Add(self.statusLogTextCtrl,proportion=1,flag=wx.EXPAND)
-        statusBoxSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT)
-        statusBoxSizer.Add(self.eventViewControl,proportion=2,flag=wx.EXPAND)
+        #logFileBoxSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW)
+        #eventLogBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
+        eventLogBoxSizer = wx.StaticBoxSizer(eventLogBox,wx.HORIZONTAL)
+        logFileBoxSizer = wx.StaticBoxSizer(logFileBox,wx.HORIZONTAL)
+        logFileBoxSizer.Add(self.userLogTextCtrl,1, wx.EXPAND|wx.ALL)
+        eventLogBoxSizer.Add(self.eventViewControl,1, wx.EXPAND|wx.ALL)
+
+        statusBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
+        statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
+        statusBoxSizer.Add(eventLogBoxSizer,proportion=1, flag=wx.EXPAND|wx.ALL)
+
+
 
         # Define the data selection tools
         toolPanel = wx.Panel(parent=self.mainPanel,id=-1)
