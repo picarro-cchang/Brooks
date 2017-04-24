@@ -1775,6 +1775,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_read_thermistor_resistance_16bit(numInt,params,env);
         case ACTION_AVERAGE_FLOAT_REGISTERS:
             return r_average_float_registers(numInt,params,env);
+        case ACTION_UPDATE_FROM_SIMULATORS:
+            return r_update_from_simulators(numInt,params,env);
+        case ACTION_STEP_SIMULATORS:
+            return r_step_simulators(numInt,params,env);
         case ACTION_TEMP_CNTRL_FILTER_HEATER_INIT:
             return r_tempCntrlFilterHeaterInit(numInt,params,env);
         case ACTION_TEMP_CNTRL_FILTER_HEATER_STEP:

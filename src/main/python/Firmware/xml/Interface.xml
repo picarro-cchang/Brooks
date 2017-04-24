@@ -4826,6 +4826,8 @@
         <action ident="ACTION_ACC_READ_ACCEL">r_acc_read_accel</action>
         <action ident="ACTION_READ_THERMISTOR_RESISTANCE_16BIT">r_read_thermistor_resistance_16bit</action>
         <action ident="ACTION_AVERAGE_FLOAT_REGISTERS">r_average_float_registers</action>
+        <action ident="ACTION_UPDATE_FROM_SIMULATORS">r_update_from_simulators</action>
+        <action ident="ACTION_STEP_SIMULATORS">r_step_simulators</action>
         <action ident="ACTION_TEMP_CNTRL_FILTER_HEATER_INIT">r_tempCntrlFilterHeaterInit</action>
         <action ident="ACTION_TEMP_CNTRL_FILTER_HEATER_STEP">r_tempCntrlFilterHeaterStep</action>
     </action_list>
