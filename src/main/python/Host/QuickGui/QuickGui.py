@@ -1337,7 +1337,7 @@ class QuickGui(wx.Frame):
         self.userLevelChange = False
         self.userSession = None
         self.showStat = False
-        self.showInstStat = False
+        self.showInstStat = True
         self.serviceModeOnlyControls = []
         self.statControls = []
         self.imageDatabase = ImageDatabase()
@@ -1439,7 +1439,10 @@ class QuickGui(wx.Frame):
         self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Show Statistics", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iStatDisplay)
         self.idInstStatDisplay = wx.NewId()
-        self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
+        if self.showInstStat:
+            self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
+        else:
+            self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iInstStatDisplay)
 
         self.menuBar.Append(self.iTools,"Tools")
@@ -1684,10 +1687,16 @@ class QuickGui(wx.Frame):
         self.gauge = wx.Gauge(parent=self.mainPanel,range=100,style=wx.GA_VERTICAL,
                               size=(10,-1))
 
+        self.userLogButton = wx.Button(parent=self.mainPanel,id=-1,size=(-1,25),label="Start User Log(s)")
+        setItemFont(self.userLogButton,self.getFontFromIni('MeasurementButtons'))
+        self.userLogButton.State = False
+        self.restartUserLog = False
+
+        self.Bind(wx.EVT_BUTTON,self.OnUserLogButton,self.userLogButton)
+
         # Define the status log window
-        logFileBox = wx.StaticBox(parent=self.mainPanel,id=1,label="Log file")
-        eventLogBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="Status Box Title")
-        #self.statusLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,style=wx.TE_MULTILINE,size=(-1,150))
+        logFileBox = wx.StaticBox(parent=self.mainPanel,id=1,label="Saved Data File")
+        eventLogBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="Measurement Status")
         height = self.config.getint("StatusBox","Height")
         if self.numGraphs > 2:
             height *= 0.8
@@ -1697,27 +1706,20 @@ class QuickGui(wx.Frame):
         setItemFont(eventLogBox,self.getFontFromIni('Panel'))
         setItemFont(logFileBox,self.getFontFromIni('Panel'))
 
-        # RSF Changes
-        #
-        self.userLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,size=(-1,120),
+        self.userLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,#size=(-1,12),
                                         style=wx.TE_READONLY|wx.TE_RICH2|wx.TE_MULTILINE,
                                         value="No log file")
         setItemFont(self.userLogTextCtrl,self.getFontFromIni('UserLogBox'))
 
-        #statusBoxSizer = wx.StaticBoxSizer(statusBox,wx.VERTICAL)
-        #statusBoxSizer.Add(self.statusLogTextCtrl,proportion=1,flag=wx.EXPAND)
-        #logFileBoxSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW)
-        #eventLogBoxSizer.Add(self.eventViewControl,proportion=1,flag=wx.EXPAND)
         eventLogBoxSizer = wx.StaticBoxSizer(eventLogBox,wx.HORIZONTAL)
-        logFileBoxSizer = wx.StaticBoxSizer(logFileBox,wx.HORIZONTAL)
+        logFileBoxSizer = wx.StaticBoxSizer(logFileBox,wx.VERTICAL)
+        logFileBoxSizer.Add(self.userLogButton, 0, wx.EXPAND)
         logFileBoxSizer.Add(self.userLogTextCtrl,1, wx.EXPAND|wx.ALL)
         eventLogBoxSizer.Add(self.eventViewControl,1, wx.EXPAND|wx.ALL)
 
         statusBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
         statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
         statusBoxSizer.Add(eventLogBoxSizer,proportion=1, flag=wx.EXPAND|wx.ALL)
-
-
 
         # Define the data selection tools
         toolPanel = wx.Panel(parent=self.mainPanel,id=-1)
@@ -1969,21 +1971,9 @@ class QuickGui(wx.Frame):
             measDisplaySizer.Add(statsSizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
             measDisplaySizer.Add((20,10),proportion=0)
 
-        self.shutdownButton = wx.Button(parent=self.measPanel,id=-1,size=(-1,25),label="Shutdown")
+        self.shutdownButton = wx.Button(parent=self.measPanel,id=wx.ID_EXIT,size=(75,65))
         setItemFont(self.shutdownButton,self.getFontFromIni('MeasurementButtons'))
         self.Bind(wx.EVT_BUTTON,self.OnShutdownButton,self.shutdownButton)
-
-        self.userLogButton = wx.Button(parent=self.measPanel,id=-1,size=(-1,25),label="Start User Log(s)")
-        setItemFont(self.userLogButton,self.getFontFromIni('MeasurementButtons'))
-        self.userLogButton.State = False
-        self.restartUserLog = False
-
-        self.Bind(wx.EVT_BUTTON,self.OnUserLogButton,self.userLogButton)
-
-        #self.userLogTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(-1,120),
-        #                                style=wx.TE_READONLY|wx.TE_RICH2|wx.TE_MULTILINE,
-        #                                value="No log file")
-        #setItemFont(self.userLogTextCtrl,self.getFontFromIni('UserLogBox'))
 
         self.measPanelSizer = wx.BoxSizer(wx.VERTICAL)
         # Next line defines width of panel
@@ -1993,24 +1983,17 @@ class QuickGui(wx.Frame):
         logoBmp = wx.Bitmap(os_dirname(AppPath)+'/logo.png',wx.BITMAP_TYPE_PNG)
         logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp),proportion=0, flag=wx.TOP,border = 15)
         self.measPanelSizer.Add(logoSizer,proportion=0,flag=wx.ALIGN_CENTER|wx.BOTTOM,border = 5)
-        #self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
-        self.measPanelSizer.Add(alarmBoxSizer,proportion=1,flag=wx.ALIGN_CENTER)
         self.measPanelSizer.Add((panelWidth,10),proportion=0)
         self.measPanelSizer.Add(measDisplaySizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
         self.measPanelSizer.Add(instStatusBoxSizer,proportion=0,flag=wx.ALIGN_CENTER | wx.ALL,border = 5)
-        self.measPanelSizer.Add(self.shutdownButton,proportion=0,flag=wx.GROW | wx.ALL,border = 10)
-        self.measPanelSizer.Add(self.userLogButton,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
-        #self.measPanelSizer.Add(self.userLogTextCtrl,proportion=1,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
-
-        # RSF remove here to move elsewhere
-        #self.measPanelSizer.Add(self.userLogTextCtrl,proportion=0,flag=wx.GROW | wx.BOTTOM | wx.LEFT | wx.RIGHT,border = 10)
-        
-        #measPanelSizer.Add((-1,1),proportion=1,flag=wx.GROW)
+        self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
+        self.measPanelSizer.AddStretchSpacer()
+        self.measPanelSizer.Add(self.shutdownButton,proportion=0, flag=wx.ALIGN_CENTER|wx.ALIGN_BOTTOM)
+        self.measPanelSizer.AddSpacer(10)
 
         self.measPanel.SetSizer(self.measPanelSizer)
 
-        # RSF
-        graphBox = wx.StaticBox(parent=self.mainPanel, id=-1, label="Graph Box Title")
+        graphBox = wx.StaticBox(parent=self.mainPanel, id=-1)
         setItemFont(graphBox,self.getFontFromIni('Panel'))
 
         # Construct the layout using sizers
@@ -2030,10 +2013,8 @@ class QuickGui(wx.Frame):
         titleSizer = wx.BoxSizer(wx.VERTICAL)
         titleSizer.Add(self.titleLabel,proportion=0,flag=wx.ALIGN_CENTER)
         vsizer2.Add(titleSizer,proportion=0,flag= wx.GROW | wx.ALL,border=10)
-        #vsizer2.Add(sizer,proportion=1,flag=wx.GROW)
-        #vsizer2.Add(toolPanel,proportion=0,flag=wx.GROW)
         vsizer2.Add(innerVSizer,proportion=1,flag=wx.GROW)
-        vsizer2.Add(statusBoxSizer,proportion=0,flag=wx.GROW)
+        vsizer2.Add(statusBoxSizer,proportion=0, flag=wx.EXPAND)
 
         hsizer1 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer1.Add(self.measPanel,proportion = 0,flag=wx.GROW | wx.RIGHT,border=10)
