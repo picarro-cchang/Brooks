@@ -54,6 +54,9 @@ class Four220Server(object):
         self.baudrate = self.config.getint('SERIAL_PORT_SETUP', 'BAUDRATE')
         self.timeout = self.config.getfloat('SERIAL_PORT_SETUP', 'TIMEOUT')
         
+
+
+        
         self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
@@ -129,6 +132,8 @@ class Four220Server(object):
             if streamOut["source"] == self.analyzer_source:
                 raw_data = streamOut["data"]
                 for channel in self.channel_par:
+                    self.con_max = float(self.channel_par[channel]["SOURCE_MAX"])
+                    self.con_min = float(self.channel_par[channel]["SOURCE_MIN"])
                     channel_num = int(channel[-1])
                     try:
                         data = raw_data[self.channel_par[channel]["SOURCE"]]
@@ -139,9 +144,9 @@ class Four220Server(object):
                     # if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
                         # slope = float(self.channel_par[channel]["SLOPE"])
                         # offset = float(self.channel_par[channel]["OFFSET"])
-                    if float(self.channel_par[channel]["SOURCE_MIN"]) <= float(self.channel_par[channel]["SOURCE_MAX"]):
-                        slope = 16.0/(float(self.channel_par[channel]["SOURCE_MAX"]) - float(self.channel_par[channel]["SOURCE_MIN"]))
-                        offset = 4.0 - slope*float(self.channel_par[channel]["SOURCE_MIN"])
+                    if self.con_min <= self.con_max:
+                        slope = 16.0/(self.con_max - self.con_min)
+                        offset = 4.0 - slope*self.con_min
                     else:
                         print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in ini file. Make sure min you put is less than max."
                         sys.exit(1)
@@ -159,18 +164,21 @@ class Four220Server(object):
         """
         cur = float(slope * data + offset)
         
-        if cur < 0.0 or cur > 20.0:
-            print "Cur out of range."
+        if cur < self.con_min:
+            cur_str = '04.000'
+        elif cur > self.con_max:
+            cur_str = '20.000'
         elif cur < 10.0:
             cur_str = '0'+ format(cur, '.3f')
         else:
             cur_str = format(cur, '.3f')
+       
         cmd_str = '#0'+ str(channel_num + 1) + '0+' + cur_str
         try:
             self.ser.write(cmd_str + '\r')
             #ser.close()
             print "Gas Concentration: ", data
-            print "Write current %f mA to serial port %s."%(cur,self.port)
+            print "Write current %s mA to serial port %s."%(cur_str,self.port)
             print "-------------------"
             
         except:
