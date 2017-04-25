@@ -37,7 +37,7 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
-INACTIVE_SESSION_TIMEOUT = 10
+INACTIVE_SESSION_TIMEOUT = 30
 
 import sys
 import wx
@@ -2655,8 +2655,6 @@ class QuickGui(wx.Frame):
             except:
                 authorized = False
                 connectionErrMsg = "Failed to connect to authentication server. Please check whether the server is running."
-                
-            print "authorized: ", authorized
             
             if okClicked: 
                 if authorized:
@@ -2682,10 +2680,7 @@ class QuickGui(wx.Frame):
                         self.menuBar.EnableTop(2, True)
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
-                        self.mainPanel.Bind(wx.EVT_MOTION,self.SessionRefresher)
-                        self.instStatusPanel.Bind(wx.EVT_MOTION,self.SessionRefresher)
-                        for idx in range(self.numGraphs):
-                            self.graphPanel[idx].Bind(wx.EVT_MOTION,self.SessionRefresher)
+                        self.BindAllWidgetsMotion(self.mainPanel)
                         self.sessionTimer.Start(5000) # 5 second interval
                                     
                 elif connectionErrMsg:
@@ -2704,10 +2699,7 @@ class QuickGui(wx.Frame):
             self.menuBar.EnableTop(2, False)
             self.userLoggedIn = False
             self.iGuiMode.SetItemLabel("User Login")
-            self.mainPanel.Unbind(wx.EVT_MOTION)
-            self.instStatusPanel.Unbind(wx.EVT_MOTION)
-            for idx in range(self.numGraphs):
-                self.graphPanel[idx].Unbind(wx.EVT_MOTION)
+            self.UnbindAllWidgetsMotion(self.mainPanel)
             self.sessionTimer.Stop()
             
     def SessionRefresher(self, e):
@@ -2725,16 +2717,24 @@ class QuickGui(wx.Frame):
             self.menuBar.EnableTop(2, False)
             self.userLoggedIn = False
             self.iGuiMode.SetItemLabel("User Login")
-            self.mainPanel.Unbind(wx.EVT_MOTION)
-            self.instStatusPanel.Unbind(wx.EVT_MOTION)
-            for idx in range(self.numGraphs):
-                self.graphPanel[idx].Unbind(wx.EVT_MOTION)
+            self.UnbindAllWidgetsMotion(self.mainPanel)
             self.sessionTimer.Stop()
         else:
             #timer runs every 5 secs
             self.session_time += 5
             
-
+    def BindAllWidgetsMotion(self, node):
+        for child in node.GetChildren():
+            self.BindAllWidgetsMotion(child)
+        node.Bind(wx.EVT_MOTION,self.SessionRefresher)
+        return
+        
+    def UnbindAllWidgetsMotion(self, node):
+        for child in node.GetChildren():
+            self.UnbindAllWidgetsMotion(child)
+        node.Unbind(wx.EVT_MOTION)
+        return
+    
 #end of class QuickGui
 HELP_STRING = \
 """\
