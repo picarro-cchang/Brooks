@@ -610,9 +610,9 @@ class DasConfigure(SharedTypes.Singleton):
                           ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
 
         # Filter heater control
-        present = self.installCheck("FILTER_HEATER_PRESENT")
+        filterHeaterPresent = self.installCheck("FILTER_HEATER_PRESENT")
 
-        if present:
+        if filterHeaterPresent:
             self.opGroups["MEDIUM"]["SENSOR_READ"].addOperation(
                 Operation("ACTION_READ_THERMISTOR_RESISTANCE",
                             ["I2C_FILTER_HEATER_THERMISTOR_ADC",
