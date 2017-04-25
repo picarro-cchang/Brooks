@@ -282,6 +282,16 @@ int r_wbInvCache(unsigned int numInt, void *params, void *env)
     return STATUS_OK;
 }
 
+int r_update_from_simulators(unsigned int numInt, void *params, void *env)
+{
+    return STATUS_OK;
+}
+
+int r_step_simulators(unsigned int numInt, void *params, void *env)
+{
+    return STATUS_OK;
+}
+
 int r_resistanceToTemperature(unsigned int numInt, void *params, void *env)
 {
     float resistance, constA, constB, constC, result;
