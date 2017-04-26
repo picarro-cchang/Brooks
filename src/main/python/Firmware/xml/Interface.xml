@@ -2,11 +2,11 @@
 <!DOCTYPE Das_Interface SYSTEM "Interface.dtd">
 <Das_Interface>
     <files>
-        <file ident="usbPy">../../host/autogen/usbdefs.py</file>
+        <file ident="usbPy">../../Host/autogen/usbdefs.py</file>
         <file ident="usbH">../CypressUSB/autogen/usbdefs.h</file>
         <file ident="usbA51">../CypressUSB/autogen/usbdefs.inc</file>
         <file ident="intH">../DSP/autogen/interface.h</file>
-        <file ident="intPy">../../host/autogen/interface.py</file>
+        <file ident="intPy">../../Host/autogen/interface.py</file>
         <file ident="dspC">../DSP/autogen/dspAutogen.c</file>
         <file ident="dspH">../DSP/autogen/dspAutogen.h</file>
     </files>

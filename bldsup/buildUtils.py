@@ -29,7 +29,7 @@ def get_package_resource(base_path):
         "Host/Utilities/SetupTool/*.py",
         "Host/Utilities/SupervisorLauncher/*.py",
         "Host/Utilities/Four220/*.*",
-        "Host/WebServer/flask_security/*.*"
+        "Host/WebServer/*.*"
     ]
 
     includeFileList = [
