@@ -134,7 +134,7 @@ SQLiteServer.py [-h] [-c<FILENAME>]
 
 Where the options can be a combination of the following:
 -h              Print this help.
--c              Specify a different config file.  Default = "./SQLiteDateBase.ini"
+-c              Specify a different config file.  Default = "./SQLiteDataBase.ini"
 """    
 def PrintUsage():
     print HELP_STRING
@@ -161,7 +161,7 @@ def HandleCommandSwitches():
         sys.exit()
 
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + "SQLiteDateBase.ini"
+    configFile = os.path.dirname(AppPath) + "/" + "SQLiteDataBase.ini"
 
     if "-c" in options:
         configFile = options["-c"]
