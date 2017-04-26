@@ -26,6 +26,7 @@ File History:
     10-07-05  alex Add the function to change line/marker color at a specified time
     14-05-20  tw   Fixed bug in Win7 alarm box height calc, bumped max alarms in box to 5 before shows scrollbars.
     16-11-09  wenting Implemented three user levels on GUI mode: Operator mode, Service Technician mode and Expert mode.
+    17-04-21  wenting Implemented users inactive session timeout function.
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -35,7 +36,8 @@ __version__ = 1.0
 _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
-FLASK_SERVER_URL = "http://127.0.0.1:3000/api/v1.0/"
+FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
+INACTIVE_SESSION_TIMEOUT = 30
 
 import sys
 import wx
@@ -1104,7 +1106,7 @@ class DataStore(object):
                 obj = self.queue.get_nowait()
                 if "mode" in obj:
                     self.mode = obj["mode"]
-                    print("mode", self.mode)
+                    #print("mode", self.mode)
                 if "data" in obj and "ALARM_STATUS" in obj["data"]:
                     # diagnostics
                     #pprint.pprint(obj)
@@ -1235,7 +1237,7 @@ class LoginDialog(wx.Dialog):
 
         fieldSz = wx.FlexGridSizer(2,2,5,8)
         fieldSz.AddGrowableCol(1,1)
-        userLbl = wx.StaticText(self, label= "User email:")
+        userLbl = wx.StaticText(self, label= "Username:")
         fieldSz.Add(userLbl, 0, wx.ALIGN_CENTER_VERTICAL)
         fieldSz.Add(self._user, 1, wx.EXPAND)
         passLbl = wx.StaticText(self, label= "Password:")
@@ -1334,8 +1336,8 @@ class QuickGui(wx.Frame):
         self.logo = None
         self.fullInterface = False
         self.userLevel = 1
-        self.userLevelChange = False
-        self.userSession = None
+        self.userLoggedIn = False
+        
         self.showStat = False
         self.showInstStat = True
         self.serviceModeOnlyControls = []
@@ -1413,23 +1415,14 @@ class QuickGui(wx.Frame):
         self.iHelp = wx.Menu()
         
         #user level setting manu
-        self.menuBar.Append(self.iUserSettings,"User Level Settings")
-        self.idGUIMODE1 = wx.NewId()
-        self.idGUIMODE2 = wx.NewId()
-        self.idGUIMODE3 = wx.NewId()
-        self.idGUIMODE4 = wx.NewId()
+        self.menuBar.Append(self.iUserSettings,"Users")
+        self.idGuiMode = wx.NewId()
 
-        self.iGuiMode1 = wx.MenuItem(self.iUserSettings, self.idGUIMODE1, "Operator", "", wx.ITEM_NORMAL)
-        self.iGuiMode2 = wx.MenuItem(self.iUserSettings, self.idGUIMODE2, "Service technician", "", wx.ITEM_NORMAL)
-        self.iGuiMode3 = wx.MenuItem(self.iUserSettings, self.idGUIMODE3, "Expert(Admin)", "", wx.ITEM_NORMAL)
-        self.iGuiMode4 = wx.MenuItem(self.iUserSettings, self.idGUIMODE4, "Manage Users(Admin)", "", wx.ITEM_NORMAL)
+        self.iGuiMode = wx.MenuItem(self.iUserSettings, self.idGuiMode, "User Login", "", wx.ITEM_NORMAL)
 
-        self.iUserSettings.AppendItem(self.iGuiMode1)
-        self.iUserSettings.AppendItem(self.iGuiMode2)
-        self.iUserSettings.AppendItem(self.iGuiMode3)
-        self.iUserSettings.AppendItem(self.iGuiMode4)
+        self.iUserSettings.AppendItem(self.iGuiMode)
 
-        self.iGuiMode1.Enable(False)
+        self.iGuiMode.Enable(True)
         
         self.menuBar.Append(self.iView,"View")
         self.idLockTime = wx.NewId()
@@ -1474,10 +1467,7 @@ class QuickGui(wx.Frame):
         self.SetMenuBar(self.menuBar)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.idABOUT)
 
-        self.Bind(wx.EVT_MENU, self.OnGuiMode1, id=self.idGUIMODE1)
-        self.Bind(wx.EVT_MENU, self.OnGuiMode2, id=self.idGUIMODE2)
-        self.Bind(wx.EVT_MENU, self.OnGuiMode3, id=self.idGUIMODE3)
-        self.Bind(wx.EVT_MENU, self.OnGuiMode4, id=self.idGUIMODE4)
+        self.Bind(wx.EVT_MENU, self.OnGuiMode, id=self.idGuiMode)
 
         self.Bind(wx.EVT_MENU, self.OnLockTime, id=self.idLockTime)
         self.iLockTime.Enable(self.numGraphs>1)
@@ -1490,6 +1480,13 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_IDLE,self.OnIdle)
         self.Bind(wx.EVT_SIZE,self.OnSize)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
+
+        #Add session timer for inactive session timeout function of higher user level GUI mode
+        self.sessionTimer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER,self.OnSessionTimer,self.sessionTimer)
+        
+        self.session_time = 0
+
 
         self.startServer()
 
@@ -2068,18 +2065,11 @@ class QuickGui(wx.Frame):
             #Technician Level
             if self.userLevel == 2:
                 for c in self.serviceModeOnlyControls:
-                    print "AAAAAAAAAAAAA"
                     c.Show(False)
-                #self.iGuiMode1.Enable(True)
-                #self.iGuiMode2.Enable(False)
-                #self.iGuiMode3.Enable(True)
             #Expert
             else:
                 for c in self.serviceModeOnlyControls:
                     c.Show(True)
-                #self.iGuiMode1.Enable(True)
-                #self.iGuiMode2.Enable(True)
-                #self.iGuiMode3.Enable(False)
 
         if self.showStat:
             for c in self.statControls:
@@ -2657,175 +2647,108 @@ class QuickGui(wx.Frame):
         d.ShowModal()
         d.Destroy()
 
-    def OnGuiMode1(self,e):
-        # change GUI mode to operator
-        self.userLevel = 1
-        self.modifyInterface()
-        self.measPanelSizer.Layout()
-        self.Refresh()
-        d = OKDialog(self,"Operator GUI mode selected",None,-1,"User Authentication")
 
-        d.ShowModal()
-        d.Destroy()
-
-        #payload = {'command': 'get_current_user'}
-        #with requests.Session() as session:
-        #    r_account = session.get(FLASK_SERVER_URL + "account", data = payload )
-        #    print r_account.json()
-        #print r_account.json()
-        #if 'email' in r_account.json():
-        #    with requests.Session() as session:
-        #        req_dict = {'email': r_account.json['email'], 'password': r_account.json['password'], 'command': 'log_out_user'}
-        #        r_logout = session.post(FLASK_SERVER_URL + "account", data = payload )
-        #    print "log out msg:", r_logout.json()['msg']        
-        #update the menu tabs in the GUI
-        self.iGuiMode1.Enable(False)
-        self.iGuiMode2.Enable(True)
-        self.iGuiMode3.Enable(True)
-        self.iGuiMode4.Enable(True)
-
-        self.menuBar.EnableTop(1, False)
-        self.menuBar.EnableTop(2, False) 
-
-
-    def OnGuiMode2(self,e):
+    def OnGuiMode(self,e):
         # change GUI mode to technician (if password matched)
         #d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
         #setItemFont(d,self.getFontFromIni("Dialogs"))
-        d = LoginDialog(self, title = "Authorization required")
-        d.Show()
-
-        okClicked = d.ShowModal() == wx.ID_OK
-
-        print "email: ", d.Username, ", password: ", d.Password
-        payload = {'email': d.Username, 'password': d.Password, 'command': 'log_in_user'}
-        print "payload: ", payload
-
-        with requests.Session() as session:
-                r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
-        session.close()
-        print "session: ", session
-        print "The Http request response: ", r_account.text 
-        print "response code:  ", r_account.status_code
-
-        authorized = "roles" in r_account.json()
-        print "authorized: ", authorized
-
-        if okClicked and authorized:
-            self.userLevel = 2
-        d.Destroy()
-
-        if okClicked:
-            if self.userLevel == 2:
-                self.modifyInterface()
-                self.measPanelSizer.Layout()
-                self.Refresh()
-                d = OKDialog(self,"Standard technician GUI mode selected",None,-1,"User Authentication")
-
-                #update GUI
-                self.iGuiMode1.Enable(True)
-                self.iGuiMode2.Enable(False)
-                self.iGuiMode3.Enable(True)
-                self.iGuiMode4.Enable(True)
-                self.menuBar.EnableTop(1, True)
-                self.menuBar.EnableTop(2, True)
-#                self.iLockTime.Enable(True)
-#                self.iStatDisplay.Enable(True)
-#                self.iInstStatDisplay.Enable(True)
-
-            else:
-                d = OKDialog(self,"Authentication failed, mode not changed.",None,-1,"User Authentication")
-            d.ShowModal()
+        if not self.userLoggedIn:
+            d = LoginDialog(self, title = "Authorization required")
+            d.Show()
+            okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
+            payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user'}
 
-    def OnGuiMode3(self,e):
-        # try to change GUI mode to expert (if password matched)
-        #d = wx.TextEntryDialog(self, 'Expert Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        #setItemFont(d,self.getFontFromIni("Dialogs"))
-        d = LoginDialog(self, title = "Authorization required")
-        d.Show()
-
-        okClicked = d.ShowModal() == wx.ID_OK
-
-        print "email: ", d.Username, ", password: ", d.Password
-        payload = {'email': d.Username, 'password': d.Password, 'command': 'log_in_user'}
-        print "payload: ", payload
-
-        with requests.Session() as session:
-                r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
-        session.close()
-        print "session: ", session
-        print "The Http request response: ", r_account.text 
-        print "response code:  ", r_account.status_code
-
-        authorized = "roles" in r_account.json() and 'Admin' in r_account.json()["roles"]
-        print "authorized: ", authorized
-
-        if okClicked and authorized:
-            self.userLevel = 3
-        d.Destroy()
-
-        if okClicked:
-            if self.userLevel == 3:
-                self.modifyInterface()
-                self.measPanelSizer.Layout()
-                self.Refresh()
-                d = OKDialog(self,"Expert GUI mode selected",None,-1,"User Authentication")
-                self.iGuiMode1.Enable(True)
-                self.iGuiMode2.Enable(True)
-                self.iGuiMode3.Enable(False)
-                self.iGuiMode4.Enable(True)
-                self.menuBar.EnableTop(1, True)
-                self.menuBar.EnableTop(2, True)
-
-            else:
-                d = OKDialog(self,"Authentication failed, mode not changed.",None,-1,"User Authentication")
-            d.ShowModal()
-            d.Destroy()
-            if okClicked:
-                if self.fullInterface:
-                    self.modifyInterface()
-                    self.measPanelSizer.Layout()
-                    self.Refresh()
-                    d = OKDialog(self,"Service GUI mode selected",None,-1,"CRDS Data Viewer")
-                    # update the "Change GUI mode" menu option
-                    self.iSettings.SetLabel(self.idGUIMODE,"Change GUI mode from Service to Standard")
-                else:
-                    d = OKDialog(self,"Password incorrect, mode not changed.",None,-1,"CRDS Data Viewer")
-                d.ShowModal()
-                d.Destroy()
-
-    def OnGuiMode4(self,e):
-        print "User Management tab clicked."
-        d = LoginDialog(self, title = "Authorization required")
-        d.Show()
-
-        okClicked = d.ShowModal() == wx.ID_OK
-        print "email: ", d.Username, ", password: ", d.Password
-        payload = {'email': d.Username, 'password': d.Password, 'command': 'log_in_user'}
-        print "payload: ", payload
-
-        with requests.Session() as session:
-            r_account = session.post(FLASK_SERVER_URL + "account", data = payload )
-            authorized = "roles" in r_account.json() and 'Admin' in r_account.json()["roles"]
-            if okClicked:
+            #with requests.Session() as session:
+            try:    
+                r_account = requests.post(FLASK_SERVER_URL + "account", data = payload )
+                #print "The Http request response: ", r_account.text 
+                #print "response code:  ", r_account.status_code
+                authorized = "roles" in r_account.json()
+                connectionErrMsg = None
+            except:
+                authorized = False
+                connectionErrMsg = "Failed to connect to authentication server. Please check whether the server is running."
+            
+            if okClicked: 
                 if authorized:
-                    d = OKDialog(self,"Users management mode selected",None,-1,"User Authentication")
-                    self.iGuiMode1.Enable(True)
-                    self.iGuiMode2.Enable(True)
-                    self.iGuiMode3.Enable(True)
-                    self.iGuiMode4.Enable(False)
-                    print "User management authorized."
-                    #user management panel 
+                    if 'Admin' in r_account.json()["roles"]:
+                        self.userLevel = 3
+                    elif 'Technician' in r_account.json()["roles"]:
+                        self.userLevel = 2
+                    else:
+                        self.userLevel = 1
+                        d = OKDialog(self,"Operator logged in, GUI mode NOT changed",None,-1,"User Authentication")
 
+                    if self.userLevel >= 2:
+                        if self.userLevel == 2:
+                            d = OKDialog(self,"Technician logged in, GUI mode changed",None,-1,"User Authentication")
+                        else:
+                            d = OKDialog(self,"Admin logged in, GUI mode changed",None,-1,"User Authentication")
+
+                        #update GUI
+                        self.modifyInterface()
+                        self.measPanelSizer.Layout()
+                        self.Refresh()                    
+                        self.menuBar.EnableTop(1, True)
+                        self.menuBar.EnableTop(2, True)
+                        self.userLoggedIn = True
+                        self.iGuiMode.SetItemLabel("User Logout")
+                        self.BindAllWidgetsMotion(self.mainPanel)
+                        self.sessionTimer.Start(5000) # 5 second interval
+                                    
+                elif connectionErrMsg:
+                    d = OKDialog(self,connectionErrMsg,None,-1,"User Authentication Server Connection")
                 else:
-                    d = OKDialog(self,"Authentication failed, Can not enter user management mode.",None,-1,"User Authentication")
+                    d = OKDialog(self,"Authentication failed.",None,-1,"User Authentication")
+
                 d.ShowModal()
                 d.Destroy()
+        else:
+            self.userLevel = 1
+            self.modifyInterface()
+            self.measPanelSizer.Layout()
+            self.Refresh()
+            self.menuBar.EnableTop(1, False)
+            self.menuBar.EnableTop(2, False)
+            self.userLoggedIn = False
+            self.iGuiMode.SetItemLabel("User Login")
+            self.UnbindAllWidgetsMotion(self.mainPanel)
+            self.sessionTimer.Stop()
+            
+    def SessionRefresher(self, e):
+        if self.sessionTimer.IsRunning():
+            self.session_time = 0
+        print "My XY:", e.GetX(), e.GetY()
 
-        session.close()
-
-
+    def OnSessionTimer(self, event):
+        if self.session_time >= INACTIVE_SESSION_TIMEOUT:
+            self.userLevel = 1
+            self.modifyInterface()
+            self.measPanelSizer.Layout()
+            self.Refresh()
+            self.menuBar.EnableTop(1, False)
+            self.menuBar.EnableTop(2, False)
+            self.userLoggedIn = False
+            self.iGuiMode.SetItemLabel("User Login")
+            self.UnbindAllWidgetsMotion(self.mainPanel)
+            self.sessionTimer.Stop()
+        else:
+            #timer runs every 5 secs
+            self.session_time += 5
+            
+    def BindAllWidgetsMotion(self, node):
+        for child in node.GetChildren():
+            self.BindAllWidgetsMotion(child)
+        node.Bind(wx.EVT_MOTION,self.SessionRefresher)
+        return
+        
+    def UnbindAllWidgetsMotion(self, node):
+        for child in node.GetChildren():
+            self.UnbindAllWidgetsMotion(child)
+        node.Unbind(wx.EVT_MOTION)
+        return
+    
 #end of class QuickGui
 HELP_STRING = \
 """\
