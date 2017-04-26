@@ -2649,11 +2649,15 @@ class QuickGui(wx.Frame):
 
 
     def OnGuiMode(self,e):
-        # change GUI mode to technician (if password matched)
-        #d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        #setItemFont(d,self.getFontFromIni("Dialogs"))
+        # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 
+        # to the flask_security server. If Technician/Expert mode stays inactive for a period of time (default 30 secs), it will automatically log out
+        # and the GUI mode changes to the default.  
+        # d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        
+        # toggle login/logout
         if not self.userLoggedIn:
             d = LoginDialog(self, title = "Authorization required")
+            setItemFont(d,self.getFontFromIni("Dialogs"))
             d.Show()
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
@@ -2694,8 +2698,10 @@ class QuickGui(wx.Frame):
                         self.menuBar.EnableTop(2, True)
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
+                        #Recursively bind all the widgets with mouse motion event 
                         self.BindAllWidgetsMotion(self.mainPanel)
-                        self.sessionTimer.Start(5000) # 5 second interval
+                        #Inactive session timeout timer
+                        self.sessionTimer.Start(5000) # 5 seconds interval
                                     
                 elif connectionErrMsg:
                     d = OKDialog(self,connectionErrMsg,None,-1,"User Authentication Server Connection")
@@ -2713,14 +2719,17 @@ class QuickGui(wx.Frame):
             self.menuBar.EnableTop(2, False)
             self.userLoggedIn = False
             self.iGuiMode.SetItemLabel("User Login")
+            #recursively unbind all the widgets
             self.UnbindAllWidgetsMotion(self.mainPanel)
             self.sessionTimer.Stop()
-            
+
+    # reset the timer everytime a mouse motion is detected        
     def SessionRefresher(self, e):
         if self.sessionTimer.IsRunning():
             self.session_time = 0
-        print "My XY:", e.GetX(), e.GetY()
+        #print "My XY:", e.GetX(), e.GetY()
 
+    #count the session_time, logout and change GUI mode to the default automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
             self.userLevel = 1
@@ -2734,9 +2743,10 @@ class QuickGui(wx.Frame):
             self.UnbindAllWidgetsMotion(self.mainPanel)
             self.sessionTimer.Stop()
         else:
-            #timer runs every 5 secs
+            #timer runs every 5 secs, count
             self.session_time += 5
-            
+
+    #DFS algorithm to recursively traverse the widgets tree. Bind/Unbind mouse motion             
     def BindAllWidgetsMotion(self, node):
         for child in node.GetChildren():
             self.BindAllWidgetsMotion(child)
