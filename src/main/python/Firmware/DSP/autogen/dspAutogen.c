@@ -16,10 +16,10 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[505];
+RegTypes regTypes[538];
 
 /* I2C devices */
-I2C_device i2c_devices[33] = {
+I2C_device i2c_devices[34] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -44,6 +44,7 @@ I2C_device i2c_devices[33] = {
     {0, 7, 0x17},
     {0, 7, 0x14},
     {0, 7, 0x15},
+    {0, 5, 0x26},
     {0, 7, 0x54},
     {0, 7, 0x2c},
     {0, 7, 0x49},
@@ -631,6 +632,64 @@ void initRegisters()
     writeRegister(HEATER_PRBS_MEAN_REGISTER,d);
     d.asFloat = 45.1;
     writeRegister(HEATER_CUTOFF_REGISTER,d);
+    d.asFloat = 0.00112789997365;
+    writeRegister(CONVERSION_FILTER_HEATER_THERM_CONSTA_REGISTER,d);
+    d.asFloat = 0.000234289997024;
+    writeRegister(CONVERSION_FILTER_HEATER_THERM_CONSTB_REGISTER,d);
+    d.asFloat = 8.72979981636e-008;
+    writeRegister(CONVERSION_FILTER_HEATER_THERM_CONSTC_REGISTER,d);
+    d.asFloat = 30000;
+    writeRegister(FILTER_HEATER_THERMISTOR_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 32768.0;
+    writeRegister(FILTER_HEATER_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(FILTER_HEATER_MANUAL_REGISTER,d);
+    d.asUint = TEMP_CNTRL_DisabledState;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_SETPOINT_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER,d);
+    d.asFloat = 0.1;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_TOLERANCE_REGISTER,d);
+    d.asFloat = 30.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER,d);
+    d.asFloat = 20.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER,d);
+    d.asFloat = 0.05;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER,d);
+    d.asFloat = 0.2;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_H_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_K_REGISTER,d);
+    d.asFloat = 1000.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_TI_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_TD_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_B_REGISTER,d);
+    d.asFloat = 1.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_C_REGISTER,d);
+    d.asFloat = 100.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_N_REGISTER,d);
+    d.asFloat = 5.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_S_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_FFWD_REGISTER,d);
+    d.asFloat = 5.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_AMIN_REGISTER,d);
+    d.asFloat = 55000.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_AMAX_REGISTER,d);
+    d.asFloat = 10000.0;
+    writeRegister(FILTER_HEATER_TEMP_CNTRL_IMAX_REGISTER,d);
+    d.asUint = 0x481;
+    writeRegister(FILTER_HEATER_PRBS_GENPOLY_REGISTER,d);
+    d.asFloat = 5000.0;
+    writeRegister(FILTER_HEATER_PRBS_AMPLITUDE_REGISTER,d);
+    d.asFloat = 40000.0;
+    writeRegister(FILTER_HEATER_PRBS_MEAN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(FILTER_HEATER_MONITOR_REGISTER,d);
     d.asInt = 32768;
     writeRegister(CAVITY_PRESSURE_ADC_REGISTER,d);
     d.asFloat = 1.5258789E-2;
@@ -871,6 +930,10 @@ void initRegisters()
     writeRegister(SENTRY_AMBIENT_PRESSURE_MIN_REGISTER,d);
     d.asFloat = 900.0;
     writeRegister(SENTRY_AMBIENT_PRESSURE_MAX_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SENTRY_FILTER_HEATER_TEMPERATURE_MIN_REGISTER,d);
+    d.asFloat = 60.0;
+    writeRegister(SENTRY_FILTER_HEATER_TEMPERATURE_MAX_REGISTER,d);
     d.asUint = FAN_CNTRL_OnState;
     writeRegister(FAN_CNTRL_STATE_REGISTER,d);
     d.asFloat = 25.0;
@@ -1311,6 +1374,37 @@ void initRegisters()
     regTypes[HEATER_PRBS_AMPLITUDE_REGISTER] = float_type;
     regTypes[HEATER_PRBS_MEAN_REGISTER] = float_type;
     regTypes[HEATER_CUTOFF_REGISTER] = float_type;
+    regTypes[CONVERSION_FILTER_HEATER_THERM_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_FILTER_HEATER_THERM_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_FILTER_HEATER_THERM_CONSTC_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_RESISTANCE_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMPERATURE_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_THERMISTOR_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_MANUAL_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_SETPOINT_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_TOLERANCE_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_H_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_K_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_TI_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_TD_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_B_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_C_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_N_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_S_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_FFWD_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_AMIN_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_AMAX_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_PRBS_GENPOLY_REGISTER] = uint_type;
+    regTypes[FILTER_HEATER_PRBS_AMPLITUDE_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_PRBS_MEAN_REGISTER] = float_type;
+    regTypes[FILTER_HEATER_MONITOR_REGISTER] = float_type;
     regTypes[CAVITY_PRESSURE_ADC_REGISTER] = int_type;
     regTypes[CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER] = float_type;
     regTypes[CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER] = float_type;
@@ -1434,6 +1528,8 @@ void initRegisters()
     regTypes[SENTRY_CAVITY_PRESSURE_MAX_REGISTER] = float_type;
     regTypes[SENTRY_AMBIENT_PRESSURE_MIN_REGISTER] = float_type;
     regTypes[SENTRY_AMBIENT_PRESSURE_MAX_REGISTER] = float_type;
+    regTypes[SENTRY_FILTER_HEATER_TEMPERATURE_MIN_REGISTER] = float_type;
+    regTypes[SENTRY_FILTER_HEATER_TEMPERATURE_MAX_REGISTER] = float_type;
     regTypes[FAN_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[FAN_CNTRL_TEMPERATURE_REGISTER] = float_type;
     regTypes[KEEP_ALIVE_REGISTER] = int_type;
@@ -1683,6 +1779,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_update_from_simulators(numInt,params,env);
         case ACTION_STEP_SIMULATORS:
             return r_step_simulators(numInt,params,env);
+        case ACTION_TEMP_CNTRL_FILTER_HEATER_INIT:
+            return r_tempCntrlFilterHeaterInit(numInt,params,env);
+        case ACTION_TEMP_CNTRL_FILTER_HEATER_STEP:
+            return r_tempCntrlFilterHeaterStep(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

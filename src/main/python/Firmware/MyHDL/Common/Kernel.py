@@ -35,7 +35,8 @@ from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
 from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
 from Host.autogen.interface import KERNEL_DOUT_HI, KERNEL_DOUT_LO
-from Host.autogen.interface import KERNEL_DIN
+from Host.autogen.interface import KERNEL_DIN, KERNEL_STATUS_LED
+from Host.autogen.interface import KERNEL_FAN
 
 from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
@@ -45,16 +46,21 @@ from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTR
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_3_CHANNEL_B, KERNEL_INTRONIX_3_CHANNEL_W
+from Host.autogen.interface import KERNEL_STATUS_LED_RED_B, KERNEL_STATUS_LED_RED_W
+from Host.autogen.interface import KERNEL_STATUS_LED_GREEN_B, KERNEL_STATUS_LED_GREEN_W
+from Host.autogen.interface import KERNEL_FAN_FAN1_B, KERNEL_FAN_FAN1_W
+from Host.autogen.interface import KERNEL_FAN_FAN2_B, KERNEL_FAN_FAN2_W
 
 
 t_State = enum("NORMAL","DISCONNECTED","RESETTING")
 
 LOW, HIGH = bool(0), bool(1)
-def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
-           usb_connected,cyp_reset,diag_1_out,config_out,
-           intronix_clksel_out,intronix_1_out,intronix_2_out,
-           intronix_3_out,overload_in,overload_out,i2c_reset_out,
-           dout_man_out,dout_out,din_in,map_base):
+def Kernel(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
+            usb_connected, cyp_reset, diag_1_out, config_out,
+            intronix_clksel_out, intronix_1_out, intronix_2_out,
+            intronix_3_out, overload_in, overload_out, i2c_reset_out,
+            status_led_out, fan_out, dout_man_out, dout_out, din_in,
+            map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -74,6 +80,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     overload_in         -- Inputs from overload detection circuitry, readable via a register
     overload_out        -- Goes high if any bit in latched overload_in is high
     i2c_reset_out       -- Goes high to reset I2C multiplexers
+    status_led_out      -- used to set tricolor LED on front panel
+    fan_out             -- used to set dual fans
     dout_man_out        -- Goes high to indicate FPGA DOUT lines are driven manually
     dout_out            -- Values to write to FPGA DOUT lines when in manual mode
     din_in              -- Values from FPGA DIN lines
@@ -93,6 +101,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     KERNEL_DOUT_HI      -- High-order bits (39-32) for FPGA DOUT lines
     KERNEL_DOUT_LO      -- Low-order  bits (31-0)  for FPGA DOUT lines
     KERNEL_DIN          -- Readback for FPGA DIN lines
+    KERNEL_STATUS_LED   -- state of LEDs (bit0 for red and bit1 for green)
+    KERNEL_FAN          -- state of fans (bit0 for fan1 and bit1 for fan2)
 
     Fields in KERNEL_CONTROL:
     KERNEL_CONTROL_CYPRESS_RESET
@@ -111,6 +121,14 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
 
     Fields in KERNEL_INTRONIX_3:
     KERNEL_INTRONIX_3_CHANNEL
+
+    Fields in KERNEL_STATUS_LED:
+    KERNEL_STATUS_LED_RED
+    KERNEL_STATUS_LED_GREEN
+
+    Fields in KERNEL_FAN:
+    KERNEL_FAN_FAN1
+    KERNEL_FAN_FAN2
 
     A state machine is used to control resetting of the Cypress FX2. If
      a kernel reset is commanded, the FX2 reset is asserted for 1s. When
@@ -135,6 +153,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     kernel_dout_hi_addr = map_base + KERNEL_DOUT_HI
     kernel_dout_lo_addr = map_base + KERNEL_DOUT_LO
     kernel_din_addr = map_base + KERNEL_DIN
+    kernel_status_led_addr = map_base + KERNEL_STATUS_LED
+    kernel_fan_addr = map_base + KERNEL_FAN
     magic_code = Signal(intbv(0)[FPGA_REG_WIDTH:])
     control = Signal(intbv(0)[FPGA_REG_WIDTH:])
     diag_1 = Signal(intbv(0)[8:])
@@ -147,6 +167,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     dout_hi = Signal(intbv(0)[8:])
     dout_lo = Signal(intbv(0)[32:])
     din = Signal(intbv(0)[24:])
+    status_led = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    fan = Signal(intbv(0)[FPGA_REG_WIDTH:])
 
     state = Signal(t_State.NORMAL)
     control_init = 1 << KERNEL_CONTROL_I2C_RESET_B
@@ -161,6 +183,10 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         config_out.next = config
         dout_out.next = concat(dout_hi,dout_lo)
         din.next = din_in
+        status_led_out[0].next = status_led[KERNEL_STATUS_LED_RED_B]
+        status_led_out[1].next = status_led[KERNEL_STATUS_LED_GREEN_B]
+        fan_out[0].next = fan[KERNEL_FAN_FAN1_B]
+        fan_out[1].next = fan[KERNEL_FAN_FAN2_B]
     @instance
     def logic():
         while True:
@@ -177,6 +203,8 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 i2c_reset_out.next = 1
                 dout_hi.next = 0
                 dout_lo.next = 0
+                status_led.next = 0
+                fan.next = 0
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
                     if False: pass
@@ -213,6 +241,12 @@ def Kernel(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         dsp_data_in.next = dout_lo
                     elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_din_addr: # r
                         dsp_data_in.next = din
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_status_led_addr: # rw
+                        if dsp_wr: status_led.next = dsp_data_out
+                        dsp_data_in.next = status_led
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == kernel_fan_addr: # rw
+                        if dsp_wr: fan.next = dsp_data_out
+                        dsp_data_in.next = fan
                     else:
                         dsp_data_in.next = 0
                 else:
@@ -294,6 +328,8 @@ if __name__ == "__main__":
     overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     overload_out = Signal(LOW)
     i2c_reset_out = Signal(LOW)
+    status_led_out = Signal(intbv(0)[2:])
+    fan_out = Signal(intbv(0)[2:])
     dout_man_out = Signal(LOW)
     dout_out = Signal(intbv(0)[40:])
     din_in = Signal(intbv(0)[24:])
@@ -310,5 +346,6 @@ if __name__ == "__main__":
                    intronix_3_out=intronix_3_out,
                    overload_in=overload_in, overload_out=overload_out,
                    i2c_reset_out=i2c_reset_out,
+                   status_led_out=status_led_out, fan_out=fan_out,
                    dout_man_out=dout_man_out, dout_out=dout_out,
                    din_in=din_in, map_base=map_base)

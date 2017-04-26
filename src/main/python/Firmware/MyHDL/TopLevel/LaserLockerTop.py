@@ -52,6 +52,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
          sw1, sw2, sw3, sw4,
          i2c_rst0, i2c_rst1,
          i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
+         fp_lcd, fp_led, fp_rs_n,
          rd_adc, rd_adc_clk, rd_adc_oe,
          monitor,
          dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,
@@ -97,12 +98,19 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     dsp_data_in_pwm_warmbox = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_wlmsim      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_scaler      = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_pwm_filter_heater = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
     dsp_wr, ce2 = [Signal(LOW) for i in range(2)]
     pwm_laser1_out, pwm_laser1_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser2_out, pwm_laser2_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser3_out, pwm_laser3_inv_out = [Signal(LOW) for i in range(2)]
     pwm_laser4_out, pwm_laser4_inv_out = [Signal(LOW) for i in range(2)]
+
+    filter_heater_pwm_out = Signal(LOW)
+    filter_heater_pwm_inv_out = Signal(LOW)
+
+    status_led = Signal(intbv(0)[2:])
+    fan = Signal(intbv(0)[2:])
 
     heater_pwm_out = Signal(LOW)
     hot_box_pwm_out = Signal(LOW)
@@ -301,6 +309,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      overload_in=overload_in,
                      overload_out=overload_out,
                      i2c_reset_out=i2c_reset,
+                     status_led_out=status_led, 
+                     fan_out=fan, 
                      dout_man_out=dout_man,
                      dout_out=dout,
                      din_in=din,
@@ -402,6 +412,13 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                      pwm_out=heater_pwm_out,
                      pwm_inv_out=heater_pwm_inv,
                      map_base=FPGA_PWM_HEATER)
+
+    pwm_filter_heater = Pwm(clk=clk0, reset=reset, dsp_addr=dsp_addr,
+                     dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_pwm_filter_heater,
+                     dsp_wr=dsp_wr,
+                     pwm_out=filter_heater_pwm_out,
+                     pwm_inv_out=filter_heater_pwm_inv_out,
+                     map_base=FPGA_PWM_FILTER_HEATER)
 
     rdman = RdMan( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                    dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_rdman,
@@ -759,7 +776,8 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
                    dsp_data_in_twGen |
                    dsp_data_in_pwm_warmbox |
                    dsp_data_in_wlmsim |
-                   dsp_data_in_scaler)
+                   dsp_data_in_scaler |
+                   dsp_data_in_pwm_filter_heater)
 
         overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload
         overload_in.next[OVERLOAD_HotBoxTecBit]  = hot_box_tec_overload
@@ -836,6 +854,15 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         if config[KERNEL_CONFIG_ENGINE2_TEC_B]:
             aux_din[3].next = engine2_pwm_out
 
+        fp_led.next = 0
+        fp_led[0].next = status_led[0]
+        fp_led[1].next = status_led[1]
+        fp_led[2].next = fan[1]
+
+        fp_lcd.next = 0
+        fp_lcd[1].next = filter_heater_pwm_out
+        fp_lcd[2].next = fan[0]
+
         fpga_program_enable.next = 1
         ## Do not reset Cypress
         cyp_reset.next = 0
@@ -861,6 +888,9 @@ dsp_emif_be = Signal(intbv(0)[4:])
 dsp_emif_ce = Signal(intbv(0)[4:])
 i2c_rst0, i2c_rst1 = [Signal(LOW) for i in range(2)]
 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1 = [Signal(LOW) for i in range(4)]
+fp_lcd = Signal(intbv(0)[8:])
+fp_led = Signal(intbv(0)[4:])
+fp_rs_n = Signal(LOW)
 rd_adc = Signal(intbv(0)[16:])
 rd_adc_clk, rd_adc_oe = [Signal(LOW) for i in range(2)]
 dsp_eclk, monitor = [Signal(LOW) for i in range(2)]
@@ -904,6 +934,7 @@ def makeVHDL():
                 sw1, sw2, sw3, sw4,
                 i2c_rst0, i2c_rst1,
                 i2c_scl0, i2c_sda0, i2c_scl1, i2c_sda1,
+                fp_lcd, fp_led, fp_rs_n,
                 rd_adc, rd_adc_clk, rd_adc_oe,
                 monitor,
                 dsp_ext_int4, dsp_ext_int5, dsp_ext_int6, dsp_ext_int7,

@@ -96,6 +96,7 @@ class DasConfigure(SharedTypes.Singleton):
                    ("FLOW_SENSOR_PRESENT",  1<<interface.HARDWARE_PRESENT_FlowSensorBit),
                    ("RDD_VAR_GAIN_PRESENT", 1<<interface.HARDWARE_PRESENT_RddVarGainBit),
                    ("ACCELEROMETER_PRESENT",1<<interface.HARDWARE_PRESENT_AccelerometerBit),
+                   ("FILTER_HEATER_PRESENT",1<<interface.HARDWARE_PRESENT_FilterHeaterBit)
                    ]
         mask = 0
         for key, bit in mapping:
@@ -608,6 +609,36 @@ class DasConfigure(SharedTypes.Singleton):
                 Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
                           ["CAVITY_TEC_REGISTER","FPGA_PWM_HOTBOX","PWM_PULSE_WIDTH"]))
 
+        # Filter heater control
+        filterHeaterPresent = self.installCheck("FILTER_HEATER_PRESENT")
+
+        if filterHeaterPresent:
+            self.opGroups["MEDIUM"]["SENSOR_READ"].addOperation(
+                Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                            ["I2C_FILTER_HEATER_THERMISTOR_ADC",
+                            "FILTER_HEATER_RESISTANCE_REGISTER",
+                            "FILTER_HEATER_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
+            self.opGroups["MEDIUM"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                    ["FILTER_HEATER_RESISTANCE_REGISTER",
+                        "CONVERSION_FILTER_HEATER_THERM_CONSTA_REGISTER",
+                        "CONVERSION_FILTER_HEATER_THERM_CONSTB_REGISTER",
+                        "CONVERSION_FILTER_HEATER_THERM_CONSTC_REGISTER",
+                        "FILTER_HEATER_TEMPERATURE_REGISTER"]))
+            self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_FilterHeaterTemp","FILTER_HEATER_TEMPERATURE_REGISTER"]))
+
+            self.opGroups["MEDIUM"]["ACTUATOR_WRITE"].addOperation(
+                Operation("ACTION_FLOAT_REGISTER_TO_FPGA",
+                            ["FILTER_HEATER_REGISTER","FPGA_PWM_FILTER_HEATER","PWM_PULSE_WIDTH"]))
+            self.opGroups["MEDIUM"]["STREAMER"].addOperation(
+                Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                    ["STREAM_FilterHeater","FILTER_HEATER_REGISTER"]))
+
+            self.opGroups["MEDIUM"]["CONTROLLER"].addOperation(
+                Operation("ACTION_TEMP_CNTRL_FILTER_HEATER_STEP"))
+
         # Fan control
         fanCntrl = not self.installCheck("FAN_CONTROL_DISABLED")
         if fanCntrl:
@@ -808,6 +839,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
+        sender.doOperation(Operation("ACTION_TEMP_CNTRL_FILTER_HEATER_INIT"))
         if fanCntrl: sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
         if rddVarGainPresent: sender.doOperation(Operation("ACTION_RDD_CNTRL_INIT"))
 
@@ -817,6 +849,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HOTBOX","PWM_CS"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[0x0,"FPGA_PWM_HEATER","PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_HEATER","PWM_CS"]))
+        sender.doOperation(Operation("ACTION_INT_TO_FPGA",[runCont,"FPGA_PWM_FILTER_HEATER","PWM_CS"]))
 
         # Must do following AFTER turning on the warm box and hot box PWM and allowing the monostable
         #  to trigger
@@ -867,6 +900,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
         sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
+        sender.wrRegFloat("FILTER_HEATER_RESISTANCE_REGISTER", 10000.0)
 
         sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
         sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)

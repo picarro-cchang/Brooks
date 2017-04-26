@@ -50,6 +50,8 @@
             <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_2</fpga_register>
             <fpga_register offset="FPGA_KERNEL">INTRONIX_3</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">STATUS_LED</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">FAN</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser 1 Parameters</title>
@@ -291,6 +293,31 @@
             </!-->
         </gui_page>
         <gui_page>
+            <title>Filter Heater Parameters</title>
+            <register>FILTER_HEATER_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_H_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_K_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_TI_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_TD_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_B_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_C_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_N_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_S_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>FILTER_HEATER_PRBS_GENPOLY_REGISTER</register>
+            <register>FILTER_HEATER_PRBS_AMPLITUDE_REGISTER</register>
+            <register>FILTER_HEATER_PRBS_MEAN_REGISTER</register>
+            <register>FILTER_HEATER_MANUAL_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Fan Controller Parameters</title>
             <register>FAN_CNTRL_TEMPERATURE_REGISTER</register>
             <register>FAN_CNTRL_STATE_REGISTER</register>
@@ -430,7 +457,7 @@
             <register>VIRTUAL_LASER_REGISTER</register>
             <fpga_register offset="FPGA_INJECT">CONTROL</fpga_register>
             <fpga_register offset="FPGA_INJECT">CONTROL2</fpga_register>
-       </gui_page>
+        </gui_page>
         <gui_page>
             <title>Spectrum Controller Parameters</title>
             <register>SPECT_CNTRL_STATE_REGISTER</register>
@@ -563,6 +590,8 @@
             <register>SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER</register>
             <register>SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER</register>
             <register>SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_FILTER_HEATER_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_FILTER_HEATER_TEMPERATURE_MAX_REGISTER</register>
             <register>SENTRY_DAS_TEMPERATURE_MIN_REGISTER</register>
             <register>SENTRY_DAS_TEMPERATURE_MAX_REGISTER</register>
             <register>SENTRY_LASER1_CURRENT_MIN_REGISTER</register>

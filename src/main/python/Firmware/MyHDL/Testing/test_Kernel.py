@@ -24,7 +24,8 @@ from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL
 from Host.autogen.interface import KERNEL_INTRONIX_1, KERNEL_INTRONIX_2
 from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
 from Host.autogen.interface import KERNEL_DOUT_HI, KERNEL_DOUT_LO
-from Host.autogen.interface import KERNEL_DIN
+from Host.autogen.interface import KERNEL_DIN, KERNEL_STATUS_LED
+from Host.autogen.interface import KERNEL_FAN
 
 from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
@@ -34,6 +35,10 @@ from Host.autogen.interface import KERNEL_INTRONIX_CLKSEL_DIVISOR_B, KERNEL_INTR
 from Host.autogen.interface import KERNEL_INTRONIX_1_CHANNEL_B, KERNEL_INTRONIX_1_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_2_CHANNEL_B, KERNEL_INTRONIX_2_CHANNEL_W
 from Host.autogen.interface import KERNEL_INTRONIX_3_CHANNEL_B, KERNEL_INTRONIX_3_CHANNEL_W
+from Host.autogen.interface import KERNEL_STATUS_LED_RED_B, KERNEL_STATUS_LED_RED_W
+from Host.autogen.interface import KERNEL_STATUS_LED_GREEN_B, KERNEL_STATUS_LED_GREEN_W
+from Host.autogen.interface import KERNEL_FAN_FAN1_B, KERNEL_FAN_FAN1_W
+from Host.autogen.interface import KERNEL_FAN_FAN2_B, KERNEL_FAN_FAN2_W
 
 from MyHDL.Common.Kernel import Kernel
 
@@ -55,6 +60,8 @@ intronix_3_out = Signal(intbv(0)[8:])
 overload_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 overload_out = Signal(LOW)
 i2c_reset_out = Signal(LOW)
+status_led_out = Signal(intbv(0)[2:])
+fan_out = Signal(intbv(0)[2:])
 dout_man_out = Signal(LOW)
 dout_out = Signal(intbv(0)[40:])
 din_in = Signal(intbv(0)[24:])
@@ -131,6 +138,7 @@ def bench():
                      intronix_3_out=intronix_3_out,
                      overload_in=overload_in, overload_out=overload_out,
                      i2c_reset_out=i2c_reset_out,
+                     status_led_out=status_led_out, fan_out=fan_out,
                      dout_man_out=dout_man_out, dout_out=dout_out,
                      din_in=din_in, map_base=map_base )
     @instance
