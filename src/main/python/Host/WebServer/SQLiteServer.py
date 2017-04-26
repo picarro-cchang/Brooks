@@ -19,6 +19,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///PicarroDataBase.sqlite'
 app.config['SECURITY_TRACKABLE'] = False
 app.config['SECURITY_CONFIRMABLE'] = False
+app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(7)    # 7 days
 app.config['SECURITY_TOKEN_MAX_AGE'] = 7 * 24 * 60 * 60    # 7 days
 app.config['SECRET_KEY'] = 'picarro'
@@ -217,26 +218,28 @@ class AccountAPI(Resource):
                 return {"username":current_user.username, 
                         "first_name":current_user.first_name,
                         "last_name":current_user.last_name,
-                        "roles":[role.name for role in current_user.roles],
-                        "token":current_user.get_auth_token()}
+                        "roles":[role.name for role in current_user.roles]}
             except:
                 return {"error": traceback.format_exc()}
 
     @api.expect(post_parser)            
     def post(self):
         request_dict = self.post_parser.parse_args()
-        print request_dict, "  ************"
         cmd = request_dict["command"]
         if cmd == "log_in_user":
             user = User.query.filter_by(username=request_dict["username"]).first()
             if user is not None:
                 if utils.verify_password(request_dict["password"], user.password):
-                    utils.login_user(user)
-                    db.session.commit()
-                    return {"username":user.username,
-                            "first_name":user.first_name,
-                            "last_name":user.last_name,
-                            "roles":[role.name for role in user.roles]}
+                    if not user.active:
+                        return {"error": "User is disabled!"}
+                    else:
+                        utils.login_user(user)
+                        db.session.commit()
+                        return {"username":user.username,
+                                "first_name":user.first_name,
+                                "last_name":user.last_name,
+                                "roles":[role.name for role in user.roles],
+                                "token":user.get_auth_token()}
                 else:
                     return {"error": "Username and password not match!"}
             else:
@@ -261,8 +264,9 @@ class UsersAPI(Resource):
     post_parser.add_argument('password', type=str, required=False)
     post_parser.add_argument('roles', type=str, required=False)
     post_parser.add_argument('active', type=int, required=False)
-    # @auth_token_required
-    # @any_role_required("Admin")
+    
+    @auth_token_required
+    @any_role_required("Admin")
     @api.expect(get_parser)
     def get(self):
         request_dict = self.get_parser.parse_args()
@@ -286,27 +290,28 @@ class UsersAPI(Resource):
             roles = Role.query.all()
             return [role.name for role in roles]
 
-    # @auth_token_required
-    # @any_role_required("Admin")
+    @auth_token_required
+    @any_role_required("Admin")
     @api.expect(post_parser)
     def post(self):
         request_dict = self.post_parser.parse_args()
         cmd = request_dict["command"]
+        username = request_dict["username"]
         if cmd == "delete":
-            user = user_datastore.find_user(username=request_dict["username"])
+            user = user_datastore.find_user(username=username)
             if not user:
                 abort(406)
             user_datastore.delete_user(user)
             db.session.commit()
-            return {}
+            return {"username": username}
         elif cmd == "create":
-            if not request_dict["username"] or not request_dict["password"]:
+            if not username or not request_dict["password"]:
                 abort(406)
-            user = user_datastore.find_user(username=request_dict["username"])
+            user = user_datastore.find_user(username=username)
             if user: # User already exists
                 abort(409)
             user = user_datastore.create_user( \
-                username=request_dict["username"],
+                username=username,
                 last_name=request_dict["last_name"],
                 first_name=request_dict["first_name"],
                 employee_id=request_dict["employee_id"],
@@ -315,11 +320,11 @@ class UsersAPI(Resource):
             for role in request_dict["roles"].split(","):
                 user_datastore.add_role_to_user(user, user_datastore.find_role(role))
             db.session.commit()
-            return {}
+            return {"username": username}
         elif cmd == "update":
-            if not request_dict["username"]:
+            if not username:
                 abort(406)
-            user = user_datastore.find_user(username=request_dict["username"])
+            user = user_datastore.find_user(username=username)
             if not user: # User does not exist
                 abort(406)
             if request_dict["active"] is not None:
@@ -335,7 +340,7 @@ class UsersAPI(Resource):
                     if not user.has_role(user_datastore.find_role(role)):
                         user_datastore.add_role_to_user(user, user_datastore.find_role(role))
             db.session.commit()
-            return {}
+            return {"username": username}
 
 if __name__ == '__main__':
     db_server.run()
