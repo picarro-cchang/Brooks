@@ -8,11 +8,13 @@ from wx.lib.wordwrap import wordwrap
 from Host.Common.GuiTools import *
 from Host.Common import AppStatus
 from Host.Common import CmdFIFO, Listener, TextListener
-from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_IPV
+from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_IPV, RPC_PORT_DRIVER
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED, \
                                    INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR, \
                                    INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_MEAS_ACTIVE
 from Host.Common.EventManagerProxy import *
+from Host.autogen import interface
+
 EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
@@ -108,6 +110,8 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
         self.tipWindow = None
         self.tipItem = None
+        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
+
 
     def SetMainForm(self,mainForm):
         self.mainForm = mainForm
@@ -177,6 +181,23 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         else:
             alarmColor = self.IconAlarmRed
             self.currentAlarmColor[item] = "RED"
+
+        if item == 0:
+            realLEDState = self.driverRpc.rdFPGA("FPGA_KERNEL", "KERNEL_STATUS_LED")
+            if self.currentAlarmColor[item] == "GREEN":
+                realLEDState |= 1 << interface.KERNEL_STATUS_LED_GREEN_B
+                realLEDState &= ~(1<<interface.KERNEL_STATUS_LED_RED_B)
+            elif self.currentAlarmColor[item] == "YELLOW":
+                realLEDState |= 1 << interface.KERNEL_STATUS_LED_GREEN_B
+                realLEDState |= 1 << interface.KERNEL_STATUS_LED_RED_B
+            elif self.currentAlarmColor[item] == "RED":
+                realLEDState |= 1 << interface.KERNEL_STATUS_LED_RED_B
+                realLEDState &= ~(1<<interface.KERNEL_STATUS_LED_GREEN_B)
+            else:
+                realLEDState &= ~(1<<interface.KERNEL_STATUS_LED_GREEN_B)
+                realLEDState &= ~(1<<interface.KERNEL_STATUS_LED_RED_B)
+            self.driverRpc.wrFPGA("FPGA_KERNEL", "KERNEL_STATUS_LED", realLEDState)
+
         return alarmColor
 
     def Defocus(self):
