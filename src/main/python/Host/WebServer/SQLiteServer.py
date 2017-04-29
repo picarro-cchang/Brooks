@@ -206,8 +206,8 @@ class AccountAPI(Resource):
     get_parser = reqparse.RequestParser()
     get_parser.add_argument('command', type=str, required=True, help="Should be get_current_user or log_out_user.")
     post_parser = reqparse.RequestParser()
-    post_parser.add_argument('username', type=str, required=True, location='form')
-    post_parser.add_argument('password', type=str, required=True, location='form')
+    post_parser.add_argument('username', type=str, required=False, location='form')
+    post_parser.add_argument('password', type=str, required=False, location='form')
     post_parser.add_argument('command', type=str, required=True, help="Should be log_in_user.")
     @api.expect(get_parser)
     def get(self):

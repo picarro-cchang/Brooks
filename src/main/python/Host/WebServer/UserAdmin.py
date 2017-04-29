@@ -331,7 +331,7 @@ class MainWindow(QMainWindow):
                 
     def _check_user_input(self):
         new_user_input = self.new_user_info_widget.isVisible()
-        password = self.input_new_password.text()
+        password = str(self.input_new_password.text())
         errors = []
         # Here we only do preliminary checking. 
         # Further checking on user policies will be done on the server side
@@ -596,6 +596,7 @@ class MainWindow(QMainWindow):
         self._send_request("post", "account", {"command":"log_out_user"}, show_error=True)
         self.input_password.clear()
         self.input_user_name.clear()
+        self.label_login_info.clear()
         self.input_user_name.setFocus()
         self.user_admin_widget.hide()
         self.home_widget.show()
