@@ -62,6 +62,24 @@ class Four220Server(object):
             self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
         except:
             print "Can not connect to %s port. Please check the SERIAL_PORT_SETUP configuration. "% self.port
+        
+        #set the device configuration to 4-20 mA outputs.
+        try:
+            self.ser.write('%0101310600'+ '\r')
+            s = ''
+            while True:
+                c = self.ser.read(1)
+                if c == "\r":
+                    break
+                s += c
+            #bytesToRead = self.ser.inWaiting()
+            #s = self.ser.read(bytesToRead)
+            if '!01' not in s:
+                print "Can not set the device confidguration, aborting..."
+                sys.exit(1)
+        except:
+            print "Can not set the device configuration to 4-20 mA outputs."
+            sys.exit(1)
         #simulation mode or execution mode    
         if simulation:
             self.data_thread = threading.Thread(target=self.simulate_data)
@@ -87,6 +105,9 @@ class Four220Server(object):
         self.simulation_env = {}
         self.simulation_env['min'] = self.config.getfloat('Simulation', 'MIN')
         self.simulation_env['max'] = self.config.getfloat('Simulation', 'MAX')
+        self.con_max = self.simulation_env['max']
+        self.con_min = self.simulation_env['min']
+        
         self.simulation_env['Test_mode'] = self.config.getboolean('Simulation', 'TEST_MODE')
         self.simulation_env['Test_num'] = self.config.getint('Simulation', 'TEST_NUM')
         self.simulation_env['channel'] = self.config.getint('Simulation', 'CHANNEL')
@@ -140,10 +161,6 @@ class Four220Server(object):
                     except:
                         print "SOURCE value in configuration file is not valid. " 
                         sys.exit(1)
-                    #get slope and offset from ini
-                    # if self.channel_par[channel]["SLOPE"] != '' and self.channel_par[channel]["OFFSET"] != '':
-                        # slope = float(self.channel_par[channel]["SLOPE"])
-                        # offset = float(self.channel_par[channel]["OFFSET"])
                     if self.con_min <= self.con_max:
                         slope = 16.0/(self.con_max - self.con_min)
                         offset = 4.0 - slope*self.con_min
@@ -162,21 +179,24 @@ class Four220Server(object):
         It takes the concentration (data), map to 4-20 mA, and send to command to the designated COM port.  
         
         """
-        cur = float(slope * data + offset)
         
-        if cur < self.con_min:
+        cur = float(slope * data + offset)
+
+        if cur < 4.0:
             cur_str = '04.000'
-        elif cur > self.con_max:
+        elif cur > 20.0:
             cur_str = '20.000'
         elif cur < 10.0:
             cur_str = '0'+ format(cur, '.3f')
         else:
             cur_str = format(cur, '.3f')
        
-        cmd_str = '#0'+ str(channel_num + 1) + '0+' + cur_str
+        cmd_str = '#01'+ str(channel_num) + '+' + cur_str
         try:
             self.ser.write(cmd_str + '\r')
+            self.waitForRet()
             #ser.close()
+            print "Channel: ", channel_num + 1 
             print "Gas Concentration: ", data
             print "Write current %s mA to serial port %s."%(cur_str,self.port)
             print "-------------------"
@@ -184,7 +204,11 @@ class Four220Server(object):
         except:
             "Failed to write to serial port."
         
-        
+    def waitForRet(self):
+        while True:
+            c = self.ser.read(1)
+            if c == "\r":
+                break    
         
     def run(self):
         """
