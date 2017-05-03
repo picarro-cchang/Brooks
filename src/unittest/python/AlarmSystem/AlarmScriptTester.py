@@ -39,6 +39,8 @@ class AlarmScriptTester(object):
                                             MeasSysRpcServer = None,
                                             FreqConvRpcServer = None,
                                             SpecCollRpcServer = None,
+                                            DataLoggerRpcServer = None,
+                                            FsrHoppingControllerRpcServer = None,
                                             PeriphIntrfFunc = None,
                                             PeriphIntrfCols = [],
                                             ExcLogFunc = sys.stdout.write,

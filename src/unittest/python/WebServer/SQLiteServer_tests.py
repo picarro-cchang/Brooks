@@ -5,16 +5,17 @@ import json
 from Host.WebServer.SQLiteServer import db_server, app, SystemVariable, Password, UserAction, User, Role
 
 API_PREFIX = '/api/v1.0/'
+DATABASE_DIR = './src/main/python/Host/WebServer'
 
 class TestSQLiteServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        db = "PicarroDataBase.sqlite"
+        db = os.path.join(DATABASE_DIR, "PicarroDataBase.sqlite")
+        config = os.path.join(DATABASE_DIR, "SQLiteDataBase.ini")
         if os.path.exists(db):
-            os.rename(db, "PicarroDataBase_backup.sqlite")
-        config = "SQLiteDataBase.ini"
+            os.remove(db)
         if os.path.exists(config):
-            os.rename(config, "SQLiteDataBase_backup.ini")
+            os.remove(config)
             with open(config, "w") as f:
                 f.write("[Setup]\n")
                 f.write("Host_IP = 0.0.0.0\n")
@@ -25,16 +26,12 @@ class TestSQLiteServer(unittest.TestCase):
         
     @classmethod
     def tearDownClass(cls):
-        db = "PicarroDataBase.sqlite"
-        config = "SQLiteDataBase.ini"
+        db = os.path.join(DATABASE_DIR, "PicarroDataBase.sqlite")
+        config = os.path.join(DATABASE_DIR, "SQLiteDataBase.ini")
         if os.path.exists(db):
             os.remove(db)
-        if os.path.exists("PicarroDataBase_backup.sqlite"):
-            os.rename("PicarroDataBase_backup.sqlite", db)
         if os.path.exists(config):
             os.remove(config)
-        if os.path.exists("SQLiteDataBase_backup.ini"):
-            os.rename("SQLiteDataBase_backup.ini", config)
             
     def send_request(self, action, api, payload, use_token=False):
         """
@@ -93,10 +90,17 @@ class TestSQLiteServer(unittest.TestCase):
         payload['password'] = "picarro"
         ret = self.send_request("post", "account", payload)
         self.assertTrue("User is disabled" in ret["error"])
+        # log in as admin
+        payload = {'command': "log_in_user",
+                   'requester': "unittest",
+                   'username': "picarro", 
+                   'password': "picarro"}
+        ret = self.send_request("post", "account", payload)
+        self.assertFalse('error' in ret)
+        self.token = ret["token"]
         # reactive user
-        payload = {'command': 'update_user', 'username': 'picarro-technician', 'active': 1,
-                   'password': None, 'roles': None}
-        ret = db_server.process_request_dict(payload)
+        payload = {'command': 'update_user', 'username': 'picarro-technician', 'active': 1}
+        ret = self.send_request('post', 'users', payload, use_token=True)
         self.assertFalse('error' in ret)
         
     def test_password_policy(self):

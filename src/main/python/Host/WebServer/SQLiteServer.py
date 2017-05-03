@@ -53,8 +53,9 @@ class SystemVariable(db.Model):
         self.value = value
         
 class Password(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp(),
-                 onupdate=db.func.current_timestamp(), primary_key=True)
+                 onupdate=db.func.current_timestamp())
     username = db.Column(db.String(64))
     value = db.Column(db.String(255))
     
@@ -97,16 +98,15 @@ security = Security(app, user_datastore)
 
 
 class SQLiteServer(object):
-    def __init__(self, configFile):
+    def __init__(self):
+        self.user_login_attempts = {"username":None, "attempts":0}
+            
+    def load_config_from_ini(self, configFile):
         if os.path.exists(configFile):
             self.config = CustomConfigObj(configFile)
         else:
             print "Configuration file not found: %s" % configFile
             sys.exit(1)
-        self.load_config_from_ini()
-        self.user_login_attempts = {"username":None, "attempts":0}
-            
-    def load_config_from_ini(self):
         self.setup = {'host' : self.config.get('Setup', "Host_IP", "0.0.0.0"),
                       'port' : self.config.getint('Setup', "Port", 3600),
                       'debug' : self.config.getboolean('Setup', "Debug_Mode", True)}
@@ -138,7 +138,7 @@ class SQLiteServer(object):
         period = self.system_varialbes["password_reuse_period"]
         if period >= 0:
             # New password cannot be one of the previous [period] passwords
-            history = Password.query.filter_by(username=username).order_by(Password.created_at.desc())
+            history = Password.query.filter_by(username=username).order_by(Password.id.desc())
             if history is not None:
                 for idx, p in enumerate(history):
                     if idx >= period:
@@ -422,9 +422,9 @@ def HandleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
     
-    return (configFile, )
+    return configFile
 
-db_server = SQLiteServer(*HandleCommandSwitches())
+db_server = SQLiteServer()
 
 @app.before_first_request
 def before_first_request():
@@ -531,5 +531,7 @@ class UsersAPI(Resource):
         
 
 if __name__ == '__main__':
+    configFile = HandleCommandSwitches()
+    db_server.load_config_from_ini(configFile)
     db_server.run()
     app.run(**db_server.setup)
