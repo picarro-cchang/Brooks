@@ -3,7 +3,9 @@
 File Name: 4to20Server.py
 Purpose: 4-20 mA back end. It takes data obj from data manager, 
 map the consentration to the 0-40 mA value and send to COM port 
-on the mother board.  
+on the mother board.
+module i7024 Hardware info: http://confluence.picarro.int/display/SEM/4-20+mA+Analog+Output+Testing
+software implimentation: http://confluence.picarro.int/display/~wtan@picarro.com/Software+Implement+4-20+mA+Output+for+SI2000+Series+Analyzers
 
 File History:
     17-04-03  Wenting   Created file
@@ -54,19 +56,17 @@ class Four220Server(object):
         self.baudrate = self.config.getint('SERIAL_PORT_SETUP', 'BAUDRATE')
         self.timeout = self.config.getfloat('SERIAL_PORT_SETUP', 'TIMEOUT')
         
-
-
-        
         self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
         except:
             print "Can not connect to %s port. Please check the SERIAL_PORT_SETUP configuration. "% self.port
         
-        #set the device configuration to 4-20 mA outputs.
+        #set the device configuration to 4-20 mA outputs. Send the command '%0101310600'. You should get this reply '!01' saying that your re-configuration of the module was successful.
         try:
             self.ser.write('%0101310600'+ '\r')
             s = ''
+            #wait for response. 
             while True:
                 c = self.ser.read(1)
                 if c == "\r":
@@ -74,6 +74,7 @@ class Four220Server(object):
                 s += c
             #bytesToRead = self.ser.inWaiting()
             #s = self.ser.read(bytesToRead)
+            #check the reply.
             if '!01' not in s:
                 print "Can not set the device confidguration, aborting..."
                 sys.exit(1)
@@ -161,6 +162,8 @@ class Four220Server(object):
                     except:
                         print "SOURCE value in configuration file is not valid. " 
                         sys.exit(1)
+                        
+                    #compute slope and offset values based in given max/min range
                     if self.con_min <= self.con_max:
                         slope = 16.0/(self.con_max - self.con_min)
                         offset = 4.0 - slope*self.con_min
@@ -176,12 +179,13 @@ class Four220Server(object):
             
     def data_processor(self, data, slope, offset, channel_num):
         """
-        It takes the concentration (data), map to 4-20 mA, and send to command to the designated COM port.  
+        It takes the concentration (data), map to 4-20 mA, and send the command to the designated COM port.
+        Any value lower than 4.0 mA will output 4.0 mA, any value higher than 20.0 mA will output 20.0 mA.
         
         """
         
         cur = float(slope * data + offset)
-
+        
         if cur < 4.0:
             cur_str = '04.000'
         elif cur > 20.0:
@@ -190,8 +194,11 @@ class Four220Server(object):
             cur_str = '0'+ format(cur, '.3f')
         else:
             cur_str = format(cur, '.3f')
-       
+
+
+        #If send the command '#010+05.000'. This tells the module at address 01 to set channel 0 to 5.000 mA.
         cmd_str = '#01'+ str(channel_num) + '+' + cur_str
+        
         try:
             self.ser.write(cmd_str + '\r')
             self.waitForRet()
