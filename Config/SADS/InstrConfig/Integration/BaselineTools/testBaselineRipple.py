@@ -24,7 +24,7 @@ if INIT:
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
-    fname = os.path.join(BASEPATH,r"./FitterConfig.ini")
+    fname = os.path.join(BASEPATH,r"./FitterConfig_HCl_140Torr.ini")
     instrParams = getInstrParams(fname)
 
     analysis = []

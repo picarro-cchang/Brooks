@@ -73,7 +73,7 @@ class ProportionalMode(SampleManagerBaseMode):
     step       = self.proportional_step
     try:
         iterations = deltapos/step
-        self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=2 ) 
+        self._LPC_StepValve( valve=stepValve, start=startpos, step=step, iterations=iterations, interval=1 ) 
     except:
         pass
     self._LPC_SetValve( stepValve, targetpos )
@@ -83,7 +83,7 @@ class ProportionalMode(SampleManagerBaseMode):
     # setPoint = self._RPC_ReadPressureSetpoint()
     print "Waiting for pressure to stabilize"
     status = self._LPC_WaitPressureStabilize( self.operate_pressure_sp_torr, tolerance=0.02,
-      timeout=600, checkInterval=1, lockCount=5 )
+      timeout=18000, checkInterval=2, lockCount=5 )
     if status==False:
       print "Pressure failed to stabilize."
       return False
@@ -93,12 +93,12 @@ class ProportionalMode(SampleManagerBaseMode):
 
   def RPC_FlowStop(self):
     """STOP FLOW"""
-    if self.valve_mode == INLETVALVE:
-        self._LPC_CloseValve(OUTLETVALVE)
+    if self.valve_mode == OUTLETVALVE:
+        self._LPC_CloseValve(INLETVALVE)
     else:
         self._LPC_CloseValve(INLETVALVE)
-    self._LPC_StopValveControl()
-    self._Sleep( 5 )
+    #self._LPC_StopValveControl()
+    #self._Sleep( 5 )
     self._LPC_StopSolenoidValveControl()
     self._Sleep( 5 )
     self._clearStatus()
@@ -115,7 +115,8 @@ class ProportionalMode(SampleManagerBaseMode):
             return False   # TODO: report to INSTRMGR
     # Goto pressure with inlet control
     else:
-        self._LPC_SetValveControl( interface.VALVE_CNTRL_InletControlState )
+        #self._LPC_SetValveControl( interface.VALVE_CNTRL_InletControlState )
+        self._LPC_SetValveControl( interface.VALVE_CNTRL_OutletControlState )
         self._LPC_WaitPressureStabilize( self.fill_pressure_sp_torr, tolerance=0.001, timeout=self.fill_pressure_timeout_s, checkInterval=1 )
 
     self._LPC_StopValveControl()

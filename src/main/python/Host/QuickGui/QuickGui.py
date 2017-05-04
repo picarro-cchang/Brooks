@@ -92,11 +92,11 @@ if sys.platform == 'win32':
 else:
     TimeStamp = time.time
 
-#if __debug__:
-#    print("Loading rpdb2")
-#    import rpdb2
-#    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-#    print("rpdb2 loaded")
+if __debug__:
+    print("Loading rpdb2")
+    import rpdb2
+    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
+    print("rpdb2 loaded")
 
 class ImageDatabase(object):
     def __init__(self):
@@ -464,17 +464,6 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
         self.tipWindow = None
         self.tipItem = None
-        self.allLEDsOff = False
-
-    def turnOffLEDs(self):
-        """
-        Turn off the LEDs regardless of the state of any other inputs.
-        """
-        # We need this because when the user clicks QUIT in the QuickGui, the dataSource mode
-        # is still in measurement mode and so the LEDs remain lit even if the measurment is
-        # meaningless. Clicking the QUIT button will call this method.
-        #
-        self.allLEDsOff = True
 
     def SetMainForm(self,mainForm):
         self.mainForm = mainForm
@@ -553,7 +542,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
 
         if not enabled:
             alarmColor = self.IconAlarmOff
-        elif len(self.dataStore.mode) == 0 or "warming_mode" in self.dataStore.mode or self.allLEDsOff:
+        elif len(self.dataStore.mode) == 0 or "warming_mode" in self.dataStore.mode:
             alarmColor = self.IconAlarmOff
         elif status == 0:
             alarmColor = self.IconAlarmGreen
@@ -1063,7 +1052,6 @@ class DataStore(object):
         self.oldData = {}
         self.alarmStatus = 0
         self.mode = ""
-        self.good = False
 
     def loadConfig(self):
         self.seqPoints = self.config.getint('DataManagerStream','Points')
@@ -1369,13 +1357,13 @@ class QuickGui(wx.Frame):
         self.restartUserLog = False
         # Collect instrument status setpoint and tolerance
         try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.cavityTempS = 45.0
             self.cavityTempT = 0.2
         try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.warmBoxTempS = 45.0
@@ -2146,7 +2134,6 @@ class QuickGui(wx.Frame):
 
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
         dialog.Destroy()
-        self.alarmView.turnOffLEDs()
 
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
@@ -2732,6 +2719,7 @@ class QuickGui(wx.Frame):
     def SessionRefresher(self, e):
         if self.sessionTimer.IsRunning():
             self.session_time = 0
+        print "My XY:", e.GetX(), e.GetY()
 
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
