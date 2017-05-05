@@ -2,7 +2,7 @@ $$$
 schemeVersion = 1
 repeat = 10
 peak = 7822.9835
-cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 peakDwell = 5
 restDwell = 2
