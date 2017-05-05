@@ -107,7 +107,7 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
                 info = subprocess.STARTUPINFO()
                 proc = subprocess.Popen(["python.exe", "Coordinator.py"] + argList + ["-c",self.coordinatorIni], startupinfo=info)
             elif sys.platform == "linux2":
-                cmd = ["python", "-O", "/Picarro/G2000/Host/Coordinator/Coordinator.py"] + argList + ["-c",self.coordinatorIni] #self.supervisorIni]
+                cmd = ["python", "-O", "/home/picarro/SI2000/Host/Coordinator/Coordinator.py"] + argList + ["-c",self.coordinatorIni] #self.supervisorIni]
                 proc = subprocess.Popen(cmd)
 
 HELP_STRING = \
