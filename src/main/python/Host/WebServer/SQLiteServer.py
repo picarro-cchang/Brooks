@@ -510,7 +510,6 @@ class UsersAPI(Resource):
     post_parser.add_argument('username', type=str, required=True)
     post_parser.add_argument('last_name', type=str, required=False)
     post_parser.add_argument('first_name', type=str, required=False)
-    post_parser.add_argument('last_name', type=str, required=False)
     post_parser.add_argument('employee_id', type=str, required=False)
     post_parser.add_argument('phone_number', type=str, required=False)
     post_parser.add_argument('password', type=str, required=False)

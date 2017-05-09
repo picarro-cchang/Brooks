@@ -1,0 +1,73 @@
+<html>
+    <head>
+        <style>
+            .report_title {font-size: 36px; font-weight: 900; margin:10px;}
+            table.tbl {margin: 10px;}
+            table.tbl th {padding: 5px;}
+            table.tbl td {padding: 5px;}
+            .cell {font-weight: 600;}
+        </style>
+    </head>
+    <body>
+        <div style='margin: 10px;'>
+            <p>&nbsp;</p>
+            <div class='report_title'>Validation Report</div>
+            <table class='tbl' style='font-size:16px;'>
+                <tr>
+                    <td class='cell'>Date:</td><td>{date}</td>
+                    <td class='cell'>Time:</td><td>{time}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Operator:</td><td>{operator}</td>
+                    <td class='cell'>Username:</td><td>{username}</td>
+                </tr>
+            </table>
+            <table class='tbl' style='border-width: 1px;border-style: solid;'>
+                <tr>
+                    <th>Gas Source</th>
+                    <th>Nominal Methane (ppm)</th>
+                    <th>Mean Observed Concentration</th>
+                    <th>Standard Dev</th>
+                </tr>
+                <tr>
+                    <td>Zero Air</td>
+                    <td>{zero_air_nominal}</td>
+                    <td>{zero_air_mean}</td>
+                    <td>{zero_air_sd}</td>
+                </tr>
+                <tr>
+                    <td>Calibrant 1</td>
+                    <td>{calibrant1_nominal}</td>
+                    <td>{calibrant1_mean}</td>
+                    <td>{calibrant1_sd}</td>
+                </tr>
+                <tr>
+                    <td>Calibrant 2</td>
+                    <td>{calibrant2_nominal}</td>
+                    <td>{calibrant2_mean}</td>
+                    <td>{calibrant2_sd}</td>
+                </tr>
+                <tr>
+                    <td>Calibrant 3</td>
+                    <td>{calibrant3_nominal}</td>
+                    <td>{calibrant3_mean}</td>
+                    <td>{calibrant3_sd}</td>
+                </tr>
+            </table>
+            <table class='tbl' style='font-size:16px;'>
+                <tr>
+                    <td class='cell'>CH<sub>4</sub> slope:</td><td>{ch4_slope}</td>
+                    <td class='cell'>CH<sub>4</sub> R<sup>2</sup>:</td><td>{ch4_r2}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>CH<sub>4</sub> intercept (ppm):</td><td>{ch4_intercept}</td>
+                    <td class='cell'>H<sub>2</sub>O<sub>2</sub> equivalent (ppb):</td><td>{h2o2_equivalent}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>H<sub>2</sub>O<sub>2</sub> intercept (ppb):</td><td>{h2o2_mean}</td>
+                    <td></td><td></td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>
