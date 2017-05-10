@@ -124,19 +124,25 @@ class ChannelSettingWidget(QWidget):
         if self._airType.currentIndex() == 4:
             for key in CONFIG[self.section_name]:
                 CONFIG[self.section_name].update({key : '' })
-                
         else:
-            if CONFIG[self.section_name].get('SOURCE_MIN') == '' or float(CONFIG[self.section_name].get('SOURCE_MIN')) != float(self._rangeMin.text()):
-                CONFIG[self.section_name].update({'SOURCE_MIN': float(self._rangeMin.text())})                
-                
-            if CONFIG[self.section_name].get('SOURCE_MAX') == '' or float(CONFIG[self.section_name].get('SOURCE_MAX')) != float(self._rangeMax.text()):
-                CONFIG[self.section_name].update({'SOURCE_MAX': float(self._rangeMax.text())})
-                
-            if CONFIG[self.section_name].get('SOURCE') == '' or CONFIG[self.section_name].get('SOURCE') != self._airType.itemText(self._airType.currentIndex()):
-                CONFIG[self.section_name].update({'SOURCE' : str(self._airType.itemText(self._airType.currentIndex()))})
-        
-        self._saveBTN.setDisabled(True)
-        self._undoBTN.setDisabled(True)
+            try:
+                if float(self._rangeMin.text()) < float(self._rangeMax.text()) and float(self._rangeMin.text()) >= 0 and float(self._rangeMax.text()) <=2000:
+                    if CONFIG[self.section_name].get('SOURCE_MIN') == '' or float(CONFIG[self.section_name].get('SOURCE_MIN')) != float(self._rangeMin.text()):
+                        CONFIG[self.section_name].update({'SOURCE_MIN': float(self._rangeMin.text())})                
+                        
+                    if CONFIG[self.section_name].get('SOURCE_MAX') == '' or float(CONFIG[self.section_name].get('SOURCE_MAX')) != float(self._rangeMax.text()):
+                        CONFIG[self.section_name].update({'SOURCE_MAX': float(self._rangeMax.text())})
+                        
+                    if CONFIG[self.section_name].get('SOURCE') == '' or CONFIG[self.section_name].get('SOURCE') != self._airType.itemText(self._airType.currentIndex()):
+                        CONFIG[self.section_name].update({'SOURCE' : str(self._airType.itemText(self._airType.currentIndex()))})
+                        
+                    self._saveBTN.setDisabled(True)
+                    self._undoBTN.setDisabled(True)
+                else:
+                    QMessageBox.warning(self, 'Invalid Range Min and Max', 'Make sure: 0 <= Range Min < Range Max <=2000.')
+            except:
+                QMessageBox.warning(self, 'Error', 'Please input Digit Numbers to the Range Min and Range Max field.')
+
         
     def modifyUI(self):
         self._undoBTN.setDisabled(False)
