@@ -470,12 +470,12 @@ class DataManager(object):
         self.addToPulseAnalyzer = False
 
         # New file output system for SI-2000
-        self.healthMonitorOutputFile = OutputFile.OutputFile(
-                analyzerType = "AMADS",
-                newFileInterval = 60,
-                fileType = "DAT"
-                )
-        self.healthMonitorOutputFile.start()
+        #self.healthMonitorOutputFile = OutputFile.OutputFile(
+        #        analyzerType = "AMADS",
+        #        newFileInterval = 60,
+        #        fileType = "DAT"
+        #        )
+        #self.healthMonitorOutputFile.start()
 
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
