@@ -14,7 +14,7 @@ NH3_laser = 1
 f_NH3 = 6548.618
 f_H2O = 6549.13061
 
-cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 
 schemeRows = []
