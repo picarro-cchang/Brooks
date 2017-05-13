@@ -354,6 +354,7 @@ class IntegrationTool(IntegrationToolFrame):
             co["SETTINGS"]["FILENAME"] = os.path.join(self.INTEGRATION_DIR, laserFilename)
             co.write()
             co = ConfigObj(os.path.join(self.INTEGRATION_DIR, "writeLaserEeprom%d.ini" % laserNum), raise_errors=True)
+            co["SETTINGS"]["FILENAME"] = os.path.join(self.INTEGRATION_DIR, laserFilename)
             co["SETTINGS"]["SERIAL"] = self.laserSerNumDict[laserNum][0]
             co.write()
             key = "LASER%d" % laserNum
