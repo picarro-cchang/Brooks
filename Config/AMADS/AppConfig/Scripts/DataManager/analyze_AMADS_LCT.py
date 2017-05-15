@@ -3,6 +3,7 @@
 #  2016 0711:  variant for LCT operation
 #  2016 0901:  added filter for pressure lock to prevent spikes from perturbing PZT
 #  2016 0920: EWMA - Exponential Weighted Moving Average; requested by Raymond
+#  2017 0111:  changed PZT gain factor from 0.05 to 0.2 (hoffnagle)
 import os
 import sys
 import inspect
@@ -200,7 +201,7 @@ except:
     pass
  
 max_adjust = 5.0e-5
-PZTgain = 0.05
+PZTgain = 0.2
 
 
 if not good:

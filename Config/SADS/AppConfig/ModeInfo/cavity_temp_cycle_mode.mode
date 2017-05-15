@@ -7,7 +7,7 @@ Tuning = CavityLength
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 1
-Scheme_1_Path = ../Schemes/_CavityTempCycleHF.sch
+Scheme_1_Path = ../Schemes/_CavityTempCycleHCl.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...

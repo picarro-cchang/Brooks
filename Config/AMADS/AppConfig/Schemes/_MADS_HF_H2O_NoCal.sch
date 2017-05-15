@@ -13,7 +13,7 @@ f_HF = 7823.8530
 f_O2 = 7822.9835
 
 
-cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 
 vLaser1 = 0

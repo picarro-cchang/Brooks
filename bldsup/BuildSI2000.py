@@ -188,8 +188,6 @@ Description: Picarro Host Software for Semiconductor Industry
         if os.path.isdir(common_config_dir):
             shutil.rmtree(common_config_dir)
         shutil.copytree(os.path.join(config_dir, "CommonConfig"), common_config_dir)
-        # create launchers
-        buildUtils.make_xubuntu_launchers(dist_dir)
         # create python path file
         pth_file_dir = os.path.join(dist_dir, 'home', 'picarro', 'anaconda2','lib','python2.7','site-packages')
         os.makedirs(pth_file_dir)

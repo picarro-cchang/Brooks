@@ -11,7 +11,7 @@ nfreq = 1000
 vLaser = 0
 fit = 32768
 
-cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 
 def makeScan(base,incr,stepAndDwell,id,vLaser,threshold=None):

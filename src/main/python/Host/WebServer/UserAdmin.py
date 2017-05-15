@@ -12,7 +12,12 @@ DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 class MainWindow(QMainWindow):
     def __init__(self, configFile, parent=None):
         super(MainWindow, self).__init__(parent)
-        
+
+        self.styleData = ""
+        f = open('styleSheet.qss', 'r')
+        self.styleData = f.read()
+        f.close()
+
         #Set Picarro marketing colors to be used for manual color changes
         picarroGreen = QColor(108,179,63).rgba()
         picarroGrey = QColor(64,64,64,).rgba()
@@ -22,18 +27,21 @@ class MainWindow(QMainWindow):
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setColor(QColor(30,30,30,180))
         self.shadow.setBlurRadius(5)
-                
+
         self.create_widgets()
         self.setWindowTitle("User Management")
         self.resize(800,600)
-        
+
         self.host_session = requests.Session()
         self.role_list = []
         self.current_user = None    # user logged in
         # take off for SI2000
         # self._get_system_variables()
-        
+
     def create_widgets(self):
+
+        #self.setStyleSheet(self.styleData)
+
         def spin_box(value=0, min=0, max=100, step=1):
             sBox = QSpinBox()
             sBox.setMinimum(min)
@@ -41,7 +49,7 @@ class MainWindow(QMainWindow):
             sBox.setSingleStep(step)
             sBox.setProperty("value", value)
             return sBox
-            
+
         def control_box(caption, control, caption_on_left=False):
             box = QFormLayout()
             if caption_on_left:
@@ -49,7 +57,7 @@ class MainWindow(QMainWindow):
             else:
                 box.addRow(control, QLabel(caption))
             return box
-    
+
         # Most buttons are placed in QFormLayouts as it is a convenient class
         # for lining up buttons and text fields.
         # The buttons are organized in groups and a group of buttons is put
@@ -60,13 +68,13 @@ class MainWindow(QMainWindow):
         self.user_admin_widget = QWidget()
         self.add_user_widget = QWidget()
         self.change_password_widget = QWidget()
-        
+
         home_layout = QFormLayout() 
         user_profile_layout = QFormLayout() 
         user_admin_layout = QFormLayout()
         add_user_layout = QFormLayout()
         change_password_layout = QFormLayout()
-        
+
         # Picarro logo
         picarro_logo = QPixmap("logo_picarro.png")
         picarro_label = QLabel("")
@@ -93,7 +101,7 @@ class MainWindow(QMainWindow):
         self.input_password.setEchoMode(QLineEdit.Password)
         self.button_user_login = QPushButton("Login")
         self.button_user_login.clicked.connect(self._user_login)
-        self.button_cancel_login = QPushButton("Cancel")
+        self.button_cancel_login = QPushButton("Exit") # Changed "Cancel" to "Exit"
         self.button_cancel_login.clicked.connect(self._cancel_login)
         self.label_login_info = QLabel("")
         login_input = QFormLayout()
@@ -308,6 +316,7 @@ class MainWindow(QMainWindow):
     def _cancel_login(self):
         self.input_user_name.clear()
         self.input_password.clear()
+        self.close()
         
     def _change_user_pwd(self):
         # this function is called when admin is logged in 
@@ -600,6 +609,7 @@ class MainWindow(QMainWindow):
         self.input_user_name.setFocus()
         self.user_admin_widget.hide()
         self.home_widget.show()
+        self.close()
         
 
 HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
@@ -638,7 +648,7 @@ def handleCommandSwitches():
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     window = MainWindow(*handleCommandSwitches())
-    #window.setWindowState(QtCore.Qt.WindowFullScreen)
+    window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
     window.show()
     app.installEventFilter(window)
     app.exec_()

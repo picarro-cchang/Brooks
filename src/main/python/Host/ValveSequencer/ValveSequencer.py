@@ -599,15 +599,18 @@ class ValveSequencer(ValveSequencerFrame):
             self.seqData.append(newData)
 
         if self.filename:
-            defaultVSFile = self.filename
+            defaultVSFile = os.path.basename(self.filename)
         else:
             defaultVSFile = ""
 
         if not self.defaultPath:
             self.defaultPath = os.getcwd()
 
-        dlg = wx.FileDialog(self, "Save Valve Sequence as...",
-                            self.defaultPath, defaultVSFile, wildcard = "*.seq", style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        dlg = wx.FileDialog(self, "Save Valve Sequence as...", \
+                            self.defaultPath, \
+                            defaultVSFile, \
+                            wildcard = "*.seq", \
+                            style=wx.SAVE|wx.OVERWRITE_PROMPT)
 
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()

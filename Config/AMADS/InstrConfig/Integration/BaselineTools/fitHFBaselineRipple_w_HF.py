@@ -58,7 +58,7 @@ if INIT:
     loadSplineLibrary(fname)
 
     analysis = []
-    analysis.append(Analysis(os.path.join(BASEPATH,r"./MADS-xx baseline ripple w HF v01.ini")))
+    analysis.append(Analysis(os.path.join(BASEPATH,r"./Baseline+HF+H2O.ini")))
 
     oname = os.path.join(BASEPATH,time.strftime("FitterOutput.dat",time.localtime()))
     file(oname,"wb").close()

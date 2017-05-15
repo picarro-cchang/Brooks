@@ -81,8 +81,8 @@ class WlmFileMaker(object):
 
         if "-a" in options:
             self.ipAddr = options["-a"]
-        elif "IP_ADDR" in self.config["SETTINGS"]:
-            self.ipAddr = self.config["SETTINGS"]["IP_ADDR"]
+        elif "IF_ADDR" in self.config["SETTINGS"]:
+            self.ipAddr = self.config["SETTINGS"]["IF_ADDR"]
 
         if "-l" in options:
             self.laserNum = int(options["-l"])
