@@ -168,8 +168,7 @@ class IntegrationTool(IntegrationToolFrame):
                 for sName in self.cp["THRESHOLD_STATS_SCHEMES"][aType]:
                     newStr = r"%s" % self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName]
                     self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName] = newStr
-            self.allSchemes = self.cp["THRESHOLD_STATS_SCHEMES"]
-            
+            self.allSchemes = self.cp["THRESHOLD_STATS_SCHEMES"]   
             WARMBOX_CAL = self.cp.get("Main", "WARMBOX_CAL")
             WARMBOX_CAL_ACTIVE = self.cp.get("Main", "WARMBOX_CAL")
             HOTBOX_CAL = self.cp.get("Main", "HOTBOX_CAL")
@@ -340,8 +339,8 @@ class IntegrationTool(IntegrationToolFrame):
     def onMakeIniFiles(self, event):
         try:
             writeWlmEeprom_ini = self.cp.get("MakeIniFiles", "writeWlmEeprom_ini")
-            makeWarmBoxCalFile_ini = self.cp.get("MakeIniFiles", "makeWarmBoxCalFile_ini")
-            makeCalFromEeproms_ini = self.cp.get("MakeIniFiles", "makeCalFromEeproms_ini")
+            makeWarmBoxCalFile_ini = self.cp.get("MakeIniFiles", "MakeWarmBoxCalFile_ini")
+            makeCalFromEeproms_ini = self.cp.get("MakeIniFiles", "MakeCalFromEeproms_ini")
             wlmEepromCo = ConfigObj(os.path.join(self.INTEGRATION_DIR, writeWlmEeprom_ini), raise_errors=True)
             makeWarmBoxCalCo = ConfigObj(os.path.join(self.INTEGRATION_DIR, makeWarmBoxCalFile_ini), raise_errors=True)
             makeEepromCalCo = ConfigObj(os.path.join(self.INTEGRATION_DIR, makeCalFromEeproms_ini), raise_errors=True)
@@ -355,6 +354,7 @@ class IntegrationTool(IntegrationToolFrame):
             co["SETTINGS"]["FILENAME"] = os.path.join(self.INTEGRATION_DIR, laserFilename)
             co.write()
             co = ConfigObj(os.path.join(self.INTEGRATION_DIR, "writeLaserEeprom%d.ini" % laserNum), raise_errors=True)
+            co["SETTINGS"]["FILENAME"] = os.path.join(self.INTEGRATION_DIR, laserFilename)
             co["SETTINGS"]["SERIAL"] = self.laserSerNumDict[laserNum][0]
             co.write()
             key = "LASER%d" % laserNum
@@ -405,7 +405,7 @@ class IntegrationTool(IntegrationToolFrame):
         try:
             for idx in range(self.numLasers):
                 laserNum = idx+1
-                cmd = executable.split() + ["-w", "%.1f" % timeDelay, "-c", "%s%d.ini" % (iniFile,laserNum)]
+                cmd = executable.split() + ["-w", "%.1f" % timeDelay, "-c",  "%s%d.ini" % (iniFile,laserNum)]
                 print " ".join(cmd)
                 subprocess.Popen(cmd).wait()
                 self.display += "WLM file for laser %d created\n" % laserNum

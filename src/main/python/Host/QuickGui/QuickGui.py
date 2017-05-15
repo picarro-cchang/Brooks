@@ -37,7 +37,7 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
-INACTIVE_SESSION_TIMEOUT = 30
+INACTIVE_SESSION_TIMEOUT = 300
 
 import sys
 import wx
@@ -1357,13 +1357,13 @@ class QuickGui(wx.Frame):
         self.restartUserLog = False
         # Collect instrument status setpoint and tolerance
         try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.cavityTempS = 45.0
             self.cavityTempT = 0.2
         try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.warmBoxTempS = 45.0
@@ -2719,7 +2719,6 @@ class QuickGui(wx.Frame):
     def SessionRefresher(self, e):
         if self.sessionTimer.IsRunning():
             self.session_time = 0
-        print "My XY:", e.GetX(), e.GetY()
 
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:

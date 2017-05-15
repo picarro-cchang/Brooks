@@ -19,7 +19,7 @@ f_H2O = 6549.13061
 f_HF = 7823.84945
 f_O2 = 7822.9835
 
-cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 
 schemeRows = []

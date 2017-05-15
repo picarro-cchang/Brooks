@@ -28,7 +28,7 @@ if INIT:
     instrParams = getInstrParams(fname)
 
     analysis = []
-    analysis.append(Analysis(os.path.join(BASEPATH,r"./MADS_xx baseline ripple test w HF.ini")))
+    analysis.append(Analysis(os.path.join(BASEPATH,r"./BaselineTest+HF+H2O.ini")))
     
     baseline_level = instrParams['HF_Baseline_level']
     baseline_slope = instrParams['HF_Baseline_slope']

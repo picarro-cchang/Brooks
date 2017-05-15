@@ -529,10 +529,26 @@ class RpcServerThread(threading.Thread):
 
 
 def validateChecksum(fname):
+    """
+    The Warm Box cal files have a checkstring appended at the end. Compare the reported
+    checksum to the value computed here to determine if the file is not corrupted.
+    """
+    # We have been finding that after a few days running AMADS on Linux the warm box
+    # cal files are corrupted, missing the section defining the actual lasers.  When
+    # this happens the code can't load the warm box active cal and hangs.
+    # Here we check if the ["LASER_MAP"] string is in the cal file.  When the bug
+    # appears, this section is missing and so we raise an exception. This forces
+    # the code to recover by reloading the factory (permanent) warm box cal file.
+    # RSF 05May2017
+    #
     filePtr = file(fname, 'rb')
     try:
         calStr = filePtr.read()
         cPos = calStr.find("#checksum=")
+        lmPos = calStr.find("LASER_MAP")
+        if lmPos < 0:
+            Log("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname, Level = 3)
+            raise ValueError("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname)
         if cPos < 0:
             raise ValueError("No checksum in file")
         else:

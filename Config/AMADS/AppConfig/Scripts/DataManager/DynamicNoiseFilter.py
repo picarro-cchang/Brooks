@@ -13,10 +13,10 @@ import numpy as np
 from Host.Common.CustomConfigObj import CustomConfigObj
 
 if sys.platform == 'win32':
-    Paras=CustomConfigObj("C:\Picarro\G2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
+    Paras=CustomConfigObj("/home/picarro/SI2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
 else:
     try:
-        Paras=CustomConfigObj("/Picarro/G2000/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+        Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
     except Exception as e:
         print("Exception:",e)
         raise 
