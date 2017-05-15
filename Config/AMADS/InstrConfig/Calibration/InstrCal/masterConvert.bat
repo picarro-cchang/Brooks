@@ -1,1 +1,0 @@
-masterConvert.py  Master.ini Changes_lct.ini Master_lct.ini
