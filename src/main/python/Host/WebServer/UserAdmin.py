@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
 
     def create_widgets(self):
 
-        self.setStyleSheet(self.styleData)
+        #self.setStyleSheet(self.styleData)
 
         def spin_box(value=0, min=0, max=100, step=1):
             sBox = QSpinBox()
@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
         self.input_password.setEchoMode(QLineEdit.Password)
         self.button_user_login = QPushButton("Login")
         self.button_user_login.clicked.connect(self._user_login)
-        self.button_cancel_login = QPushButton("Cancel")
+        self.button_cancel_login = QPushButton("Exit") # Changed "Cancel" to "Exit"
         self.button_cancel_login.clicked.connect(self._cancel_login)
         self.label_login_info = QLabel("")
         login_input = QFormLayout()
@@ -316,6 +316,7 @@ class MainWindow(QMainWindow):
     def _cancel_login(self):
         self.input_user_name.clear()
         self.input_password.clear()
+        self.close()
         
     def _change_user_pwd(self):
         # this function is called when admin is logged in 
@@ -608,6 +609,7 @@ class MainWindow(QMainWindow):
         self.input_user_name.setFocus()
         self.user_admin_widget.hide()
         self.home_widget.show()
+        self.close()
         
 
 HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
@@ -646,7 +648,7 @@ def handleCommandSwitches():
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     window = MainWindow(*handleCommandSwitches())
-    #window.setWindowState(QtCore.Qt.WindowFullScreen)
+    window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
     window.show()
     app.installEventFilter(window)
     app.exec_()
