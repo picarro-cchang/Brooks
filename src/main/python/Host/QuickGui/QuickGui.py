@@ -38,7 +38,7 @@ _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 INACTIVE_SESSION_TIMEOUT = 30
-
+import pdb
 import sys
 import wx
 from wx.lib import sized_controls
@@ -1336,8 +1336,7 @@ class QuickGui(wx.Frame):
         self.logo = None
         self.fullInterface = False
         self.userLevel = 1
-        self.userLoggedIn = False
-        
+        self.userLoggedIn = False    
         self.showStat = False
         self.showInstStat = True
         self.serviceModeOnlyControls = []
@@ -2031,10 +2030,14 @@ class QuickGui(wx.Frame):
     #user levels setting
     def modifyInterface(self):
         #Operator level
+        
         if self.userLevel == 1:
             self.shutdownButton.Enable(False)
             self.userLogButton.Disable()
-            for sc in self.sourceChoice:
+            #pdb.set_trace()
+            for sc in self.sourceChoice:    
+                sc.SetSelection(0)
+                self.OnSourceChoice(obj=sc)
                 sc.Enable(False)
             for kc in self.keyChoice:
                 kc.Enable(False)
@@ -2141,9 +2144,18 @@ class QuickGui(wx.Frame):
             self.dataStore.getDataSequence(s,'good').Clear()
             for k in self.dataStore.getKeys(s):
                 self.dataStore.getDataSequence(s,k).Clear()
-    def OnSourceChoice(self,evt):
-        idx = self.sourceChoiceIdList.index(evt.GetEventObject().GetId())
-        self.source[idx] = self.sourceChoice[idx].GetClientData(evt.GetSelection())
+    def OnSourceChoice(self, evt=None, obj=None):
+        if evt is not None:
+            idx = self.sourceChoiceIdList.index(evt.GetEventObject().GetId())
+            self.source[idx] = self.sourceChoice[idx].GetClientData(evt.GetSelection())
+        elif obj is not None:
+            idx = self.sourceChoiceIdList.index(obj.GetId())
+            try:
+                self.source[idx] = obj.GetClientData(obj.GetSelection())
+            except:
+                self.source[idx] = None
+        else:
+            raise ValueError("Invalid call of OnSourceChoice")
         self.graphPanel[idx].RemoveAllSeries()
         self.dataKey[idx] = None
         self.keyChoices[idx] = None
@@ -2537,15 +2549,18 @@ class QuickGui(wx.Frame):
             concCal = self.dataManagerRpc.Cal_GetUserCal(conc)
             userCalList.append((conc+"Slope", "%s slope" % conc, str(concCal[0])))
             userCalList.append((conc+"Offset", "%s offset" % conc, str(concCal[1])))
-        dlg = UserCalGui(userCalList, None, -1, "")
-        getUserCals = (dlg.ShowModal() == wx.ID_OK)
+        self.dlg = UserCalGui(userCalList, None, -1, "")
+        self.BindAllWidgetsMotion(self.dlg)
+        getUserCals = (self.dlg.ShowModal() == wx.ID_OK)
         if getUserCals:
+            
             numConcs = len(userCalList)/2
             for idx in range(numConcs):
-                if dlg.textCtrlList[2*idx].GetValue() != userCalList[2*idx][2] or dlg.textCtrlList[2*idx+1].GetValue() != userCalList[2*idx+1][2]:
-                    newCal = (float(dlg.textCtrlList[2*idx].GetValue()), float(dlg.textCtrlList[2*idx+1].GetValue()))
+                if self.dlg.textCtrlList[2*idx].GetValue() != userCalList[2*idx][2] or self.dlg.textCtrlList[2*idx+1].GetValue() != userCalList[2*idx+1][2]:
+                    newCal = (float(self.dlg.textCtrlList[2*idx].GetValue()), float(self.dlg.textCtrlList[2*idx+1].GetValue()))
                     self.dataManagerRpc.Cal_SetSlopeAndOffset(concList[idx], newCal[0], newCal[1])
-        dlg.Destroy()
+            
+        self.dlg.Destroy()
 
     def OnValveSeq(self, evt):
         try:
@@ -2741,6 +2756,11 @@ class QuickGui(wx.Frame):
             self.userLoggedIn = False
             self.iGuiMode.SetItemLabel("User Login")
             self.UnbindAllWidgetsMotion(self.mainPanel)
+            try:
+                self.dlg.Destroy()
+                self.UnbindAllWidgetsMotion(self.dlg)
+            except:
+                pass
             self.sessionTimer.Stop()
         else:
             #timer runs every 5 secs, count
