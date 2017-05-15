@@ -37,7 +37,7 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
-INACTIVE_SESSION_TIMEOUT = 30
+INACTIVE_SESSION_TIMEOUT = 300
 
 import sys
 import wx
@@ -2719,7 +2719,6 @@ class QuickGui(wx.Frame):
     def SessionRefresher(self, e):
         if self.sessionTimer.IsRunning():
             self.session_time = 0
-        print "My XY:", e.GetX(), e.GetY()
 
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
