@@ -39,9 +39,9 @@ class LaserDacModel(object):
     #  1mA of current change results from changing the coarse value by 277.78 digU
     #  or the fine value by 1388,89 digU
     def __init__(self, coarse_sens = 0.0036, fine_sens = 0.00072, offset = 0):
-        self.coarse_sens = coarse_sens
-        self.fine_sens = fine_sens
-        self.offset = offset
+        self.coarse_sens = float(coarse_sens)
+        self.fine_sens = float(fine_sens)
+        self.offset = float(offset)
 
     def dacToCurrent(self, coarse, fine):
         return self.offset + self.coarse_sens * coarse + self.fine_sens * fine
@@ -55,7 +55,7 @@ class LaserOpticalModel(object):
     #  or -0.035344 wavenumber/mA
     #
     # When 18*laserTemp(in millidegrees) changes by 65536, the laser frequency
-    #  changes by 50GHz. The sensitivity of the laser frequency to current is
+    #  changes by 50GHz. The sensitivity of the laser frequency to temperature is
     #  thus -13.7329 GHz/degree or -0.45808 wavenumber/degree
     #
     # The nominal frequency of the laser is attained at a laser current of 150mA
@@ -63,13 +63,14 @@ class LaserOpticalModel(object):
     def __init__(self,
                  nominal_wn = 6237.0, wn_temp_sens = -0.45808, wn_current_sens = -0.035344,
                  thresh0 = 0.8, char_temp=90., eff=0.17, eff_temp_sens=-7e-4):
-        self.nominal_wn = nominal_wn
-        self.wn_temp_sens = wn_temp_sens
-        self.wn_current_sens = wn_current_sens
-        self.thresh0 = thresh0
-        self.char_temp = char_temp
-        self.eff = eff
-        self.eff_temp_sens = eff_temp_sens
+        self.nominal_wn = float(nominal_wn)
+        self.wn_temp_sens = float(wn_temp_sens)
+        self.wn_current_sens = float(wn_current_sens)
+        self.thresh0 = float(thresh0)
+        self.char_temp = float(char_temp)
+        self.eff = float(eff)
+        self.eff_temp_sens = float(eff_temp_sens)
+
 
     def calcWavenumber(self, temp, current):
         """The wavenumber is given by a bilinear model. nominal_wn is the wavenumber produced
@@ -99,13 +100,13 @@ class LaserThermalModel(object):
             den = [1.00000000e+00, -1.37628382e+00, 2.19598434e-02, 1.01673929e-01,
                    2.99996581e-01, 2.93872141e-02, -7.45088401e-02, -1.42310788e-04]
         self.den = den
-        self.offset = offset
+        self.offset = float(offset)
         assert len(num) == len(den)
         degree = len(num) - 1
         self.state = degree * [0.0]
-        self.thermA = thermA
-        self.thermB = thermB
-        self.thermC = thermC
+        self.thermA = float(thermA)
+        self.thermB = float(thermB)
+        self.thermC = float(thermC)
         self.initState()
 
     def initState(self):
@@ -147,24 +148,24 @@ class WlmModel(object):
                  eta1_offset=6000, eta2_offset=6000, ref1_offset=6000, ref2_offset=6000, epsilon=0,
                  fsr=1.66782, cal_temp=45, temp_sensitivity=-0.19, cal_pressure=760,
                  pressureC0=0.0, pressureC1=0.0, pressureC2=0.0, pressureC3=0.0):
-        self.rho = rho
-        self.Ieta1fac = Ieta1fac
-        self.Ieta2fac = Ieta2fac
-        self.Iref1fac = Iref1fac
-        self.Iref2fac = Iref2fac
-        self.eta1_offset = eta1_offset
-        self.eta2_offset = eta2_offset
-        self.ref1_offset = ref1_offset
-        self.ref2_offset = ref2_offset
-        self.epsilon = epsilon
-        self.fsr = fsr
-        self.cal_temp = cal_temp
-        self.temp_sensitivity = temp_sensitivity
-        self.cal_pressure = cal_pressure
-        self.pressureC0 = pressureC0
-        self.pressureC1 = pressureC1
-        self.pressureC2 = pressureC2
-        self.pressureC3 = pressureC3
+        self.rho = float(rho)
+        self.Ieta1fac = float(Ieta1fac)
+        self.Ieta2fac = float(Ieta2fac)
+        self.Iref1fac = float(Iref1fac)
+        self.Iref2fac = float(Iref2fac)
+        self.eta1_offset = float(eta1_offset)
+        self.eta2_offset = float(eta2_offset)
+        self.ref1_offset = float(ref1_offset)
+        self.ref2_offset = float(ref2_offset)
+        self.epsilon = float(epsilon)
+        self.fsr = float(fsr)
+        self.cal_temp = float(cal_temp)
+        self.temp_sensitivity = float(temp_sensitivity)
+        self.cal_pressure = float(cal_pressure)
+        self.pressureC0 = float(pressureC0)
+        self.pressureC1 = float(pressureC1)
+        self.pressureC2 = float(pressureC2)
+        self.pressureC3 = float(pressureC3)
 
     def getWlmAngle(self, wavenumber, etalonTemp, ambientPressure):
         dP = ambientPressure - self.cal_pressure
@@ -370,19 +371,20 @@ class PressureSimulator(Simulator):
     inlet = prop_das(interface.VALVE_CNTRL_INLET_VALVE_REGISTER)
     outlet = prop_das(interface.VALVE_CNTRL_OUTLET_VALVE_REGISTER)
 
-    def __init__(self, sim):
+    def __init__(self, sim, inletMaxConductance=0.3, outletMaxConductance=2.0,
+                 adcScale=6.92300018272e-05, adcOffset=0.0):
         self.sim = sim
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
         self.inletPressure = 760
         self.outletPressure = 5  # Pump base pressure
-        self.inletMaxConductance = 0.3
-        self.outletMaxConductance = 2.0
+        self.inletMaxConductance = float(inletMaxConductance)
+        self.outletMaxConductance = float(outletMaxConductance)
         self.nextFlow = 0.0
         self.nextPressure = 760
         self.dt = 0.2
-        self.adcScale = 6.92300018272e-05
-        self.adcOffset = 0.0
+        self.adcScale = float(adcScale)
+        self.adcOffset = float(adcOffset)
 
     def valveModel(self, value, maxConductance, center=32768, range=4096):
         return 0.5*maxConductance*(1.0 + math.tanh(float((value - center) / range)))
@@ -597,3 +599,32 @@ class TunerSimulator(Simulator):
                     sweepUpMs = self.timeRequired(sweep, self.slopeUp)
                     return allowedValues[-1], "down", ts + hitLowMs + sweepUpMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
         return None
+
+
+class WarmBoxThermalSimulator(Simulator):
+    etalonResistance = prop_das(interface.ETALON_RESISTANCE_REGISTER)
+    warmBoxTemperature = prop_das(interface.WARM_BOX_TEMPERATURE_REGISTER)
+
+    def __init__(self, sim, thermA=0.00112789997365, thermB=0.000234289997024, thermC=8.72979981636e-08):
+        # thermistor coefficients for etalon thermistor
+        self.sim = sim
+        self.das_registers = sim.das_registers
+        """Represent the thermistor by its Steinhart Hart coefficients"""
+        self.thermA = float(thermA)
+        self.thermB = float(thermB)
+        self.thermC = float(thermC)
+        self.nextEtalonResistance = 5800.0
+
+    def tempToResistance(self, temp):
+        def cubeRoot(x):
+            return x ** (1.0/3.0)
+        y = (self.thermA-1.0/(temp + 273.15))/self.thermC
+        x = math.sqrt((self.thermB/(3.0*self.thermC))**3 + (y/2.0)**2)
+        return math.exp(cubeRoot(x - 0.5*y) - cubeRoot(x + 0.5*y))
+
+    def step(self):
+        self.nextEtalonResistance = self.tempToResistance(self.warmBoxTemperature)
+
+    def update(self):
+        self.etalonResistance = self.nextEtalonResistance
+

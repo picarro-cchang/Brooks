@@ -538,8 +538,12 @@ class DriverSimulator(SharedTypes.Singleton):
     def __init__(self, configFile):
         self.looping = True
         self.config = ConfigObj(configFile)
-        self.dasSimulator = DasSimulator(self)
         basePath = os.path.split(os.path.normpath(os.path.abspath(configFile)))[0]
+        analyzerSetupFile = os.path.join(basePath, self.config["Files"]["analyzerSetupFileName"])
+        if not os.path.exists(analyzerSetupFile):
+            print "Analyzer setup file not found: %s" % analyzerSetupFile
+            sys.exit(0)
+        self.dasSimulator = DasSimulator(self, ConfigObj(analyzerSetupFile))
         # Set up automatic streaming file for sensors, if startStreamFile
         # option in the [Config] section is present. Also allow the maximum
         # number of lines in the stream file to be set
