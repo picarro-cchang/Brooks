@@ -38,8 +38,6 @@ class BuildHelper(HasTraits):
     incr_version_e = Property(depends_on = ['version'])
     official = Bool(False, label="Official", desc="Produce an official release")
     push = Bool(False, desc="Push repository back to GitHub", label="Push repository")
-    copy = Bool(False, desc="Copy installers to folders", label="Copy installers")
-    changeDir = Button
     product = Enum("si2000",
                    "mobile",
                    "ai_autosampler",
@@ -54,6 +52,8 @@ class BuildHelper(HasTraits):
     set_version_e = Property(depends_on = ['version'])
     version = Enum("Do not change", "Increment", "Set", desc="Version of installer", label="Version")
     tag = Bool(False, desc="Tag local repository", label="Tag repository")
+    run_unit_tests = Bool(False, desc="Run unit tests", label="Run unit tests")
+    run_integration_tests = Bool(False, desc="Run integration tests", label="Run integration tests")
     task = Enum("make_installers", "run_unit_tests", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
 
     text_display = Instance(TextDisplay)
@@ -85,12 +85,10 @@ class BuildHelper(HasTraits):
                 Item(name="version"),
                 Item(name="incr_version", enabled_when="incr_version_e"),
                 Item(name="set_version", enabled_when="set_version_e"),
+                Item(name="run_unit_tests"),
+                Item(name="run_integration_tests"),
                 Item(name="tag"),
                 Item(name="push"),
-                HGroup(
-                    Item(name="copy"),
-                    Item(name="changeDir", enabled_when="copy")
-                ),
                 Group(
                     Item(name="build", show_label=False, enabled_when="build_e")
                 )
@@ -105,7 +103,6 @@ class BuildHelper(HasTraits):
         self.si2000_types_available = self.load_types_from_file("si2000")
         self.mobile_types_available = self.load_types_from_file("mobile")
         self.text_display = TextDisplay()
-        self.copyDir = ""
         
     def load_types_from_file(self, product):
         with open("versions/%s_types.json" % product, "r") as inp:
@@ -138,19 +135,12 @@ class BuildHelper(HasTraits):
     def _official_changed(self):
         self.push = self.official
         self.tag = self.official
-        
-    def _copy_changed(self):
-        if self.copy:
-            if self.copyDir == "":
-                defaultPath = r'S:\CRDS\CRD Engineering\Software\SI2000'
-            else:
-                defaultPath = self.copyDir
-            d = wx.DirDialog(None, r"Select root directory and installers will be copied into subfolders named with analyzer species",
-                             defaultPath=defaultPath,
-                             style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
-            if d.ShowModal() == wx.ID_OK:
-                self.copyDir = d.GetPath()
-            d.Destroy()
+    
+    def add_exclusion(self, attr):
+        if hasattr(self, attr) and not getattr(self, attr):
+            return ["-x%s" % attr]
+        else:
+            return []
 
     def make_option(self, attr, formatter=None):
         if formatter is None:
@@ -182,14 +172,6 @@ class BuildHelper(HasTraits):
     def restore_build_button(self):
         self.build_e = True
     
-    def _changeDir_fired(self):
-        d = wx.DirDialog(None, r"Select root directory and installers will be copied into subfolders named with analyzer species",
-                         defaultPath=self.copyDir,
-                         style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
-        if d.ShowModal() == wx.ID_OK:
-            self.copyDir = d.GetPath()
-        d.Destroy()
-    
     def _build_fired(self):
         command = ["python -u build.py"]
         command.extend(self.make_option("product"))
@@ -203,8 +185,8 @@ class BuildHelper(HasTraits):
             command.extend(self.make_option("set_version"))
             command.extend(self.make_option("push"))
             command.extend(self.make_option("tag"))
-            if self.copy:
-                command.extend(self.make_option("copyDir"))
+            command.extend(self.add_exclusion("run_unit_tests"))
+            command.extend(self.add_exclusion("run_integration_tests"))
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)

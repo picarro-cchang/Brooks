@@ -325,30 +325,7 @@ class Builder(object):
                     dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/hostexe/" + installer_version + "/"
                     cmd = "curl -u %s:%s -T %s %s" % ("ci-server", "ALGP@&gNR%h", src_path, dest_path)
                     self.run_command(cmd)
-                    logger.info('Upload %s installer to Artifactory' % file)
-    
-    def copy_installer(self):
-        """Copy installers to remote directory (e.g., S drive) if this has been requested
-        """
-        project = self.project
-        logger = self.logger
-        dest_path = project.get_property('copyDir')
-        if len(dest_path) > 0:
-            installer_version = project.get_property('installer_version')
-            product = project.get_property('product')
-            installer_folder = os.path.join('target', 'Installers', '%s-%s' % (product, installer_version))
-            for file in os.listdir(installer_folder):
-                if file.endswith('.exe'):
-                    src_path = os.path.join(installer_folder, file)
-                    species = file.split('_')[1]
-                    if species == os.path.split(dest_path)[1]:  # already points to the species folder
-                        dst = dest_path
-                    else:
-                        dst = os.path.join(dest_path, species)
-                        if not os.path.isdir(dst):
-                            os.makedirs(dst)
-                    shutil.copy(src_path, dst)
-                    logger.info('Copy %s-%s installer to %s' % (species, installer_version, dst))
+                    logger.info('Upload %s installer to Artifactory' % file)    
             
 def get_dir_hash(root):
     s = sha1()

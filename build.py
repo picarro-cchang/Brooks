@@ -3,12 +3,9 @@ from pybuilder import bootstrap
 bootstrap()
 
 import os
-from pybuilder.core import after, before, depends, use_plugin, init, task
+from pybuilder.core import after, before, depends, use_plugin, init, task, optional
 from pybuilder.errors import BuildFailedException
 from pybuilder.core import use_bldsup
-import shlex
-import subprocess
-import sys
 
 use_bldsup(build_support_dir="bldsup")
 import Builder
@@ -23,6 +20,7 @@ from BuildDatViewer import BuildDatViewer
 
 use_plugin("python.core")
 use_plugin("python.unittest")
+use_plugin("python.integrationtest")
 use_plugin("python.install_dependencies")
 # use_plugin("python.flake8")
 # use_plugin("python.coverage")
@@ -39,6 +37,8 @@ def initialize(project, logger):
                         ssim = BuildSSIM,
                         vaporizer_cleaner=BuildVaporizerCleaner,
                         datviewer=BuildDatViewer)
+    ### Normalize input ###
+
     # official removes "INTERNAL" from version number
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "y", "true", "t", "1")
@@ -62,9 +62,6 @@ def initialize(project, logger):
     push = project.get_property("push", "True" if official else "False")
     push = push.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("push", push)
-    # copy determines if installer is to be copied to another folder after the build
-    copy = project.get_property("copyDir", "")
-    project.set_property("copyDir", copy)
     # force determines if we are to ignore version number ordering
     force = project.get_property("force", "False")
     force = force.lower() in ("yes", "y", "y", "true", "t", "1")
@@ -73,6 +70,7 @@ def initialize(project, logger):
     upload = project.get_property("upload_artifactory", "False")
     upload = upload.lower() in ("yes", "y", "y", "true", "t", "1")
     project.set_property("upload_artifactory", upload)
+    
     # branch, if specified, checks that the correct branch has been checked out
     if project.has_property("branch"):
         branch = project.get_property("branch").strip()
@@ -94,8 +92,7 @@ def compile_sources(project, logger):
     builder.compile_sources()
     
 @task
-@depends('compile_sources')
-#@depends('run_unit_tests')
+@depends('compile_sources', optional('run_unit_tests'))
 def copy_sources(project, logger):
     builder = project.get_property("builder")
     builder.copy_sources()
@@ -113,7 +110,7 @@ def make_executables(project, logger):
     builder.publish()
    
 @task
-@depends('cythonize_sources')
+@depends('cythonize_sources', optional('run_integration_tests'))
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()
@@ -122,19 +119,13 @@ def make_installers(project, logger):
 def tidy_repo(project, logger):
     builder = project.get_property("builder")
     builder.upload_to_artifactory()
-    builder.copy_installer()
     builder.tidy_repo()
 
 @after('clean')
 def after_clean(project, logger):
     builder = project.get_property("builder")
     builder.after_clean()
-
-@task
-def copy_installer(project, logger):
-    builder = project.get_property("builder")
-    builder.copy_installer()
-    
+   
 @task
 def check_config_hashes(project, logger):
     return Builder.check_config_hashes(project, logger)

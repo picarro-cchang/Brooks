@@ -14,11 +14,15 @@
             "species": "HF",
             "installerSignature": "MADS"
         },
+
+        "NCDS": {
+            "species": "H2O2",
+            "installerSignature": "NCDS"
+        },
         
         "SADS": {
             "species": "HCl",
             "installerSignature": "SADS"
         }
-
     }
 }
