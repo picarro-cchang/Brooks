@@ -2171,10 +2171,19 @@ class QuickGui(wx.Frame):
                     selection = None
             else:
                 selection = None
-        self.graphPanel[idx].AddSeriesAsLine(series,selection,statsFlag=True,width=self.defaultLineWidth)
-        self.graphPanel[idx].AddSeriesAsPoints(series,selection,marker=getInnerStr(self.config.get("Graph","Marker")),size=self.defaultMarkerSize)
-        if self.graphPanel[idx].getNumColors() == 0:
-            self.graphPanel[idx].AddColor(self.lineMarkerColor)
+
+        #self.graphPanel[idx].AddSeriesAsLine(series,selection,statsFlag=True,width=self.defaultLineWidth)
+        #self.graphPanel[idx].AddSeriesAsPoints(series,selection,marker=getInnerStr(self.config.get("Graph","Marker")),size=self.defaultMarkerSize)
+        #if self.graphPanel[idx].getNumColors() == 0:
+        #    self.graphPanel[idx].AddColor(self.lineMarkerColor)
+        #
+        # The above code block forces the line and points to be the same color.
+        # Below we set line and marker color based upon the QuickGui ini file.
+        # RSF
+        #
+        self.graphPanel[idx].AddSeriesAsLine(series,selection,statsFlag=True,width=self.defaultLineWidth, colour=getInnerStr(self.config.get("Graph","LineColor")))
+        self.graphPanel[idx].AddSeriesAsPoints(series,selection,marker=getInnerStr(self.config.get("Graph","Marker")),size=self.defaultMarkerSize,colour=getInnerStr(self.config.get("Graph","MarkerColor")))
+
         # When changing data keys, if the panel is currently zoomed, we want to keep the x-axis locked but
         # unlock the y-axis in order to show the data of the new key. To do so, we first un-zoom the panel,
         # update it to auto-scale in y-axis only, and then we remove the x-axis enforcement and set it in zoomed mode.
