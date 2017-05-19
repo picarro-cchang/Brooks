@@ -1499,7 +1499,7 @@ class QuickGui(wx.Frame):
         self.OneShotTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.OneShotTimer)
         self.OneShotTimer.Start(100, True)
-
+        self.iUserCal.Enable(False)
         # Full screen for the Linux industrial platform.
         if(fullScreen):
             self.Maximize(True)
