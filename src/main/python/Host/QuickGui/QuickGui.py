@@ -2728,6 +2728,7 @@ class QuickGui(wx.Frame):
     def SessionRefresher(self, e):
         if self.sessionTimer.IsRunning():
             self.session_time = 0
+        e.Skip()
 
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
