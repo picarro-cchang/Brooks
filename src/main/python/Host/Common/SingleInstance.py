@@ -33,11 +33,22 @@ elif sys.platform == "linux2":
     import os
     class SingleInstance:
         """ Limits application to single instance """
-
+        # The recommended place to put pid files is /run.  This location is
+        # preferred because early in the boot process this directory is cleared
+        # out so we don't have stale pid files hanging about after a power
+        # failure.
+        #
+        # /run is owned by root. User level pid files go into /run/user/<uid>.
+        # pid files should have the .pid extension.  Add it if it's not in the
+        # name.
+        #
         def __init__(self,name):
-            self.name = name
-            if os.path.exists(name):
-                pid = open(name,"r").read().strip()
+            if "pid" not in name:
+                name = name + ".pid"
+            pidFilePath = "/run/user/" + str(os.getuid()) + "/"
+            self.name = pidFilePath + name
+            if os.path.exists(self.name):
+                pid = open(self.name,"r").read().strip()
                 pidRunning = commands.getoutput('ls /proc | grep %s' % pid)
                 if pidRunning:
                     self.lasterror = True
@@ -46,7 +57,7 @@ elif sys.platform == "linux2":
             else:
                 self.lasterror = False
             if not self.lasterror:
-                fp = open(name,'w')
+                fp = open(self.name,'w')
                 fp.write(str(os.getpid()))
                 fp.close()
 
