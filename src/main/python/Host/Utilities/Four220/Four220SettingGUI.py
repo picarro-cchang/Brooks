@@ -2,7 +2,6 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from functools import partial
-import SerialSettingsIniInterface
 import getopt, os, re, copy
 from configobj import ConfigObj
 
@@ -52,11 +51,12 @@ class ChannelSettingWidget(QWidget):
 
         
         self._airType = QComboBox()
-        self._airType.addItems(['NH3','H2O','HF','CavityPressure', 'None'])
+        self.output_list = CONFIG['OUTPUT_LIST'].get('AIR_TYPE').strip().split()
+        self.max_index = len(self.output_list)
+        self._airType.addItems(self.output_list+ ['None'])
         
         self._rangeMin = QLineEdit()
         self._rangeMax = QLineEdit()
-        
         
         qfl.addRow(QLabel("Output Type"), self._airType)
         qfl.addRow(QLabel("Range Min"), self._rangeMin)
@@ -110,7 +110,7 @@ class ChannelSettingWidget(QWidget):
         if idx >= 0:
             self._airType.setCurrentIndex(idx)
         else:
-            self._airType.setCurrentIndex(4)
+            self._airType.setCurrentIndex(self.max_index)
             
         range_min = CONFIG[self.section_name].get('SOURCE_MIN')
         self._rangeMin.setText(range_min)
@@ -121,9 +121,11 @@ class ChannelSettingWidget(QWidget):
      
     def _saveSettings(self):
         # convert wiget settings to CONFIG
-        if self._airType.currentIndex() == 4:
+        if self._airType.currentIndex() == self.max_index:
             for key in CONFIG[self.section_name]:
                 CONFIG[self.section_name].update({key : '' })
+                self._saveBTN.setDisabled(True)
+                self._undoBTN.setDisabled(True)
         else:
             try:
                 if float(self._rangeMin.text()) < float(self._rangeMax.text()) and float(self._rangeMin.text()) >= 0 and float(self._rangeMax.text()) <=2000:
@@ -179,7 +181,7 @@ class ChannelSettingsDialog(QDialog):
         self.setLayout(self._initGui())
         self.setConnections()
         self.setModal(True)
-        #self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
         
         return        
         
