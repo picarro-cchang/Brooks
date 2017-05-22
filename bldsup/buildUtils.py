@@ -12,6 +12,7 @@ def get_package_resource(base_path):
     includeFolderList = [
         "Assets/icons/*.ico",
         "Host/__init__.py",
+        "Host/DriverSimulator/*.py",
         "Host/Controller/*.py",
         "Host/Coordinator/*.py",
         "Host/MfgUtilities/*.py",

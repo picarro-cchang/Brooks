@@ -20,7 +20,7 @@ from BuildDatViewer import BuildDatViewer
 
 use_plugin("python.core")
 use_plugin("python.unittest")
-use_plugin("python.integrationtest")
+use_plugin("picarro", plugin_module_name="Host.Utilities.BuildHelper.integration_test_plugin")
 use_plugin("python.install_dependencies")
 # use_plugin("python.flake8")
 # use_plugin("python.coverage")
@@ -108,9 +108,9 @@ def cythonize_sources(project, logger):
 def make_executables(project, logger):
     builder = project.get_property("builder")
     builder.publish()
-   
+  
 @task
-@depends('cythonize_sources', optional('run_integration_tests'))
+@depends('cythonize_sources', optional('run_integration_testing'))
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()

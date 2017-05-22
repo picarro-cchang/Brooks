@@ -53,7 +53,7 @@ class BuildHelper(HasTraits):
     version = Enum("Do not change", "Increment", "Set", desc="Version of installer", label="Version")
     tag = Bool(False, desc="Tag local repository", label="Tag repository")
     run_unit_tests = Bool(False, desc="Run unit tests", label="Run unit tests")
-    run_integration_tests = Bool(False, desc="Run integration tests", label="Run integration tests")
+    run_integration_testing = Bool(False, desc="Run integration tests", label="Run integration tests")
     task = Enum("make_installers", "run_unit_tests", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
 
     text_display = Instance(TextDisplay)
@@ -86,7 +86,7 @@ class BuildHelper(HasTraits):
                 Item(name="incr_version", enabled_when="incr_version_e"),
                 Item(name="set_version", enabled_when="set_version_e"),
                 Item(name="run_unit_tests"),
-                Item(name="run_integration_tests"),
+                Item(name="run_integration_testing"),
                 Item(name="tag"),
                 Item(name="push"),
                 Group(
@@ -186,7 +186,7 @@ class BuildHelper(HasTraits):
             command.extend(self.make_option("push"))
             command.extend(self.make_option("tag"))
             command.extend(self.add_exclusion("run_unit_tests"))
-            command.extend(self.add_exclusion("run_integration_tests"))
+            command.extend(self.add_exclusion("run_integration_testing"))
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)
