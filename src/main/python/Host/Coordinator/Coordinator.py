@@ -355,9 +355,9 @@ class CoordinatorFrame(CoordinatorFrameGui):
 
     def makeFilename(self, fileType = "save"):
         if fileType == "log":
-            (dirName, baseName) = os.path.split(self.config.get("Files", "log", "/CoordinatorData/Log/"))
+            (dirName, baseName) = os.path.split(self.config.get("Files", "log", "/home/picarro/SI2000/Log/CoordinatorData/Log/"))
         else:
-            (dirName, baseName) = os.path.split(self.config.get("Files", "output", "/CoordinatorData/"))
+            (dirName, baseName) = os.path.split(self.config.get("Files", "output", "/home/picarro/SI2000/Log/CoordinatorData/"))
         if not os.path.isdir(dirName):
             os.makedirs(dirName)
         if self.fileTime == "local":
