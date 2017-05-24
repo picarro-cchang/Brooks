@@ -390,6 +390,10 @@ elif sys.platform == "linux2":
         except ValueError:
             Log("Parameter error while launching application", dict(appName=appName), 2)
             raise
+        except Exception as e:
+            Log("Caught exception in launchProcess:",e)
+            raise e
+
         # Set the affinity
         if sys.platform == 'win32':
             pAffinity = ctypes.c_int32()
@@ -534,6 +538,11 @@ class App(object):
         self.NotifyOnRestart = False
         self.KillByName = True
         self.ShowDispatcherWarning = 1
+
+        # If an app fails to launch, set this variable to point to a script to run.
+        # This was created to handle the unusual case where the Drive won't load
+        # due to a USB communication error and the only recourse is to do a hard reset.
+        self.ResetScript = ""
 
         # DebugMode == False runs interpreted python code with the -OO option.
         # DebugMode == True runs without -OO and sets __debug__.  In some codes
@@ -746,12 +755,32 @@ class App(object):
         else:
             self._LaunchFailureCount += 1
             #Make sure that the application is completely gone...
+            self.LaunchFailureHandler()
             self.ShutDown(_METHOD_DESTROYFIRST)
             raise AppLaunchFailure("Application '%s' did not start within specified timeframe of %s ms." % (self._AppName, self.VerifyTimeout_ms))
-
         self._LaunchTime = TimeStamp()
+
     def IsProcessActive(self):
         return isProcessActive(self._ProcessHandle)
+
+    def LaunchFailureHandler(self):
+        """
+        If an app fails to start, run some external program before attempting to start the app again.
+        """
+        # The original intent here is to call a script that will power cycle the analyzer and start over
+        # instead trying to restart a single app.  We did this because we are getting USB errors and
+        # can't load the Driver.  The only solution that works is to reboot.
+        # The script to run is set with the 'ResetScript' option in the supervisor ini file.  The
+        # script can be set globally so that any app failure will trigger running the script, or 
+        # 'ResetScript' can be defined for individual processes so that the event is triggered only
+        # for critical subsystems, like the Driver.  If you set it for individual processes you can
+        # create different handlers.
+        #
+        if len(self.ResetScript):
+            Log("Application won't start... rebooting NOW", self._AppName, Level = 3)
+            subprocess.Popen([self.ResetScript])
+        return
+
     def ShutDown(self, StopMethod = _METHOD_STOPFIRST, StopWaitTime_s = -1, KillWaitTime_s = -1, NoKillByName = False,
                        NoWait = False):
         """Shuts down the application.  If NoWait is True, return immediately after performing StopMethod.
