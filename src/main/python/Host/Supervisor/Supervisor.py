@@ -778,7 +778,8 @@ class App(object):
         #
         if len(self.ResetScript):
             Log("Application won't start... rebooting NOW", self._AppName, Level = 3)
-            subprocess.Popen([self.ResetScript])
+            print("running:", self.ResetScript.split())
+            subprocess.Popen(self.ResetScript.split())
         return
 
     def ShutDown(self, StopMethod = _METHOD_STOPFIRST, StopWaitTime_s = -1, KillWaitTime_s = -1, NoKillByName = False,
