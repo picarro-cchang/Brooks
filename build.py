@@ -93,24 +93,24 @@ def compile_sources(project, logger):
     
 @task
 @depends('compile_sources', optional('run_unit_tests'))
+def cythonize_sources(project, logger):
+    builder = project.get_property("builder")
+    builder.cythonize_sources()
+
+@task
+@depends('cythonize_sources')
 def copy_sources(project, logger):
     builder = project.get_property("builder")
     builder.copy_sources()
 
 @task
 @depends('copy_sources')
-def cythonize_sources(project, logger):
+def compile_sources_to_pyo(project, logger):
     builder = project.get_property("builder")
-    builder.cythonize_sources()
-    
+    builder.compile_sources_to_pyo()
+
 @task
-#@depends('cythonize_sources')
-def make_executables(project, logger):
-    builder = project.get_property("builder")
-    builder.publish()
-  
-@task
-@depends('cythonize_sources', optional('run_integration_testing'))
+@depends('compile_sources_to_pyo', optional('run_integration_testing'))
 def make_installers(project, logger):
     builder = project.get_property("builder")
     builder.make_installers()

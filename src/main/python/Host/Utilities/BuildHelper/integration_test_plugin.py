@@ -1,8 +1,10 @@
 #   -*- coding: utf-8 -*-
 """
 This file is based on the integration test plugin shipped with PyBuilder
-Only the task name "run_integration_tests" is changed to "run_integration_testing",
-so this task doesn't depend on task package defined in python.core plugin
+1. New task "run_integration_testing" is defined, and this task doesn't depend on task package 
+    defined in python.core plugin.
+2. Use "-O" switch when running python files.
+3. Test environment needs to inherit from process environment.
 """
 
 import multiprocessing
@@ -30,7 +32,8 @@ def initialize_integrationtest_plugin(project):
     project.set_property_if_unset("integrationtest_file_glob", "*_tests.py")
     project.set_property_if_unset("integrationtest_file_suffix", None)  # deprecated, use integrationtest_file_glob.
     project.set_property_if_unset("integrationtest_additional_environment", {})
-    project.set_property_if_unset("integrationtest_inherit_environment", False)
+    # Need "DISPLAY" and other properties from process environment
+    project.set_property_if_unset("integrationtest_inherit_environment", True)
     project.set_property_if_unset("integrationtest_always_verbose", False)
 
 
@@ -173,8 +176,11 @@ def inherit_environment(env, project):
 
 def prepare_environment(project):
     env = {
-        "PYTHONPATH": os.pathsep.join((project.expand_path("$dir_dist"),
-                                       project.expand_path("$dir_source_integrationtest_python")))
+        "PYTHONPATH": os.pathsep.join((
+            # Add sandbox into python searching path
+            # Note that src/main/python is NOT in the environment of this process
+            project.expand_path("$dir_dist"),
+            project.expand_path("$dir_source_integrationtest_python")))
     }
 
     inherit_environment(env, project)
@@ -206,7 +212,8 @@ def run_single_test(logger, project, reports_dir, test, output_test_names=True):
 
     env = prepare_environment(project)
     test_time = Timer.start()
-    command_and_arguments = (sys.executable, test)
+    # use -O switch below since only pyo files are in sandbox
+    command_and_arguments = (sys.executable, "-O", test)
     command_and_arguments += additional_integrationtest_commandline
 
     report_file_name = os.path.join(reports_dir, name)

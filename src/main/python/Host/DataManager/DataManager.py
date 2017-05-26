@@ -341,11 +341,11 @@ class DataManager(object):
             try:
                 self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
             except:
-                LogExc('Looking for Peripheral Interface config')
+                Log('Looking for Peripheral Interface config', Level = 1)
                 try:
                     self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
                 except:
-                    LogExc('Unable to find Peripheral Interface')
+                    Log('Unable to find Peripheral Interface', Level = 1)
                     self.periphIntrfConfig = None
 
             self.enablePulseAnalyzer = False

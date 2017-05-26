@@ -86,6 +86,25 @@ class BuildSI2000(Builder):
         if return_code != 0:
             raise BuildFailedException("Error while executing compile_sources")
 
+    def cythonize_sources(self):
+        project = self.project
+        logger = self.logger
+        output_file_path = self.get_report_file_path("cythonize_sources")
+        # Copy cythonized files from reservoir
+        logger.info("Copy cythonized files from reservoir")
+        python_source =  project.expand_path("$dir_source_main_python")
+        for filename in buildUtils.get_cython_source(python_source):
+            buildUtils.get_cython_file(filename, python_source)
+        # Cythonization
+        logger.info("Cythonizing modules")
+        with open(output_file_path, "a") as output_file:
+            output_file.write("=== %s ===\n" % time.asctime())
+            stdout, retcode = self.run_command("doit dir_source=%s cythonization" % 
+                (project.expand_path("$dir_source_main_python")))
+            output_file.write(stdout)
+            if retcode != 0:
+                raise BuildFailedException("Error while cythonizing sources")                
+
     def copy_sources(self):
         """
         Copy selected files to sandbox. Existing files will be overwritten.
@@ -94,10 +113,9 @@ class BuildSI2000(Builder):
         logger = self.logger
         python_source =  project.expand_path("$dir_source_main_python")
         python_target = project.expand_path("$dir_dist")
-        source_list = setup.get_raw_source_list(python_source)
-        source_list.extend(buildUtils.get_package_resource(python_source))
+        source_list = buildUtils.get_cython_source(python_source, after_cython=True)
+        source_list.extend(buildUtils.get_noncython_resource(python_source))
         # if there is a Host folder from last build, move it to target/dist/
-        #old_host = os.path.join(python_target, "home", "picarro", "PI2000", "Host")
         old_host = os.path.join(python_target, "home", "picarro", "SI2000", "Host")
         if os.path.exists(old_host):
             logger.info("Found Host folder in sandbox.")
@@ -113,6 +131,17 @@ class BuildSI2000(Builder):
                 if not os.path.exists(dist_folder):
                     os.makedirs(dist_folder)
                 shutil.copyfile(f, dist_file)
+
+    def compile_sources_to_pyo(self):
+        self.logger.info("Compiling python sources to pyo files")
+        path = os.path.join(self.project.expand_path("$dir_dist"), "Host")
+        self.run_command("python -O -m compileall -x '__init__.py' %s" % path)
+        # delete python source files
+        for root, dirs, files in os.walk(path, topdown=False):
+            for fname in files:
+                if fname.endswith(".py") and fname != "__init__.py":
+                    fp = os.path.join(root, fname)
+                    os.remove(fp)
 
     def _make_python_version_files(self):
         project = self.project

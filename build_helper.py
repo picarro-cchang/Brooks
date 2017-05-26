@@ -54,6 +54,7 @@ class BuildHelper(HasTraits):
     tag = Bool(False, desc="Tag local repository", label="Tag repository")
     run_unit_tests = Bool(False, desc="Run unit tests", label="Run unit tests")
     run_integration_testing = Bool(False, desc="Run integration tests", label="Run integration tests")
+    verbose = Bool(False, desc="Verbose output of build process", label="Verbose output")
     task = Enum("make_installers", "run_unit_tests", "clean", "check_config_hashes", "update_config_hashes", desc="Task to perform", label="Task")
 
     text_display = Instance(TextDisplay)
@@ -89,6 +90,7 @@ class BuildHelper(HasTraits):
                 Item(name="run_integration_testing"),
                 Item(name="tag"),
                 Item(name="push"),
+                Item(name="verbose"),
                 Group(
                     Item(name="build", show_label=False, enabled_when="build_e")
                 )
@@ -187,6 +189,8 @@ class BuildHelper(HasTraits):
             command.extend(self.make_option("tag"))
             command.extend(self.add_exclusion("run_unit_tests"))
             command.extend(self.add_exclusion("run_integration_testing"))
+        if self.verbose:
+            command.append("--debug")
         command.append(self.task)
         self.text_display.string += " ".join(command) + "\n"
         args = shlex.split(" ".join(command), posix=False)

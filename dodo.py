@@ -1,15 +1,15 @@
 import jinja2
 import json
 import os
-# import pprint
 import shutil
-import subprocess
+import subprocess32 as subprocess
 import sys
-# import textwrap
-
-# import time
-# from doit.tools import check_timestamp_unchanged
 from doit import get_var
+
+bldsup_path = os.path.join(os.getcwd(), "bldsup")
+if bldsup_path not in sys.path:
+    sys.path.append(bldsup_path)
+import buildUtils
 
 def run_command(command):
     """
@@ -19,7 +19,10 @@ def run_command(command):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
-    return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
+    if stdout_value and stderr_value:
+        return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
+    else:
+        return '', ''
 
 def task_make_sources_from_xml():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
@@ -223,25 +226,55 @@ def task_build_ai_autosampler_exe():
             'verbosity': 2
     }
 
-def task_cythonization():
-    targets = []
-    file_deps = []
-    dist_dir = get_var('dist_dir', '')
-    if len(dist_dir) > 0:
-        bldsup_path = os.path.join(os.getcwd(), "bldsup")
-        if bldsup_path not in sys.path:
-            sys.path.append(bldsup_path)
-        from setupforPyd import get_source_list
-        file_deps = get_source_list(dist_dir)
-        targets = [f[:-2] + "so" for f in file_deps]
+def task_before_cythonization():
+    """
+    This task just creates an empty so file if it doesn't exist
+    This is to meet the file_dep requirement in task_cythonization
+    """
+    def check_file(cython_file):
+        if not os.path.exists(cython_file):
+            with open(cython_file, "w") as f:
+                pass
 
-    return {'actions': [
-                'python %s build_ext --inplace --basepath=%s' % (r"./bldsup/setupforPyd.py", dist_dir)
-            ],
-           'file_dep': file_deps,
-           'targets' : targets,
-           'verbosity': 2
-    }
+    dir_source = get_var('dir_source', '')
+    if len(dir_source) > 0:
+        for filename in buildUtils.get_cython_source(dir_source):
+            cython_file = filename[:-2] + "so"
+            yield {
+                'name': cython_file,
+                'actions': [(check_file, (cython_file,))],
+                'targets': [cython_file],
+                'verbosity': 2
+            }
+
+def task_cythonization():
+    """
+    This task depends on both python source file and cythonized file
+    If one of them is changed, cythonization will be run.
+    Otherwise cythonization will be skipped.
+    """
+    def cythonize_file(filename):
+        cython_file = filename[:-2] + "so"
+        if os.path.exists(cython_file):
+            os.remove(cython_file)
+        run_command(['python', r"./bldsup/setupForCython.py", 'build_ext',
+                        '--inplace', '--filename=%s' % filename])
+        # save cythonized file in reservoir
+        buildUtils.save_cython_file(cython_file, dir_source)
+        # clean up
+        c_file = filename[:-2] + "c"
+        if os.path.exists(c_file):
+            os.remove(c_file)
+
+    dir_source = get_var('dir_source', '')
+    if len(dir_source) > 0:
+        for filename in buildUtils.get_cython_source(dir_source):
+            yield {
+                'name': filename,
+                'actions': [(cythonize_file, (filename,))],
+                'file_dep': [filename, filename[:-2] + "so"],
+                'verbosity': 2
+            }
 
 def task_build_hostexe():
     dist_dir = get_var('dist_dir', '.')
