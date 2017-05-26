@@ -64,11 +64,11 @@ def initialize(project, logger):
     project.set_property("push", push)
     # force determines if we are to ignore version number ordering
     force = project.get_property("force", "False")
-    force = force.lower() in ("yes", "y", "y", "true", "t", "1")
+    force = force.lower() in ("yes", "y", "Y", "true", "t", "1")
     project.set_property("force", force)
     # upload determines if we are to upload installers to artifactory
     upload = project.get_property("upload_artifactory", "False")
-    upload = upload.lower() in ("yes", "y", "y", "true", "t", "1")
+    upload = upload.lower() in ("yes", "y", "Y", "true", "t", "1")
     project.set_property("upload_artifactory", upload)
     
     # branch, if specified, checks that the correct branch has been checked out

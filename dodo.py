@@ -128,55 +128,6 @@ def task_compile_sources():
     return {'actions': None,
             'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb', 'compile_DatViewer']}
 
-def task_build_datviewer_exe():
-    dist_dir = get_var('dist_dir', '.')
-
-    def python_build_datviewer_exe(dist_dir):
-        build_dir = os.path.join(dist_dir, "AddOns", "DatViewer")
-        old_dir = os.getcwd()
-        os.chdir(build_dir)
-        try:
-            # Get the current dir. Expect that we are in the DatViewer folder.
-            cur_dir_path = os.getcwd()
-            cur_dir = os.path.split(cur_dir_path)[1]
-            # Windows dirs are not case-sensitive.
-            # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
-            if cur_dir.lower() != "datviewer":
-                raise ValueError("Not running in expected folder 'DatViewer'.")
-            # Set the PYTHONPATH environment variable so the current folder tree is used to
-            # pull local libraries from.
-            parent_dir = os.path.normpath(os.path.join(cur_dir_path, "..", ".."))
-            firmware_dir = os.path.normpath(os.path.join(cur_dir_path, "..", "..", "Firmware"))
-
-            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
-            common_dir = os.path.join(parent_dir, "Host", "Common")
-
-            # folders must exist
-            folders = [parent_dir, common_dir, firmware_dir]
-            for folder in folders:
-                if not os.path.isdir(folder):
-                    raise ValueError("Expected folder '%s' does not exist." % folder)
-
-            build_env = dict(os.environ)
-            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
-            ret_code = subprocess.call(['python.exe', 'datviewerSetup.py', 'py2exe'], env=build_env)
-            if ret_code != 0:
-                raise ValueError("datviewerSetup.py failed")
-            dist_target = os.path.join(dist_dir, "DatViewerExe")
-            if os.path.exists(dist_target):
-                shutil.rmtree(dist_target)
-            shutil.move(os.path.join(build_dir, "dist"), dist_target)
-
-        finally:
-            os.chdir(old_dir)
-
-    yield {'actions': [(python_build_datviewer_exe,(dist_dir,))],
-           'name':dist_dir,
-           'targets' : [os.path.join(dist_dir, "DatViewerExe")],
-           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
-            'verbosity': 2
-    }            
-            
 def task_build_ai_autosampler_exe():
     dist_dir = get_var('dist_dir', '.')
 

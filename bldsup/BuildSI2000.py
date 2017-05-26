@@ -6,7 +6,6 @@ from pybuilder.errors import BuildFailedException
 import shutil
 import textwrap
 import time
-import setupforPyd as setup
 import buildUtils
 
 INSTALLER_SCRIPTS_DIR = ('src', 'main', 'python', 'Tools', 'Release', 'InstallerScriptsWin7')

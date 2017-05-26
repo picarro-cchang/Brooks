@@ -23,7 +23,6 @@ def get_cython_source(base_path, after_cython=False):
             r"Host/Fitter/*.py",
             r"Host/InstMgr/*.py",
             r"Host/MeasSystem/*.py",
-            r"Host/PortListerner/*.py",
             r"Host/RDFrequencyConverter/*.py",
             r"Host/rdReprocessor/*.py",
             r"Host/PeriphIntrf/*.py",
