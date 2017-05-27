@@ -2566,9 +2566,13 @@ class QuickGui(wx.Frame):
             errMsg = "%s" % err
             if errMsg == "connection failed":
                 errMsg += " (valve sequencer may be terminated already)"
-            d = wx.MessageDialog(self, "Error: %s" % errMsg, "Valve Sequencer Error", wx.OK | wx.ICON_EXCLAMATION)
-            d.ShowModal()
-            d.Destroy()
+            #
+            # Hide the warning from the user. The supervisor should restart the
+            # ValveSequencer automatically.
+            #
+            #d = wx.MessageDialog(self, "Error: %s" % errMsg, "Valve Sequencer Error", wx.OK | wx.ICON_EXCLAMATION)
+            #d.ShowModal()
+            #d.Destroy()
 
     def OnPulseAnalyzerParam(self, evt):
         errorMsg = ""

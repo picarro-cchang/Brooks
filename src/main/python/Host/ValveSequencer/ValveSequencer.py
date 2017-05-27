@@ -199,10 +199,14 @@ class ValveSequencer(ValveSequencerFrame):
         self.onLoadFileMenu(None, filename)
 
     def showGui(self):
-        self.Show(True)
+        # CallAfter enforces thread safety. Without it about
+        # 1 in 10 calls to this method from QuickGui would cause
+        # the ValveSequencer to crash.
+        # See https://wiki.wxpython.org/CallAfter
+        wx.CallAfter(self.Show)
 
     def hideGui(self):
-        self.Show(False)
+        wx.CallAfter(self.Hide)
 
     def isGuiOn(self):
         return self.Shown
