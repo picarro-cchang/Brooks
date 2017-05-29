@@ -37,8 +37,8 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
-INACTIVE_SESSION_TIMEOUT = 300
-
+INACTIVE_SESSION_TIMEOUT = 30
+import pdb
 import sys
 import wx
 from wx.lib import sized_controls
@@ -1336,8 +1336,7 @@ class QuickGui(wx.Frame):
         self.logo = None
         self.fullInterface = False
         self.userLevel = 1
-        self.userLoggedIn = False
-        
+        self.userLoggedIn = False    
         self.showStat = False
         self.showInstStat = True
         self.serviceModeOnlyControls = []
@@ -1357,13 +1356,13 @@ class QuickGui(wx.Frame):
         self.restartUserLog = False
         # Collect instrument status setpoint and tolerance
         try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER")
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
             self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.cavityTempS = 45.0
             self.cavityTempT = 0.2
         try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER")
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
             self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.warmBoxTempS = 45.0
@@ -1500,7 +1499,7 @@ class QuickGui(wx.Frame):
         self.OneShotTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.OneShotTimer)
         self.OneShotTimer.Start(100, True)
-
+        self.iUserCal.Enable(False)
         # Full screen for the Linux industrial platform.
         if(fullScreen):
             self.Maximize(True)
@@ -2031,10 +2030,14 @@ class QuickGui(wx.Frame):
     #user levels setting
     def modifyInterface(self):
         #Operator level
+        
         if self.userLevel == 1:
             self.shutdownButton.Enable(False)
             self.userLogButton.Disable()
-            for sc in self.sourceChoice:
+            #pdb.set_trace()
+            for sc in self.sourceChoice:    
+                sc.SetSelection(0)
+                self.OnSourceChoice(obj=sc)
                 sc.Enable(False)
             for kc in self.keyChoice:
                 kc.Enable(False)
@@ -2141,9 +2144,18 @@ class QuickGui(wx.Frame):
             self.dataStore.getDataSequence(s,'good').Clear()
             for k in self.dataStore.getKeys(s):
                 self.dataStore.getDataSequence(s,k).Clear()
-    def OnSourceChoice(self,evt):
-        idx = self.sourceChoiceIdList.index(evt.GetEventObject().GetId())
-        self.source[idx] = self.sourceChoice[idx].GetClientData(evt.GetSelection())
+    def OnSourceChoice(self, evt=None, obj=None):
+        if evt is not None:
+            idx = self.sourceChoiceIdList.index(evt.GetEventObject().GetId())
+            self.source[idx] = self.sourceChoice[idx].GetClientData(evt.GetSelection())
+        elif obj is not None:
+            idx = self.sourceChoiceIdList.index(obj.GetId())
+            try:
+                self.source[idx] = obj.GetClientData(obj.GetSelection())
+            except:
+                self.source[idx] = None
+        else:
+            raise ValueError("Invalid call of OnSourceChoice")
         self.graphPanel[idx].RemoveAllSeries()
         self.dataKey[idx] = None
         self.keyChoices[idx] = None
@@ -2546,15 +2558,18 @@ class QuickGui(wx.Frame):
             concCal = self.dataManagerRpc.Cal_GetUserCal(conc)
             userCalList.append((conc+"Slope", "%s slope" % conc, str(concCal[0])))
             userCalList.append((conc+"Offset", "%s offset" % conc, str(concCal[1])))
-        dlg = UserCalGui(userCalList, None, -1, "")
-        getUserCals = (dlg.ShowModal() == wx.ID_OK)
+        self.dlg = UserCalGui(userCalList, None, -1, "")
+        self.BindAllWidgetsMotion(self.dlg)
+        getUserCals = (self.dlg.ShowModal() == wx.ID_OK)
         if getUserCals:
+            
             numConcs = len(userCalList)/2
             for idx in range(numConcs):
-                if dlg.textCtrlList[2*idx].GetValue() != userCalList[2*idx][2] or dlg.textCtrlList[2*idx+1].GetValue() != userCalList[2*idx+1][2]:
-                    newCal = (float(dlg.textCtrlList[2*idx].GetValue()), float(dlg.textCtrlList[2*idx+1].GetValue()))
+                if self.dlg.textCtrlList[2*idx].GetValue() != userCalList[2*idx][2] or self.dlg.textCtrlList[2*idx+1].GetValue() != userCalList[2*idx+1][2]:
+                    newCal = (float(self.dlg.textCtrlList[2*idx].GetValue()), float(self.dlg.textCtrlList[2*idx+1].GetValue()))
                     self.dataManagerRpc.Cal_SetSlopeAndOffset(concList[idx], newCal[0], newCal[1])
-        dlg.Destroy()
+            
+        self.dlg.Destroy()
 
     def OnValveSeq(self, evt):
         try:
@@ -2662,11 +2677,15 @@ class QuickGui(wx.Frame):
 
 
     def OnGuiMode(self,e):
-        # change GUI mode to technician (if password matched)
-        #d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        #setItemFont(d,self.getFontFromIni("Dialogs"))
+        # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 
+        # to the flask_security server. If Technician/Expert mode stays inactive for a period of time (default 30 secs), it will automatically log out
+        # and the GUI mode changes to the default.  
+        # d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        
+        # toggle login/logout
         if not self.userLoggedIn:
             d = LoginDialog(self, title = "Authorization required")
+            setItemFont(d,self.getFontFromIni("Dialogs"))
             d.Show()
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
@@ -2707,8 +2726,10 @@ class QuickGui(wx.Frame):
                         self.menuBar.EnableTop(2, True)
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
+                        #Recursively bind all the widgets with mouse motion event 
                         self.BindAllWidgetsMotion(self.mainPanel)
-                        self.sessionTimer.Start(5000) # 5 second interval
+                        #Inactive session timeout timer
+                        self.sessionTimer.Start(5000) # 5 seconds interval
                                     
                 elif connectionErrMsg:
                     d = OKDialog(self,connectionErrMsg,None,-1,"User Authentication Server Connection")
@@ -2726,14 +2747,17 @@ class QuickGui(wx.Frame):
             self.menuBar.EnableTop(2, False)
             self.userLoggedIn = False
             self.iGuiMode.SetItemLabel("User Login")
+            #recursively unbind all the widgets
             self.UnbindAllWidgetsMotion(self.mainPanel)
             self.sessionTimer.Stop()
-            
+
+    # reset the timer everytime a mouse motion is detected        
     def SessionRefresher(self, e):
         if self.sessionTimer.IsRunning():
             self.session_time = 0
         e.Skip()
 
+    #count the session_time, logout and change GUI mode to the default automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
             self.userLevel = 1
@@ -2745,11 +2769,17 @@ class QuickGui(wx.Frame):
             self.userLoggedIn = False
             self.iGuiMode.SetItemLabel("User Login")
             self.UnbindAllWidgetsMotion(self.mainPanel)
+            try:
+                self.dlg.Destroy()
+                self.UnbindAllWidgetsMotion(self.dlg)
+            except:
+                pass
             self.sessionTimer.Stop()
         else:
-            #timer runs every 5 secs
+            #timer runs every 5 secs, count
             self.session_time += 5
-            
+
+    #DFS algorithm to recursively traverse the widgets tree. Bind/Unbind mouse motion             
     def BindAllWidgetsMotion(self, node):
         for child in node.GetChildren():
             self.BindAllWidgetsMotion(child)
