@@ -16,7 +16,10 @@ if sys.platform == 'win32':
     Paras=CustomConfigObj("/home/picarro/SI2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
 else:
     try:
-        Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+        #Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+        # Set path to work on a running analyzer without git.
+        # We'll have to come up with a 'running from source method' later.
+        Paras=CustomConfigObj("/home/picarro/SI2000/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
     except Exception as e:
         print("Exception:",e)
         raise 

@@ -37,7 +37,7 @@ from matplotlib import pyplot, dates
 from matplotlib.ticker import MaxNLocator
 import urllib2
 from xml.dom import minidom
-import pyscreenshot as ImageGrab
+#import pyscreenshot as ImageGrab
 from shutil import move
 from glob import glob
 #import pytz
@@ -252,9 +252,9 @@ def plotWithMatplotTime(plotObj, matplotTimeArray, dataArray, xLabel, yLabel, fo
     plotObj.xaxis.set_major_formatter(formatter)
     plotObj.xaxis.set_major_locator(MaxNLocator(numLocator))
 
-def grabScreenshot(filename):
-    im = ImageGrab.grab()
-    im.save(filename)
+#def grabScreenshot(filename):
+    #im = ImageGrab.grab()
+    #im.save(filename)
 
 ##########################
 # Get barometric pressure with Yahoo weather

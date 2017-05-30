@@ -383,8 +383,12 @@ class ValveSequencerFrame(wx.Frame):
         # I have to set the window larger because on Linux the automatic size 
         # adjustment of the scroll panel is not working and it's pushing
         # the last row of widgets off of the screen.
+        #
+        # This size looks good with stock Xubuntu 16.04
         # self.SetSize((760, 630))
-        self.SetSize((760,700))
+        #
+        # This size looks good with MATE on Xubuntu
+        self.SetSize((870,700))
 
         #self.Layout()
 

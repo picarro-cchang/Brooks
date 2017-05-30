@@ -247,10 +247,12 @@ class ValveSequencer(ValveSequencerFrame):
         print "Set valves with new mask -- sol valve code = %d; rot valve code = %d, mask = %d" % (valCode, rotValCode, mask)
 
     def getValves(self):
-        return CRDS_Driver.getValveMask() & (2**self.numSolValves-1)
+        #return CRDS_Driver.getValveMask() & (2**self.numSolValves-1)
+        return 7 & (2**self.numSolValves-1)
 
     def getMPVPosition(self):
-        return CRDS_Driver.getMPVPosition()
+        #return CRDS_Driver.getMPVPosition()
+        return 1
 
     def _writeFilenameToIni(self, filename):
         if filename != self.co.get("MAIN", "lastSeqFile", ""):

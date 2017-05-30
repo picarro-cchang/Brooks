@@ -437,10 +437,16 @@ def before_first_request():
         user_datastore.create_role(name='Technician')
         user_datastore.create_role(name='Operator')
         # create a default admin account
-        admin = user_datastore.create_user(username='picarro', \
-            password=utils.encrypt_password('picarro'),
+        admin = user_datastore.create_user(username='admin', \
+            password=utils.encrypt_password('admin'),
             phone_number='1-408-962-3900')
         user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
+        technician = user_datastore.create_user(username='tech',\
+            password=utils.encrypt_password('tech'))
+        user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
+        operator = user_datastore.create_user(username='operator', \
+            password=utils.encrypt_password('operator'))
+        user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
         # add default user policies
         default_policies = dict(
             password_length='6',

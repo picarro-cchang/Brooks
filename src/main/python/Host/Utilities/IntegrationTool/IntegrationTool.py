@@ -326,6 +326,7 @@ class IntegrationTool(IntegrationToolFrame):
         self.Destroy()
 
     def onWriteInstrName(self, event):
+        os.chdir(self.INTEGRATION_DIR)
         try:
             info = subprocess.STARTUPINFO()
         except:
