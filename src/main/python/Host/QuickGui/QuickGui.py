@@ -37,7 +37,7 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
-INACTIVE_SESSION_TIMEOUT = 30
+INACTIVE_SESSION_TIMEOUT = 60 # seconds until user logout
 import pdb
 import sys
 import wx
@@ -1316,7 +1316,7 @@ class QuickGui(wx.Frame):
         self.eventStore = EventStore(self.config)
         self.alarmInterface = AlarmInterface(self.config)
         self.alarmInterface.getAlarmData()
-        self.sysAlarmInterface = SysAlarmInterface()
+        self.sysAlarmInterface = SysAlarmInterface(self.config.getint("AlarmBox", "ledBlinkTime", 0) )
         self.dataLoggerInterface = DataLoggerInterface(self.config)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
@@ -1504,7 +1504,6 @@ class QuickGui(wx.Frame):
         if(fullScreen):
             self.Maximize(True)
             self.ShowFullScreen(True, style = wx.FULLSCREEN_NOBORDER)
-
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
@@ -2757,7 +2756,8 @@ class QuickGui(wx.Frame):
             self.session_time = 0
         e.Skip()
 
-    #count the session_time, logout and change GUI mode to the default automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
+    # count the session_time, logout and change GUI mode to the default
+    # automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
             self.userLevel = 1

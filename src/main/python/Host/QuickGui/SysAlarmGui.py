@@ -4,6 +4,7 @@ import os
 import sys
 import wx
 import time
+import threading
 from wx.lib.wordwrap import wordwrap
 from Host.Common.GuiTools import *
 from Host.Common import AppStatus
@@ -215,7 +216,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
 
 class SysAlarmInterface(object):
     """Interface to the alarm system RPC and status ports"""
-    def __init__(self):
+    def __init__(self, ledBlinkTime = 0):
         self.instMgrStatusListener = Listener.Listener(None,
                                                       STATUS_PORT_INST_MANAGER,
                                                       AppStatus.STREAM_Status,
@@ -237,6 +238,31 @@ class SysAlarmInterface(object):
                               100: "IPV Disabled"
                               }
         self.lastIPVStatus = None
+
+        # After the initial warm up the system may be unstable and the warm/hot
+        # box may loose the temperature lock after achieving its initial lock.
+        # We this mostly when the system is already warm and restarted.  In
+        # this case the temperature PID can take awhile to settle about the
+        # set temperature and the system may lock/unlock several times as the
+        # temperature oscillations settle.
+        #
+        # To avoid the status LED from switching repeated from green to red and
+        # back, we can make the LED blink yellow (the warmup indication) for a
+        # set extended period until we are sure to be past any PID caused
+        # oscillations.
+        #
+        # To enable this feature set ledBlinkTime to anything greater than
+        # zero.  The units are seconds.  This value is set in QuickGui.ini
+        # in the section AlarmBox | LedBlinkTime.  This key is optional. If not
+        # found the ledBlinkTime is 0 and the LED will blink yellow until the
+        # first time measurement status is achieved.
+        #
+        self._makeLedBlink = True
+        self.OneShotTimer = threading.Timer(ledBlinkTime, self._ledBlinkTimer)
+        self.OneShotTimer.start()
+
+    def _ledBlinkTimer(self):
+        self._makeLedBlink = False
 
     def _InstMgrStatusFilter(self, obj):
         """Updates the local (latest) copy of the instrument manager status bits."""
@@ -276,11 +302,11 @@ class SysAlarmInterface(object):
             measActive = self.latestInstMgrStatus & INSTMGR_STATUS_MEAS_ACTIVE
             warmingUp = self.latestInstMgrStatus & INSTMGR_STATUS_WARMING_UP
             systemError = self.latestInstMgrStatus & INSTMGR_STATUS_SYSTEM_ERROR
-            if pressureLocked and cavityTempLocked and warmboxTempLocked and measActive and (not warmingUp) and (not systemError):
+            if pressureLocked and cavityTempLocked and warmboxTempLocked and measActive and (not warmingUp) and (not systemError) and (not self._makeLedBlink):
                 good = 3 # green
             if good != 3:
                 descr = "System Status:"
-                if warmingUp:
+                if warmingUp or self._makeLedBlink:
                     descr += "\n* Warming Up"
                     good = 2 # blinking yellow
                 if systemError:
