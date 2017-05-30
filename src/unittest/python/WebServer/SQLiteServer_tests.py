@@ -50,15 +50,15 @@ class TestSQLiteServer(unittest.TestCase):
         except Exception, err:
             return {"error": str(err)}
 
-    def test_admin_func(self):
+    def test_0_admin_func(self):
         """
         This test should be run first as the new user created here will be used later
         """
         # log in
         payload = {'command': "log_in_user",
                    'requester': "unittest",
-                   'username': "picarro", 
-                   'password': "picarro"}
+                   'username': "admin", 
+                   'password': "admin"}
         ret = self.send_request("post", "account", payload)
         self.assertFalse('error' in ret)
         self.token = ret["token"]
@@ -77,7 +77,7 @@ class TestSQLiteServer(unittest.TestCase):
         ret = self.send_request("post", "account", payload)
         self.assertTrue('succeed' in ret["status"])        
         
-    def test_multiple_login_attempts(self):
+    def test_1_multiple_login_attempts(self):
         db_server.system_varialbes["user_login_attempts"] = 1
         # first attempt
         payload = {'command': "log_in_user",
@@ -93,8 +93,8 @@ class TestSQLiteServer(unittest.TestCase):
         # log in as admin
         payload = {'command': "log_in_user",
                    'requester': "unittest",
-                   'username': "picarro", 
-                   'password': "picarro"}
+                   'username': "admin", 
+                   'password': "admin"}
         ret = self.send_request("post", "account", payload)
         self.assertFalse('error' in ret)
         self.token = ret["token"]
@@ -103,7 +103,7 @@ class TestSQLiteServer(unittest.TestCase):
         ret = self.send_request('post', 'users', payload, use_token=True)
         self.assertFalse('error' in ret)
         
-    def test_password_policy(self):
+    def test_2_password_policy(self):
         db_server.system_varialbes["password_reuse_period"] = 1
         # change password
         payload = {'command': 'change_password', 'username': 'picarro-technician', 
