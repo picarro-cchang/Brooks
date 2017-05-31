@@ -8,13 +8,16 @@ import threading
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
+import Queue
+from collections import deque
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
+from H2O2ValidationFrame import H2O2ValidationFrame
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common import StringPickler, Listener
+from Host.Common import SharedTypes
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 
@@ -101,45 +104,59 @@ class TimeSeriesData(object):
     def get(self):
         return (self.xdata[:self.pointer], self.ydata[:self.pointer])
 
-class H2O2ValidationFrame(QMainWindow):
-    def __init__(self, configFile, simulation, parent=None):
+class H2O2Validation(H2O2ValidationFrame):
+    def __init__(self, configFile, simulation, no_login, parent=None):
         if not os.path.exists(configFile):
             print "Config file not found: %s" % configFile
             sys.exit(0)
         self.config = CustomConfigObj(configFile)
         self.simulation = simulation
         self.load_config()
-        super(H2O2ValidationFrame, self).__init__(parent)
-        self.setWindowTitle("H2O2 Validation")
-        #self.setWindowState(Qt.WindowFullScreen)
-        self.style_data = ""
-        with open('styleSheet.qss', 'r') as f:
-            self.style_data = f.read()
-        self.setStyleSheet(self.style_data)
-        self.create_widgets()
-        self.set_connections()
-        self.resize(1200,800)        
+        super(H2O2Validation, self).__init__(parent)
         
+        self.display_caption.setText(validation_procedure[0][0])
+        self.display_instruction.setText(validation_procedure[0][1])
         self.host_session = requests.Session()
         self.current_step = 0
+        self.start_time = 0
         self.record_status = ""
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
         self.validation_data = dict(H2O2=[], zero_air=[], calibrant1=[], calibrant2=[], calibrant3=[])
+        adp = self.config.getint("Status_Check", "Average_Data_Points", 10)
+        self.status_data = dict(H2O=deque(maxlen=adp), 
+                                CavityPressure=deque(maxlen=adp), 
+                                CavityTemp=deque(maxlen=adp))
         self.validation_results = {}
+        self.data_queue = Queue.Queue()
         self.ch4_data = TimeSeriesData(100)
         
         if self.simulation:
             self.simulation_env = {func: getattr(math, func) for func in dir(math) if not func.startswith("__")}
             self.simulation_env.update({'random':  random.random, 'x': 0})
+        if no_login:
+            self.login_frame.hide()
+            self.top_frame.show()
+            self.wizard_frame.show()
+            self.start_data_collection()
             
     def load_config(self):
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
         self.report_dir = self.config.get("Setup", "Report_Directory")
+        self.water_conc_limit = self.config.getfloat("Status_Check", "Water_Conc_Limit", 100)
+        self.pressure_upper_limit = self.config.getfloat("Status_Check", "Pressure_Upper_Limit", 1000)
+        self.pressure_lower_limit = self.config.getfloat("Status_Check", "Pressure_Lower_Limit", 0)
+        self.temperature_upper_limit = self.config.getfloat("Status_Check", "Temperature_Upper_Limit", 1000)
+        self.temperature_lower_limit = self.config.getfloat("Status_Check", "Temperature_Lower_Limit", -1000)
+        self.ch4_max_deviation = self.config.getfloat("Status_Check", "CH4_Max_Deviaion_Percent", 1000)/100.0   # percent
+        self.ch4_max_std = self.config.getfloat("Status_Check", "CH4_Max_Standard_Deviation", 100)
         if self.simulation:
             self.simulation_dict = dict(
                 H2O2=self.config.get("Simulation", "H2O2", "0.0"),
                 CH4=self.config.get("Simulation", "CH4", "0.0"),
+                H2O=self.config.get("Simulation", "H2O", "0.0"),
+                CavityPressure=self.config.get("Simulation", "CavityPressure", "0.0"),
+                CavityTemp=self.config.get("Simulation", "CavityTemp", "0.0"),
                 CH4_zero_air=self.config.get("Simulation", "CH4_zero_air", "0.0"),
                 CH4_calibrant1=self.config.get("Simulation", "CH4_calibrant1", None),
                 CH4_calibrant2=self.config.get("Simulation", "CH4_calibrant2", None),
@@ -147,31 +164,79 @@ class H2O2ValidationFrame(QMainWindow):
             )
             self.ch4_simulation = self.simulation_dict["CH4"]
             
+    def start_data_collection(self):
+        if self.simulation:
+            self.simulation_thread = threading.Thread(target=self.run_simulation)
+            self.simulation_thread.daemon = True
+            self.simulation_thread.start()
+        else:
+            self.listener = Listener.Listener(None,
+                                             SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                             StringPickler.ArbitraryObject,
+                                             self.stream_filter,
+                                             retry = True,
+                                             name = "H2O2Validation")
+        self.measurement_timer.start(1000)
+        
+    def stream_filter(self, entry):
+        if entry["source"] == self.data_source:
+            try:
+                data = {c: entry['data'][c] for c in ["CH4", "H2O", "H2O2", "CavityPressure", "CavityTemp"]}
+                self.process_data(1, data)
+            except:
+                pass
+    
     def run_simulation(self):
-        index = 0
         while True:
             if self.current_step in validation_steps:
                 step = "CH4_%s" % (validation_steps[self.current_step])
                 if self.simulation_dict[step] is not None:
                     self.ch4_simulation = self.simulation_dict[step]
-            ch4 = self.run_simulation_expression(self.ch4_simulation)
-            h2o2 = self.run_simulation_expression(self.simulation_dict['H2O2'])
-            self.process_data(index, ch4, h2o2)
-            index += 1
+            data = {}
+            data["CH4"] = self.run_simulation_expression(self.ch4_simulation)
+            data["H2O2"] = self.run_simulation_expression(self.simulation_dict['H2O2'])
+            data["H2O"] = self.run_simulation_expression(self.simulation_dict['H2O'])
+            data["CavityPressure"] = self.run_simulation_expression(self.simulation_dict['CavityPressure'])
+            data["CavityTemp"] = self.run_simulation_expression(self.simulation_dict['CavityTemp'])
+            self.process_data(time.time(), data)
             self.simulation_env['x'] += 1
-            time.sleep(1)
+            time.sleep(1)            
             
-    def process_data(self, xdata, ch4, h2o2):
-        # save data
-        if len(self.record_status) > 0:
-            self.validation_data[self.record_status].append(ch4)
+    def process_data(self, xdata, ydata):
+        self.data_queue.put([xdata, ydata["CH4"], ydata["H2O2"]])
+        if len(self.record_status) > 0 and not self.record_status.startswith("error_"):
+            # save data
+            self.validation_data[self.record_status].append(ydata["CH4"])
             if self.record_status == "zero_air": 
-                self.validation_data["H2O2"].append(h2o2)
-        # display data
-        self.display_conc_ch4.setText("%.3f" % ch4)
-        self.display_conc_h2o2.setText("%.3f" % h2o2)
-        self.ch4_data.put(xdata, ch4)
-        self.ch4_plot.setData(*self.ch4_data.get())            
+                self.validation_data["H2O2"].append(ydata["H2O2"])
+                self.status_data["H2O"].append(ydata["H2O"])
+            # status checking
+            self.status_data["CavityPressure"].append(ydata["CavityPressure"])
+            self.status_data["CavityTemp"].append(ydata["CavityTemp"])
+            self.check_status()
+
+    def check_status(self):
+        if self.record_status == "zero_air":
+            if self.check_status_variable("H2O", lambda x: x > self.water_conc_limit,
+                    "Water concentration is too high!\nPlease check gas source!"):
+                return 1
+        if self.check_status_variable("CavityPressure",
+                lambda x: x > self.pressure_upper_limit or x < self.pressure_lower_limit,
+                "Cavity pressure is out of range!\nPlease check gas source and pump!"):
+            return 1
+        if self.check_status_variable("CavityTemp",
+                lambda x: x > self.temperature_upper_limit or x < self.temperature_lower_limit,
+                "Cavity temperature is out of range!\nPlease check analyzer!"):
+            return 1
+                
+    def check_status_variable(self, variable, criteria, error_info):
+        var = self.status_data[variable]
+        if len(var) == var.maxlen:
+            avg = np.average(var)
+            if criteria(avg):
+                self.record_status = "error_%s_%s" % (self.record_status, error_info)
+                return 1
+        return 0
             
     def run_simulation_expression(self, expression):
         if len(expression) > 0:
@@ -179,148 +244,6 @@ class H2O2ValidationFrame(QMainWindow):
             return self.simulation_env["simulation_result"]
         else:
             return 0.0
-        
-    def create_widgets(self):
-        self.measurement_timer = QTimer()
-        
-        self.top_frame = QWidget()
-        self.top_frame.setMaximumHeight(150)
-        self.display_conc_ch4 = QLabel("0.00")
-        self.display_conc_ch4.setAccessibleName("concentration")
-        self.display_conc_ch4.setFrameShape(QFrame.Panel)
-        self.display_conc_ch4.setFixedWidth(100)
-        self.display_conc_h2o2 = QLabel("0.00")
-        self.display_conc_h2o2.setAccessibleName("concentration")
-        self.display_conc_h2o2.setFrameShape(QFrame.Panel)
-        self.display_conc_h2o2.setFixedWidth(100)
-        time_series_plot = pg.PlotWidget()
-        time_series_plot.showGrid(x=True, y=True)
-        time_series_plot.setLabels(left="CH4 (ppm)")
-        self.ch4_plot = time_series_plot.plot(pen=pg.mkPen(color=(255,255,255), width=1))
-        top_layout = QHBoxLayout()
-        data_layout = QVBoxLayout()
-        data_layout.addStretch(1)
-        data_row1 = QHBoxLayout()
-        data_row1.addWidget(QLabel("<font size=16>H<sub>2</sub>O<sub>2</sub></font>"))
-        data_row1.addWidget(self.display_conc_h2o2)
-        data_layout.addLayout(data_row1)
-        data_layout.addStretch(1)
-        data_row2 = QHBoxLayout()
-        data_row2.addWidget(QLabel("<font size=16>CH<sub>4</sub></font>"))
-        data_row2.addWidget(self.display_conc_ch4)
-        data_layout.addLayout(data_row2)
-        data_layout.addStretch(1)
-        top_layout.addLayout(data_layout)
-        top_layout.addWidget(time_series_plot)
-        self.top_frame.setLayout(top_layout)
-        
-        self.wizard_frame = QWidget()
-        self.display_caption = QLabel(validation_procedure[0][0])
-        self.display_caption.setAccessibleName("caption")
-        self.display_instruction = QLabel(validation_procedure[0][1])
-        self.display_instruction.setAccessibleName("instruction")
-        self.display_instruction.setFixedWidth(800)
-        self.display_instruction.setFixedHeight(600)
-        self.display_instruction.setWordWrap(True)
-        self.input_nominal_concentration = QLineEdit()
-        self.display_instruction2 = QLabel("Click Next to continue.")
-        self.display_instruction2.setAccessibleName("instruction2")
-        self.nominal_concentration = QWidget()
-        self.nominal_concentration.hide()
-        nominal_concentration_layout = QHBoxLayout()
-        nominal_concentration_layout.addWidget(QLabel("<b>Nominal Concentration (ppm)</b>"))
-        nominal_concentration_layout.addWidget(self.input_nominal_concentration)
-        self.nominal_concentration.setLayout(nominal_concentration_layout)
-        information_layout = QVBoxLayout()
-        information_layout.addWidget(self.display_caption)
-        information_layout.addWidget(self.display_instruction)
-        information_layout.addWidget(self.display_instruction2)
-        information_layout.addWidget(self.nominal_concentration)
-        information_layout.addStretch(1)
-                
-        # control buttons
-        self.button_next_step = QPushButton("Next")
-        self.button_cancel_process = QPushButton("Cancel")
-        button_layout = QHBoxLayout()
-        button_layout.addStretch(1)
-        button_layout.addWidget(self.button_next_step)
-        button_layout.addWidget(self.button_cancel_process)
-        
-        wizard_layout = QGridLayout()
-        wizard_layout.setColumnStretch(0,1)
-        wizard_layout.setColumnStretch(2,1)
-        wizard_layout.addLayout(information_layout,0,1,Qt.AlignHCenter)
-        wizard_layout.addLayout(button_layout,1,1,Qt.AlignHCenter)
-        self.wizard_frame.setLayout(wizard_layout)
-        
-        # report 
-        self.report_frame = QWidget()
-        self.report = QTextEdit()
-        self.report.setFixedWidth(800)
-        self.report.setFixedHeight(800)
-        self.report.setReadOnly(True)
-        self.button_save_report = QPushButton("Save Report")
-        self.button_cancel_report = QPushButton("Cancel")
-        
-        control_layout = QHBoxLayout()
-        control_layout.addStretch(1)
-        control_layout.addWidget(self.button_save_report)
-        control_layout.addWidget(self.button_cancel_report)
-        control_layout.addStretch(1)
-        report_layout = QGridLayout()
-        report_layout.setColumnStretch(0,1)
-        report_layout.setColumnStretch(2,1)
-        report_layout.addWidget(self.report,0,1,Qt.AlignHCenter)
-        report_layout.addLayout(control_layout,1,1,Qt.AlignHCenter)
-        self.report_frame.setLayout(report_layout)
-        
-        # login
-        self.login_frame = QWidget()
-        self.input_user_name = QLineEdit()
-        self.input_password = QLineEdit()
-        self.input_password.setEchoMode(QLineEdit.Password)        
-        self.button_user_login = QPushButton("Login")
-        self.button_cancel_login = QPushButton("Cancel")
-        self.label_login_info = QLabel("")
-        login_input = QFormLayout()
-        login_input.addRow("User Name", self.input_user_name)
-        login_input.addRow("Password", self.input_password)
-        login_buttons = QHBoxLayout()
-        login_buttons.addWidget(self.button_user_login)
-        login_buttons.addWidget(self.button_cancel_login)
-        login_layout = QGridLayout()
-        login_layout.setColumnStretch(0,1)
-        login_layout.setColumnStretch(2,1)
-        login_layout.setRowStretch(1,1)
-        login_layout.addLayout(login_input,2,1,Qt.AlignHCenter)
-        login_layout.addLayout(login_buttons,3,1,Qt.AlignHCenter)
-        login_layout.addWidget(self.label_login_info,4,1,Qt.AlignHCenter)
-        login_layout.setRowStretch(5,1)
-        self.login_frame.setLayout(login_layout)
-            
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(self.top_frame)
-        main_layout.addWidget(self.wizard_frame)
-        main_layout.addWidget(self.report_frame)
-        main_layout.addWidget(self.login_frame)
-        main_layout.addStretch(1)        
-        
-        central_widget = QWidget()
-        central_widget.setLayout(main_layout)
-        self.setCentralWidget(central_widget)
-        
-        self.report_frame.hide()
-        self.top_frame.hide()
-        self.wizard_frame.hide()
-        
-    def set_connections(self):
-        self.measurement_timer.timeout.connect(self.measurement)
-        self.button_next_step.clicked.connect(self.next_step)
-        self.button_cancel_process.clicked.connect(self.cancel_process)
-        self.button_save_report.clicked.connect(self.save_report)
-        self.input_password.returnPressed.connect(self.user_login)
-        self.button_user_login.clicked.connect(self.user_login)
-        self.button_cancel_login.clicked.connect(self.cancel_login)
         
     def send_request(self, action, api, payload):
         """
@@ -348,10 +271,7 @@ class H2O2ValidationFrame(QMainWindow):
                     self.login_frame.hide()
                     self.top_frame.show()
                     self.wizard_frame.show()
-                    if self.simulation:
-                        self.simulation_thread = threading.Thread(target=self.run_simulation)
-                        self.simulation_thread.daemon = True
-                        self.simulation_thread.start()
+                    self.start_data_collection()
                 else:
                     self.label_login_info.setText("You don't have the permission to perform validation.")
                     self.send_request("post", "account", {"command":"log_out_user"})
@@ -363,33 +283,82 @@ class H2O2ValidationFrame(QMainWindow):
         self.input_password.clear()
         
     def measurement(self):
-        current_time = time.time()
-        if self.record_status == "":    # wait before collecting data
-            if current_time - self.start_time >= self.wait_time_before_collection:
-                # transition to data collection
-                self.start_time = current_time
-                self.record_status = validation_steps[self.current_step]
-                self.display_instruction2.setText("Collecting data...")
-        elif current_time - self.start_time >= self.data_collection_time:
-            # data collection is done
-            self.measurement_timer.stop()
-            stage = self.record_status
-            self.record_status = ""
-            result_string = ""
-            # calculate averages
-            if len(self.validation_data[stage]) > 0:
-                self.validation_results[stage+"_mean"] = np.average(self.validation_data[stage])
-                self.validation_results[stage+"_sd"] = np.std(self.validation_data[stage])
-                result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_mean"])
-            if stage == "zero_air" and len(self.validation_data["H2O2"]) > 0:
-                self.validation_results["h2o2_mean"] = np.average(self.validation_data["H2O2"])
-                result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["h2o2_mean"])
-            self.button_next_step.setEnabled(True)
-            if self.current_step == len(validation_procedure) - 1:
-                self.button_next_step.setText("Create Report")
-                self.display_instruction2.setText(result_string)
-            else:
-                self.display_instruction2.setText(result_string+" Click Next to continue.")
+        # get data from queue and display
+        x, ch4, h2o2 = None, None, None
+        while not self.data_queue.empty():
+            x, ch4, h2o2 = self.data_queue.get()
+        if x is not None:
+            self.display_conc_ch4.setText("%.3f" % ch4)
+            self.display_conc_h2o2.setText("%.3f" % h2o2)
+            self.ch4_data.put(x, ch4)
+            self.ch4_plot.setData(*self.ch4_data.get())
+        if self.start_time > 0:
+            current_time = time.time()
+            if self.record_status == "":    # wait before collecting data
+                if current_time - self.start_time >= self.wait_time_before_collection:
+                    # transition to data collection
+                    self.start_time = current_time
+                    self.record_status = validation_steps[self.current_step]
+                    self.display_instruction2.setText("Collecting data...")
+            elif self.record_status.startswith("error_"):
+                self.start_time = 0
+                stage, error = self.record_status.split("_")[1:]
+                self.record_status = ""
+                QMessageBox(QMessageBox.Critical, "Error", error, QMessageBox.Ok, self).exec_()
+                self.handle_measurement_error(stage)
+            elif current_time - self.start_time >= self.data_collection_time:
+                # data collection is done
+                self.start_time = 0
+                stage = self.record_status
+                self.record_status = ""
+                result_string = ""
+                # calculate averages
+                if len(self.validation_data[stage]) > 0:
+                    avg = np.average(self.validation_data[stage])
+                    nominal = float(self.validation_results[stage+"_nominal"])
+                    if nominal > 0:
+                        dev = abs(avg - nominal)/nominal
+                    else:
+                        dev = abs(avg - nominal)
+                    std = np.std(self.validation_data[stage])
+                    if self.check_ch4_result(dev, std, stage):
+                        return 1
+                    self.validation_results[stage+"_mean"] = avg
+                    self.validation_results[stage+"_sd"] = std
+                    result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_mean"])
+                if stage == "zero_air" and len(self.validation_data["H2O2"]) > 0:
+                    self.validation_results["h2o2_mean"] = np.average(self.validation_data["H2O2"])
+                    result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["h2o2_mean"])
+                self.button_next_step.setEnabled(True)
+                if self.current_step == len(validation_procedure) - 1:
+                    self.button_next_step.setText("Create Report")
+                    self.display_instruction2.setText(result_string)
+                else:
+                    self.display_instruction2.setText(result_string+" Click Next to continue.")
+                
+    def handle_measurement_error(self, step_name):
+        # clear data collected in this step
+        self.validation_data[step_name] = []
+        if step_name == "zero_air":
+            self.validation_data["H2O2"] = []
+        # go to previous step so user have time to fix problem
+        self.current_step -= 2
+        self.button_next_step.setEnabled(True)
+        self.next_step()
+                
+    def check_ch4_result(self, deviation, std, step_name):
+        if deviation > self.ch4_max_deviation:
+            info = "Measurement result is too far away from nominal concentration!\n" + \
+                "Please check gas source and analyzer."
+            QMessageBox(QMessageBox.Critical, "Error", info, QMessageBox.Ok, self).exec_()
+            self.handle_measurement_error(step_name)
+            return 1
+        if std > self.ch4_max_std:
+            info = "Measurement data is too noisy\nPlease check analyzer."
+            QMessageBox(QMessageBox.Critical, "Error", info, QMessageBox.Ok, self).exec_()
+            self.handle_measurement_error(step_name)
+            return 1
+        return 0
         
     def next_step(self):
         if self.current_step < len(validation_procedure) - 1:
@@ -412,7 +381,6 @@ class H2O2ValidationFrame(QMainWindow):
                 self.button_next_step.setEnabled(False)
                 self.display_instruction2.setText("Waiting...")
                 self.start_time = time.time()
-                self.measurement_timer.start(1000)
         else:
             self.top_frame.hide()
             self.wizard_frame.hide()
@@ -508,7 +476,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'hc:s'
-    longOpts = ["help", "debug"]
+    longOpts = ["help", "no_login"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -523,6 +491,7 @@ def handleCommandSwitches():
     #Start with option defaults...
     configFile = "H2O2Validation.ini"
     simulation = False
+    no_login = False
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
@@ -530,10 +499,12 @@ def handleCommandSwitches():
         configFile = options["-c"]
     if "-s" in options:
         simulation = True
-    return (configFile, simulation)
+    if "--no_login" in options: # used for testing program without sqlite server
+        no_login = True
+    return (configFile, simulation, no_login)
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    window = H2O2ValidationFrame(*handleCommandSwitches())
+    app = QApplication(sys.argv)
+    window = H2O2Validation(*handleCommandSwitches())
     window.show()
     app.exec_()
