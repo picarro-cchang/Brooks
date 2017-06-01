@@ -1356,13 +1356,13 @@ class QuickGui(wx.Frame):
         self.restartUserLog = False
         # Collect instrument status setpoint and tolerance
         try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.cavityTempS = 45.0
             self.cavityTempT = 0.2
         try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.warmBoxTempS = 45.0
