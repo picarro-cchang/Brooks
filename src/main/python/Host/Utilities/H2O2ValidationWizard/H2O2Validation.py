@@ -120,6 +120,7 @@ class H2O2Validation(H2O2ValidationFrame):
         self.current_step = 0
         self.start_time = 0
         self.record_status = ""
+        self.info = ""
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
         self.validation_data = dict(H2O2=[], zero_air=[], calibrant1=[], calibrant2=[], calibrant3=[])
         adp = self.config.getint("Status_Check", "Average_Data_Points", 10)
@@ -140,6 +141,7 @@ class H2O2Validation(H2O2ValidationFrame):
             self.start_data_collection()
             
     def load_config(self):
+        self.update_period = self.config.getfloat("Setup", "Update_Period")
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
         self.report_dir = self.config.get("Setup", "Report_Directory")
@@ -176,7 +178,7 @@ class H2O2Validation(H2O2ValidationFrame):
                                              self.stream_filter,
                                              retry = True,
                                              name = "H2O2Validation")
-        self.measurement_timer.start(1000)
+        self.measurement_timer.start(int(self.update_period*1000))
         
     def stream_filter(self, entry):
         if entry["source"] == self.data_source:
@@ -200,11 +202,11 @@ class H2O2Validation(H2O2ValidationFrame):
             data["CavityTemp"] = self.run_simulation_expression(self.simulation_dict['CavityTemp'])
             self.process_data(time.time(), data)
             self.simulation_env['x'] += 1
-            time.sleep(1)            
+            time.sleep(self.update_period)            
             
     def process_data(self, xdata, ydata):
         self.data_queue.put([xdata, ydata["CH4"], ydata["H2O2"]])
-        if len(self.record_status) > 0 and not self.record_status.startswith("error_"):
+        if len(self.record_status) > 0 and not self.record_status.startswith("error"):
             # save data
             self.validation_data[self.record_status].append(ydata["CH4"])
             if self.record_status == "zero_air": 
@@ -234,7 +236,7 @@ class H2O2Validation(H2O2ValidationFrame):
         if len(var) == var.maxlen:
             avg = np.average(var)
             if criteria(avg):
-                self.record_status = "error_%s_%s" % (self.record_status, error_info)
+                self.record_status = "error|%s|%s" % (self.record_status, error_info)
                 return 1
         return 0
             
@@ -300,11 +302,11 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.start_time = current_time
                     self.record_status = validation_steps[self.current_step]
                     self.display_instruction2.setText("Collecting data...")
-            elif self.record_status.startswith("error_"):
+            elif self.record_status.startswith("error"):
                 self.start_time = 0
-                stage, error = self.record_status.split("_")[1:]
+                stage, self.info = self.record_status.split("|")[1:]
                 self.record_status = ""
-                QMessageBox(QMessageBox.Critical, "Error", error, QMessageBox.Ok, self).exec_()
+                QMessageBox(QMessageBox.Critical, "Error", self.info, QMessageBox.Ok, self).open()
                 self.handle_measurement_error(stage)
             elif current_time - self.start_time >= self.data_collection_time:
                 # data collection is done
@@ -344,18 +346,19 @@ class H2O2Validation(H2O2ValidationFrame):
         # go to previous step so user have time to fix problem
         self.current_step -= 2
         self.button_next_step.setEnabled(True)
+        self.display_instruction2.clear()
         self.next_step()
                 
     def check_ch4_result(self, deviation, std, step_name):
         if deviation > self.ch4_max_deviation:
-            info = "Measurement result is too far away from nominal concentration!\n" + \
+            self.info = "Measurement result is too far away from nominal concentration!\n" + \
                 "Please check gas source and analyzer."
-            QMessageBox(QMessageBox.Critical, "Error", info, QMessageBox.Ok, self).exec_()
+            QMessageBox(QMessageBox.Critical, "Error", self.info, QMessageBox.Ok, self).open()
             self.handle_measurement_error(step_name)
             return 1
         if std > self.ch4_max_std:
-            info = "Measurement data is too noisy\nPlease check analyzer."
-            QMessageBox(QMessageBox.Critical, "Error", info, QMessageBox.Ok, self).exec_()
+            self.info = "Measurement data is too noisy\nPlease check analyzer."
+            QMessageBox(QMessageBox.Critical, "Error", self.info, QMessageBox.Ok, self).open()
             self.handle_measurement_error(step_name)
             return 1
         return 0
@@ -448,11 +451,11 @@ class H2O2Validation(H2O2ValidationFrame):
         cursor.insertImage(image_format)
         
     def save_report(self):
-        info = """
+        self.info = """
         <p><b>You are about to sign a record electronically. This is the legal equivalent of a traditional handwritten signature.</b></p>
         <p>Click OK to sign and save the validation report.</p>
         """
-        msg = QMessageBox(QMessageBox.Warning, "Electronic Signature", info, QMessageBox.Ok | QMessageBox.Cancel, self)
+        msg = QMessageBox(QMessageBox.Warning, "Electronic Signature", self.info, QMessageBox.Ok | QMessageBox.Cancel, self)
         if msg.exec_() == QMessageBox.Ok:
             printer = QPrinter(QPrinter.PrinterResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
