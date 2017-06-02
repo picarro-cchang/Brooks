@@ -1230,7 +1230,7 @@ class LoginDialog(wx.Dialog):
         self._pass = wx.TextCtrl(self, style=wx.TE_PASSWORD)
 
         self.__DoLayout()
-        self.SetInitialSize((400, 300))
+        self.SetInitialSize((300, 150))
 
     def __DoLayout(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1335,7 +1335,7 @@ class QuickGui(wx.Frame):
         self.dataKey = [None]*self.numGraphs
         self.logo = None
         self.fullInterface = False
-        self.userLevel = 1
+        self.userLevel = 0
         self.userLoggedIn = False    
         self.showStat = False
         self.showInstStat = True
@@ -1356,13 +1356,13 @@ class QuickGui(wx.Frame):
         self.restartUserLog = False
         # Collect instrument status setpoint and tolerance
         try:
-            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.cavityTempS = 45.0
             self.cavityTempT = 0.2
         try:
-            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")
+            self.warmBoxTempS = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER")
             self.warmBoxTempT = self.driverRpc.rdDasReg("WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER")
         except:
             self.warmBoxTempS = 45.0
@@ -2026,53 +2026,12 @@ class QuickGui(wx.Frame):
         self.SetSizer(box)
         self.modifyInterface()
 
-    #user levels setting
     def modifyInterface(self):
-        #Operator level
-        
-        if self.userLevel == 1:
-            self.shutdownButton.Enable(False)
-            self.userLogButton.Disable()
-            #pdb.set_trace()
-            for sc in self.sourceChoice:    
-                sc.SetSelection(0)
-                self.OnSourceChoice(obj=sc)
-                sc.Enable(False)
-            for kc in self.keyChoice:
-                kc.Enable(False)
-            for pc in self.precisionChoice:
-                pc.Enable(False)
-            for ayb in self.autoY:
-                ayb.Enable(False)
-            for c in self.serviceModeOnlyControls:
-                print "************", c, "type: ", type(c)
-                c.Show(False)
-            self.clearButton.Enable(False)
-
-
-        else:
-            self.shutdownButton.Enable(True)
-
-            self.userLogButton.Enable(True)
-            for sc in self.sourceChoice:
-                sc.Enable(True)
-            for kc in self.keyChoice:
-                kc.Enable(True)
-            for pc in self.precisionChoice:
-                pc.Enable(True)
-            for ayb in self.autoY:
-                ayb.Enable(True)
-            self.clearButton.Enable(True)
-
-            #Technician Level
-            if self.userLevel == 2:
-                for c in self.serviceModeOnlyControls:
-                    c.Show(False)
-            #Expert
-            else:
-                for c in self.serviceModeOnlyControls:
-                    c.Show(True)
-
+        """
+        Enable/Disable widgets depending on the logged in user's authority level.
+        The default (no one logged in) is to disable widgets that can change the
+        operation of the analyzer or the data displayed on the screen.
+        """
         if self.showStat:
             for c in self.statControls:
                 c.Show(True)
@@ -2086,6 +2045,56 @@ class QuickGui(wx.Frame):
         else:
             self.instStatusBox.Show(False)
             self.instStatusPanel.Show(False)
+
+
+        # No one logged in, disable everything
+        self.shutdownButton.Enable(False)
+        self.userLogButton.Disable()
+        for sc in self.sourceChoice:
+            sc.SetSelection(0)
+            self.OnSourceChoice(obj=sc)
+            sc.Enable(False)
+        for kc in self.keyChoice:
+            kc.Enable(False)
+        for pc in self.precisionChoice:
+            pc.Enable(False)
+        for ayb in self.autoY:
+            ayb.Enable(False)
+        for c in self.serviceModeOnlyControls:
+            c.Show(False)
+        self.clearButton.Enable(False)
+
+        # Operator level
+        # Activate the shutdown button, basic stats views, and different
+        # data to plot
+        if self.userLevel >= 1:
+            self.shutdownButton.Enable(True)
+            # Enable View pulldown menu
+            self.menuBar.EnableTop(1, True)
+            for sc in self.sourceChoice:
+                sc.Enable(True)
+            for kc in self.keyChoice:
+                kc.Enable(True)
+
+        # Technician level
+        # Activate additional widgets that change the display of data but
+        # still limit the data source choices.  Enable the valve
+        # sequencer GUI.
+        if self.userLevel >= 2:
+            self.userLogButton.Enable(True)
+            for pc in self.precisionChoice:
+                pc.Enable(True)
+            for ayb in self.autoY:
+                ayb.Enable(True)
+            self.clearButton.Enable(True)
+            # Enable Tools pulldown menu
+            self.menuBar.EnableTop(2, True)
+
+        # Admin level
+        # Enable data view of fit parameters and other "Picarro" only data
+        if self.userLevel >= 3:
+           for c in self.serviceModeOnlyControls:
+               c.Show(True)
 
     def getSourcesbyMode(self):
         s = self.dataStore.getSources()
@@ -2561,13 +2570,13 @@ class QuickGui(wx.Frame):
         self.BindAllWidgetsMotion(self.dlg)
         getUserCals = (self.dlg.ShowModal() == wx.ID_OK)
         if getUserCals:
-            
+
             numConcs = len(userCalList)/2
             for idx in range(numConcs):
                 if self.dlg.textCtrlList[2*idx].GetValue() != userCalList[2*idx][2] or self.dlg.textCtrlList[2*idx+1].GetValue() != userCalList[2*idx+1][2]:
                     newCal = (float(self.dlg.textCtrlList[2*idx].GetValue()), float(self.dlg.textCtrlList[2*idx+1].GetValue()))
                     self.dataManagerRpc.Cal_SetSlopeAndOffset(concList[idx], newCal[0], newCal[1])
-            
+
         self.dlg.Destroy()
 
     def OnValveSeq(self, evt):
@@ -2680,7 +2689,7 @@ class QuickGui(wx.Frame):
         # to the flask_security server. If Technician/Expert mode stays inactive for a period of time (default 30 secs), it will automatically log out
         # and the GUI mode changes to the default.  
         # d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        
+
         # toggle login/logout
         if not self.userLoggedIn:
             d = LoginDialog(self, title = "Authorization required")
@@ -2691,7 +2700,7 @@ class QuickGui(wx.Frame):
             payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user'}
 
             #with requests.Session() as session:
-            try:    
+            try:
                 r_account = requests.post(FLASK_SERVER_URL + "account", data = payload )
                 #print "The Http request response: ", r_account.text 
                 #print "response code:  ", r_account.status_code
@@ -2700,36 +2709,32 @@ class QuickGui(wx.Frame):
             except:
                 authorized = False
                 connectionErrMsg = "Failed to connect to authentication server. Please check whether the server is running."
-            
+
             if okClicked: 
                 if authorized:
                     if 'Admin' in r_account.json()["roles"]:
                         self.userLevel = 3
+                        d = OKDialog(self,"\tAdmin logged in.",None,-1,"")
                     elif 'Technician' in r_account.json()["roles"]:
                         self.userLevel = 2
+                        d = OKDialog(self,"\tTechnician logged in.",None,-1,"")
                     else:
                         self.userLevel = 1
-                        d = OKDialog(self,"Operator logged in, GUI mode NOT changed",None,-1,"User Authentication")
+                        d = OKDialog(self,"\tOperator logged in.",None,-1,"")
 
-                    if self.userLevel >= 2:
-                        if self.userLevel == 2:
-                            d = OKDialog(self,"Technician logged in, GUI mode changed",None,-1,"User Authentication")
-                        else:
-                            d = OKDialog(self,"Admin logged in, GUI mode changed",None,-1,"User Authentication")
+                    #update GUI
+                    self.modifyInterface()
+                    self.measPanelSizer.Layout()
+                    self.Refresh()
+                    #self.menuBar.EnableTop(1, True)
+                    #self.menuBar.EnableTop(2, True)
+                    self.userLoggedIn = True
+                    self.iGuiMode.SetItemLabel("User Logout")
+                    #Recursively bind all the widgets with mouse motion event 
+                    self.BindAllWidgetsMotion(self.mainPanel)
+                    #Inactive session timeout timer
+                    self.sessionTimer.Start(5000) # 5 seconds interval
 
-                        #update GUI
-                        self.modifyInterface()
-                        self.measPanelSizer.Layout()
-                        self.Refresh()                    
-                        self.menuBar.EnableTop(1, True)
-                        self.menuBar.EnableTop(2, True)
-                        self.userLoggedIn = True
-                        self.iGuiMode.SetItemLabel("User Logout")
-                        #Recursively bind all the widgets with mouse motion event 
-                        self.BindAllWidgetsMotion(self.mainPanel)
-                        #Inactive session timeout timer
-                        self.sessionTimer.Start(5000) # 5 seconds interval
-                                    
                 elif connectionErrMsg:
                     d = OKDialog(self,connectionErrMsg,None,-1,"User Authentication Server Connection")
                 else:
@@ -2738,7 +2743,7 @@ class QuickGui(wx.Frame):
                 d.ShowModal()
                 d.Destroy()
         else:
-            self.userLevel = 1
+            self.userLevel = 0
             self.modifyInterface()
             self.measPanelSizer.Layout()
             self.Refresh()
