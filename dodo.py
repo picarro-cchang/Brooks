@@ -1,15 +1,15 @@
 import jinja2
 import json
 import os
-# import pprint
 import shutil
-import subprocess
+import subprocess32 as subprocess
 import sys
-# import textwrap
-
-# import time
-# from doit.tools import check_timestamp_unchanged
 from doit import get_var
+
+bldsup_path = os.path.join(os.getcwd(), "bldsup")
+if bldsup_path not in sys.path:
+    sys.path.append(bldsup_path)
+import buildUtils
 
 def run_command(command):
     """
@@ -19,7 +19,10 @@ def run_command(command):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     stdout_value, stderr_value = p.communicate()
-    return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
+    if stdout_value and stderr_value:
+        return stdout_value.replace('\r\n','\n').replace('\r','\n'), stderr_value.replace('\r\n','\n').replace('\r','\n')
+    else:
+        return '', ''
 
 def task_make_sources_from_xml():
     python_scripts_dir = os.path.join(os.path.dirname(sys.executable),"Scripts")
@@ -125,55 +128,6 @@ def task_compile_sources():
     return {'actions': None,
             'task_dep': ['make_sources_from_xml', 'compile_fitutils', 'compile_cluster_analyzer', 'compile_swathP', 'compile_fastLomb', 'compile_DatViewer']}
 
-def task_build_datviewer_exe():
-    dist_dir = get_var('dist_dir', '.')
-
-    def python_build_datviewer_exe(dist_dir):
-        build_dir = os.path.join(dist_dir, "AddOns", "DatViewer")
-        old_dir = os.getcwd()
-        os.chdir(build_dir)
-        try:
-            # Get the current dir. Expect that we are in the DatViewer folder.
-            cur_dir_path = os.getcwd()
-            cur_dir = os.path.split(cur_dir_path)[1]
-            # Windows dirs are not case-sensitive.
-            # Logic will need to be changed slightly to support OSes that have case-sensitive directory names.
-            if cur_dir.lower() != "datviewer":
-                raise ValueError("Not running in expected folder 'DatViewer'.")
-            # Set the PYTHONPATH environment variable so the current folder tree is used to
-            # pull local libraries from.
-            parent_dir = os.path.normpath(os.path.join(cur_dir_path, "..", ".."))
-            firmware_dir = os.path.normpath(os.path.join(cur_dir_path, "..", "..", "Firmware"))
-
-            # for a sanity check -- not needed in PYTHONPATH as the parent dir will already be there
-            common_dir = os.path.join(parent_dir, "Host", "Common")
-
-            # folders must exist
-            folders = [parent_dir, common_dir, firmware_dir]
-            for folder in folders:
-                if not os.path.isdir(folder):
-                    raise ValueError("Expected folder '%s' does not exist." % folder)
-
-            build_env = dict(os.environ)
-            build_env.update({'PYTHONPATH' : "%s;%s" %(parent_dir, firmware_dir)})
-            ret_code = subprocess.call(['python.exe', 'datviewerSetup.py', 'py2exe'], env=build_env)
-            if ret_code != 0:
-                raise ValueError("datviewerSetup.py failed")
-            dist_target = os.path.join(dist_dir, "DatViewerExe")
-            if os.path.exists(dist_target):
-                shutil.rmtree(dist_target)
-            shutil.move(os.path.join(build_dir, "dist"), dist_target)
-
-        finally:
-            os.chdir(old_dir)
-
-    yield {'actions': [(python_build_datviewer_exe,(dist_dir,))],
-           'name':dist_dir,
-           'targets' : [os.path.join(dist_dir, "DatViewerExe")],
-           'file_dep': [os.path.join(dist_dir, "last_updated.txt")],
-            'verbosity': 2
-    }            
-            
 def task_build_ai_autosampler_exe():
     dist_dir = get_var('dist_dir', '.')
 
@@ -223,25 +177,55 @@ def task_build_ai_autosampler_exe():
             'verbosity': 2
     }
 
-def task_cythonization():
-    targets = []
-    file_deps = []
-    dist_dir = get_var('dist_dir', '')
-    if len(dist_dir) > 0:
-        bldsup_path = os.path.join(os.getcwd(), "bldsup")
-        if bldsup_path not in sys.path:
-            sys.path.append(bldsup_path)
-        from setupforPyd import get_source_list
-        file_deps = get_source_list(dist_dir)
-        targets = [f[:-2] + "so" for f in file_deps]
+def task_before_cythonization():
+    """
+    This task just creates an empty so file if it doesn't exist
+    This is to meet the file_dep requirement in task_cythonization
+    """
+    def check_file(cython_file):
+        if not os.path.exists(cython_file):
+            with open(cython_file, "w") as f:
+                pass
 
-    return {'actions': [
-                'python %s build_ext --inplace --basepath=%s' % (r"./bldsup/setupforPyd.py", dist_dir)
-            ],
-           'file_dep': file_deps,
-           'targets' : targets,
-           'verbosity': 2
-    }
+    dir_source = get_var('dir_source', '')
+    if len(dir_source) > 0:
+        for filename in buildUtils.get_cython_source(dir_source):
+            cython_file = filename[:-2] + "so"
+            yield {
+                'name': cython_file,
+                'actions': [(check_file, (cython_file,))],
+                'targets': [cython_file],
+                'verbosity': 2
+            }
+
+def task_cythonization():
+    """
+    This task depends on both python source file and cythonized file
+    If one of them is changed, cythonization will be run.
+    Otherwise cythonization will be skipped.
+    """
+    def cythonize_file(filename):
+        cython_file = filename[:-2] + "so"
+        if os.path.exists(cython_file):
+            os.remove(cython_file)
+        run_command(['python', r"./bldsup/setupForCython.py", 'build_ext',
+                        '--inplace', '--filename=%s' % filename])
+        # save cythonized file in reservoir
+        buildUtils.save_cython_file(cython_file, dir_source)
+        # clean up
+        c_file = filename[:-2] + "c"
+        if os.path.exists(c_file):
+            os.remove(c_file)
+
+    dir_source = get_var('dir_source', '')
+    if len(dir_source) > 0:
+        for filename in buildUtils.get_cython_source(dir_source):
+            yield {
+                'name': filename,
+                'actions': [(cythonize_file, (filename,))],
+                'file_dep': [filename, filename[:-2] + "so"],
+                'verbosity': 2
+            }
 
 def task_build_hostexe():
     dist_dir = get_var('dist_dir', '.')

@@ -151,43 +151,6 @@ class Builder(object):
 
     def compile_sources(self):
         return
-        
-    def cythonize_sources(self):
-        project = self.project
-        logger = self.logger
-        output_file_path = self.get_report_file_path("cythonize_sources")
-        logger.info("Cythonizing modules")
-        with open(output_file_path, "a") as output_file:
-            output_file.write("=== %s ===\n" % time.asctime())
-            stdout, retcode = self.run_command("doit dist_dir=%s cythonization" % project.expand_path("$dir_dist"))
-            output_file.write(stdout)
-            if retcode != 0:
-                raise BuildFailedException("Error while cythonizing sources")
-        logger.info("Cleaning source code")
-        sys.path.append("bldsup")
-        from setupforPyd import get_source_list
-        for f in get_source_list(project.expand_path("$dir_dist")):
-            if os.path.exists(f):
-                os.remove(f)
-            fc = os.path.splitext(f)[0] + ".c"
-            if os.path.exists(fc):
-                os.remove(fc)
-        #self.compile_sources_to_pyo()
-
-    def compile_sources_to_pyo(self):
-        self.logger.info("Compiling remaining python sources to pyo files")
-        path = os.path.join(self.project.expand_path("$dir_dist"), "Host")
-        self.run_command("python -O -m compileall -x '__init__.py' %s" % path)
-        # delete python source files
-        for root, dirs, files in os.walk(path, topdown=False):
-            if "pydCaller" in root:
-                pass
-            else:
-                for fname in files:
-                    if fname.endswith(".py") and fname != "__init__.py":
-                        fp = os.path.join(root, fname)
-                        os.remove(fp)
-
 
     def publish(self):
         return
@@ -202,7 +165,6 @@ class Builder(object):
             os.makedirs(reports_dir)
         return os.path.join(reports_dir, '%s_%s.txt' %
                             (datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), basename))
-
 
     def handle_set_version(self, version, version_file):
         project = self.project
@@ -325,30 +287,7 @@ class Builder(object):
                     dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/hostexe/" + installer_version + "/"
                     cmd = "curl -u %s:%s -T %s %s" % ("ci-server", "ALGP@&gNR%h", src_path, dest_path)
                     self.run_command(cmd)
-                    logger.info('Upload %s installer to Artifactory' % file)
-    
-    def copy_installer(self):
-        """Copy installers to remote directory (e.g., S drive) if this has been requested
-        """
-        project = self.project
-        logger = self.logger
-        dest_path = project.get_property('copyDir')
-        if len(dest_path) > 0:
-            installer_version = project.get_property('installer_version')
-            product = project.get_property('product')
-            installer_folder = os.path.join('target', 'Installers', '%s-%s' % (product, installer_version))
-            for file in os.listdir(installer_folder):
-                if file.endswith('.exe'):
-                    src_path = os.path.join(installer_folder, file)
-                    species = file.split('_')[1]
-                    if species == os.path.split(dest_path)[1]:  # already points to the species folder
-                        dst = dest_path
-                    else:
-                        dst = os.path.join(dest_path, species)
-                        if not os.path.isdir(dst):
-                            os.makedirs(dst)
-                    shutil.copy(src_path, dst)
-                    logger.info('Copy %s-%s installer to %s' % (species, installer_version, dst))
+                    logger.info('Upload %s installer to Artifactory' % file)    
             
 def get_dir_hash(root):
     s = sha1()
