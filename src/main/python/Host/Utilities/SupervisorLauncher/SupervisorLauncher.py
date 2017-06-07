@@ -233,7 +233,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 info = subprocess.STARTUPINFO()
                 proc = subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
             elif sys.platform == "linux2":
-                cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.py","-c",self.supervisorIni]
+                if os.path.exists("Supervisor.py"):
+                    cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.py","-c",self.supervisorIni]
+                else:
+                    cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.pyo","-c",self.supervisorIni]
                 proc = subprocess.Popen(cmd)
         else:
             backupSupervisorRunning = False
