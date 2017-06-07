@@ -59,6 +59,7 @@ import traceback
 from platform import platform
 import wx.lib.mixins.listctrl as listmix
 from wx.lib.wordwrap import wordwrap
+import subprocess32 as subprocess
 
 from Host.QuickGui.PulseAnalyzerGui import PulseAnalyzerGui
 from Host.QuickGui.UserCalGui import UserCalGui
@@ -1413,7 +1414,7 @@ class QuickGui(wx.Frame):
         self.iTools = wx.Menu()
         self.iHelp = wx.Menu()
         
-        #user level setting manu
+        #user level setting menu
         self.menuBar.Append(self.iUserSettings,"Users")
         self.idGuiMode = wx.NewId()
 
@@ -1437,10 +1438,26 @@ class QuickGui(wx.Frame):
             self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iInstStatDisplay)
 
+        # get external tools from config
+        self.externalTools = {}
+        if "ExternalTools" in self.config:
+            tools = self.config["ExternalTools"]
+            for k in tools:
+                if k.startswith("toolName"):
+                    idx = int(k[8:])
+                    if ("toolCmd%d" % idx) in tools:
+                        self.externalTools[tools[k]] = {"cmd": tools["toolCmd%d" % idx]}
+
         self.menuBar.Append(self.iTools,"Tools")
         self.idUserCal = wx.NewId()
         self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
         self.iTools.AppendItem(self.iUserCal)
+        for tool in self.externalTools:
+            self.externalTools[tool]['id'] = wx.NewId()
+            self.externalTools[tool]['menu'] = wx.MenuItem(self.iTools,
+                                                        self.externalTools[tool]['id'], 
+                                                        tool, "", wx.ITEM_NORMAL)
+            self.iTools.AppendItem(self.externalTools[tool]['menu'])
         self.menuBar.EnableTop(1, False)
         self.menuBar.EnableTop(2, False)
         try:
@@ -1473,6 +1490,9 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnStatDisplay, id=self.idStatDisplay)
         self.Bind(wx.EVT_MENU, self.OnInstStatDisplay, id=self.idInstStatDisplay)
         self.Bind(wx.EVT_MENU, self.OnUserCal, id=self.idUserCal)
+        for tool in self.externalTools:
+            self.Bind(wx.EVT_MENU, self.OnExternalTools, id=self.externalTools[tool]['id'])
+
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.OnTimer,self.updateTimer)
         self.updateTimer.Start(UPDATE_TIMER_INTERVAL)
@@ -2579,6 +2599,12 @@ class QuickGui(wx.Frame):
 
         self.dlg.Destroy()
 
+    def OnExternalTools(self, evt):
+        menu_id = evt.GetId()
+        obj = evt.GetEventObject()
+        label = obj.GetLabelText(menu_id)
+        subprocess.Popen(self.externalTools[label]['cmd'].split()) 
+
     def OnValveSeq(self, evt):
         try:
             if not self.valveSeqRpc.isGuiOn():
@@ -2697,7 +2723,11 @@ class QuickGui(wx.Frame):
             d.Show()
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
-            payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user'}
+            payload = {
+                'username': d.Username, 
+                'password': d.Password, 
+                'command': 'log_in_user',
+                'requester': 'QuickGui'}
 
             #with requests.Session() as session:
             try:
