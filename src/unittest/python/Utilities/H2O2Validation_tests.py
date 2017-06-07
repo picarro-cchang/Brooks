@@ -6,6 +6,7 @@ from PyQt4.QtTest import QTest
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QApplication
 from Host.Utilities.H2O2ValidationWizard.H2O2Validation import H2O2Validation
+from Host.Utilities.BuildHelper.BuildHelper import isAnalyzerToBuild
 
 CONFIG_FILE = os.path.abspath(r"./src/main/python/Host/Utilities/H2O2ValidationWizard/H2O2Validation.ini")
 
