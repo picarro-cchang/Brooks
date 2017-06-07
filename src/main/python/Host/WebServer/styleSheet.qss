@@ -77,7 +77,7 @@ QPushButton {
     border-width: 1px;
     border-color: rgb(127,176,81);
     border-style: solid;
-    max-width: 80px;
+    max-width: 120px;
     width: 80px;
     color: rgb(64,64,64);
     padding: 10px;

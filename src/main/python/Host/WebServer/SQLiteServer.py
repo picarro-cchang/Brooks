@@ -285,7 +285,7 @@ class SQLiteServer(object):
             self.save_action_history(current_user.username, "set %s roles to %s" % (username, request_dict["roles"]))
         db.session.commit()
         return {"username": username}
-            
+           
     def save_action_history(self, username, action):
         if self.system_varialbes["save_history"]:
             a = UserAction(username, action)
@@ -313,6 +313,9 @@ class SQLiteServer(object):
             user_datastore.delete_user(user)
             db.session.commit()
             return {"username": username}
+        elif cmd == "get_actions":      # ActionAPI, get
+            actions = UserAction.query.all()
+            return [[a.taken_at.strftime("%Y-%m-%d %H:%M:%S"), a.username, a.action] for a in actions]
         elif cmd == "get_all_users":    # UsersAPI, get
             def get_item(foo, item_name):
                 res = getattr(foo, item_name)
@@ -352,6 +355,9 @@ class SQLiteServer(object):
             utils.logout_user()
             self.save_action_history(username, "log out from %s" % (request_dict["requester"]))
             db.session.commit()
+            return {"status": "succeed"}
+        elif cmd == "save_action":  # ActionAPI, post
+            save_action_history(username, request_dict["action"])
             return {"status": "succeed"}
         elif cmd == "save_system_variables":    # SystemAPI, post
             for name in request_dict:
@@ -481,6 +487,29 @@ class SystemAPI(Resource):
     def post(self):
         request_dict = request.form
         request_dict["command"] = "save_system_variables"
+        return db_server.process_request_dict(request_dict)
+        
+@api.route('/action')
+class ActionAPI(Resource):
+    get_parser = reqparse.RequestParser()
+    post_parser = reqparse.RequestParser()
+    post_parser.add_argument('username', type=str, required=True)
+    post_parser.add_argument('action', type=str, required=True)
+    
+    @auth_token_required
+    @any_role_required("Admin")
+    @api.expect(get_parser)
+    def get(self):
+        request_dict = self.get_parser.parse_args()
+        request_dict["command"] = "get_actions"
+        return db_server.process_request_dict(request_dict)
+
+    @auth_token_required
+    @any_role_required("Admin")
+    @api.expect(post_parser)
+    def post(self):
+        request_dict = self.post_parser.parse_args()
+        request_dict["command"] = "save_action"
         return db_server.process_request_dict(request_dict)
             
 @api.route('/account')
