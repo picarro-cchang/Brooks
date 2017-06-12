@@ -5,7 +5,7 @@ import time
 import traceback
 import datetime
 from functools import wraps
-from flask import abort, Flask, make_response, Response, request, render_template, jsonify
+from flask import abort, Flask, make_response, Response, request
 from flask_restplus import Api, reqparse, Resource
 from flask_security import SQLAlchemyUserDatastore, auth_token_required, Security, utils, current_user, UserMixin, RoleMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -15,7 +15,7 @@ AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
 app = Flask(__name__, static_url_path='', static_folder='')
      
-api = Api(app, prefix='/api/v1.0',  doc='/apidoc', )
+api = Api(app, prefix='/api/v1.0', doc='/apidoc', )
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///PicarroDataBase.sqlite'

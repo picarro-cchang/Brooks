@@ -84,6 +84,13 @@ QPushButton {
     margin: 3px;
     height: 16px;
     }
+QPushButton[accessibleName="history"] {
+    background-color: rgb(127,176,81);
+    width: 15px;
+    height: 10px;
+    margin: 0px;
+}
+
 QPushButton#blackbtn {
     background-color: rgb(0,0,0);
     color: rgb(127,176,81);
