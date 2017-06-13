@@ -2,10 +2,12 @@ import os
 import unittest
 from AlarmScriptTester import AlarmScriptTester
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Utilities.BuildHelper.BuildHelper import isAnalyzerToBuild
 
 ALARM_SCRIPT = os.path.abspath(r"./Config/RFADS/AppConfig/Scripts/AlarmSystem/alarm_RFADS.py")
 ALARM_CONFIG = os.path.abspath(r"./Config/RFADS/AppConfig/Config/AlarmSystem/AlarmSystem.ini")
 
+@unittest.skipUnless(isAnalyzerToBuild(["RFADS", "Surveyor"]), "Analyzer type not match")
 class TestHealthMonitor(unittest.TestCase):
     """unit test for alarm system script of health monitor"""
     def setUp(self):

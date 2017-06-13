@@ -1,9 +1,9 @@
 import os
 import sys
+import time
 import getopt
 import requests
 
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -12,12 +12,7 @@ DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 class MainWindow(QMainWindow):
     def __init__(self, configFile, parent=None):
         super(MainWindow, self).__init__(parent)
-
-        self.styleData = ""
-        f = open('styleSheet.qss', 'r')
-        self.styleData = f.read()
-        f.close()
-
+        
         #Set Picarro marketing colors to be used for manual color changes
         picarroGreen = QColor(108,179,63).rgba()
         picarroGrey = QColor(64,64,64,).rgba()
@@ -27,21 +22,17 @@ class MainWindow(QMainWindow):
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setColor(QColor(30,30,30,180))
         self.shadow.setBlurRadius(5)
-
+                
         self.create_widgets()
         self.setWindowTitle("User Management")
         self.resize(800,600)
-
+        
         self.host_session = requests.Session()
         self.role_list = []
         self.current_user = None    # user logged in
-        # take off for SI2000
-        # self._get_system_variables()
-
+        self._get_system_variables()
+        
     def create_widgets(self):
-
-        #self.setStyleSheet(self.styleData)
-
         def spin_box(value=0, min=0, max=100, step=1):
             sBox = QSpinBox()
             sBox.setMinimum(min)
@@ -49,7 +40,7 @@ class MainWindow(QMainWindow):
             sBox.setSingleStep(step)
             sBox.setProperty("value", value)
             return sBox
-
+            
         def control_box(caption, control, caption_on_left=False):
             box = QFormLayout()
             if caption_on_left:
@@ -57,7 +48,7 @@ class MainWindow(QMainWindow):
             else:
                 box.addRow(control, QLabel(caption))
             return box
-
+    
         # Most buttons are placed in QFormLayouts as it is a convenient class
         # for lining up buttons and text fields.
         # The buttons are organized in groups and a group of buttons is put
@@ -68,13 +59,13 @@ class MainWindow(QMainWindow):
         self.user_admin_widget = QWidget()
         self.add_user_widget = QWidget()
         self.change_password_widget = QWidget()
-
+        
         home_layout = QFormLayout() 
         user_profile_layout = QFormLayout() 
         user_admin_layout = QFormLayout()
         add_user_layout = QFormLayout()
         change_password_layout = QFormLayout()
-
+        
         # Picarro logo
         picarro_logo = QPixmap("logo_picarro.png")
         picarro_label = QLabel("")
@@ -99,9 +90,10 @@ class MainWindow(QMainWindow):
         self.input_user_name = QLineEdit()
         self.input_password = QLineEdit()
         self.input_password.setEchoMode(QLineEdit.Password)
+        self.input_password.returnPressed.connect(self._user_login)
         self.button_user_login = QPushButton("Login")
         self.button_user_login.clicked.connect(self._user_login)
-        self.button_cancel_login = QPushButton("Exit") # Changed "Cancel" to "Exit"
+        self.button_cancel_login = QPushButton("Cancel")
         self.button_cancel_login.clicked.connect(self._cancel_login)
         self.label_login_info = QLabel("")
         login_input = QFormLayout()
@@ -127,9 +119,8 @@ class MainWindow(QMainWindow):
         self.user_admin_tabs = QTabWidget()
         self.user_admin_tabs.setTabShape(QTabWidget.Triangular)
         self.user_admin_tabs.addTab(tab_user_manage, "User Accounts")
-        # take off these tabs for SI2000
-        # self.user_admin_tabs.addTab(tab_user_policy, "User Policies")
-        # self.user_admin_tabs.addTab(tab_user_role, "User Roles")
+        self.user_admin_tabs.addTab(tab_user_policy, "User Policies")
+        self.user_admin_tabs.addTab(tab_user_role, "User Roles")
         button_layout = QHBoxLayout()
         self.button_log_off_user = QPushButton("Log Off")
         self.button_log_off_user.clicked.connect(self._user_log_off)
@@ -316,7 +307,6 @@ class MainWindow(QMainWindow):
     def _cancel_login(self):
         self.input_user_name.clear()
         self.input_password.clear()
-        self.close()
         
     def _change_user_pwd(self):
         # this function is called when admin is logged in 
@@ -328,13 +318,25 @@ class MainWindow(QMainWindow):
         self.label_curr_password.hide()
         self.input_curr_password.hide()
         self.add_user_widget.show()
-        
+    
+    def _check_user_activity(self):
+        # log off user if cursor doesn't move after certain amount of time
+        pos = QCursor.pos()
+        new_cursor_pos = [pos.x(), pos.y()]
+        if cmp(new_cursor_pos, self.session_cursor_pos) != 0:
+            self.session_cursor_pos = new_cursor_pos
+            self.session_active_ts = time.time()
+        elif time.time() - self.session_active_ts > self.session_lifetime:
+            self.session_timer.stop()
+            self.label_login_info.setText("Session time off.")
+            self._user_log_off()
+    
     def _change_user_role(self, role):
         query = "<p>Please confirm this action:</p><h2>Set %s as %s</h2>" % \
             (self.selected_user["username"], role)
         msg = QMessageBox(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel, self)
         if msg.exec_() == QMessageBox.Ok:
-            payload = dict(command="update", username=self.selected_user["username"], roles=role)
+            payload = dict(command="update_user", username=self.selected_user["username"], roles=role)
             self._send_request("post", "users", payload, use_token=True, show_error=True)
             self._update_user_list()
                 
@@ -366,8 +368,7 @@ class MainWindow(QMainWindow):
             if ret is None:
                 pass    # do nothing, give users a chance to edit their input
             elif "error" in ret:    # show errors and then let users edit input
-                err ="<ul><li>%s</li></ul>" % ("</li><li>".join(errors))
-                QMessageBox(QMessageBox.Critical, "Error", err, QMessageBox.Ok, self).exec_()
+                QMessageBox(QMessageBox.Critical, "Error", ret["error"], QMessageBox.Ok, self).exec_()
             else:   # succeed
                 self.add_user_widget.hide()
                 self.user_admin_widget.show()
@@ -385,7 +386,7 @@ class MainWindow(QMainWindow):
             ("Enable" if user_active else "Disable", self.selected_user["username"])
         msg = QMessageBox(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel, self)
         if msg.exec_() == QMessageBox.Ok:
-            payload = dict(command="update", username=self.selected_user["username"], active=int(user_active))
+            payload = dict(command="update_user", username=self.selected_user["username"], active=int(user_active))
             self._send_request("post", "users", payload, use_token=True, show_error=True)
             self._update_user_list()
     
@@ -421,52 +422,34 @@ class MainWindow(QMainWindow):
                 # if some roles have been removed, we clear all actions in menu
                 self.menu_user_role.clear()
                 self.input_new_user_role.clear()
-                # take off for SI2000
-                #self.input_config_user_role.clear()
+                self.input_config_user_role.clear()
                 set_old_roles = set()
             for role in set_current_roles-set_old_roles:
                 self.menu_user_role.addAction(role)
                 self.input_new_user_role.addItem(role)
-                # take off for SI2000
-                #self.input_config_user_role.addItem(role)
+                self.input_config_user_role.addItem(role)
             self.role_list = ret
         
     def _get_system_variables(self):
         self.config = self._send_request("get", "system", {'command':'get_all_variables'}, show_error=True)
         
-        def get_value(key, default_value):
-            if key in self.config:
-                return self.config[key]
-            else:
-                self.config[key] = default_value
-                return default_value
-                
-        tmp = int(get_value("password_length", '6'))
-        self.check_password_length.setChecked(tmp >= 0)
-        self.input_password_length.setEnabled(tmp >= 0)
-        if tmp >= 0:
-            self.input_password_length.setValue(tmp)
-        self.check_password_mix_charset.setChecked(get_value("password_mix_charset", 'False')=='True')
-        tmp = int(get_value("password_lifetime", '183'))
-        self.check_password_lifetime.setChecked(tmp >= 0)
-        self.input_password_lifetime.setEnabled(tmp >= 0)
-        if tmp >= 0:
-            self.input_password_lifetime.setValue(tmp)
-        tmp = int(get_value("password_reuse_period", '3'))
-        self.check_password_reuse_period.setChecked(tmp >= 0)
-        self.input_password_reuse_period.setEnabled(tmp >= 0)
-        if tmp >= 0:
-            self.input_password_reuse_period.setValue(tmp)
-        tmp = int(get_value("user_login_attempts", '3'))
-        self.check_user_login_attempts.setChecked(tmp >= 0)
-        self.input_user_login_attempts.setEnabled(tmp >= 0)
-        if tmp >= 0:
-            self.input_user_login_attempts.setValue(tmp)
-        tmp = int(get_value("user_session_lifetime", '10'))
-        self.check_user_session_lifetime.setChecked(tmp >= 0)
-        self.input_user_session_lifetime.setEnabled(tmp >= 0)
-        if tmp >= 0:
-            self.input_user_session_lifetime.setValue(tmp)
+        def set_policy_controls(policy):
+            value = int(self.config[policy])
+            enable = (value >= 0)
+            policy_check_control = getattr(self, "check_"+policy)
+            policy_value_control = getattr(self, "input_"+policy)
+            getattr(policy_check_control, "setChecked")(enable)
+            getattr(policy_value_control, "setEnabled")(enable)
+            if enable:
+                getattr(policy_value_control, "setValue")(value)
+                            
+        policies = ["password_length", "password_lifetime", "password_reuse_period", 
+                    "user_login_attempts", "user_session_lifetime"]
+        for p in policies:
+            set_policy_controls(p)
+        self.check_password_mix_charset.setChecked(self.config["password_mix_charset"]=='True')
+
+        self.session_lifetime = int(self.config["user_session_lifetime"]) * 60
     
     def _process_role_trigger(self, q):
         self._change_user_role(str(q.text()))
@@ -475,7 +458,7 @@ class MainWindow(QMainWindow):
         pass
         
     def _save_new_pwd(self, username, password):
-        payload = dict(command="update", username=username, password=password)
+        payload = dict(command="update_user", username=username, password=password)
         ret = self._send_request("post", "users", payload, use_token=True)
         if "error" not in ret:
             msg = "Password is updated for %s!" % username
@@ -501,7 +484,7 @@ class MainWindow(QMainWindow):
         msg = QMessageBox(QMessageBox.Information, "New User Account", info, QMessageBox.Ok | QMessageBox.Cancel, self)
         ret = msg.exec_()
         if ret == QMessageBox.Ok:
-            user.update(dict(password=str(password), command="create"))
+            user.update(dict(password=password, command="create_user"))
             ret = self._send_request("post", "users", user, use_token=True)
             if "error" not in ret:
                 self._update_user_list()
@@ -582,6 +565,7 @@ class MainWindow(QMainWindow):
     
     def _user_login(self):
         payload = {'command': "log_in_user",
+                   'requester': "UserAdmin",
                    'username': str(self.input_user_name.text()), 
                    'password': str(self.input_password.text())}
         return_dict = self._send_request("post", "account", payload)
@@ -595,6 +579,13 @@ class MainWindow(QMainWindow):
                     self._get_role_list()
                     self.home_widget.hide()
                     self.user_admin_widget.show()
+                    # set up a timer for user session
+                    self.session_timer = QTimer()
+                    self.session_timer.timeout.connect(self._check_user_activity)
+                    pos = QCursor.pos()
+                    self.session_cursor_pos = [pos.x(), pos.y()]
+                    self.session_active_ts = time.time()
+                    self.session_timer.start(2000)
                 else:
                     self.label_login_info.setText("Only Admin users can log in.")
                     self._send_request("post", "account", {"command":"log_out_user"})
@@ -602,14 +593,13 @@ class MainWindow(QMainWindow):
             self.label_login_info.setText(return_dict["error"])
             
     def _user_log_off(self):
-        self._send_request("post", "account", {"command":"log_out_user"}, show_error=True)
+        self._send_request("post", "account", {"command":"log_out_user", 'requester': "UserAdmin"}, show_error=True)
         self.input_password.clear()
         self.input_user_name.clear()
         self.label_login_info.clear()
         self.input_user_name.setFocus()
         self.user_admin_widget.hide()
         self.home_widget.show()
-        self.close()
         
 
 HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
@@ -646,9 +636,9 @@ def handleCommandSwitches():
     return (configFile,)
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     window = MainWindow(*handleCommandSwitches())
-    window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    #window.setWindowState(Qt.WindowFullScreen)
     window.show()
     app.installEventFilter(window)
     app.exec_()

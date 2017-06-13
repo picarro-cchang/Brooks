@@ -900,7 +900,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.wrRegFloat("WARM_BOX_HEATSINK_RESISTANCE_REGISTER",5800.0)
         sender.wrRegFloat("HOT_BOX_HEATSINK_RESISTANCE_REGISTER",60000.0)
         sender.wrRegFloat("CAVITY_RESISTANCE_REGISTER",59000.0)
-        sender.wrRegFloat("FILTER_HEATER_RESISTANCE_REGISTER", 10000.0)
+        sender.wrRegFloat("FILTER_HEATER_RESISTANCE_REGISTER", 10000000.0)
 
         sender.wrRegUint("AMBIENT_PRESSURE_ADC_REGISTER",11000000)
         sender.wrRegUint("CAVITY_PRESSURE_ADC_REGISTER",1500000)

@@ -20,7 +20,7 @@ from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
 from Host.DriverSimulator.Simulators import (
-    InjectionSimulator, PressureSimulator, TunerSimulator)
+    WlmModel, InjectionSimulator, PressureSimulator, TunerSimulator, WarmBoxThermalSimulator)
 from Host.DriverSimulator.SpectrumControl import SpectrumControl
 from Host.DriverSimulator.ValveControl import ValveControl
 
@@ -76,8 +76,9 @@ class DasSimulator(object):
         def wrRegUint(self, regIndexOrName, value, convert=True):
             return self.sim.wrDasReg(regIndexOrName, value, convert)
 
-    def __init__(self, driver):
+    def __init__(self, driver, analyzer_setup):
         self.driver = driver
+        self.analyzer_setup = analyzer_setup
         self.das_registers = interface.INTERFACE_NUMBER_OF_REGISTERS * [0]
         self.fpga_registers = 512*[0]
         self.dsp_message_queue = deque(maxlen=interface.NUM_MESSAGES)
@@ -91,7 +92,7 @@ class DasSimulator(object):
         # shared_mem is an array of 32-bit unsigned integers
         self.shared_mem = interface.SHAREDMEM_SIZE * [0]
         self.hostToDspSender = DasSimulator.HostToDspSender(self)
-        self.actionHandler = ActionHandler(self)
+        self.actionHandler = ActionHandler(self, self.analyzer_setup)
         # The following attributes are associated with the scheduler
         self.operationGroups = []
         self.scheduler = None
@@ -117,9 +118,17 @@ class DasSimulator(object):
         self.laser3Simulator = None
         self.laser4Simulator = None
         #
-        self.injectionSimulator = InjectionSimulator(self)
-        self.pressureSimulator = PressureSimulator(self)
+        simulator_config = {}
+        if "WlmModel" in self.analyzer_setup:
+            simulator_config["wlmModel"] = WlmModel(**self.analyzer_setup["WlmModel"])
+        self.injectionSimulator = InjectionSimulator(self, **simulator_config)
+        simulator_config = {}
+        if "PressureSimulator" in self.analyzer_setup:
+            simulator_config = self.analyzer_setup["PressureSimulator"] 
+        self.pressureSimulator = PressureSimulator(self, **simulator_config)
         self.tunerSimulator = TunerSimulator(self)
+
+        self.warmBoxThermalSimulator = WarmBoxThermalSimulator(self)
 
     def addSimulator(self, simulator):
         self.simulators.add(simulator)
@@ -258,7 +267,7 @@ class Scheduler(object):
 
     def initRunqueue(self):
         for group in self.operationGroups:
-            period_ms = 25*group.period # Originally 100, 25 makes the simulator faster
+            period_ms = 100*group.period # Originally 100, 25 makes the simulator faster
             when = int(period_ms * math.ceil(float(self.startTimestamp) / period_ms))
             item = (when, group.priority, group)
             heapq.heappush(self.runqueue, item)
@@ -271,7 +280,7 @@ class Scheduler(object):
                 return
             heapq.heappop(self.runqueue)
             # Enqueue next time this is to be performed
-            period_ms = 25*group.period # Originally 100, 25 makes the simulator faster
+            period_ms = 100*group.period # Originally 100, 25 makes the simulator faster
             item = (when + period_ms, group.priority, group)
             heapq.heappush(self.runqueue, item)
             # Carry out the actions in the list

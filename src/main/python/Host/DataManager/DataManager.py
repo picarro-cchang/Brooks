@@ -341,11 +341,11 @@ class DataManager(object):
             try:
                 self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
             except:
-                LogExc('Looking for Peripheral Interface config')
+                Log('Looking for Peripheral Interface config', Level = 1)
                 try:
                     self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
                 except:
-                    LogExc('Unable to find Peripheral Interface')
+                    Log('Unable to find Peripheral Interface', Level = 1)
                     self.periphIntrfConfig = None
 
             self.enablePulseAnalyzer = False
@@ -467,15 +467,7 @@ class DataManager(object):
         # Pulse Analyzer
         self.pulseAnalyzer = None
         self.runPulseAnalyzer = False
-        self.addToPulseAnalyzer = False
-
-        # New file output system for SI-2000
-        #self.healthMonitorOutputFile = OutputFile.OutputFile(
-        #        analyzerType = "AMADS",
-        #        newFileInterval = 60,
-        #        fileType = "DAT"
-        #        )
-        #self.healthMonitorOutputFile.start()
+        self.addToPulseAnalyzer = False        
 
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
@@ -2189,7 +2181,7 @@ def main():
             alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=False)
             alarmSystem.ALARMSYSTEM_start_inthread()
         else:
-            print("No config file specified")
+            print("No alarm config file specified")
 
         app = DataManager(configFile, alarmSystem, noInstMgr, options)
         if test:

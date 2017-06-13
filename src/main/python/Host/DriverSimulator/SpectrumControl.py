@@ -270,7 +270,6 @@ class SpectrumControl(object):
                 if fine < 0 or fine > 65535:
                     print "Lock failed"
                     return None
-            # print "Fine", fine, "LockError", lockError
         else:
             laserCurrent = laserSimulator.getLaserCurrent(coarseLaserCurrent, fine=fine, laserOn=True)
             wavenumber, power = laserSimulator.getLaserOutput(current=laserCurrent)
@@ -280,7 +279,7 @@ class SpectrumControl(object):
             ratio2 = (eta2 - self.eta2_offset) / (ref2 - self.ref2_offset)
 
         vLaserParams = self.sim.driver.virtualLaserParams[self.virtLaser + 1]
-        # Calculate the angle in the WLM plane, corrected by the ambienRampt pressure and etalon temperature
+        # Calculate the angle in the WLM plane, corrected by the ambient pressure and etalon temperature
         arctanvar1 = (vLaserParams["ratio1Scale"] * (ratio2 - vLaserParams["ratio2Center"]) -
                       vLaserParams["ratio2Scale"] * (ratio1 - vLaserParams["ratio1Center"]) * math.sin(vLaserParams["phase"]))
         arctanvar2 = vLaserParams["ratio2Scale"] * (ratio1 - vLaserParams["ratio1Center"]) * math.cos(vLaserParams["phase"])

@@ -16,7 +16,8 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.LaserCurrentControl import (
     Laser1CurrentControl, Laser2CurrentControl, Laser3CurrentControl, Laser4CurrentControl)
 from Host.DriverSimulator.Simulators import (
-    Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator, LaserOpticalModel)
+    Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator, 
+    LaserOpticalModel, LaserThermalModel, LaserDacModel)
 from Host.DriverSimulator.TempControl import (
     CavityTempControl, Laser1TempControl, Laser2TempControl, Laser3TempControl, Laser4TempControl, WarmBoxTempControl)
 
@@ -25,8 +26,9 @@ EventManagerProxy_Init(APP_NAME)
 
 
 class ActionHandler(object):
-    def __init__(self, sim):
+    def __init__(self, sim, setup):
         self.sim = sim
+        self.setup = setup
         self.action = {
             interface.ACTION_WRITE_BLOCK: self.writeBlock,
             interface.ACTION_SET_TIMESTAMP: self.setTimestamp,
@@ -254,6 +256,7 @@ class ActionHandler(object):
             simulator.step()
         self.sim.injectionSimulator.step()
         self.sim.pressureSimulator.step()
+        self.sim.warmBoxThermalSimulator.step()        
         # The following collects ringdowns in virtual time and is called at the
         #  of end of a timeslice
         self.sim.spectrumControl.collectSpectrum(when)
@@ -285,6 +288,16 @@ class ActionHandler(object):
         self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_STANDARD, message))
         return interface.STATUS_OK
 
+    def getLaserModels(self, laserName):
+        models = {}
+        if (laserName+"OpticalModel") in self.setup:
+            models["opticalModel"] = LaserOpticalModel(**self.setup[laserName+"OpticalModel"])
+        if (laserName+"ThermalModel") in self.setup:
+            models["thermalModel"] = LaserOpticalModel(**self.setup[laserName+"ThermalModel"])
+        if (laserName+"DacModel") in self.setup:
+            models["dacModel"] = LaserOpticalModel(**self.setup[laserName+"DacModel"])
+        return models
+
     def tempCntrlCavityInit(self, params, env, when, command):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
@@ -294,7 +307,7 @@ class ActionHandler(object):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         self.sim.laser1TempControl = Laser1TempControl(self.sim)
-        self.sim.laser1Simulator = Laser1Simulator(self.sim, opticalModel=LaserOpticalModel(nominal_wn=6237.0))
+        self.sim.laser1Simulator = Laser1Simulator(self.sim, **self.getLaserModels("Laser1"))
         self.sim.addSimulator(self.sim.laser1Simulator)
         return interface.STATUS_OK
 
@@ -302,7 +315,7 @@ class ActionHandler(object):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         self.sim.laser2TempControl = Laser2TempControl(self.sim)
-        self.sim.laser2Simulator = Laser2Simulator(self.sim, opticalModel=LaserOpticalModel(nominal_wn=6058.0))
+        self.sim.laser2Simulator = Laser2Simulator(self.sim, **self.getLaserModels("Laser2"))
         self.sim.addSimulator(self.sim.laser2Simulator)
         return interface.STATUS_OK
 
@@ -310,7 +323,7 @@ class ActionHandler(object):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         self.sim.laser3TempControl = Laser3TempControl(self.sim)
-        self.sim.laser3Simulator = Laser3Simulator(self.sim)
+        self.sim.laser3Simulator = Laser3Simulator(self.sim, **self.getLaserModels("Laser3"))
         self.sim.addSimulator(self.sim.laser3Simulator)
         return interface.STATUS_OK
 
@@ -318,7 +331,7 @@ class ActionHandler(object):
         if 0 != len(params):
             return interface.ERROR_BAD_NUM_PARAMS
         self.sim.laser4TempControl = Laser4TempControl(self.sim)
-        self.sim.laser4Simulator = Laser4Simulator(self.sim)
+        self.sim.laser4Simulator = Laser4Simulator(self.sim, **self.getLaserModels("Laser4"))
         self.sim.addSimulator(self.sim.laser4Simulator)
         return interface.STATUS_OK
 
@@ -364,6 +377,7 @@ class ActionHandler(object):
             simulator.update()
         self.sim.injectionSimulator.update()
         self.sim.pressureSimulator.update()
+        self.sim.warmBoxThermalSimulator.update()
         return interface.STATUS_OK
 
     def unknownAction(self, params, env, when, command):
