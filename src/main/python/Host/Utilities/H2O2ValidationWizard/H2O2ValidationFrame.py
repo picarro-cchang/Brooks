@@ -82,10 +82,13 @@ class H2O2ValidationFrame(QMainWindow):
         information_layout.addStretch(1)
                 
         # control buttons
+        self.button_skip_step = QPushButton("Skip")
+        self.button_skip_step.hide()
         self.button_next_step = QPushButton("Next")
         self.button_cancel_process = QPushButton("Cancel")
         button_layout = QHBoxLayout()
         button_layout.addStretch(1)
+        button_layout.addWidget(self.button_skip_step)
         button_layout.addWidget(self.button_next_step)
         button_layout.addWidget(self.button_cancel_process)
         
@@ -103,6 +106,7 @@ class H2O2ValidationFrame(QMainWindow):
         self.report.setFixedHeight(800)
         self.report.setReadOnly(True)
         self.button_save_report = QPushButton("Save Report")
+        self.button_save_report.setStyleSheet("width: 100px")
         self.button_cancel_report = QPushButton("Cancel")
         
         control_layout = QHBoxLayout()
@@ -134,11 +138,11 @@ class H2O2ValidationFrame(QMainWindow):
         login_layout = QGridLayout()
         login_layout.setColumnStretch(0,1)
         login_layout.setColumnStretch(2,1)
-        login_layout.setRowStretch(1,1)
-        login_layout.addLayout(login_input,2,1,Qt.AlignHCenter)
-        login_layout.addLayout(login_buttons,3,1,Qt.AlignHCenter)
-        login_layout.addWidget(self.label_login_info,4,1,Qt.AlignHCenter)
-        login_layout.setRowStretch(5,1)
+        login_layout.setRowStretch(0,1)
+        login_layout.addLayout(login_input,1,1,Qt.AlignHCenter)
+        login_layout.addLayout(login_buttons,2,1,Qt.AlignHCenter)
+        login_layout.addWidget(self.label_login_info,3,1,Qt.AlignHCenter)
+        login_layout.setRowStretch(4,1)
         self.login_frame.setLayout(login_layout)
             
         main_layout = QVBoxLayout()
@@ -146,7 +150,6 @@ class H2O2ValidationFrame(QMainWindow):
         main_layout.addWidget(self.wizard_frame)
         main_layout.addWidget(self.report_frame)
         main_layout.addWidget(self.login_frame)
-        main_layout.addStretch(1)        
         
         central_widget = QWidget()
         central_widget.setLayout(main_layout)
@@ -158,9 +161,11 @@ class H2O2ValidationFrame(QMainWindow):
         
     def set_connections(self):
         self.measurement_timer.timeout.connect(self.measurement)
+        self.button_skip_step.clicked.connect(self.skip_step)
         self.button_next_step.clicked.connect(self.next_step)
         self.button_cancel_process.clicked.connect(self.cancel_process)
         self.button_save_report.clicked.connect(self.save_report)
+        self.button_cancel_report.clicked.connect(self.cancel_report)
         self.input_password.returnPressed.connect(self.user_login)
         self.button_user_login.clicked.connect(self.user_login)
         self.button_cancel_login.clicked.connect(self.cancel_login)

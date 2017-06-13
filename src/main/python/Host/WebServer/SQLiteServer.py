@@ -506,7 +506,6 @@ class ActionAPI(Resource):
         return db_server.process_request_dict(request_dict)
 
     @auth_token_required
-    @any_role_required("Admin")
     @api.expect(post_parser)
     def post(self):
         request_dict = self.post_parser.parse_args()

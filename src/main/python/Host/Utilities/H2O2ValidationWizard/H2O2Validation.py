@@ -25,17 +25,16 @@ validation_steps = {2:"zero_air", 4:"calibrant1", 6:"calibrant2", 8:"calibrant3"
 
 validation_procedure = [
     ("Introduction to System Validation", """
-        <p>This validation procedure is based on sequentially introducing zero air and three methane standards.</p>
-        <p><b>Procedure Duration</b>
-            <ul>
-                <li>20-60 minutes for data acquisition</li>
-                <li>5-15 minutes for data analysis</li>
-            </ul>
+        <p>This validation procedure is based on sequentially introducing zero air and two (or three) methane standards.
+        The H2O2 signal in zero air will be measured to evaluate the zero offset for the spectroscopic model. 
+        The methane concentrations in zero air and in each standard will be measured, and a linear regression 
+        is calculated to demonstrate the linearity and zero accuracy of the analyzer. 
         </p>
+        <p>Validation process takes 20-30 minutes. A report will be generated if validation passes.</p>
         <p><b>Required Supplies</b>
             <ul>
                 <li>Cylinder of zero air (dry synthetic hydrocarbon-free air.)</li>
-                <li>Three methane standard cylinders containing 2, 10, and 100 ppm of methane certified at +/- 2% composition accuracy.</li>
+                <li>Two or three methane standard cylinders containing 2, 10, and 100 ppm of methane certified at +/- 2% composition accuracy.</li>
                 <li>One or more two-stage regulators. The second stage should be capable of accurately delivering 2-3 psi (0.1-0.2 bar) of line pressure. 
                 Recommend using a 0-15 psi (0-1 bar) output range.</li>
                 <li>Sufficient tubing to connect the regulator(s) to the instrument. </li>
@@ -48,39 +47,37 @@ validation_procedure = [
         </p>
     """),
     ("Zero-Air Measurement: Preparation", """
-        <ol>
-            <li>Attach a regulator to the zero air source if not already installed, with the output pressure set to zero. 
-            Open the cylinder valve and adjust the output line pressure upwards to 2-3 psi (0.1-0.2 bar). </li>
-            <li>Attach the zero air line to the instrument.</li>
-        </ol>
+        <h2>1. Attach a regulator to the zero air source if not already installed, with the output pressure set to zero. 
+            Open the cylinder valve and adjust the output line pressure upwards to 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>2. Attach the zero air line to the instrument.</h2>
     """),
     ("Zero-Air Measurement", """
-        <p><b>Data Collection</b></p>
-        <p>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</p>
+        <h2>Data Collection</h2>
+        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
     """),
     ("Calibrant 1: Preparation", """
-        <p>Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </p>
-        <p>Enter nominal concentration of methane gas below. </p>
+        <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>2. Enter nominal concentration of methane gas below. </h2>
     """),
     ("Calibrant 1 Measurement", """
-        <p><b>Data Collection</b></p>
-        <p>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</p>
+        <h2>Data Collection</h2>
+        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
     """),
     ("Calibrant 2: Preparation", """
-        <p>Attach the second methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </p>
-        <p>Enter nominal concentration of methane gas below. </p>
+        <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>2. Enter nominal concentration of methane gas below. </h2>
     """),
     ("Calibrant 2 Measurement", """
-        <p><b>Data Collection</b></p>
-        <p>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</p>
+        <h2>Data Collection</h2>
+        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
     """),
     ("Calibrant 3: Preparation", """
-        <p>Attach the third methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </p>
-        <p>Enter nominal concentration of methane gas below. </p>
+        <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>2. Enter nominal concentration of methane gas below. </h2>
     """),
     ("Calibrant 3 Measurement", """
-        <p><b>Collecting data...</b></p>
-        <p>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</p>
+        <h2>Data Collection</h2>
+        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
     """)]
     
 class TimeSeriesData(object):
@@ -135,6 +132,7 @@ class H2O2Validation(H2O2ValidationFrame):
             self.simulation_env = {func: getattr(math, func) for func in dir(math) if not func.startswith("__")}
             self.simulation_env.update({'random':  random.random, 'x': 0})
         if no_login:
+            self.current_user = {"first_name": "Picarro", "last_name": "Testing", "username": "test"}
             self.login_frame.hide()
             self.top_frame.show()
             self.wizard_frame.show()
@@ -277,12 +275,14 @@ class H2O2Validation(H2O2ValidationFrame):
                 else:
                     self.label_login_info.setText("You don't have the permission to perform validation.")
                     self.send_request("post", "account", {"command":"log_out_user"})
+        elif "Password expire" in return_dict["error"]:
+            msg = "Password already expires!\nPlease use QuickGUI or other programs to change password."
+            self.label_login_info.setText(msg)
         else:
             self.label_login_info.setText(return_dict["error"])
             
     def cancel_login(self):
-        self.input_user_name.clear()
-        self.input_password.clear()
+        self.close()
         
     def measurement(self):
         # get data from queue and display
@@ -334,9 +334,11 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.button_next_step.setEnabled(True)
                 if self.current_step == len(validation_procedure) - 1:
                     self.button_next_step.setText("Create Report")
-                    self.display_instruction2.setText(result_string)
+                    self.button_next_step.setStyleSheet("width: 110px")
+                    self.display_instruction2.setText("Data collection is done. Ready to create report.")
                 else:
-                    self.display_instruction2.setText(result_string+" Click Next to continue.")
+                    self.display_instruction2.setText("Click Next to continue.")
+                QMessageBox(QMessageBox.Information, "Measurement Done", result_string, QMessageBox.Ok, self).exec_()
                 
     def handle_measurement_error(self, step_name):
         # clear data collected in this step
@@ -362,6 +364,16 @@ class H2O2Validation(H2O2ValidationFrame):
             self.handle_measurement_error(step_name)
             return 1
         return 0
+
+    def skip_step(self):
+        self.info = "Do you really want to skip the 3rd calibrant?"
+        ret = QMessageBox(QMessageBox.Question, "Skip Step", self.info, QMessageBox.Ok | QMessageBox.Cancel, self).exec_()
+        if ret == QMessageBox.Ok:
+            self.button_skip_step.hide()
+            self.current_step += 1
+            self.button_next_step.setText("Create Report")
+            self.button_next_step.setStyleSheet("width: 110px")
+            self.display_instruction2.setText("Data collection is done. Ready to create report.")
         
     def next_step(self):
         if self.current_step < len(validation_procedure) - 1:
@@ -372,6 +384,8 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.nominal_concentration.show()
                 self.display_instruction2.clear()
                 self.nominal_concentration.setEnabled(True)
+                if validation_steps[self.current_step+1] == "calibrant3":
+                    self.button_skip_step.show()
                 self.input_nominal_concentration.clear()
                 self.input_nominal_concentration.setFocus()
             elif self.current_step in validation_steps:
@@ -382,6 +396,7 @@ class H2O2Validation(H2O2ValidationFrame):
                         str(self.input_nominal_concentration.text())
                 self.nominal_concentration.setEnabled(False)
                 self.button_next_step.setEnabled(False)
+                self.button_skip_step.hide()
                 self.display_instruction2.setText("Waiting...")
                 self.start_time = time.time()
         else:
@@ -391,19 +406,28 @@ class H2O2Validation(H2O2ValidationFrame):
             self.create_report()
     
     def cancel_process(self):
-        pass
-        
+        self.info = "Do you really want to abort validation process?"
+        ret = QMessageBox(QMessageBox.Question, "Stop Validation", self.info, QMessageBox.Ok | QMessageBox.Cancel, self).exec_()
+        if ret == QMessageBox.Ok:
+            payload = {"command": "save_action",
+                       "username": self.current_user["username"],
+                       "action": "Abort H2O2 validation"}
+            self.send_request("post", "action", payload)
+            self.close()
+
     def data_analysis(self):
         # fake data used for testing
         # self.validation_results = dict(
-            # zero_air_nominal=0, zero_air_mean=-0.064270241, zero_air_sd=0.068583138,
-            # calibrant1_nominal=2.01, calibrant1_mean=1.984485907, calibrant1_sd=0.085401663,
-            # calibrant2_nominal=10, calibrant2_mean=10.02599381, calibrant2_sd=0.071903936,
-            # calibrant3_nominal=100.2, calibrant3_mean=99.8075018, calibrant3_sd=0.100870281
+        #     zero_air_nominal=0, zero_air_mean=-0.064270241, zero_air_sd=0.068583138,
+        #     calibrant1_nominal=2.01, calibrant1_mean=1.984485907, calibrant1_sd=0.085401663,
+        #     calibrant2_nominal=10, calibrant2_mean=10.02599381, calibrant2_sd=0.071903936,
+        #     calibrant3_nominal=100.2, calibrant3_mean=99.8075018, calibrant3_sd=0.100870281
         # )
         
         # linear fitting
-        labels = ["zero_air", "calibrant1", "calibrant2", "calibrant3"]
+        labels = ["zero_air", "calibrant1", "calibrant2"]
+        if "calibrant3_mean" in self.validation_results:
+            labels.append("calibrant3")
         xdata = [float(self.validation_results[i+"_nominal"]) for i in labels]
         ydata = [float(self.validation_results[i+"_mean"]) for i in labels]
         coeffs = np.polyfit(xdata, ydata, 1)
@@ -465,6 +489,23 @@ class H2O2Validation(H2O2ValidationFrame):
             doc = self.report.document()
             doc.setPageSize(QSizeF(printer.pageRect().size()))   #This is necessary if you want to hide the page number
             doc.print_(printer)
+            payload = {"command": "save_action",
+                       "username": self.current_user["username"],
+                       "action": "Create validation report: %s" % file_name}
+            self.send_request("post", "action", payload)
+            self.info = "Validation report created: %s\nThis program will be closed." % file_name
+            QMessageBox(QMessageBox.Information, "Save Report", self.info, QMessageBox.Ok, self).exec_()
+            self.close()
+
+    def cancel_report(self):
+        self.info = "Do you really want to quit the program without saving report?"
+        ret = QMessageBox(QMessageBox.Question, "Quit Program", self.info, QMessageBox.Ok | QMessageBox.Cancel, self).exec_()
+        if ret == QMessageBox.Ok:
+            payload = {"command": "save_action",
+                       "username": self.current_user["username"],
+                       "action": "Quit H2O2 validation without saving report"}
+            self.send_request("post", "action", payload)
+            self.close()
 
 HELP_STRING = """H2O2Validation.py [-c<FILENAME>] [-h|--help]
 
