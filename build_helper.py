@@ -1,3 +1,4 @@
+from __future__ import print_function # Python3 style print functions
 import json
 from Queue import Queue, Empty
 import shlex
@@ -201,6 +202,20 @@ class BuildHelper(HasTraits):
         t.start()
 
 def process_build_config_file(configFile):
+    boolPropertyList = [\
+                'check_working_tree',\
+                'check_configs',\
+                'official',\
+                'push_github',\
+                'tag_github',\
+                'upload_artifactory',\
+                'version_increase'
+                ]
+    propertyList = [\
+            'product',\
+            'types'\
+            ]
+
     if not os.path.exists(configFile):
         raise("Configuration file not found: %s" % configFile)
     else:
@@ -213,29 +228,38 @@ def process_build_config_file(configFile):
         for section in config:
             if section.startswith("Build"):
                 if bool(config[section]["enable"]):
-                    product = config[section]["product"]
-                    types = config[section]["types"]
-                    official = config[section]["official_release"]
-                    tag = config[section]["tag_github"]
-                    push = config[section]["push_github"]
-                    upload = config[section]["upload_artifactory"]
-                    version_inc = config[section]["version_increase"]
-                    other_options = "-Pcheck_working_tree=False -Pcheck_configs=False"
-                    command = "python -u build.py -Pproduct=%s -Ptypes=%s -Pofficial=%s -Ppush=%s -Ptag=%s -Pupload_artifactory=%s %s" % \
-                        (product, types, official, push, tag, upload, other_options)
-                    if git_path:
-                        command += (" -Pgit=%s" % git_path)
-                    command += " make_installers"
-                    print command
-                    args = shlex.split(command, posix=False)
-                    p = Popen(args, stdout=PIPE, stderr=STDOUT, bufsize=1, close_fds=ON_POSIX)
-                    while True:
-                        line = p.stdout.readline()
-                        if len(line) == 0:
-                            break
+                    cmd = ['python','-u','build.py']
+
+                    # Get the boolean properties. If one is not found, set it
+                    # with False.
+                    for keyStr in boolPropertyList:
+                        if keyStr in config[section][keyStr]:
+                            opt = '-P' + keyStr + '=' + config[section][keyStr]
                         else:
-                            print line
-        
+                            opt = '-P' + keyStr + '=False'
+                        cmd.append(opt)
+
+                    # Get properties with string values
+                    for keyStr in propertyList:
+                        if keyStr in config[section]:
+                            opt = '-P' + keyStr + '=' + config[section][keyStr]
+                            cmd.append(opt)
+
+                    # Exclusion list (build targets not to run)
+                    if 'exclusion_list' in config[section]:
+                        cmd.extend([ '-x' + ex for ex in config[section]['exclusion_list']])
+
+                    # Build targets
+                    cmd.extend(config[section]['targets'])
+
+                    print("Running:", ' '.join(cmd))
+                    p = Popen(cmd, stdout=PIPE, stderr=STDOUT, bufsize=1, close_fds=ON_POSIX)
+                    line = p.stdout.readline()
+                    while line:
+                        print(line,end='')
+                        line = p.stdout.readline()
+
+
 HELP_STRING = """\
 build_helper.py [-h] [-c<FILENAME>]
 
@@ -244,7 +268,7 @@ Where the options can be a combination of the following:
 -c  Specify a build configuration file. Specified build process will be run automatically
 """
 def printUsage():
-    print HELP_STRING
+    print(HELP_STRING)
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
@@ -252,7 +276,7 @@ def handleCommandSwitches():
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
-        print "%s %r" % (data, data)
+        print("%s %r" % (data, data))
         sys.exit(1)
 
     # assemble a dictionary where the keys are the switches and values are switch args...
@@ -274,10 +298,10 @@ def handleCommandSwitches():
 
     if "-c" in options:
         configFile = options["-c"]
-        print "Config file specified at command line: %s" % configFile
+        print("Config file specified at command line: %s" % configFile)
 
     return configFile
-        
+
 if __name__ == "__main__":
     configFile = handleCommandSwitches()
     if len(configFile) > 0:
