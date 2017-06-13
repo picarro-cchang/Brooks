@@ -40,13 +40,43 @@ class MainWindow(UserAdminFrame):
         self.new_user_info_widget.show()
         self.add_user_widget.show()
         
-    def canel_add_user(self):
+    def cancel_add_user(self):
         self.add_user_widget.hide()
         self.user_admin_widget.show()
+
+    def cancel_change_pwd(self):
+        self.change_password_widget.hide()
+        self.input_password.clear()
+        self.home_widget.show()
     
     def cancel_login(self):
         self.input_user_name.clear()
         self.input_password.clear()
+
+    def change_password(self):
+        # this function is called when password expires
+        # and user is required to change pwd
+        password = str(self.input_change_password.text())
+        password2 = str(self.input_change_password2.text())
+        if len(password) == 0:
+            self.label_change_pwd_info.setText("New password cannot be blank!")
+        elif password != password2:
+            self.label_change_pwd_info.setText("Passwords not match!")
+        else:
+            payload = {"command": "change_password",
+                       "requester": "UserAdmin",
+                       "password": self.current_user["password"],
+                       "username": self.current_user["username"],
+                       "new_password": password}
+            return_dict = self.send_request("post", "account", payload)
+            if "error" in return_dict:
+                self.label_change_pwd_info.setText(return_dict["error"])
+            else:
+                msg = "Password of account %s has been changed" % self.current_user["username"]
+                QMessageBox(QMessageBox.Information, "Change Password", msg, QMessageBox.Ok, self).exec_()
+                self.cancel_change_pwd()
+        self.input_change_password.clear()
+        self.input_change_password2.clear()
         
     def change_user_pwd(self):
         # this function is called when admin is logged in 
@@ -58,7 +88,7 @@ class MainWindow(UserAdminFrame):
         self.label_curr_password.hide()
         self.input_curr_password.hide()
         self.add_user_widget.show()
-    
+
     def check_user_activity(self):
         # log off user if cursor doesn't move after certain amount of time
         pos = QCursor.pos()
@@ -133,7 +163,6 @@ class MainWindow(UserAdminFrame):
         check_control = getattr(self, "check_"+policy)
         input_control = getattr(self, "input_"+policy)
         enable = getattr(check_control, "isChecked")()
-        self.config
         getattr(input_control, "setEnabled")(enable)
     
     def disable_user(self):
@@ -193,9 +222,9 @@ class MainWindow(UserAdminFrame):
         self.create_history_page()
     
     def get_system_variables(self):
-        self.config = self.send_request("get", "system", {'command':'get_all_variables'}, show_error=True)
+        self.system_vars = self.send_request("get", "system", {'command':'get_all_variables'}, show_error=True)
         self.revert_policy()        
-        self.session_lifetime = int(self.config["user_session_lifetime"]) * 60
+        self.session_lifetime = int(self.system_vars["user_session_lifetime"]) * 60
 
     def load_config(self):
         self.output_folder = self.config.get("Setup", "Output_Folder", ".")
@@ -217,7 +246,7 @@ class MainWindow(UserAdminFrame):
     
     def revert_policy(self):
         def set_policy_controls(policy):
-            value = int(self.config[policy])
+            value = int(self.system_vars[policy])
             enable = (value >= 0)
             policy_check_control = getattr(self, "check_"+policy)
             policy_value_control = getattr(self, "input_"+policy)
@@ -230,8 +259,8 @@ class MainWindow(UserAdminFrame):
                     "user_login_attempts", "user_session_lifetime"]
         for p in policies:
             set_policy_controls(p)
-        self.check_password_mix_charset.setChecked(self.config["password_mix_charset"]=='True')
-        self.check_save_history.setChecked(self.config["save_history"]=='True')
+        self.check_password_mix_charset.setChecked(self.system_vars["password_mix_charset"]=='True')
+        self.check_save_history.setChecked(self.system_vars["save_history"]=='True')
 
     def save_history(self):
         # TO DO: export history in pdf format
@@ -286,19 +315,19 @@ class MainWindow(UserAdminFrame):
             policy_check_control = getattr(self, "check_"+policy)
             policy_value_control = getattr(self, "input_"+policy)
             if getattr(policy_check_control, "isChecked")():
-                self.config[policy] = str(getattr(policy_value_control, "value")())
+                self.system_vars[policy] = str(getattr(policy_value_control, "value")())
             else:
-                self.config[policy] = "-1"
+                self.system_vars[policy] = "-1"
         
         policies = ["password_length", "password_lifetime", "password_reuse_period", 
                     "user_login_attempts", "user_session_lifetime"]
         for p in policies:
             get_policy(p)    
         
-        self.config["password_mix_charset"] = "True" if self.check_password_mix_charset.isChecked() else "False"
-        self.config["save_history"] = "True" if self.check_save_history.isChecked() else "False"
-        self.send_request("post", "system", self.config, use_token=True, show_error=True)
-        self.session_lifetime = int(self.config["user_session_lifetime"]) * 60
+        self.system_vars["password_mix_charset"] = "True" if self.check_password_mix_charset.isChecked() else "False"
+        self.system_vars["save_history"] = "True" if self.check_save_history.isChecked() else "False"
+        self.send_request("post", "system", self.system_vars, use_token=True, show_error=True)
+        self.session_lifetime = int(self.system_vars["user_session_lifetime"]) * 60
     
     def select_user_from_table(self):
         indexes = self.table_user_list.selectionModel().selectedRows()
@@ -379,8 +408,19 @@ class MainWindow(UserAdminFrame):
                 else:
                     self.label_login_info.setText("Only Admin users can log in.")
                     self.send_request("post", "account", {"command":"log_out_user"})
+        elif "Password expire" in return_dict["error"]:
+            self.current_user = dict(
+                username=str(self.input_user_name.text()),
+                password=str(self.input_password.text())
+                )
+            self.home_widget.hide()
+            self.input_change_password.clear()
+            self.input_change_password2.clear()
+            self.change_password_widget.show()
+            self.label_change_pwd_info.setText("Password expires! Please change your password.")
         else:
             self.label_login_info.setText(return_dict["error"])
+            self.input_password.clear()
             
     def user_log_off(self):
         self.send_request("post", "account", {"command":"log_out_user", 'requester': "UserAdmin"}, show_error=True)

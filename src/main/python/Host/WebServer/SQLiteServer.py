@@ -485,7 +485,8 @@ class SystemAPI(Resource):
     @auth_token_required
     @any_role_required("Admin")
     def post(self):
-        request_dict = request.form
+        # request.form is an immutable MultiDict
+        request_dict = {k: request.form[k] for k in request.form}
         request_dict["command"] = "save_system_variables"
         return db_server.process_request_dict(request_dict)
         

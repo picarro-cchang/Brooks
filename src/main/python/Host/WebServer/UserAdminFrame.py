@@ -45,16 +45,14 @@ class UserAdminFrame(QMainWindow):
         # into a QFormLayout.  To hide/show a layout, it must be set in a
         # widget.
         self.home_widget = QWidget()
-        self.user_profile_widget = QWidget()
         self.user_admin_widget = QWidget()
         self.add_user_widget = QWidget()
         self.change_password_widget = QWidget()
         
-        home_layout = QFormLayout() 
-        user_profile_layout = QFormLayout() 
+        home_layout = QVBoxLayout() 
         user_admin_layout = QFormLayout()
         add_user_layout = QFormLayout()
-        change_password_layout = QFormLayout()
+        change_password_layout = QVBoxLayout()
         
         # Picarro logo
         picarro_logo = QPixmap("logo_picarro.png")
@@ -66,17 +64,15 @@ class UserAdminFrame(QMainWindow):
         # Set the form layouts in widgets so hide/show works.
         # Set home form as a the initially visible form.
         self.home_widget.setLayout(home_layout)
-        self.user_profile_widget.setLayout(user_profile_layout)
         self.user_admin_widget.setLayout(user_admin_layout)
         self.add_user_widget.setLayout(add_user_layout)
         self.change_password_widget.setLayout(change_password_layout)
         #self.home_widget.hide()
-        self.user_profile_widget.hide()
         self.user_admin_widget.hide()
         self.change_password_widget.hide()
         self.add_user_widget.hide()
         
-        # Home
+        # Home/Login
         self.input_user_name = QLineEdit()
         self.input_password = QLineEdit()
         self.input_password.setEchoMode(QLineEdit.Password)
@@ -91,10 +87,32 @@ class UserAdminFrame(QMainWindow):
         login_input.addRow("Password", self.input_password)
         login_buttons = QHBoxLayout()
         login_buttons.addWidget(self.button_user_login)
+        login_buttons.addStretch(1)
         login_buttons.addWidget(self.button_cancel_login)
-        home_layout.addRow(login_input)
-        home_layout.addRow(login_buttons)
-        home_layout.addRow(self.label_login_info)
+        home_layout.addLayout(login_input)
+        home_layout.addLayout(login_buttons)
+        home_layout.addWidget(self.label_login_info)
+
+        # Change password widget
+        self.input_change_password = QLineEdit()
+        self.input_change_password.setEchoMode(QLineEdit.Password)
+        self.input_change_password2 = QLineEdit()
+        self.input_change_password2.setEchoMode(QLineEdit.Password)
+        self.button_change_pwd = QPushButton("Next")
+        self.button_change_pwd.clicked.connect(self.change_password)
+        self.button_cancel_change = QPushButton("Cancel")
+        self.button_cancel_change.clicked.connect(self.cancel_change_pwd)
+        self.label_change_pwd_info = QLabel("")
+        pwd_input = QFormLayout()
+        pwd_input.addRow("New Password", self.input_change_password)
+        pwd_input.addRow("Confirmed Password", self.input_change_password2)
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.button_change_pwd)
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.button_cancel_change)
+        change_password_layout.addLayout(pwd_input)
+        change_password_layout.addLayout(button_layout)
+        change_password_layout.addWidget(self.label_change_pwd_info)
         
         # User admin widget
         tab_user_manage = QWidget()
@@ -240,8 +258,8 @@ class UserAdminFrame(QMainWindow):
         self.input_new_user_role = QComboBox()
         self.button_add_user_next = QPushButton("Next")
         self.button_add_user_next.clicked.connect(self.check_user_input)
-        self.button_canel_add_user = QPushButton("Cancel")
-        self.button_canel_add_user.clicked.connect(self.canel_add_user)
+        self.button_cancel_add_user = QPushButton("Cancel")
+        self.button_cancel_add_user.clicked.connect(self.cancel_add_user)
         self.new_user_info_widget = QWidget()
         user_info = QFormLayout()
         self.new_user_info_widget.setLayout(user_info)
@@ -255,7 +273,7 @@ class UserAdminFrame(QMainWindow):
         new_user_control = QHBoxLayout()
         new_user_control.addWidget(self.button_add_user_next)
         new_user_control.addStretch(1)
-        new_user_control.addWidget(self.button_canel_add_user)
+        new_user_control.addWidget(self.button_cancel_add_user)
         add_user_layout.addRow(self.new_user_info_widget)
         add_user_layout.addRow(self.label_curr_password, self.input_curr_password)
         add_user_layout.addRow("New Password", self.input_new_password)
@@ -272,11 +290,10 @@ class UserAdminFrame(QMainWindow):
         grid_layout.setColumnStretch(3,1)
         grid_layout.setRowStretch(0,2)
         grid_layout.addWidget(self.home_widget,1,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.user_profile_widget,2,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.user_admin_widget,3,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.add_user_widget,4,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.change_password_widget,5,2,Qt.AlignHCenter)
-        grid_layout.setRowStretch(6,2)
+        grid_layout.addWidget(self.user_admin_widget,2,2,Qt.AlignHCenter)
+        grid_layout.addWidget(self.add_user_widget,3,2,Qt.AlignHCenter)
+        grid_layout.addWidget(self.change_password_widget,4,2,Qt.AlignHCenter)
+        grid_layout.setRowStretch(5,2)
 
         main_layout = QVBoxLayout()
         main_layout.addSpacing(25)
@@ -285,4 +302,4 @@ class UserAdminFrame(QMainWindow):
 
         centralWidget = QWidget()
         centralWidget.setLayout(main_layout)
-        self.setCentralWidget(centralWidget)    
+        self.setCentralWidget(centralWidget)
