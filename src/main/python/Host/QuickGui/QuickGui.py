@@ -2697,7 +2697,7 @@ class QuickGui(wx.Frame):
             d.Show()
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
-            payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user'}
+            payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user', 'requester': 'QuickGui'}
 
             #with requests.Session() as session:
             try:

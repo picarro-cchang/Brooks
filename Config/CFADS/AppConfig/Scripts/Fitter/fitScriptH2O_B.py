@@ -16,7 +16,6 @@ import os.path
 import time
 
 tstart = time.clock()
-
 if INIT:
     fname = os.path.join(BASEPATH,r"./CFADS/spectral library v1_043_CFADS-xx_2009_0813.ini")
     loadSpectralLibrary(fname)
@@ -35,6 +34,7 @@ deps = Dependencies()
 ANALYSIS = []
 d = DATA
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
+print "After badRingdownFilter"
 d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
 d.sparse(maxPoints=100,width=0.002,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",sigmaThreshold=1.8)
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
@@ -44,7 +44,7 @@ T = d["cavitytemperature"]
 tunerMean = mean(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
-
+print d["spectrumId"], d["ngroups"]
 tstart = time.clock()
 if d["spectrumId"]==11 and d["ngroups"]>5:
     r = anH2O[0](d,init,deps)

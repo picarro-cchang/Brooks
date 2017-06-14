@@ -52,7 +52,7 @@ ANALYSIS = []
 d = DATA
 d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
 d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
-d.tunerEnsembleFilter(maxDev=500000,sigmaThreshold=3.5)
+# d.tunerEnsembleFilter(maxDev=500000,sigmaThreshold=3.5)
 d.sparse(maxPoints=1000,width=0.003,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",outlierThreshold=4)
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
 d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
@@ -65,6 +65,7 @@ dasTemp = d.sensorDict["DasTemp"]
 r = None
 
 tstart = time.clock()
+# if d["spectrumId"]==25: print d["ngroups"]
 if (d["spectrumId"]==25) and (d["ngroups"]>13):
     r = anCH4[0](d,init,deps)
     ANALYSIS.append(r)
