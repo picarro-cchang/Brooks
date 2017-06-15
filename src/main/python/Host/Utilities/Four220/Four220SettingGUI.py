@@ -26,12 +26,13 @@ class ChannelSettingWidget(QWidget):
         Open external stylesheet and read the data
         ------------------------------------------
         """
-        
-        self.styleData = ""
-        f = open('../styleSheet.qss', 'r')
-        self.styleData = f.read()
-        f.close()
-
+        try:
+            self.styleData = ""
+            f = open('styleSheet.qss', 'r')
+            self.styleData = f.read()
+            f.close()
+        except:
+            pass
         
         match = re.search(r'\#(\d)', title)
         ch_num = match.group(1)
@@ -48,19 +49,28 @@ class ChannelSettingWidget(QWidget):
         #self.setStyleSheet(self.styleData)
         innergl = QGridLayout()
         qfl = QFormLayout()
-
         
         self._airType = QComboBox()
         self.output_list = CONFIG['OUTPUT_LIST'].get('AIR_TYPE').strip().split()
+        self.units = CONFIG['OUTPUT_LIST'].get('UNITS').strip().split()
+        self.high_limits = map(float, CONFIG['OUTPUT_LIST'].get('LIMIT').strip().split())
+        
+        self.unit_dict = dict(zip(self.output_list, self.units))
+        self.limit_dict = dict(zip(self.output_list, self.high_limits))
+        self.unit_dict["None"] = 'None'
+        self.limit_dict["None"] = 'None'
+        print "Dicts: ", self.unit_dict, self.limit_dict
         self.max_index = len(self.output_list)
         self._airType.addItems(self.output_list+ ['None'])
         
         self._rangeMin = QLineEdit()
         self._rangeMax = QLineEdit()
-        
+        self._unit = QLabel("None")
+
         qfl.addRow(QLabel("Output Type"), self._airType)
-        qfl.addRow(QLabel("Range Min"), self._rangeMin)
-        qfl.addRow(QLabel("Range Max"), self._rangeMax)
+        qfl.addRow(QLabel("Unit: "), self._unit)
+        qfl.addRow(QLabel("Min (Current 4mA)"), self._rangeMin)
+        qfl.addRow(QLabel("Max (Current 20mA)"), self._rangeMax)
         
         # Action buttons
         self._undoBTN = QPushButton("Undo")
@@ -111,39 +121,42 @@ class ChannelSettingWidget(QWidget):
             self._airType.setCurrentIndex(idx)
         else:
             self._airType.setCurrentIndex(self.max_index)
-            
+        
         range_min = CONFIG[self.section_name].get('SOURCE_MIN')
         self._rangeMin.setText(range_min)
         range_max = CONFIG[self.section_name].get('SOURCE_MAX')
         self._rangeMax.setText(range_max)
+        print source, "+++", self.unit_dict[source]
+        self._unit.setText(self.unit_dict[source])
         self._undoBTN.setDisabled(True)
         self._saveBTN.setDisabled(True)
      
     def _saveSettings(self):
-        # convert wiget settings to CONFIG
+        # convert wiget settings to CONFIG obj
         if self._airType.currentIndex() == self.max_index:
             for key in CONFIG[self.section_name]:
-                CONFIG[self.section_name].update({key : '' })
+                CONFIG[self.section_name][key] = 'None'
                 self._saveBTN.setDisabled(True)
                 self._undoBTN.setDisabled(True)
         else:
             try:
-                if float(self._rangeMin.text()) < float(self._rangeMax.text()) and float(self._rangeMin.text()) >= 0 and float(self._rangeMax.text()) <=2000:
-                    if CONFIG[self.section_name].get('SOURCE_MIN') == '' or float(CONFIG[self.section_name].get('SOURCE_MIN')) != float(self._rangeMin.text()):
+                limitmax = self.limit_dict[str(self._airType.itemText(self._airType.currentIndex()))]
+                if float(self._rangeMin.text()) < float(self._rangeMax.text()) and float(self._rangeMin.text()) >= 0 and float(self._rangeMax.text()) <=limitmax:
+                    if CONFIG[self.section_name].get('SOURCE_MIN') == 'None' or float(CONFIG[self.section_name].get('SOURCE_MIN')) != float(self._rangeMin.text()):
                         CONFIG[self.section_name].update({'SOURCE_MIN': float(self._rangeMin.text())})                
-                        
-                    if CONFIG[self.section_name].get('SOURCE_MAX') == '' or float(CONFIG[self.section_name].get('SOURCE_MAX')) != float(self._rangeMax.text()):
+                    #if CONFIG[self.section_name].get('SOURCE_MAX') == 'None' or CONFIG[self.section_name].get('SOURCE_MAX') == '':
+                    #    CONFIG[self.section_name]['SOURCE_MAX'] = 'None'
+                    if CONFIG[self.section_name].get('SOURCE_MAX') == 'None' or float(CONFIG[self.section_name].get('SOURCE_MAX')) != float(self._rangeMax.text()):
                         CONFIG[self.section_name].update({'SOURCE_MAX': float(self._rangeMax.text())})
-                        
-                    if CONFIG[self.section_name].get('SOURCE') == '' or CONFIG[self.section_name].get('SOURCE') != self._airType.itemText(self._airType.currentIndex()):
+                    if CONFIG[self.section_name].get('SOURCE') != self._airType.itemText(self._airType.currentIndex()):
                         CONFIG[self.section_name].update({'SOURCE' : str(self._airType.itemText(self._airType.currentIndex()))})
-                        
                     self._saveBTN.setDisabled(True)
                     self._undoBTN.setDisabled(True)
                 else:
-                    QMessageBox.warning(self, 'Invalid Range Min and Max', 'Make sure: 0 <= Range Min < Range Max <=2000.')
+                    QMessageBox.warning(self, 'Invalid Range Min and Max', 'Make sure: 0 <= Range Min < Range Max <=%s in %s.'%(str(limitmax), self.unit_dict[str(self._airType.itemText(self._airType.currentIndex()))]))
             except:
                 QMessageBox.warning(self, 'Error', 'Please input Digit Numbers to the Range Min and Range Max field.')
+                raise
 
         
     def modifyUI(self):
@@ -157,7 +170,8 @@ class ChannelSettingWidget(QWidget):
         else:
             for w in [self._rangeMin, self._rangeMax]:
                 w.setDisabled(False)
-
+        update_unit = self.unit_dict[str(self._airType.itemText(self._airType.currentIndex()))]
+        self._unit.setText(update_unit)
 
 
 class ChannelSettingsDialog(QDialog):
@@ -165,12 +179,14 @@ class ChannelSettingsDialog(QDialog):
     def __init__(self, ch0 = True, ch1 = True, ch2 = True, ch3 = True, parent = None):
         super(ChannelSettingsDialog, self).__init__(parent)
         
-        self.styleData = ""
-        f = open('../styleSheet.qss', 'r')
-        self.styleData = f.read()
-        f.close()
-        self.setStyleSheet(self.styleData)
-        
+        try:
+            self.styleData = ""
+            f = open('styleSheet.qss', 'r')
+            self.styleData = f.read()
+            f.close()
+            self.setStyleSheet(self.styleData)
+        except:
+            pass
         # Set which widgets to show
         self._ch0 = ch0
         self._ch1 = ch1
@@ -181,7 +197,7 @@ class ChannelSettingsDialog(QDialog):
         self.setLayout(self._initGui())
         self.setConnections()
         self.setModal(True)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        #self.setWindowFlags(Qt.FramelessWindowHint)
         
         return        
         
@@ -238,7 +254,8 @@ class ChannelSettingsDialog(QDialog):
 
         if isSaved:
             if CONFIG != ini_CONFIG:
-                print "write new values to ini file."
+                result = QMessageBox.information(self, 'Message', "Write new values to configuration.  \
+                \n If your analyzer is in measuring mode, you need to restart the analyzer to make the change take effect.")
                 CONFIG.write()
             self.accept()
         else:
