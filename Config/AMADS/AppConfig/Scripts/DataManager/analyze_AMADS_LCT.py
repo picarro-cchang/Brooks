@@ -4,6 +4,10 @@
 #  2016 0901:  added filter for pressure lock to prevent spikes from perturbing PZT
 #  2016 0920: EWMA - Exponential Weighted Moving Average; requested by Raymond
 #  2017 0111:  changed PZT gain factor from 0.05 to 0.2 (hoffnagle)
+#  2017 0412:  Added post-fit corrections for water cross-talk to HF; no need for HF cross-talk to water (jah)
+#              Change HF reporting to come from peak77 WITHOUT baseline averaging (jah)
+#              Correction coefficient comes from stored config for MADS2060 aka Golden 
+
 import os
 import sys
 import inspect
@@ -104,6 +108,8 @@ H1 = _INSTR_["water_crosstalk_linear"]
 A1H1 = _INSTR_["water_crossbroadening_linear"]
 A1H2 = _INSTR_["water_crossbroadening_quadratic"]
 
+H1onHF = _INSTR_["water_to_hf"]
+
 # Check instrument status and do not do any updates if any parameters are unlocked
 
 pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
@@ -169,7 +175,7 @@ except:
 
 try:   
     
-    temp = applyLinear(_DATA_["hf_ppbv_ave"],HF_CONC)
+    temp = applyLinear(_DATA_["hf_ppbv"],HF_CONC) + H1onHF*_DATA_["peak_82"]
     _NEW_DATA_["HF_raw"] = temp
     now = _OLD_DATA_["HF_raw"][-2].time
     HF30s = boxAverage(_PERSISTENT_["bufferHF30"],temp,now,30)
