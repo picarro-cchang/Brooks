@@ -40,7 +40,8 @@ def get_cython_source(base_path, after_cython=False):
     SpecialFiles = [
             "__init__.py", "setup.py",
             "EventManagerGUI.py",
-            "GuiTools.py", "GuiWidgets.py"
+            "GuiTools.py", "GuiWidgets.py",
+            "ValveSequencerSimulator.py"
     ]
     if not after_cython:
         for f in pySourceFiles:
