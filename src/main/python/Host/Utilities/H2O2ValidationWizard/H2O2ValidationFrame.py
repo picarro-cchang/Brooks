@@ -12,9 +12,9 @@ class H2O2ValidationFrame(QMainWindow):
         super(H2O2ValidationFrame, self).__init__(parent)
         self.setWindowTitle("H2O2 Validation")
         #self.setWindowState(Qt.WindowFullScreen)
-        curr_dir = os.path.dirname(os.path.realpath(__file__))
+        self.curr_dir = os.path.dirname(os.path.realpath(__file__))
         self.style_data = ""
-        with open(os.path.join(curr_dir, 'styleSheet.qss'), 'r') as f:
+        with open(os.path.join(self.curr_dir, 'styleSheet.qss'), 'r') as f:
             self.style_data = f.read()
         self.setStyleSheet(self.style_data)
         pg.setConfigOption('background', (64,64,64))

@@ -102,12 +102,13 @@ class TimeSeriesData(object):
         return (self.xdata[:self.pointer], self.ydata[:self.pointer])
 
 class H2O2Validation(H2O2ValidationFrame):
-    def __init__(self, configFile, simulation, no_login, parent=None):
+    def __init__(self, configFile, simulation=False, no_login=False, unit_test=False, parent=None):
         if not os.path.exists(configFile):
             print "Config file not found: %s" % configFile
             sys.exit(0)
         self.config = CustomConfigObj(configFile)
         self.simulation = simulation
+        self.unit_test = unit_test
         self.load_config()
         super(H2O2Validation, self).__init__(parent)
         
@@ -117,7 +118,7 @@ class H2O2Validation(H2O2ValidationFrame):
         self.current_step = 0
         self.start_time = 0
         self.record_status = ""
-        self.info = ""
+        self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
         self.validation_data = dict(H2O2=[], zero_air=[], calibrant1=[], calibrant2=[], calibrant3=[])
         adp = self.config.getint("Status_Check", "Average_Data_Points", 10)
@@ -177,6 +178,15 @@ class H2O2Validation(H2O2ValidationFrame):
                                              retry = True,
                                              name = "H2O2Validation")
         self.measurement_timer.start(int(self.update_period*1000))
+
+    def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
+        msg_box = QMessageBox(icon, title, message, buttons, self)
+        if self.unit_test:
+            self.message_box_content["title"] = title
+            self.message_box_content["msg"] = message
+            return self.message_box_content["response"]
+        else:
+            return msg_box.exec_()
         
     def stream_filter(self, entry):
         if entry["source"] == self.data_source:
@@ -304,9 +314,9 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.display_instruction2.setText("Collecting data...")
             elif self.record_status.startswith("error"):
                 self.start_time = 0
-                stage, self.info = self.record_status.split("|")[1:]
+                stage, info = self.record_status.split("|")[1:]
                 self.record_status = ""
-                QMessageBox(QMessageBox.Critical, "Error", self.info, QMessageBox.Ok, self).open()
+                self.message_box(QMessageBox.Critical, "Error", info)
                 self.handle_measurement_error(stage)
             elif current_time - self.start_time >= self.data_collection_time:
                 # data collection is done
@@ -338,7 +348,7 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.display_instruction2.setText("Data collection is done. Ready to create report.")
                 else:
                     self.display_instruction2.setText("Click Next to continue.")
-                QMessageBox(QMessageBox.Information, "Measurement Done", result_string, QMessageBox.Ok, self).exec_()
+                self.message_box(QMessageBox.Information, "Measurement Done", result_string)
                 
     def handle_measurement_error(self, step_name):
         # clear data collected in this step
@@ -353,21 +363,21 @@ class H2O2Validation(H2O2ValidationFrame):
                 
     def check_ch4_result(self, deviation, std, step_name):
         if deviation > self.ch4_max_deviation:
-            self.info = "Measurement result is too far away from nominal concentration!\n" + \
+            info = "Measurement result is too far away from nominal concentration!\n" + \
                 "Please check gas source and analyzer."
-            QMessageBox(QMessageBox.Critical, "Error", self.info, QMessageBox.Ok, self).open()
+            self.message_box(QMessageBox.Critical, "Error", info)
             self.handle_measurement_error(step_name)
             return 1
         if std > self.ch4_max_std:
-            self.info = "Measurement data is too noisy\nPlease check analyzer."
-            QMessageBox(QMessageBox.Critical, "Error", self.info, QMessageBox.Ok, self).open()
+            info = "Measurement data is too noisy\nPlease check analyzer."
+            self.message_box(QMessageBox.Critical, "Error", info)
             self.handle_measurement_error(step_name)
             return 1
         return 0
 
     def skip_step(self):
-        self.info = "Do you really want to skip the 3rd calibrant?"
-        ret = QMessageBox(QMessageBox.Question, "Skip Step", self.info, QMessageBox.Ok | QMessageBox.Cancel, self).exec_()
+        info = "Do you really want to skip the 3rd calibrant?"
+        ret = self.message_box(QMessageBox.Question, "Skip Step", info, QMessageBox.Ok | QMessageBox.Cancel)
         if ret == QMessageBox.Ok:
             self.button_skip_step.hide()
             self.current_step += 1
@@ -378,8 +388,6 @@ class H2O2Validation(H2O2ValidationFrame):
     def next_step(self):
         if self.current_step < len(validation_procedure) - 1:
             self.current_step += 1
-            self.display_caption.setText(validation_procedure[self.current_step][0]) 
-            self.display_instruction.setText(validation_procedure[self.current_step][1])
             if self.current_step+1 in validation_steps and validation_steps[self.current_step+1].startswith("calibrant"):
                 self.nominal_concentration.show()
                 self.display_instruction2.clear()
@@ -392,13 +400,22 @@ class H2O2Validation(H2O2ValidationFrame):
                 if self.current_step == self.zero_air_step:
                     self.validation_results["zero_air_nominal"] = 0
                 else:
-                    self.validation_results[validation_steps[self.current_step]+"_nominal"] = \
-                        str(self.input_nominal_concentration.text())
+                    concentration = str(self.input_nominal_concentration.text())
+                    try:
+                        float(concentration)
+                    except ValueError:
+                        msg = "Not a valid nomial concentration!"
+                        self.message_box(QMessageBox.Critical, "Error", msg)
+                        self.current_step -= 1
+                        return 1
+                    self.validation_results[validation_steps[self.current_step]+"_nominal"] = concentration
                 self.nominal_concentration.setEnabled(False)
                 self.button_next_step.setEnabled(False)
                 self.button_skip_step.hide()
                 self.display_instruction2.setText("Waiting...")
                 self.start_time = time.time()
+            self.display_caption.setText(validation_procedure[self.current_step][0]) 
+            self.display_instruction.setText(validation_procedure[self.current_step][1])
         else:
             self.top_frame.hide()
             self.wizard_frame.hide()
@@ -406,8 +423,8 @@ class H2O2Validation(H2O2ValidationFrame):
             self.create_report()
     
     def cancel_process(self):
-        self.info = "Do you really want to abort validation process?"
-        ret = QMessageBox(QMessageBox.Question, "Stop Validation", self.info, QMessageBox.Ok | QMessageBox.Cancel, self).exec_()
+        msg = "Do you really want to abort validation process?"
+        ret = self.message_box(QMessageBox.Question, "Stop Validation", msg, QMessageBox.Ok | QMessageBox.Cancel)
         if ret == QMessageBox.Ok:
             payload = {"command": "save_action",
                        "username": self.current_user["username"],
@@ -455,7 +472,7 @@ class H2O2Validation(H2O2ValidationFrame):
         
     def create_report(self):
         image = self.data_analysis()
-        html = file("ReportTemplate.html","r").read()
+        html = file(os.path.join(self.curr_dir, "ReportTemplate.html"),"r").read()
         # fill data in report
         html = html.replace("{date}", time.strftime("%Y-%m-%d"))
         html = html.replace("{time}", time.strftime("%H:%M:%S"))
@@ -475,12 +492,12 @@ class H2O2Validation(H2O2ValidationFrame):
         cursor.insertImage(image_format)
         
     def save_report(self):
-        self.info = """
+        msg = """
         <p><b>You are about to sign a record electronically. This is the legal equivalent of a traditional handwritten signature.</b></p>
         <p>Click OK to sign and save the validation report.</p>
         """
-        msg = QMessageBox(QMessageBox.Warning, "Electronic Signature", self.info, QMessageBox.Ok | QMessageBox.Cancel, self)
-        if msg.exec_() == QMessageBox.Ok:
+        ret = self.message_box(QMessageBox.Warning, "Electronic Signature", msg, QMessageBox.Ok | QMessageBox.Cancel)
+        if ret == QMessageBox.Ok:
             printer = QPrinter(QPrinter.PrinterResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
             printer.setPaperSize(QPrinter.B4)
@@ -489,17 +506,16 @@ class H2O2Validation(H2O2ValidationFrame):
             doc = self.report.document()
             doc.setPageSize(QSizeF(printer.pageRect().size()))   #This is necessary if you want to hide the page number
             doc.print_(printer)
-            payload = {"command": "save_action",
-                       "username": self.current_user["username"],
+            payload = {"username": self.current_user["username"],
                        "action": "Create validation report: %s" % file_name}
             self.send_request("post", "action", payload)
-            self.info = "Validation report created: %s\nThis program will be closed." % file_name
-            QMessageBox(QMessageBox.Information, "Save Report", self.info, QMessageBox.Ok, self).exec_()
+            msg = "Validation report created: %s\nThis program will be closed." % file_name
+            self.message_box(QMessageBox.Information, "Save Report", msg)
             self.close()
 
     def cancel_report(self):
-        self.info = "Do you really want to quit the program without saving report?"
-        ret = QMessageBox(QMessageBox.Question, "Quit Program", self.info, QMessageBox.Ok | QMessageBox.Cancel, self).exec_()
+        msg = "Do you really want to quit the program without saving report?"
+        ret = self.message_box(QMessageBox.Question, "Quit Program", msg, QMessageBox.Ok | QMessageBox.Cancel)
         if ret == QMessageBox.Ok:
             payload = {"command": "save_action",
                        "username": self.current_user["username"],
