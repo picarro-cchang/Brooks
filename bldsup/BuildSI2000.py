@@ -132,6 +132,7 @@ class BuildSI2000(Builder):
                 shutil.copyfile(f, dist_file)
 
     def compile_sources_to_pyo(self):
+        return # RSF
         self.logger.info("Compiling python sources to pyo files")
         path = os.path.join(self.project.expand_path("$dir_dist"), "Host")
         self.run_command("python -O -m compileall -x '__init__.py' %s" % path)

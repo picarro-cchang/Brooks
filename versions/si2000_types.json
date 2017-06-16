@@ -23,6 +23,10 @@
         "SADS": {
             "species": "HCl",
             "installerSignature": "SADS"
+        },
+        "CFADS": {
+            "species": "CH4",
+            "installerSignature": "CFADS"
         }
     }
 }
