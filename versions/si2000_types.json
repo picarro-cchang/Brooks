@@ -15,6 +15,11 @@
             "installerSignature": "MADS"
         },
         
+        "BxDS": {
+            "species": "H2S",
+            "installerSignature": "BxDS"
+        },
+        
         "SADS": {
             "species": "HCl",
             "installerSignature": "SADS"
