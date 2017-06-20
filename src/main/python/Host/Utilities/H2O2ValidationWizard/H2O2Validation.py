@@ -109,9 +109,8 @@ class H2O2Validation(H2O2ValidationFrame):
         self.config = CustomConfigObj(configFile)
         self.simulation = simulation
         self.unit_test = unit_test
-        self.load_config()
         super(H2O2Validation, self).__init__(parent)
-        
+        self.load_config()
         self.display_caption.setText(validation_procedure[0][0])
         self.display_instruction.setText(validation_procedure[0][1])
         self.host_session = requests.Session()
@@ -144,6 +143,8 @@ class H2O2Validation(H2O2ValidationFrame):
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
         self.report_dir = self.config.get("Setup", "Report_Directory")
+        if not os.path.isabs(self.report_dir):
+            self.report_dir = os.path.join(self.curr_dir, self.report_dir)
         self.water_conc_limit = self.config.getfloat("Status_Check", "Water_Conc_Limit", 100)
         self.pressure_upper_limit = self.config.getfloat("Status_Check", "Pressure_Upper_Limit", 1000)
         self.pressure_lower_limit = self.config.getfloat("Status_Check", "Pressure_Lower_Limit", 0)

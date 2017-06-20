@@ -20,6 +20,7 @@ from BuildDatViewer import BuildDatViewer
 
 use_plugin("python.core")
 use_plugin("python.unittest")
+use_plugin("p_func_test", plugin_module_name="Host.Utilities.BuildHelper.functional_test_plugin")
 use_plugin("picarro", plugin_module_name="Host.Utilities.BuildHelper.integration_test_plugin")
 use_plugin("python.install_dependencies")
 # use_plugin("python.flake8")
