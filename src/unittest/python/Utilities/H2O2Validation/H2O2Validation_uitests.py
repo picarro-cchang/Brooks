@@ -15,7 +15,7 @@ CONFIG_FILE = os.path.join(os.path.dirname(__file__), "H2O2Validation.ini")
 
 app = QApplication(sys.argv)
 
-@unittest.skipUnless(isAnalyzerToBuild(["NCDS"]), "Analyzer type not match")
+@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
 class TestH2O2Validation(unittest.TestCase):
     def setUp(self):
         self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False, unit_test=True)              

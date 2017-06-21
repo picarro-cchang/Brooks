@@ -4,11 +4,11 @@ import unittest
 from TestUtils import TestAnalyzer
 from Host.Utilities.BuildHelper.BuildHelper import isAnalyzerToBuild
 
-@unittest.skipUnless(isAnalyzerToBuild(["NCDS"]), "Analyzer type not match")
+@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
 class TestNCDSAnalyzer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.test_agent = TestAnalyzer("NCDS", "supervisorSO_simulation.ini")
+        cls.test_agent = TestAnalyzer("NDDS", "supervisorSO_simulation.ini")
         cls.test_agent.start_analyzer()
         
     @classmethod
