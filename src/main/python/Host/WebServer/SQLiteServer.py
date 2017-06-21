@@ -53,7 +53,7 @@ class SQLiteServer(object):
         vars = self.ds.get_all_from_model("system_model")
         self.system_varialbes = {v.name: self._convert_string(v.value) for v in vars}
 
-    def get_request(self, action, api, payload):
+    def get_request(self, action, api, payload, headers={}):
         request_dict = payload
         if api == "system" and action == "post":
             request_dict["command"] = "save_system_variables"
@@ -210,17 +210,17 @@ class SQLiteServer(object):
         user = self.ds.find_user(username=username)
         if not user: # User does not exist
             return {"error": "Username not exists!"}
-        if request_dict["active"] is not None:
+        if "active" in request_dict and request_dict["active"] is not None:
             user.active = bool(request_dict["active"])
             a = current_user.username if hasattr(current_user, "username") else "System"
             self.save_action_history(a, "set %s active to %s" % (username, user.active))
-        if request_dict["password"]:
+        if "password" in request_dict and request_dict["password"]:
             ret = self.check_password(username, request_dict["password"])
             if ret: return ret
             user.password = utils.encrypt_password(request_dict["password"])
             self.save_action_history(current_user.username, "change %s password" % username)
             self.save_password_history(username, request_dict["password"])
-        if request_dict["roles"]:
+        if "roles" in request_dict and request_dict["roles"]:
             request_roles = request_dict["roles"].split(",")
             for role in user.roles:
                 if not role.name in request_roles:

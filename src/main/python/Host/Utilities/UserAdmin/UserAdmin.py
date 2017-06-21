@@ -12,17 +12,20 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 
 class MainWindow(UserAdminFrame):
-    def __init__(self, configFile, parent=None):
+    def __init__(self, configFile, unit_test=False, parent=None):
         super(MainWindow, self).__init__(parent)
         if not os.path.exists(configFile):
             raise Exception("Configuration file not found: %s" % configFile)
         self.config = CustomConfigObj(configFile)
+        self.unit_test = unit_test
+        self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
         self.load_config()
         self.host_session = requests.Session()
         self.role_list = []
         self.action_history = []
         self.current_user = None    # user logged in
-        self.get_system_variables()
+        if not unit_test:
+            self.get_system_variables()
     
     def add_user(self):
         self.input_new_user_name.clear()
@@ -39,6 +42,7 @@ class MainWindow(UserAdminFrame):
         self.input_curr_password.hide()
         self.new_user_info_widget.show()
         self.add_user_widget.show()
+        self.action = "add_user"
         
     def cancel_add_user(self):
         self.add_user_widget.hide()
@@ -73,7 +77,7 @@ class MainWindow(UserAdminFrame):
                 self.label_change_pwd_info.setText(return_dict["error"])
             else:
                 msg = "Password of account %s has been changed" % self.current_user["username"]
-                QMessageBox(QMessageBox.Information, "Change Password", msg, QMessageBox.Ok, self).exec_()
+                self.message_box(QMessageBox.Information, "Change Password", msg)
                 self.cancel_change_pwd()
         self.input_change_password.clear()
         self.input_change_password2.clear()
@@ -88,6 +92,7 @@ class MainWindow(UserAdminFrame):
         self.label_curr_password.hide()
         self.input_curr_password.hide()
         self.add_user_widget.show()
+        self.action = "change_pwd"
 
     def check_user_activity(self):
         # log off user if cursor doesn't move after certain amount of time
@@ -104,14 +109,13 @@ class MainWindow(UserAdminFrame):
     def change_user_role(self, role):
         query = "<p>Please confirm this action:</p><h2>Set %s as %s</h2>" % \
             (self.selected_user["username"], role)
-        msg = QMessageBox(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel, self)
-        if msg.exec_() == QMessageBox.Ok:
+        msg = self.message_box(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel)
+        if msg == QMessageBox.Ok:
             payload = dict(command="update_user", username=self.selected_user["username"], roles=role)
             self.send_request("post", "users", payload, use_token=True, show_error=True)
             self.update_user_list()
                 
     def check_user_input(self):
-        new_user_input = self.new_user_info_widget.isVisible()
         password = str(self.input_new_password.text())
         errors = []
         # Here we only do preliminary checking. 
@@ -121,7 +125,7 @@ class MainWindow(UserAdminFrame):
                 errors.append("Passwords not match.")
         else:
             errors.append("Password is blank.")
-        if new_user_input:  # check user name
+        if self.action == "add_user":  # check user name
             new_username = str(self.input_new_user_name.text())
             if len(new_username) == 0:
                 errors.append("UserName is blank.")
@@ -129,16 +133,16 @@ class MainWindow(UserAdminFrame):
                 errors.append("UserName already exists.")
         if len(errors) > 0:
             err ="<ul><li>%s</li></ul>" % ("</li><li>".join(errors))
-            QMessageBox(QMessageBox.Critical, "Error", err, QMessageBox.Ok, self).exec_()
+            self.message_box(QMessageBox.Critical, "Error", err)
         else:   # go on to update/create user account
-            if new_user_input:
+            if self.action == "add_user":
                 ret = self.save_new_user(new_username, password)
             else:
                 ret = self.save_new_pwd(self.selected_user["username"], password)
             if ret is None:
                 pass    # do nothing, give users a chance to edit their input
             elif "error" in ret:    # show errors and then let users edit input
-                QMessageBox(QMessageBox.Critical, "Error", ret["error"], QMessageBox.Ok, self).exec_()
+                self.message_box(QMessageBox.Critical, "Error", ret["error"])
             else:   # succeed
                 self.add_user_widget.hide()
                 self.user_admin_widget.show()
@@ -169,8 +173,8 @@ class MainWindow(UserAdminFrame):
         user_active = str(self.button_disable_user.text()) == "Enable User"
         query = "<p>Please confirm this action:</p><h2>%s %s</h2>" % \
             ("Enable" if user_active else "Disable", self.selected_user["username"])
-        msg = QMessageBox(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel, self)
-        if msg.exec_() == QMessageBox.Ok:
+        msg = self.message_box(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel)
+        if msg == QMessageBox.Ok:
             payload = dict(command="update_user", username=self.selected_user["username"], active=int(user_active))
             self.send_request("post", "users", payload, use_token=True, show_error=True)
             self.update_user_list()
@@ -229,6 +233,15 @@ class MainWindow(UserAdminFrame):
     def load_config(self):
         self.output_folder = self.config.get("Setup", "Output_Folder", ".")
 
+    def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
+        msg_box = QMessageBox(icon, title, message, buttons, self)
+        if self.unit_test:
+            self.message_box_content["title"] = title
+            self.message_box_content["msg"] = message
+            return self.message_box_content["response"]
+        else:
+            return msg_box.exec_()
+
     def next_history_page(self):
         self.history_page += 1
         self.button_prev_history.setEnabled(True)
@@ -266,7 +279,7 @@ class MainWindow(UserAdminFrame):
         # TO DO: export history in pdf format
         if len(self.action_history) == 0:
             msg = "User history is empty. Please click Refresh button to download history from server"
-            QMessageBox(QMessageBox.Critical, "Error", msg, QMessageBox.Ok, self).exec_()
+            self.message_box(QMessageBox.Critical, "Error", msg)
             return 1
         fname = os.path.join(self.output_folder, time.strftime("%Y%m%d_%H%M%S.csv"))
         with open(fname, "w") as f:
@@ -274,15 +287,14 @@ class MainWindow(UserAdminFrame):
             for a in self.action_history:
                 f.write("%s,%s,%s\n" % (a[0], a[1], a[2]))
         msg = "User history has been saved to %s." % fname
-        QMessageBox(QMessageBox.Information, "Save History", msg, QMessageBox.Ok, self).exec_()
+        self.message_box(QMessageBox.Information, "Save History", msg)
         
     def save_new_pwd(self, username, password):
         payload = dict(command="update_user", username=username, password=password)
-        ret = self.send_request("post", "users", payload, use_token=True)
+        ret = self.send_request("post", "users", payload, use_token=True, show_error=True)
         if "error" not in ret:
             msg = "Password is updated for %s!" % username
-            b = QMessageBox(QMessageBox.Information, "New Password", msg, QMessageBox.Ok, self)
-            b.exec_()
+            self.message_box(QMessageBox.Information, "New Password", msg)
         return ret
         
     def save_new_user(self, new_username, password):
@@ -300,8 +312,7 @@ class MainWindow(UserAdminFrame):
             <p>User account can NOT be deleted, and many fields can NOT be modified after user account is created.</p>
             <p><ul><li>%s</li></ul></p>
         """ % ("</li><li>".join([k+"="+user[k] for k in user]))
-        msg = QMessageBox(QMessageBox.Information, "New User Account", info, QMessageBox.Ok | QMessageBox.Cancel, self)
-        ret = msg.exec_()
+        ret = self.message_box(QMessageBox.Information, "New User Account", info, QMessageBox.Ok | QMessageBox.Cancel)
         if ret == QMessageBox.Ok:
             user.update(dict(password=password, command="create_user"))
             ret = self.send_request("post", "users", user, use_token=True)
@@ -326,8 +337,10 @@ class MainWindow(UserAdminFrame):
         
         self.system_vars["password_mix_charset"] = "True" if self.check_password_mix_charset.isChecked() else "False"
         self.system_vars["save_history"] = "True" if self.check_save_history.isChecked() else "False"
-        self.send_request("post", "system", self.system_vars, use_token=True, show_error=True)
-        self.session_lifetime = int(self.system_vars["user_session_lifetime"]) * 60
+        ret = self.send_request("post", "system", self.system_vars, use_token=True, show_error=True)
+        if "error" not in ret:
+            self.message_box(QMessageBox.Information, "Save", "User policies have been updated!")
+            self.session_lifetime = int(self.system_vars["user_session_lifetime"]) * 60
     
     def select_user_from_table(self):
         indexes = self.table_user_list.selectionModel().selectedRows()
@@ -348,17 +361,21 @@ class MainWindow(UserAdminFrame):
         use_token: set to True if the api requires token for authentication
         show_error: if True, pop up a messagebox to display error messages
         """
-        action_func = getattr(self.host_session, action)
         if use_token:
             header = {'Authentication': self.current_user["token"]}
         else:
             header = {}
+        response = self._send_request(action, api, payload, header)
+        if "error" in response and show_error:
+            self.message_box(QMessageBox.Critical, "Error", response["error"])
+        return response
+
+    def _send_request(self, action, api, payload, header):
+        action_func = getattr(self.host_session, action)
         try:
             response = action_func(DB_SERVER_URL + api, data=payload, headers=header)
             return response.json()
         except Exception, err:
-            if show_error:
-                QMessageBox(QMessageBox.Critical, "Error", str(err), QMessageBox.Ok, self).exec_()
             return {"error": str(err)}
         
     def update_user_list(self):
@@ -379,6 +396,7 @@ class MainWindow(UserAdminFrame):
                 self.table_user_list.setItem(idx,3, QTableWidgetItem(",".join(user["roles"])))
                 if idx == 0:
                     self.table_user_list.selectRow(0)
+                    self.select_user_from_table()
                     self.display_user_info(user)
             self.table_user_list.setSortingEnabled(True)        
     

@@ -68,7 +68,7 @@ class DummyDataBase(object):
         pass
 
     def create_user(self, **kwargs):
-        user = Bunch(roles=[], **kwargs)
+        user = Bunch(active=True, roles=[], **kwargs)
         self.user_model.append(user)
         return user
 
@@ -127,7 +127,9 @@ class DummyDataBase(object):
             Bunch(username=username, action=action, taken_at=datetime.datetime.utcnow())
         )
 
-    def save_user_password(self, username, password):
+    def save_user_password(self, username, password, created_time=None):
+        if created_time is None:
+            created_time = datetime.datetime.utcnow()
         self.pwd_model.append(
-            Bunch(username=username, value=password, created_at=datetime.datetime.utcnow())
+            Bunch(username=username, value=password, created_at=created_time)
         )

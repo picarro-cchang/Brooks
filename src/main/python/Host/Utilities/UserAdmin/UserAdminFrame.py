@@ -1,3 +1,4 @@
+import os
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -12,9 +13,9 @@ class UserAdminFrame(QMainWindow):
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setColor(QColor(30,30,30,180))
         self.shadow.setBlurRadius(5)
-        
+        self.curr_dir = os.path.dirname(os.path.realpath(__file__))
         self.style_data = ""
-        with open('styleSheet.qss', 'r') as f:
+        with open(os.path.join(self.curr_dir,'styleSheet.qss'), 'r') as f:
             self.style_data = f.read()
         self.setStyleSheet(self.style_data)
                 
@@ -55,7 +56,7 @@ class UserAdminFrame(QMainWindow):
         change_password_layout = QVBoxLayout()
         
         # Picarro logo
-        picarro_logo = QPixmap("logo_picarro.png")
+        picarro_logo = QPixmap(os.path.join(self.curr_dir, "logo_picarro.png"))
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
         logo_box = QHBoxLayout()
@@ -98,8 +99,8 @@ class UserAdminFrame(QMainWindow):
         self.input_change_password.setEchoMode(QLineEdit.Password)
         self.input_change_password2 = QLineEdit()
         self.input_change_password2.setEchoMode(QLineEdit.Password)
-        self.button_change_pwd = QPushButton("Next")
-        self.button_change_pwd.clicked.connect(self.change_password)
+        self.button_change_user_pwd = QPushButton("Next")
+        self.button_change_user_pwd.clicked.connect(self.change_password)
         self.button_cancel_change = QPushButton("Cancel")
         self.button_cancel_change.clicked.connect(self.cancel_change_pwd)
         self.label_change_pwd_info = QLabel("")
@@ -107,7 +108,7 @@ class UserAdminFrame(QMainWindow):
         pwd_input.addRow("New Password", self.input_change_password)
         pwd_input.addRow("Confirmed Password", self.input_change_password2)
         button_layout = QHBoxLayout()
-        button_layout.addWidget(self.button_change_pwd)
+        button_layout.addWidget(self.button_change_user_pwd)
         button_layout.addStretch(1)
         button_layout.addWidget(self.button_cancel_change)
         change_password_layout.addLayout(pwd_input)

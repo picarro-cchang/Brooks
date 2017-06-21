@@ -38,7 +38,6 @@ class TestH2O2Validation(unittest.TestCase):
             self.wizard.input_user_name.setText("admin")
             self.wizard.input_password.setText("admin")
             QTest.mouseClick(self.wizard.button_user_login, Qt.LeftButton)
-            QTest.qWait(30)
             self.assertTrue(self.wizard.current_user["username"] == "admin")
             self.assertTrue("Admin" in self.wizard.current_user["roles"])
             # validation
@@ -58,11 +57,9 @@ class TestH2O2Validation(unittest.TestCase):
                 self.assertTrue(self.wizard.message_box_content["title"] == "Measurement Done")
             # create report
             QTest.mouseClick(next_button, Qt.LeftButton)
-            QTest.qWait(30)
             self.assertTrue(self.wizard.validation_results["ch4_r2"] > 0.9)
             # save report
             QTest.mouseClick(self.wizard.button_save_report, Qt.LeftButton)
-            QTest.qWait(200)
             last_action = server.ds.action_model[-1].action
             self.assertTrue("Create validation report" in last_action)
             filename = last_action.split(":")[1]
@@ -92,7 +89,6 @@ class TestH2O2Validation(unittest.TestCase):
         QTest.mouseClick(next_button, Qt.LeftButton)
         self.wizard.input_nominal_concentration.setText("wrong concentration")
         QTest.mouseClick(next_button, Qt.LeftButton)
-        QTest.qWait(30)
         self.assertTrue(self.wizard.message_box_content["title"] == "Error")
         # simulated concentration is 2; intentionally enter a wrong number
         self.wizard.input_nominal_concentration.setText("10")
