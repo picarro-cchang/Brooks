@@ -2697,7 +2697,7 @@ class QuickGui(wx.Frame):
             d.Show()
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
-            payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user'}
+            payload = {'username': d.Username, 'password': d.Password, 'command': 'log_in_user', 'requester': 'QuickGui'}
 
             #with requests.Session() as session:
             try:
@@ -2765,20 +2765,9 @@ class QuickGui(wx.Frame):
     # automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
     def OnSessionTimer(self, event):
         if self.session_time >= INACTIVE_SESSION_TIMEOUT:
-            self.userLevel = 1
-            self.modifyInterface()
-            self.measPanelSizer.Layout()
-            self.Refresh()
-            self.menuBar.EnableTop(1, False)
-            self.menuBar.EnableTop(2, False)
+            self.userLevel = 0
+            self.OnGuiMode(event)
             self.userLoggedIn = False
-            self.iGuiMode.SetItemLabel("User Login")
-            self.UnbindAllWidgetsMotion(self.mainPanel)
-            try:
-                self.dlg.Destroy()
-                self.UnbindAllWidgetsMotion(self.dlg)
-            except:
-                pass
             self.sessionTimer.Stop()
         else:
             #timer runs every 5 secs, count
