@@ -268,7 +268,7 @@ Description: Picarro Host Software for Semiconductor Industry
             species = config_info[installer_type]['species']
             os.rename(dist_dir+".deb", 
                 os.path.join(resource_dir, 
-                    '%s_%s_%s_%s.deb' % (project.name, installer_type, species, raw_version) )
+                    '%s_%s_%s_%s_%s.deb' % (project.name, installer_type, species, raw_version, self.git_hash[:8]) )
                 )
 
 def get_dir_hash(root):
