@@ -109,9 +109,8 @@ class SQLiteServer(object):
                 
     def check_password_length(self, password):
         length = self.system_varialbes["password_length"]
-        if length >= 0:
-            if len(password) < length:
-                return {"error": "Password is too short! Minimum length: %s" % length}
+        if length >= 0 and len(password) < length:
+            return {"error": "Password is too short! Minimum length: %s" % length}
         return False    # no error
         
     def check_password_age(self, username, password):
@@ -128,9 +127,8 @@ class SQLiteServer(object):
         return False    # no error                
     
     def check_user_login_attempts(self, username):
-        # A simple check to see how many times user fails to login
+        # Check to see how many times user fails to login
         # Disable user if attempts exceeds system setting
-        # Attempt times is reset to 1 if username is changed.
         if self.system_varialbes["user_login_attempts"] >= 0:
             if username == self.user_login_attempts["username"]:
                 self.user_login_attempts["attempts"] += 1
@@ -140,6 +138,12 @@ class SQLiteServer(object):
                 # disable user
                 self.process_request_dict({"command": "update_user", "username": username, 
                     "active": 0, "password": None, "roles": None})
+                return {"error": "Username and password not match! User account is disabled!"}
+            else:
+                msg = "%s/%s" % (self.user_login_attempts["attempts"], self.system_varialbes["user_login_attempts"])
+                return {"error": "Username and password not match! Failed times: %s." % msg}
+        else:
+            return {"error": "Username and password not match!"}
                       
     def log_in_user(self, username, password, no_commit=False):
         user = self.ds.find_user(username=username)
@@ -155,20 +159,22 @@ class SQLiteServer(object):
                 utils.login_user(user)
                 self.ds.commit()
                 self.session_active_time = time.time()
+                self.user_login_attempts = {"username": username, "attempts": 0}
                 return {"username":user.username,
                         "first_name":user.first_name,
                         "last_name":user.last_name,
                         "roles":[role.name for role in user.roles],
                         "token":user.get_auth_token()}
             else:
-                self.check_user_login_attempts(username)
-                return {"error": "Username and password not match!"}
+                return self.check_user_login_attempts(username)
         else:
             return {"error": "Username not exist!"}
             
     def create_user_account(self, username, request_dict):
         if not username or not request_dict["password"]:
             abort(406)
+        if len(username) > 64:
+            return {"error": "Username too long! Maximum length: 64."}
         user = self.ds.find_user(username=username)
         if user: # User already exists
             return {"error": "Username already exists!"}
