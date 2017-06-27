@@ -19,7 +19,7 @@ import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
-
+from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 import threading
 
@@ -112,7 +112,7 @@ class Four220Server(object):
         self.simulation_env['Test_mode'] = self.config.getboolean('Simulation', 'TEST_MODE')
         self.simulation_env['Test_num'] = self.config.getint('Simulation', 'TEST_NUM')
         self.simulation_env['channel'] = self.config.getint('Simulation', 'CHANNEL')
-        if self.simulation_env['min'] != '' and self.simulation_env['max'] != '':
+        if self.simulation_env['min'] != 'None' and self.simulation_env['max'] != 'None':
             slope = 16.0/(float(self.simulation_env['max']) - float(self.simulation_env['min']))
             offset = 4.0 - slope*float(self.simulation_env['min'])
             print "Simulation: Slope and Offset: ", slope, offset
@@ -154,25 +154,29 @@ class Four220Server(object):
             if streamOut["source"] == self.analyzer_source:
                 raw_data = streamOut["data"]
                 for channel in self.channel_par:
-                    self.con_max = float(self.channel_par[channel]["SOURCE_MAX"])
-                    self.con_min = float(self.channel_par[channel]["SOURCE_MIN"])
                     channel_num = int(channel[-1])
-                    try:
-                        data = raw_data[self.channel_par[channel]["SOURCE"]]
-                    except:
-                        print "SOURCE value in configuration file is not valid. " 
-                        sys.exit(1)
-                        
-                    #compute slope and offset values based in given max/min range
-                    if self.con_min <= self.con_max:
-                        slope = 16.0/(self.con_max - self.con_min)
-                        offset = 4.0 - slope*self.con_min
+                    #print "Channel:", channel, "channel_par:", self.channel_par[channel]
+                    if self.channel_par[channel]["SOURCE"] != 'Disabled':
+                        self.con_max = float(self.channel_par[channel]["SOURCE_MAX"])
+                        self.con_min = float(self.channel_par[channel]["SOURCE_MIN"])
+                        try:
+                            data = raw_data[self.channel_par[channel]["SOURCE"]]
+                        except:
+                            print "SOURCE value in configuration file is not valid. " 
+                            sys.exit(1)
+                            
+                        #compute slope and offset values based in given max/min range
+                        if self.con_min <= self.con_max:
+                            slope = 16.0/(self.con_max - self.con_min)
+                            offset = 4.0 - slope*self.con_min
+                        else:
+                            print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in ini file. Make sure min you put is less than max."
+                            sys.exit(1)
+                        print "Slope and Offset: ", slope, offset
+                        self.data_processor(data, slope, offset, channel_num)
                     else:
-                        print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in ini file. Make sure min you put is less than max."
-                        sys.exit(1)
-                    print "Slope and Offset: ", slope, offset
-                    
-                    self.data_processor(data, slope, offset, channel_num)
+                        print "Dummy Channel: channel", channel_num
+                        self.data_processor(0, 0, 0, channel_num)
         except Exception, err:
             print "Error in streamFilter. Wrong values in ini file..."
             print err, "   ****"
@@ -203,8 +207,8 @@ class Four220Server(object):
             self.ser.write(cmd_str + '\r')
             self.waitForRet()
             #ser.close()
-            print "Channel: ", channel_num + 1 
-            print "Gas Concentration: ", data
+            print "Channel: ", channel_num
+            print self.channel_par['OUTPUT_CHANNEL'+str(channel_num)]["SOURCE"], " Value: ", data
             print "Write current %s mA to serial port %s."%(cur_str,self.port)
             print "-------------------"
             
@@ -231,17 +235,11 @@ class Four220Server(object):
         self.channel_par = {}
         for s in self.config:
             if s.startswith("OUTPUT_CHANNEL"):
-                if self.config[s]["SOURCE"] != '': 
-                    if self.config[s]["SOURCE_MIN"] != '' and self.config[s]["SOURCE_MAX"] != '':
-                        if float(self.config[s]["SOURCE_MIN"]) < 0:
-                            self.config[s]["SOURCE_MIN"] = 0
-                        if float(self.config[s]["SOURCE_MAX"]) > 2000:
-                            self.config[s]["SOURCE_MAX"] = 2000
-                        
-                        self.channel_par[s] = self.config[s]
-                    else:
-                        print "Please check configuration file. Make sure you set the SOURCE_MIN and SOURCE_MAX in", s
-                        sys.exit(1)
+                #if self.config[s]["SOURCE"] != 'Disabled': 
+                print "here: " #self.config[s]
+                self.channel_par[s] = self.config[s]
+                        #print "Please check configuration file. Make sure you set the SOURCE_MIN and SOURCE_MAX in", s
+                        #sys.exit(1)
 
     def startServer(self):
         """

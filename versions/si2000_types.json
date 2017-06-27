@@ -10,7 +10,7 @@
             "installerSignature": "AMADS"
         },  
 
-        "MBDS": {
+        "MxDS": {
             "species": "HF",
             "installerSignature": "MADS"
         },
@@ -18,6 +18,11 @@
         "NCDS": {
             "species": "H2O2",
             "installerSignature": "NCDS"
+        },
+        
+        "BxDS": {
+            "species": "H2S",
+            "installerSignature": "BxDS"
         },
         
         "SADS": {
