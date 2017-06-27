@@ -114,7 +114,7 @@ class ScopePanel(wx.Panel):
         self.graphPanel1 = GraphPanel(parent=self,id=-1)
         self.graphPanel1.SetGraphProperties(xlabel='Tuner sweep',timeAxes=(False,False),ylabel='Mode Amplitude',
             grid=True,frameColour=bg,backgroundColour=bg)
-        #self.graphPanel1.Update()
+        self.graphPanel1.Update()
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.graphPanel1,proportion=1,flag=wx.GROW)
         self.SetSizer(vbox)
@@ -234,7 +234,7 @@ class ModePanel(wx.Panel):
                 self.graphPanel1.AddSeriesAsPoints(self.modeSeries[i],colour=self.seriesColor[i],width=1,size=1)
             self.modeSelectPanels[i].setColor(self.seriesColor[i])
         self.setMaxPoints(250)
-        #self.graphPanel1.Update()
+        self.graphPanel1.Update()
     def modeAndTypeToIndex(self,m):
         return m
     def addData(self,t,modeAmpl):
