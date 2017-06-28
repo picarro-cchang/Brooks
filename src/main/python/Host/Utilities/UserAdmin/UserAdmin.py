@@ -12,20 +12,16 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 
 class MainWindow(UserAdminFrame):
-    def __init__(self, configFile, unit_test=False, parent=None):
+    def __init__(self, configFile, parent=None):
         super(MainWindow, self).__init__(parent)
         if not os.path.exists(configFile):
             raise Exception("Configuration file not found: %s" % configFile)
         self.config = CustomConfigObj(configFile)
-        self.unit_test = unit_test
-        self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
         self.load_config()
         self.host_session = requests.Session()
         self.role_list = []
         self.action_history = []
         self.current_user = None    # user logged in
-        if not unit_test:
-            self.get_system_variables()
     
     def add_user(self):
         self.input_new_user_name.clear()
@@ -235,12 +231,7 @@ class MainWindow(UserAdminFrame):
 
     def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
         msg_box = QMessageBox(icon, title, message, buttons, self)
-        if self.unit_test:
-            self.message_box_content["title"] = title
-            self.message_box_content["msg"] = message
-            return self.message_box_content["response"]
-        else:
-            return msg_box.exec_()
+        return msg_box.exec_()
 
     def next_history_page(self):
         self.history_page += 1
@@ -487,6 +478,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow(*handleCommandSwitches())
     #window.setWindowState(Qt.WindowFullScreen)
+    window.get_system_variables()
     window.show()
     app.installEventFilter(window)
     app.exec_()

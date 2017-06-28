@@ -5,7 +5,7 @@ from datetime import datetime
 from mockito import patch, unstub
 from PyQt4.QtTest import QTest
 from PyQt4.QtCore import Qt, QPoint
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QMessageBox
 from Host.Utilities.UserAdmin.UserAdmin import MainWindow
 from Host.WebServer.SQLiteServer import SQLiteServer
 from Host.WebServer.SQLiteServer import app as flask_app
@@ -18,7 +18,9 @@ class TestUserAdmin(unittest.TestCase):
         self.request_context = flask_app.test_request_context()
         self.request_context.push()
         self.server = SQLiteServer(dummy=True)
-        self.interface = MainWindow(CONFIG_FILE, unit_test=True)  
+        self.interface = MainWindow(CONFIG_FILE)  
+        self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
+        patch(self.interface.message_box, self.message_box)
         patch(self.interface._send_request, self.server.get_request)
         self.interface.get_system_variables()
 
@@ -27,6 +29,11 @@ class TestUserAdmin(unittest.TestCase):
         self.interface.close()
         self.interface = None
         unstub()
+
+    def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
+        self.message_box_content["title"] = title
+        self.message_box_content["msg"] = message
+        return self.message_box_content["response"]
 
     def login_user(self, username, password):
         self.interface.input_user_name.setText(username)
@@ -43,17 +50,17 @@ class TestUserAdmin(unittest.TestCase):
         # test1: only enter username
         self.interface.input_new_user_name.setText("yren")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
-        self.assertTrue("Password is blank" in self.interface.message_box_content["msg"])
+        self.assertTrue("Password is blank" in self.message_box_content["msg"])
         # test2: passwords not match
         self.interface.input_new_password.setText("123")
         self.interface.input_new_password2.setText("12345")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
-        self.assertTrue("Passwords not match" in self.interface.message_box_content["msg"])
+        self.assertTrue("Passwords not match" in self.message_box_content["msg"])
         # test3: password too short
         self.interface.input_new_password.setText("12345")
         self.interface.input_new_password2.setText("12345")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
-        self.assertTrue("Password is too short" in self.interface.message_box_content["msg"])
+        self.assertTrue("Password is too short" in self.message_box_content["msg"])
         # test4: correct input
         self.interface.input_new_password.setText("123456")
         self.interface.input_new_password2.setText("123456")
@@ -89,12 +96,12 @@ class TestUserAdmin(unittest.TestCase):
         self.interface.input_new_password.setText("12345")
         self.interface.input_new_password2.setText("12345")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
-        self.assertTrue("Password is too short" in self.interface.message_box_content["msg"])
+        self.assertTrue("Password is too short" in self.message_box_content["msg"])
         # test2: correct input
         self.interface.input_new_password.setText("Extreme_Science!")
         self.interface.input_new_password2.setText("Extreme_Science!")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
-        self.assertTrue("Password is updated" in self.interface.message_box_content["msg"])
+        self.assertTrue("Password is updated" in self.message_box_content["msg"])
         self.assertTrue(("change %s password" % username) in self.server.ds.action_model[-1].action)
 
     def test_password_expire(self):
@@ -120,7 +127,7 @@ class TestUserAdmin(unittest.TestCase):
         self.assertTrue(self.interface.input_password_lifetime.value() == 183)
         self.interface.input_password_lifetime.setValue(1)
         QTest.mouseClick(self.interface.button_user_save_policy, Qt.LeftButton)
-        self.assertTrue("User policies have been updated" in self.interface.message_box_content["msg"])
+        self.assertTrue("User policies have been updated" in self.message_box_content["msg"])
         p_pwd_lifetime = None
         for p in self.server.ds.system_model:
             if p.name=='password_lifetime':

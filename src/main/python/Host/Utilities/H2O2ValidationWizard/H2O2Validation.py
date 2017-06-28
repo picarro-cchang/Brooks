@@ -102,13 +102,12 @@ class TimeSeriesData(object):
         return (self.xdata[:self.pointer], self.ydata[:self.pointer])
 
 class H2O2Validation(H2O2ValidationFrame):
-    def __init__(self, configFile, simulation=False, no_login=False, unit_test=False, parent=None):
+    def __init__(self, configFile, simulation=False, no_login=False, parent=None):
         if not os.path.exists(configFile):
             print "Config file not found: %s" % configFile
             sys.exit(0)
         self.config = CustomConfigObj(configFile)
         self.simulation = simulation
-        self.unit_test = unit_test
         super(H2O2Validation, self).__init__(parent)
         self.load_config()
         self.display_caption.setText(validation_procedure[0][0])
@@ -117,7 +116,6 @@ class H2O2Validation(H2O2ValidationFrame):
         self.current_step = 0
         self.start_time = 0
         self.record_status = ""
-        self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
         self.validation_data = dict(H2O2=[], zero_air=[], calibrant1=[], calibrant2=[], calibrant3=[])
         adp = self.config.getint("Status_Check", "Average_Data_Points", 10)
@@ -182,12 +180,7 @@ class H2O2Validation(H2O2ValidationFrame):
 
     def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
         msg_box = QMessageBox(icon, title, message, buttons, self)
-        if self.unit_test:
-            self.message_box_content["title"] = title
-            self.message_box_content["msg"] = message
-            return self.message_box_content["response"]
-        else:
-            return msg_box.exec_()
+        return msg_box.exec_()
         
     def stream_filter(self, entry):
         if entry["source"] == self.data_source:

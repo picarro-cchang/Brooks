@@ -5,7 +5,7 @@ import unittest
 from mockito import patch, unstub
 from PyQt4.QtTest import QTest
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QMessageBox
 from Host.WebServer.SQLiteServer import SQLiteServer
 from Host.WebServer.SQLiteServer import app as flask_app
 from Host.Utilities.H2O2ValidationWizard.H2O2Validation import H2O2Validation, validation_steps
@@ -18,11 +18,18 @@ app = QApplication(sys.argv)
 @unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
 class TestH2O2Validation(unittest.TestCase):
     def setUp(self):
-        self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False, unit_test=True)              
+        self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False)
+        self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
+        patch(self.interface.message_box, self.message_box)       
 
     def tearDown(self):
         self.wizard.close()
         self.wizard = None
+
+    def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
+        self.message_box_content["title"] = title
+        self.message_box_content["msg"] = message
+        return self.message_box_content["response"]
 
     def bypass_login_screen(self):
         self.wizard.login_frame.hide()
@@ -50,11 +57,11 @@ class TestH2O2Validation(unittest.TestCase):
                 if step > 0:    # enter nominal concentraion of calibrant
                     self.wizard.input_nominal_concentration.setText(str(nominal_concentraion[step]))
                 QTest.mouseClick(next_button, Qt.LeftButton)
-                self.wizard.message_box_content["title"] = ""
+                self.message_box_content["title"] = ""
                 self.assertTrue(validation_steps[self.wizard.current_step] == stage)
                 QTest.qWait(1500)   # data collection
                 self.assertTrue(stage + "_mean" in self.wizard.validation_results)
-                self.assertTrue(self.wizard.message_box_content["title"] == "Measurement Done")
+                self.assertTrue(self.message_box_content["title"] == "Measurement Done")
             # create report
             QTest.mouseClick(next_button, Qt.LeftButton)
             self.assertTrue(self.wizard.validation_results["ch4_r2"] > 0.9)
@@ -77,7 +84,7 @@ class TestH2O2Validation(unittest.TestCase):
         QTest.mouseClick(next_button, Qt.LeftButton)
         QTest.mouseClick(next_button, Qt.LeftButton)
         QTest.qWait(1000)   # zero-air measurement
-        self.assertTrue("Cavity pressure is out of range" in self.wizard.message_box_content["msg"])
+        self.assertTrue("Cavity pressure is out of range" in self.message_box_content["msg"])
 
     def test_wrong_nomial_concentration(self):
         self.bypass_login_screen()
@@ -89,12 +96,12 @@ class TestH2O2Validation(unittest.TestCase):
         QTest.mouseClick(next_button, Qt.LeftButton)
         self.wizard.input_nominal_concentration.setText("wrong concentration")
         QTest.mouseClick(next_button, Qt.LeftButton)
-        self.assertTrue(self.wizard.message_box_content["title"] == "Error")
+        self.assertTrue(self.message_box_content["title"] == "Error")
         # simulated concentration is 2; intentionally enter a wrong number
         self.wizard.input_nominal_concentration.setText("10")
         QTest.mouseClick(next_button, Qt.LeftButton)
         QTest.qWait(1500)   # data collection
-        self.assertTrue("Measurement result is too far away" in self.wizard.message_box_content["msg"])
+        self.assertTrue("Measurement result is too far away" in self.message_box_content["msg"])
 
 if __name__ == '__main__':
     unittest.main()
