@@ -20,7 +20,7 @@ class TestH2O2Validation(unittest.TestCase):
     def setUp(self):
         self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False)
         self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
-        patch(self.interface.message_box, self.message_box)       
+        patch(self.wizard.message_box, self.message_box)       
 
     def tearDown(self):
         self.wizard.close()
