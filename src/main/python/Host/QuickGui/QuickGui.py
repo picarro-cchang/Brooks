@@ -64,6 +64,7 @@ import subprocess32 as subprocess
 from Host.QuickGui.PulseAnalyzerGui import PulseAnalyzerGui
 from Host.QuickGui.UserCalGui import UserCalGui
 from Host.QuickGui.SysAlarmGui import *
+import Host.QuickGui.DialogUI as Dialog
 from Host.Common import CmdFIFO, StringPickler, Listener, TextListener
 #from Host.Common import plot
 from Host.Common import GraphPanel
@@ -175,250 +176,6 @@ class InstMgrInterface(object):
     def loadConfig(self):
         pass
 
-class OKDialog(wx.Dialog):
-    def __init__(self,mainForm,aboutText,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
-                 style=wx.DEFAULT_DIALOG_STYLE, boldText = None):
-        wx.Dialog.__init__(self,parent,id,title,pos,size,style)
-        self.okButton = wx.Button(self, wx.ID_OK)
-        self.aboutText = wx.StaticText(self,-1,aboutText)
-        if boldText:
-            boldFont = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-            self.boldText = wx.StaticText(self,-1,boldText)
-            self.boldText.SetFont(boldFont)
-        else:
-            self.boldText = None
-        self.mainForm = mainForm
-        self.__set_properties()
-        self.__do_layout()
-        # end wxGlade
-
-    def __set_properties(self):
-        # begin wxGlade: ShutdownDialog.__set_properties
-        setItemFont(self,self.mainForm.getFontFromIni("Dialogs"))
-        setItemFont(self.okButton,self.mainForm.getFontFromIni("DialogButtons"))
-        # end wxGlade
-
-    def __do_layout(self):
-        # begin wxGlade: ShutdownDialog.__do_layout
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        if self.boldText:
-            sizer_1.Add((-1,10))
-            sizer_1.Add(self.boldText, flag=wx.LEFT|wx.RIGHT|wx.TOP, border=5)
-        sizer_1.Add(self.aboutText, flag=wx.ALL, border=5)
-        #sizer_2.AddButton(self.okButton)
-        #sizer_2.Realize()
-        sizer_2.Add((20,20),1)
-        sizer_2.Add(self.okButton)
-        sizer_2.Add((20,20),1)
-        sizer_1.Add(sizer_2, 0, wx.ALL|wx.EXPAND, 10)
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
-        self.Layout()
-        # end wxGlade
-
-# end of class OKDialog
-class ShutdownDialog(wx.Dialog):
-    def __init__(self, mainForm, *args, **kwds):
-        # begin wxGlade: ShutdownDialog.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
-        wx.Dialog.__init__(self, *args, **kwds)
-        self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-            choices=["Turn Off Analyzer and Prepare For Shipping", "Turn Off Analyzer in Current State", "Stop Analyzer Software Only"], majorDimension=3,
-            style=wx.RA_SPECIFY_ROWS)
-        self.okButton = wx.Button(self, wx.ID_OK)
-        self.cancelButton = wx.Button(self, wx.ID_CANCEL)
-        self.mainForm = mainForm
-        self.__set_properties()
-        self.__do_layout()
-
-        # end wxGlade
-
-    def __set_properties(self):
-        # begin wxGlade: ShutdownDialog.__set_properties
-        self.SetTitle("Shutdown Instrument")
-        self.selectShutdownType.SetSelection(0)
-        setItemFont(self,self.mainForm.getFontFromIni("Dialogs"))
-        setItemFont(self.okButton,self.mainForm.getFontFromIni("DialogButtons"))
-        setItemFont(self.cancelButton,self.mainForm.getFontFromIni("DialogButtons"))
-        # end wxGlade
-
-    def __do_layout(self):
-        # begin wxGlade: ShutdownDialog.__do_layout
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        sizer_2 = wx.StdDialogButtonSizer()
-        sizer_1.Add(self.selectShutdownType, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5)
-        sizer_2.AddButton(self.okButton)
-        sizer_2.AddButton(self.cancelButton)
-        sizer_2.Realize()
-        sizer_1.Add(sizer_2, 0, wx.ALL|wx.EXPAND, 10)
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
-        self.Layout()
-        # end wxGlade
-
-    def getShutdownType(self):
-        return self.selectShutdownType.GetSelection()
-
-# end of class ShutdownDialog
-class AlarmDialog(wx.Dialog):
-    modeInstructions = {"Higher":\
-                        "Alarm is set when value is above Alarm threshold 1. It is reset when value falls below Clear threshold 1.",
-                        "Lower":\
-                        "Alarm is set when value is below Alarm threshold 1. It is reset when value rises above Clear threshold 1.",
-                        "Inside":\
-                        "Alarm is set when value is below Alarm threshold 1 and above Alarm threshold 2.\nIt is reset when value rises above Clear threshold 1 or falls below Clear threshold 2.",
-                        "Outside":\
-                        "Alarm is set when value is above Alarm threshold 1 or below Alarm threshold 2.\nIt is reset when value falls below Clear threshold 1 or rises above Clear threshold 2."}
-    def __init__(self,mainForm,data,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
-                 style=wx.DEFAULT_DIALOG_STYLE):
-        wx.Dialog.__init__(self,parent,id,title,pos,size,style)
-
-        self.mainForm = mainForm
-        getFontFromIni = mainForm.getFontFromIni
-        setItemFont(self,self.mainForm.getFontFromIni('Dialogs'))
-        self.data = data
-        self.vsizer = wx.BoxSizer(wx.VERTICAL)
-        sizer = wx.GridBagSizer(hgap=5,vgap=5)
-        label = wx.StaticText(self, -1, "Alarm name")
-        setItemFont(label,getFontFromIni('Dialogs'))
-
-        sizer.Add(label, pos = (0,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
-        self.name = wx.StaticText(parent=self,id=-1,size=(100,-1))
-        self.name.SetValidator(DataXferValidator(data,"name",None))
-        sizer.Add(self.name, pos = (0,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
-        self.instructions = wx.StaticText(self,-1,"")
-        label = wx.StaticText(self, -1, "Alarm mode")
-        sizer.Add(label, pos = (1,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
-        self.mode = wx.ComboBox(parent=self,id=-1,size=(125,-1),style=wx.CB_READONLY,
-                            choices=["Higher","Lower","Inside","Outside"])
-        #self.mode = wx.StaticText(parent=self,id=-1,size=(100,-1))
-        self.mode.SetValidator(DataXferValidator(data,"mode",None))
-        sizer.Add(self.mode, pos = (1,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
-        self.instructions = wx.StaticText(self,-1,"")
-        sizer.Add(self.instructions, pos=(2,0), span=(1,2), flag=wx.ALL, border=5)
-
-        label = wx.StaticText(self, -1, "Alarm threshold 1")
-        sizer.Add(label, pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        self.alarm1Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.alarm1Edit,getFontFromIni('DialogTextBoxes'))
-        self.alarm1Edit.SetValidator(DataXferValidator(data,"alarm1",self.validate))
-        sizer.Add(self.alarm1Edit, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        label = wx.StaticText(self, -1, "Clear threshold 1")
-        sizer.Add(label, pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        self.clear1Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.clear1Edit,getFontFromIni('DialogTextBoxes'))
-        self.clear1Edit.SetValidator(DataXferValidator(data,"clear1",self.validate))
-        sizer.Add(self.clear1Edit, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        label = wx.StaticText(self, -1, "Alarm threshold 2")
-        sizer.Add(label, pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        self.alarm2Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.alarm2Edit,getFontFromIni('DialogTextBoxes'))
-        self.alarm2Edit.SetValidator(DataXferValidator(data,"alarm2",self.validate))
-        sizer.Add(self.alarm2Edit, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        label = wx.StaticText(self, -1, "Clear threshold 2")
-        sizer.Add(label, pos=(6,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        self.clear2Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.clear2Edit,getFontFromIni('DialogTextBoxes'))
-        self.clear2Edit.SetValidator(DataXferValidator(data,"clear2",self.validate))
-        sizer.Add(self.clear2Edit, pos=(6,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-        self.enabled = wx.CheckBox(self,-1,"Enable alarm")
-        self.enabled.SetValidator(DataXferValidator(data,"enabled",None))
-        sizer.Add(self.enabled, pos=(7,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
-
-        self.vsizer.Add(sizer)
-        line = wx.StaticLine(self, -1, size=(20,-1), style=wx.LI_HORIZONTAL)
-        self.vsizer.Add(line, 0, flag=wx.GROW|wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT|wx.TOP, border=5)
-
-        btnsizer = wx.StdDialogButtonSizer()
-        btn = wx.Button(self, wx.ID_OK)
-        setItemFont(btn,getFontFromIni('DialogButtons'))
-        btn.SetDefault()
-        btnsizer.AddButton(btn)
-
-        btn = wx.Button(self, wx.ID_CANCEL)
-        setItemFont(btn,getFontFromIni('DialogButtons'))
-        btnsizer.AddButton(btn)
-        btnsizer.Realize()
-
-        self.vsizer.Add(btnsizer, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
-        self.SetSizer(self.vsizer)
-        self.selectMode(data["mode"])
-        self.Bind(wx.EVT_COMBOBOX, self.onModeComboBox, self.mode)
-
-    def setDialogValues(self,name,mode,enabled,alarm1,clear1,alarm2,clear2):
-        self.name.SetLabel(name)
-        self.alarm1Edit.SetValue("%.2f" % alarm1)
-        self.clear1Edit.SetValue("%.2f" % clear1)
-        self.alarm2Edit.SetValue("%.2f" % alarm2)
-        self.clear2Edit.SetValue("%.2f" % clear2)
-        self.enabled.SetValue(enabled)
-        self.mode.SetLabel(mode)
-        self.selectMode(mode)
-
-    def onModeComboBox(self,evt):
-        self.selectMode(evt.GetEventObject().GetValue())
-
-    def selectMode(self,mode):
-        self.mode.SetValidator(DataXferValidator(self.data,"mode",None))
-        self.data["mode"] = mode
-        self.instructions.SetLabel(wordwrap(self.modeInstructions[mode],300, wx.ClientDC(self)))
-        if mode in ["Higher","Lower"]:
-            self.alarm2Edit.Enable(False)
-            self.clear2Edit.Enable(False)
-        if mode in ["Inside","Outside"]:
-            self.alarm2Edit.Enable(True)
-            self.clear2Edit.Enable(True)
-        self.SendSizeEvent()
-        self.vsizer.Fit(self)
-
-    def validate(self,ctrl,parent):
-        try:
-            v = float(ctrl.GetValue())
-        except ValueError:
-            wx.MessageBox("This field does not contain number","Error")
-            ctrl.SetBackgroundColour("pink")
-            ctrl.SetFocus()
-            ctrl.Refresh()
-            return False
-        try:
-            alarm1 = float(self.alarm1Edit.GetValue())
-            alarm2 = float(self.alarm2Edit.GetValue())
-            clear1 = float(self.clear1Edit.GetValue())
-            clear2 = float(self.clear2Edit.GetValue())
-        except ValueError:
-            return True # This will be caught later
-        mode = self.data["mode"]
-        if mode in ["Higher","Outside"]:
-            if alarm1<clear1:
-                wx.MessageBox("In %s mode, Alarm threshold 1 must be above Clear threshold 1" % mode,"Error")
-                return False
-        if mode in ["Lower","Inside"]:
-            if alarm1>clear1:
-                wx.MessageBox("In %s mode, Alarm threshold 1 must be below Clear threshold 1" % mode,"Error")
-                return False
-        if mode in ["Outside"]:
-            if alarm2>clear2:
-                wx.MessageBox("In %s mode, Alarm threshold 2 must be below Clear threshold 2" % mode,"Error")
-                return False
-            if alarm1<clear2:
-                wx.MessageBox("In %s mode, Alarm threshold 1 must be above Clear threshold 2" % mode,"Error")
-                return False
-            if alarm2>clear1:
-                wx.MessageBox("In %s mode, Alarm threshold 2 must be below Clear threshold 1" % mode,"Error")
-                return False
-        if mode in ["Inside"]:
-            if alarm2<clear2:
-                wx.MessageBox("In %s mode, Alarm threshold 2 must be above Clear threshold 2" % mode,"Error")
-                return False
-        if mode in ["Inside", "Outside"]:
-            if alarm1<alarm2:
-                wx.MessageBox("In %s mode, Alarm threshold 1 must be above Alarm threshold 2" % mode,"Error")
-                return False
-        return True
-
-
-
 
 class AlarmViewListCtrl(wx.ListCtrl):
     """ListCtrl to display alarm status
@@ -485,7 +242,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
             clear2 = "%.2f" % clear2
             d = dict(name=name,mode=mode,enabled=enabled,alarm1=alarm1,clear1=clear1,
                         alarm2=alarm2,clear2=clear2)
-            dialog = AlarmDialog(self.mainForm,d,None,-1,"Setting alarm %d" % (item+1,))
+            dialog = Dialog.AlarmDialog(self.mainForm,d,None,-1,"Setting alarm %d" % (item+1,))
             retCode = dialog.ShowModal()
             dialog.Destroy()
             if retCode == wx.ID_OK:
@@ -1223,43 +980,6 @@ class RpcServerThread(threading.Thread):
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
-class LoginDialog(wx.Dialog):
-    def __init__(self, parent, title="Login"):
-        super(LoginDialog, self).__init__(parent, title = title)
-
-        self._user = wx.TextCtrl(self)
-        self._pass = wx.TextCtrl(self, style=wx.TE_PASSWORD)
-
-        self.__DoLayout()
-        self.SetInitialSize((300, 150))
-
-    def __DoLayout(self):
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        fieldSz = wx.FlexGridSizer(2,2,5,8)
-        fieldSz.AddGrowableCol(1,1)
-        userLbl = wx.StaticText(self, label= "Username:")
-        fieldSz.Add(userLbl, 0, wx.ALIGN_CENTER_VERTICAL)
-        fieldSz.Add(self._user, 1, wx.EXPAND)
-        passLbl = wx.StaticText(self, label= "Password:")
-        fieldSz.Add(passLbl, 0, wx.ALIGN_CENTER_VERTICAL)
-        fieldSz.Add(self._pass, 1, wx.EXPAND)
-
-        sizer.Add((10,10))
-        sizer.Add(fieldSz, 1, wx.ALL|wx.EXPAND, 5)
-        btnSz = self.CreateButtonSizer(wx.OK|wx.CANCEL)
-        sizer.Add(btnSz, 0, wx.EXPAND|wx.BOTTOM|wx.TOP, 5)
-
-        self.Sizer = sizer
-
-    @property
-    def Username(self):
-        return self._user.Value
-
-    @property
-    def Password(self):
-        return self._pass.Value
-
 
 class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
@@ -1328,6 +1048,7 @@ class QuickGui(wx.Frame):
 
         self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
         self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
+        self.hostSession = requests.Session()
         self.lockTime = False
         self.allTimeLocked = False
         self.sourceChoices = []
@@ -1416,9 +1137,9 @@ class QuickGui(wx.Frame):
         
         #user level setting menu
         self.menuBar.Append(self.iUserSettings,"Users")
-        self.idGuiMode = wx.NewId()
+        self.idLoginUser = wx.NewId()
 
-        self.iGuiMode = wx.MenuItem(self.iUserSettings, self.idGuiMode, "User Login", "", wx.ITEM_NORMAL)
+        self.iGuiMode = wx.MenuItem(self.iUserSettings, self.idLoginUser, "User Login", "", wx.ITEM_NORMAL)
 
         self.iUserSettings.AppendItem(self.iGuiMode)
 
@@ -1483,7 +1204,7 @@ class QuickGui(wx.Frame):
         self.SetMenuBar(self.menuBar)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.idABOUT)
 
-        self.Bind(wx.EVT_MENU, self.OnGuiMode, id=self.idGuiMode)
+        self.Bind(wx.EVT_MENU, self.OnLoginUser, id=self.idLoginUser)
 
         self.Bind(wx.EVT_MENU, self.OnLockTime, id=self.idLockTime)
         self.iLockTime.Enable(self.numGraphs>1)
@@ -2558,7 +2279,7 @@ class QuickGui(wx.Frame):
     def OnUserCal(self, evt):
         concList = self.dataManagerRpc.Cal_GetMeasNames()
         if len(concList) == 0:
-            d = OKDialog(self,"User calibration not allowed, action cancelled.",None,-1,"User Calibration Disabled")
+            d = Dialog.OKDialog(self,"User calibration not allowed, action cancelled.",None,-1,"User Calibration Disabled")
             d.ShowModal()
             d.Destroy()
             return
@@ -2575,7 +2296,7 @@ class QuickGui(wx.Frame):
         if not okClicked:
             return
         elif d.GetValue() != password:
-            d = OKDialog(self,"Password incorrect, action cancelled.",None,-1,"Incorrect Password")
+            d = Dialog.OKDialog(self,"Password incorrect, action cancelled.",None,-1,"Incorrect Password")
             d.ShowModal()
             d.Destroy()
             return
@@ -2639,7 +2360,7 @@ class QuickGui(wx.Frame):
             except:
                 errorMsg = "Connection to Pulse Analyzer failed"
         if errorMsg:
-            d = OKDialog(self,errorMsg,None,-1,"Error")
+            d = Dialog.OKDialog(self,errorMsg,None,-1,"Error")
             d.ShowModal()
             d.Destroy()
             return
@@ -2674,11 +2395,13 @@ class QuickGui(wx.Frame):
         for key in self.imageDatabase.dbase:
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
+
     def OnPaint(self,evt):
         w, h = self.GetClientSizeTuple()
         for key in self.imageDatabase.dbase:
             self.imageDatabase.placeImage(key,(w,h))
         evt.Skip()
+
     def OnAbout(self,e):
         v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-%d, Picarro Inc.\n\n" % time.localtime()[0]
         try:
@@ -2702,15 +2425,30 @@ class QuickGui(wx.Frame):
         except:
             aboutTitle = "Picarro CRDS"
 
-        d = OKDialog(self,v,None,-1,aboutTitle, boldText=boldText)
+        d = Dialog.OKDialog(self,v,None,-1,aboutTitle, boldText=boldText)
         if biggerSize:
             currSize = d.GetSize()
             d.SetSize((currSize[0]+40, currSize[1]))
         d.ShowModal()
         d.Destroy()
 
+    def sendRequest(self, action, api, payload, useToken=False):
+        """
+        action: 'get' or 'post'
+        useToken: set to True if the api requires token for authentication
+        """
+        if useToken:
+            header = {'Authentication': self.current_user["token"]}
+        else:
+            header = {}
+        actionFunc = getattr(self.hostSession, action)
+        try:
+            response = actionFunc(FLASK_SERVER_URL + api, data=payload, headers=header)
+            return response.json()
+        except Exception, err:
+            return {"error": str(err)}        
 
-    def OnGuiMode(self,e):
+    def OnLoginUser(self,e):
         # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 
         # to the flask_security server. If Technician/Expert mode stays inactive for a period of time (default 30 secs), it will automatically log out
         # and the GUI mode changes to the default.  
@@ -2718,60 +2456,54 @@ class QuickGui(wx.Frame):
 
         # toggle login/logout
         if not self.userLoggedIn:
-            d = LoginDialog(self, title = "Authorization required")
-            setItemFont(d,self.getFontFromIni("Dialogs"))
-            d.Show()
-            okClicked = d.ShowModal() == wx.ID_OK
-            d.Destroy()
-            payload = {
-                'username': d.Username, 
-                'password': d.Password, 
-                'command': 'log_in_user',
-                'requester': 'QuickGui'}
-
-            #with requests.Session() as session:
-            try:
-                r_account = requests.post(FLASK_SERVER_URL + "account", data = payload )
-                #print "The Http request response: ", r_account.text 
-                #print "response code:  ", r_account.status_code
-                authorized = "roles" in r_account.json()
-                connectionErrMsg = None
-            except:
-                authorized = False
-                connectionErrMsg = "Failed to connect to authentication server. Please check whether the server is running."
-
-            if okClicked: 
-                if authorized:
-                    if 'Admin' in r_account.json()["roles"]:
-                        self.userLevel = 3
-                        d = OKDialog(self,"\tAdmin logged in.",None,-1,"")
-                    elif 'Technician' in r_account.json()["roles"]:
-                        self.userLevel = 2
-                        d = OKDialog(self,"\tTechnician logged in.",None,-1,"")
-                    else:
-                        self.userLevel = 1
-                        d = OKDialog(self,"\tOperator logged in.",None,-1,"")
-
-                    #update GUI
-                    self.modifyInterface()
-                    self.measPanelSizer.Layout()
-                    self.Refresh()
-                    #self.menuBar.EnableTop(1, True)
-                    #self.menuBar.EnableTop(2, True)
-                    self.userLoggedIn = True
-                    self.iGuiMode.SetItemLabel("User Logout")
-                    #Recursively bind all the widgets with mouse motion event 
-                    self.BindAllWidgetsMotion(self.mainPanel)
-                    #Inactive session timeout timer
-                    self.sessionTimer.Start(5000) # 5 seconds interval
-
-                elif connectionErrMsg:
-                    d = OKDialog(self,connectionErrMsg,None,-1,"User Authentication Server Connection")
-                else:
-                    d = OKDialog(self,"Authentication failed.",None,-1,"User Authentication")
-
-                d.ShowModal()
+            user, msg = "", ""
+            while True:
+                d = Dialog.LoginDialog(self, title="Authorization required", user=user, msg=msg)
+                setItemFont(d,self.getFontFromIni("Dialogs"))
+                okClicked = d.ShowModal() == wx.ID_OK
+                user, pwd = d.getInput()
                 d.Destroy()
+                if not okClicked:
+                    break
+                else:
+                    payload = {
+                        'username': user, 
+                        'password': pwd, 
+                        'command': 'log_in_user',
+                        'requester': 'QuickGui'}
+                    returnDict = self.sendRequest("post", "account", payload)       
+                    if "error" in returnDict:
+                        msg = returnDict["error"]
+                        if "Password expire" in msg:
+                            msg = self.OnChangePwd(user, pwd)
+                            if len(msg) == "":
+                                break
+                    elif "roles" in returnDict:
+                        if 'Admin' in returnDict["roles"]:
+                            self.userLevel = 3
+                            d = Dialog.OKDialog(self,"\tAdmin logged in.",None,-1,"")
+                        elif 'Technician' in returnDict["roles"]:
+                            self.userLevel = 2
+                            d = Dialog.OKDialog(self,"\tTechnician logged in.",None,-1,"")
+                        else:
+                            self.userLevel = 1
+                            d = Dialog.OKDialog(self,"\tOperator logged in.",None,-1,"")
+
+                        #update GUI
+                        self.modifyInterface()
+                        self.measPanelSizer.Layout()
+                        self.Refresh()
+                        #self.menuBar.EnableTop(1, True)
+                        #self.menuBar.EnableTop(2, True)
+                        self.userLoggedIn = True
+                        self.iGuiMode.SetItemLabel("User Logout")
+                        #Recursively bind all the widgets with mouse motion event 
+                        self.BindAllWidgetsMotion(self.mainPanel)
+                        #Inactive session timeout timer
+                        self.sessionTimer.Start(5000) # 5 seconds interval
+                        d.ShowModal()
+                        d.Destroy()
+                        break                    
         else:
             self.userLevel = 0
             self.modifyInterface()
@@ -2784,6 +2516,33 @@ class QuickGui(wx.Frame):
             #recursively unbind all the widgets
             self.UnbindAllWidgetsMotion(self.mainPanel)
             self.sessionTimer.Stop()
+
+    def OnChangePwd(self, username, password):
+        msg = "Password Expired! Must change password."
+        while True:
+            d = Dialog.ChangePasswordDialog(self, msg=msg)
+            setItemFont(d, self.getFontFromIni("Dialogs"))
+            okClicked = d.ShowModal() == wx.ID_OK
+            pwd, pwd2 = d.getInput()
+            d.Destroy()
+
+            if not okClicked:
+                return ""
+            elif pwd != pwd2:
+                msg = "Password not match!"
+            else:
+                payload = {
+                    "password": password,
+                    "username": username,
+                    "new_password": pwd,
+                    'command': 'change_password',
+                    'requester': 'QuickGui'}
+                
+                returnDict = self.sendRequest("post", "account", payload)                
+                if "error" in returnDict:
+                    msg = returnDict["error"]
+                else:
+                    return "Password updated! Please log in."
 
     # reset the timer everytime a mouse motion is detected        
     def SessionRefresher(self, e):
@@ -2860,13 +2619,9 @@ def HandleCommandSwitches():
     if "/?" in args or "/h" in args:
         options["-h"] = ""
 
-    executeTest = False
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit(0)
-    else:
-        if "--test" in options:
-            executeTest = True
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
@@ -2880,11 +2635,12 @@ def HandleCommandSwitches():
     else:
         defaultTitle = ""
 
-    return (configFile, executeTest, defaultTitle)
+    return (configFile, defaultTitle)
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(False)
-    configFile, test, defaultTitle = HandleCommandSwitches()
+    app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
+    configFile, defaultTitle = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
     frame = QuickGui(configFile, defaultTitle)
     frame.Show()

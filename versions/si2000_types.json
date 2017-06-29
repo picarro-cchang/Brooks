@@ -8,16 +8,21 @@
         "AMADS": {
             "species": "NH3_HF",
             "installerSignature": "AMADS"
-        },  
+        }, 
 
-        "MBDS": {
+        "BxDS": {
+            "species": "H2S",
+            "installerSignature": "BxDS"
+        },
+
+        "MxDS": {
             "species": "HF",
             "installerSignature": "MADS"
         },
 
-        "NCDS": {
+        "NDDS": {
             "species": "H2O2",
-            "installerSignature": "NCDS"
+            "installerSignature": "NDDS"
         },
         
         "SADS": {
