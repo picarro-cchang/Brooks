@@ -253,7 +253,7 @@ class MyPlotCanvas(plot.PlotCanvas):
         dc.SetTextBackground(self.GetBackgroundColour())
 
         # sizes axis to axis type, create lower left and upper right corners of plot
-        if xAxis == None or yAxis == None:
+        if xAxis is None or yAxis is None:
             # One or both axis not specified in Draw
             p1, p2 = graphics.boundingBox()     # min, max points of graphics
             if xAxis == None:
