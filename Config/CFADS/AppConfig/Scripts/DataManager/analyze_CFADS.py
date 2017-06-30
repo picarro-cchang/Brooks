@@ -28,13 +28,13 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["ignore_count"] = 7
     _PERSISTENT_["init"] = False
 
-    script = "adjustTempOffset.py"
-    scriptRelPath = os.path.join(here, '..', '..', '..', 'CommonConfig',
-                                 'Scripts', 'DataManager', script)
-    cp = file(os.path.join(here, scriptRelPath), "rU")
-    codeAsString = cp.read() + "\n"
-    cp.close()
-    _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
+    #script = "adjustTempOffset.py"
+    #scriptRelPath = os.path.join(here, '..', '..', '..', 'CommonConfig',
+    #                             'Scripts', 'DataManager', script)
+    #cp = file(os.path.join(here, scriptRelPath), "rU")
+    #codeAsString = cp.read() + "\n"
+    #cp.close()
+    #_PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 
 # Cannot unconditionally execute this script here else end up with
 # different columns in output when SpectrumID is 10 vs. other values.
@@ -151,7 +151,7 @@ except:
 
 if _DATA_["SpectrumID"] != 10:
     # must run this script here since updating _REPORT_
-    exec _PERSISTENT_["adjustOffsetScript"] in globals()
+    #exec _PERSISTENT_["adjustOffsetScript"] in globals()
 
     t = time.gmtime(_MEAS_TIME_)
     t1 = float("%04d%02d%02d" % t[0:3])

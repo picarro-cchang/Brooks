@@ -352,8 +352,26 @@ class BuildStationFrame(BuildStationGUI):
         self.Close()
         if evt: evt.Skip()
 
+# Added assert suppress to get this code to run on Linux.
+#
+# wxPython 3.0.0 enabled an assert that always fails when running this code
+# in Linux with a GTK based desktop environment.  This assert was suppressed
+# in wxPython 2.8 and this assert is never reached when running the code
+# in Windows or MacOS.
+# Fortunately the assert can be suppress, and the code will run, with
+# wx.App.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS).
+#
+# See
+#
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=758949
+#
+# https://anonscm.debian.org/cgit/collab-maint/wx-migration-tools.git/tree/README#n30
+#
+# https://nuand.com/forums/viewtopic.php?f=4&t=3604
+#
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
+    app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     wx.InitAllImageHandlers()
     frame_1 = BuildStationFrame(None, -1, "")
     app.SetTopWindow(frame_1)

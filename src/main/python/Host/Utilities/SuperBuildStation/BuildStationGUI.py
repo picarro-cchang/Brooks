@@ -362,6 +362,7 @@ class BuildStationGUI(wx.Frame):
 
 if __name__ == "__main__":
     BuildStationSoftware = wx.PySimpleApp(0)
+    BuildStationSoftware.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     wx.InitAllImageHandlers()
     buildStationGUI = BuildStationGUI(None, -1, "")
     BuildStationSoftware.SetTopWindow(buildStationGUI)
