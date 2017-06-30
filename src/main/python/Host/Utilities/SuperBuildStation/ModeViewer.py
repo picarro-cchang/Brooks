@@ -526,6 +526,7 @@ def HandleCommandSwitches():
 
 def main():
     app = wx.PySimpleApp()
+    app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     configFile = HandleCommandSwitches()
     frame = ModeViewer(configFile)
     frame.Show()
