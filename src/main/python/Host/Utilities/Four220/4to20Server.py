@@ -19,7 +19,7 @@ import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
-
+from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 import threading
 

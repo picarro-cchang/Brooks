@@ -96,6 +96,36 @@ class User(Base, UserMixin):
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
+@app.before_first_request
+def before_first_request():
+    app_dir = os.path.realpath(os.path.dirname(__file__))
+    database_path = os.path.join(app_dir, "PicarroDataBase.sqlite")      
+    if not os.path.exists(database_path):
+        create_default_database()
+    else:
+        # if the database file is empty, kill it and create a new one
+        if os.stat(database_path).st_size < 100:
+            os.remove(database_path)
+            create_default_database()
+            
+def create_default_database():
+    db.create_all()
+    # add some data into database
+    user_datastore.create_role(name='Admin')
+    user_datastore.create_role(name='Technician')
+    user_datastore.create_role(name='Operator')
+    admin = user_datastore.create_user(username='admin', \
+        password=utils.encrypt_password('admin'),
+        phone_number='1-408-555-3900')
+    user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
+    technician = user_datastore.create_user(username='tech',\
+        password=utils.encrypt_password('tech'))
+    user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
+    operator = user_datastore.create_user(username='operator', \
+        password=utils.encrypt_password('operator'))
+    user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
+    db.session.commit()
+
 
 class SQLiteServer(object):
     def __init__(self):
@@ -113,7 +143,7 @@ class SQLiteServer(object):
                       
     def load_config_from_database(self):
         vars = SystemVariable.query.all()
-        self.system_varialbes = {v.name: self._convert_string(v.value) for v in vars}
+        self.system_variables = {v.name: self._convert_string(v.value) for v in vars}
         
     def _convert_string(self, s):
         converter = ["float", "int",
@@ -135,7 +165,7 @@ class SQLiteServer(object):
         return False    # no error
                 
     def check_password_history(self, username, password):
-        period = self.system_varialbes["password_reuse_period"]
+        period = self.system_variables["password_reuse_period"]
         if period >= 0:
             # New password cannot be one of the previous [period] passwords
             history = Password.query.filter_by(username=username).order_by(Password.id.desc())
@@ -149,7 +179,7 @@ class SQLiteServer(object):
         return False    # no error
         
     def check_password_charset(self, password):
-        if self.system_varialbes["password_mix_charset"]:
+        if self.system_variables["password_mix_charset"]:
             # searching for digits
             if re.search(r"\d", password) is None:
                 return {"error": "Password must contain at least one number!"}
@@ -162,14 +192,14 @@ class SQLiteServer(object):
         return False    # no error
                 
     def check_password_length(self, password):
-        length = self.system_varialbes["password_length"]
+        length = self.system_variables["password_length"]
         if length >= 0:
             if len(password) < length:
                 return {"error": "Password is too short! Minimum length: %s" % length}
         return False    # no error
         
     def check_password_age(self, username, password):
-        lifetime = self.system_varialbes["password_lifetime"]
+        lifetime = self.system_variables["password_lifetime"]
         if lifetime >= 0:
             latest_password = Password.query.filter_by(username=username).order_by(Password.created_at.desc()).first()
             if latest_password is None:
@@ -185,12 +215,12 @@ class SQLiteServer(object):
         # A simple check to see how many times user fails to login
         # Disable user if attempts exceeds system setting
         # Attempt times is reset to 1 if username is changed.
-        if self.system_varialbes["user_login_attempts"] >= 0:
+        if self.system_variables["user_login_attempts"] >= 0:
             if username == self.user_login_attempts["username"]:
                 self.user_login_attempts["attempts"] += 1
             else:
                 self.user_login_attempts = {"username": username, "attempts": 1}
-            if self.user_login_attempts["attempts"] >= self.system_varialbes["user_login_attempts"]:
+            if self.user_login_attempts["attempts"] >= self.system_variables["user_login_attempts"]:
                 # disable user
                 self.process_request_dict({"command": "update_user", "username": username, 
                     "active": 0, "password": None, "roles": None})
@@ -287,14 +317,14 @@ class SQLiteServer(object):
         return {"username": username}
             
     def save_action_history(self, username, action):
-        if self.system_varialbes["save_history"]:
+        if self.system_variables["save_history"]:
             a = UserAction(username, action)
             db.session.add(a)
             db.session.commit()
             
     def save_password_history(self, username, password):
-        if (self.system_varialbes["password_reuse_period"] >= 0) \
-                or (self.system_varialbes["password_lifetime"] >= 0):
+        if (self.system_variables["password_reuse_period"] >= 0) \
+                or (self.system_variables["password_lifetime"] >= 0):
             p = Password(username, password)
             db.session.add(p)
             db.session.commit()
@@ -361,7 +391,7 @@ class SQLiteServer(object):
                     db.session.add(var)
                 else:
                     var.value = request_dict[name]
-                self.system_varialbes[name] = self._convert_string(request_dict[name])
+                self.system_variables[name] = self._convert_string(request_dict[name])
             db.session.commit()
             return {"status": "succeed"}
         elif cmd == "update_user":  # UsersAPI, post
@@ -426,43 +456,43 @@ def HandleCommandSwitches():
 
 db_server = SQLiteServer()
 
-@app.before_first_request
-def before_first_request():
-    app_dir = os.path.realpath(os.path.dirname(__file__))
-    database_path = os.path.join(app_dir, "PicarroDataBase.sqlite")
-    if not os.path.exists(database_path):
-        db.create_all()
-        # create default roles
-        user_datastore.create_role(name='Admin')
-        user_datastore.create_role(name='Technician')
-        user_datastore.create_role(name='Operator')
-        # create a default admin account
-        admin = user_datastore.create_user(username='admin', \
-            password=utils.encrypt_password('admin'),
-            phone_number='1-408-962-3900')
-        user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
-        technician = user_datastore.create_user(username='tech',\
-            password=utils.encrypt_password('tech'))
-        user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
-        operator = user_datastore.create_user(username='operator', \
-            password=utils.encrypt_password('operator'))
-        user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
-        # add default user policies
-        default_policies = dict(
-            password_length='6',
-            password_mix_charset='False',
-            password_lifetime='183',    # days
-            password_reuse_period='3',  # times
-            user_login_attempts='3',    # times
-            user_session_lifetime='10',  # minutes
-            save_history='True'
-        )
-        for p in default_policies:
-            var = SystemVariable(p, default_policies[p])
-            db.session.add(var)
-        db.session.commit()
-    # get configurations from database
-    db_server.load_config_from_database()
+# @app.before_first_request
+# def before_first_request():
+    # app_dir = os.path.realpath(os.path.dirname(__file__))
+    # database_path = os.path.join(app_dir, "PicarroDataBase.sqlite")
+    # if not os.path.exists(database_path):
+        # db.create_all()
+        # # create default roles
+        # user_datastore.create_role(name='Admin')
+        # user_datastore.create_role(name='Technician')
+        # user_datastore.create_role(name='Operator')
+        # # create a default admin account
+        # admin = user_datastore.create_user(username='admin', \
+            # password=utils.encrypt_password('admin'),
+            # phone_number='1-408-962-3900')
+        # user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
+        # technician = user_datastore.create_user(username='tech',\
+            # password=utils.encrypt_password('tech'))
+        # user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
+        # operator = user_datastore.create_user(username='operator', \
+            # password=utils.encrypt_password('operator'))
+        # user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
+        # # add default user policies
+        # default_policies = dict(
+            # password_length='6',
+            # password_mix_charset='False',
+            # password_lifetime='183',    # days
+            # password_reuse_period='3',  # times
+            # user_login_attempts='3',    # times
+            # user_session_lifetime='10',  # minutes
+            # save_history='True'
+        # )
+        # for p in default_policies:
+            # var = SystemVariable(p, default_policies[p])
+            # db.session.add(var)
+        # db.session.commit()
+    # # get configurations from database
+    # db_server.load_config_from_database()
 
 @api.route('/system')
 class SystemAPI(Resource):

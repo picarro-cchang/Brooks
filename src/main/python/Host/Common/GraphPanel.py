@@ -349,7 +349,7 @@ class GraphPanel(wx.Panel):
                             attr['fillcolour'] = wx.ColourRGB(colors[startPt]) if colors[startPt]!= -1 else attr0['colour']
                             plot_objects.append(plot.PolyMarker(data1,**attr))
                         del data1
-                    if statsFlag:
+                    if statsFlag and self.canvas.last_draw is not None:
                         self.stats.append(self.calcStats(data,canvas))
                 del data
             else:
@@ -373,7 +373,7 @@ class GraphPanel(wx.Panel):
                                 plot_objects.append(plot.PolyLine(data,**attr))
                                 statData = concatenate((statData,data))
                             del data
-                        if statsFlag:
+                        if statsFlag and self.canvas.last_draw is not None:
                             self.stats.append(self.calcStats(statData,canvas))
                     except Exception, err:
                         print err
@@ -385,7 +385,7 @@ class GraphPanel(wx.Panel):
                             data = data[selSequence.GetValues() == selValue]
                         if len(data)>0:
                             plot_objects.append(plot.PolyLine(data,**attr))
-                        if statsFlag:
+                        if statsFlag and self.canvas.last_draw is not None:
                             self.stats.append(self.calcStats(data,canvas))
                     del data
         for series,select,statsFlag,attr0 in self._pointSeries:
@@ -414,7 +414,7 @@ class GraphPanel(wx.Panel):
                             attr['fillcolour'] = wx.ColourRGB(colors[startPt]) if colors[startPt]!= -1 else attr0['colour']
                             plot_objects.append(plot.PolyMarker(data1,**attr))
                         del data1
-                    if statsFlag:
+                    if statsFlag and self.canvas.last_draw is not None:
                         self.stats.append(self.calcStats(data,canvas))
                 del data
             elif len(self.colorList)-len(self.colorTimeList) == 1:
@@ -437,7 +437,7 @@ class GraphPanel(wx.Panel):
                             plot_objects.append(plot.PolyMarker(data,**attr))
                             statData = concatenate((statData,data))
                         del data
-                    if statsFlag:
+                    if statsFlag and self.canvas.last_draw is not None:
                         self.stats.append(self.calcStats(statData,canvas))
                 except Exception, err:
                     print err
@@ -449,7 +449,7 @@ class GraphPanel(wx.Panel):
                         data = data[selSequence.GetValues() == selValue]
                     if len(data)>0:
                         plot_objects.append(plot.PolyMarker(data,**attr))
-                    if statsFlag:
+                    if statsFlag and self.canvas.last_draw is not None:
                         self.stats.append(self.calcStats(data,canvas))
                 del data
         for h in self._text:
