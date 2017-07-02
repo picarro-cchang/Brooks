@@ -90,6 +90,7 @@ def get_noncython_resource(base_path):
         "Host/Utilities/SetupTool/*.py",
         "Host/Utilities/SupervisorLauncher/*.py",
         "Host/Utilities/Four220/*.*",
+        "Host/Utilities/UserAdmin/*.*",
         "AddOns/DatViewer/*.py",
         "AddOns/DatViewer/Scripts/*.py",
         "AddOns/DatViewer/tzlocal/*.py",

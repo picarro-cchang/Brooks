@@ -2,7 +2,7 @@ import os
 import time
 import unittest
 import json
-from Host.WebServer.SQLiteServer import db_server, app, SystemVariable, Password, UserAction, User, Role
+from Host.WebServer.SQLiteServer import db_server, app
 
 API_PREFIX = '/api/v1.0/'
 DATABASE_DIR = './src/main/python/Host/WebServer'

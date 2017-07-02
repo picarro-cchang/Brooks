@@ -5,15 +5,24 @@ import time
 import shutil
 
 # Kill host software if it's running
-host_software_components = ["AlarmSystem", "Archiver", "Controller", "ControlBridge", \
-                            "DataLogger", "DataManager", "DataManagerPublisher", "Driver", "DriverSimulator", \
-                            "EventManager", "Fitter", "HostStartup", "InstMgr", "MobileKitMonitor", \
-                            "MeasSystem", "QuickGui", "RDFreqConverter", "RestartSurveyor", "RestartSupervisor", "SampleManager", \
-                            "Serial2Socket", "SpectrumCollector", "StopSupervisor", "Supervisor", "SupervisorLauncher" \
+host_software_components = ["AlarmSystem", "Archiver",\
+        "Controller", "ControlBridge", "DataLogger", \
+        "DataManager", "DataManagerPublisher", "Driver",\
+        "DriverSimulator","EventManager", "Fitter",\
+        "HostStartup", "InstMgr", "MobileKitMonitor", \
+        "MeasSystem", "QuickGui", "RDFreqConverter",\
+        "RestartSurveyor", "RestartSupervisor", "SampleManager", \
+        "Serial2Socket", "SpectrumCollector", "SQLiteServer",\
+        "StopSupervisor", "Supervisor", "SupervisorLauncher" \
                             ]
 
+# Search the list for PIDs that contain the name of the Python
+# code and kill them before installing new code.
+# pgrep is a version of grep that searches the process table
+# and returns a matching PID.
+#
 for c in host_software_components:
-    os.system("killall %s" % c)
+    os.system("kill $(pgrep -f %s)" %c)
 
 
 # Backup instrConfig if it already exists

@@ -254,6 +254,7 @@ class DetectorViewer(wx.Frame):
         panel.SetSizer(sizer_1)
         self.setupAnalyzer()
         self.nSample = 0
+        self.allTimeLocked = False
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.onTimer,self.timer)
         self.timer.Start(250)

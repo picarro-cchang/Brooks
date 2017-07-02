@@ -1,8 +1,0 @@
-[SYNC_SETUP]
-#Define synchronous executions to be run by the DataManager in this mode
-# - Note that these are in addition to any in _BaseDefinition.ini
-NumSyncAnalyzers = 0
-
-# Sync_1_Period_s = 5
-# Sync_1_ReportName = Sensors
-# Sync_1_Script = ../Scripts/DataManager/analyze_warming.py
