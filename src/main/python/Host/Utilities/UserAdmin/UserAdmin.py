@@ -167,6 +167,10 @@ class MainWindow(UserAdminFrame):
     
     def disable_user(self):
         user_active = str(self.button_disable_user.text()) == "Enable User"
+        # prevent user disabling himself
+        if self.selected_user["username"] == self.current_user["username"] and (not user_active):
+            self.message_box(QMessageBox.Critical, "Error", "Cannot disable youselve!")
+            return 
         query = "<p>Please confirm this action:</p><h2>%s %s</h2>" % \
             ("Enable" if user_active else "Disable", self.selected_user["username"])
         msg = self.message_box(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel)
@@ -438,14 +442,16 @@ class MainWindow(UserAdminFrame):
         self.label_login_info.clear()
         self.input_user_name.setFocus()
         self.user_admin_widget.hide()
+        self.add_user_widget.hide()
+        self.change_password_widget.hide()
         self.home_widget.show()
         
 
-HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
+HELP_STRING = """UserAdmin.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following:
 -h, --help           print this help
--c                   specify a config file:  default = "./ModbusServer.ini"
+-c                   specify a config file:  default = "UserAdmin.ini"
 """
 
 def printUsage():
