@@ -183,10 +183,10 @@ class H2O2Validation(H2O2ValidationFrame):
         return msg_box.exec_()
         
     def stream_filter(self, entry):
-        if entry["source"] == self.data_source:
+        if entry["source"] == "analyze_H2O2":
             try:
                 data = {c: entry['data'][c] for c in ["CH4", "H2O", "H2O2", "CavityPressure", "CavityTemp"]}
-                self.process_data(1, data)
+                self.process_data(entry['data']['time'], data)
             except:
                 pass
     
