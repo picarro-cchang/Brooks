@@ -192,18 +192,22 @@ delta_time = tstart-prior_time
 prior_time = tstart
 delta_P = abs((P - prior_P) / delta_time)
 prior_P = P
-
+if last_time != None:
+    interval = r["time"]-last_time
+else:
+    interval = 0
+last_time = r["time"]
 if r != None and supressPressureExcursions and (delta_P <= delta_P_max):
     IgnoreThis = False
-    if last_time != None:
-        interval = r["time"]-last_time
-    else:
-        interval = 0
-    last_time = r["time"]
+    #if last_time != None:
+    #    interval = r["time"]-last_time
+    #else:
+    #    interval = 0
+    #last_time = r["time"]
 else:
     IgnoreThis = True
 
-if not IgnoreThis:
+if True: #not IgnoreThis:
     RESULT = {"h2o2_ppbv":h2o2_ppbv,"h2o2_shift":h2o2_shift,"h2o2_adjust":h2o2_adjust,
               "h2o2_base":base0,"h2o2_slope":base1,"h2o2_amp":h2o2_amp,"h2o2_res":h2o2_res,
               "h2o_conc":h2o_conc,"h2o_amp":h2o_amp,"h2o_y_eff":h2o_y_eff,"h2o_y_ave":h2o_y_ave,
@@ -212,6 +216,7 @@ if not IgnoreThis:
               "fit_time":fit_time,"interval":interval,"delta_P":delta_P,"delta_time":delta_time}
     RESULT.update(d.sensorDict)
     RESULT.update({"species":d["spectrumId"],"cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
-              "das_temp":dasTemp})
+              "das_temp":dasTemp, "IgnoreThis":IgnoreThis})
+
 lta_P = abs((P - prior_P) / delta_time)
 prior_P = P
