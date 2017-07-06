@@ -108,12 +108,6 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
-#if __debug__:
-    #print("Loading rpdb2")
-    #import rpdb2
-    #rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-    #print("rpdb2 loaded")
-
 #Global constants...
 APP_NAME = "Supervisor"
 MAX_LAUNCH_COUNT = 1
