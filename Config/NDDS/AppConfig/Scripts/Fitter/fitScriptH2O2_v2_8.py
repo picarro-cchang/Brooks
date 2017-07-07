@@ -197,11 +197,12 @@ delta_time = tstart-prior_time
 prior_time = tstart
 delta_P = abs((P - prior_P) / delta_time)
 prior_P = P
-if last_time != None:
-    interval = r["time"]-last_time
-else:
-    interval = 0
-last_time = r["time"]
+if r != None:
+    if last_time != None:
+        interval = r["time"]-last_time
+    else:
+        interval = 0
+    last_time = r["time"]
 if r != None and supressPressureExcursions and (delta_P <= delta_P_max):
     IgnoreThis = False
     if last_time != None:
