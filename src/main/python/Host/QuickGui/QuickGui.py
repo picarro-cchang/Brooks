@@ -1143,11 +1143,14 @@ class QuickGui(wx.Frame):
         self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iLockTime)
         self.idStatDisplay = wx.NewId()
-        self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Show Statistics", "", wx.ITEM_NORMAL)
+        if self.showStat:
+            self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Hide Statistics", "", wx.ITEM_NORMAL)
+        else:
+            self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Show Statistics", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iStatDisplay)
         self.idInstStatDisplay = wx.NewId()
         if self.showInstStat:
-            self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
+            self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Hide Instrument Status", "", wx.ITEM_NORMAL)
         else:
             self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iInstStatDisplay)
