@@ -103,6 +103,11 @@ class MainWindow(UserAdminFrame):
             self.user_log_off()
     
     def change_user_role(self, role):
+        if self.selected_user["username"] == self.current_user["username"]:
+            self.message_box(QMessageBox.Critical, "Error", "For safty reason, it is NOT allowed to change you own role!")
+            return
+        if role in self.selected_user["roles"]:
+            return
         query = "<p>Please confirm this action:</p><h2>Set %s as %s</h2>" % \
             (self.selected_user["username"], role)
         msg = self.message_box(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel)
@@ -169,7 +174,7 @@ class MainWindow(UserAdminFrame):
         user_active = str(self.button_disable_user.text()) == "Enable User"
         # prevent user disabling himself
         if self.selected_user["username"] == self.current_user["username"] and (not user_active):
-            self.message_box(QMessageBox.Critical, "Error", "Cannot disable youselve!")
+            self.message_box(QMessageBox.Critical, "Error", "Cannot disable yourselve!")
             return 
         query = "<p>Please confirm this action:</p><h2>%s %s</h2>" % \
             ("Enable" if user_active else "Disable", self.selected_user["username"])
