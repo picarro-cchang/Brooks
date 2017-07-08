@@ -1052,7 +1052,7 @@ class QuickGui(wx.Frame):
         self.fullInterface = False
         self.userLevel = 0
         self.userLoggedIn = False    
-        self.showStat = False
+        self.showStat = True # Show stats panels
         self.showInstStat = True
         self.serviceModeOnlyControls = []
         self.statControls = []
@@ -1143,10 +1143,7 @@ class QuickGui(wx.Frame):
         self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_NORMAL)
         self.iView.AppendItem(self.iLockTime)
         self.idStatDisplay = wx.NewId()
-        if self.showStat:
-            self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Hide Statistics", "", wx.ITEM_NORMAL)
-        else:
-            self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Show Statistics", "", wx.ITEM_NORMAL)
+        self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Statistics", "", wx.ITEM_CHECK)
         self.iView.AppendItem(self.iStatDisplay)
         self.idInstStatDisplay = wx.NewId()
         if self.showInstStat:
@@ -1234,13 +1231,26 @@ class QuickGui(wx.Frame):
         # Do one graphics refresh right after the window is fully drawn to clean
         # things up.
         self.OneShotTimer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.OnTimer, self.OneShotTimer)
+        self.Bind(wx.EVT_TIMER, self.lateStart, self.OneShotTimer)
         self.OneShotTimer.Start(100, True)
         self.iUserCal.Enable(False)
         # Full screen for the Linux industrial platform.
         if(fullScreen):
             self.Maximize(True)
             self.ShowFullScreen(True, style = wx.FULLSCREEN_NOBORDER)
+
+    def lateStart(self, evt):
+        """
+        Some initialization can't be done until after the main window
+        and all its widgets have been initialized.  For example,
+        some widgets have their view dependent on the state of another
+        widget but until the window is created the code can examine
+        the state of widgets (reference errors). This method is called
+        a few milliseconds after the main window has been created. Put
+        post initialization steps here.
+        """
+        self.OnStatDisplay(evt, self.showStat)
+        self.OnTimer(evt)
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
@@ -2220,19 +2230,34 @@ class QuickGui(wx.Frame):
             self.lockTime = True
             self.iView.SetLabel(self.idLockTime,"Unlock time axis")
 
-    def OnStatDisplay(self, evt):
-        if self.showStat:
-            self.showStat = False
-            self.iView.SetLabel(self.idStatDisplay,"Show Statistics")
+    def OnStatDisplay(self, evt = None, showNow = None):
+        """
+        Control the hide/show state of the statistics panels.
+        If showNow = True, show all now.
+        If showNow = False, hide all now.
+        If showNow = None, toggle the current state.
+
+        The menu item is also set to the checked state if
+        the panels are shown.
+        """
+        showStats = False
+        if len(self.statControls) > 0:
+            if showNow == False:
+                showStats = False
+            elif showNow == True:
+                showStats = True;
+            elif self.statControls[0].IsShown():
+                showStats = False
+            elif not self.statControls[0].IsShown():
+                showStats = True
+
             for c in self.statControls:
-                c.Show(False)
-        else:
-            self.showStat = True
-            self.iView.SetLabel(self.idStatDisplay,"Hide Statistics")
-            for c in self.statControls:
-                c.Show(True)        
-        self.measPanelSizer.Layout()
-        self.Refresh()
+                c.Show(showStats)
+            self.iStatDisplay.Check(showStats)
+
+            self.measPanelSizer.Layout()
+            self.Refresh()
+        return
 
     def OnInstStatDisplay(self, evt):
         if self.showInstStat:
