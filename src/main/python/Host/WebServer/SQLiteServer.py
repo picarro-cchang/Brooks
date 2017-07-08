@@ -72,13 +72,19 @@ class SQLiteServer(object):
                 pass
                 
     def check_password(self, username, password):
+        responses = []
         ret = self.check_password_length(password)
-        if ret: return ret
+        if ret:
+            responses.append(ret)
         ret = self.check_password_charset(password)
-        if ret: return ret
+        if ret:
+            responses.append(ret)
         ret = self.check_password_history(username, password)
-        if ret: return ret
-        return False    # no error
+        if ret:
+            responses.append(ret)
+        if len(responses) > 0:
+            return {"error": "\n".join([r["error"] for r in responses])}
+        return {}    # no error
                 
     def check_password_history(self, username, password):
         period = self.system_varialbes["password_reuse_period"]
@@ -88,30 +94,33 @@ class SQLiteServer(object):
             if history is not None:
                 for idx, p in enumerate(history):
                     if idx >= period:
-                        return False    # no error
+                        return {}    # no error
                     else:
                         if utils.verify_password(password, p.value):
                             return {"error": "Error in reusing passwords!"}
-        return False    # no error
+        return {}    # no error
         
     def check_password_charset(self, password):
         if self.system_varialbes["password_mix_charset"]:
+            errors = []
             # searching for digits
             if re.search(r"\d", password) is None:
-                return {"error": "Password must contain at least one number!"}
+                errors.append("Password must contain at least one number!")
             # searching for letters
             if re.search(r"[a-zA-Z]", password) is None:
-                return {"error": "Password must contain at least one letter!"}
+                errors.append("Password must contain at least one letter!")
             # searching for special symbols
             if password.isalnum():
-                return {"error": "Password must contain at least one special character!"}
-        return False    # no error
+                errors.append("Password must contain at least one special character!")
+            if len(errors) > 0:
+                return {"error": "\n".join(errors)}
+        return {}    # no error
                 
     def check_password_length(self, password):
         length = self.system_varialbes["password_length"]
         if length >= 0 and len(password) < length:
             return {"error": "Password is too short! Minimum length: %s" % length}
-        return False    # no error
+        return {}    # no error
         
     def check_password_age(self, username, password):
         lifetime = self.system_varialbes["password_lifetime"]
@@ -120,11 +129,11 @@ class SQLiteServer(object):
             if latest_password is None:
                 # accounts created when lifetime < 0 do not have records
                 # those accounts are considered "permanent"
-                return False
+                return {}
             td = datetime.datetime.utcnow() - latest_password.created_at
             if (td.days*86400 + td.seconds)*1000 + td.microseconds//1000 > lifetime*86400000:
                 return {"error": "Password expires!"}
-        return False    # no error                
+        return {}    # no error                
     
     def check_user_login_attempts(self, username):
         # Check to see how many times user fails to login
