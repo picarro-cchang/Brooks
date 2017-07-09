@@ -1052,8 +1052,8 @@ class QuickGui(wx.Frame):
         self.fullInterface = False
         self.userLevel = 0
         self.userLoggedIn = False    
-        self.showStat = True # Show stats panels
-        self.showInstStat = True
+        self.showStat = True # Show data statistics panels
+        self.showInstStat = True # Show instrument status panels
         self.serviceModeOnlyControls = []
         self.statControls = []
         self.imageDatabase = ImageDatabase()
@@ -1146,10 +1146,7 @@ class QuickGui(wx.Frame):
         self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Statistics", "", wx.ITEM_CHECK)
         self.iView.AppendItem(self.iStatDisplay)
         self.idInstStatDisplay = wx.NewId()
-        if self.showInstStat:
-            self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Hide Instrument Status", "", wx.ITEM_NORMAL)
-        else:
-            self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Show Instrument Status", "", wx.ITEM_NORMAL)
+        self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Instrument Status", "", wx.ITEM_CHECK)
         self.iView.AppendItem(self.iInstStatDisplay)
 
         # get external tools from config
@@ -1241,15 +1238,17 @@ class QuickGui(wx.Frame):
 
     def lateStart(self, evt):
         """
-        Some initialization can't be done until after the main window
-        and all its widgets have been initialized.  For example,
-        some widgets have their view dependent on the state of another
-        widget but until the window is created the code can examine
-        the state of widgets (reference errors). This method is called
-        a few milliseconds after the main window has been created. Put
-        post initialization steps here.
+        Post init configurations.
         """
+        # Some initialization can't be done until after the main window
+        # and all its widgets have been initialized.  For example,
+        # some widgets have their view dependent on the state of another
+        # widget but until the window is created the code can examine
+        # the state of widgets (reference errors). This method is called
+        # a few milliseconds after the main window has been created. Put
+        # post initialization steps here.
         self.OnStatDisplay(evt, self.showStat)
+        self.OnInstStatDisplay(evt, self.showInstStat)
         self.OnTimer(evt)
 
     def _addStandardKeys(self, sourceKeyDict):
@@ -2232,7 +2231,7 @@ class QuickGui(wx.Frame):
 
     def OnStatDisplay(self, evt = None, showNow = None):
         """
-        Control the hide/show state of the statistics panels.
+        Control the hide/show state of the data statistics panels.
         If showNow = True, show all now.
         If showNow = False, hide all now.
         If showNow = None, toggle the current state.
@@ -2254,22 +2253,31 @@ class QuickGui(wx.Frame):
             for c in self.statControls:
                 c.Show(showStats)
             self.iStatDisplay.Check(showStats)
-
             self.measPanelSizer.Layout()
             self.Refresh()
         return
 
-    def OnInstStatDisplay(self, evt):
-        if self.showInstStat:
-            self.showInstStat = False
-            self.iView.SetLabel(self.idInstStatDisplay,"Show Instrument Status")
-            self.instStatusBox.Show(False)
-            self.instStatusPanel.Show(False)
-        else:
-            self.showInstStat = True
-            self.iView.SetLabel(self.idInstStatDisplay,"Hide Instrument Status")
-            self.instStatusBox.Show(True)
-            self.instStatusPanel.Show(True)
+    def OnInstStatDisplay(self, evt = None, showNow = None):
+        """
+        Control the hide/show state of the instrument status panels.
+        If showNow = True, show all now.
+        If showNow = False, hide all now.
+        If showNow = None, toggle the current state.
+
+        The menu item is also set to the checked state if
+        the panels are shown.
+        """
+        showStats = False
+        if showNow == False:
+            showStats = False
+        elif showNow == True:
+            showStats = True;
+        elif self.instStatusBox.IsShown():
+            showStats = False
+        elif not self.instStatusBox.IsShown():
+            showStats = True
+
+        if showStats:
             try:
                 self.cavityTempS = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
                 self.cavityTempT = self.driverRpc.rdDasReg("CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER")
@@ -2284,6 +2292,10 @@ class QuickGui(wx.Frame):
             except:
                 self.cavityPressureS = 140.0
                 self.cavityPressureT = 5.0
+
+        self.instStatusBox.Show(showStats)
+        self.instStatusPanel.Show(showStats)
+        self.iInstStatDisplay.Check(showStats)
         self.measPanelSizer.Layout()
         self.Refresh()
 
