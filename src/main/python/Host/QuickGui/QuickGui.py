@@ -1182,7 +1182,7 @@ class QuickGui(wx.Frame):
 
         if self.valveSeqOption:
             self.idValveSeq = wx.NewId()
-            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show/Hide Valve Sequencer GUI", "", wx.ITEM_NORMAL)
+            self.iValveSeq = wx.MenuItem(self.iTools, self.idValveSeq, "Show Valve Sequencer GUI", "", wx.ITEM_NORMAL)
             self.iTools.AppendItem(self.iValveSeq)
             self.Bind(wx.EVT_MENU, self.OnValveSeq, id=self.idValveSeq)
 
@@ -2354,22 +2354,18 @@ class QuickGui(wx.Frame):
         subprocess.Popen(self.externalTools[label]['cmd'].split()) 
 
     def OnValveSeq(self, evt):
+        """
+        Show the valve sequencer GUI.
+        This GUI runs full screen and is now only closed by
+        clicking the hide option in the valve sequencer menu item.
+        """
         try:
             if not self.valveSeqRpc.isGuiOn():
                 self.valveSeqRpc.showGui()
-            else:
-                self.valveSeqRpc.hideGui()
         except Exception, err:
             errMsg = "%s" % err
             if errMsg == "connection failed":
                 errMsg += " (valve sequencer may be terminated already)"
-            #
-            # Hide the warning from the user. The supervisor should restart the
-            # ValveSequencer automatically.
-            #
-            #d = wx.MessageDialog(self, "Error: %s" % errMsg, "Valve Sequencer Error", wx.OK | wx.ICON_EXCLAMATION)
-            #d.ShowModal()
-            #d.Destroy()
 
     def OnPulseAnalyzerParam(self, evt):
         errorMsg = ""
