@@ -1127,7 +1127,7 @@ class QuickGui(wx.Frame):
         self.iView = wx.Menu()
         self.iTools = wx.Menu()
         self.iHelp = wx.Menu()
-        
+
         #user level setting menu
         self.menuBar.Append(self.iUserSettings,"Users")
         self.idLoginUser = wx.NewId()
@@ -1137,10 +1137,10 @@ class QuickGui(wx.Frame):
         self.iUserSettings.AppendItem(self.iGuiMode)
 
         self.iGuiMode.Enable(True)
-        
+
         self.menuBar.Append(self.iView,"View")
         self.idLockTime = wx.NewId()
-        self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_NORMAL)
+        self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_CHECK)
         self.iView.AppendItem(self.iLockTime)
         self.idStatDisplay = wx.NewId()
         self.iStatDisplay = wx.MenuItem(self.iView, self.idStatDisplay, "Statistics", "", wx.ITEM_CHECK)
@@ -1214,9 +1214,8 @@ class QuickGui(wx.Frame):
         #Add session timer for inactive session timeout function of higher user level GUI mode
         self.sessionTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.OnSessionTimer,self.sessionTimer)
-        
-        self.session_time = 0
 
+        self.session_time = 0
 
         self.startServer()
 
@@ -2222,12 +2221,17 @@ class QuickGui(wx.Frame):
                 pass
 
     def OnLockTime(self, evt):
+        """
+        Lock/Unlock the time axis of all charts.
+        """
         if self.lockTime:
             self.lockTime = False
-            self.iView.SetLabel(self.idLockTime,"Lock time axis when zoomed")
+            self.iLockTime.Check(False)
         else:
             self.lockTime = True
-            self.iView.SetLabel(self.idLockTime,"Unlock time axis")
+            self.iLockTime.Check(True)
+        self.OnTimer(evt)
+        return
 
     def OnStatDisplay(self, evt = None, showNow = None):
         """
