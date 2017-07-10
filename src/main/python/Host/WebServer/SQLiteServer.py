@@ -55,6 +55,16 @@ class SQLiteServer(object):
 
     def get_request(self, action, api, payload, headers={}):
         request_dict = payload
+        # token required
+        if api in ["action", "users"] or (api == "system" and action == "post"):
+            if "Authentication" not in headers:
+                return {"error": "Authentication token required!"}
+        # Admin required
+        if api == "users" or (api == "action" and action == "get") \
+            or (api == "system" and action == "post"):
+            roles = [r.name for r in current_user.roles]
+            if "Admin" not in roles:
+                return {"error": "Admin role required!"}
         if api == "system" and action == "post":
             request_dict["command"] = "save_system_variables"
         elif api == "action" and action == "post":
@@ -444,6 +454,7 @@ class SystemAPI(Resource):
     
     @auth_token_required
     @any_role_required("Admin")
+    @api.expect(post_parser)
     def post(self):
         # request.form is an immutable MultiDict
         request_dict = {k: request.form[k] for k in request.form}

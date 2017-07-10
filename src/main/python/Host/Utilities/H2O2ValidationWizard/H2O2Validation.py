@@ -53,7 +53,7 @@ validation_procedure = [
     """),
     ("Zero-Air Measurement", """
         <h2>Data Collection</h2>
-        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
+        <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 1: Preparation", """
         <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
@@ -61,7 +61,7 @@ validation_procedure = [
     """),
     ("Calibrant 1 Measurement", """
         <h2>Data Collection</h2>
-        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
+        <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 2: Preparation", """
         <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
@@ -69,7 +69,7 @@ validation_procedure = [
     """),
     ("Calibrant 2 Measurement", """
         <h2>Data Collection</h2>
-        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
+        <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 3: Preparation", """
         <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
@@ -77,7 +77,7 @@ validation_procedure = [
     """),
     ("Calibrant 3 Measurement", """
         <h2>Data Collection</h2>
-        <h3>It will take about two minutes for the cavity pressure to stabilize, and approximately five minutes for collecting data.</h3>
+        <h3>This process will take a few minutes...</h3>
     """)]
     
 class TimeSeriesData(object):
@@ -140,6 +140,7 @@ class H2O2Validation(H2O2ValidationFrame):
         self.update_period = self.config.getfloat("Setup", "Update_Period")
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
+        self.total_measurement_time = self.wait_time_before_collection + self.data_collection_time
         self.report_dir = self.config.get("Setup", "Report_Directory")
         if not os.path.isabs(self.report_dir):
             self.report_dir = os.path.join(self.curr_dir, self.report_dir)
@@ -247,15 +248,23 @@ class H2O2Validation(H2O2ValidationFrame):
             exec "simulation_result=" + expression in self.simulation_env
             return self.simulation_env["simulation_result"]
         else:
-            return 0.0
-        
-    def send_request(self, action, api, payload):
+            return 0.0 
+
+    def send_request(self, action, api, payload, use_token=False):
         """
         action: 'get' or 'post'
+        use_token: set to True if the api requires token for authentication
         """
+        if use_token:
+            header = {'Authentication': self.current_user["token"]}
+        else:
+            header = {}
+        return self._send_request(action, api, payload, header)
+
+    def _send_request(self, action, api, payload, header):
         action_func = getattr(self.host_session, action)
         try:
-            response = action_func(DB_SERVER_URL + api, data=payload)
+            response = action_func(DB_SERVER_URL + api, data=payload, headers=header)
             return response.json()
         except Exception, err:
             return {"error": str(err)}
@@ -300,49 +309,52 @@ class H2O2Validation(H2O2ValidationFrame):
             self.ch4_plot.setData(*self.ch4_data.get())
         if self.start_time > 0:
             current_time = time.time()
+            dt = current_time - self.start_time
             if self.record_status == "":    # wait before collecting data
-                if current_time - self.start_time >= self.wait_time_before_collection:
+                self.measurement_progress.setValue(int(dt*100/self.total_measurement_time))
+                if dt >= self.wait_time_before_collection:
                     # transition to data collection
                     self.start_time = current_time
                     self.record_status = validation_steps[self.current_step]
                     self.display_instruction2.setText("Collecting data...")
             elif self.record_status.startswith("error"):
                 self.start_time = 0
+                self.measurement_progress.hide()
                 stage, info = self.record_status.split("|")[1:]
                 self.record_status = ""
                 self.message_box(QMessageBox.Critical, "Error", info)
                 self.handle_measurement_error(stage)
-            elif current_time - self.start_time >= self.data_collection_time:
-                # data collection is done
-                self.start_time = 0
-                stage = self.record_status
-                self.record_status = ""
-                result_string = ""
-                # calculate averages
-                if len(self.validation_data[stage]) > 0:
-                    avg = np.average(self.validation_data[stage])
-                    nominal = float(self.validation_results[stage+"_nominal"])
-                    if nominal > 0:
-                        dev = abs(avg - nominal)/nominal
+            else:
+                self.measurement_progress.setValue(
+                    int((dt+self.wait_time_before_collection)*100/self.total_measurement_time))
+                if dt >= self.data_collection_time:
+                    # data collection is done
+                    self.start_time = 0
+                    stage = self.record_status
+                    self.record_status = ""
+                    result_string = ""
+                    # calculate averages
+                    if len(self.validation_data[stage]) > 0:
+                        avg = np.average(self.validation_data[stage])
+                        nominal = float(self.validation_results[stage+"_nominal"])
+                        std = np.std(self.validation_data[stage])
+                        if self.check_ch4_result(nominal, avg, std, stage):
+                            return 1
+                        self.validation_results[stage+"_mean"] = avg
+                        self.validation_results[stage+"_sd"] = std
+                        result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_mean"])
+                    if stage == "zero_air" and len(self.validation_data["H2O2"]) > 0:
+                        self.validation_results["h2o2_mean"] = np.average(self.validation_data["H2O2"])
+                        result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["h2o2_mean"])
+                    self.button_next_step.setEnabled(True)
+                    self.measurement_progress.hide()
+                    if self.current_step == len(validation_procedure) - 1:
+                        self.button_next_step.setText("Create Report")
+                        self.button_next_step.setStyleSheet("width: 110px")
+                        self.display_instruction2.setText("Data collection is done. Ready to create report.")
                     else:
-                        dev = abs(avg - nominal)
-                    std = np.std(self.validation_data[stage])
-                    if self.check_ch4_result(dev, std, stage):
-                        return 1
-                    self.validation_results[stage+"_mean"] = avg
-                    self.validation_results[stage+"_sd"] = std
-                    result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_mean"])
-                if stage == "zero_air" and len(self.validation_data["H2O2"]) > 0:
-                    self.validation_results["h2o2_mean"] = np.average(self.validation_data["H2O2"])
-                    result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["h2o2_mean"])
-                self.button_next_step.setEnabled(True)
-                if self.current_step == len(validation_procedure) - 1:
-                    self.button_next_step.setText("Create Report")
-                    self.button_next_step.setStyleSheet("width: 110px")
-                    self.display_instruction2.setText("Data collection is done. Ready to create report.")
-                else:
-                    self.display_instruction2.setText("Click Next to continue.")
-                self.message_box(QMessageBox.Information, "Measurement Done", result_string)
+                        self.display_instruction2.setText("Click Next to continue.")
+                    self.message_box(QMessageBox.Information, "Measurement Done", result_string)
                 
     def handle_measurement_error(self, step_name):
         # clear data collected in this step
@@ -355,13 +367,20 @@ class H2O2Validation(H2O2ValidationFrame):
         self.display_instruction2.clear()
         self.next_step()
                 
-    def check_ch4_result(self, deviation, std, step_name):
+    def check_ch4_result(self, nominal, average, std, step_name):
+        if nominal > 0:
+            deviation = abs(average - nominal)/nominal
+        else:
+            deviation = abs(average) / 10.0
         if deviation > self.ch4_max_deviation:
-            info = "Measurement result is too far away from nominal concentration!\n" + \
-                "Please check gas source and analyzer."
-            self.message_box(QMessageBox.Critical, "Error", info)
-            self.handle_measurement_error(step_name)
-            return 1
+            info = "Nominal concentration = %s\nAveraged CH4 concentration = %s\n" + \
+                "Measurement result is too far away from nominal concentration!\n" + \
+                "Click OK to run this step again.\nClick Cancel to ignore this error and proceed to next step."
+            info = info % (nominal, average)
+            ret = self.message_box(QMessageBox.Critical, "Error", info, QMessageBox.Ok | QMessageBox.Cancel)
+            if ret == QMessageBox.Ok:
+                self.handle_measurement_error(step_name)
+                return 1
         if std > self.ch4_max_std:
             info = "Measurement data is too noisy\nPlease check analyzer."
             self.message_box(QMessageBox.Critical, "Error", info)
@@ -407,6 +426,8 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.button_next_step.setEnabled(False)
                 self.button_skip_step.hide()
                 self.display_instruction2.setText("Waiting...")
+                self.measurement_progress.setValue(0)
+                self.measurement_progress.show()
                 self.start_time = time.time()
             self.display_caption.setText(validation_procedure[self.current_step][0]) 
             self.display_instruction.setText(validation_procedure[self.current_step][1])
@@ -439,6 +460,10 @@ class H2O2Validation(H2O2ValidationFrame):
         labels = ["zero_air", "calibrant1", "calibrant2"]
         if "calibrant3_mean" in self.validation_results:
             labels.append("calibrant3")
+        else:
+            self.validation_results["calibrant3_nominal"] = None
+            self.validation_results["calibrant3_mean"] = None
+            self.validation_results["calibrant3_sd"] = None
         xdata = [float(self.validation_results[i+"_nominal"]) for i in labels]
         ydata = [float(self.validation_results[i+"_mean"]) for i in labels]
         coeffs = np.polyfit(xdata, ydata, 1)
@@ -502,7 +527,7 @@ class H2O2Validation(H2O2ValidationFrame):
             doc.print_(printer)
             payload = {"username": self.current_user["username"],
                        "action": "Create validation report: %s" % file_name}
-            self.send_request("post", "action", payload)
+            self.send_request("post", "action", payload, use_token=True)
             msg = "Validation report created: %s\nThis program will be closed." % file_name
             self.message_box(QMessageBox.Information, "Save Report", msg)
             self.close()
@@ -514,7 +539,7 @@ class H2O2Validation(H2O2ValidationFrame):
             payload = {"command": "save_action",
                        "username": self.current_user["username"],
                        "action": "Quit H2O2 validation without saving report"}
-            self.send_request("post", "action", payload)
+            self.send_request("post", "action", payload, use_token=True)
             self.close()
 
 HELP_STRING = """H2O2Validation.py [-c<FILENAME>] [-h|--help]

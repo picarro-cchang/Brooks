@@ -40,7 +40,7 @@ class TestH2O2Validation(unittest.TestCase):
     def test_full_process(self):
         with flask_app.test_request_context():
             server = SQLiteServer(dummy=True)
-            patch(self.wizard.send_request, server.get_request)
+            patch(self.wizard._send_request, server.get_request)
             # login
             self.wizard.input_user_name.setText("admin")
             self.wizard.input_password.setText("admin")
@@ -78,6 +78,7 @@ class TestH2O2Validation(unittest.TestCase):
         unstub()
     
     def test_low_cavity_pressure(self):
+        # simulate the case that cylinder gets empty and cavity pressure drops
         self.wizard.simulation_dict["CavityPressure"] = "100-x"
         self.bypass_login_screen()
         next_button = self.wizard.button_next_step
