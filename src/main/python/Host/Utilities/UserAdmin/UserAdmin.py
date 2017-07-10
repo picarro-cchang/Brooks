@@ -8,6 +8,7 @@ from PyQt4.QtGui import *
 
 from UserAdminFrame import UserAdminFrame
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SingleInstance import SingleInstance
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 
@@ -486,10 +487,12 @@ def handleCommandSwitches():
     return (configFile,)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow(*handleCommandSwitches())
-    #window.setWindowState(Qt.WindowFullScreen)
-    window.get_system_variables()
-    window.show()
-    app.installEventFilter(window)
-    app.exec_()
+    userAdminApp = SingleInstance("PicarroUserAdmin")
+    if not userAdminApp.alreadyrunning():
+        app = QApplication(sys.argv)
+        window = MainWindow(*handleCommandSwitches())
+        #window.setWindowState(Qt.WindowFullScreen)
+        window.get_system_variables()
+        window.show()
+        app.installEventFilter(window)
+        app.exec_()

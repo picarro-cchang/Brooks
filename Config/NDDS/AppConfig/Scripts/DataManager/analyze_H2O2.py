@@ -1,6 +1,7 @@
 #  Analysis script for NBDS hydrogen peroxide analyzer
 #  16 Jul 2012:  use ammonia (AEDS) analysis script as starting point
 #  23 May 2013:  add report delay on startup
+#  16 Mar 2017: Added back in Laser Aging (EW)
 
 import os
 import sys
@@ -27,7 +28,13 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["ignore_count"] = 5
     _PERSISTENT_["init"] = False
 
-
+    script = "adjustTempOffset.py"
+    scriptRelPath = os.path.join(here, '..', '..', '..', 'CommonConfig',
+                                 'Scripts', 'DataManager', script)
+    cp = file(os.path.join(here, scriptRelPath), "rU")
+    codeAsString = cp.read() + "\n"
+    cp.close()
+    _PERSISTENT_["adjustOffsetScript"] = compile(codeAsString, script, 'exec')
 REPORT_UPPER_LIMIT = 5000.0
 REPORT_LOWER_LIMIT = -5000.0
 
@@ -133,6 +140,7 @@ if _DATA_["species"] == 66:
 
     if _PERSISTENT_["ignore_count"] > 0:
         _PERSISTENT_["ignore_count"] = _PERSISTENT_["ignore_count"] - 1
+exec _PERSISTENT_["adjustOffsetScript"] in globals()
 
 max_adjust = 5.0e-5
 gain = 0.2

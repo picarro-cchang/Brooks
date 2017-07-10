@@ -2,9 +2,9 @@ $$$
 schemeVersion = 1
 repeat = 1
 schemeRows = []
-fmin = 7010
+fmin = 6998.0
 fincr = 0.001
-nfreq = 2000
+nfreq = 4000
 vLaser = 0
 fit = 32768
 
