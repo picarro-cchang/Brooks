@@ -117,24 +117,30 @@ class H2O2Validation(H2O2ValidationFrame):
         self.start_time = 0
         self.record_status = ""
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
-        self.validation_data = dict(H2O2=[], zero_air=[], calibrant1=[], calibrant2=[], calibrant3=[])
-        adp = self.config.getint("Status_Check", "Average_Data_Points", 10)
-        self.status_data = dict(H2O=deque(maxlen=adp), 
-                                CavityPressure=deque(maxlen=adp), 
-                                CavityTemp=deque(maxlen=adp))
+        self.validation_data = {}        
         self.validation_results = {}
         self.data_queue = Queue.Queue()
         self.ch4_data = TimeSeriesData(100)
+        self.data_fields = ["CH4", "H2O", "H2O2", "CavityPressure", "CavityTemp"]
+        for k in validation_steps:
+            step = validation_steps[k] 
+            self.validation_data[step] = {"time": []}
+            for field in self.data_fields:
+                self.validation_data[step][field] = []
         
         if self.simulation:
             self.simulation_env = {func: getattr(math, func) for func in dir(math) if not func.startswith("__")}
             self.simulation_env.update({'random':  random.random, 'x': 0})
         if no_login:
-            self.current_user = {"first_name": "Picarro", "last_name": "Testing", "username": "test"}
+            self.current_user = {"first_name": "Picarro", "last_name": "Testing", "username": "test", "token": ""}
             self.login_frame.hide()
             self.top_frame.show()
             self.wizard_frame.show()
             self.start_data_collection()
+        # self.top_frame.hide()
+        # self.wizard_frame.hide()
+        # self.report_frame.show()
+        # self.create_report()
             
     def load_config(self):
         self.update_period = self.config.getfloat("Setup", "Update_Period")
@@ -144,13 +150,16 @@ class H2O2Validation(H2O2ValidationFrame):
         self.report_dir = self.config.get("Setup", "Report_Directory")
         if not os.path.isabs(self.report_dir):
             self.report_dir = os.path.join(self.curr_dir, self.report_dir)
+        self.average_data_point = self.config.getint("Status_Check", "Average_Data_Points", 10)
         self.water_conc_limit = self.config.getfloat("Status_Check", "Water_Conc_Limit", 100)
         self.pressure_upper_limit = self.config.getfloat("Status_Check", "Pressure_Upper_Limit", 1000)
         self.pressure_lower_limit = self.config.getfloat("Status_Check", "Pressure_Lower_Limit", 0)
         self.temperature_upper_limit = self.config.getfloat("Status_Check", "Temperature_Upper_Limit", 1000)
         self.temperature_lower_limit = self.config.getfloat("Status_Check", "Temperature_Lower_Limit", -1000)
-        self.ch4_max_deviation = self.config.getfloat("Status_Check", "CH4_Max_Deviaion_Percent", 1000)/100.0   # percent
-        self.ch4_max_std = self.config.getfloat("Status_Check", "CH4_Max_Standard_Deviation", 100)
+        self.ch4_max_deviation = self.config.getfloat("Status_Check", "CH4_Max_Deviation_Absolute", 1)
+        self.ch4_max_deviation_percent = self.config.getfloat("Status_Check", "CH4_Max_Deviaion_Percent", 1000)/100.0  
+        self.ch4_max_std = self.config.getfloat("Status_Check", "CH4_Max_STD_Absolute", 0.1)
+        self.ch4_max_std_percent = self.config.getfloat("Status_Check", "CH4_Max_STD_Percent", 0.1)/100.0 
         if self.simulation:
             self.simulation_dict = dict(
                 H2O2=self.config.get("Simulation", "H2O2", "0.0"),
@@ -186,7 +195,7 @@ class H2O2Validation(H2O2ValidationFrame):
     def stream_filter(self, entry):
         if entry["source"] == "analyze_H2O2":
             try:
-                data = {c: entry['data'][c] for c in ["CH4", "H2O", "H2O2", "CavityPressure", "CavityTemp"]}
+                data = {c: entry['data'][c] for c in self.data_fields}
                 self.process_data(entry['data']['time'], data)
             except:
                 pass
@@ -208,36 +217,31 @@ class H2O2Validation(H2O2ValidationFrame):
             time.sleep(self.update_period)            
             
     def process_data(self, xdata, ydata):
-        self.data_queue.put([xdata, ydata["CH4"], ydata["H2O2"]])
+        self.data_queue.put([xdata, ydata["CH4"], ydata["H2O2"], ydata["H2O"]])
         if len(self.record_status) > 0 and not self.record_status.startswith("error"):
             # save data
-            self.validation_data[self.record_status].append(ydata["CH4"])
-            if self.record_status == "zero_air": 
-                self.validation_data["H2O2"].append(ydata["H2O2"])
-                self.status_data["H2O"].append(ydata["H2O"])
-            # status checking
-            self.status_data["CavityPressure"].append(ydata["CavityPressure"])
-            self.status_data["CavityTemp"].append(ydata["CavityTemp"])
-            self.check_status()
+            for field in self.data_fields:
+                self.validation_data[self.record_status][field].append(ydata[field])
+            self.validation_data[self.record_status]['time'].append(xdata)            
+            self.check_status(self.record_status)
 
-    def check_status(self):
-        if self.record_status == "zero_air":
-            if self.check_status_variable("H2O", lambda x: x > self.water_conc_limit,
-                    "Water concentration is too high!\nPlease check gas source!"):
-                return 1
-        if self.check_status_variable("CavityPressure",
+    def check_status(self, stage):        
+        if self.check_status_variable(stage, "H2O", lambda x: x > self.water_conc_limit,
+                "Water concentration is too high!\nPlease check gas source!"):
+            return 1
+        if self.check_status_variable(stage, "CavityPressure",
                 lambda x: x > self.pressure_upper_limit or x < self.pressure_lower_limit,
                 "Cavity pressure is out of range!\nPlease check gas source and pump!"):
             return 1
-        if self.check_status_variable("CavityTemp",
+        if self.check_status_variable(stage, "CavityTemp",
                 lambda x: x > self.temperature_upper_limit or x < self.temperature_lower_limit,
                 "Cavity temperature is out of range!\nPlease check analyzer!"):
             return 1
                 
-    def check_status_variable(self, variable, criteria, error_info):
-        var = self.status_data[variable]
-        if len(var) == var.maxlen:
-            avg = np.average(var)
+    def check_status_variable(self, stage, variable, criteria, error_info):
+        var = self.validation_data[stage][variable]
+        if len(var) > self.average_data_point:
+            avg = np.average(var[-self.average_data_point:])
             if criteria(avg):
                 self.record_status = "error|%s|%s" % (self.record_status, error_info)
                 return 1
@@ -299,12 +303,13 @@ class H2O2Validation(H2O2ValidationFrame):
         
     def measurement(self):
         # get data from queue and display
-        x, ch4, h2o2 = None, None, None
+        x, ch4, h2o2, h2o = None, None, None, None
         while not self.data_queue.empty():
-            x, ch4, h2o2 = self.data_queue.get()
+            x, ch4, h2o2, h2o = self.data_queue.get()
         if x is not None:
             self.display_conc_ch4.setText("%.3f" % ch4)
             self.display_conc_h2o2.setText("%.3f" % h2o2)
+            self.display_conc_h2o.setText("%.3f" % h2o)
             self.ch4_data.put(x, ch4)
             self.ch4_plot.setData(*self.ch4_data.get())
         if self.start_time > 0:
@@ -334,18 +339,20 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.record_status = ""
                     result_string = ""
                     # calculate averages
-                    if len(self.validation_data[stage]) > 0:
-                        avg = np.average(self.validation_data[stage])
-                        nominal = float(self.validation_results[stage+"_nominal"])
-                        std = np.std(self.validation_data[stage])
+                    if len(self.validation_data[stage]["CH4"]) > 0:
+                        avg = np.average(self.validation_data[stage]["CH4"])
+                        nominal = self.validation_results[stage+"_nominal"]
+                        std = np.std(self.validation_data[stage]["CH4"])
                         if self.check_ch4_result(nominal, avg, std, stage):
                             return 1
-                        self.validation_results[stage+"_mean"] = avg
-                        self.validation_results[stage+"_sd"] = std
-                        result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_mean"])
-                    if stage == "zero_air" and len(self.validation_data["H2O2"]) > 0:
-                        self.validation_results["h2o2_mean"] = np.average(self.validation_data["H2O2"])
-                        result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["h2o2_mean"])
+                        self.validation_results["%s_ch4_mean" % stage] = avg
+                        self.validation_results["%s_ch4_sd" % stage] = std
+                        self.validation_results["%s_ch4_diff" % stage] = avg - nominal
+                        result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_ch4_mean"])
+                    if len(self.validation_data[stage]["H2O2"]) > 0:
+                        self.validation_results["%s_h2o2_mean" % stage] = np.average(self.validation_data[stage]["H2O2"])
+                        result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["%s_h2o2_mean" % stage])
+                        self.validation_results["%s_h2o_mean" % stage] = np.average(self.validation_data[stage]["H2O"])
                     self.button_next_step.setEnabled(True)
                     self.measurement_progress.hide()
                     if self.current_step == len(validation_procedure) - 1:
@@ -358,21 +365,25 @@ class H2O2Validation(H2O2ValidationFrame):
                 
     def handle_measurement_error(self, step_name):
         # clear data collected in this step
-        self.validation_data[step_name] = []
-        if step_name == "zero_air":
-            self.validation_data["H2O2"] = []
+        for k in self.validation_data[step_name]:
+            self.validation_data[step_name][k] = []        
         # go to previous step so user have time to fix problem
         self.current_step -= 2
         self.button_next_step.setEnabled(True)
         self.display_instruction2.clear()
+        self.measurement_progress.hide()
         self.next_step()
                 
     def check_ch4_result(self, nominal, average, std, step_name):
         if nominal > 0:
             deviation = abs(average - nominal)/nominal
+            deviation_limit = self.ch4_max_deviation_percent
+            std_limit = nominal*self.ch4_max_std_percent
         else:
-            deviation = abs(average) / 10.0
-        if deviation > self.ch4_max_deviation:
+            deviation = abs(average)
+            deviation_limit = self.ch4_max_deviation
+            std_limit = self.ch4_max_std
+        if deviation > deviation_limit:
             info = "Nominal concentration = %s\nAveraged CH4 concentration = %s\n" + \
                 "Measurement result is too far away from nominal concentration!\n" + \
                 "Click OK to run this step again.\nClick Cancel to ignore this error and proceed to next step."
@@ -381,8 +392,9 @@ class H2O2Validation(H2O2ValidationFrame):
             if ret == QMessageBox.Ok:
                 self.handle_measurement_error(step_name)
                 return 1
-        if std > self.ch4_max_std:
-            info = "Measurement data is too noisy\nPlease check analyzer."
+        if std > std_limit:
+            info = ("Standard deviation = %s\n" % std) + \
+                "Measurement data is too noisy\nPlease check analyzer."
             self.message_box(QMessageBox.Critical, "Error", info)
             self.handle_measurement_error(step_name)
             return 1
@@ -413,9 +425,9 @@ class H2O2Validation(H2O2ValidationFrame):
                 if self.current_step == self.zero_air_step:
                     self.validation_results["zero_air_nominal"] = 0
                 else:
-                    concentration = str(self.input_nominal_concentration.text())
+                    
                     try:
-                        float(concentration)
+                        concentration = float(self.input_nominal_concentration.text())
                     except ValueError:
                         msg = "Not a valid nomial concentration!"
                         self.message_box(QMessageBox.Critical, "Error", msg)
@@ -450,39 +462,60 @@ class H2O2Validation(H2O2ValidationFrame):
     def data_analysis(self):
         # fake data used for testing
         # self.validation_results = dict(
-        #     zero_air_nominal=0, zero_air_mean=-0.064270241, zero_air_sd=0.068583138,
-        #     calibrant1_nominal=2.01, calibrant1_mean=1.984485907, calibrant1_sd=0.085401663,
-        #     calibrant2_nominal=10, calibrant2_mean=10.02599381, calibrant2_sd=0.071903936,
-        #     calibrant3_nominal=100.2, calibrant3_mean=99.8075018, calibrant3_sd=0.100870281
+        #     zero_air_nominal=0, zero_air_ch4_mean=-0.064, zero_air_ch4_sd=0.0685,
+        #     zero_air_ch4_diff=0.001, zero_air_h2o2_mean=0.001, zero_air_h2o_mean=0.001,
+        #     calibrant1_nominal=2, calibrant1_ch4_mean=1.984, calibrant1_ch4_sd=0.0854,
+        #     calibrant1_ch4_diff=0.001, calibrant1_h2o2_mean=0.001, calibrant1_h2o_mean=0.001,
+        #     calibrant2_nominal=10, calibrant2_ch4_mean=10.025, calibrant2_ch4_sd=0.0719,
+        #     calibrant2_ch4_diff=0.001, calibrant2_h2o2_mean=0.001, calibrant2_h2o_mean=0.001,
+        #     calibrant3_nominal=100.2, calibrant3_ch4_mean=99.807, calibrant3_ch4_sd=0.1008,
+        #     calibrant3_ch4_diff=0.001, calibrant3_h2o2_mean=0.001, calibrant3_h2o_mean=0.001,
+        #     status_ch4_slope="<font color='green'>Pass</font>",
+        #     status_zero_h2o2="<font color='green'>Pass</font>",
+        #     status_ch4_r2="<font color='green'>Pass</font>"
         # )
         
         # linear fitting
-        labels = ["zero_air", "calibrant1", "calibrant2"]
-        if "calibrant3_mean" in self.validation_results:
-            labels.append("calibrant3")
-        else:
-            self.validation_results["calibrant3_nominal"] = None
-            self.validation_results["calibrant3_mean"] = None
-            self.validation_results["calibrant3_sd"] = None
-        xdata = [float(self.validation_results[i+"_nominal"]) for i in labels]
-        ydata = [float(self.validation_results[i+"_mean"]) for i in labels]
+        self.step_names = ["zero_air", "calibrant1", "calibrant2"]
+        if "calibrant3_ch4_mean" in self.validation_results:
+            self.step_names.append("calibrant3")
+            self.validation_results["calibrant3_source"] = "Calibrant 3"     
+        xdata = [self.validation_results[i+"_nominal"] for i in self.step_names]
+        ydata = [self.validation_results[i+"_ch4_mean"] for i in self.step_names]
         coeffs = np.polyfit(xdata, ydata, 1)
-        self.validation_results["ch4_slope"] = format(coeffs[0], '.6f')
-        self.validation_results["ch4_intercept"] = format(-coeffs[1], '.6f')
-        self.validation_results["h2o2_equivalent"] = format(-coeffs[1]/70.0*1000.0, '.6f')
+        self.validation_results["ch4_slope"] = coeffs[0]
+        self.validation_results["ch4_intercept"] = -coeffs[1]
+        self.validation_results["h2o2_equivalent"] = -coeffs[1]/70.0*1000.0
         yfit = np.poly1d(coeffs)(xdata)
         ybar = np.average(ydata)
         ssreg = np.sum((yfit - ybar)**2)
         sstot = np.sum((ydata - ybar)**2)
-        self.validation_results["ch4_r2"] = format(ssreg / sstot, '.6f')
-        # create image
+        self.validation_results["ch4_r2"] = ssreg / sstot
+        # create image1: observed ch4 vs nominal ch4
+        image1 = self.create_image(xdata, ydata, yfit, 
+            'Surrogate Gas Validation', 'Nominal CH4 ppm', 'Observed CH4 ppm')        
+
+        # create image2: observed h2o2 vs nomial h2o2
+        nominal_h2o2 = [self.validation_results[s+"_nominal"]/70.0*1000.0 for s in self.step_names]
+        observed_h2o2 = [self.validation_results[s+"_ch4_mean"]/70.0*1000.0 for s in self.step_names]
+        coeffs = np.polyfit(nominal_h2o2, observed_h2o2, 1)
+        yfit2 = np.poly1d(coeffs)(nominal_h2o2)
+        image2 = self.create_image(nominal_h2o2, observed_h2o2, yfit2,
+            'Surrogate Gas Validation', 'Nominal Equivalent H2O2 ppb', 'Observed Equivalent H2O2 ppb')
+        return [image1, image2]
+
+    def create_image(self, xdata, ydata, yfitting, title, xlabel, ylabel):
         fig = plt.figure(figsize=(6, 5), facecolor=(1,1,1))
         ax = fig.gca()
-        ax.plot(xdata, ydata, 'bo', xdata, yfit, 'r-')
+        ax.plot(xdata, ydata, 'bo', xdata, yfitting, 'r-')
         ax.grid('on')
-        plt.title('Surrogate Gas Validation')
-        plt.xlabel('Nominal CH4 ppm')
-        plt.ylabel('Observed CH4 ppm')
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        max_x, min_x = max(xdata), min(xdata)
+        offset = (max_x - min_x) * 0.05
+        ax.set_xlim([min_x-offset, max_x+offset])
+        ax.set_ylim([min_x-offset, max_x+offset])
         canvas = fig.canvas
         canvas.draw()
         size = canvas.size()
@@ -490,25 +523,70 @@ class H2O2Validation(H2O2ValidationFrame):
         return QImage(canvas.buffer_rgba(), width, height, QImage.Format_ARGB32)
         
     def create_report(self):
-        image = self.data_analysis()
+        imagelist = self.data_analysis()
+        self.check_report()
         html = file(os.path.join(self.curr_dir, "ReportTemplate.html"),"r").read()
         # fill data in report
+        items = ["source", "nominal", "ch4_mean", "ch4_sd", "ch4_diff", "h2o2_mean", "h2o_mean"]
+        for item in items:
+            html = html.replace("{%s}" % ("more_"+item), \
+                ("<td>{%s}</td>" % ("calibrant3_"+item)) \
+                if "calibrant3_ch4_mean" in self.validation_results else "")
+        html = html.replace("{analyzer_name}", os.uname()[1])
         html = html.replace("{date}", time.strftime("%Y-%m-%d"))
-        html = html.replace("{time}", time.strftime("%H:%M:%S"))
+        time_str = "%s (GMT%+d)" % (time.strftime("%H:%M:%S"), time.timezone/36)
+        html = html.replace("{time}", time_str)
         html = html.replace("{operator}", "%s %s" % (self.current_user["first_name"], self.current_user["last_name"]))
         html = html.replace("{username}", self.current_user["username"])
         for key in self.validation_results:
-            html = html.replace("{%s}" % key, str(self.validation_results[key]))
+            html = html.replace("{%s}" % key, self.format_variable(key))
         self.report.setText(html)
         cursor = self.report.textCursor()
-        doc = self.report.document()    
-        # insert image into document
-        url = QUrl("mydata://report.png")
-        doc.addResource( QTextDocument.ImageResource, url, QVariant(image))
-        image_format = QTextImageFormat()
-        image_format.setName(url.toString())
-        cursor.movePosition(QTextCursor.End)
-        cursor.insertImage(image_format)
+        doc = self.report.document()
+        # insert images into document
+        for idx in range(len(imagelist)):
+            url = QUrl("mydata://report%d.png" % idx)
+            doc.addResource( QTextDocument.ImageResource, url, QVariant(imagelist[idx]))
+            image_format = QTextImageFormat()
+            image_format.setName(url.toString())
+            cursor.movePosition(QTextCursor.End)
+            cursor.insertImage(image_format)        
+
+    def check_report(self):
+        # check validation pass or fail
+        errors = []
+        if abs(self.validation_results["ch4_slope"] - 1) > 0.05:
+            errors.append("CH4 slope (%s) is too far away from 1" % (self.validation_results["ch4_slope"]))
+            self.validation_results["status_ch4_slope"] = "<font color='red'>Fail</font>"
+        else:
+            self.validation_results["status_ch4_slope"] = "<font color='green'>Pass</font>"
+        if abs(self.validation_results["h2o2_equivalent"]) > 10:
+            errors.append("Zero H2O2 (%s) is too far away from 0" % (self.validation_results["h2o2_equivalent"]))
+            self.validation_results["status_zero_h2o2"] = "<font color='red'>Fail</font>"
+        else:
+            self.validation_results["status_zero_h2o2"] = "<font color='green'>Pass</font>"
+        if self.validation_results["ch4_r2"] < 0.95:
+            errors.append("Linearity (%s) is too low" % (self.validation_results["ch4_r2"]))
+            self.validation_results["status_ch4_r2"] = "<font color='red'>Fail</font>"
+        else:
+            self.validation_results["status_ch4_r2"] = "<font color='green'>Pass</font>"
+        if len(errors) > 0:
+            msg = "Validation fails! See errors below:\n" + ("\n".join(errors))
+            self.message_box(QMessageBox.Critical, "Validation Fail", msg)
+
+    def format_variable(self, var_name):
+        value = self.validation_results[var_name]
+        end = var_name.split("_")[-1]
+        if type(value) is str:
+            return value
+        elif end in ["mean", "diff", "intercept", "nominal"]:
+            return format(value, ".3f")
+        elif end == "sd":
+            return format(value, ".4f")
+        elif end == "equivalent":
+            return format(value, ".2f")
+        else:
+            return format(value, ".6f")
         
     def save_report(self):
         msg = """
@@ -520,14 +598,27 @@ class H2O2Validation(H2O2ValidationFrame):
             printer = QPrinter(QPrinter.PrinterResolution)
             printer.setOutputFormat(QPrinter.PdfFormat)
             printer.setPaperSize(QPrinter.B4)
+            folder_name = time.strftime("%Y%m%d_%H%M%S")
+            data_folder = os.path.join(self.curr_dir, folder_name)
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
             file_name = time.strftime("Validation_Report_%Y-%m-%d-%H-%M-%S.pdf")
-            printer.setOutputFileName(os.path.join(self.report_dir, file_name))
+            printer.setOutputFileName(os.path.join(self.report_dir, folder_name, file_name))
             doc = self.report.document()
             doc.setPageSize(QSizeF(printer.pageRect().size()))   #This is necessary if you want to hide the page number
             doc.print_(printer)
             payload = {"username": self.current_user["username"],
-                       "action": "Create validation report: %s" % file_name}
+                       "action": "Create validation report: %s" % (os.path.join(folder_name, file_name))}
             self.send_request("post", "action", payload, use_token=True)
+            # save data files
+            for step in self.step_names:
+                with open(os.path.join(data_folder, step+".csv"), "w") as f:
+                    f.write("Time, " + ", ".join(self.data_fields) + "\n")
+                    for idx in xrange(len(self.validation_data[step]['time'])):
+                        f.write(str(self.validation_data[step]['time'][idx]))
+                        for field in self.data_fields:
+                            f.write(", %s" % (self.validation_data[step][field][idx]))
+                        f.write("\n")
             msg = "Validation report created: %s\nThis program will be closed." % file_name
             self.message_box(QMessageBox.Information, "Save Report", msg)
             self.close()
