@@ -209,7 +209,7 @@ def process_build_config_file(configFile):
                 'push_github',\
                 'tag_github',\
                 'upload_artifactory',\
-                'version_increase'
+                'incr_version'
                 ]
     propertyList = [\
             'product',\
