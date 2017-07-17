@@ -9,7 +9,6 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import Queue
-from collections import deque
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -48,7 +47,7 @@ validation_procedure = [
     """),
     ("Zero-Air Measurement: Preparation", """
         <h2>1. Attach a regulator to the zero air source if not already installed, with the output pressure set to zero. 
-            Open the cylinder valve and adjust the output line pressure upwards to 2-3 psi (0.1-0.2 bar). </h2>
+            Open the cylinder valve and adjust the output line pressure upwards to 2-3 psig (0.1-0.2 bar). </h2>
         <h2>2. Attach the zero air line to the instrument.</h2>
     """),
     ("Zero-Air Measurement", """
@@ -56,7 +55,7 @@ validation_procedure = [
         <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 1: Preparation", """
-        <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>1. Attach a methane calibrant gas line at 2-3 psig (0.1-0.2 bar). </h2>
         <h2>2. Enter nominal concentration of methane gas below. </h2>
     """),
     ("Calibrant 1 Measurement", """
@@ -64,7 +63,7 @@ validation_procedure = [
         <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 2: Preparation", """
-        <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>1. Attach a methane calibrant gas line at 2-3 psig (0.1-0.2 bar). </h2>
         <h2>2. Enter nominal concentration of methane gas below. </h2>
     """),
     ("Calibrant 2 Measurement", """
@@ -72,7 +71,7 @@ validation_procedure = [
         <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 3: Preparation", """
-        <h2>1. Attach a methane calibrant gas line at 2-3 psi (0.1-0.2 bar). </h2>
+        <h2>1. Attach a methane calibrant gas line at 2-3 psig (0.1-0.2 bar). </h2>
         <h2>2. Enter nominal concentration of methane gas below. </h2>
     """),
     ("Calibrant 3 Measurement", """
@@ -117,8 +116,9 @@ class H2O2Validation(H2O2ValidationFrame):
         self.start_time = 0
         self.record_status = ""
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
-        self.validation_data = {}        
+        self.validation_data = {}   
         self.validation_results = {}
+        self.cylinder_used = {}     
         self.data_queue = Queue.Queue()
         self.ch4_data = TimeSeriesData(100)
         self.data_fields = ["CH4", "H2O", "H2O2", "CavityPressure", "CavityTemp"]
@@ -132,7 +132,9 @@ class H2O2Validation(H2O2ValidationFrame):
             self.simulation_env = {func: getattr(math, func) for func in dir(math) if not func.startswith("__")}
             self.simulation_env.update({'random':  random.random, 'x': 0})
         if no_login:
-            self.current_user = {"first_name": "Picarro", "last_name": "Testing", "username": "test", "token": ""}
+            self.current_user = {
+                "first_name": "Picarro", "last_name": "Testing", "username": "test", 
+                "token": "", "login_time": time.time()}
             self.login_frame.hide()
             self.top_frame.show()
             self.wizard_frame.show()
@@ -143,6 +145,17 @@ class H2O2Validation(H2O2ValidationFrame):
         # self.create_report()
             
     def load_config(self):
+        self.cylinders = {}
+        self.cylinder_list_file = self.config.get("Setup", "Cylinder_List")
+        if not os.path.exists(self.cylinder_list_file):
+            open(self.cylinder_list_file, 'w').close()
+        self.cylinder_config = CustomConfigObj(self.cylinder_list_file)
+        for section in self.cylinder_config:
+            if self.cylinder_config.getboolean(section, "Active", False):
+                self.cylinders[section] = {
+                    "concentration": self.cylinder_config.getfloat(section, "Concentration"),
+                    "uncertainty": self.cylinder_config.getfloat(section, "Uncertainty")
+                }
         self.update_period = self.config.getfloat("Setup", "Update_Period")
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
@@ -280,18 +293,25 @@ class H2O2Validation(H2O2ValidationFrame):
                    'password': str(self.input_password.text())}
         return_dict = self.send_request("post", "account", payload)
         if "error" not in return_dict:
-            if "roles" in return_dict:
-                if "Admin" in return_dict["roles"] or "Technician" in return_dict["roles"]:
+            if "roles" in return_dict and ("Admin" in return_dict["roles"] or "Technician" in return_dict["roles"]):
+                if not hasattr(self, "current_user"):   # first-time login
                     self.input_user_name.clear()
                     self.input_password.clear()
                     self.current_user = return_dict
+                    self.current_user["login_time"] = time.time()
                     self.login_frame.hide()
                     self.top_frame.show()
                     self.wizard_frame.show()
                     self.start_data_collection()
-                else:
-                    self.label_login_info.setText("You don't have the permission to perform validation.")
-                    self.send_request("post", "account", {"command":"log_out_user"})
+                else:   # login to sign report
+                    self.signature_user = return_dict
+                    self.login_frame.hide()
+                    self.report_frame.show()
+                    self.create_report()
+                    self.save_report()
+            else:
+                self.label_login_info.setText("You don't have the permission to perform validation.")
+                self.send_request("post", "account", {"command":"log_out_user"})
         elif "Password expire" in return_dict["error"]:
             msg = "Password already expires!\nPlease use QuickGUI or other programs to change password."
             self.label_login_info.setText(msg)
@@ -299,7 +319,122 @@ class H2O2Validation(H2O2ValidationFrame):
             self.label_login_info.setText(return_dict["error"])
             
     def cancel_login(self):
-        self.close()
+        if not hasattr(self, "current_user"):   # first-time login
+            self.close()
+        else:   # login to sign report
+            self.login_frame.hide()
+            self.top_frame.show()
+            self.wizard_frame.show()
+
+    def edit_cylinder(self):
+        self.report_frame.hide()
+        self.top_frame.hide()
+        self.wizard_frame.hide()
+        self.cylinder_frame.show()
+        self.update_cylinder_list()
+
+    def select_cylinder_from_table(self):
+        indexes = self.table_cylinder_list.selectionModel().selectedRows()
+        if len(indexes) > 0:
+            cylinder = self.table_cylinder_list.item(indexes[0].row(), 0)
+            if cylinder is not None:
+                ident = str(cylinder.text())
+                self.input_cylinder_ident.setText(ident)
+                self.input_cylinder_ch4.setText(str(self.cylinders[ident]["concentration"]))
+                self.input_cylinder_uncertainty.setText(str(self.cylinders[ident]["uncertainty"]))
+
+    def add_cylinder(self):
+        self.update_cylinder_info(new_cylinder=True)
+
+    def update_cylinder_list(self):
+        num_rows = self.table_cylinder_list.rowCount()
+        num_cylinder = len(self.cylinders)
+        if num_cylinder > num_rows:
+            for _ in range(num_cylinder-num_rows):
+                self.table_cylinder_list.insertRow(0)
+        elif num_cylinder < num_rows:
+            for _ in range(num_rows-num_cylinder):
+                self.table_cylinder_list.removeRow(0)
+        for idx, ident in enumerate(self.cylinders):
+            self.table_cylinder_list.setItem(idx, 0, QTableWidgetItem(ident))
+            self.table_cylinder_list.setItem(idx, 1, 
+                QTableWidgetItem(format(self.cylinders[ident]["concentration"], ".2f")))
+            self.table_cylinder_list.setItem(idx, 2, 
+                QTableWidgetItem(format(self.cylinders[ident]["uncertainty"], ".2f")))
+            self.table_cylinder_list.setItem(idx, 3, 
+                QTableWidgetItem(self.cylinder_used[ident] if ident in self.cylinder_used else ""))
+        self.table_cylinder_list.selectRow(num_cylinder-1)
+        self.select_cylinder_from_table()
+
+    def delete_cylinder(self):
+        indexes = self.table_cylinder_list.selectionModel().selectedRows()
+        if len(indexes) > 0:
+            cylinder = self.table_cylinder_list.item(indexes[0].row(), 0)
+            if cylinder is not None:
+                ident = str(cylinder.text())
+                self.cylinders.pop(ident)
+                self.cylinder_config[ident]["Active"] = "False"
+                self.update_cylinder_list()
+
+    def update_cylinder_info(self, new_cylinder=False):
+        ident = str(self.input_cylinder_ident.text()).strip()
+        if len(ident) == 0:
+            self.message_box(QMessageBox.Critical, "Error", "Cylinder identification is blank!")
+            return 1
+        if new_cylinder:
+            if ident in self.cylinders:
+                self.message_box(QMessageBox.Critical, "Error", "Cylinder already exists!")
+                return 1
+        else:
+            if ident not in self.cylinders:
+                self.message_box(QMessageBox.Critical, "Error", "Cylinder does not exist!")
+                return 1
+        try:
+            conc = float(self.input_cylinder_ch4.text())
+            if conc < 0:
+                self.message_box(QMessageBox.Critical, "Error", "CH4 concentration cannot be negative!")
+                return 1
+        except:
+            self.message_box(QMessageBox.Critical, "Error", "CH4 concentration not valid!")
+            return 1
+        try:
+            uncertainty = float(self.input_cylinder_uncertainty.text())
+            if uncertainty < 0:
+                self.message_box(QMessageBox.Critical, "Error", "Concentration uncertainty cannot be negative!")
+                return 1
+        except:
+            self.message_box(QMessageBox.Critical, "Error", "Concentration uncertainty not valid!")
+            return 1
+        self.cylinders[ident] = {"concentration": conc, "uncertainty": uncertainty}
+        self.cylinder_config[ident] = {"Concentration": str(conc), "Uncertainty": str(uncertainty), "Active": "True"}
+        self.update_cylinder_list()        
+
+    def exit_cylinder_setting(self):
+        self.cylinder_config.write()    # write to file
+        self.cylinder_frame.hide()
+        self.top_frame.show()
+        self.wizard_frame.show()
+        self.popular_cylinder_selection_list()
+
+    def popular_cylinder_selection_list(self):
+        self.select_cylinder.clear()
+        available_cylinder = []
+        for cylinder in self.cylinders:
+            if cylinder not in self.cylinder_used:
+                if validation_steps[self.current_step+1] == "zero_air" \
+                    and self.cylinders[cylinder]["concentration"] > 0:
+                    continue
+                available_cylinder.append([cylinder, 
+                    self.cylinders[cylinder]["concentration"], self.cylinders[cylinder]["uncertainty"]])
+        if len(available_cylinder) == 0:
+            self.message_box(QMessageBox.Critical, "Notice",
+                "No available gas sources for this step.\n" +
+                "Please edit information of gas sources!")
+        else:
+            available_cylinder = sorted(available_cylinder, key=lambda x: x[1])
+            for item in available_cylinder:
+                self.select_cylinder.addItem(
+                    "%s: CH4=%.2f ppm +/-%d%%" % (item[0], item[1], item[2]))
         
     def measurement(self):
         # get data from queue and display
@@ -356,9 +491,9 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.button_next_step.setEnabled(True)
                     self.measurement_progress.hide()
                     if self.current_step == len(validation_procedure) - 1:
-                        self.button_next_step.setText("Create Report")
-                        self.button_next_step.setStyleSheet("width: 110px")
-                        self.display_instruction2.setText("Data collection is done. Ready to create report.")
+                        self.button_next_step.setText("Create and Save Report")
+                        self.button_next_step.setStyleSheet("width: 180px")
+                        self.display_instruction2.setText("Data collection is done. Ready to create and save report.")
                     else:
                         self.display_instruction2.setText("Click Next to continue.")
                     self.message_box(QMessageBox.Information, "Measurement Done", result_string)
@@ -412,29 +547,33 @@ class H2O2Validation(H2O2ValidationFrame):
         
     def next_step(self):
         if self.current_step < len(validation_procedure) - 1:
+            if self.current_step == 0 and len(self.cylinders) == 0:
+                self.message_box(QMessageBox.Information, "Notice", 
+                    "Please enter infomation of all gas sources for validation.")
+                self.edit_cylinder()
+                return 0
             self.current_step += 1
-            if self.current_step+1 in validation_steps and validation_steps[self.current_step+1].startswith("calibrant"):
-                self.nominal_concentration.show()
+            if self.current_step+1 in validation_steps:
+                self.cylinder_selection.show()                
                 self.display_instruction2.clear()
-                self.nominal_concentration.setEnabled(True)
+                self.cylinder_selection.setEnabled(True)
                 if validation_steps[self.current_step+1] == "calibrant3":
                     self.button_skip_step.show()
-                self.input_nominal_concentration.clear()
-                self.input_nominal_concentration.setFocus()
+                self.popular_cylinder_selection_list()
             elif self.current_step in validation_steps:
-                if self.current_step == self.zero_air_step:
-                    self.validation_results["zero_air_nominal"] = 0
-                else:
-                    
-                    try:
-                        concentration = float(self.input_nominal_concentration.text())
-                    except ValueError:
-                        msg = "Not a valid nomial concentration!"
-                        self.message_box(QMessageBox.Critical, "Error", msg)
-                        self.current_step -= 1
-                        return 1
-                    self.validation_results[validation_steps[self.current_step]+"_nominal"] = concentration
-                self.nominal_concentration.setEnabled(False)
+                cylinder = str(self.select_cylinder.currentText()).split(":")[0]
+                if cylinder == "":
+                    self.message_box(QMessageBox.Critical, "Error", "Please select a cylinder!")
+                    self.current_step -= 1
+                    return 1
+                concentration = self.cylinders[cylinder]["concentration"]
+                uncertainty = self.cylinders[cylinder]["uncertainty"]
+                stage = validation_steps[self.current_step]
+                self.validation_results[stage+"_source"] = cylinder
+                self.validation_results[stage+"_nominal"] = concentration
+                self.validation_results[stage+"_info"] = "%s&plusmn;%s%%" % (concentration, uncertainty)
+                self.cylinder_used[cylinder] = stage
+                self.cylinder_selection.setEnabled(False)
                 self.button_next_step.setEnabled(False)
                 self.button_skip_step.hide()
                 self.display_instruction2.setText("Waiting...")
@@ -444,10 +583,19 @@ class H2O2Validation(H2O2ValidationFrame):
             self.display_caption.setText(validation_procedure[self.current_step][0]) 
             self.display_instruction.setText(validation_procedure[self.current_step][1])
         else:
+            self.label_login_message.setText("""
+            <p>
+                <b>You are about to sign a record electronically. 
+                This is the legal equivalent of a traditional handwritten signature.</b>
+            </p>
+            <p>Please login to sign and save the validation report.</p>
+            """)
             self.top_frame.hide()
             self.wizard_frame.hide()
-            self.report_frame.show()
-            self.create_report()
+            self.login_frame.show()
+            self.input_user_name.clear()
+            self.input_password.clear()
+            self.input_user_name.setFocus()
     
     def cancel_process(self):
         msg = "Do you really want to abort validation process?"
@@ -462,24 +610,21 @@ class H2O2Validation(H2O2ValidationFrame):
     def data_analysis(self):
         # fake data used for testing
         # self.validation_results = dict(
-        #     zero_air_nominal=0, zero_air_ch4_mean=-0.064, zero_air_ch4_sd=0.0685,
+        #     zero_air_nominal=0, zero_air_ch4_mean=-0.064, zero_air_ch4_sd=0.0685, zero_air_source="cylinder_#1_aaa",
         #     zero_air_ch4_diff=0.001, zero_air_h2o2_mean=0.001, zero_air_h2o_mean=0.001,
-        #     calibrant1_nominal=2, calibrant1_ch4_mean=1.984, calibrant1_ch4_sd=0.0854,
+        #     calibrant1_nominal=2, calibrant1_ch4_mean=1.984, calibrant1_ch4_sd=0.0854, calibrant1_source="cylinder_#2_bbb",
         #     calibrant1_ch4_diff=0.001, calibrant1_h2o2_mean=0.001, calibrant1_h2o_mean=0.001,
-        #     calibrant2_nominal=10, calibrant2_ch4_mean=10.025, calibrant2_ch4_sd=0.0719,
+        #     calibrant2_nominal=10, calibrant2_ch4_mean=10.025, calibrant2_ch4_sd=0.0719, calibrant2_source="cylinder_#3_ccc",
         #     calibrant2_ch4_diff=0.001, calibrant2_h2o2_mean=0.001, calibrant2_h2o_mean=0.001,
-        #     calibrant3_nominal=100.2, calibrant3_ch4_mean=99.807, calibrant3_ch4_sd=0.1008,
-        #     calibrant3_ch4_diff=0.001, calibrant3_h2o2_mean=0.001, calibrant3_h2o_mean=0.001,
-        #     status_ch4_slope="<font color='green'>Pass</font>",
-        #     status_zero_h2o2="<font color='green'>Pass</font>",
-        #     status_ch4_r2="<font color='green'>Pass</font>"
+        #     calibrant3_nominal=100.2, calibrant3_ch4_mean=99.807, calibrant3_ch4_sd=0.1008, calibrant3_source="cylinder_#4_ddd",
+        #     calibrant3_ch4_diff=0.001, calibrant3_h2o2_mean=0.001, calibrant3_h2o_mean=0.001
         # )
         
         # linear fitting
         self.step_names = ["zero_air", "calibrant1", "calibrant2"]
         if "calibrant3_ch4_mean" in self.validation_results:
             self.step_names.append("calibrant3")
-            self.validation_results["calibrant3_source"] = "Calibrant 3"     
+            self.validation_results["calibrant3_step"] = "Calibrant 3"     
         xdata = [self.validation_results[i+"_nominal"] for i in self.step_names]
         ydata = [self.validation_results[i+"_ch4_mean"] for i in self.step_names]
         coeffs = np.polyfit(xdata, ydata, 1)
@@ -524,20 +669,27 @@ class H2O2Validation(H2O2ValidationFrame):
         
     def create_report(self):
         imagelist = self.data_analysis()
-        self.check_report()
+        self.check_results()
         html = file(os.path.join(self.curr_dir, "ReportTemplate.html"),"r").read()
         # fill data in report
-        items = ["source", "nominal", "ch4_mean", "ch4_sd", "ch4_diff", "h2o2_mean", "h2o_mean"]
+        items = ["step", "source", "info", "ch4_mean", "ch4_sd", "ch4_diff", "h2o2_mean", "h2o_mean"]
         for item in items:
             html = html.replace("{%s}" % ("more_"+item), \
                 ("<td>{%s}</td>" % ("calibrant3_"+item)) \
                 if "calibrant3_ch4_mean" in self.validation_results else "")
         html = html.replace("{analyzer_name}", os.uname()[1])
-        html = html.replace("{date}", time.strftime("%Y-%m-%d"))
-        time_str = "%s (GMT%+d)" % (time.strftime("%H:%M:%S"), time.timezone/36)
-        html = html.replace("{time}", time_str)
-        html = html.replace("{operator}", "%s %s" % (self.current_user["first_name"], self.current_user["last_name"]))
-        html = html.replace("{username}", self.current_user["username"])
+        start_time = time.localtime(self.current_user["login_time"])
+        time_str = "%s (GMT%+d)" % (time.strftime("%Y-%m-%d %H:%M:%S", start_time), time.timezone/36)
+        html = html.replace("{start_time}", time_str)
+        html = html.replace("{signature_time}", "%s (GMT%+d)" % (time.strftime("%Y-%m-%d %H:%M:%S"), time.timezone/36))
+        html = html.replace("{operator}", "%s %s (username: %s)" \
+            % (self.current_user["first_name"] if self.current_user["first_name"] is not None else "", 
+            self.current_user["last_name"] if self.current_user["first_name"] is not None else "",
+            self.current_user["username"]))
+        html = html.replace("{signator}", "%s %s (username: %s)" \
+            % (self.signature_user["first_name"] if self.signature_user["first_name"] is not None else "", 
+            self.signature_user["last_name"] if self.signature_user["first_name"] is not None else "",
+            self.signature_user["username"]))
         for key in self.validation_results:
             html = html.replace("{%s}" % key, self.format_variable(key))
         self.report.setText(html)
@@ -550,29 +702,60 @@ class H2O2Validation(H2O2ValidationFrame):
             image_format = QTextImageFormat()
             image_format.setName(url.toString())
             cursor.movePosition(QTextCursor.End)
-            cursor.insertImage(image_format)        
+            cursor.insertImage(image_format)
 
-    def check_report(self):
+    def check_results(self):
         # check validation pass or fail
-        errors = []
+        self.report_status = {}
         if abs(self.validation_results["ch4_slope"] - 1) > 0.05:
-            errors.append("CH4 slope (%s) is too far away from 1" % (self.validation_results["ch4_slope"]))
+            self.report_status["color_ch4_slope"] = 'red'
             self.validation_results["status_ch4_slope"] = "<font color='red'>Fail</font>"
         else:
+            self.report_status["color_ch4_slope"] = 'green'
             self.validation_results["status_ch4_slope"] = "<font color='green'>Pass</font>"
-        if abs(self.validation_results["h2o2_equivalent"]) > 10:
-            errors.append("Zero H2O2 (%s) is too far away from 0" % (self.validation_results["h2o2_equivalent"]))
+        if self.validation_results["h2o2_equivalent"] > 10 or self.validation_results["h2o2_equivalent"] < -5:
+            self.report_status["color_zero_h2o2"] = 'red'
             self.validation_results["status_zero_h2o2"] = "<font color='red'>Fail</font>"
         else:
+            self.report_status["color_zero_h2o2"] = 'green'
             self.validation_results["status_zero_h2o2"] = "<font color='green'>Pass</font>"
         if self.validation_results["ch4_r2"] < 0.95:
-            errors.append("Linearity (%s) is too low" % (self.validation_results["ch4_r2"]))
+            self.report_status["color_ch4_r2"] = 'red'
             self.validation_results["status_ch4_r2"] = "<font color='red'>Fail</font>"
         else:
+            self.report_status["color_ch4_r2"] = 'green'
             self.validation_results["status_ch4_r2"] = "<font color='green'>Pass</font>"
-        if len(errors) > 0:
-            msg = "Validation fails! See errors below:\n" + ("\n".join(errors))
+
+    def create_summary(self, report_path):
+        results = """
+        <ul>
+            <li><font color='{color_zero_h2o2}'>
+                Zero H<sub>2</sub>O<sub>2</sub> = %.2f (Accepted range: [-5, 10])</font></li>
+            <li><font color='{color_ch4_slope}'>
+                CH<sub>4</sub> slope = %.6f (Accepted range: [0.95, 1.05])</font></li>
+            <li><font color='{color_ch4_r2}'>
+                Linearity = %.6f (Accepted range: > 0.95)</font></li>
+        </ul>
+        """ % (self.validation_results["h2o2_equivalent"],
+               self.validation_results["ch4_slope"],
+               self.validation_results["ch4_r2"])
+        for k in self.report_status:
+            results = results.replace("{%s}" % k, self.report_status[k])
+        if "color='red'" in results:
+            validation_pass = False
+            msg = "<h1><font color='red'>Validation Fail</font></h1>" + results + """
+                <p>Please check system.</p>
+                <p>Validation report created: %s</p>
+            """ % report_path
             self.message_box(QMessageBox.Critical, "Validation Fail", msg)
+        else:
+            validation_pass = True
+            msg = "<h1><font color='green'>Validation Pass</font></h1>" + results \
+                + "<p>Validation report created: %s</p>" % report_path
+            self.message_box(QMessageBox.Information, "Validation Pass", msg)
+        payload = {"username": self.signature_user["username"],
+                   "action": "Validation %s. Report created: %s" % (validation_pass, report_path)}
+        self.send_request("post", "action", payload, use_token=True)
 
     def format_variable(self, var_name):
         value = self.validation_results[var_name]
@@ -586,52 +769,35 @@ class H2O2Validation(H2O2ValidationFrame):
         elif end == "equivalent":
             return format(value, ".2f")
         else:
-            return format(value, ".6f")
+            return format(value, ".6f")    
         
     def save_report(self):
-        msg = """
-        <p><b>You are about to sign a record electronically. This is the legal equivalent of a traditional handwritten signature.</b></p>
-        <p>Click OK to sign and save the validation report.</p>
-        """
-        ret = self.message_box(QMessageBox.Warning, "Electronic Signature", msg, QMessageBox.Ok | QMessageBox.Cancel)
-        if ret == QMessageBox.Ok:
-            printer = QPrinter(QPrinter.PrinterResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setPaperSize(QPrinter.B4)
-            folder_name = time.strftime("%Y%m%d_%H%M%S")
-            data_folder = os.path.join(self.curr_dir, folder_name)
-            if not os.path.exists(data_folder):
-                os.makedirs(data_folder)
-            file_name = time.strftime("Validation_Report_%Y-%m-%d-%H-%M-%S.pdf")
-            printer.setOutputFileName(os.path.join(self.report_dir, folder_name, file_name))
-            doc = self.report.document()
-            doc.setPageSize(QSizeF(printer.pageRect().size()))   #This is necessary if you want to hide the page number
-            doc.print_(printer)
-            payload = {"username": self.current_user["username"],
-                       "action": "Create validation report: %s" % (os.path.join(folder_name, file_name))}
-            self.send_request("post", "action", payload, use_token=True)
-            # save data files
+        printer = QPrinter(QPrinter.PrinterResolution)
+        printer.setOutputFormat(QPrinter.PdfFormat)
+        printer.setPaperSize(QPrinter.B4)
+        folder_name = time.strftime("%Y%m%d_%H%M%S")
+        data_folder = os.path.join(self.curr_dir, folder_name)
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
+        file_name = time.strftime("Validation_Report_%Y-%m-%d-%H-%M-%S.pdf")
+        printer.setOutputFileName(os.path.join(self.report_dir, folder_name, file_name))
+        doc = self.report.document()
+        doc.setPageSize(QSizeF(printer.pageRect().size()))   #This is necessary if you want to hide the page number
+        doc.print_(printer)        
+        # save data file
+        with open(os.path.join(data_folder, "validation_data.csv"), "w") as f:
+            f.write("Time, Step, " + ", ".join(self.data_fields) + "\n")
             for step in self.step_names:
-                with open(os.path.join(data_folder, step+".csv"), "w") as f:
-                    f.write("Time, " + ", ".join(self.data_fields) + "\n")
-                    for idx in xrange(len(self.validation_data[step]['time'])):
-                        f.write(str(self.validation_data[step]['time'][idx]))
-                        for field in self.data_fields:
-                            f.write(", %s" % (self.validation_data[step][field][idx]))
-                        f.write("\n")
-            msg = "Validation report created: %s\nThis program will be closed." % file_name
-            self.message_box(QMessageBox.Information, "Save Report", msg)
-            self.close()
-
-    def cancel_report(self):
-        msg = "Do you really want to quit the program without saving report?"
-        ret = self.message_box(QMessageBox.Question, "Quit Program", msg, QMessageBox.Ok | QMessageBox.Cancel)
-        if ret == QMessageBox.Ok:
-            payload = {"command": "save_action",
-                       "username": self.current_user["username"],
-                       "action": "Quit H2O2 validation without saving report"}
-            self.send_request("post", "action", payload, use_token=True)
-            self.close()
+                for idx in xrange(len(self.validation_data[step]['time'])):
+                    f.write(str(self.validation_data[step]['time'][idx]))
+                    f.write(", %s" % step)
+                    for field in self.data_fields:
+                        f.write(", %s" % (self.validation_data[step][field][idx]))
+                    f.write("\n")
+        self.create_summary(os.path.join(folder_name, file_name))
+        
+    def exit_program(self):
+        self.close()
 
 HELP_STRING = """H2O2Validation.py [-c<FILENAME>] [-h|--help]
 

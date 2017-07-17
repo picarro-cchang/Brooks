@@ -160,6 +160,8 @@ QPushButton:disabled {
 QComboBox {
     height: 20px;
     font-family: Helvetica Neue LT Std;
+    color: rgb(177,177,177);
+    padding: 1px, 1px, 1px, 1px;
     selection-background-color: rgb(127,176,81);
     background-color: rgb(64,64,64);
     border-style: solid;

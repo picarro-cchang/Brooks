@@ -14,15 +14,19 @@
             <div class='report_title'>Picarro PI2114 Validation Report</div>
             <table class='tbl' style='font-size:14px;'>
                 <tr>
-                    <td class='cell'>Analyzer:</td><td colspan='3'>{analyzer_name}</td>
+                    <td class='cell'>Analyzer:</td><td>{analyzer_name}</td>
                 </tr>
                 <tr>
-                    <td class='cell'>Date:</td><td>{date}</td>
-                    <td class='cell'>Time:</td><td>{time}</td>
+                    <td class='cell'>Operated by:</td><td>{operator}</td>
                 </tr>
                 <tr>
-                    <td class='cell'>Operator:</td><td>{operator}</td>
-                    <td class='cell'>Username:</td><td>{username}</td>
+                    <td class='cell'>Start Time:</td><td>{start_time}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Signed by:</td><td>{signator}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Signature Time:</td><td>{signature_time}</td>
                 </tr>
             </table>
             <h2>Summary</h2>
@@ -35,38 +39,45 @@
                 </tr>
                 <tr>
                     <td>Zero H<sub>2</sub>O<sub>2</sub></td>
-                    <td> &lt; 10ppb and &gt;-10ppb</td>
-                    <td>{h2o2_equivalent}</td>
-                    <td>{status_zero_h2o2}</td>
+                    <td> &gt;-5ppb and &lt; 10ppb</td>
+                    <td>{zero_air_h2o2_mean} ppb</td>
+                    <td><b>{status_zero_h2o2}</b></td>
                 </tr>
                 <tr>
                     <td>CH<sub>4</sub> slope</td>
-                    <td> &lt; 1.05 and &gt; 0.95</td>
+                    <td>&gt; 0.95 and &lt; 1.05</td>
                     <td>{ch4_slope}</td>
-                    <td>{status_ch4_slope}</td>
+                    <td><b>{status_ch4_slope}</b></td>
                 </tr>
                 <tr>
                     <td>Linearity</td>
                     <td> &gt; 0.95</td>
                     <td>{ch4_r2}</td>
-                    <td>{status_ch4_r2}</td>
+                    <td><b>{status_ch4_r2}</b></td>
                 </tr>
             </table>
             <h2>Details</h2>
             <table class='tbl' style='border-width: 1px;border-style: solid;'>
                 <tr>
-                    <td class='cell'>Gas Source</td>
+                    <td class='cell'>Step</td>
                     <td>Zero Air</td>
                     <td>Calibrant 1</td>
                     <td>Calibrant 2</td>
+                    {more_step}
+                </tr>
+                <tr>
+                    <td class='cell'>Gas Source</td>
+                    <td>{zero_air_source}</td>
+                    <td>{calibrant1_source}</td>
+                    <td>{calibrant2_source}</td>
                     {more_source}
                 </tr>
                 <tr>
                     <td class='cell'>Nominal CH<sub>4</sub> (ppm)</td>
-                    <td>{zero_air_nominal}</td>
-                    <td>{calibrant1_nominal}</td>
-                    <td>{calibrant2_nominal}</td>
-                    {more_nominal}
+                    <td>{zero_air_info}</td>
+                    <td>{calibrant1_info}</td>
+                    <td>{calibrant2_info}</td>
+                    {more_info}
                 </tr>
                 <tr>
                     <td class='cell'>Observed CH<sub>4</sub> (ppm)</td>
