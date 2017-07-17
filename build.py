@@ -3,6 +3,7 @@ from pybuilder import bootstrap
 bootstrap()
 
 import os
+import sys
 from pybuilder.core import after, before, depends, use_plugin, init, task, optional
 from pybuilder.errors import BuildFailedException
 from pybuilder.core import use_bldsup
@@ -20,6 +21,7 @@ from BuildDatViewer import BuildDatViewer
 
 use_plugin("python.core")
 use_plugin("python.unittest")
+sys.path.insert(0, "src/main/python")
 use_plugin("p_func_test", plugin_module_name="Host.Utilities.BuildHelper.functional_test_plugin")
 use_plugin("picarro", plugin_module_name="Host.Utilities.BuildHelper.integration_test_plugin")
 use_plugin("python.install_dependencies")

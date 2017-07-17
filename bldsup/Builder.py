@@ -278,11 +278,11 @@ class Builder(object):
         project = self.project
         logger = self.logger
         if project.get_property('upload_artifactory'):
-            installer_version = project.get_property('installer_version')
+            installer_version = project.get_property('raw_version')
             product = project.get_property('product')
             installer_folder = os.path.join('target', 'Installers', '%s-%s' % (product, installer_version))
             for file in os.listdir(installer_folder):
-                if file.endswith('.exe'):
+                if file.endswith('.deb'):
                     src_path = os.path.join(installer_folder, file)
                     dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/hostexe/" + installer_version + "/"
                     cmd = "curl -u %s:%s -T %s %s" % ("ci-server", "ALGP@&gNR%h", src_path, dest_path)
