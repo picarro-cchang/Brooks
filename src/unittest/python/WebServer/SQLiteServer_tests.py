@@ -85,7 +85,7 @@ class TestSQLiteServer(unittest.TestCase):
                'username': "picarro-technician", 
                'password': "bad-password"}
         ret = self.send_request("post", "account", payload)
-        self.assertTrue("password not match" in ret["error"])
+        self.assertTrue("password do not match" in ret["error"])
         # second attempt
         payload['password'] = "picarro"
         ret = self.send_request("post", "account", payload)

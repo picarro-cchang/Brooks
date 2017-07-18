@@ -22,6 +22,7 @@ class MainWindow(UserAdminFrame):
         self.host_session = requests.Session()
         self.role_list = []
         self.action_history = []
+        self.current_tab = 0
         self.current_user = None    # user logged in
     
     def add_user(self):
@@ -51,8 +52,7 @@ class MainWindow(UserAdminFrame):
         self.home_widget.show()
     
     def cancel_login(self):
-        self.input_user_name.clear()
-        self.input_password.clear()
+        self.close()
 
     def change_password(self):
         # this function is called when password expires
@@ -62,7 +62,7 @@ class MainWindow(UserAdminFrame):
         if len(password) == 0:
             self.label_change_pwd_info.setText("New password cannot be blank!")
         elif password != password2:
-            self.label_change_pwd_info.setText("Passwords not match!")
+            self.label_change_pwd_info.setText("Passwords do not match!")
         else:
             payload = {"command": "change_password",
                        "requester": "UserAdmin",
@@ -91,18 +91,6 @@ class MainWindow(UserAdminFrame):
         self.add_user_widget.show()
         self.action = "change_pwd"
 
-    def check_user_activity(self):
-        # log off user if cursor doesn't move after certain amount of time
-        pos = QCursor.pos()
-        new_cursor_pos = [pos.x(), pos.y()]
-        if cmp(new_cursor_pos, self.session_cursor_pos) != 0:
-            self.session_cursor_pos = new_cursor_pos
-            self.session_active_ts = time.time()
-        elif time.time() - self.session_active_ts > self.session_lifetime:
-            self.session_timer.stop()
-            self.label_login_info.setText("Session time off.")
-            self.user_log_off()
-    
     def change_user_role(self, role):
         if self.selected_user["username"] == self.current_user["username"]:
             self.message_box(QMessageBox.Critical, "Error", "For safty reason, it is NOT allowed to change you own role!")
@@ -116,6 +104,18 @@ class MainWindow(UserAdminFrame):
             payload = dict(command="update_user", username=self.selected_user["username"], roles=role)
             self.send_request("post", "users", payload, use_token=True, show_error=True)
             self.update_user_list()
+
+    def check_user_activity(self):
+        # log off user if cursor doesn't move after certain amount of time
+        pos = QCursor.pos()
+        new_cursor_pos = [pos.x(), pos.y()]
+        if cmp(new_cursor_pos, self.session_cursor_pos) != 0:
+            self.session_cursor_pos = new_cursor_pos
+            self.session_active_ts = time.time()
+        elif time.time() - self.session_active_ts > self.session_lifetime:
+            self.session_timer.stop()
+            self.label_login_info.setText("Session time off.")
+            self.user_log_off()  
                 
     def check_user_input(self):
         password = str(self.input_new_password.text())
@@ -128,7 +128,7 @@ class MainWindow(UserAdminFrame):
         else:
             errors.append("Password is blank.")
         if self.action == "add_user":  # check user name
-            new_username = str(self.input_new_user_name.text())
+            new_username = str(self.input_new_user_name.text()).strip()
             if len(new_username) == 0:
                 errors.append("UserName is blank.")
             elif new_username in self.all_users:
@@ -230,6 +230,35 @@ class MainWindow(UserAdminFrame):
         if len(self.action_history) > 20:
             self.button_next_history.setEnabled(True)
         self.create_history_page()
+
+    def get_policies(self, checking=False):
+        def get_policy(policy):
+            policy_check_control = getattr(self, "check_"+policy)
+            try:
+                policy_value_control = getattr(self, "input_"+policy)
+            except:
+                policy_value_control = None
+            if policy_value_control:
+                if getattr(policy_check_control, "isChecked")():
+                    value = str(getattr(policy_value_control, "value")())
+                else:
+                    value = "-1"
+            else:
+                value = "True" if getattr(policy_check_control, "isChecked")() else "False"
+            if checking:
+                return self.system_vars[policy] == value
+            else:
+                self.system_vars[policy] = value
+        
+        policies = ["password_length", "password_lifetime", "password_reuse_period", 
+                    "user_login_attempts", "user_session_lifetime", "password_mix_charset",
+                    "save_history"]
+        for p in policies:
+            if checking and (not get_policy(p)):
+                return False
+            else:
+                get_policy(p)
+        return True
     
     def get_system_variables(self):
         self.system_vars = self.send_request("get", "system", {'command':'get_all_variables'}, show_error=True)
@@ -323,21 +352,7 @@ class MainWindow(UserAdminFrame):
         return None
     
     def save_policy(self):
-        def get_policy(policy):
-            policy_check_control = getattr(self, "check_"+policy)
-            policy_value_control = getattr(self, "input_"+policy)
-            if getattr(policy_check_control, "isChecked")():
-                self.system_vars[policy] = str(getattr(policy_value_control, "value")())
-            else:
-                self.system_vars[policy] = "-1"
-        
-        policies = ["password_length", "password_lifetime", "password_reuse_period", 
-                    "user_login_attempts", "user_session_lifetime"]
-        for p in policies:
-            get_policy(p)    
-        
-        self.system_vars["password_mix_charset"] = "True" if self.check_password_mix_charset.isChecked() else "False"
-        self.system_vars["save_history"] = "True" if self.check_save_history.isChecked() else "False"
+        self.get_policies()
         ret = self.send_request("post", "system", self.system_vars, use_token=True, show_error=True)
         if "error" not in ret:
             self.message_box(QMessageBox.Information, "Save", "User policies have been updated!")
@@ -378,6 +393,17 @@ class MainWindow(UserAdminFrame):
             return response.json()
         except Exception, err:
             return {"error": str(err)}
+
+    def switch_tab(self, tabindex):
+        if self.user_admin_tabs.tabText(self.current_tab) == "User Policies":
+            if not self.get_policies(checking=True):
+                msg = "Do you want to save your changes in user policies?"
+                ret = self.message_box(QMessageBox.Question, "Save Policies?", msg, QMessageBox.Yes | QMessageBox.No)
+                if ret == QMessageBox.Yes:
+                    self.save_policy()
+                else:
+                    self.revert_policy()
+        self.current_tab = tabindex
         
     def update_user_list(self):
         payload = {'command': "get_all_users"}
@@ -443,14 +469,15 @@ class MainWindow(UserAdminFrame):
             
     def user_log_off(self):
         self.send_request("post", "account", {"command":"log_out_user", 'requester': "UserAdmin"}, show_error=True)
-        self.input_password.clear()
-        self.input_user_name.clear()
-        self.label_login_info.clear()
-        self.input_user_name.setFocus()
-        self.user_admin_widget.hide()
-        self.add_user_widget.hide()
-        self.change_password_widget.hide()
-        self.home_widget.show()
+        self.close()
+        # self.input_password.clear()
+        # self.input_user_name.clear()
+        # self.label_login_info.clear()
+        # self.input_user_name.setFocus()
+        # self.user_admin_widget.hide()
+        # self.add_user_widget.hide()
+        # self.change_password_widget.hide()
+        # self.home_widget.show()
         
 
 HELP_STRING = """UserAdmin.py [-c<FILENAME>] [-h|--help]

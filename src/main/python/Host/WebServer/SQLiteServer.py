@@ -15,7 +15,7 @@ AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
 app = Flask(__name__, static_url_path='', static_folder='')
      
-api = Api(app, prefix='/api/v1.0', doc='/apidoc', )
+api = Api(app, prefix='/api/v1.0', doc='/apidoc')
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///PicarroDataBase.sqlite'
@@ -129,7 +129,9 @@ class SQLiteServer(object):
     def check_password_length(self, password):
         length = self.system_varialbes["password_length"]
         if length >= 0 and len(password) < length:
-            return {"error": "Password is too short! Minimum length: %s" % length}
+            return {"error": "Password is too short! Minimum length: %d" % length}
+        if length > 15:
+            return {"error": "Password is too long! Maximum length: 15."}
         return {}    # no error
         
     def check_password_age(self, username, password):
@@ -157,12 +159,12 @@ class SQLiteServer(object):
                 # disable user
                 self.process_request_dict({"command": "update_user", "username": username, 
                     "active": 0, "password": None, "roles": None})
-                return {"error": "Username and password not match! User account is disabled!"}
+                return {"error": "Username and password do not match! User account is disabled!"}
             else:
                 msg = "%s/%d" % (self.user_login_attempts["attempts"], self.system_varialbes["user_login_attempts"])
-                return {"error": "Username and password not match! Failed times: %s." % msg}
+                return {"error": "Username and password do not match! Failed times: %s." % msg}
         else:
-            return {"error": "Username and password not match!"}
+            return {"error": "Username and password do not match!"}
                       
     def log_in_user(self, username, password, no_commit=False):
         user = self.ds.find_user(username=username)
@@ -187,7 +189,7 @@ class SQLiteServer(object):
             else:
                 return self.check_user_login_attempts(username)
         else:
-            return {"error": "Username not exist!"}
+            return {"error": "Username does not exist!"}
             
     def create_user_account(self, username, request_dict):
         if not username or not request_dict["password"]:
@@ -265,6 +267,22 @@ class SQLiteServer(object):
         if (self.system_varialbes["password_reuse_period"] >= 0) \
                 or (self.system_varialbes["password_lifetime"] >= 0):
             self.ds.save_user_password(username, password)
+
+    def save_system_variables(self, request_dict):
+        for name in request_dict:
+            var = self.ds.find_system_variable(name)
+            if var is None:
+                self.ds.save_system_variable(name, request_dict[name])
+                self.save_action_history(current_user.username, 
+                    "create system variable %s=%s" % (name, request_dict[name]))
+            else:
+                new_value = request_dict[name]
+                if new_value != var.value:
+                    var.value = new_value
+                    self.save_action_history(current_user.username,
+                        "set system variable %s=%s" % (name, request_dict[name]))
+            self.system_varialbes[name] = self._convert_string(request_dict[name])
+        self.ds.commit()
     
     def process_request_dict(self, request_dict):
         cmd = request_dict.pop("command")
@@ -327,14 +345,7 @@ class SQLiteServer(object):
             self.save_action_history(username, request_dict["action"])
             return {"status": "succeed"}
         elif cmd == "save_system_variables":    # SystemAPI, post
-            for name in request_dict:
-                var = self.ds.find_system_variable(name)
-                if var is None:
-                    self.ds.save_system_variable(name, request_dict[name])
-                else:
-                    var.value = request_dict[name]
-                self.system_varialbes[name] = self._convert_string(request_dict[name])
-            self.ds.commit()
+            self.save_system_variables(request_dict)
             return {"status": "succeed"}
         elif cmd == "update_user":  # UsersAPI, post
             ret = self.update_user_account(username, request_dict)

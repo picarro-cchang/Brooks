@@ -55,7 +55,7 @@ class TestUserAdmin(unittest.TestCase):
         self.interface.input_new_password.setText("123")
         self.interface.input_new_password2.setText("12345")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
-        self.assertTrue("Passwords not match" in self.message_box_content["msg"])
+        self.assertTrue("Passwords do not match" in self.message_box_content["msg"])
         # test3: password too short
         self.interface.input_new_password.setText("12345")
         self.interface.input_new_password2.setText("12345")
@@ -114,7 +114,7 @@ class TestUserAdmin(unittest.TestCase):
         self.assertTrue("change password" in self.server.ds.action_model[-1].action)
         # try to log in using old pwd
         self.login_user("admin", "admin")
-        self.assertTrue("Username and password not match" in self.interface.label_login_info.text())
+        self.assertTrue("Username and password do not match" in self.interface.label_login_info.text())
         # login using the new pwd
         self.login_user("admin", "Extreme_Science!")
         self.assertTrue(self.interface.table_user_list.rowCount() == 3) # user list is populated after login

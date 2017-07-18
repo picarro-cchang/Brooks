@@ -107,14 +107,13 @@ QPushButton#blackbtn:pressed {
     }
 
 
-
 QPushButton:hover {
     font-family: Helvetica Neue LT Std;
     border-color: rgb(114,158,73);
     background-color: rgb(114,158,73);
     }
 QPushButton:focus {
-    outline: none;
+    border-color: rgb(177,177,177);
     }
 QPushButton:pressed {
     border-color: rgb(127,176,81);
