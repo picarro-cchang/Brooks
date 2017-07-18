@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 import unittest
 from mockito import patch, unstub
 from PyQt4.QtTest import QTest
@@ -15,7 +16,7 @@ CONFIG_FILE = os.path.join(os.path.dirname(__file__), "H2O2Validation.ini")
 
 app = QApplication(sys.argv)
 
-@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
+#@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
 class TestH2O2Validation(unittest.TestCase):
     def setUp(self):
         self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False)
@@ -54,25 +55,29 @@ class TestH2O2Validation(unittest.TestCase):
             for step in range(4):
                 stage = measurements[step]
                 QTest.mouseClick(next_button, Qt.LeftButton)
-                if step > 0:    # enter nominal concentraion of calibrant
-                    self.wizard.input_nominal_concentration.setText(str(nominal_concentraion[step]))
                 QTest.mouseClick(next_button, Qt.LeftButton)
                 self.message_box_content["title"] = ""
                 self.assertTrue(validation_steps[self.wizard.current_step] == stage)
                 QTest.qWait(1500)   # data collection
-                self.assertTrue(stage + "_mean" in self.wizard.validation_results)
+                self.assertTrue(stage + "_ch4_mean" in self.wizard.validation_results)
                 self.assertTrue(self.message_box_content["title"] == "Measurement Done")
             # create report
             QTest.mouseClick(next_button, Qt.LeftButton)
-            self.assertTrue(self.wizard.validation_results["ch4_r2"] > 0.9)
-            # save report
-            QTest.mouseClick(self.wizard.button_save_report, Qt.LeftButton)
+            # login again
+            self.wizard.input_user_name.setText("tech")
+            self.wizard.input_password.setText("tech")
+            QTest.mouseClick(self.wizard.button_user_login, Qt.LeftButton)
+            self.assertTrue(self.wizard.signature_user["username"] == "tech")
+            self.assertTrue(self.message_box_content["title"] == "Validation Pass")
+            # check report
             last_action = server.ds.action_model[-1].action
-            self.assertTrue("Create validation report" in last_action)
+            self.assertTrue("Validation pass. Report created" in last_action)
             filename = last_action.split(":")[1]
             filename = os.path.join(self.wizard.curr_dir, filename.strip())
             self.assertTrue(os.path.exists(filename))
-            os.remove(filename)
+            data_file = os.path.join(os.path.split(filename)[0], "validation_data.csv")
+            self.assertTrue(os.path.exists(data_file))
+            shutil.rmtree(os.path.split(filename)[0]) 
 
         # clear mockito functions
         unstub()
@@ -87,7 +92,7 @@ class TestH2O2Validation(unittest.TestCase):
         QTest.qWait(1000)   # zero-air measurement
         self.assertTrue("Cavity pressure is out of range" in self.message_box_content["msg"])
 
-    def test_wrong_nomial_concentration(self):
+    def test_select_wrong_cylinder(self):
         self.bypass_login_screen()
         for s in validation_steps:
             if validation_steps[s] == "calibrant1":
@@ -95,11 +100,8 @@ class TestH2O2Validation(unittest.TestCase):
                 break
         next_button = self.wizard.button_next_step
         QTest.mouseClick(next_button, Qt.LeftButton)
-        self.wizard.input_nominal_concentration.setText("wrong concentration")
-        QTest.mouseClick(next_button, Qt.LeftButton)
-        self.assertTrue(self.message_box_content["title"] == "Error")
-        # simulated concentration is 2; intentionally enter a wrong number
-        self.wizard.input_nominal_concentration.setText("10")
+        # simulated concentration is 2; intentionally choose a different cylinder
+        self.wizard.select_cylinder.setCurrentIndex(1)
         QTest.mouseClick(next_button, Qt.LeftButton)
         QTest.qWait(1500)   # data collection
         self.assertTrue("Measurement result is too far away" in self.message_box_content["msg"])

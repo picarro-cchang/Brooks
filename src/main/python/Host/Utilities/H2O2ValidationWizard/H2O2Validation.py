@@ -164,13 +164,13 @@ class H2O2Validation(H2O2ValidationFrame):
         if not os.path.isabs(self.report_dir):
             self.report_dir = os.path.join(self.curr_dir, self.report_dir)
         self.average_data_point = self.config.getint("Status_Check", "Average_Data_Points", 10)
-        self.water_conc_limit = self.config.getfloat("Status_Check", "Water_Conc_Limit", 100)
+        self.water_conc_limit = self.config.getfloat("Status_Check", "Water_Conc_Limit")
         self.pressure_upper_limit = self.config.getfloat("Status_Check", "Pressure_Upper_Limit", 1000)
         self.pressure_lower_limit = self.config.getfloat("Status_Check", "Pressure_Lower_Limit", 0)
         self.temperature_upper_limit = self.config.getfloat("Status_Check", "Temperature_Upper_Limit", 1000)
         self.temperature_lower_limit = self.config.getfloat("Status_Check", "Temperature_Lower_Limit", -1000)
         self.ch4_max_deviation = self.config.getfloat("Status_Check", "CH4_Max_Deviation_Absolute", 1)
-        self.ch4_max_deviation_percent = self.config.getfloat("Status_Check", "CH4_Max_Deviaion_Percent", 1000)/100.0  
+        self.ch4_max_deviation_percent = self.config.getfloat("Status_Check", "CH4_Max_Deviation_Percent", 10)/100.0  
         self.ch4_max_std = self.config.getfloat("Status_Check", "CH4_Max_STD_Absolute", 0.1)
         self.ch4_max_std_percent = self.config.getfloat("Status_Check", "CH4_Max_STD_Percent", 0.1)/100.0 
         if self.simulation:
@@ -424,6 +424,9 @@ class H2O2Validation(H2O2ValidationFrame):
                 if validation_steps[self.current_step+1] == "zero_air" \
                     and self.cylinders[cylinder]["concentration"] > 0:
                     continue
+                elif self.cylinders[cylinder]["concentration"] == 0 \
+                    and validation_steps[self.current_step+1] != "zero_air":
+                    continue
                 available_cylinder.append([cylinder, 
                     self.cylinders[cylinder]["concentration"], self.cylinders[cylinder]["uncertainty"]])
         if len(available_cylinder) == 0:
@@ -501,12 +504,16 @@ class H2O2Validation(H2O2ValidationFrame):
     def handle_measurement_error(self, step_name):
         # clear data collected in this step
         for k in self.validation_data[step_name]:
-            self.validation_data[step_name][k] = []        
+            self.validation_data[step_name][k] = []       
+        for c in self.cylinder_used:
+            if self.cylinder_used[c] == step_name:
+                self.cylinder_used.pop(c)
+                break
         # go to previous step so user have time to fix problem
         self.current_step -= 2
         self.button_next_step.setEnabled(True)
         self.display_instruction2.clear()
-        self.measurement_progress.hide()
+        self.measurement_progress.hide()        
         self.next_step()
                 
     def check_ch4_result(self, nominal, average, std, step_name):
@@ -742,14 +749,14 @@ class H2O2Validation(H2O2ValidationFrame):
         for k in self.report_status:
             results = results.replace("{%s}" % k, self.report_status[k])
         if "color='red'" in results:
-            validation_pass = False
+            validation_pass = "fail"
             msg = "<h1><font color='red'>Validation Fail</font></h1>" + results + """
                 <p>Please check system.</p>
                 <p>Validation report created: %s</p>
             """ % report_path
             self.message_box(QMessageBox.Critical, "Validation Fail", msg)
         else:
-            validation_pass = True
+            validation_pass = "pass"
             msg = "<h1><font color='green'>Validation Pass</font></h1>" + results \
                 + "<p>Validation report created: %s</p>" % report_path
             self.message_box(QMessageBox.Information, "Validation Pass", msg)
