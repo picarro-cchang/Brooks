@@ -332,7 +332,7 @@ class MainWindow(UserAdminFrame):
         
     def save_new_pwd(self, username, password):
         payload = dict(command="update_user", username=username, password=password)
-        ret = self.send_request("post", "users", payload, use_token=True, show_error=True)
+        ret = self.send_request("post", "users", payload, use_token=True)
         if "error" not in ret:
             msg = "Password is updated for %s!" % username
             self.message_box(QMessageBox.Information, "New Password", msg)
