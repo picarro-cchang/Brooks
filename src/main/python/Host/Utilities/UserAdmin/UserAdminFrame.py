@@ -196,7 +196,7 @@ class UserAdminFrame(QMainWindow):
         self.input_user_login_attempts = spin_box(value=3, min=1, max=100, step=1)
         self.check_user_session_lifetime = QCheckBox("Lock user session after")
         self.check_user_session_lifetime.clicked.connect(lambda: self.disable_policy_input("user_session_lifetime"))
-        self.input_user_session_lifetime = spin_box(value=10, min=1, max=100000, step=1)
+        self.input_user_session_lifetime = spin_box(value=10, min=0, max=100000, step=1)
         self.check_save_history = QCheckBox("Save user actions")
         self.button_user_save_policy = QPushButton("Save")
         self.button_user_save_policy.clicked.connect(self.save_policy)

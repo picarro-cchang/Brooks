@@ -22,7 +22,6 @@ class TestUserAdmin(unittest.TestCase):
         self.message_box_content = {"title":"", "msg":"", "response":QMessageBox.Ok}
         patch(self.interface.message_box, self.message_box)
         patch(self.interface._send_request, self.server.get_request)
-        self.interface.get_system_variables()
 
     def tearDown(self):
         self.request_context.pop()

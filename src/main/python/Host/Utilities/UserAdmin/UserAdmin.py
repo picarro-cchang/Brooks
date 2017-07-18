@@ -107,15 +107,14 @@ class MainWindow(UserAdminFrame):
 
     def check_user_activity(self):
         # log off user if cursor doesn't move after certain amount of time
-        pos = QCursor.pos()
-        new_cursor_pos = [pos.x(), pos.y()]
-        if cmp(new_cursor_pos, self.session_cursor_pos) != 0:
-            self.session_cursor_pos = new_cursor_pos
-            self.session_active_ts = time.time()
-        elif time.time() - self.session_active_ts > self.session_lifetime:
-            self.session_timer.stop()
-            self.label_login_info.setText("Session time off.")
-            self.user_log_off()  
+        if self.session_lifetime >= 0:
+            pos = QCursor.pos()
+            new_cursor_pos = [pos.x(), pos.y()]
+            if cmp(new_cursor_pos, self.session_cursor_pos) != 0:
+                self.session_cursor_pos = new_cursor_pos
+                self.session_active_ts = time.time()
+            elif time.time() - self.session_active_ts > self.session_lifetime:
+                self.user_log_off()
                 
     def check_user_input(self):
         password = str(self.input_new_password.text())
@@ -124,7 +123,7 @@ class MainWindow(UserAdminFrame):
         # Further checking on user policies will be done on the server side
         if len(password) > 0:
             if password != self.input_new_password2.text():
-                errors.append("Passwords not match.")
+                errors.append("Passwords do not match.")
         else:
             errors.append("Password is blank.")
         if self.action == "add_user":  # check user name
@@ -443,6 +442,7 @@ class MainWindow(UserAdminFrame):
                     self.get_role_list()
                     self.home_widget.hide()
                     self.user_admin_widget.show()
+                    self.get_system_variables()
                     # set up a timer for user session
                     self.session_timer = QTimer()
                     self.session_timer.timeout.connect(self.check_user_activity)
@@ -469,7 +469,8 @@ class MainWindow(UserAdminFrame):
             
     def user_log_off(self):
         self.send_request("post", "account", {"command":"log_out_user", 'requester': "UserAdmin"}, show_error=True)
-        self.close()
+        self.session_timer.stop()
+        self.close()        
         # self.input_password.clear()
         # self.input_user_name.clear()
         # self.label_login_info.clear()
@@ -519,7 +520,6 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         window = MainWindow(*handleCommandSwitches())
         #window.setWindowState(Qt.WindowFullScreen)
-        window.get_system_variables()
         window.show()
         app.installEventFilter(window)
         app.exec_()
