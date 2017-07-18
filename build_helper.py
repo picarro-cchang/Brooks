@@ -233,7 +233,7 @@ def process_build_config_file(configFile):
                     # Get the boolean properties. If one is not found, set it
                     # with False.
                     for keyStr in boolPropertyList:
-                        if keyStr in config[section][keyStr]:
+                        if keyStr in config[section]:
                             opt = '-P' + keyStr + '=' + config[section][keyStr]
                         else:
                             opt = '-P' + keyStr + '=False'
