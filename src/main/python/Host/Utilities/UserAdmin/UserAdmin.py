@@ -48,15 +48,17 @@ class MainWindow(UserAdminFrame):
 
     def cancel_change_pwd(self):
         self.change_password_widget.hide()
-        self.input_password.clear()
-        self.home_widget.show()
+        if self.action == "change_pwd_after_login":
+            self.user_admin_widget.show()
+        else:
+            self.input_password.clear()
+            self.home_widget.show()
     
     def cancel_login(self):
         self.close()
 
     def change_password(self):
-        # this function is called when password expires
-        # and user is required to change pwd
+        # this function is called when user needs to change his own pwd
         password = str(self.input_change_password.text())
         password2 = str(self.input_change_password2.text())
         if len(password) == 0:
@@ -75,6 +77,7 @@ class MainWindow(UserAdminFrame):
             else:
                 msg = "Password of account %s has been changed" % self.current_user["username"]
                 self.message_box(QMessageBox.Information, "Change Password", msg)
+                self.action = ""
                 self.cancel_change_pwd()
         self.input_change_password.clear()
         self.input_change_password2.clear()
@@ -82,14 +85,23 @@ class MainWindow(UserAdminFrame):
     def change_user_pwd(self):
         # this function is called when admin is logged in 
         # and admin wants to change pwd of accounts
-        self.input_new_password.clear()
-        self.input_new_password2.clear()
-        self.user_admin_widget.hide()
-        self.new_user_info_widget.hide()
-        self.label_curr_password.hide()
-        self.input_curr_password.hide()
-        self.add_user_widget.show()
-        self.action = "change_pwd"
+        if self.selected_user["username"] == self.current_user["username"]:
+            self.home_widget.hide()
+            self.user_admin_widget.hide()
+            self.input_change_password.clear()
+            self.input_change_password2.clear()
+            self.change_password_widget.show()
+            self.input_change_password.setFocus()
+            self.action = "change_pwd_after_login"
+        else:
+            self.input_new_password.clear()
+            self.input_new_password2.clear()
+            self.user_admin_widget.hide()
+            self.new_user_info_widget.hide()
+            self.label_curr_password.hide()
+            self.input_curr_password.hide()
+            self.add_user_widget.show()
+            self.action = "change_pwd"
 
     def change_user_role(self, role):
         if self.selected_user["username"] == self.current_user["username"]:
@@ -402,6 +414,8 @@ class MainWindow(UserAdminFrame):
                     self.save_policy()
                 else:
                     self.revert_policy()
+        if self.user_admin_tabs.tabText(tabindex) == "User History":
+            self.get_history()
         self.current_tab = tabindex
         
     def update_user_list(self):
@@ -427,10 +441,11 @@ class MainWindow(UserAdminFrame):
             self.table_user_list.setSortingEnabled(True)        
     
     def user_login(self):
+        password = str(self.input_password.text())
         payload = {'command': "log_in_user",
                    'requester': "UserAdmin",
                    'username': str(self.input_user_name.text()), 
-                   'password': str(self.input_password.text())}
+                   'password': password}
         return_dict = self.send_request("post", "account", payload)
         if "error" not in return_dict:
             if "roles" in return_dict:
@@ -438,6 +453,7 @@ class MainWindow(UserAdminFrame):
                     self.input_user_name.clear()
                     self.input_password.clear()
                     self.current_user = return_dict
+                    self.current_user["password"] = password
                     self.update_user_list()
                     self.get_role_list()
                     self.home_widget.hide()
@@ -463,6 +479,7 @@ class MainWindow(UserAdminFrame):
             self.input_change_password2.clear()
             self.change_password_widget.show()
             self.label_change_pwd_info.setText("Password expires! Please change your password.")
+            self.action = "change_expired_pwd"
         else:
             self.label_login_info.setText(return_dict["error"])
             self.input_password.clear()

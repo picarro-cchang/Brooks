@@ -103,6 +103,22 @@ class TestUserAdmin(unittest.TestCase):
         self.assertTrue("Password is updated" in self.message_box_content["msg"])
         self.assertTrue(("change %s password" % username) in self.server.ds.action_model[-1].action)
 
+    def test_change_own_password(self):
+        self.login_user("admin", "admin")
+        # admin should already be selected after login
+        QTest.mouseClick(self.interface.button_change_pwd, Qt.LeftButton) 
+        # click next without new pwd 
+        QTest.mouseClick(self.interface.button_change_user_pwd, Qt.LeftButton)
+        self.assertTrue("New password cannot be blank" in self.interface.label_change_pwd_info.text()) 
+        # try again with new pwd
+        self.interface.input_change_password.setText("123456")
+        self.interface.input_change_password2.setText("123456")
+        QTest.mouseClick(self.interface.button_change_user_pwd, Qt.LeftButton)
+        self.assertTrue("has been changed" in self.message_box_content["msg"])
+        self.login_user("admin", "12345")
+        self.assertTrue("admin" in self.server.ds.action_model[-1].username) 
+        self.assertTrue("log in" in self.server.ds.action_model[-1].action)        
+
     def test_password_expire(self):
         self.server.ds.save_user_password("admin", "admin", created_time=datetime(1969,7,20,20,18,0,0))
         self.login_user("admin", "admin")
@@ -124,6 +140,7 @@ class TestUserAdmin(unittest.TestCase):
         # revert policy
         QTest.mouseClick(self.interface.button_user_revert_policy, Qt.LeftButton)
         self.assertTrue(self.interface.input_password_lifetime.value() == 183)
+        # change policy and save
         self.interface.input_password_lifetime.setValue(1)
         QTest.mouseClick(self.interface.button_user_save_policy, Qt.LeftButton)
         self.assertTrue("User policies have been updated" in self.message_box_content["msg"])
@@ -133,6 +150,6 @@ class TestUserAdmin(unittest.TestCase):
                 p_pwd_lifetime = p
                 break
         self.assertTrue(p_pwd_lifetime.value == "1")
-
+    
 if __name__ == '__main__':
     unittest.main()

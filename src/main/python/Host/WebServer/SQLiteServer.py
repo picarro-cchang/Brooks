@@ -194,6 +194,8 @@ class SQLiteServer(object):
     def create_user_account(self, username, request_dict):
         if not username or not request_dict["password"]:
             abort(406)
+        if len(username) < 4:
+            return {"error": "Username too short! Minimum length: 4."}
         if len(username) > 64:
             return {"error": "Username too long! Maximum length: 64."}
         user = self.ds.find_user(username=username)
@@ -233,14 +235,14 @@ class SQLiteServer(object):
             
     def update_user_account(self, username, request_dict):
         if not username:
-            return {"error": "Username not specified!"}
+            return {"error": "Username is not specified!"}
         user = self.ds.find_user(username=username)
         if not user: # User does not exist
-            return {"error": "Username not exists!"}
+            return {"error": "Username does not exist!"}
         if "active" in request_dict and request_dict["active"] is not None:
             user.active = bool(request_dict["active"])
             a = current_user.username if hasattr(current_user, "username") else "System"
-            self.save_action_history(a, "set %s active to %s" % (username, user.active))
+            self.save_action_history(a, "%s is %s" % (username, "enabled" if user.active else "disabled"))
         if "password" in request_dict and request_dict["password"]:
             ret = self.check_password(username, request_dict["password"])
             if ret: return ret
@@ -440,7 +442,7 @@ def before_first_request():
             password_mix_charset='False',
             password_lifetime='183',    # days
             password_reuse_period='3',  # times
-            user_login_attempts='3',    # times
+            user_login_attempts='5',    # times
             user_session_lifetime='10',  # minutes
             save_history='True'
         )

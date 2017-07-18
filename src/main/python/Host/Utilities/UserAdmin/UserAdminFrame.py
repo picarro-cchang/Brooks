@@ -95,9 +95,9 @@ class UserAdminFrame(QMainWindow):
         home_layout.addLayout(login_input)
         home_layout.addLayout(login_buttons)
         home_layout.addWidget(self.label_login_info)
-        self.home_widget.setTabOrder(self.input_user_name, self.input_password)
-        self.home_widget.setTabOrder(self.input_password, self.button_user_login)
-        self.home_widget.setTabOrder(self.button_user_login, self.button_cancel_login)
+        self.change_password_widget.setTabOrder(self.input_user_name, self.input_password)
+        self.change_password_widget.setTabOrder(self.input_password, self.button_user_login)
+        self.change_password_widget.setTabOrder(self.button_user_login, self.button_cancel_login)
 
         # Change password widget
         self.input_change_password = QLineEdit()
@@ -106,8 +106,10 @@ class UserAdminFrame(QMainWindow):
         self.input_change_password2.setEchoMode(QLineEdit.Password)
         self.button_change_user_pwd = QPushButton("Next")
         self.button_change_user_pwd.clicked.connect(self.change_password)
+        self.button_change_user_pwd.setAutoDefault(True)
         self.button_cancel_change = QPushButton("Cancel")
         self.button_cancel_change.clicked.connect(self.cancel_change_pwd)
+        self.button_cancel_change.setAutoDefault(True)
         self.label_change_pwd_info = QLabel("")
         pwd_input = QFormLayout()
         pwd_input.addRow("New Password", self.input_change_password)
@@ -119,6 +121,9 @@ class UserAdminFrame(QMainWindow):
         change_password_layout.addLayout(pwd_input)
         change_password_layout.addLayout(button_layout)
         change_password_layout.addWidget(self.label_change_pwd_info)
+        self.home_widget.setTabOrder(self.input_change_password, self.input_change_password2)
+        self.home_widget.setTabOrder(self.input_change_password2, self.button_change_user_pwd)
+        self.home_widget.setTabOrder(self.button_change_user_pwd, self.button_cancel_change)
         
         # User admin widget
         tab_user_manage = QWidget()
@@ -196,7 +201,7 @@ class UserAdminFrame(QMainWindow):
         self.input_user_login_attempts = spin_box(value=3, min=1, max=100, step=1)
         self.check_user_session_lifetime = QCheckBox("Lock user session after")
         self.check_user_session_lifetime.clicked.connect(lambda: self.disable_policy_input("user_session_lifetime"))
-        self.input_user_session_lifetime = spin_box(value=10, min=0, max=100000, step=1)
+        self.input_user_session_lifetime = spin_box(value=10, min=1, max=100000, step=1)
         self.check_save_history = QCheckBox("Save user actions")
         self.button_user_save_policy = QPushButton("Save")
         self.button_user_save_policy.clicked.connect(self.save_policy)
