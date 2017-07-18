@@ -269,7 +269,7 @@ class Builder(object):
             out, retcode = self.run_command('git tag -a %s -m %s"' % (tagname, tagname), ignore_status=False)
             logger.info('Tagged repository: %s' % tagname)
         if project.get_property('push'):
-            out, retcode = self.run_command('git push --tags', ignore_status=False)
+            out, retcode = self.run_command('git push origin --tags', ignore_status=False)
             logger.info('Pushed repository: %s' % out)
     
     def upload_to_artifactory(self):
