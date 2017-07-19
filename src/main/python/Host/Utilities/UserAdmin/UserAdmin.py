@@ -173,7 +173,9 @@ class MainWindow(UserAdminFrame):
             self.button_next_history.setEnabled(False)
         for idx in range(start, end):
             a = self.action_history[idx]
-            list_actions += (pattern % (a[0], a[1], a[2]))
+            list_actions += (pattern % (a[0], 
+                self.replace_html_special_chars(a[1]), 
+                self.replace_html_special_chars(a[2])))
         self.label_action_history.setText("<ul>%s</ul>" % list_actions)
     
     def disable_policy_input(self, policy):
@@ -197,6 +199,9 @@ class MainWindow(UserAdminFrame):
             self.update_user_list()
     
     def display_user_info(self, user):
+        username = self.replace_html_special_chars(user["username"])
+        last_name = self.replace_html_special_chars(user["last_name"])
+        first_name = self.replace_html_special_chars(user["first_name"])
         user_info = """
             <html>
                 <head>
@@ -213,8 +218,7 @@ class MainWindow(UserAdminFrame):
                     </table>
                 </body>
             </html>
-        """ % (user["username"], "True" if user["active"] else "False",
-            user["first_name"], user["last_name"],
+        """ % (username, "True" if user["active"] else "False", first_name, last_name,
             user["employee_id"], user["phone_number"], ",".join(user["roles"]))
         self.label_user_info.setText(user_info)
 
@@ -297,6 +301,12 @@ class MainWindow(UserAdminFrame):
     
     def process_role_trigger(self, q):
         self.change_user_role(str(q.text()))
+
+    def replace_html_special_chars(self, string):
+        string = string.replace("&", "&amp;")
+        string = string.replace("<", "&lt;")
+        string = string.replace(">", "&gt;")
+        return string
     
     def revert_policy(self):
         def set_policy_controls(policy):
@@ -352,7 +362,7 @@ class MainWindow(UserAdminFrame):
             <h2>Please verify user information carefully.</h2>
             <p>User account can NOT be deleted, and many fields can NOT be modified after user account is created.</p>
             <p><ul><li>%s</li></ul></p>
-        """ % ("</li><li>".join([k+"="+user[k] for k in user]))
+        """ % ("</li><li>".join([k+"="+self.replace_html_special_chars(user[k]) for k in user]))
         ret = self.message_box(QMessageBox.Information, "New User Account", info, QMessageBox.Ok | QMessageBox.Cancel)
         if ret == QMessageBox.Ok:
             user.update(dict(password=password, command="create_user"))
@@ -437,7 +447,6 @@ class MainWindow(UserAdminFrame):
                 if idx == 0:
                     self.table_user_list.selectRow(0)
                     self.select_user_from_table()
-                    self.display_user_info(user)
             self.table_user_list.setSortingEnabled(True)        
     
     def user_login(self):
