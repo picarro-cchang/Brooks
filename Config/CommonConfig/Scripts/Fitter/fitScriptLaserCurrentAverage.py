@@ -9,7 +9,7 @@ if INIT:
     from os import listdir
     from os.path import isfile, join
 
-    calDir = "/home/picarro/SI2000/InstrConfig/Calibration/InstrCal"
+    calDir = "../../InstrConfig/Calibration/InstrCal"
     fnames = listdir(calDir)
     la_fname = None
     for fn in fnames:
