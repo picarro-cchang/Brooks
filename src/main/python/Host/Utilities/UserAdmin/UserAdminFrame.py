@@ -157,7 +157,7 @@ class UserAdminFrame(QMainWindow):
         self.table_user_list.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_user_list.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table_user_list.verticalHeader().setVisible(False)
-        self.table_user_list.setHorizontalHeaderLabels(QString("UserName;Last Name;First Name;Roles").split(";"))
+        self.table_user_list.setHorizontalHeaderLabels(QString("UserName;Last Name;First Name;Role").split(";"))
         self.table_user_list.clicked.connect(self.select_user_from_table)
         self.label_user_info = QLabel("")
         self.button_change_pwd = QPushButton("Change Pwd")

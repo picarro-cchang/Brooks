@@ -110,7 +110,7 @@ class MainWindow(UserAdminFrame):
         if role in self.selected_user["roles"]:
             return
         query = "<p>Please confirm this action:</p><h2>Set %s as %s</h2>" % \
-            (self.selected_user["username"], role)
+            (self.replace_html_special_chars(self.selected_user["username"]), role)
         msg = self.message_box(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel)
         if msg == QMessageBox.Ok:
             payload = dict(command="update_user", username=self.selected_user["username"], roles=role)
@@ -191,7 +191,8 @@ class MainWindow(UserAdminFrame):
             self.message_box(QMessageBox.Critical, "Error", "Cannot disable yourselve!")
             return 
         query = "<p>Please confirm this action:</p><h2>%s %s</h2>" % \
-            ("Enable" if user_active else "Disable", self.selected_user["username"])
+            ("Enable" if user_active else "Disable", 
+            self.replace_html_special_chars(self.selected_user["username"]))
         msg = self.message_box(QMessageBox.Question, "Confirm Action", query, QMessageBox.Ok | QMessageBox.Cancel)
         if msg == QMessageBox.Ok:
             payload = dict(command="update_user", username=self.selected_user["username"], active=int(user_active))
@@ -226,17 +227,7 @@ class MainWindow(UserAdminFrame):
         payload = {'command': "get_roles"}
         ret = self.send_request("get", "users", payload, use_token=True, show_error=True)
         if "error" not in ret:
-            set_current_roles = set(ret)
-            set_old_roles = set(self.role_list)
-            if set_old_roles - set_current_roles:
-                # if some roles have been removed, we clear all actions in menu
-                self.menu_user_role.clear()
-                self.input_new_user_role.clear()
-                set_old_roles = set()
-            for role in set_current_roles-set_old_roles:
-                self.menu_user_role.addAction(role)
-                self.input_new_user_role.addItem(role)
-            self.role_list = ret
+            self.role_list = ret          
     
     def get_history(self):
         self.action_history = self.send_request("get", "action", {}, use_token=True)
@@ -391,6 +382,7 @@ class MainWindow(UserAdminFrame):
                     self.button_disable_user.setText("Disable User")
                 else:
                     self.button_disable_user.setText("Enable User")
+                self.setup_role_menu(self.selected_user["roles"])
                     
     def send_request(self, action, api, payload, use_token=False, show_error=False):
         """
@@ -414,6 +406,15 @@ class MainWindow(UserAdminFrame):
             return response.json()
         except Exception, err:
             return {"error": str(err)}
+
+    def setup_role_menu(self, roles):
+        set_all_roles = set(self.role_list)        
+        # clear all actions in menu
+        self.menu_user_role.clear()
+        self.input_new_user_role.clear()
+        for role in set_all_roles-set(roles):
+            self.menu_user_role.addAction(role)
+            self.input_new_user_role.addItem(role)
 
     def switch_tab(self, tabindex):
         if self.user_admin_tabs.tabText(self.current_tab) == "User Policies":
@@ -463,8 +464,8 @@ class MainWindow(UserAdminFrame):
                     self.input_password.clear()
                     self.current_user = return_dict
                     self.current_user["password"] = password
-                    self.update_user_list()
                     self.get_role_list()
+                    self.update_user_list()
                     self.home_widget.hide()
                     self.user_admin_widget.show()
                     self.get_system_variables()
