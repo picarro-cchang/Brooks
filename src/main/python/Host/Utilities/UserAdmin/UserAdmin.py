@@ -7,6 +7,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from UserAdminFrame import UserAdminFrame
+from Host.Common.timestamp import timestampToLocalDatetime
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
 
@@ -173,7 +174,8 @@ class MainWindow(UserAdminFrame):
             self.button_next_history.setEnabled(False)
         for idx in range(start, end):
             a = self.action_history[idx]
-            list_actions += (pattern % (a[0], 
+            list_actions += (pattern % (
+                timestampToLocalDatetime(a[0]).strftime("%Y-%m-%d %H:%M:%S"), 
                 self.replace_html_special_chars(a[1]), 
                 self.replace_html_special_chars(a[2])))
         self.label_action_history.setText("<ul>%s</ul>" % list_actions)

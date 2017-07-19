@@ -10,6 +10,7 @@ from flask_restplus import Api, reqparse, Resource
 from flask_security import auth_token_required, Security, utils, current_user
 from DataBaseModel import pds
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.timestamp import datetimeToTimestamp
 
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
@@ -302,7 +303,7 @@ class SQLiteServer(object):
             return {"username": username}
         elif cmd == "get_actions":      # ActionAPI, get
             actions = self.ds.get_all_from_model("action_model")
-            return [[a.taken_at.strftime("%Y-%m-%d %H:%M:%S"), a.username, a.action] for a in actions]
+            return [[datetimeToTimestamp(a.taken_at), a.username, a.action] for a in actions]
         elif cmd == "get_all_users":    # UsersAPI, get
             def get_item(foo, item_name):
                 res = getattr(foo, item_name)
