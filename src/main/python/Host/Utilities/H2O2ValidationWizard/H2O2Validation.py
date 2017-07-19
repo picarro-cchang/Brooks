@@ -163,6 +163,8 @@ class H2O2Validation(H2O2ValidationFrame):
         self.report_dir = self.config.get("Setup", "Report_Directory")
         if not os.path.isabs(self.report_dir):
             self.report_dir = os.path.join(self.curr_dir, self.report_dir)
+        if not os.path.exists(self.report_dir):
+            os.makedirs(self.report_dir)
         self.average_data_point = self.config.getint("Status_Check", "Average_Data_Points", 10)
         self.water_conc_limit = self.config.getfloat("Status_Check", "Water_Conc_Limit")
         self.pressure_upper_limit = self.config.getfloat("Status_Check", "Pressure_Upper_Limit", 1000)
@@ -293,7 +295,7 @@ class H2O2Validation(H2O2ValidationFrame):
                    'password': str(self.input_password.text())}
         return_dict = self.send_request("post", "account", payload)
         if "error" not in return_dict:
-            if "roles" in return_dict and ("Admin" in return_dict["roles"] or "Technician" in return_dict["roles"]):
+            if "roles" in return_dict:
                 if not hasattr(self, "current_user"):   # first-time login
                     self.input_user_name.clear()
                     self.input_password.clear()
@@ -309,9 +311,6 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.report_frame.show()
                     self.create_report()
                     self.save_report()
-            else:
-                self.label_login_info.setText("You don't have the permission to perform validation.")
-                self.send_request("post", "account", {"command":"log_out_user"})
         elif "Password expire" in return_dict["error"]:
             msg = "Password already expires!\nPlease use QuickGUI or other programs to change password."
             self.label_login_info.setText(msg)

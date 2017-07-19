@@ -188,7 +188,7 @@ class UserAdminFrame(QMainWindow):
         # User policies tab
         self.check_password_length = QCheckBox("Password must have at least")
         self.check_password_length.clicked.connect(lambda: self.disable_policy_input("password_length"))
-        self.input_password_length = spin_box(value=6, min=6, max=20, step=1)
+        self.input_password_length = spin_box(value=6, min=6, max=15, step=1)
         self.check_password_mix_charset = QCheckBox("Password must contain numbers, letters and special characters")
         self.check_password_lifetime = QCheckBox("Password expires after")
         self.check_password_lifetime.clicked.connect(lambda: self.disable_policy_input("password_lifetime"))

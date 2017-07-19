@@ -229,7 +229,10 @@ class MainWindow(UserAdminFrame):
         payload = {'command': "get_roles"}
         ret = self.send_request("get", "users", payload, use_token=True, show_error=True)
         if "error" not in ret:
-            self.role_list = ret          
+            self.role_list = ret  
+            self.input_new_user_role.clear()  
+            for role in ret:
+                self.input_new_user_role.addItem(role)      
     
     def get_history(self):
         self.action_history = self.send_request("get", "action", {}, use_token=True)
@@ -275,6 +278,8 @@ class MainWindow(UserAdminFrame):
 
     def load_config(self):
         self.output_folder = self.config.get("Setup", "Output_Folder", ".")
+        if not os.path.exists(self.output_folder):
+            os.makedirs(self.output_folder)
 
     def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
         msg_box = QMessageBox(icon, title, message, buttons, self)
@@ -413,10 +418,8 @@ class MainWindow(UserAdminFrame):
         set_all_roles = set(self.role_list)        
         # clear all actions in menu
         self.menu_user_role.clear()
-        self.input_new_user_role.clear()
         for role in set_all_roles-set(roles):
-            self.menu_user_role.addAction(role)
-            self.input_new_user_role.addItem(role)
+            self.menu_user_role.addAction(role)            
 
     def switch_tab(self, tabindex):
         if self.user_admin_tabs.tabText(self.current_tab) == "User Policies":
@@ -460,27 +463,23 @@ class MainWindow(UserAdminFrame):
                    'password': password}
         return_dict = self.send_request("post", "account", payload)
         if "error" not in return_dict:
-            if "roles" in return_dict:
-                if "Admin" in return_dict["roles"]:
-                    self.input_user_name.clear()
-                    self.input_password.clear()
-                    self.current_user = return_dict
-                    self.current_user["password"] = password
-                    self.get_role_list()
-                    self.update_user_list()
-                    self.home_widget.hide()
-                    self.user_admin_widget.show()
-                    self.get_system_variables()
-                    # set up a timer for user session
-                    self.session_timer = QTimer()
-                    self.session_timer.timeout.connect(self.check_user_activity)
-                    pos = QCursor.pos()
-                    self.session_cursor_pos = [pos.x(), pos.y()]
-                    self.session_active_ts = time.time()
-                    self.session_timer.start(2000)
-                else:
-                    self.label_login_info.setText("Only Admin users can log in.")
-                    self.send_request("post", "account", {"command":"log_out_user"})
+            if "roles" in return_dict and "Admin" in return_dict["roles"]:
+                self.input_user_name.clear()
+                self.input_password.clear()
+                self.current_user = return_dict
+                self.current_user["password"] = password
+                self.get_role_list()
+                self.update_user_list()
+                self.home_widget.hide()
+                self.user_admin_widget.show()
+                self.get_system_variables()
+                # set up a timer for user session
+                self.session_timer = QTimer()
+                self.session_timer.timeout.connect(self.check_user_activity)
+                pos = QCursor.pos()
+                self.session_cursor_pos = [pos.x(), pos.y()]
+                self.session_active_ts = time.time()
+                self.session_timer.start(2000)
         elif "Password expire" in return_dict["error"]:
             self.current_user = dict(
                 username=str(self.input_user_name.text()),

@@ -81,6 +81,19 @@ class SQLiteServer(object):
                 return eval(c)(s)
             except:
                 pass
+
+    def check_login_requester(self, roles, requester):
+        if "Admin" in roles:
+            level = 3
+        elif "Technician" in roles:
+            level = 2
+        elif "Operator" in roles:
+            level = 1
+        if requester == "UserAdmin" and level < 3:
+            return {"error": "Permission denied. Only Admin users can log in."}
+        elif requester == "H2O2Validation" and level < 2:
+            return {"error": "Permission denied. Only Admin and Technician can log in."}
+        return {}
                 
     def check_password(self, username, password):
         responses = []
@@ -167,7 +180,7 @@ class SQLiteServer(object):
         else:
             return {"error": "Username and password do not match!"}
                       
-    def log_in_user(self, username, password, no_commit=False):
+    def log_in_user(self, username, password, requester, no_commit=False):
         user = self.ds.find_user(username=username)
         if user is not None:
             if utils.verify_password(password, user.password):
@@ -177,6 +190,8 @@ class SQLiteServer(object):
                     # just check password. Do not commit to session
                     return {"user": user}
                 ret = self.check_password_age(username, password)
+                if ret: return ret
+                ret = self.check_login_requester(user.roles, requester)
                 if ret: return ret
                 utils.login_user(user)
                 self.ds.commit()
@@ -222,7 +237,7 @@ class SQLiteServer(object):
         if new_password is None:
             return {"error": "New password not specified!"}
         # check password but not log in
-        ret = self.log_in_user(username, password, no_commit=True)
+        ret = self.log_in_user(username, password, "", no_commit=True)
         if "error" in ret:
             return ret
         user = ret["user"]
@@ -282,8 +297,12 @@ class SQLiteServer(object):
                 new_value = request_dict[name]
                 if new_value != var.value:
                     var.value = new_value
-                    self.save_action_history(current_user.username,
-                        "set system variable %s=%s" % (name, request_dict[name]))
+                    if new_value == "-1":
+                        self.save_action_history(current_user.username,
+                            "system variable %s is disabled" % (name))
+                    else:
+                        self.save_action_history(current_user.username,
+                            "set system variable %s=%s" % (name, request_dict[name]))
             self.system_varialbes[name] = self._convert_string(request_dict[name])
         self.ds.commit()
     
@@ -334,9 +353,10 @@ class SQLiteServer(object):
             roles = self.ds.get_all_from_model("role_model")
             return [role.name for role in roles]
         elif cmd == "log_in_user":  # AccountAPI, post
-            ret = self.log_in_user(username, request_dict["password"])
+            requester = request_dict["requester"]
+            ret = self.log_in_user(username, request_dict["password"], requester)
             status = ret["error"] if "error" in ret else "succeed"
-            self.save_action_history(username, "log in from %s: %s" % (request_dict["requester"], status))
+            self.save_action_history(username, "log in from %s: %s" % (requester, status))
             return ret
         elif cmd == "log_out_user": # AccountAPI, post
             username = current_user.username
