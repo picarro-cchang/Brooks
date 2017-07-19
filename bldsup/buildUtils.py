@@ -84,6 +84,7 @@ def get_noncython_resource(base_path):
         "Host/Utilities/CoordinatorLauncher/*.py",
         "Host/Utilities/DataRecal/*.py",
         "Host/Utilities/FlowController/*.py",
+        "Host/Utilities/H2O2ValidationWizard/*.*",
         "Host/Utilities/InstrEEPROMAccess/*.py",
         "Host/Utilities/IntegrationTool/*.py",
         "Host/Utilities/ModbusServer/*.py",
