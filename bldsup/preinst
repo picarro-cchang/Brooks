@@ -26,9 +26,9 @@ for c in host_software_components:
 
 
 # Backup instrConfig if it already exists
-instr_config = "/home/picarro/SI2000/InstrConfig"
+instr_config = "/home/picarro/I2000/InstrConfig"
 if os.path.isdir(instr_config):
-    root_dir = "/home/picarro/SI2000"
+    root_dir = "/home/picarro/I2000"
     # make sure there is no 'active' instrConfig folder left over by last installation
     for folder in os.listdir(root_dir):
         if folder.startswith("InstrConfig") and folder.endswith("_active"):

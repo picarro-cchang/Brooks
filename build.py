@@ -11,7 +11,7 @@ use_bldsup(build_support_dir="bldsup")
 import Builder
 from BuildAiAutosampler import BuildAiAutosampler
 from BuildChemCorrect import BuildChemCorrect
-from BuildSI2000 import BuildSI2000
+from BuildI2000 import BuildI2000
 from BuildMobile import BuildMobile
 from BuildSDM import BuildSDM
 from BuildSSIM import BuildSSIM
@@ -32,7 +32,7 @@ default_task = "make_installers"
 def initialize(project, logger):
     BuildClasses = dict(ai_autosampler = BuildAiAutosampler,
                         chem_correct = BuildChemCorrect,
-                        si2000 = BuildSI2000,
+                        i2000 = BuildI2000,
                         mobile = BuildMobile,
                         sdm = BuildSDM,
                         ssim = BuildSSIM,
@@ -44,8 +44,8 @@ def initialize(project, logger):
     official = project.get_property("official", "False")
     official = official.lower() in ("yes", "y", "true", "t", "1")
     project.set_property("official", official)
-    # product specifies which installer to produce, currently supported values are si2000
-    product = project.get_property("product", "si2000").strip().lower()
+    # product specifies which installer to produce, currently supported values are i2000
+    product = project.get_property("product", "i2000").strip().lower()
     project.set_property("product", product)
     builder = BuildClasses[product.lower()](project, logger)
     # check_woking_tree ensures working tree is clean before doing build

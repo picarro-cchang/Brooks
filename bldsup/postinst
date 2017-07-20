@@ -4,7 +4,7 @@ import os
 import shutil
 
 # if there is an 'active' instrConfig folder, copy it over to instrConfig
-root_dir = "/home/picarro/SI2000"
+root_dir = "/home/picarro/I2000"
 for folder in os.listdir(root_dir):
     if folder.startswith("InstrConfig") and folder.endswith("_active"):
         active_config = os.path.join(root_dir, folder)
