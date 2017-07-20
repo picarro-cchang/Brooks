@@ -13,13 +13,13 @@ import numpy as np
 from Host.Common.CustomConfigObj import CustomConfigObj
 
 if sys.platform == 'win32':
-    Paras=CustomConfigObj("/home/picarro/SI2000/AppConfig/Config/DataManager/DynamicFilter_MCDS.ini")
+    Paras=CustomConfigObj("/home/picarro/I2000/AppConfig/Config/DataManager/DynamicFilter_MCDS.ini")
 else:
     try:
         #Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
         # Set path to work on a running analyzer without git.
         # We'll have to come up with a 'running from source method' later.
-        Paras=CustomConfigObj("/home/picarro/SI2000/AppConfig/Config/DataManager/DynamicFilter_MCDS.ini")
+        Paras=CustomConfigObj("/home/picarro/I2000/AppConfig/Config/DataManager/DynamicFilter_MCDS.ini")
     except Exception as e:
         print("Exception:",e)
         raise 

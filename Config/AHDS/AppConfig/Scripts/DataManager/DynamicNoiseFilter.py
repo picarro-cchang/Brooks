@@ -13,7 +13,7 @@ import numpy as np
 from Host.Common.CustomConfigObj import CustomConfigObj
 
 #if sys.platform == 'linux2':
-#    Paras=CustomConfigObj("/home/picarro/SI2000/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+#    Paras=CustomConfigObj("/home/picarro/I2000/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
 #else:
 #    try:
 #        Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AHDS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")

@@ -1,7 +1,7 @@
 # DateTime,20151214_151616
 # Description,Variation of ringdown statistics with threshold
 # InstrumentName,AEDS2056_NH3_PK
-# SchemeFile,/home/picarro/SI2000\InstrConfig\Schemes\NH3_PK.sch
+# SchemeFile,/home/picarro/I2000\InstrConfig\Schemes\NH3_PK.sch
 # TUNER_DITHER_MEDIAN_COUNT_REGISTER,9
 # TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER,2100.0
 # TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER,2100.0

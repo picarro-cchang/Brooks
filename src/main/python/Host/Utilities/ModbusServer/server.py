@@ -257,7 +257,7 @@ class ModbusServer(object):
 
         identity = ModbusDeviceIdentification()
         identity.VendorName  = 'Picarro'
-        identity.ProductCode = 'SI2000'
+        identity.ProductCode = 'I2000'
         identity.VendorUrl   = 'http://www.picarro.com'
         identity.ProductName = 'Picarro Modbus Server'
         identity.ModelName   = 'Picarro Modbus Server'

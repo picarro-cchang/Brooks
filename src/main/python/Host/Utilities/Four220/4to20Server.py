@@ -5,7 +5,7 @@ Purpose: 4-20 mA back end. It takes data obj from data manager,
 map the consentration to the 0-40 mA value and send to COM port 
 on the mother board.
 module i7024 Hardware info: http://confluence.picarro.int/display/SEM/4-20+mA+Analog+Output+Testing
-software implimentation: http://confluence.picarro.int/display/~wtan@picarro.com/Software+Implement+4-20+mA+Output+for+SI2000+Series+Analyzers
+software implimentation: http://confluence.picarro.int/display/~wtan@picarro.com/Software+Implement+4-20+mA+Output+for+I2000+Series+Analyzers
 
 File History:
     17-04-03  Wenting   Created file

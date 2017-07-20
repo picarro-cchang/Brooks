@@ -7,4 +7,4 @@ def readConfig(fname):
     config = CustomConfigObj(fname)
     return config
 
-print readConfig("/home/picarro/SI2000\AppConfig\Config\AlarmSystem\AlarmSystem_AMADS.ini")
+print readConfig("/home/picarro/I2000\AppConfig\Config\AlarmSystem\AlarmSystem_AMADS.ini")

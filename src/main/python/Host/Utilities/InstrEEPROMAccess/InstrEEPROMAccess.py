@@ -33,9 +33,9 @@ class InstrEEPROMAccessFrame(wx.Frame):
         except:
             analyzerTypes = DEFAULT_TYPES
         try:
-            signaturePath = co.get("Main", "SignaturePath", "/home/picarro/SI2000/installerSignature")
+            signaturePath = co.get("Main", "SignaturePath", "/home/picarro/I2000/installerSignature")
         except:
-            signaturePath = "/home/picarro/SI2000/installerSignature"
+            signaturePath = "/home/picarro/I2000/installerSignature"
         try:
             sigFd = open(signaturePath, "r")
             self.installerId = sigFd.readline().strip()
@@ -315,7 +315,7 @@ def HandleCommandSwitches():
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
     else:
-        configFile = r"/home/picarro/SI2000/CommonConfig/Config/Utilities/InstrEEPROMAccess.ini"
+        configFile = r"/home/picarro/I2000/CommonConfig/Config/Utilities/InstrEEPROMAccess.ini"
 
     if "-d" in options:
         defaultChassis = options["-d"]

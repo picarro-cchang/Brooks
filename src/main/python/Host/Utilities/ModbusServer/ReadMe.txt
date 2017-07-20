@@ -1,4 +1,4 @@
-This module is developed by Yuan Ren in early 2017 for the SI2000 analyzers.
+This module is developed by Yuan Ren in early 2017 for the I2000 analyzers.
 
 I design this module as a general-purpose platform for data transfer and remote control using Modbus.
 

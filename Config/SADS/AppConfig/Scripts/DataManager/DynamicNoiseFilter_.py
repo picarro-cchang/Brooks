@@ -9,7 +9,7 @@ Created on Thu Jul 07 08:33:28 2016
 import numpy as np
 from Host.Common.CustomConfigObj import CustomConfigObj
 
-#Paras=CustomConfigObj("/home/picarro/SI2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
+#Paras=CustomConfigObj("/home/picarro/I2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
 # Linux path below
 Paras=CustomConfigObj("../../AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
 N_max=Paras.getint("Dynamic filter","N_max") # ini

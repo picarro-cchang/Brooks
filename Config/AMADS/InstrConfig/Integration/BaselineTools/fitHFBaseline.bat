@@ -1,1 +1,1 @@
-/home/picarro/SI2000\HostExe\Fitter.exe -v -c FitterHFBaseline.ini
+/home/picarro/I2000\HostExe\Fitter.exe -v -c FitterHFBaseline.ini
