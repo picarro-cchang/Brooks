@@ -1,8 +1,8 @@
 {
     "buildTypes": {
-        "AHDS": {
+        "AJDS": {
             "species": "NH3",
-            "installerSignature": "AEDS"
+            "installerSignature": "AJDS"
         },
 
         "AMADS": {
