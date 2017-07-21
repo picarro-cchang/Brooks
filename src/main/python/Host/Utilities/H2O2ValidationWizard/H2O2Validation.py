@@ -139,10 +139,6 @@ class H2O2Validation(H2O2ValidationFrame):
             self.top_frame.show()
             self.wizard_frame.show()
             self.start_data_collection()
-        # self.top_frame.hide()
-        # self.wizard_frame.hide()
-        # self.report_frame.show()
-        # self.create_report()
             
     def load_config(self):
         self.cylinders = {}
@@ -160,6 +156,7 @@ class H2O2Validation(H2O2ValidationFrame):
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
         self.total_measurement_time = self.wait_time_before_collection + self.data_collection_time
+        self.allow_skip_calibrant3 = self.config.getboolean("Setup", "Allow_Skip_Calibrant3")
         self.report_dir = self.config.get("Setup", "Report_Directory")
         if not os.path.isabs(self.report_dir):
             self.report_dir = os.path.join(self.curr_dir, self.report_dir)
@@ -488,7 +485,7 @@ class H2O2Validation(H2O2ValidationFrame):
                         result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_ch4_mean"])
                     if len(self.validation_data[stage]["H2O2"]) > 0:
                         self.validation_results["%s_h2o2_mean" % stage] = np.average(self.validation_data[stage]["H2O2"])
-                        result_string += "Average H2O2 = %.3f ppm. " % (self.validation_results["%s_h2o2_mean" % stage])
+                        result_string += "Average H2O2 = %.3f ppb. " % (self.validation_results["%s_h2o2_mean" % stage])
                         self.validation_results["%s_h2o_mean" % stage] = np.average(self.validation_data[stage]["H2O"])
                     self.button_next_step.setEnabled(True)
                     self.measurement_progress.hide()
@@ -563,7 +560,7 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.cylinder_selection.show()                
                 self.display_instruction2.clear()
                 self.cylinder_selection.setEnabled(True)
-                if validation_steps[self.current_step+1] == "calibrant3":
+                if validation_steps[self.current_step+1] == "calibrant3" and self.allow_skip_calibrant3:
                     self.button_skip_step.show()
                 self.popular_cylinder_selection_list()
             elif self.current_step in validation_steps:
@@ -725,12 +722,6 @@ class H2O2Validation(H2O2ValidationFrame):
         else:
             self.report_status["color_zero_h2o2"] = 'green'
             self.validation_results["status_zero_h2o2"] = "<font color='green'>Pass</font>"
-        if self.validation_results["ch4_r2"] < 0.95:
-            self.report_status["color_ch4_r2"] = 'red'
-            self.validation_results["status_ch4_r2"] = "<font color='red'>Fail</font>"
-        else:
-            self.report_status["color_ch4_r2"] = 'green'
-            self.validation_results["status_ch4_r2"] = "<font color='green'>Pass</font>"
 
     def create_summary(self, report_path):
         results = """
@@ -739,12 +730,9 @@ class H2O2Validation(H2O2ValidationFrame):
                 Zero H<sub>2</sub>O<sub>2</sub> = %.2f (Accepted range: [-5, 10])</font></li>
             <li><font color='{color_ch4_slope}'>
                 CH<sub>4</sub> slope = %.6f (Accepted range: [0.95, 1.05])</font></li>
-            <li><font color='{color_ch4_r2}'>
-                Linearity = %.6f (Accepted range: > 0.95)</font></li>
         </ul>
         """ % (self.validation_results["h2o2_equivalent"],
-               self.validation_results["ch4_slope"],
-               self.validation_results["ch4_r2"])
+               self.validation_results["ch4_slope"])
         for k in self.report_status:
             results = results.replace("{%s}" % k, self.report_status[k])
         if "color='red'" in results:
