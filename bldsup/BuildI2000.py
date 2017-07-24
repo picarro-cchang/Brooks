@@ -227,11 +227,7 @@ Description: Picarro Host Software for Industry Application
         if os.path.isdir(common_config_dir):
             shutil.rmtree(common_config_dir)
         shutil.copytree(os.path.join(config_dir, "CommonConfig"), common_config_dir)
-        # create python path file
-        pth_file_dir = os.path.join(dist_dir, 'home', 'picarro', 'anaconda2','lib','python2.7','site-packages')
-        os.makedirs(pth_file_dir)
-        with open(os.path.join(pth_file_dir, 'Picarro.pth'), 'w') as f:
-            f.write("/home/picarro/I2000")
+
         # make debian folder
         debian_dir = os.path.join(dist_dir, "DEBIAN")
         if not os.path.isdir(debian_dir):
