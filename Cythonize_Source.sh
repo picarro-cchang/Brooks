@@ -1,6 +1,9 @@
 #!/bin/bash
 # Script will go to below folder list (includeFolderList vriable) to Cythonize I2000 Analyzer code
 
+export PATH=/home/picarro/anaconda2/bin:$PATH
+export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
+
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
 echo $dir_source_main_python
@@ -39,7 +42,7 @@ do
     # also create build folder containing all .o object files of files
     if ! python "$git_directory/bldsup/setupForCython.py" build_ext --inplace --filename=$file_in_dir
     then
-      echo "Error during Cythonizing file $file_in_dir"
+      echo "***********************Error during Cythonizing file $file_in_dir******************"
       exit 1
     fi
     

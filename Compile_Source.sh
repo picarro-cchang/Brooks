@@ -1,6 +1,9 @@
 #!/bin/bash
 # Script to compile and generate I2000 Analyzer code for DSP, FPGA, FitUtils, DatVeiwer and FastLomb
 
+export PATH=/home/picarro/anaconda2/bin:$PATH
+export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
+
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
 echo $dir_source_main_python
@@ -27,7 +30,7 @@ echo "Running: cd $fitter_path"
 cd $fitter_path
 if [ -f fitutils.so ]; then rm fitutils.so; fi
 echo "Running: f2py -c -m fitutils fitutils.f"
-if /home/picarro/anaconda2/bin/f2py -c -m fitutils fitutils.f
+if f2py -c -m fitutils fitutils.f
 then
   echo "***********************FitUtils Compilation Successful**************"
 else

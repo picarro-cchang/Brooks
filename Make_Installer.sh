@@ -1,6 +1,9 @@
 #!/bin/bash
 # Script to make debian package
 
+export PATH=/home/picarro/anaconda2/bin:$PATH
+export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
+
 if [ $# -lt 2 ] 
 then
     echo "Invalid argument please pass two arguments"
@@ -39,18 +42,36 @@ fi
 
 # create the desired directory tree: home/picarro/I2000
 dist_directory_temp="${dist_directory}_temp"
-mv $dist_directory $dist_directory_temp
-mkdir -p "$dist_directory/home/picarro"
-mv $dist_directory_temp $dist_dir_new
+if ! mv $dist_directory $dist_directory_temp
+then
+  echo -e "\n***********Error during moving directory $dist_directory to $dist_directory_temp******************"
+  exit 1
+fi
 
-echo $dist_common_config_directory
+if ! mkdir -p "$dist_directory/home/picarro"
+then
+  echo -e "\n***********Error during creating directory "$dist_directory/home/picarro"*************************"
+  exit 1
+fi
+
+if ! mv $dist_directory_temp $dist_dir_new
+then
+  echo -e "\n***********Error during moving directory $dist_directory_temp to $dist_dir_new********************"
+  exit 1
+fi
+
+
 # copy commonconfig
 if [ -d "$dist_common_config_directory" ]
 then
   rm -rf $dist_common_config_directory
 fi
 
-cp -R "$git_common_config_directory/." $dist_common_config_directory
+if ! cp -R "$git_common_config_directory/." $dist_common_config_directory
+then
+  echo -e "\n****Error during copying files from $git_common_config_directory to $dist_common_config_directory*"
+  exit 1
+fi
 
 # create python path file
 #mkdir -p $pth_file_dir
@@ -102,8 +123,12 @@ Description: Picarro Host Software for Semiconductor Industry
  $installer_type Analyzer
  Version: $raw_version
 EOM
-   
-dpkg-deb --build $dist_directory
+
+if ! dpkg-deb --build $dist_directory
+then
+  echo -e "\n***********************Error during creating debian package******************"
+  exit 1
+fi
 
 # move package to installer folder
 mv "$dist_directory.deb" "$resource_directory/${project_name}_${installer_type}_${species}_${raw_version}.deb"

@@ -1,6 +1,9 @@
 #!/bin/bash
 # Script to Copy all required files to target directory for debian package
 
+export PATH=/home/picarro/anaconda2/bin:$PATH
+export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
+
 if [ $# -lt 1 ] 
 then
     echo "Invalid argument please pass one argument"
@@ -10,7 +13,7 @@ fi
 raw_version=$1
 project_name="I2000"
 dist_foldername=${project_name}_${raw_version}
-git_directory="/home/git/host"
+git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
 target_directory="$git_directory/target/dist/${dist_foldername}"
 echo $dir_source_main_python
@@ -22,7 +25,12 @@ then
   rm -rf $target_directory
 fi
 
-mkdir -p $target_directory
+if ! mkdir -p $target_directory 
+  then
+  echo "******************Can not able to create directory $target_directory*********************"
+  exit 1
+fi
+
 
 includeFolderList[0]="Host/AlarmSystem"
 includeFolderList[1]="Host/Archiver"
@@ -121,7 +129,11 @@ do
     dist_file_folder_path=( $(python -c "import os.path; print os.path.dirname('$dist_file_path')") )
     if [ ! -d "$dist_file_folder_path" ]
     then
-      mkdir -p $dist_file_folder_path
+      if ! mkdir -p $dist_file_folder_path 
+        then
+        echo "******************Can not able to create directory $dist_file_folder_path*********************"
+        exit 1
+      fi
     fi
     if ! cp -v $file_in_list $dist_file_folder_path 
     then
