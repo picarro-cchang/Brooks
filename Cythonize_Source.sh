@@ -37,7 +37,7 @@ do
   do
     # Cythonize file in place
     # also create build folder containing all .o object files of files
-    if ! python "$git_directory/bldsup/setupForCython.py" build_ext --inplace --filename=$file_in_dir &
+    if ! python "$git_directory/bldsup/setupForCython.py" build_ext --inplace --filename=$file_in_dir
     then
       echo "Error during Cythonizing file $file_in_dir"
       exit 1
@@ -56,6 +56,5 @@ do
     fi
   done
 done
-wait
 
 rm -R build
