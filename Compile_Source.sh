@@ -27,7 +27,7 @@ echo "Running: cd $fitter_path"
 cd $fitter_path
 if [ -f fitutils.so ]; then rm fitutils.so; fi
 echo "Running: f2py -c -m fitutils fitutils.f"
-if f2py -c -m fitutils fitutils.f
+if /home/picarro/anaconda2/bin/f2py -c -m fitutils fitutils.f
 then
   echo "***********************FitUtils Compilation Successful**************"
 else
