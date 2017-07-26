@@ -4,14 +4,15 @@
 export PATH=/home/picarro/anaconda2/bin:$PATH
 export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
 
-if [ $# -lt 2 ] 
+if [ $# -lt 3 ] 
 then
-    echo "Invalid argument please pass two arguments"
+    echo "Invalid argument please pass three arguments, 1: build number (Like 1.0.0.0) 2: installer type (Like NDDS) 3: Git hash number"
     exit 1
 fi
 
 raw_version=$1
 installer_type=$2
+git_hash=$3
 project_name="I2000"
 species="NH3_HF"
 git_directory=$(pwd)
@@ -131,5 +132,5 @@ then
 fi
 
 # move package to installer folder
-mv "$dist_directory.deb" "$resource_directory/${project_name}_${installer_type}_${species}_${raw_version}.deb"
+mv "$dist_directory.deb" "$resource_directory/${project_name}_${installer_type}_${species}_${raw_version}_${git_hash}.deb"
 
