@@ -6,7 +6,6 @@ export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
 
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
-echo $dir_source_main_python
 
 #Compile source for XML
 echo -e "\n***********************Compiling Source For XML******************"

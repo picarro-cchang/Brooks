@@ -14,8 +14,8 @@ raw_version=$1
 installer_type=$2
 git_hash=$3
 project_name="I2000"
-species="NH3_HF"
 git_directory=$(pwd)
+version_file_path=$git_directory/versions/i2000_types.json
 dir_source_main_python="$git_directory/src/main/python"
 dist_foldername=${project_name}_${raw_version}
 dist_directory="$git_directory/target/dist/${dist_foldername}"
@@ -25,7 +25,6 @@ debian_directory="$dist_directory/DEBIAN"
 resource_directory="$git_directory/target/Installers/${dist_foldername}"
 git_instr_config_directory="$config_directory/$installer_type/InstrConfig"
 git_app_config_directory="$config_directory/$installer_type/AppConfig"
-echo $dir_source_main_python
 
 dist_dir_home="$dist_directory/home"
 dist_dir_new="$dist_directory/home/picarro/${project_name}"
@@ -34,6 +33,14 @@ dist_common_config_directory="$dist_dir_new/CommonConfig"
 dist_app_config_directory="$dist_dir_new/AppConfig"
 
 pth_file_dir="$dist_dir_home/picarro/anaconda2/lib/python2.7/site-packages"
+
+#lets read species information from version/*_types.json file
+species=( $(cat $version_file_path | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["buildTypes"]["'$installer_type'"]["species"];') )
+if [ $? != 0 ]
+then
+  echo -e "\n*****************Error while readying $version_file_path file ***********************************"
+  exit 1
+fi
 
 # lets start clean installer by deleting any old directory and files if present
 if [ -d "$dist_dir_home" ]

@@ -16,8 +16,6 @@ dist_foldername=${project_name}_${raw_version}
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
 target_directory="$git_directory/target/dist/${dist_foldername}"
-echo $dir_source_main_python
-echo $target_directory
 
 # lets start with fresh copy by deleting old files and folder if present
 if [ -d "$target_directory" ]
