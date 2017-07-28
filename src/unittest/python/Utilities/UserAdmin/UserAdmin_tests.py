@@ -10,6 +10,9 @@ from Host.Utilities.UserAdmin.UserAdmin import MainWindow
 from Host.WebServer.SQLiteServer import SQLiteServer
 from Host.WebServer.SQLiteServer import app as flask_app
 
+from teamcity import is_running_under_teamcity
+from teamcity.unittestpy import TeamcityTestRunner
+
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "UserAdmin.ini")
 app = QApplication(sys.argv)
 
@@ -152,4 +155,11 @@ class TestUserAdmin(unittest.TestCase):
         self.assertTrue(p_pwd_lifetime.value == "1")
     
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    if is_running_under_teamcity():
+        print("***********In tamcity unitestcase*****************")
+        runner = TeamcityTestRunner()
+    else:
+        print("***********In normal unitestcase*****************")
+        runner = unittest.TextTestRunner()
+    unittest.main(testRunner=runner)
