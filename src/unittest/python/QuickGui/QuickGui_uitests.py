@@ -77,9 +77,7 @@ class TestQuickGui(unittest.TestCase):
 if __name__ == '__main__':
     #unittest.main()
     if is_running_under_teamcity():
-        print("***********In tamcity unitestcase*****************")
         runner = TeamcityTestRunner()
     else:
-        print("***********In normal unitestcase*****************")
         runner = unittest.TextTestRunner()
     unittest.main(testRunner=runner)
