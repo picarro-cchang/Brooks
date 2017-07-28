@@ -158,7 +158,7 @@ def variableExpAverage(bufferZZ,buffer,y, t, length, MinNoiseID, previousS,previ
     
     #if k % 250 == 0 and True:
     #print k
-    print "%.3f  %.2f  %.3f, %.3f" % (sigma, tau,current_noise_est, zz)
+    #print "%.3f  %.2f  %.3f, %.3f" % (sigma, tau,current_noise_est, zz)
     
     current_ave = continuous_ave(previousS, y, tau)
                
