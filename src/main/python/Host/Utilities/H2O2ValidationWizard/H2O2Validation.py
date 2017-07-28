@@ -17,6 +17,7 @@ from H2O2ValidationFrame import H2O2ValidationFrame
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import StringPickler, Listener
 from Host.Common import SharedTypes
+from Host.Common.SingleInstance import SingleInstance
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
 
@@ -115,6 +116,7 @@ class H2O2Validation(H2O2ValidationFrame):
         self.current_step = 0
         self.start_time = 0
         self.record_status = ""
+        self.cylinder_reviewed = False
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
         self.validation_data = {}   
         self.validation_results = {}
@@ -335,12 +337,44 @@ class H2O2Validation(H2O2ValidationFrame):
             cylinder = self.table_cylinder_list.item(indexes[0].row(), 0)
             if cylinder is not None:
                 ident = str(cylinder.text())
-                self.input_cylinder_ident.setText(ident)
+                self.label_cylinder_ident.setText(ident)
                 self.input_cylinder_ch4.setText(str(self.cylinders[ident]["concentration"]))
                 self.input_cylinder_uncertainty.setText(str(self.cylinders[ident]["uncertainty"]))
 
     def add_cylinder(self):
-        self.update_cylinder_info(new_cylinder=True)
+        self.cylinder_frame.hide()
+        self.add_cylinder_frame.show()
+        self.input_add_cylinder_ident.setFocus()
+
+    def add_cylinder_cancel(self):
+        self.input_add_cylinder_ident.clear()
+        self.input_add_cylinder_ch4.clear()
+        self.input_add_cylinder_uncertainty.clear()
+        self.cylinder_frame.show()
+        self.add_cylinder_frame.hide()
+
+    def add_cylinder_ok(self):
+        ident = str(self.input_add_cylinder_ident.text()).strip()
+        if len(ident) == 0:
+            self.message_box(QMessageBox.Critical, "Error", "Cylinder identification is blank!")
+            return 1
+        if ident in self.cylinders:
+            self.message_box(QMessageBox.Critical, "Error", "Cylinder already exists!")
+            return 1
+        try:
+            conc = float(self.input_add_cylinder_ch4.text())
+        except:
+            self.message_box(QMessageBox.Critical, "Error", "CH4 concentration not valid!")
+            return 1
+        try:
+            uncertainty = float(self.input_add_cylinder_uncertainty.text())
+        except:
+            self.message_box(QMessageBox.Critical, "Error", "Concentration uncertainty not valid!")
+            return 1
+        if not self.update_cylinder_info(ident, conc, uncertainty):
+            return 1
+        self.update_cylinder_list()
+        self.add_cylinder_cancel()
 
     def update_cylinder_list(self):
         num_rows = self.table_cylinder_list.rowCount()
@@ -372,39 +406,35 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.cylinder_config[ident]["Active"] = "False"
                 self.update_cylinder_list()
 
-    def update_cylinder_info(self, new_cylinder=False):
-        ident = str(self.input_cylinder_ident.text()).strip()
-        if len(ident) == 0:
-            self.message_box(QMessageBox.Critical, "Error", "Cylinder identification is blank!")
-            return 1
-        if new_cylinder:
-            if ident in self.cylinders:
-                self.message_box(QMessageBox.Critical, "Error", "Cylinder already exists!")
-                return 1
-        else:
-            if ident not in self.cylinders:
-                self.message_box(QMessageBox.Critical, "Error", "Cylinder does not exist!")
-                return 1
+    def update_cylinder(self):
+        ident = str(self.label_cylinder_ident.text()).strip()
         try:
             conc = float(self.input_cylinder_ch4.text())
-            if conc < 0:
-                self.message_box(QMessageBox.Critical, "Error", "CH4 concentration cannot be negative!")
-                return 1
         except:
             self.message_box(QMessageBox.Critical, "Error", "CH4 concentration not valid!")
             return 1
         try:
             uncertainty = float(self.input_cylinder_uncertainty.text())
-            if uncertainty < 0:
-                self.message_box(QMessageBox.Critical, "Error", "Concentration uncertainty cannot be negative!")
-                return 1
         except:
             self.message_box(QMessageBox.Critical, "Error", "Concentration uncertainty not valid!")
             return 1
-        self.cylinders[ident] = {"concentration": conc, "uncertainty": uncertainty}
-        self.cylinder_config[ident] = {"Concentration": str(conc), "Uncertainty": str(uncertainty), "Active": "True"}
-        self.update_cylinder_list()        
+        if not self.update_cylinder_info(ident, conc, uncertainty):
+            return 1
+        self.update_cylinder_list()
 
+    def update_cylinder_info(self, identification, conc, uncertainty):        
+        if conc < 0 or conc > 1e6:
+            self.message_box(QMessageBox.Critical, "Error", 
+                "CH4 concentration is out of range!\nMin=0, Max=1e6.")
+            return False
+        if uncertainty < 0 or uncertainty > 100:
+            self.message_box(QMessageBox.Critical, "Error", 
+                "Concentration uncertainty is out of range!\nMin=0, Max=100.")
+            return False
+        self.cylinders[identification] = {"concentration": conc, "uncertainty": uncertainty}
+        self.cylinder_config[identification] = {"Concentration": str(conc), "Uncertainty": str(uncertainty), "Active": "True"}
+        return True
+   
     def exit_cylinder_setting(self):
         self.cylinder_config.write()    # write to file
         self.cylinder_frame.hide()
@@ -544,17 +574,12 @@ class H2O2Validation(H2O2ValidationFrame):
         if ret == QMessageBox.Ok:
             self.button_skip_step.hide()
             self.current_step += 1
-            self.button_next_step.setText("Create Report")
-            self.button_next_step.setStyleSheet("width: 110px")
+            self.button_next_step.setText("Create and Save Report")
+            self.button_next_step.setStyleSheet("width: 180px")
             self.display_instruction2.setText("Data collection is done. Ready to create report.")
         
     def next_step(self):
-        if self.current_step < len(validation_procedure) - 1:
-            if self.current_step == 0 and len(self.cylinders) == 0:
-                self.message_box(QMessageBox.Information, "Notice", 
-                    "Please enter infomation of all gas sources for validation.")
-                self.edit_cylinder()
-                return 0
+        if self.current_step < len(validation_procedure) - 1:            
             self.current_step += 1
             if self.current_step+1 in validation_steps:
                 self.cylinder_selection.show()                
@@ -599,6 +624,12 @@ class H2O2Validation(H2O2ValidationFrame):
             self.input_user_name.clear()
             self.input_password.clear()
             self.input_user_name.setFocus()
+        if not self.cylinder_reviewed:
+            self.cylinder_reviewed = True
+            if len(self.cylinders) == 0:
+                self.message_box(QMessageBox.Information, "Notice", 
+                    "Please enter infomation of all gas sources for validation.")
+            self.edit_cylinder()
     
     def cancel_process(self):
         msg = "Do you really want to abort validation process?"
@@ -770,11 +801,12 @@ class H2O2Validation(H2O2ValidationFrame):
         printer.setOutputFormat(QPrinter.PdfFormat)
         printer.setPaperSize(QPrinter.B4)
         folder_name = time.strftime("%Y%m%d_%H%M%S")
-        data_folder = os.path.join(self.curr_dir, folder_name)
+        data_folder = os.path.join(self.report_dir, folder_name)
         if not os.path.exists(data_folder):
             os.makedirs(data_folder)
         file_name = time.strftime("Validation_Report_%Y-%m-%d-%H-%M-%S.pdf")
-        printer.setOutputFileName(os.path.join(self.report_dir, folder_name, file_name))
+        report_path = os.path.join(self.report_dir, folder_name, file_name)
+        printer.setOutputFileName(report_path)
         doc = self.report.document()
         doc.setPageSize(QSizeF(printer.pageRect().size()))   #This is necessary if you want to hide the page number
         doc.print_(printer)        
@@ -788,10 +820,12 @@ class H2O2Validation(H2O2ValidationFrame):
                     for field in self.data_fields:
                         f.write(", %s" % (self.validation_data[step][field][idx]))
                     f.write("\n")
-        self.create_summary(os.path.join(folder_name, file_name))
+        self.create_summary(report_path)
         
     def exit_program(self):
-        self.close()
+        if self.message_box(QMessageBox.Question, "Question",
+            "Do you really want to exit program?", QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
+            self.close()
 
 HELP_STRING = """H2O2Validation.py [-c<FILENAME>] [-h|--help]
 
@@ -834,7 +868,9 @@ def handleCommandSwitches():
     return (configFile, simulation, no_login)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = H2O2Validation(*handleCommandSwitches())
-    window.show()
-    app.exec_()
+    userAdminApp = SingleInstance("H2O2Validation")
+    if not userAdminApp.alreadyrunning():
+        app = QApplication(sys.argv)
+        window = H2O2Validation(*handleCommandSwitches())
+        window.show()
+        app.exec_()
