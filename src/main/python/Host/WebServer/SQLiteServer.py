@@ -78,24 +78,32 @@ security = Security(app, user_datastore)
 @app.before_first_request
 def before_first_request():
     app_dir = os.path.realpath(os.path.dirname(__file__))
-    database_path = os.path.join(app_dir, "PicarroDataBase.sqlite")
+    database_path = os.path.join(app_dir, "PicarroDataBase.sqlite")      
     if not os.path.exists(database_path):
-        db.create_all()
-        # add some data into database
-        user_datastore.create_role(name='Admin')
-        user_datastore.create_role(name='Technician')
-        user_datastore.create_role(name='Operator')
-        admin = user_datastore.create_user(username='admin', \
-            password=utils.encrypt_password('admin'),
-            phone_number='1-408-555-3900')
-        user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
-        technician = user_datastore.create_user(username='tech',\
-            password=utils.encrypt_password('tech'))
-        user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
-        operator = user_datastore.create_user(username='operator', \
-            password=utils.encrypt_password('operator'))
-        user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
-        db.session.commit()
+        create_default_database()
+    else:
+        # if the database file is empty, kill it and create a new one
+        if os.stat(database_path).st_size < 100:
+            os.remove(database_path)
+            create_default_database()
+            
+def create_default_database():
+    db.create_all()
+    # add some data into database
+    user_datastore.create_role(name='Admin')
+    user_datastore.create_role(name='Technician')
+    user_datastore.create_role(name='Operator')
+    admin = user_datastore.create_user(username='admin', \
+        password=utils.encrypt_password('admin'),
+        phone_number='1-408-555-3900')
+    user_datastore.add_role_to_user(admin, user_datastore.find_role("Admin"))
+    technician = user_datastore.create_user(username='tech',\
+        password=utils.encrypt_password('tech'))
+    user_datastore.add_role_to_user(technician, user_datastore.find_role("Technician"))
+    operator = user_datastore.create_user(username='operator', \
+        password=utils.encrypt_password('operator'))
+    user_datastore.add_role_to_user(operator, user_datastore.find_role("Operator"))
+    db.session.commit()
 
 
 class SQLiteServer(object):

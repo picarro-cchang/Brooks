@@ -19,7 +19,7 @@ import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
-
+from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 import threading
 
@@ -156,7 +156,8 @@ class Four220Server(object):
                 for channel in self.channel_par:
                     channel_num = int(channel[-1])
                     #print "Channel:", channel, "channel_par:", self.channel_par[channel]
-                    if self.channel_par[channel]["SOURCE"] != 'None':
+
+                    if self.channel_par[channel]["SOURCE"] != 'Disabled':
                         self.con_max = float(self.channel_par[channel]["SOURCE_MAX"])
                         self.con_min = float(self.channel_par[channel]["SOURCE_MIN"])
                         try:
@@ -235,7 +236,8 @@ class Four220Server(object):
         self.channel_par = {}
         for s in self.config:
             if s.startswith("OUTPUT_CHANNEL"):
-                #if self.config[s]["SOURCE"] != 'None': 
+
+                #if self.config[s]["SOURCE"] != 'Disabled': 
                 print "here: " #self.config[s]
                 self.channel_par[s] = self.config[s]
                         #print "Please check configuration file. Make sure you set the SOURCE_MIN and SOURCE_MAX in", s

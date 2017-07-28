@@ -132,6 +132,7 @@ class BuildSI2000(Builder):
                 shutil.copyfile(f, dist_file)
 
     def compile_sources_to_pyo(self):
+        return # Don't build/deploy pyo files for SI2000 v1.0 (RSF)
         self.logger.info("Compiling python sources to pyo files")
         path = os.path.join(self.project.expand_path("$dir_dist"), "Host")
         self.run_command("python -O -m compileall -x '__init__.py' %s" % path)
@@ -267,7 +268,7 @@ Description: Picarro Host Software for Semiconductor Industry
             species = config_info[installer_type]['species']
             os.rename(dist_dir+".deb", 
                 os.path.join(resource_dir, 
-                    '%s_%s_%s_%s.deb' % (project.name, installer_type, species, raw_version) )
+                    '%s_%s_%s_%s_%s.deb' % (project.name, installer_type, species, raw_version, self.git_hash[:8]) )
                 )
 
 def get_dir_hash(root):

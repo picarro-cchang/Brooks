@@ -13,7 +13,7 @@ class ValveSequencerFrame(wx.Frame):
         self.lastNumSteps = 0
 
         #kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
-        kwds["style"] = wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
+        kwds["style"] = wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL|wx.RESIZE_BORDER
         wx.Frame.__init__(self, *args, **kwds)
 
         # The wx.ALWAYS_SHOW_SB option is broken in wxPython 3.0.0 on posix platforms.
