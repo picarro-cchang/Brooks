@@ -7,6 +7,9 @@ import Host.QuickGui.QuickGui as QuickGui
 from Host.WebServer.SQLiteServer import SQLiteServer
 from Host.WebServer.SQLiteServer import app as flask_app
 
+from teamcity import is_running_under_teamcity
+from teamcity.unittestpy import TeamcityTestRunner
+
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "QuickGui.ini")
 app = wx.App(False)
 
@@ -72,4 +75,9 @@ class TestQuickGui(unittest.TestCase):
         self.assertTrue("change password" in self.server.ds.action_model[-2].action)
 
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    if is_running_under_teamcity():
+        runner = TeamcityTestRunner()
+    else:
+        runner = unittest.TextTestRunner()
+    unittest.main(testRunner=runner)

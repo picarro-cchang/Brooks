@@ -12,6 +12,9 @@ from Host.WebServer.SQLiteServer import app as flask_app
 from Host.Utilities.H2O2ValidationWizard.H2O2Validation import H2O2Validation, validation_steps
 from Host.Utilities.BuildHelper.BuildHelper import isAnalyzerToBuild
 
+from teamcity import is_running_under_teamcity
+from teamcity.unittestpy import TeamcityTestRunner
+
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "H2O2Validation.ini")
 
 app = QApplication(sys.argv)
@@ -107,4 +110,9 @@ class TestH2O2Validation(unittest.TestCase):
         self.assertTrue("Measurement result is too far away" in self.message_box_content["msg"])
 
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    if is_running_under_teamcity():
+        runner = TeamcityTestRunner()
+    else:
+        runner = unittest.TextTestRunner()
+    unittest.main(testRunner=runner)

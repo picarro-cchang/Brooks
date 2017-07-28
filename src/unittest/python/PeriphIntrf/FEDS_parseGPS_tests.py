@@ -3,6 +3,9 @@ import unittest
 from PeripheralScriptTester import PeripheralScriptTester
 from Host.Utilities.BuildHelper.BuildHelper import isAnalyzerToBuild
 
+from teamcity import is_running_under_teamcity
+from teamcity.unittestpy import TeamcityTestRunner
+
 PARSEGPS_SCRIPT = os.path.abspath(r"./Config/FEDS/AppConfig/Scripts/PeriphIntrf/parseGPS.py")
 PARSEGPS_CONFIG = os.path.abspath(r"./Config/FEDS/InstrConfig/Config/PeriphIntrf/RunSerial2Socket.ini")
 
@@ -48,3 +51,11 @@ class TestRegularGPS(unittest.TestCase):
         self.assertTrue(gpsData[2:5] == [-1, -1, 1])
         gpsData = self.tester.runScript("$GPGGA,012346.67,12.345,N,123.456,W,1")
         self.assertTrue(gpsData[2:5] == [-1, -1, 1])
+
+if __name__ == '__main__':
+    #unittest.main()
+    if is_running_under_teamcity():
+        runner = TeamcityTestRunner()
+    else:
+        runner = unittest.TextTestRunner()
+    unittest.main(testRunner=runner)
