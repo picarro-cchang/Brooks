@@ -374,6 +374,9 @@ class H2O2Validation(H2O2ValidationFrame):
         if not self.update_cylinder_info(ident, conc, uncertainty):
             return 1
         self.update_cylinder_list()
+        payload = {"username": self.current_user["username"],
+                   "action": "H2O2Validation: add cylinder %s, CH4=%s, uncertainty=%s" % (ident, conc, uncertainty)}
+        self.send_request("post", "action", payload, use_token=True)
         self.add_cylinder_cancel()
 
     def update_cylinder_list(self):
@@ -396,15 +399,20 @@ class H2O2Validation(H2O2ValidationFrame):
         self.table_cylinder_list.selectRow(num_cylinder-1)
         self.select_cylinder_from_table()
 
-    def delete_cylinder(self):
+    def delete_cylinder(self):        
         indexes = self.table_cylinder_list.selectionModel().selectedRows()
         if len(indexes) > 0:
             cylinder = self.table_cylinder_list.item(indexes[0].row(), 0)
             if cylinder is not None:
                 ident = str(cylinder.text())
-                self.cylinders.pop(ident)
-                self.cylinder_config[ident]["Active"] = "False"
-                self.update_cylinder_list()
+                if self.message_box(QMessageBox.Question, "Delete Cylinder",
+                        "Delete %s?" % ident, QMessageBox.Ok | QMessageBox.Cancel) == QMessageBox.Ok:
+                    self.cylinders.pop(ident)
+                    self.cylinder_config[ident]["Active"] = "False"
+                    payload = {"username": self.current_user["username"],
+                        "action": "H2O2Validation: delete cylinder %s" % (ident)}
+                    self.send_request("post", "action", payload, use_token=True)
+                    self.update_cylinder_list()
 
     def update_cylinder(self):
         ident = str(self.label_cylinder_ident.text()).strip()
@@ -418,9 +426,15 @@ class H2O2Validation(H2O2ValidationFrame):
         except:
             self.message_box(QMessageBox.Critical, "Error", "Concentration uncertainty not valid!")
             return 1
-        if not self.update_cylinder_info(ident, conc, uncertainty):
-            return 1
-        self.update_cylinder_list()
+        ret = self.message_box(QMessageBox.Question, "Update Cylinder Info",
+            "Update %s?\nCH4=%s\nUncertainty=%s" % (ident, conc, uncertainty), QMessageBox.Ok | QMessageBox.Cancel)
+        if ret == QMessageBox.Ok: 
+            if not self.update_cylinder_info(ident, conc, uncertainty):
+                return 1
+            payload = {"username": self.current_user["username"],
+                "action": "H2O2Validation: update cylinder %s, CH4=%s, uncertainty=%s" % (ident, conc, uncertainty)}
+            self.send_request("post", "action", payload, use_token=True)
+            self.update_cylinder_list()
 
     def update_cylinder_info(self, identification, conc, uncertainty):        
         if conc < 0 or conc > 1e6:
@@ -526,6 +540,7 @@ class H2O2Validation(H2O2ValidationFrame):
                     else:
                         self.display_instruction2.setText("Click Next to continue.")
                     self.message_box(QMessageBox.Information, "Measurement Done", result_string)
+                    self.next_step()
                 
     def handle_measurement_error(self, step_name):
         # clear data collected in this step
@@ -554,12 +569,11 @@ class H2O2Validation(H2O2ValidationFrame):
         if deviation > deviation_limit:
             info = "Nominal concentration = %s\nAveraged CH4 concentration = %s\n" + \
                 "Measurement result is too far away from nominal concentration!\n" + \
-                "Click OK to run this step again.\nClick Cancel to ignore this error and proceed to next step."
+                "Click OK to run this step again."
             info = info % (nominal, average)
-            ret = self.message_box(QMessageBox.Critical, "Error", info, QMessageBox.Ok | QMessageBox.Cancel)
-            if ret == QMessageBox.Ok:
-                self.handle_measurement_error(step_name)
-                return 1
+            ret = self.message_box(QMessageBox.Critical, "Error", info)
+            self.handle_measurement_error(step_name)
+            return 1
         if std > std_limit:
             info = ("Standard deviation = %s\n" % std) + \
                 "Measurement data is too noisy\nPlease check analyzer."
@@ -612,11 +626,11 @@ class H2O2Validation(H2O2ValidationFrame):
             self.display_instruction.setText(validation_procedure[self.current_step][1])
         else:
             self.label_login_message.setText("""
+            <p>Measurement is done. Please login to sign and save the validation report.</p>
             <p>
                 <b>You are about to sign a record electronically. 
                 This is the legal equivalent of a traditional handwritten signature.</b>
-            </p>
-            <p>Please login to sign and save the validation report.</p>
+            </p>            
             """)
             self.top_frame.hide()
             self.wizard_frame.hide()
@@ -635,8 +649,7 @@ class H2O2Validation(H2O2ValidationFrame):
         msg = "Do you really want to abort validation process?"
         ret = self.message_box(QMessageBox.Question, "Stop Validation", msg, QMessageBox.Ok | QMessageBox.Cancel)
         if ret == QMessageBox.Ok:
-            payload = {"command": "save_action",
-                       "username": self.current_user["username"],
+            payload = {"username": self.current_user["username"],
                        "action": "Abort H2O2 validation"}
             self.send_request("post", "action", payload)
             self.close()
