@@ -110,7 +110,7 @@ class RingdownPanel(RingdownPanelGui):
                     waveforms["Ringdown"]["uncorrected"].Add(wavenumber, loss_u)
                     waveforms["Ringdown"]["corrected"].Add(wavenumber, loss_c)
             self.ringdownGraph.SetGraphProperties(xlabel='Wavenumber (1/cm)',
-                                                  timeAxes=(False,False),ylabel='Loss (ppm/cm)',grid=True,
+                                                  timeAxes=(False,False),
                                                   ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
@@ -138,7 +138,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio1 = data.ratio1
                     waveforms["Ringdown"]["uncorrected"].Add(ratio1/32768.0, loss_u)
                     waveforms["Ringdown"]["corrected"].Add(ratio1/32768.0, loss_c)
-            self.ringdownGraph.SetGraphProperties(xlabel='',
+            self.ringdownGraph.SetGraphProperties(
                                                   timeAxes=(False,False),xlabel='Ratio 1',ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
@@ -152,7 +152,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio2 = data.ratio2
                     waveforms["Ringdown"]["uncorrected"].Add(ratio2/32768.0, loss_u)
                     waveforms["Ringdown"]["corrected"].Add(ratio2/32768.0, loss_c)
-            self.ringdownGraph.SetGraphProperties(xlabel='',
+            self.ringdownGraph.SetGraphProperties(
                                                   timeAxes=(False,False),xlabel='Ratio 2',ylabel='Loss (ppm/cm)',grid=True,
                                                   frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
@@ -204,7 +204,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio1 = data.ratio1
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["tuner"].Add(ratio1/32768.0, data.tunerValue,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='',
+            self.ringdownGraph.SetGraphProperties(
             timeAxes=(False,False),xlabel='Ratio 1',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
@@ -216,7 +216,7 @@ class RingdownPanel(RingdownPanelGui):
                     ratio2 = data.ratio2
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["tuner"].Add(ratio2/32768.0, data.tunerValue,fillColours[vLaser])
-            self.ringdownGraph.SetGraphProperties(xlabel='',
+            self.ringdownGraph.SetGraphProperties(
             timeAxes=(False,False),xlabel='Ratio 2',ylabel='Tuner value',grid=True,
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
             backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
@@ -803,7 +803,7 @@ class StatsPanel(StatsPanelGui):
             grid=True,
             timeAxes=(False,False),
             frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
-            grid=True,backgroundColour=wx.SystemSettings_GetColour(
+            backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.waveNumberGraph.SetGraphProperties(
             xlabel='log10[Number of ringdowns]',
