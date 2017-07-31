@@ -1889,6 +1889,7 @@ class QuickGui(wx.Frame):
 
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
         dialog.Destroy()
+        self.shutdownButton.Enable(False)
 
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
