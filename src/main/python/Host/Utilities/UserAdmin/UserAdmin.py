@@ -91,6 +91,7 @@ class MainWindow(UserAdminFrame):
             self.user_admin_widget.hide()
             self.input_change_password.clear()
             self.input_change_password2.clear()
+            self.label_change_pwd_info.clear()
             self.change_password_widget.show()
             self.input_change_password.setFocus()
             self.action = "change_pwd_after_login"

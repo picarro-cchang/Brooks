@@ -179,6 +179,14 @@ class SQLiteServer(object):
                 return {"error": "Username and password do not match! Failed times: %s." % msg}
         else:
             return {"error": "Username and password do not match!"}
+
+    def check_phone_number(self, phone_str):
+        phone, ext = phone_str.split(",")
+        if len(phone) > 15:
+            return {"error": "Phone number is too long. Maximum length: 15."}
+        if len(ext) > 6:
+            return {"error": "Extension number is too long. Maximum length: 6."}
+        return {}
                       
     def log_in_user(self, username, password, requester, no_commit=False):
         user = self.ds.find_user(username=username)
@@ -211,9 +219,11 @@ class SQLiteServer(object):
         if not username or not request_dict["password"]:
             abort(406)
         if len(username) < 4:
-            return {"error": "Username too short! Minimum length: 4."}
+            return {"error": "Username is too short! Minimum length: 4."}
         if len(username) > 64:
-            return {"error": "Username too long! Maximum length: 64."}
+            return {"error": "Username is too long! Maximum length: 64."}
+        ret = self.check_phone_number(request_dict["phone_number"])
+        if ret: return ret
         user = self.ds.find_user(username=username)
         if user: # User already exists
             return {"error": "Username already exists!"}
@@ -235,7 +245,7 @@ class SQLiteServer(object):
         
     def change_user_password(self, username, password, new_password):
         if new_password is None:
-            return {"error": "New password not specified!"}
+            return {"error": "New password is not specified!"}
         # check password but not log in
         ret = self.log_in_user(username, password, "", no_commit=True)
         if "error" in ret:
@@ -273,7 +283,7 @@ class SQLiteServer(object):
             for role in request_roles:
                 if not user.has_role(self.ds.find_role(role)):
                     self.ds.add_role_to_user(user, self.ds.find_role(role))
-            self.save_action_history(current_user.username, "set %s roles to %s" % (username, request_dict["roles"]))
+            self.save_action_history(current_user.username, "set %s role to %s" % (username, request_dict["roles"]))
         self.ds.commit()
         return {"username": username}
            
