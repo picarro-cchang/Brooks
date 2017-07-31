@@ -231,7 +231,6 @@ class TestHealthMonitor(unittest.TestCase):
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
 
 if __name__ == '__main__':
-    #unittest.main()
     if is_running_under_teamcity():
         runner = TeamcityTestRunner()
     else:

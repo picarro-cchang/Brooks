@@ -151,7 +151,6 @@ class TestSQLiteServer(unittest.TestCase):
         self.assertFalse("error" in ret)
 
 if __name__ == '__main__':
-    #unittest.main()
     if is_running_under_teamcity():
         runner = TeamcityTestRunner()
     else:

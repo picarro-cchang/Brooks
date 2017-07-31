@@ -53,7 +53,6 @@ class TestRegularGPS(unittest.TestCase):
         self.assertTrue(gpsData[2:5] == [-1, -1, 1])
 
 if __name__ == '__main__':
-    #unittest.main()
     if is_running_under_teamcity():
         runner = TeamcityTestRunner()
     else:

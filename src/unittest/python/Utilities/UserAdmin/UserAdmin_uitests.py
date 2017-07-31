@@ -155,7 +155,6 @@ class TestUserAdmin(unittest.TestCase):
         self.assertTrue(p_pwd_lifetime.value == "1")
     
 if __name__ == '__main__':
-    #unittest.main()
     if is_running_under_teamcity():
         runner = TeamcityTestRunner()
     else:

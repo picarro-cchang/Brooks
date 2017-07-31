@@ -75,7 +75,6 @@ class TestQuickGui(unittest.TestCase):
         self.assertTrue("change password" in self.server.ds.action_model[-2].action)
 
 if __name__ == '__main__':
-    #unittest.main()
     if is_running_under_teamcity():
         runner = TeamcityTestRunner()
     else:
