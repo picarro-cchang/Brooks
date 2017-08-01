@@ -27,11 +27,13 @@ includeFolderList[16]="Host/SpectrumCollector"
 includeFolderList[17]="Host/Supervisor"
 includeFolderList[18]="Host/ValveSequencer" 
 
+number_of_running_process=0
+
 for includeFolder in "${includeFolderList[@]}"
 do
   working_Path=$dir_source_main_python/$includeFolder
   # we need to Cythonize python files from all above folder ecluding init, gui, setup and simulator files
-  # so lets find all intrested files and cleate list of all files
+  # so lets find all intrested files and create list of all files
   dirs=( $(find $working_Path -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "setup.py" ! -name "EventManagerGUI.py" ! -name "GuiTools.py" ! -name "GuiWidgets.py" ! -name "ValveSequencerSimulator.py") )
   
   #Now lets go over each file and one by one Cythonize intrested files
@@ -39,7 +41,7 @@ do
   do
     # Cythonize file in place
     # also create build folder containing all .o object files of files
-    if ! python "$git_directory/bldsup/setupForCython.py" build_ext --inplace --filename=$file_in_dir
+    if ! python "$git_directory/bldsup/setupForCython.py" build_ext --inplace --filename=$file_in_dir &
     then
       echo "***********************Error during Cythonizing file $file_in_dir******************"
       exit 1
@@ -56,7 +58,16 @@ do
       echo "Deleting file $c_File_Location"
       rm $c_File_Location
     fi
+    
+    if [ $number_of_running_process == 10 ]
+    then
+        number_of_running_process=0
+        wait
+    else
+        number_of_running_process=$((number_of_running_process + 1))
+        echo "****Number of Process Running : $number_of_running_process**********************"
+    fi
   done
 done
-
+wait
 rm -R build
