@@ -236,9 +236,8 @@ class H2O2Validation(H2O2ValidationFrame):
             # save data
             for field in self.data_fields:
                 self.validation_data[self.record_status][field].append(ydata[field])
-            self.validation_data[self.record_status]['time'].append(xdata)            
-            self.check_status(self.record_status)
-
+            self.validation_data[self.record_status]['time'].append(xdata)
+            
     def check_status(self, stage):        
         if self.check_status_variable(stage, "H2O", lambda x: x > self.water_conc_limit,
                 "Water concentration is too high!\nPlease check gas source!"):
@@ -509,7 +508,8 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.handle_measurement_error(stage)
             else:
                 self.measurement_progress.setValue(
-                    int((dt+self.wait_time_before_collection)*100/self.total_measurement_time))
+                    int((dt+self.wait_time_before_collection)*100/self.total_measurement_time))                
+                self.check_status(self.record_status) 
                 if dt >= self.data_collection_time:
                     # data collection is done
                     self.start_time = 0

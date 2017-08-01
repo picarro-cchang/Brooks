@@ -89,6 +89,8 @@ class SQLiteServer(object):
             level = 2
         elif "Operator" in roles:
             level = 1
+        else:
+            level = 0
         if requester == "UserAdmin" and level < 3:
             return {"error": "Permission denied. Only Admin users can log in."}
         elif requester == "H2O2Validation" and level < 2:
@@ -199,7 +201,8 @@ class SQLiteServer(object):
                     return {"user": user}
                 ret = self.check_password_age(username, password)
                 if ret: return ret
-                ret = self.check_login_requester(user.roles, requester)
+                roles = [role.name for role in user.roles]
+                ret = self.check_login_requester(roles, requester)
                 if ret: return ret
                 utils.login_user(user)
                 self.ds.commit()
@@ -208,7 +211,7 @@ class SQLiteServer(object):
                 return {"username":user.username,
                         "first_name":user.first_name,
                         "last_name":user.last_name,
-                        "roles":[role.name for role in user.roles],
+                        "roles":roles,
                         "token":user.get_auth_token()}
             else:
                 return self.check_user_login_attempts(username)

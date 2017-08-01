@@ -16,7 +16,7 @@ CONFIG_FILE = os.path.join(os.path.dirname(__file__), "H2O2Validation.ini")
 
 app = QApplication(sys.argv)
 
-#@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
+@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
 class TestH2O2Validation(unittest.TestCase):
     def setUp(self):
         self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False)
@@ -51,11 +51,11 @@ class TestH2O2Validation(unittest.TestCase):
             # validation
             next_button = self.wizard.button_next_step
             measurements = ["zero_air", "calibrant1", "calibrant2", "calibrant3"]
-            nominal_concentraion = [0, 2, 10, 100]
+            QTest.mouseClick(next_button, Qt.LeftButton)
+            QTest.mouseClick(self.wizard.button_exit_cylinder_setting, Qt.LeftButton)
             for step in range(4):
                 stage = measurements[step]
-                QTest.mouseClick(next_button, Qt.LeftButton)
-                QTest.mouseClick(next_button, Qt.LeftButton)
+                QTest.mouseClick(next_button, Qt.LeftButton)                
                 self.message_box_content["title"] = ""
                 self.assertTrue(validation_steps[self.wizard.current_step] == stage)
                 QTest.qWait(1500)   # data collection
@@ -74,9 +74,9 @@ class TestH2O2Validation(unittest.TestCase):
             self.assertTrue("Validation pass. Report created" in last_action)
             filename = last_action.split(":")[1]
             filename = os.path.join(self.wizard.curr_dir, filename.strip())
-            self.assertTrue(os.path.exists(filename))
+            self.assertTrue(os.path.exists(filename))   # check report
             data_file = os.path.join(os.path.split(filename)[0], "validation_data.csv")
-            self.assertTrue(os.path.exists(data_file))
+            self.assertTrue(os.path.exists(data_file))  # check data file
             shutil.rmtree(os.path.split(filename)[0]) 
 
         # clear mockito functions
