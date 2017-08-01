@@ -117,6 +117,7 @@ class H2O2Validation(H2O2ValidationFrame):
         self.start_time = 0
         self.record_status = ""
         self.cylinder_reviewed = False
+        self.system_ready = False
         self.zero_air_step = validation_steps.keys()[validation_steps.values().index("zero_air")]
         self.validation_data = {}   
         self.validation_results = {}
@@ -231,6 +232,7 @@ class H2O2Validation(H2O2ValidationFrame):
             time.sleep(self.update_period)            
             
     def process_data(self, xdata, ydata):
+        self.system_ready = True
         self.data_queue.put([xdata, ydata["CH4"], ydata["H2O2"], ydata["H2O"]])
         if len(self.record_status) > 0 and not self.record_status.startswith("error"):
             # save data
@@ -517,7 +519,7 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.record_status = ""
                     result_string = ""
                     # calculate averages
-                    if len(self.validation_data[stage]["CH4"]) > 0:
+                    if len(self.validation_data[stage]["CH4"]) > 5:
                         avg = np.average(self.validation_data[stage]["CH4"])
                         nominal = self.validation_results[stage+"_nominal"]
                         std = np.std(self.validation_data[stage]["CH4"])
@@ -527,6 +529,13 @@ class H2O2Validation(H2O2ValidationFrame):
                         self.validation_results["%s_ch4_sd" % stage] = std
                         self.validation_results["%s_ch4_diff" % stage] = avg - nominal
                         result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_ch4_mean"])
+                    else:
+                        self.message_box(QMessageBox.Critical, "Error",
+                            """<h3>Not enough data points collected!</h3>
+                               <p>Please check the analyzer.</p>
+                            """)
+                        self.handle_measurement_error(stage)
+                        return 1
                     if len(self.validation_data[stage]["H2O2"]) > 0:
                         self.validation_results["%s_h2o2_mean" % stage] = np.average(self.validation_data[stage]["H2O2"])
                         result_string += "Average H2O2 = %.3f ppb. " % (self.validation_results["%s_h2o2_mean" % stage])
@@ -591,8 +600,33 @@ class H2O2Validation(H2O2ValidationFrame):
             self.button_next_step.setText("Create and Save Report")
             self.button_next_step.setStyleSheet("width: 180px")
             self.display_instruction2.setText("Data collection is done. Ready to create report.")
+
+    def last_step(self):        
+        if self.current_step in validation_steps:
+            info = """<h3>Do you really want to go back to last step?</h3>
+                <p>Data collected in this step will be cleared if go back to last step.</p>
+            """
+            ret = self.message_box(QMessageBox.Question, "Go Back", info, QMessageBox.Ok | QMessageBox.Cancel)
+            if ret == QMessageBox.Ok:
+                self.start_time = 0
+                self.record_status = ""
+                self.handle_measurement_error(validation_steps[self.current_step])
+        elif self.current_step-1 in validation_steps:
+            stage = validation_steps[self.current_step-1]
+            info = """<h3>Do you really want to go back to last step?</h3>
+                <p>This will go back to beginning of %s measurement and data collected for %s will be clearred.</p>
+            """ % (stage, stage)
+            ret = self.message_box(QMessageBox.Question, "Go Back", info, QMessageBox.Ok | QMessageBox.Cancel)
+            if ret == QMessageBox.Ok:
+                self.current_step -= 1
+                self.handle_measurement_error(stage)
+        elif self.current_step == 1:
+            self.current_step = -1
+            self.next_step()
+            self.cylinder_selection.hide()
+            self.button_last_step.setEnabled(False)
         
-    def next_step(self):
+    def next_step(self):        
         if self.current_step < len(validation_procedure) - 1:            
             self.current_step += 1
             if self.current_step+1 in validation_steps:
@@ -606,6 +640,14 @@ class H2O2Validation(H2O2ValidationFrame):
                 cylinder = str(self.select_cylinder.currentText()).split(":")[0]
                 if cylinder == "":
                     self.message_box(QMessageBox.Critical, "Error", "Please select a cylinder!")
+                    self.current_step -= 1
+                    return 1
+                elif not self.system_ready:
+                    self.message_box(QMessageBox.Critical, "Error",
+                        """<h2>System is NOT ready for measurement!</h2>
+                           <p>System may still be warming up. Please start measurement after CH4 concentration is 
+                           already displayed on the top-left corner of this program.</p>
+                        """)
                     self.current_step -= 1
                     return 1
                 concentration = self.cylinders[cylinder]["concentration"]
@@ -624,6 +666,7 @@ class H2O2Validation(H2O2ValidationFrame):
                 self.start_time = time.time()
             self.display_caption.setText(validation_procedure[self.current_step][0]) 
             self.display_instruction.setText(validation_procedure[self.current_step][1])
+            self.button_last_step.setEnabled(True)
         else:
             self.label_login_message.setText("""
             <p>Measurement is done. Please login to sign and save the validation report.</p>

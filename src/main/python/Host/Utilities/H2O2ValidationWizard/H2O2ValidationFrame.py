@@ -103,11 +103,14 @@ class H2O2ValidationFrame(QMainWindow):
         # control buttons
         self.button_skip_step = QPushButton("Skip")
         self.button_skip_step.hide()
+        self.button_last_step = QPushButton("Back")
+        self.button_last_step.setEnabled(False)
         self.button_next_step = QPushButton("Next")
-        self.button_cancel_process = QPushButton("Cancel")
+        self.button_cancel_process = QPushButton("Abort")
         button_layout = QHBoxLayout()
         button_layout.addStretch(1)
         button_layout.addWidget(self.button_skip_step)
+        button_layout.addWidget(self.button_last_step)
         button_layout.addWidget(self.button_next_step)
         button_layout.addWidget(self.button_cancel_process)
         
@@ -261,6 +264,7 @@ class H2O2ValidationFrame(QMainWindow):
     def set_connections(self):
         self.measurement_timer.timeout.connect(self.measurement)
         self.button_skip_step.clicked.connect(self.skip_step)
+        self.button_last_step.clicked.connect(self.last_step)
         self.button_next_step.clicked.connect(self.next_step)
         self.button_cancel_process.clicked.connect(self.cancel_process)
         self.button_exit.clicked.connect(self.exit_program)

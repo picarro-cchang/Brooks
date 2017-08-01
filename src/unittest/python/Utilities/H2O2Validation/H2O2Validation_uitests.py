@@ -106,5 +106,32 @@ class TestH2O2Validation(unittest.TestCase):
         QTest.qWait(1500)   # data collection
         self.assertTrue("Measurement result is too far away" in self.message_box_content["msg"])
 
+    def test_go_back_measurement(self):
+        self.bypass_login_screen()
+        next_button = self.wizard.button_next_step
+        back_button = self.wizard.button_last_step
+        # test1: go back from the first page after introduction
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 1)
+        QTest.mouseClick(back_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 0)
+        # test2: go back in the middle of measurement
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 2)
+        QTest.qWait(500)
+        QTest.mouseClick(back_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 1)
+        self.assertTrue(len(self.wizard.validation_data['zero_air']['CH4']) == 0)
+        self.assertTrue(len(self.wizard.cylinder_used) == 0)
+        # test3: go back in the preparation step of calibrant1
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        QTest.qWait(1500)   # data collection
+        self.assertTrue(self.wizard.current_step == 3)
+        self.assertTrue(len(self.wizard.validation_data['zero_air']['CH4']) > 0)
+        QTest.mouseClick(back_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 1)
+        self.assertTrue(len(self.wizard.validation_data['zero_air']['CH4']) == 0)
+
 if __name__ == '__main__':
     unittest.main()
