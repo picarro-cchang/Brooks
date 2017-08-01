@@ -1889,6 +1889,8 @@ class QuickGui(wx.Frame):
 
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
         dialog.Destroy()
+        payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
+        self.sendRequest("post", "action", payload, useToken=True)
         self.shutdownButton.Enable(False)
 
     def OnResetBuffers(self,evt):
@@ -2476,7 +2478,7 @@ class QuickGui(wx.Frame):
         useToken: set to True if the api requires token for authentication
         """
         if useToken:
-            header = {'Authentication': self.current_user["token"]}
+            header = {'Authentication': self.currentUser["token"]}
         else:
             header = {}
         actionFunc = getattr(self.hostSession, action)
@@ -2525,6 +2527,7 @@ class QuickGui(wx.Frame):
                                 break
                     elif "roles" in returnDict:
                         self.userLevel = self.userLevelMap[returnDict["roles"][0]]
+                        self.currentUser = returnDict
                         d = Dialog.OKDialog(self,"\t%s logged in." % (returnDict["roles"][0]),None,-1,"") 
                         #update GUI
                         self.modifyInterface()
