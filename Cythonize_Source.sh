@@ -59,13 +59,12 @@ do
       rm $c_File_Location
     fi
     
-    if [ $number_of_running_process == 10 ]
+    if [ $number_of_running_process == 12 ]
     then
         number_of_running_process=0
         wait
     else
         number_of_running_process=$((number_of_running_process + 1))
-        echo "****Number of Process Running : $number_of_running_process**********************"
     fi
   done
 done
