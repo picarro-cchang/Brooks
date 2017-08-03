@@ -6,7 +6,7 @@ export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
 
 if [ $# -lt 1 ] 
 then
-    echo "Invalid argument please pass one argument"
+    echo "Invalid argument please pass version number as argument"
     exit 1
 fi
 

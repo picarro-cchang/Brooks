@@ -6,7 +6,7 @@ export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
 
 if [ $# -lt 3 ] 
 then
-    echo "Invalid argument please pass three arguments, 1: build number (Like 1.0.0.0) 2: installer type (Like NDDS) 3: Git hash number"
+    echo -e "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: installer type (Like NDDS)\n  3: Git hash number"
     exit 1
 fi
 
@@ -120,7 +120,7 @@ cp -R "$git_app_config_directory/." $dist_app_config_directory
 
 # make control file
 cat <<EOM > "$debian_directory/control"
-Package: I2000
+Package: $project_name
 Version: $raw_version
 Section: science
 Priority: required
