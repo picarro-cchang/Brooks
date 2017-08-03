@@ -1465,7 +1465,8 @@ class QuickGui(wx.Frame):
         eventLogBoxSizer.Add(self.eventViewControl,1, wx.EXPAND|wx.ALL)
 
         statusBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
-        statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
+        if self.config.getboolean("UserLogBox", "Enable", True):
+            statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
         statusBoxSizer.Add(eventLogBoxSizer,proportion=1, flag=wx.EXPAND|wx.ALL)
 
         # Define the data selection tools
