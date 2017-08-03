@@ -146,7 +146,7 @@ class SQLiteServer(object):
         length = self.system_varialbes["password_length"]
         if length >= 0 and len(password) < length:
             return {"error": "Password is too short! Minimum length: %d" % length}
-        if length > 15:
+        if len(password) > 15:
             return {"error": "Password is too long! Maximum length: 15."}
         return {}    # no error
         
@@ -183,10 +183,10 @@ class SQLiteServer(object):
             return {"error": "Username and password do not match!"}
 
     def check_phone_number(self, phone_str):
-        phone, ext = phone_str.split(",")
-        if len(phone) > 15:
+        phone_ext = phone_str.split(",")
+        if len(phone_ext[0]) > 15:
             return {"error": "Phone number is too long. Maximum length: 15."}
-        if len(ext) > 6:
+        if len(phone_ext) == 2 and len(phone_ext[1]) > 6:
             return {"error": "Extension number is too long. Maximum length: 6."}
         return {}
                       

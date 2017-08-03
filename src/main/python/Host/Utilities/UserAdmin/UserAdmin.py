@@ -107,7 +107,7 @@ class MainWindow(UserAdminFrame):
 
     def change_user_role(self, role):
         if self.selected_user["username"] == self.current_user["username"]:
-            self.message_box(QMessageBox.Critical, "Error", "For safty reason, it is NOT allowed to change you own role!")
+            self.message_box(QMessageBox.Critical, "Error", "For safety reason, it is NOT allowed to change your own role!")
             return
         if role in self.selected_user["roles"]:
             return

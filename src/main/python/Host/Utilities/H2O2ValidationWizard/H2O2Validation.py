@@ -527,7 +527,8 @@ class H2O2Validation(H2O2ValidationFrame):
                             return 1
                         self.validation_results["%s_ch4_mean" % stage] = avg
                         self.validation_results["%s_ch4_sd" % stage] = std
-                        self.validation_results["%s_ch4_diff" % stage] = avg - nominal
+                        self.validation_results["%s_ch4_diff" % stage] = abs(avg - nominal)*100.0/nominal \
+                             if nominal > 1e-6 else 'N/A'
                         result_string += "Average CH4 = %.3f ppm. " % (self.validation_results[stage+"_ch4_mean"])
                     else:
                         self.message_box(QMessageBox.Critical, "Error",
@@ -809,6 +810,15 @@ class H2O2Validation(H2O2ValidationFrame):
         else:
             self.report_status["color_zero_h2o2"] = 'green'
             self.validation_results["status_zero_h2o2"] = "<font color='green'>Pass</font>"
+        diffs = [self.validation_results[k] for k in self.validation_results \
+            if k.endswith("_ch4_diff") and k.startswith("calibrant")]
+        self.validation_results["max_ch4_deviation"] = max(diffs)
+        if self.validation_results["max_ch4_deviation"] > 5:
+            self.report_status["color_ch4_deviation"] = 'red'
+            self.validation_results["status_ch4_deviation"] = "<font color='red'>Fail</font>"
+        else:
+            self.report_status["color_ch4_deviation"] = 'green'
+            self.validation_results["status_ch4_deviation"] = "<font color='green'>Pass</font>"
 
     def create_summary(self, report_path):
         results = """
@@ -817,9 +827,12 @@ class H2O2Validation(H2O2ValidationFrame):
                 Zero H<sub>2</sub>O<sub>2</sub> = %.2f (Accepted range: [-5, 10])</font></li>
             <li><font color='{color_ch4_slope}'>
                 CH<sub>4</sub> slope = %.6f (Accepted range: [0.95, 1.05])</font></li>
+            <li><font color='{color_ch4_deviation}'>
+                Max CH<sub>4</sub> deviation = %.2f (Accepted range: [0, 5])</font></li>
         </ul>
         """ % (self.validation_results["h2o2_equivalent"],
-               self.validation_results["ch4_slope"])
+               self.validation_results["ch4_slope"],
+               self.validation_results["max_ch4_deviation"])
         for k in self.report_status:
             results = results.replace("{%s}" % k, self.report_status[k])
         if "color='red'" in results:
