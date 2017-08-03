@@ -145,7 +145,7 @@ if _DATA_["species"] == 2:
         _NEW_DATA_["NH3_uncorrected"] = _OLD_DATA_["NH3_uncorrected"][-1].value
         _NEW_DATA_["NH3_broadeningCorrected"] = _OLD_DATA_["NH3_broadeningCorrected"][-1].value
         _NEW_DATA_["NH3_dry"] = _OLD_DATA_["NH3_dry"][-1].value
-        _NEW_DATA_["NH3_raw"] = _OLD_DATA_["NH3_Raw"][-1].value
+        #_NEW_DATA_["NH3_raw"] = _OLD_DATA_["NH3_Raw"][-1].value
         _NEW_DATA_["NH3_30s"] = _OLD_DATA_["NH3_30s"][-1].value
         _NEW_DATA_["NH3_2min"] = _OLD_DATA_["NH3_2min"][-1].value
         _NEW_DATA_["NH3_5min"] = _OLD_DATA_["NH3_5min"][-1].value

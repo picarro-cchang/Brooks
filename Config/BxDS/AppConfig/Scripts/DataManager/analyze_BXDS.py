@@ -104,7 +104,7 @@ else:
 H2S = (_INSTR_["h2s_conc_slope"],_INSTR_["h2s_conc_intercept"])
 CH4 = (_INSTR_["ch4_conc_slope"],_INSTR_["ch4_conc_intercept"])
 H2O = (_INSTR_["h2o_conc_slope"],_INSTR_["h2o_conc_intercept"])
-
+CO2 = (_INSTR_["co2_conc_slope"],_INSTR_["co2_conc_intercept"])
 try:
     if _DATA_["SpectrumID"] == 125:
         h2s_raw = applyLinear(_DATA_["f_h2s_peak_ppbv"],H2S)
@@ -147,7 +147,7 @@ try:
     #ch4_conc = applyLinear(_DATA_["ch4_conc_ppmv_final"],CH4)
     _NEW_DATA_["HDO_ref"] = _DATA_["h2o_from_h2s"] #applyLinear(_DATA_["h2o_from_h2s"],H2O)
     #print _DATA_["h2o_from_h2s"]
-    _NEW_DATA_["CO2"] = _DATA_["co2_ppmv"]
+    _NEW_DATA_["CO2"] = applyLinear(_DATA_["co2_ppmv"],CO2) 
 
 
 except:

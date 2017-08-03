@@ -55,13 +55,13 @@ def autoCorr2(f,l,df):
     return (2.0*s0*df,2.0*s1*df)
 
 if INIT:
-    fname = os.path.join(BASEPATH,r"./spectral library v1_045_AADS12_E2 0219.ini")
+    fname = os.path.join(BASEPATH,r"./spectral library v1_045_AXDS12_E2 0219.ini")
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
 
     analysis = []
-    analysis.append(Analysis(os.path.join(BASEPATH,r"./AEDS-xx baseline ripple.ini")))
+    analysis.append(Analysis(os.path.join(BASEPATH,r"./AXDS-xx baseline ripple.ini")))
 
     oname = os.path.join(BASEPATH,time.strftime("FitterOutput.dat",time.localtime()))
     file(oname,"wb").close()

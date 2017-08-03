@@ -9,7 +9,7 @@ import time
 tstart = time.clock()
 
 if INIT:
-    fname = os.path.join(BASEPATH,r"./BCDS/spectral library H2S pressure cal.ini")
+    fname = os.path.join(BASEPATH,r"./BXDS/spectral library H2S pressure cal.ini")
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
@@ -18,7 +18,7 @@ if INIT:
     #locals().update(instrParams)
 
     anCO2 = []
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/H2S_PressureCal_v1.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/H2S_PressureCal_v1.ini")))
     lastShift = None
 
 init = InitialValues()

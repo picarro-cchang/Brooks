@@ -24,13 +24,13 @@ def fitQuality(sdFit,maxPeak,normPeak,sdTau):
     return numpy.sqrt(sdFit**2/((maxPeak/normPeak)**2 + sdTau**2))
 
 if INIT:
-    fname = os.path.join(BASEPATH,r"./spectral library v1_045_AADS12_E2 0219.ini")
+    fname = os.path.join(BASEPATH,r"./spectral library v1_045_AXDS12_E2 0219.ini")
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
 
     analysis = []
-    analysis.append(Analysis(os.path.join(BASEPATH,r"./AEDS-xx baseline ripple.ini")))
+    analysis.append(Analysis(os.path.join(BASEPATH,r"./AXDS-xx baseline ripple.ini")))
 
     oname = os.path.join(BASEPATH,time.strftime("FitterOutput.dat",time.localtime()))
     file(oname,"wb").close()

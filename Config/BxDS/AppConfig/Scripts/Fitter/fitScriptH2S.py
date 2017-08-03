@@ -72,9 +72,9 @@ if INIT:
     instrParams = getInstrParams(fname)
 
     anH2S = []
-    anH2S.append(Analysis(os.path.join(BASEPATH,r"./BCDS/BCDS-xx Spline VC NH3 v1_1.ini")))
-    anH2S.append(Analysis(os.path.join(BASEPATH,r"./BCDS/BCDS-xx Spline FC NH3 v1_1.ini")))
-    anH2S.append(Analysis(os.path.join(BASEPATH,r"./BCDS/BCDS-xx Spline 9-point NH3 v1_1.ini")))
+    anH2S.append(Analysis(os.path.join(BASEPATH,r"./BXDS/BXDS-xx Spline VC NH3 v1_1.ini")))
+    anH2S.append(Analysis(os.path.join(BASEPATH,r"./BXDS/BXDS-xx Spline FC NH3 v1_1.ini")))
+    anH2S.append(Analysis(os.path.join(BASEPATH,r"./BXDS/BXDS-xx Spline 9-point NH3 v1_1.ini")))
 
     #  Globals
 

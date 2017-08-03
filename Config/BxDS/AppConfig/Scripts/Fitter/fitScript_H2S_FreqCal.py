@@ -6,25 +6,25 @@ from numpy import arange, mean, std, sqrt, digitize, polyfit
 import os.path
 
 if INIT:
-    fname = os.path.join(BASEPATH,r"./BCDS/spectral library CO2_comb_6350 v1_1.ini")
+    fname = os.path.join(BASEPATH,r"./BXDS/spectral library CO2_comb_6350 v1_1.ini")
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
 
     anCO2 = []
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_P8.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_P6.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_P4.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_P2.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R0.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R2.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R4.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R6.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R8.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R10.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R12.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R14.ini")))
-    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BCDS/FSR_R16.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_P8.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_P6.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_P4.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_P2.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R0.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R2.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R4.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R6.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R8.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R10.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R12.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R14.ini")))
+    anCO2.append(Analysis(os.path.join(BASEPATH,r"./BXDS/FSR_R16.ini")))
 
     out = file("FSR_calibration.txt","w")
 
