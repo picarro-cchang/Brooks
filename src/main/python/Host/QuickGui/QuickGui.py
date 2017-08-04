@@ -1887,12 +1887,11 @@ class QuickGui(wx.Frame):
                 self.setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
-
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
-        dialog.Destroy()
-        payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
-        self.sendRequest("post", "action", payload, useToken=True)
-        self.shutdownButton.Enable(False)
+            payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
+            self.sendRequest("post", "action", payload, useToken=True)
+            self.shutdownButton.Enable(False)
+        dialog.Destroy()        
 
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
