@@ -2526,6 +2526,8 @@ class QuickGui(wx.Frame):
                             msg = self.OnChangePwd(user, pwd)
                             if len(msg) == "":
                                 break
+                        elif "HTTPConnection" in msg:
+                            msg = "Unable to connect database server!"
                     elif "roles" in returnDict:
                         self.userLevel = self.userLevelMap[returnDict["roles"][0]]
                         self.currentUser = returnDict

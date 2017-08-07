@@ -315,7 +315,11 @@ class H2O2Validation(H2O2ValidationFrame):
             msg = "Password already expires!\nPlease use QuickGUI or other programs to change password."
             self.label_login_info.setText(msg)
         else:
-            self.label_login_info.setText(return_dict["error"])
+            if "HTTPConnection" in return_dict["error"]:
+                msg = "Unable to connect database server!"
+            else:
+                msg = return_dict["error"]
+            self.label_login_info.setText(msg)
             
     def cancel_login(self):
         if not hasattr(self, "current_user"):   # first-time login
@@ -890,6 +894,12 @@ class H2O2Validation(H2O2ValidationFrame):
                         f.write(", %s" % (self.validation_data[step][field][idx]))
                     f.write("\n")
         self.create_summary(report_path)
+
+    def download_report(self):
+        cmd = self.config.get("Setup", "File_Manager_Cmd", "")
+        if len(cmd) > 0:
+            from subprocess import Popen
+            Popen(cmd.split())
         
     def exit_program(self):
         if self.message_box(QMessageBox.Question, "Question",

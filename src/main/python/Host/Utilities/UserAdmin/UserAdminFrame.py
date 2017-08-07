@@ -240,6 +240,8 @@ class UserAdminFrame(QMainWindow):
         self.button_next_history.setEnabled(False)
         self.button_save_history = QPushButton("Save")
         self.button_save_history.clicked.connect(self.save_history)
+        self.button_download_history = QPushButton("Download")
+        self.button_download_history.clicked.connect(self.download_file)
         self.button_refresh_history = QPushButton("Refresh")
         self.button_refresh_history.clicked.connect(self.get_history)
         action_history_layout.addWidget(self.label_action_history)
@@ -249,9 +251,10 @@ class UserAdminFrame(QMainWindow):
         button_line1.addStretch(1)
         action_history_layout.addLayout(button_line1)
         button_line2 = QHBoxLayout()
-        button_line2.addStretch(1)
-        button_line2.addWidget(self.button_save_history)
+        button_line2.addStretch(1)        
         button_line2.addWidget(self.button_refresh_history)
+        button_line2.addWidget(self.button_save_history)
+        button_line2.addWidget(self.button_download_history)
         action_history_layout.addLayout(button_line2)
 
         # Add new user

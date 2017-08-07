@@ -226,6 +226,11 @@ class MainWindow(UserAdminFrame):
             user["employee_id"], user["phone_number"], ",".join(user["roles"]))
         self.label_user_info.setText(user_info)
 
+    def download_file(self):
+        if self.file_manager_cmd:
+            from subprocess import Popen
+            Popen(self.file_manager_cmd.split())
+
     def get_role_list(self):
         payload = {'command': "get_roles"}
         ret = self.send_request("get", "users", payload, use_token=True, show_error=True)
@@ -281,6 +286,7 @@ class MainWindow(UserAdminFrame):
         self.output_folder = self.config.get("Setup", "Output_Folder", ".")
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
+        self.file_manager_cmd = self.config.get("Setup", "File_Manager_Cmd", "")
 
     def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
         msg_box = QMessageBox(icon, title, message, buttons, self)
@@ -493,7 +499,11 @@ class MainWindow(UserAdminFrame):
             self.label_change_pwd_info.setText("Password expires! Please change your password.")
             self.action = "change_expired_pwd"
         else:
-            self.label_login_info.setText(return_dict["error"])
+            if "HTTPConnection" in return_dict["error"]:
+                msg = "Unable to connect database server!"
+            else:
+                msg = return_dict["error"]
+            self.label_login_info.setText(msg)
             self.input_password.clear()
             
     def user_log_off(self):
