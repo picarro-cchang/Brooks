@@ -2490,7 +2490,8 @@ class QuickGui(wx.Frame):
 
     def getSystemVariables(self):
         returnDict = self.sendRequest("get", "system", {'command':'get_all_variables'})
-        self.sessionLifeTime = int(returnDict["user_session_lifetime"]) * 60
+        lifetime = int(returnDict["user_session_lifetime"])
+        self.sessionLifeTime =  lifetime * 60 if lifetime >= 0 else float('inf')
 
     def OnLoginUser(self,e):
         # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 

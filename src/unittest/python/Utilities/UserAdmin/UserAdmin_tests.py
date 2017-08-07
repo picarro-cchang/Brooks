@@ -97,8 +97,8 @@ class TestUserAdmin(unittest.TestCase):
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
         self.assertTrue("Password is too short" in self.message_box_content["msg"])
         # test2: correct input
-        self.interface.input_new_password.setText("Extreme_Science!")
-        self.interface.input_new_password2.setText("Extreme_Science!")
+        self.interface.input_new_password.setText("Extreme_Science")
+        self.interface.input_new_password2.setText("Extreme_Science")
         QTest.mouseClick(self.interface.button_add_user_next, Qt.LeftButton)
         self.assertTrue("Password is updated" in self.message_box_content["msg"])
         self.assertTrue(("change %s password" % username) in self.server.ds.action_model[-1].action)
@@ -123,15 +123,15 @@ class TestUserAdmin(unittest.TestCase):
         self.server.ds.save_user_password("admin", "admin", created_time=datetime(1969,7,20,20,18,0,0))
         self.login_user("admin", "admin")
         self.assertTrue("Password expires" in self.interface.label_change_pwd_info.text())
-        self.interface.input_change_password.setText("Extreme_Science!")
-        self.interface.input_change_password2.setText("Extreme_Science!")
+        self.interface.input_change_password.setText("Extreme_Science")
+        self.interface.input_change_password2.setText("Extreme_Science")
         QTest.mouseClick(self.interface.button_change_user_pwd, Qt.LeftButton)
         self.assertTrue("change password" in self.server.ds.action_model[-1].action)
         # try to log in using old pwd
         self.login_user("admin", "admin")
         self.assertTrue("Username and password do not match" in self.interface.label_login_info.text())
         # login using the new pwd
-        self.login_user("admin", "Extreme_Science!")
+        self.login_user("admin", "Extreme_Science")
         self.assertTrue(self.interface.table_user_list.rowCount() == 3) # user list is populated after login
 
     def test_change_system_variable(self):
