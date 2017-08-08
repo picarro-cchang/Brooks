@@ -159,7 +159,9 @@ class H2O2Validation(H2O2ValidationFrame):
         self.wait_time_before_collection = self.config.getint("Setup", "Wait_Time_before_Data_Collection")
         self.data_collection_time = self.config.getint("Setup", "Data_Collection_Time")
         self.total_measurement_time = self.wait_time_before_collection + self.data_collection_time
-        self.allow_skip_calibrant3 = self.config.getboolean("Setup", "Allow_Skip_Calibrant3")
+        # Determine whether or not calibrant3 can be skipped.
+        # Disable this option to force users measure 3 calibrants. 
+        self.allow_skip_calibrant3 = False  #self.config.getboolean("Setup", "Allow_Skip_Calibrant3")
         self.report_dir = self.config.get("Setup", "Report_Directory")
         if not os.path.isabs(self.report_dir):
             self.report_dir = os.path.join(self.curr_dir, self.report_dir)
@@ -548,8 +550,7 @@ class H2O2Validation(H2O2ValidationFrame):
                     self.button_next_step.setEnabled(True)
                     self.measurement_progress.hide()
                     if self.current_step == len(validation_procedure) - 1:
-                        self.button_next_step.setText("Create and Save Report")
-                        self.button_next_step.setStyleSheet("width: 180px")
+                        self.button_next_step.hide()
                         self.display_instruction2.setText("Data collection is done. Ready to create and save report.")
                     else:
                         self.display_instruction2.setText("Click Next to continue.")
@@ -602,9 +603,8 @@ class H2O2Validation(H2O2ValidationFrame):
         if ret == QMessageBox.Ok:
             self.button_skip_step.hide()
             self.current_step += 1
-            self.button_next_step.setText("Create and Save Report")
-            self.button_next_step.setStyleSheet("width: 180px")
-            self.display_instruction2.setText("Data collection is done. Ready to create report.")
+            self.button_next_step.hide()
+            self.next_step()
 
     def last_step(self):        
         if self.current_step in validation_steps:

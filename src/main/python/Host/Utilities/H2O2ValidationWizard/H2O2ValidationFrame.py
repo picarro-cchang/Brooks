@@ -273,7 +273,7 @@ class H2O2ValidationFrame(QMainWindow):
         self.button_next_step.clicked.connect(self.next_step)
         self.button_cancel_process.clicked.connect(self.cancel_process)
         self.button_exit.clicked.connect(self.exit_program)
-        self.button_report_file.connect(self.download_report)
+        self.button_report_file.clicked.connect(self.download_report)
         self.input_password.returnPressed.connect(self.user_login)
         self.button_user_login.clicked.connect(self.user_login)
         self.button_cancel_login.clicked.connect(self.cancel_login)
