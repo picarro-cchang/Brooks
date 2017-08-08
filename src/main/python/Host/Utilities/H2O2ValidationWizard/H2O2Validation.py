@@ -146,6 +146,8 @@ class H2O2Validation(H2O2ValidationFrame):
     def load_config(self):
         self.cylinders = {}
         self.cylinder_list_file = self.config.get("Setup", "Cylinder_List")
+        if not os.path.isabs(self.cylinder_list_file):
+            self.cylinder_list_file = os.path.join(self.curr_dir, self.cylinder_list_file)
         if not os.path.exists(self.cylinder_list_file):
             open(self.cylinder_list_file, 'w').close()
         self.cylinder_config = CustomConfigObj(self.cylinder_list_file)
@@ -897,6 +899,7 @@ class H2O2Validation(H2O2ValidationFrame):
 
     def download_report(self):
         cmd = self.config.get("Setup", "File_Manager_Cmd", "")
+        cmd += self.config.get("Setup", "File_Manager_Args", "")
         if len(cmd) > 0:
             from subprocess import Popen
             Popen(cmd.split())
