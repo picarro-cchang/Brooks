@@ -258,6 +258,7 @@ Description: Picarro Host Software for Industry Application
                 shutil.rmtree(bin_folder_target)
             if os.path.exists(bin_folder_source):
                 shutil.copytree(bin_folder_source, bin_folder_target)
+                os.system("chmod -R 755 %s" % bin_folder_target)
             # make control file
             self.make_control_file(debian_dir, installer_type)
             logger.info('Project version: %s' % project.version)
