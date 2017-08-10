@@ -185,7 +185,7 @@ class SQLiteServer(object):
     def check_phone_number(self, phone_str):
         if phone_str:
             phone_ext = phone_str.split(",")
-            if len(phone_ext[0]) > 15:
+            if len(phone_ext[0]) > 20:
                 return {"error": "Phone number is too long. Maximum length: 15."}
             if len(phone_ext) == 2 and len(phone_ext[1]) > 6:
                 return {"error": "Extension number is too long. Maximum length: 6."}
