@@ -899,7 +899,7 @@ class H2O2Validation(H2O2ValidationFrame):
 
     def download_report(self):
         cmd = self.config.get("Setup", "File_Manager_Cmd", "")
-        cmd += self.config.get("Setup", "File_Manager_Args", "")
+        cmd += " " + self.config.get("Setup", "File_Manager_Args", "")
         if len(cmd) > 0:
             from subprocess import Popen
             Popen(cmd.split())
