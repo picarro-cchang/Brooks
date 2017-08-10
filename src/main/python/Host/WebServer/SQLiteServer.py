@@ -475,7 +475,7 @@ def before_first_request():
         default_policies = dict(
             password_length='6',
             password_mix_charset='False',
-            password_lifetime='183',    # days
+            password_lifetime='182',    # days
             password_reuse_period='3',  # times
             user_login_attempts='5',    # times
             user_session_lifetime='10',  # minutes

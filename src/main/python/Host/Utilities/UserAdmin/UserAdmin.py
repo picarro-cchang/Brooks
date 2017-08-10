@@ -229,7 +229,8 @@ class MainWindow(UserAdminFrame):
     def download_file(self):
         if self.file_manager_cmd:
             from subprocess import Popen
-            Popen(self.file_manager_cmd.split())
+            cmd = self.file_manager_cmd + " " + self.file_manager_args
+            Popen(cmd.split())
 
     def get_role_list(self):
         payload = {'command': "get_roles"}
@@ -287,6 +288,7 @@ class MainWindow(UserAdminFrame):
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
         self.file_manager_cmd = self.config.get("Setup", "File_Manager_Cmd", "")
+        self.file_manager_args = self.config.get("Setup", "File_Manager_Args", "")
 
     def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
         msg_box = QMessageBox(icon, title, message, buttons, self)
