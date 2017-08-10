@@ -186,7 +186,7 @@ class SQLiteServer(object):
         if phone_str:
             phone_ext = phone_str.split(",")
             if len(phone_ext[0]) > 20:
-                return {"error": "Phone number is too long. Maximum length: 15."}
+                return {"error": "Phone number is too long. Maximum length: 20."}
             if len(phone_ext) == 2 and len(phone_ext[1]) > 6:
                 return {"error": "Extension number is too long. Maximum length: 6."}
         return {}

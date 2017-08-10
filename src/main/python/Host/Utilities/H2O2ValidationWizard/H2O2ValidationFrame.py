@@ -102,12 +102,16 @@ class H2O2ValidationFrame(QMainWindow):
                 
         # control buttons
         self.button_skip_step = QPushButton("Skip")
+        self.button_skip_step.setAutoDefault(True)
         self.button_skip_step.hide()
         self.button_last_step = QPushButton("Back")
         self.button_last_step.setEnabled(False)
+        self.button_last_step.setAutoDefault(True)
         self.button_next_step = QPushButton("Next")
+        self.button_next_step.setAutoDefault(True)
         self.button_cancel_process = QPushButton("Logoff and Quit")
         self.button_cancel_process.setStyleSheet("width: 150px")
+        self.button_cancel_process.setAutoDefault(True)
         button_layout = QHBoxLayout()
         button_layout.addStretch(1)
         button_layout.addWidget(self.button_skip_step)
