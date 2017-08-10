@@ -4,14 +4,14 @@ import os
 import shutil
 
 # if there is an 'active' instrConfig folder, copy it over to instrConfig
-#root_dir = "/home/picarro/I2000"
-#for folder in os.listdir(root_dir):
-#    if folder.startswith("InstrConfig") and folder.endswith("_active"):
-#        active_config = os.path.join(root_dir, folder)
-#        instr_config = os.path.join(root_dir, "InstrConfig")
-#        # delete original instrConfig and then copy the old one over
-#        shutil.rmtree(instr_config)
-#        shutil.copytree(active_config, instr_config)
-#        os.system("chown -R picarro.picarro " + instr_config)
-#        os.rename(active_config, os.path.join(root_dir, folder[:-7]))
-#        break
+root_dir = "/home/picarro/I2000"
+for folder in os.listdir(root_dir):
+    if folder.startswith("InstrConfig") and folder.endswith("_active"):
+        active_config = os.path.join(root_dir, folder)
+        instr_config = os.path.join(root_dir, "InstrConfig")
+        # delete original instrConfig and then copy the old one over
+        shutil.rmtree(instr_config)
+        shutil.copytree(active_config, instr_config)
+        os.system("chown -R picarro.picarro " + instr_config)
+        os.rename(active_config, os.path.join(root_dir, folder[:-7]))
+        break
