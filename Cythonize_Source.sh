@@ -59,7 +59,7 @@ do
       rm $c_File_Location
     fi
     
-    if [ $number_of_running_process == 2 ]
+    if [ $number_of_running_process == 4 ]
     then
         number_of_running_process=0
         wait
