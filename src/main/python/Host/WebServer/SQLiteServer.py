@@ -476,8 +476,8 @@ def before_first_request():
             password_length='6',
             password_mix_charset='False',
             password_lifetime='182',    # days
-            password_reuse_period='3',  # times
-            user_login_attempts='5',    # times
+            password_reuse_period='5',  # times
+            user_login_attempts='3',    # times
             user_session_lifetime='10',  # minutes
             save_history='True'
         )
