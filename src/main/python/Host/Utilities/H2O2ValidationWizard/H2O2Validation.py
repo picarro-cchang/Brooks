@@ -636,13 +636,13 @@ class H2O2Validation(H2O2ValidationFrame):
     def next_step(self):        
         if self.current_step < len(validation_procedure) - 1:            
             self.current_step += 1
-            if self.current_step+1 in validation_steps:
-                self.cylinder_selection.show()                
+            if self.current_step+1 in validation_steps:                                
                 self.display_instruction2.clear()
                 self.cylinder_selection.setEnabled(True)
                 if validation_steps[self.current_step+1] == "calibrant3" and self.allow_skip_calibrant3:
                     self.button_skip_step.show()
                 self.popular_cylinder_selection_list()
+                self.cylinder_selection.show()
             elif self.current_step in validation_steps:
                 cylinder = str(self.select_cylinder.currentText()).split(":")[0]
                 if cylinder == "":
