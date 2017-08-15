@@ -19,7 +19,7 @@ CONFIG_FILE = os.path.join(os.path.dirname(__file__), "H2O2Validation.ini")
 
 app = QApplication(sys.argv)
 
-#@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
+@unittest.skipUnless(isAnalyzerToBuild(["NDDS"]), "Analyzer type not match")
 class TestH2O2Validation(unittest.TestCase):
     def setUp(self):
         self.wizard = H2O2Validation(CONFIG_FILE, simulation=True, no_login=False)
@@ -54,11 +54,11 @@ class TestH2O2Validation(unittest.TestCase):
             # validation
             next_button = self.wizard.button_next_step
             measurements = ["zero_air", "calibrant1", "calibrant2", "calibrant3"]
-            nominal_concentraion = [0, 2, 10, 100]
+            QTest.mouseClick(next_button, Qt.LeftButton)
+            QTest.mouseClick(self.wizard.button_exit_cylinder_setting, Qt.LeftButton)
             for step in range(4):
                 stage = measurements[step]
-                QTest.mouseClick(next_button, Qt.LeftButton)
-                QTest.mouseClick(next_button, Qt.LeftButton)
+                QTest.mouseClick(next_button, Qt.LeftButton)                
                 self.message_box_content["title"] = ""
                 self.assertTrue(validation_steps[self.wizard.current_step] == stage)
                 QTest.qWait(1500)   # data collection
@@ -77,9 +77,9 @@ class TestH2O2Validation(unittest.TestCase):
             self.assertTrue("Validation pass. Report created" in last_action)
             filename = last_action.split(":")[1]
             filename = os.path.join(self.wizard.curr_dir, filename.strip())
-            self.assertTrue(os.path.exists(filename))
+            self.assertTrue(os.path.exists(filename))   # check report
             data_file = os.path.join(os.path.split(filename)[0], "validation_data.csv")
-            self.assertTrue(os.path.exists(data_file))
+            self.assertTrue(os.path.exists(data_file))  # check data file
             shutil.rmtree(os.path.split(filename)[0]) 
 
         # clear mockito functions
@@ -108,6 +108,33 @@ class TestH2O2Validation(unittest.TestCase):
         QTest.mouseClick(next_button, Qt.LeftButton)
         QTest.qWait(1500)   # data collection
         self.assertTrue("Measurement result is too far away" in self.message_box_content["msg"])
+
+    def test_go_back_measurement(self):
+        self.bypass_login_screen()
+        next_button = self.wizard.button_next_step
+        back_button = self.wizard.button_last_step
+        # test1: go back from the first page after introduction
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 1)
+        QTest.mouseClick(back_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 0)
+        # test2: go back in the middle of measurement
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 2)
+        QTest.qWait(500)
+        QTest.mouseClick(back_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 1)
+        self.assertTrue(len(self.wizard.validation_data['zero_air']['CH4']) == 0)
+        self.assertTrue(len(self.wizard.cylinder_used) == 0)
+        # test3: go back in the preparation step of calibrant1
+        QTest.mouseClick(next_button, Qt.LeftButton)
+        QTest.qWait(1500)   # data collection
+        self.assertTrue(self.wizard.current_step == 3)
+        self.assertTrue(len(self.wizard.validation_data['zero_air']['CH4']) > 0)
+        QTest.mouseClick(back_button, Qt.LeftButton)
+        self.assertTrue(self.wizard.current_step == 1)
+        self.assertTrue(len(self.wizard.validation_data['zero_air']['CH4']) == 0)
 
 if __name__ == '__main__':
     if is_running_under_teamcity():

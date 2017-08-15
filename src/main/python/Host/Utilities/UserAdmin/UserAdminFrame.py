@@ -8,7 +8,7 @@ class UserAdminFrame(QMainWindow):
     """
     def __init__(self, parent=None):
         super(UserAdminFrame, self).__init__(parent)
-        
+
         # Set-up Drop Shadow effect to be used on elements
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setColor(QColor(30,30,30,180))
@@ -18,11 +18,11 @@ class UserAdminFrame(QMainWindow):
         with open(os.path.join(self.curr_dir,'styleSheet.qss'), 'r') as f:
             self.style_data = f.read()
         self.setStyleSheet(self.style_data)
-                
+
         self.create_widgets()
         self.setWindowTitle("User Management")
         self.resize(800,600)
-        
+
     def create_widgets(self):
         def spin_box(value=0, min=0, max=100, step=1):
             sBox = QSpinBox()
@@ -31,7 +31,7 @@ class UserAdminFrame(QMainWindow):
             sBox.setSingleStep(step)
             sBox.setProperty("value", value)
             return sBox
-            
+
         def control_box(caption, control, caption_on_left=False):
             box = QFormLayout()
             if caption_on_left:
@@ -39,7 +39,7 @@ class UserAdminFrame(QMainWindow):
             else:
                 box.addRow(control, QLabel(caption))
             return box
-    
+
         # Most buttons are placed in QFormLayouts as it is a convenient class
         # for lining up buttons and text fields.
         # The buttons are organized in groups and a group of buttons is put
@@ -49,19 +49,19 @@ class UserAdminFrame(QMainWindow):
         self.user_admin_widget = QWidget()
         self.add_user_widget = QWidget()
         self.change_password_widget = QWidget()
-        
-        home_layout = QVBoxLayout() 
+
+        home_layout = QVBoxLayout()
         user_admin_layout = QFormLayout()
         add_user_layout = QFormLayout()
         change_password_layout = QVBoxLayout()
-        
+
         # Picarro logo
         picarro_logo = QPixmap(os.path.join(self.curr_dir, "logo_picarro.png"))
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
         logo_box = QHBoxLayout()
         logo_box.addWidget(picarro_label,0,Qt.AlignHCenter)
-        
+
         # Set the form layouts in widgets so hide/show works.
         # Set home form as a the initially visible form.
         self.home_widget.setLayout(home_layout)
@@ -72,7 +72,7 @@ class UserAdminFrame(QMainWindow):
         self.user_admin_widget.hide()
         self.change_password_widget.hide()
         self.add_user_widget.hide()
-        
+
         # Home/Login
         self.input_user_name = QLineEdit()
         self.input_password = QLineEdit()
@@ -84,7 +84,7 @@ class UserAdminFrame(QMainWindow):
         self.button_cancel_login = QPushButton("Cancel")
         self.button_cancel_login.clicked.connect(self.cancel_login)
         self.button_cancel_login.setAutoDefault(True)
-        self.label_login_info = QLabel("")        
+        self.label_login_info = QLabel("")
         login_input = QFormLayout()
         login_input.addRow("User Name", self.input_user_name)
         login_input.addRow("Password", self.input_password)
@@ -124,7 +124,7 @@ class UserAdminFrame(QMainWindow):
         self.home_widget.setTabOrder(self.input_change_password, self.input_change_password2)
         self.home_widget.setTabOrder(self.input_change_password2, self.button_change_user_pwd)
         self.home_widget.setTabOrder(self.button_change_user_pwd, self.button_cancel_change)
-        
+
         # User admin widget
         tab_user_manage = QWidget()
         user_manage_layout = QFormLayout()
@@ -142,13 +142,14 @@ class UserAdminFrame(QMainWindow):
         self.user_admin_tabs.addTab(tab_user_role, "User History")
         self.user_admin_tabs.currentChanged.connect(self.switch_tab)
         button_layout = QHBoxLayout()
-        self.button_log_off_user = QPushButton("Log Off")
+        self.button_log_off_user = QPushButton("LogOff and Quit")
+        self.button_log_off_user.setStyleSheet("width: 150px")
         self.button_log_off_user.clicked.connect(self.user_log_off)
         button_layout.addStretch(1)
         button_layout.addWidget(self.button_log_off_user)
         user_admin_layout.addRow(self.user_admin_tabs)
         user_admin_layout.addRow(button_layout)
-        
+
         # User management tab
         self.table_user_list = QTableWidget(1, 4)
         self.table_user_list.setMinimumSize(QSize(600, 300))
@@ -184,7 +185,7 @@ class UserAdminFrame(QMainWindow):
         user_manage_layout.addRow(self.table_user_list)
         user_manage_layout.addRow(self.label_user_info)
         user_manage_layout.addRow(user_info_control)
-        
+
         # User policies tab
         self.check_password_length = QCheckBox("Password must have at least")
         self.check_password_length.clicked.connect(lambda: self.disable_policy_input("password_length"))
@@ -221,7 +222,7 @@ class UserAdminFrame(QMainWindow):
         user_policy_layout.addRow(self.check_user_session_lifetime, control_box("minutes",self.input_user_session_lifetime))
         user_policy_layout.addRow(self.check_save_history)
         user_policy_layout.addRow(button_layout)
-        
+
         # User history tab
         self.label_action_history = QLabel()
         self.label_action_history.setFixedWidth(700)
@@ -239,6 +240,8 @@ class UserAdminFrame(QMainWindow):
         self.button_next_history.setEnabled(False)
         self.button_save_history = QPushButton("Save")
         self.button_save_history.clicked.connect(self.save_history)
+        self.button_download_history = QPushButton("Download")
+        self.button_download_history.clicked.connect(self.download_file)
         self.button_refresh_history = QPushButton("Refresh")
         self.button_refresh_history.clicked.connect(self.get_history)
         action_history_layout.addWidget(self.label_action_history)
@@ -248,18 +251,22 @@ class UserAdminFrame(QMainWindow):
         button_line1.addStretch(1)
         action_history_layout.addLayout(button_line1)
         button_line2 = QHBoxLayout()
-        button_line2.addStretch(1)
-        button_line2.addWidget(self.button_save_history)
+        button_line2.addStretch(1)        
         button_line2.addWidget(self.button_refresh_history)
+        button_line2.addWidget(self.button_save_history)
+        button_line2.addWidget(self.button_download_history)
         action_history_layout.addLayout(button_line2)
-                
+
         # Add new user
         self.input_new_user_name = QLineEdit()
         self.input_new_first_name = QLineEdit()
         self.input_new_last_name = QLineEdit()
         self.input_new_employee_id = QLineEdit()
+        phone_number_validator = QRegExpValidator(QRegExp(r"[0-9\-+()x ]*"))
         self.input_new_phone_num = QLineEdit()
+        self.input_new_phone_num.setValidator(phone_number_validator)
         self.input_new_phone_ext = QLineEdit()
+        self.input_new_phone_ext.setValidator(phone_number_validator)
         self.label_curr_password = QLabel("Current Password")
         self.input_curr_password = QLineEdit()
         self.input_curr_password.setEchoMode(QLineEdit.Password)
@@ -293,7 +300,7 @@ class UserAdminFrame(QMainWindow):
         add_user_layout.addRow("New Password <font color='#FF0000'>*</font>", self.input_new_password)
         add_user_layout.addRow("Confirm Password <font color='#FF0000'>*</font>", self.input_new_password2)
         add_user_layout.addRow(new_user_control)
-        
+
         # Main grid layout
         # The row and column stretch help to keep the buttons clustered
         # in the center and also prevent the logo from moving around

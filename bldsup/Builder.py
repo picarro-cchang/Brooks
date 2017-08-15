@@ -286,7 +286,7 @@ class Builder(object):
             for file in os.listdir(installer_folder):
                 if file.endswith('.deb'):
                     src_path = os.path.join(installer_folder, file)
-                    dest_path = r"https://picarro.artifactoryonline.com/picarro/Pharma/PI2000/Hostdeb/" + installer_version+ "_" + self.git_hash[:8] + "/"
+                    dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/Pharma/PI2000/Hostdeb/" + installer_version+ "_" + self.git_hash[:8] + "/"
                     cmd = "curl -u %s:%s -T %s %s" % ("ci-server", "ALGP@&gNR%h", src_path, dest_path)
                     self.run_command(cmd)
                     logger.info('Upload %s installer to Artifactory' % file)    

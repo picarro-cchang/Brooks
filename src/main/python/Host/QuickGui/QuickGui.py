@@ -1009,7 +1009,7 @@ class QuickGui(wx.Frame):
         self.keySubstDatabase = SubstDatabase.fromIni(self.config,"KeyFilters","string",
                                                        ["replacement","units","format"],
                                                        ["\g<0>","","%.3f"])
-
+        
         if "StandardModeKeysSources" in self.config:
             self.sourceStandardModeDatabase = None
             self.keyStandardModeDatabase = None
@@ -1034,7 +1034,7 @@ class QuickGui(wx.Frame):
         self.dataLoggerInterface = DataLoggerInterface(self.config)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config)
-
+        
         # clamp # of additional alarms displayed to 5 (shows vert scrollbar if more)
         self.numAlarms = self.config.getint("AlarmBox", "NumAlarms", 4)
         self.numAlarmsDisplay = min(5, self.numAlarms)
@@ -1117,7 +1117,6 @@ class QuickGui(wx.Frame):
         # Set Windows platform type
         self.platform = platform()[:10]
 
-        self.layoutFrame()
         # Create the image panels with the frame as parent
         for key in self.imageDatabase.dbase:
             self.imageDatabase.setImagePanel(key,self)
@@ -1149,6 +1148,8 @@ class QuickGui(wx.Frame):
         self.iInstStatDisplay = wx.MenuItem(self.iView, self.idInstStatDisplay, "Instrument Status", "", wx.ITEM_CHECK)
         self.iView.AppendItem(self.iInstStatDisplay)
 
+        self.userLevelMap = {"SuperUser": 4, "Admin": 3, "Technician": 2, "Operator": 1}
+
         # get external tools from config
         self.externalTools = {}
         if "ExternalTools" in self.config:
@@ -1156,13 +1157,20 @@ class QuickGui(wx.Frame):
             for k in tools:
                 if k.startswith("toolName"):
                     idx = int(k[8:])
+                    self.externalTools[tools[k]] = {}
                     if ("toolCmd%d" % idx) in tools:
-                        self.externalTools[tools[k]] = {"cmd": tools["toolCmd%d" % idx]}
+                        self.externalTools[tools[k]]["cmd"] = tools["toolCmd%d" % idx]
+                    if ("toolUser%d" % idx) in tools:
+                        self.externalTools[tools[k]]["user"] = \
+                            [self.userLevelMap[t.strip()] for t in tools["toolUser%d" % idx].split(",")]
 
         self.menuBar.Append(self.iTools,"Tools")
-        self.idUserCal = wx.NewId()
-        self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
-        self.iTools.AppendItem(self.iUserCal)
+        if self.config.getboolean("UserCalibration", "Enable", True):
+            self.idUserCal = wx.NewId()
+            self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
+            self.iTools.AppendItem(self.iUserCal)
+            self.Bind(wx.EVT_MENU, self.OnUserCal, id=self.idUserCal)
+
         for tool in self.externalTools:
             self.externalTools[tool]['id'] = wx.NewId()
             self.externalTools[tool]['menu'] = wx.MenuItem(self.iTools,
@@ -1199,8 +1207,7 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnLockTime, id=self.idLockTime)
         self.iLockTime.Enable(self.numGraphs>1)
         self.Bind(wx.EVT_MENU, self.OnStatDisplay, id=self.idStatDisplay)
-        self.Bind(wx.EVT_MENU, self.OnInstStatDisplay, id=self.idInstStatDisplay)
-        self.Bind(wx.EVT_MENU, self.OnUserCal, id=self.idUserCal)
+        self.Bind(wx.EVT_MENU, self.OnInstStatDisplay, id=self.idInstStatDisplay)        
         for tool in self.externalTools:
             self.Bind(wx.EVT_MENU, self.OnExternalTools, id=self.externalTools[tool]['id'])
 
@@ -1217,6 +1224,7 @@ class QuickGui(wx.Frame):
 
         self.session_time = 0
 
+        self.layoutFrame()
         self.startServer()
 
         # The GTK has some graphics artifacts that can only be cleaned up after the
@@ -1229,7 +1237,6 @@ class QuickGui(wx.Frame):
         self.OneShotTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.lateStart, self.OneShotTimer)
         self.OneShotTimer.Start(100, True)
-        self.iUserCal.Enable(False)
         # Full screen for the Linux industrial platform.
         if(fullScreen):
             self.Maximize(True)
@@ -1458,7 +1465,8 @@ class QuickGui(wx.Frame):
         eventLogBoxSizer.Add(self.eventViewControl,1, wx.EXPAND|wx.ALL)
 
         statusBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
-        statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
+        if self.config.getboolean("UserLogBox", "Enable", True):
+            statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
         statusBoxSizer.Add(eventLogBoxSizer,proportion=1, flag=wx.EXPAND|wx.ALL)
 
         # Define the data selection tools
@@ -1826,6 +1834,13 @@ class QuickGui(wx.Frame):
            for c in self.serviceModeOnlyControls:
                c.Show(True)
 
+        for tool in self.externalTools:
+            if "user" in self.externalTools[tool]:
+                if self.userLevel in self.externalTools[tool]["user"]:
+                    self.externalTools[tool]["menu"].Enable(True)
+                else:
+                    self.externalTools[tool]["menu"].Enable(False)
+
     def getSourcesbyMode(self):
         s = self.dataStore.getSources()
         if self.userLevel < 3:
@@ -1872,9 +1887,11 @@ class QuickGui(wx.Frame):
                 self.setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
-
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
-        dialog.Destroy()
+            payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
+            self.sendRequest("post", "action", payload, useToken=True)
+            self.shutdownButton.Enable(False)
+        dialog.Destroy()        
 
     def OnResetBuffers(self,evt):
         for s in self.dataStore.getSources():
@@ -2461,7 +2478,7 @@ class QuickGui(wx.Frame):
         useToken: set to True if the api requires token for authentication
         """
         if useToken:
-            header = {'Authentication': self.current_user["token"]}
+            header = {'Authentication': self.currentUser["token"]}
         else:
             header = {}
         actionFunc = getattr(self.hostSession, action)
@@ -2473,7 +2490,8 @@ class QuickGui(wx.Frame):
 
     def getSystemVariables(self):
         returnDict = self.sendRequest("get", "system", {'command':'get_all_variables'})
-        self.sessionLifeTime = int(returnDict["user_session_lifetime"]) * 60
+        lifetime = int(returnDict["user_session_lifetime"])
+        self.sessionLifeTime =  lifetime * 60 if lifetime >= 0 else float('inf')
 
     def OnLoginUser(self,e):
         # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 
@@ -2508,24 +2526,16 @@ class QuickGui(wx.Frame):
                             msg = self.OnChangePwd(user, pwd)
                             if len(msg) == "":
                                 break
+                        elif "HTTPConnection" in msg:
+                            msg = "Unable to connect database server!"
                     elif "roles" in returnDict:
-                        if 'SuperUser' in returnDict["roles"]:
-                            self.userLevel = 4
-                        elif 'Admin' in returnDict["roles"]:
-                            self.userLevel = 3
-                            d = Dialog.OKDialog(self,"\tAdmin logged in.",None,-1,"")
-                        elif 'Technician' in returnDict["roles"]:
-                            self.userLevel = 2
-                            d = Dialog.OKDialog(self,"\tTechnician logged in.",None,-1,"")
-                        else:
-                            self.userLevel = 1
-                            d = Dialog.OKDialog(self,"\tOperator logged in.",None,-1,"")                        
+                        self.userLevel = self.userLevelMap[returnDict["roles"][0]]
+                        self.currentUser = returnDict
+                        d = Dialog.OKDialog(self,"\t%s logged in." % (returnDict["roles"][0]),None,-1,"") 
                         #update GUI
                         self.modifyInterface()
                         self.measPanelSizer.Layout()
                         self.Refresh()
-                        #self.menuBar.EnableTop(1, True)
-                        #self.menuBar.EnableTop(2, True)
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
                         #Recursively bind all the widgets with mouse motion event 

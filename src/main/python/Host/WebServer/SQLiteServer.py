@@ -89,6 +89,8 @@ class SQLiteServer(object):
             level = 2
         elif "Operator" in roles:
             level = 1
+        else:
+            level = 0
         if requester == "UserAdmin" and level < 3:
             return {"error": "Permission denied. Only Admin users can log in."}
         elif requester == "H2O2Validation" and level < 2:
@@ -144,7 +146,7 @@ class SQLiteServer(object):
         length = self.system_varialbes["password_length"]
         if length >= 0 and len(password) < length:
             return {"error": "Password is too short! Minimum length: %d" % length}
-        if length > 15:
+        if len(password) > 15:
             return {"error": "Password is too long! Maximum length: 15."}
         return {}    # no error
         
@@ -179,6 +181,15 @@ class SQLiteServer(object):
                 return {"error": "Username and password do not match! Failed times: %s." % msg}
         else:
             return {"error": "Username and password do not match!"}
+
+    def check_phone_number(self, phone_str):
+        if phone_str:
+            phone_ext = phone_str.split(",")
+            if len(phone_ext[0]) > 20:
+                return {"error": "Phone number is too long. Maximum length: 20."}
+            if len(phone_ext) == 2 and len(phone_ext[1]) > 6:
+                return {"error": "Extension number is too long. Maximum length: 6."}
+        return {}
                       
     def log_in_user(self, username, password, requester, no_commit=False):
         user = self.ds.find_user(username=username)
@@ -191,7 +202,8 @@ class SQLiteServer(object):
                     return {"user": user}
                 ret = self.check_password_age(username, password)
                 if ret: return ret
-                ret = self.check_login_requester(user.roles, requester)
+                roles = [role.name for role in user.roles]
+                ret = self.check_login_requester(roles, requester)
                 if ret: return ret
                 utils.login_user(user)
                 self.ds.commit()
@@ -200,7 +212,7 @@ class SQLiteServer(object):
                 return {"username":user.username,
                         "first_name":user.first_name,
                         "last_name":user.last_name,
-                        "roles":[role.name for role in user.roles],
+                        "roles":roles,
                         "token":user.get_auth_token()}
             else:
                 return self.check_user_login_attempts(username)
@@ -211,9 +223,11 @@ class SQLiteServer(object):
         if not username or not request_dict["password"]:
             abort(406)
         if len(username) < 4:
-            return {"error": "Username too short! Minimum length: 4."}
+            return {"error": "Username is too short! Minimum length: 4."}
         if len(username) > 64:
-            return {"error": "Username too long! Maximum length: 64."}
+            return {"error": "Username is too long! Maximum length: 64."}
+        ret = self.check_phone_number(request_dict["phone_number"])
+        if ret: return ret
         user = self.ds.find_user(username=username)
         if user: # User already exists
             return {"error": "Username already exists!"}
@@ -235,7 +249,7 @@ class SQLiteServer(object):
         
     def change_user_password(self, username, password, new_password):
         if new_password is None:
-            return {"error": "New password not specified!"}
+            return {"error": "New password is not specified!"}
         # check password but not log in
         ret = self.log_in_user(username, password, "", no_commit=True)
         if "error" in ret:
@@ -273,7 +287,7 @@ class SQLiteServer(object):
             for role in request_roles:
                 if not user.has_role(self.ds.find_role(role)):
                     self.ds.add_role_to_user(user, self.ds.find_role(role))
-            self.save_action_history(current_user.username, "set %s roles to %s" % (username, request_dict["roles"]))
+            self.save_action_history(current_user.username, "set %s role to %s" % (username, request_dict["roles"]))
         self.ds.commit()
         return {"username": username}
            
@@ -461,9 +475,9 @@ def before_first_request():
         default_policies = dict(
             password_length='6',
             password_mix_charset='False',
-            password_lifetime='183',    # days
-            password_reuse_period='3',  # times
-            user_login_attempts='5',    # times
+            password_lifetime='182',    # days
+            password_reuse_period='5',  # times
+            user_login_attempts='3',    # times
             user_session_lifetime='10',  # minutes
             save_history='True'
         )

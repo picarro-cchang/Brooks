@@ -251,6 +251,14 @@ Description: Picarro Host Software for Industry Application
             if os.path.isdir(app_config_dir):
                 shutil.rmtree(app_config_dir)
             shutil.copytree(os.path.join(config_dir, installer_type, "AppConfig"), app_config_dir)
+            # copy bin folder
+            bin_folder_target = os.path.join(dist_dir, 'home', 'picarro', 'bin')
+            bin_folder_source = os.path.join(config_dir, installer_type, "bin")            
+            if os.path.isdir(bin_folder_target):
+                shutil.rmtree(bin_folder_target)
+            if os.path.exists(bin_folder_source):
+                shutil.copytree(bin_folder_source, bin_folder_target)
+                os.system("chmod -R 755 %s" % bin_folder_target)
             # make control file
             self.make_control_file(debian_dir, installer_type)
             logger.info('Project version: %s' % project.version)
