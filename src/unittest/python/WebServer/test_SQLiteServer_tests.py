@@ -31,10 +31,10 @@ class TestSQLiteServer(unittest.TestCase):
     def tearDownClass(cls):
         db = os.path.join(DATABASE_DIR, "PicarroDataBase.sqlite")
         config = os.path.join(DATABASE_DIR, "SQLiteDataBase.ini")
-        #if os.path.exists(db):
-        #    os.remove(db)
-        #if os.path.exists(config):
-        #    os.remove(config)
+        if os.path.exists(db):
+            os.remove(db)
+        if os.path.exists(config):
+            os.remove(config)
             
     def send_request(self, action, api, payload, use_token=False):
         """
@@ -69,18 +69,18 @@ class TestSQLiteServer(unittest.TestCase):
         payload = {'command': 'create_user', 'username': 'picarro-technician',
                    'password': 'picarro', 'roles': 'Operator'}
         ret = self.send_request("post", "users", payload, use_token=True)
-        print(ret)
+        print '1 ' + ret
         self.assertTrue("username" in ret)
         # change role
         payload = {'command': 'update_user', 'username': 'picarro-technician',
                    'roles': 'Technician'}
         ret = self.send_request("post", "users", payload, use_token=True)
-        print(ret)
+        print '1 ' + ret
         self.assertTrue("username" in ret)
         # log out
         payload = {'command': "log_out_user", 'requester': "unittest"}
         ret = self.send_request("post", "account", payload)
-        print(ret)
+        print '1 ' + ret
         self.assertTrue('succeed' in ret["status"])        
         
     def test_1_multiple_login_attempts(self):
