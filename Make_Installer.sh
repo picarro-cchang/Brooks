@@ -25,12 +25,14 @@ debian_directory="$dist_directory/DEBIAN"
 resource_directory="$git_directory/target/Installers/${dist_foldername}"
 git_instr_config_directory="$config_directory/$installer_type/InstrConfig"
 git_app_config_directory="$config_directory/$installer_type/AppConfig"
+git_bin_config_directory="$config_directory/$installer_type/bin"
 
 dist_dir_home="$dist_directory/home"
 dist_dir_new="$dist_directory/home/picarro/${project_name}"
 dist_instr_config_directory="$dist_dir_new/InstrConfig"
 dist_common_config_directory="$dist_dir_new/CommonConfig"
 dist_app_config_directory="$dist_dir_new/AppConfig"
+dist_bin_config_directory="$dist_dir_new/bin"
 
 pth_file_dir="$dist_dir_home/picarro/anaconda2/lib/python2.7/site-packages"
 
@@ -102,7 +104,6 @@ then
   mkdir -p $resource_directory
 fi
 
-echo $dist_instr_config_directory
 # copy config files
 if [ -d "$dist_instr_config_directory" ]
 then
@@ -117,6 +118,14 @@ then
 fi
 
 cp -R "$git_app_config_directory/." $dist_app_config_directory
+
+if [ -d "$dist_bin_config_directory" ]
+then
+  rm -rf $dist_bin_config_directory
+fi
+
+cp -R "$git_bin_config_directory/." $dist_bin_config_directory
+chmod -R 755 $dist_bin_config_directory
 
 # make control file
 cat <<EOM > "$debian_directory/control"
