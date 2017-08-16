@@ -1464,9 +1464,13 @@ class QuickGui(wx.Frame):
         logFileBoxSizer.Add(self.userLogTextCtrl,1, wx.EXPAND|wx.ALL)
         eventLogBoxSizer.Add(self.eventViewControl,1, wx.EXPAND|wx.ALL)
 
+        # Hide/Show the status panel that shows the name of the dat file.  21 CFR part 11 compliant
+        # systems do not show the output file name on the main screen.
+        #
         statusBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
-        if self.config.getboolean("UserLogBox", "Enable", True):
-            statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
+        statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
+        if not self.config.getboolean("UserLogBox", "Enable", True):
+            statusBoxSizer.Hide(logFileBoxSizer, recursive = True)
         statusBoxSizer.Add(eventLogBoxSizer,proportion=1, flag=wx.EXPAND|wx.ALL)
 
         # Define the data selection tools
