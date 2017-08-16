@@ -1,5 +1,6 @@
 import wx
-from Host.Common.GuiTools import setItemFont
+from wx.lib.wordwrap import wordwrap
+from Host.Common.GuiTools import setItemFont, DataXferValidator
 
 class OKDialog(wx.Dialog):
     def __init__(self,mainForm,aboutText,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
