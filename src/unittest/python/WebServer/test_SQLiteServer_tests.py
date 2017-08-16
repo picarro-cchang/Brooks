@@ -15,7 +15,9 @@ class TestSQLiteServer(unittest.TestCase):
     def setUpClass(cls):
         db = os.path.join(DATABASE_DIR, "PicarroDataBase.sqlite")
         config = os.path.join(DATABASE_DIR, "SQLiteDataBase.ini")
+        print(db)
         if os.path.exists(db):
+            print("Deleting db file")
             os.remove(db)
         if os.path.exists(config):
             os.remove(config)
@@ -31,7 +33,9 @@ class TestSQLiteServer(unittest.TestCase):
     def tearDownClass(cls):
         db = os.path.join(DATABASE_DIR, "PicarroDataBase.sqlite")
         config = os.path.join(DATABASE_DIR, "SQLiteDataBase.ini")
+        print(db)
         if os.path.exists(db):
+            print("Deleting db file")
             os.remove(db)
         if os.path.exists(config):
             os.remove(config)
