@@ -18,7 +18,7 @@ export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
 
 git_directory=$(pwd)
 build_helper_file_path=$git_directory/src/main/python/Host/Utilities/BuildHelper/BuildInfo.py
-project_name="i2000"
+project_name="I2000"
 dist_foldername=${project_name}_${raw_version}
 dist_directory="$git_directory/target/dist/${dist_foldername}"
 
