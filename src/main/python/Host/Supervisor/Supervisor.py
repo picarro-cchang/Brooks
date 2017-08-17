@@ -79,6 +79,8 @@ import psutil
 from os import spawnv
 from os import P_NOWAIT
 from os import getpid as os_getpid
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -1201,6 +1203,12 @@ class Supervisor(object):
         return foundApps
 
     def LaunchApps(self, AppList, ExclusionList = [], IsRestart = False):
+        start = time.time()
+        qapp = QApplication(sys.argv)
+        splashPix = QPixmap("/home/picarro/Pictures/h2o2_4.png")
+        splash = QSplashScreen(splashPix, Qt.WindowStaysOnTopHint)
+        splash.show()
+        qapp.processEvents()
         """Launches all apps in the list in order of the list index.
         """
         if self.appList == None:
@@ -1219,6 +1227,11 @@ class Supervisor(object):
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
         for appName in appsToLaunch:
+
+            titleStr = QString("PI-2000 H2O2 Analyzer")
+            splashStr = QString("Starting " + appName + " Module")
+            theStr = titleStr + QString("\n") + splashStr
+            splash.showMessage(theStr, Qt.AlignHCenter, Qt.white)
 
             failedAppDependent = False
             #check to make sure they are not dependents of apps that failed to launch
@@ -1256,6 +1269,8 @@ class Supervisor(object):
                 Log("Not launching because of dependence on app which is not launched", dict(AppName = appName), Level = 2)
 
             self.KickBackup()
+        splash.close()
+        qapp.exit(0)
 
     def GetDependents(self, MasterAppName):
         """Determines the dependent app list.  Returns a list ordered from top down.
@@ -1887,6 +1902,9 @@ def main():
             if supervisorApp.alreadyrunning():
                 sys.exit(0)
             try:
+                #splashPix = QPixmap("/home/picarro/Pictures/Picarro.jpg")
+                #supervisorSplash = QSplashScreen(splashPix, Qt.WindowStaysOnTopHint)
+                #supervisorSplash.show()
                 supe = Supervisor(FileName = configFile, viFileName = viConfigFile) #loads all the app info
                 supe.AddExtraArgs(extraAppArgs)
                 supe.LaunchMasterRPCServer() # in separate thread, only supports TerminateApplications RPC
@@ -1908,12 +1926,6 @@ def main():
 if __name__ == "__main__":
     # Run iniCoordinator to verify the configurations of all applications
     configFile, printIniLog = GetConfigFileAndIniLog()
-    # try:
-        # iniCdr = IniCoordinator(configFile, iniLogEnable = printIniLog)
-        # iniCdr.parseAppIni()
-        # iniCdr.verifyConfig()
-    # except Exception, E:
-        # raise IniVerifyErr("%s %r" % (E, E))
     try:
         main()
     except SystemExit:
