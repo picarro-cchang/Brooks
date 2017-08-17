@@ -1,9 +1,6 @@
 #!/bin/bash
 # Script to make debian package
 
-export PATH=/home/picarro/anaconda2/bin:$PATH
-export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
-
 if [ $# -lt 3 ] 
 then
     echo -e "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: installer type (Like NDDS)\n  3: Git hash number"

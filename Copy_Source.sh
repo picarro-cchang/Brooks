@@ -1,9 +1,6 @@
 #!/bin/bash
 # Script to Copy all required files to target directory for debian package
 
-export PATH=/home/picarro/anaconda2/bin:$PATH
-export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
-
 if [ $# -lt 1 ] 
 then
     echo "Invalid argument please pass version number as argument"

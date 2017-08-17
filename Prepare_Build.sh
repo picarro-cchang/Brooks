@@ -13,9 +13,6 @@ installer_type=$2
 git_hash=$3
 internal_build=${4:-0}
 
-export PATH=/home/picarro/anaconda2/bin:$PATH
-export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
-
 git_directory=$(pwd)
 build_helper_file_path=$git_directory/src/main/python/Host/Utilities/BuildHelper/BuildInfo.py
 project_name="I2000"

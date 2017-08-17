@@ -1,9 +1,6 @@
 #!/bin/bash
 # Script to compile and generate I2000 Analyzer code for DSP, FPGA, FitUtils, DatVeiwer and FastLomb
 
-export PATH=/home/picarro/anaconda2/bin:$PATH
-export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
-
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
 

@@ -1,9 +1,6 @@
 #!/bin/bash
 # Script will go to below folder list (includeFolderList vriable) to Cythonize I2000 Analyzer code
 
-export PATH=/home/picarro/anaconda2/bin:$PATH
-export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
-
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
 
