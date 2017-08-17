@@ -13,7 +13,7 @@ fi
 raw_version=$1
 installer_type=$2
 git_hash=$3
-project_name="I2000"
+project_name="i2000"
 git_directory=$(pwd)
 version_file_path=$git_directory/versions/i2000_types.json
 dir_source_main_python="$git_directory/src/main/python"
