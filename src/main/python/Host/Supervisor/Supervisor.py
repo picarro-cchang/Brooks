@@ -1074,6 +1074,20 @@ class Supervisor(object):
             defaultSettings = bogusApp.ReadAppOptions(co)
             del bogusApp
 
+        # Splash screen settings. Default is not to show one for legacy systems.
+        # splashEnable : If true show the splash screen.
+        # splashPicture : Full pathname to the splash screen image (gif,jpg,png).
+        # splashShowProcessNames : If true show the name of each process as they start. If false show dots or
+        #    progress counter.
+        #
+        self.splashEnable = False
+        self.splashImage = None
+        self.splashShowProcessNames = False
+        if co.has_section("SplashScreen"):
+            self.splashEnable = co.getboolean("SplashScreen","Enable")
+            self.splashImage = co.get("SplashScreen","Image")
+            print("Enable:", self.splashEnable)
+
         #Cruise through the application names (and port shortcut values)...
         for appInfo in co[_MAIN_SECTION].items():
             appName = appInfo[0]
@@ -1203,12 +1217,6 @@ class Supervisor(object):
         return foundApps
 
     def LaunchApps(self, AppList, ExclusionList = [], IsRestart = False):
-        start = time.time()
-        qapp = QApplication(sys.argv)
-        splashPix = QPixmap("/home/picarro/Pictures/h2o2_4.png")
-        splash = QSplashScreen(splashPix, Qt.WindowStaysOnTopHint)
-        splash.show()
-        qapp.processEvents()
         """Launches all apps in the list in order of the list index.
         """
         if self.appList == None:
@@ -1226,12 +1234,23 @@ class Supervisor(object):
         failedAppDependents = []
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
+        qapp = QApplication(sys.argv)
+        splashPix = None
+        print("Image:", self.splashImage)
+        if self.splashImage and os.path.isfile(self.splashImage):
+            splashPix = QPixmap(self.splashImage)
+        else:
+            splashPix = QPixmap(300,150)
+            splashPix.fill(Qt.black)
+        splash = QSplashScreen(splashPix, Qt.WindowStaysOnTopHint)
         for appName in appsToLaunch:
 
-            titleStr = QString("PI-2000 H2O2 Analyzer")
-            splashStr = QString("Starting " + appName + " Module")
-            theStr = titleStr + QString("\n") + splashStr
-            splash.showMessage(theStr, Qt.AlignHCenter, Qt.white)
+            if self.splashEnable:
+                splash.show()
+                titleStr = QString("PI-2000 H2O2 Analyzer")
+                splashStr = QString("Starting " + appName + " Module")
+                theStr = titleStr + QString("\n") + splashStr
+                splash.showMessage(theStr, Qt.AlignHCenter, Qt.white)
 
             failedAppDependent = False
             #check to make sure they are not dependents of apps that failed to launch
@@ -1269,8 +1288,6 @@ class Supervisor(object):
                 Log("Not launching because of dependence on app which is not launched", dict(AppName = appName), Level = 2)
 
             self.KickBackup()
-        splash.close()
-        qapp.exit(0)
 
     def GetDependents(self, MasterAppName):
         """Determines the dependent app list.  Returns a list ordered from top down.
