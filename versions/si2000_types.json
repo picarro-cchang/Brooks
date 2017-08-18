@@ -10,6 +10,11 @@
             "installerSignature": "AMADS"
         },  
 
+        "AMADS_PFV": {
+            "species": "NH3_HF",
+            "installerSignature": "AMADS_PFV"
+        }, 
+
         "MxDS": {
             "species": "HF",
             "installerSignature": "MADS"
@@ -23,7 +28,11 @@
         "SADS": {
             "species": "HCl",
             "installerSignature": "SADS"
-        }
+        },
 
+        "SADS_PFV": {
+            "species": "HCl",
+            "installerSignature": "SADS_PFV"
+        }
     }
 }
