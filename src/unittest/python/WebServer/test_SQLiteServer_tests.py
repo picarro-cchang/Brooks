@@ -8,7 +8,7 @@ from teamcity import is_running_under_teamcity
 from teamcity.unittestpy import TeamcityTestRunner
 
 API_PREFIX = '/api/v1.0/'
-DATABASE_DIR = './src/main/python/Host/WebServer'
+DATABASE_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../../../main/python/Host/WebServer')
 
 class TestSQLiteServer(unittest.TestCase):
     @classmethod
