@@ -29,7 +29,7 @@ dist_dir_new="$dist_directory/home/picarro/${project_name}"
 dist_instr_config_directory="$dist_dir_new/InstrConfig"
 dist_common_config_directory="$dist_dir_new/CommonConfig"
 dist_app_config_directory="$dist_dir_new/AppConfig"
-dist_bin_config_directory="$dist_dir_new/bin"
+dist_bin_config_directory="$dist_directory/home/picarro/bin"
 
 pth_file_dir="$dist_dir_home/picarro/anaconda2/lib/python2.7/site-packages"
 
