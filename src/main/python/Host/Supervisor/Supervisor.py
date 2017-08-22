@@ -1082,11 +1082,14 @@ class Supervisor(object):
         #
         self.splashEnable = False
         self.splashImage = None
+        self.splashTitle = "Picarro Inc."
+        self.splashFontColor = "white"
         self.splashShowProcessNames = False
         if co.has_section("SplashScreen"):
             self.splashEnable = co.getboolean("SplashScreen","Enable")
             self.splashImage = co.get("SplashScreen","Image")
-            print("Enable:", self.splashEnable)
+            self.splashTitle = co.get("SplashScreen","Title")
+            self.splashFontColor = co.get("SplashScreen","FontColor")
 
         #Cruise through the application names (and port shortcut values)...
         for appInfo in co[_MAIN_SECTION].items():
@@ -1236,21 +1239,46 @@ class Supervisor(object):
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
         qapp = QApplication(sys.argv)
         splashPix = None
-        print("Image:", self.splashImage)
         if self.splashImage and os.path.isfile(self.splashImage):
+            # QSplashScreen is not modal and so users can interaction with windows behind
+            # the splash screen.  We run the splash screen as full screen to keep the focus
+            # only on the splash screen.  The splash screen graphic is small so we create
+            # a single color full screen pic based upon the current resolution and add
+            # our desired pic to it.  I found an example at this url:
+            # https://forum.qt.io/topic/8558/solved-full-screen-qsplashscreen-on-mobile/6
             splashPix = QPixmap(self.splashImage)
+            desktop = QApplication.desktop()
+            desktopRect = desktop.availableGeometry()
+            fillPixmap = QPixmap(desktopRect.width(), desktopRect.height())
+            fillPixmap.fill(QColor(30,30,30))
+            p = QPainter()
+            p.begin(fillPixmap)
+            targetRect = QRect((fillPixmap.width() - splashPix.width())/2,
+                               (fillPixmap.height() - splashPix.height())/2,
+                               splashPix.width(), splashPix.height())
+            p.drawPixmap(targetRect, splashPix)
+            p.end()
         else:
-            splashPix = QPixmap(300,150)
-            splashPix.fill(Qt.black)
-        splash = QSplashScreen(splashPix, Qt.WindowStaysOnTopHint)
+            fillPixmap = QPixmap(500,500)
+            fillPixmap.fill(Qt.black)
+        splash = QSplashScreen(fillPixmap, Qt.WindowStaysOnTopHint)
+        splash.setWindowState(Qt.WindowFullScreen)
+        progressCounter = 0
+        updateSplash = True
         for appName in appsToLaunch:
 
-            if self.splashEnable:
+            if self.splashEnable and updateSplash:
                 splash.show()
-                titleStr = QString("PI-2000 H2O2 Analyzer")
-                splashStr = QString("Starting " + appName + " Module")
-                theStr = titleStr + QString("\n") + splashStr
-                splash.showMessage(theStr, Qt.AlignHCenter, Qt.white)
+                myAlignment = Qt.AlignCenter # Alignment doesn't work right if the msg has html in it.
+                progressCounter += 1
+                str = QString(self.splashTitle)
+                str += QString("\n\nLoading %1 of %2\n%3").arg(progressCounter, 2).arg(len(appsToLaunch)).arg(appName)
+                splash.showMessage(str, myAlignment, Qt.white)
+            else:
+                splash.close()
+            if "QuickGui" in appName:
+                updateSplash = False
+                #splash.close()
 
             failedAppDependent = False
             #check to make sure they are not dependents of apps that failed to launch
