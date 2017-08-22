@@ -402,7 +402,7 @@ class H2O2Validation(H2O2ValidationFrame):
             self.table_cylinder_list.setItem(idx, 1, 
                 QTableWidgetItem(format(self.cylinders[ident]["concentration"], ".2f")))
             self.table_cylinder_list.setItem(idx, 2, 
-                QTableWidgetItem(format(self.cylinders[ident]["uncertainty"], ".2f")))
+                QTableWidgetItem("+/- " + format(self.cylinders[ident]["uncertainty"], ".2f")))
             self.table_cylinder_list.setItem(idx, 3, 
                 QTableWidgetItem(self.cylinder_used[ident] if ident in self.cylinder_used else ""))
         self.table_cylinder_list.selectRow(num_cylinder-1)
