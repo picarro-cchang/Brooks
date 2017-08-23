@@ -4,8 +4,11 @@ import unittest
 import json
 from Host.WebServer.SQLiteServer import db_server, app
 
+from teamcity import is_running_under_teamcity
+from teamcity.unittestpy import TeamcityTestRunner
+
 API_PREFIX = '/api/v1.0/'
-DATABASE_DIR = './src/main/python/Host/WebServer'
+DATABASE_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../../../main/python/Host/WebServer')
 
 class TestSQLiteServer(unittest.TestCase):
     @classmethod
@@ -145,7 +148,11 @@ class TestSQLiteServer(unittest.TestCase):
         db_server.system_varialbes["password_mix_charset"] = False
         payload['new_password'] = 'picarro'
         ret = self.send_request("post", "account", payload)
-        self.assertFalse("error" in ret)    
+        self.assertFalse("error" in ret)
 
 if __name__ == '__main__':
-    unittest.main()
+    if is_running_under_teamcity():
+        runner = TeamcityTestRunner()
+    else:
+        runner = unittest.TextTestRunner()
+    unittest.main(testRunner=runner)
