@@ -176,7 +176,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
     DataSource must be the AlarmInterface object which reads the alarm status
     """
     def __init__(self, parent, id, attrib, DataStore=None, DataSource=None, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, numAlarms=4):
+                 size=wx.DefaultSize, numAlarms=4, sysAlarmInterface=None):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
                              | wx.LC_VIRTUAL
@@ -199,6 +199,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
 
         self.dataStore = DataStore
         self._DataSource = DataSource
+        self._sysAlarmInterface = sysAlarmInterface
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
 
@@ -285,6 +286,14 @@ class AlarmViewListCtrl(wx.ListCtrl):
         """
         When the list is refreshed with RefreshList() (are we sure?) it comes here
         to figure out what LED light to display.
+
+        EDIT:
+        Now we track the status of the system alarm to see if it is blinking. If so
+        this indicates we are in a transition state like warming up, pressure or
+        temperature unlocked, service mode etc.  If the system led is blinking turn
+        off the gas concentration led.
+        When the system alarm led is green (return code 3) all systems are good
+        and the gas measurment is considered valid.
         """
         alarmColor = self.IconAlarmRed
         status = int(self.dataStore.alarmStatus) & (1 << item)
@@ -293,7 +302,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
 
         if not enabled:
             alarmColor = self.IconAlarmOff
-        elif len(self.dataStore.mode) == 0 or "warming_mode" in self.dataStore.mode:
+        elif self._sysAlarmInterface.getStatus(0)[0] != 3 :
             alarmColor = self.IconAlarmOff
         elif status == 0:
             alarmColor = self.IconAlarmGreen
@@ -1592,7 +1601,7 @@ class QuickGui(wx.Frame):
 
         self.alarmView = AlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataStore=self.dataStore, DataSource=self.alarmInterface,
-                                           size=size, numAlarms=self.numAlarms)
+                                           size=size, numAlarms=self.numAlarms, sysAlarmInterface=self.sysAlarmInterface)
         self.alarmView.SetMainForm(self)
         setItemFont(alarmBox,self.getFontFromIni('AlarmBox'))
         setItemFont(self.alarmView,self.getFontFromIni('AlarmBox'))
