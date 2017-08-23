@@ -586,7 +586,7 @@ class H2O2Validation(H2O2ValidationFrame):
         if deviation > deviation_limit:
             info = "Nominal concentration = %s\nAveraged CH4 concentration = %s\n" + \
                 "Measurement result is too far away from nominal concentration!\n" + \
-                "Please check the gas concentration, regulator pressure, and gas lines."
+                "Please check the gas concentration, regulator pressure, and gas lines.\n" + \
                 "Click OK to run this step again."
             info = info % (nominal, average)
             ret = self.message_box(QMessageBox.Critical, "Error", info)
