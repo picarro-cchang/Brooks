@@ -1111,20 +1111,26 @@ class QuickGui(wx.Frame):
         # Get INI for peripheral interface and create an internal dictionary for later use
         self.periphStandardSourceKey = {}
         basePath = os.path.split(configFile)[0]
-        self.rawPeriphDict = {}
-        self.syncPeriphDict = {}
-        try:
-            periphIntrfConfig = os.path.join(basePath, self.config.get("PeriphIntrf", "periphIntrfConfig"))
-            selectAll = self.config.getboolean("PeriphIntrf", "showAll", False)
-            (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig,selectAll)
-        except Exception, err:
-            print "1280 %r Exception parsing peripheral interface config." % err
 
-        # Add peripheral interface columns (if available) in standard mode
-        if self.rawPeriphDict:
-            self._addStandardKeys(self.rawPeriphDict)
-        if self.syncPeriphDict:
-            self._addStandardKeys(self.syncPeriphDict)
+        # Load in the data keys for the peripheral interface.  Ignore this if there is no "PeriphIntrf"
+        # section in the QuickGui ini file.
+        # PeriphIntrf is only used in the Surveyor product line for devices such as the anemometer and
+        # GPS.
+        if "PeriphIntrf" in self.config.keys():
+            try:
+                self.rawPeriphDict = {}
+                self.syncPeriphDict = {}
+                periphIntrfConfig = os.path.join(basePath, self.config.get("PeriphIntrf", "periphIntrfConfig"))
+                selectAll = self.config.getboolean("PeriphIntrf", "showAll", False)
+                (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig,selectAll)
+                # Add peripheral interface columns (if available) in standard mode
+                if self.rawPeriphDict:
+                    self._addStandardKeys(self.rawPeriphDict)
+                if self.syncPeriphDict:
+                    self._addStandardKeys(self.syncPeriphDict)
+            except Exception, err:
+                print "%r Exception parsing peripheral interface config." % err
+
 
         # Set Windows platform type
         self.platform = platform()[:10]
@@ -2688,7 +2694,6 @@ def HandleCommandSwitches():
 
     if "-c" in options:
         configFile = options["-c"]
-        print "Config file specified at command line: %s" % configFile
 
     if "-t" in options:
         defaultTitle = options["-t"]
@@ -2698,7 +2703,7 @@ def HandleCommandSwitches():
     return (configFile, defaultTitle)
 
 if __name__ == "__main__":
-    app = wx.PySimpleApp(False)
+    app = wx.App(False)
     app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     configFile, defaultTitle = HandleCommandSwitches()
     Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
