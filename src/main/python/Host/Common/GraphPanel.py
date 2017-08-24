@@ -100,14 +100,27 @@ class Sequence(object):
 
 class Series(object):
     def __init__(self,*args):
-        """Construct a Series from either a pair of Sequence objects or with a specified
-            number of points."""
+        """
+        Construct a Series from either a pair of Sequence objects or with a specified
+        number of points.
+        """
         if isinstance(args[0],int):
             self.x = Sequence(args[0])
             self.y = Sequence(args[0])
         elif isinstance(args[0],Sequence) and isinstance(args[1],Sequence):
             self.x = args[0]
             self.y = args[1]
+        else:
+            # A bug in the Host code will sometimes try to create a Series with data not yet
+            # defined.  If either x or y inputs are invalid create an empty series so the
+            # GUI doesn't throw a bunch of errors.  Eventually the empty series is populated
+            # with valid data (assuming everything else is working) and plot updates work
+            # without complaint.
+            self.x = Sequence(0)
+            self.y = Sequence(0)
+        self.seriesName = "Unamed Series"
+        if len(args) > 2:
+            self.seriesName = args[2]
         self.maxPoints = None
     def GetLatestUpdate(self):
         return max(self.x.GetLatestUpdate(),self.y.GetLatestUpdate())

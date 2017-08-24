@@ -918,7 +918,10 @@ class DataStore(object):
         return self.sourceDict[source].keys()
 
     def getDataSequence(self,source,key):
-        return self.sourceDict[source][key]
+        try:
+            return self.sourceDict[source][key]
+        except:
+            return None
 
 #end of class DataStore
 class InstStatusPanel(wx.Panel):
@@ -2164,7 +2167,8 @@ class QuickGui(wx.Frame):
                 self.stdDevTextCtrl[idx].SetValue(self.statsStdvFormat % self.graphPanel[idx].stats[0][1])
                 self.slopeTextCtrl[idx].SetValue(self.statsSlopeFormat % self.graphPanel[idx].stats[0][2])
 
-            if self.dataStore != None and self.source[idx] != None and self.dataKey[idx] != None:
+            if self.dataStore != None and self.source[idx] != None and self.dataKey[idx] != None \
+                    and self.dataStore.getDataSequence(self.source[idx],self.dataKey[idx]) is not None:
                 timeSeq = self.dataStore.getTime(self.source[idx])
                 v = self.dataStore.getDataSequence(self.source[idx],self.dataKey[idx]).GetLatest()
                 format = self.keySubstDatabase.applySubstitution(self.dataKey[idx])[2]
