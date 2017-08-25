@@ -547,7 +547,8 @@ class H2O2Validation(H2O2ValidationFrame):
                         self.validation_results["%s_ch4_sd" % stage] = std
                         self.validation_results["%s_ch4_diff" % stage] = abs(avg - nominal)*100.0/nominal \
                              if nominal > 1e-6 else 'N/A'
-                        result_string += "Observed average CH4 = %.3f ppm. " % (self.validation_results[stage+"_ch4_mean"])
+                        result_string = "Measured average concentrations\n\n"
+                        result_string += "%-6s=%8.3f ppm.\n" % ("CH4",self.validation_results[stage+"_ch4_mean"])
                     else:
                         self.message_box(QMessageBox.Critical, "Error",
                             """<h3>Not enough data points collected!</h3>
@@ -557,7 +558,7 @@ class H2O2Validation(H2O2ValidationFrame):
                         return 1
                     if len(self.validation_data[stage]["H2O2"]) > 0:
                         self.validation_results["%s_h2o2_mean" % stage] = np.average(self.validation_data[stage]["H2O2"])
-                        result_string += "Observed average H2O2 = %.3f ppb. " % (self.validation_results["%s_h2o2_mean" % stage])
+                        result_string += "%-6s=%8.3f ppb." % ("H2O2",self.validation_results["%s_h2o2_mean" % stage])
                         self.validation_results["%s_h2o_mean" % stage] = np.average(self.validation_data[stage]["H2O"])
                     self.button_next_step.setEnabled(True)
                     self.measurement_progress.hide()
