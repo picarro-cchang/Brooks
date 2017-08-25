@@ -177,8 +177,10 @@ class SQLiteServer(object):
                     "active": 0, "password": None, "roles": None})
                 return {"error": "Username and password do not match! User account is disabled!"}
             else:
-                msg = "%s/%d" % (self.user_login_attempts["attempts"], self.system_varialbes["user_login_attempts"])
-                return {"error": "Username and password do not match! Failed login: %s." % msg}
+                # msg = "%s/%d" % (self.user_login_attempts["attempts"], self.system_varialbes["user_login_attempts"])
+                # return {"error": "Username and password do not match! Failed login: %s." % msg}
+                msg = "%d" % (self.system_varialbes["user_login_attempts"] - self.user_login_attempts["attempts"])
+                return {"error": "Username or password are incorrect.\nYou are allowed %s more failed attempts before your account is locked." % msg}
         else:
             return {"error": "Username and password do not match!"}
 

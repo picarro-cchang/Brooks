@@ -253,7 +253,7 @@ class LoginDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.BORDER_NONE | wx.TE_MULTILINE)
 
         self.__DoLayout()
-        self.SetInitialSize((300, 200))
+        self.SetInitialSize((300, 230))
         self.user.SetFocus()
 
     def __DoLayout(self):
