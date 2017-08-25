@@ -59,8 +59,9 @@ class UserAdminFrame(QMainWindow):
         picarro_logo = QPixmap(os.path.join(self.curr_dir, "logo_picarro.png"))
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
-        logo_box = QHBoxLayout()
+        logo_box = QVBoxLayout()
         logo_box.addWidget(picarro_label,0,Qt.AlignHCenter)
+        logo_box.addWidget(QLabel("<h3>User Management Tool</h3>"),0,Qt.AlignHCenter)
 
         # Set the form layouts in widgets so hide/show works.
         # Set home form as a the initially visible form.
