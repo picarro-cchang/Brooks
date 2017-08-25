@@ -75,7 +75,7 @@ class H2O2ValidationFrame(QMainWindow):
         self.display_instruction.setMinimumHeight(300)
         self.display_instruction.setWordWrap(True)
         self.select_cylinder = QComboBox()
-        self.button_edit_cylinder = QPushButton("Edit Cylinder")
+        self.button_edit_cylinder = QPushButton("Edit Cylinders")
         self.button_edit_cylinder.setStyleSheet("width: 120px")
         self.display_instruction2 = QLabel("Click Next to continue.")
         self.display_instruction2.setAccessibleName("instruction2")

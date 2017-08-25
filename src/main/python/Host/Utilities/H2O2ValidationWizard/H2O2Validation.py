@@ -46,9 +46,11 @@ validation_procedure = [
         </p>
     """),
     ("Zero-Air Measurement: Preparation", """
-        <h2>1. Attach a regulator to the zero air source if not already installed, with the output pressure set to zero. 
-            Open the cylinder valve and adjust the output line pressure upwards to 2-3 psig (0.1-0.2 bar). </h2>
+        <h2>1. Attach a regulator to the zero air source with the output pressure set to zero. 
+            Open the cylinder valve and adjust the output line pressure to 2-3 psig (0.1-0.2 bar). </h2>
         <h2>2. Attach the zero air line to the instrument.</h2>
+        <h2>3. Select the zero-air cylinder from the drop down menu.  If a zero-air cylinder does not appear as an option, click EDIT CYLINDERS to enter in the information about your zero-air cylinder.</h2>
+        <h2>4. After selecting a zero-air source, click NEXT.
     """),
     ("Zero-Air Measurement", """
         <h2>Data Collection</h2>
