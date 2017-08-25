@@ -56,24 +56,33 @@ validation_procedure = [
         <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 1: Preparation", """
-        <h2>1. Attach a methane calibrant gas line at 2-3 psig (0.1-0.2 bar). </h2>
-        <h2>2. Enter nominal concentration of methane gas below. </h2>
+        <h2>1. Remove the previous cylinder.</h2>
+        <h2>2. Set the output pressure of lowest concentration methane cylinder to 2-3 psi.</h2>
+        <h2>3. Attach the lowest methane concentration cylinder to the instrument.</h2>
+        <h2>4. Select the appropriate cylinder from the drop down menu.</h2>
+        <h2>5. Click NEXT to continue.</h2>
     """),
     ("Calibrant 1 Measurement", """
         <h2>Data Collection</h2>
         <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 2: Preparation", """
-        <h2>1. Attach a methane calibrant gas line at 2-3 psig (0.1-0.2 bar). </h2>
-        <h2>2. Enter nominal concentration of methane gas below. </h2>
+        <h2>1. Remove the previous cylinder.</h2>
+        <h2>2. Set the output pressure of lowest concentration methane cylinder to 2-3 psi.</h2>
+        <h2>3. Attach the mid-range methane concentration cylinder to the instrument.</h2>
+        <h2>4. Select the appropriate cylinder from the drop down menu.</h2>
+        <h2>5. Click NEXT to continue.</h2>
     """),
     ("Calibrant 2 Measurement", """
         <h2>Data Collection</h2>
         <h3>This process will take a few minutes...</h3>
     """),
     ("Calibrant 3: Preparation", """
-        <h2>1. Attach a methane calibrant gas line at 2-3 psig (0.1-0.2 bar). </h2>
-        <h2>2. Enter nominal concentration of methane gas below. </h2>
+        <h2>1. Remove the previous cylinder.</h2>
+        <h2>2. Set the output pressure of lowest concentration methane cylinder to 2-3 psi.</h2>
+        <h2>3. Attach the highest methane concentration cylinder to the instrument.</h2>
+        <h2>4. Select the appropriate cylinder from the drop down menu.</h2>
+        <h2>5. Click NEXT to continue.</h2>
     """),
     ("Calibrant 3 Measurement", """
         <h2>Data Collection</h2>
