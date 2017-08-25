@@ -59,8 +59,9 @@ class UserAdminFrame(QMainWindow):
         picarro_logo = QPixmap(os.path.join(self.curr_dir, "logo_picarro.png"))
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
-        logo_box = QHBoxLayout()
+        logo_box = QVBoxLayout()
         logo_box.addWidget(picarro_label,0,Qt.AlignHCenter)
+        logo_box.addWidget(QLabel("<h3>User Management Tool</h3>"),0,Qt.AlignHCenter)
 
         # Set the form layouts in widgets so hide/show works.
         # Set home form as a the initially visible form.
@@ -237,11 +238,9 @@ class UserAdminFrame(QMainWindow):
         self.button_next_history = QPushButton(">")
         self.button_next_history.setAccessibleName("history")
         self.button_next_history.clicked.connect(self.next_history_page)
-        self.button_next_history.setEnabled(False)
-        self.button_save_history = QPushButton("Save")
-        self.button_save_history.clicked.connect(self.save_history)
+        self.button_next_history.setEnabled(False)        
         self.button_download_history = QPushButton("Download")
-        self.button_download_history.clicked.connect(self.download_file)
+        self.button_download_history.clicked.connect(self.download_history)
         self.button_refresh_history = QPushButton("Refresh")
         self.button_refresh_history.clicked.connect(self.get_history)
         action_history_layout.addWidget(self.label_action_history)
@@ -253,7 +252,6 @@ class UserAdminFrame(QMainWindow):
         button_line2 = QHBoxLayout()
         button_line2.addStretch(1)        
         button_line2.addWidget(self.button_refresh_history)
-        button_line2.addWidget(self.button_save_history)
         button_line2.addWidget(self.button_download_history)
         action_history_layout.addLayout(button_line2)
 

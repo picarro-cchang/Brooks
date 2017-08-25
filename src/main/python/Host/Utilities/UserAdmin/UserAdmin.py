@@ -226,7 +226,8 @@ class MainWindow(UserAdminFrame):
             user["employee_id"], user["phone_number"], ",".join(user["roles"]))
         self.label_user_info.setText(user_info)
 
-    def download_file(self):
+    def download_history(self):
+        self.save_history()
         if self.file_manager_cmd:
             from subprocess import Popen
             cmd = self.file_manager_cmd + " " + self.file_manager_args
@@ -339,12 +340,12 @@ class MainWindow(UserAdminFrame):
             msg = "User history is empty. Please click Refresh button to download history from server"
             self.message_box(QMessageBox.Critical, "Error", msg)
             return 1
-        fname = os.path.join(self.output_folder, time.strftime("%Y%m%d_%H%M%S.csv"))
+        fname = os.path.join(self.output_folder, "UserHistory.csv")
         with open(fname, "w") as f:
             f.write("DateTime,UserName,Operation\n")
             for a in self.action_history:
                 f.write("%s,%s,%s\n" % (a[0], a[1], a[2]))
-        msg = "User history has been saved to %s." % fname
+        msg = "User history has been saved in %s." % fname
         self.message_box(QMessageBox.Information, "Save History", msg)
         
     def save_new_pwd(self, username, password):
