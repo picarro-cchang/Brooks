@@ -25,20 +25,19 @@ validation_steps = {2:"zero_air", 4:"calibrant1", 6:"calibrant2", 8:"calibrant3"
 
 validation_procedure = [
     ("Introduction to System Validation", """
-        <p>This validation procedure is based on sequentially introducing zero air and two (or three) methane standards.
+        <p>This validation procedure is based on sequentially introducing zero air and three methane standards.
         The H2O2 signal in zero air will be measured to evaluate the zero offset for the spectroscopic model. 
         The methane concentrations in zero air and in each standard will be measured, and a linear regression 
         is calculated to demonstrate the linearity and zero accuracy of the analyzer. 
         </p>
-        <p>Validation process takes 20-30 minutes. A report will be generated if validation passes.</p>
+        <p>The validation process takes 20-30 minutes. A PDF report with electronic signature will be generated upon successful completion.</p>
         <p><b>Required Supplies</b>
             <ul>
-                <li>Cylinder of zero air (dry synthetic hydrocarbon-free air.)</li>
-                <li>Two or three methane standard cylinders containing 2, 10, and 100 ppm of methane certified at +/- 2% composition accuracy.</li>
-                <li>One or more two-stage regulators. The second stage should be capable of accurately delivering 2-3 psi (0.1-0.2 bar) of line pressure. 
-                Recommend using a 0-15 psi (0-1 bar) output range.</li>
-                <li>Sufficient tubing to connect the regulator(s) to the instrument. </li>
-                <li>1/4" Ultra Torr union (optional but highly recommended). </li>
+                <li>Cylinder of zero air (dry synthetic hydrocarbon-free air).</li>
+                <li>Three methane standard cylinders containing 2, 10, and 100 ppm of methane certified at +/- 2% composition accuracy or better.</li>
+                <li>Two-stage regulators for each gas cyclinder capable of accurately delivering 2-3 psi (0.1-0.2 bar) of line pressure.</li>
+                <li>Sufficient tubing to connect the regulators to the instrument. </li>
+                <li>1/4" Swagelok Ultra-Torr fittings for the gas lines.</li>
             </ul>
         </p>
         <p><b>Safety</b><br>
