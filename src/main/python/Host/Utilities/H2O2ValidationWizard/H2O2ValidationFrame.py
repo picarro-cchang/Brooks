@@ -41,6 +41,8 @@ class H2O2ValidationFrame(QMainWindow):
         self.display_conc_h2o.setFixedWidth(100)
         time_axis = DateAxisItem("bottom")
         time_series_plot = pg.PlotWidget(axisItems={'bottom':time_axis})
+        time_series_plot.setMouseEnabled(x=False,y=False)
+        time_series_plot.setMenuEnabled(False)
         time_series_plot.showGrid(x=True, y=True)
         time_series_plot.setLabels(left="CH4 (ppm)")
         self.ch4_plot = time_series_plot.plot(pen=pg.mkPen(color=(255,255,255), width=1))
