@@ -45,6 +45,17 @@ class H2O2ValidationFrame(QMainWindow):
         time_series_plot.setMenuEnabled(False)
         time_series_plot.showGrid(x=True, y=True)
         time_series_plot.setLabels(left="CH4 (ppm)")
+
+        # Seems to keep time stamp labels from overlapping with eachother and over
+        # the y-axis label.
+        time_series_plot.getAxis("bottom").setStyle(autoExpandTextSpace=False)
+
+        # Add top and right axes without labels to create a box around the plot.
+        time_series_plot.showAxis("top",show=True)
+        time_series_plot.getAxis("top").setStyle(showValues=False)
+        time_series_plot.showAxis("right",show=True)
+        time_series_plot.getAxis("right").setStyle(showValues=False)
+
         self.ch4_plot = time_series_plot.plot(pen=pg.mkPen(color=(255,255,255), width=1))
         top_layout = QHBoxLayout()
         data_layout = QVBoxLayout()
