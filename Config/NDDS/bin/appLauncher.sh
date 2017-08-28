@@ -6,6 +6,7 @@
 # Picarro python modules.
 # 
 export PATH=/home/picarro/anaconda2/bin:$PATH
+export PYTHONPATH=/home/picarro/I2000:$PYTHONPATH
 cd /usr/local/picarro/qtLauncher
 python -O qtLauncher.py
 
