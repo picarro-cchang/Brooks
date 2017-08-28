@@ -332,7 +332,7 @@ class SQLiteServer(object):
         elif cmd == "delete_user":
             user = self.ds.find_user(username=username)
             if not user:
-                return {"error": "Username not exists!"}
+                return {"error": "Username does not exist!"}
             self.ds.delete_user(user)
             self.ds.commit()
             return {"username": username}
