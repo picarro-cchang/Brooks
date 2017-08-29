@@ -177,10 +177,11 @@ class SQLiteServer(object):
                     "active": 0, "password": None, "roles": None})
                 return {"error": "Username and password do not match! User account is disabled!"}
             else:
-                # msg = "%s/%d" % (self.user_login_attempts["attempts"], self.system_varialbes["user_login_attempts"])
-                # return {"error": "Username and password do not match! Failed login: %s." % msg}
-                msg = "%d" % (self.system_varialbes["user_login_attempts"] - self.user_login_attempts["attempts"])
-                return {"error": "Username or password are incorrect.\nYou are allowed %s more failed attempts before your account is locked." % msg}
+                remain_login = self.system_varialbes["user_login_attempts"] - self.user_login_attempts["attempts"]
+                msg = "Username or password are incorrect.\n" + \
+                    "You are allowed %d more failed attempts before your account is locked.\n" % (remain_login) + \
+                    "If you have forgotten your credentials please contact your account administrator."
+                return {"error": msg}
         else:
             return {"error": "Username and password do not match!"}
 
@@ -372,6 +373,8 @@ class SQLiteServer(object):
             requester = request_dict["requester"]
             ret = self.log_in_user(username, request_dict["password"], requester)
             status = ret["error"] if "error" in ret else "succeed"
+            if "Username or password are incorrect" in status:
+                status = "Username or password are incorrect"
             self.save_action_history(username, "log in from %s: %s" % (requester, status))
             return ret
         elif cmd == "log_out_user": # AccountAPI, post
