@@ -243,9 +243,9 @@ class H2O2ValidationFrame(QMainWindow):
         cylinder_layout.setColumnStretch(0,1)
         cylinder_layout.setColumnStretch(2,1)
         cylinder_layout.setRowStretch(0,1)
-        label1 = QLabel("Available Cylinders. Please review infomation of all cylinders for validation." +
-            "\nThen click 'Exit' to proceed.") 
-        cylinder_layout.addWidget(label1,1,1,Qt.AlignHCenter)
+        label1 = QLabel("<h3>Available Cylinders. Please review infomation of all cylinders for validation.</h3>" +
+            "<h3>Then click 'Exit' to proceed.</h3>") 
+        cylinder_layout.addWidget(label1,1,1,Qt.AlignLeft)
         cylinder_layout.addWidget(self.table_cylinder_list,2,1,Qt.AlignHCenter)
         cylinder_layout.addLayout(info_layout,3,1,Qt.AlignHCenter)
         cylinder_layout.addLayout(control_layout,4,1,Qt.AlignHCenter)

@@ -153,13 +153,17 @@ class UserAdminFrame(QMainWindow):
 
         # User management tab
         self.table_user_list = QTableWidget(1, 4)
-        self.table_user_list.setMinimumSize(QSize(600, 300))
+        self.table_user_list.setMinimumSize(QSize(700, 300))
         self.table_user_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
         #self.table_user_list.setAlternatingRowColors(True)
         self.table_user_list.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table_user_list.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table_user_list.verticalHeader().setVisible(False)
         self.table_user_list.setHorizontalHeaderLabels(QString("UserName;Last Name;First Name;Role").split(";"))
+        self.table_user_list.setColumnWidth(0, 175)
+        self.table_user_list.setColumnWidth(1, 175)
+        self.table_user_list.setColumnWidth(2, 175)
+        self.table_user_list.setColumnWidth(3, 170)
         self.table_user_list.clicked.connect(self.select_user_from_table)
         self.label_user_info = QLabel("")
         self.button_change_pwd = QPushButton("Change Pwd")
