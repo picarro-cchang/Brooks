@@ -269,8 +269,10 @@ class Builder(object):
             out, retcode = self.run_command('git tag -a %s -m %s"' % (tagname, tagname), ignore_status=False)
             logger.info('Tagged repository: %s' % tagname)
         if project.get_property('push'):
-            out, retcode = self.run_command('git push origin --tags', ignore_status=False)
+            out, retcode = self.run_command('git push origin', ignore_status=False)
             logger.info('Pushed repository: %s' % out)
+            out, retcode = self.run_command('git push --tags', ignore_status=False)
+            logger.info('Tagged repository: %s' % out)
     
     def upload_to_artifactory(self):
         """Upload installers to artifactory using curl commands
@@ -278,13 +280,13 @@ class Builder(object):
         project = self.project
         logger = self.logger
         if project.get_property('upload_artifactory'):
-            installer_version = project.get_property('installer_version')
+            installer_version = project.get_property('raw_version')
             product = project.get_property('product')
             installer_folder = os.path.join('target', 'Installers', '%s-%s' % (product, installer_version))
             for file in os.listdir(installer_folder):
-                if file.endswith('.exe'):
+                if file.endswith('.deb'):
                     src_path = os.path.join(installer_folder, file)
-                    dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/hostexe/" + installer_version + "/"
+                    dest_path = r"https://picarro.artifactoryonline.com/picarro/picarro-generic-private/Semi/SI2000/Dev/LTCAutoCalibration/" + installer_version + "_" + self.git_hash[:8] + "/"
                     cmd = "curl -u %s:%s -T %s %s" % ("ci-server", "ALGP@&gNR%h", src_path, dest_path)
                     self.run_command(cmd)
                     logger.info('Upload %s installer to Artifactory' % file)    
