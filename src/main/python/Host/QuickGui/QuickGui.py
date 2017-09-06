@@ -2712,6 +2712,7 @@ class QuickGui(wx.Frame):
 
             if okClicked: 
                 if authorized:
+                    self.session_time = 0
                     if 'Admin' in r_account.json()["roles"]:
                         self.userLevel = 3
                         d = OKDialog(self,"\tAdmin logged in.",None,-1,"")
