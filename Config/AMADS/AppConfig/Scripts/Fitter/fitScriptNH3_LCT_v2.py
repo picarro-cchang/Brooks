@@ -162,9 +162,10 @@ if d["spectrumId"]==2 and d["ngroups"]>6:
     else:
         r = anNH3[1](d,init,deps)
         ANALYSIS.append(r)
-        cm_adjust = 0.0
-        
+        cm_adjust = 0.0        
     goodLCT = abs(cm_adjust)<0.005 and sigma0<0.005 and badshot_h2o == 0
+    tuner2mean = tunerMean
+    tuner2stdev = tunerStdev
     if goodLCT:
         d.waveNumber = f0 + fsr*round_((d.waveNumber - f0)/fsr)
         d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
