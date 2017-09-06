@@ -2561,6 +2561,7 @@ class QuickGui(wx.Frame):
                         self.Refresh()
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
+                        self.session_time = 0
                         #Recursively bind all the widgets with mouse motion event 
                         self.BindAllWidgetsMotion(self.mainPanel)
                         if self.userLevel < 4:
