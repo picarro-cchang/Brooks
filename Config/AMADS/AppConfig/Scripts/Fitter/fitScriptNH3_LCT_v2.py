@@ -5,8 +5,9 @@
 #  2016-09-26:  added condition on shift to avoid errors when fitting dry samples
 #  2017-01-10:  major change to frequency assignment and pzt feedback to deal with switching between room air and dry nitrogen
 #               implemented only on SID 2 and 4 for now -- SID 3 "big water" can remain as before
+#  2017-09-05:  added reporting of tuner statistics for LCT diagnosis
 
-from numpy import any, argmin, mean, std, sqrt, round_
+from numpy import any, argmin, diff, mean, std, sqrt, round_
 import os.path
 import time
 
@@ -119,6 +120,10 @@ if INIT:
     h2o_conc = 0.0
     co2_conc = 0.0
     pzt2_adjust = 0.0
+    tuner2mean = 32768
+    tuner2stdev = 0
+    tuner4mean = 32768
+    tuner4stdev = 0
 
 init = InitialValues()
 deps = Dependencies()
@@ -132,6 +137,7 @@ d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrec
 P = d["cavitypressure"]
 T = d["cavitytemperature"]
 tunerMean = mean(d.tunerValue)
+tunerStdev = std(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
 
@@ -228,7 +234,8 @@ if d["spectrumId"]==4 and d["ngroups"]>15:
         last_base_12 = nh3_base_12
         if abs(dbase) > 3:
             badshot_nh3 = 1
-        
+    tuner4mean = tunerMean
+    tuner4stdev = tunerStdev        
     if goodLCT:
         i0 = argmin(abs(d.fitData["freq"] - 6548.618))
         f0 = d.fitData["freq"][i0]
@@ -323,6 +330,7 @@ if badshot_nh3 == 0:
               "nh3_base_12":nh3_base_12,"nh3_peak_12":nh3_peak_12,"nh3_slope_12":nh3_slope_12,
               "nh3_conc_ave":nh3_conc_ave,"nh3_conc_smooth":nh3_conc_smooth,
               "pzt2_adjust":pzt2_adjust,"pzt_per_fsr":pzt_per_fsr,
+              "tuner2mean":tuner2mean,"tuner2stdev":tuner2stdev,"tuner4mean":tuner4mean,"tuner4stdev":tuner4stdev,
               "ngroups":d["ngroups"],"numRDs":d["datapoints"]}
     RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                    "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
