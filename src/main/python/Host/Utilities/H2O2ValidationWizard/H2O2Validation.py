@@ -69,7 +69,7 @@ validation_procedure = [
     """),
     ("Calibrant 2: Preparation", """
         <h2>1. Remove the previous cylinder.</h2>
-        <h2>2. Set the output pressure of lowest concentration methane cylinder to 2-3 psi.</h2>
+        <h2>2. Set the output pressure of mid-range concentration methane cylinder to 2-3 psi.</h2>
         <h2>3. Attach the mid-range methane concentration cylinder to the instrument.</h2>
         <h2>4. Select the appropriate cylinder from the drop down menu.</h2>
         <h2>5. Click NEXT to continue.</h2>
@@ -80,7 +80,7 @@ validation_procedure = [
     """),
     ("Calibrant 3: Preparation", """
         <h2>1. Remove the previous cylinder.</h2>
-        <h2>2. Set the output pressure of lowest concentration methane cylinder to 2-3 psi.</h2>
+        <h2>2. Set the output pressure of highest concentration methane cylinder to 2-3 psi.</h2>
         <h2>3. Attach the highest methane concentration cylinder to the instrument.</h2>
         <h2>4. Select the appropriate cylinder from the drop down menu.</h2>
         <h2>5. Click NEXT to continue.</h2>
