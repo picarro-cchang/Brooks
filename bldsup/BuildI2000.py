@@ -259,6 +259,10 @@ Description: Picarro Host Software for Industry Application
             if os.path.exists(bin_folder_source):
                 shutil.copytree(bin_folder_source, bin_folder_target)
                 os.system("chmod -R 755 %s" % bin_folder_target)
+            # copy installerSignature
+            signature_file = os.path.join(config_dir, installer_type, "installerSignature.txt")
+            if os.path.exists(signature_file):
+                shutil.copyfile(signature_file, dist_dir_new)
             # make control file
             self.make_control_file(debian_dir, installer_type)
             logger.info('Project version: %s' % project.version)
