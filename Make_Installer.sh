@@ -3,7 +3,7 @@
 
 if [ $# -lt 4 ] 
 then
-    echo -e "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: installer type (Like NDDS)\n  3:Project type (Like si2000)\n  4: Git hash number"
+    echo -e "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: installer type (Like NDDS)\n 3: Git hash number\n 4:Project name (Like si2000)"
     exit 1
 fi
 

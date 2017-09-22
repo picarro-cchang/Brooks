@@ -3,7 +3,7 @@
 
 if [ $# -lt 2 ] 
 then
-    echo "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: Project type (Like si2000)\n  3: Git hash number"
+    echo -e "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: Project name (Like si2000)\n"
     exit 1
 fi
 
