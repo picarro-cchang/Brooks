@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to compile and generate I2000 Analyzer code for DSP, FPGA, FitUtils, DatVeiwer and FastLomb
+# Script to compile and generate Analyzer code for DSP, FPGA, FitUtils, DatVeiwer and FastLomb
 
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"

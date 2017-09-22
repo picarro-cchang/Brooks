@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script will go to below folder list (includeFolderList vriable) to Cythonize I2000 Analyzer code
+# Script will go to below folder list (includeFolderList vriable) to Cythonize Analyzer code
 
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
