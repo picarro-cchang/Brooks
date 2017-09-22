@@ -62,13 +62,6 @@ if hasattr(sys, "frozen"):  # we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
-if __debug__:
-    print("Loading rpdb2")
-    import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg",timeout=0)
-    print("rpdb2 loaded")
-
-
 def _reg_index(indexOrName):
     """Convert a name or index into an integer index, raising an exception if the name is not found"""
     if isinstance(indexOrName, types.IntType):

@@ -70,13 +70,6 @@ Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
 Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
                                       APP_NAME, IsDontCareConnection=True)
 
-if __debug__:
-    print("Loading rpdb2")
-    import rpdb2
-    rpdb2.start_embedded_debugger("hostdbg", timeout=0)
-    print("rpdb2 loaded")
-
-
 class CalibrationDataInRow(object):
     """Structure for collecting ringdown metadata for calibration ringdowns associated with a scheme row.
 
