@@ -2,10 +2,15 @@ import os
 import unittest
 from AlarmScriptTester import AlarmScriptTester
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Utilities.BuildHelper.BuildHelper import isAnalyzerToBuild
+
+from teamcity import is_running_under_teamcity
+from teamcity.unittestpy import TeamcityTestRunner
 
 ALARM_SCRIPT = os.path.abspath(r"./Config/RFADS/AppConfig/Scripts/AlarmSystem/alarm_RFADS.py")
 ALARM_CONFIG = os.path.abspath(r"./Config/RFADS/AppConfig/Config/AlarmSystem/AlarmSystem.ini")
 
+@unittest.skipUnless(isAnalyzerToBuild(["FEDS", "Surveyor"]), "Analyzer type not match")
 class TestHealthMonitor(unittest.TestCase):
     """unit test for alarm system script of health monitor"""
     def setUp(self):
@@ -201,3 +206,10 @@ class TestHealthMonitor(unittest.TestCase):
         analyzerStatus, peripheralStatus = self._get_both_status(0, {"species": 170, "ValveMask": 0, "WS_STATUS": 0})
         self.assertTrue((peripheralStatus & self._get_alarm_mask("WindSensorDisconnected")) == 0)
         self.assertTrue((analyzerStatus & self._get_alarm_mask("InvalidData")) == 0)
+
+if __name__ == '__main__':
+    if is_running_under_teamcity():
+        runner = TeamcityTestRunner()
+    else:
+        runner = unittest.TextTestRunner()
+    unittest.main(testRunner=runner)
