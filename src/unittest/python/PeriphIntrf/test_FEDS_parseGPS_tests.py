@@ -9,7 +9,7 @@ from teamcity.unittestpy import TeamcityTestRunner
 PARSEGPS_SCRIPT = os.path.abspath(r"./Config/FEDS/AppConfig/Scripts/PeriphIntrf/parseGPS.py")
 PARSEGPS_CONFIG = os.path.abspath(r"./Config/FEDS/InstrConfig/Config/PeriphIntrf/RunSerial2Socket.ini")
 
-@unittest.skipUnless(isAnalyzerToBuild(["FEDS", "Surveyor"]), "Analyzer type not match")
+@unittest.skipUnless(isAnalyzerToBuild(["FEDS"]), "Analyzer type not match")
 class TestRegularGPS(unittest.TestCase):
     """unit test for alarm system script of health monitor"""
     def setUp(self):

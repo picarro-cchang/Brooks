@@ -10,7 +10,7 @@ from teamcity.unittestpy import TeamcityTestRunner
 ALARM_SCRIPT = os.path.abspath(r"./Config/RFADS/AppConfig/Scripts/AlarmSystem/alarm_RFADS.py")
 ALARM_CONFIG = os.path.abspath(r"./Config/RFADS/AppConfig/Config/AlarmSystem/AlarmSystem.ini")
 
-@unittest.skipUnless(isAnalyzerToBuild(["FEDS", "Surveyor"]), "Analyzer type not match")
+@unittest.skipUnless(isAnalyzerToBuild(["RFADS", "Surveyor"]), "Analyzer type not match")
 class TestHealthMonitor(unittest.TestCase):
     """unit test for alarm system script of health monitor"""
     def setUp(self):
