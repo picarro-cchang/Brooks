@@ -25,7 +25,7 @@ git_app_config_directory="$config_directory/$installer_type/AppConfig"
 git_bin_config_directory="$config_directory/$installer_type/bin"
 
 dist_dir_home="$dist_directory/home"
-dist_dir_new="$dist_directory/home/picarro/${project_name}"
+dist_dir_new="$dist_directory/home/picarro/${project_name^^}"
 dist_instr_config_directory="$dist_dir_new/InstrConfig"
 dist_common_config_directory="$dist_dir_new/CommonConfig"
 dist_app_config_directory="$dist_dir_new/AppConfig"
