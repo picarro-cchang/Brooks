@@ -1,14 +1,14 @@
 #!/bin/bash
 # Script to Copy all required files to target directory for debian package
 
-if [ $# -lt 1 ] 
+if [ $# -lt 2 ] 
 then
-    echo "Invalid argument please pass version number as argument"
+    echo "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: Project type (Like si2000)\n  3: Git hash number"
     exit 1
 fi
 
 raw_version=$1
-project_name="I2000"
+project_name=$2
 dist_foldername=${project_name}_${raw_version}
 git_directory=$(pwd)
 dir_source_main_python="$git_directory/src/main/python"
