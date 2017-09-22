@@ -132,7 +132,7 @@ class TestUserAdmin(unittest.TestCase):
         self.assertTrue("change password" in self.server.ds.action_model[-1].action)
         # try to log in using old pwd
         self.login_user("admin", "admin")
-        self.assertTrue("Username and password do not match" in self.interface.label_login_info.text())
+        self.assertTrue("Username or password are incorrect" in self.interface.label_login_info.text())
         # login using the new pwd
         self.login_user("admin", "Extreme_Science")
         self.assertTrue(self.interface.table_user_list.rowCount() == 3) # user list is populated after login
