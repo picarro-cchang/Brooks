@@ -3,7 +3,7 @@
 
 if [ $# -lt 4 ] 
 then
-    echo -e "Invalid argument please pass three arguments,\n  1: build number (Like 1.0.0.0)\n  2: installer type (Like NDDS)\n 3: Git hash number\n 4:Project name (Like si2000)"
+    echo -e "Invalid argument please pass three arguments,\n  1: Build number (Like 1.0.0.0)\n  2: Installer type (Like NDDS)\n  3: Git hash number\n  4: Project name (Like I2000)"
     exit 1
 fi
 
@@ -12,7 +12,7 @@ installer_type=$2
 git_hash=$3
 project_name=$4
 git_directory=$(pwd)
-version_file_path=$git_directory/versions/${project_name}_types.json
+version_file_path=$git_directory/versions/${project_name,,}_types.json
 dir_source_main_python="$git_directory/src/main/python"
 dist_foldername=${project_name}_${raw_version}
 dist_directory="$git_directory/target/dist/${dist_foldername}"
