@@ -125,7 +125,7 @@ class smokeTest(unittest.TestCase):
         self.assertTrue(checkSupervisorIni)
     
     def test_05_config(self):
-        pass
+        
     
 
                
