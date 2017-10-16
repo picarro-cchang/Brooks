@@ -2,7 +2,7 @@
 #  2014 0731:  Added correction for direct and indirect water interference, dry-mole-fraction
 #              Added nonlinear calculation of h2o_actual based on cross-calibration with CFADS
 #  2015 0611:  Changed reporting so that "NH3" now means dry mole fraction, not raw value.
-
+#  2017 0802:  add damping to wlm adjust as in other G2000 scripts
 import os
 import sys
 import inspect
@@ -145,7 +145,7 @@ if _DATA_["species"] == 2:
         _NEW_DATA_["NH3_uncorrected"] = _OLD_DATA_["NH3_uncorrected"][-1].value
         _NEW_DATA_["NH3_broadeningCorrected"] = _OLD_DATA_["NH3_broadeningCorrected"][-1].value
         _NEW_DATA_["NH3_dry"] = _OLD_DATA_["NH3_dry"][-1].value
-        #_NEW_DATA_["NH3_raw"] = _OLD_DATA_["NH3_Raw"][-1].value
+        _NEW_DATA_["NH3_raw"] = _OLD_DATA_["NH3_raw"][-1].value
         _NEW_DATA_["NH3_30s"] = _OLD_DATA_["NH3_30s"][-1].value
         _NEW_DATA_["NH3_2min"] = _OLD_DATA_["NH3_2min"][-1].value
         _NEW_DATA_["NH3_5min"] = _OLD_DATA_["NH3_5min"][-1].value
@@ -169,7 +169,7 @@ if _DATA_["species"] == 2:
         pass
 
 max_adjust = 5.0e-5
-
+wlm_gain = 0.2
 # Check instrument status and do not do any updates if any parameters are unlocked
 
 pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
@@ -183,7 +183,7 @@ if not good:
 else:
     if _DATA_["species"] == 2: # Update the offset for virtual laser 1
         try:
-            nh3_adjust = _DATA_["cm_adjust"]
+            nh3_adjust = _DATA_["cm_adjust"]*wlm_gain
             nh3_adjust = min(max_adjust,max(-max_adjust,nh3_adjust))
             newOffset0 = _FREQ_CONV_.getWlmOffset(1) + nh3_adjust
             _PERSISTENT_["wlm1_offset"] = newOffset0

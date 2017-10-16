@@ -6,6 +6,7 @@
 #  2012-12-23:  Move pzt statistics to SID 2 (otherwise pointless)
 #  2013-02-14:  Fixed bug in "badshot" logic that generated error messages when fit was bad
 #  2013-05-30:  Fixed bug in baseline initialization:  slope was not initialized
+#  2016-11-07:  Changed the definition of "dbase" to be more stable at high ammonia concentration
 
 from numpy import any, mean, std, sqrt
 import os.path
@@ -55,7 +56,6 @@ if INIT:
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/AXDS-xx peak 11 v1_1.ini")))
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/AXDS-xx peak 12 v1_1.ini")))
     anNH3.append(Analysis(os.path.join(BASEPATH,r"./NH3/big water #25 v2_0.ini")))
-
     #  Import instrument specific baseline constants
 
     baseline_slope = instrParams['Baseline_slope']
@@ -109,7 +109,7 @@ init = InitialValues()
 deps = Dependencies()
 ANALYSIS = []
 d = DATA
-#d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.50,maxVal=20.0)
+d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
 #d.wlmSetpointFilter(maxDev=0.005,sigmaThreshold=3)
 d.sparse(maxPoints=200,width=0.005,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",outlierThreshold=4.0)
 d.evaluateGroups(["waveNumber","uncorrectedAbsorbance"])
@@ -174,8 +174,9 @@ if (d["spectrumId"]==1 or d["spectrumId"]==4) and d["ngroups"]>18:
         nh3_conc_11 = 8.75*nh3_peak_11
     else:
         badshot_nh3 = 1
-    dbase = nh3_base_11 - last_base_11
-    last_base_11 = nh3_base_11
+    dbase = r[11,"base"] - last_base_11
+    last_base_11 = r[11,"base"]
+    #print "Peak 11 quality = %.3f, dbase = %.3f" % (nh3_quality_11, dbase)
     if abs(dbase) > 3:
         badshot_nh3 = 1
 
@@ -196,8 +197,9 @@ if (d["spectrumId"]==1 or d["spectrumId"]==4) and d["ngroups"]>18:
         nh3_conc_12 = 8.75*nh3_peak_12
     else:
         badshot_nh3 = 1
-    dbase = nh3_base_12 - last_base_12
-    last_base_12 = nh3_base_12
+    dbase = r[12,"base"] - last_base_12
+    last_base_12 = r[12,"base"]
+    #print "Peak 12 quality = %.3f, dbase = %.3f" % (nh3_quality_12, dbase)
     if abs(dbase) > 3:
         badshot_nh3 = 1
 
