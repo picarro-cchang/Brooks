@@ -33,6 +33,12 @@
         "SADS_PFV": {
             "species": "HCl",
             "installerSignature": "SADS_PFV"
+        },
+
+        "BDDS": {
+            "species": "H2S",
+            "installerSignature": "BDDS"
         }
+
     }
 }
