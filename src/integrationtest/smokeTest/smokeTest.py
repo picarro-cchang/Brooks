@@ -3,6 +3,8 @@ import time
 import unittest
 import configobj
 
+from TestUtilsSmoke import TestAnalyzer
+
 from PyQt4.QtTest import QTest
 from PyQt4.QtGui import QApplication
 from PyQt4.QtCore import Qt
@@ -13,6 +15,7 @@ import MainWindow
 launcher_path = "/usr/local/picarro/qtLauncher"
 curpath = os.path.dirname(os.path.realpath(__file__))
 match = re.search(r'\/(\w+2000)', curpath)
+
 if match:
     I_model = match.group(1)
 
@@ -89,7 +92,8 @@ class smokeTest(unittest.TestCase):
         
         pathOfScriptsCheck = "NDDS" in self.window._configObj["Host_Code_Button"]["args"]
         
-        self.launcherConfigCheckList = [rootDirCheck, startButtonLabelCheck, startButtonCaptionCheck, pathOfScriptsCheck]
+        self.launcherConfigCheckList = [(rootDirCheck, "rootDir error"), (startButtonLabelCheck, "start button label error"), 
+                                        (startButtonCaptionCheck, "start button caption error"), (pathOfScriptsCheck, "bin scripts path error")]
 
         launcherWidgets_lst = os.listdir(launcher_path+ '/pQtWidgets')
 
@@ -101,22 +105,20 @@ class smokeTest(unittest.TestCase):
             self.assertIn('SerialSettingsIniInterface.py',launcherWidgets_lst)
             self.assertIn('SerialSettingsWidget.py',launcherWidgets_lst)
       
-        button_0 = "File_Manager_Button" in self.window._configObj
-        button_1 = "Network" in self.window._configObj
-        button_2 = "Clock" in self.window._configObj
-        button_3 = "Serial" in self.window._configObj
-        button_4 = "UserAccounts" in self.window._configObj
-        button_5 = "H2O2Validation" in self.window._configObj
-        button_6 = "4-20mA Setting" in self.window._configObj
+        self.launcherConfigCheckList.append( ("File_Manager_Button" in self.window._configObj, "File_Manager_Button"))
+        self.launcherConfigCheckList.append( ("Network" in self.window._configObj, "Network"))
+        self.launcherConfigCheckList.append( ("Clock" in self.window._configObj, "Clock"))
+        self.launcherConfigCheckList.append( ("Serial" in self.window._configObj, "Serial"))
+        self.launcherConfigCheckList.append( ("UserAccounts" in self.window._configObj, "UserAccounts"))
+        self.launcherConfigCheckList.append( ("H2O2Validation" in self.window._configObj, "H2O2Validation"))
+        self.launcherConfigCheckList.append( ("4-20mA Setting" in self.window._configObj, "4-20mA Setting"))
         
-        for num in xrange(7):
-            tempCheck = "button_" + str(num)
-            self.launcherConfigCheckList.append(tempCheck)
 
         #check assert
         for item in self.launcherConfigCheckList:
-            self.assertTrue(item)
-
+            if not item[0]:
+                print "checkItem: ", item[1]
+            self.assertTrue(item[0])
 
     def test_04_config(self):
         #check supervisor config
@@ -125,11 +127,32 @@ class smokeTest(unittest.TestCase):
         self.assertTrue(checkSupervisorIni)
     
     def test_05_config(self):
+        test_agent = TestAnalyzer("NDDS", "/home/picarro/I2000/AppConfig/Config/Supervisor/supervisorSO_simulation.ini")
+        test_agent.start_analyzer()
+        #t.start_log_listenr()
+        #wait for the warmup process
+        time.sleep(20)
+        test_agent.start_log_listener()
+        while not test_agent.measurement:
+            
+            time.sleep(2)
+        print test_agent.measurement
+        test_agent.log_listener.stop()
+        time.sleep(20)
+        print "stop analyzer"
+        test_agent.stop_analyzer()
+        print "Done"
+
         
+        
+
     
 
                
     
+
+
+
 
 
 

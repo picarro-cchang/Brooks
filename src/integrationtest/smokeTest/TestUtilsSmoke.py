@@ -37,6 +37,12 @@ class TestAnalyzer(object):
 
     def log_processor(self, log_text):
         self.log = log_text.split("|")
+        level = float(self.log[3].strip()[1:])
+        if level >= 2.0:
+            self.error_msg = "Error in %s: %s" % (self.log[2], self.log[5])
+        elif level == 1.5:
+            if "Measuring" in self.log[5]:
+                self.measurement = True
         print "streamFilter log data:", self.log
 
     def stop_analyzer(self):
