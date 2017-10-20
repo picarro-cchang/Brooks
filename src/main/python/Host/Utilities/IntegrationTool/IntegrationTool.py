@@ -589,7 +589,7 @@ class IntegrationTool(IntegrationToolFrame):
             # Move the current active files to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.copy(self.wbCalActive+".ini", savedWbCalActive)
+                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
             #if os.path.isfile(self.hbCalActive+".ini"):
             #    savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
             #    shutil.copy(self.hbCalActive+".ini", savedHbCalActive)
@@ -623,7 +623,7 @@ class IntegrationTool(IntegrationToolFrame):
             # Move the current active WB file to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.copy(self.wbCalActive+".ini", savedWbCalActive)
+                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
             self.display += "Archived active WB file.\n"
             self.display += "WLM Offset finished.\n"
         except Exception, err:
