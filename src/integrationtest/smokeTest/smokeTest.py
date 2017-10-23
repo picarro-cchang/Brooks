@@ -2,6 +2,7 @@ import os,sys, re
 import time
 import unittest
 import configobj
+import tables, numpy
 
 from TestUtilsSmoke import TestAnalyzer
 
@@ -15,6 +16,9 @@ import MainWindow
 launcher_path = "/usr/local/picarro/qtLauncher"
 curpath = os.path.dirname(os.path.realpath(__file__))
 match = re.search(r'\/(\w+2000)', curpath)
+dataLog_path = '/home/picarro/I2000/Log/DataLogger/DataLog_Private'
+
+
 
 if match:
     I_model = match.group(1)
@@ -24,7 +28,7 @@ class smokeTest(unittest.TestCase):
 
     def test_00_pre(self):
         #os.system("killall python")
-        #os.system("bash /home/picarro/bin/launchSQLServer.sh &")
+        os.system("bash /home/picarro/bin/launchSQLServer.sh &")
         os.system("ps aux | grep python | grep -v 'SQL' | grep -v 'smokeTest' |awk '{print $2}' |xargs kill") 
         time.sleep(1)
 
@@ -133,25 +137,35 @@ class smokeTest(unittest.TestCase):
         #wait for the warmup process
         time.sleep(20)
         test_agent.start_log_listener()
+
         while not test_agent.measurement:
-            
             time.sleep(2)
+
         print test_agent.measurement
         test_agent.log_listener.stop()
-        time.sleep(20)
+        time.sleep(60)
         print "stop analyzer"
         test_agent.stop_analyzer()
         print "Done"
 
-        
-        
-
-    
-
-               
-    
-
-
+    def test_06_config(self):
+        data_log = os.listdir(dataLog_path)	
+        file_exist = len(data_log) > 0
+        self.assertTrue(file_exist)
+        for item in data_log:
+            if item.endswith('.h5'):
+                dataFile = os.path.join(dataLog_path, item)
+                ip = tables.openFile(dataFile, 'r')
+                resultsTable = ip.root.results
+                colNames = resultsTable.colnames
+                data = []
+                if 'H2O2' in colNames:
+                    data = resultsTable.col('H2O2')
+                average = numpy.average(data)
+                break
+        print "average_data: ", average
+        data_validation = (average > 50.0) and (average < 500.0) 
+        self.assertTrue(data_validation)
 
 
 
