@@ -43,7 +43,7 @@ class TestAnalyzer(object):
         elif level == 1.5:
             if "Measuring" in self.log[5]:
                 self.measurement = True
-        print "streamFilter log data:", self.log
+        #print "streamFilter log data:", self.log
 
     def stop_analyzer(self):
         #stop analyzer

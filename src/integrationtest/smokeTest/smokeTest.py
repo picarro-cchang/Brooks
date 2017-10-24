@@ -1,4 +1,4 @@
-import os,sys, re
+import os,sys, re, json
 import time
 import unittest
 import configobj
@@ -16,19 +16,48 @@ import MainWindow
 launcher_path = "/usr/local/picarro/qtLauncher"
 curpath = os.path.dirname(os.path.realpath(__file__))
 match = re.search(r'\/(\w+2000)', curpath)
-dataLog_path = '/home/picarro/I2000/Log/DataLogger/DataLog_Private'
 
 
-
+#Get host dir
 if match:
     I_model = match.group(1)
 
+if I_model == 'I2000':
+    host_dir = '/home/picarro/I2000'
+else:
+    host_dir = '/home/picarro/SI2000'
+
+dataLog_path = host_dir + '/Log/DataLogger/DataLog_Private'
+
+#get type of the analyzer
+build_info = host_dir + '/Host/Utilities/BuildHelper/BuildInfo.py'
+with open(build_info, 'rb') as f:
+    content = f.read()
+matchtype = re.search(r'buildTypes \= \[\'(\w+)\'\]', content)
+
+if matchtype:
+    built_type = matchtype.group(1)
+print "built type: ",  built_type
+
+#get types json and abstract species
+gitdirmatch = re.search(r'(\S+)\/src\/', curpath)
+
+if gitdirmatch:
+    gitdir = gitdirmatch.group(1)
+
+I2000types_json_dir = os.path.join(gitdir, 'versions')
+I2000types_json_file = os.path.join(I2000types_json_dir, 'i2000_types.json')
+with open(I2000types_json_file) as f:
+    data = json.load(f)
+
+species = data["buildTypes"][built_type]['species']
+print "species: ", species
 
 class smokeTest(unittest.TestCase):
 
     def test_00_pre(self):
         #os.system("killall python")
-        os.system("bash /home/picarro/bin/launchSQLServer.sh &")
+        #os.system("bash /home/picarro/bin/launchSQLServer.sh &")
         os.system("ps aux | grep python | grep -v 'SQL' | grep -v 'smokeTest' |awk '{print $2}' |xargs kill") 
         time.sleep(1)
 
@@ -76,8 +105,8 @@ class smokeTest(unittest.TestCase):
 
         
         rootDirCheck = ("/"+ I_model) in self.window._configObj["DEFAULT"]['rootDir']
-        startButtonLabelCheck = "H2O2" in self.window._configObj["Host_Code_Button"]["button_label"]
-        startButtonCaptionCheck = "H<sub>2</sub>O<sub>2</sub>" in self.window._configObj["Host_Code_Button"]["caption"]
+        startButtonLabelCheck = species in self.window._configObj["Host_Code_Button"]["button_label"]
+        #startButtonCaptionCheck = "H<sub>2</sub>O<sub>2</sub>" in self.window._configObj["Host_Code_Button"]["caption"]
         
 
         # dynamically
@@ -94,10 +123,10 @@ class smokeTest(unittest.TestCase):
         
         self.assertTrue(binExists)
         
-        pathOfScriptsCheck = "NDDS" in self.window._configObj["Host_Code_Button"]["args"]
+        pathOfScriptsCheck = built_type in self.window._configObj["Host_Code_Button"]["args"]
         
         self.launcherConfigCheckList = [(rootDirCheck, "rootDir error"), (startButtonLabelCheck, "start button label error"), 
-                                        (startButtonCaptionCheck, "start button caption error"), (pathOfScriptsCheck, "bin scripts path error")]
+                                         (pathOfScriptsCheck, "bin scripts path error")]
 
         launcherWidgets_lst = os.listdir(launcher_path+ '/pQtWidgets')
 
@@ -114,8 +143,10 @@ class smokeTest(unittest.TestCase):
         self.launcherConfigCheckList.append( ("Clock" in self.window._configObj, "Clock"))
         self.launcherConfigCheckList.append( ("Serial" in self.window._configObj, "Serial"))
         self.launcherConfigCheckList.append( ("UserAccounts" in self.window._configObj, "UserAccounts"))
-        self.launcherConfigCheckList.append( ("H2O2Validation" in self.window._configObj, "H2O2Validation"))
+        
         self.launcherConfigCheckList.append( ("4-20mA Setting" in self.window._configObj, "4-20mA Setting"))
+        if species == 'H2O2':
+            self.launcherConfigCheckList.append( ("H2O2Validation" in self.window._configObj, "H2O2Validation"))
         
 
         #check assert
@@ -126,12 +157,12 @@ class smokeTest(unittest.TestCase):
 
     def test_04_config(self):
         #check supervisor config
-        supervisor_config = os.listdir('/home/picarro/I2000/AppConfig/Config/Supervisor')
+        supervisor_config = os.listdir(host_dir+'/AppConfig/Config/Supervisor')
         checkSupervisorIni = "supervisorEXE.ini" in supervisor_config or "supervisorEXE_AMADS_LCT.ini" in supervisor_config
         self.assertTrue(checkSupervisorIni)
     
     def test_05_config(self):
-        test_agent = TestAnalyzer("NDDS", "/home/picarro/I2000/AppConfig/Config/Supervisor/supervisorSO_simulation.ini")
+        test_agent = TestAnalyzer(built_type, host_dir+"/AppConfig/Config/Supervisor/supervisorSO_simulation.ini")
         test_agent.start_analyzer()
         #t.start_log_listenr()
         #wait for the warmup process
@@ -159,15 +190,13 @@ class smokeTest(unittest.TestCase):
                 resultsTable = ip.root.results
                 colNames = resultsTable.colnames
                 data = []
-                if 'H2O2' in colNames:
-                    data = resultsTable.col('H2O2')
+                if species in colNames:
+                    data = resultsTable.col(species)
                 average = numpy.average(data)
                 break
         print "average_data: ", average
         data_validation = (average > 50.0) and (average < 500.0) 
         self.assertTrue(data_validation)
-
-
 
 
 
