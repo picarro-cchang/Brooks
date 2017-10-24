@@ -434,6 +434,7 @@ class AutoCal(object):
         self.waveNumberMeasured = None
         self.ignoreSpline = False
         self.tempOffset = 0.0
+        self.currentActiveIni  = None # Save a copy of the entire ini. RSF
 
     def loadFromWlmFile(self,wlmFile,dTheta = 0.05,wMin = None,wMax = None):
         # Construct an Autocal object from a WlmFile object based on measured data which lie within the
@@ -566,6 +567,7 @@ class AutoCal(object):
                 raise ValueError("loadFromIni failed due to missing section %s" % originalSec)
             # Find the actual laser
             mapSec = "LASER_MAP"
+            self.currentActiveIni = ini
             if mapSec not in ini:
                 raise ValueError("loadFromIni failed due to missing section %s" % mapSec)
             aLaserNum = int(ini[mapSec]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum])
@@ -625,6 +627,27 @@ class AutoCal(object):
         AutoCal object, using the specified "vLaserNum" to indicate which virtual laser
         (1-origin) is involved"""
         self.lock.acquire()
+
+        # For some unknow reason, may be 1:100 times the read in config is object is empty and the update
+        # results in a corrupt warmbox active file that is missing the necessary "ACTUAL_LASER_#"
+        # and "LASER_MAP" sections.  I think there is a race condition where the ConfigObj module
+        # can get confused and return an empty ConfigObj object after reading a valid warmbox
+        # ini file.
+        #
+        # So what we are doing in the original warmbox file read is to save it to currentActiveIni.
+        # If we are doing an update with new spline coefficients we look at the ini object to
+        # update.  If it's missing the ACTUAL_LASER AND LASER_MAP sections, rewrite our saved
+        # copies to the config obj getting the new spline coefficients.
+        # RSF 20171022
+        #
+        for key in self.currentActiveIni.keys():
+            if "ACTUAL_LASER" in key and key not in ini:
+                print("Writing key:", key)
+                ini[key] = self.currentActiveIni[key]
+        print("Writing laser_map")
+        if "LASER_MAP" not in ini:
+            ini["LASER_MAP"] = self.currentActiveIni["LASER_MAP"]
+
         try:
             paramSec = "VIRTUAL_PARAMS_%d" % vLaserNum
             currentSec = "VIRTUAL_CURRENT_%d" % vLaserNum

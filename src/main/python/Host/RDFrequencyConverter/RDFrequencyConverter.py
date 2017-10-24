@@ -38,13 +38,17 @@ import threading
 import time
 import datetime
 import traceback
-from numpy import arctan2, array, argsort, asarray, concatenate, cos, cumsum, diff, floor, int_, mean, median, mod
-from numpy import pi, round_, sin, std, zeros, linspace, sum, argmin, polyfit
+from numpy import (arange, arctan2, argmin, argsort, array, asarray,
+                   concatenate, cos, cumsum, diff, flatnonzero, floor, int_,
+                   interp, linspace, mean, median, mod, pi, polyfit, polyval,
+                   r_, round_, sin, sort, std, sum, zeros)
+from scipy.optimize import leastsq
 from cStringIO import StringIO
 from binascii import crc32
 
 from Host.autogen import interface
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
+from Host.Common.qt_cluster import qt_cluster
 from Host.Common.SharedTypes import Singleton
 from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
@@ -213,10 +217,66 @@ class SchemeBasedCalibrator(object):
                 Log("Setting multiple scheme mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
                                                          calFailed=self.rdFreqConv.calFailed))
 
-    def misfit(self, xi, waveNumber, fsr):
-        return sum(abs((waveNumber / fsr - round_((waveNumber - xi * fsr) / fsr) - xi)))
+    # def misfit(self, xi, waveNumber, fsr):
+    # return sum(abs((waveNumber / fsr - round_((waveNumber - xi * fsr) / fsr)
+    # - xi)))
+
+    def getExtraFsr(self, fsrIndices, wlmAngles, nextra):
+        """fsrIndices is a collection of integers specifying the FSR indices at which ringdowns occur.
+        This routine considers fsrIndices as a collection of disjoint intervals, and finds for each interval
+        "nextra" consecutive points below and "nextra" consecutive points above the interval. From the
+        collection of all these extra points, any points originally in fsrIndices are removed.
+
+        Corresponding to fsrIndices is a set of wavelength monitor angles wlmAngles. We use linear
+        interpolation to find the angles corresponding to the extra fsr that lie between min(fsrIndices) and
+        max(fsrIndices). Outside this interval, we use linear extrapolation based on the stright line that
+        best fits fsrIndices and wlmAngles.
+        """
+
+        fsrIndices = sorted(set(fsrIndices))
+        fsrs = asarray(fsrIndices)
+        bdy = flatnonzero(diff(fsrs) != 1)
+        upper = concatenate((fsrs[bdy], [fsrs[-1]])) + 1
+        lower = concatenate(([fsrs[0]], fsrs[bdy + 1]))
+        extra = set()
+        for u in upper:
+            u = int(u)
+            extra.update(range(u, u + nextra))
+        for l in lower:
+            l = int(l)
+            extra.update(range(l - nextra, l))
+        extra.difference_update(fsrIndices)
+        extra = asarray(sorted(extra))
+
+        p = polyfit(fsrIndices, wlmAngles, 1)
+        a0, a1 = polyval(p, (extra[0], extra[-1]))
+        extraAngles = interp(xp=r_[extra[0], fsrIndices, extra[-1]],
+                             fp=r_[a0, wlmAngles, a1], x=extra)
+
+        return extra, extraAngles
 
     def laserCurrentTuningCalibration(self):
+        # Read the update parameters (if they are defined) in the LASER_CURRENT_TUNING section of the
+        #  hot box calibration file. These parameters are
+        # params[0]: Number of times to call update when applying new WLM calibration information
+        # Params 1 and 2 are used to determine if the clusters of WLM angles are likely from consecutive FSRs
+        # params[1]: Upper bound on spread of WLM angle difference between clusters for classification as consecutive FSRs
+        # params[2]: Upper bound on deviation between average cluster angle separation and expected FSR separation
+        # Params 3 and 4 are used to determine if the clusters of WLM angles map to frequencies that lie on an FSR grid
+        # params[3]: Upper bound (in fractions of an FSR) before a cluster frequency is considered off the FSR grid
+        # params[4]: Upper bound on fractional deviation of cluster frequency separation and the known cavity FSR
+        # Default parameter values may be overridden by entries in the file
+        params = [50, 0.15, 0.2, 0.1, 0.01]
+        try:
+            updateParams = self.rdFreqConv.RPC_getHotBoxCalParam(
+                "LASER_CURRENT_TUNING", "UPDATE_PARAMS")
+            updates = [float(p) for p in updateParams.split(",")]
+            params[:len(updates)] = updates
+        except KeyError:
+            pass
+        except:
+            LogExc("Invalid UPDATE_PARAMS encountered for LASER_CURRENT_TUNING")
+
         scs = self.rdFreqConv.shortCircuitSchemes
         calDataByRow = self.calDataByRow
         # Process the data one virtual laser at a time
@@ -225,12 +285,12 @@ class SchemeBasedCalibrator(object):
             rows = [k for k in calDataByRow if (
                 calDataByRow[k].vLaserNum == vLaserNum)]
             if len(rows) >= 2:
-
                 # Apply LCT algr
                 wlmAngle = concatenate(
                     [calDataByRow[k].wlmAngle for k in rows])
+                goodAngles = (wlmAngle != 0.0)
                 freqConverter = self.rdFreqConv.freqConverter[vLaserNum - 1]
-                # throtation
+
                 waveNumber_meas = concatenate(
                     [calDataByRow[k].waveNumber for k in rows])
                 laserTempVals = concatenate(
@@ -244,53 +304,110 @@ class SchemeBasedCalibrator(object):
                     floor((thetaHat - wlmAngle) / (2 * pi) + 0.5)
 
                 fsr = float(self.rdFreqConv.hotBoxCal["AUTOCAL"]["CAVITY_FSR"])
-                numpts = 50
-                xiRange = linspace(0, 1, numpts)
-                misfitRange = array(
-                    [self.misfit(xi, waveNumber_meas, fsr) for xi in xiRange])
+                # At this point we have a collection of wlmAngles and nominal measured wavenumbers
+                # We should bin the wavenumbers and check the frequency
+                # separations
 
-                idx = argmin(misfitRange)
+                wlmAngleFilt = wlmAngle[goodAngles]
+                fsrAngle = fsr * abs(freqConverter.dTheta /
+                                     freqConverter.sLinear[0])
+                clusters = qt_cluster(wlmAngleFilt, r_cluster=0.3 * fsrAngle)
 
-                # using parabolic fitting to find the minimum
-                indices = [(idx + i) % numpts for i in range(-2, 3)]
-                polyPars = polyfit(xiRange[indices], misfitRange[indices], 2)
-                xi_fit = -polyPars[1] / (2 * polyPars[0])
-
-                # using sufficient points to find the minimum
-                #xi_fit = xiRange[idx]
-
-                # check max deviation to continue calibration
-                if max(abs((waveNumber_meas / fsr - round_((waveNumber_meas - xi_fit * fsr) / fsr) - xi_fit))) > 0.4:  # not well fitted
-                    Log("Calibration not done, max deviation greater than 0.4: tuner std = %.1f " % std(
-                        tunerVals))
-                    if scs:
-                        self.calFailed(vLaserNum)
+                clusterMeans = sort(
+                    asarray([wlmAngleFilt[cluster].mean() for cluster in clusters]))
+                angleSep = diff(clusterMeans).mean()
+                angleVar = std(diff(clusterMeans))
+                flag = 0
+                # Use the current WLM calibration to assign FSR indices to the clusters
+                # Update calibration if we have no missing FSRs
+                if (angleVar < params[1] * angleSep) and abs(angleSep - fsrAngle) < params[2] * fsrAngle:
+                    flag = 1  # Calibration due to consecutive FSR data
+                    wlmAngles = clusterMeans
+                    if freqConverter.sLinear[0] > 0:
+                        fsrIndices = arange(len(wlmAngles))
+                    else:
+                        fsrIndices = -arange(len(wlmAngles))
                 else:
-                    # get the wn list on the comb
-                    waveNumber = fsr * \
-                        asarray([(xi_fit + num)
-                                 for num in round_(waveNumber_meas / fsr - xi_fit)])
+                    # We do not have consecutive FSRs but may be able to assign indices using the
+                    #  wavelength monitor calibration information
+                    clusterFreq = freqConverter.thetaCal2WaveNumber(
+                        clusterMeans)
 
-                    try:
-                        maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam(
-                            "AUTOCAL", "MAX_WAVENUM_DIFF"))
-                    except KeyError:
-                        maxDiff = 0.4
-                    wlmAngle = asarray(wlmAngle)
-                    perm = argsort(wlmAngle)
-                    self.rdFreqConv.RPC_updateWlmCal(
-                        vLaserNum, wlmAngle, waveNumber, max(
-                            1.0, len(waveNumber) / 500.0),
-                        float(self.rdFreqConv.RPC_getHotBoxCalParam(
-                            "AUTOCAL", "RELAX")), True,
-                        float(self.rdFreqConv.RPC_getHotBoxCalParam(
-                            "AUTOCAL", "RELAX_DEFAULT")),
-                        float(self.rdFreqConv.RPC_getHotBoxCalParam(
-                            "AUTOCAL", "RELAX_ZERO")),
-                        maxDiff)
-                    print "Laser Current Tuning: vLaser=%d, xi_fit=%s" % (vLaserNum, xi_fit)
-                    Log("WLM Cal for virtual laser %d done: tuner std = %.1f" %
-                        (vLaserNum, std(tunerVals)))
+                    def res(params):
+                        xi, fsr1 = params
+                        y = asarray(clusterFreq) / fsr1 - xi
+                        return y - round_(y)
+
+                    p, cov_p, infodict, mesg, ier = leastsq(
+                        res, [0.5, fsr], full_output=1)
+                    xi = mod(p[0], 1)
+                    fsr_meas = p[1]
+                    off_grid = max(abs(infodict["fvec"]))
+
+                    if off_grid < params[3] and abs(fsr_meas - fsr) < params[4] * fsr:
+                        flag = 2  # Calibration using current WLM data
+                        fsrIndices = round_(clusterFreq / fsr_meas - xi)
+                        fsrIndices -= min(fsrIndices)
+                        wlmAngles = clusterMeans
+
+                if flag == 0:
+                    Log("WLM LCT Cal (VL %d) skipped" % vLaserNum)
+
+                else:
+                    extraFsr, extraAngles = self.getExtraFsr(
+                        fsrIndices, wlmAngles, nextra=3)
+                    waveNumbers = fsr * r_[fsrIndices, extraFsr]
+                    wlmAngles = r_[wlmAngles, extraAngles]
+
+                    for i in range(int(params[0])):
+                        self.rdFreqConv.RPC_updateWlmCal(
+                            vLaserNum, wlmAngles, waveNumbers, 1.0, 0.1, True)
+                    if flag == 1:
+                        Log("WLM LCT Cal (VL %d) done using adjacent FSR: tuner std: %.1f" % (
+                            vLaserNum, std(tunerVals)))
+                    elif flag == 2:
+                        Log("WLM LCT Cal (VL %d) done, off-grid: %.3f, tuner std: %.1f" %
+                            (vLaserNum, off_grid, std(tunerVals)))
+
+                # numpts = 50
+                # xiRange = linspace(0,1,numpts)
+                # misfitRange = array([self.misfit(xi, waveNumber_meas, fsr) for xi in xiRange])
+
+                # idx = argmin(misfitRange)
+
+                # #using parabolic fitting to find the minimum
+                # indices = [(idx+i) % numpts for i in range(-2,3)]
+                # polyPars = polyfit(xiRange[indices], misfitRange[indices], 2)
+                # xi_fit = -polyPars[1] / (2 * polyPars[0])
+
+                # #using sufficient points to find the minimum
+                # #xi_fit = xiRange[idx]
+                # Log("Number of points for calibration: %d" % len(wlmAngle))
+
+                # #check max deviation to continue calibration
+                # if False:
+                # # if max(abs((waveNumber_meas/fsr - round_((waveNumber_meas - xi_fit*fsr)/fsr) - xi_fit))) > 0.4: ##not well fitted
+                #     Log("Calibration not done, max deviation greater than 0.4: tuner std = %.1f " % std(tunerVals) )
+                #     if scs:
+                #         self.calFailed(vLaserNum)
+                # else:
+                #     # get the wn list on the comb
+                #     waveNumber = fsr * asarray([(xi_fit + num) for num in round_(waveNumber_meas/fsr-xi_fit)])
+
+                #     try:
+                #         maxDiff = float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_WAVENUM_DIFF"))
+                #     except KeyError:
+                #         maxDiff = 0.4
+                #     wlmAngle = asarray(wlmAngle)
+                #     perm =argsort(wlmAngle)
+                    # self.rdFreqConv.RPC_updateWlmCal(
+                    #     vLaserNum, wlmAngle, waveNumber, max( 1.0 ,len(waveNumber)/500.0),
+                    #     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "RELAX")),True,
+                    #     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "RELAX_DEFAULT")),
+                    #     float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "RELAX_ZERO")),
+                    #     maxDiff)
+                    # print "Laser Current Tuning: vLaser=%d, xi_fit=%s" % (vLaserNum, xi_fit)
+                    # Log("WLM Cal for virtual laser %d done: tuner std = %.1f" % (vLaserNum, std(tunerVals)) )
 
     def cavityLengthTuningCalibration(self):
         scs = self.rdFreqConv.shortCircuitSchemes
@@ -305,6 +422,7 @@ class SchemeBasedCalibrator(object):
             calData.tunerMed = median(calData.tunerVals)
             calData.pztMed = median(calData.pztVals)
             calData.laserTempMed = median(calData.laserTempVals)
+
         # Process the data one virtual laser at a time
         for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
             # Get scheme rows involving this virtual laser. If the calibration were correct, the PZT values for all
@@ -540,8 +658,9 @@ def validateChecksum(fname):
         cPos = calStr.find("#checksum=")
         lmPos = calStr.find("LASER_MAP")
         if lmPos < 0:
-            Log("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname, Level = 3)
-            raise ValueError("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname)
+            Log("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname, Level=3)
+            raise ValueError(
+                "RDFreqConv reports %s corrupt, missing LASER_MAP" % fname)
         if cPos < 0:
             raise ValueError("No checksum in file")
         else:
@@ -912,6 +1031,10 @@ class RDFrequencyConverter(Singleton):
     def RPC_getWarmBoxCalFilePath(self):
         return self.warmBoxCalFilePath
 
+    def RPC_getCalFileNames(self):
+        """Returns warm box factory, warm box active, hot box factory and hot box active calibration file names from configuration file"""
+        return (self.warmBoxCalFilePathFactory, self.warmBoxCalFilePathActive, self.hotBoxCalFilePathFactory, self.hotBoxCalFilePathActive)
+
     def RPC_isCalibrationDone(self, vLaserNumList):
         # Check if calibration has been done for the specified list of virtual
         # lasers
@@ -942,12 +1065,12 @@ class RDFrequencyConverter(Singleton):
                              "CAVITY_LENGTH_TUNING or LASER_CURRENT_TUNING sections.")
         if "CAVITY_LENGTH_TUNING" in self.hotBoxCal:
             self.cavityLengthTunerAdjuster = TunerAdjuster(
-                "CAVITY_LENGTH_TUNING")
+                "CAVITY_LENGTH_TUNING", interface.ANALYZER_TUNING_CavityLengthTuningMode)
         else:
             self.cavityLengthTunerAdjuster = None
         if "LASER_CURRENT_TUNING" in self.hotBoxCal:
             self.laserCurrentTunerAdjuster = TunerAdjuster(
-                "LASER_CURRENT_TUNING")
+                "LASER_CURRENT_TUNING", interface.ANALYZER_TUNING_LaserCurrentTuningMode)
         else:
             self.laserCurrentTunerAdjuster = None
         self.dthetaMax = float(self.hotBoxCal["AUTOCAL"][
@@ -992,6 +1115,7 @@ class RDFrequencyConverter(Singleton):
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
                 except ValueError:
                     Log('Bad checksum in active warm box calibration file, using factory file', Level=2)
+                    print('Bad checksum in active warm box calibration file, using factory file')
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
             else:
                 Log('No active warm box calibration file, using factory file', Level=0)
@@ -1127,9 +1251,10 @@ class RDFrequencyConverter(Singleton):
             calStrIO = StringIO()
             self.hotBoxCal.write(calStrIO)
             calStr = calStrIO.getvalue()
-            calStr = calStr[:calStr.find("#checksum=")]
+            if(calStr.find("#checksum=") > 0):
+                calStr = calStr[:calStr.find("#checksum=")]
             checksum = crc32(calStr, 0)
-            calStr += "#checksum=%d" % checksum
+            calStr += "#checksum=%d\n" % checksum
             if fileName is not None:
                 self.hotBoxCalFilePath = fileName
             fp = file(self.hotBoxCalFilePath, "wb")
@@ -1177,9 +1302,10 @@ class RDFrequencyConverter(Singleton):
             calStrIO = StringIO()
             config.write(calStrIO)
             calStr = calStrIO.getvalue()
-            calStr = calStr[:calStr.find("#checksum=")]
+            if(calStr.find("#checksum") > 0):
+                calStr = calStr[:calStr.find("#checksum=")]
             checksum = crc32(calStr, 0)
-            calStr += "#checksum=%d" % checksum
+            calStr += "#checksum=%d\n" % checksum
             if fileName is not None:
                 self.warmBoxCalFilePath = fileName
             filePtr = file(self.warmBoxCalFilePath, "wb")
@@ -1217,7 +1343,7 @@ class RDFrequencyConverter(Singleton):
 
 class TunerAdjuster(object):
 
-    def __init__(self, section):
+    def __init__(self, section, tuningMode):
         rdFreqConv = RDFrequencyConverter()
         self.ditherAmplitude = float(
             rdFreqConv.RPC_getHotBoxCalParam(section, "DITHER_AMPLITUDE"))
@@ -1231,6 +1357,7 @@ class TunerAdjuster(object):
             rdFreqConv.RPC_getHotBoxCalParam(section, "UP_SLOPE"))
         self.downSlope = float(
             rdFreqConv.RPC_getHotBoxCalParam(section, "DOWN_SLOPE"))
+        self.tuningMode = tuningMode
 
     def findCenter(self, value, minCen, maxCen, fsr):
         """Finds the best center value for the tuner, given that the mean over the current scan
@@ -1294,18 +1421,20 @@ class TunerAdjuster(object):
         """
         rampAmpl = float(0.5 * fsrFactor * self.freeSpectralRange)
         ditherPeakToPeak = 2 * self.ditherAmplitude
-        centerMax = self.maxValue - ditherPeakToPeak // 2 - rampAmpl
-        centerMin = self.minValue + ditherPeakToPeak // 2 + rampAmpl
-        if centerMin > centerMax:
-            # We need to use the maximum range available
-            centerValue = 0.5 * (self.minValue + self.maxValue)
-            rampAmpl = self.maxValue - centerValue - ditherPeakToPeak // 2
-            if 2 * rampAmpl < self.freeSpectralRange:
-                Log("Insufficient PZT range to cover cavity FSR",
-                    dict(fsr=self.freeSpectralRange, rampAmpl=rampAmpl), Level=2)
-        else:
-            centerValue = self.findCenter(
-                centerValue, centerMin, centerMax, self.freeSpectralRange)
+
+        if self.tuningMode == interface.ANALYZER_TUNING_CavityLengthTuningMode:
+            centerMax = self.maxValue - ditherPeakToPeak // 2 - rampAmpl
+            centerMin = self.minValue + ditherPeakToPeak // 2 + rampAmpl
+            if centerMin > centerMax:
+                # We need to use the maximum range available
+                centerValue = 0.5 * (self.minValue + self.maxValue)
+                rampAmpl = self.maxValue - centerValue - ditherPeakToPeak // 2
+                if 2 * rampAmpl < self.freeSpectralRange:
+                    Log("Insufficient PZT range to cover cavity FSR",
+                        dict(fsr=self.freeSpectralRange, rampAmpl=rampAmpl), Level=2)
+            else:
+                centerValue = self.findCenter(
+                    centerValue, centerMin, centerMax, self.freeSpectralRange)
 
         Driver.wrDasReg("TUNER_WINDOW_RAMP_HIGH_REGISTER",
                         centerValue + rampAmpl)
@@ -1360,6 +1489,7 @@ def handleCommandSwitches():
     if "-h" in opts or "--help" in opts:
         printUsage()
         sys.exit()
+    configFile = "/home/picarro/git/host/src/main/python/AppConfig/Config/RDFrequencyConverter/RDFrequencyConverter.ini"
     if "-c" in opts:
         configFile = opts["-c"]
     if "--vi" in opts:
