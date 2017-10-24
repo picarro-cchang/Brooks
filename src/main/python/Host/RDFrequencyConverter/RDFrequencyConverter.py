@@ -1115,6 +1115,7 @@ class RDFrequencyConverter(Singleton):
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
                 except ValueError:
                     Log('Bad checksum in active warm box calibration file, using factory file', Level=2)
+                    print('Bad checksum in active warm box calibration file, using factory file')
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
             else:
                 Log('No active warm box calibration file, using factory file', Level=0)
@@ -1250,9 +1251,10 @@ class RDFrequencyConverter(Singleton):
             calStrIO = StringIO()
             self.hotBoxCal.write(calStrIO)
             calStr = calStrIO.getvalue()
-            calStr = calStr[:calStr.find("#checksum=")]
+            if(calStr.find("#checksum=") > 0):
+                calStr = calStr[:calStr.find("#checksum=")]
             checksum = crc32(calStr, 0)
-            calStr += "#checksum=%d" % checksum
+            calStr += "#checksum=%d\n" % checksum
             if fileName is not None:
                 self.hotBoxCalFilePath = fileName
             fp = file(self.hotBoxCalFilePath, "wb")
@@ -1300,9 +1302,10 @@ class RDFrequencyConverter(Singleton):
             calStrIO = StringIO()
             config.write(calStrIO)
             calStr = calStrIO.getvalue()
-            calStr = calStr[:calStr.find("#checksum=")]
+            if(calStr.find("#checksum") > 0):
+                calStr = calStr[:calStr.find("#checksum=")]
             checksum = crc32(calStr, 0)
-            calStr += "#checksum=%d" % checksum
+            calStr += "#checksum=%d\n" % checksum
             if fileName is not None:
                 self.warmBoxCalFilePath = fileName
             filePtr = file(self.warmBoxCalFilePath, "wb")
@@ -1486,6 +1489,7 @@ def handleCommandSwitches():
     if "-h" in opts or "--help" in opts:
         printUsage()
         sys.exit()
+    configFile = "/home/picarro/git/host/src/main/python/AppConfig/Config/RDFrequencyConverter/RDFrequencyConverter.ini"
     if "-c" in opts:
         configFile = opts["-c"]
     if "--vi" in opts:

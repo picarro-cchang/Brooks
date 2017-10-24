@@ -99,6 +99,7 @@ class CoordinatorFrameGui(wx.Frame):
 
     def __do_layout(self):
         # begin wxGlade: CoordinatorFrameGui.__do_layout
+        #
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
@@ -137,7 +138,16 @@ class CoordinatorFrameGui(wx.Frame):
         sizer_9.Add(self.label_2, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 10)
         sizer_9.Add(self.logTextCtrl, 1, wx.EXPAND, 5)
         self.window_1_pane_2.SetSizer(sizer_9)
-        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2)
+
+        # Hack: wx.SplitterWindow is broken.  The sash (or splitter) always starts at the top
+        # so that the upper pane is compressed to a few pixels tall.  The default setting
+        # in the SplitterWindow is to put the split in the middle.  So the hack is to explicitly
+        # set the sash position 150 pixels from the top and set the minimum pane size to
+        # 50 pixels.
+        #
+        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2,150)
+        self.window_1.SetMinimumPaneSize(50)
+
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 5)
         sizer_7.Add(self.label_3, 0, wx.LEFT, 5)
         sizer_7.Add(self.sampleDescrComboBox, 1, wx.ALL|wx.EXPAND, 5)

@@ -76,7 +76,9 @@ class IntegrationToolFrame(wx.Frame):
         try:
             analyzerChassis = "CHAS2K"+Driver.fetchObject("LOGIC_EEPROM")[0]["Chassis"]
         except:
-            pass
+            # If we can't read the EEPROM assume we are running a simulator and put
+            # a dummy name so the application will start.
+            analyzerChassis = "SIMULATOR_MODE"
 
         try:
             #analyzerChoices = [elem['identifier'] for elem in DB.get_values("Analyzer",dict(status="I"))]
@@ -122,10 +124,18 @@ class IntegrationToolFrame(wx.Frame):
         self.__do_layout()
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.VERTICAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        sizer_4 = wx.BoxSizer(wx.VERTICAL)
+        """
+        Set the layout with analyzer information widgets on the top left,
+        launch buttons for configuration apps on the right, and the close
+        button in its own panel on the bottom spanning the width of the window.
+
+        The original layout was all vertically stacked but it doesn't fit
+        on smaller displays.
+        """
+        sizer_1 = wx.BoxSizer(wx.VERTICAL) # sizer for analyzer information fields
+        sizer_2 = wx.BoxSizer(wx.VERTICAL) # sizer for code launchers
+        sizer_3 = wx.BoxSizer(wx.VERTICAL) # sizer for close button
+        sizer_4 = wx.GridBagSizer(2, 2)
 
         sizer_1.Add(self.labelAnalyzer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER, 10)
         grid_sizer_1 = wx.FlexGridSizer(0, 2)
@@ -148,9 +158,9 @@ class IntegrationToolFrame(wx.Frame):
         sizer_3.Add(self.labelFooter, 0, wx.EXPAND|wx.BOTTOM, 5)
         self.panel3.SetSizer(sizer_3)
 
-        sizer_4.Add(self.panel1, 0, wx.EXPAND, 0)
-        sizer_4.Add(self.panel2, 0, wx.EXPAND, 0)
-        sizer_4.Add(self.panel3, 0, wx.EXPAND, 0)
+        sizer_4.Add(self.panel1, pos=(0,0), flag=wx.EXPAND)
+        sizer_4.Add(self.panel2, pos=(0,1), flag=wx.EXPAND)
+        sizer_4.Add(self.panel3, pos=(1,0), span=(1,2), flag=wx.EXPAND)
 
         self.SetSizer(sizer_4)
         sizer_4.Fit(self)
@@ -589,10 +599,10 @@ class IntegrationTool(IntegrationToolFrame):
             # Move the current active files to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.copy(self.wbCalActive+".ini", savedWbCalActive)
+                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
             #if os.path.isfile(self.hbCalActive+".ini"):
             #    savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-            #    shutil.copy(self.hbCalActive+".ini", savedHbCalActive)
+            #    shutil.move(self.hbCalActive+".ini", savedHbCalActive)
             self.display += "Archived active WB file.\n"
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
@@ -623,7 +633,7 @@ class IntegrationTool(IntegrationToolFrame):
             # Move the current active WB file to Integration folder
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-                shutil.copy(self.wbCalActive+".ini", savedWbCalActive)
+                shutil.move(self.wbCalActive+".ini", savedWbCalActive)
             self.display += "Archived active WB file.\n"
             self.display += "WLM Offset finished.\n"
         except Exception, err:
