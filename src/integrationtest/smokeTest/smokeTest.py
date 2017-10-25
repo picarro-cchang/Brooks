@@ -15,7 +15,14 @@ sys.path.insert(0,'/usr/local/picarro/qtLauncher')
 import MainWindow
 launcher_path = "/usr/local/picarro/qtLauncher"
 curpath = os.path.dirname(os.path.realpath(__file__))
-match = re.search(r'\/(\w+2000)', curpath)
+
+
+#get I2000 or SI2000
+with open('/home/picarro/bin/appLauncher.sh', 'rb') as f:
+    content = f.read()
+match = re.search(r'\/(\w+2000)', content)
+
+print match.group(1)
 
 
 #Get host dir
@@ -26,6 +33,8 @@ if I_model == 'I2000':
     host_dir = '/home/picarro/I2000'
 else:
     host_dir = '/home/picarro/SI2000'
+
+
 
 dataLog_path = host_dir + '/Log/DataLogger/DataLog_Private'
 
@@ -52,6 +61,9 @@ with open(I2000types_json_file) as f:
 
 species = data["buildTypes"][built_type]['species']
 print "species: ", species
+
+
+
 
 class smokeTest(unittest.TestCase):
 
@@ -200,5 +212,5 @@ class smokeTest(unittest.TestCase):
 
 
 
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+#    unittest.main()
