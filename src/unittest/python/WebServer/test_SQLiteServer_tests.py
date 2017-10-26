@@ -30,11 +30,8 @@ class TestSQLiteServer(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         db = os.path.join(DATABASE_DIR, "PicarroDataBase.sqlite")
-        config = os.path.join(DATABASE_DIR, "SQLiteDataBase.ini")
         if os.path.exists(db):
             os.remove(db)
-        if os.path.exists(config):
-            os.remove(config)
             
     def send_request(self, action, api, payload, use_token=False):
         """
