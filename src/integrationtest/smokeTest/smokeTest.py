@@ -180,11 +180,16 @@ class smokeTest(unittest.TestCase):
         #wait for the warmup process
         time.sleep(20)
         test_agent.start_log_listener()
-
+		
+        timeout = 0
         while not test_agent.measurement:
             time.sleep(2)
+            timeout += 2
+            if timeout > 100:
+                self.assertTrue(False)
+                break
 
-        print test_agent.measurement
+        print "Measurement mode: ", test_agent.measurement
         test_agent.log_listener.stop()
         time.sleep(60)
         print "stop analyzer"
