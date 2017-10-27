@@ -197,23 +197,26 @@ class smokeTest(unittest.TestCase):
         print "Done"
 
     def test_06_config(self):
-        data_log = os.listdir(dataLog_path)	
-        file_exist = len(data_log) > 0
-        self.assertTrue(file_exist)
-        for item in data_log:
-            if item.endswith('.h5'):
-                dataFile = os.path.join(dataLog_path, item)
-                ip = tables.openFile(dataFile, 'r')
-                resultsTable = ip.root.results
-                colNames = resultsTable.colnames
-                data = []
-                if species in colNames:
-                    data = resultsTable.col(species)
-                average = numpy.average(data)
-                break
-        print "average_data: ", average
-        data_validation = (average > 50.0) and (average < 500.0) 
-        self.assertTrue(data_validation)
+        folder_exists = os.path.isdir(dataLog_path)
+        self.assertTrue(folder_exists)
+        if folder_exists:
+            data_log = os.listdir(dataLog_path)
+            file_exist = len(data_log) > 0
+            self.assertTrue(file_exist)
+            for item in data_log:
+                if item.endswith('.h5'):
+                    dataFile = os.path.join(dataLog_path, item)
+                    ip = tables.openFile(dataFile, 'r')
+                    resultsTable = ip.root.results
+                    colNames = resultsTable.colnames
+                    data = []
+                    if species in colNames:
+                        data = resultsTable.col(species)
+                    average = numpy.average(data)
+                    break
+            print "average_data: ", average
+            data_validation = (average > 50.0) and (average < 500.0) 
+            self.assertTrue(data_validation)
 
 
 
