@@ -145,7 +145,7 @@ class smokeTest(unittest.TestCase):
         if launcherWidgets_lst:
             self.assertIn('ClockInterface.py',launcherWidgets_lst)
             self.assertIn('ClockSettingsWidget.py',launcherWidgets_lst)
-            self.assertIn('FourToTwentySettingsWidget.py',launcherWidgets_lst)
+            #self.assertIn('FourToTwentySettingsWidget.py',launcherWidgets_lst)
             self.assertIn('NetworkInfoDialog.py',launcherWidgets_lst)
             self.assertIn('SerialSettingsIniInterface.py',launcherWidgets_lst)
             self.assertIn('SerialSettingsWidget.py',launcherWidgets_lst)
@@ -156,7 +156,7 @@ class smokeTest(unittest.TestCase):
         self.launcherConfigCheckList.append( ("Serial" in self.window._configObj, "Serial"))
         self.launcherConfigCheckList.append( ("UserAccounts" in self.window._configObj, "UserAccounts"))
         
-        self.launcherConfigCheckList.append( ("4-20mA Setting" in self.window._configObj, "4-20mA Setting"))
+        #self.launcherConfigCheckList.append( ("4-20mA Setting" in self.window._configObj, "4-20mA Setting"))
         if species == 'H2O2':
             self.launcherConfigCheckList.append( ("H2O2Validation" in self.window._configObj, "H2O2Validation"))
         
@@ -185,7 +185,7 @@ class smokeTest(unittest.TestCase):
         while not test_agent.measurement:
             time.sleep(2)
             timeout += 2
-            if timeout > 100:
+            if timeout > 300:
                 self.assertTrue(False)
                 break
 
