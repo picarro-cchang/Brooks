@@ -145,7 +145,7 @@ class smokeTest(unittest.TestCase):
         if launcherWidgets_lst:
             self.assertIn('ClockInterface.py',launcherWidgets_lst)
             self.assertIn('ClockSettingsWidget.py',launcherWidgets_lst)
-            self.assertIn('FourToTwentySettingsWidget.py',launcherWidgets_lst)
+            #self.assertIn('FourToTwentySettingsWidget.py',launcherWidgets_lst)
             self.assertIn('NetworkInfoDialog.py',launcherWidgets_lst)
             self.assertIn('SerialSettingsIniInterface.py',launcherWidgets_lst)
             self.assertIn('SerialSettingsWidget.py',launcherWidgets_lst)
@@ -156,7 +156,7 @@ class smokeTest(unittest.TestCase):
         self.launcherConfigCheckList.append( ("Serial" in self.window._configObj, "Serial"))
         self.launcherConfigCheckList.append( ("UserAccounts" in self.window._configObj, "UserAccounts"))
         
-        self.launcherConfigCheckList.append( ("4-20mA Setting" in self.window._configObj, "4-20mA Setting"))
+        #self.launcherConfigCheckList.append( ("4-20mA Setting" in self.window._configObj, "4-20mA Setting"))
         if species == 'H2O2':
             self.launcherConfigCheckList.append( ("H2O2Validation" in self.window._configObj, "H2O2Validation"))
         
@@ -180,11 +180,16 @@ class smokeTest(unittest.TestCase):
         #wait for the warmup process
         time.sleep(20)
         test_agent.start_log_listener()
-
+		
+        timeout = 0
         while not test_agent.measurement:
             time.sleep(2)
+            timeout += 2
+            if timeout > 300:
+                self.assertTrue(False)
+                break
 
-        print test_agent.measurement
+        print "Measurement mode: ", test_agent.measurement
         test_agent.log_listener.stop()
         time.sleep(60)
         print "stop analyzer"
@@ -192,23 +197,26 @@ class smokeTest(unittest.TestCase):
         print "Done"
 
     def test_06_config(self):
-        data_log = os.listdir(dataLog_path)	
-        file_exist = len(data_log) > 0
-        self.assertTrue(file_exist)
-        for item in data_log:
-            if item.endswith('.h5'):
-                dataFile = os.path.join(dataLog_path, item)
-                ip = tables.openFile(dataFile, 'r')
-                resultsTable = ip.root.results
-                colNames = resultsTable.colnames
-                data = []
-                if species in colNames:
-                    data = resultsTable.col(species)
-                average = numpy.average(data)
-                break
-        print "average_data: ", average
-        data_validation = (average > 50.0) and (average < 500.0) 
-        self.assertTrue(data_validation)
+        folder_exists = os.path.isdir(dataLog_path)
+        self.assertTrue(folder_exists)
+        if folder_exists:
+            data_log = os.listdir(dataLog_path)
+            file_exist = len(data_log) > 0
+            self.assertTrue(file_exist)
+            for item in data_log:
+                if item.endswith('.h5'):
+                    dataFile = os.path.join(dataLog_path, item)
+                    ip = tables.openFile(dataFile, 'r')
+                    resultsTable = ip.root.results
+                    colNames = resultsTable.colnames
+                    data = []
+                    if species in colNames:
+                        data = resultsTable.col(species)
+                    average = numpy.average(data)
+                    break
+            print "average_data: ", average
+            data_validation = (average > 50.0) and (average < 500.0) 
+            self.assertTrue(data_validation)
 
 
 
