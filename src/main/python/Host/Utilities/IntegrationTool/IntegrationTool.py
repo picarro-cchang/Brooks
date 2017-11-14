@@ -180,9 +180,9 @@ class IntegrationTool(IntegrationToolFrame):
                     self.cp["THRESHOLD_STATS_SCHEMES"][aType][sName] = newStr
             self.allSchemes = self.cp["THRESHOLD_STATS_SCHEMES"]   
             WARMBOX_CAL = self.cp.get("Main", "WARMBOX_CAL")
-            WARMBOX_CAL_ACTIVE = self.cp.get("Main", "WARMBOX_CAL")
+            WARMBOX_CAL_ACTIVE = self.cp.get("Main", "WARMBOX_CAL_ACTIVE")
             HOTBOX_CAL = self.cp.get("Main", "HOTBOX_CAL")
-            HOTBOX_CAL_ACTIVE = self.cp.get("Main", "WARMBOX_CAL_ACTIVE")
+            HOTBOX_CAL_ACTIVE = self.cp.get("Main", "HOTBOX_CAL_ACTIVE")
             CAL_DIR = self.cp.get("Main", "INSTR_CAL_DIR")
             self.INTEGRATION_DIR = self.cp.get("Main", "INTEGRATION_DIR")
             self.wbCalFile = os.path.join(CAL_DIR, WARMBOX_CAL)
@@ -600,9 +600,9 @@ class IntegrationTool(IntegrationToolFrame):
             if os.path.isfile(self.wbCalActive+".ini"):
                 savedWbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.wbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
                 shutil.move(self.wbCalActive+".ini", savedWbCalActive)
-            #if os.path.isfile(self.hbCalActive+".ini"):
-            #    savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
-            #    shutil.move(self.hbCalActive+".ini", savedHbCalActive)
+            if os.path.isfile(self.hbCalActive+".ini"):
+                savedHbCalActive = os.path.join(newDir, time.strftime(os.path.split(self.hbCalActive)[1] + "_%Y%m%d_%H%M%S.ini"))
+                shutil.move(self.hbCalActive+".ini", savedHbCalActive)
             self.display += "Archived active WB file.\n"
         except Exception, err:
             self.display += "Calibrate System failed: %s\n" % err
