@@ -343,7 +343,7 @@ class ArchiveGroup(object):
         except KeyError:
             self.aggregationCount = 0
         if not os.path.exists(self.groupRoot):
-            os.makedirs(self.groupRoot)
+            os.makedirs(self.groupRoot,0775)
             Log("Creating archive group directory %s" % (self.groupRoot,))
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(archiver.storageRoot,groupName + ".zip")
@@ -445,7 +445,7 @@ class ArchiveGroup(object):
            the specified resultQueue. """
         count = 0
         if not os.path.exists(destDir):
-            os.makedirs(destDir)
+            os.makedirs(destDir,0775)
         for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByName,reversed=False):
             if type == 'file':
                 fileTime = os.path.getmtime(name)
@@ -482,7 +482,7 @@ class ArchiveGroup(object):
         pathName = os.path.join(self.groupRoot,pathName)
 
         if not os.path.exists(pathName):
-            os.makedirs(pathName)
+            os.makedirs(pathName,0775)
         targetName = os.path.join(pathName,os.path.split(source)[-1])
 
         a = LiveArchive(source, targetName, self)
@@ -646,7 +646,7 @@ class ArchiveGroup(object):
         # First make room for the file by deleting old files, if necessary
         if self.makeSpace(nBytes, 1):
             if not os.path.exists(pathName):
-                os.makedirs(pathName)
+                os.makedirs(pathName,0775)
 
             targetName = os.path.join(pathName, targetName)
             if os.path.exists(targetName):
@@ -818,7 +818,7 @@ class Archiver(object):
             return
         self.storageRoot = os.path.abspath(self.storageRoot)
         if not os.path.exists(self.storageRoot):
-            os.makedirs(self.storageRoot)
+            os.makedirs(self.storageRoot,0775)
             Log("Creating archive directory %s" % (self.storageRoot,))
         self.storageGroups = {}
         for groupName in self.storageGroupNames:
