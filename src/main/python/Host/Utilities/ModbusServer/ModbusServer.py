@@ -62,6 +62,7 @@ def get_ip_address():
         return ip_address
     except Exception, e:
         print "Error in reading IpAddress in ModbusServer: %s " % e
+        return '127.0.0.1'
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
