@@ -35,15 +35,33 @@ import threading
 from Host.Utilities.ModbusServer.ErrorHandler import Errors, ErrorHandler
 from Queue import Queue
 from pymodbus.server.sync import ModbusSerialServer
+from pymodbus.server.sync import ModbusTcpServer
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock
 from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 from pymodbus.transaction import ModbusRtuFramer
+from pymodbus.transaction import ModbusSocketFramer
 
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 from Host.Utilities.ModbusServer.ModbusDataBlock import ThreadSafeDataBlock, CallbackDataBlock
 from Host.Utilities.ModbusServer.ModbusUtils import get_variable_type, ModbusScriptEnv
+
+import socket
+
+def get_ip_address():
+    '''
+    Method use to get eth0 ip address and run modbus server using ip address for Modbus over TCPIP
+    :return:
+    '''
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+        s.close()
+        return ip_address
+    except Exception, e:
+        print "Error in reading IpAddress in ModbusServer: %s " % e
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -56,12 +74,15 @@ DISCRETE_INPUT = 2
 HOLDING_REGISTER = 3
 INPUT_REGISTER = 4
 
-def StartSerialServer(context=None, framer=None, identity=None, **kwargs):
+def StartServer(rtu = True, context=None, framer=None, identity=None, **kwargs):
     ''' 
     This is a bug in pyModbus 1.2.0 that only allows framer=ModbusAsciiFramer
     The bug is fixed in pymodbus 1.3.0. The solution here will work for both versions.
-    '''    
-    server = ModbusSerialServer(context, framer, identity, **kwargs)
+    '''
+    if rtu:
+        server = ModbusSerialServer(context, framer, identity, **kwargs)
+    else:
+        server = ModbusTcpServer(context, framer, identity, **kwargs)
     server.serve_forever() 
 
 class ModbusServer(object):
@@ -76,6 +97,7 @@ class ModbusServer(object):
             log = logging.getLogger()
             log.setLevel(logging.DEBUG)
         self.slaveid = self.config.getint("SerialPortSetup", "SlaveId", 1)
+        self.rtu = self.config.getboolean("Main", "rtu", True)
         self.debug = debug
         self.get_register_info()
         self.errorhandler = ErrorHandler(self, 'Errors')
@@ -107,10 +129,15 @@ class ModbusServer(object):
         identity.ProductName = 'Picarro Modbus Server'
         identity.ModelName   = 'Picarro Modbus Server'
         identity.MajorMinorRevision = '1.0'
+        if self.rtu:
+            framer = ModbusRtuFramer
+        else:
+            framer = ModbusSocketFramer
         self.serverConfig = {
             "context": self.context, 
-            "framer": ModbusRtuFramer, 
-            "identity": identity, 
+            "framer": framer,
+            "identity": identity,
+            "address" : (get_ip_address(), self.config.getint("Main", "TCPPort", 50300)),
             "port": self.config.get("SerialPortSetup", "Port").strip(),
             "baudrate": self.config.getint("SerialPortSetup", "BaudRate", 19200),
             "timeout": self.config.getfloat("SerialPortSetup", "TimeOut", 1.0),
@@ -477,7 +504,7 @@ class ModbusServer(object):
     def run(self):
         self.control_thread.start()
         self.writer_thread.start()
-        StartSerialServer(**self.serverConfig)
+        StartServer(**self.serverConfig)
 
 HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
 

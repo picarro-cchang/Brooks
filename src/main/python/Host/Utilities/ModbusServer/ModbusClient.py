@@ -1,7 +1,12 @@
 import sys
 import time
 from struct import pack, unpack
-from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+from pymodbus.client.sync import ModbusSerialClient
+from pymodbus.client.sync import ModbusTcpClient
+
+RTU = True
+IP_ADDRESS = '127.0.0.1'
+TCP_PORT = 50300
 
 struct_type_map = {
     "int_16"  :  "h",
@@ -17,10 +22,16 @@ def get_variable_type(bit, type):
     else:
         return struct_type_map["%s_%s" % (type.strip().lower(), bit)]
 
-com_setting = {"port": "COM2", "baudrate": 9600, "timeout": 3}
-client = ModbusClient(method='rtu', **com_setting)
-client.connect()
-print("Connected to server")
+try:
+    com_setting = {"port": "COM2", "baudrate": 9600, "timeout": 3}
+    if RTU:
+        client = ModbusSerialClient(method='rtu', **com_setting)
+    else:
+        client = ModbusTcpClient(IP_ADDRESS, port=TCP_PORT)
+    client.connect()
+    print("Connected to server")
+except Exception, e:
+    print "Error in Modbus Client: %s " % e
 
 if "--debug" in sys.argv[1:]:
     import logging
