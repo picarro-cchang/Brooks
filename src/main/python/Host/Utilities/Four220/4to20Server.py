@@ -5,7 +5,7 @@ Purpose: 4-20 mA back end. It takes data obj from data manager,
 map the consentration to the 0-40 mA value and send to COM port 
 on the mother board.
 module i7024 Hardware info: http://confluence.picarro.int/display/SEM/4-20+mA+Analog+Output+Testing
-software implimentation: http://confluence.picarro.int/display/~wtan@picarro.com/Software+Implement+4-20+mA+Output+for+I2000+Series+Analyzers
+software implimentation: http://confluence.picarro.int/display/~wtan@picarro.com/Software+Implement+4-20+mA+Output+for+SI2000+Series+Analyzers
 
 File History:
     17-04-03  Wenting   Created file
@@ -19,7 +19,7 @@ import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.EventManagerProxy import Log, LogExc
+#from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 import threading
 
@@ -150,20 +150,22 @@ class Four220Server(object):
     def _streamFilter(self, streamOut):
         try:
             #get the concentration indicated in the ini file as source.
-            
+            #print streamOut["source"]
             if streamOut["source"] == self.analyzer_source:
                 raw_data = streamOut["data"]
+                ###print raw_data.keys()
                 for channel in self.channel_par:
                     channel_num = int(channel[-1])
-                    #print "Channel:", channel, "channel_par:", self.channel_par[channel]
+                    ###print self.channel_par[channel]["SOURCE"], self.channel_par[channel]["SOURCE"] in raw_data.keys()
+                    ###print "Channel:", channel, "channel_par:", self.channel_par[channel]
                     if self.channel_par[channel]["SOURCE"] != 'Disabled':
                         self.con_max = float(self.channel_par[channel]["SOURCE_MAX"])
                         self.con_min = float(self.channel_par[channel]["SOURCE_MIN"])
                         try:
                             data = raw_data[self.channel_par[channel]["SOURCE"]]
                         except:
-                            print "SOURCE value in configuration file is not valid. " 
-                            sys.exit(1)
+                            continue
+                            #sys.exit(1)
                             
                         #compute slope and offset values based in given max/min range
                         if self.con_min <= self.con_max:
@@ -172,10 +174,10 @@ class Four220Server(object):
                         else:
                             print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in ini file. Make sure min you put is less than max."
                             sys.exit(1)
-                        print "Slope and Offset: ", slope, offset
+                        ###print "Slope and Offset: ", slope, offset
                         self.data_processor(data, slope, offset, channel_num)
                     else:
-                        print "Dummy Channel: channel", channel_num
+                        ###print "Dummy Channel: channel", channel_num
                         self.data_processor(0, 0, 0, channel_num)
         except Exception, err:
             print "Error in streamFilter. Wrong values in ini file..."
@@ -207,10 +209,10 @@ class Four220Server(object):
             self.ser.write(cmd_str + '\r')
             self.waitForRet()
             #ser.close()
-            print "Channel: ", channel_num
-            print self.channel_par['OUTPUT_CHANNEL'+str(channel_num)]["SOURCE"], " Value: ", data
-            print "Write current %s mA to serial port %s."%(cur_str,self.port)
-            print "-------------------"
+            ###print "Channel: ", channel_num
+            ###print self.channel_par['OUTPUT_CHANNEL'+str(channel_num)]["SOURCE"], " Value: ", data
+            ###print "Write current %s mA to serial port %s."%(cur_str,self.port)
+            ###print "-------------------"
             
         except:
             "Failed to write to serial port."
