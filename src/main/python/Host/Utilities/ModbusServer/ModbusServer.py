@@ -135,6 +135,7 @@ class ModbusServer(object):
         else:
             framer = ModbusSocketFramer
         self.serverConfig = {
+            "rtu": self.rtu,
             "context": self.context, 
             "framer": framer,
             "identity": identity,
