@@ -6,7 +6,7 @@ from pymodbus.client.sync import ModbusTcpClient
 
 RTU = True
 IP_ADDRESS = '127.0.0.1'
-TCP_PORT = 50300
+TCP_PORT = 50500
 
 struct_type_map = {
     "int_16"  :  "h",
