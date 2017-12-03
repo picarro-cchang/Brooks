@@ -1,6 +1,7 @@
 #  Baseline ripple fitter for H2O2 region at 7011 wvn
+#  2017 1101:  Added single frequency model for flat baselines (current best practice)
 
-from numpy import *
+from numpy import * 
 import os.path
 import time
 import cPickle
@@ -33,7 +34,7 @@ def autoCorr2(f,l,df):
 
     l[0:s0] = 0.0
     l[s0:N] = r[0:N-s0]
-
+    
     r = r+l
     minA = 1e12
     shift = int(minPeriod/df)
@@ -58,6 +59,7 @@ if INIT:
 
     analysis = []
     analysis.append(Analysis(os.path.join(BASEPATH,r"./NBDS-xx baseline ripple v1_2.ini")))
+    analysis.append(Analysis(os.path.join(BASEPATH,r"./NBDS-xx baseline ripple 1freq v1_2.ini")))
 
     oname = os.path.join(BASEPATH,time.strftime("FitterOutput.dat",time.localtime()))
     file(oname,"wb").close()
@@ -86,13 +88,26 @@ if first_fit:
     if p[1] < 1.5:
         p1 = p[1]
     first_fit = 0
+    
+    init[1000,2] = p0
+    init[1001,2] = p1
+    r = analysis[0](d,init,deps)
+    ANALYSIS.append(r)
+    if abs(r[1000,2]-r[1001,2]) < 0.1 or abs(r[1000,0]) > 0.5 or abs(r[1001,0]) > 0.5 or abs(r[1000,2]) > 3 or abs(r[1001,2]) > 3:
+        full_fit = False
+    else:
+        full_fit = True
 
-#  THE INITIAL GUESSES FOR RIPPLE PERIOICITIES GO HERE
+#  THE INITIAL GUESSES FOR RIPPLE PERIOICITIES GO HERE    
 init[1000,2] = p0
 init[1001,2] = p1
 
-r = analysis[0](d,init,deps)
-ANALYSIS.append(r)
+if full_fit:
+    r = analysis[0](d,init,deps)
+    ANALYSIS.append(r)
+else:
+    r = analysis[1](d,init,deps)
+    ANALYSIS.append(r)
 
 amp_ripp_1 = r[1000,0]
 amp_ripp_2 = r[1001,0]
@@ -116,7 +131,7 @@ while phase_ripp_1 > pi:
     phase_ripp_1 -= 2*pi
 if phase_ripp_1 < -2.5:
     phase_ripp_1 += 2*pi
-
+    
 if amp_ripp_2 < 0:
     amp_ripp_2 = -amp_ripp_2
     phase_ripp_2 += pi
