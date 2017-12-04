@@ -98,7 +98,7 @@ class ModbusServer(object):
             log = logging.getLogger()
             log.setLevel(logging.DEBUG)
         self.slaveid = self.config.getint("SerialPortSetup", "SlaveId", 1)
-        self.rtu = self.config.getboolean("Main", "rtu", True)
+        self.rtu = self.config.getboolean("Main", "rtu", False)
         self.debug = debug
         self.get_register_info()
         self.errorhandler = ErrorHandler(self, 'Errors')
@@ -139,7 +139,7 @@ class ModbusServer(object):
             "context": self.context, 
             "framer": framer,
             "identity": identity,
-            "address" : (get_ip_address(), self.config.getint("Main", "TCPPort", 50300)),
+            "address" : (get_ip_address(), self.config.getint("Main", "TCPPort", 50500)),
             "port": self.config.get("SerialPortSetup", "Port").strip(),
             "baudrate": self.config.getint("SerialPortSetup", "BaudRate", 19200),
             "timeout": self.config.getfloat("SerialPortSetup", "TimeOut", 1.0),
