@@ -8,5 +8,5 @@
 export PATH=/home/picarro/anaconda2/bin:$PATH
 export PYTHONPATH=/home/picarro/I2000:$PYTHONPATH
 cd /home/picarro/I2000/Host/pydCaller/
-python -O Supervisor.py -c ../../AppConfig/Config/Supervisor/supervisorEXE.ini
+python -O Supervisor.py -f -c ../../AppConfig/Config/Supervisor/supervisorSO_simulationNC.ini
 
