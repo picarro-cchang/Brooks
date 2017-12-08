@@ -565,8 +565,10 @@ class SchemeBasedCalibrator(object):
                                 self.calFailed(vLaserNum)
                             else:
                                 self.calSucceeded(vLaserNum)
-                        Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" %
-                            (vLaserNum, anglePerFsr, stdPzt))
+
+                        # Turn off event manager noise - RSF
+                        # Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" %
+                        #     (vLaserNum, anglePerFsr, stdPzt))
 
     def applySchemeBasedCalibration(self):
         """Called after a scheme is completed to process data from calibration rows.
@@ -815,6 +817,7 @@ class RDFrequencyConverter(Singleton):
         self.rpcThread.start()
         startTime = time.time()
         timeout = 0.5
+        updateWarmBoxCalThread = None
 
         while self.virtualMode:
             time.sleep(1.0)
@@ -825,12 +828,21 @@ class RDFrequencyConverter(Singleton):
             # file
             if self.timeToUpdateWarmBoxCal():
                 Log("Time to update warm box calibration file")
+
+                # --- Threaded version, suspect warmbox corruption is due to a race condition here ---
+                # --- updateWarmBoxCal() doesn't use mutex and so is not thread safe. ---
+                #
                 # we'll do it in a separate thread in case it takes too long to
                 # write the new calibration file to disk
-                updateWarmBoxCalThread = threading.Thread(target=self.updateWarmBoxCal,
-                                                          args=(self.warmBoxCalFilePathActive,))
-                updateWarmBoxCalThread.setDaemon(True)
-                updateWarmBoxCalThread.start()
+                # if updateWarmBoxCalThread is None or not updateWarmBoxCalThread.isAlive():
+                #     updateWarmBoxCalThread = threading.Thread(target=self.updateWarmBoxCal,
+                #                                           args=(self.warmBoxCalFilePathActive,))
+                #     updateWarmBoxCalThread.setDaemon(True)
+                #     updateWarmBoxCalThread.start()
+
+                # --- Non-threaded version, safer and preferred if the update doesn't stall this loop ---
+                self.updateWarmBoxCal(self.warmBoxCalFilePathActive)
+
             try:
                 rdQueueSize = self.rdQueue.qsize()
                 if rdQueueSize > self.rdQueueMaxLevel:
@@ -1282,6 +1294,34 @@ class RDFrequencyConverter(Singleton):
         if not self.warmBoxCalFilePath:
             return
 
+        # We need the factory cal file to use as a template.  If we can't open or parse it
+        # now, we hope that this is a temporary glitch.  Log the exception and do nothing
+        # else and see if it works the next time around.  If we fail we keep the existing
+        # wb active file in place so we continue to boot from the last good wb active file
+        # instead of going all the way back to the factory file.  If the previous
+        # active file is also bad, RPC_loadWarmBoxCal() will catch it and fallback to
+        # the wb factory file.
+        #
+        # If both the wb active file and factory file are broken or in some way inaccessible
+        # the analyzer will continue to run as all the data still resides in memory.  In
+        # this case there is automatic recovery to repair or replace these files as we
+        # assume the wb factory file is always good.
+        try:
+            config = CustomConfigObj(self.warmBoxCalFilePathFactory)
+        except Exception as e:
+            Log("RPC_updateWarmBoxCal, failed to open factory file:", e)
+            return
+
+        # Make a temporary local copy of the current wb active file before
+        # we do anything.
+        tmpCopyOfCurrentCalFile = self.warmBoxCalFilePath + ".tmp"
+        shutil.copy2(self.warmBoxCalFilePath, tmpCopyOfCurrentCalFile)
+
+        # Copy the current wb active file to a new file that contains
+        # the current timestamp and move this copy to the archive in
+        # in Log/Archive/WBCAL.  We intentionally don't do a sanity check
+        # on this file because even if it is corrupt, we want a copy of the
+        # broken file for debugging purposes.
         timeStamp = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
         warmBoxCalFilePathWithTime = self.warmBoxCalFilePath.replace(
             ".ini", "_%s.ini" % timeStamp)
@@ -1290,13 +1330,18 @@ class RDFrequencyConverter(Singleton):
                              warmBoxCalFilePathWithTime, True)
         Log("Archived %s" % warmBoxCalFilePathWithTime)
 
+        # Update the wlm offset and spline coefficients.  The update here is
+        # to the wb cal file in memory.  Results are written to disk below.
         filePtr = None
-        config = CustomConfigObj(self.warmBoxCalFilePath)
+        calStrIO = None
         for i in self.freqConverter.keys():
             freqConv = self.freqConverter[i]
             if freqConv is not None:
                 # Note: In Autocal1, laser indices are 1 based
                 freqConv.updateIni(config, i + 1)
+
+        # Set the timestamp, append the new checksum, and overwrite the existing
+        # active file with the new settings.
         try:
             config["timestamp"] = Driver.hostGetTicks()
             calStrIO = StringIO()
@@ -1310,10 +1355,39 @@ class RDFrequencyConverter(Singleton):
                 self.warmBoxCalFilePath = fileName
             filePtr = file(self.warmBoxCalFilePath, "wb")
             filePtr.write(calStr)
+        except Exception as e:
+            Log("RPC_updateWarmBoxCal file update failure:", e)
         finally:
-            calStrIO.close()
+            if calStrIO is not None:
+                calStrIO.close()
             if filePtr is not None:
                 filePtr.close()
+
+        # Sanity check on the new active file.  If one of the tests failed restore the
+        # previous active file.
+        sanityCheckFailed = False
+        try:
+            rtn = validateChecksum(self.warmBoxCalFilePath)
+            if rtn is not "OK":
+                Log("RPC_updateWarmBoxCal new wb active file failed the checksum test")
+                sanityCheckFailed = True
+        except Exception as e:
+            Log("RPC_updateWarmBoxCal new wb active file failed the checksum test:", e)
+            sanityCheckFailed = True
+        try:
+            config = CustomConfigObj(self.warmBoxCalFilePath)
+        except Exception as e:
+            Log("RPC_updateWarmBoxCal new wb active file failed CustomConfigObj test:", e)
+            sanityCheckFailed = True
+        if sanityCheckFailed:
+            Log("RPC_updateWarmBoxCal wb sanity test failed, restoring previous file.")
+            if os.path.isfile(tmpCopyOfCurrentCalFile):
+                os.rename(tmpCopyOfCurrentCalFile, self.warmBoxCalFilePath)
+        else:
+            Log("RPC_updateWarmBoxCal wb sanity test passed, deleting previous cal file.")
+            if os.path.isfile(tmpCopyOfCurrentCalFile):
+                os.remove(tmpCopyOfCurrentCalFile)
+        return
 
     def RPC_updateWlmCal(self, vLaserNum, thetaCal, waveNumbers, weights, relax=5e-3,
                          relative=True, relaxDefault=5e-3, relaxZero=5e-5, maxDiff=0.4):
