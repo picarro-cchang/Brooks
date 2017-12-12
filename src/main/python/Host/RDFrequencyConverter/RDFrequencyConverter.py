@@ -1309,7 +1309,7 @@ class RDFrequencyConverter(Singleton):
         try:
             config = CustomConfigObj(self.warmBoxCalFilePathFactory)
         except Exception as e:
-            Log("RPC_updateWarmBoxCal, failed to open factory file:", e)
+            Log("RPC_updateWarmBoxCal, failed to open factory file:", Data=e, Level=2)
             return
 
         # Make a temporary local copy of the current wb active file before
@@ -1356,7 +1356,7 @@ class RDFrequencyConverter(Singleton):
             filePtr = file(self.warmBoxCalFilePath, "wb")
             filePtr.write(calStr)
         except Exception as e:
-            Log("RPC_updateWarmBoxCal file update failure:", e)
+            Log("RPC_updateWarmBoxCal file update failure:", Data=e, Level=2)
         finally:
             if calStrIO is not None:
                 calStrIO.close()
@@ -1369,22 +1369,22 @@ class RDFrequencyConverter(Singleton):
         try:
             rtn = validateChecksum(self.warmBoxCalFilePath)
             if rtn is not "OK":
-                Log("RPC_updateWarmBoxCal new wb active file failed the checksum test")
+                Log("RPC_updateWarmBoxCal new wb active file failed the checksum test", Level=2)
                 sanityCheckFailed = True
         except Exception as e:
-            Log("RPC_updateWarmBoxCal new wb active file failed the checksum test:", e)
+            Log("RPC_updateWarmBoxCal new wb active file failed the checksum test:", Data=e, Level=2)
             sanityCheckFailed = True
         try:
             config = CustomConfigObj(self.warmBoxCalFilePath)
         except Exception as e:
-            Log("RPC_updateWarmBoxCal new wb active file failed CustomConfigObj test:", e)
+            Log("RPC_updateWarmBoxCal new wb active file failed CustomConfigObj test:", Data=e, Level=2)
             sanityCheckFailed = True
         if sanityCheckFailed:
-            Log("RPC_updateWarmBoxCal wb sanity test failed, restoring previous file.")
+            Log("RPC_updateWarmBoxCal wb sanity test failed, restoring previous file.", Level=2)
             if os.path.isfile(tmpCopyOfCurrentCalFile):
                 os.rename(tmpCopyOfCurrentCalFile, self.warmBoxCalFilePath)
         else:
-            Log("RPC_updateWarmBoxCal wb sanity test passed, deleting previous cal file.")
+            # Success!
             if os.path.isfile(tmpCopyOfCurrentCalFile):
                 os.remove(tmpCopyOfCurrentCalFile)
         return
