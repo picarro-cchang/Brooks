@@ -142,11 +142,12 @@ class ModbusScriptEnv(object):
             try:
                 import subprocess
                 import shlex
-                #subprocess.call(shlex.split("timedatectl set-ntp false"))  # May be necessary
-                subprocess.call(shlex.split("sudo date -s '%s'" % dt.strftime("%d %b %Y %H:%M:%S")))
-                subprocess.call(shlex.split("sudo hwclock -w"))
-            except KeyError:
+                datetimeStr = dt.strftime("%Y-%m-%d %H:%M:%S")
+                subprocess.check_call(shlex.split("timedatectl set-time '%s'" % datetimeStr))
+                subprocess.check_call(shlex.split("sudo hwclock -w"))
+            except Exception as e:
                 self.MODBUS_SetError(Errors.NO_SUDO_USER_PRIVILEGE)
+                print(str(e))
                 return 0
 
         self.MODBUS_SetError(Errors.NO_ERROR)
