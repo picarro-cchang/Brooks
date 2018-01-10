@@ -8,6 +8,9 @@ from Host.Common import CmdFIFO, SharedTypes
 from Host.Utilities.ModbusServer.ErrorHandler import Errors
 from Host.autogen import interface
 
+import subprocess
+import shlex
+
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"        
 ORIGIN = datetime.datetime(datetime.MINYEAR,1,1,0,0,0,0)
@@ -49,7 +52,12 @@ class ModbusScriptEnv(object):
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
         self.cavityPressureT = self.cavityPressureTPer * self.cavityPressureS
-        
+        self._clockStatus={}
+        proc = subprocess.Popen('timedatectl', stdout=subprocess.PIPE)
+        for line in proc.stdout.readlines():
+            (key, val) = line.split(':', 1)
+            self._clockStatus[key.lstrip().rstrip(' \n')] = val.lstrip().rstrip(' \n')
+
     def create_script_env(self):
         script_env = {}
         class_dir = dir(self)
@@ -140,9 +148,10 @@ class ModbusScriptEnv(object):
             )
         elif sys.platform == 'linux2':
             try:
-                import subprocess
-                import shlex
+
                 datetimeStr = dt.strftime("%Y-%m-%d %H:%M:%S")
+                if self.isTimeSyncEnabled():
+                    self.disableTimeSync()
                 subprocess.check_call(shlex.split("timedatectl set-time '%s'" % datetimeStr))
                 subprocess.check_call(shlex.split("sudo hwclock -w"))
             except Exception as e:
@@ -152,6 +161,32 @@ class ModbusScriptEnv(object):
 
         self.MODBUS_SetError(Errors.NO_ERROR)
         return 1
+
+    def isTimeSyncEnabled(self):
+        """
+        Ubunut 16.04 uses Systemd's simple NTP service: timesyncd.
+        Other/older systems will use the standard NTPd.
+        If either is enabled return True.
+        :return:
+        """
+        timeSyncEnabled = False
+        if self._clockStatus:
+            if self._clockStatus["Network time on"].lower() == "yes":
+                timeSyncEnabled = True
+            if self._clockStatus["NTP synchronized"].lower() == "yes":
+                timeSynchEnabled = True
+        return timeSyncEnabled
+
+    def disableTimeSync(self):
+        """
+        Disable timesyncd and ntp.
+        :return:
+        """
+        # Need error/exception handling here.  check_call blocks until we get a return code
+        # from timedatectl.  It should be instantaneous.
+        subprocess.check_call(shlex.split("timedatectl set-ntp false"))
+        return
+
             
     ########## Instrument Manager functions #####################################
     
