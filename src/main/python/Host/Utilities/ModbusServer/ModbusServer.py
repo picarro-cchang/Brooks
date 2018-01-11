@@ -46,6 +46,8 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
 from Host.Utilities.ModbusServer.ModbusDataBlock import ThreadSafeDataBlock, CallbackDataBlock
 from Host.Utilities.ModbusServer.ModbusUtils import get_variable_type, ModbusScriptEnv
+from Host.Common import AppStatus
+from Host.Common import InstMgrInc
 
 import socket
 
@@ -125,7 +127,7 @@ class ModbusServer(object):
 
         identity = ModbusDeviceIdentification()
         identity.VendorName  = 'Picarro'
-        identity.ProductCode = 'I2000'
+        identity.ProductCode = 'SI2000'
         identity.VendorUrl   = 'http://www.picarro.com'
         identity.ProductName = 'Picarro Modbus Server'
         identity.ModelName   = 'Picarro Modbus Server'
@@ -160,6 +162,12 @@ class ModbusServer(object):
                                         self._streamFilter,
                                         retry = True,
                                         name = APP_NAME)
+            self.InstMgrStatusListener = Listener.Listener(None,
+                                                  SharedTypes.STATUS_PORT_INST_MANAGER,
+                                                  AppStatus.STREAM_Status,
+                                                  self._InstMgrStatusFilter,
+                                                  retry = True,
+                                                  name = APP_NAME)
         # writer thread gets data from queue and write to memory
         self.writer_thread = threading.Thread(target=self.data_writer)
         self.writer_thread.daemon = True
@@ -507,6 +515,73 @@ class ModbusServer(object):
         self.control_thread.start()
         self.writer_thread.start()
         StartServer(**self.serverConfig)
+
+    def _InstMgrStatusFilter(self, obj):
+        """Updates the local (latest) copy of the instrument manager status bits."""
+        LedState = self.get_Instrument_Status(obj.status)
+        data_dict = {}
+        data_dict["Measurement_Status"] = LedState
+        # let make sure that there is data to write
+        if len(data_dict) > 0:
+            self.write_readonly_registers(data_dict)
+
+    def get_Instrument_Status(self, currentInstMgrStatus):
+
+        pressureLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_PRESSURE_LOCKED
+        cavityTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_CAVITY_TEMP_LOCKED
+        warmboxTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+        measActive = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_MEAS_ACTIVE
+        warmingUp = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARMING_UP
+        systemError = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_SYSTEM_ERROR
+
+        # ANOTHER TERRIBLE KLUDGE HERE...
+        # RSF 04NOV2017
+        #
+        # The analyzer GUI and front panel have a real and simulated red/yellow/green LED
+        # indicating the analyzer measuring state.  The logic to set the LED color in the
+        # GUI and front panel light is (originally) set in SysAlarmGui.py.  That is the
+        # color logic is in the GUI code at the point the color needs to be determined.
+        # Not my choice to put it there!
+        #
+        # Well now, with the addition of Modbus, we need to report this status in a Modbus
+        # register.  Unfortunately the LED status in SysAlarmGui.py can't be shared with
+        # any other code so we have to repeat the LED color selection logic here and put
+        # the state in the reportDict.  And, unfortunately again, SysAlarmGui.py can't
+        # read this data stream without a significant redesign so the LED color logic
+        # remains there too.
+        #
+        # ledState = 0 # red, system error, gas conc. measurements invalid
+        # ledState = 1 # solid yellow, need service, gas conc. measurements might be ok
+        # ledState = 2 # blinking yellow, not in reporting mode by system ok, like during warmup
+        # ledState = 3 # green, system ok, gas conc. measurements accurate
+        #
+        # Note that at this time there is no test that sets ledState = 1. Checks to do this
+        # is TBD.
+        #
+        ledState = 0
+        makeLedBlink = False
+        if pressureLocked and cavityTempLocked and warmboxTempLocked and measActive and \
+                (not warmingUp) and (not systemError) and (not makeLedBlink):
+            ledState = 3  # green
+        if ledState != 3:
+            descr = "System Status:"
+            if warmingUp or makeLedBlink:
+                descr += "\n* Warming Up"
+                ledState = 2  # blinking yellow
+            if systemError:
+                descr += "\n* System Error"
+            if not pressureLocked:
+                descr += "\n* Pressure Unlocked"
+            if not cavityTempLocked:
+                descr += "\n* Cavity Temp Unlocked"
+            if not warmboxTempLocked:
+                descr += "\n* Warm Box Temp Unlocked"
+            if not measActive:
+                descr += "\n* Measurement Not Active"
+                ledState = 2
+
+        return ledState
+
 
 HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
 
