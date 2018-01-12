@@ -12,6 +12,8 @@ from DataBaseModel import pds
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import datetimeToTimestamp
 
+_DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
+
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
 app = Flask(__name__, static_url_path='', static_folder='')
@@ -59,13 +61,13 @@ class SQLiteServer(object):
         # token required
         if api in ["action", "users"] or (api == "system" and action == "post"):
             if "Authentication" not in headers:
-                return {"error": "Authentication token required!"}
+                return {"error": "Authentication token required!"}, 401
         # Admin required
         if api == "users" or (api == "action" and action == "get") \
             or (api == "system" and action == "post"):
             roles = [r.name for r in current_user.roles]
             if "Admin" not in roles:
-                return {"error": "Admin role required!"}
+                return {"error": "Admin role required!"}, 403
         if api == "system" and action == "post":
             request_dict["command"] = "save_system_variables"
         elif api == "action" and action == "post":
@@ -92,24 +94,22 @@ class SQLiteServer(object):
         else:
             level = 0
         if requester in ["UserAdmin","qtLauncher_Config"] and level < 3:
-            return {"error": "Permission denied. Only Admin users can log in."}
+            return {"error": "Permission denied. Only Admin users can log in."}, 403
         elif requester == "H2O2Validation" and level < 2:
-            return {"error": "Permission denied. Only Admin and Technician can log in."}
+            return {"error": "Permission denied. Only Admin and Technician can log in."}, 403
         return {}
                 
     def check_password(self, username, password):
         responses = []
         ret = self.check_password_length(password)
         if ret:
-            responses.append(ret)
+            return ret
         ret = self.check_password_charset(password)
         if ret:
-            responses.append(ret)
+            return ret
         ret = self.check_password_history(username, password)
         if ret:
-            responses.append(ret)
-        if len(responses) > 0:
-            return {"error": "\n".join([r["error"] for r in responses])}
+            return ret
         return {}    # no error
                 
     def check_password_history(self, username, password):
@@ -123,7 +123,7 @@ class SQLiteServer(object):
                         return {}    # no error
                     else:
                         if utils.verify_password(password, p.value):
-                            return {"error": "Error in reusing passwords!"}
+                            return {"error": "Error in reusing passwords!"}, 409
         return {}    # no error
         
     def check_password_charset(self, password):
@@ -139,15 +139,15 @@ class SQLiteServer(object):
             if password.isalnum():
                 errors.append("Password must contain at least one special character!")
             if len(errors) > 0:
-                return {"error": "\n".join(errors)}
+                return {"error": "\n".join(errors)}, 422
         return {}    # no error
                 
     def check_password_length(self, password):
         length = self.system_varialbes["password_length"]
         if length >= 0 and len(password) < length:
-            return {"error": "Password is too short! Minimum length: %d" % length}
+            return {"error": "Password is too short! Minimum length: %d" % length}, 411
         if len(password) > 15:
-            return {"error": "Password is too long! Maximum length: 15."}
+            return {"error": "Password is too long! Maximum length: 15."}, 411
         return {}    # no error
         
     def check_password_age(self, username, password):
@@ -160,7 +160,7 @@ class SQLiteServer(object):
                 return {}
             td = datetime.datetime.utcnow() - latest_password.created_at
             if (td.days*86400 + td.seconds)*1000 + td.microseconds//1000 > lifetime*86400000:
-                return {"error": "Password expires!"}
+                return {"error": "Password expires!"}, 401
         return {}    # no error                
     
     def check_user_login_attempts(self, username):
@@ -175,23 +175,23 @@ class SQLiteServer(object):
                 # disable user
                 self.process_request_dict({"command": "update_user", "username": username, 
                     "active": 0, "password": None, "roles": None})
-                return {"error": "Username and password do not match! User account is disabled!"}
+                return {"error": "Username and password do not match! User account is disabled!"}, 423
             else:
                 remain_login = self.system_varialbes["user_login_attempts"] - self.user_login_attempts["attempts"]
                 msg = "Username or password are incorrect.\n" + \
                     "You are allowed %d more failed attempts before your account is locked.\n" % (remain_login) + \
                     "If you have forgotten your credentials please contact your account administrator."
-                return {"error": msg}
+                return {"error": msg}, 401
         else:
-            return {"error": "Username and password do not match!"}
+            return {"error": "Username and password do not match!"}, 401
 
     def check_phone_number(self, phone_str):
         if phone_str:
             phone_ext = phone_str.split(",")
             if len(phone_ext[0]) > 20:
-                return {"error": "Phone number is too long. Maximum length: 20."}
+                return {"error": "Phone number is too long. Maximum length: 20."}, 411
             if len(phone_ext) == 2 and len(phone_ext[1]) > 6:
-                return {"error": "Extension number is too long. Maximum length: 6."}
+                return {"error": "Extension number is too long. Maximum length: 6."}, 411
         return {}
                       
     def log_in_user(self, username, password, requester, no_commit=False):
@@ -199,7 +199,7 @@ class SQLiteServer(object):
         if user is not None:
             if utils.verify_password(password, user.password):
                 if not user.active:
-                    return {"error": "User is disabled!"}
+                    return {"error": "User is disabled!"}, 423
                 if no_commit:
                     # just check password. Do not commit to session
                     return {"user": user}
@@ -220,20 +220,20 @@ class SQLiteServer(object):
             else:
                 return self.check_user_login_attempts(username)
         else:
-            return {"error": "Username does not exist!"}
+            return {"error": "Username does not exist!"}, 400
             
     def create_user_account(self, username, request_dict):
         if not username or not request_dict["password"]:
-            abort(406)
+            abort(400)
         if len(username) < 4:
-            return {"error": "Username is too short! Minimum length: 4."}
+            return {"error": "Username is too short! Minimum length: 4."}, 411
         if len(username) > 64:
-            return {"error": "Username is too long! Maximum length: 64."}
+            return {"error": "Username is too long! Maximum length: 64."}, 411
         ret = self.check_phone_number(request_dict["phone_number"])
         if ret: return ret
         user = self.ds.find_user(username=username)
         if user: # User already exists
-            return {"error": "Username already exists!"}
+            return {"error": "Username already exists!"}, 409
         ret = self.check_password(username, request_dict["password"])
         if ret: return ret                
         user = self.ds.create_user( \
@@ -252,7 +252,7 @@ class SQLiteServer(object):
         
     def change_user_password(self, username, password, new_password):
         if new_password is None:
-            return {"error": "New password is not specified!"}
+            return {"error": "New password is not specified!"}, 400
         # check password but not log in
         ret = self.log_in_user(username, password, "", no_commit=True)
         if "error" in ret:
@@ -268,10 +268,10 @@ class SQLiteServer(object):
             
     def update_user_account(self, username, request_dict):
         if not username:
-            return {"error": "Username is not specified!"}
+            return {"error": "Username is not specified!"}, 400
         user = self.ds.find_user(username=username)
         if not user: # User does not exist
-            return {"error": "Username does not exist!"}
+            return {"error": "Username does not exist!"}, 404
         if "active" in request_dict and request_dict["active"] is not None:
             user.active = bool(request_dict["active"])
             a = current_user.username if hasattr(current_user, "username") else "System"
@@ -333,7 +333,7 @@ class SQLiteServer(object):
         elif cmd == "delete_user":
             user = self.ds.find_user(username=username)
             if not user:
-                return {"error": "Username does not exist!"}
+                return {"error": "Username does not exist!"}, 404
             self.ds.delete_user(user)
             self.ds.commit()
             return {"username": username}
@@ -365,7 +365,7 @@ class SQLiteServer(object):
                         "last_name":current_user.last_name,
                         "roles":[role.name for role in current_user.roles]}
             except:
-                return {"error": traceback.format_exc()}
+                return {"error": traceback.format_exc()}, 404
         elif cmd == "get_roles":    # UsersAPI, get
             roles = self.ds.get_all_from_model("role_model")
             return [role.name for role in roles]
@@ -446,11 +446,12 @@ def HandleCommandSwitches():
         sys.exit()
 
     #Start with option defaults...
-    configFile = "SQLiteDataBase.ini"
+    # configFile = "SQLiteDataBase.ini"
+    configFile = _DEFAULT_CONFIG_FILE
 
     if "-c" in options:
         configFile = options["-c"]
-        print "Config file specified at command line: %s" % configFile
+    print "Config file specified at command line: %s" % configFile
     
     return configFile
 

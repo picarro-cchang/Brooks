@@ -4,10 +4,10 @@ I design this module as a general-purpose platform for data transfer and remote 
 
 The module is based on pyModbus. 
 
-server.py: the Modbus server program running on analyzers.
-client.py: example program of Modbus client. Used for testing.
+ModbusServer.py: the Modbus server program running on analyzers.
+ModbusClient.py: example program of Modbus client. Used for testing.
 ModbusServer.ini: configuration file of server.py
-ModbusServer.py: python script of server.py. Define functions for remote control.
+ModbusScript.py: python script of server.py. Define functions for remote control.
 
 
 Document: http://confluence.picarro.int/display/SEM/Modbus+Programming
