@@ -137,7 +137,7 @@ class ModbusServer(object):
         else:
             framer = ModbusSocketFramer
         self.serverConfig = {
-            "rtu" : self.rtu,
+            "rtu": self.rtu,
             "context": self.context, 
             "framer": framer,
             "identity": identity,
@@ -163,11 +163,11 @@ class ModbusServer(object):
                                         retry = True,
                                         name = APP_NAME)
             self.InstMgrStatusListener = Listener.Listener(None,
-                                            SharedTypes.STATUS_PORT_INST_MANAGER,
-                                            AppStatus.STREAM_Status,
-                                            self._InstMgrStatusFilter,
-                                            retry = True,
-                                            name = APP_NAME)
+                                                  SharedTypes.STATUS_PORT_INST_MANAGER,
+                                                  AppStatus.STREAM_Status,
+                                                  self._InstMgrStatusFilter,
+                                                  retry = True,
+                                                  name = APP_NAME)
         # writer thread gets data from queue and write to memory
         self.writer_thread = threading.Thread(target=self.data_writer)
         self.writer_thread.daemon = True

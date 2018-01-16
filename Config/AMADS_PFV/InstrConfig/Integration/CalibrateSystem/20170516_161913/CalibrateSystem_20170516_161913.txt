@@ -1,0 +1,40 @@
+Virtual laser Index: 1
+Center wavenumber:   7823.850
+Number of steps:     70
+Recentering tuner around 32500
+Collecting data for PZT sensitivity measurement
+Residual: 0.063
+Cavity FSR  (WLM radians):    0.07834
+Sensitivity (digU/FSR): 16547
+Starting spectrum acquisition (pass 1 of 10)
+Standard deviation: 13165.6
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 2 of 10)
+Standard deviation: 5492.4
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 3 of 10)
+Standard deviation: 3471.7
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 4 of 10)
+Standard deviation: 2058.5
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 5 of 10)
+Standard deviation: 1192.5
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 6 of 10)
+Standard deviation: 654.5
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 7 of 10)
+Standard deviation: 371.1
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 8 of 10)
+Standard deviation: 199.7
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 9 of 10)
+Standard deviation: 119.4
+Recentering tuner around 37044
+Starting spectrum acquisition (pass 10 of 10)
+Standard deviation: 71.7
+Recentering tuner around 37044
+Cavity free spectral range = 0.020621 wavenumbers
+Virtual laser number = 1

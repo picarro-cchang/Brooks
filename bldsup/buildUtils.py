@@ -89,6 +89,7 @@ def get_noncython_resource(base_path):
         "Host/Utilities/IntegrationTool/*.py",
         "Host/Utilities/ModbusServer/*.py",
         "Host/Utilities/RestartSupervisor/*.py",
+        "Host/Utilities/SelfCalibration/*.*",
         "Host/Utilities/SetupTool/*.py",
         "Host/Utilities/SupervisorLauncher/*.py",
         "Host/Utilities/Four220/*.*",

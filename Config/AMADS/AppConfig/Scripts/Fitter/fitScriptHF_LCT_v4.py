@@ -4,6 +4,7 @@
 #  2016 1118:  modified water concentration calibration based on comparison with CFADS done 17. Nov. 2016
 #  2017 0109:  major change to frequency assignment and pzt feedback to deal with switching between room air and dry nitrogen
 #              also changed fit definition ini for H2O-O2 VC to make it less prone to misidentify water as oxygen
+#  2017-09-05:  added reporting of tuner statistics for LCT diagnosis
 
 from numpy import any, mean, std, sqrt, argmin, round_
 import os.path
@@ -116,6 +117,10 @@ if INIT:
     hf_ppbv_ave = 0.0
     hf_res = 0.0
     o2_res = 0.0
+    tuner60mean = 32768
+    tuner60stdev = 0
+    tuner61mean = 32768
+    tuner61stdev = 0
     
     counter = -20
     ignore_count = 8
@@ -134,6 +139,7 @@ d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrec
 P = d["cavitypressure"]
 T = d["cavitytemperature"]
 tunerMean = mean(d.tunerValue)
+tunerStdev = std(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
 dasTemp = d.sensorDict["DasTemp"]
 
@@ -148,7 +154,8 @@ if d["spectrumId"]==60 and d["ngroups"]>8:
         # fit with variable center and y if either H2O or HF peak is strong.
         r = anHF[1](d,init,deps)
         ANALYSIS.append(r)
-        
+    tuner60mean = tunerMean
+    tuner60stdev = tunerStdev    
     if goodLCT:
         i0 = argmin(abs(d.fitData["freq"] - 7823.84945))
         f0 = d.fitData["freq"][i0]
@@ -194,7 +201,8 @@ if d["spectrumId"]==61 and d["ngroups"]>9:
         ANALYSIS.append(r)
     adjust_81 = r["base",3]
     goodLCT = abs(adjust_81)<0.005 and sigma0 < 0.005
-
+    tuner61mean = tunerMean
+    tuner61stdev = tunerStdev
     if goodLCT:
         d.waveNumber = f0 + fsr*round_((d.waveNumber - f0)/fsr)
         d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
@@ -248,7 +256,8 @@ if (ignore_count == 0) and (not IgnoreThis):
           "adjust_81":adjust_81,"peak_82":peak_82,"str_82":str_82,"base_82":base_82,
           "h2o_conc_61":h2o_conc_61,"o2_conc":o2_conc,
           "hf_ppbv":hf_ppbv,"hf_ppbv_ave":hf_ppbv_ave,"hf_res":hf_res,"o2_res":o2_res,
-          "ngroups":d["ngroups"],"numRDs":d["datapoints"],"fit_time":fit_time,"hf_interval":hf_interval,          
+          "ngroups":d["ngroups"],"numRDs":d["datapoints"],"fit_time":fit_time,"hf_interval":hf_interval,
+          "tuner60mean":tuner60mean,"tuner60stdev":tuner60stdev,"tuner61mean":tuner61mean,"tuner61stdev":tuner61stdev,       
           "pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT}
     RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,

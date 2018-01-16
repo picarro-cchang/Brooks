@@ -38,7 +38,6 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-
 HELP_STRING = \
 """\
 AlarmSystem.py [-h] [-c<FILENAME>]

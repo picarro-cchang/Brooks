@@ -1955,6 +1955,7 @@ class DataManager(object):
                 pressureLocked =    currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_PRESSURE_LOCKED
                 cavityTempLocked =  currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_CAVITY_TEMP_LOCKED
                 warmboxTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
+                measActive = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_MEAS_ACTIVE
                 warmingUp =         currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARMING_UP
                 systemError =       currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_SYSTEM_ERROR
                 measGood = measGood and pressureLocked \
@@ -1965,7 +1966,60 @@ class DataManager(object):
             else:
                 measGood = 1
 
+            # ANOTHER TERRIBLE KLUDGE HERE...
+            # RSF 04NOV2017
+            #
+            # The analyzer GUI and front panel have a real and simulated red/yellow/green LED
+            # indicating the analyzer measuring state.  The logic to set the LED color in the
+            # GUI and front panel light is (originally) set in SysAlarmGui.py.  That is the
+            # color logic is in the GUI code at the point the color needs to be determined.
+            # Not my choice to put it there!
+            #
+            # Well now, with the addition of Modbus, we need to report this status in a Modbus
+            # register.  Unfortunately the LED status in SysAlarmGui.py can't be shared with
+            # any other code so we have to repeat the LED color selection logic here and put
+            # the state in the reportDict.  And, unfortunately again, SysAlarmGui.py can't
+            # read this data stream without a significant redesign so the LED color logic
+            # remains there too.
+            #
+            # ledState = 0 # red, system error, gas conc. measurements invalid
+            # ledState = 1 # solid yellow, need service, gas conc. measurements might be ok
+            # ledState = 2 # blinking yellow, not in reporting mode by system ok, like during warmup
+            # ledState = 3 # green, system ok, gas conc. measurements accurate
+            #
+            # Note that at this time there is no test that sets ledState = 1. Checks to do this
+            # is TBD.
+            #
+            ledState = 0
+            makeLedBlink = False
+            if not self.noInstMgr:
+                if pressureLocked and cavityTempLocked and warmboxTempLocked and measActive and \
+                        (not warmingUp) and (not systemError) and (not makeLedBlink):
+                    ledState = 3  # green
+                if ledState != 3:
+                    descr = "System Status:"
+                    if warmingUp or makeLedBlink:
+                        descr += "\n* Warming Up"
+                        ledState = 2  # blinking yellow
+                    if systemError:
+                        descr += "\n* System Error"
+                    if not pressureLocked:
+                        descr += "\n* Pressure Unlocked"
+                    if not cavityTempLocked:
+                        descr += "\n* Cavity Temp Unlocked"
+                    if not warmboxTempLocked:
+                        descr += "\n* Warm Box Temp Unlocked"
+                    if not measActive:
+                        descr += "\n* Measurement Not Active"
+                        ledState = 2
+            else:
+                pass
+
+
             resultDict = {}
+            resultDict["LED_STATE"] = ledState
+
+
             # Broadcast the result data...
             #
             # This block of code is used for the QuickGUI alarm panel (I think).
@@ -1973,9 +2027,9 @@ class DataManager(object):
             # seems to still work?!
             #
             try:
-                resultDict = self.alarmSystem._MeasDataListener(reportSource_out, reportDict, measGood)
+                resultDict.update(self.alarmSystem._MeasDataListener(reportSource_out, reportDict, measGood))
             except:
-                resultDict = reportDict
+                resultDict.update(reportDict)
 
             #if (not self.legacyAlarmSystem) and (self.alarmSystem.alarmScriptCodeObj is not None):
             testAlarmMessage = ""

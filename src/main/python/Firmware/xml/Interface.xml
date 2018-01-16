@@ -2834,7 +2834,7 @@
             <description>PZT offset update factor</description>
             <initial>0</initial>
             <save/>
-            <display format="%.3f">PZT offset update factor</display>
+            <display format="%.5f">PZT offset update factor</display>
         </register>
         <register ident="PZT_OFFSET_VIRTUAL_LASER1" type="float" minver="1.0" access="rw">
             <description>PZT offset for virtual laser 1</description>

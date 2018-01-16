@@ -1,0 +1,22 @@
+Virtual laser 1. Target value for peak is: 5732.473120
+Original WLM offset is: 0.000000
+Processing spectrum
+9 steps of median filtering performed before offset calculation
+Peak position: 5732.473427 [target: 5732.473120, error: 0.000307]
+Setting offset to: -0.000307
+Processing spectrum
+9 steps of median filtering performed before offset calculation
+Peak position: 5732.471429 [target: 5732.473120, error: -0.001691]
+Setting offset to: 0.001383
+Processing spectrum
+9 steps of median filtering performed before offset calculation
+Peak position: 5732.473935 [target: 5732.473120, error: 0.000815]
+Setting offset to: 0.000568
+Processing spectrum
+9 steps of median filtering performed before offset calculation
+Peak position: 5732.472325 [target: 5732.473120, error: -0.000795]
+Setting offset to: 0.001363
+Processing spectrum
+9 steps of median filtering performed before offset calculation
+Peak position: 5732.473068 [target: 5732.473120, error: -0.000052]
+Warm box calibration file C:\Picarro\G2000\InstrConfig\Calibration\InstrCal\Beta2000_WarmBoxCal.ini updated with offset 0.001363 for virtual laser 1

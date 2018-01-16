@@ -22,6 +22,7 @@ debian_directory="$dist_directory/DEBIAN"
 resource_directory="$git_directory/target/Installers/${dist_foldername}"
 git_instr_config_directory="$config_directory/$installer_type/InstrConfig"
 git_app_config_directory="$config_directory/$installer_type/AppConfig"
+git_signature_file="$config_directory/$installer_type/installerSignature.txt"
 git_bin_config_directory="$config_directory/$installer_type/bin"
 
 dist_dir_home="$dist_directory/home"
@@ -121,6 +122,7 @@ then
   rm -rf $dist_bin_config_directory
 fi
 
+cp $git_signature_file $dist_dir_new
 cp -R "$git_bin_config_directory/." $dist_bin_config_directory
 chmod -R 755 $dist_bin_config_directory
 

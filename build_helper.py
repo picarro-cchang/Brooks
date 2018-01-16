@@ -206,8 +206,8 @@ def process_build_config_file(configFile):
                 'check_working_tree',\
                 'check_configs',\
                 'official',\
-                'push_github',\
-                'tag_github',\
+                'push',\
+                'tag',\
                 'upload_artifactory',\
                 'incr_version'
                 ]

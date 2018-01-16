@@ -57,14 +57,17 @@ class ChannelSettingWidget(QWidget):
         
         self.unit_dict = dict(zip(self.output_list, self.units))
         self.limit_dict = dict(zip(self.output_list, self.high_limits))
+
         self.unit_dict["Disabled"] = 'Disabled'
         self.limit_dict["Disabled"] = 'Disabled'
+
         print "Dicts: ", self.unit_dict, self.limit_dict
         self.max_index = len(self.output_list)
         self._airType.addItems(self.output_list+ ['Disabled'])
         
         self._rangeMin = QLineEdit()
         self._rangeMax = QLineEdit()
+
         self._unit = QLabel("Disabled")
 
         qfl.addRow(QLabel("Output Type"), self._airType)
@@ -135,6 +138,7 @@ class ChannelSettingWidget(QWidget):
         # convert wiget settings to CONFIG obj
         if self._airType.currentIndex() == self.max_index:
             for key in CONFIG[self.section_name]:
+
                 CONFIG[self.section_name][key] = 'Disabled'
                 self._saveBTN.setDisabled(True)
                 self._undoBTN.setDisabled(True)
@@ -142,7 +146,8 @@ class ChannelSettingWidget(QWidget):
             try:
                 limitmax = self.limit_dict[str(self._airType.itemText(self._airType.currentIndex()))]
                 if float(self._rangeMin.text()) < float(self._rangeMax.text()) and float(self._rangeMin.text()) >= 0 and float(self._rangeMax.text()) <=limitmax:
-                    if CONFIG[self.section_name].get('SOURCE_MIN') == 'Disabled' or float(CONFIG[self.section_name].get('SOURCE_MIN')) != float(self._rangeMin.text()):
+
+                    if CONFIG[self.section_name].get('SOURCE_MIN') == 'Disabled' or float(CONFIG[self.section_name].get('SOURCE_MIN')) != float(self._rangeMin.text()) :
                         CONFIG[self.section_name].update({'SOURCE_MIN': float(self._rangeMin.text())})                
                     #if CONFIG[self.section_name].get('SOURCE_MAX') == 'Disabled' or CONFIG[self.section_name].get('SOURCE_MAX') == '':
                     #    CONFIG[self.section_name]['SOURCE_MAX'] = 'Disabled'

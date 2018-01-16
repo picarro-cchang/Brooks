@@ -4359,7 +4359,7 @@ parameter_forms.append(('Sample Handling Parameters',__p))
 __p = []
 
 __p.append(('dsp','float',PZT_INCR_PER_CAVITY_FSR,'PZT increment per cavity FSR','','%.0f',1,1))
-__p.append(('dsp','float',PZT_OFFSET_UPDATE_FACTOR,'PZT offset update factor','','%.3f',1,1))
+__p.append(('dsp','float',PZT_OFFSET_UPDATE_FACTOR,'PZT offset update factor','','%.5f',1,1))
 __p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER1,'Virtual laser 1 PZT offset','','%.0f',1,1))
 __p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER2,'Virtual laser 2 PZT offset','','%.0f',1,1))
 __p.append(('dsp','float',PZT_OFFSET_VIRTUAL_LASER3,'Virtual laser 3 PZT offset','','%.0f',1,1))
