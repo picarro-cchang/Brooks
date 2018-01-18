@@ -34,16 +34,6 @@ def User_Login():
     #Get user password
     user_password=MODBUS_GetValue("UserPassword").lstrip()
 
-    #check if user name or user password is not empty
-    if not user_name:
-        print "Fail to read UserName from Modbus"
-        MODBUS_SetError(Errors.NO_USERNAME_SET)
-        return 0
-    if not user_password:
-        print "Fail to read UserPassword from Modbus"
-        MODBUS_SetError(Errors.NO_PASSWORD_SET)
-        return 0
-
     #update user password
     MODBUS_UserLogin(user_name, user_password)
     return 1
@@ -53,16 +43,6 @@ def Change_UserPassword():
     user_name=MODBUS_GetValue("UserName").lstrip()
     #Get user password
     user_password=MODBUS_GetValue("UserPassword").lstrip()
-
-    #check if user name or user password is not empty
-    if not user_name:
-        print "Fail to read UserName from Modbus"
-        MODBUS_SetError(Errors.NO_USERNAME_SET)
-        return 0
-    if not user_password:
-        print "Fail to read UserPassword from Modbus"
-        MODBUS_SetError(Errors.NO_PASSWORD_SET)
-        return 0
 
     #update user password
     MODBUS_ChangeUserPassword(user_name, user_password)
