@@ -152,9 +152,8 @@ class ModbusScriptEnv(object):
                     self.disableTimeSync()
                 subprocess.check_call(shlex.split("timedatectl set-time '%s'" % datetimeStr))
                 subprocess.check_call(shlex.split("sudo hwclock -w"))
-            except Exception as e:
-                self.MODBUS_SetError(Errors.NO_SUDO_USER_PRIVILEGE)
-                print(str(e))
+            except:
+                self.MODBUS_SetError(Errors.ERROR)
                 return 0
 
         self.MODBUS_SetError(Errors.NO_ERROR)
