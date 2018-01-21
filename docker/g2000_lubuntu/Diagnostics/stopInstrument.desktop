@@ -1,7 +1,0 @@
-#!usr/bin/env xdg-open
-[Desktop Entry]
-Type=Application
-Name=Stop Instrument
-Icon=/Picarro/G2000/Assets/icons/Cancel.ico
-Exec=bash -c 'python /Picarro/G2000/Host/Common/StopSupervisor.py'
-Terminal=false

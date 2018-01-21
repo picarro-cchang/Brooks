@@ -1,3 +1,0 @@
-#!/bin/bash
-sudo docker build --rm -t picarrodocker/host_base .
-# sudo docker save -o host_base.tar picarrodocker/host_base:latest

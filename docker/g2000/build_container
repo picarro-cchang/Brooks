@@ -1,2 +1,0 @@
-#!/bin/bash
-sudo docker build --rm -t g2000 .

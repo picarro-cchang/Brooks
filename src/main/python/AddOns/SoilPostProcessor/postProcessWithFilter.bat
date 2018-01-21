@@ -1,1 +1,0 @@
-postProcessor.exe --dat=%1 --chambers=chambers.csv --measurements=measurements.csv --filter

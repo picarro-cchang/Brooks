@@ -1,9 +1,0 @@
-#!usr/bin/env xdg-open
-
-[Desktop Entry]
-Type=Application
-Name=Integration Backup
-Icon=/Picarro/G2000/Assets/icons/Integration_icon.ico
-Exec=bash -c 'cd /Picarro/G2000/Host/Utilities/IntegrationBackup;python -O IntegrationBackup.py'
-Terminal=true
-Name[C]=Integration Backup

@@ -92,8 +92,8 @@ then
   mkdir -p $debian_directory
 fi
 
-cp "$git_directory/bldsup/preinst" $debian_directory
-cp "$git_directory/bldsup/postinst" $debian_directory
+cp "$git_directory/buildTools/preinst" $debian_directory
+cp "$git_directory/buildTools/postinst" $debian_directory
 chmod 755 "$debian_directory/preinst"
 chmod 755 "$debian_directory/postinst"
 

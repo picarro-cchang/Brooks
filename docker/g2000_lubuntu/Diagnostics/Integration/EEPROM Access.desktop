@@ -1,9 +1,0 @@
-#!usr/bin/env xdg-open
-
-[Desktop Entry]
-Type=Application
-Name=EEPROM Access
-Icon=/Picarro/G2000/Assets/icons/Integration_icon.ico
-Exec=bash -c 'cd /Picarro/G2000/Host/Utilities/InstrEEPROMAccess;python -O InstrEEPROMAccess.py -c ../../../CommonConfig/Config/Utilities/InstrEEPROMAccess.ini'
-Terminal=true
-Name[C]=EEPROM Access
