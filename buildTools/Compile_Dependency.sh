@@ -2,6 +2,7 @@
 # Script to compile and generate Analyzer code for DSP, FPGA, FitUtils, DatVeiwer and FastLomb
 
 git_directory=$(pwd)
+git_directory="$(dirname $git_directory)"
 dir_source_main_python="$git_directory/src/main/python"
 
 #Compile source for XML

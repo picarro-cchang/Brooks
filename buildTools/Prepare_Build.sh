@@ -15,6 +15,7 @@ project_name=$4
 internal_build=${5:-0}
 
 git_directory=$(pwd)
+git_directory="$(dirname $git_directory)"
 build_helper_file_path=$git_directory/src/main/python/Host/Utilities/BuildHelper/BuildInfo.py
 dist_foldername=${project_name}_${raw_version}
 dist_directory="$git_directory/target/dist/${dist_foldername}"

@@ -11,6 +11,7 @@ raw_version=$1
 project_name=$2
 dist_foldername=${project_name}_${raw_version}
 git_directory=$(pwd)
+git_directory="$(dirname $git_directory)"
 dir_source_main_python="$git_directory/src/main/python"
 target_directory="$git_directory/target/dist/${dist_foldername}"
 

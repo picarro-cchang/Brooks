@@ -2,6 +2,7 @@
 # Script will go to below folder list (includeFolderList vriable) to Cythonize Analyzer code
 
 git_directory=$(pwd)
+git_directory="$(dirname $git_directory)"
 dir_source_main_python="$git_directory/src/main/python"
 
 includeFolderList[0]="Host/AlarmSystem"
@@ -38,7 +39,7 @@ do
   do
     # Cythonize file in place
     # also create build folder containing all .o object files of files
-    if ! python "$git_directory/bldsup/setupForCython.py" build_ext --inplace --filename=$file_in_dir &
+    if ! python "$git_directory/buildTools/setupForCython.py" build_ext --inplace --filename=$file_in_dir &
     then
       echo "***********************Error during Cythonizing file $file_in_dir******************"
       exit 1
