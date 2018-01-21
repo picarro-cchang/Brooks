@@ -3,13 +3,12 @@ import time
 import datetime
 import requests
 import struct
+import subprocess
+import shlex
 
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Utilities.ModbusServer.ErrorHandler import Errors
 from Host.autogen import interface
-
-import subprocess
-import shlex
 
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"        
@@ -52,12 +51,12 @@ class ModbusScriptEnv(object):
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
         self.cavityPressureT = self.cavityPressureTPer * self.cavityPressureS
-        self._clockStatus={}
+        self._clockStatus = {}
         proc = subprocess.Popen('timedatectl', stdout=subprocess.PIPE)
         for line in proc.stdout.readlines():
             (key, val) = line.split(':', 1)
             self._clockStatus[key.lstrip().rstrip(' \n')] = val.lstrip().rstrip(' \n')
-
+        
     def create_script_env(self):
         script_env = {}
         class_dir = dir(self)
@@ -148,15 +147,13 @@ class ModbusScriptEnv(object):
             )
         elif sys.platform == 'linux2':
             try:
-
                 datetimeStr = dt.strftime("%Y-%m-%d %H:%M:%S")
                 if self.isTimeSyncEnabled():
                     self.disableTimeSync()
                 subprocess.check_call(shlex.split("timedatectl set-time '%s'" % datetimeStr))
                 subprocess.check_call(shlex.split("sudo hwclock -w"))
-            except Exception as e:
-                self.MODBUS_SetError(Errors.NO_SUDO_USER_PRIVILEGE)
-                print(str(e))
+            except:
+                self.MODBUS_SetError(Errors.ERROR)
                 return 0
 
         self.MODBUS_SetError(Errors.NO_ERROR)
@@ -187,7 +184,6 @@ class ModbusScriptEnv(object):
         subprocess.check_call(shlex.split("timedatectl set-ntp false"))
         return
 
-            
     ########## Instrument Manager functions #####################################
     
     def MODBUS_EnableMeasurement(self):
@@ -229,7 +225,7 @@ class ModbusScriptEnv(object):
                    'username': username, 
                    'password': password}
         response, return_dict = self._send_request("post", "account", payload)
-        if "error" not in return_dict:
+        if "error" not in return_dict and response.status_code == 200:
             self.current_user = return_dict
             self.MODBUS_SetError(Errors.NO_ERROR)
             return 1
@@ -250,7 +246,7 @@ class ModbusScriptEnv(object):
         
     def MODBUS_UserLogoff(self):
         response, return_dict = self._send_request("post", "account", {"command":"log_out_user", 'requester': "Modbus"})
-        if "error" not in return_dict:
+        if "error" not in return_dict and response.status_code == 200:
             self.current_user = None
             self.MODBUS_SetError(Errors.NO_ERROR)
             return 1
@@ -261,12 +257,12 @@ class ModbusScriptEnv(object):
     def MODBUS_ChangeUserPassword(self, username, new_password):
         payload = dict(command="update_user", username=username, password=new_password)
         response, return_dict = self._send_request("post", "users", payload)
-        if "error" not in return_dict:
+        if "error" not in return_dict and response.status_code == 200:
             self.MODBUS_SetError(Errors.NO_ERROR)
             return 1
         else:
             error_code = Errors.NO_ERROR
-            if response.status_code == 401:
+            if response.status_code == 403:
                 error_code = Errors.ADMIN_RIGHT_REQUIRES
             elif response.status_code == 404:
                 error_code = Errors.NO_USER_EXIST
