@@ -19,6 +19,7 @@ class Window(QtGui.QMainWindow):
 
     def setUpTasks_(self):
         tm = TaskManager("test")
+        tm.emit_test_signal()
         return
 
 app = QtGui.QApplication(sys.argv)

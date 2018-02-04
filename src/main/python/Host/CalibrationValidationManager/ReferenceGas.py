@@ -1,5 +1,5 @@
 from enum import Enum
-class GasType(Enum):
+class GasEnum(Enum):
     Air = 1
     CH4 = 2
     CO2 = 3
@@ -17,33 +17,34 @@ class GasType(Enum):
 class ComponentGas(object):
     def __init__(self):
         self.gasName = ""       # Human readable name, free form
-        self.gasType = ""       # GasType enum for defined gases
+        self.gasType = ""       # GasEnum enum for defined gases
         self.gasConcPpm = 0.0   # Vendor reported gas conc in PPM
         self.gasAccPpm = 0.0    # Vendor reproted gas accuracy/uncertainty in PPM
         return
 
     def setGasType(self, type):
         """
-        Set the GasType enum.
-        If type is a GasType enum confirm that it exists, throw an error if it doesn't.
-        If the type is a string (molecule name), see if we can match to a known GasType enum.
+        Set the GasEnum enum.
+        If type is a GasEnum enum confirm that it exists, throw an error if it doesn't.
+        If the type is a string (molecule name), see if we can match to a known GasEnum enum.
         Throw an error if there is no match.
-        :param type: Can be a GasType enum or a string.
+        :param type: Can be a GasEnum enum or a string.
         :return: Nothing
         """
 
-        # See if type is a valid GasType enum.
-        # If not, see if type is a string that matches one of the defined gases in GasType.
-        if type in list(GasType):
+        # See if type is a valid GasEnum enum.
+        # If not, see if type is a string that matches one of the defined gases in GasEnum.
+        if type in list(GasEnum):
             self.gasType = type
         else:
-            for name, member in GasType.__members__.items():
+            for name, member in GasEnum.__members__.items():
                 if type == name:
                     self.gasType = member
 
         if self.gasType is "":
-            print("Failed to assign gastype. %s is not a valid type." %type)
-            exit(1)
+            #print("Failed to assign gastype. %s is not a valid type." %type)
+            raise AttributeError
+            # exit(1)
         return
 
     def getGasType(self):
@@ -53,9 +54,15 @@ class ComponentGas(object):
         self.gasConcPpm = conc
         return
 
+    def getGasConcPpm(self):
+        return self.gasConcPpm
+
     def setGasAccPpm(self, acc):
         self.gasAccPpm = acc
         return
+
+    def getGasAccPpm(self):
+        return self.gasAccPpm
 
 # ReferenceGas
 # Represents a gas source that has one or more ComponentGas object.
@@ -64,12 +71,12 @@ class ComponentGas(object):
 #
 class ReferenceGas(object):
     def __init__(self, gasDict):
-        print("initializing Reference Gas", gasDict)
+        # print("initializing Reference Gas", gasDict)
         self.tankName = ""      # Human readable name like '2ppm CH4 in N2', free form
         self.tankVendor = ""    # Supplier
         self.tankSN = ""        # Tank serial number or some other unique identifier
         self.tankDesc = ""      # Free form field for any user input
-        self.components = []    # Collection of GasComponent objects
+        self.components = {}    # Collection of GasComponent objects
 
         if "Name" in gasDict:
             self.tankName = gasDict["Name"]
@@ -124,7 +131,13 @@ class ReferenceGas(object):
             cg.setGasType(component[idx])
             cg.setGasConcPpm(concentration[idx])
             cg.setGasAccPpm(accuracy[idx])
-            self.components.append(cg)
+            self.components[cg.getGasType()] = cg
 
         return
+
+    def getGasConcPpm(self, gasEnum):
+        return self.components[gasEnum].getGasConcPpm()
+
+    def getGasAccPpm(self, gasEnum):
+        return self.components[gasEnum].getGasAccPpm()
 
