@@ -2,7 +2,9 @@
 #
 
 import sys
+import time
 from PyQt4 import QtGui
+from PyQt4 import QtCore
 
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 #import Host.CalibrationValidationManager.TaskManager as TaskManager
@@ -13,14 +15,17 @@ class Window(QtGui.QMainWindow):
         super(Window, self).__init__()
         self.setGeometry(50, 50, 500, 300)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
-        #self.setWindowIcon(QtGui.QIcon("PicarroAMC.jpg"))
-        self.setUpTasks_()
+        self.tm = self.setUpTasks_()
         self.show()
+        # This lets the GUI show before the GIL hands over the CPU to the TaskManager
+        QtCore.QTimer.singleShot(1,self.start_running_tasks)
 
     def setUpTasks_(self):
         tm = TaskManager("test")
-        tm.emit_test_signal()
-        return
+        return tm
+
+    def start_running_tasks(self):
+        self.tm.emit_test_signal()
 
 app = QtGui.QApplication(sys.argv)
 GUI = Window()

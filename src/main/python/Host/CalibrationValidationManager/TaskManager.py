@@ -1,13 +1,15 @@
 # TaskManager
 
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import QObject, pyqtSignal
+
+# from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from ReferenceGas import ReferenceGas
 from Task import Task
 
-class TaskManager(QObject):
-    stop_signal = pyqtSignal()
+class TaskManager(QtCore.QObject):
+    start_signal = QtCore.pyqtSignal()
+    stop_signal = QtCore.pyqtSignal()
 
     def __init__(self, iniFile):
         print("initializing task manager", iniFile)
@@ -42,14 +44,25 @@ class TaskManager(QObject):
             # in this case are floats, ints, strings, booleans, and lists.
             #
             if isinstance(taskConfObj,dict):
-                self.tasks.append(Task())
+                self.tasks.append(Task(my_parent=self, my_id=key))
 
         return
 
     def set_connections(self):
-        self.stop_signal.connect(self.tasks[0].stop_slot)
+        for task in self.tasks:
+            task.task_started_signal.connect(self.task_started_ack_slot)
+            task.task_finish_signal.connect(self.task_finished_ack_slot)
         return
 
     def emit_test_signal(self):
-        print("Emitting signal")
-        self.stop_signal.emit()
+        print("Emitting start signal")
+        self.start_signal.emit()
+        return
+
+    def task_started_ack_slot(self):
+        print("Recieved start ack")
+        return
+
+    def task_finished_ack_slot(self):
+        print("Recieved finished ack")
+        return
