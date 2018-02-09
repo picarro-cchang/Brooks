@@ -30,13 +30,14 @@ class Task(QtCore.QObject):
     task_abort_signal = QtCore.pyqtSignal(str)
     task_heartbeat_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, my_parent = None, settings = {}, refGas = None, my_id = None):
+    def __init__(self, my_parent = None, settings = {}, refGas = None, my_id = None, data_source = None):
         super(Task, self).__init__()
         self.my_parent = my_parent
         self.referenceGas = refGas
         self.settings = settings
         self.my_id = my_id
         self._running = False
+        self.data_source = data_source
         self._mutex = QtCore.QMutex()
         self.set_connections()
         return
@@ -75,6 +76,9 @@ class Task(QtCore.QObject):
     #
     def core_measurement(self):
         for i in xrange(10):
-            print("%s doing some mock work here: %s" %(self.my_id, i))
+            try:
+                print("%s doing some mock work here: time = %s" %(self.my_id, self.data_source.getList("analyze_H2O2","time")))
+            except Exception as e:
+                pass
             time.sleep(1)
         return

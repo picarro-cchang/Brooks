@@ -3,7 +3,7 @@ from wx.lib.wordwrap import wordwrap
 from Host.Common.GuiTools import setItemFont, DataXferValidator
 
 class OKDialog(wx.Dialog):
-    def __init__(self,mainForm,aboutText,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
+    def __init__(self,mainForm,aboutText,parent,id,title,fontDatabase,pos=wx.DefaultPosition,size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE, boldText = None):
         super(OKDialog, self).__init__(parent,id,title,pos,size,style)
         self.okButton = wx.Button(self, wx.ID_OK)
@@ -15,14 +15,9 @@ class OKDialog(wx.Dialog):
         else:
             self.boldText = None
         self.mainForm = mainForm
-        self.__set_properties()
+        setItemFont(self,fontDatabase.getFontFromIni("Dialogs"))
+        setItemFont(self.okButton,fontDatabase.getFontFromIni("DialogButtons"))
         self.__do_layout()
-        # end wxGlade
-
-    def __set_properties(self):
-        # begin wxGlade: ShutdownDialog.__set_properties
-        setItemFont(self,self.mainForm.getFontFromIni("Dialogs"))
-        setItemFont(self.okButton,self.mainForm.getFontFromIni("DialogButtons"))
         # end wxGlade
 
     def __do_layout(self):
@@ -54,6 +49,7 @@ class ShutdownDialog(wx.Dialog):
             style=wx.RA_SPECIFY_ROWS)
         self.okButton = wx.Button(self, wx.ID_OK)
         self.cancelButton = wx.Button(self, wx.ID_CANCEL)
+        self.fontDatabase = fontDatabase
         self.mainForm = mainForm
         self.__set_properties()
         self.__do_layout()
@@ -64,9 +60,9 @@ class ShutdownDialog(wx.Dialog):
         # begin wxGlade: ShutdownDialog.__set_properties
         self.SetTitle("Shutdown Instrument")
         self.selectShutdownType.SetSelection(0)
-        setItemFont(self,self.mainForm.getFontFromIni("Dialogs"))
-        setItemFont(self.okButton,self.mainForm.getFontFromIni("DialogButtons"))
-        setItemFont(self.cancelButton,self.mainForm.getFontFromIni("DialogButtons"))
+        setItemFont(self,self.fontDatabase.getFontFromIni("Dialogs"))
+        setItemFont(self.okButton,self.fontDatabase.getFontFromIni("DialogButtons"))
+        setItemFont(self.cancelButton,self.fontDatabase.getFontFromIni("DialogButtons"))
         # end wxGlade
 
     def __do_layout(self):
@@ -96,18 +92,17 @@ class AlarmDialog(wx.Dialog):
                         "Alarm is set when value is below Alarm threshold 1 and above Alarm threshold 2.\nIt is reset when value rises above Clear threshold 1 or falls below Clear threshold 2.",
                         "Outside":\
                         "Alarm is set when value is above Alarm threshold 1 or below Alarm threshold 2.\nIt is reset when value falls below Clear threshold 1 or rises above Clear threshold 2."}
-    def __init__(self,mainForm,data,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
+    def __init__(self,mainForm,data,parent,id,title,fontDatabase,pos=wx.DefaultPosition,size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE):
         super(AlarmDialog, self).__init__(parent,id,title,pos,size,style)
 
         self.mainForm = mainForm
-        getFontFromIni = mainForm.getFontFromIni
-        setItemFont(self,self.mainForm.getFontFromIni('Dialogs'))
+        setItemFont(self,fontDatabase.getFontFromIni('Dialogs'))
         self.data = data
         self.vsizer = wx.BoxSizer(wx.VERTICAL)
         sizer = wx.GridBagSizer(hgap=5,vgap=5)
         label = wx.StaticText(self, -1, "Alarm name")
-        setItemFont(label,getFontFromIni('Dialogs'))
+        setItemFont(label,fontDatabase.getFontFromIni('Dialogs'))
 
         sizer.Add(label, pos = (0,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
         self.name = wx.StaticText(parent=self,id=-1,size=(100,-1))
@@ -127,25 +122,25 @@ class AlarmDialog(wx.Dialog):
         label = wx.StaticText(self, -1, "Alarm threshold 1")
         sizer.Add(label, pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         self.alarm1Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.alarm1Edit,getFontFromIni('DialogTextBoxes'))
+        setItemFont(self.alarm1Edit,fontDatabase.getFontFromIni('DialogTextBoxes'))
         self.alarm1Edit.SetValidator(DataXferValidator(data,"alarm1",self.validate))
         sizer.Add(self.alarm1Edit, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         label = wx.StaticText(self, -1, "Clear threshold 1")
         sizer.Add(label, pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         self.clear1Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.clear1Edit,getFontFromIni('DialogTextBoxes'))
+        setItemFont(self.clear1Edit,fontDatabase.getFontFromIni('DialogTextBoxes'))
         self.clear1Edit.SetValidator(DataXferValidator(data,"clear1",self.validate))
         sizer.Add(self.clear1Edit, pos=(4,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         label = wx.StaticText(self, -1, "Alarm threshold 2")
         sizer.Add(label, pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         self.alarm2Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.alarm2Edit,getFontFromIni('DialogTextBoxes'))
+        setItemFont(self.alarm2Edit,fontDatabase.getFontFromIni('DialogTextBoxes'))
         self.alarm2Edit.SetValidator(DataXferValidator(data,"alarm2",self.validate))
         sizer.Add(self.alarm2Edit, pos=(5,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         label = wx.StaticText(self, -1, "Clear threshold 2")
         sizer.Add(label, pos=(6,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         self.clear2Edit = wx.TextCtrl(self, -1, "0.0", size=(125, -1))
-        setItemFont(self.clear2Edit,getFontFromIni('DialogTextBoxes'))
+        setItemFont(self.clear2Edit,fontDatabase.getFontFromIni('DialogTextBoxes'))
         self.clear2Edit.SetValidator(DataXferValidator(data,"clear2",self.validate))
         sizer.Add(self.clear2Edit, pos=(6,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
         self.enabled = wx.CheckBox(self,-1,"Enable alarm")
@@ -158,12 +153,12 @@ class AlarmDialog(wx.Dialog):
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
-        setItemFont(btn,getFontFromIni('DialogButtons'))
+        setItemFont(btn,fontDatabase.getFontFromIni('DialogButtons'))
         btn.SetDefault()
         btnsizer.AddButton(btn)
 
         btn = wx.Button(self, wx.ID_CANCEL)
-        setItemFont(btn,getFontFromIni('DialogButtons'))
+        setItemFont(btn,fontDatabase.getFontFromIni('DialogButtons'))
         btnsizer.AddButton(btn)
         btnsizer.Realize()
 

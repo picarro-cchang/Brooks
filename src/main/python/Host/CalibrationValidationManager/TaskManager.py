@@ -6,6 +6,7 @@ import functools
 import time
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
+from Host.DataManager.DataStore import DataStoreForQt
 from ReferenceGas import ReferenceGas
 from Task import Task
 
@@ -20,8 +21,12 @@ class TaskManager(QtCore.QObject):
         self.tasks = []
         self.threads = []
         self.running_task_idx = None    # Running task idx, None if no jobs running
+        self.monitor_data_stream = False
+        self.input_data = {}            # Dict of measured data
+        self.ds = DataStoreForQt()
         self.loadConfig()
         self.set_connections()
+        self.start_data_stream()
         return
 
     def loadConfig(self, iniFile = "task_manager.ini"):
@@ -47,7 +52,7 @@ class TaskManager(QtCore.QObject):
             #
             if isinstance(taskConfObj,dict):
                 task_thread = QtCore.QThread()
-                task = Task(my_parent=self, my_id=key)
+                task = Task(my_parent=self, my_id=key, data_source=self.ds)
                 task.moveToThread(task_thread)
                 task_thread.started.connect(task.work)
                 self.tasks.append(task)
@@ -59,6 +64,17 @@ class TaskManager(QtCore.QObject):
             task.task_finish_signal.connect(self.task_finished_ack_slot)
             task.task_heartbeat_signal.connect(self.task_heartbeat_slot)
         return
+
+    def start_data_stream(self):
+        """
+        Manage the listener that will collect broadcasted data and make the received data
+        easy for the tasks to access.
+        :return:
+        """
+        monitor_data_thread = QtCore.QThread()
+        self.ds.moveToThread(monitor_data_thread)
+        monitor_data_thread.started.connect(self.ds.run)
+        monitor_data_thread.start()
 
     def start_work(self):
         """
