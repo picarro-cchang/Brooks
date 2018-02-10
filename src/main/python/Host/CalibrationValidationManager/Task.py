@@ -23,14 +23,18 @@
 # ping_slot:                Receives TaskManager command to send task_heartbeat_signal.
 
 from PyQt4 import QtCore
-import time
+from QNonBlockingTimer import QNonBlockingTimer
 
 class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
     task_abort_signal = QtCore.pyqtSignal(str)
     task_heartbeat_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, my_parent = None, settings = {}, refGas = None, my_id = None, data_source = None):
+    def __init__(self, my_parent = None,
+                 settings = {},
+                 refGas = None,
+                 my_id = None,
+                 data_source = None):
         super(Task, self).__init__()
         self.my_parent = my_parent
         self.referenceGas = refGas
@@ -52,7 +56,7 @@ class Task(QtCore.QObject):
     def work(self):
         self._running = True
         aborted_work = False
-        self.core_measurement()
+        self.simple_avg_measurement()
         if aborted_work:
             self.task_abort_signal.emit(self.my_id)
         else:
@@ -74,11 +78,19 @@ class Task(QtCore.QObject):
     # ------------------------------------------------------------------------------------
     # Work to-do and helper methods
     #
-    def core_measurement(self):
-        for i in xrange(10):
-            try:
-                print("%s doing some mock work here: time = %s" %(self.my_id, self.data_source.getList("analyze_H2O2","time")))
-            except Exception as e:
-                pass
-            time.sleep(1)
+    # This method is a simple example of how to get an average measurement of a gas.
+    #
+    def simple_avg_measurement(self):
+        t = QNonBlockingTimer(10)
+        t.tick_signal.connect(self.task_heartbeat_signal)
+        t.start()
+
+        try:
+            time_stamp = self.data_source.getList(self.settings["Data_Source"], "time")
+            data = self.data_source.getList(self.settings["Data_Source"], self.settings["Data_Key"])
+            last_nth_data = data[-10:]
+            print("N:%s  Avg:%s" % (len(last_nth_data), sum(last_nth_data) / len(last_nth_data)))
+        except Exception as e:
+            print("Excep: %s" %e)
+
         return

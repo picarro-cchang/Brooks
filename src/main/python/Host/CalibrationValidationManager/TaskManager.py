@@ -11,7 +11,6 @@ from ReferenceGas import ReferenceGas
 from Task import Task
 
 class TaskManager(QtCore.QObject):
-    # start_signal = QtCore.pyqtSignal()
     stop_signal = QtCore.pyqtSignal()       # Tell current task to stop, aborts the queue
     ping_task_signal = QtCore.pyqtSignal()
 
@@ -35,7 +34,14 @@ class TaskManager(QtCore.QObject):
         for key, gasConfObj in co["GASES"].items():
             self.referenceGases.append(ReferenceGas(gasConfObj))
 
-        for key, taskConfObj in co["TASKS"].items():
+        task_global_settings = {}
+        for key, value in co["TASKS"].items():
+            # Loop through [TASKS] and build a local dict of the global
+            # key/value pairs to pass to each task.
+            if not isinstance(value, dict):
+                task_global_settings[key] = value
+
+        for key, value in co["TASKS"].items():
             # The [TASKS] section is a collection of individual tasks
             # and global key-value pairs that apply to all tasks.
             # Individual tasks are in sub-sections like [[TASK0]].
@@ -50,13 +56,20 @@ class TaskManager(QtCore.QObject):
             # treat as a TASKS global key-value pair.  Valid values
             # in this case are floats, ints, strings, booleans, and lists.
             #
-            if isinstance(taskConfObj,dict):
+            if isinstance(value, dict):
+                # Merge TASKS global and individual task settings into one
+                # dict passed to each dict.
+                value.update(task_global_settings)
                 task_thread = QtCore.QThread()
-                task = Task(my_parent=self, my_id=key, data_source=self.ds)
+                task = Task(my_parent=self,
+                            my_id=key,
+                            settings=value,
+                            data_source=self.ds)
                 task.moveToThread(task_thread)
                 task_thread.started.connect(task.work)
                 self.tasks.append(task)
                 self.threads.append(task_thread)
+
         return
 
     def set_connections(self):
