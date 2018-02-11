@@ -29,6 +29,7 @@ class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
     task_abort_signal = QtCore.pyqtSignal(str)
     task_heartbeat_signal = QtCore.pyqtSignal(str)
+    task_countdown_signal = QtCore.pyqtSignal(int, int, str)
 
     def __init__(self, my_parent = None,
                  settings = {},
@@ -70,6 +71,11 @@ class Task(QtCore.QObject):
         self._mutex.unlock()
         return
 
+    # @QtCore.pyqtSlot(int, int)
+    # def countdown_slot(self, countdown_sec, set_time_sec):
+    #     self.task_countdown_signal.emit(countdown_sec, set_time_sec)
+    #     return
+
     def ping_slot(self):
         if self._running:
             self.task_heartbeat_signal.emit(self.my_id)
@@ -81,15 +87,21 @@ class Task(QtCore.QObject):
     # This method is a simple example of how to get an average measurement of a gas.
     #
     def simple_avg_measurement(self):
-        t = QNonBlockingTimer(10)
-        t.tick_signal.connect(self.task_heartbeat_signal)
+        # self.task_countdown_signal.emit(100,100,"Reset")
+        t = QNonBlockingTimer(set_time_sec=int(self.settings["GasDelayBeforeMeasureSeconds"]),
+                              description="Waiting for " +
+                                          self.settings["Data_Key"] +
+                                          " to equilibrate:")
+        t.tick_signal.connect(self.task_countdown_signal)
         t.start()
-
+        t = QNonBlockingTimer(set_time_sec=int(self.settings["GasMeasureSeconds"]),
+                              description="Measuring " + self.settings["Data_Key"])
+        t.tick_signal.connect(self.task_countdown_signal)
+        t.start()
         try:
             time_stamp = self.data_source.getList(self.settings["Data_Source"], "time")
             data = self.data_source.getList(self.settings["Data_Source"], self.settings["Data_Key"])
             last_nth_data = data[-10:]
-            print("N:%s  Avg:%s" % (len(last_nth_data), sum(last_nth_data) / len(last_nth_data)))
         except Exception as e:
             print("Excep: %s" %e)
 

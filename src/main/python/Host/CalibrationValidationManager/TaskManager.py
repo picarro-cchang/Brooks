@@ -13,6 +13,7 @@ from Task import Task
 class TaskManager(QtCore.QObject):
     stop_signal = QtCore.pyqtSignal()       # Tell current task to stop, aborts the queue
     ping_task_signal = QtCore.pyqtSignal()
+    task_countdown_signal = QtCore.pyqtSignal(int, int, str)
 
     def __init__(self, iniFile):
         super(TaskManager, self).__init__()
@@ -76,6 +77,7 @@ class TaskManager(QtCore.QObject):
         for task in self.tasks:
             task.task_finish_signal.connect(self.task_finished_ack_slot)
             task.task_heartbeat_signal.connect(self.task_heartbeat_slot)
+            task.task_countdown_signal.connect(self.task_countdown_slot)
         return
 
     def start_data_stream(self):
@@ -122,6 +124,10 @@ class TaskManager(QtCore.QObject):
         :return:
         """
         print("Got heartbeat signal from %s" %task_id)
+        return
+
+    def task_countdown_slot(self, countdown_sec, set_time_sec, description):
+        self.task_countdown_signal.emit(countdown_sec, set_time_sec, description)
         return
 
     def is_task_alive_slot(self):

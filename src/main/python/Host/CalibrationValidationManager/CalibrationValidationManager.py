@@ -13,26 +13,33 @@ class Window(QtGui.QMainWindow):
 
     def __init__(self):
         super(Window, self).__init__()
-        self.setGeometry(50, 50, 500, 300)
+        self.setGeometry(50, 50, 500, 500)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
+        self.tm = None
         self._init_gui()
         self.tm = self.setUpTasks_()
         self.show()
         self._set_connections()
-        # This lets the GUI show before the GIL hands over the CPU to the TaskManager
-        # QtCore.QTimer.singleShot(1,self.start_running_tasks)
+        return
 
     def _set_connections(self):
         self.btn.clicked.connect(self.start_running_tasks)
         self.ping_btn.clicked.connect(self.ping_running_tasks)
+        self.tm.task_countdown_signal.connect(self.update_progressbar)
 
     def _init_gui(self):
         self.btn = QtGui.QPushButton("Run", self)
-        self.btn.resize(100, 100)
-        self.btn.move(100, 100)
         self.ping_btn = QtGui.QPushButton("Ping", self)
-        self.ping_btn.resize(100, 100)
-        self.ping_btn.move(200, 100)
+        self.task_label = QtGui.QLabel("Progress so far...")
+        self.task_progressbar = QtGui.QProgressBar()
+        gl = QtGui.QGridLayout()
+        gl.addWidget(self.btn,0,0)
+        gl.addWidget(self.ping_btn,1,0)
+        gl.addWidget(self.task_label,2,0)
+        gl.addWidget(self.task_progressbar,3,0)
+        central_widget = QtGui.QWidget()
+        central_widget.setLayout(gl)
+        self.setCentralWidget(central_widget)
         return
 
     def setUpTasks_(self):
@@ -46,6 +53,11 @@ class Window(QtGui.QMainWindow):
 
     def ping_running_tasks(self):
         self.tm.is_task_alive_slot()
+        return
+
+    def update_progressbar(self, countdown_sec, set_time_sec, description):
+        self.task_progressbar.setValue((set_time_sec - countdown_sec)*100/set_time_sec)
+        self.task_label.setText(QtCore.QString(description))
         return
 
 def run():
