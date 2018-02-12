@@ -32,6 +32,7 @@ class Window(QtGui.QMainWindow):
         self.ping_btn = QtGui.QPushButton("Ping", self)
         self.task_label = QtGui.QLabel("Progress so far...")
         self.task_progressbar = QtGui.QProgressBar()
+        self.task_progressbar.setValue(0)
         gl = QtGui.QGridLayout()
         gl.addWidget(self.btn,0,0)
         gl.addWidget(self.ping_btn,1,0)

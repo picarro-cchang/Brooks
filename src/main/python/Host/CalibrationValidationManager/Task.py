@@ -24,6 +24,7 @@
 
 from PyQt4 import QtCore
 from QNonBlockingTimer import QNonBlockingTimer
+from QDateTimeUtilities import get_nseconds_of_latest_data
 
 class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
@@ -71,11 +72,6 @@ class Task(QtCore.QObject):
         self._mutex.unlock()
         return
 
-    # @QtCore.pyqtSlot(int, int)
-    # def countdown_slot(self, countdown_sec, set_time_sec):
-    #     self.task_countdown_signal.emit(countdown_sec, set_time_sec)
-    #     return
-
     def ping_slot(self):
         if self._running:
             self.task_heartbeat_signal.emit(self.my_id)
@@ -87,7 +83,6 @@ class Task(QtCore.QObject):
     # This method is a simple example of how to get an average measurement of a gas.
     #
     def simple_avg_measurement(self):
-        # self.task_countdown_signal.emit(100,100,"Reset")
         t = QNonBlockingTimer(set_time_sec=int(self.settings["GasDelayBeforeMeasureSeconds"]),
                               description="Waiting for " +
                                           self.settings["Data_Key"] +
@@ -99,10 +94,14 @@ class Task(QtCore.QObject):
         t.tick_signal.connect(self.task_countdown_signal)
         t.start()
         try:
-            time_stamp = self.data_source.getList(self.settings["Data_Source"], "time")
+            timestamps = self.data_source.getList(self.settings["Data_Source"], "time")
             data = self.data_source.getList(self.settings["Data_Source"], self.settings["Data_Key"])
-            last_nth_data = data[-10:]
+            (subset_times, subset_data, flag) =\
+                get_nseconds_of_latest_data(timestamps, data, int(self.settings["GasMeasureSeconds"]))
+            print(flag)
+            if subset_data:
+                avg_data = sum(subset_data)/len(subset_data)
+                print(avg_data)
         except Exception as e:
             print("Excep: %s" %e)
-
         return
