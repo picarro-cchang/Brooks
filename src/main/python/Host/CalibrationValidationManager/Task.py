@@ -32,17 +32,20 @@ class Task(QtCore.QObject):
     task_heartbeat_signal = QtCore.pyqtSignal(str)
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
 
-    def __init__(self, my_parent = None,
+    def __init__(self,
+                 my_parent = None,
                  settings = {},
+                 results = {},
                  refGas = None,
                  my_id = None,
                  data_source = None):
         super(Task, self).__init__()
-        self.my_parent = my_parent
-        self.referenceGas = refGas
-        self.settings = settings
-        self.my_id = my_id
+        self._my_parent = my_parent
+        self._reference_gas = refGas
+        self._settings = settings
+        self._my_id = my_id
         self._running = False
+        self._results = results
         self.data_source = data_source
         self._mutex = QtCore.QMutex()
         self.set_connections()
@@ -52,7 +55,7 @@ class Task(QtCore.QObject):
     # Task start/stop management methods
     #
     def set_connections(self):
-        self.my_parent.ping_task_signal.connect(self.ping_slot)
+        self._my_parent.ping_task_signal.connect(self.ping_slot)
         return
 
     def work(self):
@@ -60,9 +63,9 @@ class Task(QtCore.QObject):
         aborted_work = False
         self.simple_avg_measurement()
         if aborted_work:
-            self.task_abort_signal.emit(self.my_id)
+            self.task_abort_signal.emit(self._my_id)
         else:
-            self.task_finish_signal.emit(self.my_id)
+            self.task_finish_signal.emit(self._my_id)
         self._running = False
         return
 
@@ -74,7 +77,7 @@ class Task(QtCore.QObject):
 
     def ping_slot(self):
         if self._running:
-            self.task_heartbeat_signal.emit(self.my_id)
+            self.task_heartbeat_signal.emit(self._my_id)
         return
 
     # ------------------------------------------------------------------------------------
@@ -83,25 +86,31 @@ class Task(QtCore.QObject):
     # This method is a simple example of how to get an average measurement of a gas.
     #
     def simple_avg_measurement(self):
-        t = QNonBlockingTimer(set_time_sec=int(self.settings["GasDelayBeforeMeasureSeconds"]),
-                              description="Waiting for " +
-                                          self.settings["Data_Key"] +
-                                          " to equilibrate:")
-        t.tick_signal.connect(self.task_countdown_signal)
-        t.start()
-        t = QNonBlockingTimer(set_time_sec=int(self.settings["GasMeasureSeconds"]),
-                              description="Measuring " + self.settings["Data_Key"])
-        t.tick_signal.connect(self.task_countdown_signal)
-        t.start()
+
+        if "GasDelayBeforeMeasureSeconds" in self._settings:
+            t = QNonBlockingTimer(set_time_sec=int(self._settings["GasDelayBeforeMeasureSeconds"]),
+                                  description="Waiting for " +
+                                              self._settings["Data_Key"] +
+                                              " to equilibrate:")
+            t.tick_signal.connect(self.task_countdown_signal)
+            t.start()
+
+        if "GasMeasureSeconds" in self._settings:
+            t = QNonBlockingTimer(set_time_sec=int(self._settings["GasMeasureSeconds"]),
+                                  description="Measuring " +
+                                              self._settings["Data_Key"])
+            t.tick_signal.connect(self.task_countdown_signal)
+            t.start()
+
         try:
-            timestamps = self.data_source.getList(self.settings["Data_Source"], "time")
-            data = self.data_source.getList(self.settings["Data_Source"], self.settings["Data_Key"])
+            timestamps = self.data_source.getList(self._settings["Data_Source"], "time")
+            data = self.data_source.getList(self._settings["Data_Source"], self._settings["Data_Key"])
             (subset_times, subset_data, flag) =\
-                get_nseconds_of_latest_data(timestamps, data, int(self.settings["GasMeasureSeconds"]))
+                get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
             print(flag)
             if subset_data:
                 avg_data = sum(subset_data)/len(subset_data)
-                print(avg_data)
+                self._results[self._my_id] = {self._settings["Data_Key"]: avg_data}
         except Exception as e:
             print("Excep: %s" %e)
         return

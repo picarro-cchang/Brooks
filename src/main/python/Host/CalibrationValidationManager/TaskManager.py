@@ -23,6 +23,7 @@ class TaskManager(QtCore.QObject):
         self.running_task_idx = None    # Running task idx, None if no jobs running
         self.monitor_data_stream = False
         self.input_data = {}            # Dict of measured data
+        self.results = {}
         self.ds = DataStoreForQt()
         self.loadConfig()
         self.set_connections()
@@ -65,6 +66,7 @@ class TaskManager(QtCore.QObject):
                 task = Task(my_parent=self,
                             my_id=key,
                             settings=value,
+                            results=self.results,
                             data_source=self.ds)
                 task.moveToThread(task_thread)
                 task_thread.started.connect(task.work)
@@ -98,16 +100,15 @@ class TaskManager(QtCore.QObject):
         """
         self.running_task_idx = 0
         self.threads[self.running_task_idx].start()
-        self.running_task_idx += 1
 
     def move_to_next_task(self):
         """
         If there are more tasks to do, start the next one
         :return:
         """
-        if self.running_task_idx < len(self.threads):
-            self.threads[self.running_task_idx].start()
+        if self.running_task_idx < len(self.threads)-1:
             self.running_task_idx += 1
+            self.threads[self.running_task_idx].start()
         else:
             print("All jobs done")
             self.running_task_idx = None
