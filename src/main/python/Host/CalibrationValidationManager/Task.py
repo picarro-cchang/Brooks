@@ -31,6 +31,7 @@ class Task(QtCore.QObject):
     task_abort_signal = QtCore.pyqtSignal(str)
     task_heartbeat_signal = QtCore.pyqtSignal(str)
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
+    task_next_signal = QtCore.pyqtSignal()
 
     def __init__(self,
                  my_parent = None,
@@ -86,6 +87,7 @@ class Task(QtCore.QObject):
     # This method is a simple example of how to get an average measurement of a gas.
     #
     def simple_avg_measurement(self):
+        self.pre_task_instructions()
 
         if "GasDelayBeforeMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasDelayBeforeMeasureSeconds"]),
@@ -113,4 +115,32 @@ class Task(QtCore.QObject):
                 self._results[self._my_id] = {self._settings["Data_Key"]: avg_data}
         except Exception as e:
             print("Excep: %s" %e)
+
+        self.post_task_instructions()
+        return
+
+    def pre_task_instructions(self):
+        # Emit this text up to the TaskManager (where it gets passed to the GUI)
+        # Go into a non-blocking infinite loop and wait for proceed signal.
+        # Proceed signal comes from TaskManager and connects to the timer stop slot.
+        # The proceed signal is initiated by clicking NEXT in the GUI and connects
+        # to the TaskManager proceed signal. The TaskManager has to direct the signal
+        # to the currently active Task.
+        instructions = "Open the correct valve to let in the gas and then click NEXT"
+        print("Emitting pre task instructions in ", self._my_id)
+        t = QNonBlockingTimer(set_time_sec=99999,
+                              description="Waiting in pre task " + self._my_id)
+        self.task_next_signal.connect(t.stop)
+        t.start()
+        print("Proceeding from pre task instructions in ", self._my_id)
+        return
+
+    def post_task_instructions(self):
+        instructions = "Close the gas valve and then click NEXT"
+        print("Emitting post task instructions in ", self._my_id)
+        t = QNonBlockingTimer(set_time_sec=99999,
+                              description="Waiting in pre task " + self._my_id)
+        self.task_next_signal.connect(t.stop)
+        t.start()
+        print("Proceeding from ost task instructions in ", self._my_id)
         return

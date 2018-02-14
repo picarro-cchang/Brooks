@@ -25,11 +25,13 @@ class Window(QtGui.QMainWindow):
     def _set_connections(self):
         self.btn.clicked.connect(self.start_running_tasks)
         self.ping_btn.clicked.connect(self.ping_running_tasks)
+        self.next_btn.clicked.connect(self.tm.next_subtask_signal)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
 
     def _init_gui(self):
         self.btn = QtGui.QPushButton("Run", self)
         self.ping_btn = QtGui.QPushButton("Ping", self)
+        self.next_btn = QtGui.QPushButton("NEXT", self)
         self.task_label = QtGui.QLabel("Progress so far...")
         self.task_progressbar = QtGui.QProgressBar()
         self.task_progressbar.setValue(0)
@@ -38,6 +40,7 @@ class Window(QtGui.QMainWindow):
         gl.addWidget(self.ping_btn,1,0)
         gl.addWidget(self.task_label,2,0)
         gl.addWidget(self.task_progressbar,3,0)
+        gl.addWidget(self.next_btn,4,0)
         central_widget = QtGui.QWidget()
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)

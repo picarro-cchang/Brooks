@@ -13,6 +13,7 @@ from Task import Task
 class TaskManager(QtCore.QObject):
     stop_signal = QtCore.pyqtSignal()       # Tell current task to stop, aborts the queue
     ping_task_signal = QtCore.pyqtSignal()
+    next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
 
     def __init__(self, iniFile):
@@ -99,6 +100,7 @@ class TaskManager(QtCore.QObject):
         :return:
         """
         self.running_task_idx = 0
+        self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
         self.threads[self.running_task_idx].start()
 
     def move_to_next_task(self):
@@ -107,7 +109,9 @@ class TaskManager(QtCore.QObject):
         :return:
         """
         if self.running_task_idx < len(self.threads)-1:
+            self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
             self.running_task_idx += 1
+            self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
         else:
             print("All jobs done")
