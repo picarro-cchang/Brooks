@@ -25,6 +25,7 @@
 from PyQt4 import QtCore
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
+from ReferenceGas import ReferenceGas, GasEnum
 
 class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
@@ -37,12 +38,12 @@ class Task(QtCore.QObject):
                  my_parent = None,
                  settings = {},
                  results = {},
-                 refGas = None,
+                 reference_gases = {},
                  my_id = None,
                  data_source = None):
         super(Task, self).__init__()
         self._my_parent = my_parent
-        self._reference_gas = refGas
+        self._reference_gases = reference_gases
         self._settings = settings
         self._my_id = my_id
         self._running = False
@@ -107,6 +108,8 @@ class Task(QtCore.QObject):
         try:
             timestamps = self.data_source.getList(self._settings["Data_Source"], "time")
             data = self.data_source.getList(self._settings["Data_Source"], self._settings["Data_Key"])
+            data_ = self._reference_gases[self._settings["Gas"]]
+            data__ = data_.getGasConcPpm(GasEnum.CH4)
             (subset_times, subset_data, flag) =\
                 get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
             print(flag)
@@ -120,27 +123,38 @@ class Task(QtCore.QObject):
         return
 
     def pre_task_instructions(self):
-        # Emit this text up to the TaskManager (where it gets passed to the GUI)
-        # Go into a non-blocking infinite loop and wait for proceed signal.
-        # Proceed signal comes from TaskManager and connects to the timer stop slot.
-        # The proceed signal is initiated by clicking NEXT in the GUI and connects
-        # to the TaskManager proceed signal. The TaskManager has to direct the signal
-        # to the currently active Task.
+        """
+        Before the main measurement task, prompt the user to hook up the correct
+        gas source.
+        :return:
+        """
+        # A timer pauses for infinite time (31 years actually) until the timer
+        # is stopped.  The stop is connected to a NEXT button signal in the main
+        # GUI.
+        # The tick signal is needed to emit the user prompt to the main GUI.
+        #
         instructions = "Open the correct valve to let in the gas and then click NEXT"
-        print("Emitting pre task instructions in ", self._my_id)
-        t = QNonBlockingTimer(set_time_sec=99999,
-                              description="Waiting in pre task " + self._my_id)
+        t = QNonBlockingTimer(set_time_sec=1e10,
+                              description=instructions + self._my_id)
+        t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
         t.start()
-        print("Proceeding from pre task instructions in ", self._my_id)
         return
 
     def post_task_instructions(self):
+        """
+        After finishing the measurement task, prompt the user to disconnect the
+        reference gas source.
+        :return:
+        """
+        # A timer pauses for infinite time (31 years actually) until the timer
+        # is stopped.  The stop is connected to a NEXT button signal in the main
+        # GUI.
+        #
         instructions = "Close the gas valve and then click NEXT"
-        print("Emitting post task instructions in ", self._my_id)
-        t = QNonBlockingTimer(set_time_sec=99999,
-                              description="Waiting in pre task " + self._my_id)
+        t = QNonBlockingTimer(set_time_sec=1e10,
+                              description=instructions + self._my_id)
+        t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
         t.start()
-        print("Proceeding from ost task instructions in ", self._my_id)
         return

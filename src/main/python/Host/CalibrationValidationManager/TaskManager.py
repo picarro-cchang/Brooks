@@ -18,7 +18,7 @@ class TaskManager(QtCore.QObject):
 
     def __init__(self, iniFile):
         super(TaskManager, self).__init__()
-        self.referenceGases = []
+        self.referenceGases = {}
         self.tasks = []
         self.threads = []
         self.running_task_idx = None    # Running task idx, None if no jobs running
@@ -35,7 +35,7 @@ class TaskManager(QtCore.QObject):
         co = ConfigObj(iniFile)
 
         for key, gasConfObj in co["GASES"].items():
-            self.referenceGases.append(ReferenceGas(gasConfObj))
+            self.referenceGases[key] = ReferenceGas(gasConfObj)
 
         task_global_settings = {}
         for key, value in co["TASKS"].items():
@@ -67,6 +67,7 @@ class TaskManager(QtCore.QObject):
                 task = Task(my_parent=self,
                             my_id=key,
                             settings=value,
+                            reference_gases=self.referenceGases,
                             results=self.results,
                             data_source=self.ds)
                 task.moveToThread(task_thread)
