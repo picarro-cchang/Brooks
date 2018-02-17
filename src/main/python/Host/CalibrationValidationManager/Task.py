@@ -61,6 +61,12 @@ class Task(QtCore.QObject):
         return
 
     def work(self):
+        if "Simulation" in self._settings:
+            # refConc = self._reference_gases[self._settings["Gas"]].getGasConcPpm(GasEnum.CH4)
+            # self.data_source.setOffset("CH4", refConc)
+            (key, conc) = self._settings["Simulation"]
+            self.data_source.setOffset(key, conc)
+
         self._running = True
         aborted_work = False
         self.simple_avg_measurement()
@@ -108,8 +114,6 @@ class Task(QtCore.QObject):
         try:
             timestamps = self.data_source.getList(self._settings["Data_Source"], "time")
             data = self.data_source.getList(self._settings["Data_Source"], self._settings["Data_Key"])
-            data_ = self._reference_gases[self._settings["Gas"]]
-            data__ = data_.getGasConcPpm(GasEnum.CH4)
             (subset_times, subset_data, flag) =\
                 get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
             print(flag)

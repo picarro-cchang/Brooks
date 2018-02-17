@@ -220,6 +220,7 @@ class DataStoreForQt(QtCore.QObject):
                                           retry = True)
         self.sourceDict = {}
         self.oldData = {}
+        self.offsets = {}   # For simulations
         self.alarmStatus = 0
         self.mode = ""
         return
@@ -262,7 +263,10 @@ class DataStoreForQt(QtCore.QObject):
                         for dataKey in obj["data"].keys():
                             if dataKey not in self.sourceDict[source]:
                                 self.sourceDict[source][dataKey] = collections.deque([], self.length)
-                            self.sourceDict[source][dataKey].append(obj["data"][dataKey])
+                            offset = 0.0
+                            if dataKey in self.offsets:
+                                offset = float(self.offsets[dataKey])
+                            self.sourceDict[source][dataKey].append(obj["data"][dataKey] + offset)
                             update = True
                     else:
                         if key not in self.sourceDict[source].keys():
@@ -289,6 +293,9 @@ class DataStoreForQt(QtCore.QObject):
             print("getList exception:",e)
             return None
 
+    def setOffset(self, key, offset):
+        self.offsets[key] = offset
+        return
 
 
 

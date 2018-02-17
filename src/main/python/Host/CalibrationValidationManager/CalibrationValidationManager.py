@@ -116,7 +116,7 @@ class Window(QtGui.QMainWindow):
         """
         try:
             timestamps = self.tm.ds.getList("analyze_H2O2", "time")
-            data = self.tm.ds.getList("analyze_H2O2", "H2O2")
+            data = self.tm.ds.getList("analyze_H2O2", "CH4")
             self.plot.setData(timestamps,data)
         except Exception as e:
             pass
