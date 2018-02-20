@@ -22,6 +22,7 @@
 # abort_slot:               Receives TaskManager command to abort this task.
 # ping_slot:                Receives TaskManager command to send task_heartbeat_signal.
 
+import numpy
 from PyQt4 import QtCore
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
@@ -62,14 +63,15 @@ class Task(QtCore.QObject):
 
     def work(self):
         if "Simulation" in self._settings:
-            # refConc = self._reference_gases[self._settings["Gas"]].getGasConcPpm(GasEnum.CH4)
-            # self.data_source.setOffset("CH4", refConc)
             (key, conc) = self._settings["Simulation"]
             self.data_source.setOffset(key, conc)
 
         self._running = True
         aborted_work = False
-        self.simple_avg_measurement()
+        if "Analysis" not in self._settings:
+            self.simple_avg_measurement()
+        else:
+            self.linear_regression()
         if aborted_work:
             self.task_abort_signal.emit(self._my_id)
         else:
@@ -116,10 +118,19 @@ class Task(QtCore.QObject):
             data = self.data_source.getList(self._settings["Data_Source"], self._settings["Data_Key"])
             (subset_times, subset_data, flag) =\
                 get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
-            print(flag)
             if subset_data:
                 avg_data = sum(subset_data)/len(subset_data)
-                self._results[self._my_id] = {self._settings["Data_Key"]: avg_data}
+                if self._settings["Data_Key"] in self._results:
+                    self._results[self._settings["Data_Key"]].append(avg_data)
+                else:
+                    self._results[self._settings["Data_Key"]] = [avg_data]
+
+                ref_gas = float(self._reference_gases[self._settings["Gas"]].getGasConcPpm(GasEnum.CH4))
+                refKey = self._settings["Data_Key"] + "_ref"
+                if refKey in self._results:
+                    self._results[refKey].append(ref_gas)
+                else:
+                    self._results[refKey] = [ref_gas]
         except Exception as e:
             print("Excep: %s" %e)
 
@@ -137,8 +148,11 @@ class Task(QtCore.QObject):
         # GUI.
         # The tick signal is needed to emit the user prompt to the main GUI.
         #
+        delay = 1e10    # about 31 years
+        if "Pre_Task_Delay_Sec" in self._settings:
+            delay = int(self._settings["Pre_Task_Delay_Sec"])
         instructions = "Open the correct valve to let in the gas and then click NEXT"
-        t = QNonBlockingTimer(set_time_sec=1e10,
+        t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions + self._my_id)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
@@ -155,10 +169,24 @@ class Task(QtCore.QObject):
         # is stopped.  The stop is connected to a NEXT button signal in the main
         # GUI.
         #
+        delay = 1e10    # about 31 years
+        if "Post_Task_Delay_Sec" in self._settings:
+            delay = int(self._settings["Post_Task_Delay_Sec"])
         instructions = "Close the gas valve and then click NEXT"
-        t = QNonBlockingTimer(set_time_sec=1e10,
+        t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions + self._my_id)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
         t.start()
+        return
+
+    def linear_regression(self):
+        """
+        Linear regression of the reference gas concentration (x) vs the measured
+        concentration (y).
+        :return: p = slope and offset of best fit line
+        """
+        x = self._results[self._settings["Data_Key"]]
+        y = self._results[self._settings["Data_Key"]+"_ref"]
+        p = numpy.polyfit(x,y,1)
         return
