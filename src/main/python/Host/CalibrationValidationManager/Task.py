@@ -22,8 +22,18 @@
 # abort_slot:               Receives TaskManager command to abort this task.
 # ping_slot:                Receives TaskManager command to send task_heartbeat_signal.
 
+# Use the SVG rendering engine for matplotlib plots generated for reports.
+# If a rendering engine is not specified it will default to Qt4.  If the Qt4 or Qt5
+# rendering engines are used in this context you will get the
+# "QPixmap: It is not safe to use pixmaps outside the GUI thread" error message.
+#
+import matplotlib
+matplotlib.use("SVG")
+import matplotlib.pyplot as plt
+
+import io
 import numpy
-from PyQt4 import QtCore
+from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
 from ReferenceGas import ReferenceGas, GasEnum
@@ -188,5 +198,40 @@ class Task(QtCore.QObject):
         """
         x = self._results[self._settings["Data_Key"]]
         y = self._results[self._settings["Data_Key"]+"_ref"]
-        p = numpy.polyfit(x,y,1)
+        coeffs = numpy.polyfit(x,y,1)
+        yfit = numpy.poly1d(coeffs)(x)
+        image = self.create_image(x, y, yfit, "S", "N", "O")
         return
+
+    def create_image(self, xdata, ydata, yfitting, title, xlabel, ylabel):
+        """
+        Plot measured vs reference along with the regression.
+        Typical usecase is plotting measured gas concentrations against known
+        standards.
+        :param xdata: Reference concentrations
+        :param ydata: Measured concentrations
+        :param yfitting: y regression points (x's on xdata)
+        :param title:
+        :param xlabel:
+        :param ylabel:
+        :return:
+        """
+        fig = plt.figure(figsize=(6, 5), facecolor=(1, 1, 1))
+        ax = fig.gca()
+        ax.plot(xdata, ydata, 'bo', xdata, yfitting, 'r-')
+        ax.grid('on')
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        max_x, min_x = max(xdata), min(xdata)
+        offset = (max_x - min_x) * 0.05
+        ax.set_xlim([min_x - offset, max_x + offset])
+        ax.set_ylim([min_x - offset, max_x + offset])
+
+        # Save matplotlib to an in memory png and pass it as a QPixmap to
+        # the Qt based report generator.
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        qpix = QtGui.QPixmap()
+        qpix.loadFromData(buf.getvalue())
+        return qpix
