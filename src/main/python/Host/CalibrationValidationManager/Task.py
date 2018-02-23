@@ -44,6 +44,7 @@ class Task(QtCore.QObject):
     task_heartbeat_signal = QtCore.pyqtSignal(str)
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
     task_next_signal = QtCore.pyqtSignal()
+    task_report_signal = QtCore.pyqtSignal(str, object)
 
     def __init__(self,
                  my_parent = None,
@@ -201,6 +202,7 @@ class Task(QtCore.QObject):
         coeffs = numpy.polyfit(x,y,1)
         yfit = numpy.poly1d(coeffs)(x)
         image = self.create_image(x, y, yfit, "S", "N", "O")
+        self.create_report(image)
         return
 
     def create_image(self, xdata, ydata, yfitting, title, xlabel, ylabel):
@@ -228,10 +230,13 @@ class Task(QtCore.QObject):
         ax.set_xlim([min_x - offset, max_x + offset])
         ax.set_ylim([min_x - offset, max_x + offset])
 
-        # Save matplotlib to an in memory png and pass it as a QPixmap to
+        # Save matplotlib to an in memory png and pass it to
         # the Qt based report generator.
-        buf = io.BytesIO()
+        buf = io.BytesIO() #.StringIO()
         plt.savefig(buf, format='png')
-        qpix = QtGui.QPixmap()
-        qpix.loadFromData(buf.getvalue())
-        return qpix
+        return buf
+
+    def create_report(self, obj):
+        html = "<html>Preamble<p>Hello World<p></html>"
+        self.task_report_signal.emit(html, obj)
+        return

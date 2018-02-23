@@ -2,9 +2,7 @@
 #
 
 import sys
-import time
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt4 import QtCore, QtGui
 import pyqtgraph as pg
 from DateAxisItem import DateAxisItem
 from Host.CalibrationValidationManager.TaskManager import TaskManager
@@ -29,6 +27,7 @@ class Window(QtGui.QMainWindow):
         self.ping_btn.clicked.connect(self.ping_running_tasks)
         self.next_btn.clicked.connect(self.tm.next_subtask_signal)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
+        self.tm.report_signal.connect(self.display_report)
 
     def _init_plot(self):
         time_axis = DateAxisItem("bottom")
@@ -60,6 +59,7 @@ class Window(QtGui.QMainWindow):
         self.task_progressbar = QtGui.QProgressBar()
         self.task_progressbar.setValue(0)
         self.plot = self._init_plot()
+        self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         gl = QtGui.QGridLayout()
         gl.addWidget(self.btn,0,0)
         gl.addWidget(self.ping_btn,1,0)
@@ -67,6 +67,7 @@ class Window(QtGui.QMainWindow):
         gl.addWidget(self.task_progressbar,3,0)
         gl.addWidget(self.next_btn,4,0)
         gl.addWidget(self._time_series_plot,5,0)
+        gl.addWidget(self.text_edit,6,0)
         central_widget = QtGui.QWidget()
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)
@@ -121,6 +122,17 @@ class Window(QtGui.QMainWindow):
         except Exception as e:
             pass
         return
+
+    def display_report(self, str, obj):
+        self.text_edit.setHtml(QtCore.QString(str))
+        qpix = QtGui.QPixmap()
+        qpix.loadFromData(obj.getvalue())
+        img = qpix.toImage()
+        cursor = QtGui.QTextCursor(self.text_edit.document())
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertImage(img)
+        return
+
 
 def run():
     app = QtGui.QApplication(sys.argv)

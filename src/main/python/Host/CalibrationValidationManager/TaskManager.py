@@ -15,6 +15,7 @@ class TaskManager(QtCore.QObject):
     ping_task_signal = QtCore.pyqtSignal()
     next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
+    report_signal = QtCore.pyqtSignal(str, object)
 
     def __init__(self, iniFile):
         super(TaskManager, self).__init__()
@@ -82,6 +83,7 @@ class TaskManager(QtCore.QObject):
             task.task_finish_signal.connect(self.task_finished_ack_slot)
             task.task_heartbeat_signal.connect(self.task_heartbeat_slot)
             task.task_countdown_signal.connect(self.task_countdown_slot)
+            task.task_report_signal.connect(self.report_signal)
         return
 
     def start_data_stream(self):
