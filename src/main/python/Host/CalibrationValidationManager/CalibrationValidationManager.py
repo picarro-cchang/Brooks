@@ -124,13 +124,29 @@ class Window(QtGui.QMainWindow):
         return
 
     def display_report(self, str, obj):
-        self.text_edit.setHtml(QtCore.QString(str))
         qpix = QtGui.QPixmap()
         qpix.loadFromData(obj.getvalue())
         img = qpix.toImage()
-        cursor = QtGui.QTextCursor(self.text_edit.document())
+
+        # self.text_edit.setHtml(QtCore.QString(str))
+        # cursor = QtGui.QTextCursor(self.text_edit.document())
+        # cursor.movePosition(QtGui.QTextCursor.End)
+        # cursor.insertImage(img)
+
+        myDoc = QtGui.QTextDocument("This is a demo document")
+        myDoc.setHtml(QtCore.QString(str))
+        cursor = QtGui.QTextCursor(myDoc)
         cursor.movePosition(QtGui.QTextCursor.End)
         cursor.insertImage(img)
+
+        printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
+        printer.setPageSize(QtGui.QPrinter.Letter)
+        printer.setColorMode(QtGui.QPrinter.Color)
+        printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
+        printer.setOutputFileName("demo_doc.pdf")
+        myDoc.print_(printer)
+
+        self.text_edit.setDocument(myDoc)
         return
 
 
