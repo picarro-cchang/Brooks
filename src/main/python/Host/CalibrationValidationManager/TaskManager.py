@@ -2,8 +2,6 @@
 
 
 # from PyQt4.QtCore import QObject, pyqtSignal
-import functools
-import time
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
@@ -15,10 +13,11 @@ class TaskManager(QtCore.QObject):
     ping_task_signal = QtCore.pyqtSignal()
     next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
-    report_signal = QtCore.pyqtSignal(str, object)
+    report_signal = QtCore.pyqtSignal(object)
 
-    def __init__(self, iniFile):
+    def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
+        # self.parent = parent
         self.referenceGases = {}
         self.tasks = []
         self.threads = []

@@ -7,7 +7,6 @@ import pyqtgraph as pg
 from DateAxisItem import DateAxisItem
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
-
 class Window(QtGui.QMainWindow):
 
     def __init__(self):
@@ -27,7 +26,7 @@ class Window(QtGui.QMainWindow):
         self.ping_btn.clicked.connect(self.ping_running_tasks)
         self.next_btn.clicked.connect(self.tm.next_subtask_signal)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
-        self.tm.report_signal.connect(self.display_report)
+        self.tm.report_signal.connect(self.text_edit.setDocument)
 
     def _init_plot(self):
         time_axis = DateAxisItem("bottom")
@@ -74,7 +73,7 @@ class Window(QtGui.QMainWindow):
         return
 
     def setUpTasks_(self):
-        tm = TaskManager("test")
+        tm = TaskManager(iniFile="test")
         return tm
 
     def start_data_stream_polling(self):
@@ -121,32 +120,6 @@ class Window(QtGui.QMainWindow):
             self.plot.setData(timestamps,data)
         except Exception as e:
             pass
-        return
-
-    def display_report(self, str, obj):
-        qpix = QtGui.QPixmap()
-        qpix.loadFromData(obj.getvalue())
-        img = qpix.toImage()
-
-        # self.text_edit.setHtml(QtCore.QString(str))
-        # cursor = QtGui.QTextCursor(self.text_edit.document())
-        # cursor.movePosition(QtGui.QTextCursor.End)
-        # cursor.insertImage(img)
-
-        myDoc = QtGui.QTextDocument("This is a demo document")
-        myDoc.setHtml(QtCore.QString(str))
-        cursor = QtGui.QTextCursor(myDoc)
-        cursor.movePosition(QtGui.QTextCursor.End)
-        cursor.insertImage(img)
-
-        printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
-        printer.setPageSize(QtGui.QPrinter.Letter)
-        printer.setColorMode(QtGui.QPrinter.Color)
-        printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
-        printer.setOutputFileName("demo_doc.pdf")
-        myDoc.print_(printer)
-
-        self.text_edit.setDocument(myDoc)
         return
 
 

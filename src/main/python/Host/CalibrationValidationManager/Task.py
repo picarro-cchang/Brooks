@@ -37,6 +37,7 @@ from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
 from ReferenceGas import ReferenceGas, GasEnum
+import ReportUtilities
 
 class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
@@ -44,7 +45,7 @@ class Task(QtCore.QObject):
     task_heartbeat_signal = QtCore.pyqtSignal(str)
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
     task_next_signal = QtCore.pyqtSignal()
-    task_report_signal = QtCore.pyqtSignal(str, object)
+    task_report_signal = QtCore.pyqtSignal(object)
 
     def __init__(self,
                  my_parent = None,
@@ -52,7 +53,8 @@ class Task(QtCore.QObject):
                  results = {},
                  reference_gases = {},
                  my_id = None,
-                 data_source = None):
+                 data_source = None,
+                 ):
         super(Task, self).__init__()
         self._my_parent = my_parent
         self._reference_gases = reference_gases
@@ -201,42 +203,7 @@ class Task(QtCore.QObject):
         y = self._results[self._settings["Data_Key"]+"_ref"]
         coeffs = numpy.polyfit(x,y,1)
         yfit = numpy.poly1d(coeffs)(x)
-        image = self.create_image(x, y, yfit, "S", "N", "O")
-        self.create_report(image)
-        return
-
-    def create_image(self, xdata, ydata, yfitting, title, xlabel, ylabel):
-        """
-        Plot measured vs reference along with the regression.
-        Typical usecase is plotting measured gas concentrations against known
-        standards.
-        :param xdata: Reference concentrations
-        :param ydata: Measured concentrations
-        :param yfitting: y regression points (x's on xdata)
-        :param title:
-        :param xlabel:
-        :param ylabel:
-        :return:
-        """
-        fig = plt.figure(figsize=(6, 5), facecolor=(1, 1, 1))
-        ax = fig.gca()
-        ax.plot(xdata, ydata, 'bo', xdata, yfitting, 'r-')
-        ax.grid('on')
-        plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        max_x, min_x = max(xdata), min(xdata)
-        offset = (max_x - min_x) * 0.05
-        ax.set_xlim([min_x - offset, max_x + offset])
-        ax.set_ylim([min_x - offset, max_x + offset])
-
-        # Save matplotlib to an in memory png and pass it to
-        # the Qt based report generator.
-        buf = io.BytesIO() #.StringIO()
-        plt.savefig(buf, format='png')
-        return buf
-
-    def create_report(self, obj):
-        html = "<html>Preamble<p>Hello World<p></html>"
-        self.task_report_signal.emit(html, obj)
+        image = ReportUtilities.create_image(x, y, yfit, "S", "N", "O")
+        doc = ReportUtilities.create_report("validation report<p>",image)
+        self.task_report_signal.emit(doc)
         return
