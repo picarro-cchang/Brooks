@@ -1,3 +1,4 @@
+#import collections
 from enum import Enum
 class GasEnum(Enum):
     Air = 1
@@ -71,7 +72,6 @@ class ComponentGas(object):
 #
 class ReferenceGas(object):
     def __init__(self, gasDict):
-        # print("initializing Reference Gas", gasDict)
         self.tankName = ""      # Human readable name like '2ppm CH4 in N2', free form
         self.tankVendor = ""    # Supplier
         self.tankSN = ""        # Tank serial number or some other unique identifier
@@ -91,7 +91,7 @@ class ReferenceGas(object):
         #
         component = []
         concentration = []
-        accuracy = []
+        uncertainty = []
 
         try:
             if isinstance(gasDict["Component"], list):
@@ -112,12 +112,12 @@ class ReferenceGas(object):
             exit(1)
 
         try:
-            if isinstance(gasDict["Accuracy"], list):
-                accuracy.extend(gasDict["Accuracy"])
+            if isinstance(gasDict["Uncertainty"], list):
+                uncertainty.extend(gasDict["Uncertainty"])
             else:
-                accuracy.append(gasDict["Accuracy"])
+                uncertainty.append(gasDict["Uncertainty"])
         except KeyError as e:
-            accuracy = ["UNK"] * len(component)
+            uncertainty = ["UNK"] * len(component)
 
         if not component  or not concentration:
             print("ReferenceGas.py - A gas component or concentration field is empty.")
@@ -130,7 +130,7 @@ class ReferenceGas(object):
             cg = ComponentGas()
             cg.setGasType(component[idx])
             cg.setGasConcPpm(concentration[idx])
-            cg.setGasAccPpm(accuracy[idx])
+            cg.setGasAccPpm(uncertainty[idx])
             self.components[cg.getGasType()] = cg
 
         return
@@ -140,4 +140,38 @@ class ReferenceGas(object):
 
     def getGasAccPpm(self, gasEnum):
         return self.components[gasEnum].getGasAccPpm()
+
+    def getGasDetails(self):
+        d = {} #collections.OrderedDict()
+        d["Tank_Name"] = self.tankName
+        d["Tank_Serial_Number"] = self.tankSN
+        d["Tank_Description"] = self.tankDesc
+        d["Tank_Vendor"] = self.tankVendor
+        d["Gas"] = []
+        for gas_enum, component_gas in self.components.items():
+            d["Gas"].append([gas_enum.name, component_gas.getGasConcPpm(), component_gas.getGasAccPpm()])
+        return d
+
+    def getFormattedGasDetails(self, key):
+        d = self.getGasDetails()
+        str = "{0} {1} {0}\n".format("="*20, key)
+        str += "{0:20}: {1}\n".format("Tank Name", self.tankName)
+        str += "{0:20}: {1}\n".format("Tank Serial Number", self.tankSN)
+        str += "{0:20}: {1}\n".format("Tank Description", self.tankDesc)
+        str += "{0:20}: {1}\n".format("Tank Vendor", self.tankVendor)
+        for i, [gas_name, gas_conc, conc_acc] in enumerate(d["Gas"]):
+            if i == 0:
+                try:
+                    x = float(conc_acc)
+                    str += "{0:20}: {1} {2:10.3f} +/-{3} ppm\n".format("Gas Composition", gas_name, float(gas_conc), float(conc_acc))
+                except ValueError:
+                    str += "{0:20}: {1} {2:10.3f} ppm\n".format("Gas Composition", gas_name, float(gas_conc))
+            else:
+                try:
+                    x = float(conc_acc)
+                    str += "{0:20}: {1} {2:10.3f} +/-{3} ppm\n".format(" ", gas_name, float(gas_conc), float(conc_acc))
+                except ValueError:
+                    str += "{0:20}: {1} {2:10.3f} ppm\n".format(" ", gas_name, float(gas_conc))
+        str += "{0}\n".format("-"*46)
+        return str
 

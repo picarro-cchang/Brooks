@@ -4,9 +4,10 @@ matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 
 import io
+import pprint
 from PyQt4 import QtCore, QtGui
 
-def create_image(xdata, ydata, yfitting, title, xlabel, ylabel):
+def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
     """
     Plot measured vs reference along with the regression.
     Typical usecase is plotting measured gas concentrations against known
@@ -37,12 +38,29 @@ def create_image(xdata, ydata, yfitting, title, xlabel, ylabel):
     plt.savefig(buf, format='png')
     return buf
 
-def create_report(str, obj):
+def fill_report_template(settings, reference_gases, results):
+    report = ""
+    # report = "Settings\n"
+    # report += pprint.pformat(settings)
+    # report += "\nResults\n"
+    # report += pprint.pformat(results)
+    # report += "\n"
+    for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
+        report += g.getFormattedGasDetails(e)
+    report += "\n"
+    return report
+
+
+def create_report(settings, reference_gases, results, obj):
     img = QtGui.QImage()
     img.loadFromData(obj.getvalue())
 
     myDoc = QtGui.QTextDocument("This is a demo document")
-    myDoc.setHtml(QtCore.QString(str))
+    font = myDoc.defaultFont()
+    font.setFamily("Courier New") # need a monospace font to line up numeric data
+    myDoc.setDefaultFont(font)
+
+    myDoc.setPlainText(fill_report_template(settings, reference_gases, results))
     cursor = QtGui.QTextCursor(myDoc)
     cursor.movePosition(QtGui.QTextCursor.End)
     cursor.insertImage(img)

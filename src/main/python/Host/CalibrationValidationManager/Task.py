@@ -203,7 +203,16 @@ class Task(QtCore.QObject):
         y = self._results[self._settings["Data_Key"]+"_ref"]
         coeffs = numpy.polyfit(x,y,1)
         yfit = numpy.poly1d(coeffs)(x)
-        image = ReportUtilities.create_image(x, y, yfit, "S", "N", "O")
-        doc = ReportUtilities.create_report("validation report<p>",image)
+
+        ybar = numpy.sum(y)
+        ssreg = numpy.sum((yfit - ybar)**2)
+        sstot = numpy.sum((y - ybar)**2)
+        r2 = ssreg/sstot
+        self._results["slope"] = coeffs[0]
+        self._results["intercept"] = coeffs[1]
+        self._results["r2"] = r2
+
+        image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
+        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
         self.task_report_signal.emit(doc)
         return
