@@ -154,7 +154,7 @@ class ReferenceGas(object):
 
     def getFormattedGasDetails(self, key):
         d = self.getGasDetails()
-        str = "{0} {1} {0}\n".format("="*20, key)
+        str = "{0} {1} {0}\n".format("="*20, key) # name of gas source
         str += "{0:20}: {1}\n".format("Tank Name", self.tankName)
         str += "{0:20}: {1}\n".format("Tank Serial Number", self.tankSN)
         str += "{0:20}: {1}\n".format("Tank Description", self.tankDesc)

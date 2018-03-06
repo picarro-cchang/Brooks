@@ -65,6 +65,31 @@ class Task(QtCore.QObject):
         self.data_source = data_source
         self._mutex = QtCore.QMutex()
         self.set_connections()
+
+        # Init reference unk gas arrays if a gas is associated with this task.
+        # Arrays are used as these results are passed directly to array based
+        # statistic tools.
+        # Gas_Alias: [ list of gas tanks, e.g. "GAS0", for reporting ]
+        # Gas_Name: human readable name like "CH4"
+        # Meas_Conc: [ array of unk. gas measured concs. ]
+        # Meas_Conc_Std: [ array of standard deviations from meas_conc data ]
+        # Ref_Conc: [ array of ref. gas conc. ]
+        if "Gas" in self._settings:
+            gas_key = self._settings["Gas"]
+            self._results["Gas_Name"] = self._settings["Data_Key"]
+            ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(GasEnum.CH4))
+            if "Ref_Conc" in self._results:
+                self._results["Ref_Conc"].append(ref_gas_conc)
+            else:
+                self._results["Ref_Conc"] = [ref_gas_conc]
+            if "Gas" in self._results:
+                self._results["Gas"].append(gas_key)
+            else:
+                self._results["Gas"] = [gas_key]
+            if "Meas_Conc" not in self._results:
+                self._results["Meas_Conc"] = []
+            if "Meas_Conc_Std" not in self._results:
+                self._results["Meas_Conc_Std"] = []
         return
 
     # ----------------------------------------------------------------------------------
@@ -132,18 +157,11 @@ class Task(QtCore.QObject):
             (subset_times, subset_data, flag) =\
                 get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
             if subset_data:
-                avg_data = sum(subset_data)/len(subset_data)
-                if self._settings["Data_Key"] in self._results:
-                    self._results[self._settings["Data_Key"]].append(avg_data)
-                else:
-                    self._results[self._settings["Data_Key"]] = [avg_data]
+                avg_data = numpy.average(subset_data)
+                std = numpy.std(subset_data)
+                self._results["Meas_Conc"].append(avg_data)
+                self._results["Meas_Conc_Std"].append(std)
 
-                ref_gas = float(self._reference_gases[self._settings["Gas"]].getGasConcPpm(GasEnum.CH4))
-                refKey = self._settings["Data_Key"] + "_ref"
-                if refKey in self._results:
-                    self._results[refKey].append(ref_gas)
-                else:
-                    self._results[refKey] = [ref_gas]
         except Exception as e:
             print("Excep: %s" %e)
 
@@ -199,8 +217,8 @@ class Task(QtCore.QObject):
         concentration (y).
         :return: p = slope and offset of best fit line
         """
-        x = self._results[self._settings["Data_Key"]]
-        y = self._results[self._settings["Data_Key"]+"_ref"]
+        x = self._results["Meas_Conc"]
+        y = self._results["Ref_Conc"]
         coeffs = numpy.polyfit(x,y,1)
         yfit = numpy.poly1d(coeffs)(x)
 
@@ -215,4 +233,7 @@ class Task(QtCore.QObject):
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
         doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
         self.task_report_signal.emit(doc)
+        return
+
+    def pass_fail(self):
         return

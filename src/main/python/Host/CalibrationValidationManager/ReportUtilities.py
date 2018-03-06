@@ -4,7 +4,6 @@ matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 
 import io
-import pprint
 from PyQt4 import QtCore, QtGui
 
 def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
@@ -47,9 +46,33 @@ def fill_report_template(settings, reference_gases, results):
     # report += "\n"
     for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
         report += g.getFormattedGasDetails(e)
+    report += get_formatted_linear_regression_results(results)
+    report += get_formatted_task_details(settings, reference_gases, results)
     report += "\n"
     return report
 
+def get_formatted_linear_regression_results(results):
+    str = "{0} {1} {0}\n".format("=" * 15, "Linear Regression")
+    str += "{0:30}: {1}\n".format("Linear Regression slope", results["slope"])
+    str += "{0:30}: {1}\n".format("Linear Regression intercept", results["intercept"])
+    str += "{0:30}: {1}\n".format("Linear Regression R^2", results["r2"])
+    return str
+
+def get_formatted_task_details(settings, reference_gases, results):
+    line = "|{0}|\n".format("-" * 63)
+    str = "|{0} {1} {2} {0}|\n".format("=" * 23, results["Gas_Name"], "Measurements")
+    str += "|{0:^15}|{1:^15}|{2:^15}|{3:^15}|\n".format("Gas Source",
+                                                        "Measured PPM",
+                                                        "Measured Std.",
+                                                        "Reference PPM")
+    str += line
+    for idx, value in enumerate(results["Gas"]):
+        str += "|{0:^15}|{1:15.5f}|{2:15.5f}|{3:15.5f}|\n".format(value,
+                                                                  results["Meas_Conc"][idx],
+                                                                  results["Meas_Conc_Std"][idx],
+                                                                  results["Ref_Conc"][idx])
+        str += line
+    return str
 
 def create_report(settings, reference_gases, results, obj):
     img = QtGui.QImage()
