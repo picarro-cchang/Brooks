@@ -1,5 +1,11 @@
 {
     "buildTypes": {
+        
+        "AJDS": {
+            "species": "NH3",
+            "installerSignature": "AJDS"
+        },
+        
         "AHDS": {
             "species": "NH3",
             "installerSignature": "AEDS"
@@ -8,6 +14,11 @@
         "AMADS": {
             "species": "NH3_HF",
             "installerSignature": "AMADS"
+        }, 
+        
+        "AMADS_PFV": {
+            "species": "NH3_HF",
+            "installerSignature": "AMADS_PFV"
         }, 
 
         "BxDS": {
@@ -29,9 +40,20 @@
             "species": "HCl",
             "installerSignature": "SADS"
         },
+        
+        "SADS_PFV": {
+            "species": "HCl",
+            "installerSignature": "SADS_PFV"
+        },
+        
         "CFADS": {
             "species": "CH4",
             "installerSignature": "CFADS"
+        },
+        
+        "BDDS": {
+            "species": "H2S",
+            "installerSignature": "BDDS"
         }
     }
 }

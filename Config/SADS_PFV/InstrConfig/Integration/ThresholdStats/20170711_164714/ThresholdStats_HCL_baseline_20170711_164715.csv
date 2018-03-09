@@ -1,7 +1,7 @@
 # DateTime,20170711_164715
 # Description,Variation of ringdown statistics with threshold
 # InstrumentName,SADS2020_HF_BL
-# SchemeFile,/home/picarro/SI2000/AppConfig/Schemes/HCL_baseline.sch
+# SchemeFile,/home/picarro/I2000/AppConfig/Schemes/HCL_baseline.sch
 # TUNER_DITHER_MEDIAN_COUNT_REGISTER,9
 # TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER,2100.0
 # TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER,2100.0
