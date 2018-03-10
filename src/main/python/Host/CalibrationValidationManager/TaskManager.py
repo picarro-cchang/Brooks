@@ -2,6 +2,7 @@
 
 
 # from PyQt4.QtCore import QObject, pyqtSignal
+import copy
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
@@ -14,6 +15,7 @@ class TaskManager(QtCore.QObject):
     next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str)
     report_signal = QtCore.pyqtSignal(object)
+    reference_gas_signal = QtCore.pyqtSignal(object)
 
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
@@ -25,26 +27,29 @@ class TaskManager(QtCore.QObject):
         self.monitor_data_stream = False
         self.input_data = {}            # Dict of measured data
         self.results = {}
+        self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
         self.loadConfig()
         self.set_connections()
         self.start_data_stream()
+        QtCore.QTimer.singleShot(100, self.late_start)
         return
 
     def loadConfig(self, iniFile = "task_manager.ini"):
-        co = ConfigObj(iniFile)
+        self.co = ConfigObj(iniFile)
 
-        for key, gasConfObj in co["GASES"].items():
-            self.referenceGases[key] = ReferenceGas(gasConfObj)
+        for key, gasConfObj in self.co["GASES"].items():
+            self.referenceGases[key] = ReferenceGas(gasConfObj, key)
+            # self.reference_gas_signal.emit(self.referenceGases)
 
         task_global_settings = {}
-        for key, value in co["TASKS"].items():
+        for key, value in self.co["TASKS"].items():
             # Loop through [TASKS] and build a local dict of the global
             # key/value pairs to pass to each task.
             if not isinstance(value, dict):
                 task_global_settings[key] = value
 
-        for key, value in co["TASKS"].items():
+        for key, value in self.co["TASKS"].items():
             # The [TASKS] section is a collection of individual tasks
             # and global key-value pairs that apply to all tasks.
             # Individual tasks are in sub-sections like [[TASK0]].
@@ -62,11 +67,12 @@ class TaskManager(QtCore.QObject):
             if isinstance(value, dict):
                 # Merge TASKS global and individual task settings into one
                 # dict passed to each dict.
-                value.update(task_global_settings)
+                value_copy = copy.deepcopy(value)
+                value_copy.update(task_global_settings)
                 task_thread = QtCore.QThread()
                 task = Task(my_parent=self,
                             my_id=key,
-                            settings=value,
+                            settings=value_copy,
                             reference_gases=self.referenceGases,
                             results=self.results,
                             data_source=self.ds)
@@ -83,6 +89,16 @@ class TaskManager(QtCore.QObject):
             task.task_heartbeat_signal.connect(self.task_heartbeat_slot)
             task.task_countdown_signal.connect(self.task_countdown_slot)
             task.task_report_signal.connect(self.report_signal)
+        return
+
+    def late_start(self):
+        """
+        Post init things to do before the work starts.
+        :return:
+        """
+        # self.reference_gas_signal.emit(self.referenceGases)
+        self.reference_gas_signal.emit(self.co)
+        print("Task manager late start")
         return
 
     def start_data_stream(self):
@@ -140,4 +156,33 @@ class TaskManager(QtCore.QObject):
     def is_task_alive_slot(self):
         print("TM sending ping")
         self.ping_task_signal.emit()
+        # print("Trying to save gas settings")
+        # for key, rg in self.referenceGases.items():
+        #     (k,d) = rg.save_reference_gas_details_from_qtable()
+        #     print("K:{0} d:{1}".format(k, d))
+        #     self.co["GASES"][key] = d
+        # self.co.write()
+        # print("write")
         return
+
+    # def get_reference_gas_details_for_qtable(self):
+        """
+        Create an ordered dict of the reference gas attributes.  The keys need
+        to be human readable as these are passed to the reference gas editor GUI.
+        The order is important so that the display order always matches the
+        manual screen shots.
+        :return:
+        """
+        # d = collections.OrderedDict()
+        # d["Name"] = self.tankName
+        # d["SN"] = self.tankSN
+        # d["Desc"] = self.tankDesc
+        # d["Vendor"] = self.tankVendor
+        # for gas_enum, component_gas in self.components.items():
+        #     d[gas_enum.name] = component_gas.getGasConcPpm()
+        #     d[gas_enum.name + " acc."] = component_gas.getGasAccPpm()
+        # return d
+
+        # for key, gasConfObj in self.co["GASES"].items():
+        #     self.referenceGases[key] = ReferenceGas(gasConfObj, key)
+        # return (a,b)

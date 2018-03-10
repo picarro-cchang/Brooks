@@ -1,5 +1,6 @@
-#import collections
+import collections
 from enum import Enum
+
 class GasEnum(Enum):
     Air = 1
     CH4 = 2
@@ -71,12 +72,19 @@ class ComponentGas(object):
 # the vendor name and serial number.
 #
 class ReferenceGas(object):
-    def __init__(self, gasDict):
+    def __init__(self, gasDict, key = ""):
+        self.key = key          # Key (or section name like GAS0) in the ini file
         self.tankName = ""      # Human readable name like '2ppm CH4 in N2', free form
         self.tankVendor = ""    # Supplier
         self.tankSN = ""        # Tank serial number or some other unique identifier
         self.tankDesc = ""      # Free form field for any user input
-        self.components = {}    # Collection of GasComponent objects
+        self.gasDict = gasDict  # Save the dict for writing changes back to disk
+
+        # Store the component gases in the order that they appear in the task
+        # manager ini file.  The order here sets the order that the gases appear in
+        # the reference gas editor GUI.  It is assumed that the first component is
+        # the molecule that we want to measure.
+        self.components = collections.OrderedDict()    # Collection of GasComponent objects
 
         if "Name" in gasDict:
             self.tankName = gasDict["Name"]
@@ -117,7 +125,7 @@ class ReferenceGas(object):
             else:
                 uncertainty.append(gasDict["Uncertainty"])
         except KeyError as e:
-            uncertainty = ["UNK"] * len(component)
+            uncertainty = ["-"] * len(component)
 
         if not component  or not concentration:
             print("ReferenceGas.py - A gas component or concentration field is empty.")
@@ -140,6 +148,29 @@ class ReferenceGas(object):
 
     def getGasAccPpm(self, gasEnum):
         return self.components[gasEnum].getGasAccPpm()
+
+    def get_reference_gas_for_qtable(self):
+        """
+        Create an ordered dict of the reference gas attributes.  The keys need
+        to be human readable as these are passed to the reference gas editor GUI.
+        The order is important so that the display order always matches the
+        manual screen shots.
+        :return:
+        """
+        d = collections.OrderedDict()
+        d["Name"] = self.tankName
+        d["SN"] = self.tankSN
+        d["Desc"] = self.tankDesc
+        d["Vendor"] = self.tankVendor
+        for gas_enum, component_gas in self.components.items():
+            d[gas_enum.name] = component_gas.getGasConcPpm()
+            d[gas_enum.name + " acc."] = component_gas.getGasAccPpm()
+        return d
+
+    # def save_reference_gas_details_from_qtable(self, b):
+    #     print(b[0])
+    #     # self.gasDict["Name"] = "Test Name" + self.key
+    #     return (self.key, self.gasDict)
 
     def getGasDetails(self):
         d = {} #collections.OrderedDict()
