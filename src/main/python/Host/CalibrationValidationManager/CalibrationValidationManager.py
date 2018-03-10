@@ -4,7 +4,8 @@
 import sys
 from PyQt4 import QtCore, QtGui
 import pyqtgraph as pg
-from QReferenceGasEditor import QReferenceGasEditorWidget, QReferenceGasEditor
+from functools import partial
+from QReferenceGasEditor import QReferenceGasEditorWidget
 from DateAxisItem import DateAxisItem
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
@@ -25,12 +26,15 @@ class Window(QtGui.QMainWindow):
         return
 
     def _set_connections(self):
-        self.btn.clicked.connect(self.start_running_tasks)
+        self.run_btn.clicked.connect(self.start_running_tasks)
+        self.run_btn.clicked.connect(partial(self.tableWidget.disable_edit, True))
+
         self.ping_btn.clicked.connect(self.ping_running_tasks)
         self.next_btn.clicked.connect(self.tm.next_subtask_signal)
+
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.text_edit.setDocument)
-        self.tm.reference_gas_signal.connect(self.tableWidget.table.display_reference_gas_data)
+        self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
 
     def _init_plot(self):
         time_axis = DateAxisItem("bottom")
@@ -55,7 +59,7 @@ class Window(QtGui.QMainWindow):
 
 
     def _init_gui(self):
-        self.btn = QtGui.QPushButton("Run", self)
+        self.run_btn = QtGui.QPushButton("Run", self)
         self.ping_btn = QtGui.QPushButton("Ping", self)
         self.next_btn = QtGui.QPushButton("NEXT", self)
         self.task_label = QtGui.QLabel("Click RUN to start the validation process.")
@@ -65,7 +69,7 @@ class Window(QtGui.QMainWindow):
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
         gl = QtGui.QGridLayout()
-        gl.addWidget(self.btn,0,0)
+        gl.addWidget(self.run_btn,0,0)
         gl.addWidget(self.ping_btn,1,0)
         gl.addWidget(self.task_label,2,0)
         gl.addWidget(self.task_progressbar,3,0)

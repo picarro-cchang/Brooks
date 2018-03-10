@@ -44,7 +44,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self._saveBtn = QtGui.QPushButton("Save")
         self._undoBtn = QtGui.QPushButton("Undo")
-        self.table = QReferenceGasEditor()
+        self._table = QReferenceGasEditor()
         self.setLayout( self._init_gui() )
         self._set_connections()
         return
@@ -57,7 +57,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         hb.addWidget(self._undoBtn)
         hb.addWidget(self._saveBtn)
         gl = QtGui.QGridLayout()
-        gl.addWidget(self.table, 0, 0)
+        gl.addWidget(self._table, 0, 0)
         gl.addLayout(hb, 1, 0)
         gb = QtGui.QGroupBox("Reference Gases")
         gb.setLayout(gl)
@@ -66,13 +66,18 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         return mgl
 
     def _set_connections(self):
-        self._undoBtn.clicked.connect(self.table.display_reference_gas_data)
-        self._saveBtn.clicked.connect(self.table.save_reference_gas_data)
+        self._undoBtn.clicked.connect(self._table.display_reference_gas_data)
+        self._saveBtn.clicked.connect(self._table.save_reference_gas_data)
         return
 
-    def display_referenece_gas_data(self, reference_gases_configobj):
-        self.table.display_reference_gas_data(reference_gases_configobj)
+    def display_reference_gas_data(self, reference_gases_configobj):
+        self._table.display_reference_gas_data(reference_gases_configobj)
         return
+
+    def disable_edit(self, disable):
+        self._undoBtn.setDisabled(disable)
+        self._saveBtn.setDisabled(disable)
+        self._table.disable_edit(disable)
 
 class QReferenceGasEditor(QtGui.QTableWidget):
     def __init__(self, data=None, *args):
@@ -80,8 +85,6 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.data = data
         self.co = None                  # Ini handle (configobj)
         self.rgco = None                # Ini handle (reference gas configobj)
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
 
     def display_reference_gas_data(self, reference_gases_configobj=None):
         """
@@ -125,8 +128,9 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             for j, value in enumerate(values):
                 self.setItem(j, idx, QtGui.QTableWidgetItem(values[j]))
             idx = idx + 1
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
+        # Expand the column widths so that the table fills the space given
+        # by the parent window.
+        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         return
 
     def save_reference_gas_data(self):
@@ -152,6 +156,21 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.rgco[col_key]["Uncertainty"] = uncertainty
         self.co["GASES"] = self.rgco
         self.co.write()
+        return
+
+    def disable_edit(self, disable):
+        """
+        Enable/disable editing individual table cells.
+        This is preferred over disabling the entire table widget because when you do
+        that the scroll bars don't work and the font becomes light gray and hard
+        to read.
+        :param disable:
+        :return:
+        """
+        if disable:
+            self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        else:
+            self.setEditTriggers(self.editTriggers() | ~QtGui.QAbstractItemView.NoEditTriggers)
         return
 
     # Sample code
