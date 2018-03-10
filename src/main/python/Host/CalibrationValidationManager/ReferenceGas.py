@@ -202,7 +202,11 @@ class ReferenceGas(object):
                     x = float(conc_acc)
                     str += "{0:20}: {1} {2:10.3f} +/-{3} ppm\n".format(" ", gas_name, float(gas_conc), float(conc_acc))
                 except ValueError:
-                    str += "{0:20}: {1} {2:10.3f} ppm\n".format(" ", gas_name, float(gas_conc))
+                    try:
+                        x = float(gas_conc)
+                        str += "{0:20}: {1} {2:10.3f} ppm\n".format(" ", gas_name, float(gas_conc))
+                    except ValueError:
+                        str += "{0:20}: {1} {2:10}\n".format(" ", gas_name, gas_conc)
         str += "{0}\n".format("-"*46)
         return str
 

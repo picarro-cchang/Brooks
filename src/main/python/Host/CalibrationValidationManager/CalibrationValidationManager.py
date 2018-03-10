@@ -7,6 +7,7 @@ import pyqtgraph as pg
 from functools import partial
 from QReferenceGasEditor import QReferenceGasEditorWidget
 from DateAxisItem import DateAxisItem
+from QPlotWidget import QPlotWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
 # dummy data for cylinder table widget
@@ -36,28 +37,6 @@ class Window(QtGui.QMainWindow):
         self.tm.report_signal.connect(self.text_edit.setDocument)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
 
-    def _init_plot(self):
-        time_axis = DateAxisItem("bottom")
-        self._time_series_plot = pg.PlotWidget(axisItems={'bottom':time_axis})
-        self._time_series_plot.setMouseEnabled(x=False,y=False)
-        self._time_series_plot.setMenuEnabled(False)
-        self._time_series_plot.showGrid(x=True, y=True)
-        self._time_series_plot.setLabels(left="CH4 (ppm)")
-
-        # Seems to keep time stamp labels from overlapping with eachother and over
-        # the y-axis label.
-        self._time_series_plot.getAxis("bottom").setStyle(autoExpandTextSpace=False)
-
-        # Add top and right axes without labels to create a box around the plot.
-        self._time_series_plot.showAxis("top",show=True)
-        self._time_series_plot.getAxis("top").setStyle(showValues=False)
-        self._time_series_plot.showAxis("right",show=True)
-        self._time_series_plot.getAxis("right").setStyle(showValues=False)
-
-        # return self._time_series_plot.plot(pen=pg.mkPen(color=(255,255,255), width=1))
-        return self._time_series_plot.plot(width=1, symbol='o')
-
-
     def _init_gui(self):
         self.run_btn = QtGui.QPushButton("Run", self)
         self.ping_btn = QtGui.QPushButton("Ping", self)
@@ -65,7 +44,7 @@ class Window(QtGui.QMainWindow):
         self.task_label = QtGui.QLabel("Click RUN to start the validation process.")
         self.task_progressbar = QtGui.QProgressBar()
         self.task_progressbar.setValue(0)
-        self.plot = self._init_plot()
+        self.plotWidget = QPlotWidget()
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
         gl = QtGui.QGridLayout()
@@ -74,7 +53,7 @@ class Window(QtGui.QMainWindow):
         gl.addWidget(self.task_label,2,0)
         gl.addWidget(self.task_progressbar,3,0)
         gl.addWidget(self.next_btn,4,0)
-        gl.addWidget(self._time_series_plot,5,0)
+        gl.addWidget(self.plotWidget, 5, 0)
         gl.addWidget(self.text_edit,6,0)
         gl.addWidget(self.tableWidget, 7, 0)
         central_widget = QtGui.QWidget()
@@ -128,8 +107,14 @@ class Window(QtGui.QMainWindow):
         try:
             timestamps = self.tm.ds.getList("analyze_H2O2", "time")
             data = self.tm.ds.getList("analyze_H2O2", "CH4")
-            self.plot.setData(timestamps,data)
+            d = {}
+            if data:
+                d["CH4 [PPM]"] = data[-1]
+                d["H2O2 [PPM]"] = self.tm.ds.getList("analyze_H2O2", "H2O2")[-1]
+                d["H2O [PPM]"] = self.tm.ds.getList("analyze_H2O2", "H2O")[-1]
+            self.plotWidget.setData(timestamps, data, d)
         except Exception as e:
+            print("E:",e)
             pass
         return
 
