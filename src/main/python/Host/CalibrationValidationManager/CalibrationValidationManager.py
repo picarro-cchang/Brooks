@@ -14,7 +14,7 @@ data = {'col1':['1','2','3'], 'col2':['4','5','6'], 'col3':['7','8','9']}
 class Window(QtGui.QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
-        self.setGeometry(50, 50, 500, 500)
+        self.setGeometry(50, 50, 700, 700)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
         self.tm = None
         self._init_gui()

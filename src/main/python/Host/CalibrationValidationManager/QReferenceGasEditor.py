@@ -1,8 +1,40 @@
+# QReferenceGasEditor and QReferenceGasEditorWidget
+#
+# This is an editor class that is hard coded to read/write to the
+# reference gas settings in the Calibration & Validation Tool.
+#
+# The ini format is like this:
+"""
+[GASES]
+[[GAS0]]
+Name = "Zero-air"
+SN = Alpha003a
+Component = CH4,CO2,H2O
+Concentration = 0.02,338.0,10000
+Uncertainty = 0.001, 0.2, -
+
+[[GAS1]]
+Name = "CH4, 2ppm"
+SN = Alpha003b
+Component = CH4,CO2,H2O
+Concentration = 2.148, -, -
+
+[[GAS2]]
+Name = "CH4, 20ppm"
+SN = AirGasSN4837
+Component = CH4, CO2, H2O
+Concentration = 20.53, -, -
+
+[[GAS3]]
+Name = "CH4, 100ppm"
+SN = LAir_a09948
+Component = CH4, CO2, H2O
+Concentration = 105.5, -,
+"""
+
 from PyQt4 import QtCore, QtGui
 import sys
 from Host.Common.configobj import ConfigObj
-import pprint
-from ReferenceGas import ReferenceGas
 
 data = {'col1': ['1', '2', '3'], 'col2': ['4', '5', '6'], 'col3': ['7', '8', '9']}
 
@@ -18,6 +50,8 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         return
 
     def _init_gui(self):
+        # Sets up a groupbox frame with the table in the middle and UNDO and SAVE
+        # buttons at the bottom right.
         hb = QtGui.QHBoxLayout()
         hb.addStretch(1)
         hb.addWidget(self._undoBtn)
@@ -25,7 +59,11 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         gl = QtGui.QGridLayout()
         gl.addWidget(self.table, 0, 0)
         gl.addLayout(hb, 1, 0)
-        return gl
+        gb = QtGui.QGroupBox("Reference Gases")
+        gb.setLayout(gl)
+        mgl = QtGui.QGridLayout()
+        mgl.addWidget(gb,0,0)
+        return mgl
 
     def _set_connections(self):
         self._undoBtn.clicked.connect(self.table.display_reference_gas_data)
@@ -42,13 +80,10 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.data = data
         self.co = None                  # Ini handle (configobj)
         self.rgco = None                # Ini handle (reference gas configobj)
-        # self.setmydata()
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
     def display_reference_gas_data(self, reference_gases_configobj=None):
-        # print("undo data",reference_gases_configobj)
-        # return
         """
         data is a dictionary of ReferenceGas objects
         :param data:
@@ -95,6 +130,12 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         return
 
     def save_reference_gas_data(self):
+        """
+        Reverse operation of display_reference_gas_data() to get the table data
+        back into the ConfigObj format and write back out to the original
+        ini file.
+        :return:
+        """
         for col in range(self.columnCount()):
             col_key = str(self.horizontalHeaderItem(col).text())
             self.rgco[col_key]["Name"] = str(self.item(0,col).text())
@@ -113,14 +154,16 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.co.write()
         return
 
-    def setmydata(self):
-        horHeaders = []
-        for n, key in enumerate(sorted(self.data.keys())):
-            horHeaders.append(key)
-            for m, item in enumerate(self.data[key]):
-                newitem = QtGui.QTableWidgetItem(item)
-                self.setItem(m, n, newitem)
-        self.setHorizontalHeaderLabels(horHeaders)
+    # Sample code
+    #
+    # def setmydata(self):
+    #     horHeaders = []
+    #     for n, key in enumerate(sorted(self.data.keys())):
+    #         horHeaders.append(key)
+    #         for m, item in enumerate(self.data[key]):
+    #             newitem = QtGui.QTableWidgetItem(item)
+    #             self.setItem(m, n, newitem)
+    #     self.setHorizontalHeaderLabels(horHeaders)
 
 
 def main(args):
