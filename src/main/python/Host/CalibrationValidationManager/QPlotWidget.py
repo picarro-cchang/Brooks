@@ -5,13 +5,17 @@ from DateAxisItem import DateAxisItem
 class QPlotWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(sizePolicy)
         self._saveBtn = QtGui.QPushButton("Save")
         self._undoBtn = QtGui.QPushButton("Undo")
         self._plot_widget = self._init_plot()
         self._plot_str_data = QtGui.QLabel("the label")
         self.setLayout( self._init_gui() )
-        # self._set_connections()
         return
+
+    def sizeHint(self):
+        return QtCore.QSize(800,300)
 
     def _init_gui(self):
         gl = QtGui.QGridLayout()
@@ -45,6 +49,14 @@ class QPlotWidget(QtGui.QWidget):
         return self._time_series_plot
 
     def setData(self,x,y,d={}):
+        """
+        Set the time series data to plot and the current data text field below
+        the plot.
+        :param x:
+        :param y:
+        :param d:
+        :return:
+        """
         self._the_plot.setData(x,y)
         str = ""
         for k,v in d.items():

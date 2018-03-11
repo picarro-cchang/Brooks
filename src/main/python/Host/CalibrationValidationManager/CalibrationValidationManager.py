@@ -3,20 +3,15 @@
 
 import sys
 from PyQt4 import QtCore, QtGui
-import pyqtgraph as pg
-from functools import partial
 from QReferenceGasEditor import QReferenceGasEditorWidget
-from DateAxisItem import DateAxisItem
 from QPlotWidget import QPlotWidget
+from QTaskWizardWidget import QTaskWizardWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
-
-# dummy data for cylinder table widget
-data = {'col1':['1','2','3'], 'col2':['4','5','6'], 'col3':['7','8','9']}
 
 class Window(QtGui.QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
-        self.setGeometry(50, 50, 700, 700)
+        self.setGeometry(0, 0, 1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
         self.tm = None
         self._init_gui()
@@ -27,35 +22,20 @@ class Window(QtGui.QMainWindow):
         return
 
     def _set_connections(self):
-        self.run_btn.clicked.connect(self.start_running_tasks)
-        self.run_btn.clicked.connect(partial(self.tableWidget.disable_edit, True))
-
-        self.ping_btn.clicked.connect(self.ping_running_tasks)
-        self.next_btn.clicked.connect(self.tm.next_subtask_signal)
-
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.text_edit.setDocument)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
+        self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
 
     def _init_gui(self):
-        self.run_btn = QtGui.QPushButton("Run", self)
-        self.ping_btn = QtGui.QPushButton("Ping", self)
-        self.next_btn = QtGui.QPushButton("NEXT", self)
-        self.task_label = QtGui.QLabel("Click RUN to start the validation process.")
-        self.task_progressbar = QtGui.QProgressBar()
-        self.task_progressbar.setValue(0)
         self.plotWidget = QPlotWidget()
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
+        self.taskWizardWidget = QTaskWizardWidget()
         gl = QtGui.QGridLayout()
-        gl.addWidget(self.run_btn,0,0)
-        gl.addWidget(self.ping_btn,1,0)
-        gl.addWidget(self.task_label,2,0)
-        gl.addWidget(self.task_progressbar,3,0)
-        gl.addWidget(self.next_btn,4,0)
-        gl.addWidget(self.plotWidget, 5, 0)
-        gl.addWidget(self.text_edit,6,0)
-        gl.addWidget(self.tableWidget, 7, 0)
+        gl.addWidget(self.plotWidget, 0, 0)
+        gl.addWidget(self.tableWidget, 1, 0)
+        gl.addWidget(self.taskWizardWidget, 2, 0)
         central_widget = QtGui.QWidget()
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)
@@ -82,7 +62,7 @@ class Window(QtGui.QMainWindow):
 
     def ping_running_tasks(self):
         self.tm.is_task_alive_slot()
-        self.tableWidget.table.save_reference_gas_data()
+        # self.tableWidget.table.save_reference_gas_data()
         return
 
     def update_progressbar(self, countdown_sec, set_time_sec, description):
@@ -93,8 +73,8 @@ class Window(QtGui.QMainWindow):
         :param description:
         :return:
         """
-        self.task_progressbar.setValue((set_time_sec - countdown_sec)*100/set_time_sec)
-        self.task_label.setText(QtCore.QString(description))
+        self.taskWizardWidget.setText(QtCore.QString(description))
+        self.taskWizardWidget.setProgressBar((set_time_sec - countdown_sec)*100/set_time_sec)
         return
 
     def update_data_stream(self):

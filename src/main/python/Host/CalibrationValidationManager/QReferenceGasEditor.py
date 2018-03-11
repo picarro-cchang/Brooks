@@ -78,6 +78,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._undoBtn.setDisabled(disable)
         self._saveBtn.setDisabled(disable)
         self._table.disable_edit(disable)
+        self.hide()
 
 class QReferenceGasEditor(QtGui.QTableWidget):
     def __init__(self, data=None, *args):
