@@ -17,7 +17,11 @@ class QPlotWidget(QtGui.QWidget):
         gl = QtGui.QGridLayout()
         gl.addWidget(self._plot_widget, 0, 0)
         gl.addWidget(self._plot_str_data, 1, 0, QtCore.Qt.AlignHCenter)
-        return gl
+        gb = QtGui.QGroupBox("Measured Gas")
+        gb.setLayout(gl)
+        mgl = QtGui.QGridLayout()
+        mgl.addWidget(gb,0,0)
+        return mgl
 
     def _init_plot(self):
         time_axis = DateAxisItem("bottom")
