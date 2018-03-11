@@ -43,9 +43,12 @@ class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
     task_abort_signal = QtCore.pyqtSignal(str)
     task_heartbeat_signal = QtCore.pyqtSignal(str)
-    task_countdown_signal = QtCore.pyqtSignal(int, int, str)
+    task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
     task_next_signal = QtCore.pyqtSignal()
     task_report_signal = QtCore.pyqtSignal(object)
+
+    # Send up a signal if we start a timer and are waiting for user input
+    task_prompt_user_signal = QtCore.pyqtSignal()
 
     def __init__(self,
                  my_parent = None,
@@ -179,12 +182,16 @@ class Task(QtCore.QObject):
         # GUI.
         # The tick signal is needed to emit the user prompt to the main GUI.
         #
+        self.task_prompt_user_signal.emit()
         delay = 1e10    # about 31 years
+        busy = True     # Show busy state in progress bars if no time defined
         if "Pre_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Pre_Task_Delay_Sec"])
+            busy = False
         instructions = "Open the correct valve to let in the gas and then click NEXT"
         t = QNonBlockingTimer(set_time_sec=delay,
-                              description=instructions + self._my_id)
+                              description=instructions + self._my_id,
+                              busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
         t.start()
@@ -200,12 +207,16 @@ class Task(QtCore.QObject):
         # is stopped.  The stop is connected to a NEXT button signal in the main
         # GUI.
         #
+        self.task_prompt_user_signal.emit()
         delay = 1e10    # about 31 years
+        busy = True  # Show busy state in progress bars if no time defined
         if "Post_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Post_Task_Delay_Sec"])
+            busy = False
         instructions = "Close the gas valve and then click NEXT"
         t = QNonBlockingTimer(set_time_sec=delay,
-                              description=instructions + self._my_id)
+                              description=instructions + self._my_id,
+                              busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
         t.start()

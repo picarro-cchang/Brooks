@@ -25,7 +25,9 @@ class Window(QtGui.QMainWindow):
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.text_edit.setDocument)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
+        self.tm.prompt_user_signal.connect(self.taskWizardWidget.prompt_user)
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
+        self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
 
     def _init_gui(self):
         self.plotWidget = QPlotWidget()
@@ -65,7 +67,7 @@ class Window(QtGui.QMainWindow):
         # self.tableWidget.table.save_reference_gas_data()
         return
 
-    def update_progressbar(self, countdown_sec, set_time_sec, description):
+    def update_progressbar(self, countdown_sec, set_time_sec, description, busy):
         """
         This is a slot to receive a progress signal from a running task.
         :param countdown_sec:
@@ -74,7 +76,7 @@ class Window(QtGui.QMainWindow):
         :return:
         """
         self.taskWizardWidget.setText(QtCore.QString(description))
-        self.taskWizardWidget.setProgressBar((set_time_sec - countdown_sec)*100/set_time_sec)
+        self.taskWizardWidget.setProgressBar((set_time_sec - countdown_sec)*100/set_time_sec, busy)
         return
 
     def update_data_stream(self):

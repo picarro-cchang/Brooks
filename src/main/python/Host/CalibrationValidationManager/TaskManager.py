@@ -13,9 +13,10 @@ class TaskManager(QtCore.QObject):
     stop_signal = QtCore.pyqtSignal()       # Tell current task to stop, aborts the queue
     ping_task_signal = QtCore.pyqtSignal()
     next_subtask_signal = QtCore.pyqtSignal()
-    task_countdown_signal = QtCore.pyqtSignal(int, int, str)
+    task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
     report_signal = QtCore.pyqtSignal(object)
     reference_gas_signal = QtCore.pyqtSignal(object)
+    prompt_user_signal = QtCore.pyqtSignal()
 
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
@@ -118,17 +119,22 @@ class TaskManager(QtCore.QObject):
         :return:
         """
         self.running_task_idx = 0
+        self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
         self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
         self.threads[self.running_task_idx].start()
 
     def move_to_next_task(self):
         """
-        If there are more tasks to do, start the next one
+        If there are more tasks to do, start the next one.
+        The connect/disconnect signals are done here so that the NEXT button press is sent
+        to the currently running task.
         :return:
         """
         if self.running_task_idx < len(self.threads)-1:
+            self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
             self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
             self.running_task_idx += 1
+            self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
         else:
@@ -149,8 +155,8 @@ class TaskManager(QtCore.QObject):
         print("Got heartbeat signal from %s" %task_id)
         return
 
-    def task_countdown_slot(self, countdown_sec, set_time_sec, description):
-        self.task_countdown_signal.emit(countdown_sec, set_time_sec, description)
+    def task_countdown_slot(self, countdown_sec, set_time_sec, description, busy):
+        self.task_countdown_signal.emit(countdown_sec, set_time_sec, description, busy)
         return
 
     def is_task_alive_slot(self):
