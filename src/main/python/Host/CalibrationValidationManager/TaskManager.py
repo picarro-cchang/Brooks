@@ -17,6 +17,7 @@ class TaskManager(QtCore.QObject):
     report_signal = QtCore.pyqtSignal(object)
     reference_gas_signal = QtCore.pyqtSignal(object)
     prompt_user_signal = QtCore.pyqtSignal()
+    job_complete_signal = QtCore.pyqtSignal()
 
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
@@ -97,9 +98,7 @@ class TaskManager(QtCore.QObject):
         Post init things to do before the work starts.
         :return:
         """
-        # self.reference_gas_signal.emit(self.referenceGases)
         self.reference_gas_signal.emit(self.co)
-        print("Task manager late start")
         return
 
     def start_data_stream(self):
@@ -138,12 +137,11 @@ class TaskManager(QtCore.QObject):
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
         else:
-            print("All jobs done")
+            self.job_complete_signal.emit()
             self.running_task_idx = None
         return
 
     def task_finished_ack_slot(self, task_id):
-        print("Recieved finished ack from %s, starting next job" %task_id)
         self.move_to_next_task()
         return
 
@@ -160,35 +158,6 @@ class TaskManager(QtCore.QObject):
         return
 
     def is_task_alive_slot(self):
-        print("TM sending ping")
         self.ping_task_signal.emit()
-        # print("Trying to save gas settings")
-        # for key, rg in self.referenceGases.items():
-        #     (k,d) = rg.save_reference_gas_details_from_qtable()
-        #     print("K:{0} d:{1}".format(k, d))
-        #     self.co["GASES"][key] = d
-        # self.co.write()
-        # print("write")
         return
 
-    # def get_reference_gas_details_for_qtable(self):
-        """
-        Create an ordered dict of the reference gas attributes.  The keys need
-        to be human readable as these are passed to the reference gas editor GUI.
-        The order is important so that the display order always matches the
-        manual screen shots.
-        :return:
-        """
-        # d = collections.OrderedDict()
-        # d["Name"] = self.tankName
-        # d["SN"] = self.tankSN
-        # d["Desc"] = self.tankDesc
-        # d["Vendor"] = self.tankVendor
-        # for gas_enum, component_gas in self.components.items():
-        #     d[gas_enum.name] = component_gas.getGasConcPpm()
-        #     d[gas_enum.name + " acc."] = component_gas.getGasAccPpm()
-        # return d
-
-        # for key, gasConfObj in self.co["GASES"].items():
-        #     self.referenceGases[key] = ReferenceGas(gasConfObj, key)
-        # return (a,b)

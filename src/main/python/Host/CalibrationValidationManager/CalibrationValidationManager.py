@@ -2,6 +2,7 @@
 #
 
 import sys
+from functools import partial
 from PyQt4 import QtCore, QtGui
 from QReferenceGasEditor import QReferenceGasEditorWidget
 from QPlotWidget import QPlotWidget
@@ -26,6 +27,8 @@ class Window(QtGui.QMainWindow):
         self.tm.report_signal.connect(self.text_edit.setDocument)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
         self.tm.prompt_user_signal.connect(self.taskWizardWidget.prompt_user)
+        self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
+        self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
 

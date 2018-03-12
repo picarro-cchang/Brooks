@@ -17,13 +17,15 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._startRunBtn = QtGui.QPushButton("Start Run")
         self._nextBtn = QtGui.QPushButton("Next")
         self._abortBtn = QtGui.QPushButton("Abort")
-        self._text_edit = QtGui.QTextEdit("Text Edit H<sub>2</sub>O")
+        self._viewReportBtn = QtGui.QPushButton("View Report")
+        self._text_edit = QtGui.QTextEdit("Instructions to user TBD")
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
         hb = QtGui.QHBoxLayout()
         hb.addWidget(self._abortBtn)
         hb.addStretch(1)
+        hb.addWidget(self._viewReportBtn)
         hb.addWidget(self._startRunBtn)
         hb.addWidget(self._nextBtn)
 
@@ -43,6 +45,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._startRunBtn.clicked.connect(self._start_run)
         self._nextBtn.clicked.connect(self._next_step)
         self._abortBtn.clicked.connect(self._abort)
+        self._viewReportBtn.clicked.connect(self._view_report)
 
     def _startup_settings(self):
         """
@@ -52,6 +55,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._startRunBtn.setEnabled(True)
         self._nextBtn.setEnabled(False)
         self._abortBtn.setEnabled(False)
+        self._viewReportBtn.setEnabled(False)
+        self._task_progressbar.setRange(0, 100)
         self._task_progressbar.setValue(0)
 
     def _start_run(self):
@@ -84,6 +89,29 @@ class QTaskWizardWidget(QtGui.QWidget):
         # put user confirmation dialog here
         # send the abort signal
         # reset the widget states
+        # Show a message box
+        result = QtGui.QMessageBox.question(self,
+                                            'Message', "Do you want to abort all tasks to start over or exit?",
+                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                            QtGui.QMessageBox.No)
+
+        if result == QtGui.QMessageBox.Yes:
+            print 'Yes.'
+            QtGui.QMessageBox.critical(self,
+                                       'Critical',
+                                       "Abort code TBD",
+                                       QtGui.QMessageBox.Ok,
+                                       QtGui.QMessageBox.Ok)
+        else:
+            print 'No.'
+        return
+
+    def _view_report(self):
+        QtGui.QMessageBox.critical(self,
+                                   'Critical',
+                                   "View report code TBD",
+                                   QtGui.QMessageBox.Ok,
+                                   QtGui.QMessageBox.Ok)
         return
 
     def prompt_user(self):
@@ -114,4 +142,10 @@ class QTaskWizardWidget(QtGui.QWidget):
         else:
             self._task_progressbar.setRange(0, 100)
             self._task_progressbar.setValue(percent_complete)
+        return
+
+    def job_complete(self):
+        self._text_edit.setText("Job completed, message TBD")
+        self._startup_settings()
+        self._viewReportBtn.setEnabled(True)
         return

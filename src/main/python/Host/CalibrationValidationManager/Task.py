@@ -188,9 +188,9 @@ class Task(QtCore.QObject):
         if "Pre_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Pre_Task_Delay_Sec"])
             busy = False
-        instructions = "Open the correct valve to let in the gas and then click NEXT"
+        instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
         t = QNonBlockingTimer(set_time_sec=delay,
-                              description=instructions + self._my_id,
+                              description=instructions,
                               busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)
@@ -213,9 +213,9 @@ class Task(QtCore.QObject):
         if "Post_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Post_Task_Delay_Sec"])
             busy = False
-        instructions = "Close the gas valve and then click NEXT"
+        instructions = "Generic message from Task {0}: Close the reference gas valve and then click NEXT".format(self._my_id)
         t = QNonBlockingTimer(set_time_sec=delay,
-                              description=instructions + self._my_id,
+                              description=instructions,
                               busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_next_signal.connect(t.stop)

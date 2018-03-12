@@ -36,11 +36,8 @@ from PyQt4 import QtCore, QtGui
 import sys
 from Host.Common.configobj import ConfigObj
 
-data = {'col1': ['1', '2', '3'], 'col2': ['4', '5', '6'], 'col3': ['7', '8', '9']}
-
 class QReferenceGasEditorWidget(QtGui.QWidget):
     def __init__(self, parent=None):
-        # super(QReferenceGasEditorWidget, self)._init__(parent)
         QtGui.QWidget.__init__(self)
         self._saveBtn = QtGui.QPushButton("Save")
         self._undoBtn = QtGui.QPushButton("Undo")
@@ -78,7 +75,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._undoBtn.setDisabled(disable)
         self._saveBtn.setDisabled(disable)
         self._table.disable_edit(disable)
-        self.hide()
+
 
 class QReferenceGasEditor(QtGui.QTableWidget):
     def __init__(self, data=None, *args):
@@ -173,17 +170,6 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         else:
             self.setEditTriggers(self.editTriggers() | ~QtGui.QAbstractItemView.NoEditTriggers)
         return
-
-    # Sample code
-    #
-    # def setmydata(self):
-    #     horHeaders = []
-    #     for n, key in enumerate(sorted(self.data.keys())):
-    #         horHeaders.append(key)
-    #         for m, item in enumerate(self.data[key]):
-    #             newitem = QtGui.QTableWidgetItem(item)
-    #             self.setItem(m, n, newitem)
-    #     self.setHorizontalHeaderLabels(horHeaders)
 
 
 def main(args):
