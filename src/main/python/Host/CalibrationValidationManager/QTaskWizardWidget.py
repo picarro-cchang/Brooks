@@ -5,6 +5,8 @@ class QTaskWizardWidget(QtGui.QWidget):
     start_run_signal = QtCore.pyqtSignal()
     next_signal = QtCore.pyqtSignal()
     abort_signal = QtCore.pyqtSignal()
+    view_gases_signal = QtCore.pyqtSignal()
+    hide_gases_signal = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
@@ -22,9 +24,14 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
+        # Set up a two state button
+        self._ref_gases_visible = False
+        self._viewReferenceGasesBtn = QtGui.QPushButton("Show Gases")
+
         hb = QtGui.QHBoxLayout()
         hb.addWidget(self._abortBtn)
         hb.addStretch(1)
+        hb.addWidget(self._viewReferenceGasesBtn)
         hb.addWidget(self._viewReportBtn)
         hb.addWidget(self._startRunBtn)
         hb.addWidget(self._nextBtn)
@@ -46,6 +53,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._nextBtn.clicked.connect(self._next_step)
         self._abortBtn.clicked.connect(self._abort)
         self._viewReportBtn.clicked.connect(self._view_report)
+        self._viewReferenceGasesBtn.clicked.connect(self._view_reference_gases_button_clicked)
 
     def _startup_settings(self):
         """
@@ -112,6 +120,17 @@ class QTaskWizardWidget(QtGui.QWidget):
                                    "View report code TBD",
                                    QtGui.QMessageBox.Ok,
                                    QtGui.QMessageBox.Ok)
+        return
+
+    def _view_reference_gases_button_clicked(self):
+        if self._ref_gases_visible:
+            self._ref_gases_visible = False
+            self._viewReferenceGasesBtn.setText("Show Gases")
+            self.hide_gases_signal.emit()
+        else:
+            self._ref_gases_visible = True
+            self._viewReferenceGasesBtn.setText("Hide Gases")
+            self.view_gases_signal.emit()
         return
 
     def prompt_user(self):

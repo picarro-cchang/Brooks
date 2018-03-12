@@ -12,10 +12,18 @@ from Host.CalibrationValidationManager.TaskManager import TaskManager
 class Window(QtGui.QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
+
+        self.styleData = ""
+        f = open('styleSheet.qss', 'r')
+        self.styleData = f.read()
+        self.setStyleSheet(self.styleData)
+        f.close()
+
         self.setGeometry(0, 0, 1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
         self.tm = None
         self._init_gui()
+        self._startup_settings()
         self.tm = self.setUpTasks_()
         self.show()
         self._set_connections()
@@ -31,6 +39,8 @@ class Window(QtGui.QMainWindow):
         self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
+        self.taskWizardWidget.view_gases_signal.connect(self._view_reference_gas_settings)
+        self.taskWizardWidget.hide_gases_signal.connect(self._startup_settings)
 
     def _init_gui(self):
         self.plotWidget = QPlotWidget()
@@ -45,6 +55,15 @@ class Window(QtGui.QMainWindow):
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)
         return
+
+    def _startup_settings(self):
+        self.plotWidget.setVisible(True)
+        self.tableWidget.setVisible(False)
+        return
+
+    def _view_reference_gas_settings(self):
+        self.plotWidget.setVisible(False)
+        self.tableWidget.setVisible(True)
 
     def setUpTasks_(self):
         tm = TaskManager(iniFile="test")
