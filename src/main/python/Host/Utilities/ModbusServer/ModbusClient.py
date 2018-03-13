@@ -4,8 +4,8 @@ from struct import pack, unpack
 from pymodbus.client.sync import ModbusSerialClient
 from pymodbus.client.sync import ModbusTcpClient
 
-RTU = True
-IP_ADDRESS = '127.0.0.1'
+RTU = False
+IP_ADDRESS = '10.100.3.86'
 TCP_PORT = 50500
 
 struct_type_map = {
@@ -23,7 +23,7 @@ def get_variable_type(bit, type):
         return struct_type_map["%s_%s" % (type.strip().lower(), bit)]
 
 try:
-    com_setting = {"port": "COM2", "baudrate": 9600, "timeout": 3}
+    com_setting = {"port": "COM3", "baudrate": 19200, "timeout": 3}
     if RTU:
         client = ModbusSerialClient(method='rtu', **com_setting)
     else:
@@ -98,33 +98,39 @@ def logout(unit_number):
     print read_error(unit_number)
 
 
-def login(user_name, user_password, unit_number):
-    user_name_fixsize="{:>8}".format(user_name)
-    value_str = pack("%s%s" % ('>', 's'), user_name)
-    value_to_write = list(unpack('%s%dH' % ('>', 4), user_name_fixsize) )
+def set_username(user_name, unit_number):
+    user_name_fixsize = "{:>8}".format(user_name)
+    value_to_write = list(unpack('%s%dH' % ('>', 4), user_name_fixsize))
     client.write_registers(4, value_to_write, unit=unit_number)
 
-    user_password_fixsize="{:>8}".format(user_password)
-    value_str = pack("%s%s" % ('>', 's'), user_password)
-    value_to_write = list(unpack('%s%dH' % ('>', 4), user_password_fixsize) )
+
+def set_password(user_password, unit_number):
+    user_password_fixsize = "{:>8}".format(user_password)
+    value_to_write = list(unpack('%s%dH' % ('>', 4), user_password_fixsize))
     client.write_registers(8, value_to_write, unit=unit_number)
+
+
+def login(unit_number):
     client.write_coil(153, 1, unit=unit_number)
     time.sleep(1)
     print read_error(unit_number)
 
 
-def update_password(user_name, user_password, unit_number):
-    user_name_fixsize = "{:>8}".format(user_name)
-    value_to_write = list(unpack('%s%dH' % ('>', 4), user_name_fixsize) )
-    client.write_registers(4, value_to_write, unit=unit_number)
+def login_with_userInfo(user_name, user_password, unit_number):
+    set_username(user_name, unit_number)
+    set_password(user_password, unit_number)
+    login(unit_number)
 
-    user_password_fixsize="{:>8}".format(user_password)
-    value_to_write = list(unpack('%s%dH' % ('>', 4), user_password_fixsize) )
-    client.write_registers(8, value_to_write, unit=unit_number)
-    #update password
+def update_password(unit_number):
+    # update password
     client.write_coil(154, 1, unit=unit_number)
     time.sleep(1)
     print read_error(unit_number)
+
+def update_password_with_userinfo(user_name, user_password, unit_number):
+    set_username(user_name, unit_number)
+    set_password(user_password, unit_number)
+    update_password(unit_number)
 
 
 def read_float_register(register_address, unit_number):
@@ -137,22 +143,78 @@ def read_status_register(register_Address, unit_number):
     result = client.read_discrete_inputs(register_Address, 1, unit=unit_number)
     print result.bits[0]
 
-# login with admin
+# #Check error case when username and password is not set
+# login(1);
+
+# #Check error case when only username is set
+# set_username('admin', 1)
+# login(1)
+
+# #login with admin
 # user_name='admin'
 # user_password='admin'
-# login(user_name, user_password, 1)
+# login_with_userInfo(user_name, user_password, 1)
 #
 # #update user password
 # user_name='tech'
 # user_password='picarro'
-# update_password(user_name, user_password, 1)
+# update_password_with_userinfo(user_name, user_password, 1)
 #
 # #Logout from admin
 # logout(1)
 # logout(2)
 
+
+# # Try to change password without administration login
+# user_name='tech'
+# user_password='picarro'
+# login_with_userInfo(user_name, user_password, 1)
+#
+# #update user password
+# user_name='admin'
+# user_password='picarro1'
+# update_password_with_userinfo(user_name, user_password, 1)
+#
+# #logout from tech user
+# logout(1)
+
+
+# #update user password with shorter password length
+# #login with admin
+# user_name='admin'
+# user_password='admin'
+# login_with_userInfo(user_name, user_password, 1)
+#
+# #update user password
+# user_name='tech'
+# user_password='tech'
+# update_password_with_userinfo(user_name, user_password, 1)
+#
+# #Passowrd reuse error
+# #update user password
+# user_name='tech'
+# user_password='picarro1'
+# update_password_with_userinfo(user_name, user_password, 1)
+#
+# #update user password
+# user_name='tech'
+# user_password='picarro'
+# update_password_with_userinfo(user_name, user_password, 1)
+#
+#
+# #Logout from admin
+# logout(1)
+
+# #lock user error
+# user_name='tech'
+# user_password='picarro'
+# login_with_userInfo(user_name, user_password, 1)
+# login_with_userInfo(user_name, user_password, 1)
+# login_with_userInfo(user_name, user_password, 1)
+# login_with_userInfo(user_name, user_password, 1)
+
 # #shut down
-#shutdown(1)
+# shutdown(1)
 # shutdown(2)
 
 #read current time
