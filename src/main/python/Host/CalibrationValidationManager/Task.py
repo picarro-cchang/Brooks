@@ -65,9 +65,13 @@ class Task(QtCore.QObject):
         self._my_id = my_id
         self._running = False
         self._results = results
+        self.skip = False                   # If true this task is never run
         self.data_source = data_source
         self._mutex = QtCore.QMutex()
         self.set_connections()
+
+        # if "Skip" in self._settings:
+        #     self.skip = self._settings["Skip"]     # Need a boolean checker here
 
         # Init reference unk gas arrays if a gas is associated with this task.
         # Arrays are used as these results are passed directly to array based
@@ -79,20 +83,24 @@ class Task(QtCore.QObject):
         # Ref_Conc: [ array of ref. gas conc. ]
         if "Gas" in self._settings:
             gas_key = self._settings["Gas"]
-            self._results["Gas_Name"] = self._settings["Data_Key"]
-            ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(GasEnum.CH4))
-            if "Ref_Conc" in self._results:
-                self._results["Ref_Conc"].append(ref_gas_conc)
+            if "Skip" in gas_key:
+                self.skip = True
             else:
-                self._results["Ref_Conc"] = [ref_gas_conc]
-            if "Gas" in self._results:
-                self._results["Gas"].append(gas_key)
-            else:
-                self._results["Gas"] = [gas_key]
-            if "Meas_Conc" not in self._results:
-                self._results["Meas_Conc"] = []
-            if "Meas_Conc_Std" not in self._results:
-                self._results["Meas_Conc_Std"] = []
+                self._results["Gas_Name"] = self._settings["Data_Key"]
+                ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(GasEnum.CH4))
+                if "Ref_Conc" in self._results:
+                    self._results["Ref_Conc"].append(ref_gas_conc)
+                else:
+                    self._results["Ref_Conc"] = [ref_gas_conc]
+                if "Gas" in self._results:
+                    self._results["Gas"].append(gas_key)
+                else:
+                    self._results["Gas"] = [gas_key]
+                if "Meas_Conc" not in self._results:
+                    self._results["Meas_Conc"] = []
+                if "Meas_Conc_Std" not in self._results:
+                    self._results["Meas_Conc_Std"] = []
+
         return
 
     # ----------------------------------------------------------------------------------

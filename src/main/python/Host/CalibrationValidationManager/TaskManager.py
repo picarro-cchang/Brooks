@@ -16,6 +16,7 @@ class TaskManager(QtCore.QObject):
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
     report_signal = QtCore.pyqtSignal(object)
     reference_gas_signal = QtCore.pyqtSignal(object)
+    task_settings_signal = QtCore.pyqtSignal(object)
     prompt_user_signal = QtCore.pyqtSignal()
     job_complete_signal = QtCore.pyqtSignal()
 
@@ -99,6 +100,7 @@ class TaskManager(QtCore.QObject):
         :return:
         """
         self.reference_gas_signal.emit(self.co)
+        self.task_settings_signal.emit(self.co)
         return
 
     def start_data_stream(self):
@@ -133,6 +135,8 @@ class TaskManager(QtCore.QObject):
             self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
             self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
             self.running_task_idx += 1
+            while self.tasks[self.running_task_idx].skip:
+                self.running_task_idx += 1
             self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()

@@ -7,6 +7,7 @@ from PyQt4 import QtCore, QtGui
 from QReferenceGasEditor import QReferenceGasEditorWidget
 from QPlotWidget import QPlotWidget
 from QTaskWizardWidget import QTaskWizardWidget
+from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
 class Window(QtGui.QMainWindow):
@@ -34,6 +35,7 @@ class Window(QtGui.QMainWindow):
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.text_edit.setDocument)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
+        self.tm.task_settings_signal.connect(self.taskEditorWidget.display_task_settings)
         self.tm.prompt_user_signal.connect(self.taskWizardWidget.prompt_user)
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
         self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
@@ -47,10 +49,12 @@ class Window(QtGui.QMainWindow):
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
         self.taskWizardWidget = QTaskWizardWidget()
+        self.taskEditorWidget = QTaskEditorWidget()
         gl = QtGui.QGridLayout()
         gl.addWidget(self.plotWidget, 0, 0)
         gl.addWidget(self.tableWidget, 1, 0)
         gl.addWidget(self.taskWizardWidget, 2, 0)
+        # gl.addWidget(self.taskEditorWidget, 3, 0)
         central_widget = QtGui.QWidget()
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)
