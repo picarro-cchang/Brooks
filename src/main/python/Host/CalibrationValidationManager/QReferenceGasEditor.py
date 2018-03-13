@@ -56,7 +56,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         gl = QtGui.QGridLayout()
         gl.addWidget(self._table, 0, 0)
         gl.addLayout(hb, 1, 0)
-        gb = QtGui.QGroupBox("Reference Gases")
+        gb = QtGui.QGroupBox("Reference Gas Editor")
         gb.setLayout(gl)
         mgl = QtGui.QGridLayout()
         mgl.addWidget(gb,0,0)

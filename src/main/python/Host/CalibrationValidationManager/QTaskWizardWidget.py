@@ -5,8 +5,8 @@ class QTaskWizardWidget(QtGui.QWidget):
     start_run_signal = QtCore.pyqtSignal()
     next_signal = QtCore.pyqtSignal()
     abort_signal = QtCore.pyqtSignal()
-    view_gases_signal = QtCore.pyqtSignal()
-    hide_gases_signal = QtCore.pyqtSignal()
+    view_editors_signal = QtCore.pyqtSignal()
+    hide_editors_signal = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
@@ -25,13 +25,13 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._task_progressbar = QtGui.QProgressBar()
 
         # Set up a two state button
-        self._ref_gases_visible = False
-        self._viewReferenceGasesBtn = QtGui.QPushButton("Show Gases")
+        self._editors_visible = False
+        self._showEditorsBtn = QtGui.QPushButton("Show Editors")
 
         hb = QtGui.QHBoxLayout()
         hb.addWidget(self._abortBtn)
         hb.addStretch(1)
-        hb.addWidget(self._viewReferenceGasesBtn)
+        hb.addWidget(self._showEditorsBtn)
         hb.addWidget(self._viewReportBtn)
         hb.addWidget(self._startRunBtn)
         hb.addWidget(self._nextBtn)
@@ -41,7 +41,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         vb.addWidget(self._task_progressbar)
         vb.addLayout(hb)
 
-        gb = QtGui.QGroupBox("Wizard")
+        gb = QtGui.QGroupBox("Status")
         gb.setLayout(vb)
 
         mgl = QtGui.QGridLayout()
@@ -53,7 +53,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._nextBtn.clicked.connect(self._next_step)
         self._abortBtn.clicked.connect(self._abort)
         self._viewReportBtn.clicked.connect(self._view_report)
-        self._viewReferenceGasesBtn.clicked.connect(self._view_reference_gases_button_clicked)
+        self._showEditorsBtn.clicked.connect(self._show_editors_button_clicked)
 
     def _startup_settings(self):
         """
@@ -122,15 +122,15 @@ class QTaskWizardWidget(QtGui.QWidget):
                                    QtGui.QMessageBox.Ok)
         return
 
-    def _view_reference_gases_button_clicked(self):
-        if self._ref_gases_visible:
-            self._ref_gases_visible = False
-            self._viewReferenceGasesBtn.setText("Show Gases")
-            self.hide_gases_signal.emit()
+    def _show_editors_button_clicked(self):
+        if self._editors_visible:
+            self._editors_visible = False
+            self._showEditorsBtn.setText("Show Editors")
+            self.hide_editors_signal.emit()
         else:
-            self._ref_gases_visible = True
-            self._viewReferenceGasesBtn.setText("Hide Gases")
-            self.view_gases_signal.emit()
+            self._editors_visible = True
+            self._showEditorsBtn.setText("Hide Editors")
+            self.view_editors_signal.emit()
         return
 
     def prompt_user(self):

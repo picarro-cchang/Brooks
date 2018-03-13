@@ -17,7 +17,7 @@ class Window(QtGui.QMainWindow):
         self.styleData = ""
         f = open('styleSheet.qss', 'r')
         self.styleData = f.read()
-        self.setStyleSheet(self.styleData)
+        # self.setStyleSheet(self.styleData)
         f.close()
 
         self.setGeometry(0, 0, 1024, 768)
@@ -41,8 +41,8 @@ class Window(QtGui.QMainWindow):
         self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
-        self.taskWizardWidget.view_gases_signal.connect(self._view_reference_gas_settings)
-        self.taskWizardWidget.hide_gases_signal.connect(self._startup_settings)
+        self.taskWizardWidget.view_editors_signal.connect(self._view_reference_gas_settings)
+        self.taskWizardWidget.hide_editors_signal.connect(self._startup_settings)
 
     def _init_gui(self):
         self.plotWidget = QPlotWidget()
@@ -53,8 +53,8 @@ class Window(QtGui.QMainWindow):
         gl = QtGui.QGridLayout()
         gl.addWidget(self.plotWidget, 0, 0)
         gl.addWidget(self.tableWidget, 1, 0)
-        gl.addWidget(self.taskWizardWidget, 2, 0)
-        # gl.addWidget(self.taskEditorWidget, 3, 0)
+        gl.addWidget(self.taskEditorWidget, 2, 0)
+        gl.addWidget(self.taskWizardWidget, 3, 0)
         central_widget = QtGui.QWidget()
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)
@@ -63,11 +63,13 @@ class Window(QtGui.QMainWindow):
     def _startup_settings(self):
         self.plotWidget.setVisible(True)
         self.tableWidget.setVisible(False)
+        self.taskEditorWidget.setVisible(False)
         return
 
     def _view_reference_gas_settings(self):
         self.plotWidget.setVisible(False)
         self.tableWidget.setVisible(True)
+        self.taskEditorWidget.setVisible(True)
 
     def setUpTasks_(self):
         tm = TaskManager(iniFile="test")
