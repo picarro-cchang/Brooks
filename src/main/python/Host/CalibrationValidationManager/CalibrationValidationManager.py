@@ -17,10 +17,10 @@ class Window(QtGui.QMainWindow):
         self.styleData = ""
         f = open('styleSheet.qss', 'r')
         self.styleData = f.read()
-        # self.setStyleSheet(self.styleData)
+        self.setStyleSheet(self.styleData)
         f.close()
 
-        self.setGeometry(0, 0, 1024, 768)
+        self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
         self.tm = None
         self._init_gui()
