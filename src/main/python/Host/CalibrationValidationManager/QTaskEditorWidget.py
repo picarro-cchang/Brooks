@@ -33,32 +33,25 @@ class QTaskEditorWidget(QtGui.QWidget):
                 tgl.addWidget(cb, row, col+1, QtCore.Qt.AlignLeft)
                 task_id = task_id + 1
 
-        self.linearRegressionRB = QtGui.QRadioButton("3/4 Point Linear Regression")
-        self.spanTestRB = QtGui.QRadioButton("2 Point Span Test")
-        measTypeVB = QtGui.QVBoxLayout()
-        measTypeVB.addWidget(QtGui.QLabel("Validation Type"))
-        measTypeVB.addWidget(self.linearRegressionRB)
-        measTypeVB.addWidget(self.spanTestRB)
-
-        # topHB = QtGui.QHBoxLayout()
-        # topHB.addLayout(tgl)
-        # topHB.addLayout(measTypeVB)
+        self.linearRegressionValidationRB = QtGui.QRadioButton("3 or 4 Gas Linear Regression Validation")
+        self.spanValidationRB = QtGui.QRadioButton("2 Gas Span Validation")
+        self.onePointValidationRB = QtGui.QRadioButton("1 Gas Validation")
+        mhbl = QtGui.QVBoxLayout()
+        mhbl.addWidget(QtGui.QLabel("Validation Type"))
+        mhbl.addWidget(self.onePointValidationRB)
+        mhbl.addWidget(self.spanValidationRB)
+        mhbl.addWidget(self.linearRegressionValidationRB)
 
         bottomHB = QtGui.QHBoxLayout()
-        # bottomHB.addStretch(1)
         bottomHB.addWidget(self._undoBtn)
         bottomHB.addWidget(self._saveBtn)
 
         hb = QtGui.QHBoxLayout()
+        hb.addLayout(mhbl)
+        hb.addStretch(1)
         hb.addLayout(tgl)
         hb.addStretch(1)
-        hb.addLayout(measTypeVB)
-        hb.addStretch(1)
         hb.addLayout(bottomHB)
-
-        # vb = QtGui.QVBoxLayout()
-        # vb.addLayout(topHB)
-        # vb.addLayout(bottomHB)
 
         gb = QtGui.QGroupBox("Task Editor")
         gb.setLayout(hb)
@@ -93,18 +86,22 @@ class QTaskEditorWidget(QtGui.QWidget):
                     idx = self.taskDictCB[taskKey].findText(gas_in_configobj)
                     self.taskDictCB[taskKey].setCurrentIndex(idx)
         if "Linear_Regression" in self.tco["TASK4"]["Analysis"]:
-            self.linearRegressionRB.setChecked(True)
+            self.linearRegressionValidationRB.setChecked(True)
+        elif "Span" in self.tco["TASK4"]["Analysis"]:
+            self.spanValidationRB.setChecked(True)
         else:
-            self.spanTestRB.setChecked(True)
+            self.onePointValidationRB.setChecked(True)
         return
 
     def save_task_settings(self):
         for key, cb in self.taskDictCB.items():
             self.tco[key]["Gas"] = cb.currentText()
-        if self.linearRegressionRB.isChecked():
-            self.tco["TASK4"]["Analysis"] = "Linear_Regression"
+        if self.linearRegressionValidationRB.isChecked():
+            self.tco["TASK4"]["Analysis"] = "Linear_Regression_Validation"
+        elif self.spanValidationRB.isChecked():
+            self.tco["TASK4"]["Analysis"] = "Span_Validation"
         else:
-            self.tco["TASK4"]["Analysis"] = "Span_Test"
+            self.tco["TASK4"]["Analysis"] = "One_Point_Validation"
         self.co["TASKS"] = self.tco
         self.co.write()
         return
