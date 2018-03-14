@@ -1610,6 +1610,9 @@ class Supervisor(object):
         if self.powerDownAfterTermination:
             if sys.platform == "win32":
                 os.system("shutdown -f -s -t 20")
+            elif  sys.platform == "linux2":
+                #os.system("sleep 60; shutdown now")
+                os.system("shutdown -h 1")
             else:
                 pass
 
