@@ -2,6 +2,7 @@
 #
 
 import sys
+import qdarkstyle
 from functools import partial
 from PyQt4 import QtCore, QtGui
 from QReferenceGasEditor import QReferenceGasEditorWidget
@@ -17,7 +18,7 @@ class Window(QtGui.QMainWindow):
         self.styleData = ""
         f = open('styleSheet.qss', 'r')
         self.styleData = f.read()
-        self.setStyleSheet(self.styleData)
+        # self.setStyleSheet(self.styleData)
         f.close()
 
         self.setFixedSize(1024, 768)
@@ -33,7 +34,7 @@ class Window(QtGui.QMainWindow):
 
     def _set_connections(self):
         self.tm.task_countdown_signal.connect(self.update_progressbar)
-        self.tm.report_signal.connect(self.text_edit.setDocument)
+        self.tm.report_signal.connect(self.taskWizardWidget.set_report)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
         self.tm.task_settings_signal.connect(self.taskEditorWidget.display_task_settings)
         self.tm.prompt_user_signal.connect(self.taskWizardWidget.prompt_user)
@@ -131,6 +132,7 @@ class Window(QtGui.QMainWindow):
 
 def run():
     app = QtGui.QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
     GUI = Window()
     sys.exit(app.exec_())
 

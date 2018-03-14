@@ -1,5 +1,31 @@
 from PyQt4 import QtCore, QtGui
 
+class QReportDisplayDialog(QtGui.QDialog):
+    def __init__(self, textDoc = None, parent = None):
+        QtGui.QDialog.__init__(self)
+        self.setFixedSize(1024, 768)
+        self._textEditWidget = QtGui.QTextEdit()
+        self._textEditWidget.setDocument(textDoc)
+        self.setLayout( self._initGui() )
+        self._setConnections()
+        return
+
+    def _initGui(self):
+        self._okBtn = QtGui.QPushButton("OK")
+        self._discardReportBtn = QtGui.QPushButton("Discard Report")
+
+        hb = QtGui.QHBoxLayout()
+        hb.addWidget(self._discardReportBtn)
+        hb.addStretch(1)
+        hb.addWidget(self._okBtn)
+
+        gl = QtGui.QGridLayout()
+        gl.addWidget(self._textEditWidget, 0, 0)
+        gl.addLayout(hb, 1, 0)
+        return gl
+
+    def _setConnections(self):
+        return
 
 class QTaskWizardWidget(QtGui.QWidget):
     start_run_signal = QtCore.pyqtSignal()
@@ -10,6 +36,7 @@ class QTaskWizardWidget(QtGui.QWidget):
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
+        self._report = None                 # QTextDocument object containing the measurement report
         self.setLayout( self._init_gui() )
         self._startup_settings()
         self._set_connections()
@@ -73,7 +100,10 @@ class QTaskWizardWidget(QtGui.QWidget):
         Set the local widgets for this state.
         :return:
         """
-        self._startRunBtn.setDisabled(True)
+        self._report = None
+        self._startRunBtn.setEnabled(False)
+        self._nextBtn.setEnabled(False)
+        self._viewReportBtn.setEnabled(False)
         self._abortBtn.setEnabled(True)
         self.start_run_signal.emit()
 
@@ -115,11 +145,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         return
 
     def _view_report(self):
-        QtGui.QMessageBox.critical(self,
-                                   'Critical',
-                                   "View report code TBD",
-                                   QtGui.QMessageBox.Ok,
-                                   QtGui.QMessageBox.Ok)
+        report_dialog = QReportDisplayDialog(textDoc = self._report, parent = self)
+        report_dialog.exec_()
         return
 
     def _show_editors_button_clicked(self):
@@ -167,4 +194,14 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._text_edit.setText("Job completed, message TBD")
         self._startup_settings()
         self._viewReportBtn.setEnabled(True)
+        return
+
+    def set_report(self, obj):
+        """
+        Receive the report (a QTextDocument) and save it for display.  This object is cleared if a
+        new job is started.
+        :param obj:
+        :return:
+        """
+        self._report = obj
         return
