@@ -1,3 +1,13 @@
+# QTaskEditorWidget
+#
+# This is a Qt based widget to edit the TASKS section of the validation tool ini file.
+# It is harded to handle a maximum of 4 gas sources and 4 measurement tasks.  This
+# limit is also baked into the other widgets that comprise the validation tool.
+#
+# Note that the tool lets one assign gases to a task but this code doesn't validate
+# the selection.  It is possible for a user to assign an undefined gas source to a
+# task resulting in failure of the code.
+#
 from PyQt4 import QtCore, QtGui
 from collections import OrderedDict
 from Host.Common.configobj import ConfigObj
@@ -6,7 +16,6 @@ class QTaskEditorWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
         self.setLayout( self._init_gui() )
-        # self._startup_settings()
         self._set_connections()
         return
 
@@ -15,8 +24,6 @@ class QTaskEditorWidget(QtGui.QWidget):
         self._saveBtn = QtGui.QPushButton("Save")
 
         tgl = QtGui.QGridLayout()
-        # self.taskListCB = []
-        # self.taskListLBL = []
         self.taskDictCB = OrderedDict()
         gases = ["Skip", "GAS0", "GAS1", "GAS2", "GAS3"]
         task_id = 0

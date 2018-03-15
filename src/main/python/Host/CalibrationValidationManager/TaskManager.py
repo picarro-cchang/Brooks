@@ -23,19 +23,30 @@ class TaskManager(QtCore.QObject):
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
         # self.parent = parent
-        self.referenceGases = {}
-        self.tasks = []
-        self.threads = []
+        # self.referenceGases = {}
+        # self.tasks = []
+        # self.threads = []
         self.running_task_idx = None    # Running task idx, None if no jobs running
         self.monitor_data_stream = False
-        self.input_data = {}            # Dict of measured data
-        self.results = {}
+        # self.input_data = {}            # Dict of measured data
+        # self.results = {}
         self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
-        self.loadConfig()
-        self.set_connections()
+        # self.loadConfig()
+        # self.set_connections()
+        self._initAllObjectsAndConnections()
         self.start_data_stream()
         QtCore.QTimer.singleShot(100, self.late_start)
+        return
+
+    def _initAllObjectsAndConnections(self):
+        # self.input_data = {}
+        self.referenceGases = {}
+        self.results = {}
+        self.tasks = []
+        self.threads = []
+        self.loadConfig()
+        self.set_connections()
         return
 
     def loadConfig(self, iniFile = "task_manager.ini"):
@@ -119,6 +130,7 @@ class TaskManager(QtCore.QObject):
         Kick off the first task in the task list
         :return:
         """
+        self._initAllObjectsAndConnections()
         self.running_task_idx = 0
         self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
         self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
