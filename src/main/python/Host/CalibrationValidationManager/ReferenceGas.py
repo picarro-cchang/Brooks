@@ -79,6 +79,7 @@ class ReferenceGas(object):
         self.tankSN = ""        # Tank serial number or some other unique identifier
         self.tankDesc = ""      # Free form field for any user input
         self.gasDict = gasDict  # Save the dict for writing changes back to disk
+        self.zeroAir = ""       # Zero Air needs special treatment in the analysis, use as a string, "Yes" or "No"
 
         # Store the component gases in the order that they appear in the task
         # manager ini file.  The order here sets the order that the gases appear in
@@ -90,6 +91,11 @@ class ReferenceGas(object):
             self.tankName = gasDict["Name"]
         if "SN" in gasDict:
             self.tankSN = gasDict["SN"]
+        if "Zero_Air" in gasDict:
+            if any(substr in gasDict["Zero_Air"] for substr in ["Y", "y", "T", "t"]):
+                self.zeroAir = "Yes"
+            else:
+                self.zeroAir = "No"
 
         # Loop through the list of component gases in this gas mix.
         # The concentration field is required but accuracy is optional.
@@ -162,15 +168,11 @@ class ReferenceGas(object):
         d["SN"] = self.tankSN
         d["Desc"] = self.tankDesc
         d["Vendor"] = self.tankVendor
+        d["Zero_Air"] = self.zeroAir
         for gas_enum, component_gas in self.components.items():
             d[gas_enum.name] = component_gas.getGasConcPpm()
             d[gas_enum.name + " acc."] = component_gas.getGasAccPpm()
         return d
-
-    # def save_reference_gas_details_from_qtable(self, b):
-    #     print(b[0])
-    #     # self.gasDict["Name"] = "Test Name" + self.key
-    #     return (self.key, self.gasDict)
 
     def getGasDetails(self):
         d = {} #collections.OrderedDict()
@@ -178,6 +180,7 @@ class ReferenceGas(object):
         d["Tank_Serial_Number"] = self.tankSN
         d["Tank_Description"] = self.tankDesc
         d["Tank_Vendor"] = self.tankVendor
+        d["Zero_Air"] = self.zeroAir
         d["Gas"] = []
         for gas_enum, component_gas in self.components.items():
             d["Gas"].append([gas_enum.name, component_gas.getGasConcPpm(), component_gas.getGasAccPpm()])
@@ -190,6 +193,7 @@ class ReferenceGas(object):
         str += "{0:20}: {1}\n".format("Tank Serial Number", self.tankSN)
         str += "{0:20}: {1}\n".format("Tank Description", self.tankDesc)
         str += "{0:20}: {1}\n".format("Tank Vendor", self.tankVendor)
+        str += "{0:20}: {1}\n".format("Zero Air", self.zeroAir)
         for i, [gas_name, gas_conc, conc_acc] in enumerate(d["Gas"]):
             if i == 0:
                 try:

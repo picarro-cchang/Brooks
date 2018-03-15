@@ -107,14 +107,18 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.setHorizontalHeaderLabels(sorted(self.rgco.keys()))
         idx = 0
         for k,v in self.rgco.items():
+            labels = []
+            values = []
             if "Desc" not in v:
                 v["Desc"] = ""
             if "Vendor" not in v:
                 v["Vendor"] = ""
+            if "Zero_Air" not in v:
+                v["Zero_Air"] = "No"
             if "Uncertainty" not in v:
                 v["Uncertainty"] = ['-'] * len(v["Component"])
-            labels = ["Name", "SN", "Desc", "Vendor"]
-            values = [v["Name"], v["SN"], v["Desc"], v["Vendor"]]
+            labels.extend(["Name", "SN", "Desc", "Vendor", "Zero_Air"])
+            values.extend([v["Name"], v["SN"], v["Desc"], v["Vendor"], v["Zero_Air"]])
             for i, name in enumerate(v["Component"]):
                 labels.append(name + " ppm")
                 labels.append(name + " acc")
@@ -144,10 +148,10 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.rgco[col_key]["SN"] = str(self.item(1, col).text())
             self.rgco[col_key]["Desc"] = str(self.item(2, col).text())
             self.rgco[col_key]["Vendor"] = str(self.item(3, col).text())
-            # component = []
+            self.rgco[col_key]["Zero_Air"] = str(self.item(4, col).text())
             concentration = []
             uncertainty = []
-            for row in range(4,self.rowCount(),2):
+            for row in range(5, self.rowCount(), 2):
                 concentration.append(str(self.item(row,col).text()))
                 uncertainty.append(str(self.item(row+1,col).text()))
             self.rgco[col_key]["Concentration"] = concentration

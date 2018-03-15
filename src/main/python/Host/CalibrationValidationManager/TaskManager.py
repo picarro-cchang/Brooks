@@ -22,18 +22,10 @@ class TaskManager(QtCore.QObject):
 
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
-        # self.parent = parent
-        # self.referenceGases = {}
-        # self.tasks = []
-        # self.threads = []
         self.running_task_idx = None    # Running task idx, None if no jobs running
         self.monitor_data_stream = False
-        # self.input_data = {}            # Dict of measured data
-        # self.results = {}
         self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
-        # self.loadConfig()
-        # self.set_connections()
         self._initAllObjectsAndConnections()
         self.start_data_stream()
         QtCore.QTimer.singleShot(100, self.late_start)
