@@ -1,6 +1,6 @@
 [CRDS Header]
 FileType=Wavelength Monitor Calibration
-Filename= /home/picarro/SI2000/InstrConfig/Integration/Laser_16260659_NH3.wlm
+Filename= /home/picarro/I2000/InstrConfig/Integration/Laser_16260659_NH3.wlm
 Date=20170413
 Time=031744
 

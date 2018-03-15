@@ -6,6 +6,6 @@
 # Picarro python modules.
 # 
 export PATH=/home/picarro/anaconda2/bin:$PATH
-cd /home/picarro/SI2000/Host/pydCaller/
+cd /home/picarro/I2000/Host/pydCaller/
 python -O Supervisor.py -c ../../AppConfig/Config/Supervisor/supervisorEXE_AMADS_LCT.ini
 

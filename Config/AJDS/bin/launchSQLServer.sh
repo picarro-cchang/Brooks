@@ -6,6 +6,6 @@
 # Picarro python modules.
 # 
 export PATH=/home/picarro/anaconda2/bin:$PATH
-cd /home/picarro/SI2000/Host/WebServer/
+cd /home/picarro/I2000/Host/WebServer/
 python -O SQLiteServer.py -c ./SQLiteDataBase.ini
 

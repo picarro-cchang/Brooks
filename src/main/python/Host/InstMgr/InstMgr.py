@@ -283,6 +283,8 @@ class InstMgr(object):
         self.noSampleMgr = noSampleMgr
         self.flowStarted = False
         self.State = INSTMGR_STATE_RESET
+        self.powerOff = True
+        self.terminateProtectedProcess = True
         self._SetupInstModeDispatcher()
         if __debug__: Log("Loading config options.")
         self.configPath = configPath
@@ -1012,7 +1014,7 @@ class InstMgr(object):
                     if (( sampleMgrStatus & SAMPLEMGR_STATUS_PARKED ) == SAMPLEMGR_STATUS_PARKED ):
                         status = self._StateHandler(EVENT_SHUTDOWN_INST)
                         # ask supervisor to terminate all applications including INSTMGR
-                        self.SupervisorRpc.TerminateApplications(True)
+                        self.SupervisorRpc.TerminateApplications(self.powerOff, self.terminateProtectedProcess)
 
                 if self.MeasuringState in [MEAS_STATE_CONT_MEASURING, MEAS_STATE_BATCH_MEASURING]:
                     try:
@@ -1157,9 +1159,10 @@ class InstMgr(object):
                 return INSTMGR_RPC_FAILED
         else:
             return INSTMGR_RPC_SUCCESS
-    def INSTMGR_ShutdownRpc(self, shutdownType):
+    def INSTMGR_ShutdownRpc(self, shutdownType, shutdown=True):
 
-        powerOff = True
+        self.powerOff = True
+        self.terminateProtectedProcess = True
 
         # stop measuring
         if shutdownType == INSTMGR_SHUTDOWN_PREP_SHIPMENT:
@@ -1173,6 +1176,8 @@ class InstMgr(object):
             # go into PARK State and wait for parking to complete before shutting down instrument
             # SupervisorRpc.TerminateApplications(True) is called within _Monitor once pressure is correct
             status = self._StateHandler(EVENT_PARK)
+            self.powerOff = shutdown
+            self.terminateProtectedProcess = shutdown
             if status == INST_ERROR_OKAY:
                 return status
         elif shutdownType == INSTMGR_SHUTDOWN_HOST_AND_DAS:
@@ -1190,10 +1195,11 @@ class InstMgr(object):
             # Since the Driver is still running we assume the user doesn't want the computer
             # to power down.
             status = self._StateHandler(EVENT_SHUTDOWN_INST)
-            powerOff = False;
+            self.powerOff = False
+            self.terminateProtectedProcess = False
 
         # ask supervisor to terminate all applications including INSTMGR
-        self.SupervisorRpc.TerminateApplications(powerOff)
+        self.SupervisorRpc.TerminateApplications(self.powerOff, self.terminateProtectedProcess)
 
         if status != INST_ERROR_OKAY:
             self._HandleError(status)

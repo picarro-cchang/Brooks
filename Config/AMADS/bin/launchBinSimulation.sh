@@ -6,6 +6,6 @@
 # Picarro python modules.
 # 
 export PATH=/home/picarro/anaconda2/bin:$PATH
-cd /home/picarro/SI2000/Host/pydCaller/
+cd /home/picarro/I2000/Host/pydCaller/
 python -O Supervisor.py -f -c ../../AppConfig/Config/Supervisor/supervisorEXE_CFADS_simulation.ini
 

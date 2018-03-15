@@ -193,12 +193,12 @@ class ModbusScriptEnv(object):
         self._instrument_manager.INSTMGR_StopMeasureRpc()
         
     def MODBUS_ParkInstrument(self):
-        self._instrument_manager.INSTMGR_ShutdownRpc(0)
+        self._instrument_manager.INSTMGR_ShutdownRpc(0, False)
         self.MODBUS_SetError(Errors.NO_ERROR)
         return 1
 
     def MODBUS_ShutdownInstrument(self):
-        self._instrument_manager.INSTMGR_ShutdownRpc(1)
+        self._instrument_manager.INSTMGR_ShutdownRpc(0, True)
         self.MODBUS_SetError(Errors.NO_ERROR)
         return 1
     

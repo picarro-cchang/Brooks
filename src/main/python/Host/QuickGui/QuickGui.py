@@ -934,26 +934,31 @@ class QuickGui(wx.Frame):
         #
         # click ShutDown button -> mode 0
         # click Shutdown button while holding down SHIFT -> mode 1
-        # click Shutdown button while holding down SHIFT + CTRL -> mode 2
+        # click Shutdown button while holding down SHIFT + CTRL -> mode 0
         #
         shutdownMode = 0
-        message = "Do you really want to shutdown the analyzer?"
-        if wx.GetKeyState(wx.WXK_SHIFT) and wx.GetKeyState(wx.WXK_CONTROL):
-            shutdownMode = 2
-        elif wx.GetKeyState(wx.WXK_SHIFT):
-            shutdownMode = 1
+        # Lets only park and we do not need to power Off
+        powerOffAnalyzer = False
+        message = "Do you really want to stop data acquisition?"
+        # if wx.GetKeyState(wx.WXK_SHIFT) and wx.GetKeyState(wx.WXK_CONTROL):
+        #     shutdownMode = 0
+        #     # we dont need power off in this mode, but lets set to default as we need to pass to INSTMGR_ShutdownRpc call
+        #     powerOff = True
+        # elif wx.GetKeyState(wx.WXK_SHIFT):
+        #     shutdownMode = 1
+        #     # we dont need power off in this mode, but lets set to default as we need to pass to INSTMGR_ShutdownRpc call
+        #     powerOff = True
 
-        dialog = wx.MessageDialog(self, message, "Analyzer Shut Down", style=wx.YES_NO | wx.ICON_QUESTION)
+        dialog = wx.MessageDialog(self, message, "", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()
         if retCode == wx.ID_YES:
             try:
                 self.setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
-
-            self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode)
-            payload = {"username": self.currentUser["username"], "action": "Quit software from QuickGui."}
-            self._sendRequest("post", "action", payload, useToken=True)
+            self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode, powerOffAnalyzer)
+            payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
+            self.sendRequest("post", "action", payload, useToken=True)
             self.shutdownButton.Enable(False)
         dialog.Destroy()
         return
