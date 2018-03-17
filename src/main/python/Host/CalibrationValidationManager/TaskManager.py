@@ -22,12 +22,13 @@ class TaskManager(QtCore.QObject):
 
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
+        self.iniFile = iniFile
         self.running_task_idx = None    # Running task idx, None if no jobs running
         self.monitor_data_stream = False
         self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
         self._initAllObjectsAndConnections()
-        self.start_data_stream()
+        # self.start_data_stream()
         QtCore.QTimer.singleShot(100, self.late_start)
         return
 
@@ -41,12 +42,11 @@ class TaskManager(QtCore.QObject):
         self.set_connections()
         return
 
-    def loadConfig(self, iniFile = "task_manager.ini"):
-        self.co = ConfigObj(iniFile)
+    def loadConfig(self):
+        self.co = ConfigObj(self.iniFile)
 
         for key, gasConfObj in self.co["GASES"].items():
             self.referenceGases[key] = ReferenceGas(gasConfObj, key)
-            # self.reference_gas_signal.emit(self.referenceGases)
 
         task_global_settings = {}
         for key, value in self.co["TASKS"].items():
@@ -104,6 +104,7 @@ class TaskManager(QtCore.QObject):
         """
         self.reference_gas_signal.emit(self.co)
         self.task_settings_signal.emit(self.co)
+        self.start_data_stream()
         return
 
     def start_data_stream(self):
@@ -112,10 +113,10 @@ class TaskManager(QtCore.QObject):
         easy for the tasks to access.
         :return:
         """
-        monitor_data_thread = QtCore.QThread()
-        self.ds.moveToThread(monitor_data_thread)
-        monitor_data_thread.started.connect(self.ds.run)
-        monitor_data_thread.start()
+        self.monitor_data_thread = QtCore.QThread()
+        self.ds.moveToThread(self.monitor_data_thread)
+        self.monitor_data_thread.started.connect(self.ds.run)
+        self.monitor_data_thread.start()
 
     def start_work(self):
         """

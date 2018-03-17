@@ -177,6 +177,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
 
 
 def main(args):
+    data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     app = QtGui.QApplication(args)
     table = QReferenceGasEditor(data, 5, 3)
     table.show()

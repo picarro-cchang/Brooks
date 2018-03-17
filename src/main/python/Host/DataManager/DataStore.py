@@ -225,6 +225,7 @@ class DataStoreForQt(QtCore.QObject):
         self.mode = ""
         return
 
+    @QtCore.pyqtSlot()
     def run(self):
         """
         Run continuously grabbing data a storing the n'th most recent values.

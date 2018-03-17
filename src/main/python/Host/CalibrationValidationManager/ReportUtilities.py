@@ -92,6 +92,6 @@ def create_report(settings, reference_gases, results, obj):
     printer.setPageSize(QtGui.QPrinter.Letter)
     printer.setColorMode(QtGui.QPrinter.Color)
     printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
-    printer.setOutputFileName("demo_doc.pdf")
+    printer.setOutputFileName("/home/picarro/demo_doc.pdf")
     myDoc.print_(printer)
     return myDoc

@@ -12,18 +12,19 @@ from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
 class Window(QtGui.QMainWindow):
-    def __init__(self):
+    def __init__(self, iniFile):
         super(Window, self).__init__()
 
-        self.styleData = ""
-        f = open('styleSheet.qss', 'r')
-        self.styleData = f.read()
+        # self.styleData = ""
+        # f = open('styleSheet.qss', 'r')
+        # self.styleData = f.read()
         # self.setStyleSheet(self.styleData)
-        f.close()
+        # f.close()
 
         self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
         self.tm = None
+        self.iniFile = iniFile
         self._init_gui()
         self._startup_settings()
         self.tm = self.setUpTasks_()
@@ -73,7 +74,7 @@ class Window(QtGui.QMainWindow):
         self.taskEditorWidget.setVisible(True)
 
     def setUpTasks_(self):
-        tm = TaskManager(iniFile="test")
+        tm = TaskManager(iniFile=self.iniFile)
         return tm
 
     def start_data_stream_polling(self):
@@ -130,10 +131,11 @@ class Window(QtGui.QMainWindow):
         return
 
 
-def run():
+def main():
     app = QtGui.QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    GUI = Window()
+    GUI = Window(sys.argv[1])
     sys.exit(app.exec_())
 
-run()
+if __name__ == "__main__":
+    main()
