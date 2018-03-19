@@ -44,12 +44,24 @@ def fill_report_template(settings, reference_gases, results):
     # report += "\nResults\n"
     # report += pprint.pformat(results)
     # report += "\n"
+    report += get_formatted_linear_regression_pass_fail_summary(results)
     for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
         report += g.getFormattedGasDetails(e)
     report += get_formatted_linear_regression_results(results)
     report += get_formatted_task_details(settings, reference_gases, results)
     report += "\n"
     return report
+
+def get_formatted_linear_regression_pass_fail_summary(results):
+    str = "{0} {1} {0}\n".format("=" * 15, "Summary")
+    str += "|{0:10}|{1:20}|{2:15}|{3:10}|\n".format("Test", "Acceptance Criteria", "Result", "Status")
+    (zeroMeas, zeroStatus, zeroMin, zeroMax) = results["Zero_Air_Test"][0]  # NEED TO RPT LARGEST AWAY FROM 0.0
+    str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
+    (slope, slope_status, slope_min, slope_max) = results["Slope_Test"]
+    str += "|{0:10}|>{1:5} <{2:5}|{3}|{4}|\n".format("Slope", slope_min, slope_max, slope, slope_status)
+    (measConc, percent_deviation, percent_status, percent_acceptance) = results["Deviation_Test"][0]  # NEED TO RPT MAX DEV.
+    str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    return str
 
 def get_formatted_linear_regression_results(results):
     str = "{0} {1} {0}\n".format("=" * 15, "Linear Regression")

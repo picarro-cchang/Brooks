@@ -79,7 +79,7 @@ class ReferenceGas(object):
         self.tankSN = ""        # Tank serial number or some other unique identifier
         self.tankDesc = ""      # Free form field for any user input
         self.gasDict = gasDict  # Save the dict for writing changes back to disk
-        self.zeroAir = ""       # Zero Air needs special treatment in the analysis, use as a string, "Yes" or "No"
+        self.zeroAir = "No"     # Zero Air needs special treatment in the analysis, use as a string, "Yes" or "No"
 
         # Store the component gases in the order that they appear in the task
         # manager ini file.  The order here sets the order that the gases appear in

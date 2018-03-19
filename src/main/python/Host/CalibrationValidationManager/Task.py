@@ -88,6 +88,7 @@ class Task(QtCore.QObject):
             else:
                 self._results["Gas_Name"] = self._settings["Data_Key"]
                 ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(GasEnum.CH4))
+                zero_air = self._reference_gases[gas_key].zeroAir
                 if "Ref_Conc" in self._results:
                     self._results["Ref_Conc"].append(ref_gas_conc)
                 else:
@@ -96,6 +97,10 @@ class Task(QtCore.QObject):
                     self._results["Gas"].append(gas_key)
                 else:
                     self._results["Gas"] = [gas_key]
+                if "Zero_Air" in self._results:
+                    self._results["Zero_Air"].append(zero_air)
+                else:
+                    self._results["Zero_Air"] = [zero_air]
                 if "Meas_Conc" not in self._results:
                     self._results["Meas_Conc"] = []
                 if "Meas_Conc_Std" not in self._results:
@@ -248,6 +253,50 @@ class Task(QtCore.QObject):
         self._results["slope"] = coeffs[0]
         self._results["intercept"] = coeffs[1]
         self._results["r2"] = r2
+
+        # Find zero air measurements and see if they pass the zero test.
+        #
+        # The output is an array for each zero air measurement.  Normally you only measure it once
+        # but we put in the ability to handle an arbitrary number if the measurement pattern
+        # is repeated like low-high-low-high...
+        # Each array element is a tuple with the measurement, "Pass" or "Fail, and min and max
+        # fail thresholds.
+        #
+        #
+        self._results["Zero_Air_Test"] = []
+        zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
+        zeroAirMax = 0.010
+        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
+            if "Yes" in zeroAirFlag:
+                measConc = self._results["Meas_Conc"][idx]
+                if measConc > zeroAirMin and measConc < zeroAirMax:
+                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))
+                else:
+                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroAirMin, zeroAirMax))
+
+        # Check to see if the slope test passes
+        slope_min = 0.95
+        slope_max = 1.05
+        slope = self._results["slope"]
+        self._results["Slope_Test"] = None
+        if self._results["slope"] > slope_min and self._results["slope"] < slope_max:
+            self._results["Slope_Test"] = (slope, "Pass", slope_min, slope_max)
+        else:
+            self._results["Slope_Test"] = (slope, "Fail", slope_min, slope_max)
+
+        # Check if % deviation of measured vs actual exceed the passing threshold
+        #
+        percent_acceptance = 5.0 # 5%
+        self._results["Deviation_Test"] = []
+        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
+            if "No" in zeroAirFlag:
+                measConc = self._results["Meas_Conc"][idx]
+                refConc = self._results["Ref_Conc"][idx]
+                percent_deviation = abs(100.0*(measConc - refConc)/refConc)
+                if percent_deviation < percent_acceptance :
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
+                else:
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
 
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
         doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
