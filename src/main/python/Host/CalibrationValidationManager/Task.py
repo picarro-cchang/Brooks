@@ -129,7 +129,7 @@ class Task(QtCore.QObject):
             if "Linear_Regression_Validation" in self._settings["Analysis"]:
                 self.linear_regression()
             elif "Span_Validation" in self._settings["Analysis"]:
-                pass
+                self.span_validation()
             elif "One_Point_Validation" in self._settings["Analysis"]:
                 self.one_point_validation()
             else:
@@ -340,7 +340,36 @@ class Task(QtCore.QObject):
         Span test with zero air and one medium to high concentration source.
         :return:
         """
-        print("span validation")
+        self.preanalysis_data_processing()
+
+        self._results["Zero_Air_Test"] = []
+        zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
+        zeroAirMax = 0.010
+        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
+            if "Yes" in zeroAirFlag:
+                measConc = self._results["Meas_Conc"][idx]
+                if measConc > zeroAirMin and measConc < zeroAirMax:
+                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))
+                else:
+                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroAirMin, zeroAirMax))
+
+        # Check if % deviation of measured vs actual exceed the passing threshold
+        #
+        percent_acceptance = 5.0 # 5%
+        self._results["Deviation_Test"] = []
+        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
+            if numpy.isnan(percent_deviation):
+                pass
+            else:
+                measConc = self._results["Meas_Conc"][idx]
+                refConc = self._results["Ref_Conc"][idx]
+                if percent_deviation < percent_acceptance :
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
+                else:
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
+
+        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
+        self.task_report_signal.emit(doc)
         return
 
     def one_point_validation(self):

@@ -42,6 +42,8 @@ def fill_report_template(settings, reference_gases, results):
     if "Linear_Regression_Validation" in settings["Analysis"]:
         report += get_formatted_linear_regression_pass_fail_summary(results)
         report += get_formatted_linear_regression_results(results)
+    if "Span_Validation" in settings["Analysis"]:
+        report += get_formatted_span_pass_fail_summary(results)
     if "One_Point_Validation" in settings["Analysis"]:
         report += get_formatted_one_point_pass_fail_summary(results)
 
@@ -51,6 +53,23 @@ def fill_report_template(settings, reference_gases, results):
         report += g.getFormattedGasDetails(e)
     report += "\n"
     return report
+
+def get_formatted_span_pass_fail_summary(results):
+    str = "{0} {1} {0}\n".format("=" * 15, "Summary")
+    str += "|{0:10}|{1:20}|{2:15}|{3:10}|\n".format("Test", "Acceptance Criteria", "Result", "Status")
+
+    # Sort to show the worst result.
+    # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0.0.
+    sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
+    sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
+    (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
+    str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
+
+    # Sort the percent deviation results so that we show the worst result.
+    sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
+    (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
+    str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    return str
 
 def get_formatted_one_point_pass_fail_summary(results):
     str = "{0} {1} {0}\n".format("=" * 15, "Summary")
