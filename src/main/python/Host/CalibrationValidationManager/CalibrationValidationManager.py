@@ -29,11 +29,16 @@ class Window(QtGui.QMainWindow):
         self._startup_settings()
         self.tm = self.setUpTasks_()
         self.show()
+        QtCore.QTimer.singleShot(100, self._late_start)
+        return
+
+    def _late_start(self):
         self._set_connections()
         self.start_data_stream_polling()
         return
 
     def _set_connections(self):
+        self.closeBtn.clicked.connect(self.close)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.taskWizardWidget.set_report)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
@@ -47,6 +52,12 @@ class Window(QtGui.QMainWindow):
         self.taskWizardWidget.hide_editors_signal.connect(self._startup_settings)
 
     def _init_gui(self):
+        self.closeBtn = QtGui.QPushButton("Close")
+        hb = QtGui.QHBoxLayout()
+        hb.addStretch(1)
+        hb.addWidget(self.closeBtn)
+        hb.addSpacing(10)   # Fudge to line up button with widgets above
+
         self.plotWidget = QPlotWidget()
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
@@ -57,6 +68,7 @@ class Window(QtGui.QMainWindow):
         gl.addWidget(self.tableWidget, 1, 0)
         gl.addWidget(self.taskEditorWidget, 2, 0)
         gl.addWidget(self.taskWizardWidget, 3, 0)
+        gl.addLayout(hb, 4, 0)
         central_widget = QtGui.QWidget()
         central_widget.setLayout(gl)
         self.setCentralWidget(central_widget)
