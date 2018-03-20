@@ -129,7 +129,7 @@ chmod -R 755 $dist_bin_config_directory
 
 # make control file
 cat <<EOM > "$debian_directory/control"
-Package: $project_name
+Package: $project_name-$installer_type
 Version: $raw_version
 Section: science
 Priority: required
