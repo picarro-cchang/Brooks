@@ -125,10 +125,18 @@ class Task(QtCore.QObject):
 
         self._running = True
         aborted_work = False
-        if "Analysis" not in self._settings:
-            self.simple_avg_measurement()
+        if "Analysis" in self._settings:
+            if "Linear_Regression_Validation" in self._settings["Analysis"]:
+                self.linear_regression()
+            elif "Span_Validation" in self._settings["Analysis"]:
+                pass
+            elif "One_Point_Validation" in self._settings["Analysis"]:
+                self.one_point_validation()
+            else:
+                print("Undefined analysis:", self._settings["Analysis"])
         else:
-            self.linear_regression()
+            self.simple_avg_measurement()
+
         if aborted_work:
             self.task_abort_signal.emit(self._my_id)
         else:
@@ -309,16 +317,6 @@ class Task(QtCore.QObject):
         # Check if % deviation of measured vs actual exceed the passing threshold
         #
         percent_acceptance = 5.0 # 5%
-        # self._results["Deviation_Test"] = []
-        # for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-        #     if "No" in zeroAirFlag:
-        #         measConc = self._results["Meas_Conc"][idx]
-        #         refConc = self._results["Ref_Conc"][idx]
-        #         percent_deviation = abs(100.0*(measConc - refConc)/refConc)
-        #         if percent_deviation < percent_acceptance :
-        #             self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
-        #         else:
-        #             self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
         self._results["Deviation_Test"] = []
         for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
             if numpy.isnan(percent_deviation):
@@ -337,5 +335,35 @@ class Task(QtCore.QObject):
         self.task_report_signal.emit(doc)
         return
 
-    def pass_fail(self):
+    def span_validation(self):
+        """
+        Span test with zero air and one medium to high concentration source.
+        :return:
+        """
+        print("span validation")
+        return
+
+    def one_point_validation(self):
+        """
+        Test one known reference gas. No zero air.
+        :return:
+        """
+        self.preanalysis_data_processing()
+        # Check if % deviation of measured vs actual exceed the passing threshold
+        #
+        percent_acceptance = 5.0 # 5%
+        self._results["Deviation_Test"] = []
+        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
+            if numpy.isnan(percent_deviation):
+                pass
+            else:
+                measConc = self._results["Meas_Conc"][idx]
+                refConc = self._results["Ref_Conc"][idx]
+                if percent_deviation < percent_acceptance :
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
+                else:
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
+
+        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
+        self.task_report_signal.emit(doc)
         return

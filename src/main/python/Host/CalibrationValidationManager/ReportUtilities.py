@@ -39,18 +39,27 @@ def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
 
 def fill_report_template(settings, reference_gases, results):
     report = ""
-    # report = "Settings\n"
-    # report += pprint.pformat(settings)
-    # report += "\nResults\n"
-    # report += pprint.pformat(results)
-    # report += "\n"
-    report += get_formatted_linear_regression_pass_fail_summary(results)
+    if "Linear_Regression_Validation" in settings["Analysis"]:
+        report += get_formatted_linear_regression_pass_fail_summary(results)
+        report += get_formatted_linear_regression_results(results)
+    if "One_Point_Validation" in settings["Analysis"]:
+        report += get_formatted_one_point_pass_fail_summary(results)
+
+    report += get_formatted_task_details(settings, reference_gases, results)
+
     for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
         report += g.getFormattedGasDetails(e)
-    report += get_formatted_linear_regression_results(results)
-    report += get_formatted_task_details(settings, reference_gases, results)
     report += "\n"
     return report
+
+def get_formatted_one_point_pass_fail_summary(results):
+    str = "{0} {1} {0}\n".format("=" * 15, "Summary")
+    str += "|{0:10}|{1:20}|{2:15}|{3:10}|\n".format("Test", "Acceptance Criteria", "Result", "Status")
+    # Sort the percent deviation results so that we show the worst result.
+    sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
+    (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
+    str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    return str
 
 def get_formatted_linear_regression_pass_fail_summary(results):
     str = "{0} {1} {0}\n".format("=" * 15, "Summary")
@@ -95,9 +104,10 @@ def get_formatted_task_details(settings, reference_gases, results):
         str += line
     return str
 
-def create_report(settings, reference_gases, results, obj):
-    img = QtGui.QImage()
-    img.loadFromData(obj.getvalue())
+def create_report(settings, reference_gases, results, obj=None):
+    if obj:
+        img = QtGui.QImage()
+        img.loadFromData(obj.getvalue())
 
     myDoc = QtGui.QTextDocument("This is a demo document")
     font = myDoc.defaultFont()
@@ -107,7 +117,8 @@ def create_report(settings, reference_gases, results, obj):
     myDoc.setPlainText(fill_report_template(settings, reference_gases, results))
     cursor = QtGui.QTextCursor(myDoc)
     cursor.movePosition(QtGui.QTextCursor.End)
-    cursor.insertImage(img)
+    if obj:
+        cursor.insertImage(img)
 
     printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
     printer.setPageSize(QtGui.QPrinter.Letter)
