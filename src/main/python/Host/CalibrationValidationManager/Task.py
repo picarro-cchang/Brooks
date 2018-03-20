@@ -87,7 +87,8 @@ class Task(QtCore.QObject):
                 self.skip = True
             else:
                 self._results["Gas_Name"] = self._settings["Data_Key"]
-                ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(GasEnum.CH4))
+                gasEnum = GasEnum[self._settings["Data_Key"]]  # Convert the human readable gas name to the enum form
+                ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(gasEnum))
                 zero_air = self._reference_gases[gas_key].zeroAir
                 if "Ref_Conc" in self._results:
                     self._results["Ref_Conc"].append(ref_gas_conc)
@@ -105,6 +106,8 @@ class Task(QtCore.QObject):
                     self._results["Meas_Conc"] = []
                 if "Meas_Conc_Std" not in self._results:
                     self._results["Meas_Conc_Std"] = []
+                if "Percent_Deviation" not in self._results:
+                    self._results["Percent_Deviation"] = []
 
         return
 
@@ -235,12 +238,31 @@ class Task(QtCore.QObject):
         t.start()
         return
 
+    def preanalysis_data_processing(self):
+        """
+        Generate additional data needed for the final analysis step.
+        :return:
+        """
+        # % deviation
+        self._results["Percent_Deviation"] = []
+        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
+            if "No" in zeroAirFlag:
+                measConc = self._results["Meas_Conc"][idx]
+                refConc = self._results["Ref_Conc"][idx]
+                self._results["Percent_Deviation"].append(abs(100.0*(measConc - refConc)/refConc))
+            else:
+                self._results["Percent_Deviation"].append(numpy.NaN)
+        return
+
+
     def linear_regression(self):
         """
         Linear regression of the reference gas concentration (x) vs the measured
         concentration (y).
         :return: p = slope and offset of best fit line
         """
+        self.preanalysis_data_processing()
+
         x = self._results["Meas_Conc"]
         y = self._results["Ref_Conc"]
         coeffs = numpy.polyfit(x,y,1)
@@ -287,16 +309,28 @@ class Task(QtCore.QObject):
         # Check if % deviation of measured vs actual exceed the passing threshold
         #
         percent_acceptance = 5.0 # 5%
+        # self._results["Deviation_Test"] = []
+        # for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
+        #     if "No" in zeroAirFlag:
+        #         measConc = self._results["Meas_Conc"][idx]
+        #         refConc = self._results["Ref_Conc"][idx]
+        #         percent_deviation = abs(100.0*(measConc - refConc)/refConc)
+        #         if percent_deviation < percent_acceptance :
+        #             self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
+        #         else:
+        #             self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
         self._results["Deviation_Test"] = []
-        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-            if "No" in zeroAirFlag:
+        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
+            if numpy.isnan(percent_deviation):
+                pass
+            else:
                 measConc = self._results["Meas_Conc"][idx]
                 refConc = self._results["Ref_Conc"][idx]
-                percent_deviation = abs(100.0*(measConc - refConc)/refConc)
                 if percent_deviation < percent_acceptance :
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
                 else:
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
+
 
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
         doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
