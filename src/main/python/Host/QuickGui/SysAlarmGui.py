@@ -26,18 +26,20 @@ else:
 AppPath = os.path.abspath(AppPath)
 
 class SysAlarmDialog(wx.Dialog):
-    def __init__(self,mainForm,data,parent,id,title,pos=wx.DefaultPosition,size=wx.DefaultSize,
+    def __init__(self,mainForm,data,parent,id,title,fontDatabase,pos=wx.DefaultPosition,size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self,parent,id,title,pos,size,style)
 
         self.mainForm = mainForm
-        getFontFromIni = mainForm.getFontFromIni
-        setItemFont(self,self.mainForm.getFontFromIni('Dialogs'))
+        # getFontFromIni = mainForm.getFontFromIni
+        # setItemFont(self,self.mainForm.getFontFromIni('Dialogs'))
+        setItemFont(self, fontDatabase.getFontFromIni('Dialogs'))
         self.data = data
         self.vsizer = wx.BoxSizer(wx.VERTICAL)
         sizer = wx.GridBagSizer(hgap=5,vgap=5)
         label = wx.StaticText(self, -1, "Alarm name")
-        setItemFont(label,getFontFromIni('Dialogs'))
+        # setItemFont(label,getFontFromIni('Dialogs'))
+        setItemFont(label, fontDatabase.getFontFromIni('Dialogs'))
 
         sizer.Add(label, pos = (0,0), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border = 5)
         self.name = wx.StaticText(parent=self,id=-1,size=(100,-1))
@@ -59,7 +61,7 @@ class SysAlarmDialog(wx.Dialog):
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
-        setItemFont(btn,getFontFromIni('DialogButtons'))
+        setItemFont(btn, fontDatabase.getFontFromIni('DialogButtons'))
         btn.SetDefault()
         btnsizer.AddButton(btn)
 
@@ -78,7 +80,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
     attrib is a list of wx.ListItemAttr objects for the disabled and enabled alarm text
     DataSource must be the AlarmInterface object which reads the alarm status
     """
-    def __init__(self, parent, id, attrib, DataSource=None, pos=wx.DefaultPosition,
+    def __init__(self, parent, id, attrib, DataSource=None, fontDatabase=None, pos=wx.DefaultPosition,
                  size=wx.DefaultSize, numAlarms=2):
         wx.ListCtrl.__init__(self, parent, id, pos, size,
                              style = wx.LC_REPORT
@@ -102,6 +104,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.currentAlarmColor = ["RED","RED"]
         self._DataSource = DataSource
         self.dataStore = None
+        self.fontDatabase = fontDatabase
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
         self.InsertColumn(1,"Name",width=sx-40-17)
@@ -127,7 +130,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
             self.tipWindow.Close()
         name, enabled = self._DataSource.alarmData[item]
         d = dict(name=name,enabled=enabled)
-        dialog = SysAlarmDialog(self.mainForm,d,None,-1,"Alarm Description")
+        dialog = SysAlarmDialog(self.mainForm,d,None,-1,"Alarm Description",self.fontDatabase)
         retCode = dialog.ShowModal()
         dialog.Destroy()
         if retCode == wx.ID_OK:
