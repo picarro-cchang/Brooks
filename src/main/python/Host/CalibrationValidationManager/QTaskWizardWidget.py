@@ -123,7 +123,6 @@ class QTaskWizardWidget(QtGui.QWidget):
         shutdown activities.
         :return:
         """
-        print("Abort button pressed")
         # put user confirmation dialog here
         # send the abort signal
         # reset the widget states
@@ -134,12 +133,12 @@ class QTaskWizardWidget(QtGui.QWidget):
                                             QtGui.QMessageBox.No)
 
         if result == QtGui.QMessageBox.Yes:
-            print 'Yes.'
             QtGui.QMessageBox.critical(self,
                                        'Critical',
                                        "Abort code TBD",
                                        QtGui.QMessageBox.Ok,
                                        QtGui.QMessageBox.Ok)
+            self.abort_signal.emit()
         else:
             print 'No.'
         return
@@ -194,6 +193,12 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._text_edit.setText("Job completed, message TBD")
         self._startup_settings()
         self._viewReportBtn.setEnabled(True)
+        return
+
+    def job_aborted(self):
+        self._text_edit.setText("Job Aborted")
+        self._startup_settings()
+        self._viewReportBtn.setEnabled(False)
         return
 
     def set_report(self, obj):

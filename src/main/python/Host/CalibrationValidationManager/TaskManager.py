@@ -19,11 +19,13 @@ class TaskManager(QtCore.QObject):
     task_settings_signal = QtCore.pyqtSignal(object)
     prompt_user_signal = QtCore.pyqtSignal()
     job_complete_signal = QtCore.pyqtSignal()
+    job_aborted_signal = QtCore.pyqtSignal()
 
     def __init__(self, iniFile=None):
         super(TaskManager, self).__init__()
         self.iniFile = iniFile
         self.running_task_idx = None    # Running task idx, None if no jobs running
+        self.abort = False              # When true, abort current job then reset
         self.monitor_data_stream = False
         self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
@@ -123,6 +125,7 @@ class TaskManager(QtCore.QObject):
         Kick off the first task in the task list
         :return:
         """
+        self.abort = False
         self._initAllObjectsAndConnections()
         self.running_task_idx = 0
         self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
@@ -136,18 +139,21 @@ class TaskManager(QtCore.QObject):
         to the currently running task.
         :return:
         """
-        if self.running_task_idx < len(self.threads)-1:
-            self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
-            self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
-            self.running_task_idx += 1
-            while self.tasks[self.running_task_idx].skip:
-                self.running_task_idx += 1
-            self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
-            self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
-            self.threads[self.running_task_idx].start()
+        if self.abort:
+            self.job_aborted_signal.emit()
         else:
-            self.job_complete_signal.emit()
-            self.running_task_idx = None
+            if self.running_task_idx < len(self.threads)-1:
+                self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
+                self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
+                self.running_task_idx += 1
+                while self.tasks[self.running_task_idx].skip:
+                    self.running_task_idx += 1
+                self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
+                self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
+                self.threads[self.running_task_idx].start()
+            else:
+                self.job_complete_signal.emit()
+                self.running_task_idx = None
         return
 
     def task_finished_ack_slot(self, task_id):
@@ -168,5 +174,20 @@ class TaskManager(QtCore.QObject):
 
     def is_task_alive_slot(self):
         self.ping_task_signal.emit()
+        return
+
+    def abort_slot(self):
+        """
+        Handle an abort request from the GUI.
+
+        Prompt for user confirmation and if YES give the user instructions.  This part is handled in the
+        QTaskWizardWidget which has the ABORT button.  We get here after the user confirms the choice.
+
+        Abort the current task - immediately if possible - and reset the queue.
+        :return:
+        """
+        self.abort = True
+        for task in self.tasks:
+            task.abort_slot()   # Tells any running task to stop
         return
 

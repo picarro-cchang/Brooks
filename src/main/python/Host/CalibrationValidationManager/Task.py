@@ -46,6 +46,7 @@ class Task(QtCore.QObject):
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
     task_next_signal = QtCore.pyqtSignal()
     task_report_signal = QtCore.pyqtSignal(object)
+    task_stop_clock_signal = QtCore.pyqtSignal()
 
     # Send up a signal if we start a timer and are waiting for user input
     task_prompt_user_signal = QtCore.pyqtSignal()
@@ -64,6 +65,7 @@ class Task(QtCore.QObject):
         self._settings = settings
         self._my_id = my_id
         self._running = False
+        self._abort =   False
         self._results = results
         self.skip = False                   # If true this task is never run
         self.data_source = data_source
@@ -118,13 +120,23 @@ class Task(QtCore.QObject):
         self._my_parent.ping_task_signal.connect(self.ping_slot)
         return
 
+    def abort_slot(self):
+        """
+        Terminate the clock of any running subtask.  _abort prevents execution from passing on to the
+        next subtask.
+        :return:
+        """
+        self._abort = True
+        self.task_stop_clock_signal.emit()      # Stop the clock of any running subtasks
+        self.task_abort_signal.emit(self._my_id)
+        return
+
     def work(self):
         if "Simulation" in self._settings:
             (key, conc) = self._settings["Simulation"]
             self.data_source.setOffset(key, conc)
 
         self._running = True
-        aborted_work = False
         if "Analysis" in self._settings:
             if "Linear_Regression_Validation" in self._settings["Analysis"]:
                 self.linear_regression()
@@ -137,10 +149,8 @@ class Task(QtCore.QObject):
         else:
             self.simple_avg_measurement()
 
-        if aborted_work:
-            self.task_abort_signal.emit(self._my_id)
-        else:
-            self.task_finish_signal.emit(self._my_id)
+        self.task_finish_signal.emit(self._my_id)
+
         self._running = False
         return
 
@@ -161,7 +171,13 @@ class Task(QtCore.QObject):
     # This method is a simple example of how to get an average measurement of a gas.
     #
     def simple_avg_measurement(self):
+        if self._abort:
+            return
+
         self.pre_task_instructions()
+
+        if self._abort:
+            return
 
         if "GasDelayBeforeMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasDelayBeforeMeasureSeconds"]),
@@ -169,14 +185,22 @@ class Task(QtCore.QObject):
                                               self._settings["Data_Key"] +
                                               " to equilibrate:")
             t.tick_signal.connect(self.task_countdown_signal)
+            self.task_stop_clock_signal.connect(t.stop)
             t.start()
+
+        if self._abort:
+            return
 
         if "GasMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasMeasureSeconds"]),
                                   description="Measuring " +
                                               self._settings["Data_Key"])
             t.tick_signal.connect(self.task_countdown_signal)
+            self.task_stop_clock_signal.connect(t.stop)
             t.start()
+
+        if self._abort:
+            return
 
         try:
             timestamps = self.data_source.getList(self._settings["Data_Source"], "time")
@@ -192,7 +216,11 @@ class Task(QtCore.QObject):
         except Exception as e:
             print("Excep: %s" %e)
 
+        if self._abort:
+            return
+
         self.post_task_instructions()
+
         return
 
     def pre_task_instructions(self):
@@ -217,6 +245,7 @@ class Task(QtCore.QObject):
                               description=instructions,
                               busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
+        self.task_stop_clock_signal.connect(t.stop)
         self.task_next_signal.connect(t.stop)
         t.start()
         return
@@ -242,6 +271,7 @@ class Task(QtCore.QObject):
                               description=instructions,
                               busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
+        self.task_stop_clock_signal.connect(t.stop)
         self.task_next_signal.connect(t.stop)
         t.start()
         return

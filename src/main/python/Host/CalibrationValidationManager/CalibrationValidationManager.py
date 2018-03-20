@@ -29,11 +29,11 @@ class Window(QtGui.QMainWindow):
         self._startup_settings()
         self.tm = self.setUpTasks_()
         self.show()
+        self._set_connections()
         QtCore.QTimer.singleShot(100, self._late_start)
         return
 
     def _late_start(self):
-        self._set_connections()
         self.start_data_stream_polling()
         return
 
@@ -45,11 +45,13 @@ class Window(QtGui.QMainWindow):
         self.tm.task_settings_signal.connect(self.taskEditorWidget.display_task_settings)
         self.tm.prompt_user_signal.connect(self.taskWizardWidget.prompt_user)
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
+        self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
         self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
         self.taskWizardWidget.view_editors_signal.connect(self._view_reference_gas_settings)
         self.taskWizardWidget.hide_editors_signal.connect(self._startup_settings)
+        self.taskWizardWidget.abort_signal.connect(self.tm.abort_slot)
 
     def _init_gui(self):
         self.closeBtn = QtGui.QPushButton("Close")
