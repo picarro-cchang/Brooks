@@ -1,3 +1,4 @@
+import subprocess32
 from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
@@ -53,6 +54,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._nextBtn = QtGui.QPushButton("Next")
         self._abortBtn = QtGui.QPushButton("Abort")
         self._viewReportBtn = QtGui.QPushButton("View Report")
+        self._openFileManagerBtn = QtGui.QPushButton("Download Report")
         self._text_edit = QtGui.QTextEdit("Instructions to user TBD")
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
@@ -65,6 +67,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         hb.addWidget(self._abortBtn)
         hb.addStretch(1)
         hb.addWidget(self._showEditorsBtn)
+        hb.addWidget(self._openFileManagerBtn)
         hb.addWidget(self._viewReportBtn)
         hb.addWidget(self._startRunBtn)
         hb.addWidget(self._nextBtn)
@@ -87,6 +90,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._abortBtn.clicked.connect(self._abort)
         self._viewReportBtn.clicked.connect(self._view_report)
         self._showEditorsBtn.clicked.connect(self._show_editors_button_clicked)
+        self._openFileManagerBtn.clicked.connect(self._open_filemanager)
 
     def _startup_settings(self):
         """
@@ -152,6 +156,16 @@ class QTaskWizardWidget(QtGui.QWidget):
     def _view_report(self):
         report_dialog = QReportDisplayDialog(fileName = self._reportFileName, textDoc = self._reportTextObj, parent = self)
         report_dialog.exec_()
+        return
+
+    def _open_filemanager(self):
+        cmd = ["python",
+               "/usr/local/picarro/qtLauncher/FileManager/main.py",
+               "--dir",
+               "/home/picarro/I2000/Log/ValidationReport",
+               "--name",
+               "ValidationReport"]
+        p = subprocess32.Popen(cmd, stdin=None, stdout=None, stderr=None)
         return
 
     def _show_editors_button_clicked(self):
