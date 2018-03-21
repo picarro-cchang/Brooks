@@ -4,6 +4,10 @@ matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 
 import io
+import glob
+import os
+import re
+from datetime import datetime, date
 from PyQt4 import QtCore, QtGui
 
 def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
@@ -123,7 +127,59 @@ def get_formatted_task_details(settings, reference_gases, results):
         str += line
     return str
 
+def getDateNow():
+    """
+    Return the current date in YYYYMMDD format.
+    The timezone is the local (system) setting.
+    """
+    dateStr = date.today().strftime("%Y%m%d")
+    return dateStr
+
+def getFileCounter(path, which = 0):
+    """
+    Examine the files in the directory defined by 'path' and determine
+    the counter to apply to the next file to be created.
+
+    'which' determines this method returns the counter for the oldest
+    file in the path, the newest (or current), or the next (newest + 1).
+    The default is to return the next file counter for new file creation.
+
+    which = 0 : next
+    which = 1 : newest
+    which = 2 : oldest
+    """
+
+    # If there are no file in the path, start with file '0000'
+    nextCounter = 0
+
+    # '*' allows matching to filenames that have a compression extension
+    # such as '.gz.'
+    generalFileName = getDateNow() + "_CH4_" + "[0-9][0-9][0-9][0-9]" + "*"
+    fileList = glob.glob(os.path.join(path, generalFileName))
+
+    # If one or more valid counters are found, return the max + 1
+    # as a zero padded 4 character string.
+    # If no matches are found, we start with the first file '0000'.
+    #
+    myRegExp = r"(\d{4})\." + "pdf"
+    counterList = [ int(re.search(myRegExp, x).group(1)) for x in fileList]
+    if counterList:
+        if 0 == which:
+            nextCounter = max(counterList) + 1
+        elif 1 == which:
+            nextCounter = max(counterList)
+        elif 2 == which:
+            nextCounter = min(counterList)
+        else:
+            print("Error in FileManager::getFileCounter")
+    return str(nextCounter).zfill(4)
+
 def create_report(settings, reference_gases, results, obj=None):
+
+    destinationPath = "/home/picarro/I2000/Log/ValidationReport"
+    counter = getFileCounter(destinationPath, 0)
+    outputFileName = "{0}/{1}_{2}_{3}.pdf".format(destinationPath, getDateNow(), settings["Data_Key"], counter)
+
     if obj:
         img = QtGui.QImage()
         img.loadFromData(obj.getvalue())
@@ -143,6 +199,6 @@ def create_report(settings, reference_gases, results, obj=None):
     printer.setPageSize(QtGui.QPrinter.Letter)
     printer.setColorMode(QtGui.QPrinter.Color)
     printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
-    printer.setOutputFileName("/home/picarro/demo_doc.pdf")
+    printer.setOutputFileName(outputFileName)
     myDoc.print_(printer)
-    return myDoc
+    return (outputFileName, myDoc)

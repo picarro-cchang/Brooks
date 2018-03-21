@@ -45,7 +45,7 @@ class Task(QtCore.QObject):
     task_heartbeat_signal = QtCore.pyqtSignal(str)
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
     task_next_signal = QtCore.pyqtSignal()
-    task_report_signal = QtCore.pyqtSignal(object)
+    task_report_signal = QtCore.pyqtSignal(str, object)
     task_stop_clock_signal = QtCore.pyqtSignal()
 
     # Send up a signal if we start a timer and are waiting for user input
@@ -361,8 +361,8 @@ class Task(QtCore.QObject):
 
 
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
-        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
-        self.task_report_signal.emit(doc)
+        (fileName, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
+        self.task_report_signal.emit(fileName, doc)
         return
 
     def span_validation(self):

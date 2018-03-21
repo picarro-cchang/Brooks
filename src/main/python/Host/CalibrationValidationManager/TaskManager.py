@@ -14,7 +14,7 @@ class TaskManager(QtCore.QObject):
     ping_task_signal = QtCore.pyqtSignal()
     next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
-    report_signal = QtCore.pyqtSignal(object)
+    report_signal = QtCore.pyqtSignal(str, object)
     reference_gas_signal = QtCore.pyqtSignal(object)
     task_settings_signal = QtCore.pyqtSignal(object)
     prompt_user_signal = QtCore.pyqtSignal()

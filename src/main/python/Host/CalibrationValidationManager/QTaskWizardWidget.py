@@ -1,30 +1,35 @@
 from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
-    def __init__(self, textDoc = None, parent = None):
+    def __init__(self, fileName = None, textDoc = None, parent = None):
         QtGui.QDialog.__init__(self)
         self.setFixedSize(1024, 768)
         self._textEditWidget = QtGui.QTextEdit()
         self._textEditWidget.setDocument(textDoc)
+        self._fileNameWidget = QtGui.QLineEdit(fileName)
         self.setLayout( self._initGui() )
         self._setConnections()
         return
 
     def _initGui(self):
         self._okBtn = QtGui.QPushButton("OK")
-        self._discardReportBtn = QtGui.QPushButton("Discard Report")
+
+        fnhb = QtGui.QHBoxLayout()
+        fnhb.addWidget(QtGui.QLabel("Validation Report File:"))
+        fnhb.addWidget(self._fileNameWidget)
 
         hb = QtGui.QHBoxLayout()
-        hb.addWidget(self._discardReportBtn)
         hb.addStretch(1)
         hb.addWidget(self._okBtn)
 
         gl = QtGui.QGridLayout()
         gl.addWidget(self._textEditWidget, 0, 0)
-        gl.addLayout(hb, 1, 0)
+        gl.addLayout(fnhb, 1, 0)
+        gl.addLayout(hb, 2, 0)
         return gl
 
     def _setConnections(self):
+        self._okBtn.clicked.connect(self.close)
         return
 
 class QTaskWizardWidget(QtGui.QWidget):
@@ -36,7 +41,8 @@ class QTaskWizardWidget(QtGui.QWidget):
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
-        self._report = None                 # QTextDocument object containing the measurement report
+        self._reportTextObj = None          # QTextDocument object containing the measurement report
+        self._reportFileName = None         # File name of the PDF doc containing _reportTextObj
         self.setLayout( self._init_gui() )
         self._startup_settings()
         self._set_connections()
@@ -100,7 +106,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         Set the local widgets for this state.
         :return:
         """
-        self._report = None
+        self._reportTextObj = None
         self._startRunBtn.setEnabled(False)
         self._nextBtn.setEnabled(False)
         self._viewReportBtn.setEnabled(False)
@@ -135,7 +141,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         if result == QtGui.QMessageBox.Yes:
             QtGui.QMessageBox.critical(self,
                                        'Critical',
-                                       "Abort code TBD",
+                                       "Close all gas valves then click OK",
                                        QtGui.QMessageBox.Ok,
                                        QtGui.QMessageBox.Ok)
             self.abort_signal.emit()
@@ -144,7 +150,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         return
 
     def _view_report(self):
-        report_dialog = QReportDisplayDialog(textDoc = self._report, parent = self)
+        report_dialog = QReportDisplayDialog(fileName = self._reportFileName, textDoc = self._reportTextObj, parent = self)
         report_dialog.exec_()
         return
 
@@ -201,12 +207,13 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._viewReportBtn.setEnabled(False)
         return
 
-    def set_report(self, obj):
+    def set_report(self, fileName, obj):
         """
         Receive the report (a QTextDocument) and save it for display.  This object is cleared if a
         new job is started.
         :param obj:
         :return:
         """
-        self._report = obj
+        self._reportFileName = fileName
+        self._reportTextObj = obj
         return
