@@ -133,7 +133,7 @@ Package: $project_name-$installer_type
 Version: $raw_version
 Section: science
 Priority: required
-Architecture: all
+Architecture: amd64
 Depends: 
 Maintainer: Picarro instrument software team
 Description: Picarro Host Software for Semiconductor Industry 
