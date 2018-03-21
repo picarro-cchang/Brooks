@@ -106,6 +106,7 @@ nonCythonizeIncludeIconFolderList[27]="AddOns/DatViewer/Manual/_images/*.*"
 nonCythonizeIncludeIconFolderList[28]="AddOns/DatViewer/Manual/_sources/*.*"
 nonCythonizeIncludeIconFolderList[29]="AddOns/DatViewer/Manual/_static/*.*"
 nonCythonizeIncludeIconFolderList[30]="Host/CalibrationValidationManager/*.py"
+nonCythonizeIncludeIconFolderList[31]="Host/Utilities/SelfCalibration/*.*"
 
 #Take cares of file name with spaces
 IFS=$'\n'  
