@@ -42,7 +42,7 @@ def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
     return buf
 
 def fill_report_template(settings, reference_gases, results):
-    report = ""
+    report = get_formatted_user_information(results)
     if "Linear_Regression_Validation" in settings["Analysis"]:
         report += get_formatted_linear_regression_pass_fail_summary(results)
         report += get_formatted_linear_regression_results(results)
@@ -57,6 +57,14 @@ def fill_report_template(settings, reference_gases, results):
         report += g.getFormattedGasDetails(e)
     report += "\n"
     return report
+
+def get_formatted_user_information(results):
+    str = "{0} {1} {0}\n".format("=" * 15, "Report Authentication")
+    str += "{0:20}:{1}\n".format("Username", results["username"])
+    str += "{0:20}:{1}\n".format("Full name", results["fullname"])
+    str += "{0:20}:{1}\n".format("Start time", results["start_time"])
+    str += "{0:20}:{1}\n".format("End time", results["end_time"])
+    return str
 
 def get_formatted_span_pass_fail_summary(results):
     str = "{0} {1} {0}\n".format("=" * 15, "Summary")

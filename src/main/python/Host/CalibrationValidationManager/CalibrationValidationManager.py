@@ -12,19 +12,14 @@ from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
 class Window(QtGui.QMainWindow):
-    def __init__(self, iniFile):
+    def __init__(self, iniFile, username=None, fullname=None):
         super(Window, self).__init__()
-
-        # self.styleData = ""
-        # f = open('styleSheet.qss', 'r')
-        # self.styleData = f.read()
-        # self.setStyleSheet(self.styleData)
-        # f.close()
-
         self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
         self.tm = None
         self.iniFile = iniFile
+        self.username = username
+        self.fullname = fullname
         self._init_gui()
         self._startup_settings()
         self.tm = self.setUpTasks_()
@@ -88,7 +83,7 @@ class Window(QtGui.QMainWindow):
         self.taskEditorWidget.setVisible(True)
 
     def setUpTasks_(self):
-        tm = TaskManager(iniFile=self.iniFile)
+        tm = TaskManager(iniFile=self.iniFile, username=self.username, fullname=self.fullname)
         return tm
 
     def start_data_stream_polling(self):
@@ -144,11 +139,40 @@ class Window(QtGui.QMainWindow):
             pass
         return
 
+def HandleCommandSwitches():
+    import getopt
+
+    shortOpts = 'c:'
+    longOpts = ["ini=", "username=", "fullname="]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, data:
+        sys.exit(1)
+
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    configFile = ""
+    if "--ini" in options:
+        configFile = options["--ini"]
+
+    username = ""
+    if "--username" in options:
+        username = options["--username"]
+
+    fullname = ""
+    if "--fullname" in options:
+        fullname = options["--fullname"]
+
+    return (configFile, username, fullname)
 
 def main():
     app = QtGui.QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    GUI = Window(sys.argv[1])
+    (configFile, username, fullname) = HandleCommandSwitches()
+    # GUI = Window(sys.argv[1])
+    GUI = Window(iniFile=configFile, username=username, fullname=fullname)
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

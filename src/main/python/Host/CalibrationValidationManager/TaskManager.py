@@ -1,8 +1,8 @@
 # TaskManager
 
-
-# from PyQt4.QtCore import QObject, pyqtSignal
 import copy
+import requests
+import datetime
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
@@ -21,9 +21,11 @@ class TaskManager(QtCore.QObject):
     job_complete_signal = QtCore.pyqtSignal()
     job_aborted_signal = QtCore.pyqtSignal()
 
-    def __init__(self, iniFile=None):
+    def __init__(self, iniFile=None, username=None, fullname=None):
         super(TaskManager, self).__init__()
         self.iniFile = iniFile
+        self.username = username
+        self.fullname = fullname
         self.running_task_idx = None    # Running task idx, None if no jobs running
         self.abort = False              # When true, abort current job then reset
         self.monitor_data_stream = False
@@ -37,7 +39,7 @@ class TaskManager(QtCore.QObject):
     def _initAllObjectsAndConnections(self):
         # self.input_data = {}
         self.referenceGases = {}
-        self.results = {}
+        self.results = {"username": self.username, "fullname": self.fullname, "start_time": "aaa"}
         self.tasks = []
         self.threads = []
         self.loadConfig()
@@ -107,6 +109,7 @@ class TaskManager(QtCore.QObject):
         self.reference_gas_signal.emit(self.co)
         self.task_settings_signal.emit(self.co)
         self.start_data_stream()
+        self.hostSession = requests.Session()
         return
 
     def start_data_stream(self):
@@ -127,6 +130,7 @@ class TaskManager(QtCore.QObject):
         """
         self.abort = False
         self._initAllObjectsAndConnections()
+        self.results["start_time"] = str(datetime.datetime.now())
         self.running_task_idx = 0
         self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
         self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
@@ -190,4 +194,3 @@ class TaskManager(QtCore.QObject):
         for task in self.tasks:
             task.abort_slot()   # Tells any running task to stop
         return
-

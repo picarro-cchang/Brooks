@@ -31,7 +31,7 @@ import matplotlib
 matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 
-import io
+import datetime
 import numpy
 from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
@@ -138,6 +138,7 @@ class Task(QtCore.QObject):
 
         self._running = True
         if "Analysis" in self._settings:
+            self._results["end_time"] = str(datetime.datetime.now())
             if "Linear_Regression_Validation" in self._settings["Analysis"]:
                 self.linear_regression()
             elif "Span_Validation" in self._settings["Analysis"]:
