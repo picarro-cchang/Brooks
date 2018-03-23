@@ -1443,10 +1443,10 @@ class QuickGui(wx.Frame):
         obj = evt.GetEventObject()
         label = obj.GetLabelText(menu_id)
         cmd = self.externalTools[label]['cmd'].split()
-        cmd.append("--username=" + username)
-        cmd.append("--fullname=" + first_name + " " + last_name)
+        if "CalibrationValidationManager" in cmd:
+            cmd.append("--username=" + username)
+            cmd.append("--fullname=" + first_name + " " + last_name)
         subprocess.Popen(cmd)
-        # subprocess.Popen(self.externalTools[label]['cmd'].split())
         return
 
     def _OnValveSeq(self, evt):
