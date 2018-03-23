@@ -129,11 +129,11 @@ chmod -R 755 $dist_bin_config_directory
 
 # make control file
 cat <<EOM > "$debian_directory/control"
-Package: $project_name
+Package: $project_name-$installer_type
 Version: $raw_version
 Section: science
 Priority: required
-Architecture: all
+Architecture: amd64
 Depends: 
 Maintainer: Picarro instrument software team
 Description: Picarro Host Software for Semiconductor Industry 
