@@ -22,11 +22,11 @@ class TaskManager(QtCore.QObject):
     job_complete_signal = QtCore.pyqtSignal()
     job_aborted_signal = QtCore.pyqtSignal()
 
-    def __init__(self, iniFile=None, db=None, username=None, fullname=None):
+    def __init__(self, iniFile=None, db=None): #, username=None, fullname=None):
         super(TaskManager, self).__init__()
         self.iniFile = iniFile
-        self.username = username
-        self.fullname = fullname
+        self.username = None
+        self.fullname = None
         self.running_task_idx = None    # Running task idx, None if no jobs running
         self.abort = False              # When true, abort current job then reset
         self.monitor_data_stream = False
@@ -39,9 +39,19 @@ class TaskManager(QtCore.QObject):
         return
 
     def _initAllObjectsAndConnections(self):
-        # self.input_data = {}
+        firstname = "(No firstname)"
+        lastname = "(No lastname)"
+        userInfo = self.db._send_request("get", "system", {'command': 'get_current_user'})
+        username = userInfo["username"]
+        if userInfo["first_name"]:
+            firstname = userInfo["first_name"]
+        if userInfo["last_name"]:
+            lastname = userInfo["last_name"]
+        self.username = username
+        self.fullname = firstname + " " + lastname
+        self.results = {"username": self.username, "fullname": self.fullname, "start_time": "---"}
+
         self.referenceGases = {}
-        self.results = {"username": self.username, "fullname": self.fullname, "start_time": "aaa"}
         self.tasks = []
         self.threads = []
         self.loadConfig()

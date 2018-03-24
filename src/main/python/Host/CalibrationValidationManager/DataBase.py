@@ -48,8 +48,8 @@ def logout():
     return return_dict
 
 def log(action):
-    # if USER_NAME is None or SESSION_TOKEN is None:
-    #     return {"error": "Cannot log before login!"}
+    if USER_NAME is None or SESSION_TOKEN is None:
+        return {"error": "Cannot log before login!"}
 
     payload = {'username': USER_NAME,
                'action': action }
