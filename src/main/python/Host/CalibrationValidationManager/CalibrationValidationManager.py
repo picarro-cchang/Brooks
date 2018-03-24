@@ -3,6 +3,9 @@
 
 import sys
 import qdarkstyle
+from PasswordDialog import PasswordDialog
+from QLoginDialog import QLoginDialog
+import DataBase
 from functools import partial
 from PyQt4 import QtCore, QtGui
 from QReferenceGasEditor import QReferenceGasEditorWidget
@@ -16,6 +19,7 @@ class Window(QtGui.QMainWindow):
         super(Window, self).__init__()
         self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
+        self._db = DataBase
         self.tm = None
         self.iniFile = iniFile
         self.username = username
@@ -23,17 +27,19 @@ class Window(QtGui.QMainWindow):
         self._init_gui()
         self._startup_settings()
         self.tm = self.setUpTasks_()
-        self.show()
         self._set_connections()
         QtCore.QTimer.singleShot(100, self._late_start)
         return
 
     def _late_start(self):
+        self.display_login_dialog()
+        self.show()
         self.start_data_stream_polling()
         return
 
     def _set_connections(self):
         self.closeBtn.clicked.connect(self.close)
+        self.loginBtn.clicked.connect(self.display_login_dialog)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.taskWizardWidget.set_report)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
@@ -50,9 +56,11 @@ class Window(QtGui.QMainWindow):
 
     def _init_gui(self):
         self.closeBtn = QtGui.QPushButton("Close")
+        self.loginBtn = QtGui.QPushButton("Login")
         hb = QtGui.QHBoxLayout()
         hb.addStretch(1)
         hb.addWidget(self.closeBtn)
+        hb.addWidget(self.loginBtn)
         hb.addSpacing(10)   # Fudge to line up button with widgets above
 
         self.plotWidget = QPlotWidget()
@@ -82,8 +90,15 @@ class Window(QtGui.QMainWindow):
         self.tableWidget.setVisible(True)
         self.taskEditorWidget.setVisible(True)
 
+    def display_login_dialog(self):
+        ld = QLoginDialog(self)
+        ret = ld.exec_()
+        if ret == 0:
+            self.close()
+        return
+
     def setUpTasks_(self):
-        tm = TaskManager(iniFile=self.iniFile, username=self.username, fullname=self.fullname)
+        tm = TaskManager(iniFile=self.iniFile, db=self._db, username=self.username, fullname=self.fullname)
         return tm
 
     def start_data_stream_polling(self):

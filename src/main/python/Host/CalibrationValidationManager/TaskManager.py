@@ -3,6 +3,7 @@
 import copy
 import requests
 import datetime
+import DataBase
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
@@ -21,7 +22,7 @@ class TaskManager(QtCore.QObject):
     job_complete_signal = QtCore.pyqtSignal()
     job_aborted_signal = QtCore.pyqtSignal()
 
-    def __init__(self, iniFile=None, username=None, fullname=None):
+    def __init__(self, iniFile=None, db=None, username=None, fullname=None):
         super(TaskManager, self).__init__()
         self.iniFile = iniFile
         self.username = username
@@ -31,6 +32,7 @@ class TaskManager(QtCore.QObject):
         self.monitor_data_stream = False
         self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
+        self.db = db
         self._initAllObjectsAndConnections()
         # self.start_data_stream()
         QtCore.QTimer.singleShot(100, self.late_start)
@@ -128,6 +130,9 @@ class TaskManager(QtCore.QObject):
         Kick off the first task in the task list
         :return:
         """
+        # self.db.login('admin','admin','TaskManager')
+        self.db.log("Test Message in task manager, start work")
+
         self.abort = False
         self._initAllObjectsAndConnections()
         self.results["start_time"] = str(datetime.datetime.now())

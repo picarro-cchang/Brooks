@@ -325,8 +325,8 @@ class Task(QtCore.QObject):
         #
         #
         self._results["Zero_Air_Test"] = []
-        zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
-        zeroAirMax = 0.010
+        zeroAirMin = self._settings["ZERO_PPM"][0] #-0.005 # -0.005 PPM or -5 PPB
+        zeroAirMax = self._settings["ZERO_PPM"][1]
         for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
             if "Yes" in zeroAirFlag:
                 measConc = self._results["Meas_Conc"][idx]
