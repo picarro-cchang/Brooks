@@ -1432,20 +1432,10 @@ class QuickGui(wx.Frame):
         return
 
     def _OnExternalTools(self, evt):
-        username = self.currentUser["username"]
-        first_name = "J."
-        last_name = "Doe"
-        if self.currentUser["first_name"]:
-            first_name = self.currentUser["first_name"]
-        if self.currentUser["last_name"]:
-            last_name = self.currentUser["last_name"]
         menu_id = evt.GetId()
         obj = evt.GetEventObject()
         label = obj.GetLabelText(menu_id)
         cmd = self.externalTools[label]['cmd'].split()
-        if "CalibrationValidationManager" in cmd:
-            cmd.append("--username=" + username)
-            cmd.append("--fullname=" + first_name + " " + last_name)
         subprocess.Popen(cmd)
         return
 

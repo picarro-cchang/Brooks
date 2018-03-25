@@ -1,4 +1,5 @@
 import subprocess32
+import QGuiText
 from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
@@ -55,7 +56,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._abortBtn = QtGui.QPushButton("Abort")
         self._viewReportBtn = QtGui.QPushButton("View Report")
         self._openFileManagerBtn = QtGui.QPushButton("Download Report")
-        self._text_edit = QtGui.QTextEdit("Instructions to user TBD")
+        self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text())
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
@@ -171,10 +172,12 @@ class QTaskWizardWidget(QtGui.QWidget):
     def _show_editors_button_clicked(self):
         if self._editors_visible:
             self._editors_visible = False
+            self._text_edit.setText(QGuiText.welcome_text())
             self._showEditorsBtn.setText("Show Editors")
             self.hide_editors_signal.emit()
         else:
             self._editors_visible = True
+            self._text_edit.setText(QGuiText.editor_instructions())
             self._showEditorsBtn.setText("Hide Editors")
             self.view_editors_signal.emit()
         return

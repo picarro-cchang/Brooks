@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 
 import datetime
 import numpy
+import QGuiText
 from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
@@ -182,9 +183,7 @@ class Task(QtCore.QObject):
 
         if "GasDelayBeforeMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasDelayBeforeMeasureSeconds"]),
-                                  description="Waiting for " +
-                                              self._settings["Data_Key"] +
-                                              " to equilibrate:")
+                                  description=QGuiText.equilibrating_text(self._settings["Data_Key"]))
             t.tick_signal.connect(self.task_countdown_signal)
             self.task_stop_clock_signal.connect(t.stop)
             t.start()
@@ -194,8 +193,7 @@ class Task(QtCore.QObject):
 
         if "GasMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasMeasureSeconds"]),
-                                  description="Measuring " +
-                                              self._settings["Data_Key"])
+                                  description=QGuiText.measuring_text(self._settings["Data_Key"]))
             t.tick_signal.connect(self.task_countdown_signal)
             self.task_stop_clock_signal.connect(t.stop)
             t.start()
@@ -241,7 +239,9 @@ class Task(QtCore.QObject):
         if "Pre_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Pre_Task_Delay_Sec"])
             busy = False
-        instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
+        # instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
+        tank = self._reference_gases[self._settings["Gas"]].tankName
+        instructions = QGuiText.pre_task_instructions(tank, self._settings["Data_Key"])
         t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions,
                               busy_hint = busy)
@@ -267,7 +267,8 @@ class Task(QtCore.QObject):
         if "Post_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Post_Task_Delay_Sec"])
             busy = False
-        instructions = "Generic message from Task {0}: Close the reference gas valve and then click NEXT".format(self._my_id)
+        # instructions = "Generic message from Task {0}: Close the reference gas valve and then click NEXT".format(self._my_id)
+        instructions = QGuiText.post_task_instructions()
         t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions,
                               busy_hint = busy)
