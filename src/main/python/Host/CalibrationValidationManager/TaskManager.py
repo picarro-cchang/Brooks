@@ -22,7 +22,7 @@ class TaskManager(QtCore.QObject):
     job_complete_signal = QtCore.pyqtSignal()
     job_aborted_signal = QtCore.pyqtSignal()
 
-    def __init__(self, iniFile=None, db=None): #, username=None, fullname=None):
+    def __init__(self, iniFile=None, db=None):
         super(TaskManager, self).__init__()
         self.iniFile = iniFile
         self.username = None
@@ -34,7 +34,6 @@ class TaskManager(QtCore.QObject):
         self.ds = DataStoreForQt()
         self.db = db
         self._initAllObjectsAndConnections()
-        # self.start_data_stream()
         QtCore.QTimer.singleShot(100, self.late_start)
         return
 
@@ -111,6 +110,7 @@ class TaskManager(QtCore.QObject):
             task.task_heartbeat_signal.connect(self.task_heartbeat_slot)
             task.task_countdown_signal.connect(self.task_countdown_slot)
             task.task_report_signal.connect(self.report_signal)
+            task.task_report_signal.connect(self.record_report_in_history_log_slot)
         return
 
     def late_start(self):
@@ -140,8 +140,8 @@ class TaskManager(QtCore.QObject):
         Kick off the first task in the task list
         :return:
         """
-        # self.db.login('admin','admin','TaskManager')
-        self.db.log("Test Message in task manager, start work")
+        logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+        self.db.log(logStr)
 
         self.abort = False
         self._initAllObjectsAndConnections()
@@ -159,6 +159,8 @@ class TaskManager(QtCore.QObject):
         :return:
         """
         if self.abort:
+            logStr = "Aborting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+            self.db.log(logStr)
             self.job_aborted_signal.emit()
         else:
             if self.running_task_idx < len(self.threads)-1:
@@ -171,6 +173,8 @@ class TaskManager(QtCore.QObject):
                 self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
                 self.threads[self.running_task_idx].start()
             else:
+                logStr = "Completed surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+                self.db.log(logStr)
                 self.job_complete_signal.emit()
                 self.running_task_idx = None
         return
@@ -208,4 +212,9 @@ class TaskManager(QtCore.QObject):
         self.abort = True
         for task in self.tasks:
             task.abort_slot()   # Tells any running task to stop
+        return
+
+    def record_report_in_history_log_slot(self, filename, obj):
+        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], filename)
+        self.db.log(logStr)
         return

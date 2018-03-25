@@ -22,7 +22,7 @@ def _send_request(action, api, payload):
         return {"error": str(err)}
 
 def login(username, password, requester):
-    global USER_NAME, SESSION_TOKEN
+    global USER_NAME, SESSION_TOKEN, REQUESTER
     payload = {'command': "log_in_user",
             'requester': requester,
             'username': username,
@@ -30,6 +30,7 @@ def login(username, password, requester):
     return_dict = _send_request("post", "account", payload)
     if "error" not in return_dict:
         USER_NAME = username
+        REQUESTER = requester
         SESSION_TOKEN = return_dict["token"]
     return return_dict
 
@@ -39,8 +40,8 @@ def logout():
         return {"error": "Cannot logout before login!"}
 
     payload = {'command': "log_out_user",
-            'requester': "qtLauncher",
-            'username': USER_NAME }
+               'requester': REQUESTER,
+               'username': USER_NAME }
     return_dict = _send_request("post", "account", payload)
     if "error" not in return_dict:
         USER_NAME = None
