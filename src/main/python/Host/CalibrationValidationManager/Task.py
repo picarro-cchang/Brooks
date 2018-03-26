@@ -31,8 +31,9 @@ import matplotlib
 matplotlib.use("SVG")
 import matplotlib.pyplot as plt
 
-import io
+import datetime
 import numpy
+import QGuiText
 from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
@@ -45,7 +46,8 @@ class Task(QtCore.QObject):
     task_heartbeat_signal = QtCore.pyqtSignal(str)
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
     task_next_signal = QtCore.pyqtSignal()
-    task_report_signal = QtCore.pyqtSignal(object)
+    task_report_signal = QtCore.pyqtSignal(str, object)
+    task_stop_clock_signal = QtCore.pyqtSignal()
 
     # Send up a signal if we start a timer and are waiting for user input
     task_prompt_user_signal = QtCore.pyqtSignal()
@@ -64,6 +66,7 @@ class Task(QtCore.QObject):
         self._settings = settings
         self._my_id = my_id
         self._running = False
+        self._abort =   False
         self._results = results
         self.skip = False                   # If true this task is never run
         self.data_source = data_source
@@ -118,14 +121,25 @@ class Task(QtCore.QObject):
         self._my_parent.ping_task_signal.connect(self.ping_slot)
         return
 
+    def abort_slot(self):
+        """
+        Terminate the clock of any running subtask.  _abort prevents execution from passing on to the
+        next subtask.
+        :return:
+        """
+        self._abort = True
+        self.task_stop_clock_signal.emit()      # Stop the clock of any running subtasks
+        self.task_abort_signal.emit(self._my_id)
+        return
+
     def work(self):
         if "Simulation" in self._settings:
             (key, conc) = self._settings["Simulation"]
             self.data_source.setOffset(key, conc)
 
         self._running = True
-        aborted_work = False
         if "Analysis" in self._settings:
+            self._results["end_time"] = str(datetime.datetime.now())
             if "Linear_Regression_Validation" in self._settings["Analysis"]:
                 self.linear_regression()
             elif "Span_Validation" in self._settings["Analysis"]:
@@ -137,10 +151,8 @@ class Task(QtCore.QObject):
         else:
             self.simple_avg_measurement()
 
-        if aborted_work:
-            self.task_abort_signal.emit(self._my_id)
-        else:
-            self.task_finish_signal.emit(self._my_id)
+        self.task_finish_signal.emit(self._my_id)
+
         self._running = False
         return
 
@@ -161,22 +173,33 @@ class Task(QtCore.QObject):
     # This method is a simple example of how to get an average measurement of a gas.
     #
     def simple_avg_measurement(self):
+        if self._abort:
+            return
+
         self.pre_task_instructions()
+
+        if self._abort:
+            return
 
         if "GasDelayBeforeMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasDelayBeforeMeasureSeconds"]),
-                                  description="Waiting for " +
-                                              self._settings["Data_Key"] +
-                                              " to equilibrate:")
+                                  description=QGuiText.equilibrating_text(self._settings["Data_Key"]))
             t.tick_signal.connect(self.task_countdown_signal)
+            self.task_stop_clock_signal.connect(t.stop)
             t.start()
+
+        if self._abort:
+            return
 
         if "GasMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasMeasureSeconds"]),
-                                  description="Measuring " +
-                                              self._settings["Data_Key"])
+                                  description=QGuiText.measuring_text(self._settings["Data_Key"]))
             t.tick_signal.connect(self.task_countdown_signal)
+            self.task_stop_clock_signal.connect(t.stop)
             t.start()
+
+        if self._abort:
+            return
 
         try:
             timestamps = self.data_source.getList(self._settings["Data_Source"], "time")
@@ -192,7 +215,11 @@ class Task(QtCore.QObject):
         except Exception as e:
             print("Excep: %s" %e)
 
+        if self._abort:
+            return
+
         self.post_task_instructions()
+
         return
 
     def pre_task_instructions(self):
@@ -212,11 +239,14 @@ class Task(QtCore.QObject):
         if "Pre_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Pre_Task_Delay_Sec"])
             busy = False
-        instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
+        # instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
+        tank = self._reference_gases[self._settings["Gas"]].tankName
+        instructions = QGuiText.pre_task_instructions(tank, self._settings["Data_Key"])
         t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions,
                               busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
+        self.task_stop_clock_signal.connect(t.stop)
         self.task_next_signal.connect(t.stop)
         t.start()
         return
@@ -237,11 +267,13 @@ class Task(QtCore.QObject):
         if "Post_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Post_Task_Delay_Sec"])
             busy = False
-        instructions = "Generic message from Task {0}: Close the reference gas valve and then click NEXT".format(self._my_id)
+        # instructions = "Generic message from Task {0}: Close the reference gas valve and then click NEXT".format(self._my_id)
+        instructions = QGuiText.post_task_instructions()
         t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions,
                               busy_hint = busy)
         t.tick_signal.connect(self.task_countdown_signal)
+        self.task_stop_clock_signal.connect(t.stop)
         self.task_next_signal.connect(t.stop)
         t.start()
         return
@@ -294,8 +326,8 @@ class Task(QtCore.QObject):
         #
         #
         self._results["Zero_Air_Test"] = []
-        zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
-        zeroAirMax = 0.010
+        zeroAirMin = self._settings["ZERO_PPM"][0] #-0.005 # -0.005 PPM or -5 PPB
+        zeroAirMax = self._settings["ZERO_PPM"][1]
         for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
             if "Yes" in zeroAirFlag:
                 measConc = self._results["Meas_Conc"][idx]
@@ -331,8 +363,8 @@ class Task(QtCore.QObject):
 
 
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
-        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
-        self.task_report_signal.emit(doc)
+        (fileName, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
+        self.task_report_signal.emit(fileName, doc)
         return
 
     def span_validation(self):

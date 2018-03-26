@@ -3,6 +3,8 @@
 
 import sys
 import qdarkstyle
+from QLoginDialog import QLoginDialog
+import DataBase
 from functools import partial
 from PyQt4 import QtCore, QtGui
 from QReferenceGasEditor import QReferenceGasEditorWidget
@@ -14,42 +16,39 @@ from Host.CalibrationValidationManager.TaskManager import TaskManager
 class Window(QtGui.QMainWindow):
     def __init__(self, iniFile):
         super(Window, self).__init__()
-
-        # self.styleData = ""
-        # f = open('styleSheet.qss', 'r')
-        # self.styleData = f.read()
-        # self.setStyleSheet(self.styleData)
-        # f.close()
-
         self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration/Validation Tool")
+        self._db = DataBase
+        self.display_login_dialog()  # Need DB authentication here so the TaskManager can get the user information.
         self.tm = None
         self.iniFile = iniFile
         self._init_gui()
         self._startup_settings()
         self.tm = self.setUpTasks_()
+        self._set_connections()
         self.show()
         QtCore.QTimer.singleShot(100, self._late_start)
         return
 
     def _late_start(self):
-        self._set_connections()
         self.start_data_stream_polling()
         return
 
     def _set_connections(self):
-        self.closeBtn.clicked.connect(self.close)
+        self.closeBtn.clicked.connect(self._quit_validation_tool)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
         self.tm.report_signal.connect(self.taskWizardWidget.set_report)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
         self.tm.task_settings_signal.connect(self.taskEditorWidget.display_task_settings)
         self.tm.prompt_user_signal.connect(self.taskWizardWidget.prompt_user)
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
+        self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
         self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
         self.taskWizardWidget.view_editors_signal.connect(self._view_reference_gas_settings)
         self.taskWizardWidget.hide_editors_signal.connect(self._startup_settings)
+        self.taskWizardWidget.abort_signal.connect(self.tm.abort_slot)
 
     def _init_gui(self):
         self.closeBtn = QtGui.QPushButton("Close")
@@ -85,8 +84,20 @@ class Window(QtGui.QMainWindow):
         self.tableWidget.setVisible(True)
         self.taskEditorWidget.setVisible(True)
 
+    def _quit_validation_tool(self):
+        self._db.logout()
+        self.close()
+        return
+
+    def display_login_dialog(self):
+        ld = QLoginDialog(self)
+        ret = ld.exec_()
+        if ret == 0:
+            self.close()
+        return
+
     def setUpTasks_(self):
-        tm = TaskManager(iniFile=self.iniFile)
+        tm = TaskManager(iniFile=self.iniFile, db=self._db) #, username=self.username, fullname=self.fullname)
         return tm
 
     def start_data_stream_polling(self):
@@ -142,11 +153,39 @@ class Window(QtGui.QMainWindow):
             pass
         return
 
+def HandleCommandSwitches():
+    import getopt
+
+    shortOpts = 'c:'
+    longOpts = ["ini=", "username=", "fullname="]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError, data:
+        sys.exit(1)
+
+    options = {}
+    for o, a in switches:
+        options[o] = a
+
+    configFile = ""
+    if "--ini" in options:
+        configFile = options["--ini"]
+
+    username = ""
+    if "--username" in options:
+        username = options["--username"]
+
+    fullname = ""
+    if "--fullname" in options:
+        fullname = options["--fullname"]
+
+    return (configFile, username, fullname)
 
 def main():
     app = QtGui.QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    GUI = Window(sys.argv[1])
+    (configFile, username, fullname) = HandleCommandSwitches()
+    GUI = Window(iniFile=configFile)
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

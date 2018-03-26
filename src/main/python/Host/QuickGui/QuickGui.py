@@ -147,6 +147,7 @@ class InstStatusPanel(wx.Panel):
 
         self.warmBoxTempLabel = wx.StaticText(self, -1, "Warm Box Temp (degC)")
         setItemFont(self.warmBoxTempLabel,font)
+        self.warmBoxTempLabel.SetBackgroundColour(wx.RED)
         self.cavityTempLabel = wx.StaticText(self, -1, "Cavity Temperature (degC)")
         setItemFont(self.cavityTempLabel,font)
         self.cavityPressureLabel = wx.StaticText(self, -1, "Cavity Pressure (Torr)")
@@ -672,7 +673,14 @@ class QuickGui(wx.Frame):
         numSysAlarms = min(2, self.config.getint("AlarmBox", "NumSysAlarms", 1))
         boxHeight = numSysAlarms * 40
 
-        size = boxWidth,boxHeight
+        # Kludge here to work around wx difficulties.
+        # If the alarm label is a little long we get scroll bars in the alarm panel even if all the
+        # text fits.  If I use the width setting in the QuickGui.ini the scrollbars are always visible.
+        # If I hardcode the width here I can get the right size to see all the text label
+        # without scrollbars.
+        #
+        # size = boxWidth,boxHeight
+        size = 210, boxHeight
 
         self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
                                            DataSource=self.sysAlarmInterface, fontDatabase=self.fontDatabase,
@@ -1435,7 +1443,8 @@ class QuickGui(wx.Frame):
         menu_id = evt.GetId()
         obj = evt.GetEventObject()
         label = obj.GetLabelText(menu_id)
-        subprocess.Popen(self.externalTools[label]['cmd'].split())
+        cmd = self.externalTools[label]['cmd'].split()
+        subprocess.Popen(cmd)
         return
 
     def _OnValveSeq(self, evt):
