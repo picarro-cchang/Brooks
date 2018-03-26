@@ -1,30 +1,37 @@
+import subprocess32
+import QGuiText
 from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
-    def __init__(self, textDoc = None, parent = None):
+    def __init__(self, fileName = None, textDoc = None, parent = None):
         QtGui.QDialog.__init__(self)
         self.setFixedSize(1024, 768)
         self._textEditWidget = QtGui.QTextEdit()
         self._textEditWidget.setDocument(textDoc)
+        self._fileNameWidget = QtGui.QLineEdit(fileName)
         self.setLayout( self._initGui() )
         self._setConnections()
         return
 
     def _initGui(self):
         self._okBtn = QtGui.QPushButton("OK")
-        self._discardReportBtn = QtGui.QPushButton("Discard Report")
+
+        fnhb = QtGui.QHBoxLayout()
+        fnhb.addWidget(QtGui.QLabel("Validation Report File:"))
+        fnhb.addWidget(self._fileNameWidget)
 
         hb = QtGui.QHBoxLayout()
-        hb.addWidget(self._discardReportBtn)
         hb.addStretch(1)
         hb.addWidget(self._okBtn)
 
         gl = QtGui.QGridLayout()
         gl.addWidget(self._textEditWidget, 0, 0)
-        gl.addLayout(hb, 1, 0)
+        gl.addLayout(fnhb, 1, 0)
+        gl.addLayout(hb, 2, 0)
         return gl
 
     def _setConnections(self):
+        self._okBtn.clicked.connect(self.close)
         return
 
 class QTaskWizardWidget(QtGui.QWidget):
@@ -36,7 +43,8 @@ class QTaskWizardWidget(QtGui.QWidget):
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
-        self._report = None                 # QTextDocument object containing the measurement report
+        self._reportTextObj = None          # QTextDocument object containing the measurement report
+        self._reportFileName = None         # File name of the PDF doc containing _reportTextObj
         self.setLayout( self._init_gui() )
         self._startup_settings()
         self._set_connections()
@@ -47,7 +55,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._nextBtn = QtGui.QPushButton("Next")
         self._abortBtn = QtGui.QPushButton("Abort")
         self._viewReportBtn = QtGui.QPushButton("View Report")
-        self._text_edit = QtGui.QTextEdit("Instructions to user TBD")
+        self._openFileManagerBtn = QtGui.QPushButton("Download Report")
+        self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text())
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
@@ -59,6 +68,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         hb.addWidget(self._abortBtn)
         hb.addStretch(1)
         hb.addWidget(self._showEditorsBtn)
+        hb.addWidget(self._openFileManagerBtn)
         hb.addWidget(self._viewReportBtn)
         hb.addWidget(self._startRunBtn)
         hb.addWidget(self._nextBtn)
@@ -81,6 +91,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._abortBtn.clicked.connect(self._abort)
         self._viewReportBtn.clicked.connect(self._view_report)
         self._showEditorsBtn.clicked.connect(self._show_editors_button_clicked)
+        self._openFileManagerBtn.clicked.connect(self._open_filemanager)
 
     def _startup_settings(self):
         """
@@ -100,7 +111,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         Set the local widgets for this state.
         :return:
         """
-        self._report = None
+        self._reportTextObj = None
         self._startRunBtn.setEnabled(False)
         self._nextBtn.setEnabled(False)
         self._viewReportBtn.setEnabled(False)
@@ -123,7 +134,6 @@ class QTaskWizardWidget(QtGui.QWidget):
         shutdown activities.
         :return:
         """
-        print("Abort button pressed")
         # put user confirmation dialog here
         # send the abort signal
         # reset the widget states
@@ -134,28 +144,40 @@ class QTaskWizardWidget(QtGui.QWidget):
                                             QtGui.QMessageBox.No)
 
         if result == QtGui.QMessageBox.Yes:
-            print 'Yes.'
             QtGui.QMessageBox.critical(self,
                                        'Critical',
-                                       "Abort code TBD",
+                                       "Close all gas valves then click OK",
                                        QtGui.QMessageBox.Ok,
                                        QtGui.QMessageBox.Ok)
+            self.abort_signal.emit()
         else:
             print 'No.'
         return
 
     def _view_report(self):
-        report_dialog = QReportDisplayDialog(textDoc = self._report, parent = self)
+        report_dialog = QReportDisplayDialog(fileName = self._reportFileName, textDoc = self._reportTextObj, parent = self)
         report_dialog.exec_()
+        return
+
+    def _open_filemanager(self):
+        cmd = ["python",
+               "/usr/local/picarro/qtLauncher/FileManager/main.py",
+               "--dir",
+               "/home/picarro/I2000/Log/ValidationReport",
+               "--name",
+               "ValidationReport"]
+        p = subprocess32.Popen(cmd, stdin=None, stdout=None, stderr=None)
         return
 
     def _show_editors_button_clicked(self):
         if self._editors_visible:
             self._editors_visible = False
+            self._text_edit.setText(QGuiText.welcome_text())
             self._showEditorsBtn.setText("Show Editors")
             self.hide_editors_signal.emit()
         else:
             self._editors_visible = True
+            self._text_edit.setText(QGuiText.editor_instructions())
             self._showEditorsBtn.setText("Hide Editors")
             self.view_editors_signal.emit()
         return
@@ -196,12 +218,19 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._viewReportBtn.setEnabled(True)
         return
 
-    def set_report(self, obj):
+    def job_aborted(self):
+        self._text_edit.setText("Job Aborted")
+        self._startup_settings()
+        self._viewReportBtn.setEnabled(False)
+        return
+
+    def set_report(self, fileName, obj):
         """
         Receive the report (a QTextDocument) and save it for display.  This object is cleared if a
         new job is started.
         :param obj:
         :return:
         """
-        self._report = obj
+        self._reportFileName = fileName
+        self._reportTextObj = obj
         return

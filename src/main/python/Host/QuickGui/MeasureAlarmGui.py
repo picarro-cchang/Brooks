@@ -1,5 +1,6 @@
 import wx
 import os
+import datetime
 import Host.QuickGui.DialogUI as Dialog
 
 class AlarmViewListCtrl(wx.ListCtrl):
@@ -27,6 +28,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self._fontDatabase = fontDatabase
         self.tipWindow = None
         self.tipItem = None
+        self.dummyCounter = 0
 
         self.appPath = os.path.dirname(os.path.realpath(__file__))
 
@@ -43,7 +45,8 @@ class AlarmViewListCtrl(wx.ListCtrl):
         # Set column dimensions, must subtract off width needed for scrollbars (17)
         self.InsertColumn(0,"Icon",width=40)
         sx,sy = self.GetSize()
-        self.InsertColumn(1, "Name", width=sx-40-17)
+        # self.InsertColumn(1, "Name", width=sx-40-17)
+        self.InsertColumn(1, "Name", width=sx+20) # Works better with longer alarm label text
 
         self.alarmNames = []
         for i in range(numAlarms):
@@ -59,25 +62,34 @@ class AlarmViewListCtrl(wx.ListCtrl):
         :param evt:
         :return:
         """
+        #
+        # The test for "Operating Range" is a hack.
+        # A request is to throw an alarm if the gas exceeds the high concentration limit as set in the
+        # product spec.  This is a fixed number not adjustable by the customer.  As such we want to
+        # prevent the user from accessing the alarm threshold dialog.  Alarms of this type have a name
+        # of the form "HF Operating Range".  If we find "Operating Range" we block the alarm setting
+        # dialog.
+        #
         pos = evt.GetPositionTuple()
         item,flags = self.HitTest(pos)
         if self.tipWindow and self.tipWindow.IsShown():
             self.tipWindow.Close()
         if self._DataSource.alarmData:
             name,mode,enabled,alarm1,clear1,alarm2,clear2 = self._DataSource.alarmData[item]
-            alarm1 = "%.2f" % alarm1
-            alarm2 = "%.2f" % alarm2
-            clear1 = "%.2f" % clear1
-            clear2 = "%.2f" % clear2
-            d = dict(name=name,mode=mode,enabled=enabled,alarm1=alarm1,clear1=clear1,
-                        alarm2=alarm2,clear2=clear2)
-            dialog = Dialog.AlarmDialog(self.mainForm,d,None,-1,"Setting alarm %d" % (item+1,), self._fontDatabase)
-            retCode = dialog.ShowModal()
-            dialog.Destroy()
-            if retCode == wx.ID_OK:
-                self._DataSource.setAlarm(item+1,d["enabled"],d["mode"],
-                                          float(d["alarm1"]),float(d["clear1"]),
-                                          float(d["alarm2"]),float(d["clear2"]))
+            if "Operating Range" not in name:
+                alarm1 = "%.2f" % alarm1
+                alarm2 = "%.2f" % alarm2
+                clear1 = "%.2f" % clear1
+                clear2 = "%.2f" % clear2
+                d = dict(name=name,mode=mode,enabled=enabled,alarm1=alarm1,clear1=clear1,
+                            alarm2=alarm2,clear2=clear2)
+                dialog = Dialog.AlarmDialog(self.mainForm,d,None,-1,"Setting alarm %d" % (item+1,), self._fontDatabase)
+                retCode = dialog.ShowModal()
+                dialog.Destroy()
+                if retCode == wx.ID_OK:
+                    self._DataSource.setAlarm(item+1,d["enabled"],d["mode"],
+                                              float(d["alarm1"]),float(d["clear1"]),
+                                              float(d["alarm2"]),float(d["clear2"]))
         return
 
     def OnMouseMotion(self,evt):

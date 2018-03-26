@@ -1,8 +1,9 @@
 # TaskManager
 
-
-# from PyQt4.QtCore import QObject, pyqtSignal
 import copy
+import requests
+import datetime
+import DataBase
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
@@ -14,28 +15,42 @@ class TaskManager(QtCore.QObject):
     ping_task_signal = QtCore.pyqtSignal()
     next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
-    report_signal = QtCore.pyqtSignal(object)
+    report_signal = QtCore.pyqtSignal(str, object)
     reference_gas_signal = QtCore.pyqtSignal(object)
     task_settings_signal = QtCore.pyqtSignal(object)
     prompt_user_signal = QtCore.pyqtSignal()
     job_complete_signal = QtCore.pyqtSignal()
+    job_aborted_signal = QtCore.pyqtSignal()
 
-    def __init__(self, iniFile=None):
+    def __init__(self, iniFile=None, db=None):
         super(TaskManager, self).__init__()
         self.iniFile = iniFile
+        self.username = None
+        self.fullname = None
         self.running_task_idx = None    # Running task idx, None if no jobs running
+        self.abort = False              # When true, abort current job then reset
         self.monitor_data_stream = False
         self.co = None                  # Handle to the input ini file
         self.ds = DataStoreForQt()
+        self.db = db
         self._initAllObjectsAndConnections()
-        # self.start_data_stream()
         QtCore.QTimer.singleShot(100, self.late_start)
         return
 
     def _initAllObjectsAndConnections(self):
-        # self.input_data = {}
+        firstname = "(No firstname)"
+        lastname = "(No lastname)"
+        userInfo = self.db._send_request("get", "system", {'command': 'get_current_user'})
+        username = userInfo["username"]
+        if userInfo["first_name"]:
+            firstname = userInfo["first_name"]
+        if userInfo["last_name"]:
+            lastname = userInfo["last_name"]
+        self.username = username
+        self.fullname = firstname + " " + lastname
+        self.results = {"username": self.username, "fullname": self.fullname, "start_time": "---"}
+
         self.referenceGases = {}
-        self.results = {}
         self.tasks = []
         self.threads = []
         self.loadConfig()
@@ -95,6 +110,7 @@ class TaskManager(QtCore.QObject):
             task.task_heartbeat_signal.connect(self.task_heartbeat_slot)
             task.task_countdown_signal.connect(self.task_countdown_slot)
             task.task_report_signal.connect(self.report_signal)
+            task.task_report_signal.connect(self.record_report_in_history_log_slot)
         return
 
     def late_start(self):
@@ -105,6 +121,7 @@ class TaskManager(QtCore.QObject):
         self.reference_gas_signal.emit(self.co)
         self.task_settings_signal.emit(self.co)
         self.start_data_stream()
+        self.hostSession = requests.Session()
         return
 
     def start_data_stream(self):
@@ -123,7 +140,12 @@ class TaskManager(QtCore.QObject):
         Kick off the first task in the task list
         :return:
         """
+        logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+        self.db.log(logStr)
+
+        self.abort = False
         self._initAllObjectsAndConnections()
+        self.results["start_time"] = str(datetime.datetime.now())
         self.running_task_idx = 0
         self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
         self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
@@ -136,18 +158,25 @@ class TaskManager(QtCore.QObject):
         to the currently running task.
         :return:
         """
-        if self.running_task_idx < len(self.threads)-1:
-            self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
-            self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
-            self.running_task_idx += 1
-            while self.tasks[self.running_task_idx].skip:
-                self.running_task_idx += 1
-            self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
-            self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
-            self.threads[self.running_task_idx].start()
+        if self.abort:
+            logStr = "Aborting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+            self.db.log(logStr)
+            self.job_aborted_signal.emit()
         else:
-            self.job_complete_signal.emit()
-            self.running_task_idx = None
+            if self.running_task_idx < len(self.threads)-1:
+                self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
+                self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
+                self.running_task_idx += 1
+                while self.tasks[self.running_task_idx].skip:
+                    self.running_task_idx += 1
+                self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
+                self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
+                self.threads[self.running_task_idx].start()
+            else:
+                logStr = "Completed surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+                self.db.log(logStr)
+                self.job_complete_signal.emit()
+                self.running_task_idx = None
         return
 
     def task_finished_ack_slot(self, task_id):
@@ -170,3 +199,22 @@ class TaskManager(QtCore.QObject):
         self.ping_task_signal.emit()
         return
 
+    def abort_slot(self):
+        """
+        Handle an abort request from the GUI.
+
+        Prompt for user confirmation and if YES give the user instructions.  This part is handled in the
+        QTaskWizardWidget which has the ABORT button.  We get here after the user confirms the choice.
+
+        Abort the current task - immediately if possible - and reset the queue.
+        :return:
+        """
+        self.abort = True
+        for task in self.tasks:
+            task.abort_slot()   # Tells any running task to stop
+        return
+
+    def record_report_in_history_log_slot(self, filename, obj):
+        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], filename)
+        self.db.log(logStr)
+        return
