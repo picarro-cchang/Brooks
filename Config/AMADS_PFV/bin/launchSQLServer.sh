@@ -7,5 +7,5 @@
 # 
 export PATH=/home/picarro/anaconda2/bin:$PATH
 cd /home/picarro/I2000/Host/WebServer/
-python -O SQLiteServer.py -c ./SQLiteDataBase.ini
+python -O SQLiteServer.py -c SQLiteDataBase.ini
 
