@@ -140,13 +140,28 @@ class Window(QtGui.QMainWindow):
         :return:
         """
         try:
-            timestamps = self.tm.ds.getList("analyze_H2O2", "time")
-            data = self.tm.ds.getList("analyze_H2O2", "CH4")
+            # A hack here, looking at TaskManager internals to get some settings from the ini.
+            # self.tm.co is the ConfigObj in the TaskManager.
+            # This code determines which data is displayed in the plot (primary)
+            # and which data is displayed in the text label below the plot (primary + secondary)
+            #
+            data_source = self.tm.co["TASKS"]["Data_Source"]
+            primary_data_key = self.tm.co["TASKS"]["Data_Key"]
+            primary_data_key_name = self.tm.co["TASKS"]["Data_Key_Name"]
+
+            timestamps = self.tm.ds.getList(data_source, "time")
+            data = self.tm.ds.getList(data_source, primary_data_key)
             d = {}
             if data:
-                d["CH4 [PPM]"] = data[-1]
-                d["H2O2 [PPM]"] = self.tm.ds.getList("analyze_H2O2", "H2O2")[-1]
-                d["H2O [PPM]"] = self.tm.ds.getList("analyze_H2O2", "H2O")[-1]
+                d[primary_data_key_name] = data[-1]
+                if "Secondary_Data_Key" in self.tm.co["TASKS"]:
+                    secondary_data_key = self.tm.co["TASKS"]["Secondary_Data_Key"]
+                    secondary_data_key_name = self.tm.co["TASKS"]["Secondary_Data_Key_Name"]
+                    if isinstance(secondary_data_key, list):
+                        for i, val in enumerate(secondary_data_key):
+                            d[secondary_data_key_name[i]] = self.tm.ds.getList(data_source, secondary_data_key[i])[-1]
+                    else:
+                        d[secondary_data_key_name] = self.tm.ds.getList(data_source, secondary_data_key)[-1]
             self.plotWidget.setData(timestamps, data, d)
         except Exception as e:
             print("E:",e)
