@@ -961,12 +961,12 @@ class QuickGui(wx.Frame):
         retCode = dialog.ShowModal()
         if retCode == wx.ID_YES:
             try:
-                self.setDisplayedSource(self.shutdownShippingSource)
+                self._setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode, powerOffAnalyzer)
             payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
-            self.sendRequest("post", "action", payload, useToken=True)
+            self._sendRequest("post", "action", payload, useToken=True)
             self.shutdownButton.Enable(False)
         dialog.Destroy()
         return
@@ -1723,6 +1723,19 @@ class QuickGui(wx.Frame):
             self._UnbindAllWidgetsMotion(child)
         node.Unbind(wx.EVT_MOTION)
         return
+
+    def _setDisplayedSource(self, source):
+        try:
+            srcSel = self.sourceChoice[0].GetItems().index(source)
+            for idx in range(len(self.sourceChoice)):
+                self.sourceChoice[idx].SetSelection(srcSel)
+                self.source[idx] = self.sourceChoice[idx].GetClientData(srcSel)
+                self.graphPanel[idx].RemoveAllSeries()
+                self.dataKey[idx] = None
+                self.keyChoices[idx] = None
+            return "OK"
+        except Exception, err:
+            return "%r" % err
 
 
 def HandleCommandSwitches():
