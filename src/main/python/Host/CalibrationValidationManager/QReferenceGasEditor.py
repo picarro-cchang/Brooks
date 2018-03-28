@@ -109,21 +109,35 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         for k,v in self.rgco.items():
             labels = []
             values = []
-            if "Desc" not in v:
-                v["Desc"] = ""
-            if "Vendor" not in v:
-                v["Vendor"] = ""
+            # if "Desc" not in v:
+            #     v["Desc"] = ""
+            # if "Vendor" not in v:
+            #     v["Vendor"] = ""
             if "Zero_Air" not in v:
                 v["Zero_Air"] = "No"
             if "Uncertainty" not in v:
-                v["Uncertainty"] = ['-'] * len(v["Component"])
-            labels.extend(["Name", "SN", "Desc", "Vendor", "Zero_Air"])
-            values.extend([v["Name"], v["SN"], v["Desc"], v["Vendor"], v["Zero_Air"]])
-            for i, name in enumerate(v["Component"]):
+                if isinstance(v["Component"], list):
+                    v["Uncertainty"] = ['-'] * len(v["Component"])
+                else:
+                    v["Uncertainty"] = '-'
+            # labels.extend(["Name", "SN", "Desc", "Vendor", "Zero_Air"])
+            # values.extend([v["Name"], v["SN"], v["Desc"], v["Vendor"], v["Zero_Air"]])
+            labels.extend(["Name", "SN", "Zero_Air"])
+            values.extend([v["Name"], v["SN"], v["Zero_Air"]])
+            if isinstance(v["Component"], list):
+                # Handle multiple gases in the component list
+                for i, name in enumerate(v["Component"]):
+                    labels.append(name + " ppm")
+                    labels.append(name + " acc")
+                    values.append(v["Concentration"][i])
+                    values.append(v["Uncertainty"][i])
+            else:
+                # If there is only one gas, the values are strings and not lists
+                name = v["Component"]
                 labels.append(name + " ppm")
                 labels.append(name + " acc")
-                values.append(v["Concentration"][i])
-                values.append(v["Uncertainty"][i])
+                values.append(v["Concentration"][0])
+                values.append(v["Uncertainty"][0])
 
             self.setVerticalHeaderLabels(labels)
             self.setRowCount(len(values))
@@ -144,18 +158,28 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         """
         for col in range(self.columnCount()):
             col_key = str(self.horizontalHeaderItem(col).text())
-            self.rgco[col_key]["Name"] = str(self.item(0,col).text())
-            self.rgco[col_key]["SN"] = str(self.item(1, col).text())
-            self.rgco[col_key]["Desc"] = str(self.item(2, col).text())
-            self.rgco[col_key]["Vendor"] = str(self.item(3, col).text())
-            self.rgco[col_key]["Zero_Air"] = str(self.item(4, col).text())
+            i = 0
+            self.rgco[col_key]["Name"] = str(self.item(i,col).text())
+            i += 1
+            self.rgco[col_key]["SN"] = str(self.item(i, col).text())
+            # i += 1
+            # self.rgco[col_key]["Desc"] = str(self.item(i, col).text())
+            # i += 1
+            # self.rgco[col_key]["Vendor"] = str(self.item(i, col).text())
+            i += 1
+            self.rgco[col_key]["Zero_Air"] = str(self.item(i, col).text())
+            i += 1
             concentration = []
             uncertainty = []
-            for row in range(5, self.rowCount(), 2):
+            for row in range(i, self.rowCount(), 2):
                 concentration.append(str(self.item(row,col).text()))
                 uncertainty.append(str(self.item(row+1,col).text()))
-            self.rgco[col_key]["Concentration"] = concentration
-            self.rgco[col_key]["Uncertainty"] = uncertainty
+            if len(concentration) > 1:
+                self.rgco[col_key]["Concentration"] = concentration
+                self.rgco[col_key]["Uncertainty"] = uncertainty
+            else:
+                self.rgco[col_key]["Concentration"] = concentration[0]
+                self.rgco[col_key]["Uncertainty"] = uncertainty[0]
         self.co["GASES"] = self.rgco
         self.co.write()
         return
