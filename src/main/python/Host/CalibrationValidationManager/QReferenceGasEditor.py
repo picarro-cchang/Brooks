@@ -136,8 +136,8 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                 name = v["Component"]
                 labels.append(name + " ppm")
                 labels.append(name + " acc")
-                values.append(v["Concentration"][0])
-                values.append(v["Uncertainty"][0])
+                values.append(v["Concentration"])
+                values.append(v["Uncertainty"])
 
             self.setVerticalHeaderLabels(labels)
             self.setRowCount(len(values))
