@@ -400,8 +400,8 @@ class Task(QtCore.QObject):
                 else:
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
 
-        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
-        self.task_report_signal.emit(doc)
+        (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
+        self.task_report_signal.emit(filename, doc)
         return
 
     def one_point_validation(self):
@@ -425,6 +425,6 @@ class Task(QtCore.QObject):
                 else:
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
 
-        doc = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
-        self.task_report_signal.emit(doc)
+        (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
+        self.task_report_signal.emit(filename, doc)
         return
