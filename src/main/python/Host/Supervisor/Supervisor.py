@@ -155,7 +155,9 @@ if sys.platform == "linux2":
     }
 
 # Protected applications (not shut down on normal termination)
-PROTECTED_APPS = ["Driver"]
+# Lets never close SLQLiteServer also on host app quit as other application uses it
+# even though hist is not running for example qtLauncher
+PROTECTED_APPS = ["Driver", "SQLiteServer"]
 
 # Only the below apps are allowed to run in the virtual mode
 APPS_IN_VIRTUAL_MODE = ("EventManager", "Archiver", "DataManager", "InstMgr", "rdReprocessor", "QuickGui", "DataLogger", \
