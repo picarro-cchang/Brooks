@@ -36,6 +36,31 @@ from PyQt4 import QtCore, QtGui
 import sys
 from Host.Common.configobj import ConfigObj
 
+class MyDoubleValidator(QtGui.QDoubleValidator):
+    """
+    QDoubleValidator can be used to check the range of input but it is lacking in that
+    it will allow out of range values if edit field focus is changed by the user clicking
+    on another widget.  In the QDoubleValidator this is noted in the class documentation
+    as the "Intermediate" state (i.e. it looks like the user is not finished entering in
+    a number).
+
+    This subclass overrides the validate method and continually checks the current
+    value, preventing the user from typing any combination of numbers that exceeds the
+    specified range.  It also blocks invalid characters and a blank.
+    """
+    def __init__(self, parent = None):
+        super(MyDoubleValidator,self).__init__()
+        return
+
+    def validate(self, str, in_int):
+        (state, input) = QtGui.QDoubleValidator.validate(self, str, in_int)
+        try:
+            if state == QtGui.QValidator.Intermediate and float(str) > self.top():
+                state = QtGui.QValidator.Invalid
+        except Exception as e:
+            state = QtGui.QValidator.Invalid
+        return state, input
+
 class QReferenceGasEditorWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
@@ -142,7 +167,21 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.setVerticalHeaderLabels(labels)
             self.setRowCount(len(values))
             for j, value in enumerate(values):
-                self.setItem(j, idx, QtGui.QTableWidgetItem(values[j]))
+                if j == 2:
+                    cb = QtGui.QComboBox()
+                    cb.addItems(["No","Yes"])
+                    cb.setCurrentIndex( cb.findText(values[j]) )
+                    self.setCellWidget(j, idx, cb)
+                elif j == 3:
+                    le = QtGui.QLineEdit()
+                    validator = MyDoubleValidator()
+                    validator.setRange(0,1000000,4)
+                    validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+                    le.setValidator(validator)
+                    le.setText(values[j])
+                    self.setCellWidget(j, idx, le)
+                else:
+                    self.setItem(j, idx, QtGui.QTableWidgetItem(values[j]))
             idx = idx + 1
         # Expand the column widths so that the table fills the space given
         # by the parent window.
@@ -167,12 +206,14 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             # i += 1
             # self.rgco[col_key]["Vendor"] = str(self.item(i, col).text())
             i += 1
-            self.rgco[col_key]["Zero_Air"] = str(self.item(i, col).text())
+            # self.rgco[col_key]["Zero_Air"] = str(self.item(i, col).text())  # need to customize by widget type
+            self.rgco[col_key]["Zero_Air"] = str(self.cellWidget(i, col).currentText())
             i += 1
             concentration = []
             uncertainty = []
             for row in range(i, self.rowCount(), 2):
-                concentration.append(str(self.item(row,col).text()))
+                # concentration.append(str(self.item(row,col).text()))
+                concentration.append(str(self.cellWidget(row,col).text()))
                 uncertainty.append(str(self.item(row+1,col).text()))
             if len(concentration) > 1:
                 self.rgco[col_key]["Concentration"] = concentration
