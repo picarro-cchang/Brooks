@@ -7,6 +7,7 @@ import io
 import glob
 import os
 import re
+import numpy
 from datetime import datetime, date
 from PyQt4 import QtCore, QtGui
 
@@ -72,10 +73,11 @@ def get_formatted_span_pass_fail_summary(results):
 
     # Sort to show the worst result.
     # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0.0.
-    sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
-    sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
-    (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
-    str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
+    if "Yes" in results["Zero_Air"]:
+        sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
+        sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
+        (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
+        str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
 
     # Sort the percent deviation results so that we show the worst result.
     sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
@@ -98,10 +100,11 @@ def get_formatted_linear_regression_pass_fail_summary(results):
 
     # Sort to show the worst result.
     # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0.0.
-    sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
-    sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
-    (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
-    str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
+    if "Yes" in results["Zero_Air"]:
+        sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
+        sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
+        (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
+        str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
 
     (slope, slope_status, slope_min, slope_max) = results["Slope_Test"]
     str += "|{0:10}|>{1:5} <{2:5}|{3}|{4}|\n".format("Slope", slope_min, slope_max, slope, slope_status)
@@ -120,18 +123,23 @@ def get_formatted_linear_regression_results(results):
     return str
 
 def get_formatted_task_details(settings, reference_gases, results):
-    line = "|{0}|\n".format("-" * 63)
-    str = "|{0} {1} {2} {0}|\n".format("=" * 23, results["Gas_Name"], "Measurements")
-    str += "|{0:^15}|{1:^15}|{2:^15}|{3:^15}|\n".format("Gas Source",
+    line = "|{0}|\n".format("-" * 80)
+    str = "|{0} {1} {2} {0}|\n".format("=" * 30, results["Gas_Name"], "Measurements")
+    str += "|{0:^15}|{1:^15}|{2:^15}|{3:^15}|{4:^15}|\n".format("Gas Source",
                                                         "Measured PPM",
                                                         "Measured Std.",
-                                                        "Reference PPM")
+                                                        "Reference PPM",
+                                                        "% Deviation")
     str += line
     for idx, value in enumerate(results["Gas"]):
-        str += "|{0:^15}|{1:15.5f}|{2:15.5f}|{3:15.5f}|\n".format(value,
+        percent_deviation = 0
+        if not numpy.isnan(results["Percent_Deviation"][idx]):
+            percent_deviation = results["Percent_Deviation"][idx]
+        str += "|{0:^15}|{1:15.5f}|{2:15.5f}|{3:15.5f}|{4:15.5f}|\n".format(value,
                                                                   results["Meas_Conc"][idx],
                                                                   results["Meas_Conc_Std"][idx],
-                                                                  results["Ref_Conc"][idx])
+                                                                  results["Ref_Conc"][idx],
+                                                                  percent_deviation)
         str += line
     return str
 
