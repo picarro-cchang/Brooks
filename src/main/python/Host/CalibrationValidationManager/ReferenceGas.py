@@ -18,10 +18,11 @@ class GasEnum(Enum):
 #
 class ComponentGas(object):
     def __init__(self):
-        self.gasName = ""       # Human readable name, free form
-        self.gasType = ""       # GasEnum enum for defined gases
-        self.gasConcPpm = 0.0   # Vendor reported gas conc in PPM
-        self.gasAccPpm = 0.0    # Vendor reproted gas accuracy/uncertainty in PPM
+        self.gasName = ""           # Human readable name, free form
+        self.gasType = ""           # GasEnum enum for defined gases
+        self.gasConcPpm = 0.0       # Vendor reported gas conc in PPM
+        self.gasAccPercent = 0.0    # Vendor reproted gas accuracy/uncertainty in %.
+                                    # Usual vendor values are 0.5, 1, 2, 5 %
         return
 
     def setGasType(self, type):
@@ -59,12 +60,12 @@ class ComponentGas(object):
     def getGasConcPpm(self):
         return self.gasConcPpm
 
-    def setGasAccPpm(self, acc):
-        self.gasAccPpm = acc
+    def setGasAccPercent(self, acc):
+        self.gasAccPercent = acc
         return
 
-    def getGasAccPpm(self):
-        return self.gasAccPpm
+    def getGasAccPercent(self):
+        return self.gasAccPercent
 
 # ReferenceGas
 # Represents a gas source that has one or more ComponentGas object.
@@ -118,9 +119,14 @@ class ReferenceGas(object):
 
         try:
             if isinstance(gasDict["Concentration"], list):
+                list1 = [0.0 if (i < 0 or i > 1e6) else i for i in gasDict["Concentration"]]
+                print("list:",list1)
                 concentration.extend(gasDict["Concentration"])
             else:
-                concentration.append(gasDict["Concentration"])
+                if float(gasDict["Concentration"]) >= 0 and float(gasDict["Concentration"]) <= 1e6:
+                    concentration.append(gasDict["Concentration"])
+                else:
+                    concentration.append(0.0)
         except KeyError as e:
             print("ReferenceGas.py - no defined gas concentrations. Exception: %s" %e)
             exit(1)
@@ -131,7 +137,7 @@ class ReferenceGas(object):
             else:
                 uncertainty.append(gasDict["Uncertainty"])
         except KeyError as e:
-            uncertainty = ["-"] * len(component)
+            uncertainty = ["Unk"] * len(component)
 
         if not component  or not concentration:
             print("ReferenceGas.py - A gas component or concentration field is empty.")
@@ -144,7 +150,8 @@ class ReferenceGas(object):
             cg = ComponentGas()
             cg.setGasType(component[idx])
             cg.setGasConcPpm(concentration[idx])
-            cg.setGasAccPpm(uncertainty[idx])
+            # cg.setGasAccPpm(uncertainty[idx])
+            cg.setGasAccPercent(uncertainty[idx])
             self.components[cg.getGasType()] = cg
 
         return
@@ -152,8 +159,11 @@ class ReferenceGas(object):
     def getGasConcPpm(self, gasEnum):
         return self.components[gasEnum].getGasConcPpm()
 
-    def getGasAccPpm(self, gasEnum):
-        return self.components[gasEnum].getGasAccPpm()
+    # def getGasAccPpm(self, gasEnum):
+    #     return self.components[gasEnum].getGasAccPpm()
+
+    def getGasAccPercent(self, gasEnum):
+        return self.components[gasEnum].getGasAccPercent()
 
     def get_reference_gas_for_qtable(self):
         """
@@ -171,7 +181,7 @@ class ReferenceGas(object):
         d["Zero_Air"] = self.zeroAir
         for gas_enum, component_gas in self.components.items():
             d[gas_enum.name] = component_gas.getGasConcPpm()
-            d[gas_enum.name + " acc."] = component_gas.getGasAccPpm()
+            d[gas_enum.name + " acc."] = component_gas.getGasAccPercent()
         return d
 
     def getGasDetails(self):
@@ -183,7 +193,7 @@ class ReferenceGas(object):
         d["Zero_Air"] = self.zeroAir
         d["Gas"] = []
         for gas_enum, component_gas in self.components.items():
-            d["Gas"].append([gas_enum.name, component_gas.getGasConcPpm(), component_gas.getGasAccPpm()])
+            d["Gas"].append([gas_enum.name, component_gas.getGasConcPpm(), component_gas.getGasAccPercent()])
         return d
 
     def getFormattedGasDetails(self, key):
@@ -196,21 +206,21 @@ class ReferenceGas(object):
         str += "{0:20}: {1}\n".format("Zero Air", self.zeroAir)
         for i, [gas_name, gas_conc, conc_acc] in enumerate(d["Gas"]):
             if i == 0:
-                try:
-                    x = float(conc_acc)
-                    str += "{0:20}: {1} {2:10.3f} +/-{3} ppm\n".format("Gas Composition", gas_name, float(gas_conc), float(conc_acc))
-                except ValueError:
-                    str += "{0:20}: {1} {2:10.3f} ppm\n".format("Gas Composition", gas_name, float(gas_conc))
+                # try:
+                #     x = float(conc_acc)
+                str += "{0:20}: {1} {2:10.3f} ppm +/-{3}\n".format("Gas Composition", gas_name, float(gas_conc), conc_acc)
+                # except ValueError:
+                #     str += "{0:20}: {1} {2:10.3f} ppm\n".format("Gas Composition", gas_name, float(gas_conc))
             else:
-                try:
-                    x = float(conc_acc)
-                    str += "{0:20}: {1} {2:10.3f} +/-{3} ppm\n".format(" ", gas_name, float(gas_conc), float(conc_acc))
-                except ValueError:
-                    try:
-                        x = float(gas_conc)
-                        str += "{0:20}: {1} {2:10.3f} ppm\n".format(" ", gas_name, float(gas_conc))
-                    except ValueError:
-                        str += "{0:20}: {1} {2:>10}\n".format(" ", gas_name, gas_conc)
+                # try:
+                #     x = float(conc_acc)
+                str += "{0:20}: {1} {2:10.3f} ppm +/-{3}\n".format(" ", gas_name, float(gas_conc), conc_acc)
+                # except ValueError:
+                #     try:
+                #         x = float(gas_conc)
+                #         str += "{0:20}: {1} {2:10.3f} ppm\n".format(" ", gas_name, float(gas_conc))
+                #     except ValueError:
+                #         str += "{0:20}: {1} {2:>10}\n".format(" ", gas_name, gas_conc)
         str += "{0}\n".format("-"*46)
         return str
 

@@ -92,11 +92,16 @@ class Task(QtCore.QObject):
                 self._results["Gas_Name"] = self._settings["Data_Key"]
                 gasEnum = GasEnum[self._settings["Data_Key"]]  # Convert the human readable gas name to the enum form
                 ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(gasEnum))
+                ref_gas_acc = str(self._reference_gases[gas_key].getGasAccPercent(gasEnum))
                 zero_air = self._reference_gases[gas_key].zeroAir
                 if "Ref_Conc" in self._results:
                     self._results["Ref_Conc"].append(ref_gas_conc)
                 else:
                     self._results["Ref_Conc"] = [ref_gas_conc]
+                if "Ref_Acc" in self._results:
+                    self._results["Ref_Acc"].append(ref_gas_acc)
+                else:
+                    self._results["Ref_Acc"] = [ref_gas_acc]
                 if "Gas" in self._results:
                     self._results["Gas"].append(gas_key)
                 else:

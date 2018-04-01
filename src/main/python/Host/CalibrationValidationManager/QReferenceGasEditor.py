@@ -61,6 +61,48 @@ class MyDoubleValidator(QtGui.QDoubleValidator):
             state = QtGui.QValidator.Invalid
         return state, input
 
+class MyGasConcLineEdit(QtGui.QLineEdit):
+    """
+    This class is a gas concentration line edit that limits input in the
+    range 0 - 1,000,000 ppm and is limited to 4 decimal places.
+    """
+    def __init__(self, min = 0, max = 1000000, decimal_places = 4, text = "", parent = None):
+        super(MyGasConcLineEdit,self).__init__()
+        validator = MyDoubleValidator()
+        validator.setRange(min, max, decimal_places)
+        validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+        self.setValidator(validator)
+        self.setText(text)
+        return
+
+class MyZeroAirSelectorComboBox(QtGui.QComboBox):
+    def __init__(self, default_choice = "", parent = None):
+        super(MyZeroAirSelectorComboBox,self).__init__()
+        self.addItems(["No", "Yes"])
+        self.setCurrentIndex(self.findText(default_choice))
+        return
+
+class MyAccuracySelectorComboBox(QtGui.QComboBox):
+    def __init__(self, default_choice = "", parent = None):
+        super(MyAccuracySelectorComboBox,self).__init__()
+        self.addItems(["Unk", "0.5 %", "1.0 %", "2.0 %", "5.0 %", "10.0 %"])
+        self.setCurrentBestMatchIndex(default_choice)
+        return
+
+    def setCurrentBestMatchIndex(self, str):
+        """
+        Given an input string, try to find the selection index that best matches.
+        :param str:
+        :return:
+        """
+        # Try an exact string match.  If none found default to "unk" option
+        if self.findText(str) > -1:
+            self.setCurrentIndex(self.findText(str))
+        else:
+            self.setCurrentIndex(0)
+        return
+
+
 class QReferenceGasEditorWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
@@ -168,18 +210,17 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.setRowCount(len(values))
             for j, value in enumerate(values):
                 if j == 2:
-                    cb = QtGui.QComboBox()
-                    cb.addItems(["No","Yes"])
-                    cb.setCurrentIndex( cb.findText(values[j]) )
+                    # cb = QtGui.QComboBox()
+                    # cb.addItems(["No","Yes"])
+                    # cb.setCurrentIndex( cb.findText(values[j]) )
+                    cb = MyZeroAirSelectorComboBox(values[j])
                     self.setCellWidget(j, idx, cb)
                 elif j == 3:
-                    le = QtGui.QLineEdit()
-                    validator = MyDoubleValidator()
-                    validator.setRange(0,1000000,4)
-                    validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
-                    le.setValidator(validator)
-                    le.setText(values[j])
+                    le = MyGasConcLineEdit(text = values[j])
                     self.setCellWidget(j, idx, le)
+                elif j == 4:
+                    cb = MyAccuracySelectorComboBox(values[j])
+                    self.setCellWidget(j, idx, cb)
                 else:
                     self.setItem(j, idx, QtGui.QTableWidgetItem(values[j]))
             idx = idx + 1
@@ -214,7 +255,8 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             for row in range(i, self.rowCount(), 2):
                 # concentration.append(str(self.item(row,col).text()))
                 concentration.append(str(self.cellWidget(row,col).text()))
-                uncertainty.append(str(self.item(row+1,col).text()))
+                # uncertainty.append(str(self.item(row+1,col).text()))
+                uncertainty.append(str(self.cellWidget(row+1,col).currentText()))
             if len(concentration) > 1:
                 self.rgco[col_key]["Concentration"] = concentration
                 self.rgco[col_key]["Uncertainty"] = uncertainty

@@ -123,23 +123,28 @@ def get_formatted_linear_regression_results(results):
     return str
 
 def get_formatted_task_details(settings, reference_gases, results):
-    line = "|{0}|\n".format("-" * 80)
-    str = "|{0} {1} {2} {0}|\n".format("=" * 30, results["Gas_Name"], "Measurements")
-    str += "|{0:^15}|{1:^15}|{2:^15}|{3:^15}|{4:^15}|\n".format("Gas Source",
-                                                        "Measured PPM",
-                                                        "Measured Std.",
-                                                        "Reference PPM",
-                                                        "% Deviation")
+    eq_length = (95 - (len(results["Gas_Name"] + " " + "Measurements") + 2))/2
+    line = "|{0}|\n".format("-" * 95)
+    str = "|{0} {1} {2} {0}|\n".format("=" * eq_length, results["Gas_Name"], "Measurements")
+    str += "|{0:^15}|{1:^15}|{2:^15}|{3:^15}|{4:^15}|{5:^15}|\n".format(
+        "Gas Source",
+        "Measured PPM",
+        "Measured Std.",
+        "Reference PPM",
+        "Reference Acc",
+        "% Deviation")
     str += line
     for idx, value in enumerate(results["Gas"]):
         percent_deviation = 0
         if not numpy.isnan(results["Percent_Deviation"][idx]):
             percent_deviation = results["Percent_Deviation"][idx]
-        str += "|{0:^15}|{1:15.5f}|{2:15.5f}|{3:15.5f}|{4:15.5f}|\n".format(value,
-                                                                  results["Meas_Conc"][idx],
-                                                                  results["Meas_Conc_Std"][idx],
-                                                                  results["Ref_Conc"][idx],
-                                                                  percent_deviation)
+        str += "|{0:^15}|{1:15.5f}|{2:15.5f}|{3:15.5f}|{4:^15}|{5:15.5f}|\n".format(
+            value,
+            results["Meas_Conc"][idx],
+            results["Meas_Conc_Std"][idx],
+            results["Ref_Conc"][idx],
+            results["Ref_Acc"][idx],
+            percent_deviation)
         str += line
     return str
 
@@ -202,7 +207,8 @@ def create_report(settings, reference_gases, results, obj=None):
 
     myDoc = QtGui.QTextDocument("This is a demo document")
     font = myDoc.defaultFont()
-    font.setFamily("Courier New") # need a monospace font to line up numeric data
+    font.setFamily("Courier New")   # need a monospace font to line up numeric data
+    font.setPointSize(8)            # default is 11pt and is too big to fit the task summary on 8x11 paper
     myDoc.setDefaultFont(font)
 
     myDoc.setPlainText(fill_report_template(settings, reference_gases, results))
