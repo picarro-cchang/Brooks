@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import datetime
 import numpy
 import QGuiText
+import re
 from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
@@ -351,12 +352,24 @@ class Task(QtCore.QObject):
         else:
             self._results["Slope_Test"] = (slope, "Fail", slope_min, slope_max)
 
-        # Check if % deviation of measured vs actual exceed the passing threshold
+        # Check if % deviation of measured vs actual exceed the passing threshold.
+        # The % deviation passing criteria is % accuracy of the reference gas as
+        # entered in by the user, + 1% for instrument noise.
         #
-        percent_acceptance = 5.0 # 5%
+        # _results["Ref_Acc"] is assumed to contain % accuracy as a string in the
+        # form "2.0 %".
+        #
+        percent_acceptance = numpy.NaN
         self._results["Deviation_Test"] = []
         for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
-            if numpy.isnan(percent_deviation):
+            pa = re.findall("\d+\.\d+", self._results["Ref_Acc"][idx])
+            if pa:
+                percent_acceptance = float(pa[0]) + 1.0
+            else:
+                percent_acceptance = numpy.NaN
+            if numpy.isnan(percent_deviation) or numpy.isnan(percent_acceptance):
+                # Either this is zero air or the % accuracy wasn't specified for this
+                # reference gas.
                 pass
             else:
                 measConc = self._results["Meas_Conc"][idx]

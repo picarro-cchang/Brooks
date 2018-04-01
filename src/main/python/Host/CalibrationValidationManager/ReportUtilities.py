@@ -56,6 +56,7 @@ def fill_report_template(settings, reference_gases, results):
 
     for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
         report += g.getFormattedGasDetails(e)
+        report += "\n"
     report += "\n"
     return report
 
@@ -63,8 +64,10 @@ def get_formatted_user_information(results):
     str = "{0} {1} {0}\n".format("=" * 15, "Report Authentication")
     str += "{0:20}:{1}\n".format("Username", results["username"])
     str += "{0:20}:{1}\n".format("Full name", results["fullname"])
+    str += "{0:20}:{1}\n".format("Instrument SN", "TBD")
     str += "{0:20}:{1}\n".format("Start time", results["start_time"])
     str += "{0:20}:{1}\n".format("End time", results["end_time"])
+    str += "\n"
     return str
 
 def get_formatted_span_pass_fail_summary(results):
@@ -83,6 +86,7 @@ def get_formatted_span_pass_fail_summary(results):
     sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
     (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
     str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    str += "\n"
     return str
 
 def get_formatted_one_point_pass_fail_summary(results):
@@ -92,6 +96,7 @@ def get_formatted_one_point_pass_fail_summary(results):
     sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
     (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
     str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    str += "\n"
     return str
 
 def get_formatted_linear_regression_pass_fail_summary(results):
@@ -111,8 +116,10 @@ def get_formatted_linear_regression_pass_fail_summary(results):
 
     # Sort the percent deviation results so that we show the worst result.
     sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
-    (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
-    str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    if sorted_dev_test:
+        (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
+        str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
+    str += "\n"
     return str
 
 def get_formatted_linear_regression_results(results):
@@ -120,6 +127,7 @@ def get_formatted_linear_regression_results(results):
     str += "{0:30}: {1}\n".format("Linear Regression slope", results["slope"])
     str += "{0:30}: {1}\n".format("Linear Regression intercept", results["intercept"])
     str += "{0:30}: {1}\n".format("Linear Regression R^2", results["r2"])
+    str += "\n"
     return str
 
 def get_formatted_task_details(settings, reference_gases, results):
@@ -146,6 +154,7 @@ def get_formatted_task_details(settings, reference_gases, results):
             results["Ref_Acc"][idx],
             percent_deviation)
         str += line
+    str += "\n"
     return str
 
 def getDateNow():
