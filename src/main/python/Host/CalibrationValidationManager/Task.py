@@ -332,15 +332,19 @@ class Task(QtCore.QObject):
         #
         #
         self._results["Zero_Air_Test"] = []
-        zeroAirMin = self._settings["ZERO_PPM"][0] #-0.005 # -0.005 PPM or -5 PPB
-        zeroAirMax = self._settings["ZERO_PPM"][1]
+        zeroMax = None
+        zeroMin = -0.01 # 0.01 ppm or 10 ppb
         for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-            if "Yes" in zeroAirFlag:
+            if "Zero" in zeroAirFlag:
+                if "Standard" in zeroAirFlag:
+                    zeroMax = 1.0 # 1 ppm
+                if "Utra" in zeroAirFlag:
+                    zeroMax = 0.1 # 0.1 ppm
                 measConc = self._results["Meas_Conc"][idx]
-                if measConc > zeroAirMin and measConc < zeroAirMax:
-                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))
+                if measConc >= zeroMin and measConc <= zeroMax:
+                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroMin, zeroMax))
                 else:
-                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroAirMin, zeroAirMax))
+                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroMin, zeroMax))
 
         # Check to see if the slope test passes
         slope_min = 0.95
@@ -396,7 +400,7 @@ class Task(QtCore.QObject):
         zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
         zeroAirMax = 0.010
         for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-            if "Yes" in zeroAirFlag:
+            if "Zero" in zeroAirFlag:
                 measConc = self._results["Meas_Conc"][idx]
                 if measConc > zeroAirMin and measConc < zeroAirMax:
                     self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))

@@ -78,7 +78,7 @@ class MyGasConcLineEdit(QtGui.QLineEdit):
 class MyZeroAirSelectorComboBox(QtGui.QComboBox):
     def __init__(self, default_choice = "", parent = None):
         super(MyZeroAirSelectorComboBox,self).__init__()
-        self.addItems(["No", "Yes"])
+        self.addItems(["No", "Standard Zero < 1 ppm", "Ultra Zero < 0.1 ppm"])
         self.setCurrentIndex(self.findText(default_choice))
         return
 

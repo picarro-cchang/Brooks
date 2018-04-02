@@ -8,6 +8,7 @@ import glob
 import os
 import re
 import numpy
+from terminaltables import AsciiTable
 from datetime import datetime, date
 from PyQt4 import QtCore, QtGui
 
@@ -44,15 +45,27 @@ def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
 
 def fill_report_template(settings, reference_gases, results):
     report = get_formatted_user_information(results)
+    report += "\n"
     if "Linear_Regression_Validation" in settings["Analysis"]:
-        report += get_formatted_linear_regression_pass_fail_summary(results)
+        report += get_formatted_pass_fail_summary(results,
+                                                  show_zero_air_test=True,
+                                                  show_slope_test=True,
+                                                  show_percent_deviation_test=True)
+        report += "\n"
         report += get_formatted_linear_regression_results(results)
     if "Span_Validation" in settings["Analysis"]:
-        report += get_formatted_span_pass_fail_summary(results)
+        report += get_formatted_pass_fail_summary(results,
+                                                  show_zero_air_test=True,
+                                                  show_slope_test=False,
+                                                  show_percent_deviation_test=True)
     if "One_Point_Validation" in settings["Analysis"]:
-        report += get_formatted_one_point_pass_fail_summary(results)
-
+        report += get_formatted_pass_fail_summary(results,
+                                                  show_zero_air_test=False,
+                                                  show_slope_test=False,
+                                                  show_percent_deviation_test=True)
+    report += "\n"
     report += get_formatted_task_details(settings, reference_gases, results)
+    report += "\n"
 
     for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
         report += g.getFormattedGasDetails(e)
@@ -61,100 +74,94 @@ def fill_report_template(settings, reference_gases, results):
     return report
 
 def get_formatted_user_information(results):
-    str = "{0} {1} {0}\n".format("=" * 15, "Report Authentication")
-    str += "{0:20}:{1}\n".format("Username", results["username"])
-    str += "{0:20}:{1}\n".format("Full name", results["fullname"])
-    str += "{0:20}:{1}\n".format("Instrument SN", "TBD")
-    str += "{0:20}:{1}\n".format("Start time", results["start_time"])
-    str += "{0:20}:{1}\n".format("End time", results["end_time"])
-    str += "\n"
-    return str
+    table_data = []
+    table_data.append(["Username", results["username"]])
+    table_data.append(["Full name", results["fullname"]])
+    table_data.append(["Instrument SN", "TBD"])
+    table_data.append(["Start time", results["start_time"]])
+    table_data.append(["End time", results["end_time"]])
+    table = AsciiTable(table_data)
+    table.title = "Report Authentication"
+    table.inner_heading_row_border = False
+    return table.table + "\n"
 
-def get_formatted_span_pass_fail_summary(results):
-    str = "{0} {1} {0}\n".format("=" * 15, "Summary")
-    str += "|{0:10}|{1:20}|{2:15}|{3:10}|\n".format("Test", "Acceptance Criteria", "Result", "Status")
+def get_formatted_pass_fail_summary(results,
+                                    show_zero_air_test = False,
+                                    show_slope_test = False,
+                                    show_percent_deviation_test = True):
+    table_data = []
+    table_data.append(["Test", "Acceptance Criteria", "Result", "Status"])
 
-    # Sort to show the worst result.
-    # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0.0.
-    if "Yes" in results["Zero_Air"]:
-        sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
-        sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
-        (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
-        str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
+    if show_zero_air_test:
+        # Sort to show the worst result.
+        # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0
+        if results["Zero_Air_Test"]:
+            sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
+            sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
+            (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
+            table_data.append(["Zero Air",
+                               "{0:5.3f} ppm < [{1}] < {2:5.3f} ppm".format(zeroMin, results["Gas_Name"], zeroMax),
+                               "{0:.4f}".format(zeroMeas),
+                               "{0}".format(zeroStatus)])
 
-    # Sort the percent deviation results so that we show the worst result.
-    sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
-    (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
-    str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
-    str += "\n"
-    return str
+    if show_slope_test:
+        (slope, slope_status, slope_min, slope_max) = results["Slope_Test"]
+        table_data.append(["Slope Test",
+                           "{0:5.3f} < m < {1:5.3f}".format(slope_min, slope_max),
+                           "{0:.4f}".format(slope),
+                           "{0}".format(slope_status)])
 
-def get_formatted_one_point_pass_fail_summary(results):
-    str = "{0} {1} {0}\n".format("=" * 15, "Summary")
-    str += "|{0:10}|{1:20}|{2:15}|{3:10}|\n".format("Test", "Acceptance Criteria", "Result", "Status")
-    # Sort the percent deviation results so that we show the worst result.
-    sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
-    (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
-    str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
-    str += "\n"
-    return str
+    if show_percent_deviation_test:
+        # Sort the percent deviation results so that we show the worst result.
+        sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
+        if sorted_dev_test:
+            (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
+            table_data.append(["% Deviation",
+                              "%dev < {0:5.3f}".format(percent_acceptance),
+                               "{0:.4f}".format(percent_deviation),
+                               "{0}".format(percent_status)])
 
-def get_formatted_linear_regression_pass_fail_summary(results):
-    str = "{0} {1} {0}\n".format("=" * 15, "Summary")
-    str += "|{0:10}|{1:20}|{2:15}|{3:10}|\n".format("Test", "Acceptance Criteria", "Result", "Status")
-
-    # Sort to show the worst result.
-    # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0.0.
-    if "Yes" in results["Zero_Air"]:
-        sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
-        sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
-        (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
-        str += "|{0:10}|>{1:5}ppb <{2:5}ppb|{3:15}|{4}|\n".format("Zero Air", zeroMin, zeroMax, zeroMeas, zeroStatus)
-
-    (slope, slope_status, slope_min, slope_max) = results["Slope_Test"]
-    str += "|{0:10}|>{1:5} <{2:5}|{3}|{4}|\n".format("Slope", slope_min, slope_max, slope, slope_status)
-
-    # Sort the percent deviation results so that we show the worst result.
-    sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
-    if sorted_dev_test:
-        (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
-        str += "|{0:10}|<{1:10}%|{2:15}|{3:10}|\n".format("Deviation", percent_acceptance, percent_deviation, percent_status)
-    str += "\n"
-    return str
+    table = AsciiTable(table_data)
+    table.title = "Pass/Fail Summary"
+    table.justify_columns[0] = "center"
+    table.justify_columns[1] = "center"
+    table.justify_columns[2] = "right"
+    table.justify_columns[3] = "center"
+    return table.table + "\n"
 
 def get_formatted_linear_regression_results(results):
-    str = "{0} {1} {0}\n".format("=" * 15, "Linear Regression")
-    str += "{0:30}: {1}\n".format("Linear Regression slope", results["slope"])
-    str += "{0:30}: {1}\n".format("Linear Regression intercept", results["intercept"])
-    str += "{0:30}: {1}\n".format("Linear Regression R^2", results["r2"])
-    str += "\n"
-    return str
+    table_data = []
+    table_data.append(["Slope", "{0:15.5f}".format(results["slope"])])
+    table_data.append(["Intercept", "{0:15.5f}".format(results["intercept"])])
+    table_data.append(["R^2", "{0:15.5f}".format(results["r2"])])
+    table = AsciiTable(table_data)
+    table.title = "Linear Regression"
+    table.inner_heading_row_border = False
+    return table.table + "\n"
 
 def get_formatted_task_details(settings, reference_gases, results):
-    eq_length = (95 - (len(results["Gas_Name"] + " " + "Measurements") + 2))/2
-    line = "|{0}|\n".format("-" * 95)
-    str = "|{0} {1} {2} {0}|\n".format("=" * eq_length, results["Gas_Name"], "Measurements")
-    str += "|{0:^15}|{1:^15}|{2:^15}|{3:^15}|{4:^15}|{5:^15}|\n".format(
-        "Gas Source",
-        "Measured PPM",
-        "Measured Std.",
-        "Reference PPM",
-        "Reference Acc",
-        "% Deviation")
-    str += line
+    str = ""
+    table_data = []
+    table_data.append(["Gas Source", "Measured PPM", "Measured Std.", "Ref. ppm", "Ref. Acc %", "% Deviation"])
     for idx, value in enumerate(results["Gas"]):
         percent_deviation = 0
         if not numpy.isnan(results["Percent_Deviation"][idx]):
             percent_deviation = results["Percent_Deviation"][idx]
-        str += "|{0:^15}|{1:15.5f}|{2:15.5f}|{3:15.5f}|{4:^15}|{5:15.5f}|\n".format(
-            value,
-            results["Meas_Conc"][idx],
-            results["Meas_Conc_Std"][idx],
-            results["Ref_Conc"][idx],
-            results["Ref_Acc"][idx],
-            percent_deviation)
-        str += line
-    str += "\n"
+        table_data.append([value,
+                           "{0:>.4f}".format(results['Meas_Conc'][idx]),
+                           "{0:>.4f}".format(results['Meas_Conc_Std'][idx]),
+                           "{0:>.4f}".format(results['Ref_Conc'][idx]),
+                           "{0:^8}".format(results['Ref_Acc'][idx]),
+                           "{0:>.4f}".format(percent_deviation)])
+    table = AsciiTable(table_data)
+    table.title = results["Gas_Name"] + " " + "Measurements"
+    table.justify_columns[0] = "center"
+    table.justify_columns[1] = "right"
+    table.justify_columns[2] = "right"
+    table.justify_columns[3] = "right"
+    table.justify_columns[4] = "center"
+    table.justify_columns[5] = "right"
+    str += table.table + "\n"
     return str
 
 def getDateNow():

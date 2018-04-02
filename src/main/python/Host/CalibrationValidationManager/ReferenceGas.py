@@ -1,5 +1,6 @@
 import collections
 from enum import Enum
+from terminaltables import AsciiTable
 
 class GasEnum(Enum):
     Air = 1
@@ -93,10 +94,7 @@ class ReferenceGas(object):
         if "SN" in gasDict:
             self.tankSN = gasDict["SN"]
         if "Zero_Air" in gasDict:
-            if any(substr in gasDict["Zero_Air"] for substr in ["Y", "y", "T", "t"]):
-                self.zeroAir = "Yes"
-            else:
-                self.zeroAir = "No"
+            self.zeroAir = gasDict["Zero_Air"]
 
         # Loop through the list of component gases in this gas mix.
         # The concentration field is required but accuracy is optional.
@@ -198,29 +196,16 @@ class ReferenceGas(object):
 
     def getFormattedGasDetails(self, key):
         d = self.getGasDetails()
-        str = "{0} {1} {0}\n".format("="*20, key) # name of gas source
-        str += "{0:20}: {1}\n".format("Tank Name", self.tankName)
-        str += "{0:20}: {1}\n".format("Tank Serial Number", self.tankSN)
-        str += "{0:20}: {1}\n".format("Tank Description", self.tankDesc)
-        str += "{0:20}: {1}\n".format("Tank Vendor", self.tankVendor)
-        str += "{0:20}: {1}\n".format("Zero Air", self.zeroAir)
+        table_data = []
+        table_data.append(["Gas Cylinder Name", self.tankName])
+        table_data.append(["Gas Cylinder Serial Number", self.tankSN])
+        table_data.append(["Zero Air", self.zeroAir])
         for i, [gas_name, gas_conc, conc_acc] in enumerate(d["Gas"]):
             if i == 0:
-                # try:
-                #     x = float(conc_acc)
-                str += "{0:20}: {1} {2:10.3f} ppm +/-{3}\n".format("Gas Composition", gas_name, float(gas_conc), conc_acc)
-                # except ValueError:
-                #     str += "{0:20}: {1} {2:10.3f} ppm\n".format("Gas Composition", gas_name, float(gas_conc))
+                table_data.append(["Gas Composition", "[{0}] {1:10.3f} ppm +/- {2:<8}".format(gas_name, float(gas_conc), conc_acc)])
             else:
-                # try:
-                #     x = float(conc_acc)
-                str += "{0:20}: {1} {2:10.3f} ppm +/-{3}\n".format(" ", gas_name, float(gas_conc), conc_acc)
-                # except ValueError:
-                #     try:
-                #         x = float(gas_conc)
-                #         str += "{0:20}: {1} {2:10.3f} ppm\n".format(" ", gas_name, float(gas_conc))
-                #     except ValueError:
-                #         str += "{0:20}: {1} {2:>10}\n".format(" ", gas_name, gas_conc)
-        str += "{0}\n".format("-"*46)
-        return str
-
+                table_data.append(["", "[{0}] {1:10.3f} ppm +/- {2:<8}".format(gas_name, float(gas_conc), conc_acc)])
+        table = AsciiTable(table_data)
+        table.title = key
+        table.inner_heading_row_border = False
+        return table.table + "\n"
