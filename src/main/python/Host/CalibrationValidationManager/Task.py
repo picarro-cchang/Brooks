@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import datetime
 import numpy
 import QGuiText
+import re
 from PyQt4 import QtCore, QtGui
 from QNonBlockingTimer import QNonBlockingTimer
 from QDateTimeUtilities import get_nseconds_of_latest_data
@@ -92,11 +93,16 @@ class Task(QtCore.QObject):
                 self._results["Gas_Name"] = self._settings["Data_Key"]
                 gasEnum = GasEnum[self._settings["Data_Key"]]  # Convert the human readable gas name to the enum form
                 ref_gas_conc = float(self._reference_gases[gas_key].getGasConcPpm(gasEnum))
+                ref_gas_acc = str(self._reference_gases[gas_key].getGasAccPercent(gasEnum))
                 zero_air = self._reference_gases[gas_key].zeroAir
                 if "Ref_Conc" in self._results:
                     self._results["Ref_Conc"].append(ref_gas_conc)
                 else:
                     self._results["Ref_Conc"] = [ref_gas_conc]
+                if "Ref_Acc" in self._results:
+                    self._results["Ref_Acc"].append(ref_gas_acc)
+                else:
+                    self._results["Ref_Acc"] = [ref_gas_acc]
                 if "Gas" in self._results:
                     self._results["Gas"].append(gas_key)
                 else:
@@ -294,6 +300,72 @@ class Task(QtCore.QObject):
                 self._results["Percent_Deviation"].append(numpy.NaN)
         return
 
+    def zero_air_test(self):
+        # Find zero air measurements and see if they pass the zero test.
+        #
+        # The output is an array for each zero air measurement.  Normally you only measure it once
+        # but we put in the ability to handle an arbitrary number if the measurement pattern
+        # is repeated like low-high-low-high...
+        # Each array element is a tuple with the measurement, "Pass" or "Fail, and min and max
+        # fail thresholds.
+        #
+        #
+        self._results["Zero_Air_Test"] = []
+        zeroMax = None
+        zeroMin = -0.01 # 0.01 ppm or 10 ppb
+        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
+            if "Zero" in zeroAirFlag:
+                if "Standard" in zeroAirFlag:
+                    zeroMax = 1.0 # 1 ppm
+                if "Utra" in zeroAirFlag:
+                    zeroMax = 0.1 # 0.1 ppm
+                measConc = self._results["Meas_Conc"][idx]
+                if measConc >= zeroMin and measConc <= zeroMax:
+                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroMin, zeroMax))
+                else:
+                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroMin, zeroMax))
+        return
+
+    def slope_test(self):
+        # Check to see if the slope test passes
+        slope_min = 0.95
+        slope_max = 1.05
+        slope = self._results["slope"]
+        self._results["Slope_Test"] = None
+        if self._results["slope"] > slope_min and self._results["slope"] < slope_max:
+            self._results["Slope_Test"] = (slope, "Pass", slope_min, slope_max)
+        else:
+            self._results["Slope_Test"] = (slope, "Fail", slope_min, slope_max)
+        return
+
+    def percent_deviation_test(self):
+        # Check if % deviation of measured vs actual exceed the passing threshold.
+        # The % deviation passing criteria is % accuracy of the reference gas as
+        # entered in by the user, + 1% for instrument noise.
+        #
+        # _results["Ref_Acc"] is assumed to contain % accuracy as a string in the
+        # form "2.0 %".
+        #
+        percent_acceptance = numpy.NaN
+        self._results["Deviation_Test"] = []
+        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
+            pa = re.findall("\d+\.\d+", self._results["Ref_Acc"][idx])
+            if pa:
+                percent_acceptance = float(pa[0]) + 1.0
+            else:
+                percent_acceptance = numpy.NaN
+            if numpy.isnan(percent_deviation) or numpy.isnan(percent_acceptance):
+                # Either this is zero air or the % accuracy wasn't specified for this
+                # reference gas.
+                pass
+            else:
+                measConc = self._results["Meas_Conc"][idx]
+                refConc = self._results["Ref_Conc"][idx]
+                if percent_deviation < percent_acceptance :
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
+                else:
+                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
+        return
 
     def linear_regression(self):
         """
@@ -316,51 +388,9 @@ class Task(QtCore.QObject):
         self._results["intercept"] = coeffs[1]
         self._results["r2"] = r2
 
-        # Find zero air measurements and see if they pass the zero test.
-        #
-        # The output is an array for each zero air measurement.  Normally you only measure it once
-        # but we put in the ability to handle an arbitrary number if the measurement pattern
-        # is repeated like low-high-low-high...
-        # Each array element is a tuple with the measurement, "Pass" or "Fail, and min and max
-        # fail thresholds.
-        #
-        #
-        self._results["Zero_Air_Test"] = []
-        zeroAirMin = self._settings["ZERO_PPM"][0] #-0.005 # -0.005 PPM or -5 PPB
-        zeroAirMax = self._settings["ZERO_PPM"][1]
-        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-            if "Yes" in zeroAirFlag:
-                measConc = self._results["Meas_Conc"][idx]
-                if measConc > zeroAirMin and measConc < zeroAirMax:
-                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))
-                else:
-                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroAirMin, zeroAirMax))
-
-        # Check to see if the slope test passes
-        slope_min = 0.95
-        slope_max = 1.05
-        slope = self._results["slope"]
-        self._results["Slope_Test"] = None
-        if self._results["slope"] > slope_min and self._results["slope"] < slope_max:
-            self._results["Slope_Test"] = (slope, "Pass", slope_min, slope_max)
-        else:
-            self._results["Slope_Test"] = (slope, "Fail", slope_min, slope_max)
-
-        # Check if % deviation of measured vs actual exceed the passing threshold
-        #
-        percent_acceptance = 5.0 # 5%
-        self._results["Deviation_Test"] = []
-        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
-            if numpy.isnan(percent_deviation):
-                pass
-            else:
-                measConc = self._results["Meas_Conc"][idx]
-                refConc = self._results["Ref_Conc"][idx]
-                if percent_deviation < percent_acceptance :
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
-                else:
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
-
+        self.zero_air_test()
+        self.slope_test()
+        self.percent_deviation_test()
 
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
         (fileName, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
@@ -373,33 +403,8 @@ class Task(QtCore.QObject):
         :return:
         """
         self.preanalysis_data_processing()
-
-        self._results["Zero_Air_Test"] = []
-        zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
-        zeroAirMax = 0.010
-        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-            if "Yes" in zeroAirFlag:
-                measConc = self._results["Meas_Conc"][idx]
-                if measConc > zeroAirMin and measConc < zeroAirMax:
-                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))
-                else:
-                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroAirMin, zeroAirMax))
-
-        # Check if % deviation of measured vs actual exceed the passing threshold
-        #
-        percent_acceptance = 5.0 # 5%
-        self._results["Deviation_Test"] = []
-        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
-            if numpy.isnan(percent_deviation):
-                pass
-            else:
-                measConc = self._results["Meas_Conc"][idx]
-                refConc = self._results["Ref_Conc"][idx]
-                if percent_deviation < percent_acceptance :
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
-                else:
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
-
+        self.zero_air_test()
+        self.percent_deviation_test()
         (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
         self.task_report_signal.emit(filename, doc)
         return
@@ -410,21 +415,7 @@ class Task(QtCore.QObject):
         :return:
         """
         self.preanalysis_data_processing()
-        # Check if % deviation of measured vs actual exceed the passing threshold
-        #
-        percent_acceptance = 5.0 # 5%
-        self._results["Deviation_Test"] = []
-        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
-            if numpy.isnan(percent_deviation):
-                pass
-            else:
-                measConc = self._results["Meas_Conc"][idx]
-                refConc = self._results["Ref_Conc"][idx]
-                if percent_deviation < percent_acceptance :
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
-                else:
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
-
+        self.percent_deviation_test()
         (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
         self.task_report_signal.emit(filename, doc)
         return
