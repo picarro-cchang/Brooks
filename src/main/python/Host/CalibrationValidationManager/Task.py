@@ -300,28 +300,7 @@ class Task(QtCore.QObject):
                 self._results["Percent_Deviation"].append(numpy.NaN)
         return
 
-
-    def linear_regression(self):
-        """
-        Linear regression of the reference gas concentration (x) vs the measured
-        concentration (y).
-        :return: p = slope and offset of best fit line
-        """
-        self.preanalysis_data_processing()
-
-        x = self._results["Meas_Conc"]
-        y = self._results["Ref_Conc"]
-        coeffs = numpy.polyfit(x,y,1)
-        yfit = numpy.poly1d(coeffs)(x)
-
-        ybar = numpy.sum(y)
-        ssreg = numpy.sum((yfit - ybar)**2)
-        sstot = numpy.sum((y - ybar)**2)
-        r2 = ssreg/sstot
-        self._results["slope"] = coeffs[0]
-        self._results["intercept"] = coeffs[1]
-        self._results["r2"] = r2
-
+    def zero_air_test(self):
         # Find zero air measurements and see if they pass the zero test.
         #
         # The output is an array for each zero air measurement.  Normally you only measure it once
@@ -345,7 +324,9 @@ class Task(QtCore.QObject):
                     self._results["Zero_Air_Test"].append((measConc, "Pass", zeroMin, zeroMax))
                 else:
                     self._results["Zero_Air_Test"].append((measConc, "Fail", zeroMin, zeroMax))
+        return
 
+    def slope_test(self):
         # Check to see if the slope test passes
         slope_min = 0.95
         slope_max = 1.05
@@ -355,7 +336,9 @@ class Task(QtCore.QObject):
             self._results["Slope_Test"] = (slope, "Pass", slope_min, slope_max)
         else:
             self._results["Slope_Test"] = (slope, "Fail", slope_min, slope_max)
+        return
 
+    def percent_deviation_test(self):
         # Check if % deviation of measured vs actual exceed the passing threshold.
         # The % deviation passing criteria is % accuracy of the reference gas as
         # entered in by the user, + 1% for instrument noise.
@@ -382,7 +365,32 @@ class Task(QtCore.QObject):
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
                 else:
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
+        return
 
+    def linear_regression(self):
+        """
+        Linear regression of the reference gas concentration (x) vs the measured
+        concentration (y).
+        :return: p = slope and offset of best fit line
+        """
+        self.preanalysis_data_processing()
+
+        x = self._results["Meas_Conc"]
+        y = self._results["Ref_Conc"]
+        coeffs = numpy.polyfit(x,y,1)
+        yfit = numpy.poly1d(coeffs)(x)
+
+        ybar = numpy.sum(y)
+        ssreg = numpy.sum((yfit - ybar)**2)
+        sstot = numpy.sum((y - ybar)**2)
+        r2 = ssreg/sstot
+        self._results["slope"] = coeffs[0]
+        self._results["intercept"] = coeffs[1]
+        self._results["r2"] = r2
+
+        self.zero_air_test()
+        self.slope_test()
+        self.percent_deviation_test()
 
         image = ReportUtilities.make_plot(x, y, yfit, "S", "N", "O")
         (fileName, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results, image)
@@ -395,33 +403,8 @@ class Task(QtCore.QObject):
         :return:
         """
         self.preanalysis_data_processing()
-
-        self._results["Zero_Air_Test"] = []
-        zeroAirMin = -0.005 # -0.005 PPM or -5 PPB
-        zeroAirMax = 0.010
-        for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
-            if "Zero" in zeroAirFlag:
-                measConc = self._results["Meas_Conc"][idx]
-                if measConc > zeroAirMin and measConc < zeroAirMax:
-                    self._results["Zero_Air_Test"].append((measConc, "Pass", zeroAirMin, zeroAirMax))
-                else:
-                    self._results["Zero_Air_Test"].append((measConc, "Fail", zeroAirMin, zeroAirMax))
-
-        # Check if % deviation of measured vs actual exceed the passing threshold
-        #
-        percent_acceptance = 5.0 # 5%
-        self._results["Deviation_Test"] = []
-        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
-            if numpy.isnan(percent_deviation):
-                pass
-            else:
-                measConc = self._results["Meas_Conc"][idx]
-                refConc = self._results["Ref_Conc"][idx]
-                if percent_deviation < percent_acceptance :
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
-                else:
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
-
+        self.zero_air_test()
+        self.percent_deviation_test()
         (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
         self.task_report_signal.emit(filename, doc)
         return
@@ -432,21 +415,7 @@ class Task(QtCore.QObject):
         :return:
         """
         self.preanalysis_data_processing()
-        # Check if % deviation of measured vs actual exceed the passing threshold
-        #
-        percent_acceptance = 5.0 # 5%
-        self._results["Deviation_Test"] = []
-        for idx, percent_deviation in enumerate(self._results["Percent_Deviation"]):
-            if numpy.isnan(percent_deviation):
-                pass
-            else:
-                measConc = self._results["Meas_Conc"][idx]
-                refConc = self._results["Ref_Conc"][idx]
-                if percent_deviation < percent_acceptance :
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
-                else:
-                    self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
-
+        self.percent_deviation_test()
         (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
         self.task_report_signal.emit(filename, doc)
         return
