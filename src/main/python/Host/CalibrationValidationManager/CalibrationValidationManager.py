@@ -46,6 +46,7 @@ class Window(QtGui.QMainWindow):
         self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
         self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
         self.taskWizardWidget.abort_signal.connect(partial(self.tableWidget.disable_edit, False))
+        self.taskWizardWidget.job_complete_signal.connect(partial(self.closeBtn.setEnabled, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
         self.taskWizardWidget.view_editors_signal.connect(self._view_reference_gas_settings)
@@ -114,6 +115,7 @@ class Window(QtGui.QMainWindow):
         return
 
     def start_running_tasks(self):
+        self.closeBtn.setEnabled(False)
         self.tm.start_work()
         return
 

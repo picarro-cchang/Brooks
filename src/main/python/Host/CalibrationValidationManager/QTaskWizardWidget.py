@@ -38,6 +38,7 @@ class QTaskWizardWidget(QtGui.QWidget):
     start_run_signal = QtCore.pyqtSignal()
     next_signal = QtCore.pyqtSignal()
     abort_signal = QtCore.pyqtSignal()
+    job_complete_signal = QtCore.pyqtSignal()
     view_editors_signal = QtCore.pyqtSignal()
     hide_editors_signal = QtCore.pyqtSignal()
 
@@ -216,6 +217,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._text_edit.setText("Job completed, message TBD")
         self._startup_settings()
         self._viewReportBtn.setEnabled(True)
+        self.job_complete_signal.emit()
         return
 
     def job_aborted(self):
