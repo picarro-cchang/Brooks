@@ -101,14 +101,98 @@ class QTaskEditorWidget(QtGui.QWidget):
         return
 
     def save_task_settings(self):
-        for key, cb in self.taskDictCB.items():
-            self.tco[key]["Gas"] = cb.currentText()
-        if self.linearRegressionValidationRB.isChecked():
-            self.tco["TASK4"]["Analysis"] = "Linear_Regression_Validation"
-        elif self.spanValidationRB.isChecked():
-            self.tco["TASK4"]["Analysis"] = "Span_Validation"
-        else:
-            self.tco["TASK4"]["Analysis"] = "One_Point_Validation"
-        self.co["TASKS"] = self.tco
-        self.co.write()
+        if self.pass_sanity_check():
+            for key, cb in self.taskDictCB.items():
+                self.tco[key]["Gas"] = cb.currentText()
+            if self.linearRegressionValidationRB.isChecked():
+                self.tco["TASK4"]["Analysis"] = "Linear_Regression_Validation"
+            elif self.spanValidationRB.isChecked():
+                self.tco["TASK4"]["Analysis"] = "Span_Validation"
+            else:
+                self.tco["TASK4"]["Analysis"] = "One_Point_Validation"
+            self.co["TASKS"] = self.tco
+            self.co.write()
         return
+
+    def pass_sanity_check(self):
+        """
+        Check the widget states before saving to make sure the user's choices make sense.
+        :return:
+        ok : True/False
+
+        This code will return 3 states, PASS, WARNING, ERROR.
+
+        PASS : ok = True, error_str = ""
+        WARNING : ok = True, error_str = <warning messages about suspect choices like repeated gas choices>
+        ERROR : ok = False, error_str = <error messages>
+
+        If ERROR, do not save the results as the current settings can't be run.
+        If WARNING, saving and running allowed but the user is advised to recheck the settings.
+        """
+        ok = True
+        error_msg = ""
+        task_choices = []
+        for key, cb in self.taskDictCB.items():
+            task_choices.append(cb.currentText())
+
+        # Check to see if enough gases are measured for the analysis chosen.
+        skip_count = task_choices.count("Skip")
+        if self.linearRegressionValidationRB.isChecked() and skip_count > 1:
+            ok = False
+            error_msg += "Linear Regression requires at least 3 gas measurements."
+        elif self.spanValidationRB.isChecked() and skip_count > 2:
+            ok = False
+            error_msg += "Span Validation requires at least 2 gas measurements."
+        elif self.onePointValidationRB.isChecked() and skip_count == 4:
+            ok = False
+            error_msg += "One Point Validation requires at least 1 gas measurement."
+
+        # If the user has selected enough gas measurements, now check that enough UNIQUE
+        # measurements have been selected.
+        gas_choices = [x for x in task_choices if 'GAS' in x]  # strip out 'Skip' steps
+        uniq_gas_choices = set(gas_choices)
+        if ok:
+            # Linear regression check, make sure we measure at least 3 distinct gas sources.
+            # We are looking for mistakes like measuring gas 0,0,3,3.  Note that we are only
+            # checking for unique gas source labels and not that the concentrations are
+            # spread out to get a good linear fit.
+            #
+            if self.linearRegressionValidationRB.isChecked() and len(uniq_gas_choices) < 3:
+                ok = False
+                error_msg += "You have repeated too many gas sources for a Linear Regression Analysis."
+
+            # Span test should include at least two distinct gases sources.  The user may opt
+            # for more for something like a step test.
+            if self.spanValidationRB.isChecked() and len(uniq_gas_choices) < 2:
+                ok = False
+                error_msg += "Span Validation requires at least 2 unique gas measurements."
+
+        # If we got this far the settings are usable but here we warn the user if they
+        # may have not picked the best or recommended settings.
+        if ok:
+            if self.linearRegressionValidationRB.isChecked() and len(uniq_gas_choices) < len(gas_choices):
+                error_msg += "You have repeated a gas measurement.\n\n"
+                error_msg += "This is not recommended for the Linear Regression Analysis\n\n"
+                error_msg += "Please confirm your choice."
+            if self.spanValidationRB.isChecked() and len(uniq_gas_choices) > 2:
+                error_msg += "You have picked more than two gas sources to measure.\n\n"
+                error_msg += "For Span Validation it is recommended to only pick two."
+            if self.onePointValidationRB.isChecked() and len(uniq_gas_choices) > 1:
+                error_msg += "You have picked more than one gas source to measure.\n\n"
+                error_msg += "For One Point Validation it is recommended to measure only one source."
+
+        if not ok:
+            not_saved_str = "CHANGES NOT SAVED\n\n"
+            QtGui.QMessageBox.critical(self,
+                                       'Critical',
+                                       not_saved_str + error_msg,
+                                       QtGui.QMessageBox.Ok,
+                                       QtGui.QMessageBox.Ok)
+        if ok and len(error_msg):
+            QtGui.QMessageBox.warning(self,
+                                      'Warning',
+                                      error_msg,
+                                      QtGui.QMessageBox.Ok,
+                                      QtGui.QMessageBox.Ok)
+
+        return ok
