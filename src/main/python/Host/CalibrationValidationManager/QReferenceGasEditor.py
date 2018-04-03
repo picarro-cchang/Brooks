@@ -176,10 +176,6 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         for k,v in self.rgco.items():
             labels = []
             values = []
-            # if "Desc" not in v:
-            #     v["Desc"] = ""
-            # if "Vendor" not in v:
-            #     v["Vendor"] = ""
             if "Zero_Air" not in v:
                 v["Zero_Air"] = "No"
             if "Uncertainty" not in v:
@@ -210,9 +206,6 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.setRowCount(len(values))
             for j, value in enumerate(values):
                 if j == 2:
-                    # cb = QtGui.QComboBox()
-                    # cb.addItems(["No","Yes"])
-                    # cb.setCurrentIndex( cb.findText(values[j]) )
                     cb = MyZeroAirSelectorComboBox(values[j])
                     self.setCellWidget(j, idx, cb)
                 elif j == 3:
@@ -236,35 +229,29 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         ini file.
         :return:
         """
-        for col in range(self.columnCount()):
-            col_key = str(self.horizontalHeaderItem(col).text())
-            i = 0
-            self.rgco[col_key]["Name"] = str(self.item(i,col).text())
-            i += 1
-            self.rgco[col_key]["SN"] = str(self.item(i, col).text())
-            # i += 1
-            # self.rgco[col_key]["Desc"] = str(self.item(i, col).text())
-            # i += 1
-            # self.rgco[col_key]["Vendor"] = str(self.item(i, col).text())
-            i += 1
-            # self.rgco[col_key]["Zero_Air"] = str(self.item(i, col).text())  # need to customize by widget type
-            self.rgco[col_key]["Zero_Air"] = str(self.cellWidget(i, col).currentText())
-            i += 1
-            concentration = []
-            uncertainty = []
-            for row in range(i, self.rowCount(), 2):
-                # concentration.append(str(self.item(row,col).text()))
-                concentration.append(str(self.cellWidget(row,col).text()))
-                # uncertainty.append(str(self.item(row+1,col).text()))
-                uncertainty.append(str(self.cellWidget(row+1,col).currentText()))
-            if len(concentration) > 1:
-                self.rgco[col_key]["Concentration"] = concentration
-                self.rgco[col_key]["Uncertainty"] = uncertainty
-            else:
-                self.rgco[col_key]["Concentration"] = concentration[0]
-                self.rgco[col_key]["Uncertainty"] = uncertainty[0]
-        self.co["GASES"] = self.rgco
-        self.co.write()
+        if self.pass_sanity_check():
+            for col in range(self.columnCount()):
+                col_key = str(self.horizontalHeaderItem(col).text())
+                i = 0
+                self.rgco[col_key]["Name"] = str(self.item(i,col).text())
+                i += 1
+                self.rgco[col_key]["SN"] = str(self.item(i, col).text())
+                i += 1
+                self.rgco[col_key]["Zero_Air"] = str(self.cellWidget(i, col).currentText())
+                i += 1
+                concentration = []
+                uncertainty = []
+                for row in range(i, self.rowCount(), 2):
+                    concentration.append(str(self.cellWidget(row,col).text()))
+                    uncertainty.append(str(self.cellWidget(row+1,col).currentText()))
+                if len(concentration) > 1:
+                    self.rgco[col_key]["Concentration"] = concentration
+                    self.rgco[col_key]["Uncertainty"] = uncertainty
+                else:
+                    self.rgco[col_key]["Concentration"] = concentration[0]
+                    self.rgco[col_key]["Uncertainty"] = uncertainty[0]
+            self.co["GASES"] = self.rgco
+            self.co.write()
         return
 
     def disable_edit(self, disable):
@@ -282,6 +269,75 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.setEditTriggers(self.editTriggers() | ~QtGui.QAbstractItemView.NoEditTriggers)
         return
 
+    def pass_sanity_check(self):
+        """
+        Check the widget states before saving to make sure the user's choices make sense.
+        :return:
+        ok : True/False
+
+        This code will return 3 states, PASS, WARNING, ERROR.
+
+        PASS : ok = True, error_str = ""
+        WARNING : ok = True, error_str = <warning messages about suspect choices like repeated gas choices>
+        ERROR : ok = False, error_str = <error messages>
+
+        If ERROR, do not save the results as the current settings can't be run.
+        If WARNING, saving and running allowed but the user is advised to recheck the settings.
+        """
+        ok = True
+        error_msg = ""
+
+        # Check to make sure there are no non zero-air gases with a concentration of 0.0.
+        # If this happens we will have a division by 0 when we compute % deviation.
+        #
+        # zero_air_error_columns tabulates the columns with problems. "col+1" makes
+        # the column number user friendly.
+        zero_air_error_columns = []
+        for col in range(self.columnCount()):
+            i = 2 # Zero-Air
+            zero_air_choice = str(self.cellWidget(i, col).currentText())
+            i = 3 # gas conc
+            user_gas_conc = float(self.cellWidget(i, col).text())
+            if "No" in zero_air_choice and user_gas_conc < 0.0001:
+                ok = False
+                zero_air_error_columns.append(col+1)
+        if len(zero_air_error_columns) == 1:
+            error_msg += "Error in column {0}.\n\n".format(', '.join(str(x) for x in zero_air_error_columns))
+            error_msg += "For non-zero-air gases, set the gas concentration to more than 0.0001 ppm.\n\n"
+        if len(zero_air_error_columns) > 1:
+            error_msg += "Error in columns {0}.\n\n".format(', '.join(str(x) for x in zero_air_error_columns))
+            error_msg += "For non-zero-air gases, set all gas concentrations to more than 0.0001 ppm.\n\n"
+
+        # Give non-critical warnings or recommendations
+        blank_field_found = False
+        if ok:
+            for col in range(self.columnCount()):
+                i = 0
+                name = str(self.item(i,col).text())
+                i += 1
+                sn = str(self.item(i, col).text())
+                if not name or not sn:
+                    blank_field_found = True
+        if blank_field_found:
+            error_msg += "One or more gas sources is missing a name or serial number.\n\n"
+            error_msg += "Please fill out the gas information according to\n"
+            error_msg += "your company's standard procedures."
+
+
+        if not ok:
+            not_saved_str = "CHANGES NOT SAVED\n\n"
+            QtGui.QMessageBox.critical(self,
+                                       'Critical',
+                                       not_saved_str + error_msg,
+                                       QtGui.QMessageBox.Ok,
+                                       QtGui.QMessageBox.Ok)
+        if ok and len(error_msg):
+            QtGui.QMessageBox.warning(self,
+                                      'Warning',
+                                      error_msg,
+                                      QtGui.QMessageBox.Ok,
+                                      QtGui.QMessageBox.Ok)
+        return ok
 
 def main(args):
     data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
