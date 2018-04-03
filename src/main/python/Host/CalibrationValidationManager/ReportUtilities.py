@@ -214,6 +214,12 @@ def getFileCounter(path, which = 0):
 def create_report(settings, reference_gases, results, obj=None):
 
     destinationPath = "/home/picarro/I2000/Log/ValidationReport"
+    try:
+        # check if directory exist, if not lets create directory
+        if not os.path.exists(destinationPath):
+            os.makedirs(destinationPath)
+    except Exception as e:
+        print("Error in ReportUtilities::create_report(), cound not able to create directory %s" %destinationPath)
     counter = getFileCounter(destinationPath, 0)
     outputFileName = "{0}/{1}_{2}_{3}.pdf".format(destinationPath, getDateNow(), settings["Data_Key"], counter)
 
