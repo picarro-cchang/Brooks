@@ -137,7 +137,7 @@ class QLoginDialog(QtGui.QDialog):
         self.vbox.addWidget(self.picarroLabel)
 
         # File Manager text
-        self.filemanagerLabel = QtGui.QLabel("<i>Validation Manager</i>")
+        self.filemanagerLabel = QtGui.QLabel("<i>System Validation Tool</i>")
         self.filemanagerLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.vbox.addWidget(self.filemanagerLabel)
 
