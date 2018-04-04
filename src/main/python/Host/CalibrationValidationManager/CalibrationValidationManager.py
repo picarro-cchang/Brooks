@@ -44,8 +44,14 @@ class Window(QtGui.QMainWindow):
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
         self.tm.job_complete_signal.connect(partial(self.tableWidget.disable_edit, False))
         self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
-        self.taskWizardWidget.start_run_signal.connect(partial( self.tableWidget.disable_edit, True))
-        self.taskWizardWidget.abort_signal.connect(partial(self.tableWidget.disable_edit, False))
+        self.taskWizardWidget.start_run_signal.connect(partial(self.tableWidget.setDisabled, True))
+        self.taskWizardWidget.start_run_signal.connect(partial(self.taskEditorWidget.setDisabled, True))
+        self.taskWizardWidget.abort_signal.connect(partial(self.tableWidget.setEnabled, True))
+        self.taskWizardWidget.abort_signal.connect(partial(self.taskEditorWidget.setEnabled, True))
+        self.taskWizardWidget.job_complete_signal.connect(partial(self.tableWidget.setEnabled, True))
+        self.taskWizardWidget.job_complete_signal.connect(partial(self.taskEditorWidget.setEnabled, True))
+        self.taskWizardWidget.abort_signal.connect(partial(self.closeBtn.setEnabled, True))
+        self.taskWizardWidget.job_complete_signal.connect(partial(self.closeBtn.setEnabled, True))
         self.taskWizardWidget.start_run_signal.connect(self.start_running_tasks)
         self.taskWizardWidget.next_signal.connect(self.tm.next_subtask_signal)
         self.taskWizardWidget.view_editors_signal.connect(self._view_reference_gas_settings)
@@ -54,6 +60,7 @@ class Window(QtGui.QMainWindow):
 
     def _init_gui(self):
         self.closeBtn = QtGui.QPushButton("Close")
+        self.closeBtn.setFocusPolicy(QtCore.Qt.ClickFocus)
         hb = QtGui.QHBoxLayout()
         hb.addStretch(1)
         hb.addWidget(self.closeBtn)
@@ -114,6 +121,7 @@ class Window(QtGui.QMainWindow):
         return
 
     def start_running_tasks(self):
+        self.closeBtn.setEnabled(False)
         self.tm.start_work()
         return
 
@@ -164,11 +172,12 @@ class Window(QtGui.QMainWindow):
                             d[secondary_data_key_name[i]] = self.tm.ds.getList(data_source, secondary_data_key[i])[-1]
                     else:
                         d[secondary_data_key_name] = self.tm.ds.getList(data_source, secondary_data_key)[-1]
-            self.plotWidget.setData(timestamps, data, d)
+            self.plotWidget.setData(timestamps, data, primary_data_key_name, d)
         except Exception as e:
             print("E:",e)
             pass
         return
+
 
 def HandleCommandSwitches():
     import getopt

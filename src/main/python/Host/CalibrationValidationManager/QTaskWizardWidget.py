@@ -38,6 +38,7 @@ class QTaskWizardWidget(QtGui.QWidget):
     start_run_signal = QtCore.pyqtSignal()
     next_signal = QtCore.pyqtSignal()
     abort_signal = QtCore.pyqtSignal()
+    job_complete_signal = QtCore.pyqtSignal()
     view_editors_signal = QtCore.pyqtSignal()
     hide_editors_signal = QtCore.pyqtSignal()
 
@@ -45,9 +46,11 @@ class QTaskWizardWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self._reportTextObj = None          # QTextDocument object containing the measurement report
         self._reportFileName = None         # File name of the PDF doc containing _reportTextObj
+        self._running = False               # Track if we are in a validation run
         self.setLayout( self._init_gui() )
         self._startup_settings()
         self._set_connections()
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         return
 
     def _init_gui(self):
@@ -63,6 +66,15 @@ class QTaskWizardWidget(QtGui.QWidget):
         # Set up a two state button
         self._editors_visible = False
         self._showEditorsBtn = QtGui.QPushButton("Show Editors")
+
+        self._startRunBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._nextBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._abortBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._viewReportBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._openFileManagerBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._text_edit.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._task_progressbar.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._showEditorsBtn.setFocusPolicy(QtCore.Qt.NoFocus)
 
         hb = QtGui.QHBoxLayout()
         hb.addWidget(self._abortBtn)
@@ -111,6 +123,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         Set the local widgets for this state.
         :return:
         """
+        self._running = True
         self._reportTextObj = None
         self._startRunBtn.setEnabled(False)
         self._nextBtn.setEnabled(False)
@@ -172,12 +185,14 @@ class QTaskWizardWidget(QtGui.QWidget):
     def _show_editors_button_clicked(self):
         if self._editors_visible:
             self._editors_visible = False
-            self._text_edit.setText(QGuiText.welcome_text())
+            if not self._running:
+                self._text_edit.setText(QGuiText.welcome_text())
             self._showEditorsBtn.setText("Show Editors")
             self.hide_editors_signal.emit()
         else:
             self._editors_visible = True
-            self._text_edit.setText(QGuiText.editor_instructions())
+            if not self._running:
+                self._text_edit.setText(QGuiText.editor_instructions())
             self._showEditorsBtn.setText("Hide Editors")
             self.view_editors_signal.emit()
         return
@@ -213,12 +228,15 @@ class QTaskWizardWidget(QtGui.QWidget):
         return
 
     def job_complete(self):
+        self._running = False
         self._text_edit.setText("Job completed, message TBD")
         self._startup_settings()
         self._viewReportBtn.setEnabled(True)
+        self.job_complete_signal.emit()
         return
 
     def job_aborted(self):
+        self._running = False
         self._text_edit.setText("Job Aborted")
         self._startup_settings()
         self._viewReportBtn.setEnabled(False)

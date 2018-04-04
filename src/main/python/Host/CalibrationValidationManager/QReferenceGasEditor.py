@@ -34,6 +34,7 @@ Concentration = 105.5, -,
 
 from PyQt4 import QtCore, QtGui
 import sys
+from functools import partial
 from Host.Common.configobj import ConfigObj
 
 class MyDoubleValidator(QtGui.QDoubleValidator):
@@ -108,6 +109,8 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self._saveBtn = QtGui.QPushButton("Save")
         self._undoBtn = QtGui.QPushButton("Undo")
+        self._saveBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._undoBtn.setFocusPolicy(QtCore.Qt.NoFocus)
         self._table = QReferenceGasEditor()
         self.setLayout( self._init_gui() )
         self._set_connections()
@@ -127,11 +130,15 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         gb.setLayout(gl)
         mgl = QtGui.QGridLayout()
         mgl.addWidget(gb,0,0)
+        self._disable_undo_save()
         return mgl
 
     def _set_connections(self):
         self._undoBtn.clicked.connect(self._table.display_reference_gas_data)
+        self._undoBtn.clicked.connect(self._disable_undo_save)
         self._saveBtn.clicked.connect(self._table.save_reference_gas_data)
+        self._saveBtn.clicked.connect(self._disable_undo_save)
+        self._table.cellChanged.connect(self._enable_undo_save)
         return
 
     def display_reference_gas_data(self, reference_gases_configobj):
@@ -143,6 +150,19 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._saveBtn.setDisabled(disable)
         self._table.disable_edit(disable)
 
+    def _disable_undo_save(self):
+        self._undoBtn.setDisabled(True)
+        self._saveBtn.setDisabled(True)
+
+    def _enable_undo_save(self):
+        self._undoBtn.setEnabled(True)
+        self._saveBtn.setEnabled(True)
+
+    def keyPressEvent(self, event):
+        print("key event")
+        if event.key() == QtCore.Qt.Key_Tab:
+            print('Tab pressed!')
+
 
 class QReferenceGasEditor(QtGui.QTableWidget):
     def __init__(self, data=None, *args):
@@ -150,13 +170,25 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.data = data
         self.co = None                  # Ini handle (configobj)
         self.rgco = None                # Ini handle (reference gas configobj)
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
     def display_reference_gas_data(self, reference_gases_configobj=None):
         """
-        data is a dictionary of ReferenceGas objects
+        Build the table using the data from the validation ini file.
+        After the UNDO or SAVE button for this table is clicked, the ini
+        file is re-read and this method invoked so that the table is always
+        faithful to the ini file.  In this process all cell widgets are
+        destroyed and have to be reinstantiated.
+
+        Cells are filled with QLineEdits or QComboBoxes or subclasses of
+        these.  When changes are made to these widgets, their change
+        signals are propogated through the QTableWidget cellChanged
+        signal. This signal is then used to enable/disable the UNDO/SAVE
+        buttons when the cell contents are dirty.
         :param data:
         :return:
         """
+
         # If we are passed a ConfigObj use that to set the table otherwise
         # use the exiting ConfigObj to reset the entries.
         if isinstance(reference_gases_configobj, ConfigObj):
@@ -183,8 +215,6 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                     v["Uncertainty"] = ['-'] * len(v["Component"])
                 else:
                     v["Uncertainty"] = '-'
-            # labels.extend(["Name", "SN", "Desc", "Vendor", "Zero_Air"])
-            # values.extend([v["Name"], v["SN"], v["Desc"], v["Vendor"], v["Zero_Air"]])
             labels.extend(["Name", "SN", "Zero_Air"])
             values.extend([v["Name"], v["SN"], v["Zero_Air"]])
             if isinstance(v["Component"], list):
@@ -207,15 +237,21 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             for j, value in enumerate(values):
                 if j == 2:
                     cb = MyZeroAirSelectorComboBox(values[j])
+                    cb.currentIndexChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, cb)
                 elif j == 3:
                     le = MyGasConcLineEdit(text = values[j])
+                    le.textChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, le)
                 elif j == 4:
                     cb = MyAccuracySelectorComboBox(values[j])
+                    cb.currentIndexChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, cb)
                 else:
-                    self.setItem(j, idx, QtGui.QTableWidgetItem(values[j]))
+                    le = QtGui.QLineEdit(text = values[j])
+                    le.textChanged.connect(partial(self.cellChanged.emit, j, idx))
+                    self.setCellWidget(j, idx, le)
+                self.cellWidget(j, idx).setFocusPolicy(QtCore.Qt.ClickFocus)
             idx = idx + 1
         # Expand the column widths so that the table fills the space given
         # by the parent window.
@@ -233,9 +269,9 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             for col in range(self.columnCount()):
                 col_key = str(self.horizontalHeaderItem(col).text())
                 i = 0
-                self.rgco[col_key]["Name"] = str(self.item(i,col).text())
+                self.rgco[col_key]["Name"] = str(self.cellWidget(i,col).text())
                 i += 1
-                self.rgco[col_key]["SN"] = str(self.item(i, col).text())
+                self.rgco[col_key]["SN"] = str(self.cellWidget(i, col).text())
                 i += 1
                 self.rgco[col_key]["Zero_Air"] = str(self.cellWidget(i, col).currentText())
                 i += 1
@@ -263,6 +299,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         :param disable:
         :return:
         """
+        # Note: This doesn't work if the cell contains widgets. The widgets still work.
         if disable:
             self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         else:
@@ -313,9 +350,9 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         if ok:
             for col in range(self.columnCount()):
                 i = 0
-                name = str(self.item(i,col).text())
+                name = str(self.cellWidget(i,col).text())
                 i += 1
-                sn = str(self.item(i, col).text())
+                sn = str(self.cellWidget(i, col).text())
                 if not name or not sn:
                     blank_field_found = True
         if blank_field_found:
