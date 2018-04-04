@@ -23,6 +23,8 @@ class QTaskEditorWidget(QtGui.QWidget):
     def _init_gui(self):
         self._undoBtn = QtGui.QPushButton("Undo")
         self._saveBtn = QtGui.QPushButton("Save")
+        self._undoBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._saveBtn.setFocusPolicy(QtCore.Qt.NoFocus)
 
         tgl = QtGui.QGridLayout()
         self.taskDictCB = OrderedDict()
@@ -33,6 +35,7 @@ class QTaskEditorWidget(QtGui.QWidget):
             for row in xrange(2):
                 cb = QtGui.QComboBox()
                 cb.addItems(gases)
+                cb.setFocusPolicy(QtCore.Qt.ClickFocus)
                 str = "  TASK {0} ".format(task_id)
                 key = "TASK{0}".format(task_id)
                 self.taskDictCB[key] = cb
@@ -44,6 +47,9 @@ class QTaskEditorWidget(QtGui.QWidget):
         self.linearRegressionValidationRB = QtGui.QRadioButton("3 or 4 Gas Linear Regression Validation")
         self.spanValidationRB = QtGui.QRadioButton("2 Gas Span Validation")
         self.onePointValidationRB = QtGui.QRadioButton("1 Gas Validation")
+        self.linearRegressionValidationRB.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.spanValidationRB.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.onePointValidationRB.setFocusPolicy(QtCore.Qt.ClickFocus)
         mhbl = QtGui.QVBoxLayout()
         mhbl.addWidget(QtGui.QLabel("Validation Type"))
         mhbl.addWidget(self.onePointValidationRB)

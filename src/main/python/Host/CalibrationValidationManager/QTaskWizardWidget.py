@@ -49,6 +49,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self.setLayout( self._init_gui() )
         self._startup_settings()
         self._set_connections()
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         return
 
     def _init_gui(self):
@@ -64,6 +65,17 @@ class QTaskWizardWidget(QtGui.QWidget):
         # Set up a two state button
         self._editors_visible = False
         self._showEditorsBtn = QtGui.QPushButton("Show Editors")
+        # self._showEditorsBtn.setStyleSheet("background-color: green;")
+        # self.setStyleSheet("QPushButton:focus {background-color: #31363b;}")
+
+        self._startRunBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._nextBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._abortBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._viewReportBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._openFileManagerBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._text_edit.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._task_progressbar.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._showEditorsBtn.setFocusPolicy(QtCore.Qt.NoFocus)
 
         hb = QtGui.QHBoxLayout()
         hb.addWidget(self._abortBtn)

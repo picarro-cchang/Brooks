@@ -56,6 +56,7 @@ class Window(QtGui.QMainWindow):
 
     def _init_gui(self):
         self.closeBtn = QtGui.QPushButton("Close")
+        self.closeBtn.setFocusPolicy(QtCore.Qt.ClickFocus)
         hb = QtGui.QHBoxLayout()
         hb.addStretch(1)
         hb.addWidget(self.closeBtn)
@@ -172,6 +173,7 @@ class Window(QtGui.QMainWindow):
             print("E:",e)
             pass
         return
+
 
 def HandleCommandSwitches():
     import getopt

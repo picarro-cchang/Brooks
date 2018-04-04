@@ -109,6 +109,8 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self._saveBtn = QtGui.QPushButton("Save")
         self._undoBtn = QtGui.QPushButton("Undo")
+        self._saveBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self._undoBtn.setFocusPolicy(QtCore.Qt.NoFocus)
         self._table = QReferenceGasEditor()
         self.setLayout( self._init_gui() )
         self._set_connections()
@@ -156,6 +158,11 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._undoBtn.setEnabled(True)
         self._saveBtn.setEnabled(True)
 
+    def keyPressEvent(self, event):
+        print("key event")
+        if event.key() == QtCore.Qt.Key_Tab:
+            print('Tab pressed!')
+
 
 class QReferenceGasEditor(QtGui.QTableWidget):
     def __init__(self, data=None, *args):
@@ -163,6 +170,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.data = data
         self.co = None                  # Ini handle (configobj)
         self.rgco = None                # Ini handle (reference gas configobj)
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
     def display_reference_gas_data(self, reference_gases_configobj=None):
         """
@@ -243,6 +251,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                     le = QtGui.QLineEdit(text = values[j])
                     le.textChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, le)
+                self.cellWidget(j, idx).setFocusPolicy(QtCore.Qt.ClickFocus)
             idx = idx + 1
         # Expand the column widths so that the table fills the space given
         # by the parent window.
