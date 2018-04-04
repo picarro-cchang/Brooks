@@ -17,6 +17,7 @@ class QTaskEditorWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self.setLayout( self._init_gui() )
         self._set_connections()
+        self._disable_undo_save()
         return
 
     def _init_gui(self):
@@ -69,10 +70,46 @@ class QTaskEditorWidget(QtGui.QWidget):
 
     def _set_connections(self):
         self._undoBtn.clicked.connect(self.display_task_settings)
+        self._undoBtn.clicked.connect(self._disable_undo_save)
         self._saveBtn.clicked.connect(self.save_task_settings)
+        self._saveBtn.clicked.connect(self._disable_undo_save)
+        for cb in self.taskDictCB.values():
+            cb.currentIndexChanged.connect(self._enable_undo_save)
+        self.linearRegressionValidationRB.toggled.connect(self._enable_undo_save)
+        self.spanValidationRB.toggled.connect(self._enable_undo_save)
+        self.onePointValidationRB.toggled.connect(self._enable_undo_save)
         return
 
+    def _block_all_signals(self, block):
+        """
+        Block the signals from the combobox and radiobutton widgets.
+        These widgets emit change signals for both user changes and programatic
+        changes to the settings.
+        This is necessary when loading in the ini settings so that the UNDO/SAVE
+        buttons are enabled while initializing the widgets.
+        :param block:
+        :return:
+        """
+        for cb in self.taskDictCB.values():
+            cb.blockSignals(block)
+        self.linearRegressionValidationRB.blockSignals(block)
+        self.spanValidationRB.blockSignals(block)
+        self.onePointValidationRB.blockSignals(block)
+
+    def _disable_undo_save(self):
+        self._undoBtn.setDisabled(True)
+        self._saveBtn.setDisabled(True)
+
+    def _enable_undo_save(self):
+        self._undoBtn.setEnabled(True)
+        self._saveBtn.setEnabled(True)
+    # def _widget_changed(self):
+    #     print("Something changed!")
+    #     return
+
     def display_task_settings(self, task_configobj=None):
+        self._block_all_signals(True)
+
         # If we are passed a ConfigObj use that to set the task editor otherwise
         # use the exiting ConfigObj to reset the entries.
         if isinstance(task_configobj, ConfigObj):
@@ -98,6 +135,8 @@ class QTaskEditorWidget(QtGui.QWidget):
             self.spanValidationRB.setChecked(True)
         else:
             self.onePointValidationRB.setChecked(True)
+
+        self._block_all_signals(False)
         return
 
     def save_task_settings(self):
