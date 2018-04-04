@@ -17,7 +17,7 @@ class Window(QtGui.QMainWindow):
     def __init__(self, iniFile):
         super(Window, self).__init__()
         self.setFixedSize(1024, 768)
-        self.setWindowTitle("Picarro Calibration/Validation Tool")
+        self.setWindowTitle("Picarro Calibration Validation Tool")
         self._db = DataBase
         self.display_login_dialog()  # Need DB authentication here so the TaskManager can get the user information.
         self.tm = None
