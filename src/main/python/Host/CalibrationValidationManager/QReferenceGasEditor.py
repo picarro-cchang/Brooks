@@ -299,6 +299,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         :param disable:
         :return:
         """
+        # Note: This doesn't work if the cell contains widgets. The widgets still work.
         if disable:
             self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         else:
