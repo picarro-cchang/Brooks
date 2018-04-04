@@ -33,7 +33,7 @@ class QPlotWidget(QtGui.QWidget):
         self._time_series_plot.setMouseEnabled(x=False,y=False)
         self._time_series_plot.setMenuEnabled(False)
         self._time_series_plot.showGrid(x=True, y=True)
-        self._time_series_plot.setLabels(left="CH4 (ppm)")
+        self._time_series_plot.setLabels(left="")
 
         # Seems to keep time stamp labels from overlapping with eachother and over
         # the y-axis label.
@@ -48,7 +48,7 @@ class QPlotWidget(QtGui.QWidget):
         self._the_plot = self._time_series_plot.plot(width=1, symbol='o')
         return self._time_series_plot
 
-    def setData(self,x,y,d={}):
+    def setData(self, x, y, yname, d={}):
         """
         Set the time series data to plot and the current data text field below
         the plot.
@@ -62,4 +62,5 @@ class QPlotWidget(QtGui.QWidget):
         for k,v in d.items():
             str += " {0} = {1:.3f} ".format(k,v)
         self._plot_str_data.setText(QtCore.QString(str))
+        self._time_series_plot.setLabels(left=yname)
         return

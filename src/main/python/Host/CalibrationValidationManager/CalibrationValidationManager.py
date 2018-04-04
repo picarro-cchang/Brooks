@@ -167,7 +167,7 @@ class Window(QtGui.QMainWindow):
                             d[secondary_data_key_name[i]] = self.tm.ds.getList(data_source, secondary_data_key[i])[-1]
                     else:
                         d[secondary_data_key_name] = self.tm.ds.getList(data_source, secondary_data_key)[-1]
-            self.plotWidget.setData(timestamps, data, d)
+            self.plotWidget.setData(timestamps, data, primary_data_key_name, d)
         except Exception as e:
             print("E:",e)
             pass
