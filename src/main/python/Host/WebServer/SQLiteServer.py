@@ -95,7 +95,7 @@ class SQLiteServer(object):
             level = 0
         if requester in ["UserAdmin","qtLauncher_Config"] and level < 3:
             return {"error": "Permission denied. Only Admin users can log in."}, 403
-        elif requester == "H2O2Validation" and level < 2:
+        elif (requester == "H2O2Validation" or requester == "CalibrationValidationTool") and level < 2:
             return {"error": "Permission denied. Only Admin and Technician can log in."}, 403
         return {}
                 

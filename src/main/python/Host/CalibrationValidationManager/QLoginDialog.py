@@ -176,7 +176,7 @@ class QLoginDialog(QtGui.QDialog):
             if "error" not in ret:
                 self.accept()
             else:
-                PromptManager.error(parent, "Username/password not recognized.")
+                PromptManager.error(parent, ret["error"])
 
         # Connect dialog reject
         # self.rejected.connect(parent.quit)
@@ -184,4 +184,3 @@ class QLoginDialog(QtGui.QDialog):
         # Connect button events
         self.cancelButton.clicked.connect(self.reject)
         self.loginButton.clicked.connect(attemptLogin)
-
