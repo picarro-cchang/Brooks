@@ -1,5 +1,6 @@
 import subprocess32
 import QGuiText
+import os
 from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
@@ -8,6 +9,7 @@ class QReportDisplayDialog(QtGui.QDialog):
         self.setFixedSize(1024, 768)
         self._textEditWidget = QtGui.QTextEdit()
         self._textEditWidget.setDocument(textDoc)
+        self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
         self.setLayout( self._initGui() )
         self._setConnections()
@@ -249,7 +251,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         :param obj:
         :return:
         """
-        self._reportFileName = fileName
+        self._reportFileName = os.path.basename(str(fileName))
         self._reportTextObj = obj
         return
 
