@@ -209,7 +209,7 @@ class DataStoreForQt(QtCore.QObject):
         super(DataStoreForQt, self).__init__()
         self.INDEX = 0 # RSF
         self.config = None
-        self.length = 500
+        self.length = 1000
         if config:
             self.config = config
             self.loadConfig()
