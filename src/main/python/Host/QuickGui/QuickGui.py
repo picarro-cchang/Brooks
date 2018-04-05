@@ -1568,6 +1568,8 @@ class QuickGui(wx.Frame):
                             d.Destroy()
                         break
         else:
+            self._sendRequest("post", "account",
+                              {"command": "log_out_user", 'requester': "UserAdmin", 'Logout_InActivity': False})
             self.userLevel = 0
             self._modifyInterface()
             self.measPanelSizer.Layout()
@@ -1691,6 +1693,8 @@ class QuickGui(wx.Frame):
         # count the session_time, logout and change GUI mode to the default
         # automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
         if self.session_time >= self.sessionLifeTime:
+            self._sendRequest("post", "account",
+                              {"command": "log_out_user", 'requester': "UserAdmin", 'Logout_InActivity': True})
             self.userLevel = 0
             self._modifyInterface()
             self.measPanelSizer.Layout()
