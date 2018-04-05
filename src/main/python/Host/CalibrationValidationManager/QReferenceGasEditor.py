@@ -137,8 +137,9 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._undoBtn.clicked.connect(self._table.display_reference_gas_data)
         self._undoBtn.clicked.connect(self._disable_undo_save)
         self._saveBtn.clicked.connect(self._table.save_reference_gas_data)
-        self._saveBtn.clicked.connect(self._disable_undo_save)
         self._table.cellChanged.connect(self._enable_undo_save)
+        self._table.save_success_signal.connect(self._disable_undo_save)
+        self._table.save_failed_signal.connect(self._enable_undo_save)
         return
 
     def display_reference_gas_data(self, reference_gases_configobj):
@@ -155,16 +156,14 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._saveBtn.setDisabled(True)
 
     def _enable_undo_save(self):
+        print("enable undo save")
         self._undoBtn.setEnabled(True)
         self._saveBtn.setEnabled(True)
 
-    def keyPressEvent(self, event):
-        print("key event")
-        if event.key() == QtCore.Qt.Key_Tab:
-            print('Tab pressed!')
-
-
 class QReferenceGasEditor(QtGui.QTableWidget):
+    save_failed_signal = QtCore.pyqtSignal()
+    save_success_signal = QtCore.pyqtSignal()
+
     def __init__(self, data=None, *args):
         QtGui.QTableWidget.__init__(self, *args)
         self.data = data
@@ -288,6 +287,9 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                     self.rgco[col_key]["Uncertainty"] = uncertainty[0]
             self.co["GASES"] = self.rgco
             self.co.write()
+            self.save_success_signal.emit()
+        else:
+            self.save_failed_signal.emit()
         return
 
     def disable_edit(self, disable):

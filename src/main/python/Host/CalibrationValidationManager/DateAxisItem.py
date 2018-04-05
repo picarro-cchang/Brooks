@@ -175,7 +175,8 @@ class DateAxisItem(AxisItem):
         self.utcOffset = time.timezone
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
         # we need about 60pt for our largest label
-        self.maxTicksPerPt = 1/60.0
+        # self.maxTicksPerPt = 1/60.0
+        self.maxTicksPerPt = 1 / 80.0
         self.zoomLevels = {
             #self.maxTicksPerPt:               MS_ZOOM_LEVEL,
             30 * self.maxTicksPerPt:          HMS_ZOOM_LEVEL,
