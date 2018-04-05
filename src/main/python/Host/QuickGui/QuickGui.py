@@ -914,7 +914,7 @@ class QuickGui(wx.Frame):
 
     def _getSourcesbyMode(self):
         s = self.dataStore.getSources()
-        if self.userLevel < 3:
+        if self.userLevel < 2:
             if self.sourceStandardModeDatabase != None:
                 s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
             else:
@@ -923,7 +923,7 @@ class QuickGui(wx.Frame):
 
     def _getKeysbyMode(self, source):
         k = self.dataStore.getKeys(source)
-        if self.userLevel < 3:
+        if self.userLevel < 2:
             if self.keyStandardModeDatabase != None:
                 k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
             else:
