@@ -19,6 +19,7 @@ class QNonBlockingTimer(QtCore.QObject):
         self.countdown_sec = set_time_sec
         self.description = description
         self.busy_hint = busy_hint
+        self.master_timer = None
         self.tick_timer = QtCore.QTimer()
         self.tick_timer.setInterval(tick_interval_sec * 1000)
         self.tick_timer.timeout.connect(self.tick)
@@ -27,7 +28,7 @@ class QNonBlockingTimer(QtCore.QObject):
 
     def start(self):
         self.tick_signal.emit(self.countdown_sec, self.set_time_sec, self.description, self.busy_hint)
-        QtCore.QTimer.singleShot(self.set_time_sec * 1000, self.stop)
+        self.master_timer = QtCore.QTimer.singleShot(self.set_time_sec * 1000, self.stop)
         self.tick_timer.start()
         self.event_loop.exec_()
         return
@@ -42,6 +43,7 @@ class QNonBlockingTimer(QtCore.QObject):
         self.event_loop.quit()
         self.finish_signal.emit()
         return
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
