@@ -28,6 +28,8 @@ class QPlotWidget(QtGui.QWidget):
         return mgl
 
     def _init_plot(self):
+        pg.setConfigOption('foreground', 0.9)           # Text and graph shade of white to match qdarkstyle white
+        pg.setConfigOption('background', (0,0,0,0))     # Transparent plot background
         time_axis = DateAxisItem("bottom")
         self._time_series_plot = pg.PlotWidget(axisItems={'bottom':time_axis})
         self._time_series_plot.setMouseEnabled(x=False,y=False)
@@ -45,7 +47,9 @@ class QPlotWidget(QtGui.QWidget):
         self._time_series_plot.showAxis("right",show=True)
         self._time_series_plot.getAxis("right").setStyle(showValues=False)
 
-        self._the_plot = self._time_series_plot.plot(width=1, symbol='o')
+        # Set pen (line between points) to a cyan to match QDarkStyle color scheme.
+        # Set symbol to a small open square.
+        self._the_plot = self._time_series_plot.plot(width=1, pen=(0,150,200), symbol='s', symbolBrush=None, symbolSize=5)
         return self._time_series_plot
 
     def setData(self, x, y, yname, d={}):

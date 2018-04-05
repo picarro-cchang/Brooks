@@ -1,5 +1,6 @@
 import subprocess32
 import QGuiText
+import os
 from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
@@ -8,6 +9,7 @@ class QReportDisplayDialog(QtGui.QDialog):
         self.setFixedSize(1024, 768)
         self._textEditWidget = QtGui.QTextEdit()
         self._textEditWidget.setDocument(textDoc)
+        self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
         self.setLayout( self._initGui() )
         self._setConnections()
@@ -90,7 +92,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         vb.addWidget(self._task_progressbar)
         vb.addLayout(hb)
 
-        gb = QtGui.QGroupBox("Status")
+        gb = QtGui.QGroupBox()
         gb.setLayout(vb)
 
         mgl = QtGui.QGridLayout()
@@ -249,6 +251,17 @@ class QTaskWizardWidget(QtGui.QWidget):
         :param obj:
         :return:
         """
-        self._reportFileName = fileName
+        self._reportFileName = os.path.basename(str(fileName))
         self._reportTextObj = obj
+        return
+
+    def warming_up_warming_dialog(self):
+        str = "The analyzer is warming up and cannot measure the validation gas.\n"
+        str += "Wait until data appears in the time series plot and then click START.\n"
+        QtGui.QMessageBox.information(self,
+                                      'Information',
+                                      str,
+                                      QtGui.QMessageBox.Ok,
+                                      QtGui.QMessageBox.Ok)
+        self._startup_settings()
         return

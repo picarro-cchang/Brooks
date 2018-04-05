@@ -61,7 +61,7 @@ def fill_report_template(settings, reference_gases, results):
                                                   show_percent_deviation_test=True)
     if "One_Point_Validation" in settings["Analysis"]:
         report += get_formatted_pass_fail_summary(results,
-                                                  show_zero_air_test=False,
+                                                  show_zero_air_test=True,
                                                   show_slope_test=False,
                                                   show_percent_deviation_test=True)
     report += "\n"
@@ -78,7 +78,7 @@ def get_formatted_user_information(results):
     table_data = []
     table_data.append(["Username", results["username"]])
     table_data.append(["Full name", results["fullname"]])
-    table_data.append(["Instrument SN", "TBD"])
+    table_data.append(["Instrument SN", results["analyzer_name"]])
     table_data.append(["Start time", results["start_time"]])
     table_data.append(["End time", results["end_time"]])
     table = AsciiTable(table_data)
@@ -96,7 +96,7 @@ def get_formatted_pass_fail_summary(results,
     if show_zero_air_test:
         # Sort to show the worst result.
         # Sort first to put all "Fails" up front, then sort on measurement with largest deviation from 0
-        if results["Zero_Air_Test"]:
+        if "Zero_Air_Test" in results and results["Zero_Air_Test"]:
             sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
             sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
             (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
