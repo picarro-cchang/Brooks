@@ -90,7 +90,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         vb.addWidget(self._task_progressbar)
         vb.addLayout(hb)
 
-        gb = QtGui.QGroupBox("Status")
+        gb = QtGui.QGroupBox()
         gb.setLayout(vb)
 
         mgl = QtGui.QGridLayout()
