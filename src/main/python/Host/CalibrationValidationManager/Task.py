@@ -415,6 +415,7 @@ class Task(QtCore.QObject):
         :return:
         """
         self.preanalysis_data_processing()
+        self.zero_air_test()
         self.percent_deviation_test()
         (filename, doc) = ReportUtilities.create_report(self._settings, self._reference_gases, self._results)
         self.task_report_signal.emit(filename, doc)
