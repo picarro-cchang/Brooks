@@ -14,10 +14,13 @@ from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
 class Window(QtGui.QMainWindow):
-    def __init__(self, iniFile):
+    def __init__(self, iniFile, debug_mode=False):
         super(Window, self).__init__()
-        self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration Validation Tool")
+        if debug_mode:
+            self.setFixedSize(1024, 768)
+        else:
+            self.setWindowState(QtCore.Qt.WindowFullScreen)
         self._db = DataBase
         self.display_login_dialog()  # Need DB authentication here so the TaskManager can get the user information.
         self.tm = None
@@ -186,7 +189,7 @@ def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'c:'
-    longOpts = ["ini=", "username=", "fullname="]
+    longOpts = ["ini=", "debug_mode="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -200,21 +203,25 @@ def HandleCommandSwitches():
     if "--ini" in options:
         configFile = options["--ini"]
 
-    username = ""
-    if "--username" in options:
-        username = options["--username"]
+    # username = ""
+    # if "--username" in options:
+    #     username = options["--username"]
+    #
+    # fullname = ""
+    # if "--fullname" in options:
+    #     fullname = options["--fullname"]
 
-    fullname = ""
-    if "--fullname" in options:
-        fullname = options["--fullname"]
+    debug_mode = False
+    if "--debug_mode" in options:
+        debug_mode = options["--debug_mode"]
 
-    return (configFile, username, fullname)
+    return (configFile, debug_mode)
 
 def main():
     app = QtGui.QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    (configFile, username, fullname) = HandleCommandSwitches()
-    GUI = Window(iniFile=configFile)
+    (configFile, debug_mode) = HandleCommandSwitches()
+    GUI = Window(iniFile=configFile, debug_mode=debug_mode)
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
