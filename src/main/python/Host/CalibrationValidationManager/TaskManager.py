@@ -4,6 +4,7 @@ import copy
 import requests
 import datetime
 import DataBase
+import os
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
@@ -43,13 +44,14 @@ class TaskManager(QtCore.QObject):
         lastname = "(No lastname)"
         userInfo = self.db._send_request("get", "system", {'command': 'get_current_user'})
         username = userInfo["username"]
+        analyzer_name = os.uname()[1]
         if userInfo["first_name"]:
             firstname = userInfo["first_name"]
         if userInfo["last_name"]:
             lastname = userInfo["last_name"]
         self.username = username
         self.fullname = firstname + " " + lastname
-        self.results = {"username": self.username, "fullname": self.fullname, "start_time": "---"}
+        self.results = {"username": self.username, "fullname": self.fullname, "start_time": "---", "analyzer_name": analyzer_name}
 
         self.referenceGases = {}
         self.tasks = []

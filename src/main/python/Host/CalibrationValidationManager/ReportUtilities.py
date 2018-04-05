@@ -78,7 +78,7 @@ def get_formatted_user_information(results):
     table_data = []
     table_data.append(["Username", results["username"]])
     table_data.append(["Full name", results["fullname"]])
-    table_data.append(["Instrument SN", "TBD"])
+    table_data.append(["Instrument SN", results["analyzer_name"]])
     table_data.append(["Start time", results["start_time"]])
     table_data.append(["End time", results["end_time"]])
     table = AsciiTable(table_data)
