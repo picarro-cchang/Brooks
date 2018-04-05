@@ -44,6 +44,7 @@ class Window(QtGui.QMainWindow):
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
         self.tm.job_complete_signal.connect(partial(self.tableWidget.disable_edit, False))
         self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
+        self.tm.analyzer_warming_up_signal.connect(self.taskWizardWidget.warming_up_warming_dialog)
         self.taskWizardWidget.start_run_signal.connect(partial(self.tableWidget.setDisabled, True))
         self.taskWizardWidget.start_run_signal.connect(partial(self.taskEditorWidget.setDisabled, True))
         self.taskWizardWidget.abort_signal.connect(partial(self.tableWidget.setEnabled, True))
@@ -174,7 +175,9 @@ class Window(QtGui.QMainWindow):
                         d[secondary_data_key_name] = self.tm.ds.getList(data_source, secondary_data_key)[-1]
             self.plotWidget.setData(timestamps, data, primary_data_key_name, d)
         except Exception as e:
-            print("E:",e)
+            # Even if everything working, the datastore starts out empty and the first few calls will
+            # cause an exception.
+            # print("E:",e)
             pass
         return
 

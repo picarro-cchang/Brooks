@@ -21,6 +21,7 @@ class TaskManager(QtCore.QObject):
     prompt_user_signal = QtCore.pyqtSignal()
     job_complete_signal = QtCore.pyqtSignal()
     job_aborted_signal = QtCore.pyqtSignal()
+    analyzer_warming_up_signal = QtCore.pyqtSignal()
 
     def __init__(self, iniFile=None, db=None):
         super(TaskManager, self).__init__()
@@ -137,19 +138,23 @@ class TaskManager(QtCore.QObject):
 
     def start_work(self):
         """
-        Kick off the first task in the task list
+        Kick off the first task in the task list. Don't start if the analyzer is warming up
+        as there won't be any data to measure.
         :return:
         """
-        logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
-        self.db.log(logStr)
+        if self.ds.analyzer_warming_up():
+            self.analyzer_warming_up_signal.emit()
+        else:
+            logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
+            self.db.log(logStr)
 
-        self.abort = False
-        self._initAllObjectsAndConnections()
-        self.results["start_time"] = str(datetime.datetime.now())
-        self.running_task_idx = 0
-        self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
-        self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
-        self.threads[self.running_task_idx].start()
+            self.abort = False
+            self._initAllObjectsAndConnections()
+            self.results["start_time"] = str(datetime.datetime.now())
+            self.running_task_idx = 0
+            self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
+            self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
+            self.threads[self.running_task_idx].start()
 
     def move_to_next_task(self):
         """

@@ -221,6 +221,7 @@ class DataStoreForQt(QtCore.QObject):
         self.sourceDict = {}
         self.oldData = {}
         self.offsets = {}   # For simulations
+        self.mode = None    # Track the analyzer mode (warming, measuring, etc.)
         self.alarmStatus = 0
         self.mode = ""
         return
@@ -247,6 +248,7 @@ class DataStoreForQt(QtCore.QObject):
             try:
                 obj = self.queue.get_nowait()
                 source = obj["source"]
+                self.mode = obj["mode"]
                 if source not in self.sourceDict:
                     self.sourceDict[source] = {}
                 for key in obj.keys():
@@ -293,6 +295,12 @@ class DataStoreForQt(QtCore.QObject):
         except Exception as e:
             print("getList exception:",e)
             return None
+
+    def analyzer_warming_up(self):
+        warming_up = False
+        if self.mode is None or "warming" in self.mode:
+            warming_up = True
+        return warming_up
 
     def setOffset(self, key, offset):
         self.offsets[key] = offset
