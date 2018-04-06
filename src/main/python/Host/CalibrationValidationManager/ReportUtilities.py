@@ -192,7 +192,7 @@ def getFileCounter(path, which = 0):
 
     # '*' allows matching to filenames that have a compression extension
     # such as '.gz.'
-    generalFileName = getDateNow() + "_CH4_" + "[0-9][0-9][0-9][0-9]" + "*"
+    generalFileName = getDateNow() + "*" + "[0-9][0-9][0-9][0-9]" + "*"
     fileList = glob.glob(os.path.join(path, generalFileName))
 
     # If one or more valid counters are found, return the max + 1
@@ -246,7 +246,11 @@ def create_report(settings, reference_gases, results, obj=None):
     # except Exception as e:
     #     print("Error in ReportUtilities::create_report(), cound not able to create directory %s" %destinationPath)
     counter = getFileCounter(destinationPath, 0)
-    outputFileName = "{0}/{1}_{2}_{3}.pdf".format(destinationPath, getDateNow(), settings["Data_Key"], counter)
+    outputFileName = "{0}/{1}_{2}_{3}_{4}.pdf".format(destinationPath,
+                                                      getDateNow(),
+                                                      settings["Data_Key"],
+                                                      results["analyzer_name"],
+                                                      counter)
 
     if obj:
         img = QtGui.QImage()
