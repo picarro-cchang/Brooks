@@ -186,14 +186,15 @@ class ChannelSettingsDialog(QDialog):
     def __init__(self, ch0 = True, ch1 = True, ch2 = True, ch3 = True, parent = None):
         super(ChannelSettingsDialog, self).__init__(parent)
         
+        # Open, read, and close stylesheet
         try:
             self.styleData = ""
-            f = open('styleSheet.qss', 'r')
+            f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
             self.styleData = f.read()
-            f.close()
             self.setStyleSheet(self.styleData)
-        except:
-            pass
+            f.close()
+        except IOError as e:
+            print e
         # Set which widgets to show
         self._ch0 = ch0
         self._ch1 = ch1
