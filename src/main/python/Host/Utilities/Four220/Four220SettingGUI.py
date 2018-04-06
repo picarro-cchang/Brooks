@@ -26,13 +26,15 @@ class ChannelSettingWidget(QWidget):
         Open external stylesheet and read the data
         ------------------------------------------
         """
+        # Open, read, and close stylesheet
         try:
             self.styleData = ""
-            f = open('styleSheet.qss', 'r')
+            f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
             self.styleData = f.read()
+            self.setStyleSheet(self.styleData)
             f.close()
-        except:
-            pass
+        except IOError as e:
+            print e
         
         match = re.search(r'\#(\d)', title)
         ch_num = match.group(1)
