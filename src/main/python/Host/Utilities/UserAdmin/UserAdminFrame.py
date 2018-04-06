@@ -14,11 +14,15 @@ class UserAdminFrame(QMainWindow):
         self.shadow.setColor(QColor(30,30,30,180))
         self.shadow.setBlurRadius(5)
         self.curr_dir = os.path.dirname(os.path.realpath(__file__))
-        self.style_data = ""
-        f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
-        self.style_data = f.read()
-	self.setStyleSheet(self.style_data)
-        f.close()
+        # Open, read, and close stylesheet
+        try:
+            self.styleData = ""
+            f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
+            self.styleData = f.read()
+            self.setStyleSheet(self.styleData)
+            f.close()
+        except IOError as e:
+            print e
 
         self.create_widgets()
         self.setWindowTitle("User Management")
