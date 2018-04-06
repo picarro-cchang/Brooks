@@ -171,7 +171,7 @@ class TaskManager(QtCore.QObject):
         else:
             logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
             self.db.log(logStr)
-            # self.reset_autologout_timer()
+            self.reset_autologout_timer()
             self.abort = False
             self._initAllObjectsAndConnections()
             self.results["start_time"] = str(datetime.datetime.now())
@@ -232,13 +232,17 @@ class TaskManager(QtCore.QObject):
     def reset_autologout_timer(self):
         self.autologout_timer.tick_signal.disconnect(self.autologout_timer_signal)
         self.autologout_timer.finish_signal.disconnect(self.autologout_timer_finished)
-        self.autologout_timer.stop()
+        # self.autologout_timer.stop()
         self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time,
                               description="Auto logout",
                               busy_hint = False)
         self.autologout_timer.tick_signal.connect(self.autologout_timer_signal)
         self.autologout_timer.finish_signal.connect(self.autologout_timer_finished)
-        self.autologout_timer.start()
+        # Here's a little quirk.  If we call self.autologout_timer.start() directly
+        # it blocks the main TaskManager thread.  If we call it indirectly with a
+        # QTimer.singleShot the autologout timer runs in a different context (or thread)
+        # and doesn't block.
+        QtCore.QTimer.singleShot(100, self.autologout_timer.start)
         return
 
     def autologout_timer_finished(self):
