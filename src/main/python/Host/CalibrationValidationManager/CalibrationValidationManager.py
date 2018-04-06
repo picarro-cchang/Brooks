@@ -2,7 +2,7 @@
 #
 
 import sys
-import qdarkstyle
+#import qdarkstyle
 from QLoginDialog import QLoginDialog
 import DataBase
 from functools import partial
@@ -18,6 +18,10 @@ class Window(QtGui.QMainWindow):
         super(Window, self).__init__()
         self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration Validation Tool")
+        f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
+        self.style_data = f.read()
+        self.setStyleSheet(self.style_data)
+        f.close()
         self._db = DataBase
         self.display_login_dialog()  # Need DB authentication here so the TaskManager can get the user information.
         self.tm = None
@@ -212,7 +216,7 @@ def HandleCommandSwitches():
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
+    #app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
     (configFile, username, fullname) = HandleCommandSwitches()
     GUI = Window(iniFile=configFile)
     sys.exit(app.exec_())
