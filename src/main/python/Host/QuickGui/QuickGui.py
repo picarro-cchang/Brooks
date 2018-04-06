@@ -914,7 +914,7 @@ class QuickGui(wx.Frame):
 
     def _getSourcesbyMode(self):
         s = self.dataStore.getSources()
-        if self.userLevel < 3:
+        if self.userLevel < 2:
             if self.sourceStandardModeDatabase != None:
                 s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
             else:
@@ -923,7 +923,7 @@ class QuickGui(wx.Frame):
 
     def _getKeysbyMode(self, source):
         k = self.dataStore.getKeys(source)
-        if self.userLevel < 3:
+        if self.userLevel < 2:
             if self.keyStandardModeDatabase != None:
                 k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
             else:
@@ -1568,6 +1568,8 @@ class QuickGui(wx.Frame):
                             d.Destroy()
                         break
         else:
+            self._sendRequest("post", "account",
+                              {"command": "log_out_user", 'requester': "UserAdmin", 'Logout_InActivity': False})
             self.userLevel = 0
             self._modifyInterface()
             self.measPanelSizer.Layout()
@@ -1691,6 +1693,8 @@ class QuickGui(wx.Frame):
         # count the session_time, logout and change GUI mode to the default
         # automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
         if self.session_time >= self.sessionLifeTime:
+            self._sendRequest("post", "account",
+                              {"command": "log_out_user", 'requester': "UserAdmin", 'Logout_InActivity': True})
             self.userLevel = 0
             self._modifyInterface()
             self.measPanelSizer.Layout()

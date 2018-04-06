@@ -6,7 +6,7 @@ import traceback
 import datetime
 from functools import wraps
 from flask import abort, Flask, make_response, Response, request
-from flask_restplus import Api, reqparse, Resource
+from flask_restplus import Api, reqparse, Resource, inputs
 from flask_security import auth_token_required, Security, utils, current_user
 from DataBaseModel import pds
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -255,8 +255,10 @@ class SQLiteServer(object):
             return {"error": "New password is not specified!"}, 400
         # check password but not log in
         ret = self.log_in_user(username, password, "", no_commit=True)
-        if "error" in ret:
-            return ret
+        for item in ret:
+            if "error" in item:
+                return ret
+                break
         user = ret["user"]
         ret = self.check_password(username, new_password)
         if ret: return ret
@@ -372,15 +374,24 @@ class SQLiteServer(object):
         elif cmd == "log_in_user":  # AccountAPI, post
             requester = request_dict["requester"]
             ret = self.log_in_user(username, request_dict["password"], requester)
-            status = ret["error"] if "error" in ret else "succeed"
+            status = "succeed"
+            for item in ret:
+                if "error" in item:
+                    status = item["error"]
+                    break
+            #status = ret["error"] if "error" in ret else "succeed"
             if "Username or password are incorrect" in status:
                 status = "Username or password are incorrect"
             self.save_action_history(username, "log in from %s: %s" % (requester, status))
             return ret
         elif cmd == "log_out_user": # AccountAPI, post
+            userInactivity = request_dict["Logout_InActivity"] if "Logout_InActivity" in request_dict else False
             username = current_user.username
             utils.logout_user()
-            self.save_action_history(username, "log out from %s" % (request_dict["requester"]))
+            log_message = "log out from %s" % (request_dict["requester"])
+            if userInactivity:
+                log_message += " due to inactivity"
+            self.save_action_history(username, log_message)
             self.ds.commit()
             return {"status": "succeed"}
         elif cmd == "save_action":  # ActionAPI, post
@@ -549,6 +560,7 @@ class AccountAPI(Resource):
     post_parser.add_argument('password', type=str, required=False, location='form')
     post_parser.add_argument('new_password', type=str, required=False, location='form')
     post_parser.add_argument('requester', type=str, required=True, help="Name of request program")
+    post_parser.add_argument('Logout_InActivity', type=inputs.boolean, required=False, location='form')
     post_parser.add_argument('command', type=str, required=True, help="Commands: log_in_user, log_out_user, change_password.")
     @api.expect(get_parser)
     def get(self):

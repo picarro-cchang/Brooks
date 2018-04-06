@@ -164,8 +164,8 @@ class MainWindow(UserAdminFrame):
 
     def create_history_page(self):
         list_actions = ""
-        pattern = "<li><span style='font-weight: bold; color: rgb(0,202,255)'>%s</span> " + \
-            "<span style='font-weight: bold; color: rgb(127,176,81)'>%s</span>: %s</li>"
+        pattern = "<li><span style='font-weight: bold; color: rgb(0,202,255);'>%s</span> " + \
+            "<span style='font-weight: bold; color: rgb(127,176,81);'>%s</span>: %s</li>"
         length = len(self.action_history)
         start = self.history_page*20
         if length/20 > self.history_page:

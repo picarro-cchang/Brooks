@@ -15,9 +15,10 @@ class UserAdminFrame(QMainWindow):
         self.shadow.setBlurRadius(5)
         self.curr_dir = os.path.dirname(os.path.realpath(__file__))
         self.style_data = ""
-        with open(os.path.join(self.curr_dir,'styleSheet.qss'), 'r') as f:
-            self.style_data = f.read()
-        self.setStyleSheet(self.style_data)
+        f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
+        self.style_data = f.read()
+	self.setStyleSheet(self.style_data)
+        f.close()
 
         self.create_widgets()
         self.setWindowTitle("User Management")
@@ -26,6 +27,7 @@ class UserAdminFrame(QMainWindow):
     def create_widgets(self):
         def spin_box(value=0, min=0, max=100, step=1):
             sBox = QSpinBox()
+            sBox.setStyleSheet("min-width: 80px; max-width: 80px;")
             sBox.setMinimum(min)
             sBox.setMaximum(max)
             sBox.setSingleStep(step)
@@ -56,7 +58,7 @@ class UserAdminFrame(QMainWindow):
         change_password_layout = QVBoxLayout()
 
         # Picarro logo
-        picarro_logo = QPixmap(os.path.join(self.curr_dir, "logo_picarro.png"))
+        picarro_logo = QPixmap("/usr/local/picarro/qtLauncher/icons/logo_picarro.png")
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
         logo_box = QVBoxLayout()
@@ -144,7 +146,7 @@ class UserAdminFrame(QMainWindow):
         self.user_admin_tabs.currentChanged.connect(self.switch_tab)
         button_layout = QHBoxLayout()
         self.button_log_off_user = QPushButton("LogOff and Quit")
-        self.button_log_off_user.setStyleSheet("width: 150px")
+        #self.button_log_off_user.setStyleSheet("width: 150px")
         self.button_log_off_user.clicked.connect(self.user_log_off)
         button_layout.addStretch(1)
         button_layout.addWidget(self.button_log_off_user)
@@ -167,15 +169,15 @@ class UserAdminFrame(QMainWindow):
         self.table_user_list.clicked.connect(self.select_user_from_table)
         self.label_user_info = QLabel("")
         self.button_change_pwd = QPushButton("Change Pwd")
-        self.button_change_pwd.setStyleSheet("width: 120px")
+        #self.button_change_pwd.setStyleSheet("width: 120px")
         self.button_change_pwd.clicked.connect(self.change_user_pwd)
         self.button_change_role = QPushButton("Change Role")
-        self.button_change_role.setStyleSheet("width: 120px")
+        #self.button_change_role.setStyleSheet("width: 120px")
         self.menu_user_role = QMenu()
         self.menu_user_role.triggered[QAction].connect(self.process_role_trigger)
         self.button_change_role.setMenu(self.menu_user_role)
         self.button_disable_user = QPushButton("Disable User")
-        self.button_disable_user.setStyleSheet("width: 100px")
+        #self.button_disable_user.setStyleSheet("width: 100px")
         self.button_disable_user.clicked.connect(self.disable_user)
         self.button_add_user = QPushButton("Add User")
         self.button_add_user.clicked.connect(self.add_user)
@@ -234,7 +236,7 @@ class UserAdminFrame(QMainWindow):
         self.label_action_history.setMinimumHeight(430)
         self.label_action_history.setWordWrap(True)
         self.label_action_history.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.label_action_history.setStyleSheet("border: 2px solid")
+        #self.label_action_history.setStyleSheet("border: 2px solid")
         self.button_prev_history = QPushButton("<")
         self.button_prev_history.setAccessibleName("history")
         self.button_prev_history.clicked.connect(self.prev_history_page)
