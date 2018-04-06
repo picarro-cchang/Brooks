@@ -263,5 +263,7 @@ class QTaskWizardWidget(QtGui.QWidget):
                                       str,
                                       QtGui.QMessageBox.Ok,
                                       QtGui.QMessageBox.Ok)
+
+        self.abort_signal.emit()    # This will re-enable the main GUI close button
         self._startup_settings()
         return
