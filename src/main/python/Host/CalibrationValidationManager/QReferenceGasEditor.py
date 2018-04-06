@@ -83,11 +83,19 @@ class MyZeroAirSelectorComboBox(QtGui.QComboBox):
         self.setCurrentIndex(self.findText(default_choice))
         return
 
+    def wheelEvent(self, event):
+        # Discard wheel input as requested
+        return
+
 class MyAccuracySelectorComboBox(QtGui.QComboBox):
     def __init__(self, default_choice = "", parent = None):
         super(MyAccuracySelectorComboBox,self).__init__()
         self.addItems(["Unk", "0.5 %", "1.0 %", "2.0 %", "5.0 %", "10.0 %"])
         self.setCurrentBestMatchIndex(default_choice)
+        return
+
+    def wheelEvent(self, event):
+        # Discard wheel input as requested
         return
 
     def setCurrentBestMatchIndex(self, str):
@@ -156,7 +164,6 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._saveBtn.setDisabled(True)
 
     def _enable_undo_save(self):
-        print("enable undo save")
         self._undoBtn.setEnabled(True)
         self._saveBtn.setEnabled(True)
 
@@ -377,6 +384,10 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                                       QtGui.QMessageBox.Ok,
                                       QtGui.QMessageBox.Ok)
         return ok
+
+    def wheelEvent(self, event):
+        # Disable wheel input as requested
+        return
 
 def main(args):
     data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]

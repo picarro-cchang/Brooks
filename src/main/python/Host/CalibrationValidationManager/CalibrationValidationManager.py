@@ -14,14 +14,23 @@ from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 
 class Window(QtGui.QMainWindow):
-    def __init__(self, iniFile):
+    def __init__(self, iniFile, debug_mode=False):
         super(Window, self).__init__()
-        self.setFixedSize(1024, 768)
         self.setWindowTitle("Picarro Calibration Validation Tool")
-        f = open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r')
-        self.style_data = f.read()
-        self.setStyleSheet(self.style_data)
-        f.close()
+
+        if debug_mode:
+            self.setFixedSize(1024, 768)
+        else:
+            self.setWindowState(QtCore.Qt.WindowFullScreen)
+
+        try:
+            with open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r') as f:
+                self.style_data = f.read()
+                self.setStyleSheet(self.style_data)
+        except Exception as e:
+            # We couldn't load the Picarro style sheet so default to a vanilla style
+            QtGui.QApplication.setStyle("cleanlooks")
+
         self._db = DataBase
         self.display_login_dialog()  # Need DB authentication here so the TaskManager can get the user information.
         self.tm = None
@@ -40,7 +49,10 @@ class Window(QtGui.QMainWindow):
 
     def _set_connections(self):
         self.closeBtn.clicked.connect(self._quit_validation_tool)
+        self.resetTimerBtn.clicked.connect(self.tm.reset_autologout_timer)
         self.tm.task_countdown_signal.connect(self.update_progressbar)
+        self.tm.autologout_timer_signal.connect(self.update_autologout_timer)
+        self.tm.autologout_timer_finished_signal.connect(self.logout_and_shutdown)
         self.tm.report_signal.connect(self.taskWizardWidget.set_report)
         self.tm.reference_gas_signal.connect(self.tableWidget.display_reference_gas_data)
         self.tm.task_settings_signal.connect(self.taskEditorWidget.display_task_settings)
@@ -65,8 +77,14 @@ class Window(QtGui.QMainWindow):
 
     def _init_gui(self):
         self.closeBtn = QtGui.QPushButton("Close")
-        self.closeBtn.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.closeBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.resetTimerBtn = QtGui.QPushButton("Reset Auto Logout")
+        self.resetTimerBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.autologoutLabel = QtGui.QLabel(" ")
         hb = QtGui.QHBoxLayout()
+        hb.addSpacing(10)
+        hb.addWidget(self.resetTimerBtn)
+        hb.addWidget(self.autologoutLabel)
         hb.addStretch(1)
         hb.addWidget(self.closeBtn)
         hb.addSpacing(10)   # Fudge to line up button with widgets above
@@ -147,6 +165,19 @@ class Window(QtGui.QMainWindow):
         self.taskWizardWidget.setProgressBar((set_time_sec - countdown_sec)*100/set_time_sec, busy)
         return
 
+    def update_autologout_timer(self, countdown_sec, set_time_sec, description, busy):
+        minutes = countdown_sec/60
+        seconds = countdown_sec%60
+        if countdown_sec > 30:
+            self.autologoutLabel.setText("Automatic Logout out in {0:02d}:{1:02d} minutes.".format(minutes, seconds))
+        else:
+            self.autologoutLabel.setText("<font color=yellow>Automatic Logout out in {0:02d}:{1:02d} minutes!</font>".format(minutes, seconds))
+        return
+
+    def logout_and_shutdown(self):
+        quit()
+        return
+
     def update_data_stream(self):
         """
         Method call by self._data_timer to get the current data stream for plotting.
@@ -190,7 +221,7 @@ def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'c:'
-    longOpts = ["ini=", "username=", "fullname="]
+    longOpts = ["ini=", "debug_mode="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -204,21 +235,25 @@ def HandleCommandSwitches():
     if "--ini" in options:
         configFile = options["--ini"]
 
-    username = ""
-    if "--username" in options:
-        username = options["--username"]
+    # username = ""
+    # if "--username" in options:
+    #     username = options["--username"]
+    #
+    # fullname = ""
+    # if "--fullname" in options:
+    #     fullname = options["--fullname"]
 
-    fullname = ""
-    if "--fullname" in options:
-        fullname = options["--fullname"]
+    debug_mode = False
+    if "--debug_mode" in options:
+        debug_mode = options["--debug_mode"]
 
-    return (configFile, username, fullname)
+    return (configFile, debug_mode)
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    #app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    (configFile, username, fullname) = HandleCommandSwitches()
-    GUI = Window(iniFile=configFile)
+    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
+    (configFile, debug_mode) = HandleCommandSwitches()
+    GUI = Window(iniFile=configFile, debug_mode=debug_mode)
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

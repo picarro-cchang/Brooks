@@ -12,6 +12,17 @@ from PyQt4 import QtCore, QtGui
 from collections import OrderedDict
 from Host.Common.configobj import ConfigObj
 
+class MyGasSelectorComboBox(QtGui.QComboBox):
+    def __init__(self, default_choice = "Skip", parent = None):
+        super(MyGasSelectorComboBox,self).__init__()
+        self.addItems(["Skip", "GAS0", "GAS1", "GAS2", "GAS3"])
+        self.setCurrentIndex(self.findText(default_choice))
+        return
+
+    def wheelEvent(self, event):
+        # Discard wheel input as requested
+        return
+
 class QTaskEditorWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
@@ -28,13 +39,11 @@ class QTaskEditorWidget(QtGui.QWidget):
 
         tgl = QtGui.QGridLayout()
         self.taskDictCB = OrderedDict()
-        gases = ["Skip", "GAS0", "GAS1", "GAS2", "GAS3"]
         task_id = 0
         # col = 0
         for col in xrange(0,4,2):
             for row in xrange(2):
-                cb = QtGui.QComboBox()
-                cb.addItems(gases)
+                cb = MyGasSelectorComboBox()
                 cb.setFocusPolicy(QtCore.Qt.ClickFocus)
                 str = "  TASK {0} ".format(task_id)
                 key = "TASK{0}".format(task_id)

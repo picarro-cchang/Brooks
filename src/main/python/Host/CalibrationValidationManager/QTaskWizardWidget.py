@@ -6,8 +6,21 @@ from PyQt4 import QtCore, QtGui
 class QReportDisplayDialog(QtGui.QDialog):
     def __init__(self, fileName = None, textDoc = None, parent = None):
         QtGui.QDialog.__init__(self)
+
+        try:
+            with open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r') as f:
+                self.style_data = f.read()
+                self.setStyleSheet(self.style_data)
+        except Exception as e:
+            # We couldn't load the Picarro style sheet so default to a vanilla style
+            QtGui.QApplication.setStyle("cleanlooks")
+
         self.setFixedSize(1024, 768)
+
+        # QTextEdit shows the report. The Picarro style sheet uses a proportional font that ruins the
+        # report terminaltables formatting so we override the font style to monospace.
         self._textEditWidget = QtGui.QTextEdit()
+        self._textEditWidget.setStyleSheet("QTextEdit { font-family : monospace; }")
         self._textEditWidget.setDocument(textDoc)
         self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
@@ -61,7 +74,10 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._abortBtn = QtGui.QPushButton("Abort")
         self._viewReportBtn = QtGui.QPushButton("View Report")
         self._openFileManagerBtn = QtGui.QPushButton("Download Report")
+
         self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text())
+        self._text_edit.setStyleSheet("QTextEdit { font-family : monospace; }")
+
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
@@ -231,7 +247,7 @@ class QTaskWizardWidget(QtGui.QWidget):
 
     def job_complete(self):
         self._running = False
-        self._text_edit.setText("Job completed, message TBD")
+        self._text_edit.setText("<br><br><center>Job completed.<br><br>You may view or download your report.</center>")
         self._startup_settings()
         self._viewReportBtn.setEnabled(True)
         self.job_complete_signal.emit()
@@ -239,7 +255,7 @@ class QTaskWizardWidget(QtGui.QWidget):
 
     def job_aborted(self):
         self._running = False
-        self._text_edit.setText("Job Aborted")
+        self._text_edit.setText("<br><br><center>Job Aborted</center>")
         self._startup_settings()
         self._viewReportBtn.setEnabled(False)
         return
@@ -263,5 +279,7 @@ class QTaskWizardWidget(QtGui.QWidget):
                                       str,
                                       QtGui.QMessageBox.Ok,
                                       QtGui.QMessageBox.Ok)
+
+        self.abort_signal.emit()    # This will re-enable the main GUI close button
         self._startup_settings()
         return

@@ -8,6 +8,7 @@ import os
 from PyQt4 import QtCore
 from Host.Common.configobj import ConfigObj
 from Host.DataManager.DataStore import DataStoreForQt
+from QNonBlockingTimer import QNonBlockingTimer
 from ReferenceGas import ReferenceGas
 from Task import Task
 
@@ -23,6 +24,8 @@ class TaskManager(QtCore.QObject):
     job_complete_signal = QtCore.pyqtSignal()
     job_aborted_signal = QtCore.pyqtSignal()
     analyzer_warming_up_signal = QtCore.pyqtSignal()
+    autologout_timer_signal = QtCore.pyqtSignal(int, int, str, bool)
+    autologout_timer_finished_signal = QtCore.pyqtSignal()
 
     def __init__(self, iniFile=None, db=None):
         super(TaskManager, self).__init__()
@@ -33,6 +36,7 @@ class TaskManager(QtCore.QObject):
         self.abort = False              # When true, abort current job then reset
         self.monitor_data_stream = False
         self.co = None                  # Handle to the input ini file
+        self.autologout_time = 0        # How long before auto shutdown, set with ini settings
         self.ds = DataStoreForQt()
         self.db = db
         self._initAllObjectsAndConnections()
@@ -105,6 +109,18 @@ class TaskManager(QtCore.QObject):
                 self.tasks.append(task)
                 self.threads.append(task_thread)
 
+        # Set the auto logout time to some multiple of the time it takes to complete each measurement
+        # task to ensure that the clock doesn't run out in the middle of a validation run.
+        # Pretty up the time so that the clock starts at one minute intervals.
+        # Set the time to a minumum of 5 minutes.
+        #
+        self.autologout_time = int(self.co["TASKS"]["GasDelayBeforeMeasureSeconds"]) + int(self.co["TASKS"]["GasMeasureSeconds"])
+        self.autologout_time *= 10 # should be enough time to do all the work
+        if self.autologout_time%60 != 0:
+            i = self.autologout_time/60
+            self.autologout_time = 60 * (i+1)
+        if self.autologout_time < 300:
+            self.autologout_time = 300
         return
 
     def set_connections(self):
@@ -125,6 +141,12 @@ class TaskManager(QtCore.QObject):
         self.task_settings_signal.emit(self.co)
         self.start_data_stream()
         self.hostSession = requests.Session()
+        self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time,
+                              description="Auto logout",
+                              busy_hint = False)
+        self.autologout_timer.tick_signal.connect(self.autologout_timer_signal)
+        self.autologout_timer.finish_signal.connect(self.autologout_timer_finished)
+        self.autologout_timer.start()
         return
 
     def start_data_stream(self):
@@ -149,7 +171,7 @@ class TaskManager(QtCore.QObject):
         else:
             logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
             self.db.log(logStr)
-
+            self.reset_autologout_timer()
             self.abort = False
             self._initAllObjectsAndConnections()
             self.results["start_time"] = str(datetime.datetime.now())
@@ -182,6 +204,7 @@ class TaskManager(QtCore.QObject):
             else:
                 logStr = "Completed surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
                 self.db.log(logStr)
+                self.reset_autologout_timer()   # Give the user time to inspect or download their report
                 self.job_complete_signal.emit()
                 self.running_task_idx = None
         return
@@ -204,6 +227,28 @@ class TaskManager(QtCore.QObject):
 
     def is_task_alive_slot(self):
         self.ping_task_signal.emit()
+        return
+
+    def reset_autologout_timer(self):
+        self.autologout_timer.tick_signal.disconnect(self.autologout_timer_signal)
+        self.autologout_timer.finish_signal.disconnect(self.autologout_timer_finished)
+        # self.autologout_timer.stop()
+        self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time,
+                              description="Auto logout",
+                              busy_hint = False)
+        self.autologout_timer.tick_signal.connect(self.autologout_timer_signal)
+        self.autologout_timer.finish_signal.connect(self.autologout_timer_finished)
+        # Here's a little quirk.  If we call self.autologout_timer.start() directly
+        # it blocks the main TaskManager thread.  If we call it indirectly with a
+        # QTimer.singleShot the autologout timer runs in a different context (or thread)
+        # and doesn't block.
+        QtCore.QTimer.singleShot(100, self.autologout_timer.start)
+        return
+
+    def autologout_timer_finished(self):
+        logStr = "Auto logout timer expired. Shutting down System Validation Tool."
+        self.db.log(logStr)
+        self.autologout_timer_finished_signal.emit()
         return
 
     def abort_slot(self):

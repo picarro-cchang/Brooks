@@ -10,7 +10,7 @@ class QPlotWidget(QtGui.QWidget):
         self._saveBtn = QtGui.QPushButton("Save")
         self._undoBtn = QtGui.QPushButton("Undo")
         self._plot_widget = self._init_plot()
-        self._plot_str_data = QtGui.QLabel("the label")
+        self._plot_str_data = QtGui.QLabel(" ")
         self.setLayout( self._init_gui() )
         return
 
