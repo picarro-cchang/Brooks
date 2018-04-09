@@ -63,8 +63,11 @@ class QPlotWidget(QtGui.QWidget):
         """
         self._the_plot.setData(x,y)
         str = ""
+        space = '&nbsp;' * 5  # space between each data in the label below the plot
+        strArray = []
         for k,v in d.items():
-            str += " {0} = {1:.3f} ".format(k,v)
+            strArray.append("{0} = {1:.3f}".format(k,v))
+        str = space.join(strArray)
         self._plot_str_data.setText(QtCore.QString(str))
         self._time_series_plot.setLabels(left=yname)
         return

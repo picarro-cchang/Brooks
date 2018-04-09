@@ -17,10 +17,8 @@ class QReportDisplayDialog(QtGui.QDialog):
 
         self.setFixedSize(1024, 768)
 
-        # QTextEdit shows the report. The Picarro style sheet uses a proportional font that ruins the
-        # report terminaltables formatting so we override the font style to monospace.
+        # QTextEdit shows the report.
         self._textEditWidget = QtGui.QTextEdit()
-        self._textEditWidget.setStyleSheet("QTextEdit { font-family : monospace; }")
         self._textEditWidget.setDocument(textDoc)
         self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
@@ -77,8 +75,6 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._openFileManagerBtn = QtGui.QPushButton("Download Report")
 
         self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text())
-        self._text_edit.setStyleSheet("QTextEdit { font-family : monospace; }")
-
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 

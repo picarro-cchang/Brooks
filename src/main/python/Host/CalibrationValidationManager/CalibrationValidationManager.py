@@ -2,7 +2,7 @@
 #
 
 import sys
-#import qdarkstyle
+import collections
 from QLoginDialog import QLoginDialog
 import DataBase
 from functools import partial
@@ -197,7 +197,7 @@ class Window(QtGui.QMainWindow):
 
             timestamps = self.tm.ds.getList(data_source, "time")
             data = self.tm.ds.getList(data_source, primary_data_key)
-            d = {}
+            d = collections.OrderedDict()
             if data:
                 d[primary_data_key_name] = data[-1]
                 if "Secondary_Data_Key" in self.tm.co["TASKS"]:
