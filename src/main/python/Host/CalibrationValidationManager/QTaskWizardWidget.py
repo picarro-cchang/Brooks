@@ -5,7 +5,7 @@ from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
     def __init__(self, fileName = None, textDoc = None, parent = None):
-        QtGui.QDialog.__init__(self)
+        QtGui.QDialog.__init__(self, parent=parent)
 
         try:
             with open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r') as f:
@@ -25,6 +25,7 @@ class QReportDisplayDialog(QtGui.QDialog):
         self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
         self.setLayout( self._initGui() )
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self._setConnections()
         return
 
@@ -169,17 +170,21 @@ class QTaskWizardWidget(QtGui.QWidget):
         # send the abort signal
         # reset the widget states
         # Show a message box
-        result = QtGui.QMessageBox.question(self,
-                                            'Message', "Do you want to abort all tasks to start over or exit?",
-                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                            QtGui.QMessageBox.No)
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText("Do you want to abort all tasks to start over or exit?")
+        dialog.setIcon(QtGui.QMessageBox.Question)
+        dialog.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        dialog.setDefaultButton(QtGui.QMessageBox.No)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        result = dialog.exec_()
 
         if result == QtGui.QMessageBox.Yes:
-            QtGui.QMessageBox.critical(self,
-                                       'Critical',
-                                       "Close all gas valves then click OK",
-                                       QtGui.QMessageBox.Ok,
-                                       QtGui.QMessageBox.Ok)
+            dialog = QtGui.QMessageBox(self)
+            dialog.setText("Close all gas valves then click OK")
+            dialog.setIcon(QtGui.QMessageBox.Critical)
+            dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.exec_()
             self.abort_signal.emit()
         else:
             print 'No.'
@@ -274,11 +279,12 @@ class QTaskWizardWidget(QtGui.QWidget):
     def warming_up_warming_dialog(self):
         str = "The analyzer is warming up and cannot measure the validation gas.\n"
         str += "Wait until data appears in the time series plot and then click START.\n"
-        QtGui.QMessageBox.information(self,
-                                      'Information',
-                                      str,
-                                      QtGui.QMessageBox.Ok,
-                                      QtGui.QMessageBox.Ok)
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText(str)
+        dialog.setIcon(QtGui.QMessageBox.Information)
+        dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        dialog.exec_()
 
         self.abort_signal.emit()    # This will re-enable the main GUI close button
         self._startup_settings()
