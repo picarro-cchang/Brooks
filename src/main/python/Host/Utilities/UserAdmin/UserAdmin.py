@@ -191,7 +191,7 @@ class MainWindow(UserAdminFrame):
         user_active = str(self.button_disable_user.text()) == "Enable User"
         # prevent user disabling himself
         if self.selected_user["username"] == self.current_user["username"] and (not user_active):
-            self.message_box(QMessageBox.Critical, "Error", "Cannot disable yourselve!")
+            self.message_box(QMessageBox.Critical, "Error", "Cannot disable yourself!")
             return 
         query = "<p>Please confirm this action:</p><h2>%s %s</h2>" % \
             ("Enable" if user_active else "Disable", 
@@ -293,6 +293,7 @@ class MainWindow(UserAdminFrame):
 
     def message_box(self, icon, title, message, buttons=QMessageBox.Ok):
         msg_box = QMessageBox(icon, title, message, buttons, self)
+        msg_box.setWindowFlags(msg_box.windowFlags() | Qt.FramelessWindowHint | Qt.ApplicationModal)
         return msg_box.exec_()
 
     def next_history_page(self):
