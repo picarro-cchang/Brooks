@@ -19,11 +19,13 @@ class QPlotWidget(QtGui.QWidget):
 
     def _init_gui(self):
         gl = QtGui.QGridLayout()
+        gl.setContentsMargins(25, 25, 25, 25)
         gl.addWidget(self._plot_widget, 0, 0)
         gl.addWidget(self._plot_str_data, 1, 0, QtCore.Qt.AlignHCenter)
         gb = QtGui.QGroupBox("Measured Gas")
         gb.setLayout(gl)
         mgl = QtGui.QGridLayout()
+        mgl.setContentsMargins(10,0,10,0)
         mgl.addWidget(gb,0,0)
         return mgl
 
@@ -35,7 +37,7 @@ class QPlotWidget(QtGui.QWidget):
         self._time_series_plot.setMouseEnabled(x=False,y=False)
         self._time_series_plot.setMenuEnabled(False)
         self._time_series_plot.showGrid(x=True, y=True)
-        self._time_series_plot.setLabels(left="")
+        self._time_series_plot.setLabels(left=" ", right=" ")
 
         # Seems to keep time stamp labels from overlapping with eachother and over
         # the y-axis label.

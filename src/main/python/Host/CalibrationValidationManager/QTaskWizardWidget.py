@@ -109,6 +109,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         gb.setLayout(vb)
 
         mgl = QtGui.QGridLayout()
+        mgl.setContentsMargins(10,0,10,0)
         mgl.addWidget(gb, 0, 0)
         return mgl
 

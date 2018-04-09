@@ -137,6 +137,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         gb = QtGui.QGroupBox("Reference Gas Editor")
         gb.setLayout(gl)
         mgl = QtGui.QGridLayout()
+        mgl.setContentsMargins(10,0,10,0)
         mgl.addWidget(gb,0,0)
         self._disable_undo_save()
         return mgl
