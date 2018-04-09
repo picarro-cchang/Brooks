@@ -89,7 +89,7 @@ class Window(QtGui.QMainWindow):
         hb.addWidget(self.closeBtn)
         hb.addSpacing(10)   # Fudge to line up button with widgets above
 
-        self.plotWidget = QPlotWidget()
+        self.plotWidget = QPlotWidget(self)
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
         self.taskWizardWidget = QTaskWizardWidget()
@@ -117,8 +117,16 @@ class Window(QtGui.QMainWindow):
         self.taskEditorWidget.setVisible(True)
 
     def _quit_validation_tool(self):
-        self._db.logout()
-        self.close()
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText("Are you sure you want to close the validation tool?")
+        dialog.setIcon(QtGui.QMessageBox.Question)
+        dialog.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        dialog.setDefaultButton(QtGui.QMessageBox.No)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        result = dialog.exec_()
+        if result == QtGui.QMessageBox.Yes:
+            self._db.logout()
+            self.close()
         return
 
     def display_login_dialog(self):
