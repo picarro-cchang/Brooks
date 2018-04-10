@@ -19,6 +19,7 @@ class QReportDisplayDialog(QtGui.QDialog):
 
         # QTextEdit shows the report.
         self._textEditWidget = QtGui.QTextEdit()
+        self._textEditWidget.setStyleSheet("QTextEdit { font-family : monospace; }")
         self._textEditWidget.setDocument(textDoc)
         self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
