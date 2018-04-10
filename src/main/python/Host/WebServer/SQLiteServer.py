@@ -321,7 +321,7 @@ class SQLiteServer(object):
                             "system variable %s is disabled" % (name))
                     else:
                         self.save_action_history(current_user.username,
-                            "set system variable %s=%s" % (name, request_dict[name]))
+                            "set system variable %s as %s" % (name.replace('_', ' '), request_dict[name]))
             self.system_varialbes[name] = self._convert_string(request_dict[name])
         self.ds.commit()
     
