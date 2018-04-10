@@ -328,16 +328,18 @@ class DataManager(object):
                 self.maketimetuple = time.gmtime
             self.fitterResequencerLength = cp.getint(_MAIN_CONFIG_SECTION, "FitterResequencerLength", 3)
 
+            # commenting as peripharal interface is for surveyor not for any Semi
             # Get INI for peripheral interface
-            try:
-                self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
-            except:
-                Log('Looking for Peripheral Interface config', Level = 1)
-                try:
-                    self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
-                except:
-                    Log('Unable to find Peripheral Interface', Level = 1)
-                    self.periphIntrfConfig = None
+            # try:
+            #     self.periphIntrfConfig = os.path.join(basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
+            # except:
+            #     Log('Looking for Peripheral Interface config', Level = 1)
+            #     try:
+            #         self.periphIntrfConfig = os.path.join(basePath, cp.get("Setup", "periphIntrfConfig"))
+            #     except:
+            #         Log('Unable to find Peripheral Interface', Level = 1)
+            #         self.periphIntrfConfig = None
+            self.periphIntrfConfig = None
 
             self.enablePulseAnalyzer = False
             if "PulseAnalyzer" in cp:
@@ -1593,7 +1595,7 @@ class DataManager(object):
             # Handle peripheral interface
             self.CRDS_PeriphIntrf = None
             self.periphIntrfCols = []
-            if self.Config.periphIntrfConfig:
+            if self.Config.periphIntrfConfig is not None:
                 try:
                     self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig,self.DataBroadcaster)
                     (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
@@ -1863,7 +1865,7 @@ class DataManager(object):
             LogExc('Error getting user calibrations')
             UserCalDict = {}
 
-        if self.CRDS_PeriphIntrf:
+        if self.CRDS_PeriphIntrf is not None:
             periphIntrfFunc = self._getPeriphData
         else:
             periphIntrfFunc = None
