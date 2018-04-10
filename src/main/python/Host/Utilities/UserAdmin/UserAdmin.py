@@ -128,7 +128,7 @@ class MainWindow(UserAdminFrame):
                 self.session_cursor_pos = new_cursor_pos
                 self.session_active_ts = time.time()
             elif time.time() - self.session_active_ts > self.session_lifetime:
-                self.user_log_off()
+                self.user_log_off(True)
                 
     def check_user_input(self):
         password = str(self.input_new_password.text())
@@ -510,8 +510,8 @@ class MainWindow(UserAdminFrame):
             self.label_login_info.setText(msg)
             self.input_password.clear()
             
-    def user_log_off(self):
-        self.send_request("post", "account", {"command":"log_out_user", 'requester': "UserAdmin"}, show_error=True)
+    def user_log_off(self, logout_Inactive=False):
+        self.send_request("post", "account", {"command":"log_out_user", 'requester': "UserAdmin", 'Logout_InActivity': logout_Inactive}, show_error=True)
         self.session_timer.stop()
         self.close()        
         # self.input_password.clear()
