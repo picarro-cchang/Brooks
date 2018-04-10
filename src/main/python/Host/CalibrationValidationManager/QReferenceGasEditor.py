@@ -137,6 +137,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         gb = QtGui.QGroupBox("Reference Gas Editor")
         gb.setLayout(gl)
         mgl = QtGui.QGridLayout()
+        mgl.setContentsMargins(10,0,10,0)
         mgl.addWidget(gb,0,0)
         self._disable_undo_save()
         return mgl
@@ -296,6 +297,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             self.co.write()
             self.save_success_signal.emit()
         else:
+            self.display_reference_gas_data()
             self.save_failed_signal.emit()
         return
 
@@ -372,17 +374,22 @@ class QReferenceGasEditor(QtGui.QTableWidget):
 
         if not ok:
             not_saved_str = "CHANGES NOT SAVED\n\n"
-            QtGui.QMessageBox.critical(self,
-                                       'Critical',
-                                       not_saved_str + error_msg,
-                                       QtGui.QMessageBox.Ok,
-                                       QtGui.QMessageBox.Ok)
+            dialog = QtGui.QMessageBox(self)
+            dialog.setText(not_saved_str + error_msg)
+            dialog.setIcon(QtGui.QMessageBox.Critical)
+            dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            rtn = dialog.exec_()
         if ok and len(error_msg):
-            QtGui.QMessageBox.warning(self,
-                                      'Warning',
-                                      error_msg,
-                                      QtGui.QMessageBox.Ok,
-                                      QtGui.QMessageBox.Ok)
+            dialog = QtGui.QMessageBox(self)
+            dialog.setText(error_msg)
+            dialog.setIcon(QtGui.QMessageBox.Warning)
+            dialog.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
+            dialog.setDefaultButton(QtGui.QMessageBox.Cancel)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            rtn = dialog.exec_()
+            if rtn == QtGui.QMessageBox.Cancel:
+                ok = False
         return ok
 
     def wheelEvent(self, event):

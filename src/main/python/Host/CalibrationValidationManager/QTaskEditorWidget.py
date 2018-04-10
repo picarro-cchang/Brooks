@@ -80,6 +80,7 @@ class QTaskEditorWidget(QtGui.QWidget):
         gb.setLayout(hb)
 
         mgl = QtGui.QGridLayout()
+        mgl.setContentsMargins(10,0,10,0)
         mgl.addWidget(gb, 0, 0)
         return mgl
 
@@ -166,6 +167,8 @@ class QTaskEditorWidget(QtGui.QWidget):
                 self.tco["TASK4"]["Analysis"] = "One_Point_Validation"
             self.co["TASKS"] = self.tco
             self.co.write()
+        else:
+            self.display_task_settings()
         return
 
     def pass_sanity_check(self):
@@ -237,16 +240,20 @@ class QTaskEditorWidget(QtGui.QWidget):
 
         if not ok:
             not_saved_str = "CHANGES NOT SAVED\n\n"
-            QtGui.QMessageBox.critical(self,
-                                       'Critical',
-                                       not_saved_str + error_msg,
-                                       QtGui.QMessageBox.Ok,
-                                       QtGui.QMessageBox.Ok)
+            dialog = QtGui.QMessageBox(self)
+            dialog.setText(not_saved_str + error_msg)
+            dialog.setIcon(QtGui.QMessageBox.Critical)
+            dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.exec_()
         if ok and len(error_msg):
-            QtGui.QMessageBox.warning(self,
-                                      'Warning',
-                                      error_msg,
-                                      QtGui.QMessageBox.Ok,
-                                      QtGui.QMessageBox.Ok)
-
+            dialog = QtGui.QMessageBox(self)
+            dialog.setText(error_msg)
+            dialog.setIcon(QtGui.QMessageBox.Warning)
+            dialog.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
+            dialog.setDefaultButton(QtGui.QMessageBox.Cancel)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            rtn = dialog.exec_()
+            if rtn == QtGui.QMessageBox.Cancel:
+                ok = False
         return ok
