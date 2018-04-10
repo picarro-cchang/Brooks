@@ -166,9 +166,12 @@ class TaskManager(QtCore.QObject):
         as there won't be any data to measure.
         :return:
         """
-        if self.ds.analyzer_warming_up():
-            self.analyzer_warming_up_signal.emit()
-        else:
+
+        # Try to get some data.  If None is returned, we assume that the analyzer is still
+        # in warmup mode and don't let the user proceed to the validation process.
+        data = self.ds.getList(self.co["TASKS"]["Data_Source"], self.co["TASKS"]["Data_Key"])
+
+        if data:
             logStr = "Starting surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
             self.db.log(logStr)
             self.reset_autologout_timer()
@@ -179,6 +182,9 @@ class TaskManager(QtCore.QObject):
             self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
+        else:
+            self.analyzer_warming_up_signal.emit()
+        return
 
     def move_to_next_task(self):
         """

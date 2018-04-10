@@ -2,7 +2,7 @@
 #
 
 import sys
-#import qdarkstyle
+import collections
 from QLoginDialog import QLoginDialog
 import DataBase
 from functools import partial
@@ -60,7 +60,7 @@ class Window(QtGui.QMainWindow):
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
         self.tm.job_complete_signal.connect(partial(self.tableWidget.disable_edit, False))
         self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
-        self.tm.analyzer_warming_up_signal.connect(self.taskWizardWidget.warming_up_warming_dialog)
+        self.tm.analyzer_warming_up_signal.connect(self.taskWizardWidget.warming_up_warning_dialog)
         self.taskWizardWidget.start_run_signal.connect(partial(self.tableWidget.setDisabled, True))
         self.taskWizardWidget.start_run_signal.connect(partial(self.taskEditorWidget.setDisabled, True))
         self.taskWizardWidget.abort_signal.connect(partial(self.tableWidget.setEnabled, True))
@@ -89,7 +89,7 @@ class Window(QtGui.QMainWindow):
         hb.addWidget(self.closeBtn)
         hb.addSpacing(10)   # Fudge to line up button with widgets above
 
-        self.plotWidget = QPlotWidget()
+        self.plotWidget = QPlotWidget(self)
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
         self.taskWizardWidget = QTaskWizardWidget()
@@ -117,8 +117,16 @@ class Window(QtGui.QMainWindow):
         self.taskEditorWidget.setVisible(True)
 
     def _quit_validation_tool(self):
-        self._db.logout()
-        self.close()
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText("Are you sure you want to close the validation tool?")
+        dialog.setIcon(QtGui.QMessageBox.Question)
+        dialog.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        dialog.setDefaultButton(QtGui.QMessageBox.No)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        result = dialog.exec_()
+        if result == QtGui.QMessageBox.Yes:
+            self._db.logout()
+            self.close()
         return
 
     def display_login_dialog(self):
@@ -197,7 +205,7 @@ class Window(QtGui.QMainWindow):
 
             timestamps = self.tm.ds.getList(data_source, "time")
             data = self.tm.ds.getList(data_source, primary_data_key)
-            d = {}
+            d = collections.OrderedDict()
             if data:
                 d[primary_data_key_name] = data[-1]
                 if "Secondary_Data_Key" in self.tm.co["TASKS"]:

@@ -872,6 +872,7 @@ class QuickGui(wx.Frame):
         for c in self.serviceModeOnlyControls:
             c.Show(False)
         self.clearButton.Enable(False)
+        self.alarmView.DisableMouseButton(True)
 
         # Operator level
         # Activate the shutdown button, basic stats views, and different
@@ -884,6 +885,7 @@ class QuickGui(wx.Frame):
                 sc.Enable(True)
             for kc in self.keyChoice:
                 kc.Enable(True)
+            self.alarmView.DisableMouseButton(False)
 
         # Technician level
         # Activate additional widgets that change the display of data but

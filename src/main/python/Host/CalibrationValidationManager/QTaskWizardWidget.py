@@ -5,7 +5,7 @@ from PyQt4 import QtCore, QtGui
 
 class QReportDisplayDialog(QtGui.QDialog):
     def __init__(self, fileName = None, textDoc = None, parent = None):
-        QtGui.QDialog.__init__(self)
+        QtGui.QDialog.__init__(self, parent=parent)
 
         try:
             with open('/usr/local/picarro/qtLauncher/styleSheet.qss', 'r') as f:
@@ -17,14 +17,14 @@ class QReportDisplayDialog(QtGui.QDialog):
 
         self.setFixedSize(1024, 768)
 
-        # QTextEdit shows the report. The Picarro style sheet uses a proportional font that ruins the
-        # report terminaltables formatting so we override the font style to monospace.
+        # QTextEdit shows the report.
         self._textEditWidget = QtGui.QTextEdit()
         self._textEditWidget.setStyleSheet("QTextEdit { font-family : monospace; }")
         self._textEditWidget.setDocument(textDoc)
         self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
         self.setLayout( self._initGui() )
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self._setConnections()
         return
 
@@ -76,8 +76,6 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._openFileManagerBtn = QtGui.QPushButton("Download Report")
 
         self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text())
-        self._text_edit.setStyleSheet("QTextEdit { font-family : monospace; }")
-
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
@@ -112,6 +110,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         gb.setLayout(vb)
 
         mgl = QtGui.QGridLayout()
+        mgl.setContentsMargins(10,0,10,0)
         mgl.addWidget(gb, 0, 0)
         return mgl
 
@@ -169,17 +168,21 @@ class QTaskWizardWidget(QtGui.QWidget):
         # send the abort signal
         # reset the widget states
         # Show a message box
-        result = QtGui.QMessageBox.question(self,
-                                            'Message', "Do you want to abort all tasks to start over or exit?",
-                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                            QtGui.QMessageBox.No)
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText("Do you want to abort all tasks to start over or exit?")
+        dialog.setIcon(QtGui.QMessageBox.Question)
+        dialog.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        dialog.setDefaultButton(QtGui.QMessageBox.No)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        result = dialog.exec_()
 
         if result == QtGui.QMessageBox.Yes:
-            QtGui.QMessageBox.critical(self,
-                                       'Critical',
-                                       "Close all gas valves then click OK",
-                                       QtGui.QMessageBox.Ok,
-                                       QtGui.QMessageBox.Ok)
+            dialog = QtGui.QMessageBox(self)
+            dialog.setText("Close all gas valves then click OK")
+            dialog.setIcon(QtGui.QMessageBox.Critical)
+            dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.exec_()
             self.abort_signal.emit()
         else:
             print 'No.'
@@ -271,14 +274,15 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._reportTextObj = obj
         return
 
-    def warming_up_warming_dialog(self):
+    def warming_up_warning_dialog(self):
         str = "The analyzer is warming up and cannot measure the validation gas.\n"
         str += "Wait until data appears in the time series plot and then click START.\n"
-        QtGui.QMessageBox.information(self,
-                                      'Information',
-                                      str,
-                                      QtGui.QMessageBox.Ok,
-                                      QtGui.QMessageBox.Ok)
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText(str)
+        dialog.setIcon(QtGui.QMessageBox.Information)
+        dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        dialog.exec_()
 
         self.abort_signal.emit()    # This will re-enable the main GUI close button
         self._startup_settings()

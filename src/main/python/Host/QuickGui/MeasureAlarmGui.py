@@ -56,6 +56,15 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
         self.Bind(wx.EVT_MOTION,self.OnMouseMotion)
 
+    def DisableMouseButton(self, disable):
+        # In the QuickGui we use the user login level to enable/disable access to the alarm settings menu.
+        # By default this menu cannot be accessed.
+        if disable:
+            self.Unbind(wx.EVT_LEFT_DOWN)
+        else:
+            self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+        return
+
     def OnLeftDown(self,evt):
         """
         If left click a concentration alarm, display a dialog that allows the user to change alarm set points.
@@ -70,13 +79,17 @@ class AlarmViewListCtrl(wx.ListCtrl):
         # of the form "HF Operating Range".  If we find "Operating Range" we block the alarm setting
         # dialog.
         #
+        # EDIT: 20180409
+        # The phrase "Operating Range" has been changed to "Measuring Range" on SI units so now we just
+        # look for "Range".
+        #
         pos = evt.GetPositionTuple()
         item,flags = self.HitTest(pos)
         if self.tipWindow and self.tipWindow.IsShown():
             self.tipWindow.Close()
         if self._DataSource.alarmData:
             name,mode,enabled,alarm1,clear1,alarm2,clear2 = self._DataSource.alarmData[item]
-            if "Operating Range" not in name:
+            if "Range" not in name:
                 alarm1 = "%.2f" % alarm1
                 alarm2 = "%.2f" % alarm2
                 clear1 = "%.2f" % clear1
