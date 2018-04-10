@@ -257,7 +257,7 @@ class QuickGui(wx.Frame):
         self.fullInterface = False
         self.userLevel = 0
         self.userLoggedIn = False    
-        self.showStat = True # Show data statistics panels
+        self.showStat = False # Show data statistics panels
         self.showInstStat = True # Show instrument status panels
         self.serviceModeOnlyControls = []
         self.statControls = []
