@@ -273,7 +273,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._reportTextObj = obj
         return
 
-    def warming_up_warming_dialog(self):
+    def warming_up_warning_dialog(self):
         str = "The analyzer is warming up and cannot measure the validation gas.\n"
         str += "Wait until data appears in the time series plot and then click START.\n"
         dialog = QtGui.QMessageBox(self)

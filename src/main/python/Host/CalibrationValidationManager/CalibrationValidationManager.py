@@ -60,7 +60,7 @@ class Window(QtGui.QMainWindow):
         self.tm.job_complete_signal.connect(self.taskWizardWidget.job_complete)
         self.tm.job_complete_signal.connect(partial(self.tableWidget.disable_edit, False))
         self.tm.job_aborted_signal.connect(self.taskWizardWidget.job_aborted)
-        self.tm.analyzer_warming_up_signal.connect(self.taskWizardWidget.warming_up_warming_dialog)
+        self.tm.analyzer_warming_up_signal.connect(self.taskWizardWidget.warming_up_warning_dialog)
         self.taskWizardWidget.start_run_signal.connect(partial(self.tableWidget.setDisabled, True))
         self.taskWizardWidget.start_run_signal.connect(partial(self.taskEditorWidget.setDisabled, True))
         self.taskWizardWidget.abort_signal.connect(partial(self.tableWidget.setEnabled, True))
