@@ -177,9 +177,9 @@ class Window(QtGui.QMainWindow):
         minutes = countdown_sec/60
         seconds = countdown_sec%60
         if countdown_sec > 30:
-            self.autologoutLabel.setText("Automatic Logout out in {0:02d}:{1:02d} minutes.".format(minutes, seconds))
+            self.autologoutLabel.setText("Automatic Logout in {0:02d}:{1:02d} minutes.".format(minutes, seconds))
         else:
-            self.autologoutLabel.setText("<font color=yellow>Automatic Logout out in {0:02d}:{1:02d} minutes!</font>".format(minutes, seconds))
+            self.autologoutLabel.setText("<font color=yellow>Automatic Logout in {0:02d}:{1:02d} minutes!</font>".format(minutes, seconds))
         return
 
     def logout_and_shutdown(self):
