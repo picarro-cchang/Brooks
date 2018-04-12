@@ -189,7 +189,7 @@ class Task(QtCore.QObject):
 
         if "GasDelayBeforeMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasDelayBeforeMeasureSeconds"]),
-                                  description=QGuiText.equilibrating_text(self._settings["Data_Key"]))
+                                  description=QGuiText.equilibrating_text(self._settings["Gas_HTML"]))
             t.tick_signal.connect(self.task_countdown_signal)
             self.task_stop_clock_signal.connect(t.stop)
             t.start()
@@ -199,7 +199,7 @@ class Task(QtCore.QObject):
 
         if "GasMeasureSeconds" in self._settings:
             t = QNonBlockingTimer(set_time_sec=int(self._settings["GasMeasureSeconds"]),
-                                  description=QGuiText.measuring_text(self._settings["Data_Key"]))
+                                  description=QGuiText.measuring_text(self._settings["Gas_HTML"]))
             t.tick_signal.connect(self.task_countdown_signal)
             self.task_stop_clock_signal.connect(t.stop)
             t.start()
@@ -247,7 +247,7 @@ class Task(QtCore.QObject):
             busy = False
         # instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
         tank = self._reference_gases[self._settings["Gas"]].tankName
-        instructions = QGuiText.pre_task_instructions(tank, self._settings["Data_Key"])
+        instructions = QGuiText.pre_task_instructions(tank)
         t = QNonBlockingTimer(set_time_sec=delay,
                               description=instructions,
                               busy_hint = busy)

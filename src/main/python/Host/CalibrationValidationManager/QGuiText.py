@@ -1,44 +1,84 @@
 
-def welcome_text():
-    str = "<h1><center>Welcome to the Surrogate Gas Validation Tool</center></h1>"
-    str += "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. <b>Lorem ipsum dolor sit amet, consectetur adipiscing elit</b>. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. </p>" \
-          "<p>Sed dignissim lacinia nunc. Curabitur tortor. <i>Lorem ipsum dolor sit amet, consectetur adipiscing elit</i>. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. <i>Lorem ipsum dolor sit amet, consectetur adipiscing elit</i>. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum. <b>Aenean quam</b>. Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh. Quisque volutpat condimentum velit. </p>" \
-          "<p>Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis. Nulla facilisi. Ut fringilla. Suspendisse potenti. Nunc feugiat mi a tellus consequat imperdiet. Vestibulum sapien. Proin quam. <b>Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis</b>. Etiam ultrices. Suspendisse in justo eu magna luctus suscipit. Sed lectus. </p>" \
-          "<p>Integer euismod lacus luctus magna. Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum. Morbi in ipsum sit amet pede facilisis laoreet. Donec lacus nunc, viverra nec, blandit vel, egestas et, augue. Vestibulum tincidunt malesuada tellus. Ut ultrices ultrices enim. <i>Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh</i>. Curabitur sit amet mauris. Morbi in dui quis est pulvinar ullamcorper. <b>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui</b>. Nulla facilisi. Integer lacinia sollicitudin massa. </p>" \
-          "<p><i>Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam</i>. Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue. Proin sodales libero eget ante. Nulla quam. Aenean laoreet. <b>Curabitur sit amet mauris</b>. Vestibulum nisi lectus, commodo ac, facilisis ac, ultricies eu, pede. Ut orci risus, accumsan porttitor, cursus quis, aliquet eget, justo. Sed pretium blandit orci. <b>Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue</b>. Ut eu diam at pede suscipit sodales. Aenean lectus elit, fermentum non, convallis id, sagittis at, neque. </p>"
+def welcome_text(gasName, gasConcs):
+    g0, g1, g2 = gasConcs
+    str = "<h1><center>Welcome to the {0} Surrogate Gas Validation Tool</center></h1>".format(gasName)
+    str += """<p>The Picarro Surrogate Gas Validation Tool guides users through one of three Validation Procedures that 
+    use zero air and/or the appropriate surrogate gas as a stable proxy for the target species. 
+    Instrument Validation requires the following supplies:<p>
+    <ul>
+        <li>Up to four cylinders of input gases:</li>
+            <ul>
+            <li>1 Gas Validation: 1 {0} standard cylinder</li>
+            <li>2 Gas Span Validation: One cylinder of zero air and one or two {0} standard cylinders</li>
+            <li>3 or 4 Gas Linear Regression Validation: One cylinder of zero air and two or three {0} standard cylinders (Recommended concentrations: {1} ppm, {2} ppm, {3} ppm)</li>
+            </ul>
+        <li>Up to four regulators (one for each cylinder being used). Each regulator should be capable of accurately delivering 2-3 psig (0.1-0.2 bar) of line pressure.</li>
+        <li>Sufficient tubing to connect the regulator(s) to the instrument. We recommend using &frac14;" OD PTFE or PFA tubing.</li>
+        <li>Suitable adjustable or fixed wrenches for making gas-line connections.</li>
+    </ul>
+    To create input options, select Show Editors below and enter the requested information for each cylinder used. <p>
+    After cylinder details are entered, select Validation Type and the input source for each of the four available Tasks.
+    Any of the four Tasks may be skipped by selecting SKIP. When Validation Type and Task Sequence is confirmed, select Start Run below to proceed with the Validation Procedure.
+    """.format(gasName, g0, g1, g2)
     return str
 
-def editor_instructions():
+def editor_instructions(gasName):
     str = "<h1><center>Editor Instructions</center></h1>"
-    str += "<h1>Summus dolor plures dies manere non potest?</h1>" \
-           "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quod iam a me expectare noli. Et nemo nimium beatus est; Videsne quam sit magna dissensio? Duo Reges: constructio interrete. </p>" \
-           "<p>At enim hic etiam dolore. Tibi hoc incredibile, quod beatissimum. Quamquam te quidem video minime esse deterritum. Bonum patria: miserum exilium. </p>" \
-           "<p>Ita credo. Sed quae tandem ista ratio est? Qui convenit? De vacuitate doloris eadem sententia erit. Non quam nostram quidem, inquit Pomponius iocans; </p>" \
-           "<ol>" \
-           "<li>Quid in isto egregio tuo officio et tanta fide-sic enim existimo-ad corpus refers?</li>" \
-           "<li>Nonne videmus quanta perturbatio rerum omnium consequatur, quanta confusio?</li>" \
-           "<li>At ille non pertimuit saneque fidenter: Istis quidem ipsis verbis, inquit;</li>" \
-           "<li>Apparet statim, quae sint officia, quae actiones.</li>" \
-           "<li>Iam illud quale tandem est, bona praeterita non effluere sapienti, mala meminisse non oportere?</li></ol>"
-    str += "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. <b>Lorem ipsum dolor sit amet, consectetur adipiscing elit</b>. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. </p>" \
-          "<p>Sed dignissim lacinia nunc. Curabitur tortor. <i>Lorem ipsum dolor sit amet, consectetur adipiscing elit</i>. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. <i>Lorem ipsum dolor sit amet, consectetur adipiscing elit</i>. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum. <b>Aenean quam</b>. Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh. Quisque volutpat condimentum velit. </p>" \
-          "<p>Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis. Nulla facilisi. Ut fringilla. Suspendisse potenti. Nunc feugiat mi a tellus consequat imperdiet. Vestibulum sapien. Proin quam. <b>Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis</b>. Etiam ultrices. Suspendisse in justo eu magna luctus suscipit. Sed lectus. </p>" \
-          "<p>Integer euismod lacus luctus magna. Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum. Morbi in ipsum sit amet pede facilisis laoreet. Donec lacus nunc, viverra nec, blandit vel, egestas et, augue. Vestibulum tincidunt malesuada tellus. Ut ultrices ultrices enim. <i>Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh</i>. Curabitur sit amet mauris. Morbi in dui quis est pulvinar ullamcorper. <b>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui</b>. Nulla facilisi. Integer lacinia sollicitudin massa. </p>" \
-          "<p><i>Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam</i>. Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue. Proin sodales libero eget ante. Nulla quam. Aenean laoreet. <b>Curabitur sit amet mauris</b>. Vestibulum nisi lectus, commodo ac, facilisis ac, ultricies eu, pede. Ut orci risus, accumsan porttitor, cursus quis, aliquet eget, justo. Sed pretium blandit orci. <b>Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue</b>. Ut eu diam at pede suscipit sodales. Aenean lectus elit, fermentum non, convallis id, sagittis at, neque. </p>"
+
+    str += """
+    Instrument validation requires up to four cylinders of input gases:
+    <ul>
+        <li>Gas Validation: 1 {0} standard cylinder</li>
+        <li>Gas Span Validation: One cylinder of zero air and one or two {0} standard cylinders</li>
+        <li>3 or 4 Gas Linear Regression Validation: One cylinder of zero air and two or three {0} standard cylinders (Recommended concentrations: Xppm, XXppm, XXXppm)</li>
+    </ul>
+    Use the Reference Gas Editor to enter the following information from each cylinder's Certificate of Accuracy:
+    <ul>
+        <li>Name: assign an identifier to the cylinder (e.g. 'Zero Air')</li>
+        <li>SN: vendor-issued identifier for the cylinder (e.g. item number, lot number, etc.)</li>
+        <li>Zero_Air: If the cylinder contains zero air, select between 'Ultra Zero' and 'Standard Zero', otherwise, select 'No'</li>
+        <li>{0} ppm: Enter the concentration listed on the cylinder's Certificate in ppm</li>
+        <li>{0} acc: Select the accuracy listed on the cylinder from the drop-down menu</li>
+        </ul>
+    After cylinder details are entered, click on Save to store the cylinder information. In the Task Editor, 
+    select Validation Type and the input source for each of the four available Tasks. Any of the four Tasks may be 
+    skipped by selecting 'Skip'. When Validation Type and Task Sequence are configured, click on Save in the Task 
+    Editor to confirm the changes. Select Start Run below to proceed with the Validation Procedure. 
+    """.format(gasName)
     return str
 
-def equilibrating_text(gasStr):
-    str = "<br><br><br><center>Waiting for {0} to equilibrate before measuring.</center>".format(gasStr)
+def equilibrating_text(gasName):
+    str = """
+    <br><br><br><center>
+    Waiting for {0} to equilibrate before measuring...
+    </center>
+    """.format(gasName)
     return str
 
-def measuring_text(gasStr):
-    str = "<br><br><br><center>Measuring {0}.".format(gasStr)
+def measuring_text(gasName):
+    str = "<br><br><br><center>Measuring {0}...".format(gasName)
     return str
 
-def pre_task_instructions(gasSource, gasName):
-    str = "<br><br><br><center>Open the valve of gas source \"{0}\" to let in {1} and then click NEXT</center>".format(gasSource, gasName)
+def pre_task_instructions(gasSource):
+    str = """
+    <br><br><br><center>
+    Attach a regulator to the source "{}" with the output pressure set to zero. Open the cylinder valve 
+    and adjust the output line pressure to 2-3psig (0.1-0.2 bar).
+    After connecting the gas line to the instrument, click NEXT below.
+    </center>
+    """.format(gasSource)
     return str
 
 def post_task_instructions():
-    str = "<br><br><br><center>Close the valve on all gas sources and then click NEXT.</center>"
+    str = "<br><br><br><center>Close the valve on the gas source and disconnect the line from the analyzer. Click NEXT to proceed..</center>"
+    return str
+
+def job_complete_text():
+    str = """
+    <br><br><br><center>Validation Procedure Completed<br><br>
+    Select VIEW REPORT to view the results of the Validation Procedure.<br><br>
+    To save a copy on an external drive, select DOWNLOAD REPORT.<br><br>
+    To run another Validation Procedure, select the appropriate procedure and tasks in the Task Editor and select START RUN.
+    </center>
+    """
     return str

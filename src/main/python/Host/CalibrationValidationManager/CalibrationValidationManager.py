@@ -35,9 +35,9 @@ class Window(QtGui.QMainWindow):
         self.display_login_dialog()  # Need DB authentication here so the TaskManager can get the user information.
         self.tm = None
         self.iniFile = iniFile
+        self.tm = self.setUpTasks_()
         self._init_gui()
         self._startup_settings()
-        self.tm = self.setUpTasks_()
         self._set_connections()
         self.show()
         QtCore.QTimer.singleShot(100, self._late_start)
@@ -92,7 +92,7 @@ class Window(QtGui.QMainWindow):
         self.plotWidget = QPlotWidget(self)
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
-        self.taskWizardWidget = QTaskWizardWidget()
+        self.taskWizardWidget = QTaskWizardWidget(self.tm.co)
         self.taskEditorWidget = QTaskEditorWidget()
         gl = QtGui.QGridLayout()
         gl.addWidget(self.plotWidget, 0, 0)
@@ -137,7 +137,7 @@ class Window(QtGui.QMainWindow):
         return
 
     def setUpTasks_(self):
-        tm = TaskManager(iniFile=self.iniFile, db=self._db) #, username=self.username, fullname=self.fullname)
+        tm = TaskManager(iniFile=self.iniFile, db=self._db)
         return tm
 
     def start_data_stream_polling(self):

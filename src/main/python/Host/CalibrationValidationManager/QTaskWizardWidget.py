@@ -57,11 +57,12 @@ class QTaskWizardWidget(QtGui.QWidget):
     view_editors_signal = QtCore.pyqtSignal()
     hide_editors_signal = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, co=None, parent=None):
         QtGui.QWidget.__init__(self)
         self._reportTextObj = None          # QTextDocument object containing the measurement report
         self._reportFileName = None         # File name of the PDF doc containing _reportTextObj
         self._running = False               # Track if we are in a validation run
+        self._co = co                       # configobj, ini settings
         self.setLayout( self._init_gui() )
         self._startup_settings()
         self._set_connections()
@@ -75,7 +76,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._viewReportBtn = QtGui.QPushButton("View Report")
         self._openFileManagerBtn = QtGui.QPushButton("Download Report")
 
-        self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text())
+        self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"],
+                                                                self._co["TASKS"]["Recommended_Gas_Concentrations_PPM"]))
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
@@ -207,13 +209,13 @@ class QTaskWizardWidget(QtGui.QWidget):
         if self._editors_visible:
             self._editors_visible = False
             if not self._running:
-                self._text_edit.setText(QGuiText.welcome_text())
+                self._text_edit.setText(QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"]))
             self._showEditorsBtn.setText("Show Editors")
             self.hide_editors_signal.emit()
         else:
             self._editors_visible = True
             if not self._running:
-                self._text_edit.setText(QGuiText.editor_instructions())
+                self._text_edit.setText(QGuiText.editor_instructions(self._co["TASKS"]["Gas_HTML"]))
             self._showEditorsBtn.setText("Hide Editors")
             self.view_editors_signal.emit()
         return
@@ -250,7 +252,7 @@ class QTaskWizardWidget(QtGui.QWidget):
 
     def job_complete(self):
         self._running = False
-        self._text_edit.setText("<br><br><center>Job completed.<br><br>You may view or download your report.</center>")
+        self._text_edit.setText(QGuiText.job_complete_text())
         self._startup_settings()
         self._viewReportBtn.setEnabled(True)
         self.job_complete_signal.emit()
