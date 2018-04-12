@@ -5,10 +5,12 @@ import requests
 import struct
 import subprocess
 import shlex
+import os, errno
 
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Utilities.ModbusServer.ErrorHandler import Errors
 from Host.autogen import interface
+from Host.Common.CustomConfigObj import CustomConfigObj
 
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"        
@@ -30,10 +32,11 @@ def get_variable_type(bit, type):
         return struct_type_map["%s_%s" % (type.strip().lower(), bit)]
 
 class ModbusScriptEnv(object):
-    def __init__(self, server):
+    def __init__(self, server, userdata_file_path):
         self.server = server
         self.host_session = requests.Session()
         self.current_user = None
+        self._Modbus_Userdata_INI_File(userdata_file_path)
         self._driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
             ClientName = "ModbusServer")
         self._instrument_manager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER, 
@@ -325,3 +328,75 @@ class ModbusScriptEnv(object):
                         return 1
         except:
             pass
+
+    ############### User data store restore functionality#####################
+
+    def _Modbus_Userdata_INI_File(self, file_path):
+        self.userdata_file_path = file_path
+        directory = os.path.dirname(file_path)
+        self.makeDirs(directory)
+        if os.path.exists(file_path):
+            self.userdata_config = CustomConfigObj(file_path)
+        else:
+            raise Exception("Configuration file not found: %s" % file_path)
+
+    def makeDirs(path):
+        """
+        Recursively make directories as needed.
+        """
+        # If the directory already exists the code will thrown
+        # a EEXIST error.  See the Python errno module and
+        # the "errno" Linux man page.  We ignore this exception
+        # and throw anything else up to the parent.
+        #
+        # This idiom is discussed at
+        # https://stackoverflow.com/questions/273192/how-can-i-create-a-directory-if-it-does-not-exist/14364249#14364249
+        #
+        # The permission 0775 is explicity set to avoid the Archiver problem where on Linux systems
+        # it would create RDF destination directories as read only if makedirs() was called with the default
+        # permissions.
+        #
+        try:
+            os.makedirs(path, 0775)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise e
+        return
+
+    def MODBUS_GetUserData(self, userdata_key):
+        '''Method use to get user set value from file'''
+        # check if userdata object is created
+        if self.userdata_config:
+            #check if key is present
+            if self.userdata_config.has_option("Main", userdata_key):
+                # get current value
+                return self.userdata_config.getfloat("Main", userdata_key)
+            else:
+                # if key is not present lets create it and write to file
+                self.userdata_config.set("Main", userdata_key, 0.0, float)
+                with open(self.userdata_file_path, "w") as fh:
+                    self.userdata_config.write(fh)
+            self.MODBUS_SetError(Errors.NO_ERROR)
+            return 0.0
+        # if object is not created return not a number
+        else:
+            self.MODBUS_SetError(Errors.ERROR)
+            return float('NaN')
+
+    def MODBUS_SetUserData(self, userdata_key, userdata_new_value):
+        error_code = Errors.NO_ERROR
+        # check if userdata object is created
+        if self.userdata_config:
+            # check if key is present
+            if self.userdata_config.has_option("Main", userdata_key):
+                # get current value
+                self.userdata_config.set("Main", userdata_key, userdata_new_value, float)
+            else:
+                # if key is not present lets create it
+                self.userdata_config.set("Main", userdata_key, 0.0, float)
+
+            # write value to file
+            with open(self.userdata_file_path, "w") as fh:
+                self.userdata_config.write(fh)
+            self.MODBUS_SetError(Errors.NO_ERROR)
+        self.MODBUS_SetError(Errors.ERROR)
