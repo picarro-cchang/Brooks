@@ -332,13 +332,18 @@ class ModbusScriptEnv(object):
     ############### User data store restore functionality#####################
 
     def _Modbus_Userdata_INI_File(self, file_path):
+        '''Method use to open/create modbus userdata ini file and read it'''
         self.userdata_file_path = file_path
         try:
+            #check if directory is present, if not lets create directory
             directory = os.path.dirname(file_path)
             self.makeDirs(directory)
+            # check if file is present, if present read file
             if os.path.exists(file_path):
                 self.userdata_config = CustomConfigObj(file_path)
             else:
+                # if file is not present lets create new file
+                # to handle old instrument which are already at customer side
                 with open(file_path, "w") as fh:
                     fh.write('[Main]')
                 self.userdata_config = CustomConfigObj(file_path)
