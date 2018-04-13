@@ -333,11 +333,16 @@ class ModbusScriptEnv(object):
 
     def _Modbus_Userdata_INI_File(self, file_path):
         self.userdata_file_path = file_path
-        directory = os.path.dirname(file_path)
-        self.makeDirs(directory)
-        if os.path.exists(file_path):
-            self.userdata_config = CustomConfigObj(file_path)
-        else:
+        try:
+            directory = os.path.dirname(file_path)
+            self.makeDirs(directory)
+            if os.path.exists(file_path):
+                self.userdata_config = CustomConfigObj(file_path)
+            else:
+                with open(file_path, "w") as fh:
+                    fh.write('[Main]')
+                self.userdata_config = CustomConfigObj(file_path)
+        except Exception:
             raise Exception("Configuration file not found: %s" % file_path)
 
     def makeDirs(self, path):
@@ -399,4 +404,6 @@ class ModbusScriptEnv(object):
             with open(self.userdata_file_path, "w") as fh:
                 self.userdata_config.write(fh)
             self.MODBUS_SetError(Errors.NO_ERROR)
+            return
         self.MODBUS_SetError(Errors.ERROR)
+        return
