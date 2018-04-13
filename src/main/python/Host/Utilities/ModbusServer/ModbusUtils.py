@@ -340,7 +340,7 @@ class ModbusScriptEnv(object):
         else:
             raise Exception("Configuration file not found: %s" % file_path)
 
-    def makeDirs(path):
+    def makeDirs(self, path):
         """
         Recursively make directories as needed.
         """
@@ -373,7 +373,7 @@ class ModbusScriptEnv(object):
                 return self.userdata_config.getfloat("Main", userdata_key)
             else:
                 # if key is not present lets create it and write to file
-                self.userdata_config.set("Main", userdata_key, 0.0, float)
+                self.userdata_config.set("Main", userdata_key, 0.0)
                 with open(self.userdata_file_path, "w") as fh:
                     self.userdata_config.write(fh)
             self.MODBUS_SetError(Errors.NO_ERROR)
@@ -390,10 +390,10 @@ class ModbusScriptEnv(object):
             # check if key is present
             if self.userdata_config.has_option("Main", userdata_key):
                 # get current value
-                self.userdata_config.set("Main", userdata_key, userdata_new_value, float)
+                self.userdata_config.set("Main", userdata_key, userdata_new_value)
             else:
                 # if key is not present lets create it
-                self.userdata_config.set("Main", userdata_key, 0.0, float)
+                self.userdata_config.set("Main", userdata_key, 0.0)
 
             # write value to file
             with open(self.userdata_file_path, "w") as fh:
