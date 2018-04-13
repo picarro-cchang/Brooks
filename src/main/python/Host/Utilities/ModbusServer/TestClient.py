@@ -25,6 +25,7 @@ if "--debug" in sys.argv[1:]:
 reg_dict = {1: "Input Register", 2: "Discrete Register", 3: "Coil Register", 4: "Holding Register"}
 
 def read_error(unit_number):
+    time.sleep(1)
     result = client.read_input_registers(386, 1, unit=unit_number)
     values = pack(">h", *result.registers)
     return unpack(">h", values)[0]    
@@ -158,18 +159,25 @@ while True:
             if ops == 1:
                 size = int(raw_input("Enter size -- number of registers: "))
                 res = client.read_holding_registers(int(address), size, unit=slaveID)
-                print res
+                #print res
+                print "data types: \n 1, int \n 2, float"
+                data_type = int(raw_input("Enter data type (1 or 2): "))
                 try:
-                    value_str = pack("%s%dH" % ('>', size), *res.registers)
-                    ret = unpack("%s%s" % ('>', get_variable_type(16*size, 'int')), value_str)
-                    print "Value read: ", ret[0]
+                    if data_type == 1:
+                        value_str = pack("%s%dH" % ('>', size), *res.registers)
+                        ret = unpack("%s%s" % ('>', get_variable_type(16*size, 'int')), value_str)
+                        print "Value read: ", ret[0]
+                    elif data_type == 2:
+                        value_str = pack("%s%dH" % ('>', size), *res.registers)
+                        ret = unpack("%s%s" % ('>', get_variable_type(16 * size, 'float')), value_str)
+                        print "Value read: ", ret[0]
                 except Exception, e:
                     print "Error in reading: %s" %e 
                     print "You entered invalid parameters... "
             elif ops == 2:
                 size = int(raw_input("Enter size -- number of registers: "))
-                print "data types: \n 1, int \n 2, string"
-                data_type = int(raw_input("Enter data type (1 or 2): "))
+                print "data types: \n 1, int \n 2, string \n 3, float"
+                data_type = int(raw_input("Enter data type (1 or 2 or 3): "))
                 if data_type == 1:
                     input_value = int(raw_input("Enter integer value: "))
                     value_str = pack("%s%s" % ('>', get_variable_type(16*size, 'int')), input_value)
@@ -182,9 +190,13 @@ while True:
                     
                     value_to_write = list(unpack('%s%dH' % ('>', size), user_name_fixsize) )
                     client.write_registers(int(address), value_to_write, unit=slaveID)
-                    
+                if data_type == 3:
+                    input_value = float(raw_input("Enter Float value: "))
+                    value_str = pack("%s%s" % ('>', get_variable_type(16*size, 'float')), input_value)
+                    wr_2_value = list( unpack('%s%dH' % ('>', size), value_str) )
+                    client.write_registers(int(address), wr_2_value, unit=slaveID)
                 else:
-                    print "Please enter a number of 1 or 2. "
+                    print "Please enter a number of 1 or 2 or 3. "
                     break
                     
             else:
