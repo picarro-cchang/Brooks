@@ -190,8 +190,8 @@ class ModbusServer(object):
         script_name = self.config.get("Main", "Script", "")
         script_path = sys.path[0] + "/" + script_name
         userdata_file_path = self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
-        self.scriptEnv_Obj = ModbusScriptEnv(self, userdata_file_path=userdata_file_path)
-        scriptEnv = self.scriptEnv_Obj.create_script_env()
+        scriptEnv_Obj = ModbusScriptEnv(self, userdata_file_path=userdata_file_path)
+        scriptEnv = scriptEnv_Obj.create_script_env()
         if os.path.exists(script_path):
             script = file(script_path, 'r')
             scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
@@ -367,20 +367,6 @@ class ModbusServer(object):
         except KeyError:
             pass
 
-    def write_UserData(self):
-        '''Method use to write all user data register values'''
-        data_dict = {}
-        # now go over each variable and check if variable is available in user data
-        # file. If it is present lets get value of variable so we can
-        # write to modbus memory
-        for v in self.register_variables[HOLDING_REGISTER - 1]["variables"]:
-            if v.startswith('UserData_'):
-                data_dict[v] = self.scriptEnv_Obj.MODBUS_GetUserData(v)
-
-        # let make sure that there is data to write
-        if len(data_dict) > 0:
-            self.write_readonly_registers(data_dict)
-
 
     def write_readonly_constant_data(self):
         '''
@@ -530,7 +516,6 @@ class ModbusServer(object):
     def data_writer(self):
         time.sleep(1)
         self.write_readonly_constant_data()
-        self.write_UserData()
         while True:
             time.sleep(0.1)
             while not self.data_queue.empty():
