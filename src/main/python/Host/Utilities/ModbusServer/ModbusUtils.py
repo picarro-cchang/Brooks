@@ -397,14 +397,8 @@ class ModbusScriptEnv(object):
         error_code = Errors.NO_ERROR
         # check if userdata object is created
         if self.userdata_config:
-            # check if key is present
-            if self.userdata_config.has_option("Main", userdata_key):
-                # get current value
-                self.userdata_config.set("Main", userdata_key, userdata_new_value)
-            else:
-                # if key is not present lets create it
-                self.userdata_config.set("Main", userdata_key, 0.0)
-
+            self.userdata_config.set("Main", userdata_key, userdata_new_value)
+            
             # write value to file
             with open(self.userdata_file_path, "w") as fh:
                 self.userdata_config.write(fh)
