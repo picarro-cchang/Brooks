@@ -209,7 +209,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         if self._editors_visible:
             self._editors_visible = False
             if not self._running:
-                self._text_edit.setText(QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"]))
+                self._text_edit.setText(QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"],
+                                                              self._co["TASKS"]["Recommended_Gas_Concentrations_PPM"]))
             self._showEditorsBtn.setText("Show Editors")
             self.hide_editors_signal.emit()
         else:
