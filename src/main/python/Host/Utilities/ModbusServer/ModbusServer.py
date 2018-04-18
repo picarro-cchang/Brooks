@@ -366,19 +366,30 @@ class ModbusServer(object):
             pass
 
     def write_readonly_constant_data(self):
-        '''
-        Method use to write all constant register values
-        :return:
-        '''
-        # set default as no error
-        self.errorhandler.set_error(Errors.NO_ERROR)
-        instr_cal_file_path = self.config.get("Main", "InstrumentCalFilePath", "")
-        user_cal_file_path = self.config.get("Main", "UserCalFilePath", "")
-        instr_cal_file_path = sys.path[0] + "/" + instr_cal_file_path
-        user_cal_file_path = sys.path[0] + "/" + user_cal_file_path
-        self.Write_Instrument_Cal_File_Data(instr_cal_file_path)
-        self.Write_User_Cal_Data(user_cal_file_path)
-        self.Write_All_Const_Values()
+        try:
+            '''
+            Method use to write all constant register values
+            :return:
+            '''
+            # set default as no error
+            self.errorhandler.set_error(Errors.NO_ERROR)
+            instr_cal_file_path = self.config.get("Main", "InstrumentCalFilePath", "")
+            user_cal_file_path = self.config.get("Main", "UserCalFilePath", "")
+            instr_cal_file_path = sys.path[0] + "/" + instr_cal_file_path
+            user_cal_file_path = sys.path[0] + "/" + user_cal_file_path
+            try:
+                self.Write_Instrument_Cal_File_Data(instr_cal_file_path)
+            except Exception as ex:
+                LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
+
+            try:
+                self.Write_User_Cal_Data(user_cal_file_path)
+            except Exception as ex:
+                LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
+
+            self.Write_All_Const_Values()
+        except Exception as ex:
+            LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
 
     def Write_Instrument_Cal_File_Data(self, file_path):
         """
@@ -500,24 +511,30 @@ class ModbusServer(object):
             return 0.0
             
     def controller(self):
-        addr_func_map = {}
-        for v in self.register_variables[COIL-1]['variables']:
-            if "function" in self.variable_params[v]:
-                addr_func_map[self.variable_params[v]['address']] = self.variable_params[v]['function']
-        while True:
-            time.sleep(1)
-            while not self.command_queue.empty():
-                addr = self.command_queue.get(False)
-                ret = addr_func_map[addr]()
+        try:
+            addr_func_map = {}
+            for v in self.register_variables[COIL-1]['variables']:
+                if "function" in self.variable_params[v]:
+                    addr_func_map[self.variable_params[v]['address']] = self.variable_params[v]['function']
+            while True:
+                time.sleep(1)
+                while not self.command_queue.empty():
+                    addr = self.command_queue.get(False)
+                    ret = addr_func_map[addr]()
+        except Exception as ex:
+            LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
                 
     def data_writer(self):
-        time.sleep(1)
-        self.write_readonly_constant_data()
-        while True:
-            time.sleep(0.1)
-            while not self.data_queue.empty():
-                data = self.data_queue.get(False)
-                self.write_readonly_all_data_with_one_lock(data)
+        try:
+            time.sleep(1)
+            self.write_readonly_constant_data()
+            while True:
+                time.sleep(0.1)
+                while not self.data_queue.empty():
+                    data = self.data_queue.get(False)
+                    self.write_readonly_all_data_with_one_lock(data)
+        except Exception as ex:
+            LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
         
     def run(self):
         self.control_thread.start()
