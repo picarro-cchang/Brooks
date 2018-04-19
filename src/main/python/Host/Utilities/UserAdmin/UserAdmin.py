@@ -345,7 +345,7 @@ class MainWindow(UserAdminFrame):
         with open(fname, "w") as f:
             f.write("DateTime,UserName,Operation\n")
             for a in self.action_history:
-                f.write("%s,%s,%s\n" % (a[0], a[1], a[2]))
+                f.write("%s,%s,%s\n" % (timestampToLocalDatetime(a[0]).strftime("%Y-%m-%d %H:%M:%S"), a[1], a[2]))
         msg = "User history has been saved in %s." % fname
         self.message_box(QMessageBox.Information, "Save History", msg)
         
