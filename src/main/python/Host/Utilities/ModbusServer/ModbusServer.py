@@ -179,6 +179,7 @@ class ModbusServer(object):
             # control thread gets command from queue and execute
             self.control_thread = threading.Thread(target=self.controller)
             self.control_thread.daemon = True
+            self.write_readonly_constant_data()
         except:
             LogExc("Unable to Start Modbus Server")
             time.sleep(1)
@@ -511,8 +512,6 @@ class ModbusServer(object):
             return 0.0
             
     def controller(self):
-        # Some time LogExc does not find reference in thread so importing in thread
-        from Host.Common.EventManagerProxy import LogExc
         try:
             addr_func_map = {}
             for v in self.register_variables[COIL-1]['variables']:
@@ -527,11 +526,8 @@ class ModbusServer(object):
             LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
                 
     def data_writer(self):
-        # Some time LogExc does not find reference in thread so importing in thread 
-        from Host.Common.EventManagerProxy import LogExc
         try:
             time.sleep(1)
-            self.write_readonly_constant_data()
             while True:
                 time.sleep(0.1)
                 while not self.data_queue.empty():
