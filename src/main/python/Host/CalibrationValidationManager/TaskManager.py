@@ -177,8 +177,16 @@ class TaskManager(QtCore.QObject):
             self.reset_autologout_timer()
             self.abort = False
             self._initAllObjectsAndConnections()
-            self.results["start_time"] = str(datetime.datetime.now())
+
+            # Normally we start with the first task but if the user has skipped the first task
+            # or two find a valid task to run.  If all tasks are skipped reset the index and
+            # do nothing else.  We shouldn't get in this situation if the GUI checks are working.
             self.running_task_idx = 0
+            while self.tasks[self.running_task_idx].skip:
+                self.running_task_idx += 1
+                if (self.running_task_idx > len(self.tasks) - 1):
+                    break
+            self.results["start_time"] = str(datetime.datetime.now())
             self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
