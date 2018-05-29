@@ -237,6 +237,9 @@ class QTaskEditorWidget(QtGui.QWidget):
             if self.onePointValidationRB.isChecked() and len(uniq_gas_choices) > 1:
                 error_msg += "You have picked more than one gas source to measure.\n\n"
                 error_msg += "For One Point Validation it is recommended to measure only one source."
+            if self.onePointValidationRB.isChecked() and len(uniq_gas_choices) == 1:
+                error_msg += "Be sure you have picked a gas with a reported accuracy.\n\n"
+                error_msg += "If the reference gas accuracy is 'UNK' the % deviation test will not complete."
 
         if not ok:
             not_saved_str = "CHANGES NOT SAVED\n\n"

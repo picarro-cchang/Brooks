@@ -210,6 +210,18 @@ class Task(QtCore.QObject):
         try:
             timestamps = self.data_source.getList(self._settings["Data_Source"], "time")
             data = self.data_source.getList(self._settings["Data_Source"], self._settings["Data_Key"])
+
+            # Everything is done in PPM.  Convert PPB or % concentrations
+            # to PPM
+            scale = 1.0
+            if "Data_Source_Units" in self._settings:
+                units = self._settings["Data_Source_Units"]
+                if units == "PPB":
+                    scale = 1/1000.0
+                if units == "Percent":
+                    scale = 10000
+                data = [i*scale for i in data]
+
             (subset_times, subset_data, flag) =\
                 get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
             if subset_data:

@@ -70,7 +70,7 @@ def pre_task_instructions(gasSource):
     return str
 
 def post_task_instructions():
-    str = "<br><br><br><center>Close the valve on the gas source and disconnect the line from the analyzer. Click NEXT to proceed..</center>"
+    str = "<br><br><br><center>Disconnect the line from the analyzer and close the valve on the gas source. Click NEXT to proceed..</center>"
     return str
 
 def job_complete_text():
