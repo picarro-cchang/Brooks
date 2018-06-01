@@ -640,13 +640,22 @@ class AutoCal(object):
         # copies to the config obj getting the new spline coefficients.
         # RSF 20171022
         #
-        for key in self.currentActiveIni.keys():
-            if "ACTUAL_LASER" in key and key not in ini:
-                print("Writing key:", key)
-                ini[key] = self.currentActiveIni[key]
-        print("Writing laser_map")
-        if "LASER_MAP" not in ini:
-            ini["LASER_MAP"] = self.currentActiveIni["LASER_MAP"]
+        # This method is also called by Host/MfgUtilities/makeCalFromEeproms.py during the
+        # initial configuration of a new analyzer. In this mode the IntegrationTool does
+        # not load an active file, loadFromIni() is not called, and so self.currentActiveIni
+        # remains equal to None.  If currentActiveIni is None, we assume we are are 
+        # configuring a new analyzer and bypass this section.
+        # This fixes bug I2-434.
+        # RSF 20180123
+        #
+        if self.currentActiveIni is not None:
+            for key in self.currentActiveIni.keys():
+                if "ACTUAL_LASER" in key and key not in ini:
+                    print("Writing key:", key)
+                    ini[key] = self.currentActiveIni[key]
+            print("Writing laser_map")
+            if "LASER_MAP" not in ini:
+                ini["LASER_MAP"] = self.currentActiveIni["LASER_MAP"]
 
         try:
             paramSec = "VIRTUAL_PARAMS_%d" % vLaserNum

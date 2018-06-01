@@ -121,6 +121,11 @@ def get_formatted_pass_fail_summary(results,
                               "%dev < {0:5.3f}".format(percent_acceptance),
                                "{0:.4f}".format(percent_deviation),
                                "{0}".format(percent_status)])
+        else:
+            table_data.append(["% Deviation",
+                                "See Manual",
+                                "N/A",
+                                "N/A"])
 
     table = AsciiTable(table_data)
     table.title = "Pass/Fail Summary"

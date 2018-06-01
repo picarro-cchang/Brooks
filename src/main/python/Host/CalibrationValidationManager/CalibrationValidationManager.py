@@ -205,6 +205,18 @@ class Window(QtGui.QMainWindow):
 
             timestamps = self.tm.ds.getList(data_source, "time")
             data = self.tm.ds.getList(data_source, primary_data_key)
+
+            # Everything is done in PPM.  Convert PPB or % concentrations
+            # to PPM
+            scale = 1.0
+            if "Data_Source_Units" in self.tm.co["TASKS"]:
+                units = self.tm.co["TASKS"]["Data_Source_Units"]
+                if units == "PPB":
+                    scale = 1/1000.0
+                if units == "Percent":
+                    scale = 10000
+                data = [i*scale for i in data]
+
             d = collections.OrderedDict()
             if data:
                 d[primary_data_key_name] = data[-1]
