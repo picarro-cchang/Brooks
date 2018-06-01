@@ -347,8 +347,8 @@ class ModbusScriptEnv(object):
                 with open(self.userdata_file_path, "w") as fh:
                     fh.write('[Main]')
                 self.userdata_config = CustomConfigObj(self.userdata_file_path)
-        except Exception:
-            raise Exception("Configuration file not found: %s" % self.userdata_file_path)
+        except Exception as e:
+            raise Exception("Error while opening file %s and reading data, Detail Error: %s" % self.userdata_file_path, e.message)
 
     def makeDirs(self, path):
         """
