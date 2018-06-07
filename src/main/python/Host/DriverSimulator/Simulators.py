@@ -500,7 +500,8 @@ class TunerSimulator(Simulator):
         # See the Scheduler in DasSimulator.py.
         # RSF 15Feb2017
         #
-        return 0.25 * change * 512 * 0.01 / slope
+        # return 0.25 * change * 512 * 0.01 / slope
+        return change * 512 * 0.01 / slope
 
     def getStateAt(self, ts):
         """Get tuner value and slope at the specified timestamp `ts` in ms
