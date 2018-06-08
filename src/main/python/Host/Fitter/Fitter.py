@@ -122,6 +122,8 @@ class FitViewManager(object):
         data,analysisList,fitOutputs = dataAnalysisResults
         if not analysisList: return
         for analysis in analysisList:
+            if analysis is None:
+                continue
             time = analysis["time"]
             for output in fitOutputs:
                 if output not in self.fitViewDict["fitOutputs"]:
@@ -175,6 +177,7 @@ class FitViewManager(object):
                 ss.Add(time)
             else:
                 ss.Add(ss.GetLatest())
+
 class HistoryViewTree(FillingTree):
     name = 'History View Tree'
     def __init__(self, parent, *args, **kwargs):
@@ -731,7 +734,10 @@ class FitViewer(wx.Frame):
         self.Bind(wx.EVT_RADIOBOX,self.OnBatchMode,self.batchMode)
         self.Bind(wx.EVT_CHECKBOX,self.OnUpdateViewer,self.updateViewer)
         self.Bind(wx.EVT_CHECKLISTBOX,self.OnModelSelect,self.modelList)
-        self.Bind(wx.EVT_CHOICE,self.OnAnalysisStage,self.analysisStage)
+
+        # RSF needed?
+        # self.Bind(wx.EVT_CHOICE,self.OnAnalysisStage,self.analysisStage)
+
         self.Bind(wx.EVT_CHOICE,self.OnAnalysisName,self.analysisName)
         self.Bind(wx.EVT_CLOSE,self.OnClose)
         self.fitterRpc = CmdFIFOServerProxy("http://localhost:%d" % self.rpcPort, ClientName = "FitViewer")
@@ -773,83 +779,104 @@ class FitViewer(wx.Frame):
 
     def calculateBasicSeries(self):
         """Calculate data, model and residuals on coarse grid and add to appropriate series"""
-        self.residualsPanel.dataFreq.Clear()
-        self.residualsPanel.dataLoss.Clear()
-        self.residualsPanel.modelLoss.Clear()
-        self.residualsPanel.res.Clear()
+        # self.residualsPanel.dataFreq.Clear()
+        # self.residualsPanel.dataLoss.Clear()
+        # self.residualsPanel.modelLoss.Clear()
+        # self.residualsPanel.res.Clear()
 
         analysis = self.analysisList[self.analysisName.GetSelection()]
-        for x in analysis.xData: self.residualsPanel.dataFreq.Add(x)
-        for i in range(len(analysis.yData)):
-            y = analysis.yData[i]
-            self.residualsPanel.dataLoss.Add(y)
-            self.residualsPanel.modelLoss.Add(y-analysis.res[i])
-            self.residualsPanel.res.Add(analysis.res[i])
+        if analysis is not None:
+            self.residualsPanel.dataFreq.Clear()
+            self.residualsPanel.dataLoss.Clear()
+            self.residualsPanel.modelLoss.Clear()
+            self.residualsPanel.res.Clear()
+            for x in analysis.xData: self.residualsPanel.dataFreq.Add(x)
+            for i in range(len(analysis.yData)):
+                y = analysis.yData[i]
+                self.residualsPanel.dataLoss.Add(y)
+                self.residualsPanel.modelLoss.Add(y-analysis.res[i])
+                self.residualsPanel.res.Add(analysis.res[i])
+
     def calculateDetailedSeries(self):
         """Calculate model and partial model on fine grid, partial residual on coarse grid and
         add to appropriate series"""
-        self.residualsPanel.fineFreq.Clear()
-        self.residualsPanel.fineModel.Clear()
-        self.residualsPanel.finePartialModel.Clear()
-        self.residualsPanel.partialRes.Clear()
+        # self.residualsPanel.fineFreq.Clear()
+        # self.residualsPanel.fineModel.Clear()
+        # self.residualsPanel.finePartialModel.Clear()
+        # self.residualsPanel.partialRes.Clear()
 
         analysis = self.analysisList[self.analysisName.GetSelection()]
-        xfine = linspace(min(analysis.xData),max(analysis.xData),self.residualsPanel.finePoints)
-        yfine = analysis.mockData(self.anStage,xfine)
-        for x in xfine: self.residualsPanel.fineFreq.Add(x)
-        for y in yfine:
-            self.residualsPanel.fineModel.Add(y)
-        yfine = self.partialModel(xfine)
-        for y in yfine:
-            self.residualsPanel.finePartialModel.Add(y)
-        yPartial = self.partialModel(analysis.xData)
-        for i in range(len(analysis.yData)):
-            self.residualsPanel.partialRes.Add(analysis.yData[i]-yPartial[i])
+        if analysis is not None:
+            self.residualsPanel.fineFreq.Clear()
+            self.residualsPanel.fineModel.Clear()
+            self.residualsPanel.finePartialModel.Clear()
+            self.residualsPanel.partialRes.Clear()
+            xfine = linspace(min(analysis.xData),max(analysis.xData),self.residualsPanel.finePoints)
+            yfine = analysis.mockData(self.anStage,xfine)
+            for x in xfine: self.residualsPanel.fineFreq.Add(x)
+            for y in yfine:
+                self.residualsPanel.fineModel.Add(y)
+            yfine = self.partialModel(xfine)
+            for y in yfine:
+                self.residualsPanel.finePartialModel.Add(y)
+            yPartial = self.partialModel(analysis.xData)
+            for i in range(len(analysis.yData)):
+                self.residualsPanel.partialRes.Add(analysis.yData[i]-yPartial[i])
+
     def setupModelAnalyses(self):
-        self.analysisName.Clear()
-        for analysis in self.analysisList:
-            self.analysisName.Append(analysis.name)
-        self.analysisName.SetSelection(len(self.analysisList)-1)
+        if self.analysisName.IsEmpty():
+            for i in range(len(self.analysisList)):
+                self.analysisName.Append("analysis: " + str(i))
+            self.analysisName.SetSelection(0)
+        return
+
+        # self.analysisName.Clear()
+        # for analysis in self.analysisList:
+        #     self.analysisName.Append(analysis.name)
+        # self.analysisName.SetSelection(len(self.analysisList)-1)
 
     def doModelAnalysis(self):
         if not self.analysisList: return
         analysis = self.analysisList[self.analysisName.GetSelection()]
-        self.analysisStage.Clear()
-        for i in range(analysis.nSteps()): self.analysisStage.Append("%d" % i)
-        self.anStage = analysis.nSteps()-1
-        self.analysisStage.SetSelection(self.anStage)
-        # Construct lists of model function labels and the functions themselves for this analysis
-        model = analysis.model
-        ser = analysis.serialNumber
-        baselineFunc = model.funcList[0]
-        self.functionLabels = [ "baseline (%s)" % baselineFunc.name ]
-        self.functionList = [ baselineFunc ]
-        for i in sorted(model.basisFunctionByIndex.keys()):
-            func = model.basisFunctionByIndex[i]
-            self.functionLabels.append("%d (%s)" % (i,func.name,))
-            self.functionList.append(func)
-        self.modelList.Set(self.functionLabels)
-        # Check the appropriate boxes, depending on the self.funcsByAnalysisSerial dictionary
-        nItems = len(self.functionList)
-        if ser not in self.funcsByAnalysisSerial:
-            # If this is the first time the analysis has been seen, check all boxes
-            self.funcsByAnalysisSerial[ser] = [ True for i in range(nItems) ]
-        self.checkList = self.funcsByAnalysisSerial[ser]
+        if analysis is not None:
+            self.analysisStage.Clear()
+            for i in range(analysis.nSteps()): self.analysisStage.Append("%d" % i)
+            self.anStage = analysis.nSteps()-1
+            self.analysisStage.SetSelection(self.anStage)
+            # Construct lists of model function labels and the functions themselves for this analysis
+            model = analysis.model
+            ser = analysis.serialNumber
+            baselineFunc = model.funcList[0]
+            self.functionLabels = [ "baseline (%s)" % baselineFunc.name ]
+            self.functionList = [ baselineFunc ]
+            for i in sorted(model.basisFunctionByIndex.keys()):
+                func = model.basisFunctionByIndex[i]
+                self.functionLabels.append("%d (%s)" % (i,func.name,))
+                self.functionList.append(func)
+            self.modelList.Set(self.functionLabels)
+            # Check the appropriate boxes, depending on the self.funcsByAnalysisSerial dictionary
+            nItems = len(self.functionList)
+            if ser not in self.funcsByAnalysisSerial:
+                # If this is the first time the analysis has been seen, check all boxes
+                self.funcsByAnalysisSerial[ser] = [ True for i in range(nItems) ]
+            self.checkList = self.funcsByAnalysisSerial[ser]
 
-        for i in range(nItems):
-            self.modelList.Check(i,self.checkList[i])
+            for i in range(nItems):
+                self.modelList.Check(i,self.checkList[i])
 
-        if len(analysis.xData) == 0:
-            Log('No xData; skipping rest of model analysis', Level=0)
-            return
+            if len(analysis.xData) == 0:
+                Log('No xData; skipping rest of model analysis', Level=0)
+                return
 
-        analysis.computeResiduals(self.anStage)
-        self.calculateBasicSeries()
-        self.calculateDetailedSeries()
-        self.residualsPanel.setupFineDisplay()
-        self.residualsPanel.Update()
+            analysis.computeResiduals(self.anStage)
+            self.calculateBasicSeries()
+            self.calculateDetailedSeries()
+            self.residualsPanel.setupFineDisplay()
+            self.residualsPanel.Update()
+
     def getColorFromIni(self,section,name):
         return self.colorDatabase.getColor(self.config.get(section,name))
+
     def layoutFrame(self,parent):
         panel = wx.Panel(parent=parent,id=-1)
         # Define the graph panel
@@ -871,7 +898,7 @@ class FitViewer(wx.Frame):
         """Evaluate the partial model as defined by self.checkList at the
         frequencies specified by x"""
         # Use numpy indexing to extract out the functions selected
-        analysis = self.analysisList[-1]
+        analysis = self.analysisList[self.analysisName.GetSelection()]
         funcs = array(self.functionList)[array(self.checkList)]
         model = analysis.model
         y = zeros(shape(x),x.dtype)
@@ -882,14 +909,15 @@ class FitViewer(wx.Frame):
     def OnAnalysisName(self,evt):
         self.doModelAnalysis()
 
-    def OnAnalysisStage(self,evt):
-        analysis = self.analysisList[self.analysisName.GetSelection()]
-        self.anStage = int(self.analysisStage.GetStringSelection())
-        analysis.computeResiduals(self.anStage)
-        self.calculateBasicSeries()
-        self.calculateDetailedSeries()
-        self.residualsPanel.setupFineDisplay()
-        self.residualsPanel.Update()
+    # RSF comment out to see if this is needed
+    # def OnAnalysisStage(self,evt):
+    #     analysis = self.analysisList[self.analysisName.GetSelection()]
+    #     self.anStage = int(self.analysisStage.GetStringSelection())
+    #     analysis.computeResiduals(self.anStage)
+    #     self.calculateBasicSeries()
+    #     self.calculateDetailedSeries()
+    #     self.residualsPanel.setupFineDisplay()
+    #     self.residualsPanel.Update()
 
     def OnBatchMode(self,evt):
         mode = evt.GetEventObject().GetSelection()
@@ -915,16 +943,17 @@ class FitViewer(wx.Frame):
         for f in self.historyFrames: f.Refresh()
         for f in self.variableFrames: f.Refresh()
     def OnModelSelect(self,evt):
-        analysis = self.analysisList[-1]
-        ser = analysis.serialNumber
-        self.checkList = []
-        nItems = len(self.functionList)
-        for i in range(nItems):
-            self.checkList.append(self.modelList.IsChecked(i))
-        self.funcsByAnalysisSerial[ser] = self.checkList
-        self.calculateDetailedSeries()
-        self.residualsPanel.setupFineDisplay()
-        self.residualsPanel.Update()
+        analysis = self.analysisList[self.analysisName.GetSelection()]
+        if analysis is not None:
+            ser = analysis.serialNumber
+            self.checkList = []
+            nItems = len(self.functionList)
+            for i in range(nItems):
+                self.checkList.append(self.modelList.IsChecked(i))
+            self.funcsByAnalysisSerial[ser] = self.checkList
+            self.calculateDetailedSeries()
+            self.residualsPanel.setupFineDisplay()
+            self.residualsPanel.Update()
 
     def OnNewGraph(self,evt):
         historyFrame = HistoryViewFrame(config=self.config,root=self,
@@ -994,17 +1023,21 @@ class FitViewer(wx.Frame):
                 self.fitViewManager.update([data,analysisList,resultsDict])
                 if analysisList:
                     self.analysisList = analysisList
-                    self.setupModelAnalyses()
-                    if self.batchMode.GetSelection() == 1:
-                        self.calculateBasicSeries()
-                        self.residualsPanel.setupCoarseDisplay()
-                        self.residualsPanel.Update()
-                    else:
-                        self.doModelAnalysis()
-                        self.analysisDone = True
-                    for f in self.historyFrames: f.Refresh()
-                    for f in self.variableFrames: f.Refresh()
-                self.lastAnalysisTime = TimeStamp()
+                    self.setupModelAnalyses() # Sets up the analysis choice combobox
+                    #
+                    # Commenting out the below section prevents plotting of the coarse grid fit
+                    # results and allows the fine grid fit view to persist.
+                    #
+                    # if self.batchMode.GetSelection() == 1:
+                    #     self.calculateBasicSeries()
+                    #     self.residualsPanel.setupCoarseDisplay()
+                    #     self.residualsPanel.Update()
+                    # else:
+                    #     self.doModelAnalysis()
+                    #     self.analysisDone = True
+                    # for f in self.historyFrames: f.Refresh()
+                    # for f in self.variableFrames: f.Refresh()
+                # self.lastAnalysisTime = TimeStamp()
             elif command == 2:
                 self.shutDown = True
                 self.Close()
@@ -1019,7 +1052,7 @@ class FitViewer(wx.Frame):
                     self.Maximize(packet)
                 except:
                     pass
-        except Empty:
+        except Empty: # fitQueue is empty
             if TimeStamp()-self.lastAnalysisTime > 0.5:
                 if not self.analysisDone:
                     self.doModelAnalysis()
@@ -1108,12 +1141,18 @@ class ResidualsPanel(object):
             self.graphPanel1.RemoveAllSeries()
             self.graphPanel1.AddSeriesAsPoints(self.dataSeries,fillcolour=self.root.getColorFromIni("FitViewer","DataColor"),
                                                colour="black",marker="square",size=1,width=1)
+            # self.graphPanel1.AddSeriesAsLine(self.fineModelSeries,
+            #                                  colour=self.root.getColorFromIni("FitViewer","ModelColor"),
+            #                                  width=self.root.config.getfloat("FitViewer","LineWidth"))
+            # self.graphPanel1.AddSeriesAsLine(self.finePartialModelSeries,
+            #                                  colour=self.root.getColorFromIni("FitViewer","PartialModelColor"),
+            #                                  width=self.root.config.getfloat("FitViewer","LineWidth"))
             self.graphPanel1.AddSeriesAsLine(self.fineModelSeries,
-                                             colour=self.root.getColorFromIni("FitViewer","ModelColor"),
-                                             width=self.root.config.getfloat("FitViewer","LineWidth"))
+                                             colour="black",
+                                             width=1)
             self.graphPanel1.AddSeriesAsLine(self.finePartialModelSeries,
-                                             colour=self.root.getColorFromIni("FitViewer","PartialModelColor"),
-                                             width=self.root.config.getfloat("FitViewer","LineWidth"))
+                                             colour="red",
+                                             width=1)
             self.graphPanel2.RemoveAllSeries()
             self.graphPanel2.AddSeriesAsLine(self.resSeries,colour=self.root.getColorFromIni("FitViewer","ResidualColor"),
                                              width=self.root.config.getfloat("FitViewer","LineWidth"))
@@ -1130,8 +1169,10 @@ class ResidualsPanel(object):
             self.graphPanel1.RemoveAllSeries()
             self.graphPanel1.AddSeriesAsPoints(self.dataSeries,fillcolour=self.root.getColorFromIni("FitViewer","DataColor"),
                                                colour="black",marker="square",size=1,width=1)
-            self.graphPanel1.AddSeriesAsLine(self.modelSeries,colour=self.root.getColorFromIni("FitViewer","ModelColor"),
-                                             width=self.root.config.getfloat("FitViewer","LineWidth"))
+            # self.graphPanel1.AddSeriesAsLine(self.modelSeries,colour=self.root.getColorFromIni("FitViewer","ModelColor"),
+            #                                  width=self.root.config.getfloat("FitViewer","LineWidth"))
+            self.graphPanel1.AddSeriesAsLine(self.modelSeries,colour="blue",
+                                             width=1)
             self.graphPanel2.RemoveAllSeries()
             self.graphPanel2.AddSeriesAsLine(self.resSeries,colour=self.root.getColorFromIni("FitViewer","ResidualColor"),
                                              width=self.root.config.getfloat("FitViewer","LineWidth"))
