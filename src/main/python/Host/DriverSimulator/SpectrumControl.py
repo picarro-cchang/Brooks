@@ -315,7 +315,7 @@ class SpectrumControl(object):
         self.sim.tunerSimulator.timestamp = ts
         # Compute the loss using the spectral model here
         loss = 0.001 * self.sim.driver.spectraSimulator(wavenumber, self.cavityPressure, 273.15 + self.cavityTemperature)
-        loss *= (1.0 + 2e-4*random.gauss(0.0,1.0))
+        loss *= (1.0 + 2e-4*random.gauss(0.0,1.0)) # RSF
         rdResult = interface.RingdownEntryType()
 
         #rdResult.timestamp = int(ts)
