@@ -122,41 +122,43 @@ if abs(_DATA_["CavityPressure"]-140.0) > 0.1:
     good = False
 
 try:
-    temp = applyLinear(_DATA_["nh3_conc_ave"],NH3_CONC)
-    _NEW_DATA_["NH3_uncorrected"] = temp
-    h2o_actual = Hlin*_DATA_["peak15"] + Hquad*_DATA_["peak15"]**2
-    str15 = 1.1794*_DATA_["peak15"] + 0.001042*_DATA_["peak15"]**2
-    corrected = (temp + H1*_DATA_["peak15"])/(1.0 + A1H1*str15 + A1H2*str15**2)
-    dry = corrected/(1.0-0.01*h2o_actual)
-    now = _OLD_DATA_["NH3_uncorrected"][-2].time
-    #add spikes
-    
-    #if ((now-_PERSISTENT_["TimeS"])> 200*(1.0+random.random())) and (_DATA_["species"]==4):
-    #    dry = dry + 10*random.random()
-    #    _PERSISTENT_["TimeS"] = now 
-    
-    _NEW_DATA_["NH3_broadeningCorrected"] = corrected
-    _NEW_DATA_["NH3_dry"] = dry
-    _NEW_DATA_["NH3_raw"] = dry
-    
-    if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
-        _PERSISTENT_["NH3_filter"] = dry 
-        _PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"],_PERSISTENT_["tau_NH3"] = variableExpAverage(_PERSISTENT_["bufferZZ_NH3"],_PERSISTENT_["bufferExpAvg_NH3"],dry,now,1100,1,_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"])
-    _PERSISTENT_["Pressure_save"]=_DATA_["CavityPressure"]
-    _NEW_DATA_["NH3_sigma"]=_PERSISTENT_["previousNoise_NH3"]*1.5*sqrt(2)
-    _NEW_DATA_["NH3_ExpAvg"]=_PERSISTENT_["previousS_NH3"]
-    _NEW_DATA_["NH3_tau"]=_PERSISTENT_["tau_NH3"]
-    _NEW_DATA_["NH3_filter"] = _PERSISTENT_["NH3_filter"]
-    _NEW_DATA_["NH3raw-NH3expavg"] = _NEW_DATA_["NH3_filter"] - _NEW_DATA_["NH3_ExpAvg"]
-    _NEW_DATA_["NH3_ExpAvg_NZ"] = negative_number_filter("NH3",_NEW_DATA_["NH3_ExpAvg"])
-    _NEW_DATA_["NH3"] =_NEW_DATA_["NH3_ExpAvg_NZ"]
-    #print "final=",_NEW_DATA_["NH3_ExpAvg"],_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"]
-    NH330s= boxAverage(_PERSISTENT_["bufferNH330"],dry,now,30)
-    _NEW_DATA_["NH3_30s"] = NH330s
-    _NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["bufferNH3120"],dry,now,120)
-    _NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["bufferNH3300"],dry,now,300)
+    # This if condition is False if the NH3 fit hasn't yet be run for the first time
+    if "nh3_conc_ave" in _DATA_:
+        temp = applyLinear(_DATA_["nh3_conc_ave"],NH3_CONC)
+        _NEW_DATA_["NH3_uncorrected"] = temp
+        h2o_actual = Hlin*_DATA_["peak15"] + Hquad*_DATA_["peak15"]**2
+        str15 = 1.1794*_DATA_["peak15"] + 0.001042*_DATA_["peak15"]**2
+        corrected = (temp + H1*_DATA_["peak15"])/(1.0 + A1H1*str15 + A1H2*str15**2)
+        dry = corrected/(1.0-0.01*h2o_actual)
+        now = _OLD_DATA_["NH3_uncorrected"][-2].time
+        #add spikes
+
+        #if ((now-_PERSISTENT_["TimeS"])> 200*(1.0+random.random())) and (_DATA_["species"]==4):
+        #    dry = dry + 10*random.random()
+        #    _PERSISTENT_["TimeS"] = now
+
+        _NEW_DATA_["NH3_broadeningCorrected"] = corrected
+        _NEW_DATA_["NH3_dry"] = dry
+        _NEW_DATA_["NH3_raw"] = dry
+
+        if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
+            _PERSISTENT_["NH3_filter"] = dry
+            _PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"],_PERSISTENT_["tau_NH3"] = variableExpAverage(_PERSISTENT_["bufferZZ_NH3"],_PERSISTENT_["bufferExpAvg_NH3"],dry,now,1100,1,_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"])
+        _PERSISTENT_["Pressure_save"]=_DATA_["CavityPressure"]
+        _NEW_DATA_["NH3_sigma"]=_PERSISTENT_["previousNoise_NH3"]*1.5*sqrt(2)
+        _NEW_DATA_["NH3_ExpAvg"]=_PERSISTENT_["previousS_NH3"]
+        _NEW_DATA_["NH3_tau"]=_PERSISTENT_["tau_NH3"]
+        _NEW_DATA_["NH3_filter"] = _PERSISTENT_["NH3_filter"]
+        _NEW_DATA_["NH3raw-NH3expavg"] = _NEW_DATA_["NH3_filter"] - _NEW_DATA_["NH3_ExpAvg"]
+        _NEW_DATA_["NH3_ExpAvg_NZ"] = negative_number_filter("NH3",_NEW_DATA_["NH3_ExpAvg"])
+        _NEW_DATA_["NH3"] =_NEW_DATA_["NH3_ExpAvg_NZ"]
+        #print "final=",_NEW_DATA_["NH3_ExpAvg"],_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"]
+        NH330s= boxAverage(_PERSISTENT_["bufferNH330"],dry,now,30)
+        _NEW_DATA_["NH3_30s"] = NH330s
+        _NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["bufferNH3120"],dry,now,120)
+        _NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["bufferNH3300"],dry,now,300)
    
-except:
+except Exception as e:
     _NEW_DATA_["NH3"] = dry
     pass
 
@@ -173,29 +175,32 @@ try:
 except:
     pass
 
-try:   
-    
-    temp = applyLinear(_DATA_["hf_ppbv"],HF_CONC) + H1onHF*_DATA_["peak_82"]
-    _NEW_DATA_["HF_raw"] = temp
-    now = _OLD_DATA_["HF_raw"][-2].time
-    HF30s = boxAverage(_PERSISTENT_["bufferHF30"],temp,now,30)
-    _NEW_DATA_["HF_30sec"] = HF30s
-    _NEW_DATA_["HF_2min"] = boxAverage(_PERSISTENT_["bufferHF120"],temp,now,120)
-    _NEW_DATA_["HF_5min"] = boxAverage(_PERSISTENT_["bufferHF300"],temp,now,300)
-    if ((_DATA_["species"]==60)and (abs(_DATA_["CavityPressure"]-140.0) < 2.0)):
-        _PERSISTENT_["HF_filter"] = temp
-        _PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"], _PERSISTENT_["tau_HF"] = variableExpAverage(_PERSISTENT_["bufferZZ_HF"],_PERSISTENT_["bufferExpAvg_HF"],temp,now,1100,0,_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"])
-    _NEW_DATA_["HF_sigma"]=_PERSISTENT_["previousNoise_HF"]*1.5*sqrt(2)
-    _NEW_DATA_["HF_ExpAvg"]=_PERSISTENT_["previousS_HF"]
-    _NEW_DATA_["HF_tau"]=_PERSISTENT_["tau_HF"]
-    _NEW_DATA_["HF_filter"] = _PERSISTENT_["HF_filter"]
-    _NEW_DATA_["HFraw-HFexpavg"] = _NEW_DATA_["HF_filter"] - _PERSISTENT_["previousS_HF"]
-    _NEW_DATA_["HF_ExpAvg_NZ"] = negative_number_filter("HF",_NEW_DATA_["HF_ExpAvg"])
-    _NEW_DATA_["HF"] =_NEW_DATA_["HF_ExpAvg_NZ"]
-    #_NEW_DATA_["HF_ExpAvg"] = temp 
-    ##variableExpAverage(_PERSISTENT_["bufferExp_HF"],temp,now,12)
-    #print _NEW_DATA_["HF_ExpAvg"]
-  
+try:
+    # Fix I2-1083
+    # This if condition is False if the HF fit hasn't yet be run for the first time.
+    # This will happen as the AMADS scheme fits NH3, H2O, CO2 first, reports the available data (without HF),
+    # fits HF, then reports available data now with all gases including HF.
+    #
+    if "peak_82" in _DATA_:
+        temp = applyLinear(_DATA_["hf_ppbv"],HF_CONC) + H1onHF*_DATA_["peak_82"]
+        _NEW_DATA_["HF_raw"] = temp
+        if "HF_raw" in _OLD_DATA_ and len(_OLD_DATA["HF_raw"]) > 1:
+            now = _OLD_DATA_["HF_raw"][-2].time
+            HF30s = boxAverage(_PERSISTENT_["bufferHF30"],temp,now,30)
+            _NEW_DATA_["HF_30sec"] = HF30s
+            _NEW_DATA_["HF_2min"] = boxAverage(_PERSISTENT_["bufferHF120"],temp,now,120)
+            _NEW_DATA_["HF_5min"] = boxAverage(_PERSISTENT_["bufferHF300"],temp,now,300)
+            if ((_DATA_["species"]==60)and (abs(_DATA_["CavityPressure"]-140.0) < 2.0)):
+                _PERSISTENT_["HF_filter"] = temp
+                _PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"], _PERSISTENT_["tau_HF"] = variableExpAverage(_PERSISTENT_["bufferZZ_HF"],_PERSISTENT_["bufferExpAvg_HF"],temp,now,1100,0,_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"])
+            _NEW_DATA_["HF_sigma"]=_PERSISTENT_["previousNoise_HF"]*1.5*sqrt(2)
+            _NEW_DATA_["HF_ExpAvg"]=_PERSISTENT_["previousS_HF"]
+            _NEW_DATA_["HF_tau"]=_PERSISTENT_["tau_HF"]
+            _NEW_DATA_["HF_filter"] = _PERSISTENT_["HF_filter"]
+            _NEW_DATA_["HFraw-HFexpavg"] = _NEW_DATA_["HF_filter"] - _PERSISTENT_["previousS_HF"]
+            _NEW_DATA_["HF_ExpAvg_NZ"] = negative_number_filter("HF",_NEW_DATA_["HF_ExpAvg"])
+            _NEW_DATA_["HF"] =_NEW_DATA_["HF_ExpAvg_NZ"]
+
 except Exception, e:
     _NEW_DATA_["HF"]=temp
     print "Exception: %s, %r" % (e,e)
