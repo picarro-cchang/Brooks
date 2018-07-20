@@ -125,11 +125,11 @@ class SpectrumCollector(object):
         self.useHDF5 = cp.getboolean("MainConfig", "useHDF5", "True")
         self.archiveGroup = cp.get("MainConfig", "archiveGroup", "RDF")
         self.streamDir = os.path.abspath(os.path.join(basePath, cp.get("MainConfig", "streamDir", "../../../Log/RDF")))
-        # Make directory if not exist
+        # Check to make sure the directory we temporarily place our RD files exists
+        # Create it if it doesn't exist
         if not os.path.isdir(self.streamDir):
-            os.makedirs(self.streamDir)
-        Log("Created streamDir in %s" % self.streamDir)
-
+            os.makedirs(self.streamDir,0775)
+            Log("Created streamDir in %s" % self.streamDir)
         # RPC server
         self.rpcThread = None
         self._shutdownRequested = False
@@ -298,6 +298,12 @@ class SpectrumCollector(object):
                 if endOfScheme:
                     if self.enableSpectrumFiles and spectraInScheme:
                         fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
+                        # Check to make sure the directory we want to write to exists
+                        # Create it, if it doesn't exist
+                        if not os.path.isdir(self.streamDir):
+                            os.makedirs(self.streamDir,0775)
+                            Log("Created streamDir in %s" % self.streamDir)
+                        # Write the file
                         self.writeOut(fileName, spectraInScheme)
                         self.lastSchemeCount = -1
                     endOfScheme = False
@@ -486,12 +492,18 @@ class SpectrumCollector(object):
         # Copy to auxiliary spectrum file and reset filename to empty
         if auxSpectrumFile:
             try:
-                shutil.copyfile(streamPath, auxSpectrumFile)
+                # Check to make sure the file exists before we attempt to copy it
+                if os.path.exists(streamPath):
+                    shutil.copyfile(streamPath, auxSpectrumFile)
             except:
                 LogExc("Error copying to auxiliary spectrum file %s" % auxSpectrumFile)
         time.sleep(1.0)
         try:
-            Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
+            # Check to make sure the file exists before we attempt to Archive it
+            if os.path.exists(streamPath):
+                Archiver.ArchiveFile(self.archiveGroup, streamPath, True)
+            else:
+                Log("Error Archiving %s: File does not exist" % streamPath)
         except:
             LogExc("Archiver call error")
 
