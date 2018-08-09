@@ -781,8 +781,13 @@ class CmdFIFOSimpleCallbackServer(object):
         self.server.stop_server(*a,**k)
 
 class CmdFIFOServerProxy(object):
-    def __init__(self, uri, ClientName, CallbackURI = "",
-                 IsDontCareConnection = False, Timeout_s = None):
+    def __init__(self,
+                 uri,
+                 ClientName,
+                 CallbackURI = "",
+                 IsDontCareConnection = False,
+                 Timeout_s = None,
+                 min_ms_interval = 0):
         """Called by the client to create a proxy object which may be called to
             execute code on a CmdFIFOServer. Parameters are:
             uri:                  "http://address:port" string specifying the server
@@ -794,6 +799,9 @@ class CmdFIFOServerProxy(object):
                                     raised even if the server does not exist
             Timeout_s:            used to specify a timeout, after which a TimeoutError
                                     is raised if no response is received
+            min_ms_interval:      Under poor running conditions, the rapid error messages will overload
+                                    the event logging system. If min_ms_interval is greater than 0,
+                                    it will ignore rpc calls that come faster than this interval.
         """
         self.ClientName = ClientName
         self.CallbackURI = CallbackURI.lower() # should be "http://address:port".  eg: "http://localhost:8000"
@@ -804,7 +812,10 @@ class CmdFIFOServerProxy(object):
         self._FuncCallbacks = {}
         self.uri = uri.lower()
         self.timeout = Timeout_s
+        self.min_ms_interval = min_ms_interval
+        self.time_since_last_rpc = time.time()
         self.setupRemoteObject()
+
     def setupRemoteObject(self):
         m = uriRegex.match(self.uri)
         if m:
@@ -831,6 +842,14 @@ class CmdFIFOServerProxy(object):
         #  to some arguments.
         # The additional parameters client, modeOverride and callbackInfo are
         #  also sent to the remote object
+
+        # Check to see if it is too soon to process this rpc.
+        now = time.time()
+        dt_ms = int( (now - self.time_since_last_rpc)*1000 )
+        if dt_ms < self.min_ms_interval:
+            return
+        self.time_since_last_rpc = now
+
         client = self.ClientName
         modeOverride = CMD_TYPE_Default
         callbackInfo = None

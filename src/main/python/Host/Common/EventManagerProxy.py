@@ -16,6 +16,8 @@
 #                Made DontCareConnection default to True instead
 # 06-12-04 russ  Added PrintEverything debug option
 # 07-09-03 sze   Commented out better traceback call to reduce length of messages
+# 18-07-09 gts   Added timeout to prevent log flooding from bringing a
+#                system to its knees
 
 from Host.Common import SharedTypes #to get the right TCP port to use
 from Host.Common import CmdFIFO
@@ -23,6 +25,14 @@ from Host.Common.SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
 
 import traceback
 import sys
+import os
+
+# Get the EventManagerProxy min_ms_interval value from an environmental
+# variable. If it doesn't exist, fall-back to a safe default.
+try:
+    min_ms_interval = os.environ['EVENT_MANAGER_PROXY_MIN_MS_INTERVAL']
+except KeyError:
+    min_ms_interval = 10
 
 __EventManagerProxy = None
 _PrintEverything = False
@@ -30,14 +40,18 @@ _PrintEverything = False
 #set the explicit list of what to export for "from LoggingProxy import *"...
 __all__ = ["EventManagerProxy_Init", "Log", "LogExc"]
 
-def EventManagerProxy_Init(ApplicationName, DontCareConnection = True, PrintEverything = False):
+def EventManagerProxy_Init(ApplicationName,
+                           DontCareConnection = True,
+                           PrintEverything = False,
+                           min_ms_interval = min_ms_interval):
     """Initializes the EventManagerProxy.  Must be done before any other calls."""
     global __EventManagerProxy
     global _PrintEverything
     _PrintEverything = PrintEverything
     __EventManagerProxy = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_LOGGER,
                                                      ApplicationName,
-                                                     IsDontCareConnection = DontCareConnection)
+                                                     IsDontCareConnection = DontCareConnection,
+                                                     min_ms_interval = min_ms_interval)
 
 def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ONLY, Verbose = "", SourceTime = 0):
     """Short global log function that sends a log to the EventManager."""
