@@ -76,11 +76,8 @@ import Queue
 import traceback
 import SocketServer #for Mode 3 apps
 import psutil
-from os import spawnv
-from os import P_NOWAIT
 from os import getpid as os_getpid
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -1239,49 +1236,8 @@ class Supervisor(object):
         failedAppDependents = []
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
-        qapp = QApplication(sys.argv)
-        splashPix = None
-        if self.splashImage and os.path.isfile(self.splashImage):
-            # QSplashScreen is not modal and so users can interaction with windows behind
-            # the splash screen.  We run the splash screen as full screen to keep the focus
-            # only on the splash screen.  The splash screen graphic is small so we create
-            # a single color full screen pic based upon the current resolution and add
-            # our desired pic to it.  I found an example at this url:
-            # https://forum.qt.io/topic/8558/solved-full-screen-qsplashscreen-on-mobile/6
-            splashPix = QPixmap(self.splashImage)
-            desktop = QApplication.desktop()
-            desktopRect = desktop.availableGeometry()
-            fillPixmap = QPixmap(desktopRect.width(), desktopRect.height())
-            fillPixmap.fill(QColor(30,30,30))
-            p = QPainter()
-            p.begin(fillPixmap)
-            targetRect = QRect((fillPixmap.width() - splashPix.width())/2,
-                               (fillPixmap.height() - splashPix.height())/2,
-                               splashPix.width(), splashPix.height())
-            p.drawPixmap(targetRect, splashPix)
-            p.end()
-        else:
-            fillPixmap = QPixmap(500,500)
-            fillPixmap.fill(Qt.black)
-        splash = QSplashScreen(fillPixmap, Qt.WindowStaysOnTopHint)
-        splash.setWindowState(Qt.WindowFullScreen)
-        progressCounter = 0
-        updateSplash = True
+
         for appName in appsToLaunch:
-
-            if self.splashEnable and updateSplash:
-                splash.show()
-                myAlignment = Qt.AlignCenter # Alignment doesn't work right if the msg has html in it.
-                progressCounter += 1
-                str = QString(self.splashTitle)
-                str += QString("\n\nLoading %1 of %2\n%3").arg(progressCounter, 2).arg(len(appsToLaunch)).arg(appName)
-                splash.showMessage(str, myAlignment, Qt.white)
-            else:
-                splash.close()
-            if "QuickGui" in appName:
-                updateSplash = False
-                #splash.close()
-
             failedAppDependent = False
             #check to make sure they are not dependents of apps that failed to launch
             for failedAppName in failedAppDependents:
