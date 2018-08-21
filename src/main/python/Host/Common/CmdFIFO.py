@@ -138,6 +138,12 @@ class CmdFIFOError(Exception):
 class TimeoutError(CmdFIFOError):
     pass
 
+class CommunicationError(CmdFIFOError):
+    pass
+
+class ClaimInterfaceError(CmdFIFOError):
+    pass
+
 class ShutdownInProgress(CmdFIFOError):
     pass
 
@@ -868,6 +874,10 @@ class CmdFIFOServerProxy(object):
                     except Pyro4.errors.ConnectionClosedError:
                         pass
                         # print "Retrying proxy call: %s" % (dottedMethodName,)
+                    except Pyro4.errors.CommunicationError,e:
+                        raise CommunicationError("%s" % e)
+                    except Pyro4.errors.ClaimInterfaceError,e:
+                        raise ClaimInterfaceError("%s" % e)
                 time.sleep(0.5)
                 try:
                     self.setupRemoteObject()
