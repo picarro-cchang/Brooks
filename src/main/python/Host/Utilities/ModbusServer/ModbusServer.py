@@ -189,7 +189,9 @@ class ModbusServer(object):
         self.endian = ">" if self.config.get("Main", "Endian", ENDIAN).lower() == "big" else "<"
         script_name = self.config.get("Main", "Script", "")
         script_path = sys.path[0] + "/" + script_name
-        scriptEnv = ModbusScriptEnv(self).create_script_env()
+        userdata_file_path = self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
+        scriptEnv_Obj = ModbusScriptEnv(self, userdata_file_path=userdata_file_path)
+        scriptEnv = scriptEnv_Obj.create_script_env()
         if os.path.exists(script_path):
             script = file(script_path, 'r')
             scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
@@ -364,6 +366,7 @@ class ModbusServer(object):
                self.context[self.slaveid].setValues(DISCRETE_INPUT, startaddress, values)
         except KeyError:
             pass
+
 
     def write_readonly_constant_data(self):
         try:

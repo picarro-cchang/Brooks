@@ -23,6 +23,7 @@ import requests
 import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
+import numpy
 
 
 from Host.QuickGui.UserCalGui import UserCalGui
