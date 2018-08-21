@@ -876,8 +876,14 @@ class CmdFIFOServerProxy(object):
                         # print "Retrying proxy call: %s" % (dottedMethodName,)
                     except Pyro4.errors.CommunicationError,e:
                         raise CommunicationError("%s" % e)
-                    except Pyro4.errors.ClaimInterfaceError,e:
-                        raise ClaimInterfaceError("%s" % e)
+                    # ClaimInterfaceError is not an attribute of Pyro4, but the applyRemoteFunction
+                    # sometimes attempts to pass _Method.__call__ to the driver which chokes when
+                    # trying to claim a USB interface via RPC call
+                    except Exception,e:
+                        if "ClaimInterfaceError" in str(e):
+                            raise ClaimInterfaceError("%s" % e)
+                        elif "claimInterface" in str(e):
+                            raise ClaimInterfaceError("%s" % e)
                 time.sleep(0.5)
                 try:
                     self.setupRemoteObject()
