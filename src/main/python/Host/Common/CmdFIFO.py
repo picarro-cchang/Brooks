@@ -142,9 +142,6 @@ class TimeoutError(CmdFIFOError):
 class CommunicationError(CmdFIFOError):
     pass
 
-class ClaimInterfaceError(CmdFIFOError):
-    pass
-
 class ShutdownInProgress(CmdFIFOError):
     pass
 
@@ -878,8 +875,8 @@ class CmdFIFOServerProxy(object):
                     except Pyro4.errors.CommunicationError,e:
                         raise CommunicationError("%s" % e)
                     # ClaimInterfaceError is not an attribute of Pyro4, but the applyRemoteFunction
-                    # sometimes attempts to pass _Method.__call__ to the driver which chokes when
-                    # trying to claim a USB interface via RPC call
+                    # sometimes attempts to pass _Method.__call__ to claim a USB interface via RPC
+                    # then choke and throw multiple unhandled exceptions.
                     except Exception,e:
                         if "ClaimInterfaceError" in str(e):
                             raise ClaimInterfaceError("%s" % e)
