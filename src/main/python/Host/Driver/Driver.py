@@ -1183,10 +1183,13 @@ class Driver(SharedTypes.Singleton):
             self.looping = False
             Log("Driver has encountered an error... Exiting cleanly", Level=3)
             self.supervisor.TerminateApplications(False, False)
+            DETACHED_PROCESS = 0x00000008
             Log("Forcing restart via supervisor launcher")
             try:
                 subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
-                               "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"])
+                               "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"],
+                                 shell=False, stdin=None, stdout=None, close_fds=True,
+                                 creationflags=DETACHED_PROCESS)
             except:
                 Log("Error forcing restart via supervisor launcher")
 
