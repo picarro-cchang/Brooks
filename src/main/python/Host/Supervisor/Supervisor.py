@@ -376,6 +376,10 @@ class TcpRequestHandler(SocketServer.BaseRequestHandler):
                             Log("TCP TerminateApplications request received", Data = appName)
                             self.server.ParentSupervisor.RPC_TerminateApplications()
                             ret = "OK"
+                        elif command == "RestartApplications":
+                            Log("TCP RestartApplications request received", Data=appName)
+                            self.server.ParentSupervisor.RPC_RestartApplications()
+                            ret = "OK"
                         else:
                             response = "Command '%s' is not recognized" % (command,)
                 response += chr(13)
@@ -1309,6 +1313,15 @@ class Supervisor(object):
         self.powerDownAfterTermination = powerDown
         self._TerminateProtected = stopProtected
         return "OK"
+
+    def RPC_RestartApplications(self, AppName, RestartDependants):
+        Log("RestartApplications request received via RPC",
+            dict(Client=self.RPCServer.CurrentCmd_ClientName),
+            Level=2)
+        try:
+            self.RestartApp(self, AppName, RestartDependants)
+        except Exception, e:
+            Log("Error Restarting %s %s: " % AppName % e)
 
     def LaunchMasterRPCServer(self):
         """Configures the Master RPC server and launches it on it's own thread.

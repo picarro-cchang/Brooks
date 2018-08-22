@@ -1180,20 +1180,23 @@ class Driver(SharedTypes.Singleton):
 #            self.restartSurveyor.restart()
 #            self.looping = False
         if sys.platform == "linux2":
+            Log("Driver has encountered an error... Requesting Restart", Level=2)
+#            self.supervisor.TerminateApplications(False, False)
+            # Request restart from Supervisor and restart and dependants. then exit
+            # this thread cleanly
+            self.supervisor.RestartApplications("Driver", True)
             self.looping = False
-            Log("Driver has encountered an error... Exiting cleanly", Level=3)
-            self.supervisor.TerminateApplications(False, False)
-            Log("Forcing restart via supervisor launcher")
-            try:
-                pid = os.fork()
-                if pid == 0:
-                    subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
-                                "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"],
-                                shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
-                else:
-                    Log("Error forcing restart via supervisor launcher: OS did not fork")
-            except Exception, e:
-                Log("Error forcing restart via supervisor launcher: %s" % str(e))
+#            Log("Forcing restart via supervisor launcher")
+#            try:
+#                pid = os.fork()
+#                if pid == 0:
+#                    subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
+#                                "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"],
+#                                shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
+#                else:
+#                    Log("Error forcing restart via supervisor launcher: OS did not fork")
+#            except Exception, e:
+#                Log("Error forcing restart via supervisor launcher: %s" % str(e))
 
 
         else:
