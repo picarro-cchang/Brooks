@@ -1181,8 +1181,16 @@ class Driver(SharedTypes.Singleton):
 #            self.looping = False
         if sys.platform == "linux2":
             self.looping = False
-            print("Let the Driver die and Supervisor re-launch")
             Log("Driver has encountered an error... Exiting cleanly", Level=3)
+            self.supervisor.TerminateApplications(False, False)
+            Log("Forcing restart via supervisor launcher")
+            try:
+                subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
+                               "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"])
+            except:
+                Log("Error forcing restart via supervisor launcher")
+
+
         else:
             self.supervisor.TerminateApplications(False, False)
             DETACHED_PROCESS = 0x00000008
