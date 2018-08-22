@@ -1188,7 +1188,7 @@ class Driver(SharedTypes.Singleton):
             try:
                 subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
                                "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"],
-                                 shell=False, stdin=None, stdout=None, close_fds=True,
+                                 shell=False, stdin=None, stdout=None, stderr=None, close_fds=True,
                                  creationflags=DETACHED_PROCESS)
             except:
                 Log("Error forcing restart via supervisor launcher")
