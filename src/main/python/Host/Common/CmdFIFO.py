@@ -35,6 +35,7 @@ import re
 import sys
 import time
 import types
+from Host.Common.SharedTypes import ClaimInterfaceError
 
 # This version requires Pyro4 v 4.43 because of a change in how internal class
 # methods and members can be exposed.

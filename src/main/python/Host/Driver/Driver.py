@@ -1176,9 +1176,13 @@ class Driver(SharedTypes.Singleton):
 
         # Instruct the supervisor to shut down all applications except the driver, since the
         #  driver will be shutdown using self.looping.
-        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
-            self.restartSurveyor.restart()
+#        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
+#            self.restartSurveyor.restart()
+#            self.looping = False
+        if sys.platform == "linux2":
             self.looping = False
+            print("Let the Driver die and Supervisor re-launch")
+            Log("Driver has encountered an error... Exiting cleanly", Level=3)
         else:
             self.supervisor.TerminateApplications(False, False)
             DETACHED_PROCESS = 0x00000008
