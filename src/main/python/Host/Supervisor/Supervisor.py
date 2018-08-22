@@ -55,18 +55,12 @@ Copyright (c) 2010 Picarro, Inc. All rights reserved
 
 import sys
 import ctypes
-if sys.platform == "win32":
-    import msvcrt #for kbhit and getch
-    import win32process
-    from win32api import OpenProcess as win32api_OpenProcess
-    windll = ctypes.windll #to get access to GetProcessId() which is not in the win32 libraries
-elif sys.platform == "linux2":
-    import ttyLinux
-    import signal # to handle SIGTERM
-    libc = ctypes.CDLL("libc.so.6")
-    sched_getaffinity = libc.sched_getaffinity
-    sched_setaffinity = libc.sched_setaffinity
-    setpriority = libc.setpriority
+import ttyLinux
+import signal # to handle SIGTERM
+libc = ctypes.CDLL("libc.so.6")
+sched_getaffinity = libc.sched_getaffinity
+sched_setaffinity = libc.sched_setaffinity
+setpriority = libc.setpriority
 import os
 import shlex
 import time
@@ -105,10 +99,8 @@ else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-if sys.platform == 'win32':
-    from time import clock as TimeStamp
-else:
-    from time import time as TimeStamp
+
+from time import time as TimeStamp
 
 #Global constants...
 APP_NAME = "Supervisor"
@@ -131,18 +123,6 @@ _MODE3_TCP_SERVER_PORT = 23456
 CONSOLE_MODE_OWN_WINDOW    = 1
 CONSOLE_MODE_NO_WINDOW     = 2
 CONSOLE_MODE_SHARED_WINDOW = 3 #can't get this to function.  spawnv does it, but the apps are slave to the parent: if the parent dies so do they (when they try to write to a non-existent console).
-if sys.platform == "win32":
-    win32_PROCESS_ALL_ACCESS = 0x1F0FFF #for the OpenProcess call
-    _STILL_ACTIVE = 259 #hopefully correct - determined by doing, not by documentation
-
-    _PRIORITY_LOOKUP = {
-        "1" : win32process.IDLE_PRIORITY_CLASS,
-        "2" : win32process.BELOW_NORMAL_PRIORITY_CLASS,
-        "3" : win32process.NORMAL_PRIORITY_CLASS,
-        "4" : win32process.ABOVE_NORMAL_PRIORITY_CLASS,
-        "5" : win32process.HIGH_PRIORITY_CLASS,
-        "6" : win32process.REALTIME_PRIORITY_CLASS
-    }
 
 if sys.platform == "linux2":
     _PRIORITY_LOOKUP = {
@@ -264,97 +244,8 @@ def prompt_wait(msg=""):
     finally:
         stop_rawkb()
 
-if sys.platform == "win32":
-    def start_rawkb():
-        pass
 
-    def stop_rawkb():
-        pass
-
-    def read_rawkb():
-        if msvcrt.kbhit():
-            return msvcrt.getch()
-        return ""
-
-    def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
-        #launch the process...
-        Log("Launching application", appName, 1)
-        ##Used to do this with spawnv, but doing this causes the spawned apps to
-        ##share the console with Supervisor.  This is normally ok, but if the
-        ##Supervisor is shut down, the console disappears.  Then if any spawned app
-        ##tries to use the console (eg: a print statement) the app process dies.
-        #self._ProcessHandle = spawnv(P_NOWWAIT, exeName, exeArgs)
-        #self._ProcessId = windll.kernel32.GetProcessId(self._ProcessHandle)
-        #priority = _PRIORITY_LOOKUP[self.Priority]
-        #win32process.SetPriorityClass(self._ProcessHandle, priority)
-
-        #Now start the process using a direct win32 call. For docs on
-        #CreateProcess, do a google search for 'msdn createprocess'...
-
-        lpApplicationName = None #Better to send it all in the CommandLine
-        lpCommandLine = exeName + " " + " ".join(exeArgs[1:])
-        lpProcessAttributes = None
-        lpThreadAttributes = None
-        bInheritHandles = False
-        dwCreationFlags = _PRIORITY_LOOKUP[priority] #sets the process priority as requested
-        if consoleMode == CONSOLE_MODE_NO_WINDOW:
-            dwCreationFlags += win32process.CREATE_NO_WINDOW
-        elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
-            dwCreationFlags += win32process.CREATE_NEW_CONSOLE
-        lpEnvironment = None
-        lpCurrentDirectory = cwd
-        lpStartupInfo = win32process.STARTUPINFO()
-        hProcess, hThread, dwProcessId, dwThreadId =  win32process.CreateProcess(
-            lpApplicationName,
-            lpCommandLine,
-            lpProcessAttributes,
-            lpThreadAttributes,
-            bInheritHandles,
-            dwCreationFlags,
-            lpEnvironment,
-            lpCurrentDirectory,
-            lpStartupInfo
-        )
-        processId = dwProcessId
-        processHandle = win32api_OpenProcess(win32_PROCESS_ALL_ACCESS, int(False), dwProcessId)
-        pAffinity,sAffinity = win32process.GetProcessAffinityMask(hProcess)
-        mask = sAffinity & eval(affinity)
-        if mask == 0: mask = sAffinity
-        win32process.SetProcessAffinityMask(hProcess,mask)
-        pAffinity,sAffinity = win32process.GetProcessAffinityMask(hProcess)
-
-        return processId,processHandle,pAffinity
-
-    def isProcessActive(processHandle):
-        """Checks to see if the application is running.
-        If it can't be determined whether the app is alive or not, this assumes False.
-        """
-        if processHandle == -1:
-            return False
-        if isinstance(processHandle, int):
-            if processHandle <=0: return False
-            ec = win32process.GetExitCodeProcess(processHandle)
-        else: #it is a PyHANDLE
-            ec = win32process.GetExitCodeProcess(processHandle.handle)
-        if ec == _STILL_ACTIVE:
-            return True
-        return False
-
-    def terminateProcess(processHandle):
-        win32process.TerminateProcess(processHandle, 42)
-
-    def terminateProcessByName(name):
-        [path,filename] = os.path.split(name)
-        [base,ext] = os.path.splitext(filename)
-        if ext.lower() == ".exe":
-            call(["taskkill","/im",filename,"/t"],stderr=file("NUL","w"))
-            # os.system("taskkill /im %s > NUL" % filename)
-        else:
-            Log("Can only terminate executables by name",dict(name=name))
-
-    def getProcessHandle(pid):
-        return win32api_OpenProcess(win32_PROCESS_ALL_ACCESS, int(False), pid)
-elif sys.platform == "linux2":
+if sys.platform == "linux2":
     def start_rawkb():
         ttyLinux.setSpecial()
 
@@ -393,12 +284,8 @@ elif sys.platform == "linux2":
             raise e
 
         # Set the affinity
-        if sys.platform == 'win32':
-            pAffinity = ctypes.c_int32()
-            sAffinity = ctypes.c_int32()
-        else:
-            pAffinity = ctypes.c_int64()
-            sAffinity = ctypes.c_int64()
+        pAffinity = ctypes.c_int64()
+        sAffinity = ctypes.c_int64()
         if sched_getaffinity(process.pid,ctypes.sizeof(sAffinity),ctypes.byref(sAffinity)) == 0:
             mask = sAffinity.value & eval(affinity)
             if mask == 0: mask = sAffinity.value
@@ -429,7 +316,7 @@ elif sys.platform == "linux2":
     def terminateProcess(processHandle):
         print "Calling terminateProcess on process %s" % (processHandle.pid,)
         # print("TerminateProcess disabled") # RSF
-        os.kill(processHandle.pid,9) # Don't kill for debug RSF
+        os.kill(processHandle.pid, 15) # Don't kill for debug RSF
 
     def terminateProcessByName(name):
         [path,filename] = os.path.split(name)
@@ -1610,9 +1497,7 @@ class Supervisor(object):
         # If running on Linux, OS shutdown is managed by a script
         # that starts the Supervisor.
         if self.powerDownAfterTermination:
-            if sys.platform == "win32":
-                os.system("shutdown -f -s -t 20")
-            elif  sys.platform == "linux2":
+            if  sys.platform == "linux2":
                 #os.system("sleep 60; shutdown now")
                 os.system("shutdown -h 1")
             else:
