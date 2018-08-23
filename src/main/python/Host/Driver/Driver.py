@@ -1184,7 +1184,7 @@ class Driver(SharedTypes.Singleton):
 #            self.supervisor.TerminateApplications(False, False)
             # Request restart from Supervisor and restart and dependants. then exit
             # this thread cleanly
-            self.supervisor.RestartApplications("Driver", True)
+            self.supervisor.RestartApplications(APP_NAME, True)
             self.looping = False
 #            Log("Forcing restart via supervisor launcher")
 #            try:
