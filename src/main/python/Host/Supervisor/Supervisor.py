@@ -1270,15 +1270,21 @@ class Supervisor(object):
 
             appDependents = []
 
-            #first get all the dependents shut (politely) down, if needed...
+            #Terminate the apps
             if RestartDependents:
                 appDependents = self.GetDependents(AppName)
                 for a in appDependents:
                     assert isinstance(self.AppDict[a], App)
-                    self.AppDict[a].ShutDown() #blocks until it IS shut down
+                    #self.AppDict[a].ShutDown() #blocks until it IS shut down
+                    pid = os.getpid(AppDict[a])
+                    os.kill(pid)
 
             #Now shut down the app in question (as brutally as was requested)...
-            self.AppDict[AppName].ShutDown(StopMethod = StopMethod)
+            #self.AppDict[AppName].ShutDown(StopMethod = StopMethod)
+            #terminateProcessByName(self.AppDict[AppName])
+            #pid = os.getpid(self.AppDict[AppName])
+            #os.kill(pid, 15)
+
 
             #the app (and all dependents) are now shut down... we're ready to re-launch...
             Log("Application and all dependents successfully shut down.  Restarting from bottom up.", dict(AppName = AppName, Dependents = appDependents))
