@@ -915,6 +915,7 @@ class Supervisor(object):
         if 0: assert isinstance(self.RPCServer, CmdFIFO.CmdFIFOServer) #For Wing
         self.RPCServerProblem = False
         self.restartSurveyor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
         self.AppMonitorCount = 0
         self.AppNameList = [] #keeps the app ordering intact
         self.AppDict = {}
@@ -1322,6 +1323,7 @@ class Supervisor(object):
             self.RestartApp(self, AppName, RestartDependants)
         except Exception, e:
             Log("Error Restarting %s %s: " % AppName % e)
+        return "OK"
 
     def LaunchMasterRPCServer(self):
         """Configures the Master RPC server and launches it on it's own thread.
