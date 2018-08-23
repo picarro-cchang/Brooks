@@ -1199,27 +1199,6 @@ class Driver(SharedTypes.Singleton):
 #                Log("Error forcing restart via supervisor launcher: %s" % str(e))
 
 
-        else:
-            self.supervisor.TerminateApplications(False, False)
-            DETACHED_PROCESS = 0x00000008
-            try:
-                Log("Forced restart via supervisor launcher")
-                if os.getcwd().lower().endswith("hostexe"):
-                    subprocess.Popen([r"SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                      "-c", r"..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                     creationflags=DETACHED_PROCESS)
-                else:
-                    subprocess.Popen([r"..\..\HostExe\SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                      "-c", r"..\..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                     creationflags=DETACHED_PROCESS)
-                    #Log("Cannot invoke supervisor launcher from %s" % os.getcwd())
-            except:
-                Log("Cannot communicate with supervisor:\n%s" % traceback.format_exc())
-            finally:
-                self.looping = False
-
     def run(self):
         nudge = 0
         def messageProcessor(data):
