@@ -968,23 +968,6 @@ class Supervisor(object):
             defaultSettings = bogusApp.ReadAppOptions(co)
             del bogusApp
 
-        # Splash screen settings. Default is not to show one for legacy systems.
-        # splashEnable : If true show the splash screen.
-        # splashPicture : Full pathname to the splash screen image (gif,jpg,png).
-        # splashShowProcessNames : If true show the name of each process as they start. If false show dots or
-        #    progress counter.
-        #
-        self.splashEnable = False
-        self.splashImage = None
-        self.splashTitle = "Picarro Inc."
-        self.splashFontColor = "white"
-        self.splashShowProcessNames = False
-        if co.has_section("SplashScreen"):
-            self.splashEnable = co.getboolean("SplashScreen","Enable")
-            self.splashImage = co.get("SplashScreen","Image")
-            self.splashTitle = co.get("SplashScreen","Title")
-            self.splashFontColor = co.get("SplashScreen","FontColor")
-
         #Cruise through the application names (and port shortcut values)...
         for appInfo in co[_MAIN_SECTION].items():
             appName = appInfo[0]
@@ -1129,55 +1112,16 @@ class Supervisor(object):
         Log("Launch list: %s" % AppList)
 
         failedAppDependents = []
+        Log("Failed App Dependents: %s" % failedAppDependents)
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
-        qapp = QApplication(sys.argv)
-        splashPix = None
-        if self.splashImage and os.path.isfile(self.splashImage):
-            # QSplashScreen is not modal and so users can interaction with windows behind
-            # the splash screen.  We run the splash screen as full screen to keep the focus
-            # only on the splash screen.  The splash screen graphic is small so we create
-            # a single color full screen pic based upon the current resolution and add
-            # our desired pic to it.  I found an example at this url:
-            # https://forum.qt.io/topic/8558/solved-full-screen-qsplashscreen-on-mobile/6
-            splashPix = QPixmap(self.splashImage)
-            desktop = QApplication.desktop()
-            desktopRect = desktop.availableGeometry()
-            fillPixmap = QPixmap(desktopRect.width(), desktopRect.height())
-            fillPixmap.fill(QColor(30,30,30))
-            p = QPainter()
-            p.begin(fillPixmap)
-            targetRect = QRect((fillPixmap.width() - splashPix.width())/2,
-                               (fillPixmap.height() - splashPix.height())/2,
-                               splashPix.width(), splashPix.height())
-            p.drawPixmap(targetRect, splashPix)
-            p.end()
-        else:
-            fillPixmap = QPixmap(500,500)
-            fillPixmap.fill(Qt.black)
-        splash = QSplashScreen(fillPixmap, Qt.WindowStaysOnTopHint)
-        splash.setWindowState(Qt.WindowFullScreen)
-        progressCounter = 0
-        updateSplash = True
+
         for appName in appsToLaunch:
-
-            if self.splashEnable and updateSplash:
-                splash.show()
-                myAlignment = Qt.AlignCenter # Alignment doesn't work right if the msg has html in it.
-                progressCounter += 1
-                str = QString(self.splashTitle)
-                str += QString("\n\nLoading %1 of %2\n%3").arg(progressCounter, 2).arg(len(appsToLaunch)).arg(appName)
-                splash.showMessage(str, myAlignment, Qt.white)
-            else:
-                splash.close()
-            if "QuickGui" in appName:
-                updateSplash = False
-                #splash.close()
-
             failedAppDependent = False
             #check to make sure they are not dependents of apps that failed to launch
             for failedAppName in failedAppDependents:
                 if appName == failedAppName:
+                    Log("appName == failedAppName: %s" % appName)
                     failedAppDependent = True
                     break
 
@@ -1854,9 +1798,6 @@ def main():
             if supervisorApp.alreadyrunning():
                 sys.exit(0)
             try:
-                #splashPix = QPixmap("/home/picarro/Pictures/Picarro.jpg")
-                #supervisorSplash = QSplashScreen(splashPix, Qt.WindowStaysOnTopHint)
-                #supervisorSplash.show()
                 supe = Supervisor(FileName = configFile, viFileName = viConfigFile) #loads all the app info
                 supe.AddExtraArgs(extraAppArgs)
                 supe.LaunchMasterRPCServer() # in separate thread, only supports TerminateApplications RPC
