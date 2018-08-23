@@ -867,11 +867,9 @@ class CmdFIFOServerProxy(object):
                 if self.setup:
                     try:
                         return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
-                    """
-                    ################################
-                    Handle these exceptions later!!!
-                    ################################
-                    """
+                    #
+                    #Handle these exceptions later!!!
+                    #
                     except Pyro4.errors.TimeoutError,e:
                         #raise TimeoutError("%s" % e)
                         pass
