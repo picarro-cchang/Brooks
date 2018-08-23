@@ -1112,7 +1112,6 @@ class Supervisor(object):
         Log("Launch list: %s" % AppList)
 
         failedAppDependents = []
-        Log("Failed App Dependents: %s" % failedAppDependents)
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
 
@@ -1121,7 +1120,6 @@ class Supervisor(object):
             #check to make sure they are not dependents of apps that failed to launch
             for failedAppName in failedAppDependents:
                 if appName == failedAppName:
-                    Log("appName == failedAppName: %s" % appName)
                     failedAppDependent = True
                     break
 
