@@ -887,7 +887,7 @@ class CmdFIFOServerProxy(object):
                     self.setupRemoteObject()
                 except Pyro4.errors.ProtocolError:
                     self.setup = False
-            raise RemoteException("Remote cannot be reached for RPC")
+                    raise RemoteException("Remote cannot be reached for RPC")
 
     def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
         """Sets how the client would like a registered server function to behave.
