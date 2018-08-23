@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+{% block head %}
+    <script type="text/javascript">
+    var map;
+    var startTime;
+    var trange = 0;
+    var marker = null;
+    var peakMarkers = new Array();
+    var path = null;
+    var ignoreTimer = false;
+    var ignoreRequests = false;
+    var speedUp = 5.0;
+    var timer1;
+    var counter = 0;
+    var leakLine = 1;
+    var minAmp = {{ amplitude }};
+
+    function callJSONRPC(method,params,success_callback,error_callback) {
+        var request = {
+            "method": method,
+            "params": params,
+            "id": 1
+        };
+        jQuery.ajax( {contentType:"application/json",
+                      data:$.toJSON(request),
+                      dataType:"json",
+                      url:"/jsonrpc",
+                      type:"post",
+                      success: success_callback,
+                      error: error_callback} );
+    }
+
+    function showLeaks() {
+        callJSONRPC("getPeaks",[{"startRow":leakLine,"minAmp":minAmp}],
+                    function(data,ts,jqXHR) {
+                        var i;
+                        /*
+                        if (peakMarkers.length>0) {
+                            for (i=0;i<peakMarkers.length;i++) peakMarkers[i].setMap(null);
+                        }
+                        peakMarkers.length = 0
+                        */
+                        if ("ch4" in data.result) {
+                            lat = data.result["lat"];
+                            lon = data.result["long"];
+                            ch4 = data.result["ch4"];
+                            amp = data.result["amp"];
+                            leakLine = data.result["nextRow"];
+                            for (i=0;i<ch4.length;i++) {
+                                peakCoords = new google.maps.LatLng(lat[i],lon[i]);
+                                size = Math.sqrt(Math.sqrt(amp[i]))
+                                fontsize = 20.0*Math.sqrt(Math.sqrt(amp[i]))
+                                peakMarker = new google.maps.Marker({position:peakCoords, 
+                                                                     icon:"http://chart.apis.google.com/chart?chst=d_map_spin&chld="+size+"|0|40FFFF|"+fontsize+"|b|" + ch4[i].toFixed(1)});
+                                peakMarker.setMap(map);
+                                peakMarkers[peakMarkers.length] = peakMarker;
+                            }
+                        }
+                        timer1 = setTimeout(onTimer,1000);                        
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#errors").html(jqXHR.responseText); 
+                        timer1 = setTimeout(onTimer,1000);
+                    });
+    }                
+    
+    function onTimer() {
+        if (ignoreTimer) return;
+        callJSONRPC("getPath",[{"numRows":60}],
+                    function(data,ts,jqXHR) {
+                        var i, n;
+                        var pathCoords = new Array();
+                        counter += 1;
+                        $("#counter").html("Counter: " + counter);
+                        timeStrings = data.result["timeStrings"];
+                        $("#placeholder").html(timeStrings[timeStrings.length-1]);
+                        lat = data.result["lat"];
+                        lon = data.result["long"];
+                        ch4 = data.result["ch4"];
+                        peakPos = data.result["peakPos"];
+                        $("#concData").html("Current concentration " + ch4[ch4.length-1].toFixed(3) + " ppm"); 
+                        $("#peakData").html("Max in window         " + ch4[peakPos].toFixed(3) + " ppm"); 
+                        n = lat.length;
+                        if (n>0) {
+                            for (i=0;i<n;i++) {
+                                pathCoords[i] = new google.maps.LatLng(lat[i],lon[i]);
+                            }
+                            if (marker) marker.setMap(null);
+                            marker = new google.maps.Marker({position: pathCoords[n-1]});
+                            where = pathCoords[n-1];
+                            if ({{ follow }}) {
+                                map.setCenter(where);
+                            }
+                            marker.setMap(map);
+                        }
+                        if (path) path.setMap(null);
+                        if (n>0) {
+                            path = new google.maps.Polyline(
+                                {   path:pathCoords,
+                                    strokeColor:"#0000FF",
+                                    strokeOpactity:1.0,
+                                    strokeWeight:2  })
+                            path.setMap(map)
+                        }
+                        showLeaks();
+                    },
+                    function(jqXHR,ts,et) {  
+                        $("#errors").html(jqXHR.responseText); 
+                        showLeaks();
+                    }
+                   );
+    };
+    
+    
+    function initialize() {
+        var latlng = new google.maps.LatLng({{ center_latitude }},{{ center_longitude }});
+        var myOptions = {
+          zoom: 14,
+          center: latlng,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        $("#follow").change(function(){
+            if ($(this).is(':checked')) $("#do_not_follow").removeAttr('checked');
+            else $("#do_not_follow").attr('checked','checked');
+            $("#setoptions").submit()
+        })
+        $("#amplitude").change(function(){
+            $("#setoptions").submit()
+        })
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            myOptions);
+        google.maps.event.addListener(map, 'center_changed', function() {
+            var where = map.getCenter();
+            $("#center_latitude").val(where.lat())
+            $("#center_longitude").val(where.lng())
+        });
+        timer1 = setTimeout(onTimer,1000)
+    };
+    $(initialize)
+    </script>
+{% endblock %}
+
+{% block body %}
+<div style="width:28%; height:85%; float:left;">
+
+<p id="errors"></p>
+<p id="placeholder">Date and Time here</p>
+<p id="concData">Concentration data here</p>
+<p id="peakData">Peak data here</p>
+<p id="counter">Counter value here</p>
+
+<p>
+Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+</p>
+<p>
+Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+</p>
+<p>
+Here are some instructions as to what the driver should do in order to best traverse the map looking for any signs of methane.
+</p>
+<form id="setoptions" method="get">
+<dl>
+<dt>Follow vehicle:</dt>
+{% if follow %}
+<dd><input type="checkbox" id="follow" name="follow" checked="on"/></dd>
+{% else %}
+<dd><input type="checkbox" id="follow" name="follow"/></dd>
+{% endif %}
+<dt>Do not follow vehicle:</dt>
+{% if do_not_follow %}
+<dd><input type="checkbox" id="do_not_follow" name="do_not_follow" checked="on"/></dd>
+{% else %}
+<dd><input type="checkbox" id="do_not_follow" name="do_not_follow"/></dd>
+{% endif %}
+<dt>Minimum amplitude:</dt>
+<dd><input type="text" id="amplitude"        name="amplitude" value="{{ amplitude }}"/></dd>
+<dd><input type="text" id="center_longitude" name="center_longitude" value="{{ center_longitude }}"/></dd>
+<dd><input type="text" id="center_latitude"  name="center_latitude"  value="{{ center_latitude }}"/></dd>
+</dl>
+</form>
+</div>
+<div id="map_canvas" class="map" style="width:70%; height:90%; float:right;"></div>
+{% endblock %}

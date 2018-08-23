@@ -1,0 +1,20 @@
+syncList = \
+[
+ ("co2_conc", "co2_conc_sync", "species", 1),
+ ("co2_conc_dry", "co2_conc_dry_sync", "species", 1),
+ ("ch4_conc", "ch4_conc_sync", "species", 2),
+ ("ch4_conc_dry", "ch4_conc_dry_sync", "species", 2),
+ ("h2o_conc", "h2o_conc_sync", "species", 3),
+ ("solenoid_valves", "solenoid_valves_sync", None, None),
+ ("species", "species_sync", None, None),
+ ("DasTemp", "DasTemp_sync", None, None),
+ ("CavityPressure", "CavityPressure_sync", None, None),
+ ("MPVPosition", "MPVPosition_sync", None, None),
+ ("OutletValve", "OutletValve_sync", None, None),
+ ("CavityTemp", "CavityTemp_sync", None, None),
+ ("WarmBoxTemp", "WarmBoxTemp_sync", None, None),
+ ("EtalonTemp", "EtalonTemp_sync", None, None),
+# ("co2_conc", "co2_conc_sync", "species", 2),
+# ("co2_conc_dry", "co2_conc_dry_sync", "species", 2),
+# ("h2o_conc", "h2o_conc_sync", "species", 2),
+ ]

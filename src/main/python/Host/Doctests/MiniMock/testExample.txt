@@ -1,0 +1,77 @@
+>>> from testExample import send_email, MyClass, get_open_file
+>>> import minimock
+>>> import smtplib
+
+We want to make a mock smtplib.SMTP object that can be called from send_email
+
+>>> smtplib.SMTP = minimock.Mock('smtplib.SMTP')
+>>> smtplib.SMTP.mock_returns = minimock.Mock('smtp_connection')
+
+>>> send_email('ianb@colorstudy.com','joe@example.com','Hi there!',
+... 'How is it going?')
+Called smtplib.SMTP('localhost')
+Called smtp_connection.sendmail(
+    'ianb@colorstudy.com',
+    ['joe@example.com'],
+    'To: joe@example.com\nFrom: ianb@colorstudy.com\nSubject: Hi there!\n\nHow is it going?')
+Called smtp_connection.quit()
+
+------------------------------------------------------------------------
+In the following example the built-in "open" function is replaced. 
+Notice that we get to see the arguments with which open is called, and
+we can also specify that the return value is a file_handle
+
+>>> minimock.mock('open',returns = minimock.Mock('file_handle'))
+>>> fp = get_open_file('/test/test/test')
+Called open('/test/test/test', 'w')
+>>> fp.write("This writes to the file")
+Called file_handle.write('This writes to the file')
+
+------------------------------------------------------------------------
+The following class defines method3 to be the sum of method2 and method1. 
+Both method1 and method2 are somewhat complex, so we mock them to test 
+method3 by itself:
+
+>>> m = MyClass()
+>>> m.method1 = minimock.Mock('Mock.MyClass.method1')
+>>> m.method1.mock_returns = 5
+>>> m.method2 = minimock.Mock('Mock.MyClass.method2')
+>>> m.method2.mock_returns = 7
+
+Now we invoke method3, which calls our mock methods and finds their sum.
+Notice that the argument to Mock gives the string printed out when the
+mock object is called:
+>>> m.method3(42)
+Called Mock.MyClass.method1(42)
+Called Mock.MyClass.method2(42)
+12
+
+------------------------------------------------------------------------
+Alternatively, we can mock the methods within the class beforehand, so 
+that the object p gets the mocked methods:
+>>> minimock.mock('MyClass.method1',returns=8)
+>>> minimock.mock('MyClass.method2',returns=9)
+>>> p = MyClass()
+>>> p.method3(65)
+Called MyClass.method1(65)
+Called MyClass.method2(65)
+17
+
+------------------------------------------------------------------------
+Using restore reverts MyClass to its original state
+>>> minimock.restore()
+>>> p = MyClass()
+>>> p.method3(42)
+130.83597245795309
+
+------------------------------------------------------------------------
+method4 in MyClass uses the id function on self, and calls method3 with 
+the result. In the following, we mock id so that it returns a known 
+value and also mock method3 so that we can see that the value is 
+correctly passed.
+
+>>> minimock.mock('id',returns=123)
+>>> minimock.mock('MyClass.method3')
+>>> p.method4() # doctest: +ELLIPSIS 
+Called id(<...MyClass object ...>)
+Called MyClass.method3(123)

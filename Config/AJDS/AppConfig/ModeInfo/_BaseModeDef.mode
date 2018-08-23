@@ -1,0 +1,49 @@
+## This is a master mode definition file.
+##
+## Things to specify are:
+##   AVAILABLE_MODES
+##     - the available mode names
+##     - there must be <mode_name>.mode files for each mode
+##     - Search path for the files starts from the location of this file
+##   Default configurations for all modes
+##     - All other section headers are treated as if they are in each of
+##       the independent .mode files
+##     - If a section exists here AND in a specific mode file, the settings
+##       in the mode file override these defaults
+
+[AVAILABLE_MODES]
+ModeCount = 2
+Mode_1 = NH3_mode
+Mode_2 = warming_mode
+
+############################################################################
+###
+# Sections below are default settings for all modes
+#   - there does not *need* to be anything below this
+###
+############################################################################
+
+[SPECTRUM_IDS]
+#Specify logical names for referencing each SubSchemeID...
+NH3_H2O = 2
+NH3_ONLY = 4
+
+# Default processing to use for any spectra/label can be supplied below.
+# - If the spectrum name is not referred to in the plan file for the active mode, the processing
+#   indicated below will be used.
+#   - This is particularily convenient for occasionally inserted spectra (such as Cal spectra)
+#     that can occur in any mode.
+# - If no processing is indicated here OR in the plan file for the mode, an error will be raised.
+
+
+[SENSOR_DATA]
+#
+
+[SYNC_SETUP]
+#Define synchronous executions to be run, regardless of mode.
+NumSyncAnalyzers = 1
+
+Sync_1_Period_s = 5
+Sync_1_ReportName = Sensors
+Sync_1_Script = ../Scripts/DataManager/analyze_warming.py
+

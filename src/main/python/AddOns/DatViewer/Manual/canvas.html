@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Canvas &mdash; DatViewer Manual</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DatViewer Manual" href="index.html" />
+    <link rel="up" title="User’s Guide" href="user_guide.html" />
+    <link rel="next" title="Fitting" href="fitting.html" />
+    <link rel="prev" title="Menus of Time Series Plot" href="time_series_plot_menu.html" /> 
+  </head>
+  <body role="document">
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html">
+<img src="_static/picarro-logo.png" border="0" alt="DatViewer"/>
+</a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="fitting.html" title="Fitting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="time_series_plot_menu.html" title="Menus of Time Series Plot"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="user_guide.html" accesskey="U">User&#8217;s Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="canvas">
+<span id="plotting-canvas"></span><h1>Canvas<a class="headerlink" href="#canvas" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="mouse-motion-and-figure-transform">
+<span id="mouse-events"></span><h2>Mouse motion and figure transform<a class="headerlink" href="#mouse-motion-and-figure-transform" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Left click and drag: <strong>Zoom in</strong> into the selected area of the plot.</li>
+<li>Left click and drag with SHIFT key down: <strong>Pan</strong> the plot</li>
+<li>Left click and drag with CTRL key down: <strong>Zoom out</strong> from the plot</li>
+<li>Left click and drag with ALT key down: <strong>Stretch</strong> the plot</li>
+<li>Right click: Pop up righ-key menu</li>
+</ul>
+</div>
+<div class="section" id="right-key-menu">
+<span id="id1"></span><h2>Right-key menu<a class="headerlink" href="#right-key-menu" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/right_key_menu.jpg" src="_images/right_key_menu.jpg" />
+<div class="section" id="export-image">
+<h3>Export Image<a class="headerlink" href="#export-image" title="Permalink to this headline">¶</a></h3>
+<p>Export the current plot as a JPEG/PNG/PDF file.</p>
+</div>
+<div class="section" id="export-data-in-current-view">
+<h3>Export Data in Current View<a class="headerlink" href="#export-data-in-current-view" title="Permalink to this headline">¶</a></h3>
+<p>Export only Datetime and the selected variable in current view to a HDF5/CSV file.</p>
+</div>
+<div class="section" id="export-all-data-in-current-time-range">
+<h3>Export All Data in Current Time Range<a class="headerlink" href="#export-all-data-in-current-time-range" title="Permalink to this headline">¶</a></h3>
+<p>Export all available columns of selected dataset in current time range to a HDF5 file.
+See <a class="reference internal" href="getting_started.html#concatenate-files-timerange"><span>Concatenate data files in a specific time range</span></a> for an example of use case.</p>
+</div>
+<div class="section" id="edit-plot-properties">
+<span id="image-editor"></span><h3>Edit Plot Properties<a class="headerlink" href="#edit-plot-properties" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/image_editor.jpg" src="_images/image_editor.jpg" />
+<ul class="simple">
+<li><strong>Title</strong>: title of the plot.</li>
+<li><strong>Line</strong>: line pattern of the plot. If <em>None</em> is selected, data points will plotted without connecting lines.</li>
+<li><strong>Marker</strong>: marker of data points. If <em>None</em> is selected, data points will not be shown.</li>
+<li><strong>Min</strong> and <strong>Max</strong>: minimum and maximum of data range for the axis.</li>
+<li><strong>x[0]</strong>: set the earliest time of dataset as the minimum of x-axis.</li>
+<li><strong>Time zone</strong>: time zone selected for Datetime variables. This defaults to the local time zone.</li>
+<li><strong>Label</strong>: label of the axis.</li>
+</ul>
+</div>
+<div class="section" id="statistics">
+<h3>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline">¶</a></h3>
+<p>Calculate mean, standard deviation and peak to peak for data in the current view.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="user_guide.html">User&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#file-menu">File Menu</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="user_guide.html#time-series-plot">Time Series Plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#correlation-xy-plot">Correlation/XY Plot</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="fitting.html" title="Fitting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="time_series_plot_menu.html" title="Menus of Time Series Plot"
+             >previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="user_guide.html" >User&#8217;s Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2005 - 2016, Picarro Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
