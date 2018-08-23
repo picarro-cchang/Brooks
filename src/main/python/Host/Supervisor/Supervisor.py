@@ -1345,6 +1345,7 @@ class Supervisor(object):
 
             #register any RPC calls here...
             self.RPCServer.register_function(self.RPC_TerminateApplications, NameSlice = 4)
+            self.RPCServer.register_function(self.RPC_RestartApplications, NameSlice=4)
 
             #Launch the server on its own thread...
             th = threading.Thread(target = self.RPCServer.serve_forever)
