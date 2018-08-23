@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+f2py -c -m fitutils fitutils.f
+python setup.py build_src build_ext --inplace

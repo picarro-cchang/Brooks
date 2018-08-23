@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Define Time Range &mdash; DatViewer Manual</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DatViewer Manual" href="index.html" />
+    <link rel="up" title="User’s Guide" href="user_guide.html" />
+    <link rel="next" title="Menus of Time Series Plot" href="time_series_plot_menu.html" />
+    <link rel="prev" title="User’s Guide" href="user_guide.html" /> 
+  </head>
+  <body role="document">
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html">
+<img src="_static/picarro-logo.png" border="0" alt="DatViewer"/>
+</a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="time_series_plot_menu.html" title="Menus of Time Series Plot"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="user_guide.html" title="User’s Guide"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="user_guide.html" accesskey="U">User&#8217;s Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="define-time-range">
+<span id="id1"></span><h1>Define Time Range<a class="headerlink" href="#define-time-range" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/define_date_range.jpg" src="_images/define_date_range.jpg" />
+<p>DatViewer can search data files within the desirable date range and then concatenate such files into a H5 file.
+By defaut, TimeZone is set to the local one. However, if data were taken elsewhere, select the timezone
+where data were taken.</p>
+<p><strong>Data files are saved in directory trees named by date and time:</strong> Picarro software saves data in a directory tree
+that is named by the creation year, month and day. See, for example, the directory tree shown in the figure below.
+Select the option if the target folder has this file structure. This way DatViewer will
+only search folders within the desirable date range, which may substantially reduce processsing time.</p>
+<img alt="_images/directory_tree.jpg" src="_images/directory_tree.jpg" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To save processing time, DatViewer does not open data file but only determines data acquisition time by the file name.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Do NOT define time range if data file name has been changed.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">DatViewer does NOT concatenate data files exactly within the defined time range.</p>
+</div>
+<p>This is because the time extracted from file name is different from the data acquisition time. In order to not miss data points,
+DatViewer expands the specified time range so the resulting dataset normally has a wider time range than the user specification.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="getting_started.html#concatenate-files-timerange"><span>Concatenate data files in a specific time range</span></a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="user_guide.html">User&#8217;s Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="user_guide.html#file-menu">File Menu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#time-series-plot">Time Series Plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#correlation-xy-plot">Correlation/XY Plot</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="time_series_plot_menu.html" title="Menus of Time Series Plot"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="user_guide.html" title="User’s Guide"
+             >previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="user_guide.html" >User&#8217;s Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2005 - 2016, Picarro Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

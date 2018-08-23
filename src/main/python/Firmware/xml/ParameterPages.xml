@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ # FILE:
+ #   ParameterPages.py
+ #
+ # DESCRIPTION:
+ #   Defines the parameter editing pages for the controller GUI
+ #
+ # SEE ALSO:
+ #   Specify any related information.
+ #
+ # HISTORY:
+ #   07-Apr-2009  sze  Initial version.
+ #
+ #  Copyright (c) 2009 Picarro, Inc. All rights reserved
+ #
+ -->
+
+<!DOCTYPE Controller_gui [
+     <!ELEMENT Controller_gui (gui_pages)>
+     <!ELEMENT gui_pages (gui_page+)>
+     <!ELEMENT gui_page (title,(register|mask_register|fpga_register)+)>
+     <!ELEMENT register (#PCDATA)>
+     <!ELEMENT mask_register (register,(mask)+)>
+     <!ELEMENT fpga_register (#PCDATA)>
+     <!ATTLIST fpga_register offset CDATA #REQUIRED>
+     <!ELEMENT title (#PCDATA)>
+     <!ELEMENT mask  (#PCDATA)>]>
+
+<Controller_gui>
+    <gui_pages>
+        <gui_page>
+            <title>System Parameters</title>
+            <register>DAS_STATUS_REGISTER</register>
+            <register>SCHEDULER_CONTROL_REGISTER</register>
+            <register>RD_INITIATED_COUNT_REGISTER</register>
+            <register>RD_IRQ_COUNT_REGISTER</register>
+            <register>ACQ_DONE_COUNT_REGISTER</register>
+            <register>RD_DATA_MOVING_COUNT_REGISTER</register>
+            <register>RD_QDMA_DONE_COUNT_REGISTER</register>
+            <register>RD_FITTING_COUNT_REGISTER</register>
+            <register>KEEP_ALIVE_REGISTER</register>
+            <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">CONFIG</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">DOUT_HI</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">DOUT_LO</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">DIN</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_CLKSEL</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_1</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_2</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">INTRONIX_3</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">STATUS_LED</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">FAN</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 1 Parameters</title>
+            <register>LASER1_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER1_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER1_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER1_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER1_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER1_MANUAL_TEC_REGISTER</register>
+            <register>LASER1_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register>LASER1_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register>LASER1_MANUAL_FINE_CURRENT_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER1_FINE_CURRENT_RANGE</fpga_register>
+            <register>LASER1_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register>LASER1_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register>LASER1_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER1_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER1_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER1_EXTRA_OFFSET_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 2 Parameters</title>
+            <register>LASER2_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER2_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER2_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER2_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER2_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER2_MANUAL_TEC_REGISTER</register>
+            <register>LASER2_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register>LASER2_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register>LASER2_MANUAL_FINE_CURRENT_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER2_FINE_CURRENT_RANGE</fpga_register>
+            <register>LASER2_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register>LASER2_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register>LASER2_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER2_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER2_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER2_EXTRA_OFFSET_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 3 Parameters</title>
+            <register>LASER3_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER3_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER3_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER3_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER3_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER3_MANUAL_TEC_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER3_FINE_CURRENT_RANGE</fpga_register>
+            <register>LASER3_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register>LASER3_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register>LASER3_MANUAL_FINE_CURRENT_REGISTER</register>
+            <register>LASER3_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register>LASER3_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register>LASER3_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER3_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER3_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER3_EXTRA_OFFSET_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Laser 4 Parameters</title>
+            <register>LASER4_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_H_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_K_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_TI_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_TD_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_B_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_C_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_N_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_S_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>LASER4_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>LASER4_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>LASER4_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>LASER4_TEC_PRBS_MEAN_REGISTER</register>
+            <register>LASER4_MANUAL_TEC_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">LASER4_FINE_CURRENT_RANGE</fpga_register>
+            <register>LASER4_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register>LASER4_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register>LASER4_MANUAL_FINE_CURRENT_REGISTER</register>
+            <register>LASER4_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register>LASER4_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register>LASER4_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register>LASER4_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register>LASER4_EXTRA_FINE_SCALE_REGISTER</register>
+            <register>LASER4_EXTRA_OFFSET_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Warm Box Temperature Parameters</title>
+            <register>WARM_BOX_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>TEC_CNTRL_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_H_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_K_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_TI_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_TD_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_B_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_C_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_N_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_S_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>WARM_BOX_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>WARM_BOX_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>WARM_BOX_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>WARM_BOX_TEC_PRBS_MEAN_REGISTER</register>
+            <register>WARM_BOX_MANUAL_TEC_REGISTER</register>
+            <register>WARM_BOX_MAX_HEATSINK_TEMP_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Cavity Temperature Parameters</title>
+            <register>CAVITY_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>TEC_CNTRL_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_H_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_K_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_TI_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_TD_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_B_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_C_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_N_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_S_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>CAVITY_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>CAVITY_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>CAVITY_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>CAVITY_TEC_PRBS_MEAN_REGISTER</register>
+            <register>CAVITY_MANUAL_TEC_REGISTER</register>
+            <register>CAVITY_MAX_HEATSINK_TEMP_REGISTER</register>
+            <!-->
+            <register>HEATER_CNTRL_STATE_REGISTER</register>
+            <register>HEATER_CNTRL_GAIN_REGISTER</register>
+            <register>HEATER_CNTRL_QUANTIZE_REGISTER</register>
+            <register>HEATER_CNTRL_UBIAS_SLOPE_REGISTER</register>
+            <register>HEATER_CNTRL_UBIAS_OFFSET_REGISTER</register>
+            <register>HEATER_CNTRL_MARK_MIN_REGISTER</register>
+            <register>HEATER_CNTRL_MARK_MAX_REGISTER</register>
+            <register>HEATER_CNTRL_MANUAL_MARK_REGISTER</register>
+            </!-->
+        </gui_page>
+        <gui_page>
+            <title>Heater Controller Parameters</title>
+            <register>HEATER_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_H_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_K_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_TI_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_TD_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_B_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_C_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_N_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_S_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>HEATER_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>HEATER_PRBS_GENPOLY_REGISTER</register>
+            <register>HEATER_PRBS_AMPLITUDE_REGISTER</register>
+            <register>HEATER_PRBS_MEAN_REGISTER</register>
+            <register>HEATER_MANUAL_MARK_REGISTER</register>
+            <register>HEATER_CUTOFF_REGISTER</register>
+            <!-->
+            <register>HEATER_CNTRL_STATE_REGISTER</register>
+            <register>HEATER_CNTRL_GAIN_REGISTER</register>
+            <register>HEATER_CNTRL_QUANTIZE_REGISTER</register>
+            <register>HEATER_CNTRL_UBIAS_SLOPE_REGISTER</register>
+            <register>HEATER_CNTRL_UBIAS_OFFSET_REGISTER</register>
+            <register>HEATER_CNTRL_MARK_MIN_REGISTER</register>
+            <register>HEATER_CNTRL_MARK_MAX_REGISTER</register>
+            <register>HEATER_CNTRL_MANUAL_MARK_REGISTER</register>
+            </!-->
+        </gui_page>
+        <gui_page>
+            <title>Filter Heater Parameters</title>
+            <register>FILTER_HEATER_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_H_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_K_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_TI_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_TD_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_B_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_C_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_N_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_S_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>FILTER_HEATER_TEMP_CNTRL_FFWD_REGISTER</register>
+            <register>FILTER_HEATER_PRBS_GENPOLY_REGISTER</register>
+            <register>FILTER_HEATER_PRBS_AMPLITUDE_REGISTER</register>
+            <register>FILTER_HEATER_PRBS_MEAN_REGISTER</register>
+            <register>FILTER_HEATER_MANUAL_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Fan Controller Parameters</title>
+            <register>FAN_CNTRL_TEMPERATURE_REGISTER</register>
+            <register>FAN_CNTRL_STATE_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Sample Handling Parameters</title>
+            <register>VALVE_CNTRL_STATE_REGISTER</register>
+            <register>VALVE_CNTRL_SOLENOID_VALVES_REGISTER</register>
+            <register>VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER</register>
+            <register>VALVE_CNTRL_USER_INLET_VALVE_REGISTER</register>
+            <register>VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER</register>
+            <register>VALVE_CNTRL_CAVITY_PRESSURE_RATE_ABORT_REGISTER</register>
+            <register>VALVE_CNTRL_CAVITY_PRESSURE_MAX_RATE_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_GAIN1_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_GAIN2_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_MIN_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_MAX_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_MAX_CHANGE_REGISTER</register>
+            <register>VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_GAIN1_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_GAIN2_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_MIN_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_MAX_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_MAX_CHANGE_REGISTER</register>
+            <register>VALVE_CNTRL_OUTLET_VALVE_DITHER_REGISTER</register>
+            <register>VALVE_CNTRL_THRESHOLD_STATE_REGISTER</register>
+            <register>VALVE_CNTRL_RISING_LOSS_THRESHOLD_REGISTER</register>
+            <register>VALVE_CNTRL_RISING_LOSS_RATE_THRESHOLD_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_INLET_VALVE_VALUE_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_OUTLET_VALVE_VALUE_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_SOLENOID_MASK_REGISTER</register>
+            <register>VALVE_CNTRL_TRIGGERED_SOLENOID_STATE_REGISTER</register>
+            <register>VALVE_CNTRL_SEQUENCE_STEP_REGISTER</register>
+            <register>FLOW_CNTRL_STATE_REGISTER</register>
+            <register>FLOW_CNTRL_SETPOINT_REGISTER</register>
+            <register>FLOW_CNTRL_GAIN_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Virtual Laser Parameters</title>
+            <register>PZT_INCR_PER_CAVITY_FSR</register>
+            <register>PZT_OFFSET_UPDATE_FACTOR</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER1</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER2</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER3</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER4</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER5</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER6</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER7</register>
+            <register>PZT_OFFSET_VIRTUAL_LASER8</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER1</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER2</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER3</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER4</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER5</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER6</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER7</register>
+            <register>SCHEME_OFFSET_VIRTUAL_LASER8</register>
+        </gui_page>
+        <gui_page>
+            <title>Loss Buffer Parameters</title>
+            <register>LOSS_BUFFER_0_REGISTER</register>
+            <register>LOSS_BUFFER_1_REGISTER</register>
+            <register>LOSS_BUFFER_2_REGISTER</register>
+            <register>LOSS_BUFFER_3_REGISTER</register>
+            <register>LOSS_BUFFER_4_REGISTER</register>
+            <register>LOSS_BUFFER_5_REGISTER</register>
+            <register>LOSS_BUFFER_6_REGISTER</register>
+            <register>LOSS_BUFFER_7_REGISTER</register>
+            <register>PROCESSED_LOSS_1_REGISTER</register>
+            <register>PROCESSED_LOSS_2_REGISTER</register>
+            <register>PROCESSED_LOSS_3_REGISTER</register>
+            <register>PROCESSED_LOSS_4_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Peak Detector Parameters</title>
+            <register>PEAK_DETECT_CNTRL_STATE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_BACKGROUND_SAMPLES_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_BACKGROUND_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_UPPER_THRESHOLD_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_LOWER_THRESHOLD_1_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_LOWER_THRESHOLD_2_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_THRESHOLD_FACTOR_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_ACTIVE_SIZE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_POST_PEAK_SAMPLES_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGER_CONDITION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGER_DELAY_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRANSITIONING_DURATION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRANSITIONING_HOLDOFF_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_HOLDING_MAX_LOSS_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_HOLDING_DURATION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_CANCELLING_SAMPLES_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_PRIMING_DURATION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_PURGING_DURATION_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_ARMED_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGER_PENDING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRIGGERED_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_TRANSITIONING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_HOLDING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_INACTIVE_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_CANCELLING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_PRIMING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_PURGING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>PEAK_DETECT_CNTRL_INJECTION_PENDING_VALVE_MASK_AND_VALUE_REGISTER</register>
+            <register>FLOW_0_SETPOINT_REGISTER</register>
+            <register>FLOW_1_SETPOINT_REGISTER</register>
+            <register>FLOW_2_SETPOINT_REGISTER</register>
+            <register>FLOW_3_SETPOINT_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Tuner Parameters</title>
+            <register>ANALYZER_TUNING_MODE_REGISTER</register>
+            <fpga_register offset="FPGA_TWGEN">CS</fpga_register>
+            <!--
+            <fpga_register offset="FPGA_TWGEN">SWEEP_HIGH</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">SWEEP_LOW</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">WINDOW_HIGH</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">WINDOW_LOW</fpga_register>
+            -->
+            <fpga_register offset="FPGA_TWGEN">SLOPE_UP</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">SLOPE_DOWN</fpga_register>
+            <fpga_register offset="FPGA_TWGEN">PZT_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_SCALER">SCALE1</fpga_register>
+            <register>TUNER_SWEEP_RAMP_HIGH_REGISTER</register>
+            <register>TUNER_SWEEP_RAMP_LOW_REGISTER</register>
+            <register>TUNER_WINDOW_RAMP_HIGH_REGISTER</register>
+            <register>TUNER_WINDOW_RAMP_LOW_REGISTER</register>
+            <register>TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER</register>
+            <register>TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER</register>
+            <register>TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER</register>
+            <register>TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER</register>
+            <register>TUNER_DITHER_MEDIAN_COUNT_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Optical Injection Parameters</title>
+            <register>VIRTUAL_LASER_REGISTER</register>
+            <fpga_register offset="FPGA_INJECT">CONTROL</fpga_register>
+            <fpga_register offset="FPGA_INJECT">CONTROL2</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Spectrum Controller Parameters</title>
+            <register>SPECT_CNTRL_STATE_REGISTER</register>
+            <register>SPECT_CNTRL_MODE_REGISTER</register>
+            <register>SPECT_CNTRL_SCHEME_ITER_REGISTER</register>
+            <register>SPECT_CNTRL_SCHEME_ROW_REGISTER</register>
+            <register>SPECT_CNTRL_DWELL_COUNT_REGISTER</register>
+            <register>SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER</register>
+            <register>SPECT_CNTRL_DITHER_MODE_TIMEOUT_REGISTER</register>
+            <register>SPECT_CNTRL_RAMP_MODE_TIMEOUT_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Ringdown Simulator Parameters</title>
+            <fpga_register offset="FPGA_RDSIM">OPTIONS</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">PZT_CENTER</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">PZT_WINDOW_HALF_WIDTH</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">FILLING_RATE</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">DECAY</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">DECAY_IN_SHIFT</fpga_register>
+            <fpga_register offset="FPGA_RDSIM">DECAY_IN_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">WFAC</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Ringdown Manager Parameters</title>
+            <register>RDD_BALANCE_REGISTER</register>
+            <register>RDD_GAIN_REGISTER</register>
+            <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
+            <!-- <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register> -->
+            <fpga_register offset="FPGA_RDMAN">OPTIONS</fpga_register>
+            <!-- <fpga_register offset="FPGA_RDMAN">DATA_ADDRCNTR</fpga_register>  -->
+            <!-- <fpga_register offset="FPGA_RDMAN">METADATA_ADDRCNTR</fpga_register> -->
+            <!-- <fpga_register offset="FPGA_RDMAN">PARAM_ADDRCNTR</fpga_register>  -->
+            <fpga_register offset="FPGA_RDMAN">DIVISOR</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">NUM_SAMP</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">THRESHOLD</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">LOCK_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">PRECONTROL_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">OFF_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">EXTRA_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">TIMEOUT_DURATION</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">TUNER_AT_RINGDOWN</fpga_register>
+            <fpga_register offset="FPGA_RDMAN">METADATA_ADDR_AT_RINGDOWN</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Ringdown Data Fitting Parameters</title>
+            <register>RDFITTER_MINLOSS_REGISTER</register>
+            <register>RDFITTER_MAXLOSS_REGISTER</register>
+            <register>RDFITTER_LATEST_LOSS_REGISTER</register>
+            <register>RDFITTER_IMPROVEMENT_STEPS_REGISTER</register>
+            <register>RDFITTER_START_SAMPLE_REGISTER</register>
+            <register>RDFITTER_FRACTIONAL_THRESHOLD_REGISTER</register>
+            <register>RDFITTER_ABSOLUTE_THRESHOLD_REGISTER</register>
+            <register>RDFITTER_NUMBER_OF_POINTS_REGISTER</register>
+            <register>RDFITTER_MAX_E_FOLDINGS_REGISTER</register>
+            <register>RDFITTER_META_BACKOFF_REGISTER</register>
+            <register>RDFITTER_META_SAMPLES_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>Wavelength Monitor Simulator Parameters</title>
+            <fpga_register offset="FPGA_WLMSIM">OPTIONS</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">RFAC</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">Z0</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">ETA1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">REF1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">ETA2_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_WLMSIM">REF2_OFFSET</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Laser Locker Parameters</title>
+            <fpga_register offset="FPGA_LASERLOCKER">CS</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">OPTIONS</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA1</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF1</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA2</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF2</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF1_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">ETA2_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">REF2_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO1_CENTER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO1_MULTIPLIER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO2_CENTER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO2_MULTIPLIER</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">TUNING_OFFSET</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_LOCK_WINDOW</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_INT_GAIN</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_PROP_GAIN</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">WM_DERIV_GAIN</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO1</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">RATIO2</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">LOCK_ERROR</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">FINE_CURRENT</fpga_register>
+            <fpga_register offset="FPGA_LASERLOCKER">CYCLE_COUNTER</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Inlet Dynamic Pwm Parameters</title>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">CS</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">DELTA</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">HIGH</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">LOW</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_INLET">SLOPE</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Outlet Dynamic Pwm Parameters</title>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">CS</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">DELTA</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">HIGH</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">LOW</fpga_register>
+            <fpga_register offset="FPGA_DYNAMICPWM_OUTLET">SLOPE</fpga_register>
+        </gui_page>
+        <gui_page>
+            <title>Sentry Parameters</title>
+            <register>SENTRY_LOWER_LIMIT_TRIPPED_REGISTER</register>
+            <register>SENTRY_UPPER_LIMIT_TRIPPED_REGISTER</register>
+            <register>SENTRY_LASER1_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER1_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER2_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER2_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER3_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER3_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER4_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_LASER4_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_ETALON_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_ETALON_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_WARM_BOX_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_WARM_BOX_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_WARM_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_CAVITY_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_CAVITY_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_HOT_BOX_HEATSINK_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_FILTER_HEATER_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_FILTER_HEATER_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_DAS_TEMPERATURE_MIN_REGISTER</register>
+            <register>SENTRY_DAS_TEMPERATURE_MAX_REGISTER</register>
+            <register>SENTRY_LASER1_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER1_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_LASER2_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER2_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_LASER3_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER3_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_LASER4_CURRENT_MIN_REGISTER</register>
+            <register>SENTRY_LASER4_CURRENT_MAX_REGISTER</register>
+            <register>SENTRY_CAVITY_PRESSURE_MIN_REGISTER</register>
+            <register>SENTRY_CAVITY_PRESSURE_MAX_REGISTER</register>
+            <register>SENTRY_AMBIENT_PRESSURE_MIN_REGISTER</register>
+            <register>SENTRY_AMBIENT_PRESSURE_MAX_REGISTER</register>
+        </gui_page>
+    </gui_pages>
+</Controller_gui>

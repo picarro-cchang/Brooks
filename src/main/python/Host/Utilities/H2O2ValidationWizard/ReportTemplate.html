@@ -1,0 +1,135 @@
+<html>
+    <head>
+        <style>
+            .report_title {font-size: 32px; font-weight: 900; margin:10px;}
+            table.tbl {margin: 10px;}
+            table.tbl th {padding: 5px;}
+            table.tbl td {padding: 5px;}
+            .cell {font-weight: 600;}
+        </style>
+    </head>
+    <body>
+        <div style='margin: 10px;'>
+            <p>&nbsp;</p>
+            <div class='report_title'>Picarro PI2114 Validation Report</div>
+            <table class='tbl' style='font-size:14px;'>
+                <tr>
+                    <td class='cell'>Analyzer:</td><td>{analyzer_name}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Operated by:</td><td>{operator}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Start Time:</td><td>{start_time}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Signed by:</td><td>{signator}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>Signature Time:</td><td>{signature_time}</td>
+                </tr>
+            </table>
+            <h2>Summary</h2>
+            <table class='tbl' style='border-width: 1px;border-style: solid;'>
+                <tr>
+                    <th></th>
+                    <th>Acceptance criteria</th>
+                    <th>Result</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>Zero H<sub>2</sub>O<sub>2</sub></td>
+                    <td> &gt;-5ppb and &lt; 10ppb</td>
+                    <td>{zero_air_h2o2_mean} ppb</td>
+                    <td><b>{status_zero_h2o2}</b></td>
+                </tr>
+                <tr>
+                    <td>CH<sub>4</sub> slope</td>
+                    <td>&gt; 0.95 and &lt; 1.05</td>
+                    <td>{ch4_slope}</td>
+                    <td><b>{status_ch4_slope}</b></td>
+                </tr>
+                <tr>
+                    <td>CH<sub>4</sub> deviation</td>
+                    <td>&lt; 5%</td>
+                    <td>{max_ch4_deviation}%</td>
+                    <td><b>{status_ch4_deviation}</b></td>
+                </tr>
+            </table>
+            <h2>Details</h2>
+            <table class='tbl' style='border-width: 1px;border-style: solid;'>
+                <tr>
+                    <td class='cell'>Step</td>
+                    <td>Zero Air</td>
+                    <td>Calibrant 1</td>
+                    <td>Calibrant 2</td>
+                    {more_step}
+                </tr>
+                <tr>
+                    <td class='cell'>Gas Source</td>
+                    <td>{zero_air_source}</td>
+                    <td>{calibrant1_source}</td>
+                    <td>{calibrant2_source}</td>
+                    {more_source}
+                </tr>
+                <tr>
+                    <td class='cell'>Nominal CH<sub>4</sub> (ppm)</td>
+                    <td>{zero_air_info}</td>
+                    <td>{calibrant1_info}</td>
+                    <td>{calibrant2_info}</td>
+                    {more_info}
+                </tr>
+                <tr>
+                    <td class='cell'>Observed average CH<sub>4</sub> (ppm)</td>
+                    <td>{zero_air_ch4_mean}</td>
+                    <td>{calibrant1_ch4_mean}</td>
+                    <td>{calibrant2_ch4_mean}</td>
+                    {more_ch4_mean}
+                </tr>
+                <tr>
+                    <td class='cell'>CH<sub>4</sub> SD (ppm)</td>
+                    <td>{zero_air_ch4_sd}</td>
+                    <td>{calibrant1_ch4_sd}</td>
+                    <td>{calibrant2_ch4_sd}</td>
+                    {more_ch4_sd}
+                </tr>
+                <tr>
+                    <td class='cell'>CH<sub>4</sub> deviation (%)</td>
+                    <td>{zero_air_ch4_diff}</td>
+                    <td>{calibrant1_ch4_diff}</td>
+                    <td>{calibrant2_ch4_diff}</td>
+                    {more_ch4_diff}
+                </tr>
+                <tr>
+                    <td class='cell'>Observed H<sub>2</sub>O<sub>2</sub> (ppb)</td>
+                    <td>{zero_air_h2o2_mean}</td>
+                    <td>{calibrant1_h2o2_mean}</td>
+                    <td>{calibrant2_h2o2_mean}</td>
+                    {more_h2o2_mean}
+                </tr>
+                <tr>
+                    <td class='cell'>Observed H<sub>2</sub>O (%)</td>
+                    <td>{zero_air_h2o_mean}</td>
+                    <td>{calibrant1_h2o_mean}</td>
+                    <td>{calibrant2_h2o_mean}</td>
+                    {more_h2o_mean}
+                </tr>
+            </table>
+            <table class='tbl' style='font-size:16px;'>
+                <tr>
+                    <td class='cell'>CH<sub>4</sub> slope:</td><td>{ch4_slope}</td>
+                    <td class='cell'>CH<sub>4</sub> R<sup>2</sup>:</td><td>{ch4_r2}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>CH<sub>4</sub> intercept (ppm):</td><td>{ch4_intercept}</td>
+                    <td class='cell'>Zero air CH<sub>4</sub> (ppm):</td><td>{zero_air_ch4_mean}</td>
+                </tr>
+                <tr>
+                    <td class='cell'>H<sub>2</sub>O<sub>2</sub> equivalent (ppb):</td><td>{h2o2_equivalent}</td>
+                    <td class='cell'>H<sub>2</sub>O<sub>2</sub> measured zero (ppb):</td><td>{zero_air_h2o2_mean}</td>
+                    <td></td><td></td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>

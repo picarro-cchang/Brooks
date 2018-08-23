@@ -1,0 +1,83 @@
+The state of the spectrum controller within a scheme is completely defined by:
+
+SPECT_CNTRL_ACTIVE_SCHEME_REGISTER  Table from which current scheme is taken
+SPECT_CNTRL_SCHEME_ITER_REGISTER    Scheme iteration number
+SPECT_CNTRL_SCHEME_ROW_REGISTER     Row number within active scheme
+SPECT_CNTRL_DWELL_COUNT_REGISTER    Dwell count within scheme row
+
+We need to validate the values lie in the ranges appropriate for the scheme using
+1. SCHEME_ITER < numRepeats[ACTIVE_SCHEME]
+2. SCHEME_ROW  < numRows[ACTIVE_SCHEME]
+3. DWELL_COUNT < dwell of SCHEME_ROW of ACTIVE_SCHEME
+
+Replace any register value which is out of range by zero.
+
+Look up the scheme to calculate:
+    Which laser to use (virtual and actual)
+    Subscheme Id
+    Ringdown threshold (or use register value)
+    WLM angle to lock laser
+    
+Read (from registers):
+    Ambient pressure
+    Cavity pressure
+    Etalon temperature
+    
+    Temperature of selected laser
+    Coarse current of selected laser
+
+Get virtual laser settings
+
+Calculate WLM angle corrected for etalon temperature and ambient pressure. Use
+virtual laser settings to find ratio multipliers for locking.
+
+Write a function for determining all of the above quantities in readiness for a ringdown.    
+    
+On receiving a ringdown occured interrupt:
+    If this was a timeout:
+        If in dither mode, go to ramp mode
+        If in ramp mode, increment unsuccessful ringdown count
+        If unsuccessful ringdown count > limit, advance scheme row
+    If this was an abort:
+        Switch to ramp mode
+        Put spectrum controller in paused state
+    If this was a successful ringdown:
+        Record temperature of laser again, in case it changed while waiting
+        If allowed, switch to dither mode
+    
+On receiving an acquisition done interrupt:
+If this was an abort:
+    Switch to ramp mode
+    Put spectrum controller in paused state
+
+Otherwise, this was a successful ringdown:
+    Reset unsuccessful ringdown count
+    advance the dwell count
+    Look up laser information and laser temperature and select these appropriately
+    Calculate all necessary quantities and load them into the appropriate registers
+        Save the ringdown parameter values.
+    Post the startRdCycle semaphore
+
+NEED A WAY OF SIGNALLING THAT A SCHEME HAS ENDED, EVEN IF THE LAST SCHEME ROW DOES NOT RESULT IN SUCCESSFUL 
+RINGDOWNS. The switch between schemes should be evident to something which is just listening to the ringdown 
+results queue.
+
+For compatibility with Silverstone schemes, the most significant bit of the subscheme ID is an increment flag
+which has the property that a "count" register is incremented on the first ringdown of a scheme row which has
+this flag set.
+    
+    
+SPECT_CNTRL_STATE_REGISTER         State of spectrum controller
+SPECT_CNTRL_IdleState              Spectrum acquisition inactive
+SPECT_CNTRL_ContinuousState        Continuous acquisition with fixed parameters
+SPECT_CNTRL_SchemingSingleState    Executing a scheme, stop at end of scheme
+SPECT_CNTRL_SchemingMultipleState  Executing a scheme, and proceed with next
+SPECT_CNTRL_SequencingState        Executing a scheme sequence
+SPECT_CNTRL_PausedState            Pause spectrum acquisition without resetting scheme pointers
+
+SPECT_CNTRL_ACTIVE_SCHEME_REGISTER  Table from which current scheme is taken
+SPECT_CNTRL_NEXT_SCHEME_REGISTER    Table from which next scheme is taken
+SPECT_CNTRL_SCHEME_ITER_REGISTER    Scheme iteration number
+SPECT_CNTRL_SCHEME_ROW_REGISTER     Row number within active scheme
+SPECT_CNTRL_DWELL_COUNT_REGISTER    Dwell count within scheme row
+
