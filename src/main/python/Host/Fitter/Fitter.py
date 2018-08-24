@@ -865,7 +865,7 @@ class FitViewer(wx.Frame):
                 self.modelList.Check(i,self.checkList[i])
 
             if len(analysis.xData) == 0:
-                Log('No xData; skipping rest of model analysis', Level=0)
+                Log('No xData; skipping rest of model analysis', Level=1)
                 return
 
             analysis.computeResiduals(self.anStage)
