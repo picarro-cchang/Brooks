@@ -257,7 +257,7 @@ if sys.platform == "linux2":
 
     def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
         #launch the process...
-        Log("Launching application", dict(appName=appName), 1)
+        Log("Launching application", dict(appName=appName), Level=0)
         argList = [exeName]
         for arg in exeArgs[1:]:
             argList += shlex.split(arg)
