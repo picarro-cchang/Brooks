@@ -323,8 +323,8 @@ class SpectrumCollector(object):
             else:
                 print("Restart False")
                 Log("Restart request to supervisor not sent")
+        Log("Spectrum Collector RPC handler shut down")
 
-            Log("Spectrum Collector RPC handler shut down")
 
     def getSpectralDataPoint(self, timeToRetry, timeout = 10):
         """Pops rdData out of the local ringdown queue and returns it. If there are no ringdowns
