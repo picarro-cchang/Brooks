@@ -38,6 +38,7 @@ from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.SpectrumCollector.Sequencer import Sequencer
@@ -653,8 +654,5 @@ if __name__ == "__main__":
         Log("Exiting program")
     except Exception:
         LogExc("Unhandled exception in SpectrumCollector", Level=3)
-        Log("Requesting restart from supervisor")
-        # Establish the RPC port
-        supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
-        # Request the restart
-        supervisor.RestartApplications(APP_NAME, True)
+        # Request a restart from Supervisor via RPC call
+        RequestRestart(APP_NAME)
