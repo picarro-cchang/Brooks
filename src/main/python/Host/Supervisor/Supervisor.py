@@ -257,7 +257,7 @@ if sys.platform == "linux2":
 
     def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
         #launch the process...
-        Log("Launching application", dict(appName=appName), Level=0)
+        Log("Launching application: %s" % appName, Level=0)
         argList = [exeName]
         for arg in exeArgs[1:]:
             argList += shlex.split(arg)
@@ -623,7 +623,7 @@ class App(object):
                     self.CheckFIFO() #should be quick since the Rx timeout is only when the dispatcher has responded, and if it has the Ping should work fine.
                     #only gets here if the FIFO responded
                     appStarted = True
-                    Log("Application start confirmed", self._AppName, Level = 1)
+                    Log("Application start confirmed", self._AppName, Level = 0)
                     break
                 except AppErr, E:
                     #Just sucking it up since we're waiting for the app to start and we do expect errors.
