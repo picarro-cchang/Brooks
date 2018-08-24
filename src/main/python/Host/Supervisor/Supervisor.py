@@ -1261,7 +1261,7 @@ class Supervisor(object):
     def RPC_RestartApplications(self, AppName, RestartDependants):
         Log("RestartApplications request received via RPC",
             dict(Client=self.RPCServer.CurrentCmd_ClientName),
-            Level=2)
+            Level=0)
         try:
             self.RestartApp(AppName, RestartDependants)
         except Exception, e:

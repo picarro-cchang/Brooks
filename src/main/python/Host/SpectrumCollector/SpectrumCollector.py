@@ -318,11 +318,9 @@ class SpectrumCollector(object):
             # Request a restart from Supervisor via RPC call
             restart = RequestRestart(APP_NAME)
             if restart.requestRestart(APP_NAME) is True:
-                print("Restart True")
-                Log("Restart request to supervisor sent")
+                Log("Restart request to supervisor sent", Level=0)
             else:
-                print("Restart False")
-                Log("Restart request to supervisor not sent")
+                Log("Restart request to supervisor not sent", Level=2)
         Log("Spectrum Collector RPC handler shut down")
 
 

@@ -12,7 +12,7 @@ class RequestRestart(object):
 
     def requestRestart(self, APP_NAME):
         try:
-            Log("%s is requesting a restart from Supervisor" % APP_NAME)
+            Log("%s is requesting a restart from Supervisor" % APP_NAME, Level=0)
             self.supervisor.RestartApplications(APP_NAME, True)
             self.status = True
         except:
