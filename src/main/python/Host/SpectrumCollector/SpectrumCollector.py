@@ -655,4 +655,10 @@ if __name__ == "__main__":
     except Exception:
         LogExc("Unhandled exception in SpectrumCollector", Level=3)
         # Request a restart from Supervisor via RPC call
-        RequestRestart(APP_NAME)
+        restart = RequestRestart(APP_NAME)
+        if restart.requestRestart(APP_NAME) is True:
+            print("Restart True")
+            Log("Restart request to supervisor sent")
+        else:
+            print("Restart False")
+            Log("Restart request to supervisor not sent")

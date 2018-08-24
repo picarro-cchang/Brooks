@@ -8,7 +8,14 @@ class RequestRestart(object):
         self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
                                                      IsDontCareConnection=False)
         self.APP_NAME = APP_NAME
+        self.status = None
 
     def requestRestart(self, APP_NAME):
-        Log("%s is requesting a restart from Supervisor" % APP_NAME)
-        self.supervisor.RestartApplications(APP_NAME, True)
+        try:
+            Log("%s is requesting a restart from Supervisor" % APP_NAME)
+            self.supervisor.RestartApplications(APP_NAME, True)
+            self.status = True
+        except:
+            self.status = False
+        return self.status
+
