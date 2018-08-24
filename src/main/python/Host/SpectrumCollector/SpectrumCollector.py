@@ -35,7 +35,7 @@ from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import getTimestamp
@@ -653,3 +653,8 @@ if __name__ == "__main__":
         Log("Exiting program")
     except Exception:
         LogExc("Unhandled exception in SpectrumCollector", Level=3)
+        Log("Requesting restart from supervisor")
+        # Establish the RPC port
+        supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+        # Request the restart
+        supervisor.RestartApplications(APP_NAME, True)
