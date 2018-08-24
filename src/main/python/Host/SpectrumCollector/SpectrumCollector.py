@@ -208,112 +208,123 @@ class SpectrumCollector(object):
         self.fsrModeBoundaries = {}
 
     def run(self):
-        self.sequencer = Sequencer()
-        # start the rpc server on another thread...
-        self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
-        self.rpcThread.start()
-        # start the sequencer on another thread
-        self.sequencer.runInThread()
-        # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
-        lastCount = -1
-        thisCount = -1
-        MAXLOOPS = 500
-        loops = 0
+        try:
+            self.sequencer = Sequencer()
+            # start the rpc server on another thread...
+            self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
+            self.rpcThread.start()
+            # start the sequencer on another thread
+            self.sequencer.runInThread()
+            # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
+            lastCount = -1
+            thisCount = -1
+            MAXLOOPS = 500
+            loops = 0
 
-        endOfSpectrum = False
-        endOfScheme = False
-        spectraInScheme = []
-        self.prepareForNewSpectrum()
+            endOfSpectrum = False
+            endOfScheme = False
+            spectraInScheme = []
+            self.prepareForNewSpectrum()
 
-        while not self._shutdownRequested:
-            #Pull a spectral point from the RD queue...
-            try:
-                rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None:
-                    time.sleep(0.5)
-                    loops = 0
-                    continue
-                now = TimeStamp()
-                if self.rdQueueGetLastTime != 0:
-                    rtt = now - self.rdQueueGetLastTime
-                    if rtt > 10:
-                        Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))
-                    if rtt > self.maxRdQueueGetRtt:
-                        Log("Maximum Processed Ringdowns loop RTT so far: %.3f" % (self.maxRdQueueGetRtt,))
-                        self.maxRdQueueGetRtt = rtt
-                self.rdQueueGetLastTime = now
+            while not self._shutdownRequested:
+                #Pull a spectral point from the RD queue...
+                try:
+                    rdData = self.getSpectralDataPoint(timeToRetry=0.5)
+                    if rdData is None:
+                        time.sleep(0.5)
+                        loops = 0
+                        continue
+                    now = TimeStamp()
+                    if self.rdQueueGetLastTime != 0:
+                        rtt = now - self.rdQueueGetLastTime
+                        if rtt > 10:
+                            Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))
+                        if rtt > self.maxRdQueueGetRtt:
+                            Log("Maximum Processed Ringdowns loop RTT so far: %.3f" % (self.maxRdQueueGetRtt,))
+                            self.maxRdQueueGetRtt = rtt
+                    self.rdQueueGetLastTime = now
 
-                #localRdTime = Driver.hostGetTicks()
-                thisSubSchemeID = rdData.subschemeId
-                self.lastSpectrumID = self.spectrumID
-                self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
-                self.lastSchemeVersion = self.schemeVersion
-                self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
-                thisCount = rdData.count
+                    #localRdTime = Driver.hostGetTicks()
+                    thisSubSchemeID = rdData.subschemeId
+                    self.lastSpectrumID = self.spectrumID
+                    self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
+                    self.lastSchemeVersion = self.schemeVersion
+                    self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
+                    thisCount = rdData.count
 
-                # The schemeCount is changed when a SCHEME starts, i.e. it tracks entire schemes, including the
-                #  repeat count. We make an HDF5 file each time a scheme is run
-                schemeStatus = rdData.status
-                schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
+                    # The schemeCount is changed when a SCHEME starts, i.e. it tracks entire schemes, including the
+                    #  repeat count. We make an HDF5 file each time a scheme is run
+                    schemeStatus = rdData.status
+                    schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
 
-                if self.lastSchemeCount != schemeCount:
-                    if self.lastSchemeCount >= 0:
+                    if self.lastSchemeCount != schemeCount:
+                        if self.lastSchemeCount >= 0:
+                            endOfSpectrum = True
+                            endOfScheme = True
+                        self.lastSchemeCount = schemeCount
+                    else:
+                        self.lastSchemeTable = self.schemeTable
+                        self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
+                        self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable, None)
+
+                    # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file),
+                    #  we know a new SPECTRUM is coming and we have to process whatever we currently have.
+                    if thisCount != lastCount:
+                        # We "push back" the last data point so that it is fetched again next time as part
+                        #  of the next spectrum
+                        self.tempRdDataBuffer = rdData
+                        endOfSpectrum = True
+                    else: #still collecting the same spectrum
+                        if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
+                            self.appendRingdownToSpectrum(rdData)
+
+                except SpectrumCollectionTimeout:
+                    if self.numPts > 0:
+                        Log("Closing spectrum and scheme due to data timeout (count = %d)" % thisCount, Level = 0)
                         endOfSpectrum = True
                         endOfScheme = True
-                    self.lastSchemeCount = schemeCount
-                else:
-                    self.lastSchemeTable = self.schemeTable
-                    self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
-                    self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable, None)
 
-                # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file),
-                #  we know a new SPECTRUM is coming and we have to process whatever we currently have.
-                if thisCount != lastCount:
-                    # We "push back" the last data point so that it is fetched again next time as part
-                    #  of the next spectrum
-                    self.tempRdDataBuffer = rdData
-                    endOfSpectrum = True
-                else: #still collecting the same spectrum
-                    if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
-                        self.appendRingdownToSpectrum(rdData)
+                # A spectrum is composed of one or more sub-schemes.
+                # As each spectrum is collected, broadcast them to the fitters, collecting them
+                # into spectraInScheme as the code works its way through a scheme.
+                # After all the sub-schemes of the scheme have been collected, save the
+                # scheme's worth of RD and sensor data to a RD*.h5 file for reprocessing.
+                #
+                # If the *.h5 is reprocessed, the fitter will split it into individual
+                # spectra and fit them in order.
+                #
+                if endOfSpectrum:
+                    spectrum = self.packageSpectrum()
+                    self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))
+                    spectraInScheme.append(spectrum)
+                    if endOfScheme:
+                        if self.enableSpectrumFiles and spectraInScheme:
+                            fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
+                            self.writeOut(fileName, spectraInScheme)
+                            self.lastSchemeCount = -1
+                        endOfScheme = False
+                        self.schemesUsed = {}
+                        spectraInScheme = []
+                    endOfSpectrum = False
+                    self.prepareForNewSpectrum()
 
-            except SpectrumCollectionTimeout:
-                if self.numPts > 0:
-                    Log("Closing spectrum and scheme due to data timeout (count = %d)" % thisCount, Level = 0)
-                    endOfSpectrum = True
-                    endOfScheme = True
+                lastCount = thisCount
+                loops += 1
+                if loops >= MAXLOOPS:
+                    loops = 0
+                    time.sleep(0.01)
+        except Exception:
+            LogExc("Unhandled exception in SpectrumCollector main loop", Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                print("Restart True")
+                Log("Restart request to supervisor sent")
+            else:
+                print("Restart False")
+                Log("Restart request to supervisor not sent")
 
-            # A spectrum is composed of one or more sub-schemes.
-            # As each spectrum is collected, broadcast them to the fitters, collecting them
-            # into spectraInScheme as the code works its way through a scheme.
-            # After all the sub-schemes of the scheme have been collected, save the
-            # scheme's worth of RD and sensor data to a RD*.h5 file for reprocessing.
-            #
-            # If the *.h5 is reprocessed, the fitter will split it into individual
-            # spectra and fit them in order.
-            #
-            if endOfSpectrum:
-                spectrum = self.packageSpectrum()
-                self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))
-                spectraInScheme.append(spectrum)
-                if endOfScheme:
-                    if self.enableSpectrumFiles and spectraInScheme:
-                        fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
-                        self.writeOut(fileName, spectraInScheme)
-                        self.lastSchemeCount = -1
-                    endOfScheme = False
-                    self.schemesUsed = {}
-                    spectraInScheme = []
-                endOfSpectrum = False
-                self.prepareForNewSpectrum()
-
-            lastCount = thisCount
-            loops += 1
-            if loops >= MAXLOOPS:
-                loops = 0
-                time.sleep(0.01)
-
-        Log("Spectrum Collector RPC handler shut down")
+            Log("Spectrum Collector RPC handler shut down")
 
     def getSpectralDataPoint(self, timeToRetry, timeout = 10):
         """Pops rdData out of the local ringdown queue and returns it. If there are no ringdowns
@@ -654,11 +665,3 @@ if __name__ == "__main__":
         Log("Exiting program")
     except Exception:
         LogExc("Unhandled exception in SpectrumCollector", Level=3)
-        # Request a restart from Supervisor via RPC call
-        restart = RequestRestart(APP_NAME)
-        if restart.requestRestart(APP_NAME) is True:
-            print("Restart True")
-            Log("Restart request to supervisor sent")
-        else:
-            print("Restart False")
-            Log("Restart request to supervisor not sent")
