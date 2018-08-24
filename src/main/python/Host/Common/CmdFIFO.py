@@ -862,39 +862,38 @@ class CmdFIFOServerProxy(object):
             elif modeOverride == "V": return "OK"
             else: return "CB"
         else:
-            for _ in range(2):
-                # Perform command and re-establish connection if necessary
-                if self.setup:
-                    try:
-                        return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
-                    #
-                    #Handle these exceptions later!!!
-                    #
-                    except Pyro4.errors.TimeoutError,e:
-                        #raise TimeoutError("%s" % e)
-                        pass
-                    except Pyro4.errors.ConnectionClosedError:
-                        pass
-                        # print "Retrying proxy call: %s" % (dottedMethodName,)
-                    except Pyro4.errors.CommunicationError,e:
-                        #raise CommunicationError("%s" % e)
-                        pass
-                    # ClaimInterfaceError is not an attribute of Pyro4, but the applyRemoteFunction
-                    # sometimes attempts to pass _Method.__call__ to claim a USB interface via RPC
-                    # then choke and throw multiple unhandled exceptions when Driver is down.
-                    except Exception,e:
-                        if "ClaimInterfaceError" in str(e):
-                            #raise ClaimInterfaceError("%s" % e)
-                            pass
-                        elif "claimInterface" in str(e):
-                            #raise ClaimInterfaceError("%s" % e)
-                            pass
-                time.sleep(0.5)
+            # Perform command and re-establish connection if necessary
+            if self.setup:
                 try:
-                    self.setupRemoteObject()
-                except Pyro4.errors.ProtocolError:
-                    self.setup = False
-                    raise RemoteException("Remote cannot be reached for RPC")
+                    return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                #
+                #Handle these exceptions later!!!
+                #
+                except Pyro4.errors.TimeoutError,e:
+                    #raise TimeoutError("%s" % e)
+                    pass
+                except Pyro4.errors.ConnectionClosedError:
+                    pass
+                    # print "Retrying proxy call: %s" % (dottedMethodName,)
+                except Pyro4.errors.CommunicationError,e:
+                    #raise CommunicationError("%s" % e)
+                    pass
+                # ClaimInterfaceError is not an attribute of Pyro4, but the applyRemoteFunction
+                # sometimes attempts to pass _Method.__call__ to claim a USB interface via RPC
+                # then choke and throw multiple unhandled exceptions when Driver is down.
+                except Exception,e:
+                    if "ClaimInterfaceError" in str(e):
+                        #raise ClaimInterfaceError("%s" % e)
+                        pass
+                    elif "claimInterface" in str(e):
+                        #raise ClaimInterfaceError("%s" % e)
+                        pass
+            time.sleep(0.5)
+            try:
+                self.setupRemoteObject()
+            except Pyro4.errors.ProtocolError:
+                self.setup = False
+                raise RemoteException("Remote cannot be reached for RPC")
 
     def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
         """Sets how the client would like a registered server function to behave.
