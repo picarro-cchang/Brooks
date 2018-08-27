@@ -48,7 +48,9 @@ elif sys.platform == "linux2":
             pidFilePath = "/run/user/" + str(os.getuid()) + "/"
             self.name = pidFilePath + name
             if os.path.exists(self.name):
-                pid = open(self.name,"r").read().strip()
+                #pid = open(self.name,"r").read().strip()
+                with open(self.name, "r") as pid:
+                    pid.read().strip()
                 pidRunning = commands.getoutput('ls /proc | grep %s' % pid)
                 if pidRunning:
                     self.lasterror = True
@@ -57,9 +59,11 @@ elif sys.platform == "linux2":
             else:
                 self.lasterror = False
             if not self.lasterror:
-                fp = open(self.name,'w')
-                fp.write(str(os.getpid()))
-                fp.close()
+                #fp = open(self.name,'w')
+                #fp.write(str(os.getpid()))
+                #fp.close()
+                with open(self.name, "w") as fp:
+                    fp.write(str(os.getpid()))
 
         def alreadyrunning(self):
             return self.lasterror
@@ -67,7 +71,7 @@ elif sys.platform == "linux2":
         def __del__(self):
             if not self.lasterror:
                 if os.path.exists(self.name):
-                    os.unlink(self.name)                
+                    os.unlink(self.name)
 
 if __name__ == "__main__":
     myapp = SingleInstance("Example")
