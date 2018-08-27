@@ -1779,7 +1779,7 @@ if __name__ == "__main__":
     app = wx.App(False)
     app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     configFile = HandleCommandSwitches()
-    Log("Application started: %s" % APP_NAME, Level=0)
+    Log("%s started" % APP_NAME, Level=0)
     frame = QuickGui(configFile)
     app.MainLoop()
     Log("Exiting program")

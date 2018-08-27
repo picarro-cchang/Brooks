@@ -657,7 +657,7 @@ if __name__ == "__main__":
     try:
         configFile, options = handleCommandSwitches()
         spCollectorApp = SpectrumCollector(configFile)
-        Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+        Log("%s started" % APP_NAME, Level=0)
         spCollectorApp.run()
         # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
         Log("Exiting program")
