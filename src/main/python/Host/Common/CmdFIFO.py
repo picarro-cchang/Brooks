@@ -888,6 +888,9 @@ class CmdFIFOServerProxy(object):
                     elif "claimInterface" in str(e):
                         #raise ClaimInterfaceError("%s" % e)
                         pass
+            # Give the Pyro4 socket time to set itself up. Removing this tends
+            # to give unpredictable behavior when establishing remote objects
+            time.sleep(0.5)
             try:
                 self.setupRemoteObject()
             except Pyro4.errors.ProtocolError:
