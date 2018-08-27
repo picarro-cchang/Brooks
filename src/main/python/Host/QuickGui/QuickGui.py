@@ -187,9 +187,15 @@ class InstStatusPanel(wx.Panel):
         sizer_out.SetSizeHints(self)
 
 
+class GuiApp(wx.App):
+    def OnInit(self):
+        self.frame = QuickGui(configFile, defaultTitle="")
+        self.frame.Show(True)
+        return True
+
+
 class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
-
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS_Data_Viewer',size=(1200,700),
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
 
@@ -425,7 +431,6 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_TIMER, self._OnSessionTimer, self.sessionTimer)
 
         self.session_time = 0
-        self.Show(True)
 
         # The GTK has some graphics artifacts that can only be cleaned up after the
         # initial show event.  One clear example is the wx.ListCtrl automatic focus
@@ -1776,10 +1781,12 @@ def HandleCommandSwitches():
 
 
 if __name__ == "__main__":
-    app = wx.App(False)
-    app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
+    #app = wx.App(False)
+    #app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     configFile = HandleCommandSwitches()
     Log("%s started" % APP_NAME, Level=0)
-    frame = QuickGui(configFile)
+    app = GuiApp(configFile)
     app.MainLoop()
+    #frame = QuickGui(configFile)
+    #app.MainLoop()
     Log("Exiting program")
