@@ -603,10 +603,7 @@ class App(object):
         #self._ProcessHandle = hProcess.handle
         print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (time.strftime("%d-%b-%y %H:%M:%S"),"'%s'" % self._AppName, self.Port, self._ProcessId, pAffinity)
 
-        Log("Application started", Data = dict(App = self._AppName,
-                                               Port = self.Port,
-                                               PID = self._ProcessId,
-                                               Affinity = pAffinity))
+        Log("Application started: %s" % self._AppName, Level=0)
         self._Stat_LaunchCount += 1 #we're tracking launch attempts, not successful launches
 
 
