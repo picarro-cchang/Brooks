@@ -425,6 +425,7 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_TIMER, self._OnSessionTimer, self.sessionTimer)
 
         self.session_time = 0
+        self.Show(True)
 
         # The GTK has some graphics artifacts that can only be cleaned up after the
         # initial show event.  One clear example is the wx.ListCtrl automatic focus
@@ -451,6 +452,7 @@ class QuickGui(wx.Frame):
         self._OnStatDisplay(evt, self.showStat)
         self._OnInstStatDisplay(evt, self.showInstStat)
         self._OnTimer(evt)
+
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
@@ -1777,8 +1779,7 @@ if __name__ == "__main__":
     app = wx.App(False)
     app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
     configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    Log("Application started: %s" % APP_NAME, Level=0)
     frame = QuickGui(configFile)
-    frame.Show()
     app.MainLoop()
     Log("Exiting program")
