@@ -1,12 +1,13 @@
 APP_NAME = "Driver"
 
 import time
-from Host.Driver.Driver import Driver, handleCommandSwitches
+from Host.Driver.Driver import Driver, handleCommandSwitches, main
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
 if __name__ == "__main__":
+    """
     driverApp = SingleInstance("PicarroDriver")
     if driverApp.alreadyrunning():
         Log("Instance of driver us already running",Level=3)
@@ -17,3 +18,5 @@ if __name__ == "__main__":
         d.run()
     Log("Exiting program")
     time.sleep(1)
+    """
+    main()

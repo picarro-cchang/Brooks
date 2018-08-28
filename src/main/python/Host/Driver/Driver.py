@@ -1486,7 +1486,7 @@ def handleCommandSwitches():
         configFile = options["-c"]
     return configFile
 
-if __name__ == "__main__":
+def main():
     driverApp = SingleInstance("PicarroDriver")
     if driverApp.alreadyrunning():
         Log("Instance of driver is already running", Level=3)
@@ -1497,3 +1497,18 @@ if __name__ == "__main__":
         d.run()
     Log("Exiting program")
     time.sleep(1)
+
+if __name__ == "__main__":
+    """
+    driverApp = SingleInstance("PicarroDriver")
+    if driverApp.alreadyrunning():
+        Log("Instance of driver is already running", Level=3)
+    else:
+        configFile = handleCommandSwitches()
+        Log("%s started" % APP_NAME, Level=0)
+        d = Driver(configFile)
+        d.run()
+    Log("Exiting program")
+    time.sleep(1)
+    """
+    main()
