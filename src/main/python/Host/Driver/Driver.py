@@ -1500,15 +1500,9 @@ def main():
 
 if __name__ == "__main__":
     """
-    driverApp = SingleInstance("PicarroDriver")
-    if driverApp.alreadyrunning():
-        Log("Instance of driver is already running", Level=3)
-    else:
-        configFile = handleCommandSwitches()
-        Log("%s started" % APP_NAME, Level=0)
-        d = Driver(configFile)
-        d.run()
-    Log("Exiting program")
-    time.sleep(1)
+    The main function shall be used in all processes. This way we can
+    import it in the pydCaller, and ensure that all processes are launched
+    the same way without having to edit both files any time we want to make
+    a change.
     """
     main()
