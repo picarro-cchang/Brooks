@@ -19,6 +19,7 @@ import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.AppRequestRestart import RequestRestart
 import threading
 
