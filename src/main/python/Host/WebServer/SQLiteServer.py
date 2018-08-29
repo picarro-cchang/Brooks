@@ -11,6 +11,9 @@ from flask_security import auth_token_required, Security, utils, current_user
 from DataBaseModel import pds
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import datetimeToTimestamp
+from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
+from Host.Common.AppRequestRestart import RequestRestart
 
 _DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
 
@@ -31,10 +34,12 @@ app.config['SECRET_KEY'] = 'picarro'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
 app.config['SECURITY_PASSWORD_SALT'] = 'xxxxxxxxxxxxxxxxxx'
 
-    
+
 class SQLiteServer(object):
     def __init__(self, dummy=False):
         self.user_login_attempts = {"username":None, "attempts":0}
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         if dummy:   # used for unit testing
             import DummyDataBase
             self.ds = DummyDataBase.DummyDataBase()
@@ -601,8 +606,21 @@ class UsersAPI(Resource):
         return db_server.process_request_dict(self.post_parser.parse_args())
         
 
-if __name__ == '__main__':
+def main():
     configFile = HandleCommandSwitches()
     db_server.load_config_from_ini(configFile)
-    db_server.run()
-    app.run(**db_server.setup)
+    try:
+        db_server.run()
+        app.run(**db_server.setup)
+    except Exception, e:
+        LogExc("Unhandled exception in %s" % APP_NAME, Level=3)
+        # Request a restart from Supervisor via RPC call
+        restart = RequestRestart(APP_NAME)
+        if restart.requestRestart(APP_NAME) is True:
+            Log("Restart request to supervisor sent", Level=0)
+        else:
+            Log("Restart request to supervisor not sent", Level=2)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,7 @@
-from Host.Driver.Driver import main
+from Host.WebServer.SQLiteServer import main
 from Host.Common.EventManagerProxy import EventManagerProxy_Init
 
-APP_NAME = "Driver"
+APP_NAME = "SQLiteServer"
 EventManagerProxy_Init(APP_NAME)
 
 if __name__ == "__main__":
