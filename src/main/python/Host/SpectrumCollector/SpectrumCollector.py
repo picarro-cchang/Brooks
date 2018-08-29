@@ -314,7 +314,7 @@ class SpectrumCollector(object):
                     loops = 0
                     time.sleep(0.01)
         except Exception:
-            LogExc("Unhandled exception in SpectrumCollector main loop", Level=3)
+            LogExc("Unhandled exception in %s main loop: %s" % APP_NAME % e, Level=3)
             # Request a restart from Supervisor via RPC call
             restart = RequestRestart(APP_NAME)
             if restart.requestRestart(APP_NAME) is True:
@@ -652,7 +652,7 @@ def handleCommandSwitches():
         configFile = options["-c"]
     return configFile, options
 
-if __name__ == "__main__":
+def main():
     multiprocessing.freeze_support()
     try:
         configFile, options = handleCommandSwitches()
@@ -661,5 +661,8 @@ if __name__ == "__main__":
         spCollectorApp.run()
         # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
         Log("Exiting program")
-    except Exception:
-        LogExc("Unhandled exception in SpectrumCollector", Level=3)
+    except Exception, e:
+        LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
+
+if __name__ == "__main__":
+    main()
