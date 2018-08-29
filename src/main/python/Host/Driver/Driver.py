@@ -1379,6 +1379,12 @@ class Driver(SharedTypes.Singleton):
                 type,value,trace = sys.exc_info()
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
         finally:
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
