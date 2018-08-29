@@ -1055,7 +1055,8 @@ def main():
         if restart.requestRestart(APP_NAME) is True:
             Log("Restart request to supervisor sent", Level=0)
         else:
-            Log("Restart request to supervisor not sent", Level=2
+            Log("Restart request to supervisor not sent", Level=2)
+
 
 if __name__ == "__main__":
     main()
