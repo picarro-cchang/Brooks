@@ -9,6 +9,7 @@ from flask import abort, Flask, make_response, Response, request
 from flask_restplus import Api, reqparse, Resource, inputs
 from flask_security import auth_token_required, Security, utils, current_user
 from DataBaseModel import pds
+from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import datetimeToTimestamp
 from Host.Common.EventManagerProxy import Log, LogExc
