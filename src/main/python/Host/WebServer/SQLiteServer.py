@@ -16,6 +16,7 @@ from Host.Common.timestamp import datetimeToTimestamp
 from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 
 _DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
 
@@ -609,22 +610,26 @@ class UsersAPI(Resource):
         
 
 def main():
-    configFile = HandleCommandSwitches()
-    db_server.load_config_from_ini(configFile)
-    try:
-        db_server.run()
-        app.run(**db_server.setup)
-    except Exception, e:
-        LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
-        # Request a restart from Supervisor via RPC call
-        restart = RequestRestart(APP_NAME)
-        if restart.requestRestart(APP_NAME) is True:
-            Log("Restart request to supervisor sent", Level=0)
-        else:
-            Log("Restart request to supervisor not sent", Level=2)
-        # Exit, in case the server running, but the app is not
-        # We don't want to get stuck in a restart loop here
-        exit(1)
+    my_instance = SingleInstance("SQLiteServer")
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        configFile = HandleCommandSwitches()
+        db_server.load_config_from_ini(configFile)
+        try:
+            db_server.run()
+            app.run(**db_server.setup)
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+            # Exit, in case the server running, but the app is not
+            # We don't want to get stuck in a restart loop here
+            exit(1)
 
 
 if __name__ == '__main__':
