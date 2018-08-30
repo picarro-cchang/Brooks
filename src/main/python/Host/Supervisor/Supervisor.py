@@ -1811,7 +1811,7 @@ def main():
         sys.stdout.flush()
         #x = prompt_wait("At final!")
 
-def main():
+def start():
     # Run iniCoordinator to verify the configurations of all applications
     configFile, printIniLog = GetConfigFileAndIniLog()
     try:
@@ -1830,4 +1830,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    start()
