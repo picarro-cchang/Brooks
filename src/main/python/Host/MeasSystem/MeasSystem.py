@@ -68,6 +68,7 @@ from Host.Common.Broadcaster import Broadcaster
 from Host.Common.InstErrors import INST_ERROR_MEAS_SYS
 from Host.Common.EventManagerProxy import *
 from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
 
 STATE__UNDEFINED = -100
