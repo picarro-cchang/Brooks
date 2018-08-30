@@ -1237,9 +1237,9 @@ def HandleCommandSwitches():
 
 def main():
     app = wx.PySimpleApp()
-    configFile, useViewer, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = FitViewer(configFile,useViewer,options)
+    configFile, useViewer, options=HandleCommandSwitches()
+    Log("%s started." % APP_NAME, Level=0)
+    frame = FitViewer(configFile, useViewer, options)
     app.MainLoop()
     Log("Exiting program")
 
