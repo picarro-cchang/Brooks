@@ -313,8 +313,8 @@ class SpectrumCollector(object):
                 if loops >= MAXLOOPS:
                     loops = 0
                     time.sleep(0.01)
-        except Exception:
-            LogExc("Unhandled exception in %s main loop: %s" % APP_NAME % e, Level=3)
+        except Exception, e:
+            LogExc("Unhandled exception in %s main loop: %s" % (APP_NAME, e), Level=3)
             # Request a restart from Supervisor via RPC call
             restart = RequestRestart(APP_NAME)
             if restart.requestRestart(APP_NAME) is True:
