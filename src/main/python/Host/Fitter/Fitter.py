@@ -1237,16 +1237,16 @@ def HandleCommandSwitches():
     return (configFile, useViewer, options)
 
 def main():
-    my_instance = SingleInstance(APP_NAME)
-    if my_instance.alreadyrunning():
-        Log("Instance of %s already running" % APP_NAME, Level=2)
-    else:
-        app = wx.PySimpleApp()
-        configFile, useViewer, options=HandleCommandSwitches()
-        Log("%s started." % APP_NAME, Level=0)
-        frame = FitViewer(configFile, useViewer, options)
-        app.MainLoop()
-        Log("Exiting program")
+    #my_instance = SingleInstance(APP_NAME)
+    #if my_instance.alreadyrunning():
+    #    Log("Instance of %s already running" % APP_NAME, Level=2)
+    #else:
+    app = wx.PySimpleApp()
+    configFile, useViewer, options=HandleCommandSwitches()
+    Log("%s started." % APP_NAME, Level=0)
+    frame = FitViewer(configFile, useViewer, options)
+    app.MainLoop()
+    Log("Exiting program")
 
 if __name__ == "__main__":
     main()
