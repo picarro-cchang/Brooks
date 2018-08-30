@@ -1789,7 +1789,7 @@ def main():
         #Now get to the actual program...
         if performDuties:
             # Grab the mutex, as we should be the only one up at this stage
-            supervisorApp = SingleInstance("PicarroSupervisor")
+            supervisorApp = SingleInstance(APP_NAME)
             if supervisorApp.alreadyrunning():
                 sys.exit(0)
             try:
@@ -1811,7 +1811,7 @@ def main():
         sys.stdout.flush()
         #x = prompt_wait("At final!")
 
-if __name__ == "__main__":
+def main():
     # Run iniCoordinator to verify the configurations of all applications
     configFile, printIniLog = GetConfigFileAndIniLog()
     try:
@@ -1822,8 +1822,12 @@ if __name__ == "__main__":
         # tbMsg = BetterTraceback.get_advanced_traceback()
         tbMsg = traceback.format_exc()
         Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = tbMsg)
+            Data=dict(Note="<See verbose for debug info>"),
+            Level=3,
+            Verbose=tbMsg)
         print tbMsg
         Log("Exiting program")
+
+
+if __name__ == "__main__":
+    main()
