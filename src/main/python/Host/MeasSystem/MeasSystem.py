@@ -625,31 +625,35 @@ def ExecuteTest(MS):
     #MS.Disable()
 
 def main():
-    #Get and handle the command line options...
-    configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, Level=0)
-    try:
-        app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
-        if test:
-            threading.Timer(2, ExecuteTest(app)).start()
-        app.Start()
-    except:
-        if __debug__:
-            raise
-        else:
-            Log("Unhandled exception trapped by last chance handler",
-                Data=dict(Note="<See verbose for debug info>"),
-                Level=3,
-                Verbose=traceback.format_exc())
-            # Request a restart from Supervisor via RPC call
-            restart = RequestRestart(APP_NAME)
-            if restart.requestRestart(APP_NAME) is True:
-                Log("Restart request to supervisor sent", Level=0)
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        #Get and handle the command line options...
+        configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
+            if test:
+                threading.Timer(2, ExecuteTest(app)).start()
+            app.Start()
+        except:
+            if __debug__:
+                raise
             else:
-                Log("Restart request to supervisor not sent", Level=2)
-    finally:
-        Log("Exiting program")
-        sys.stdout.flush()
+                Log("Unhandled exception trapped by last chance handler",
+                    Data=dict(Note="<See verbose for debug info>"),
+                    Level=3,
+                    Verbose=traceback.format_exc())
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
+        finally:
+            Log("Exiting program")
+            sys.stdout.flush()
 
 
 if __name__ == "__main__":
