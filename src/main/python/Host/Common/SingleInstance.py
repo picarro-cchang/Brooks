@@ -24,7 +24,12 @@ class SingleInstance:
     def __init__(self, name):
         if "pid" not in name:
             name = name + ".pid"
-        pidFilePath = "/run/user/" + str(os.getuid()) + "/"
+        pidFilePath = "/run/user/" + str(os.getuid()) + "/picarro/"
+        if not os.path.exists(pidFilePath):
+            try:
+                os.mkdir(pidFilePath, 0775)
+            except OSError:
+                print("Cannot create directory: %s" % pidFilePath)
         self.name = pidFilePath + name
         if os.path.exists(self.name):
             with open(self.name, "r") as pidFile:
