@@ -1493,7 +1493,7 @@ def handleCommandSwitches():
     return configFile
 
 def main():
-    driverApp = SingleInstance("PicarroDriver")
+    driverApp = SingleInstance(APP_NAME)
     if driverApp.alreadyrunning():
         Log("Instance of driver is already running", Level=3)
     else:

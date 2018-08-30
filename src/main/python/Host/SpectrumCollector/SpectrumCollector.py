@@ -39,6 +39,7 @@ from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.SpectrumCollector.Sequencer import Sequencer
@@ -653,16 +654,20 @@ def handleCommandSwitches():
     return configFile, options
 
 def main():
-    multiprocessing.freeze_support()
-    try:
-        configFile, options = handleCommandSwitches()
-        spCollectorApp = SpectrumCollector(configFile)
-        Log("%s started" % APP_NAME, Level=0)
-        spCollectorApp.run()
-        # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
-        Log("Exiting program")
-    except Exception, e:
-        LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        multiprocessing.freeze_support()
+        try:
+            configFile, options = handleCommandSwitches()
+            spCollectorApp = SpectrumCollector(configFile)
+            Log("%s started" % APP_NAME, Level=0)
+            spCollectorApp.run()
+            # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
+            Log("Exiting program")
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
 
 if __name__ == "__main__":
     main()

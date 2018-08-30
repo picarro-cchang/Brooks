@@ -612,7 +612,7 @@ class UsersAPI(Resource):
         
 
 def main():
-    my_instance = SingleInstance("SQLiteServer")
+    my_instance = SingleInstance(APP_NAME)
     if my_instance.alreadyrunning():
         Log("Instance of %s already running" % APP_NAME, Level=2)
     else:

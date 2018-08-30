@@ -56,6 +56,7 @@ from Host.Common.WlmCalUtilities import AutoCal
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"):  # we're running compiled with py2exe
@@ -1580,11 +1581,15 @@ def handleCommandSwitches():
     return configFile, virtualMode, opts
 
 def main():
-    configFilename, virtualMode, options = handleCommandSwitches()
-    rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
-    Log("%s started." % APP_NAME, Level=0)
-    rdFreqConvertApp.run()
-    Log("Exiting program")
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        configFilename, virtualMode, options = handleCommandSwitches()
+        rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
+        Log("%s started." % APP_NAME, Level=0)
+        rdFreqConvertApp.run()
+        Log("Exiting program")
 
 
 if __name__ == "__main__":

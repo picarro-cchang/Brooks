@@ -43,6 +43,7 @@ from Host.Common.EventManagerProxy import *
 from Host.Common.timestamp import unixTime
 from Host.Common.S3Uploader import S3Uploader
 from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
@@ -1024,38 +1025,42 @@ def PrintUsage():
     print HELP_STRING
 
 def main():
-    try:
-        #Get and handle the command line options...
-        configFile, test = HandleCommandSwitches()
-        ar = Archiver(configFile)
-        Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-        if test:
-            if sys.platform == "win32":
-                fname = "c:/temp/AADS06wlm.dat"
-            else:
-                fname = "/var/temp/AADS06wlm.dat"
-            seqnum = 0
-            while True:
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            #Get and handle the command line options...
+            configFile, test = HandleCommandSwitches()
+            ar = Archiver(configFile)
+            Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+            if test:
                 if sys.platform == "win32":
-                    tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
+                    fname = "c:/temp/AADS06wlm.dat"
                 else:
-                    tmpName = "/var/temp/seq%07d.dat" % (seqnum,)
-                seqnum += 1
-                shutil.copy2(fname,tmpName)
-                ar.RPC_ArchiveFile("Spectra",tmpName,True)
-                print "%s" % (ar.RPC_GetGroupInfo("Spectra"),)
-                # ar.storageGroups["Spectra"].archiveData(tmpName,removeOriginal=True)
-                time.sleep(0.5)
-        else:
-            ar.startServer()
-    except Exception, e:
-        LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
-        # Request a restart from Supervisor via RPC call
-        restart = RequestRestart(APP_NAME)
-        if restart.requestRestart(APP_NAME) is True:
-            Log("Restart request to supervisor sent", Level=0)
-        else:
-            Log("Restart request to supervisor not sent", Level=2)
+                    fname = "/var/temp/AADS06wlm.dat"
+                seqnum = 0
+                while True:
+                    if sys.platform == "win32":
+                        tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
+                    else:
+                        tmpName = "/var/temp/seq%07d.dat" % (seqnum,)
+                    seqnum += 1
+                    shutil.copy2(fname,tmpName)
+                    ar.RPC_ArchiveFile("Spectra",tmpName,True)
+                    print "%s" % (ar.RPC_GetGroupInfo("Spectra"),)
+                    # ar.storageGroups["Spectra"].archiveData(tmpName,removeOriginal=True)
+                    time.sleep(0.5)
+            else:
+                ar.startServer()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
 
 
 if __name__ == "__main__":

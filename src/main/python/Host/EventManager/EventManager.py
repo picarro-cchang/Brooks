@@ -77,6 +77,8 @@ from Host.Common import SharedTypes #to get the right TCP port to use
 from Host.Common import CmdFIFO
 from Host.Common import Broadcaster
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.EventManagerProxy import Log
 
 if sys.platform == 'win32':
     TimeStamp = time.clock
@@ -639,37 +641,41 @@ def LaunchViewerGUI(EL):
 
     del logViewer, EventManagerGUI
 
-def Main():
-    #General runtime philosophy is dictated by the fact that a wxApp needs to run
-    #on the main thread.  because of this...
-    #  1. Start the logger application on it's own thread
-    #  2. Main thread will wait for the logger to finish
-    #  3. While waiting, give the main thread to the wxApp if needed
-    #  4. Shutting down of the wxApp (to get the main thread back) will be done
-    #     by the wxApp being shut down when the logger exits.
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        #General runtime philosophy is dictated by the fact that a wxApp needs to run
+        #on the main thread.  because of this...
+        #  1. Start the logger application on it's own thread
+        #  2. Main thread will wait for the logger to finish
+        #  3. While waiting, give the main thread to the wxApp if needed
+        #  4. Shutting down of the wxApp (to get the main thread back) will be done
+        #     by the wxApp being shut down when the logger exits.
 
-    showViewer, configFile = HandleCommandSwitches()
+        showViewer, configFile = HandleCommandSwitches()
 
-    #create and kick off the event logging engine...
-    EL = EventLogger(configFile)
-    t = threading.Thread(target = EL.Launch)
-    t.setDaemon(True)
-    t.start()
+        #create and kick off the event logging engine...
+        EL = EventLogger(configFile)
+        t = threading.Thread(target = EL.Launch)
+        t.setDaemon(True)
+        t.start()
 
-    if showViewer:
-        EL.ShowViewer = True
+        if showViewer:
+            EL.ShowViewer = True
 
-    #Now just loop and wait for the logger to shut down (while letting the
-    #viewer app be on the main thread)...
-    while not EL.LoggerStopped:
-        if EL.ShowViewer:
-            if EL.Viewer == None:
-                #Need to start it up. Blocks until GUI exits.
-                LaunchViewerGUI(EL)
-        else:
-            #We shouldn't be showing the viewer.
-            assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
-        time.sleep(1.0)
+        #Now just loop and wait for the logger to shut down (while letting the
+        #viewer app be on the main thread)...
+        while not EL.LoggerStopped:
+            if EL.ShowViewer:
+                if EL.Viewer == None:
+                    #Need to start it up. Blocks until GUI exits.
+                    LaunchViewerGUI(EL)
+            else:
+                #We shouldn't be showing the viewer.
+                assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
+            time.sleep(1.0)
 
 # Viewer started by:
 #   1. command line
@@ -680,4 +686,4 @@ def Main():
 #   3. Logger server stopped
 
 if __name__ == "__main__":
-    Main()
+    main()
