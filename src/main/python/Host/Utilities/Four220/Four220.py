@@ -301,7 +301,7 @@ def main():
     try:
         server.run()
     except Exception, e:
-        LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
+        LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
         # Request a restart from Supervisor via RPC call
         restart = RequestRestart(APP_NAME)
         if restart.requestRestart(APP_NAME) is True:
