@@ -13,15 +13,17 @@ from DataBaseModel import pds
 from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import datetimeToTimestamp
-from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.EventManagerProxy import Log, LogExc, EventManagerProxy_Init
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
+
 
 _DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
 
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
+EventManagerProxy_Init(APP_NAME)
 app = Flask(__name__, static_url_path='', static_folder='')
      
 api = Api(app, prefix='/api/v1.0', doc='/apidoc')

@@ -27,8 +27,8 @@ class SingleInstance:
         pidFilePath = "/run/user/" + str(os.getuid()) + "/"
         self.name = pidFilePath + name
         if os.path.exists(self.name):
-            with open(self.name, "r") as pid:
-                pid.read().strip()
+            with open(self.name, "r") as pidFile:
+                pid = pidFile.read().strip()
             pidRunning = commands.getoutput('ls /proc | grep %s' % pid)
             if pidRunning:
                 self.lasterror = True
