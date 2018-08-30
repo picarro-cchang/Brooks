@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 import datetime
+from sys import exit
 from functools import wraps
 from flask import abort, Flask, make_response, Response, request
 from flask_restplus import Api, reqparse, Resource, inputs
@@ -621,6 +622,9 @@ def main():
             Log("Restart request to supervisor sent", Level=0)
         else:
             Log("Restart request to supervisor not sent", Level=2)
+        # Exit, in case the server running, but the app is not
+        # We don't want to get stuck in a restart loop here
+        exit(1)
 
 
 if __name__ == '__main__':
