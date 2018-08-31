@@ -199,6 +199,8 @@ class ModbusServer(object):
             script = file(script_path, 'r')
             scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
             exec scriptObj in scriptEnv
+        else:
+            print("Path does not exist: %s" % script_path)
         for s in self.config:
             name = ""
             d = {}
