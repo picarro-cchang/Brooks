@@ -17,7 +17,7 @@ class SingleInstance:
     # out so we don't have stale pid files hanging about after a power
     # failure.
     #
-    # /run is owned by root. User level pid files go into /run/user/<uid>.
+    # /run is owned by root. User level pid files go into /run/user/<uid>/picarro
     # pid files should have the .pid extension.  Add it if it's not in the
     # name.
     #
