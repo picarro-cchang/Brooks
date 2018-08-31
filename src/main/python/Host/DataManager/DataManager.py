@@ -2209,7 +2209,7 @@ def ExecuteTest(DM):
 def main():
     #Get and handle the command line options...
     configFile, alarmConfigFile, alarmSystemV3ConfigFile, noInstMgr, test, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    Log("%s started." % APP_NAME, Level=0)
     my_instance = SingleInstance(APP_NAME)
     if my_instance.alreadyrunning():
         Log("Instance of %s already running" % APP_NAME, Level=2)
