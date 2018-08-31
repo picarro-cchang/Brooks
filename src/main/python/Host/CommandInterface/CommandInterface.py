@@ -749,7 +749,6 @@ def main():
             if o in ("-c", "--config"):
                 configFile = a
 
-
         app = CommandInterface()
         Log("%s started." % APP_NAME, Level=0)
         try:
@@ -770,5 +769,5 @@ def main():
                 Log("Restart request to supervisor not sent", Level=2)
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     main()
