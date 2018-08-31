@@ -27,6 +27,8 @@ import re
 import threading
 import pprint
 import __builtin__
+import sys
+import os
 from inspect import isclass
 from numpy import *
 
