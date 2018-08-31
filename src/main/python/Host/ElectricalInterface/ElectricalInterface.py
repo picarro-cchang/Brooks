@@ -19,7 +19,7 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = 'EIF'
+APP_NAME = "ElectricalInterface"
 __version__ = 1.0
 _CONFIG_NAME = 'ElectricalInterface.ini'
 MAIN_SECTION = 'MAIN'
