@@ -33,7 +33,8 @@ from inspect import isclass
 from Host.autogen import interface
 from Host.Common import CmdFIFO
 from Host.Common import AppStatus
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SAMPLE_MGR, BROADCAST_PORT_SENSORSTREAM, STATUS_PORT_SAMPLE_MGR
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SAMPLE_MGR, BROADCAST_PORT_SENSORSTREAM,\
+    STATUS_PORT_SAMPLE_MGR, RPC_PORT_SUPERVISOR
 from Host.Common.InstErrors import INST_ERROR_OKAY
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.Listener import Listener
