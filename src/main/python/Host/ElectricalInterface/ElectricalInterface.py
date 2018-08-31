@@ -28,12 +28,6 @@ SOURCE_DELIMITER = ','
 import sys
 import os
 import time
-import getopt
-import time
-import types
-import socket
-import select
-import ctypes
 import threading
 import Queue
 from math import sqrt
@@ -41,12 +35,14 @@ from inspect import isclass
 
 from Host.Common import CmdFIFO, Listener
 from Host.Common import MeasData
-from Host.Common import AppStatus
 from Host.Common.timestamp import unixTimeToTimestamp, getTimestamp
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER, BROADCAST_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER,\
+    BROADCAST_PORT_DATA_MANAGER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
+from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -479,16 +475,30 @@ def HandleCommandSwitches():
 
     return (configFile)
 
-if __name__ == "__main__" :
-    #Get and handle the command line options...
-    configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        eif = EifMgr(configFile)
-        eif.run()
-        Log("Exiting program")
-    except Exception, E:
-        if __debug__: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        # Get and handle the command line options...
+        configFile = HandleCommandSwitches()
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            eif = EifMgr(configFile)
+            eif.run()
+            Log("Exiting program")
+        except Exception, e:
+            if __debug__:
+                raise
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
+
+if __name__ == "__main__":
+    main()
