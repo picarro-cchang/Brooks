@@ -1,4 +1,4 @@
-from Host.CommandInterface.CommandInterface import Main
+from Host.CommandInterface.CommandInterface import main
 
-if __name__ == "__main__" :
-    Main()
+if __name__ == "__main__":
+    main()
