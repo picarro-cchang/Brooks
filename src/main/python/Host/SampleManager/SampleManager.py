@@ -26,13 +26,9 @@ import sys
 import os
 import time
 import getopt
-import ctypes
-import socket
-import sets
 import threading
 import Queue
 from inspect import isclass
-from operator import isNumberType
 
 from Host.autogen import interface
 from Host.Common import CmdFIFO
@@ -41,8 +37,9 @@ from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_SAMPLE_MGR, BROADC
 from Host.Common.InstErrors import INST_ERROR_OKAY
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.Listener import Listener
-from Host.Common.StringPickler import StringAsObject
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
@@ -607,6 +604,8 @@ class SampleManagerBaseMode(object):
 class SampleManager(object):
     def __init__(self, IniPath):
         """ Initialize Sample Manager """
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.state     = 'Idle'
         self.debug     = True
         self.terminate = False
@@ -846,27 +845,41 @@ class SampleManager(object):
 def Usage():
     print "[-h] [-c configfile]"
 
-def Main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help", "config="])
-    except getopt.GetoptError:
-        # print help information and exit:
-        Usage()
-        sys.exit(2)
-
-    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
-
-    for o, a in opts:
-        if o in ("-h", "--help"):
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help", "config="])
+        except getopt.GetoptError:
+            # print help information and exit:
             Usage()
-            sys.exit()
-        if o in ("-c", "--config"):
-            configFile = a
+            sys.exit(2)
 
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    app = SampleManager(configFile)
-    app.Run()
-    Log("Exiting program")
+        configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
+
+        for o, a in opts:
+            if o in ("-h", "--help"):
+                Usage()
+                sys.exit()
+            if o in ("-c", "--config"):
+                configFile = a
+
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            app = SampleManager(configFile)
+            app.Run()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+        Log("Exiting program")
+
 
 if __name__ == "__main__" :
-    Main()
+    main()
