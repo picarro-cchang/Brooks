@@ -271,6 +271,10 @@ class EifMgr(object):
         # driver rpc
         self._driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "EIF")
 
+        # supervisor rpc
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
+
         # list of analog objects
         self.analogOutput={}
         self.sampleBuffer = Queue.Queue(0)
