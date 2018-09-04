@@ -1,10 +1,8 @@
-import threading
-import time
-from Host.EventManager.EventManager import HandleCommandSwitches, EventLogger
-from Host.Common.SingleInstance import SingleInstance
-from Host.Common.EventManagerProxy import Log
+from Host.EventManager.EventManager import main
+from Host.Common.EventManagerProxy import EventManagerProxy_Init
 
 APP_NAME = "EventManager"
+EventManagerProxy_Init(APP_NAME)
 
 def LaunchViewerGUI(EL):
     import Host.EventManager.EventManagerGUI as EventManagerGUI
@@ -22,33 +20,10 @@ def LaunchViewerGUI(EL):
 
     del logViewer, EventManagerGUI
 
+
 def main():
-    my_instance = SingleInstance(APP_NAME)
-    if my_instance.alreadyrunning():
-        Log("Instance of %s already running" % APP_NAME, Level=2)
-    else:
-        showViewer, configFile = HandleCommandSwitches()
+    main()
 
-        #create and kick off the event logging engine...
-        EL = EventLogger(configFile)
-        t = threading.Thread(target = EL.Launch)
-        t.setDaemon(True)
-        t.start()
-
-        if showViewer:
-            EL.ShowViewer = True
-
-        #Now just loop and wait for the logger to shut down (while letting the
-        #viewer app be on the main thread)...
-        while not EL.LoggerStopped:
-            if EL.ShowViewer:
-                if EL.Viewer == None:
-                    #Need to start it up. Blocks until GUI exits.
-                    LaunchViewerGUI(EL)
-            else:
-                #We shouldn't be showing the viewer.
-                assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
-            time.sleep(1.0)
 
 if __name__ == "__main__":
     main()
