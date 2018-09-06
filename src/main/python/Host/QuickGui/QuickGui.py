@@ -23,8 +23,7 @@ import requests
 import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
-
-
+import sys
 from Host.QuickGui.UserCalGui import UserCalGui
 from Host.QuickGui.SysAlarmGui import *
 from Host.QuickGui.MeasureAlarmGui import AlarmViewListCtrl
@@ -46,7 +45,7 @@ from Host.Utilities.UserAdmin.UserAdmin import DB_SERVER_URL
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
-AppPath = os.path.dirname(os.path.realpath(__file__))
+AppPath = sys.path[0]
 TimeStamp = time.time
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -186,13 +185,6 @@ class InstStatusPanel(wx.Panel):
         self.SetSizer(sizer_out)
         sizer_out.Fit(self)
         sizer_out.SetSizeHints(self)
-
-
-class GuiApp(wx.App):
-    def OnInit(self):
-        self.frame = QuickGui(configFile, defaultTitle="")
-        #self.frame.Show(True)
-        return True
 
 
 class QuickGui(wx.Frame):
@@ -1790,15 +1782,15 @@ def main():
         Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
         try:
-            # app = wx.App(False)
-            # app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
+            app = wx.App(False)
+            app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
             configFile = HandleCommandSwitches()
             Log("%s started" % APP_NAME, Level=0)
-            app = GuiApp(configFile)
+            frame = QuickGui(configFile)
             app.MainLoop()
-            # frame = QuickGui(configFile)
-            # app.MainLoop()
             Log("Exiting program")
+        except KeyboardInterrupt:
+            sys.exit(0)
         except Exception, e:
             LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
             # Request a restart from Supervisor via RPC call
