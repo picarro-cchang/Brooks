@@ -1237,25 +1237,36 @@ def HandleCommandSwitches():
     return (configFile, useViewer, options)
 
 def main():
-    # Allow Fitter to have up to 3 total instances running
-    # for instruments with three lasers
+    """
+    Allow Fitter to have up to 3 total instances running
+    for instruments with three lasers
+    We will start with the name Fitter1 and increment to
+    Fitter2, and Fitter3 if necessary
+    """
     count = 1
+    max_count = 4
     my_instance = SingleInstance((APP_NAME + str(count)))
     if my_instance.alreadyrunning():
-        count += 1
-        my_instance = SingleInstance((APP_NAME + str(count)))
-        if my_instance.alreadyrunning():
+        for x in range(count, max_count):
             count += 1
             my_instance = SingleInstance((APP_NAME + str(count)))
             if my_instance.alreadyrunning():
-                Log("Maximum instances of %s already running" % APP_NAME, Level=2)
+                continue
+            else:
+                start()
+                break
     else:
-        app = wx.PySimpleApp()
-        configFile, useViewer, options=HandleCommandSwitches()
-        Log("%s started." % APP_NAME, Level=0)
-        frame = FitViewer(configFile, useViewer, options)
-        app.MainLoop()
-        Log("Exiting program")
+        start()
+
+
+def start():
+    app = wx.PySimpleApp()
+    configFile, useViewer, options = HandleCommandSwitches()
+    Log("%s started." % APP_NAME, Level=0)
+    frame = FitViewer(configFile, useViewer, options)
+    app.MainLoop()
+    Log("Exiting program")
+
 
 if __name__ == "__main__":
     main()
