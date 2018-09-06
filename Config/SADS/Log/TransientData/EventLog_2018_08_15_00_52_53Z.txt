@@ -1,0 +1,177 @@
+v1
+1	2018-08-15 00:52:53	Supervisor	L1	C-1	Application start confirmed : EventManager
+2	2018-08-15 00:52:53	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'Driver'}
+3	2018-08-15 00:52:53	Supervisor	L1	C-1	Launching application : {'appName': 'Driver'}
+4	2018-08-15 00:52:54	Supervisor	L1	C-1	Application started : {'PID': 29631, 'App': 'Driver', 'Affinity': 1, 'Port': 50010}
+5	2018-08-15 00:52:54	DriverSimulator	L0	C-1	DriverSimulator started. : {'ConfigFile': '../../AppConfig/Config/DriverSimulator/DriverSimulator.ini'}
+6	2018-08-15 00:52:54	DriverSimulator	L1	C-1	Registered RPC functions
+7	2018-08-15 00:52:57	DriverSimulator	L1	C-1	Starting main driver loop
+8	2018-08-15 00:52:57	Supervisor	L1	C-1	Application start confirmed : Driver
+9	2018-08-15 00:52:57	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'Archiver'}
+10	2018-08-15 00:52:57	Supervisor	L1	C-1	Launching application : {'appName': 'Archiver'}
+11	2018-08-15 00:52:58	Supervisor	L1	C-1	Application started : {'PID': 29676, 'App': 'Archiver', 'Affinity': 1, 'Port': 50060}
+12	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group EventLogs
+13	2018-08-15 00:52:58	Archiver	L1	C-1	Group EventLogs, files 0, bytes 0
+14	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 3.69548797607e-05 seconds
+15	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group RDF
+16	2018-08-15 00:52:58	Archiver	L1	C-1	Group RDF, files 11, bytes 72964174
+17	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 0.000237941741943 seconds
+18	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group WBCAL
+19	2018-08-15 00:52:58	Archiver	L1	C-1	Group WBCAL, files 3, bytes 269575
+20	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 0.00014591217041 seconds
+21	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group HBCAL
+22	2018-08-15 00:52:58	Archiver	L1	C-1	Group HBCAL, files 0, bytes 0
+23	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 2.19345092773e-05 seconds
+24	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group DataLog_Private
+25	2018-08-15 00:52:58	Archiver	L1	C-1	Group DataLog_Private, files 7, bytes 549957
+26	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 0.000174999237061 seconds
+27	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group DataLog_Private_Text
+28	2018-08-15 00:52:58	Archiver	L1	C-1	Group DataLog_Private_Text, files 0, bytes 0
+29	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 2.21729278564e-05 seconds
+30	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group DataLog_User
+31	2018-08-15 00:52:58	Archiver	L1	C-1	Group DataLog_User, files 4, bytes 3063808
+32	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 0.000122785568237 seconds
+33	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group DataLog_User_Backup
+34	2018-08-15 00:52:58	Archiver	L1	C-1	Group DataLog_User_Backup, files 4, bytes 361654
+35	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 0.000133037567139 seconds
+36	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group DataLog_Mailbox
+37	2018-08-15 00:52:58	Archiver	L1	C-1	Group DataLog_Mailbox, files 4, bytes 361662
+38	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 4.00543212891e-05 seconds
+39	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group IPVBackup
+40	2018-08-15 00:52:58	Archiver	L1	C-1	Group IPVBackup, files 0, bytes 0
+41	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 4.00543212891e-05 seconds
+42	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group RDFBackup
+43	2018-08-15 00:52:58	Archiver	L1	C-1	Group RDFBackup, files 0, bytes 0
+44	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 2.71797180176e-05 seconds
+45	2018-08-15 00:52:58	Archiver	L1	C-1	Opening storage group IPV_RPTBackup
+46	2018-08-15 00:52:58	Archiver	L1	C-1	Group IPV_RPTBackup, files 0, bytes 0
+47	2018-08-15 00:52:58	Archiver	L0	C-1	Archiver started. : {'ConfigFile': '../../AppConfig/Config/Archiver/Archiver.ini'}
+48	2018-08-15 00:52:58	Archiver	L1	C-1	Archiver command init took 2.31266021729e-05 seconds
+49	2018-08-15 00:52:58	Supervisor	L1	C-1	Application start confirmed : Archiver
+50	2018-08-15 00:52:58	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'RDFreqConverter'}
+51	2018-08-15 00:52:58	Supervisor	L1	C-1	Launching application : {'appName': 'RDFreqConverter'}
+52	2018-08-15 00:52:59	Supervisor	L1	C-1	Application started : {'PID': 29791, 'App': 'RDFreqConverter', 'Affinity': 1, 'Port': 50015}
+53	2018-08-15 00:52:59	RDFrequencyConverter	L0	C-1	RDFrequencyConverter started. : {'ConfigFile': '../../AppConfig/Config/RDFrequencyConverter/RDFrequencyConverter.ini'}
+54	2018-08-15 00:52:59	RDFrequencyConverter	L1	C-1	Time to update warm box calibration file
+55	2018-08-15 00:53:00	Supervisor	L1	C-1	Application start confirmed : RDFreqConverter
+56	2018-08-15 00:53:00	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'SpectrumCollector'}
+57	2018-08-15 00:53:00	Supervisor	L1	C-1	Launching application : {'appName': 'SpectrumCollector'}
+58	2018-08-15 00:53:01	Supervisor	L1	C-1	Application started : {'PID': 29827, 'App': 'SpectrumCollector', 'Affinity': 1, 'Port': 50075}
+59	2018-08-15 00:53:01	SpectrumCollector	L1	C-1	Created streamDir in /home/picarro/git/host/src/main/python/Log/RDF
+60	2018-08-15 00:53:01	SpectrumCollector	L1	C-1	Connection made by Spectrum collector listener to port 40020.
+61	2018-08-15 00:53:01	SpectrumCollector	L1	C-1	Connection made by Spectrum collector listener to port 40031.
+62	2018-08-15 00:53:01	SpectrumCollector	L0	C-1	SpectrumCollector started. : {'ConfigFile': '../../AppConfig/Config/SpectrumCollector/SpectrumCollector.ini'}
+63	2018-08-15 00:53:01	SpectrumCollector	L1	C-1	Sequences read: 15
+64	2018-08-15 00:53:01	Supervisor	L1	C-1	Application start confirmed : SpectrumCollector
+65	2018-08-15 00:53:01	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'Fitter1'}
+66	2018-08-15 00:53:01	Supervisor	L1	C-1	Launching application : {'appName': 'Fitter1'}
+67	2018-08-15 00:53:02	Supervisor	L1	C-1	Application started : {'PID': 29876, 'App': 'Fitter1', 'Affinity': 2, 'Port': 50180}
+68	2018-08-15 00:53:03	Fitter	L0	C-1	Fitter started. : {'ConfigFile': '../../AppConfig/Config/Fitter/Fitter_HCl_140Torr.ini'}
+69	2018-08-15 00:53:03	Supervisor	L1	C-1	Application start confirmed : Fitter1
+70	2018-08-15 00:53:03	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'MeasSystem'}
+71	2018-08-15 00:53:03	Supervisor	L1	C-1	Launching application : {'appName': 'MeasSystem'}
+72	2018-08-15 00:53:04	Supervisor	L1	C-1	Application started : {'PID': 29919, 'App': 'MeasSystem', 'Affinity': 1, 'Port': 50070}
+73	2018-08-15 00:53:04	MeasSystem	L1	C-1	Config file specified at command line : ../../AppConfig/Config/MeasSystem/MeasSystem.ini
+74	2018-08-15 00:53:04	MeasSystem	L0	C-1	MeasSystem started. : {'ConfigFile': '../../AppConfig/Config/MeasSystem/MeasSystem.ini'}
+75	2018-08-15 00:53:04	DriverSimulator	L1	C-1	Virtual laser 1 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+76	2018-08-15 00:53:04	DriverSimulator	L1	C-1	Virtual laser 2 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+77	2018-08-15 00:53:04	RDFrequencyConverter	L1	C-1	Connection made by Ringdown frequency converter listener to port 40030.
+78	2018-08-15 00:53:04	MeasSystem	L1	C-1	Mode definitions loaded : {'ModeNames': ['HCl_inN2_mode', 'warming_mode', 'SADS_mode']}
+79	2018-08-15 00:53:04	SpectrumCollector	L0	C-1	Added named sequence: HCl_inN2_mode
+80	2018-08-15 00:53:04	SpectrumCollector	L0	C-1	Added named sequence: SADS_mode
+81	2018-08-15 00:53:04	MeasSystem	L1	C-1	Engine started (with Driver.startEngine) due to 'StartEngine' startup config setting.
+82	2018-08-15 00:53:04	MeasSystem	L1	C-1	State changed : {'State': 'READY', 'PreviousState': 'INIT'}
+83	2018-08-15 00:53:04	Supervisor	L1	C-1	Application start confirmed : MeasSystem
+84	2018-08-15 00:53:04	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'DataManager'}
+85	2018-08-15 00:53:04	Supervisor	L1	C-1	Launching application : {'appName': 'DataManager'}
+86	2018-08-15 00:53:05	Supervisor	L1	C-1	Application started : {'PID': 29976, 'App': 'DataManager', 'Affinity': 3, 'Port': 50160}
+87	2018-08-15 00:53:05	DataManager	L1	C-1	Config file specified at command line : ../../AppConfig/Config/DataManager/DataManager.ini
+88	2018-08-15 00:53:05	DataManager	L1	C-1	Alarm system configuration file is : ../../AppConfig/Config/AlarmSystem/AlarmSystem_Code.ini
+89	2018-08-15 00:53:05	DataManager	L0	C-1	DataManager started. : {'ConfigFile': '../../AppConfig/Config/DataManager/DataManager.ini'}
+90	2018-08-15 00:53:05	DataManager	L1	C-1	Compiling alarm script : {'Path': '../../AppConfig/Config/AlarmSystem/../../Scripts/AlarmSystem/alarm_AMADS.py'}
+91	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager sensor stream listener to port 40020.
+92	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 0 listener to port 40080.
+93	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 2 listener to port 40082.
+94	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 1 listener to port 40081.
+95	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 5 listener to port 40085.
+96	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 4 listener to port 40084.
+97	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 3 listener to port 40083.
+98	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 6 listener to port 40086.
+99	2018-08-15 00:53:05	DataManager	L1	C-1	Connection made by Data manager fitter 7 listener to port 40087.
+100	2018-08-15 00:53:05	DataManager	L1	C-1	Mode definitions loaded : {'ModeNames': ['HCl_inN2_mode', 'warming_mode', 'SADS_mode']}
+101	2018-08-15 00:53:05	DataManager	L1	C-1	Starting compilation of identified analyzer scripts : {'Count': 3}
+102	2018-08-15 00:53:05	DataManager	L1	C-1	Compiling analyzer script : {'Path': '../../AppConfig/Config/DataManager/../../ModeInfo/../Scripts/DataManager/analyze_HCl_inN2.py'}
+103	2018-08-15 00:53:05	DataManager	L1	C-1	Compiling analyzer script : {'Path': '../../AppConfig/Config/DataManager/../../ModeInfo/../Scripts/DataManager/analyze_SADS.py'}
+104	2018-08-15 00:53:05	DataManager	L1	C-1	Compiling analyzer script : {'Path': '../../AppConfig/Config/DataManager/../../ModeInfo/../Scripts/DataManager/analyze_warming.py'}
+105	2018-08-15 00:53:05	DataManager	L1	C-1	Analyzer script compilation complete
+106	2018-08-15 00:53:05	DataManager	L1	C-1	Peripheral Interface not running.
+107	2018-08-15 00:53:05	DataManager	L1	C-1	State changed : {'State': 'READY', 'PreviousState': 'INIT'}
+108	2018-08-15 00:53:06	Supervisor	L1	C-1	Application start confirmed : DataManager
+109	2018-08-15 00:53:06	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'SampleManager'}
+110	2018-08-15 00:53:06	Supervisor	L1	C-1	Launching application : {'appName': 'SampleManager'}
+111	2018-08-15 00:53:07	Supervisor	L1	C-1	Application started : {'PID': 30096, 'App': 'SampleManager', 'Affinity': 1, 'Port': 50080}
+112	2018-08-15 00:53:07	SampleManager	L0	C-1	SampleManager started. : {'ConfigFile': '../../AppConfig/Config/SampleManager/SampleManager.ini'}
+113	2018-08-15 00:53:07	SampleManager	L1	C-1	Connection made by Sample Manager sensor stream listener to port 40020.
+114	2018-08-15 00:53:07	Supervisor	L1	C-1	Application start confirmed : SampleManager
+115	2018-08-15 00:53:07	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'InstMgr'}
+116	2018-08-15 00:53:07	Supervisor	L1	C-1	Launching application : {'appName': 'InstMgr'}
+117	2018-08-15 00:53:08	Supervisor	L1	C-1	Application started : {'PID': 30137, 'App': 'InstMgr', 'Affinity': 1, 'Port': 50110}
+118	2018-08-15 00:53:08	InstMgr	L1	C-1	Config file specified at command line: ../../AppConfig/Config/InstMgr/InstMgr.ini
+119	2018-08-15 00:53:08	InstMgr	L0	C-1	InstMgr started. : {'ConfigFile': '../../AppConfig/Config/InstMgr/InstMgr.ini', 'NoSampleMgr': False}
+120	2018-08-15 00:53:08	InstMgr	L1.5	C-1	Starting
+121	2018-08-15 00:53:08	DriverSimulator	L1	C-1	version = {'interface': 1, 'host release': 'I2000-1.2.3.4 (abcd1234)', 'config - app version no': '1.0.3', 'config - instr version no': '5', 'config - common version no': '1.0.9'}
+122	2018-08-15 00:53:08	DataManager	L1	C-1	Connection made by Data manager Instrument Manager listener to port 41110.
+123	2018-08-15 00:53:09	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+124	2018-08-15 00:53:09	InstMgr	L1.5	C-1	Warming...
+125	2018-08-15 00:53:10	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+126	2018-08-15 00:53:11	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+127	2018-08-15 00:53:11	DataManager	L1	C-1	Starting synchronous analyzers : {'Count': 1, 'SyncAnalyzers': ['Sensors']}
+128	2018-08-15 00:53:11	DataManager	L1	C-1	Synchronous analyzers have all been enqueued
+129	2018-08-15 00:53:11	InstMgr	L1.5	C-1	Uploading warmbox cal to DAS...
+130	2018-08-15 00:53:11	DataManager	L1	C-1	Measurement mode changed. : {'NewMode': 'warming_mode', 'OldMode': '<NOT SPECIFIED>'}
+131	2018-08-15 00:53:12	DriverSimulator	L1	C-1	Virtual laser 1 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+132	2018-08-15 00:53:12	DriverSimulator	L1	C-1	Virtual laser 2 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+133	2018-08-15 00:53:13	SampleManager	L1	C-1	Setmode: <type 'exceptions.KeyError'> 'OutletOnlyMode'
+134	2018-08-15 00:53:13	InstMgr	L1.5	C-1	Temp and pressure stabilizing...
+135	2018-08-15 00:53:13	Supervisor	L1	C-1	Application start confirmed : InstMgr
+136	2018-08-15 00:53:13	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'AlarmSystem'}
+137	2018-08-15 00:53:13	Supervisor	L1	C-1	Launching application : {'appName': 'AlarmSystem'}
+138	2018-08-15 00:53:14	Supervisor	L1	C-1	Application started : {'PID': 30208, 'App': 'AlarmSystem', 'Affinity': 1, 'Port': 50100}
+139	2018-08-15 00:53:14	Supervisor	L1	C-1	Application start confirmed : AlarmSystem
+140	2018-08-15 00:53:14	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'ValveSequencer'}
+141	2018-08-15 00:53:14	Supervisor	L1	C-1	Launching application : {'appName': 'ValveSequencer'}
+142	2018-08-15 00:53:14	AlarmSystemLegacyStub	L1	C-1	Config file specified at command line: ../../AppConfig/Config/AlarmSystem/AlarmSystem.ini
+143	2018-08-15 00:53:14	AlarmSystemLegacyStub	L0	C-1	AlarmSystemLegacyStub started. : {'ConfigFile': '../../AppConfig/Config/AlarmSystem/AlarmSystem.ini'}
+144	2018-08-15 00:53:14	AlarmSystemLegacyStub	L1	C-1	Exiting program
+145	2018-08-15 00:53:14	Supervisor	L1	C-1	Application started : {'PID': 30228, 'App': 'ValveSequencer', 'Affinity': 1, 'Port': 50200}
+146	2018-08-15 00:53:14	ValveSequencer	L0	C-1	ValveSequencer started.
+147	2018-08-15 00:53:14	Supervisor	L1	C-1	Application start confirmed : ValveSequencer
+148	2018-08-15 00:53:14	Supervisor	L1	C-1	Launching application : {'appName': 'QuickGui'}
+149	2018-08-15 00:53:14	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'QuickGui'}
+150	2018-08-15 00:53:15	DataManager	L1	C-1	Max periodic script delay so far 0.008s on iteration 0: Sensors
+151	2018-08-15 00:53:15	Supervisor	L1	C-1	Application started : {'PID': 30264, 'App': 'QuickGui', 'Affinity': 1, 'Port': -1}
+152	2018-08-15 00:53:15	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'DataLogger'}
+153	2018-08-15 00:53:15	Supervisor	L1	C-1	Launching application : {'appName': 'DataLogger'}
+154	2018-08-15 00:53:16	/home/picarro/git/host/src/main/python/Host/QuickGui/QuickGui.py	L0	C-1	QuickGui started. : {'ConfigFile': '../../AppConfig/Config/QuickGui/QuickGui.ini'}
+155	2018-08-15 00:53:16	/home/picarro/git/host/src/main/python/Host/QuickGui/QuickGui.py	L1	C-1	Connection made by QuickGUI event log listener to port 40010.
+156	2018-08-15 00:53:16	Supervisor	L1	C-1	Application started : {'PID': 30298, 'App': 'DataLogger', 'Affinity': 1, 'Port': 50090}
+157	2018-08-15 00:53:16	DataLogger	L1	C-1	Config file specified at command line: ../../AppConfig/Config/DataLogger/DataLogger.ini
+158	2018-08-15 00:53:16	DataLogger	L1	C-1	User Config file specified at command line: ../../AppConfig/Config/DataLogger/UserLog.ini
+159	2018-08-15 00:53:16	DataLogger	L1	C-1	Private Config file specified at command line: ../../AppConfig/Config/DataLogger/PrivateLog.ini
+160	2018-08-15 00:53:16	DataLogger	L0	C-1	DataLogger started. : {'ConfigFile': '../../AppConfig/Config/DataLogger/DataLogger.ini'}
+161	2018-08-15 00:53:16	DataLogger	L1	C-1	Data Logger: source dict={'analyze_SADS': ['DataLog_Private', 'DataLog_User']}; port dict={40060: ['DataLog_Private', 'DataLog_User']}
+162	2018-08-15 00:53:16	DataLogger	L1	C-1	Connection made by Data Logger data listener to port 40060.
+163	2018-08-15 00:53:17	Supervisor	L1	C-1	Application start confirmed : DataLogger
+164	2018-08-15 00:53:17	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'BackupSupervisor'}
+165	2018-08-15 00:53:17	Supervisor	L1	C-1	Launching application : {'appName': 'BackupSupervisor'}
+166	2018-08-15 00:53:18	Supervisor	L1	C-1	Application started : {'PID': 30348, 'App': 'BackupSupervisor', 'Affinity': 1, 'Port': 50031}
+167	2018-08-15 00:53:18	Supervisor	L1	C-1	Config file specified at command line : {'Path': '../../AppConfig/Config/Supervisor/supervisor_simulation.ini'}
+168	2018-08-15 00:53:18	Supervisor	L1	C-1	Application start confirmed : BackupSupervisor
+169	2018-08-15 00:53:18	Supervisor	L1	C-1	Process ID received from Master Supervisor : {'PID': 29528}
+170	2018-08-15 00:53:18	Supervisor	L1	C-1	Application monitoring loop started
+171	2018-08-15 00:53:20	DataManager	L1	C-1	Max periodic script delay so far 0.014s on iteration 1: Sensors
+172	2018-08-15 00:53:25	DataLogger	L1	C-1	Maximum data listener loop RTT so far: 0.000
+173	2018-08-15 00:53:29	DataLogger	L1	C-1	Maximum data listener loop RTT so far: 4.989
+174	2018-08-15 00:53:35	DataManager	L1	C-1	Max periodic script delay so far 0.015s on iteration 4: Sensors
+175	2018-08-15 00:53:35	DataLogger	L1	C-1	Maximum data listener loop RTT so far: 4.994
+176	2018-08-15 00:53:45	DataManager	L1	C-1	Max periodic script delay so far 0.030s on iteration 6: Sensors

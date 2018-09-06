@@ -1,0 +1,319 @@
+v1
+1	2018-08-14 22:36:12	Supervisor	L1	C-1	Application start confirmed : EventManager
+2	2018-08-14 22:36:12	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'Driver'}
+3	2018-08-14 22:36:12	Supervisor	L1	C-1	Launching application : {'appName': 'Driver'}
+4	2018-08-14 22:36:13	Supervisor	L1	C-1	Application started : {'PID': 14951, 'App': 'Driver', 'Affinity': 1, 'Port': 50010}
+5	2018-08-14 22:36:14	DriverSimulator	L0	C-1	DriverSimulator started. : {'ConfigFile': '../../AppConfig/Config/DriverSimulator/DriverSimulator.ini'}
+6	2018-08-14 22:36:14	DriverSimulator	L1	C-1	Registered RPC functions
+7	2018-08-14 22:36:16	Supervisor	L1	C-1	Application start confirmed : Driver
+8	2018-08-14 22:36:16	DriverSimulator	L1	C-1	Starting main driver loop
+9	2018-08-14 22:36:16	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'Archiver'}
+10	2018-08-14 22:36:16	Supervisor	L1	C-1	Launching application : {'appName': 'Archiver'}
+11	2018-08-14 22:36:17	Supervisor	L1	C-1	Application started : {'PID': 14996, 'App': 'Archiver', 'Affinity': 1, 'Port': 50060}
+12	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group EventLogs
+13	2018-08-14 22:36:18	Archiver	L1	C-1	Group EventLogs, files 0, bytes 0
+14	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 6.50882720947e-05 seconds
+15	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group RDF
+16	2018-08-14 22:36:18	Archiver	L1	C-1	Group RDF, files 8, bytes 56174387
+17	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 0.000259876251221 seconds
+18	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group WBCAL
+19	2018-08-14 22:36:18	Archiver	L1	C-1	Group WBCAL, files 1, bytes 89807
+20	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 0.000275135040283 seconds
+21	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group HBCAL
+22	2018-08-14 22:36:18	Archiver	L1	C-1	Group HBCAL, files 0, bytes 0
+23	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 4.29153442383e-05 seconds
+24	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group DataLog_Private
+25	2018-08-14 22:36:18	Archiver	L1	C-1	Group DataLog_Private, files 1, bytes 1626
+26	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 0.000229120254517 seconds
+27	2018-08-14 22:36:18	Archiver	L1	C-1	Group DataLog_Private_Text, files 0, bytes 0
+28	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command archiveFile took 0.000174999237061 seconds
+29	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group DataLog_Private_Text
+30	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 8.89301300049e-05 seconds
+31	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group DataLog_User
+32	2018-08-14 22:36:18	Archiver	L1	C-1	Group DataLog_User, files 1, bytes 2715648
+33	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 0.000134229660034 seconds
+34	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group DataLog_User_Backup
+35	2018-08-14 22:36:18	Archiver	L1	C-1	Group DataLog_User_Backup, files 0, bytes 0
+36	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 2.8133392334e-05 seconds
+37	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command archiveFile took 0.000173091888428 seconds
+38	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group DataLog_Mailbox
+39	2018-08-14 22:36:18	Archiver	L1	C-1	Group DataLog_Mailbox, files 1, bytes 318195
+40	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 3.71932983398e-05 seconds
+41	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group IPVBackup
+42	2018-08-14 22:36:18	Archiver	L1	C-1	Group IPVBackup, files 0, bytes 0
+43	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 2.59876251221e-05 seconds
+44	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group RDFBackup
+45	2018-08-14 22:36:18	Archiver	L1	C-1	Group RDFBackup, files 0, bytes 0
+46	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 2.78949737549e-05 seconds
+47	2018-08-14 22:36:18	Archiver	L1	C-1	Opening storage group IPV_RPTBackup
+48	2018-08-14 22:36:18	Archiver	L1	C-1	Group IPV_RPTBackup, files 0, bytes 0
+49	2018-08-14 22:36:18	Archiver	L0	C-1	Archiver started. : {'ConfigFile': '../../AppConfig/Config/Archiver/Archiver.ini'}
+50	2018-08-14 22:36:18	Archiver	L1	C-1	Archiver command init took 3.19480895996e-05 seconds
+51	2018-08-14 22:36:18	Supervisor	L1	C-1	Application start confirmed : Archiver
+52	2018-08-14 22:36:18	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'RDFreqConverter'}
+53	2018-08-14 22:36:18	Supervisor	L1	C-1	Launching application : {'appName': 'RDFreqConverter'}
+54	2018-08-14 22:36:19	Supervisor	L1	C-1	Application started : {'PID': 15115, 'App': 'RDFreqConverter', 'Affinity': 1, 'Port': 50015}
+55	2018-08-14 22:36:19	RDFrequencyConverter	L0	C-1	RDFrequencyConverter started. : {'ConfigFile': '../../AppConfig/Config/RDFrequencyConverter/RDFrequencyConverter.ini'}
+56	2018-08-14 22:36:19	RDFrequencyConverter	L1	C-1	Time to update warm box calibration file
+57	2018-08-14 22:36:19	Supervisor	L1	C-1	Application start confirmed : RDFreqConverter
+58	2018-08-14 22:36:19	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'SpectrumCollector'}
+59	2018-08-14 22:36:19	Supervisor	L1	C-1	Launching application : {'appName': 'SpectrumCollector'}
+60	2018-08-14 22:36:20	Supervisor	L1	C-1	Application started : {'PID': 15151, 'App': 'SpectrumCollector', 'Affinity': 1, 'Port': 50075}
+61	2018-08-14 22:36:21	SpectrumCollector	L1	C-1	Created streamDir in /home/picarro/git/host/src/main/python/Log/RDF
+62	2018-08-14 22:36:21	SpectrumCollector	L1	C-1	Connection made by Spectrum collector listener to port 40020.
+63	2018-08-14 22:36:21	SpectrumCollector	L1	C-1	Connection made by Spectrum collector listener to port 40031.
+64	2018-08-14 22:36:21	SpectrumCollector	L0	C-1	SpectrumCollector started. : {'ConfigFile': '../../AppConfig/Config/SpectrumCollector/SpectrumCollector.ini'}
+65	2018-08-14 22:36:21	SpectrumCollector	L1	C-1	Sequences read: 15
+66	2018-08-14 22:36:21	Supervisor	L1	C-1	Application start confirmed : SpectrumCollector
+67	2018-08-14 22:36:21	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'Fitter1'}
+68	2018-08-14 22:36:21	Supervisor	L1	C-1	Launching application : {'appName': 'Fitter1'}
+69	2018-08-14 22:36:22	Supervisor	L1	C-1	Application started : {'PID': 15200, 'App': 'Fitter1', 'Affinity': 2, 'Port': 50180}
+70	2018-08-14 22:36:22	Fitter	L0	C-1	Fitter started. : {'ConfigFile': '../../AppConfig/Config/Fitter/Fitter_HCl_140Torr.ini'}
+71	2018-08-14 22:36:23	Supervisor	L1	C-1	Application start confirmed : Fitter1
+72	2018-08-14 22:36:23	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'MeasSystem'}
+73	2018-08-14 22:36:23	Supervisor	L1	C-1	Launching application : {'appName': 'MeasSystem'}
+74	2018-08-14 22:36:24	Supervisor	L1	C-1	Application started : {'PID': 15243, 'App': 'MeasSystem', 'Affinity': 1, 'Port': 50070}
+75	2018-08-14 22:36:24	MeasSystem	L1	C-1	Config file specified at command line : ../../AppConfig/Config/MeasSystem/MeasSystem.ini
+76	2018-08-14 22:36:24	MeasSystem	L0	C-1	MeasSystem started. : {'ConfigFile': '../../AppConfig/Config/MeasSystem/MeasSystem.ini'}
+77	2018-08-14 22:36:24	DriverSimulator	L1	C-1	Virtual laser 1 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+78	2018-08-14 22:36:24	DriverSimulator	L1	C-1	Virtual laser 2 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+79	2018-08-14 22:36:24	RDFrequencyConverter	L1	C-1	Connection made by Ringdown frequency converter listener to port 40030.
+80	2018-08-14 22:36:24	MeasSystem	L1	C-1	Mode definitions loaded : {'ModeNames': ['HCl_inN2_mode', 'warming_mode', 'SADS_mode']}
+81	2018-08-14 22:36:24	SpectrumCollector	L0	C-1	Added named sequence: HCl_inN2_mode
+82	2018-08-14 22:36:24	SpectrumCollector	L0	C-1	Added named sequence: SADS_mode
+83	2018-08-14 22:36:24	MeasSystem	L1	C-1	Engine started (with Driver.startEngine) due to 'StartEngine' startup config setting.
+84	2018-08-14 22:36:24	MeasSystem	L1	C-1	State changed : {'State': 'READY', 'PreviousState': 'INIT'}
+85	2018-08-14 22:36:24	Supervisor	L1	C-1	Application start confirmed : MeasSystem
+86	2018-08-14 22:36:24	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'DataManager'}
+87	2018-08-14 22:36:24	Supervisor	L1	C-1	Launching application : {'appName': 'DataManager'}
+88	2018-08-14 22:36:25	Supervisor	L1	C-1	Application started : {'PID': 15300, 'App': 'DataManager', 'Affinity': 3, 'Port': 50160}
+89	2018-08-14 22:36:25	DataManager	L1	C-1	Config file specified at command line : ../../AppConfig/Config/DataManager/DataManager.ini
+90	2018-08-14 22:36:25	DataManager	L1	C-1	Alarm system configuration file is : ../../AppConfig/Config/AlarmSystem/AlarmSystem_Code.ini
+91	2018-08-14 22:36:25	DataManager	L0	C-1	DataManager started. : {'ConfigFile': '../../AppConfig/Config/DataManager/DataManager.ini'}
+92	2018-08-14 22:36:25	DataManager	L1	C-1	Compiling alarm script : {'Path': '../../AppConfig/Config/AlarmSystem/../../Scripts/AlarmSystem/alarm_AMADS.py'}
+93	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager sensor stream listener to port 40020.
+94	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 0 listener to port 40080.
+95	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 1 listener to port 40081.
+96	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 3 listener to port 40083.
+97	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 2 listener to port 40082.
+98	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 4 listener to port 40084.
+99	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 6 listener to port 40086.
+100	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 7 listener to port 40087.
+101	2018-08-14 22:36:25	DataManager	L1	C-1	Connection made by Data manager fitter 5 listener to port 40085.
+102	2018-08-14 22:36:25	DataManager	L1	C-1	Mode definitions loaded : {'ModeNames': ['HCl_inN2_mode', 'warming_mode', 'SADS_mode']}
+103	2018-08-14 22:36:25	DataManager	L1	C-1	Starting compilation of identified analyzer scripts : {'Count': 3}
+104	2018-08-14 22:36:25	DataManager	L1	C-1	Compiling analyzer script : {'Path': '../../AppConfig/Config/DataManager/../../ModeInfo/../Scripts/DataManager/analyze_HCl_inN2.py'}
+105	2018-08-14 22:36:25	DataManager	L1	C-1	Compiling analyzer script : {'Path': '../../AppConfig/Config/DataManager/../../ModeInfo/../Scripts/DataManager/analyze_SADS.py'}
+106	2018-08-14 22:36:25	DataManager	L1	C-1	Compiling analyzer script : {'Path': '../../AppConfig/Config/DataManager/../../ModeInfo/../Scripts/DataManager/analyze_warming.py'}
+107	2018-08-14 22:36:25	DataManager	L1	C-1	Analyzer script compilation complete
+108	2018-08-14 22:36:25	DataManager	L1	C-1	Peripheral Interface not running.
+109	2018-08-14 22:36:25	DataManager	L1	C-1	State changed : {'State': 'READY', 'PreviousState': 'INIT'}
+110	2018-08-14 22:36:26	Supervisor	L1	C-1	Application start confirmed : DataManager
+111	2018-08-14 22:36:26	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'SampleManager'}
+112	2018-08-14 22:36:26	Supervisor	L1	C-1	Launching application : {'appName': 'SampleManager'}
+113	2018-08-14 22:36:27	Supervisor	L1	C-1	Application started : {'PID': 15420, 'App': 'SampleManager', 'Affinity': 1, 'Port': 50080}
+114	2018-08-14 22:36:27	SampleManager	L0	C-1	SampleManager started. : {'ConfigFile': '../../AppConfig/Config/SampleManager/SampleManager.ini'}
+115	2018-08-14 22:36:27	SampleManager	L1	C-1	Connection made by Sample Manager sensor stream listener to port 40020.
+116	2018-08-14 22:36:27	Supervisor	L1	C-1	Application start confirmed : SampleManager
+117	2018-08-14 22:36:27	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'InstMgr'}
+118	2018-08-14 22:36:27	Supervisor	L1	C-1	Launching application : {'appName': 'InstMgr'}
+119	2018-08-14 22:36:28	Supervisor	L1	C-1	Application started : {'PID': 15461, 'App': 'InstMgr', 'Affinity': 1, 'Port': 50110}
+120	2018-08-14 22:36:28	InstMgr	L1	C-1	Config file specified at command line: ../../AppConfig/Config/InstMgr/InstMgr.ini
+121	2018-08-14 22:36:28	InstMgr	L0	C-1	InstMgr started. : {'ConfigFile': '../../AppConfig/Config/InstMgr/InstMgr.ini', 'NoSampleMgr': False}
+122	2018-08-14 22:36:28	InstMgr	L1.5	C-1	Starting
+123	2018-08-14 22:36:28	DataManager	L1	C-1	Connection made by Data manager Instrument Manager listener to port 41110.
+124	2018-08-14 22:36:28	DriverSimulator	L1	C-1	version = {'interface': 1, 'host release': 'I2000-1.2.3.4 (abcd1234)', 'config - app version no': '1.0.3', 'config - instr version no': '5', 'config - common version no': '1.0.9'}
+125	2018-08-14 22:36:29	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+126	2018-08-14 22:36:29	InstMgr	L1.5	C-1	Warming...
+127	2018-08-14 22:36:30	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+128	2018-08-14 22:36:31	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+129	2018-08-14 22:36:31	DataManager	L1	C-1	Starting synchronous analyzers : {'Count': 1, 'SyncAnalyzers': ['Sensors']}
+130	2018-08-14 22:36:31	DataManager	L1	C-1	Synchronous analyzers have all been enqueued
+131	2018-08-14 22:36:31	DataManager	L1	C-1	Measurement mode changed. : {'NewMode': 'warming_mode', 'OldMode': '<NOT SPECIFIED>'}
+132	2018-08-14 22:36:31	InstMgr	L1.5	C-1	Uploading warmbox cal to DAS...
+133	2018-08-14 22:36:31	DriverSimulator	L1	C-1	Virtual laser 1 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+134	2018-08-14 22:36:31	DriverSimulator	L1	C-1	Virtual laser 2 : {'pressureC2': 0.0, 'tempSensitivity': -0.17217200747, 'pressureC0': 0.0, 'pressureC1': 0.0, 'ratio1Scale': 1.05000433633, 'ratio2Center': 0.499991216128, 'ratio2Scale': 1.05, 'actualLaser': 0, 'pressureC3': 0.0, 'phase': 5.73743084318e-06, 'calTemp': 45.0, 'calPressure': 760.0, 'ratio1Center': 0.499993448537}
+135	2018-08-14 22:36:32	SampleManager	L1	C-1	Setmode: <type 'exceptions.KeyError'> 'OutletOnlyMode'
+136	2018-08-14 22:36:32	InstMgr	L1.5	C-1	Temp and pressure stabilizing...
+137	2018-08-14 22:36:33	Supervisor	L1	C-1	Application start confirmed : InstMgr
+138	2018-08-14 22:36:33	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'AlarmSystem'}
+139	2018-08-14 22:36:33	Supervisor	L1	C-1	Launching application : {'appName': 'AlarmSystem'}
+140	2018-08-14 22:36:34	Supervisor	L1	C-1	Application started : {'PID': 15532, 'App': 'AlarmSystem', 'Affinity': 1, 'Port': 50100}
+141	2018-08-14 22:36:34	Supervisor	L1	C-1	Application start confirmed : AlarmSystem
+142	2018-08-14 22:36:34	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'ValveSequencer'}
+143	2018-08-14 22:36:34	Supervisor	L1	C-1	Launching application : {'appName': 'ValveSequencer'}
+144	2018-08-14 22:36:34	AlarmSystemLegacyStub	L1	C-1	Config file specified at command line: ../../AppConfig/Config/AlarmSystem/AlarmSystem.ini
+145	2018-08-14 22:36:34	AlarmSystemLegacyStub	L0	C-1	AlarmSystemLegacyStub started. : {'ConfigFile': '../../AppConfig/Config/AlarmSystem/AlarmSystem.ini'}
+146	2018-08-14 22:36:34	AlarmSystemLegacyStub	L1	C-1	Exiting program
+147	2018-08-14 22:36:34	Supervisor	L1	C-1	Application started : {'PID': 15552, 'App': 'ValveSequencer', 'Affinity': 1, 'Port': 50200}
+148	2018-08-14 22:36:34	ValveSequencer	L0	C-1	ValveSequencer started.
+149	2018-08-14 22:36:34	Supervisor	L1	C-1	Application start confirmed : ValveSequencer
+150	2018-08-14 22:36:34	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'QuickGui'}
+151	2018-08-14 22:36:34	Supervisor	L1	C-1	Launching application : {'appName': 'QuickGui'}
+152	2018-08-14 22:36:35	DataManager	L1	C-1	Max periodic script delay so far 0.038s on iteration 0: Sensors
+153	2018-08-14 22:36:35	Supervisor	L1	C-1	Application started : {'PID': 15588, 'App': 'QuickGui', 'Affinity': 1, 'Port': -1}
+154	2018-08-14 22:36:35	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'DataLogger'}
+155	2018-08-14 22:36:35	Supervisor	L1	C-1	Launching application : {'appName': 'DataLogger'}
+156	2018-08-14 22:36:36	/home/picarro/git/host/src/main/python/Host/QuickGui/QuickGui.py	L0	C-1	QuickGui started. : {'ConfigFile': '../../AppConfig/Config/QuickGui/QuickGui.ini'}
+157	2018-08-14 22:36:36	/home/picarro/git/host/src/main/python/Host/QuickGui/QuickGui.py	L1	C-1	Connection made by QuickGUI event log listener to port 40010.
+158	2018-08-14 22:36:36	Supervisor	L1	C-1	Application started : {'PID': 15621, 'App': 'DataLogger', 'Affinity': 1, 'Port': 50090}
+159	2018-08-14 22:36:37	DataLogger	L1	C-1	Config file specified at command line: ../../AppConfig/Config/DataLogger/DataLogger.ini
+160	2018-08-14 22:36:37	DataLogger	L1	C-1	User Config file specified at command line: ../../AppConfig/Config/DataLogger/UserLog.ini
+161	2018-08-14 22:36:37	DataLogger	L1	C-1	Private Config file specified at command line: ../../AppConfig/Config/DataLogger/PrivateLog.ini
+162	2018-08-14 22:36:37	DataLogger	L0	C-1	DataLogger started. : {'ConfigFile': '../../AppConfig/Config/DataLogger/DataLogger.ini'}
+163	2018-08-14 22:36:37	DataLogger	L1	C-1	Data Logger: source dict={'analyze_SADS': ['DataLog_Private', 'DataLog_User']}; port dict={40060: ['DataLog_Private', 'DataLog_User']}
+164	2018-08-14 22:36:37	DataLogger	L1	C-1	Connection made by Data Logger data listener to port 40060.
+165	2018-08-14 22:36:37	Supervisor	L1	C-1	Application start confirmed : DataLogger
+166	2018-08-14 22:36:37	Supervisor	L1	C-1	Attempting to launch application : {'AppName': 'BackupSupervisor'}
+167	2018-08-14 22:36:37	Supervisor	L1	C-1	Launching application : {'appName': 'BackupSupervisor'}
+168	2018-08-14 22:36:38	Supervisor	L1	C-1	Application started : {'PID': 15672, 'App': 'BackupSupervisor', 'Affinity': 1, 'Port': 50031}
+169	2018-08-14 22:36:38	Supervisor	L1	C-1	Config file specified at command line : {'Path': '../../AppConfig/Config/Supervisor/supervisor_simulation.ini'}
+170	2018-08-14 22:36:38	Supervisor	L1	C-1	Application start confirmed : BackupSupervisor
+171	2018-08-14 22:36:38	Supervisor	L1	C-1	Process ID received from Master Supervisor : {'PID': 14848}
+172	2018-08-14 22:36:38	Supervisor	L1	C-1	Application monitoring loop started
+173	2018-08-14 22:36:45	DataLogger	L1	C-1	Maximum data listener loop RTT so far: 0.000
+174	2018-08-14 22:36:50	DataLogger	L1	C-1	Maximum data listener loop RTT so far: 4.960
+175	2018-08-14 22:37:05	DataManager	L1	C-1	Max periodic script delay so far 0.047s on iteration 6: Sensors
+176	2018-08-14 22:37:05	DataLogger	L1	C-1	Maximum data listener loop RTT so far: 5.010
+177	2018-08-14 22:37:08	InstMgr	L1.5	C-1	Temp locked:WB
+178	2018-08-14 22:37:08	InstMgr	L1.5	C-1	Temp locked:HB
+179	2018-08-14 22:37:08	InstMgr	L1.5	C-1	Preparing to measure
+180	2018-08-14 22:37:08	MeasSystem	L1	C-1	Setting instrument mode: {'Tuning': 'CavityLength'}
+181	2018-08-14 22:38:18	InstMgr	L1.5	C-1	Pressure locked
+182	2018-08-14 22:38:18	InstMgr	L1	C-1	EEPROM ID matches Software Installer ID (SBDS)
+183	2018-08-14 22:38:18	InstMgr	L1.5	C-1	Measuring...
+184	2018-08-14 22:38:18	DataManager	L1	C-1	Starting synchronous analyzers : {'Count': 1, 'SyncAnalyzers': ['Sensors']}
+185	2018-08-14 22:38:18	DataManager	L1	C-1	Synchronous analyzers have all been enqueued
+186	2018-08-14 22:38:19	DataManager	L1	C-1	Synchronous analyzers have all been stopped.
+187	2018-08-14 22:38:19	DataManager	L1	C-1	Starting synchronous analyzers : {'Count': 1, 'SyncAnalyzers': ['Sensors']}
+188	2018-08-14 22:38:19	DataManager	L1	C-1	Synchronous analyzers have all been enqueued
+189	2018-08-14 22:38:19	MeasSystem	L1	C-1	State changed : {'State': 'ENABLED', 'PreviousState': 'READY'}
+190	2018-08-14 22:38:19	DataManager	L1	C-1	Measurement mode changed. : {'NewMode': 'SADS_mode', 'OldMode': 'warming_mode'}
+191	2018-08-14 22:38:19	DataManager	L1	C-1	State changed : {'State': 'ENABLED', 'PreviousState': 'READY'}
+192	2018-08-14 22:38:19	SpectrumCollector	L1	C-1	Sequencer enters STARTUP state
+193	2018-08-14 22:38:20	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+194	2018-08-14 22:38:20	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 106
+195	2018-08-14 22:38:21	SpectrumCollector	L1	C-1	Maximum Processed Ringdowns loop RTT so far: 0.000
+196	2018-08-14 22:38:21	SpectrumCollector	L1	C-1	Maximum Processed Ringdowns loop RTT so far: 0.001
+197	2018-08-14 22:38:21	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+198	2018-08-14 22:38:21	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 113
+199	2018-08-14 22:38:21	SpectrumCollector	L1	C-1	Maximum Processed Ringdowns loop RTT so far: 0.017
+200	2018-08-14 22:38:22	SpectrumCollector	L1	C-1	Maximum Processed Ringdowns loop RTT so far: 0.176
+201	2018-08-14 22:38:22	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 272
+202	2018-08-14 22:38:26	DataLogger	L1	C-1	A new log file (/home/picarro/I2000/Log/DataLogger/DataLog_Private/SADS2001-20180814-153826-DataLog_Private.h5) created at 20180814-153826
+203	2018-08-14 22:38:26	DataLogger	L1	C-1	Datalog: /home/picarro/I2000/Log/DataLogger/DataLog_Private/SADS2001-20180814-153826-DataLog_Private.h5 action write takes new max time 0.017
+204	2018-08-14 22:38:26	DataLogger	L1	C-1	A new log file (/home/picarro/I2000/Log/DataLogger/DataLog_User/SADS2001-20180814-153826-DataLog_User.dat) created at 20180814-153826
+205	2018-08-14 22:38:26	Archiver	L1	C-1	Archiver command startLiveArchive took 0.00453805923462 seconds
+206	2018-08-14 22:38:26	DataLogger	L1	C-1	Datalog: /home/picarro/I2000/Log/DataLogger/DataLog_User/SADS2001-20180814-153826-DataLog_User.dat action write takes new max time 0.024
+207	2018-08-14 22:38:26	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+208	2018-08-14 22:38:31	DataLogger	L1	C-1	Datalog archive processing SADS2001-20180814-153826-DataLog_Private.h5 took 0.000332117080688 seconds
+209	2018-08-14 22:38:31	DataLogger	L1	C-1	A new log file (/home/picarro/I2000/Log/DataLogger/DataLog_Private/SADS2001-20180814-153831-DataLog_Private.h5) created at 20180814-153831
+210	2018-08-14 22:38:31	DataLogger	L1	C-1	Datalog: /home/picarro/I2000/Log/DataLogger/DataLog_Private/SADS2001-20180814-153831-DataLog_Private.h5 action write takes new max time 0.035
+211	2018-08-14 22:38:31	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+212	2018-08-14 22:38:35	Supervisor	L3	C-1	Dispatcher problem Unexpected exception raised after 0.5s in call to dispatcher: cannot connect: [Errno 111] Connection refused detected with monitored application : DataManager
+213	2018-08-14 22:38:35	Supervisor	L1	C-1	Application dependents identified : {'Dependents': ['InstMgr', 'AlarmSystem'], 'Master': 'DataManager'}
+214	2018-08-14 22:38:35	Supervisor	L2	C-1	Stopping application : InstMgr
+215	2018-08-14 22:38:36	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+216	2018-08-14 22:38:36	InstMgr	L1	C-1	RpcServer exited and no longer serving.
+217	2018-08-14 22:38:37	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 283
+218	2018-08-14 22:38:39	Supervisor	L2	C-1	App shutdown attempted, but app already closed : AlarmSystem
+219	2018-08-14 22:38:39	Supervisor	L2	C-1	App shutdown attempted, but app already closed : DataManager
+220	2018-08-14 22:38:39	Supervisor	L1	C-1	Application and all dependents successfully shut down.  Restarting from bottom up. : {'Dependents': ['InstMgr', 'AlarmSystem'], 'AppName': 'DataManager'}
+221	2018-08-14 22:38:39	Supervisor	L1	C-1	Launch list: ['DataManager', 'InstMgr', 'AlarmSystem']
+222	2018-08-14 22:38:41	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+223	2018-08-14 22:38:45	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 317
+224	2018-08-14 22:38:45	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+225	2018-08-14 22:38:50	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+226	2018-08-14 22:38:54	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+227	2018-08-14 22:38:59	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+228	2018-08-14 22:39:04	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+229	2018-08-14 22:39:09	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+230	2018-08-14 22:39:14	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+231	2018-08-14 22:39:19	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+232	2018-08-14 22:39:23	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+233	2018-08-14 22:39:25	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 327
+234	2018-08-14 22:39:28	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+235	2018-08-14 22:39:33	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+236	2018-08-14 22:39:37	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+237	2018-08-14 22:39:42	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+238	2018-08-14 22:39:46	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 329
+239	2018-08-14 22:39:47	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+240	2018-08-14 22:39:49	SpectrumCollector	L1	C-1	Maximum Processed Ringdowns loop RTT so far: 1.023
+241	2018-08-14 22:39:51	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+242	2018-08-14 22:39:56	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+243	2018-08-14 22:40:01	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+244	2018-08-14 22:40:06	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+245	2018-08-14 22:40:10	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+246	2018-08-14 22:40:15	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+247	2018-08-14 22:40:20	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+248	2018-08-14 22:40:20	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 333
+249	2018-08-14 22:40:25	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+250	2018-08-14 22:40:29	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+251	2018-08-14 22:40:34	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+252	2018-08-14 22:40:39	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+253	2018-08-14 22:40:43	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+254	2018-08-14 22:40:48	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+255	2018-08-14 22:40:53	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+256	2018-08-14 22:40:58	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+257	2018-08-14 22:41:02	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+258	2018-08-14 22:41:07	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+259	2018-08-14 22:41:12	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+260	2018-08-14 22:41:15	SpectrumCollector	L1	C-1	Maximum Processed Ringdowns loop RTT so far: 1.024
+261	2018-08-14 22:41:16	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+262	2018-08-14 22:41:21	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+263	2018-08-14 22:41:26	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+264	2018-08-14 22:41:31	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+265	2018-08-14 22:41:36	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+266	2018-08-14 22:41:41	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+267	2018-08-14 22:41:45	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+268	2018-08-14 22:41:50	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+269	2018-08-14 22:41:52	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 334
+270	2018-08-14 22:41:54	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+271	2018-08-14 22:41:59	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+272	2018-08-14 22:42:04	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+273	2018-08-14 22:42:09	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+274	2018-08-14 22:42:13	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+275	2018-08-14 22:42:18	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+276	2018-08-14 22:42:23	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+277	2018-08-14 22:42:28	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+278	2018-08-14 22:42:33	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+279	2018-08-14 22:42:37	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+280	2018-08-14 22:42:41	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+281	2018-08-14 22:42:46	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+282	2018-08-14 22:42:51	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+283	2018-08-14 22:42:56	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+284	2018-08-14 22:43:01	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+285	2018-08-14 22:43:05	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+286	2018-08-14 22:43:10	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+287	2018-08-14 22:43:15	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+288	2018-08-14 22:43:20	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+289	2018-08-14 22:43:25	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+290	2018-08-14 22:43:29	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+291	2018-08-14 22:43:34	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+292	2018-08-14 22:43:39	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+293	2018-08-14 22:43:43	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+294	2018-08-14 22:43:48	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+295	2018-08-14 22:43:53	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+296	2018-08-14 22:43:58	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+297	2018-08-14 22:44:02	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+298	2018-08-14 22:44:07	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+299	2018-08-14 22:44:12	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+300	2018-08-14 22:44:17	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+301	2018-08-14 22:44:21	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+302	2018-08-14 22:44:26	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+303	2018-08-14 22:44:31	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+304	2018-08-14 22:44:35	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+305	2018-08-14 22:44:40	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+306	2018-08-14 22:44:41	RDFrequencyConverter	L1	C-1	rdQueueSize reaches new peak level 338
+307	2018-08-14 22:44:45	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+308	2018-08-14 22:44:50	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+309	2018-08-14 22:44:54	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+310	2018-08-14 22:44:59	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+311	2018-08-14 22:45:04	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+312	2018-08-14 22:45:09	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+313	2018-08-14 22:45:14	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+314	2018-08-14 22:45:19	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
+315	2018-08-14 22:45:23	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 3
+316	2018-08-14 22:45:28	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 0
+317	2018-08-14 22:45:32	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 1
+318	2018-08-14 22:45:38	SpectrumCollector	L1	C-1	Sequencer enters SEND_SCHEME state. Sequence = SADS_mode, Scheme = 1 (_HCl+H2O_v4.sch), Repeat = 1, Table = 2
