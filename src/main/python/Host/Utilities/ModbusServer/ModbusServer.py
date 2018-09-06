@@ -24,7 +24,7 @@ It serves for 2 purposes:
 #
 # 11NOV2017 RSF
 
-APP_NAME = "ModbusServer"
+APP_NAME = "Modbus"
 ENDIAN = "Big"
 BYTE_SIZE = 8
 
