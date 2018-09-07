@@ -1176,29 +1176,28 @@ class Driver(SharedTypes.Singleton):
 
         # Instruct the supervisor to shut down all applications except the driver, since the
         #  driver will be shutdown using self.looping.
-        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
-            self.restartSurveyor.restart()
+#        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
+#            self.restartSurveyor.restart()
+#            self.looping = False
+        if sys.platform == "linux2":
+            Log("Driver has encountered an error... Requesting Restart", Level=2)
+#            self.supervisor.TerminateApplications(False, False)
+            # Request restart from Supervisor and restart and dependants. then exit
+            # this thread cleanly
+            self.supervisor.RestartApplications(APP_NAME, True)
             self.looping = False
-        else:
-            self.supervisor.TerminateApplications(False, False)
-            DETACHED_PROCESS = 0x00000008
-            try:
-                Log("Forced restart via supervisor launcher")
-                if os.getcwd().lower().endswith("hostexe"):
-                    subprocess.Popen([r"SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                      "-c", r"..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                     creationflags=DETACHED_PROCESS)
-                else:
-                    subprocess.Popen([r"..\..\HostExe\SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                      "-c", r"..\..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                     creationflags=DETACHED_PROCESS)
-                    #Log("Cannot invoke supervisor launcher from %s" % os.getcwd())
-            except:
-                Log("Cannot communicate with supervisor:\n%s" % traceback.format_exc())
-            finally:
-                self.looping = False
+#            Log("Forcing restart via supervisor launcher")
+#            try:
+#                pid = os.fork()
+#                if pid == 0:
+#                    subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
+#                                "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"],
+#                                shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
+#                else:
+#                    Log("Error forcing restart via supervisor launcher: OS did not fork")
+#            except Exception, e:
+#                Log("Error forcing restart via supervisor launcher: %s" % str(e))
+
 
     def run(self):
         nudge = 0
@@ -1380,6 +1379,12 @@ class Driver(SharedTypes.Singleton):
                 type,value,trace = sys.exc_info()
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
         finally:
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
@@ -1487,14 +1492,23 @@ def handleCommandSwitches():
         configFile = options["-c"]
     return configFile
 
-if __name__ == "__main__":
-    driverApp = SingleInstance("PicarroDriver")
+def main():
+    driverApp = SingleInstance(APP_NAME)
     if driverApp.alreadyrunning():
-        Log("Instance of driver us already running",Level=3)
+        Log("Instance of driver is already running", Level=3)
     else:
         configFile = handleCommandSwitches()
-        Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
+        Log("%s started" % APP_NAME, Level=0)
         d = Driver(configFile)
         d.run()
     Log("Exiting program")
     time.sleep(1)
+
+if __name__ == "__main__":
+    """
+    The main function shall be used in all processes. This way we can
+    import it in the pydCaller, and ensure that all processes are launched
+    the same way without having to edit both files any time we want to make
+    a change.
+    """
+    main()

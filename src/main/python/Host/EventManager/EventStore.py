@@ -42,7 +42,7 @@ class EventStore(object):
                 date,time = [s.strip() for s in time.split()]
                 eventTuple = (int(index),date,time,source,float(level[1:]),int(code[1:]),desc)
                 # Level 1.5 = info only; message shows on both GUI and EventLog
-                if eventTuple[4] >= 1.5:
+                if eventTuple[4] >= 1.5 or eventTuple[4] == 0:
                     self.eventDeque.append(eventTuple)
                 while len(self.eventDeque) > n:
                     self.eventDeque.popleft()

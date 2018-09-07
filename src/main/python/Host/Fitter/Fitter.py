@@ -47,6 +47,7 @@ from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+from Host.Common.SingleInstance import SingleInstance
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
@@ -865,7 +866,7 @@ class FitViewer(wx.Frame):
                 self.modelList.Check(i,self.checkList[i])
 
             if len(analysis.xData) == 0:
-                Log('No xData; skipping rest of model analysis', Level=0)
+                Log('No xData; skipping rest of model analysis', Level=1)
                 return
 
             analysis.computeResiduals(self.anStage)
@@ -1236,12 +1237,36 @@ def HandleCommandSwitches():
     return (configFile, useViewer, options)
 
 def main():
+    """
+    Allow Fitter to have up to 3 total instances running
+    for instruments with three lasers
+    We will start with the name Fitter1 and increment to
+    Fitter2, and Fitter3 if necessary
+    """
+    count = 1
+    max_count = 4
+    my_instance = SingleInstance((APP_NAME + str(count)))
+    if my_instance.alreadyrunning():
+        for x in range(count, max_count):
+            count += 1
+            my_instance = SingleInstance((APP_NAME + str(count)))
+            if my_instance.alreadyrunning():
+                continue
+            else:
+                start()
+                break
+    else:
+        start()
+
+
+def start():
     app = wx.PySimpleApp()
     configFile, useViewer, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = FitViewer(configFile,useViewer,options)
+    Log("%s started." % APP_NAME, Level=0)
+    frame = FitViewer(configFile, useViewer, options)
     app.MainLoop()
     Log("Exiting program")
+
 
 if __name__ == "__main__":
     main()

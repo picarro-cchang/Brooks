@@ -24,7 +24,7 @@ It serves for 2 purposes:
 #
 # 11NOV2017 RSF
 
-APP_NAME = "ModbusServer"
+APP_NAME = "Modbus"
 ENDIAN = "Big"
 BYTE_SIZE = 8
 
@@ -53,6 +53,9 @@ from Host.Utilities.ModbusServer.ModbusUtils import get_variable_type, ModbusScr
 from Host.Common import AppStatus
 from Host.Common import InstMgrInc
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 EventManagerProxy_Init(APP_NAME)
 
 import socket
@@ -104,6 +107,8 @@ class ModbusServer(object):
                 logging.basicConfig()
                 log = logging.getLogger()
                 log.setLevel(logging.DEBUG)
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                         IsDontCareConnection=False)
             self.slaveid = self.config.getint("SerialPortSetup", "SlaveId", 1)
             self.rtu = self.config.getboolean("Main", "rtu", False)
             self.debug = debug
@@ -196,6 +201,8 @@ class ModbusServer(object):
             script = file(script_path, 'r')
             scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
             exec scriptObj in scriptEnv
+        else:
+            print("Path does not exist: %s" % script_path)
         for s in self.config:
             name = ""
             d = {}
@@ -654,6 +661,27 @@ def handleCommandSwitches():
         debug = True
     return (configFile, simulation, debug)
 
+
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        server = ModbusServer(*handleCommandSwitches())
+        try:
+            server.run()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+            # Exit, in case the server running, but the app is not
+            # We don't want to get stuck in a restart loop here
+            sys.exit(1)
+
+
 if __name__ == "__main__":
-    server = ModbusServer(*handleCommandSwitches())
-    server.run()
+    main()

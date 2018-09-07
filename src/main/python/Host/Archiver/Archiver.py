@@ -29,32 +29,23 @@ _MAIN_CONFIG_SECTION = "MainConfig"
 import sys
 import os
 import getopt
-import doctest
 import threading
-import traceback
 import shutil
 import stat
 import time
 import Queue
 import zipfile
-from inspect import isclass
 from cStringIO import StringIO
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import RPC_PORT_LOGGER, RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
+from Host.Common.SharedTypes import RPC_PORT_ARCHIVER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
-from Host.Common.timestamp import timestampToUtcDatetime, unixTime
+from Host.Common.timestamp import unixTime
 from Host.Common.S3Uploader import S3Uploader
-if sys.platform == 'win32':
-    from win32file import CreateFile, WriteFile, CloseHandle, SetFilePointer, DeleteFile
-    from win32file import FILE_BEGIN, FILE_END, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,\
-                          INVALID_HANDLE_VALUE
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
-
-if sys.platform == 'win32':
-    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
-
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
                                             APP_NAME,
                                             IsDontCareConnection = False)
@@ -813,6 +804,8 @@ class Archiver(object):
     specified."""
     def __init__(self,configFile):
         self.configFile = configFile
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         if not self.LoadConfig(self.configFile):
             Log("Failed to load config.")
             return
@@ -1032,34 +1025,43 @@ def PrintUsage():
     print HELP_STRING
 
 def main():
-    #Get and handle the command line options...
-    configFile, test = HandleCommandSwitches()
-    ar = Archiver(configFile)
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    if test:
-        if sys.platform == "win32":
-            fname = "c:/temp/AADS06wlm.dat"
-        else:
-            fname = "/var/temp/AADS06wlm.dat"
-        seqnum = 0
-        while True:
-            if sys.platform == "win32":
-                tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
-            else:
-                tmpName = "/var/temp/seq%07d.dat" % (seqnum,)
-            seqnum += 1
-            shutil.copy2(fname,tmpName)
-            ar.RPC_ArchiveFile("Spectra",tmpName,True)
-            print "%s" % (ar.RPC_GetGroupInfo("Spectra"),)
-            # ar.storageGroups["Spectra"].archiveData(tmpName,removeOriginal=True)
-            time.sleep(0.5)
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
-        ar.startServer()
+        try:
+            #Get and handle the command line options...
+            configFile, test = HandleCommandSwitches()
+            ar = Archiver(configFile)
+            Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+            if test:
+                if sys.platform == "win32":
+                    fname = "c:/temp/AADS06wlm.dat"
+                else:
+                    fname = "/var/temp/AADS06wlm.dat"
+                seqnum = 0
+                while True:
+                    if sys.platform == "win32":
+                        tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
+                    else:
+                        tmpName = "/var/temp/seq%07d.dat" % (seqnum,)
+                    seqnum += 1
+                    shutil.copy2(fname,tmpName)
+                    ar.RPC_ArchiveFile("Spectra",tmpName,True)
+                    print "%s" % (ar.RPC_GetGroupInfo("Spectra"),)
+                    # ar.storageGroups["Spectra"].archiveData(tmpName,removeOriginal=True)
+                    time.sleep(0.5)
+            else:
+                ar.startServer()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        tbMsg = traceback.format_exc()
-        print "Unhandled exception trapped by last chance handler"
-        print "%s" % (tbMsg,)
+    main()

@@ -1,18 +1,13 @@
-APP_NAME = "SpectrumCollector"
+from Host.Common.EventManagerProxy import EventManagerProxy_Init
+from Host.SpectrumCollector.SpectrumCollector import main
 
-import multiprocessing
-from Host.SpectrumCollector.SpectrumCollector import SpectrumCollector, handleCommandSwitches
-from Host.Common.EventManagerProxy import *
+
+APP_NAME = "SpectrumCollector"
 EventManagerProxy_Init(APP_NAME)
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()
-    try:
-        configFile, options = handleCommandSwitches()
-        spCollectorApp = SpectrumCollector(configFile)
-        Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-        spCollectorApp.run()
-        # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
-        Log("Exiting program")
-    except Exception:
-        LogExc("Unhandled exception in SpectrumCollector", Level=3)
+    """
+        Import main from APP_NAME. This ensures our processes launch with
+        the same method regardless of called directly or via this pydCaller
+        """
+    main()

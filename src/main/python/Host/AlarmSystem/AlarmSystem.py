@@ -15,7 +15,7 @@ Copyright (c) 2014 Picarro, Inc. All rights reserved
 ####
 ## Set constants for this file...
 ####
-APP_NAME = "AlarmSystemLegacyStub"
+APP_NAME = "AlarmSystem"
 APP_VERSION = 1.0
 APP_DESCRIPTION = "The alarm system"
 _CONFIG_NAME = "AlarmSystem.ini"
@@ -23,13 +23,18 @@ _CONFIG_NAME = "AlarmSystem.ini"
 import sys
 import os
 import getopt
-import traceback
 
 from Host.Common import CmdFIFO
 from Host.autogen import interface
-from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SUPERVISOR
 from Host.Common.EventManagerProxy import Log, LogExc, EventManagerProxy_Init
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 EventManagerProxy_Init(APP_NAME)
+
+# Set up supervisor RPC
+supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
 
 #Set up a useful AppPath reference...
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -81,27 +86,26 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
-                                                 APP_NAME, IsDontCareConnection=False)
-        rtn = DataManager.SetLegacyAlarmConfig(configFile)
-        assert(rtn == interface.STATUS_OK)
-        Log("Exiting program")
-    except Exception, E:
-        if __debug__: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
+                                                     APP_NAME, IsDontCareConnection=False)
+            rtn = DataManager.SetLegacyAlarmConfig(configFile)
+            assert(rtn == interface.STATUS_OK)
+            Log("Exiting program")
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        tbMsg = traceback.format_exc()
-        Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = tbMsg)
-    Log("Exiting program")
-    sys.stdout.flush()
+    main()

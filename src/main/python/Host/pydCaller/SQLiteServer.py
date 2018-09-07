@@ -1,12 +1,12 @@
-from Host.Driver.Driver import main
+from Host.WebServer.SQLiteServer import main
 from Host.Common.EventManagerProxy import EventManagerProxy_Init
 
-APP_NAME = "Driver"
+APP_NAME = "SQLiteServer"
 EventManagerProxy_Init(APP_NAME)
 
 if __name__ == "__main__":
     """
-    Import main from APP_NAME. This ensures our processes launch with
+    Import main from Driver. This ensures our processes launch with
     the same method regardless of called directly or via this pydCaller
     """
     main()
