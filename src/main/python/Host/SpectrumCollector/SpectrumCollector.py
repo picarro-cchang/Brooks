@@ -35,9 +35,11 @@ from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.SpectrumCollector.Sequencer import Sequencer
@@ -302,7 +304,7 @@ class SpectrumCollector(object):
                             # Check to make sure the directory we want to write exists
                             # Create it, if it doesn't exist
                             if not os.path.isdir(self.streamDir):
-                                os.makedirs(self.streamDir):
+                                os.makedirs(self.streamDir)
                                 Log("Created streamDir in %s" % self.streamDir)
                             # Write the file
                             self.writeOut(fileName, spectraInScheme)
@@ -677,7 +679,7 @@ def main():
             # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
             Log("Exiting program")
         except Exception, e:
-            LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
 
 if __name__ == "__main__":
     main()
