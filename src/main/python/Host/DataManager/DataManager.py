@@ -36,15 +36,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-####
-## Set constants for this file...
-####
-APP_NAME = "DataManager"
-APP_VERSION = 1.0
-_DEFAULT_CONFIG_NAME = "DataManager.ini"
-_MAIN_CONFIG_SECTION = "Setup"
-_SERIAL_CONFIG_SECTION = "SerialOutput"
-
 STATE__UNDEFINED = -100
 STATE_ERROR = 0x0F
 STATE_INIT = 0
@@ -74,6 +65,7 @@ USERCAL_OFFSET_INDEX = 1
 
 DEFAULT_SERIAL_OUT_DELAY = 10.0 # the time delay of sending the fitter results to serial output
 SERIAL_CMD_DELAY = 0.02 # the execution time delay between sending a command and actually receiving the command on the serial output
+
 
 import Queue
 import threading
@@ -111,6 +103,18 @@ from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+
+####
+## Set constants for this file...
+####
+APP_NAME = "DataManager"
+APP_VERSION = 1.0
+_DEFAULT_CONFIG_NAME = "DataManager.ini"
+_MAIN_CONFIG_SECTION = "Setup"
+_SERIAL_CONFIG_SECTION = "SerialOutput"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME)
 
 if __debug__:
@@ -2153,8 +2157,8 @@ def HandleCommandSwitches():
     import getopt
     alarmConfigFile = None
     alarmSystemV3ConfigFile = None
-    shortOpts = 'hc:o:a:b:'
-    longOpts = ["help", "test", "no_inst_mgr"]
+    shortOpts = 'ho:b:'
+    longOpts = ["help", "test", "no_inst_mgr", "ini=", "alarm_ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -2180,13 +2184,13 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print("-c Config file specified at command line: %s" % configFile)
         Log("Config file specified at command line", configFile)
 
-    if "-a" in options:
-        alarmConfigFile = options["-a"]
+    if "--alarm_ini" in options:
+        alarmConfigFile = os.path.join(CONFIG_DIR, options["--alarm_ini"])
         print("-a Config file specified at command line: %s" % alarmConfigFile)
         Log("Alarm system configuration file is", alarmConfigFile)
 

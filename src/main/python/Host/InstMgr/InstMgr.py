@@ -53,11 +53,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "InstMgr"
-APP_VERSION = 1.0
-_DEFAULT_CONFIG_NAME = "InstMgr.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-
 import sys
 import os.path
 import time
@@ -80,6 +75,14 @@ from Host.Common.InstErrors import *
 from Host.Common.EventManagerProxy import *
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "InstMgr"
+APP_VERSION = 1.0
+_DEFAULT_CONFIG_NAME = "InstMgr.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
@@ -1389,8 +1392,8 @@ Where the options can be a combination of the following:
 def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["no_sample_mgr", "help", "vi"]
+    shortOpts = 'h'
+    longOpts = ["no_sample_mgr", "help", "vi", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1409,8 +1412,8 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         Log ("Config file specified at command line: %s" % configFile)
 
     if "--no_sample_mgr" in options:

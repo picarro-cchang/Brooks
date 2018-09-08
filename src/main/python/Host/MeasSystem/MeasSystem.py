@@ -40,13 +40,6 @@ File History:
     Copyright (c) 2010 Picarro, Inc. All rights reserved
 
 """
-
-APP_NAME = "MeasSystem"
-APP_VERSION = 1.0
-_DEFAULT_CONFIG_NAME = "MeasSystem.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-_SCHEME_CONFIG_SECTION = "SCHEME_CONFIG"
-
 import sys
 import os.path
 import getopt
@@ -69,6 +62,15 @@ from Host.Common.InstErrors import INST_ERROR_MEAS_SYS
 from Host.Common.EventManagerProxy import *
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
+
+APP_NAME = "MeasSystem"
+APP_VERSION = 1.0
+_DEFAULT_CONFIG_NAME = "MeasSystem.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
+_SCHEME_CONFIG_SECTION = "SCHEME_CONFIG"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
 
 STATE__UNDEFINED = -100
@@ -574,8 +576,8 @@ Where the options can be a combination of the following:
 def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
-    shortOpts = 'hsc:'
-    longOpts = ["help", "test", "no_fitter", "no_inst_mgr", "simulation"]
+    shortOpts = 'hs'
+    longOpts = ["help", "test", "no_fitter", "no_inst_mgr", "simulation", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -610,8 +612,8 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", configFile)
 

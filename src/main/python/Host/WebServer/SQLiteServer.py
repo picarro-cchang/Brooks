@@ -19,7 +19,7 @@ from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
 
-_DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
+_DEFAULT_CONFIG_FILE = os.environ["PICARRO_CONF_DIR"] + "/Host/WebServer/SQLiteDataBase.ini"
 
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
@@ -446,8 +446,8 @@ def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
     import getopt
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -470,8 +470,8 @@ def HandleCommandSwitches():
     # configFile = "SQLiteDataBase.ini"
     configFile = _DEFAULT_CONFIG_FILE
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = options["--ini"]
     print "Config file specified at command line: %s" % configFile
     
     return configFile

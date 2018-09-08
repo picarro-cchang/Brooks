@@ -21,11 +21,6 @@ File History:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-APP_NAME = "Archiver"
-__version__ = 1.0
-_DEFAULT_CONFIG_NAME = "Archiver.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-
 import sys
 import os
 import getopt
@@ -44,6 +39,13 @@ from Host.Common.timestamp import unixTime
 from Host.Common.S3Uploader import S3Uploader
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
+
+APP_NAME = "Archiver"
+__version__ = 1.0
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+_DEFAULT_CONFIG_NAME = "Archiver.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
@@ -978,8 +980,8 @@ class Archiver(object):
         return "refreshStats command queued for group %s" % (groupName,)
 
 def HandleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help","test"]
+    shortOpts = 'h'
+    longOpts = ["help","test","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1003,10 +1005,10 @@ def HandleCommandSwitches():
             executeTest = True
 
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
+    configFile = ""
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     return (configFile, executeTest)

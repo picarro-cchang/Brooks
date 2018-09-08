@@ -736,7 +736,7 @@ def main():
         Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help", "config="])
+            opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "ini="])
         except getopt.GetoptError:
             # print help information and exit:
             Usage()
@@ -748,8 +748,8 @@ def main():
             if o in ("-h", "--help"):
                 Usage()
                 sys.exit()
-            if o in ("-c", "--config"):
-                configFile = a
+            if o in ("--ini"):
+                configFile = os.path.join(CONFIG_DIR, a)
 
         app = CommandInterface()
         Log("%s started." % APP_NAME, Level=0)

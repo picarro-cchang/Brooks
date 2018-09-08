@@ -12,12 +12,6 @@ File History:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
-APP_NAME = "ValveSequencer"
-APP_DESCRIPTION = "Valve control with GUI"
-__version__ = 1.0
-DEFAULT_CONFIG_NAME = "ValveSequencer.ini"
-
 import sys
 import os
 import string
@@ -33,6 +27,14 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.RotValveCtrl import RotValveCtrl
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
 from Host.Common.EventManagerProxy import *
+
+APP_NAME = "ValveSequencer"
+APP_DESCRIPTION = "Valve control with GUI"
+__version__ = 1.0
+DEFAULT_CONFIG_NAME = "ValveSequencer.ini"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 #Set up a useful AppPath reference...
@@ -647,7 +649,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:s", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hs", ["help","ini="])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -662,10 +664,10 @@ def HandleCommandSwitches():
         sys.exit()
 
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
+    configFile = ""
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     if "-s" in options:

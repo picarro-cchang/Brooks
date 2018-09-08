@@ -23,11 +23,6 @@ It serves for 2 purposes:
 # *Move ModbusServer.ini to AppConfig/Config/Utilities
 #
 # 11NOV2017 RSF
-
-APP_NAME = "Modbus"
-ENDIAN = "Big"
-BYTE_SIZE = 8
-
 import os
 import sys
 import time
@@ -56,6 +51,11 @@ from Host.Common.EventManagerProxy import *
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
+
+APP_NAME = "Modbus"
+ENDIAN = "Big"
+BYTE_SIZE = 8
+
 EventManagerProxy_Init(APP_NAME)
 
 import socket
@@ -633,8 +633,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:s'
-    longOpts = ["help", "debug"]
+    shortOpts = 'hs'
+    longOpts = ["help", "debug", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -653,8 +653,8 @@ def handleCommandSwitches():
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = options["--ini"]
     if "-s" in options:
         simulation = True
     if "--debug" in options:

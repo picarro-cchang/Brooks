@@ -44,6 +44,8 @@ else:
     import subprocess
 
 APP_NAME = "DriverSimulator"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+
 try:
     # Release build
     from Host.Common import release_version as version
@@ -862,8 +864,8 @@ def printUsage():
 
 
 def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -876,12 +878,12 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h', "")
     # Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/DriverSimulator.ini"
+    configFile = ""
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     return configFile
 
 if __name__ == "__main__":
