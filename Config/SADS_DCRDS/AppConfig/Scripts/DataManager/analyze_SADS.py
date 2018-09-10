@@ -85,7 +85,7 @@ H2O_CONC = (_INSTR_["concentration_h2o_slope"],_INSTR_["concentration_h2o_interc
 CH4_CONC = (_INSTR_["concentration_ch4_slope"],_INSTR_["concentration_ch4_intercept"])
 
 try:   
-    temp = applyLinear(_DATA_["hcl_conc"],HCl_CONC)
+    temp = applyLinear(_DATA_["PF_hcl_conc"],HCl_CONC)
     _NEW_DATA_["HCl_raw"] = temp
     now = _OLD_DATA_["HCl_raw"][-2].time
     _NEW_DATA_["HCl_30sec"] = boxAverage(_PERSISTENT_["buffer30"],temp,now,30)

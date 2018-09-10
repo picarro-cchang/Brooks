@@ -81,7 +81,12 @@ else:
 def deleteFile(filename):
     """Delete a file, reporting any error, but not causing an exception. Returns True if delete succeeded"""
     try:
-        os.chmod(filename,stat.S_IREAD | stat.S_IWRITE)
+        """
+        Removing chmod on filename, appears to be breaking on linux
+        and should be unnecessary as the files are written by the host
+        with user rwx permissions already
+        #os.chmod(filename,stat.S_IREAD | stat.S_IWRITE)
+        """
         os.remove(filename)
         return True
     except OSError,e:
@@ -653,7 +658,12 @@ class ArchiveGroup(object):
                 # Replace existing file
                 try:
                     oldBytes = os.path.getsize(targetName)
-                    os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
+                    """
+                    Removing chmod on targetName, appears to be breaking on linux and
+                    should be unnecessar as the files are written by the host
+                    with user rwx permission already
+                    #os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
+                    """
                     os.remove(targetName)
                     self.makeSpace(-oldBytes, -1)
                 except OSError, e:
@@ -734,7 +744,12 @@ class ArchiveGroup(object):
 
     def _deleteUploadDir(self, name):
         try:
-            os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
+            """
+            Removing chmod on name, appears to be breaking on linux
+            and should be unnecessary as the files are written by the host
+            with user rwx permissions already
+            #os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
+            """
             os.rmdir(name)
             Log("(Retry Upload) Directory %s deleted" % (name,))
             print "(Retry Upload) Directory %s deleted" % (name,)
@@ -777,7 +792,12 @@ class ArchiveGroup(object):
             nBytes = os.path.getsize(name)
             nFiles = 1
             try:
-                os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
+                """
+                Removing chmod on name, appears to be breaking on linux
+                and should be unnecessary as the files are written by the host
+                with rwx permissions already
+                #os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
+                """
                 os.remove(name)
                 msg = 'ok'
             except OSError,e:
@@ -791,8 +811,17 @@ class ArchiveGroup(object):
                 msg = 'root'
             else:
                 try:
-                    os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
-                    os.rmdir(name)
+                    """
+                    Removing chmod on name, appears to be breaking on linux
+                    and should be unnecessary as the files are written by the host
+                    with rwx permissions already
+                    #os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
+                    """
+                    # Archiver doesn't appears to re-generate the tree to ensure the directory is
+                    # still empty. Let's check to make sure the directory really is empty before
+                    # we try to remove it, otherwise we'll catch an OSError exception.
+                    if len(os.listdir(name)) == 0:
+                        os.rmdir(name)
                     msg = 'ok'
                 except OSError,e:
                     msg = '%s' % (e,)

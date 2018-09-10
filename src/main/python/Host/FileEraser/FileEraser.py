@@ -31,6 +31,11 @@ Notes:
     extension =
     delete_time_hrs = 16
 
+    Behavior will be different on Windows than Linux. In linux, there is no way to get a file or folder creation time
+    in python. It will always return the Unix Timestamp of the last time the file or folder was modified. This should
+    still be acceptable for removing stales files/folders, but should be kept in mind when calculating the values you
+    would like to have in the configuration file.
+
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
@@ -128,8 +133,14 @@ def _removeOldFiles(pathToClean, extensionList, deleteTimeHrs):
             if (((os.path.basename(filename).split('.')[-1] in extensionList) or (extensionList[0] == '*')) and
                 (os.path.getmtime(filepath) < (time.time() - deleteTimeHrs * SECONDS_PER_HOUR))):
                 try:
-                    os.chmod(filepath, stat.S_IREAD | stat.S_IWRITE)
+                    """
+                    Removing chmod on filepath, appears to be breaking on linux
+                    and should be unnecessary as the files are written by the host
+                    with user permissions already
+                    #os.chmod(filepath, stat.S_IREAD | stat.S_IWRITE)
+                    """
                     os.remove(filepath)
+                    print('Removing file: %s' % (filepath))
                 except OSError,errorMsg:
                     Log('%s' % (errorMsg))
 
@@ -140,11 +151,17 @@ def _removeEmptyDirs(rootPath, deleteTimeHrs):
             dirpath = os.path.join(root, dirname)
             if os.path.getctime(dirpath) < (time.time() - deleteTimeHrs * SECONDS_PER_HOUR):
                 try:
-                    os.chmod(dirpath, stat.S_IREAD | stat.S_IWRITE)
+                    """
+                    Removing chmod on filepath, appears to be breaking on linux
+                    and should be unnecessary as the files are written by the host
+                    with user permissions already
+                    #os.chmod(filepath, stat.S_IREAD | stat.S_IWRITE)
+                    """
                     os.rmdir(dirpath)
+                    print('Removing folder: %s' % (dirpath))
                     emptyDirFound = True
-                except:
-                    pass
+                except OSError,errorMsg:
+                    Log('%s' % (errorMsg))
 
     return emptyDirFound
 

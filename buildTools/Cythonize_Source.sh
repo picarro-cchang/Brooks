@@ -23,7 +23,8 @@ includeFolderList[14]="Host/PeriphIntrf"
 includeFolderList[15]="Host/SampleManager"
 includeFolderList[16]="Host/SpectrumCollector"
 includeFolderList[17]="Host/Supervisor"
-includeFolderList[18]="Host/ValveSequencer" 
+includeFolderList[18]="Host/ValveSequencer"
+includeFolderList[19]="Host/FileEraser"
 
 number_of_running_process=0
 
