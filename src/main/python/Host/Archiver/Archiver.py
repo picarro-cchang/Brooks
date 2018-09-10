@@ -157,7 +157,7 @@ def makeStoragePathName(struct_time,level):
         pathList = ["%04d" % (struct_time[0],)]
         for i in range(1,level):
             pathList.append("%02d" % (struct_time[i],))
-        return "/".join(pathList)
+        return "-".join(pathList)
     else:
         # Flat directory without timestamp
         return "."
@@ -335,9 +335,10 @@ class ArchiveGroup(object):
             self.aggregationCount = archiver.config.getint(groupName, "AggregationCount")
         except KeyError:
             self.aggregationCount = 0
-        if not os.path.exists(self.groupRoot):
-            os.makedirs(self.groupRoot,0775)
-            Log("Creating archive group directory %s" % (self.groupRoot,))
+        # RSF
+        # if not os.path.exists(self.groupRoot):
+        #     os.makedirs(self.groupRoot,0775)
+        #     Log("Creating archive group directory %s" % (self.groupRoot,))
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(archiver.storageRoot,groupName + ".zip")
         if os.path.exists(self.tempFileName):
@@ -472,7 +473,21 @@ class ArchiveGroup(object):
         timeTuple = self.maketimetuple(now)
 
         pathName = makeStoragePathName(timeTuple,self.quantum)
-        pathName = os.path.join(self.groupRoot,pathName)
+        # pathName = os.path.join(self.groupRoot, pathName)
+
+        # RSF
+        # Hack to organize by date at the top level then by type
+        # i.e. Log/Archive/2018/08/DataLog_User/<file>
+        #
+        # Actually it's flat, 2018-08-11
+        # RDF files are a special case because they are large so
+        # we append "RDF" to the directory name.  This is to make sorting
+        # and deleting only the RDF files easier.
+        if ("RDF" in self.groupRoot):
+            pathName = pathName + "-RDF"
+        pathName = os.path.join(os.path.split(self.groupRoot)[0],
+                                pathName,
+                                os.path.basename(self.groupRoot)) # date before file type name
 
         if not os.path.exists(pathName):
             os.makedirs(pathName,0775)
@@ -603,7 +618,24 @@ class ArchiveGroup(object):
         if self.uploadEnabled:
             pathName = os.path.join(self.uploadRetryPath, makeStoragePathName(timeTuple,self.quantum))
         else:
-            pathName = os.path.join(self.groupRoot, makeStoragePathName(timeTuple,self.quantum))
+            # pathName = os.path.join(
+            #     self.groupRoot, makeStoragePathName(timeTuple, self.quantum))
+            pathName = makeStoragePathName(timeTuple, self.quantum)
+            # pathName = os.path.join(self.groupRoot, pathName)
+
+            # RSF
+            # Hack to organize by date at the top level then by type
+            # i.e. Log/Archive/2018/08/DataLog_User/<file>
+            #
+            # Actually it's flat, 2018-08-11
+            # RDF files are a special case because they are large so
+            # we append "RDF" to the directory name.  This is to make sorting
+            # and deleting only the RDF files easier.
+            if("RDF" in self.groupRoot):
+                pathName = pathName + "-RDF"
+            pathName = os.path.join(os.path.split(self.groupRoot)[0],
+                                    pathName,
+                                    os.path.basename(self.groupRoot))  # date before file type name
 
         renameFlag = True
         # Determine the target sourceFiles
@@ -847,7 +879,7 @@ class Archiver(object):
         self.config = CustomConfigObj(filename)
         basePath = os.path.split(filename)[0]
         try:
-            self.storageRoot = os.path.join(basePath, self.config.get(_MAIN_CONFIG_SECTION,'StorageRoot'))
+            self.storageRoot = os.path.join(LOG_DIR, 'Archive')
 
             # For S3 uploader
             uploadBucketName = self.config.get(_MAIN_CONFIG_SECTION, "UploadBucketName", "picarro_analyzerup")
