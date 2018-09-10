@@ -297,7 +297,8 @@ class EventLogger(object):
 
             cp = CustomConfigObj(IniPath)
             basePath = os.path.split(IniPath)[0]
-            self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            # self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            self.LogFileDir = os.path.join(LOG_DIR, "TransientData")
             self.LogToFile = cp.getboolean(_MAIN_CONFIG_SECTION, "LogToFile")
             self.LogFileLength = cp.getint(_MAIN_CONFIG_SECTION, "LogFileLength")
             self.ArchiveGroupName = cp.get(_MAIN_CONFIG_SECTION, "ArchiveGroupName")

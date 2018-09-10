@@ -270,20 +270,25 @@ class DataLog(object):
             self.delimiter = re.sub(pattern2, r'\1', delimiter)
         else:
             self.delimiter = delimiter
-        if sys.platform == "win32":
-            relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
-        else:
-            relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
-        self.srcDir = os.path.join(basePath, relDir)
+        # if sys.platform == "win32":
+        #     relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        # else:
+        #     relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        # self.srcDir = os.path.join(basePath, relDir)
 
         # Handle Linux if we want the log in the default user home directory.
         # If in the ini we have 'srcfolder = ~/Picarro/Log', expand the '~' to
         # the home directory of the user running the code.
         # If the directories don't exist they are created in _Create().
         #
-        if relDir.startswith("~"):
-            relDir = os.path.expanduser(relDir)
-            self.srcDir = relDir
+        # if relDir.startswith("~"):
+        #     relDir = os.path.expanduser(relDir)
+        #     self.srcDir = relDir
+
+        # Eliminate the srcfolder in the ini file.  Now the destination dir
+        # is in the log directory, the path specified with a an env. var.
+        self.srcDir = os.path.join(LOG_DIR, 'DataLogger', self.ArchiveGroupName)
+        print("-------------- srcDir:", self.srcDir)
 
         if self.liveArchive and self.useHdf5:
             raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
@@ -993,11 +998,11 @@ def HandleCommandSwitches():
         Log ("Config file specified at command line: %s" % configFile)
 
     if "--user_ini" in options:
-        userConfigFile = os.path.join(CONFIG_DIR, options["--ini"])
+        userConfigFile = os.path.join(CONFIG_DIR, options["--user_ini"])
         Log ("User Config file specified at command line: %s" % userConfigFile)
 
     if "--private_ini" in options:
-        privateConfigFile = os.path.join(CONFIG_DIR, options["--ini"])
+        privateConfigFile = os.path.join(CONFIG_DIR, options["--private_ini"])
         Log ("Private Config file specified at command line: %s" % privateConfigFile)
 
     return (configFile, userConfigFile, privateConfigFile)
