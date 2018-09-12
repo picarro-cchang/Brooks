@@ -192,9 +192,10 @@ class ModbusServer(object):
         self.register_variables = [{}, {}, {}, {}]
         self.variable_params = {}
         self.endian = ">" if self.config.get("Main", "Endian", ENDIAN).lower() == "big" else "<"
+        file_path = os.path.dirname(os.path.abspath(__file__))
         script_name = self.config.get("Main", "Script", "")
-        script_path = sys.path[0] + "/" + script_name
-        userdata_file_path = self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
+        script_path = file_path + "/" + script_name
+        userdata_file_path = file_path + "/" + self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
         scriptEnv_Obj = ModbusScriptEnv(self, userdata_file_path=userdata_file_path)
         scriptEnv = scriptEnv_Obj.create_script_env()
         if os.path.exists(script_path):
@@ -202,7 +203,7 @@ class ModbusServer(object):
             scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
             exec scriptObj in scriptEnv
         else:
-            print("Path does not exist: %s" % script_path)
+            raise Exception("Path does not exist: %s" % script_path)
         for s in self.config:
             name = ""
             d = {}
@@ -385,8 +386,9 @@ class ModbusServer(object):
             self.errorhandler.set_error(Errors.NO_ERROR)
             instr_cal_file_path = self.config.get("Main", "InstrumentCalFilePath", "")
             user_cal_file_path = self.config.get("Main", "UserCalFilePath", "")
-            instr_cal_file_path = sys.path[0] + "/" + instr_cal_file_path
-            user_cal_file_path = sys.path[0] + "/" + user_cal_file_path
+            file_path = os.path.dirname(os.path.abspath(__file__))
+            instr_cal_file_path = file_path + "/" + instr_cal_file_path
+            user_cal_file_path = file_path + "/" + user_cal_file_path
             try:
                 self.Write_Instrument_Cal_File_Data(instr_cal_file_path)
             except Exception as ex:
@@ -647,7 +649,8 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
     #Start with option defaults...
-    configFile = "./ModbusServer.ini"
+    file_path = os.path.dirname(os.path.abspath(__file__))
+    configFile = file_path + "../../../AppConfig/Config/Utilities/ModbusServer.ini"
     simulation = False
     debug = False
     if "-h" in options or "--help" in options:
