@@ -2,6 +2,7 @@
 #  2015 0814:  modified to use stronger water line for wlm offset adjust
 #  02-09-2017: Hongbing --- Fix the issue: the first five lines in the userdata file have zeros for all of the measurement results
 #  04-24-2017: Hongbing --- Add H2O_30sec for Moisture precision test
+#  07-16-2018: John Hoffnagle added cross-talk correction parameter for ethylene to HCl
 
 import os
 import sys
@@ -84,8 +85,11 @@ HCl_CONC = (_INSTR_["concentration_hcl_slope"],_INSTR_["concentration_hcl_interc
 H2O_CONC = (_INSTR_["concentration_h2o_slope"],_INSTR_["concentration_h2o_intercept"])
 CH4_CONC = (_INSTR_["concentration_ch4_slope"],_INSTR_["concentration_ch4_intercept"])
 
+# Import empirical cross-talk parameters
+C2H4_to_HCl = _INSTR_["c2h4_to_hcl"]
+
 try:   
-    temp = applyLinear(_DATA_["PF_hcl_conc"],HCl_CONC)
+    temp = applyLinear(_DATA_["hcl_conc"]+ C2H4_to_HCl*_DATA_["c2h4_conc"],HCl_CONC) 
     _NEW_DATA_["HCl_raw"] = temp
     now = _OLD_DATA_["HCl_raw"][-2].time
     _NEW_DATA_["HCl_30sec"] = boxAverage(_PERSISTENT_["buffer30"],temp,now,30)
