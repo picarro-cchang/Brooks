@@ -15,6 +15,11 @@
             "species": "NH3_HF",
             "installerSignature": "AMADS"
         }, 
+		
+        "AMADS_DCRDS": {
+            "species": "NH3_HF",
+            "installerSignature": "AMADS"
+        }, 
         
         "AMADS_PFV": {
             "species": "NH3_HF",
