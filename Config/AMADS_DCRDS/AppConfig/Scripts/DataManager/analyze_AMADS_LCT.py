@@ -11,7 +11,9 @@
 #              for heavily contaminated FOUP application
 #  2018 0719:  Changed source of NH3 for user from "dry" (essentially AEDS without hydrocarbons) to "nh3_cal_HCcorrected" from PF
 #  2018 0730:  Changed reporting of CO2 and H2O to be corrected for hydrocarbons
-
+#  2018 0913:  changed nh3_HC_corrected to include dry parameters using derived PF_peak15
+#              included h2o calibration on PF data for H2O with HC
+#              added in -0.294 offset derived from change to DCRDS release on 3 analyzers (2075,2081,2080)
 
 import os
 import sys
@@ -123,6 +125,9 @@ C3H4toCO2 = _INSTR_["c3h4_to_co2"]
 C2H2toH2O = _INSTR_["c2h2_to_h2o"]
 C3H4toH2O = _INSTR_["c3h4_to_h2o"]
 
+#offset that change to DCRDS and HC fit induced
+NH3_update_offset = -0.294
+
 # Check instrument status and do not do any updates if any parameters are unlocked
 
 pressureLocked =    _INSTR_STATUS_ & INSTMGR_STATUS_PRESSURE_LOCKED
@@ -155,8 +160,18 @@ try:
         _NEW_DATA_["NH3_raw"] = dry
 
     	PF_nh3_corrected = _DATA_["PF_nh3_conc_ave"] + C2H2toNH3*_DATA_["PF_c2h2_conc"] + C3H4toNH3*_DATA_["PF_c3h4_conc"]
-    	nh3_cal_HCcorrected = applyLinear(PF_nh3_corrected,NH3_CONC)
+    	nh3_cal_HCcorrected_wet = applyLinear(PF_nh3_corrected,NH3_CONC)
+    	#added dry HCcorrected section, and replaced so nh3_cal_HCcorrected is dry
+    	#previous reporting is now known as "_wet"
+    	h2o_HCcorrected = _DATA_["PF_a_h2o_conc"] + C2H2toH2O*_DATA_["PF_c2h2_conc"] + C3H4toH2O*_DATA_["PF_c3h4_conc"]
+    	pf_peak15 = h2o_HCcorrected/0.02
+    	_NEW_DATA_["NH3_HCcorrected_wet"] = nh3_cal_HCcorrected_wet
+    	pf_h2o_actual = Hlin*pf_peak15 + Hquad*pf_peak15**2
+    	pf_str15 = 1.1794*pf_peak15 + 0.001042*pf_peak15**2
+    	pf_corrected = (nh3_cal_HCcorrected_wet + H1*pf_peak15)/(1.0 + A1H1*pf_str15 + A1H2*pf_str15**2)
+    	nh3_cal_HCcorrected = pf_corrected/(1.0-0.01*h2o_actual) + NH3_update_offset
     	_NEW_DATA_["NH3_HCcorrected"] = nh3_cal_HCcorrected
+    	_NEW_DATA_["H2O"] = applyLinear(pf_h2o_actual,H2O_CONC)
     
     	if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
         	_PERSISTENT_["NH3_filter"] = nh3_cal_HCcorrected  #  "nh3_cal_HCcorrected" replaced "dry" on 19 July 2018 (5 places)
@@ -183,8 +198,6 @@ try:
     h2o_actual = Hlin*_DATA_["peak15"] + Hquad*_DATA_["peak15"]**2
     temp = applyLinear(h2o_actual,H2O_CONC)
     _NEW_DATA_["H2O_uncorrected"] = temp
-    h2o_HCcorrected = _DATA_["PF_a_h2o_conc"] + C2H2toH2O*_DATA_["PF_c2h2_conc"] + C3H4toH2O*_DATA_["PF_c3h4_conc"]
-    _NEW_DATA_["H2O"] = applyLinear(h2o_HCcorrected,H2O_CONC)
 except:
     pass
 
