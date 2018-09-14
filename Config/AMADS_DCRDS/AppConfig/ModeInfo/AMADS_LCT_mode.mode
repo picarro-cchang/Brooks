@@ -7,7 +7,7 @@ Tuning = LaserCurrent
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 1
-Scheme_1_Path = ../Schemes/_AMADS-xx LCT v06.sch  # changed from v04 on 13 Mar 2018
+Scheme_1_Path = ../Schemes/_AMADS-xx LCT DCRDS v02.sch  # for DCRDS
 
 
 [SPECTRUM_IDS]
