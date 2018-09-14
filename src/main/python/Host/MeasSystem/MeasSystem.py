@@ -41,9 +41,6 @@ File History:
 
 """
 
-# if __name__ != "__main__":
-    # raise Exception("%s is not importable!" % __file__)
-
 APP_NAME = "MeasSystem"
 APP_VERSION = 1.0
 _DEFAULT_CONFIG_NAME = "MeasSystem.ini"
@@ -53,32 +50,26 @@ _SCHEME_CONFIG_SECTION = "SCHEME_CONFIG"
 import sys
 import os.path
 import getopt
-import Queue
-import profile
 import time
 import threading
 import traceback
-import sets
 from inspect import isclass
-import numpy as np
 
 from Host.Common import CmdFIFO
 from Host.Common import ModeDef
 from Host.Common import AppStatus
 from Host.Common.SharedTypes import CrdsException
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER_BASE, RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_INSTR_MANAGER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_FITTER_BASE,\
+    RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_FREQ_CONVERTER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import BROADCAST_PORT_MEAS_SYSTEM
 from Host.Common.SharedTypes import STATUS_PORT_MEAS_SYSTEM
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SafeFile import SafeFile, FileExists
-from Host.Common.MeasData import MeasData  #For wrapping processor data packets up to send to the Data Manager
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.InstErrors import INST_ERROR_MEAS_SYS
 from Host.Common.EventManagerProxy import *
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
-
-if sys.platform == 'win32':
-    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
 
 STATE__UNDEFINED = -100
 STATE_ERROR = 0x0F
@@ -172,6 +163,8 @@ class MeasSystem(object):
     """Container class/structure for MeasSystem options."""
     class ConfigurationOptions(object):
         def __init__(self, SimMode = False):
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                         IsDontCareConnection=False)
             self.SimMode = SimMode
             self.ModeDefinitionFile = ""
             #Debugging settings (all off unless Debug option is set, in which case they get loaded)...
@@ -633,26 +626,36 @@ def ExecuteTest(MS):
     #MS.Disable()
 
 def main():
-    #Get and handle the command line options...
-    configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
-        if test:
-            threading.Timer(2, ExecuteTest(app)).start()
-        app.Start()
-    except:
-        if __debug__: raise
-        LogExc("Exception trapped outside MeasSystem execution")
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        #Get and handle the command line options...
+        configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
+            if test:
+                threading.Timer(2, ExecuteTest(app)).start()
+            app.Start()
+        except:
+            if __debug__:
+                raise
+            else:
+                Log("Unhandled exception trapped by last chance handler",
+                    Data=dict(Note="<See verbose for debug info>"),
+                    Level=3,
+                    Verbose=traceback.format_exc())
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
+        finally:
+            Log("Exiting program")
+            sys.stdout.flush()
+
 
 if __name__ == "__main__":
-    try:
-        #profile.run("main()","c:/temp/measSystemProfile")
-        main()
-    except:
-        Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = traceback.format_exc())
-    Log("Exiting program")
-    sys.stdout.flush()
+    main()

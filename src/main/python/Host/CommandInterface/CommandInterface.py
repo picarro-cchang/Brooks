@@ -20,32 +20,33 @@ APP_NAME = "CommandInterface"
 APP_DESCRIPTION = "Command interface (serial or Ethernet)"
 __version__ = 1.0
 
-import os
-import sys
 import time
 import datetime
 import getopt
 import re
 import threading
-import Queue
 import pprint
 import __builtin__
+import sys
+import os
 from inspect import isclass
 from numpy import *
 
 from Host.CommandInterface.SerialInterface import SerialInterface
 from Host.CommandInterface.SocketInterface import SocketInterface
 from Host.InstMgr.InstMgr import INSTMGR_SHUTDOWN_PREP_SHIPMENT, INSTMGR_SHUTDOWN_HOST_AND_DAS, MAX_ERROR_LIST_NUM
-from Host.Common import CmdFIFO, Listener, TextListener
+from Host.Common import CmdFIFO, Listener
 from Host.Common import MeasData
 from Host.Common.SharedTypes import RPC_PORT_COMMAND_HANDLER, RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, \
                                     RPC_PORT_DATA_MANAGER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_MEAS_SYSTEM,\
                                     RPC_PORT_EIF_HANDLER,  RPC_PORT_DATALOGGER,\
-                                    BROADCAST_PORT_MEAS_SYSTEM, BROADCAST_PORT_DATA_MANAGER
-from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
+                                    RPC_PORT_SUPERVISOR, BROADCAST_PORT_DATA_MANAGER
+from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 from Host.Common.FluxSwitcher import FluxSwitcher
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -92,6 +93,8 @@ class CommandInterface(object):
         self.debug         = True
 
         # Create RPC channels
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self._DriverRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "CommandInterface")
         self._InstMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "CommandInterface")
         self._DataMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "CommandInterface")
@@ -727,36 +730,46 @@ def _TimeToString( t ):
 def Usage():
     print "[-h] [-c configfile]"
 
-def Main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help", "config="])
-    except getopt.GetoptError:
-        # print help information and exit:
-        Usage()
-        sys.exit(2)
-
-    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
-
-    for o, a in opts:
-        if o in ("-h", "--help"):
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help", "config="])
+        except getopt.GetoptError:
+            # print help information and exit:
             Usage()
-            sys.exit()
-        if o in ("-c", "--config"):
-            configFile = a
+            sys.exit(2)
 
-    app = CommandInterface()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        app.LoadConfig( configFile )
-        app.RPC_Start()
-        app.runRpcServer()
-        app.RPC_Stop()
-        Log("Exiting program")
-    except Exception, E:
-        if app.debug: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+        configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
 
-if __name__ == "__main__" :
-    Main()
+        for o, a in opts:
+            if o in ("-h", "--help"):
+                Usage()
+                sys.exit()
+            if o in ("-c", "--config"):
+                configFile = a
+
+        app = CommandInterface()
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            app.LoadConfig( configFile )
+            app.RPC_Start()
+            app.runRpcServer()
+            app.RPC_Stop()
+            Log("Exiting program")
+        except Exception, e:
+            if app.debug:
+                raise
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
+
+if __name__ == "__main__":
+    main()

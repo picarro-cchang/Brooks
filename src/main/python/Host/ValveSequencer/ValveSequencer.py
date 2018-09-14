@@ -31,8 +31,11 @@ from Host.ValveSequencer.ValveSequencerFrame import ValveSequencerFrame
 from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.RotValveCtrl import RotValveCtrl
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER,\
+    RPC_PORT_SUPERVISOR
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 #Set up a useful AppPath reference...
@@ -65,6 +68,8 @@ class RpcServerThread(threading.Thread):
 
 class ValveSequencer(ValveSequencerFrame):
     def __init__(self, configFile, showAtStart, *args, **kwds):
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.configFile = configFile
         self.co = CustomConfigObj(configFile)
         self.numSolValves = self.co.getint("MAIN", "numSolValves", 6)
@@ -673,14 +678,31 @@ def HandleCommandSwitches():
 
     return (configFile, showAtStart)
 
-if __name__ == "__main__":
-    #Get and handle the command line options...
+def main():
+    # Get and handle the command line options...
     (configFile, showAtStart) = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, Level = 0)
-    # app = wx.PySimpleApp()
-    # wx.InitAllImageHandlers()
-    app = wx.App(False)
-    frame = ValveSequencer(configFile, showAtStart, None, -1, "")
-    app.SetTopWindow(frame)
-    app.MainLoop()
-    Log("Exiting program")
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        Log("%s started." % APP_NAME, Level=0)
+        # app = wx.PySimpleApp()
+        # wx.InitAllImageHandlers()
+        try:
+            app = wx.App(False)
+            frame = ValveSequencer(configFile, showAtStart, None, -1, "")
+            app.SetTopWindow(frame)
+            app.MainLoop()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+        Log("Exiting program")
+
+
+if __name__ == "__main__":
+    main()

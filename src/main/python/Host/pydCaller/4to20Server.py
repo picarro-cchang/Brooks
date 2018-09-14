@@ -1,7 +1,7 @@
-from Host.Driver.Driver import main
+from Host.Utilities.Four220.Four220 import main
 from Host.Common.EventManagerProxy import EventManagerProxy_Init
 
-APP_NAME = "Driver"
+APP_NAME = "4to20Server"
 EventManagerProxy_Init(APP_NAME)
 
 if __name__ == "__main__":

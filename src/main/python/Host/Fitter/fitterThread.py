@@ -40,7 +40,7 @@ _MAIN_CONFIG_SECTION = "Setup"
 import os
 import sys
 from sys import argv
-from Host.Common.CmdFIFO import CmdFIFOServer
+from Host.Common.CmdFIFO import CmdFIFOServer, CmdFIFOServerProxy
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import getTimestamp
 from copy import copy, deepcopy
@@ -56,8 +56,9 @@ from Host.Fitter.fitterCoreWithFortran import loadPhysicalConstants, loadSpectra
 from Host.Fitter.fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
 from Host.Fitter.fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
-from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_BASE, BROADCAST_PORT_SPECTRUM_COLLECTOR
+from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, RPC_PORT_SUPERVISOR, BROADCAST_PORT_FITTER_BASE, BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common import Broadcaster, Listener, StringPickler
+from Host.Common.AppRequestRestart import RequestRestart
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 FITTER_STATE_IDLE = 0
@@ -89,6 +90,8 @@ def getInstrParams(fname):
 
 class Fitter(object):
     def __init__(self,configFile):
+        self.supervisor = CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.stopOnError = 1 # Show modal dialog (and stop fitter) on error
         configFile = os.path.abspath(configFile)
         self.iniBasePath = os.path.split(configFile)[0]
@@ -429,6 +432,12 @@ def main(configFile,queue,useViewer):
                 Data = dict(Note = "<See verbose for debug info>"),
                 Level = 3,
                 Verbose = tbMsg)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
             print tbMsg
             fitter.fitQueue.put((3,tbMsg))
     finally:

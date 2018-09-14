@@ -7,6 +7,6 @@
 # 
 export PATH=/home/picarro/anaconda2/bin:$PATH
 export PYTHONPATH=/home/picarro/git/host/src/main/python:$PYTHONPATH
-cd /home/picarro/git/host/src/main/python/Host/Supervisor;
+cd /home/picarro/git/host/src/main/python/Host/pydCaller;
 python -O Supervisor.py -f -c ../../AppConfig/Config/Supervisor/supervisor_simulation.ini
 

@@ -23,9 +23,7 @@ import requests
 import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
-import numpy
-
-
+import sys
 from Host.QuickGui.UserCalGui import UserCalGui
 from Host.QuickGui.SysAlarmGui import *
 from Host.QuickGui.MeasureAlarmGui import AlarmViewListCtrl
@@ -33,20 +31,21 @@ import Host.QuickGui.DialogUI as Dialog
 from Host.Common import CmdFIFO
 from Host.Common import GraphPanel
 from Host.Common.GuiTools import ColorDatabase, FontDatabase, SubstDatabase, StringDict, getInnerStr, setItemFont
-from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
+from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR,\
+    RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
-
 from Host.DataLogger.DataLoggerInterface import DataLoggerInterface
 from Host.InstMgr.InstMgrInterface import InstMgrInterface
 from Host.AlarmSystem.AlarmInterface import AlarmInterface
 from Host.EventManager.EventStore import EventStore
 from Host.DataManager.DataStore import DataStoreForGraphPanels
-
 from Host.Utilities.UserAdmin.UserAdmin import DB_SERVER_URL
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 
-AppPath = os.path.dirname(os.path.realpath(__file__))
+AppPath = sys.path[0]
 TimeStamp = time.time
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -190,7 +189,6 @@ class InstStatusPanel(wx.Panel):
 
 class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
-
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS_Data_Viewer',size=(1200,700),
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
 
@@ -200,6 +198,8 @@ class QuickGui(wx.Frame):
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         try:
             self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
         except:
@@ -452,6 +452,8 @@ class QuickGui(wx.Frame):
         self._OnStatDisplay(evt, self.showStat)
         self._OnInstStatDisplay(evt, self.showInstStat)
         self._OnTimer(evt)
+        self.Show(True)
+
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
@@ -1774,12 +1776,30 @@ def HandleCommandSwitches():
     return configFile
 
 
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            app = wx.App(False)
+            app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
+            configFile = HandleCommandSwitches()
+            Log("%s started" % APP_NAME, Level=0)
+            frame = QuickGui(configFile)
+            app.MainLoop()
+            Log("Exiting program")
+        except KeyboardInterrupt:
+            sys.exit(0)
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
+
 if __name__ == "__main__":
-    app = wx.App(False)
-    app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
-    configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = QuickGui(configFile)
-    frame.Show()
-    app.MainLoop()
-    Log("Exiting program")
+    main()

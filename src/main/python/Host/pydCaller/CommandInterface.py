@@ -1,4 +1,8 @@
-from Host.CommandInterface.CommandInterface import Main
+from Host.CommandInterface.CommandInterface import main
+from Host.Common.EventManagerProxy import EventManagerProxy_Init
 
-if __name__ == "__main__" :
-    Main()
+APP_NAME = "CommandInterface"
+EventManagerProxy_Init(APP_NAME)
+
+if __name__ == "__main__":
+    main()

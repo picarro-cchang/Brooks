@@ -51,10 +51,12 @@ from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
 from Host.Common.qt_cluster import qt_cluster
 from Host.Common.SharedTypes import Singleton
 from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.WlmCalUtilities import AutoCal
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"):  # we're running compiled with py2exe
@@ -686,6 +688,8 @@ class RDFrequencyConverter(Singleton):
         if not self.initialized:
             self.tunerCenter = None
             self.virtualMode = virtualMode
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                         IsDontCareConnection=False)
 
             if configPath != None:
                 # Read from .ini file
@@ -866,10 +870,14 @@ class RDFrequencyConverter(Singleton):
                             StringPickler.ObjAsString(rdProcessedData))
                     except IndexError:
                         break
-            except:
-                excType, value, _trace = sys.exc_info()
-                Log("Error: %s: %s" % (str(excType), str(value)),
-                    Verbose=traceback.format_exc(), Level=3)
+            except Exception, e:
+                LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
                 while not self.rdQueue.empty():
                     self.rdQueue.get(False)
                 self.rdProcessedCache = []
@@ -1572,9 +1580,17 @@ def handleCommandSwitches():
         virtualMode = False
     return configFile, virtualMode, opts
 
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        configFilename, virtualMode, options = handleCommandSwitches()
+        rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
+        Log("%s started." % APP_NAME, Level=0)
+        rdFreqConvertApp.run()
+        Log("Exiting program")
+
+
 if __name__ == "__main__":
-    configFilename, virtualMode, options = handleCommandSwitches()
-    rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
-    Log("%s started." % APP_NAME, dict(ConfigFile=configFilename), Level=0)
-    rdFreqConvertApp.run()
-    Log("Exiting program")
+    main()
