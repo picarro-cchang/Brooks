@@ -231,69 +231,6 @@ class LiveArchive(object):
         if self.updateThread.isAlive():
             Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
 
-    # Live copying for coordinator output files
-    # def startCopy(self):
-    #     return True
-        # if sys.platform == 'win32':
-        #     self.destHandle = CreateFile(self.destPathName,GENERIC_WRITE,
-        #                              FILE_SHARE_READ,None,CREATE_ALWAYS,
-        #                              FILE_ATTRIBUTE_NORMAL,0)
-        #     if self.destHandle == INVALID_HANDLE_VALUE:
-        #         Log('Cannot open live archive file %s' % self.destPathName, Level=2)
-        #         return False
-        # else:
-        #     self.destFp = file(self.destPathName,"w")
-        #     if not self.destFp:
-        #         Log('Cannot open live archive file %s' % self.destPathName, Level=2)
-        #         return False
-        # self.updating = True
-        # self.oldNBytes = 0
-        # self.srcFp = open(self.srcPathName,'rb')
-        # if not self.srcFp:
-        #     Log('Cannot open datalogger file %s' % self.srcPathName, Level=2)
-        #     return False
-        # self.archiveGroup.makeSpace(0,1)
-        # self.copyThread = threading.Thread(target=self.copier)
-        # self.copyThread.setDaemon(True)
-        # self.copyThread.start()
-        # return True
-
-    # def makeCopy(self):
-    #     return
-        # self.srcFp.seek(0)
-        # data = self.srcFp.read()
-        # nBytes = len(data)
-        # deltaNBytes = nBytes - self.oldNBytes
-        # if deltaNBytes > 0:
-        #     self.archiveGroup.makeSpace(deltaNBytes,0)
-        #     SetFilePointer(self.destHandle, 0, FILE_BEGIN)
-        #     if sys.platform == 'win32':
-        #         WriteFile(self.destHandle,data)
-        #     else:
-        #         self.destFp.write(data)
-        #     self.oldNBytes = nBytes
-
-    # def copier(self):
-    #     return
-        # while self.updating:
-        #     self.makeCopy()
-        #     time.sleep(10.0)
-        # # Make the last copy before exiting
-        # self.makeCopy()
-        # if sys.platform == 'win32':
-        #     CloseHandle(self.destHandle)
-        # else:
-        #     self.destFp.close()
-        # if self.srcFp:
-        #     self.srcFp.close()
-        #     deleteFile(self.srcPathName)
-
-    # def stopCopy(self):
-    #     return
-        # self.updating = False
-        # self.copyThread.join(20.0)
-        # if self.copyThread.isAlive():
-        #     Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
 
 class ArchiveGroup(object):
     """Class associated with each storage group. This corresponds to a directory called "groupName" created under the
@@ -364,11 +301,6 @@ class ArchiveGroup(object):
         self.uploadRetryPath = os.path.join(self.groupRoot, "upload")
         # Flag to scan the "upload" folder and upload any remaining files
         self.retryUploadNeeded = True
-        # if self.uploadEnabled:
-        #     self.retryUploadThread = threading.Thread(target=self.retryUploadScheduler)
-        #     self.retryUploadThread.setDaemon(True)
-        #     self.retryUploadThread.start()
-
         self.serverThread.setDaemon(True)
         self.serverThread.start()
 
@@ -400,10 +332,6 @@ class ArchiveGroup(object):
 
     def retryUploadScheduler(self):
         return
-        # while True:
-        #     if self.retryUploadNeeded:
-        #         self.cmdQueue.put(("retryUpload",()))
-        #     time.sleep(self.retryUploadInterval)
 
     def zipSource(self, source, targetPath):
         """
@@ -448,34 +376,11 @@ class ArchiveGroup(object):
            True, the group name and date code are prepended to each file. Returns the number of files copied, and places them on
            the specified resultQueue. """
         return 0
-        # count = 0
-        # if not os.path.exists(destDir):
-        #     os.makedirs(destDir,0775)
-        # for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByName,reversed=False):
-        #     if type == 'file':
-        #         fileTime = os.path.getmtime(name)
-        #         if (startTime is not None) and fileTime < startTime: continue
-        #         if (endTime is not None) and fileTime > endTime: continue
-        #         destName = os.path.split(name)[-1]
-        #         if uniqueFileNames: destName = time.strftime(self.name+"_%Y%m%d_%H%M%S_",time.gmtime(fileTime)) + destName
-        #         try:
-        #             shutil.copy2(name,os.path.join(destDir,destName))
-        #             count += 1
-        #         except Exception,e:
-        #             Log("Extract file error copying %s. %s" % (name,e,))
-        #         time.sleep(0)
-        # if resultQueue is not None: resultQueue.put(count)
-        # return count
+
 
     def doesFileExist(self,fileName,timestamp):
         """Inquires if the specified file name exists in this group for the specified timestamp"""
         return True
-        # timeTuple = self.maketimetuple(unixTime(timestamp))
-        #
-        # pathName = makeStoragePathName(timeTuple,self.quantum)
-        # pathName = os.path.join(self.groupRoot,pathName)
-        # targetName = os.path.join(pathName,os.path.split(fileName)[-1])
-        # return os.path.exists(targetName)
 
     def startLiveArchive(self, source, timestamp=None, copier=False):
         if timestamp is None:
@@ -515,29 +420,12 @@ class ArchiveGroup(object):
                 # print "LiveArchive failed"
         else:
             pass
-            # Archive all the old files in the source directory first
-            # sourceDir = os.path.split(source)[0]
-            # for root, dirs, files in os.walk(sourceDir):
-            #     for filename in files:
-            #         path = os.path.join(root,filename)
-            #         if source not in path:
-            #             #print "Cleaning...", path
-            #             self.archiveData(path, True, None)
-            # if a.startCopy():
-            #     self.liveArchiveDict[source] = a
-            #     Log("LiveArchive started for source %s, timestamp %s, target %s" % (source, timestamp, targetName))
-            # else:
-            #     Log("LiveArchive failed")
+
 
     def stopLiveArchive(self, source, copier=False):
         if source in self.liveArchiveDict:
             a = self.liveArchiveDict[source]
             a.stopUpdate()
-            # if not copier:
-            #     a.stopUpdate()
-            # else:
-            #     a.stopCopy()
-            # print "LiveArchive stopped for source %s" % (source,)
         else:
             pass
             # print "No valid live archive for %s" % (source,)
@@ -571,10 +459,6 @@ class ArchiveGroup(object):
             else: # We are not aggregating and not compressing, so copy to temporary file if data are being sent as a string
                 if not sourceIsPath:
                     pass
-                    # tempFP = file(self.tempFileName, "wb")
-                    # shutil.copyfileobj(StringIO(source[1]), tempFP)
-                    # tempFP.close()
-                    # fileToArchive = self.tempFileName
                 else: # Just store a file
                     fileToArchive = sourceFileName
 
@@ -589,32 +473,6 @@ class ArchiveGroup(object):
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
                 deleteFile(source)
-
-    # def makeSpace(self,nBytes,nFiles):
-    #     """ Makes space the archive group by deleting old files as necessary so that we can add the specified number of
-    #     bytes and files. Adds nBytes and nFiles to the current counts. This function can be called with negative nBytes or
-    #     nFiles to indicate that some data or files have been deleted.
-    #
-    #     Returns only when the cleanup is complete. This function is protected by a lock so that only
-    #     a single thread can execute it at once """
-    #     self.makeSpaceLock.acquire()
-    #     try:
-    #         if self.maxSize > 0 and nBytes > self.maxSize:
-    #             Log("Cannot fit data into archive group %s" % (self.name,),Level=3)
-    #             return False
-    #         nLoops = 0
-    #         while (self.maxSize > 0 and self.byteCount + nBytes > self.maxSize) or \
-    #               (self.maxCount > 0 and self.fileCount + nFiles > self.maxCount):
-    #             # Delete files and directories starting with the oldest
-    #             self._deleteOldest()
-    #             nLoops += 1
-    #             if nLoops == 100:
-    #                 Log("More than 100 deletions required in group %s to make space for new data" % (self.name,),Level=2)
-    #         self.byteCount += nBytes
-    #         self.fileCount += nFiles
-    #         return True
-    #     finally:
-    #         self.makeSpaceLock.release()
 
     def archiveFile(self, fileToArchive, sourceFileName=None, removeOriginal=True, timestamp=None):
         # Once we get here, we have something to be archived
@@ -664,20 +522,6 @@ class ArchiveGroup(object):
         else:
             targetName = time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",timeTuple)
 
-        # Upload file to data warehouse if required
-        # if self.uploadEnabled:
-        #     if self.uploader.upload(fileToArchive, targetName) == "OK":
-        #         Log("(Upload) %s uploaded" % (targetName,))
-        #         print "(Upload) %s uploaded" % (targetName,)
-        #         if renameFlag:
-        #             deleteFile(fileToArchive)
-        #         return True
-        #     else:
-        #         self.retryUploadNeeded = True
-        #         Log("(Upload) Failed to upload %s" % (targetName,))
-        #         print "(Upload) Failed to upload %s" % (targetName,)
-        #         # Upload has failed, so archive those files locally just like others
-
         # Determine size of new file to determine if it will fit
         # Get rid of the oldest file until total file size or total file count can fit
         nBytes = os.path.getsize(fileToArchive)
@@ -690,15 +534,6 @@ class ArchiveGroup(object):
                 os.makedirs(pathName,0775)
 
             targetName = os.path.join(pathName, targetName)
-            # if os.path.exists(targetName):
-            #     Replace existing file
-            #     try:
-            #         oldBytes = os.path.getsize(targetName)
-            #         os.chmod(targetName,stat.S_IREAD | stat.S_IWRITE)
-            #         os.remove(targetName)
-            #         self.makeSpace(-oldBytes, -1)
-            #     except OSError, e:
-            #         Log("Error removing file %s. %s" % (targetName,e))
             try:
                 if renameFlag:
                     os.rename(fileToArchive,targetName)
@@ -716,74 +551,6 @@ class ArchiveGroup(object):
         if os.path.exists(self.tempFileName):
             deleteFile(self.tempFileName)
         return status
-
-    # def retryUpload(self):
-    #     """Use the treeWalker to upload the newest file in the "upload" directory. Returns the number of
-    #     bytes freed, number of file uploaded (0 or 1), and the name of the file uploaded,.
-    #     Also updates self.fileCount and self.byteCount as a side-effect.
-    #     """
-    #     return
-        # Once we get here, the data upload function is enabled and some local files are waiting to be uploaded
-        # self.makeSpaceLock.acquire()
-        # nBytes = 0
-        # nFiles = 0
-        # name = None
-        # try:
-        #     # Always restart the generator
-        #     self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
-        #     type, name = self.uploadTreeWalker.next()
-        # except Exception, err:
-        #     print "%r" % err
-        #     self.retryUploadNeeded = False
-        #     return nBytes, nFiles, name
-        # else:
-        #     if type == "file":
-        #         nBytes, nFiles = self._retryUploadFile(name)
-        #     else: # Deal with directories
-        #         while type != "file":
-        #             if name == self.uploadRetryPath:
-        #                 self.retryUploadNeeded = False
-        #                 break
-        #             else:
-        #                 try:
-        #                     self._deleteUploadDir(name)
-        #                     type, name = self.uploadTreeWalker.next()
-        #                 except:
-        #                     break
-        #         if type == "file":
-        #             nBytes, nFiles = self._retryUploadFile(name)
-        #
-        #     self.byteCount -= nBytes
-        #     self.fileCount -= nFiles
-        #     return nBytes, nFiles, name
-        # finally:
-        #     self.makeSpaceLock.release()
-
-    # def _retryUploadFile(self, name):
-    #     return 0, 0
-        # nBytes = 0
-        # nFiles = 0
-        # targetName = os.path.split(name)[-1]
-        # try:
-        #     if self.uploader.upload(name, targetName) == "OK":
-        #         Log("(Retry Upload) %s uploaded" % (name,))
-        #         print "(Retry Upload) %s uploaded" % (name,)
-        #         nBytes = os.path.getsize(name)
-        #         nFiles = 1
-        #         deleteFile(name)
-        # except Exception, err:
-        #     print "_retryUploadFile Error: %r" % err
-        # return nBytes, nFiles
-
-    # def _deleteUploadDir(self, name):
-    #     return
-        # try:
-        #     os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
-        #     os.rmdir(name)
-        #     Log("(Retry Upload) Directory %s deleted" % (name,))
-        #     print "(Retry Upload) Directory %s deleted" % (name,)
-        # except Exception, err:
-        #     print "_deleteUploadDir Error: %r" % err
 
     def updateAndGetArchiveSize(self):
         """
@@ -805,54 +572,6 @@ class ArchiveGroup(object):
         queue.put([os.path.split(name)[-1] for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
                    if type == 'file'])
 
-    # def _deleteOldest(self):
-    #     """Use the treeWalker to remove the oldest file or directory in the archive group. Returns the number of
-    #     bytes freed, number of files removed, the name of the file or directory removed, and a status message.
-    #     Also updates self.fileCount and self.byteCount as a side-effect"""
-    #     return 0, 0, "", ""
-        # try:
-        #     type, name = self.treeWalker.next()
-        # except StopIteration:
-        #     # We have run out, restart the generator at the root
-        #     self.updateAndGetArchiveSize()
-        #     self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
-        #     type, name = self.treeWalker.next()
-        #
-        # if type == 'file':
-        #     nBytes = os.path.getsize(name)
-        #     nFiles = 1
-        #     try:
-        #         os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
-        #         os.remove(name)
-        #         msg = 'ok'
-        #     except OSError,e:
-        #         nBytes = 0
-        #         nFiles = 0
-        #         msg = '%s' % (e,)
-        # else: # Deal with directories
-        #     nBytes = 0
-        #     nFiles = 0
-        #     if name == self.groupRoot:
-        #         msg = 'root'
-        #     else:
-        #         try:
-        #             os.chmod(name,stat.S_IREAD | stat.S_IWRITE)
-        #             os.rmdir(name)
-        #             msg = 'ok'
-        #         except OSError,e:
-        #             msg = '%s' % (e,)
-        # self.byteCount -= nBytes
-        # self.fileCount -= nFiles
-        # return nBytes, nFiles, name, msg
-
-    # def _removeEmptySubdirs(self):
-    #     return
-        # for root, dirs, files in os.walk(self.groupRoot):
-        #     for dirname in dirs:
-        #         try: # Remove empty directories
-        #             os.rmdir(os.path.join(root,dirname))
-        #         except:
-        #             pass
 
 class Archiver(object):
     """The archiver manages storage of data and files, placing them in FIFO order into storage groups whose sizes may be
@@ -883,16 +602,7 @@ class Archiver(object):
         #Register the rpc functions...
         self.rpcServer.register_function(self.RPC_StartLiveArchive, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_StopLiveArchive, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_ArchiveData, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_ArchiveFile, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_CopyFileDates, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_CopyRecentFiles, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_CopyAllFiles, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_GetGroupList, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_GetGroupInfo, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_RefreshGroupStats, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_GetFileNames, NameSlice = 4)
-        # self.rpcServer.register_function(self.RPC_DoesFileExist, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_GetLiveArchiveFileName, NameSlice = 4)
         self.rpcServer.serve_forever()
 
@@ -957,80 +667,6 @@ class Archiver(object):
         group.cmdQueue.put(("archiveData",(sourceFile, removeOriginal, timestamp)))
         return "archiveFile command queued for group %s" % (groupName,)
 
-    # def RPC_ArchiveData(self, groupName, dataName, wrappedData, timestamp = None):
-    #     """Archive the named dataBytes according to the rules of the storage group groupName.
-    #     The archive time is the current time, unless an explicit timestamp is specified."""
-    #     group = self.storageGroups[groupName]
-    #     group.cmdQueue.put(("archiveData",((dataName,wrappedData.data), False, timestamp)))
-    #     return "archiveData command queued for group %s" % (groupName,)
-
-    # def RPC_DoesFileExist(self,groupName,fileName,timestamp):
-    #     """Determine if the specified file exists in the specified archive group for the given timestamp.
-    #         Throws exception if archive group does not exist."""
-    #     group = self.storageGroups[groupName]
-    #     return group.doesFileExist(fileName,timestamp)
-
-    # def RPC_CopyFileDates(self, groupName, startDate_s, stopDate_s, destDir, uniqueFileNames = False, timeOut = 30):
-    #     """Copies archived files in groupName from startDate_s to stopDate_s to destDir. Both startDate_s and
-    #     stopDate_s are in "seconds since epoch". The date checked is the file modification on the archive file.
-    #     For aggregates, this means the zip file, not the contents. Returns number of files copied, or raises the
-    #     Queue.Empty exception if a timeout occurs.
-    #
-    #     If uniqueFileNames == True, a group-unique prefix is added to each destination file."""
-    #     group = self.storageGroups[groupName]
-    #     resultQueue = Queue.Queue(0)
-    #     group.cmdQueue.put(("copyFiles",(destDir,startDate_s,stopDate_s,uniqueFileNames,resultQueue)))
-    #     return resultQueue.get(timeout=timeOut)
-
-    # def RPC_CopyRecentFiles(self, groupName, lengthOfTime_s, destDir, uniqueFileNames = False, timeOut = 30):
-    #     """Copies archived files in groupName in the last lengthOfTime_s to destDir. Both startDate_s and
-    #     stopDate_s are in "seconds since epoch". The date checked is the file modification on the archive file.
-    #     For aggregates, this means the zip file, not the contents. Returns number of files copied, or raises the
-    #     Queue.Empty exception if a timeout occurs.
-    #
-    #     If uniqueFileNames == True, a group-unique prefix is added to each destination file."""
-    #     group = self.storageGroups[groupName]
-    #     now = time.time()
-    #     resultQueue = Queue.Queue(0)
-    #     group.cmdQueue.put(("copyFiles",(destDir,now-lengthOfTime_s,now,uniqueFileNames,resultQueue)))
-    #     return resultQueue.get(timeout=timeOut)
-
-    # def RPC_CopyAllFiles(self, groupName, destDir, uniqueFileNames = False, timeOut = 30):
-    #     """Copies all archived files in groupName to destDir. Both startDate_s and stopDate_s are in
-    #     "seconds since epoch". The date checked is the file modification on the archive file.
-    #     For aggregates, this means the zip file, not the contents. Returns number of files copied, or raises the
-    #     Queue.Empty exception if a timeout occurs.
-    #
-    #     If uniqueFileNames == True, a group-unique prefix is added to each destination file."""
-    #     group = self.storageGroups[groupName]
-    #     resultQueue = Queue.Queue(0)
-    #     group.cmdQueue.put(("copyFiles",(destDir,None,None,uniqueFileNames,resultQueue)))
-    #     return resultQueue.get(timeout=timeOut)
-
-    # def RPC_GetFileNames(self, groupName, timeOut = 30):
-    #     """Gets the list of file names in the specified storage group groupName. Since this is potentially a lengthy
-    #     operation, a timeout may be specified on the operation of this function"""
-    #     group = self.storageGroups[groupName]
-    #     resultQueue = Queue.Queue(0)
-    #     group.cmdQueue.put(("getFileNames",(resultQueue,)))
-    #     return resultQueue.get(timeout=timeOut)
-
-    # def RPC_GetGroupList(self):
-    #     """Gets the list of storage group names"""
-    #     return self.storageGroups.keys()
-
-    # def RPC_GetGroupInfo(self,groupName):
-    #     """Gets information about the specified storage group groupName"""
-    #     group = self.storageGroups[groupName]
-    #     return dict(fileCount = group.fileCount, byteCount = group.byteCount,
-    #                 compress = group.compress, aggregationCount = group.aggregationCount,
-    #                 StorageDir = group.groupRoot)
-
-    # def RPC_RefreshGroupStats(self,groupName):
-    #     """Re-traverses the tree associated with groupName to refresh the file and byte counts"""
-    #     group = self.storageGroups[groupName]
-    #     group.cmdQueue.put(("refreshStats",()))
-    #     return "refreshStats command queued for group %s" % (groupName,)
 
 def HandleCommandSwitches():
     shortOpts = 'h'
@@ -1046,25 +682,25 @@ def HandleCommandSwitches():
     for o, a in switches:
         options[o] = a
 
-    if "/?" in args or "/h" in args:
-        options["-h"] = ""
-
-    executeTest = False
-    if "-h" in options or "--help" in options:
-        PrintUsage()
-        sys.exit(0)
-    else:
-        if "--test" in options:
-            executeTest = True
-
-    #Start with option defaults...
+    # if "/?" in args or "/h" in args:
+    #     options["-h"] = ""
+    #
+    # executeTest = False
+    # if "-h" in options or "--help" in options:
+    #     PrintUsage()
+    #     sys.exit(0)
+    # else:
+    #     if "--test" in options:
+    #         executeTest = True
+    #
+    # #Start with option defaults...
     configFile = ""
 
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
-    return (configFile, executeTest)
+    return (configFile)
 
 HELP_STRING = \
 """\
@@ -1086,28 +722,10 @@ def main():
     else:
         try:
             #Get and handle the command line options...
-            configFile, test = HandleCommandSwitches()
+            configFile = HandleCommandSwitches()
             ar = Archiver(configFile)
             Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-            if test:
-                if sys.platform == "win32":
-                    fname = "c:/temp/AADS06wlm.dat"
-                else:
-                    fname = "/var/temp/AADS06wlm.dat"
-                seqnum = 0
-                while True:
-                    if sys.platform == "win32":
-                        tmpName = "c:/temp/seq%07d.dat" % (seqnum,)
-                    else:
-                        tmpName = "/var/temp/seq%07d.dat" % (seqnum,)
-                    seqnum += 1
-                    shutil.copy2(fname,tmpName)
-                    ar.RPC_ArchiveFile("Spectra",tmpName,True)
-                    print "%s" % (ar.RPC_GetGroupInfo("Spectra"),)
-                    # ar.storageGroups["Spectra"].archiveData(tmpName,removeOriginal=True)
-                    time.sleep(0.5)
-            else:
-                ar.startServer()
+            ar.startServer()
         except Exception, e:
             LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
             # Request a restart from Supervisor via RPC call
