@@ -33,42 +33,6 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
                                             APP_NAME,
                                             IsDontCareConnection = False)
 
-def NameOfThisCall():
-    return sys._getframe(1).f_code.co_name
-
-#Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
-    AppPath = sys.executable
-else:
-    AppPath = sys.argv[0]
-AppPath = os.path.abspath(AppPath)
-
-#Set up a useful TimeStamp function...
-if sys.platform == 'win32':
-    TimeStamp = time.clock
-else:
-    TimeStamp = time.time
-
-def deleteFile(filename):
-    """Delete a file, reporting any error, but not causing an exception. Returns True if delete succeeded"""
-    os.remove(filename)
-    return True
-
-def sortByName(top,nameList,reversed=False):
-    return []
-
-def sortByMtime(top,nameList,reversed=False):
-    """Sort a list of files by modification time"""
-    return []
-
-def walkTree(top,onError=None,sortDir=None,sortFiles=None,reversed=False):
-    """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
-    before the parent, and directories are visited before files.) The order of directory traversal is determined by
-    "sortDir" and the order of file traversal is determined by "sortFiles". If "onError" is defined, exceptions during
-    directory listings are passed to this function. When the function yields a result, it is either the pair
-    ('file',fileName)  or ('dir',directoryName)"""
-    return
-
 def makeStoragePathName(struct_time,level):
     """Convert a struct_time object into a relative path name, using entries in struct_time up to the specified level:
     level = 0: flat (no timestamp in the path name)
@@ -211,10 +175,6 @@ class ArchiveGroup(object):
             self.aggregationCount = archiver.config.getint(groupName, "AggregationCount")
         except KeyError:
             self.aggregationCount = 0
-        # RSF
-        # if not os.path.exists(self.groupRoot):
-        #     os.makedirs(self.groupRoot,0775)
-        #     Log("Creating archive group directory %s" % (self.groupRoot,))
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(archiver.storageRoot,groupName + ".zip")
         if os.path.exists(self.tempFileName):
@@ -363,8 +323,6 @@ class ArchiveGroup(object):
                              StoredGroup = self.name,
                              StoredData = sourceFileName,
                              Verbose = "Exception = %s %r" % (e, e)))
-                    if not deleteFile(self.tempFileName):
-                        self.aggregation = 0
                     return
             else: # We are not aggregating and not compressing, so copy to temporary file if data are being sent as a string
                 if not sourceIsPath:
@@ -378,13 +336,12 @@ class ArchiveGroup(object):
                 if self.aggregation < self.aggregationCount:
                     return
             self.aggregation = 0
-            print("Archiving:", fileToArchive, sourceFileName, self.aggregationCount)
             status = self.archiveFile(fileToArchive, sourceFileName, removeOriginal, timestamp)
             # If archiving fails, do not remove original
             removeOriginal = removeOriginal and status
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
-                deleteFile(source)
+                os.remove(source)
 
     def archiveFile(self, fileToArchive, sourceFileName=None, removeOriginal=True, timestamp=None):
         # Once we get here, we have something to be archived
@@ -426,34 +383,28 @@ class ArchiveGroup(object):
         else:
             targetName = time.strftime(self.name+"_%Y%m%d_%H%M%S.zip",timeTuple)
 
-        # Determine size of new file to determine if it will fit
-        # Get rid of the oldest file until total file size or total file count can fit
-        nBytes = os.path.getsize(fileToArchive)
         # Returns True if archiving succeeded
         status = False
-        # First make room for the file by deleting old files, if necessary
-        # if self.makeSpace(nBytes, 1):
-        if True:
-            if not os.path.exists(pathName):
-                os.makedirs(pathName,0775)
+        if not os.path.exists(pathName):
+            os.makedirs(pathName,0775)
 
-            targetName = os.path.join(pathName, targetName)
-            try:
-                if renameFlag:
-                    os.rename(fileToArchive,targetName)
-                else:
-                    shutil.copy2(fileToArchive,targetName)
-                # On success, touch file modification and last access times, and increment the byte and file counts
-                os.utime(targetName,(now,now))
-                status = True
-            except IOError,e:
-                Log("IOError renaming or copying file to %s. %s" % (targetName,e))
-            except OSError,e:
-                Log("OSError renaming or copying file to %s. %s" % (targetName,e))
+        targetName = os.path.join(pathName, targetName)
+        try:
+            if renameFlag:
+                os.rename(fileToArchive,targetName)
+            else:
+                shutil.copy2(fileToArchive,targetName)
+            # On success, touch file modification and last access times, and increment the byte and file counts
+            os.utime(targetName,(now,now))
+            status = True
+        except IOError,e:
+            Log("IOError renaming or copying file to %s. %s" % (targetName,e))
+        except OSError,e:
+            Log("OSError renaming or copying file to %s. %s" % (targetName,e))
 
         # Make sure the temporary file is gone
         if os.path.exists(self.tempFileName):
-            deleteFile(self.tempFileName)
+            os.remove(self.tempFileName)
         return status
 
     def updateAndGetArchiveSize(self):
