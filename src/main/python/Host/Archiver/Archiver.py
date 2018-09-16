@@ -1,23 +1,6 @@
-#!/usr/bin/python
-#
 """
 File Name: Archiver.py
 Purpose:
-    This application handles the storage (and retrieval) of files that should
-    be archived.  It manages the space to make sure the storage limits are
-    are not exceeded.
-
-File History:
-    07-01-05 sze   First release
-    07-01-10 sze   Added comments, return number of files extracted
-    07-02-01 sze   Add Directory key to allow a group to be stored in an arbitrary location
-    07-08-22 sze   Wrap binary data for archival
-    08-09-18 alex  Replaced SortedConfigParser with CustomConfigObj
-    08-09-30 alex  Added level 0 as the "Quantum" option. Also enabled Archiver to store and manage data for DataLogger
-    09-07-03 alex  Provide an option to construct the storage paths using local time (generally GMT is used)
-    10-06-14 sze   Allow a timestamp to be specified when calling archiveData
-    10-06-15 sze   New RPC function "DoesFileExist"
-    14-07-29 sze   Added conditionals for linux/windows
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
@@ -26,17 +9,15 @@ import os
 import getopt
 import threading
 import shutil
-import stat
 import time
 import Queue
 import zipfile
-from cStringIO import StringIO
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_ARCHIVER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 from Host.Common.timestamp import unixTime
-from Host.Common.S3Uploader import S3Uploader
+# from Host.Common.S3Uploader import S3Uploader
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
@@ -52,9 +33,6 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER
                                             APP_NAME,
                                             IsDontCareConnection = False)
 
-#
-# Functions
-#
 def NameOfThisCall():
     return sys._getframe(1).f_code.co_name
 
@@ -75,32 +53,13 @@ def deleteFile(filename):
     """Delete a file, reporting any error, but not causing an exception. Returns True if delete succeeded"""
     os.remove(filename)
     return True
-    # try:
-    #     os.chmod(filename,stat.S_IREAD | stat.S_IWRITE)
-    #     os.remove(filename)
-    #     return True
-    # except OSError,e:
-    #     Log("Error deleting file: %s. %s" % (filename,e))
-    #     return False
 
 def sortByName(top,nameList,reversed=False):
     return []
-    # nameList.sort()
-    # if not reversed:
-    #     return nameList
-    # else:
-    #     return nameList[::-1]
 
 def sortByMtime(top,nameList,reversed=False):
     """Sort a list of files by modification time"""
     return []
-    # # Decorate with the modification time of the file for sorting
-    # fileList = [(os.path.getmtime(os.path.join(top,name)),name) for name in nameList]
-    # fileList.sort()
-    # if not reversed:
-    #     return [name for t,name in fileList]
-    # else:
-    #     return [name for t,name in fileList[::-1]]
 
 def walkTree(top,onError=None,sortDir=None,sortFiles=None,reversed=False):
     """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
@@ -109,35 +68,6 @@ def walkTree(top,onError=None,sortDir=None,sortFiles=None,reversed=False):
     directory listings are passed to this function. When the function yields a result, it is either the pair
     ('file',fileName)  or ('dir',directoryName)"""
     return
-    # try:
-    #     names = os.listdir(top)
-    # except OSError, err:
-    #     if onError is not None:
-    #         onError(err)
-    #     return
-    # # Obtain lists of directories and files which are not links
-    # dirs, nondirs = [], []
-    # for name in names:
-    #     fullName = os.path.join(top,name)
-    #     if not os.path.islink(fullName):
-    #         if os.path.isdir(fullName):
-    #             dirs.append(name)
-    #         else:
-    #             nondirs.append(name)
-    # # Sort the directories and nondirectories (in-place)
-    # if sortDir is not None:
-    #     dirs = sortDir(top,dirs,reversed)
-    # if sortFiles is not None:
-    #     nondirs = sortFiles(top,nondirs,reversed)
-    # # Recursively call walkTree on directories
-    # for dir in dirs:
-    #     for x in walkTree(os.path.join(top,dir),onError,sortDir,sortFiles,reversed):
-    #         yield x
-    # # Yield up files
-    # for file in nondirs:
-    #     yield 'file', os.path.join(top,file)
-    # # Yield up the current directory
-    # yield 'dir', top
 
 def makeStoragePathName(struct_time,level):
     """Convert a struct_time object into a relative path name, using entries in struct_time up to the specified level:
@@ -291,16 +221,6 @@ class ArchiveGroup(object):
             self.cmdQueue.put(("archiveFile",(self.tempFileName,)))
         # Dictionary of live archives by source file name
         self.liveArchiveDict = {}
-        # Lock for arbitrating access to file deletion routines to make space for new data
-        self.makeSpaceLock = threading.Lock()
-
-        # For data uploading
-        # self.uploader = archiver.uploader
-        # self.retryUploadInterval = archiver.retryUploadInterval
-        self.uploadEnabled = archiver.config.getboolean(groupName,'UploadEnabled', False)
-        # self.uploadRetryPath = os.path.join(self.groupRoot, "upload")
-        # Flag to scan the "upload" folder and upload any remaining files
-        # self.retryUploadNeeded = True
         self.serverThread.setDaemon(True)
         self.serverThread.start()
 
@@ -315,10 +235,8 @@ class ArchiveGroup(object):
                        init = self.initArchiveGroup,
                        archiveFile = self.archiveFile,
                        startLiveArchive = self.startLiveArchive,
-                       stopLiveArchive = self.stopLiveArchive) #,
-                       # retryUpload = self.retryUpload)
+                       stopLiveArchive = self.stopLiveArchive)
         self.updateAndGetArchiveSize()
-        Log("Group %s, files %d, bytes %d" % (self.name,self.fileCount,self.byteCount,))
         while True:
             try:
                 cmd,args = self.cmdQueue.get()
@@ -329,9 +247,6 @@ class ArchiveGroup(object):
             except Exception, exc:
                 Log("Exception in ArchiveGroup server",
                     dict(GroupName = self.name), Verbose = "Exception = %s %r" % (exc, exc))
-
-    # def retryUploadScheduler(self):
-    #     return
 
     def zipSource(self, source, targetPath):
         """
@@ -365,12 +280,6 @@ class ArchiveGroup(object):
 
     def initArchiveGroup(self):
         return
-        # The treeWalker is used to delete the oldest entries when required
-        # self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
-        # Create a uploadTreeWalker to retry uploading the newest entries when required
-        # self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
-        # Remove empty subdirectories
-        # self._removeEmptySubdirs()
 
     def extractFiles(self,destDir, startTime=None, endTime=None, uniqueFileNames = False, resultQueue = None):
         """Extract all files between the specified starting and ending times to the destination directory. If uniqueFileNames is
@@ -490,28 +399,20 @@ class ArchiveGroup(object):
             now = unixTime(timestamp)
         timeTuple = self.maketimetuple(now)
 
-        # The storage path for files to be uploaded is different from files to be archived locally
-        if self.uploadEnabled:
-            pathName = os.path.join(self.uploadRetryPath, makeStoragePathName(timeTuple,self.quantum))
-        else:
-            # pathName = os.path.join(
-            #     self.groupRoot, makeStoragePathName(timeTuple, self.quantum))
-            pathName = makeStoragePathName(timeTuple, self.quantum)
-            # pathName = os.path.join(self.groupRoot, pathName)
-
-            # RSF
-            # Hack to organize by date at the top level then by type
-            # i.e. Log/Archive/2018/08/DataLog_User/<file>
-            #
-            # Actually it's flat, 2018-08-11
-            # RDF files are a special case because they are large so
-            # we append "RDF" to the directory name.  This is to make sorting
-            # and deleting only the RDF files easier.
-            if("RDF" in self.groupRoot):
-                pathName = pathName + "-RDF"
-            pathName = os.path.join(os.path.split(self.groupRoot)[0],
-                                    pathName,
-                                    os.path.basename(self.groupRoot))  # date before file type name
+        # RSF
+        # Hack to organize by date at the top level then by type
+        # i.e. Log/Archive/2018/08/DataLog_User/<file>
+        #
+        # Actually it's flat, 2018-08-11
+        # RDF files are a special case because they are large so
+        # we append "RDF" to the directory name.  This is to make sorting
+        # and deleting only the RDF files easier.
+        pathName = makeStoragePathName(timeTuple, self.quantum)
+        if("RDF" in self.groupRoot):
+            pathName = pathName + "-RDF"
+        pathName = os.path.join(os.path.split(self.groupRoot)[0],
+                                pathName,
+                                os.path.basename(self.groupRoot))  # date before file type name
 
         renameFlag = True
         # Determine the target sourceFiles
@@ -684,21 +585,7 @@ def HandleCommandSwitches():
     options = {}
     for o, a in switches:
         options[o] = a
-
-    # if "/?" in args or "/h" in args:
-    #     options["-h"] = ""
-    #
-    # executeTest = False
-    # if "-h" in options or "--help" in options:
-    #     PrintUsage()
-    #     sys.exit(0)
-    # else:
-    #     if "--test" in options:
-    #         executeTest = True
-    #
-    # #Start with option defaults...
     configFile = ""
-
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
