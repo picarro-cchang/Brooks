@@ -295,12 +295,12 @@ class ArchiveGroup(object):
         self.makeSpaceLock = threading.Lock()
 
         # For data uploading
-        self.uploader = archiver.uploader
-        self.retryUploadInterval = archiver.retryUploadInterval
+        # self.uploader = archiver.uploader
+        # self.retryUploadInterval = archiver.retryUploadInterval
         self.uploadEnabled = archiver.config.getboolean(groupName,'UploadEnabled', False)
-        self.uploadRetryPath = os.path.join(self.groupRoot, "upload")
+        # self.uploadRetryPath = os.path.join(self.groupRoot, "upload")
         # Flag to scan the "upload" folder and upload any remaining files
-        self.retryUploadNeeded = True
+        # self.retryUploadNeeded = True
         self.serverThread.setDaemon(True)
         self.serverThread.start()
 
@@ -465,8 +465,10 @@ class ArchiveGroup(object):
             # If we are aggregating, return immediately unless the aggregation count has been reached
             if self.aggregationCount != 0:
                 self.aggregation += 1
-                if self.aggregation < self.aggregationCount: return
+                if self.aggregation < self.aggregationCount:
+                    return
             self.aggregation = 0
+            print("Archiving:", fileToArchive, sourceFileName, self.aggregationCount)
             status = self.archiveFile(fileToArchive, sourceFileName, removeOriginal, timestamp)
             # If archiving fails, do not remove original
             removeOriginal = removeOriginal and status
@@ -613,7 +615,7 @@ class Archiver(object):
             self.storageRoot = os.path.join(LOG_DIR, 'Archive')
 
             # For S3 uploader
-            uploadBucketName = self.config.get(_MAIN_CONFIG_SECTION, "UploadBucketName", "picarro_analyzerup")
+            # uploadBucketName = self.config.get(_MAIN_CONFIG_SECTION, "UploadBucketName", "picarro_analyzerup")
             try:
                 analyzerId = CRDS_Driver.fetchInstrInfo("analyzername")
                 if analyzerId == None:
@@ -622,8 +624,8 @@ class Archiver(object):
                 print("Link to CRDS_Driver not established, analyzer ID unknown.")
                 print("You can ignore this error if running in virtual mode.")
                 analyzerId = "Unknown"
-            self.uploader = S3Uploader(uploadBucketName, analyzerId)
-            self.retryUploadInterval = self.config.getfloat(_MAIN_CONFIG_SECTION, "RetryUploadInterval", 30.0)
+            # self.uploader = S3Uploader(uploadBucketName, analyzerId)
+            # self.retryUploadInterval = self.config.getfloat(_MAIN_CONFIG_SECTION, "RetryUploadInterval", 30.0)
 
             # Fetch names of storage groups
             self.storageGroupNames = self.config.list_sections()
