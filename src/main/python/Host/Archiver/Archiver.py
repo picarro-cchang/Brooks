@@ -330,8 +330,8 @@ class ArchiveGroup(object):
                 Log("Exception in ArchiveGroup server",
                     dict(GroupName = self.name), Verbose = "Exception = %s %r" % (exc, exc))
 
-    def retryUploadScheduler(self):
-        return
+    # def retryUploadScheduler(self):
+    #     return
 
     def zipSource(self, source, targetPath):
         """
@@ -364,10 +364,11 @@ class ArchiveGroup(object):
             del zf
 
     def initArchiveGroup(self):
+        return
         # The treeWalker is used to delete the oldest entries when required
-        self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
+        # self.treeWalker = walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
         # Create a uploadTreeWalker to retry uploading the newest entries when required
-        self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
+        # self.uploadTreeWalker = walkTree(self.uploadRetryPath,sortDir=sortByName,sortFiles=sortByMtime,reversed=True)
         # Remove empty subdirectories
         # self._removeEmptySubdirs()
 
