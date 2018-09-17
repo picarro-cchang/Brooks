@@ -39,18 +39,8 @@ def makeStoragePathName(struct_time,level):
     level = 1: year only
     level = 2: include month
     level = 3: include monthday
-    level = 4: include hours
-    level = 5: include minutes
-    level = 6: include seconds
-
-    >>> import time
-    >>> import calendar
-    >>> print makeStoragePathName(time.gmtime(1167863366),5)
-    2007/01/03/22/29
-    >>> print makeStoragePathName(time.gmtime(1167863366),3)
-    2007/01/03
     """
-    if level<0 or level>6:
+    if level<0 or level>3:
         raise ValueError,"Invalid level in makeStoragePathName (valid value: 0...6)"
     elif level>0:
         pathList = ["%04d" % (struct_time[0],)]
@@ -152,8 +142,6 @@ class ArchiveGroup(object):
         else:
             self.maketimetuple = time.gmtime
 
-        self.maxCount = archiver.config.getint(groupName,'MaxCount')
-        self.maxSize = int(1000000 * archiver.config.getfloat(groupName,'MaxSize_MB'))
         try:
             self.quantum = archiver.config.getint(groupName,'Quantum')
         except KeyError:
@@ -190,13 +178,10 @@ class ArchiveGroup(object):
         arguments are passed to the appropriate function."""
         cmdDict = dict(archiveData = self.archiveData,
                        copyFiles = self.extractFiles,
-                       getFileNames = self.getFileNames,
-                       refreshStats = self.updateAndGetArchiveSize,
-                       init = self.initArchiveGroup,
                        archiveFile = self.archiveFile,
                        startLiveArchive = self.startLiveArchive,
                        stopLiveArchive = self.stopLiveArchive)
-        self.updateAndGetArchiveSize()
+        # self.updateAndGetArchiveSize()
         while True:
             try:
                 cmd,args = self.cmdQueue.get()
@@ -237,9 +222,6 @@ class ArchiveGroup(object):
         finally:
             zf.close()
             del zf
-
-    def initArchiveGroup(self):
-        return
 
     def extractFiles(self,destDir, startTime=None, endTime=None, uniqueFileNames = False, resultQueue = None):
         """Extract all files between the specified starting and ending times to the destination directory. If uniqueFileNames is
@@ -290,7 +272,6 @@ class ArchiveGroup(object):
                 # print "LiveArchive failed"
         else:
             pass
-
 
     def stopLiveArchive(self, source, copier=False):
         if source in self.liveArchiveDict:
@@ -364,7 +345,7 @@ class ArchiveGroup(object):
         # RDF files are a special case because they are large so
         # we append "RDF" to the directory name.  This is to make sorting
         # and deleting only the RDF files easier.
-        pathName = makeStoragePathName(timeTuple, self.quantum)
+        pathName = makeStoragePathName(self.maketimetuple(now), self.quantum)
         if("RDF" in self.groupRoot):
             pathName = pathName + "-RDF"
         pathName = os.path.join(os.path.split(self.groupRoot)[0],
@@ -407,26 +388,6 @@ class ArchiveGroup(object):
             os.remove(self.tempFileName)
         return status
 
-    def updateAndGetArchiveSize(self):
-        """
-        Determine the number of files and number of bytes presently in the archive group.
-        Update and return self.fileCount and self.byteCount.
-        """
-        fileCount = 0
-        byteCount = 0
-        for root, dirs, files in os.walk(self.groupRoot):
-            fileCount += len(files)
-            byteCount += sum([os.path.getsize(os.path.join(root, fname)) for fname in files])
-        self.fileCount = fileCount
-        self.byteCount = byteCount
-        return fileCount, byteCount
-
-    def getFileNames(self,queue):
-        """Get a list of file names for this storage group sorted in order of modification time and place it on the
-        specified queue"""
-        queue.put([os.path.split(name)[-1] for type,name in walkTree(self.groupRoot,sortDir=sortByName,sortFiles=sortByMtime,reversed=False)
-                   if type == 'file'])
-
 
 class Archiver(object):
     """The archiver manages storage of data and files, placing them in FIFO order into storage groups whose sizes may be
@@ -454,7 +415,6 @@ class Archiver(object):
                                                ServerDescription = "The archive manager that manages usage of storage space.",
                                                ServerVersion = __version__,
                                                threaded = True)
-        #Register the rpc functions...
         self.rpcServer.register_function(self.RPC_StartLiveArchive, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_StopLiveArchive, NameSlice = 4)
         self.rpcServer.register_function(self.RPC_ArchiveFile, NameSlice = 4)
@@ -466,9 +426,6 @@ class Archiver(object):
         basePath = os.path.split(filename)[0]
         try:
             self.storageRoot = os.path.join(LOG_DIR, 'Archive')
-
-            # For S3 uploader
-            # uploadBucketName = self.config.get(_MAIN_CONFIG_SECTION, "UploadBucketName", "picarro_analyzerup")
             try:
                 analyzerId = CRDS_Driver.fetchInstrInfo("analyzername")
                 if analyzerId == None:
@@ -477,8 +434,6 @@ class Archiver(object):
                 print("Link to CRDS_Driver not established, analyzer ID unknown.")
                 print("You can ignore this error if running in virtual mode.")
                 analyzerId = "Unknown"
-            # self.uploader = S3Uploader(uploadBucketName, analyzerId)
-            # self.retryUploadInterval = self.config.getfloat(_MAIN_CONFIG_SECTION, "RetryUploadInterval", 30.0)
 
             # Fetch names of storage groups
             self.storageGroupNames = self.config.list_sections()
@@ -543,18 +498,6 @@ def HandleCommandSwitches():
 
     return (configFile)
 
-HELP_STRING = \
-"""\
-Archiver.py [-h] [-c<FILENAME>]
-
-Where the options can be a combination of the following:
--h  Print this help.
--c  Specify a different config file.  Default = "./Archiver.ini"
-
-"""
-
-def PrintUsage():
-    print HELP_STRING
 
 def main():
     my_instance = SingleInstance(APP_NAME)
@@ -575,7 +518,6 @@ def main():
                 Log("Restart request to supervisor sent", Level=0)
             else:
                 Log("Restart request to supervisor not sent", Level=2)
-
 
 if __name__ == "__main__":
     main()
