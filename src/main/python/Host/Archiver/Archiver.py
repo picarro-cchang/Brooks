@@ -28,9 +28,11 @@ _DEFAULT_CONFIG_NAME = "Archiver.ini"
 _MAIN_CONFIG_SECTION = "MainConfig"
 
 EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                         APP_NAME,
-                                         IsDontCareConnection=False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy(
+    "http://localhost:%d" %
+    RPC_PORT_DRIVER,
+    APP_NAME,
+    IsDontCareConnection=False)
 
 
 def makeStoragePathName(struct_time, level):
@@ -65,11 +67,9 @@ class LiveArchive(object):
     def __init__(self, srcPathName, destPathName, archiveGroup):
         self.srcPathName = srcPathName
         self.destPathName = destPathName
-        self.bytesCopied = 0
         self.updating = False
         self.srcFp = None
         self.archiveGroup = archiveGroup
-        self.oldNBytes = 0
 
     # Live updating for data logs
     def startUpdate(self):
@@ -96,9 +96,7 @@ class LiveArchive(object):
             if not data:
                 time.sleep(1.0)
                 continue
-            nBytes = len(data)
             self.destFp.write(data)
-            self.bytesCopied += nBytes
 
     def stopUpdate(self):
         self.updating = False
@@ -116,8 +114,7 @@ class ArchiveGroup(object):
     called "groupName" created under the storageRoot of the archiver. Under this
     directory, files are stored in a tree organized by file modification time in
     GMT. The number of levels of the tree (potentially year, month, day, hour,
-    minute and second) is determined by "quantum". Limits may be placed on the
-    number of megabytes in the files and/or the number of files in the group.
+    minute and second) is determined by "quantum".
 
     Depending on the options specified for the storage group, data may be
     aggregated and/or compressed before storage.  Such compression and
@@ -154,7 +151,6 @@ class ArchiveGroup(object):
 
         self.serverThread = threading.Thread(target=self.server)
         self.fileCount = -1
-        self.byteCount = -1
 
         try:
             self.compress = archiver.config.getboolean(groupName, "Compress")
@@ -183,7 +179,6 @@ class ArchiveGroup(object):
         cmdDict, and the arguments are passed to the appropriate function.
         """
         cmdDict = dict(archiveData=self.archiveData,
-                       copyFiles=self.extractFiles,
                        archiveFile=self.archiveFile,
                        startLiveArchive=self.startLiveArchive,
                        stopLiveArchive=self.stopLiveArchive)
@@ -197,21 +192,17 @@ class ArchiveGroup(object):
                     Log("Archiver command %s took %s seconds" %
                         (cmd, time.time() - startTime))
             except Exception as exc:
-                Log("Exception in ArchiveGroup server",
-                    dict(GroupName=self.name), Verbose="Exception = %s %r" % (exc, exc))
+                Log("Exception in ArchiveGroup server", dict(
+                    GroupName=self.name), Verbose="Exception = %s %r" % (exc, exc))
 
     def zipSource(self, source, targetPath):
         """
         Compresses the source (either a filename or a (name,data) tuple) and
         puts it into targetPath.
         """
-        if self.aggregationCount > 0:
-            if os.path.exists(targetPath):
+        writeMode = "w"
+        if self.aggregationCount > 0 and os.path.exists(targetPath):
                 writeMode = "a"
-            else:
-                writeMode = "w"
-        else:
-            writeMode = "w"
 
         if self.compress:
             compressMode = zipfile.ZIP_DEFLATED
@@ -230,23 +221,6 @@ class ArchiveGroup(object):
         finally:
             zf.close()
             del zf
-
-    def extractFiles(self, destDir, startTime=None, endTime=None,
-                     uniqueFileNames=False, resultQueue=None):
-        """
-        Extract all files between the specified starting and ending times to
-        the destination directory. If uniqueFileNames is True, the group name
-        and date code are prepended to each file. Returns the number of files
-        copied, and places them on the specified resultQueue.
-        """
-        return 0
-
-    def doesFileExist(self, fileName, timestamp):
-        """
-        Inquires if the specified file name exists in this group for the
-        specified timestamp
-        """
-        return True
 
     def startLiveArchive(self, source, timestamp=None, copier=False):
         if timestamp is None:
@@ -268,9 +242,10 @@ class ArchiveGroup(object):
         # and deleting only the RDF files easier.
         if ("RDF" in self.groupRoot):
             pathName = pathName + "-RDF"
-        pathName = os.path.join(os.path.split(self.groupRoot)[0],
-                                pathName,
-                                os.path.basename(self.groupRoot))  # date before file type name
+        pathName = os.path.join(
+            os.path.split(
+                self.groupRoot)[0], pathName, os.path.basename(
+                self.groupRoot))  # date before file type name
 
         if not os.path.exists(pathName):
             os.makedirs(pathName, 0o775)
@@ -291,7 +266,6 @@ class ArchiveGroup(object):
             a.stopUpdate()
         else:
             pass
-            # print "No valid live archive for %s" % (source,)
 
     def archiveData(self, source, removeOriginal=False, timestamp=None):
         """Store the specified data in the group, setting its modification time
@@ -373,9 +347,10 @@ class ArchiveGroup(object):
         pathName = makeStoragePathName(self.maketimetuple(now), self.quantum)
         if("RDF" in self.groupRoot):
             pathName = pathName + "-RDF"
-        pathName = os.path.join(os.path.split(self.groupRoot)[0],
-                                pathName,
-                                os.path.basename(self.groupRoot))  # date before file type name
+        pathName = os.path.join(
+            os.path.split(
+                self.groupRoot)[0], pathName, os.path.basename(
+                self.groupRoot))  # date before file type name
 
         renameFlag = True
         # Determine the target sourceFiles
@@ -403,7 +378,7 @@ class ArchiveGroup(object):
             else:
                 shutil.copy2(fileToArchive, targetName)
             # On success, touch file modification and last access times, and
-            # increment the byte and file counts
+            # increment the file counts
             os.utime(targetName, (now, now))
             status = True
         except IOError as e:
@@ -425,9 +400,11 @@ class Archiver(object):
 
     def __init__(self, configFile):
         self.configFile = configFile
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
-                                                     RPC_PORT_SUPERVISOR, APP_NAME,
-                                                     IsDontCareConnection=False)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy(
+            "http://localhost:%d" %
+            RPC_PORT_SUPERVISOR,
+            APP_NAME,
+            IsDontCareConnection=False)
         if not self.LoadConfig(self.configFile):
             Log("Failed to load config.")
             return
@@ -525,8 +502,8 @@ class Archiver(object):
 
 
 def HandleCommandSwitches():
-    shortOpts = 'h'
-    longOpts = ["help", "test", "ini="]
+    shortOpts = ''
+    longOpts = ["ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError as data:
