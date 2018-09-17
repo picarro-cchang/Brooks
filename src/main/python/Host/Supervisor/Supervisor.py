@@ -1491,7 +1491,6 @@ class Supervisor(object):
         # that starts the Supervisor.
         if self.powerDownAfterTermination:
             if  sys.platform == "linux2":
-                #os.system("sleep 60; shutdown now")
                 os.system("shutdown -h 1")
             else:
                 pass

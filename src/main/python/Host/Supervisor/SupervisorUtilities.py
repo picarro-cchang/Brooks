@@ -14,4 +14,4 @@ def restart_app_via_rpc(app_name):
 
 
 if __name__ == "__main__":
-    restart_app_via_rpc(app_name="QuickGui")
+    restart_app_via_rpc(app_name="SpectrumCollector")
