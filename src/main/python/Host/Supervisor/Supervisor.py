@@ -254,7 +254,7 @@ if sys.platform == "linux2":
 
     def launchProcess(appName,exeName,exeArgs,priority,consoleMode,affinity,cwd):
         #launch the process...
-        Log("Launching application: %s" % appName, Level=0)
+        Log("Launching application: %s" % appName)
         argList = [exeName]
         for arg in exeArgs[1:]:
             argList += shlex.split(arg)
@@ -600,8 +600,8 @@ class App(object):
         #self._ProcessHandle = hProcess.handle
         print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (time.strftime("%d-%b-%y %H:%M:%S"),"'%s'" % self._AppName, self.Port, self._ProcessId, pAffinity)
 
-        Log("Application started: %s" % self._AppName, Level=0)
-        self._Stat_LaunchCount += 1 #we're tracking launch attempts, not successful launches
+        Log("%s started" % self._AppName, Level=0)
+        self._Stat_LaunchCount += 1  #we're tracking launch attempts, not successful launches
 
 
         if self.VerifyTimeout_ms > 0 and self.Port > 0: # and self.Mode in [0,1,4]:
@@ -917,6 +917,7 @@ class Supervisor(object):
         self._ShutdownRequested = False
         self._TerminateAllRequested = False
         self._TerminateProtected = False
+        self._restartRequested = False
         self.BackupExists = False
         self.BackupApp = None
         self.Mode3Exists = False
@@ -1109,13 +1110,18 @@ class Supervisor(object):
 
         appsToLaunch = [a for a in AppList if a not in ExclusionList]
 
-        for appName in appsToLaunch:
+        for index, appName in enumerate(appsToLaunch):
             failedAppDependent = False
             #check to make sure they are not dependents of apps that failed to launch
             for failedAppName in failedAppDependents:
                 if appName == failedAppName:
                     failedAppDependent = True
                     break
+            # Allow the MonitorApps loop to restart monitoring apps after
+            # we launch the last app in the list
+            if index == (len(appsToLaunch) - 1):
+                self._restartRequested = False
+                Log("Application monitoring will resume on next iteration")
 
             if not failedAppDependent:
                 Log("Attempting to launch application",dict(AppName = appName))
@@ -1253,9 +1259,19 @@ class Supervisor(object):
         return "OK"
 
     def RPC_RestartApplications(self, AppName, RestartDependants):
+        """
+        Supervisor has requested a restart from an app via RPC. Most likely because
+        it encountered an unhandled exception. Let's pass the AppName off to the
+        RestartApp method to restart it and any dependents
+        :param AppName: App requesting a restart
+        :param RestartDependants: Boolean (Should we restart any dependents) This should
+            always be True and is True by default in Host.Common.AppRequestRestart
+        :return: Returns and "OK" to CmdFIFO to acknowledge receipt
+        """
         Log("RestartApplications request received via RPC",
             dict(Client=self.RPCServer.CurrentCmd_ClientName),
             Level=0)
+        self._restartRequested = True
         try:
             self.RestartApp(AppName, RestartDependants)
         except Exception, e:
@@ -1293,6 +1309,18 @@ class Supervisor(object):
 
     def sigint_handler(self, signum, frame):
         self._TerminateAllRequested = True
+
+    def CheckForRestartRequests(self):
+        """
+        We will check to see if there have been any restart requests
+        via RPC from any of the individual apps. If so, return True
+        so we can pause the monitor loop from attempting to ping
+        them while they are being restarted
+        """
+        if self._restartRequested:
+            return True
+        else:
+            return False
 
     def CheckForStopRequests(self):
         """
@@ -1361,6 +1389,17 @@ class Supervisor(object):
             for app in appsToMonitor:
                 time.sleep(0.1)
                 if self.CheckForStopRequests():
+                    break
+                # We want to stop supervisor from monitoring apps while we are restarting
+                # them. Let's check to see if any methods set the self._restartRequested to True.
+                # If so, we'll force this loop to sleep, then break. Once the apps are started
+                # we will set self._restartRequested to False, and allow the loop to complete
+                # on the next iteration.
+                if self.CheckForRestartRequests():
+                    pause_interval = 30
+                    Log("Pausing application monitoring for %s seconds during application "
+                        "restart" % pause_interval)
+                    time.sleep(pause_interval)
                     break
                 assert isinstance(app, App) #for Wing
                 curTime = TimeStamp()
@@ -1440,7 +1479,8 @@ class Supervisor(object):
                 self.BackupApp.ShutDown()
 
     def ShutDownAll(self):
-        """Shuts down all monitored applications and then itself.
+        """
+        Shuts down all monitored applications and then itself.
         """
         #Get rid of any backup supervisor first...
         if self.BackupExists:
