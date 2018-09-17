@@ -218,7 +218,7 @@ try:
     if "peak_82" in _DATA_:
         temp = applyLinear(_DATA_["hf_ppbv"],HF_CONC) + H1onHF*_DATA_["peak_82"]
         _NEW_DATA_["HF_raw"] = temp
-        if "HF_raw" in _OLD_DATA_ and len(_OLD_DATA["HF_raw"]) > 1:
+        if "HF_raw" in _OLD_DATA_ and len(_OLD_DATA_["HF_raw"]) > 1:
             now = _OLD_DATA_["HF_raw"][-2].time
             HF30s = boxAverage(_PERSISTENT_["bufferHF30"],temp,now,30)
             _NEW_DATA_["HF_30sec"] = HF30s
