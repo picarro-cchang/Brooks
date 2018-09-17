@@ -45,7 +45,12 @@ from Host.Utilities.UserAdmin.UserAdmin import DB_SERVER_URL
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
-AppPath = sys.path[0]
+#AppPath = sys.path[0]
+print("sys.path: ", sys.path)
+
+AppPath = (os.path.dirname(os.path.abspath(__file__)) + "/")
+print(" ")
+print("AppPath: ", AppPath)
 TimeStamp = time.time
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -65,12 +70,17 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.ilEventIcons = wx.ImageList(16, 16)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
-        self.IconIndex_Warning  = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png',
-                                                     wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Info     = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png',
-                                                     wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Critical = myIL.Add(wx.Bitmap(AppPath + '/dialog-error.png',
-                                                     wx.BITMAP_TYPE_ICO))
+        # Define the Warning, Info, and Critical Icons for dialogs
+        self.IconIndex_Warning  = wx.Bitmap(AppPath + 'task-attention.png',
+                                                     wx.BITMAP_TYPE_ICO)
+        self.IconIndex_Info     = wx.Bitmap(AppPath + 'dialog-information.png',
+                                                     wx.BITMAP_TYPE_ICO)
+        self.IconIndex_Critical = wx.Bitmap(AppPath + 'dialog-error.png',
+                                                     wx.BITMAP_TYPE_ICO)
+        # Add the icons to the widget
+        myIL.Add(self.IconIndex_Warning)
+        myIL.Add(self.IconIndex_Info)
+        myIL.Add(self.IconIndex_Critical)
         self._DataSource = DataSource
         self.firstItem = 0
 
@@ -802,7 +812,7 @@ class QuickGui(wx.Frame):
         panelWidth = 250
 
         logoSizer = wx.BoxSizer(wx.VERTICAL)
-        logoBmp = wx.Bitmap(AppPath + '/logo.png', wx.BITMAP_TYPE_PNG)
+        logoBmp = wx.Bitmap(AppPath + 'logo.png', wx.BITMAP_TYPE_PNG)
         logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp),proportion=0, flag=wx.TOP,border = 15)
         self.measPanelSizer.Add(logoSizer,proportion=0,flag=wx.ALIGN_CENTER|wx.BOTTOM,border = 5)
         self.measPanelSizer.Add((panelWidth,10),proportion=0)
