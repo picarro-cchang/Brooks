@@ -264,7 +264,7 @@ if sys.platform == "linux2":
             # locks up the code.  A tip on StackOverflow (can't find the link)
             # said sleep() before each Popen made the problem go away.
             #
-            time.sleep(1.0)
+            #time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
