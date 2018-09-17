@@ -35,26 +35,22 @@ CRDS_Driver = CmdFIFO.CmdFIFOServerProxy(
     IsDontCareConnection=False)
 
 
-def makeStoragePathName(struct_time, level):
+def makeStoragePathName(struct_time, level=3):
     """
     Convert a struct_time object into a relative path name, using entries in
     struct_time up to the specified level:
-    level = 0: flat (no timestamp in the path name)
     level = 1: year only
     level = 2: include month
     level = 3: include monthday
     """
-    if level < 0 or level > 3:
+    if level < 1 or level > 3:
         raise ValueError(
             "Invalid level in makeStoragePathName (valid value: 0...6)")
-    elif level > 0:
+    else:
         pathList = ["%04d" % (struct_time[0],)]
         for i in range(1, level):
             pathList.append("%02d" % (struct_time[i],))
         return "-".join(pathList)
-    else:
-        # Flat directory without timestamp
-        return "."
 
 
 class LiveArchive(object):
@@ -129,38 +125,45 @@ class ArchiveGroup(object):
     def __init__(self, groupName, archiver):
         assert isinstance(archiver, Archiver)
         self.name = groupName
-        try:
-            self.groupRoot = archiver.config.get(groupName, 'Directory')
-        except BaseException:
-            self.groupRoot = os.path.join(archiver.storageRoot, groupName)
-
-        if archiver.config.get(
-                groupName, "StorageFolderTime", "gmt").lower() == "local":
-            self.maketimetuple = time.localtime
-        else:
-            self.maketimetuple = time.gmtime
-
-        try:
-            self.quantum = archiver.config.getint(groupName, 'Quantum')
-        except KeyError:
-            self.quantum = 3
+        self.groupRoot = os.path.join(archiver.storageRoot, groupName)
+        self.maketimetuple = time.gmtime
+        self.quantum = archiver.config.getint(groupName, 'Quantum', 3)
+        self.compress = archiver.config.getboolean(groupName, "Compress", False)
+        self.aggregationCount = archiver.config.getint( groupName, "AggregationCount", 0)
         self.aggregation = 0
         self.cmdQueue = Queue.Queue(0)  # Queue for commands
         # Enqueue command to initialize the archive group
         self.cmdQueue.put(("init", ()))
 
+        # try:
+        #     self.groupRoot = archiver.config.get(groupName, 'Directory')
+        # except BaseException:
+        #     self.groupRoot = os.path.join(archiver.storageRoot, groupName)
+
+        # if archiver.config.get(
+        #         groupName, "StorageFolderTime", "gmt").lower() == "local":
+        #     self.maketimetuple = time.localtime
+        # else:
+        #     self.maketimetuple = time.gmtime
+
+        # self.quantum = archiver.config.getint(groupName, 'Quantum', 3)
+        # self.aggregation = 0
+        # self.cmdQueue = Queue.Queue(0)  # Queue for commands
+        # # Enqueue command to initialize the archive group
+        # self.cmdQueue.put(("init", ()))
+
         self.serverThread = threading.Thread(target=self.server)
         self.fileCount = -1
 
-        try:
-            self.compress = archiver.config.getboolean(groupName, "Compress")
-        except KeyError:
-            self.compress = False
-        try:
-            self.aggregationCount = archiver.config.getint(
-                groupName, "AggregationCount")
-        except KeyError:
-            self.aggregationCount = 0
+        # try:
+        #     self.compress = archiver.config.getboolean(groupName, "Compress")
+        # except KeyError:
+        #     self.compress = False
+        # try:
+        #     self.aggregationCount = archiver.config.getint(
+        #         groupName, "AggregationCount")
+        # except KeyError:
+        #     self.aggregationCount = 0
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(
             archiver.storageRoot, groupName + ".zip")
@@ -344,7 +347,7 @@ class ArchiveGroup(object):
         # RDF files are a special case because they are large so
         # we append "RDF" to the directory name.  This is to make sorting
         # and deleting only the RDF files easier.
-        pathName = makeStoragePathName(self.maketimetuple(now), self.quantum)
+        pathName = makeStoragePathName(timeTuple, self.quantum)
         if("RDF" in self.groupRoot):
             pathName = pathName + "-RDF"
         pathName = os.path.join(

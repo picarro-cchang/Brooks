@@ -30,7 +30,7 @@ class AlarmViewListCtrl(wx.ListCtrl):
         self.tipItem = None
         self.dummyCounter = 0
 
-        self.appPath = os.path.dirname(os.path.realpath(__file__))
+        self.appPath = os.path.dirname(os.path.abspath(__file__))
 
 
         # Create Alarm LED icons. Colors

@@ -41,12 +41,10 @@ from Host.Utilities.UserAdmin.UserAdmin import DB_SERVER_URL
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
-
 APP_NAME = "QuickGui"
 UPDATE_TIMER_INTERVAL = 1000
 CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
 LOG_DIR = os.environ['PICARRO_LOG_DIR']
-
 AppPath = sys.path[0]
 TimeStamp = time.time
 
@@ -67,10 +65,10 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.ilEventIcons = wx.ImageList(16, 16)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
-        self.IconIndex_Warning  = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png',
-                                                     wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Info     = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png',
-                                                     wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Warning = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png',
+                                                    wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Info = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png',
+                                                 wx.BITMAP_TYPE_ICO))
         self.IconIndex_Critical = myIL.Add(wx.Bitmap(AppPath + '/dialog-error.png',
                                                      wx.BITMAP_TYPE_ICO))
         self._DataSource = DataSource
