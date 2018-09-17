@@ -45,12 +45,7 @@ from Host.Utilities.UserAdmin.UserAdmin import DB_SERVER_URL
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
-#AppPath = sys.path[0]
-print("sys.path: ", sys.path)
-
 AppPath = (os.path.dirname(os.path.abspath(__file__)) + "/")
-print(" ")
-print("AppPath: ", AppPath)
 TimeStamp = time.time
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
