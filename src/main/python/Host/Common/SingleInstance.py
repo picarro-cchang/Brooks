@@ -49,9 +49,11 @@ class SingleInstance:
         return self.lasterror
 
     def __del__(self):
-        if not self.lasterror:
-            if os.path.exists(self.name):
-                os.unlink(self.name)
+        if not self.lasterror and os.path.exists(self.name):
+            try:
+                os.remove(self.name)
+            except OSError:
+                print("Cannot remove: %s" % self.name)
 
 
 if __name__ == "__main__":

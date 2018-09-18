@@ -45,6 +45,7 @@ from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface
 from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import Operation
 from Host.Common.InstErrors import INST_ERROR_OKAY
