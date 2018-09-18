@@ -623,7 +623,7 @@ class App(object):
                     #Just sucking it up since we're waiting for the app to start and we do expect errors.
                     #Log("Trapped Exception","%s %r" % (E,E), 0)
                     pass
-                time.sleep(0.5)
+                #time.sleep(0.5)
         else:
             #Not verifying, so assume it did start...
             appStarted = True
@@ -918,6 +918,7 @@ class Supervisor(object):
         self._TerminateAllRequested = False
         self._TerminateProtected = False
         self._restartRequested = False
+        self._startingUp = True
         self.BackupExists = False
         self.BackupApp = None
         self.Mode3Exists = False
@@ -1121,7 +1122,10 @@ class Supervisor(object):
             # we launch the last app in the list
             if index == (len(appsToLaunch) - 1):
                 self._restartRequested = False
-                Log("Application monitoring will resume on next iteration")
+                # Ignore this message is the monitoring loop has not started
+                # yet.
+                if self._startingUp is False:
+                    Log("Application monitoring will resume on next iteration")
 
             if not failedAppDependent:
                 Log("Attempting to launch application",dict(AppName = appName))
@@ -1383,6 +1387,7 @@ class Supervisor(object):
         terminates all monitored applications before exiting.
         """
         Log("Application monitoring loop started")
+        self._startingUp = False
         appsToMonitor = [self.AppDict[a] for a in self.AppNameList if self.AppDict[a].Mode in [0, 1, 3, 4]]
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested): #we'll monitor until it is time to stop!
             sys.stdout.flush()
