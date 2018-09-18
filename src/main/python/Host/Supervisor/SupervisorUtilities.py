@@ -1,5 +1,25 @@
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+import os
+
+
+class SupervisorFIFO:
+    def __init__(self):
+        self.fifo_path = '/tmp/SupervisorFIFO'
+        try:
+            if not os.path.exists(self.fifo_path):
+                os.mkfifo(self.fifo_path, 0644)
+        except OSError:
+            raise OSError
+
+    def write_to_fifo(self, supervisor_input):
+        with open(self.fifo_path, 'w+') as pipe:
+            pipe.write(supervisor_input)
+
+    def read_from_fifo(self):
+        with open(self.fifo_path, 'r') as pipe:
+            output = pipe.readline().rstrip()
+        return output
 
 
 def restart_app_via_rpc(app_name):
@@ -14,4 +34,7 @@ def restart_app_via_rpc(app_name):
 
 
 if __name__ == "__main__":
-    restart_app_via_rpc(app_name="SpectrumCollector")
+    # restart_app_via_rpc(app_name="SpectrumCollector")
+    while True:
+        process = SupervisorFIFO()
+        print process.read_from_fifo()

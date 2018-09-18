@@ -89,6 +89,7 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BAC
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
+from Host.Supervisor.SupervisorUtilities import SupervisorFIFO
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -602,6 +603,15 @@ class App(object):
         print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (time.strftime("%d-%b-%y %H:%M:%S"),"'%s'" % self._AppName, self.Port, self._ProcessId, pAffinity)
 
         Log("%s started" % self._AppName, Level=0)
+
+        # Let's update the SupervisorFIFO located in /tmp/SupervisorFIFO
+        # so we can monitor apps as they are being launched. This is useful
+        # for external applications such as qtLauncher to display the status
+        # while we are waiting for apps to launch before QuickGui (or other GUI)
+        # applications consume the screen
+        update_supervisor_fifo = SupervisorFIFO()
+        update_supervisor_fifo.write_to_fifo(self._AppName)
+
         self._Stat_LaunchCount += 1  #we're tracking launch attempts, not successful launches
 
 
