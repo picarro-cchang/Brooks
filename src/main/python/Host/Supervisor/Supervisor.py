@@ -418,7 +418,8 @@ class App(object):
         self.Mode = 1
         self.Port = -1
         self.CheckInterval_ms = 2000
-        self.VerifyTimeout_ms = 30000
+        #self.VerifyTimeout_ms = 30000
+        self.VerifyTimeout_ms = 1000
         self.DispatcherTimeout_ms = _DEFAULT_PING_DISPATCHER_TIMEOUT_ms
         self.ConsoleMode = CONSOLE_MODE_OWN_WINDOW
         self.NotifyOnRestart = False
