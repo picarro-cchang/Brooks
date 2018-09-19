@@ -134,36 +134,9 @@ class ArchiveGroup(object):
         self.cmdQueue = Queue.Queue(0)  # Queue for commands
         # Enqueue command to initialize the archive group
         self.cmdQueue.put(("init", ()))
-
-        # try:
-        #     self.groupRoot = archiver.config.get(groupName, 'Directory')
-        # except BaseException:
-        #     self.groupRoot = os.path.join(archiver.storageRoot, groupName)
-
-        # if archiver.config.get(
-        #         groupName, "StorageFolderTime", "gmt").lower() == "local":
-        #     self.maketimetuple = time.localtime
-        # else:
-        #     self.maketimetuple = time.gmtime
-
-        # self.quantum = archiver.config.getint(groupName, 'Quantum', 3)
-        # self.aggregation = 0
-        # self.cmdQueue = Queue.Queue(0)  # Queue for commands
-        # # Enqueue command to initialize the archive group
-        # self.cmdQueue.put(("init", ()))
-
         self.serverThread = threading.Thread(target=self.server)
         self.fileCount = -1
 
-        # try:
-        #     self.compress = archiver.config.getboolean(groupName, "Compress")
-        # except KeyError:
-        #     self.compress = False
-        # try:
-        #     self.aggregationCount = archiver.config.getint(
-        #         groupName, "AggregationCount")
-        # except KeyError:
-        #     self.aggregationCount = 0
         # Create temporary filename for compression and aggregation
         self.tempFileName = os.path.join(
             archiver.storageRoot, groupName + ".zip")
@@ -233,7 +206,6 @@ class ArchiveGroup(object):
         timeTuple = self.maketimetuple(now)
 
         pathName = makeStoragePathName(timeTuple, self.quantum)
-        # pathName = os.path.join(self.groupRoot, pathName)
 
         # RSF
         # Hack to organize by date at the top level then by type
