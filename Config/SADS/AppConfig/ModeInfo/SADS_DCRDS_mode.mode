@@ -19,10 +19,10 @@ Scheme_1_Path = ../Schemes/_HCl+H2O_DCRDS_v6.sch  #  DCRDS
 # "Standard" Spectrum Processing and Analysis Instructions...
 ############################################################################
 [HCl]
-Analyzer= ../Scripts/DataManager/analyze_SADS.py
+Analyzer= ../Scripts/DataManager/analyze_SADS_DCRDS.py
 
 [H2O]
-Analyzer= ../Scripts/DataManager/analyze_SADS.py
+Analyzer= ../Scripts/DataManager/analyze_SADS_DCRDS.py
 
 ############################################################################
 ###
