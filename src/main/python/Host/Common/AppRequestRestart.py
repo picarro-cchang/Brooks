@@ -19,3 +19,4 @@ class RequestRestart(object):
             self.status = False
         return self.status
 
+
