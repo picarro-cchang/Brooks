@@ -18,5 +18,3 @@ class RequestRestart(object):
         except:
             self.status = False
         return self.status
-
-
