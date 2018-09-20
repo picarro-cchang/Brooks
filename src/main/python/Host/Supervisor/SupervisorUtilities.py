@@ -207,10 +207,10 @@ if __name__ == "__main__":
     # random_app_pid = running_apps.get_pid(random_app)
     # print("PID: %s" % random_app_pid)
     # print("Restarting", random_app)
-    # running_apps.restart_via_rpc(random_app)
     app = "Driver"
     # running_apps.get_pid(app)
     status = running_apps.is_running(app)
     print(status)
-    running_apps.kill_app(app)
+    running_apps.restart_via_rpc(app)
+    # running_apps.kill_app(app)
     # print("Running: %s\n" % status)
