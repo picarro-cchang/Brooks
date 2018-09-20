@@ -89,7 +89,7 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BAC
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
-from Host.Supervisor.SupervisorUtilities import SupervisorFIFO
+from Host.Supervisor.SupervisorUtilities import SupervisorFIFO, RunningApps
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -1208,6 +1208,11 @@ class Supervisor(object):
 
         # before restarting, make sure the app is not a dependent of an app which isn't running
         restartApp = True
+        # Set to True, so we can suppress the MonitorApps loop while we
+        # are restarting app(s). This prevents us from getting a dispatcher
+        # error when pinging an app that is dead because we restarted it.
+        self._restartRequested = True
+
         for a in self.AppNameList:
             if self.AppDict[a]._LaunchFailureCount > 0:
                 appDependents = []
@@ -1402,14 +1407,42 @@ class Supervisor(object):
         appsToMonitor = [self.AppDict[a] for a in self.AppNameList if self.AppDict[a].Mode in [0, 1, 3, 4]]
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested): #we'll monitor until it is time to stop!
             sys.stdout.flush()
-            for app in appsToMonitor:
-                time.sleep(0.1)
+            # Let's not slam the CPU
+            time.sleep(1)
+            # Let's check the OS for running apps before we fall to using CmdFIFO to
+            # check on apps. Not all apps use CmdFIFO, or have ping capability. We'll
+            # loop through all of the apps that have been launched by Supervisor and
+            # use the SingleInstance class to write a .pid file to /run/user/1000/picarro
+            # get their respective process ID (PID) and cross-reference the OS process table.
+            # This will also allow us to detect dead applications faster, and also prevent
+            # dispatcher timeouts if we can detect the app is dead before attempting to
+            # probe it using CmdFIFO
+            running_apps = RunningApps()
+            # Get a list of all running apps
+            running_apps_list = running_apps.get_list()
+            for this_app in running_apps_list:
+                # Don't monitor apps if we're trying to shutdown, reboot, etc
                 if self.CheckForStopRequests():
                     break
-                # We want to stop supervisor from monitoring apps while we are restarting
+                else:
+                    # Check the state of the app
+                    is_running = running_apps.is_running(this_app)
+                    # False will be returned if the process does not have a .pid file,
+                    # the process does not exist in the OS process table, or the process
+                    # is a zombie process.
+                    if is_running is False:
+                        # Restart the app
+                        Log("Dead application detected, restarting: %s" % this_app)
+                        self.RestartApp(this_app, RestartDependents=True, StopMethod=_METHOD_DESTROYFIRST)
+            """
+            for app in appsToMonitor:
+                if self.CheckForStopRequests():
+                    break
+
+                # We want to stop supervisor from monitoring apps via CmdFIFO while we are restarting
                 # them. Let's check to see if any methods set the self._restartRequested to True.
                 # If so, we'll force this loop to sleep, then break. Once the apps are started
-                # we will set self._restartRequested to False, and allow the loop to complete
+                # we will set self._restartRequested to False, and allow the loop to resume
                 # on the next iteration.
                 if self.CheckForRestartRequests():
                     pause_interval = 30
@@ -1417,9 +1450,9 @@ class Supervisor(object):
                         "restart" % pause_interval)
                     time.sleep(pause_interval)
                     break
-                assert isinstance(app, App) #for Wing
+
                 curTime = TimeStamp()
-                if (curTime - app._LastCheckTime) > (app.CheckInterval_ms / 1000.):
+                if (curTime - app._LastCheckTime) > (app.CheckInterval_ms / 1000):
                     app._LastCheckTime = curTime
                     #Log("Checking application", app._AppName, 0)
                     #We are due to check this app.
@@ -1474,6 +1507,7 @@ class Supervisor(object):
                             elif fifoProblem:
                                 Log("FIFO problem %s detected with monitored application" % (E,), app._AppName, 3)
                             self.RestartApp(app._AppName, RestartDependents = True, StopMethod = stopMethod)
+             """
 
         try:
             self.RPCServer._CmdFIFO_StopServer()
@@ -1870,6 +1904,8 @@ def start():
         main()
     except SystemExit:
         pass
+    except KeyboardInterrupt:
+        sys.exit(0)
     except:
         # tbMsg = BetterTraceback.get_advanced_traceback()
         tbMsg = traceback.format_exc()
@@ -1878,6 +1914,7 @@ def start():
             Level=3,
             Verbose=tbMsg)
         print tbMsg
+    finally:
         Log("Exiting program")
 
 

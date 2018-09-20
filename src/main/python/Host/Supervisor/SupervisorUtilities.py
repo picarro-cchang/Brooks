@@ -185,7 +185,8 @@ class RunningApps:
         """
         pid = self.get_pid(app_name)
         pid_running = commands.getoutput("ls /proc | grep %s" % pid)
-        if pid_running:
+        pid_state = commands.getoutput("cat /proc/%s/status | grep State:" % pid)
+        if pid_running and ("Z" or "zombie") not in pid_state:
             return True
         else:
             return False
@@ -201,14 +202,15 @@ if __name__ == "__main__":
             break
     """
     running_apps = RunningApps()
-    random_app = running_apps.get_random_app()
-    print("\nApp: %s" % random_app)
-    random_app_pid = running_apps.get_pid(random_app)
-    print("PID: %s" % random_app_pid)
+    # random_app = running_apps.get_random_app()
+    # print("\nApp: %s" % random_app)
+    # random_app_pid = running_apps.get_pid(random_app)
+    # print("PID: %s" % random_app_pid)
     # print("Restarting", random_app)
     # running_apps.restart_via_rpc(random_app)
-    # app = "Driver"
+    app = "Driver"
     # running_apps.get_pid(app)
-    # running_apps.kill_app(app)
-    status = running_apps.is_running(random_app)
-    print("Running: %s\n" % status)
+    status = running_apps.is_running(app)
+    print(status)
+    running_apps.kill_app(app)
+    # print("Running: %s\n" % status)
