@@ -130,6 +130,30 @@ def getSupervisorPid(pidFileName = 'supervisor.pid', pidFilePath = None):
     f.close()
     return int(pidStr)
 
+def makeDirs(path):
+    """
+    Recursively make directories as needed.
+    """
+    # If the directory already exists the code will thrown
+    # a EEXIST error.  See the Python errno module and
+    # the "errno" Linux man page.  We ignore this exception
+    # and throw anything else up to the parent.
+    #
+    # This idiom is discussed at
+    # https://stackoverflow.com/questions/273192/how-can-i-create-a-directory-if-it-does-not-exist/14364249#14364249
+    # http://deepix.github.io/2017/02/02/eexists.html
+    #
+    # The permission 0775 is explicity set to avoid the Archiver problem where on Linux systems
+    # it would create RDF destination directories as read only if makedirs() was called with the default
+    # permissions.
+    #
+    try:
+        os.makedirs(path,0775)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise e
+    return
+
 
 if __name__ == '__main__':
     __path_test()

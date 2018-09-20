@@ -19,6 +19,7 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.timestamp import unixTime
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.LinuxWindowsTools import makeDirs
 
 APP_NAME = "Archiver"
 __version__ = 1.0
@@ -216,14 +217,14 @@ class ArchiveGroup(object):
         # we append "RDF" to the directory name.  This is to make sorting
         # and deleting only the RDF files easier.
         if ("RDF" in self.groupRoot):
-            pathName = pathName + "-RDF"
+            pathName += "-RDF"
         pathName = os.path.join(
             os.path.split(
                 self.groupRoot)[0], pathName, os.path.basename(
                 self.groupRoot))  # date before file type name
 
         if not os.path.exists(pathName):
-            os.makedirs(pathName, 0o775)
+            makeDirs(pathName)
         targetName = os.path.join(pathName, os.path.split(source)[-1])
 
         a = LiveArchive(source, targetName, self)
@@ -344,7 +345,7 @@ class ArchiveGroup(object):
         # Returns True if archiving succeeded
         status = False
         if not os.path.exists(pathName):
-            os.makedirs(pathName, 0o775)
+            makeDirs(pathName)
 
         targetName = os.path.join(pathName, targetName)
         try:
@@ -385,7 +386,7 @@ class Archiver(object):
             return
         self.storageRoot = os.path.abspath(self.storageRoot)
         if not os.path.exists(self.storageRoot):
-            os.makedirs(self.storageRoot, 0o775)
+            makeDirs(self.storageRoot)
             Log("Creating archive directory %s" % (self.storageRoot,))
         self.storageGroups = {}
         for groupName in self.storageGroupNames:
