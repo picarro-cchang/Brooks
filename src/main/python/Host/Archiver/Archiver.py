@@ -187,6 +187,19 @@ class ArchiveGroup(object):
             compressMode = zipfile.ZIP_STORED
 
         zf = zipfile.ZipFile(targetPath, writeMode, compressMode)
+
+        # Abort if the file is already full.  If this happens something is wrong
+        # with the file or destination directory.  This doesn't fix the problem
+        # but it does prevent the file growing uncontrollably.
+        #
+        numFilesInTheZipFile = len(zf.namelist())
+        if numFilesInTheZipFile > self.aggregationCount:
+            Log('Live archive %s is full. Move operation has failed.' %
+                targetPath, Level=3)
+            zf.close()
+            del zf
+            return
+
         try:
             if isinstance(source, tuple):
                 sourceName, sourceData = source
@@ -259,7 +272,6 @@ class ArchiveGroup(object):
                 try:
                     self.zipSource(source, self.tempFileName)
                     fileToArchive = self.tempFileName
-
                 except Exception as e:
                     # some problem working with the zip file, we should kill it
                     # and start fresh...
