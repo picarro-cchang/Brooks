@@ -27,8 +27,10 @@ from Host.Common import (
     CmdFIFO, SchemeProcessor, SharedTypes, StringPickler, timestamp)
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import getSchemeTableClass, Operation, RPC_PORT_DRIVER
+from Host.Common.SharedTypes import getSchemeTableClass, Operation,\
+    RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 from Host.Driver.DasConfigure import DasConfigure
 from Host.DriverSimulator.DasSimulator import DasSimulator
 from Host.DriverSimulator.SpectraSimulator import SpectraSimulator
@@ -44,6 +46,8 @@ else:
     import subprocess
 
 APP_NAME = "DriverSimulator"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+
 try:
     # Release build
     from Host.Common import release_version as version
@@ -533,6 +537,9 @@ class DriverSimulator(SharedTypes.Singleton):
         self.config = ConfigObj(configFile)
         basePath = os.path.split(os.path.normpath(os.path.abspath(configFile)))[0]
         analyzerSetupFile = os.path.join(basePath, self.config["Files"]["analyzerSetupFileName"])
+        # Set up RPC port to supervisor
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME, IsDontCareConnection=False)
         if not os.path.exists(analyzerSetupFile):
             print "Analyzer setup file not found: %s" % analyzerSetupFile
             sys.exit(0)
@@ -673,6 +680,12 @@ class DriverSimulator(SharedTypes.Singleton):
                 type, value, trace = sys.exc_info()
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type), str(value)),
                     Verbose=traceback.format_exc(), Level=3)
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
         finally:
             self.rpcHandler.shutDown()
 
@@ -862,8 +875,8 @@ def printUsage():
 
 
 def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -876,26 +889,32 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h', "")
     # Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/DriverSimulator.ini"
+    configFile = ""
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     return configFile
 
-if __name__ == "__main__":
-    try:
-        driverApp = SingleInstance("DriverSimulator")
-        if driverApp.alreadyrunning():
-            Log("Instance of driver simulator us already running", Level=3)
-        else:
-            configFile = handleCommandSwitches()
-            Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
-            d = DriverSimulator(configFile)
-            d.run()
-        Log("Exiting program")
-    except Exception, e:
-        LogExc("Unhandled exception trapped by last chance handler",
-               Data=dict(Source="DriverSimulator"), Level=3)
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of driver is already running", Level=3)
+    else:
+        configFile = handleCommandSwitches()
+        Log("%s started" % APP_NAME, Level=0)
+        d = DriverSimulator(configFile)
+        d.run()
+    Log("Exiting program")
     time.sleep(1)
+
+
+if __name__ == "__main__":
+    """
+        The main function shall be used in all processes. This way we can
+        import it in the pydCaller, and ensure that all processes are launched
+        the same way without having to edit both files any time we want to make
+        a change.
+        """
+    main()

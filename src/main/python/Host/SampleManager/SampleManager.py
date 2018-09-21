@@ -18,10 +18,6 @@ File History:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
-APP_NAME = 'SampleManager'
-__version__              = 1.0
-
 import sys
 import os
 import time
@@ -41,6 +37,12 @@ from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import *
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = 'SampleManager'
+__version__              = 1.0
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
@@ -852,20 +854,20 @@ def main():
         Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hc:", ["help", "config="])
+            opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "ini="])
         except getopt.GetoptError:
             # print help information and exit:
             Usage()
             sys.exit(2)
 
-        configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
+        configFile = ""
 
         for o, a in opts:
             if o in ("-h", "--help"):
                 Usage()
                 sys.exit()
-            if o in ("-c", "--config"):
-                configFile = a
+            if o in ("--ini"):
+                configFile = os.path.join(CONFIG_DIR, a)
 
         Log("%s started." % APP_NAME, Level=0)
         try:

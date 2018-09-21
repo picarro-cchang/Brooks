@@ -19,8 +19,8 @@ from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
 
-_DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
-
+# _DEFAULT_CONFIG_FILE = os.environ["PICARRO_CONF_DIR"] + "/Host/WebServer/SQLiteDataBase.ini"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
 EventManagerProxy_Init(APP_NAME)
@@ -55,12 +55,15 @@ class SQLiteServer(object):
     def load_config_from_ini(self, configFile):
         if os.path.exists(configFile):
             self.config = CustomConfigObj(configFile)
+            self.setup = {'host': self.config.get('Setup', "Host_IP", "0.0.0.0"),
+                          'port': self.config.getint('Setup', "Port", 3600),
+                          'debug': self.config.getboolean('Setup', "Debug_Mode", True)}
         else:
-            print "Configuration file not found: %s" % configFile
-            sys.exit(1)
-        self.setup = {'host' : self.config.get('Setup', "Host_IP", "0.0.0.0"),
-                      'port' : self.config.getint('Setup', "Port", 3600),
-                      'debug' : self.config.getboolean('Setup', "Debug_Mode", True)}
+            print "Configuration file not found: %s. Using default settings." % configFile
+            # sys.exit(1)
+            self.setup = {'host' : "0.0.0.0",
+                          'port' : 3600,
+                          'debug' : False}
                       
     def load_config_from_database(self):
         vars = self.ds.get_all_from_model("system_model")
@@ -446,8 +449,8 @@ def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
     import getopt
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -468,10 +471,10 @@ def HandleCommandSwitches():
 
     #Start with option defaults...
     # configFile = "SQLiteDataBase.ini"
-    configFile = _DEFAULT_CONFIG_FILE
+    configFile = ""
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     print "Config file specified at command line: %s" % configFile
     
     return configFile

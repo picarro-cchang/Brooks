@@ -46,6 +46,8 @@ from Host.SpectrumCollector.Sequencer import Sequencer
 from Host.SpectrumCollector.RdfFileOutput import writeSpectrumFile
 
 APP_NAME = "SpectrumCollector"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -643,8 +645,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -661,8 +663,8 @@ def handleCommandSwitches():
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     return configFile, options
 
 def main():

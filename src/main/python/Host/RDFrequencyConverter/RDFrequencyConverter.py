@@ -26,7 +26,7 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "RDFrequencyConverter"
+
 
 import sys
 import getopt
@@ -57,6 +57,10 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
+
+APP_NAME = "RDFrequencyConverter"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"):  # we're running compiled with py2exe
@@ -1552,8 +1556,8 @@ def printUsage():
 
 
 def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help", "vi"]
+    shortOpts = 'h'
+    longOpts = ["help", "vi", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, exc:
@@ -1571,9 +1575,9 @@ def handleCommandSwitches():
     if "-h" in opts or "--help" in opts:
         printUsage()
         sys.exit()
-    configFile = "/home/picarro/git/host/src/main/python/AppConfig/Config/RDFrequencyConverter/RDFrequencyConverter.ini"
-    if "-c" in opts:
-        configFile = opts["-c"]
+    configFile = ""
+    if "--ini" in opts:
+        configFile = os.path.join(CONFIG_DIR, opts["--ini"])
     if "--vi" in opts:
         virtualMode = True
     else:

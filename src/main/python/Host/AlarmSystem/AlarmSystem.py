@@ -12,14 +12,6 @@ File History:
 Copyright (c) 2014 Picarro, Inc. All rights reserved
 """
 
-####
-## Set constants for this file...
-####
-APP_NAME = "AlarmSystem"
-APP_VERSION = 1.0
-APP_DESCRIPTION = "The alarm system"
-_CONFIG_NAME = "AlarmSystem.ini"
-
 import sys
 import os
 import getopt
@@ -30,6 +22,16 @@ from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SUPERVISOR
 from Host.Common.EventManagerProxy import Log, LogExc, EventManagerProxy_Init
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+####
+## Set constants for this file...
+####
+APP_NAME = "AlarmSystem"
+APP_VERSION = 1.0
+APP_DESCRIPTION = "The alarm system"
+_CONFIG_NAME = "AlarmSystem.ini"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME)
 
 # Set up supervisor RPC
@@ -56,8 +58,8 @@ def PrintUsage():
     print HELP_STRING
 
 def HandleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help", "ini="]
 
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -74,11 +76,9 @@ def HandleCommandSwitches():
         PrintUsage()
         sys.exit()
 
-    #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + _CONFIG_NAME
-
-    if "-c" in options:
-        configFile = options["-c"]
+    configFile = ""
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         Log ("Config file specified at command line: %s" % configFile)
 
     return configFile

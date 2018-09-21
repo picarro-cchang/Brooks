@@ -45,6 +45,7 @@ from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface
 from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import Operation
 from Host.Common.InstErrors import INST_ERROR_OKAY
@@ -1168,36 +1169,14 @@ class Driver(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_NUDGE_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
 
     def invokeSupervisorLauncher(self):
-        # Start the supervisor launcher and stop execution of current instance of driver (by setting
-        #  self.looping to False). This allows the driver to tidy up before shutting down. It
-        #  is also important for the supervisor launcher not to be a child of the driver (since this
-        #  prevents the driver from shutting down cleanly). To this end, the launcher process is
-        #  created in the detatched state and all file descriptors are closed.
-
-        # Instruct the supervisor to shut down all applications except the driver, since the
-        #  driver will be shutdown using self.looping.
-#        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
-#            self.restartSurveyor.restart()
-#            self.looping = False
-        if sys.platform == "linux2":
-            Log("Driver has encountered an error... Requesting Restart", Level=2)
-#            self.supervisor.TerminateApplications(False, False)
-            # Request restart from Supervisor and restart and dependants. then exit
-            # this thread cleanly
-            self.supervisor.RestartApplications(APP_NAME, True)
-            self.looping = False
-#            Log("Forcing restart via supervisor launcher")
-#            try:
-#                pid = os.fork()
-#                if pid == 0:
-#                    subprocess.Popen(["python", "-O", "../Utilities/SupervisorLauncher/SupervisorLauncher.py",
-#                                "-a", "-k", "-c", "../../AppConfig/Config/Utilities/SupervisorLauncher.ini"],
-#                                shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
-#                else:
-#                    Log("Error forcing restart via supervisor launcher: OS did not fork")
-#            except Exception, e:
-#                Log("Error forcing restart via supervisor launcher: %s" % str(e))
-
+        # Allow the driver to tidy up before closing itself by setting self.looping
+        # to False. We'll also send a request via RPC to the supervisor to request
+        # a restart of Driver and any dependents
+        Log("Driver has encountered an error... Requesting Restart", Level=2)
+        # Request restart from Supervisor and restart and dependants. then exit
+        # this thread cleanly
+        self.supervisor.RestartApplications(APP_NAME, True)
+        self.looping = False
 
     def run(self):
         nudge = 0

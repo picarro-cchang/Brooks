@@ -60,12 +60,6 @@ Notes:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "EventManager"
-DEFAULT_EVENT_CODE = 0
-_DEFAULT_CONFIG_NAME = "EventManager.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-LOGFILE_PREFIX = "EventLog_"
-LOGFILE_EXTENSION = "txt"
 
 import sys
 import os
@@ -81,6 +75,15 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "EventManager"
+DEFAULT_EVENT_CODE = 0
+_DEFAULT_CONFIG_NAME = "EventManager.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
+LOGFILE_PREFIX = "EventLog_"
+LOGFILE_EXTENSION = "txt"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
 if sys.platform == 'win32':
     TimeStamp = time.clock
@@ -294,7 +297,8 @@ class EventLogger(object):
 
             cp = CustomConfigObj(IniPath)
             basePath = os.path.split(IniPath)[0]
-            self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            # self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            self.LogFileDir = os.path.join(LOG_DIR, "TransientData")
             self.LogToFile = cp.getboolean(_MAIN_CONFIG_SECTION, "LogToFile")
             self.LogFileLength = cp.getint(_MAIN_CONFIG_SECTION, "LogFileLength")
             self.ArchiveGroupName = cp.get(_MAIN_CONFIG_SECTION, "ArchiveGroupName")
@@ -596,8 +600,8 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'hvc:'
-    longOpts = ["help", "viewer"]
+    shortOpts = 'hv'
+    longOpts = ["help", "viewer", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -623,8 +627,8 @@ def HandleCommandSwitches():
     if "-v" in options or "--viewer" in options:
         showViewer = True
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     return (showViewer, configFile)
