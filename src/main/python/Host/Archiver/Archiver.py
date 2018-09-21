@@ -168,6 +168,7 @@ class ArchiveGroup(object):
                 if cmd != "archiveData":
                     Log("Archiver command %s took %s seconds" %
                         (cmd, time.time() - startTime))
+                time.sleep(1)
             except Exception as exc:
                 Log("Exception in ArchiveGroup server", dict(
                     GroupName=self.name), Verbose="Exception = %s %r" % (exc, exc))
