@@ -1117,6 +1117,9 @@ class Supervisor(object):
 
         for index, appName in enumerate(appsToLaunch):
             failedAppDependent = False
+            # Don't monitor apps as we're restarting/launching them
+            if index == (len(appsToLaunch) - 1):
+                self._restartRequested = False
             #check to make sure they are not dependents of apps that failed to launch
             for failedAppName in failedAppDependents:
                 if appName == failedAppName:
@@ -1191,10 +1194,13 @@ class Supervisor(object):
         # before restarting, make sure the app is not a dependent of an app which isn't running
         restartApp = True
         # Set to True, so we can suppress the MonitorApps loop while we
-        # are restarting app(s). This prevents us from getting a dispatcher
-        # error when pinging an app that is dead because we restarted it.
+        # are restarting app(s). This prevents the MonitorApps loop from
+        # detecting an app as dead while restarting and it attempting to
+        # restart the app.
         self._restartRequested = True
-
+        # Instantiate the Runnings apps class so we can remove .pid files
+        # later in the method
+        current_apps = RunningApps()
         for a in self.AppNameList:
             if self.AppDict[a]._LaunchFailureCount > 0:
                 appDependents = []
@@ -1219,9 +1225,12 @@ class Supervisor(object):
                 appDependents = self.GetDependents(AppName)
                 for a in appDependents:
                     assert isinstance(self.AppDict[a], App)
+                    # Remove app specific .pid file
+                    current_apps.remove_pid_file(AppName)
                     self.AppDict[a].ShutDown(StopMethod = _METHOD_KILLFIRST) #blocks until it IS shut down
 
-            #Shutdown the app itself
+            #Shutdown the app itself and remove .pid file
+            current_apps.remove_pid_file(AppName)
             self.AppDict[AppName].ShutDown(StopMethod = _METHOD_KILLFIRST)
 
 
@@ -1276,6 +1285,8 @@ class Supervisor(object):
         self._restartRequested = True
         try:
             self.RestartApp(AppName, RestartDependants)
+        except KeyError, e:
+            Log("KeyError: %s" % e)
         except Exception, e:
             Log("Error Restarting %s %s: " % AppName % e)
         return "OK"
@@ -1355,7 +1366,7 @@ class Supervisor(object):
                 stop_rawkb()
 
         if self._ShutdownRequested or self._TerminateAllRequested:
-            #In addition to being set above, these could also have been set somewhere else (eg: RPC server)...
+            # In addition to being set above, these could also have been set somewhere else (eg: RPC server)...
             return True
         if self.RPCServer is not None and not self.RPCServerProblem:
             try:
@@ -1398,7 +1409,9 @@ class Supervisor(object):
             running_apps_list = running_apps.get_list()
             for this_app in running_apps_list:
                 # Don't monitor apps if we're trying to shutdown, reboot, restart, etc
-                if self.CheckForStopRequests() or self.CheckForRestartRequests():
+                if self.CheckForStopRequests():
+                    break
+                if self.CheckForRestartRequests():
                     break
                 else:
                     # Check the state of the app
@@ -1408,10 +1421,17 @@ class Supervisor(object):
                     # is a zombie process.
                     if is_running is False:
                         # Restart the app
-                        Log("Dead application detected, restarting: %s" % this_app)
-                        self.RestartApp(this_app,
-                                        RestartDependents = True,
-                                        StopMethod = _METHOD_DESTROYFIRST)
+                        try:
+                            Log("Dead application detected, restarting: %s" % this_app)
+                            self.RestartApp(this_app,
+                                            RestartDependents = True,
+                                            StopMethod = _METHOD_DESTROYFIRST)
+                        except KeyError, e:
+                            Log("KeyError: %s" % e)
+                        except ValueError, e:
+                            Log("ValueError: %s" % e)
+                        except Exception, e:
+                            Log("Error restarting %s: %s" % (this_app, e))
         try:
             self.RPCServer._CmdFIFO_StopServer()
         except Exception, E:
@@ -1445,6 +1465,10 @@ class Supervisor(object):
 
         if self.powerDownAfterTermination:
             os.system("shutdown -h 1")
+
+        # Remove all .pid files for a clean slate on next start
+        apps_running = RunningApps
+        apps_running.remove_all_pid_files()
 
         #Now shut applications down in the reverse order of launching...
         #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:

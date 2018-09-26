@@ -2,6 +2,7 @@ import os
 import fnmatch
 import random
 import commands
+import time
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 
@@ -94,13 +95,44 @@ class RunningApps:
         and return the PID as an integer.
 
         :param app_name: Name of application you would like to get the PID for
-        :return: The PID as an integer
+        :return pid: The PID as an integer
         """
         full_path = self.pid_file_path + app_name + ".pid"
         if os.path.exists(self.pid_file_path) and os.path.exists(full_path):
             with open(full_path) as pid_file:
                 pid = pid_file.read().strip()
-            return int(pid)
+                # Potential race condition as the file may exist, but the pid
+                # has not been written yet.
+                while len(pid) == 0:
+                    time.sleep(0.1)
+                    new_pid = pid_file.read().strip()
+                    print("Sleeping while waiting on pid_file to populate")
+                    if len(new_pid) > 0:
+                        try:
+                            pid = int(new_pid)
+                            break
+                        except ValueError:
+                            raise
+                print(pid)
+            return pid
+
+    def remove_pid_file(self, app_name):
+        full_path = self.pid_file_path + app_name + ".pid"
+        if os.path.exists(self.pid_file_path) and os.path.exists(full_path):
+            try:
+                os.remove(full_path)
+            except OSError:
+                raise
+
+    def remove_all_pid_files(self):
+        list_of_pid_files = self.get_list()
+        try:
+            for pid_file in list_of_pid_files:
+                full_path = self.pid_file_path + pid_file + ".pid"
+                if os.path.exists(self.pid_file_path) and os.path.exists(full_path):
+                    os.remove(full_path)
+        except OSError:
+            raise
 
     def get_list(self):
         """
@@ -207,10 +239,13 @@ if __name__ == "__main__":
     # random_app_pid = running_apps.get_pid(random_app)
     # print("PID: %s" % random_app_pid)
     # print("Restarting", random_app)
-    app = "Driver"
+    app = "DataLogger"
     # running_apps.get_pid(app)
-    status = running_apps.is_running(app)
-    print(status)
+    # status = running_apps.is_running(app)
+    # print(status)
     running_apps.restart_via_rpc(app)
-    # running_apps.kill_app(app)
+    # running_apps.remove_pid_file(app)
+    # running_apps.remove_all_pid_files()
+    #print("Killing: %s" % app)
+    #running_apps.kill_app(app)
     # print("Running: %s\n" % status)

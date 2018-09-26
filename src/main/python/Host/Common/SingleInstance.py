@@ -35,7 +35,8 @@ class SingleInstance:
             with open(self.name, "r") as pidFile:
                 pid = pidFile.read().strip()
             pidRunning = commands.getoutput('ls /proc | grep %s' % pid)
-            if pidRunning:
+            pid_state = commands.getoutput("cat /proc/%s/status | grep State:" % pid)
+            if pidRunning and ("Z" or "zombie") not in pid_state:
                 self.lasterror = True
             else:
                 self.lasterror = False

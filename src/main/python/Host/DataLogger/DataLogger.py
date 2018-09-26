@@ -1018,6 +1018,8 @@ def main():
             if DEBUG:
                 raise
             LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            print("Unhandled exception in %s: %s" % (APP_NAME, e))
+            time.sleep(5)
             # Request a restart from Supervisor via RPC call
             restart = RequestRestart(APP_NAME)
             if restart.requestRestart(APP_NAME) is True:
