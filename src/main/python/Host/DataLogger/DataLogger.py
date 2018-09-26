@@ -63,16 +63,6 @@ Notes:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-####
-# Set constants for this file...
-####
-APP_NAME = "DataLogger"
-APP_VERSION = 1.0
-APP_DESCRIPTION = "The data logger"
-_CONFIG_NAME = "DataLogger.ini"
-_PRIVATE_CONFIG_NAME = "PrivateLog.ini"
-_USER_CONFIG_NAME = "UserLog.ini"
-
 import sys
 import os
 import Queue
@@ -95,6 +85,19 @@ from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+####
+# Set constants for this file...
+####
+APP_NAME = "DataLogger"
+APP_VERSION = 1.0
+APP_DESCRIPTION = "The data logger"
+_CONFIG_NAME = "DataLogger.ini"
+_PRIVATE_CONFIG_NAME = "PrivateLog.ini"
+_USER_CONFIG_NAME = "UserLog.ini"
+# Env vars to set the ini and output file paths
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME)
 
 DATALOGGER_RPC_SUCCESS = 0
@@ -267,20 +270,25 @@ class DataLog(object):
             self.delimiter = re.sub(pattern2, r'\1', delimiter)
         else:
             self.delimiter = delimiter
-        if sys.platform == "win32":
-            relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
-        else:
-            relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
-        self.srcDir = os.path.join(basePath, relDir)
+        # if sys.platform == "win32":
+        #     relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        # else:
+        #     relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        # self.srcDir = os.path.join(basePath, relDir)
 
         # Handle Linux if we want the log in the default user home directory.
         # If in the ini we have 'srcfolder = ~/Picarro/Log', expand the '~' to
         # the home directory of the user running the code.
         # If the directories don't exist they are created in _Create().
         #
-        if relDir.startswith("~"):
-            relDir = os.path.expanduser(relDir)
-            self.srcDir = relDir
+        # if relDir.startswith("~"):
+        #     relDir = os.path.expanduser(relDir)
+        #     self.srcDir = relDir
+
+        # Eliminate the srcfolder in the ini file.  Now the destination dir
+        # is in the log directory, the path specified with a an env. var.
+        self.srcDir = os.path.join(LOG_DIR, 'DataLogger', self.ArchiveGroupName)
+        print("-------------- srcDir:", self.srcDir)
 
         if self.liveArchive and self.useHdf5:
             raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
@@ -966,7 +974,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:u:p:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "h", ["help","ini=","user_ini=","private_ini="])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -985,16 +993,16 @@ def HandleCommandSwitches():
     privateConfigFile = os.path.dirname(AppPath) + "/" + _PRIVATE_CONFIG_NAME
     userConfigFile = os.path.dirname(AppPath) + "/" + _USER_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         Log ("Config file specified at command line: %s" % configFile)
 
-    if "-u" in options:
-        userConfigFile = options["-u"]
+    if "--user_ini" in options:
+        userConfigFile = os.path.join(CONFIG_DIR, options["--user_ini"])
         Log ("User Config file specified at command line: %s" % userConfigFile)
 
-    if "-p" in options:
-        privateConfigFile = options["-p"]
+    if "--private_ini" in options:
+        privateConfigFile = os.path.join(CONFIG_DIR, options["--private_ini"])
         Log ("Private Config file specified at command line: %s" % privateConfigFile)
 
     return (configFile, userConfigFile, privateConfigFile)

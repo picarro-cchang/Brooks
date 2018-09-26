@@ -268,6 +268,7 @@ if sys.platform == "linux2":
             #time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
+                # process = Popen(argList, bufsize=-1, cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
                 termList = ["xterm","-hold","-T",appName,"-e"]
                 process = Popen(termList+argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
