@@ -241,6 +241,13 @@ class DataLog(object):
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
         self.UpdateInterval = ConfigParser.getfloat(self.LogName, "updateInterval", 10.0)
 
+        # Permanently disable the file backup and mailbox options.
+        # No one uses this feature and all it does is create additional
+        # clutter in the Log directory.
+        #
+        self.MboxEnabled = False
+        self.backupEnabled = False
+
         print("LogName: %s MaxLogDuration in seconds: %s" % (LogName, self.MaxLogDuration))
 
         # Add peripheral columns if available
