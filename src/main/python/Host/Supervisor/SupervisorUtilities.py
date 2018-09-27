@@ -2,7 +2,6 @@ import os
 import fnmatch
 import random
 import commands
-import time
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
 
@@ -101,22 +100,30 @@ class RunningApps:
         if os.path.exists(self.pid_file_path) and os.path.exists(full_path):
             with open(full_path) as pid_file:
                 pid = pid_file.read().strip()
-                # Potential race condition as the file may exist, but the pid
-                # has not been written yet.
+                # It's possible that the .pid file has been created and not written
+                # to. In this case variable pid will be an empty string. We will
+                # want to wait until the file has been populated so we can convert
+                # the string into an integer. We must pass an integer to perform
+                # os.kill operations.
                 while len(pid) == 0:
-                    time.sleep(0.1)
                     new_pid = pid_file.read().strip()
-                    print("Sleeping while waiting on pid_file to populate")
-                    if len(new_pid) > 0:
-                        try:
-                            pid = int(new_pid)
-                            break
-                        except ValueError:
-                            raise
-                print(pid)
+                    if len(new_pid) > 0 :
+                        pid = new_pid
+                try:
+                    pid = int(pid)
+                except ValueError or TypeError:
+                    raise
             return pid
 
     def remove_pid_file(self, app_name):
+        """
+        This method will search the /run/user/1000/picarro directory
+        for the app_name.pid file you would like to remove. If it exists,
+        it will remove it.
+
+        :param app_name: Name of the application you would to delete its pid file
+        :return: Nothing is returned
+        """
         full_path = self.pid_file_path + app_name + ".pid"
         if os.path.exists(self.pid_file_path) and os.path.exists(full_path):
             try:
@@ -125,6 +132,12 @@ class RunningApps:
                 raise
 
     def remove_all_pid_files(self):
+        """
+        This method will loop through the /run/user/1000/picarro directory
+        and remove all .pid files
+
+        :return: Nothing is returned
+        """
         list_of_pid_files = self.get_list()
         try:
             for pid_file in list_of_pid_files:
@@ -202,8 +215,12 @@ class RunningApps:
         :return: Nothing is returned in this method
         """
         pid = self.get_pid(app_name)
-        print("\nSending SIGTERM to: %s \nPID: %s\n" % (app_name, pid))
-        os.kill(pid, 15)
+        print("Sending SIGTERM to %s, PID: %s" % (app_name, pid))
+        try:
+            os.kill(pid, 15)
+        except OSError:
+            # Skipping, because it's already dead
+            pass
 
     def is_running(self, app_name):
         """
@@ -239,13 +256,13 @@ if __name__ == "__main__":
     # random_app_pid = running_apps.get_pid(random_app)
     # print("PID: %s" % random_app_pid)
     # print("Restarting", random_app)
-    app = "DataLogger"
+    app = "QuickGui"
     # running_apps.get_pid(app)
     # status = running_apps.is_running(app)
     # print(status)
-    running_apps.restart_via_rpc(app)
+    # running_apps.restart_via_rpc(app)
     # running_apps.remove_pid_file(app)
     # running_apps.remove_all_pid_files()
     #print("Killing: %s" % app)
-    #running_apps.kill_app(app)
+    running_apps.kill_app(app)
     # print("Running: %s\n" % status)

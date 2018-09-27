@@ -102,7 +102,7 @@ from time import time as TimeStamp
 
 #Global constants...
 APP_NAME = "Supervisor"
-MAX_LAUNCH_COUNT = 1
+MAX_LAUNCH_COUNT = 3
 DEFAULT_BACKUP_MAX_WAIT_TIME_s = 180
 BACKUP_CHECK_INTERVAL_s = 1
 _MAIN_SECTION = "Applications"
@@ -265,7 +265,7 @@ if sys.platform == "linux2":
             # locks up the code.  A tip on StackOverflow (can't find the link)
             # said sleep() before each Popen made the problem go away.
             #
-            #time.sleep(1.0)
+            time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
                 process = Popen(argList,bufsize=-1,stderr=file('/dev/null','w'),stdout=file('/dev/null','w'),cwd=cwd)
                 # process = Popen(argList, bufsize=-1, cwd=cwd)
@@ -683,7 +683,7 @@ class App(object):
         #See if our work is already done somehow... if so we just get out...
         if not self.IsProcessActive():
             if self.ShowDispatcherWarning:
-                Log("App shutdown attempted, but app already closed", self._AppName, 2)
+                Log("App shutdown attempted, but app already closed", self._AppName, Level = 1)
             return
 
         #Now sort out our args...
@@ -1140,7 +1140,7 @@ class Supervisor(object):
                             dict(AppName = appName, AttemptNum = self.AppDict[appName]._LaunchFailureCount),
                             Level = 2)
                         #Sleep a short time before trying again...
-                        #time.sleep(1)
+                        time.sleep(1)
                     except TerminationRequest:
                         Log("Terminate requested during application launch process",dict(AppName = appName),Level=2)
                         self.ShutDownAll()
@@ -1211,34 +1211,29 @@ class Supervisor(object):
                         restartApp = False
 
         if restartApp:
-            if self.AppDict[AppName].Mode == 4:
-                # Mode = 4 means the app communicates with P.S.A., so everything needs to be restarted and connections need to be re-established.
-                if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
-                    Log("About to restart the whole system")
-                    self.restartSurveyor.restart()  # call restartSurveyor to restart the whole system
-                    return 0
-                Log("RestartSurveyor is NOT running. Only %s and its dependents will be restarted." % AppName)
-
             appDependents = []
-
-            #Get all of the dependants shut down
+            #Get all of the dependants shut down if any exist
             if RestartDependents:
                 appDependents = self.GetDependents(AppName)
-                for a in appDependents:
-                    assert isinstance(self.AppDict[a], App)
-                    # Remove app specific .pid file
-                    current_apps.remove_pid_file(AppName)
-                    self.AppDict[a].ShutDown(StopMethod = _METHOD_KILLFIRST) #blocks until it IS shut down
+                if len(appDependents) > 0:
+                    for a in appDependents:
+                        assert isinstance(self.AppDict[a], App)
+                        # Remove app specific .pid file
+                        print("Removing pid file %s" % a)
+                        current_apps.remove_pid_file(a)
+                        self.AppDict[a].ShutDown(StopMethod = _METHOD_KILLFIRST) #blocks until it IS shut down
 
             #Shutdown the app itself and remove .pid file
-            current_apps.remove_pid_file(AppName)
-            self.AppDict[AppName].ShutDown(StopMethod = _METHOD_KILLFIRST)
+            if current_apps.is_running(AppName):
+                current_apps.remove_pid_file(AppName)
+                self.AppDict[AppName].ShutDown(StopMethod = _METHOD_KILLFIRST)
 
 
             #the app (and all dependents) are now shut down... we're ready to re-launch...
             Log("Application and all dependents successfully shut down.  Restarting from bottom up.", dict(AppName = AppName, Dependents = appDependents))
-
-            launchList = [AppName] + appDependents
+            launchList = []
+            launchList.append(AppName)
+            launchList += appDependents
             self.LaunchApps(launchList, IsRestart = True)
 
             # report restart of apps to Instrument Manager
@@ -1400,7 +1395,7 @@ class Supervisor(object):
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested):
             sys.stdout.flush()
             # Let's not slam the CPU
-            time.sleep(1)
+            time.sleep(5)
             # Let's check the OS for running apps.. we will accomplish this by
             # looping through all of the apps that have been launched by Supervisor and
             # use the SingleInstance class to write a .pid file to /run/user/1000/picarro,
@@ -1423,13 +1418,17 @@ class Supervisor(object):
                     if is_running is False:
                         # Restart the app
                         try:
-                            Log("Dead application detected, restarting: %s" % this_app)
+                            Log("Dead application detected, restarting: %s" % this_app, Level = 2)
                             self.RestartApp(this_app,
                                             RestartDependents = True,
                                             StopMethod = _METHOD_DESTROYFIRST)
                         except KeyError, e:
+                            # You will get a KeyError if the APP_NAME does not match the
+                            # names under [Applications] at the top of your applicable
+                            # supervisor.ini file
                             Log("KeyError: %s" % e)
                         except ValueError, e:
+                            # You should not get a ValueError
                             Log("ValueError: %s" % e)
                         except Exception, e:
                             Log("Error restarting %s: %s" % (this_app, e))
@@ -1468,7 +1467,7 @@ class Supervisor(object):
             os.system("shutdown -h 1")
 
         # Remove all .pid files for a clean slate on next start
-        apps_running = RunningApps
+        apps_running = RunningApps()
         apps_running.remove_all_pid_files()
 
         #Now shut applications down in the reverse order of launching...

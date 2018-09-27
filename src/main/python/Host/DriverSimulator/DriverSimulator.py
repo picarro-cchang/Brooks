@@ -45,7 +45,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-APP_NAME = "DriverSimulator"
+APP_NAME = "Driver"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 
 try:
