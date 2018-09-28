@@ -45,7 +45,7 @@ APP_NAME = "QuickGui"
 UPDATE_TIMER_INTERVAL = 1000
 CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
 LOG_DIR = os.environ['PICARRO_LOG_DIR']
-AppPath = sys.path[0]
+AppPath = os.path.dirname(os.path.abspath(__file__))
 TimeStamp = time.time
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
