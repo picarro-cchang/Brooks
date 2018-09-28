@@ -90,6 +90,15 @@ are are the largest files, YYYY-MM-DD and YYYY-MM-DD-RDF directories can
 have different thresholds for file deletion to maximize the number of days of
 data and event logs saved.
 
+Usage:
+
+    FileEraserSimplified.py --dat_days=N --rdf_days=M
+
+    N = number of days of dat files to retain
+    M = number of days of RDF files to retain
+
+    Both arguments are optional.  The default retention is 365 days of dat
+    files and 60 days of RDF files.
 """
 
 import sys
@@ -132,10 +141,15 @@ class FileEraserSimplified(object):
                                                 threaded = True)
 
     def keepErasingOldFiles(self):
+        """
+        Check every 5 minutes if we should delete a directory.
+        :return:
+        """
         while True:
             print("Checking for things to erase", str(time.time()))
             self.deleteOldestDirectories()
-            time.sleep(60)
+            time.sleep(300)
+        return
 
     def generateDirectoryList(self):
         """
@@ -169,6 +183,7 @@ class FileEraserSimplified(object):
             shutil.rmtree(RDF[0])
             noRDF, RDF = self.generateDirectoryList()
         print("Deleted {} dat directories and {} RDF directories.".format(noRDF_deletion_count, RDF_deletion_count))
+        return
 
     def runApp(self):
         rpcThread = threading.Thread(target = self.keepErasingOldFiles)
@@ -214,5 +229,4 @@ def main():
         Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
 
 if __name__ == "__main__":
-    # DEBUG = __debug__
     main()
