@@ -114,7 +114,7 @@ from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_FILE_ERASER
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
-APP_NAME = "FileEraser"
+APP_NAME = "FileEraserSimplified"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
