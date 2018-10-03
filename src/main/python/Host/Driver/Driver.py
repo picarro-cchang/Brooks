@@ -10,8 +10,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "Driver"
-
 import cPickle
 import ctypes
 import getopt
@@ -24,6 +22,11 @@ import time
 import types
 import traceback
 from numpy import array
+
+APP_NAME = "Driver"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -1096,7 +1099,8 @@ class Driver(SharedTypes.Singleton):
     def __init__(self, configFile):
         self.looping = True
         self.config = CustomConfigObj(configFile)
-        basePath = os.path.split(configFile)[0]
+        #basePath = os.path.split(configFile)[0]
+        basePath = "" # RSF
         self.autoStreamFile = False
         maxStreamLines = 0
         try:
@@ -1438,45 +1442,33 @@ class InstrumentConfig(SharedTypes.Singleton):
             fp.close
         return filename
 
-HELP_STRING = """Driver.py [-c<FILENAME>] [-h|--help]
-
-Where the options can be a combination of the following:
--h, --help           print this help
--c                   specify a config file:  default = "./Driver.ini"
-"""
-
-def printUsage():
-    print HELP_STRING
-
-def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+def HandleCommandSwitches():
+    shortOpts = ''
+    longOpts = ["ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
-    except getopt.GetoptError, E:
-        print "Driver 1478: %s %r" % (E, E)
+    except getopt.GetoptError as data:
+        print "%s %r" % (data, data)
         sys.exit(1)
-    #assemble a dictionary where the keys are the switches and values are switch args...
+
+    # assemble a dictionary where the keys are the switches and values are
+    # switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
-    if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
-    #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/Driver.ini"
-    if "-h" in options or "--help" in options:
-        printUsage()
-        sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
-    return configFile
+    for o, a in switches:
+        options[o] = a
+    configFile = ""
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
+        print "Config file specified at command line: %s" % configFile
+
+    return (configFile)
 
 def main():
     driverApp = SingleInstance(APP_NAME)
     if driverApp.alreadyrunning():
         Log("Instance of driver is already running", Level=3)
     else:
-        configFile = handleCommandSwitches()
+        configFile = HandleCommandSwitches()
         Log("%s started" % APP_NAME, Level=0)
         d = Driver(configFile)
         d.run()
