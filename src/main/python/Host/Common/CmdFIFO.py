@@ -849,8 +849,8 @@ class CmdFIFOServerProxy(object):
 
         # Check to see if it is too soon to process this rpc.
         now = time.time()
-        dt_ms = int( (now - self.time_since_last_rpc)*1000 )
-        if dt_ms < self.min_ms_interval:
+        dt_ms = ((now - self.time_since_last_rpc) * 1000)
+        if dt_ms < float(self.min_ms_interval):
             return
         self.time_since_last_rpc = now
 
