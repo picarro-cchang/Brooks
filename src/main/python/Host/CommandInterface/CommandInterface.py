@@ -16,10 +16,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "CommandInterface"
-APP_DESCRIPTION = "Command interface (serial or Ethernet)"
-__version__ = 1.0
-
 import time
 import datetime
 import getopt
@@ -47,6 +43,12 @@ from Host.Common.EventManagerProxy import *
 from Host.Common.FluxSwitcher import FluxSwitcher
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "CommandInterface"
+APP_DESCRIPTION = "Command interface (serial or Ethernet)"
+__version__ = 1.0
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -727,29 +729,33 @@ class CommandInterface(object):
 def _TimeToString( t ):
     return t.strftime("%Y-%m-%d %H:%M:%S") + (".%03d" % (t.microsecond/1000,))
 
-def Usage():
-    print "[-h] [-c configfile]"
+def HandleCommandSwitches():
+    shortOpts = ''
+    longOpts = ["ini="]
+    try:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError as data:
+        print "%s %r" % (data, data)
+        sys.exit(1)
+
+    # assemble a dictionary where the keys are the switches and values are
+    # switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+    configFile = ""
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
+        print "Config file specified at command line: %s" % configFile
+
+    return (configFile)
 
 def main():
     my_instance = SingleInstance(APP_NAME)
     if my_instance.alreadyrunning():
         Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
-        try:
-            opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "ini="])
-        except getopt.GetoptError:
-            # print help information and exit:
-            Usage()
-            sys.exit(2)
-
-        configFile = os.path.dirname(AppPath) + "/" + DEFAULT_INI_FILE
-
-        for o, a in opts:
-            if o in ("-h", "--help"):
-                Usage()
-                sys.exit()
-            if o in ("--ini"):
-                configFile = os.path.join(CONFIG_DIR, a)
+        configFile = HandleCommandSwitches()
 
         app = CommandInterface()
         Log("%s started." % APP_NAME, Level=0)

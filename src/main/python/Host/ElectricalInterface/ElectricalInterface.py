@@ -19,12 +19,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "ElectricalInterface"
-__version__ = 1.0
-_CONFIG_NAME = 'ElectricalInterface.ini'
-MAIN_SECTION = 'MAIN'
-SOURCE_DELIMITER = ','
-
 import sys
 import os
 import time
@@ -43,6 +37,15 @@ from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.EventManagerProxy import *
 from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "ElectricalInterface"
+__version__ = 1.0
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+_CONFIG_NAME = 'ElectricalInterface.ini'
+MAIN_SECTION = 'MAIN'
+SOURCE_DELIMITER = ','
+
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -440,42 +443,24 @@ class EifMgr(object):
         else:
             return False
 
-HELP_STRING = \
-"""\
-ElectricalInterface.py [-h] [-c<FILENAME>]
-
-Where the options can be a combination of the following:
--h  Print this help.
--c  Specify a different alarm config file.  Default = "./ElectricalInterface.ini"
-"""
-
-def PrintUsage():
-    print HELP_STRING
-
 def HandleCommandSwitches():
-    import getopt
-
+    shortOpts = ''
+    longOpts = ["ini="]
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "h", ["help","ini="])
-    except getopt.GetoptError, data:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError as data:
         print "%s %r" % (data, data)
         sys.exit(1)
 
-    #assemble a dictionary where the keys are the switches and values are switch args...
+    # assemble a dictionary where the keys are the switches and values are
+    # switch args...
     options = {}
     for o, a in switches:
         options[o] = a
-
-    if "-h" in options or "--help" in options:
-        PrintUsage()
-        sys.exit()
-
-    #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + _CONFIG_NAME
-
+    configFile = ""
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
-        Log ("Config file specified at command line: %s" % configFile)
+        print "Config file specified at command line: %s" % configFile
 
     return (configFile)
 
