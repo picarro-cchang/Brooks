@@ -24,6 +24,7 @@ import os
 import time
 import threading
 import Queue
+import getopt
 from math import sqrt
 from inspect import isclass
 

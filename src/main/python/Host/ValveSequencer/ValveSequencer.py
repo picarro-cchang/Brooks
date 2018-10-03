@@ -670,7 +670,7 @@ def HandleCommandSwitches():
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
 
     if "--ini" in options:
-        configFile = options["--ini"]
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     if "-s" in options:
