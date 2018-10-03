@@ -22,7 +22,7 @@ from Host.Controller.ControllerModels import LogListener, SensorListener, Ringdo
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.ParameterDialog import ParameterDialog
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExcOn
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 EventManagerProxy_Init(APP_NAME)
 
 # For convenience in calling driver and frequency converter functions
