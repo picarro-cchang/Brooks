@@ -22,7 +22,7 @@ from Host.Controller.ControllerModels import LogListener, SensorListener, Ringdo
 from Host.autogen import interface
 from Host.Common import SharedTypes
 from Host.Common.ParameterDialog import ParameterDialog
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExcOn
 EventManagerProxy_Init(APP_NAME)
 
 # For convenience in calling driver and frequency converter functions
@@ -281,11 +281,12 @@ class Controller(ControllerFrameGui):
         elif pageText == "Statistics":
             self.statsPanel.update()
 
-    def onIdle(self, evt):
         # Deal with updating the command log panel
         self.commandLogPanel.setStreamFileState()
         acqState = self.commandLogPanel.updateAcquisitionState()
         self.controllerFrameGui_statusbar.SetStatusText(acqState, 0)
+
+    def onIdle(self, evt):
         # Deal with event manager log messages
         while True:
             msg = self.logListener.getLogMessage()
