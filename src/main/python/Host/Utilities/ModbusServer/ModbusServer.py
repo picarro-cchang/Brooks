@@ -54,7 +54,7 @@ from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 
-APP_NAME = "Modbus"
+APP_NAME = "ModbusServer"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 ENDIAN = "Big"
