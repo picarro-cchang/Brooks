@@ -54,7 +54,9 @@ from Host.Common.SingleInstance import SingleInstance
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 
-APP_NAME = "Modbus"
+APP_NAME = "ModbusServer"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 ENDIAN = "Big"
 BYTE_SIZE = 8
 
@@ -655,7 +657,7 @@ def handleCommandSwitches():
         printUsage()
         sys.exit()
     if "--ini" in options:
-        configFile = options["--ini"]
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     if "-s" in options:
         simulation = True
     if "--debug" in options:
