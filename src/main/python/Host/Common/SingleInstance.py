@@ -21,10 +21,13 @@ class SingleInstance:
     # pid files should have the .pid extension.  Add it if it's not in the
     # name.
     #
-    def __init__(self, name):
+    def __init__(self, name, path=None):
         if "pid" not in name:
             name = name + ".pid"
-        pidFilePath = "/run/user/" + str(os.getuid()) + "/picarro/"
+        if path is None:
+            pidFilePath = "/run/user/" + str(os.getuid()) + "/picarro/"
+        else:
+            pidFilePath = path
         if not os.path.exists(pidFilePath):
             try:
                 os.mkdir(pidFilePath, 0775)

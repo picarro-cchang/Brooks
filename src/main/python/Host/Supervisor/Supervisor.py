@@ -1466,9 +1466,9 @@ class Supervisor(object):
         if self.powerDownAfterTermination:
             os.system("shutdown -h 1")
 
-        # Remove all .pid files for a clean slate on next start
+        # Instantiate the RunningApps class so we can remove pid files
+        # as we shut down applications
         apps_running = RunningApps()
-        apps_running.remove_all_pid_files()
 
         #Now shut applications down in the reverse order of launching...
         #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
@@ -1476,9 +1476,10 @@ class Supervisor(object):
             anyAlive = False
             for appName in self.AppNameList[::-1]:
                 if not (self.AppDict[appName] is self.BackupApp) and not appName in PROTECTED_APPS:
-                    # terminate the application
+                    # Remove pid file and shutdown application
                     if self.AppDict[appName].IsProcessActive():
                         anyAlive = True
+                        apps_running.remove_pid_file(str(self.AppDict[appName]))
                         self.AppDict[appName].ShutDown(severity,NoWait=True)
             if anyAlive:
                 time.sleep(_DEFAULT_KILL_WAIT_TIME_s)
@@ -1486,6 +1487,7 @@ class Supervisor(object):
         if self._TerminateProtected:
             for appName in self.AppNameList[::-1]:
                 if appName in PROTECTED_APPS:
+                    apps_running.remove_pid_file(str(self.AppDict[appName]))
                     self.AppDict[appName].ShutDown()
 
         if self.SpecialKilledByNameList:
@@ -1498,6 +1500,7 @@ class Supervisor(object):
                     else:   # name is not an instance method in psutil 1.2.1
                         name = p.name
                     if name.lower() in namesToBeKilled:
+                        apps_running.remove_pid_file(name)
                         p.kill()
                 except:
                     pass
