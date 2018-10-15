@@ -490,7 +490,7 @@ class QuickGui(wx.Frame):
         footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=copyLabel, style=wx.ALIGN_CENTER)
         setItemFont(footerLabel,self.fontDatabase.getFontFromIni('Footer'))
         # Add the time to the right of the footer label
-        current_time = strftime("%I:%M %p", localtime())
+        current_time = self.get_time()
         self.footerTime = wx.StaticText(parent=self.mainPanel, id=-1, label=current_time, style=wx.ALIGN_RIGHT)
 
         # Define the graph panels
@@ -1134,7 +1134,7 @@ class QuickGui(wx.Frame):
 
     def _OnTimer(self, evt):
         # Update GUI Clock
-        time_now = strftime("%I:%M %p", localtime())
+        time_now = self.get_time()
         self.footerTime.SetLabel(time_now)
 
         defaultSourceIndex = None
@@ -1755,6 +1755,12 @@ class QuickGui(wx.Frame):
             return "OK"
         except Exception, err:
             return "%r" % err
+
+    def get_time(self):
+        current_time = strftime("%I:%M %p", localtime())
+        if current_time[0] == "0":
+            current_time = current_time[1:]
+        return current_time
 
 
 def HandleCommandSwitches():
