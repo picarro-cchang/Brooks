@@ -1265,7 +1265,7 @@ def main():
 def start():
     app = wx.PySimpleApp()
     configFile, useViewer, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, Level=0)
+    Log("%s started." % APP_NAME, Level=1)
     frame = FitViewer(configFile, useViewer, options)
     app.MainLoop()
     Log("Exiting program")

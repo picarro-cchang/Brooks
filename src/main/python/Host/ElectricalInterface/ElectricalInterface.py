@@ -473,7 +473,7 @@ def main():
     else:
         # Get and handle the command line options...
         configFile = HandleCommandSwitches()
-        Log("%s started." % APP_NAME, Level=0)
+        Log("%s started." % APP_NAME, Level=1)
         try:
             eif = EifMgr(configFile)
             eif.run()

@@ -521,7 +521,7 @@ def main():
             # Get and handle the command line options...
             configFile = HandleCommandSwitches()
             ar = Archiver(configFile)
-            Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
+            Log("%s started" % APP_NAME, Level=1)
             ar.startServer()
         except Exception as e:
             LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)

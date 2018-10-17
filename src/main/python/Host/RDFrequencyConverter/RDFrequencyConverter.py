@@ -1591,7 +1591,7 @@ def main():
     else:
         configFilename, virtualMode, options = handleCommandSwitches()
         rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
-        Log("%s started." % APP_NAME, Level=0)
+        Log("%s started." % APP_NAME, Level=1)
         rdFreqConvertApp.run()
         Log("Exiting program")
 

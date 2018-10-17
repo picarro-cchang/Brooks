@@ -20,6 +20,7 @@ import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
 import sys
+from time import localtime, strftime
 from Host.QuickGui.UserCalGui import UserCalGui
 from Host.QuickGui.SysAlarmGui import *
 from Host.QuickGui.MeasureAlarmGui import AlarmViewListCtrl
@@ -488,6 +489,9 @@ class QuickGui(wx.Frame):
         copyLabel = "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0]
         footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=copyLabel, style=wx.ALIGN_CENTER)
         setItemFont(footerLabel,self.fontDatabase.getFontFromIni('Footer'))
+        # Add the time to the right of the footer label
+        current_time = self.get_time()
+        self.footerTime = wx.StaticText(parent=self.mainPanel, id=-1, label=current_time, style=wx.ALIGN_RIGHT)
 
         # Define the graph panels
         self.graphPanel = []
@@ -844,8 +848,10 @@ class QuickGui(wx.Frame):
         #
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1,proportion=1,flag=wx.GROW | wx.LEFT | wx.RIGHT,border=10)
-        footerSizer = wx.BoxSizer(wx.VERTICAL)
-        footerSizer.Add(footerLabel,proportion=0,flag=wx.ALIGN_CENTER)
+        footerSizer = wx.GridSizer(rows=1, cols=3, hgap=5, vgap=5)
+        footerSizer.AddStretchSpacer(0)
+        footerSizer.Add(footerLabel,1,wx.ALIGN_CENTER)
+        footerSizer.Add(self.footerTime,2,wx.ALIGN_RIGHT)
         vsizer1.Add(footerSizer,proportion=0,flag=wx.GROW | wx.ALL,border=10)
         self.mainPanel.SetSizer(vsizer1)
         box = wx.BoxSizer(wx.HORIZONTAL)
@@ -1127,6 +1133,10 @@ class QuickGui(wx.Frame):
         return
 
     def _OnTimer(self, evt):
+        # Update GUI Clock
+        time_now = self.get_time()
+        self.footerTime.SetLabel(time_now)
+
         defaultSourceIndex = None
         self.dataStore.getQueuedData()
         self.eventStore.getQueuedEvents()
@@ -1745,6 +1755,12 @@ class QuickGui(wx.Frame):
             return "OK"
         except Exception, err:
             return "%r" % err
+
+    def get_time(self):
+        current_time = strftime("%I:%M %p", localtime())
+        if current_time[0] == "0":
+            current_time = current_time[1:]
+        return current_time
 
 
 def HandleCommandSwitches():

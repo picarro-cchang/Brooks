@@ -676,7 +676,7 @@ def main():
         try:
             configFile, options = handleCommandSwitches()
             spCollectorApp = SpectrumCollector(configFile)
-            Log("%s started" % APP_NAME, Level=0)
+            Log("%s started" % APP_NAME, Level=1)
             spCollectorApp.run()
             # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
             Log("Exiting program")

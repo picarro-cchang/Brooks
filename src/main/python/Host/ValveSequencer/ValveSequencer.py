@@ -687,7 +687,7 @@ def main():
     if my_instance.alreadyrunning():
         Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
-        Log("%s started." % APP_NAME, Level=0)
+        Log("%s started." % APP_NAME, Level=1)
         # app = wx.PySimpleApp()
         # wx.InitAllImageHandlers()
         try:
