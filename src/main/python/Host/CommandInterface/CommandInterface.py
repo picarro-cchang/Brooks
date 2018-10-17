@@ -758,7 +758,7 @@ def main():
         configFile = HandleCommandSwitches()
 
         app = CommandInterface()
-        Log("%s started." % APP_NAME, Level=0)
+        Log("%s started." % APP_NAME, Level=1)
         try:
             app.LoadConfig( configFile )
             app.RPC_Start()

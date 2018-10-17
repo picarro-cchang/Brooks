@@ -1469,7 +1469,7 @@ def main():
         Log("Instance of driver is already running", Level=3)
     else:
         configFile = HandleCommandSwitches()
-        Log("%s started" % APP_NAME, Level=0)
+        Log("%s started" % APP_NAME, Level=1)
         d = Driver(configFile)
         d.run()
     Log("Exiting program")

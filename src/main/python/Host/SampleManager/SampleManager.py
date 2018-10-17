@@ -869,7 +869,7 @@ def main():
             if o in ("--ini"):
                 configFile = os.path.join(CONFIG_DIR, a)
 
-        Log("%s started." % APP_NAME, Level=0)
+        Log("%s started." % APP_NAME, Level=1)
         try:
             app = SampleManager(configFile)
             app.Run()

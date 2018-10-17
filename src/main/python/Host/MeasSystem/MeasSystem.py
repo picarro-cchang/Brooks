@@ -634,7 +634,7 @@ def main():
     else:
         #Get and handle the command line options...
         configFile, test, noFitter, noInstMgr, simMode = HandleCommandSwitches()
-        Log("%s started." % APP_NAME, Level=0)
+        Log("%s started." % APP_NAME, Level=1)
         try:
             app = MeasSystem(configFile, noFitter, noInstMgr, simMode)
             if test:
