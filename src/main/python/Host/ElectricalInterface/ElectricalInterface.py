@@ -19,34 +19,34 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = 'EIF'
-__version__ = 1.0
-_CONFIG_NAME = 'ElectricalInterface.ini'
-MAIN_SECTION = 'MAIN'
-SOURCE_DELIMITER = ','
-
 import sys
 import os
 import time
-import getopt
-import time
-import types
-import socket
-import select
-import ctypes
 import threading
 import Queue
+import getopt
 from math import sqrt
 from inspect import isclass
 
 from Host.Common import CmdFIFO, Listener
 from Host.Common import MeasData
-from Host.Common import AppStatus
 from Host.Common.timestamp import unixTimeToTimestamp, getTimestamp
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER, BROADCAST_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_EIF_HANDLER,\
+    BROADCAST_PORT_DATA_MANAGER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.StringPickler import StringAsObject,ObjAsString,ArbitraryObject
+from Host.Common.StringPickler import ArbitraryObject
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "ElectricalInterface"
+__version__ = 1.0
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+_CONFIG_NAME = 'ElectricalInterface.ini'
+MAIN_SECTION = 'MAIN'
+SOURCE_DELIMITER = ','
+
 EventManagerProxy_Init(APP_NAME)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -275,6 +275,10 @@ class EifMgr(object):
         # driver rpc
         self._driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "EIF")
 
+        # supervisor rpc
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
+
         # list of analog objects
         self.analogOutput={}
         self.sampleBuffer = Queue.Queue(0)
@@ -440,55 +444,51 @@ class EifMgr(object):
         else:
             return False
 
-HELP_STRING = \
-"""\
-ElectricalInterface.py [-h] [-c<FILENAME>]
-
-Where the options can be a combination of the following:
--h  Print this help.
--c  Specify a different alarm config file.  Default = "./ElectricalInterface.ini"
-"""
-
-def PrintUsage():
-    print HELP_STRING
-
 def HandleCommandSwitches():
-    import getopt
-
+    shortOpts = ''
+    longOpts = ["ini="]
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
-    except getopt.GetoptError, data:
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
+    except getopt.GetoptError as data:
         print "%s %r" % (data, data)
         sys.exit(1)
 
-    #assemble a dictionary where the keys are the switches and values are switch args...
+    # assemble a dictionary where the keys are the switches and values are
+    # switch args...
     options = {}
     for o, a in switches:
         options[o] = a
-
-    if "-h" in options or "--help" in options:
-        PrintUsage()
-        sys.exit()
-
-    #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + _CONFIG_NAME
-
-    if "-c" in options:
-        configFile = options["-c"]
-        Log ("Config file specified at command line: %s" % configFile)
+    configFile = ""
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
+        print "Config file specified at command line: %s" % configFile
 
     return (configFile)
 
-if __name__ == "__main__" :
-    #Get and handle the command line options...
-    configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        eif = EifMgr(configFile)
-        eif.run()
-        Log("Exiting program")
-    except Exception, E:
-        if __debug__: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        # Get and handle the command line options...
+        configFile = HandleCommandSwitches()
+        Log("%s started." % APP_NAME, Level=1)
+        try:
+            eif = EifMgr(configFile)
+            eif.run()
+            Log("Exiting program")
+        except Exception, e:
+            if __debug__:
+                raise
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
+
+if __name__ == "__main__":
+    main()

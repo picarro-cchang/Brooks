@@ -624,7 +624,12 @@ class PlotCanvas(wx.Panel):
         # OnSize called to make sure the buffer is initialized.
         # This might result in OnSize getting called twice on some
         # platforms at initialization, but little harm done.
-        self.OnSize(None) # sets the initial size based on client size
+        #
+        # This call to OnSize() causes the code to crash when running
+        # with coverage.py to get code coverage metrics.  Commenting
+        # it out doesn't cause any visible difference to the
+        # QuickGui or Fitter view.
+        # self.OnSize(None) # sets the initial size based on client size
 
         self._gridColour = wx.NamedColour('black')
 

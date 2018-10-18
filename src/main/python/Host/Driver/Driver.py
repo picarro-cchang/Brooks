@@ -10,8 +10,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "Driver"
-
 import cPickle
 import ctypes
 import getopt
@@ -24,6 +22,11 @@ import time
 import types
 import traceback
 from numpy import array
+
+APP_NAME = "Driver"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+
 
 # If we are using python 2.x on Linux, use the subprocess32
 # module which has many bug fixes and can prevent
@@ -45,6 +48,7 @@ from Host.Common.Broadcaster import Broadcaster
 from Host.Common.hostDasInterface import DasInterface
 from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import Operation
 from Host.Common.InstErrors import INST_ERROR_OKAY
@@ -1095,7 +1099,8 @@ class Driver(SharedTypes.Singleton):
     def __init__(self, configFile):
         self.looping = True
         self.config = CustomConfigObj(configFile)
-        basePath = os.path.split(configFile)[0]
+        #basePath = os.path.split(configFile)[0]
+        basePath = "" # RSF
         self.autoStreamFile = False
         maxStreamLines = 0
         try:
@@ -1168,37 +1173,14 @@ class Driver(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_NUDGE_TIMESTAMP",[ts&0xFFFFFFFF,ts>>32]))
 
     def invokeSupervisorLauncher(self):
-        # Start the supervisor launcher and stop execution of current instance of driver (by setting
-        #  self.looping to False). This allows the driver to tidy up before shutting down. It
-        #  is also important for the supervisor launcher not to be a child of the driver (since this
-        #  prevents the driver from shutting down cleanly). To this end, the launcher process is
-        #  created in the detatched state and all file descriptors are closed.
-
-        # Instruct the supervisor to shut down all applications except the driver, since the
-        #  driver will be shutdown using self.looping.
-        if self.restartSurveyor.CmdFIFO.PingDispatcher() == "Ping OK":
-            self.restartSurveyor.restart()
-            self.looping = False
-        else:
-            self.supervisor.TerminateApplications(False, False)
-            DETACHED_PROCESS = 0x00000008
-            try:
-                Log("Forced restart via supervisor launcher")
-                if os.getcwd().lower().endswith("hostexe"):
-                    subprocess.Popen([r"SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                      "-c", r"..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                     creationflags=DETACHED_PROCESS)
-                else:
-                    subprocess.Popen([r"..\..\HostExe\SupervisorLauncher.exe", "-a",  "-k", "-d", "5",
-                                      "-c", r"..\..\AppConfig\Config\Utilities\SupervisorLauncher.ini"],
-                                     shell=False, stdin=None, stdout=None, stderr=None, close_fds = True,
-                                     creationflags=DETACHED_PROCESS)
-                    #Log("Cannot invoke supervisor launcher from %s" % os.getcwd())
-            except:
-                Log("Cannot communicate with supervisor:\n%s" % traceback.format_exc())
-            finally:
-                self.looping = False
+        # Allow the driver to tidy up before closing itself by setting self.looping
+        # to False. We'll also send a request via RPC to the supervisor to request
+        # a restart of Driver and any dependents
+        Log("Driver has encountered an error... Requesting Restart", Level=2)
+        # Request restart from Supervisor and restart and dependants. then exit
+        # this thread cleanly
+        self.supervisor.RestartApplications(APP_NAME, True)
+        self.looping = False
 
     def run(self):
         nudge = 0
@@ -1380,6 +1362,12 @@ class Driver(SharedTypes.Singleton):
                 type,value,trace = sys.exc_info()
                 Log("Unhandled Exception in main loop: %s: %s" % (str(type),str(value)),
                     Verbose=traceback.format_exc(),Level=3)
+                # Request a restart from Supervisor via RPC call
+                restart = RequestRestart(APP_NAME)
+                if restart.requestRestart(APP_NAME) is True:
+                    Log("Restart request to supervisor sent", Level=0)
+                else:
+                    Log("Restart request to supervisor not sent", Level=2)
         finally:
             self.rpcHandler.shutDown()
             self.dasInterface.analyzerUsb.disconnect()
@@ -1454,47 +1442,44 @@ class InstrumentConfig(SharedTypes.Singleton):
             fp.close
         return filename
 
-HELP_STRING = """Driver.py [-c<FILENAME>] [-h|--help]
-
-Where the options can be a combination of the following:
--h, --help           print this help
--c                   specify a config file:  default = "./Driver.ini"
-"""
-
-def printUsage():
-    print HELP_STRING
-
-def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+def HandleCommandSwitches():
+    shortOpts = ''
+    longOpts = ["ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
-    except getopt.GetoptError, E:
-        print "Driver 1478: %s %r" % (E, E)
+    except getopt.GetoptError as data:
+        print "%s %r" % (data, data)
         sys.exit(1)
-    #assemble a dictionary where the keys are the switches and values are switch args...
-    options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
-    if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
-    #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/Driver.ini"
-    if "-h" in options or "--help" in options:
-        printUsage()
-        sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
-    return configFile
 
-if __name__ == "__main__":
-    driverApp = SingleInstance("PicarroDriver")
+    # assemble a dictionary where the keys are the switches and values are
+    # switch args...
+    options = {}
+    for o, a in switches:
+        options[o] = a
+    configFile = ""
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
+        print "Config file specified at command line: %s" % configFile
+
+    return (configFile)
+
+def main():
+    driverApp = SingleInstance(APP_NAME)
     if driverApp.alreadyrunning():
-        Log("Instance of driver us already running",Level=3)
+        Log("Instance of driver is already running", Level=3)
     else:
-        configFile = handleCommandSwitches()
-        Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
+        configFile = HandleCommandSwitches()
+        Log("%s started" % APP_NAME, Level=1)
         d = Driver(configFile)
         d.run()
     Log("Exiting program")
     time.sleep(1)
+
+if __name__ == "__main__":
+    """
+    The main function shall be used in all processes. This way we can
+    import it in the pydCaller, and ensure that all processes are launched
+    the same way without having to edit both files any time we want to make
+    a change.
+    """
+    main()

@@ -53,34 +53,36 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "InstMgr"
-APP_VERSION = 1.0
-_DEFAULT_CONFIG_NAME = "InstMgr.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-
 import sys
 import os.path
-import Queue
 import time
 import threading
-import socket #for transmitting data to the fitter
-import struct #for converting numbers to byte format
+import struct  #for converting numbers to byte format
 import getopt
 import traceback
-from inspect import isclass
 
 from Host.autogen import interface
 from Host.SampleManager.SampleManager import SAMPLEMGR_STATUS_STABLE, SAMPLEMGR_STATUS_PARKED, SAMPLEMGR_STATUS_PURGED, SAMPLEMGR_STATUS_PREPARED, SAMPLEMGR_STATUS_FLOWING
-from Host.Common import CmdFIFO, Listener, Broadcaster
-from Host.Common.SharedTypes import RPC_PORT_INSTR_MANAGER, RPC_PORT_DRIVER, RPC_PORT_SUPERVISOR, RPC_PORT_ARCHIVER, RPC_PORT_MEAS_SYSTEM, RPC_PORT_SAMPLE_MGR, RPC_PORT_ALARM_SYSTEM, RPC_PORT_FREQ_CONVERTER, RPC_PORT_PANEL_HANDLER
-from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY, RPC_PORT_SPECTRUM_COLLECTOR
+from Host.Common import CmdFIFO, Broadcaster
+from Host.Common.SharedTypes import STATUS_PORT_INST_MANAGER, BROADCAST_PORT_INSTMGR_DISPLAY,\
+    RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_SUPERVISOR, RPC_PORT_FREQ_CONVERTER
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.AppStatus import AppStatus
 from Host.Common.InstMgrInc import INSTMGR_STATUS_READY, INSTMGR_STATUS_MEAS_ACTIVE, INSTMGR_STATUS_ERROR_IN_BUFFER, INSTMGR_STATUS_GAS_FLOWING, INSTMGR_STATUS_PRESSURE_LOCKED, INSTMGR_STATUS_CLEAR_MASK
 from Host.Common.InstMgrInc import INSTMGR_STATUS_CAVITY_TEMP_LOCKED, INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED, INSTMGR_STATUS_WARMING_UP, INSTMGR_STATUS_SYSTEM_ERROR
-from Host.Common.SafeFile import SafeFile, FileExists
+from Host.Common.SafeFile import FileExists
 from Host.Common.InstErrors import *
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "InstMgr"
+APP_VERSION = 1.0
+_DEFAULT_CONFIG_NAME = "InstMgr.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
@@ -280,6 +282,8 @@ class RpcServerThread(threading.Thread):
 class InstMgr(object):
     """This is the Instrument Manager application object."""
     def __init__(self, configPath, noSampleMgr=False):
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.noSampleMgr = noSampleMgr
         self.flowStarted = False
         self.State = INSTMGR_STATE_RESET
@@ -380,7 +384,7 @@ class InstMgr(object):
         self.DisplayBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_INSTMGR_DISPLAY)
     def _SendDisplayMessage(self, msg):
         try:
-            Log(msg, Level = 1.5)
+            Log(msg, Level = 0)
             formatString=">%ds" %(len(msg)+1)  #Initial format string: - '>' for big endian(labview GUI uses big endian byte order)
                                                #                       - +1 for null terminator
             # add null termination before broadcasting.
@@ -1388,8 +1392,8 @@ Where the options can be a combination of the following:
 def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["no_sample_mgr", "help", "vi"]
+    shortOpts = 'h'
+    longOpts = ["no_sample_mgr", "help", "vi", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1408,8 +1412,8 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         Log ("Config file specified at command line: %s" % configFile)
 
     if "--no_sample_mgr" in options:
@@ -1426,27 +1430,29 @@ def HandleCommandSwitches():
 def main():
     #Get and handle the command line options...
     configFile, noSampleMgr, virtualMode = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile, NoSampleMgr = noSampleMgr), Level = 0)
-    try:
-        app = InstMgr(configFile, noSampleMgr)
-        if virtualMode:
-            app.INSTMGR_Start_virtualMode()
-        else:
-            app.INSTMGR_Start()
-    except Exception, E:
-        if __debug__: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            app = InstMgr(configFile, noSampleMgr)
+            if virtualMode:
+                app.INSTMGR_Start_virtualMode()
+            else:
+                app.INSTMGR_Start()
+        except Exception, e:
+            if __debug__:
+                raise
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+        Log("Exiting program")
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        tbMsg = traceback.format_exc()
-        Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = tbMsg)
-    Log("Exiting program")
-    sys.stdout.flush()
+    main()

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 File Name: 4to20Server.py
 Purpose: 4-20 mA back end. It takes data obj from data manager, 
@@ -15,12 +14,12 @@ Copyright 2017 Picarro, Inc.
 
 
 import sys,time,os
-import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
-#from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
+from Host.Common.AppRequestRestart import RequestRestart
 import threading
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -55,8 +54,9 @@ class Four220Server(object):
         self.port = self.config.get('SERIAL_PORT_SETUP', 'PORT')
         self.baudrate = self.config.getint('SERIAL_PORT_SETUP', 'BAUDRATE')
         self.timeout = self.config.getfloat('SERIAL_PORT_SETUP', 'TIMEOUT')
-        
         self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
         except:
@@ -295,6 +295,19 @@ def handleCommandSwitches():
 
     return (configFile, simulation)
 
-if __name__ == "__main__":
+def main():
     server = Four220Server(*handleCommandSwitches())
-    server.run()
+    try:
+        server.run()
+    except Exception, e:
+        LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
+        # Request a restart from Supervisor via RPC call
+        restart = RequestRestart(APP_NAME)
+        if restart.requestRestart(APP_NAME) is True:
+            Log("Restart request to supervisor sent", Level=0)
+        else:
+            Log("Restart request to supervisor not sent", Level=2)
+
+
+if __name__ == "__main__":
+    main()

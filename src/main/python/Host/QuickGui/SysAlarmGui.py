@@ -92,7 +92,7 @@ class SysAlarmViewListCtrl(wx.ListCtrl):
         self.ilEventIcons = wx.ImageList(32, 32)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
-        thisDir = os.path.dirname(AppPath)
+        thisDir = os.path.dirname(os.path.abspath(__file__))
         self.IconAlarmOff  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidOff_32x32.png',
                                                      wx.BITMAP_TYPE_ICO))
         self.IconAlarmGreen  = myIL.Add(wx.Bitmap(thisDir + '/LED_SolidGreen_32x32.png',

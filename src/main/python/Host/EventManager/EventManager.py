@@ -60,12 +60,6 @@ Notes:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "EventManager"
-DEFAULT_EVENT_CODE = 0
-_DEFAULT_CONFIG_NAME = "EventManager.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-LOGFILE_PREFIX = "EventLog_"
-LOGFILE_EXTENSION = "txt"
 
 import sys
 import os
@@ -76,7 +70,20 @@ from glob import glob
 from Host.Common import SharedTypes #to get the right TCP port to use
 from Host.Common import CmdFIFO
 from Host.Common import Broadcaster
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "EventManager"
+DEFAULT_EVENT_CODE = 0
+_DEFAULT_CONFIG_NAME = "EventManager.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
+LOGFILE_PREFIX = "EventLog_"
+LOGFILE_EXTENSION = "txt"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
 if sys.platform == 'win32':
     TimeStamp = time.clock
@@ -280,6 +287,8 @@ class EventLogger(object):
             self.MaxResidentEvents = 0        # How many events to accumulate before truncating to MinResidentEvents
             self.MinResidentEvents = 0        # How many events to truncate to when Max is reached
             self.BroadcastEvents = False      # Whether events should be broadcasted
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                         IsDontCareConnection=False)
 
         def Load(self, IniPath):
             """Loads the configuration from the specified ini/config file."""
@@ -288,7 +297,8 @@ class EventLogger(object):
 
             cp = CustomConfigObj(IniPath)
             basePath = os.path.split(IniPath)[0]
-            self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            # self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            self.LogFileDir = os.path.join(LOG_DIR, "TransientData")
             self.LogToFile = cp.getboolean(_MAIN_CONFIG_SECTION, "LogToFile")
             self.LogFileLength = cp.getint(_MAIN_CONFIG_SECTION, "LogFileLength")
             self.ArchiveGroupName = cp.get(_MAIN_CONFIG_SECTION, "ArchiveGroupName")
@@ -590,8 +600,8 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'hvc:'
-    longOpts = ["help", "viewer"]
+    shortOpts = 'hv'
+    longOpts = ["help", "viewer", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -617,8 +627,8 @@ def HandleCommandSwitches():
     if "-v" in options or "--viewer" in options:
         showViewer = True
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     return (showViewer, configFile)
@@ -639,37 +649,51 @@ def LaunchViewerGUI(EL):
 
     del logViewer, EventManagerGUI
 
-def Main():
-    #General runtime philosophy is dictated by the fact that a wxApp needs to run
-    #on the main thread.  because of this...
-    #  1. Start the logger application on it's own thread
-    #  2. Main thread will wait for the logger to finish
-    #  3. While waiting, give the main thread to the wxApp if needed
-    #  4. Shutting down of the wxApp (to get the main thread back) will be done
-    #     by the wxApp being shut down when the logger exits.
 
-    showViewer, configFile = HandleCommandSwitches()
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            #General runtime philosophy is dictated by the fact that a wxApp needs to run
+            #on the main thread.  because of this...
+            #  1. Start the logger application on it's own thread
+            #  2. Main thread will wait for the logger to finish
+            #  3. While waiting, give the main thread to the wxApp if needed
+            #  4. Shutting down of the wxApp (to get the main thread back) will be done
+            #     by the wxApp being shut down when the logger exits.
 
-    #create and kick off the event logging engine...
-    EL = EventLogger(configFile)
-    t = threading.Thread(target = EL.Launch)
-    t.setDaemon(True)
-    t.start()
+            showViewer, configFile = HandleCommandSwitches()
 
-    if showViewer:
-        EL.ShowViewer = True
+            #create and kick off the event logging engine...
+            EL = EventLogger(configFile)
+            t = threading.Thread(target = EL.Launch)
+            t.setDaemon(True)
+            t.start()
 
-    #Now just loop and wait for the logger to shut down (while letting the
-    #viewer app be on the main thread)...
-    while not EL.LoggerStopped:
-        if EL.ShowViewer:
-            if EL.Viewer == None:
-                #Need to start it up. Blocks until GUI exits.
-                LaunchViewerGUI(EL)
-        else:
-            #We shouldn't be showing the viewer.
-            assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
-        time.sleep(1.0)
+            if showViewer:
+                EL.ShowViewer = True
+
+            #Now just loop and wait for the logger to shut down (while letting the
+            #viewer app be on the main thread)...
+            while not EL.LoggerStopped:
+                if EL.ShowViewer:
+                    if EL.Viewer == None:
+                        #Need to start it up. Blocks until GUI exits.
+                        LaunchViewerGUI(EL)
+                else:
+                    #We shouldn't be showing the viewer.
+                    assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
+                time.sleep(1.0)
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
 
 # Viewer started by:
 #   1. command line
@@ -680,4 +704,4 @@ def Main():
 #   3. Logger server stopped
 
 if __name__ == "__main__":
-    Main()
+    main()

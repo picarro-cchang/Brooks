@@ -36,15 +36,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-####
-## Set constants for this file...
-####
-APP_NAME = "DataManager"
-APP_VERSION = 1.0
-_DEFAULT_CONFIG_NAME = "DataManager.ini"
-_MAIN_CONFIG_SECTION = "Setup"
-_SERIAL_CONFIG_SECTION = "SerialOutput"
-
 STATE__UNDEFINED = -100
 STATE_ERROR = 0x0F
 STATE_INIT = 0
@@ -75,23 +66,16 @@ USERCAL_OFFSET_INDEX = 1
 DEFAULT_SERIAL_OUT_DELAY = 10.0 # the time delay of sending the fitter results to serial output
 SERIAL_CMD_DELAY = 0.02 # the execution time delay between sending a command and actually receiving the command on the serial output
 
-import sys
-import os
+
 import Queue
 import threading
 import serial
 import math
-import time
-import traceback
-import string
 from inspect import isclass
-from collections import deque
 import Host.DataManager.ScriptRunner as ScriptRunner
 from Host.DataManager.AlarmSystemV3 import *
 import pprint
 import heapq
-import OutputFile
-from datetime import datetime, date
 
 from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
@@ -103,7 +87,7 @@ from Host.Common import ModeDef
 from Host.Common import InstMgrInc
 from Host.Common import AppStatus
 from Host.Common import timestamp
-from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
+from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER,RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DATALOGGER, RPC_PORT_FSR_HOPPING_CONTROLLER
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_FITTER_BASE
@@ -117,10 +101,21 @@ from Host.Common.Listener import Listener
 from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
 from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
-EventManagerProxy_Init(APP_NAME)
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 
-if sys.platform == 'win32':
-    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
+####
+## Set constants for this file...
+####
+APP_NAME = "DataManager"
+APP_VERSION = 1.0
+_DEFAULT_CONFIG_NAME = "DataManager.ini"
+_MAIN_CONFIG_SECTION = "Setup"
+_SERIAL_CONFIG_SECTION = "SerialOutput"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
+EventManagerProxy_Init(APP_NAME)
 
 if __debug__:
     #verify that we have text names for each state...
@@ -156,10 +151,7 @@ else:
 AppPath = os.path.abspath(AppPath)
 
 #Set up a useful TimeStamp function...
-if sys.platform == 'win32':
-    TimeStamp = time.clock
-else:
-    TimeStamp = time.time
+TimeStamp = time.time
 
 ####
 ## RPC connections to other CRDS applications...
@@ -356,6 +348,8 @@ class DataManager(object):
         # can fail (like talking to another CRDS app or reading the HDD) should be
         # in the INIT state handler.
         # # # # # # # # # # #
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.__State = STATE_INIT
         self.__LastState = self.__State
         self._Status = AppStatus.AppStatus(STATE_INIT, STATUS_PORT_DATA_MANAGER, APP_NAME)
@@ -2163,8 +2157,8 @@ def HandleCommandSwitches():
     import getopt
     alarmConfigFile = None
     alarmSystemV3ConfigFile = None
-    shortOpts = 'hc:o:a:b:'
-    longOpts = ["help", "test", "no_inst_mgr"]
+    shortOpts = 'ho:b:'
+    longOpts = ["help", "test", "no_inst_mgr", "ini=", "alarm_ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -2190,13 +2184,13 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print("-c Config file specified at command line: %s" % configFile)
         Log("Config file specified at command line", configFile)
 
-    if "-a" in options:
-        alarmConfigFile = options["-a"]
+    if "--alarm_ini" in options:
+        alarmConfigFile = os.path.join(CONFIG_DIR, options["--alarm_ini"])
         print("-a Config file specified at command line: %s" % alarmConfigFile)
         Log("Alarm system configuration file is", alarmConfigFile)
 
@@ -2219,29 +2213,36 @@ def ExecuteTest(DM):
 def main():
     #Get and handle the command line options...
     configFile, alarmConfigFile, alarmSystemV3ConfigFile, noInstMgr, test, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        alarmSystem = None
-        if alarmSystemV3ConfigFile is not None:
-            alarmSystem = AlarmSystemV3(alarmSystemV3ConfigFile)
-        elif alarmConfigFile is not None:
-            alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=False)
-            alarmSystem.ALARMSYSTEM_start_inthread()
-        else:
-            print("No alarm config file specified")
+    Log("%s started." % APP_NAME, Level=1)
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            alarmSystem = None
+            if alarmSystemV3ConfigFile is not None:
+                alarmSystem = AlarmSystemV3(alarmSystemV3ConfigFile)
+            elif alarmConfigFile is not None:
+                alarmSystem = AlarmSystem(alarmConfigFile, legacyMode=False)
+                alarmSystem.ALARMSYSTEM_start_inthread()
+            else:
+                print("No alarm config file specified")
 
-        app = DataManager(configFile, alarmSystem, noInstMgr, options)
-        if test:
-            threading.Timer(2, ExecuteTest(app)).start()
-        app.Start()
-    except:
-        if __debug__: raise
-        LogExc("Exception trapped outside DataManager execution")
+            app = DataManager(configFile, alarmSystem, noInstMgr, options)
+            if test:
+                threading.Timer(2, ExecuteTest(app)).start()
+            app.Start()
+        except Exception, e:
+            if __debug__:
+                raise
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        LogExc("Unhandled exception trapped by last chance handler")
-    Log("Exiting program")
-    sys.stdout.flush()
+    main()

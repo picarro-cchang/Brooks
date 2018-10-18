@@ -160,7 +160,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     restart = (d.ShowModal() == wx.ID_YES)
                     d.Destroy()
                 if restart:
-                    killList = ["HostStartup", "QuickGui", "Controller"]
+                    killList = ["HostStartup", "QuickGui", "Controller", "Driver"]
                     for proc in psutil.process_iter():
                         cmd = " ".join(proc.cmdline())
                         for kp in killList:
@@ -273,6 +273,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 raise RuntimeError("Too many restart attempts for supervisor")
             time.sleep(2.0)
         self.setGuiTitle()
+        self.Close()
 
     def setGuiTitle(self):
         titleSet = False
@@ -349,11 +350,14 @@ def HandleCommandSwitches():
 
     return (configFile, autoLaunch, closeValves, delay, killAll, modeSpecified)
 
-if __name__ == "__main__":
+def main():
     (configFile, autoLaunch, closeValves, delay, killAll, modeSpecified) = HandleCommandSwitches()
-    supervisorLauncherApp = SingleInstance("PicarroSupervisorLauncher")
+    # Save the pid file in the /tmp/ directory so Supervisor doesn't try to
+    # restart the app during its MonitorApps loop
+    path = "/tmp/"
+    supervisorLauncherApp = SingleInstance("SupervisorLauncher", path)
 
-    if supervisorLauncherApp.alreadyrunning() and not (autoLaunch or modeSpecified!=None):
+    if supervisorLauncherApp.alreadyrunning() and not (autoLaunch or modeSpecified != None):
         if sys.platform == "win32":
             import win32gui
             try:
@@ -369,11 +373,13 @@ if __name__ == "__main__":
                 break
 
         app = wx.App(False)
-        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "", mode=modeSpecified)
+        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "",
+                                   mode=modeSpecified)
         if not autoLaunch:
             frame.initMode()
             app.SetTopWindow(frame)
-            #frame.Show()
+            # frame.Show()
         app.MainLoop()
-#
-# SupervisorLauncher.py -d 3 -k -a -c c:\Picarro\G2000\AppConfig\Config\Utilities\SupervisorLauncher.ini
+
+if __name__ == "__main__":
+    main()
