@@ -182,9 +182,10 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     import getopt
-
+	shortOpts = 'hs'
+    longOpts = ["help", "ini="]
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -201,8 +202,8 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = options["--ini"]
         print "Config file specified at command line: %s" % configFile
 
     return configFile
