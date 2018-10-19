@@ -182,7 +182,7 @@ def PrintUsage():
 
 def HandleCommandSwitches():
     import getopt
-	shortOpts = 'hs'
+    shortOpts = 'hs'
     longOpts = ["help", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
