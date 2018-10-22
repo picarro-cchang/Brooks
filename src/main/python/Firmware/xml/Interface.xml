@@ -327,9 +327,9 @@
         <constant ident="SENSOR_OFFSET" description="Offset for sensor stream area in DSP shared memory">0x1B00</constant>
         <constant ident="MESSAGE_OFFSET" description="Offset for message area in DSP shared memory">0x2B00</constant>
         <constant ident="GROUP_OFFSET" description="Offset for group table in DSP shared memory">0x2F00</constant>
-        <constant ident="OPERATION_OFFSET" description="Offset for operation table in DSP shared memory">0x2F20</constant>
-        <constant ident="OPERAND_OFFSET" description="Offset for operand table in DSP shared memory">0x3300</constant>
-        <constant ident="ENVIRONMENT_OFFSET" description="Offset for environment table in DSP shared memory">0x3700</constant>
+        <constant ident="OPERATION_OFFSET" description="Offset for operation table in DSP shared memory">0x3000</constant>
+        <constant ident="OPERAND_OFFSET" description="Offset for operand table in DSP shared memory">0x3400</constant>
+        <constant ident="ENVIRONMENT_OFFSET" description="Offset for environment table in DSP shared memory">0x3800</constant>
         <constant ident="HOST_OFFSET" description="Offset for host area in DSP shared memory">0x3F00</constant>
         <constant ident="RINGDOWN_BUFFER_OFFSET" description="Offset for ringdown buffer area in DSP shared memory">0x4000</constant>
         <constant ident="NUM_RINGDOWN_BUFFERS" description="Number of ringdown buffer areas in DSP shared memory">2</constant>
