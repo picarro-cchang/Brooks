@@ -450,12 +450,14 @@ class DasConfigure(SharedTypes.Singleton):
                     status = sender.doOperation(
                         Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
                     self.i2cConfig[ident] = (status >= 0)
-                    if "CAVITY_THERMISTOR_4_ADC" in ident:
+                    if "CAVITY_THERMISTOR_4_ADC" in ident and self.cavityThermistorConfig == 2:
                         if self.i2cConfig[ident] is True:
                             # New "RevC" Hardware
+                            print("Hardware: RevC")
                             self.cavityThermistorConfig = 1
                         else:
                             # Legacy "RevB" Hardware
+                            print("Hardware: RevB")
                             self.cavityThermistorConfig = 0
                     print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
                 if self.cavityThermistorConfig == 0:
