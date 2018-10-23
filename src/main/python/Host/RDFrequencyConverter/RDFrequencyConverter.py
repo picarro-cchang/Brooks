@@ -358,7 +358,8 @@ class SchemeBasedCalibrator(object):
 
                 if flag == 0:
                     Log("WLM LCT Cal (VL %d) skipped" % vLaserNum)
-
+                elif len(set(fsrIndices)) != len(wlmAngles):
+                    Log("WLM LCT Cal (VL %d) skipped because of coincident FSR indices" % vLaserNum, Level=2)
                 else:
                     extraFsr, extraAngles = self.getExtraFsr(
                         fsrIndices, wlmAngles, nextra=3)

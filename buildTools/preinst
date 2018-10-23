@@ -8,7 +8,7 @@ import shutil
 host_software_components = ["AlarmSystem", "Archiver",\
         "Controller", "ControlBridge", "DataLogger", \
         "DataManager", "DataManagerPublisher", "Driver",\
-        "DriverSimulator","EventManager", "Fitter",\
+        "DriverSimulator","EventManager", "FileEraser", "Fitter",\
         "HostStartup", "InstMgr", "MobileKitMonitor", \
         "MeasSystem", "QuickGui", "RDFreqConverter",\
         "RestartSurveyor", "RestartSupervisor", "SampleManager", \
