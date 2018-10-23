@@ -67,7 +67,7 @@ class DasConfigure(SharedTypes.Singleton):
             # CAVITY_THERMISTOR_CONFIG = 1 for four separate 24-bit cavity thermistor ADC and
             #  a 16-bit hot box heatsink thermistor
             self.cavityThermistorConfig = self.installed.get(
-                "CAVITY_THERMISTOR_CONFIG", 0)
+                "CAVITY_THERMISTOR_CONFIG", 2)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
             self.extraSchedule = None
@@ -441,6 +441,23 @@ class DasConfigure(SharedTypes.Singleton):
         if present:
             # Hot box temperatures
             if present > 0:
+                # Remove reset on I2C multiplexers
+                sender.doOperation(Operation("ACTION_INT_TO_FPGA", [
+                                   0, "FPGA_KERNEL", "KERNEL_CONTROL"]))
+                # Check to see which I2C devices are installed on this instrument
+                for i in range(len(interface.i2cByIndex)):
+                    ident = interface.i2cByIndex[i]
+                    status = sender.doOperation(
+                        Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
+                    self.i2cConfig[ident] = (status >= 0)
+                    if "CAVITY_THERMISTOR_4_ADC" in ident:
+                        if self.i2cConfig[ident] is True:
+                            # New "RevC" Hardware
+                            self.cavityThermistorConfig = 1
+                        else:
+                            # Legacy "RevB" Hardware
+                            self.cavityThermistorConfig = 0
+                    print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
                 if self.cavityThermistorConfig == 0:
                     # This represents the legacy mode in which the hot box heatsink thermistor is connected
                     #  to CAVITY_THERMISTOR_1_ADC and the combined cavity thermistor is connected to
@@ -917,14 +934,6 @@ class DasConfigure(SharedTypes.Singleton):
         time.sleep(0.5)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [
                            0, "FPGA_KERNEL", "KERNEL_CONTROL"]))
-
-        # Check to see which I2C devices are installed on this instrument
-        for i in range(len(interface.i2cByIndex)):
-            ident = interface.i2cByIndex[i]
-            status = sender.doOperation(
-                Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
-            self.i2cConfig[ident] = (status >= 0)
-            print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
 
         if accelerometerPresent:
             ADXL345_REG_DEVID = 0
