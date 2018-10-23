@@ -68,8 +68,7 @@ static char message[120];
             (result) = d.asInt;                  \
             break;                               \
         }                                        \
-    \
-}
+    }
 
 #define WRITE_REG(regNum, result)            \
     {                                        \
@@ -90,8 +89,7 @@ static char message[120];
         status = writeRegister((regNum), d); \
         if (STATUS_OK != status)             \
             return status;                   \
-    \
-}
+    }
 
 int writeBlock(unsigned int numInt, void *params, void *env)
 // Writes a block to the communication area. The number of integers written is numInt-1, since params[0] is the start index
@@ -125,8 +123,8 @@ int initRunqueue(unsigned int numInt, void *params, void *env)
     nGroups = paramsAsInt[0];
     for (i = 0; i < nGroups; i++)
     {
-        int period = get_group_period(i);
-        long long next_time = ((now + period) / period) * period;
+        unsigned int period_ms = 100 * get_group_period(i);
+        long long next_time = ((now + period_ms) / period_ms) * period_ms;
         insert_into_runqueue(i, next_time);
     }
     return STATUS_OK;

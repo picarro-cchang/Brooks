@@ -333,11 +333,11 @@ typedef struct {
 // Offset for group table in DSP shared memory
 #define GROUP_OFFSET (0x2F00)
 // Offset for operation table in DSP shared memory
-#define OPERATION_OFFSET (0x2F20)
+#define OPERATION_OFFSET (0x3000)
 // Offset for operand table in DSP shared memory
-#define OPERAND_OFFSET (0x3300)
+#define OPERAND_OFFSET (0x3400)
 // Offset for environment table in DSP shared memory
-#define ENVIRONMENT_OFFSET (0x3700)
+#define ENVIRONMENT_OFFSET (0x3800)
 // Offset for host area in DSP shared memory
 #define HOST_OFFSET (0x3F00)
 // Offset for ringdown buffer area in DSP shared memory

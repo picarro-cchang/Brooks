@@ -1136,14 +1136,16 @@ class Driver(SharedTypes.Singleton):
                 print "Driver 1136:", err
                 self.ver[ver] = "N/A"
         # Get installer ID
+        signaturePath = os.path.join(basePath, self.config.get(
+            "Files", "SignaturePath", "../../../installerSignature.txt"))
         try:
-            signaturePath = os.path.join(basePath, self.config.get("Files", "SignaturePath", "../../../installerSignature.txt"))
-        except:
-            signaturePath = os.path.join(basePath, "../../../installerSignature.txt")
-        try:
-            sigFd = open(signaturePath, "r")
-            self.installerId = sigFd.readline().strip()
-            sigFd.close()
+            with open(signaturePath, "r") as sig_file:
+                self.installerId = sig_file.readline().strip()
+        except IOError:
+            signaturePath = os.path.join(basePath,
+                "/home/picarro/I2000/installerSignature.txt")
+            with open(signaturePath, "r") as sig_file:
+                self.installerId = sig_file.readline().strip()
         except Exception, err:
             print "Driver 1175, can't load %s: %r" % (signaturePath, err)
             self.installerId = None
