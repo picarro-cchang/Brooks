@@ -41,19 +41,21 @@ if test_type not in ["restart", "kill"]:
 
 
 def kill_random_app():
+    blacklist = ["Supervisor", "Driver"]
     running_apps = RunningApps()
     random_app = running_apps.get_random_app()
-    if "Supervisor" in random_app:
-        print("Skipping so we don't kill Supervisor")
+    if random_app in blacklist:
+        print("Skipping so we don't kill: %s" % random_app)
     else:
         running_apps.kill_app(random_app)
 
 
 def restart_random_app_via_rpc():
+    blacklist = ["Supervisor", "Driver"]
     running_apps = RunningApps()
     random_app = running_apps.get_random_app()
-    if "Supervisor" in random_app:
-        print("Skipping so we don't kill Supervisor")
+    if random_app in blacklist:
+        print("Skipping so we don't kill: %s" % random_app)
     else:
         print("Restarting %s via RPC call to supervisor" % random_app)
         running_apps.restart_via_rpc(random_app)
