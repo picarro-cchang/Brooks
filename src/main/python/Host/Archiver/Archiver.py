@@ -133,8 +133,6 @@ class ArchiveGroup(object):
         self.aggregationCount = archiver.config.getint( groupName, "AggregationCount", 0)
         self.aggregation = 0
         self.cmdQueue = Queue.Queue(0)  # Queue for commands
-        # Enqueue command to initialize the archive group
-        self.cmdQueue.put(("init", ()))
         self.serverThread = threading.Thread(target=self.server)
         self.fileCount = -1
 
