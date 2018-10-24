@@ -970,6 +970,7 @@ class QuickGui(wx.Frame):
         # mode == 1 shutdown all process and exit to the desktop
         if wx.GetKeyState(wx.WXK_SHIFT):
             shutdownMode = 1
+            message = "Do you really want to stop driver and data acquisition?"
 
         dialog = wx.MessageDialog(self, message, "", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()

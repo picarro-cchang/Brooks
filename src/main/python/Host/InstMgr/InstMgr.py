@@ -1186,7 +1186,7 @@ class InstMgr(object):
                 return status
         elif shutdownType == INSTMGR_SHUTDOWN_HOST_AND_DAS:
             # shutdown Host
-            status = self._StateHandler(EVENT_SHUTDOWN_INST)
+            status = self._StateHandler(EVENT_PARK)
             # shutdown Host only
             self.powerOff = False
             # turn off temperature control on DAS
