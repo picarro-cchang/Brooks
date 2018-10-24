@@ -363,6 +363,7 @@ class DataManager(object):
 
         self.dataQueue = []        # Priority queue for data from fitters
         self.dataQueueLock = threading.Lock()
+        self.syncScriptsLock = threading.Lock()
         self.forwardedDataQueue = []        # Used to hold generated data that need to be processed BEFORE any more collected data
         self.DataHistory = {}      # keys = data tokens; values = deque of two-tuples (time, value)
         self.ReportHistory = {}    # keys = data tokens; values = deque of two-tuples (time, value)
@@ -415,7 +416,7 @@ class DataManager(object):
         self.pulseBufferLock = threading.Lock()
         # Priority queue for synchronous scripts ordered by ideal execution time and period
         #  Entries on queue are (execTime, period, startTime, iteration, syncInfoObj)
-        self.syncScriptQueue = []
+        self.syncScriptsQueue = []
         self.syncScriptsLaunched = False
         self.lastTimeGood = True
         self.maxLate = 0
@@ -593,9 +594,9 @@ class DataManager(object):
         """Disables the measurement system and stops the instrument from scanning.
         """
         if __debug__: Log("System DISable request received - RPC_Disable()", Level = 0)
+        self._EnableEvent.clear()
         if not keepSyncScripts:
             self._StopSyncScripts()
-        self._EnableEvent.clear()
         return "OK"
 
     @CmdFIFO.rpc_wrap
@@ -1130,19 +1131,23 @@ class DataManager(object):
 
     def _EnqueueSyncScript(self,sai,startTime,iteration):
         assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
-        heapq.heappush(self.syncScriptQueue,(startTime+iteration*sai.Period_s,sai.Period_s,startTime,iteration,sai))
+        with self.syncScriptsLock:
+            heapq.heappush(self.syncScriptsQueue,(startTime+iteration*sai.Period_s,sai.Period_s,startTime,iteration,sai))
 
     def _TimeToNextSyncScript(self):
-        if self.syncScriptQueue:
-            xeqTime,period,startTime,iteration,sai = self.syncScriptQueue[0]
-            return xeqTime - time.time()
-        else:
-            return None
+        with self.syncScriptsLock:
+            if self.syncScriptsQueue:
+                xeqTime,period,startTime,iteration,sai = self.syncScriptsQueue[0]
+                return xeqTime - time.time()
+            else:
+                return None
 
     def _LaunchSyncScripts(self):
         """Enqueues initial synchronous script execution requests. These run when time.time() is an integer
            multiple of the period of the script"""
-        self.syncScriptsLaunched = True
+        # print "currentMeasMode", self.CurrentMeasMode
+        # if self.CurrentMeasMode:
+        #     print "currentMeasModeSyncSetup", self.CurrentMeasMode.SyncSetup
         if self.CurrentMeasMode and self.CurrentMeasMode.SyncSetup:
             Log("Starting synchronous analyzers", dict(Count = len(self.CurrentMeasMode.SyncSetup),
                 SyncAnalyzers = [sai.ReportName for sai in self.CurrentMeasMode.SyncSetup]))
@@ -1150,7 +1155,8 @@ class DataManager(object):
                 assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
                 startTime = math.ceil(time.time()/sai.Period_s) * sai.Period_s
                 self._EnqueueSyncScript(sai,startTime,0)
-            Log("Synchronous analyzers have all been enqueued")
+            Log("Synchronous analyzers have all been enqueued", dict(QueueLen=len(self.syncScriptsQueue)))
+            self.syncScriptsLaunched = True
 
     def _ToggleStatusSyncBit(self, SyncInfoObj):
         index = self.CurrentMeasMode.SyncSetup.index(SyncInfoObj)
@@ -1174,8 +1180,11 @@ class DataManager(object):
         self._Status.ToggleStatusBit(mask)
 
     def _RunNextSyncScript(self):
-        if self.syncScriptQueue:
-            xeqTime,period,startTime,iteration,sai = heapq.heappop(self.syncScriptQueue)
+        with self.syncScriptsLock:
+            queueNotEmpty = len(self.syncScriptsQueue) > 0
+            if queueNotEmpty:
+                xeqTime,period,startTime,iteration,sai = heapq.heappop(self.syncScriptsQueue)
+        if queueNotEmpty:
             late = time.time() - xeqTime
             codeObj = self.AnalyzerCode[sai.AnalyzerInfo.ScriptPath]
             scriptArgs = sai.AnalyzerInfo.ScriptArgs
@@ -1214,10 +1223,11 @@ class DataManager(object):
     def _StopSyncScripts(self, WaitUntilSure = True):
         """Stops the existing sync timer scripts.
         """
-        self.syncScriptQueue = []
-        self.syncScriptsLaunched = False
-        time.sleep(1)   # Wait to ensure currently running scripts have stopped
-        self.syncScriptQueue = []
+        with self.syncScriptsLock:
+            self.syncScriptsQueue = []
+            time.sleep(1)   # Wait to ensure currently running scripts have stopped
+            self.syncScriptsQueue = []
+            self.syncScriptsLaunched = False
         Log("Synchronous analyzers have all been stopped.")
 
     def _ChangeMode(self, ModeName):
@@ -1341,33 +1351,37 @@ class DataManager(object):
         spectrumNames = set()
         avgTimestamp,spectrumId,results,maxLatency = self.dataQueue[0]
         self.lastFitAnalyzed = avgTimestamp
-        while self.lastFitAnalyzed == avgTimestamp:
-            avgTimestamp,spectrumId,results,latency = heapq.heappop(self.dataQueue)
-            maxLatency = max(maxLatency, latency)
-            spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
-            analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
-            if analyzer in self.resultsByAnalyzer:
-                self.resultsByAnalyzer[analyzer].update(results)
-                analyzers.add(analyzer)
-                spectrumNames.add(spectrumName)
-            else:
-                if results:
-                    self.resultsByAnalyzer[analyzer] = results.copy()
+        measDataList = []
+        try:
+            while self.lastFitAnalyzed == avgTimestamp:
+                avgTimestamp,spectrumId,results,latency = heapq.heappop(self.dataQueue)
+                maxLatency = max(maxLatency, latency)
+                spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
+                # Log("CurrentMeasMode: %s, Analyzers: %s" % (self.CurrentMeasMode, self.CurrentMeasMode.Analyzers))
+                analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
+                if analyzer in self.resultsByAnalyzer:
+                    self.resultsByAnalyzer[analyzer].update(results)
                     analyzers.add(analyzer)
                     spectrumNames.add(spectrumName)
-            if len(self.dataQueue) == 0:
-                break
-            avgTimestamp,spectrumId,results,latency = self.dataQueue[0]
-        self.dataQueueLock.release()
-        measDataList = []
-        for name in spectrumNames:
-            analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
-            results = self.resultsByAnalyzer[analyzer]
-            if results:
-                results["max_fitter_latency"] = maxLatency
-            # Note: We must use self.lastFitAnalyzed below as this is the common timestamp of
-            #  the spectra to be analyzed
-            measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
+                else:
+                    if results:
+                        self.resultsByAnalyzer[analyzer] = results.copy()
+                        analyzers.add(analyzer)
+                        spectrumNames.add(spectrumName)
+                if len(self.dataQueue) == 0:
+                    break
+                avgTimestamp,spectrumId,results,latency = self.dataQueue[0]
+            self.dataQueueLock.release()
+            for name in spectrumNames:
+                analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
+                results = self.resultsByAnalyzer[analyzer]
+                if results:
+                    results["max_fitter_latency"] = maxLatency
+                # Note: We must use self.lastFitAnalyzed below as this is the common timestamp of
+                #  the spectra to be analyzed
+                measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
+        except KeyError:
+            self._ShutdownRequested = True
         return measDataList
 
     # def removeStragglers(self):
@@ -1587,6 +1601,14 @@ class DataManager(object):
                 Log("Current mode name initialized", dict(Name = self.Config.StartingMeasMode))
 
             # Handle peripheral interface
+            if self.CRDS_PeriphIntrf is not None:
+                # in case of re-initialization, PeriphIntrf already exists
+                # need to shut down the old PeriphIntrf before reinitialize a new one
+                self.CRDS_PeriphIntrf.shutdown()
+                self.CRDS_PeriphIntrf.socketThread.join(timeout=1) 
+                self.CRDS_PeriphIntrf.stateMachineThread.join(timeout=1)
+                if self.CRDS_PeriphIntrf.socketThread.isAlive() or self.CRDS_PeriphIntrf.stateMachineThread.isAlive():
+                    Log("Socket thread or stateMachineThread are still running after shutting down PheriphIntrf.", Level=2)
             self.CRDS_PeriphIntrf = None
             self.periphIntrfCols = []
             if self.Config.periphIntrfConfig is not None:
@@ -1651,7 +1673,7 @@ class DataManager(object):
             if not self.syncScriptsLaunched:
                 self._LaunchSyncScripts()
             # Allow script to run if we are within 10ms of the target execution time.
-            if self.syncScriptQueue:
+            if self.syncScriptsQueue:
                 timeToNextSyncScript = self._TimeToNextSyncScript()
                 while timeToNextSyncScript != None and timeToNextSyncScript < 0.01:
                     self._RunNextSyncScript()
@@ -1685,7 +1707,7 @@ class DataManager(object):
             try:
                 # First deal with synchronous scripts that need to be run. Allow script to
                 #  run if we are within 10ms of the target execution time.
-                if self.syncScriptQueue:
+                if self.syncScriptsQueue:
                     timeToNextSyncScript = self._TimeToNextSyncScript()
                     while timeToNextSyncScript != None and timeToNextSyncScript < 0.01:
                         self._RunNextSyncScript()
