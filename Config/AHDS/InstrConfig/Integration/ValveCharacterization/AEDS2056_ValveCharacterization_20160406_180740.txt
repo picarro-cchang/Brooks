@@ -1,4 +1,0 @@
-
-FSM thread starts
-Opening cavity to atmospheric pressure.
-Inlet valve control started, pressure setpoint = 900.00, outlet valve DAC = 0.00

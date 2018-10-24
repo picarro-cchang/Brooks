@@ -1,3 +1,0 @@
-Virtual laser Index: 1
-Center wavenumber:   5729.000
-Number of steps:     350

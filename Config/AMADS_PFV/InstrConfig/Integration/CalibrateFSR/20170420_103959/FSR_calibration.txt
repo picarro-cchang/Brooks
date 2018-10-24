@@ -1,8 +1,0 @@
-Fitted 3 O2 reference lines
-Wavenumber    FSR     rms
-7815.66699   86.000 585.984
-7821.11052  274.619 430.934
-7822.22163  339.000 601.044
-FSR = 0.0265746 wvn
-f(0) = 7813.46902 wvn
-RMS residual = 0.25255 wvn

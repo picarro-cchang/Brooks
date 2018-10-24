@@ -1,2 +1,0 @@
-Virtual laser 1. Target value for peak is: 6549.130760
-Original WLM offset is: -0.042985
