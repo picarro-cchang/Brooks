@@ -1187,6 +1187,8 @@ class InstMgr(object):
         elif shutdownType == INSTMGR_SHUTDOWN_HOST_AND_DAS:
             # shutdown Host
             status = self._StateHandler(EVENT_SHUTDOWN_INST)
+            # shutdown Host only
+            self.powerOff = False
             # turn off temperature control on DAS
             try:
                 self.DriverRpc.stopTempControl()

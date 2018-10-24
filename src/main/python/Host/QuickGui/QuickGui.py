@@ -967,6 +967,9 @@ class QuickGui(wx.Frame):
         #     shutdownMode = 1
         #     # we dont need power off in this mode, but lets set to default as we need to pass to INSTMGR_ShutdownRpc call
         #     powerOff = True
+        # mode == 1 shutdown all process and exit to the desktop
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            shutdownMode = 1
 
         dialog = wx.MessageDialog(self, message, "", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()
