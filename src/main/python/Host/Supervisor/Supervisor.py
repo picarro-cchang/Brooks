@@ -1489,7 +1489,7 @@ class Supervisor(object):
             for appName in self.AppNameList[::-1]:
                 # SQL lite app is used by qtLauncher so lets dont terminate it even though we want
                 # to terminate all protected app
-                if appName in PROTECTED_APPS and appName is not SQL_LITE_APP:
+                if appName in PROTECTED_APPS and appName != SQL_LITE_APP:
                     apps_running.remove_pid_file(str(self.AppDict[appName]))
                     self.AppDict[appName].ShutDown()
 
