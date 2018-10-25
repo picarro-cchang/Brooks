@@ -134,8 +134,9 @@ if sys.platform == "linux2":
 
 # Protected applications (not shut down on normal termination)
 # Lets never close SLQLiteServer also on host app quit as other application uses it
-# even though hist is not running for example qtLauncher
-PROTECTED_APPS = ["Driver", "SQLiteServer"]
+# even though host is not running for example qtLauncher
+SQL_LITE_APP = "SQLiteServer"
+PROTECTED_APPS = ["Driver", SQL_LITE_APP]
 
 # Only the below apps are allowed to run in the virtual mode
 APPS_IN_VIRTUAL_MODE = ("EventManager", "Archiver", "DataManager", "InstMgr", "rdReprocessor", "QuickGui", "DataLogger", \
@@ -1486,7 +1487,9 @@ class Supervisor(object):
 
         if self._TerminateProtected:
             for appName in self.AppNameList[::-1]:
-                if appName in PROTECTED_APPS:
+                # SQL lite app is used by qtLauncher so lets dont terminate it even though we want
+                # to terminate all protected app
+                if appName in PROTECTED_APPS and appName is not SQL_LITE_APP:
                     apps_running.remove_pid_file(str(self.AppDict[appName]))
                     self.AppDict[appName].ShutDown()
 
