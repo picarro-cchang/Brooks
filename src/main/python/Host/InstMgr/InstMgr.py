@@ -1195,7 +1195,8 @@ class InstMgr(object):
             except:
                 tbMsg = traceback.format_exc()
                 Log("Stop temp control: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-
+            if status == INST_ERROR_OKAY:
+                return status
         elif shutdownType == INSTMGR_SHUTDOWN_HOST:
             # shutdown Host only
             # Since the Driver is still running we assume the user doesn't want the computer
