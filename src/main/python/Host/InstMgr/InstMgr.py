@@ -1186,14 +1186,17 @@ class InstMgr(object):
                 return status
         elif shutdownType == INSTMGR_SHUTDOWN_HOST_AND_DAS:
             # shutdown Host
-            status = self._StateHandler(EVENT_SHUTDOWN_INST)
+            status = self._StateHandler(EVENT_PARK)
+            # shutdown Host only
+            self.powerOff = False
             # turn off temperature control on DAS
             try:
                 self.DriverRpc.stopTempControl()
             except:
                 tbMsg = traceback.format_exc()
                 Log("Stop temp control: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-
+            if status == INST_ERROR_OKAY:
+                return status
         elif shutdownType == INSTMGR_SHUTDOWN_HOST:
             # shutdown Host only
             # Since the Driver is still running we assume the user doesn't want the computer
