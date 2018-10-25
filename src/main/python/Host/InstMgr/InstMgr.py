@@ -788,7 +788,7 @@ class InstMgr(object):
         status = INST_ERROR_OKAY
 
         if event == EVENT_RESTART_INST:
-
+            self.flowStarted = False
             status = self._EnterWarming()
         elif event == EVENT_RESTART_DAS:
             try:
