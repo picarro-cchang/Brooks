@@ -160,7 +160,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     restart = (d.ShowModal() == wx.ID_YES)
                     d.Destroy()
                 if restart:
-                    killList = ["HostStartup", "QuickGui", "Controller", "Driver"]
+                    killList = ["HostStartup", "QuickGui", "Controller"]
                     for proc in psutil.process_iter():
                         cmd = " ".join(proc.cmdline())
                         for kp in killList:
