@@ -126,7 +126,12 @@ class ArchiveGroup(object):
     def __init__(self, groupName, archiver):
         assert isinstance(archiver, Archiver)
         self.name = groupName
-        self.groupRoot = os.path.join(archiver.storageRoot, groupName)
+        # Allow directory to be overriden by adding Directory entry in respective
+        # Archiver.ini file. This is necessary for some integration tools.
+        try:
+            self.groupRoot = archiver.config.get(groupName, 'Directory')
+        except KeyError:
+            self.groupRoot = os.path.join(archiver.storageRoot, groupName)
         self.maketimetuple = time.gmtime
         self.quantum = archiver.config.getint(groupName, 'Quantum', 3)
         self.compress = archiver.config.getboolean(groupName, "Compress", False)
