@@ -328,6 +328,12 @@ class EventLogger(object):
         """
         assert isinstance(event_log_list, list)
         for eventLog in event_log_list:
+            # we keep event count by static variable of EventLog class
+            # where as this event log instance comes from different process
+            # it have its own EventLog count. So lets assign correct total
+            # EventLog count by using this process eventlog count
+            EventLog.InstanceCounter += 1
+            eventLog.Index = EventLog.InstanceCounter
             self._AddEventLog(eventLog)
 
 

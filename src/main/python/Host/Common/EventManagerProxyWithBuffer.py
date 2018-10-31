@@ -105,7 +105,8 @@ class EventManagerProxy:
         self._buffer_lock_acquire()
         try:
             self.event_log_list.append(this_event)
-            self._flush_log()
+            if len(self.event_log_list) >= self.buffer_size:
+                self._flush_log()
         finally:
             self._buffer_lock_release()
 
@@ -133,13 +134,12 @@ class EventManagerProxy:
         self._flush_log()
 
     def _flush_log(self):
-        if len(self.event_log_list) >= self.buffer_size:
-            self._buffer_lock_acquire()
-            try:
-                self.__event_manager_proxy.LogEvents(self.event_log_list)
-                self._empty_buffer()
-            finally:
-                self._buffer_lock_release()
+        self._buffer_lock_acquire()
+        try:
+            self.__event_manager_proxy.LogEvents(self.event_log_list)
+            self._empty_buffer()
+        finally:
+            self._buffer_lock_release()
 
     def _empty_buffer(self):
         """Empty the buffer list."""
