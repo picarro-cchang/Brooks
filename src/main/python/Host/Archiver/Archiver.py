@@ -126,7 +126,28 @@ class ArchiveGroup(object):
     def __init__(self, groupName, archiver):
         assert isinstance(archiver, Archiver)
         self.name = groupName
-        self.groupRoot = os.path.join(archiver.storageRoot, groupName)
+        # Allow directory to be overridden by adding Directory entry in respective
+        # Archiver.ini file. This is necessary for some integration tools.
+        self.isIntegrationMode = archiver.isIntegrationMode
+        try:
+            # Override the groupRoot (typically Log/Archive/{Date}/{file_type}
+            # to path set in 'Directory' value from Archiver.ini file
+            # e.g. Directory = '/home/picarro/I2000/InstrConfig/Integration/BaselineCal
+            # Folders will be:
+            # /home/picarro/I2000/InstrConfig/Integration/BaselineCal/YYYY-MM-DD/RDF
+            # /home/picarro/I2000/InstrConfig/Integration/BaselineCal/YYYY-MM-DD/User_Data
+            # /home/picarro/I2000/InstrConfig/Integration/BaselineCal/YYYY-MM-DD/Event_Logs
+            # We will also set the self.isIntegrationMode variable to True if the Archiver.ini
+            # has "IntegrationMode = True" in the [MainConfig] header.
+            # This will allow us to reverse the {file_type} and {Date} in the folder
+            # structure to support Integration/Ops tools
+            self.customDir = archiver.config.get(groupName, 'Directory')
+            self.groupRoot = os.path.join(self.customDir, groupName)
+        except KeyError:
+            # No 'Directory' key in Archiver.ini
+            # Files will be located in /home/picarro/I2000/Log/Archive
+            self.customDir = False
+            self.groupRoot = os.path.join(archiver.storageRoot, groupName)
         self.maketimetuple = time.gmtime
         self.quantum = archiver.config.getint(groupName, 'Quantum', 3)
         self.compress = archiver.config.getboolean(groupName, "Compress", False)
@@ -211,7 +232,7 @@ class ArchiveGroup(object):
             zf.close()
             del zf
 
-    def startLiveArchive(self, source, timestamp=None, copier=False):
+    def set_path_name(self, timestamp=None):
         if timestamp is None:
             now = time.time()
         else:
@@ -219,21 +240,49 @@ class ArchiveGroup(object):
         timeTuple = self.maketimetuple(now)
 
         pathName = makeStoragePathName(timeTuple, self.quantum)
+        """
+        RSF
+        Hack to organize by date at the top level then by type
+        i.e. Log/Archive/2018/08/DataLog_User/<file>
 
-        # RSF
-        # Hack to organize by date at the top level then by type
-        # i.e. Log/Archive/2018/08/DataLog_User/<file>
-        #
-        # Actually it's flat, 2018-08-11
-        # RDF files are a special case because they are large so
-        # we append "RDF" to the directory name.  This is to make sorting
-        # and deleting only the RDF files easier.
-        if ("RDF" in self.groupRoot):
-            pathName += "-RDF"
-        pathName = os.path.join(
-            os.path.split(
-                self.groupRoot)[0], pathName, os.path.basename(
-                self.groupRoot))  # date before file type name
+        Actually it's flat, 2018-08-11
+        RDF files are a special case because they are large so
+        we append "RDF" to the directory name.  This is to make sorting
+        and deleting only the RDF files easier.
+
+        We also need to handle the option for specifying directories not
+        in the Archive directory for Integration/Ops tools.
+        """
+        # Directory key is not present in Archiver.ini
+        # We will save all other files (not RDF) in
+        # Log/Archive/YYYY-MM-DD/{file_type}
+        if self.customDir is False:
+            # We will save RDF in Log/Archive/YYYY-MM-DD-RDF as long
+            # as there is not a Directory entry in Archiver.ini
+            if "RDF" in self.groupRoot:
+                pathName += "-RDF"
+            pathName = os.path.join(
+                os.path.split(
+                    self.groupRoot)[0], pathName, os.path.basename(
+                    self.groupRoot))  # date before file type name
+        # Directory key is present in Archiver.ini
+        # We will check if an Integration tool is requesting a directory
+        # directory. If so, we need to have change the folder structure
+        # a bit to support Ops tools.
+        else:
+            if self.isIntegrationMode:
+                # Ops/Integration tool {file_type}/YYYY-MM-DD
+                pathName = os.path.join(self.groupRoot, pathName)
+            else:
+                # Not an Ops/Integration tool YYYY-MM-DD/{file_type}
+                pathName = os.path.join(
+                    os.path.split(
+                        self.groupRoot)[0], pathName, os.path.basename(
+                        self.groupRoot))  # date before file type name
+        return pathName
+
+    def startLiveArchive(self, source, timestamp=None, copier=False):
+        pathName = self.set_path_name(timestamp)
 
         if not os.path.exists(pathName):
             makeDirs(pathName)
@@ -315,29 +364,7 @@ class ArchiveGroup(object):
                 "Cannot archive non-existent file: %s" %
                 (fileToArchive,))
 
-        # If timestamp is None, use current time to store file in the correct
-        # location (local or GMT) otherwise use the specified timestamp
-        if timestamp is None:
-            now = time.time()
-        else:
-            now = unixTime(timestamp)
-        timeTuple = self.maketimetuple(now)
-
-        # RSF
-        # Hack to organize by date at the top level then by type
-        # i.e. Log/Archive/2018/08/DataLog_User/<file>
-        #
-        # Actually it's flat, 2018-08-11
-        # RDF files are a special case because they are large so
-        # we append "RDF" to the directory name.  This is to make sorting
-        # and deleting only the RDF files easier.
-        pathName = makeStoragePathName(timeTuple, self.quantum)
-        if("RDF" in self.groupRoot):
-            pathName = pathName + "-RDF"
-        pathName = os.path.join(
-            os.path.split(
-                self.groupRoot)[0], pathName, os.path.basename(
-                self.groupRoot))  # date before file type name
+        pathName = self.set_path_name(timestamp)
 
         renameFlag = True
         # Determine the target sourceFiles
@@ -435,6 +462,18 @@ class Archiver(object):
 
             # Fetch names of storage groups
             self.storageGroupNames = self.config.list_sections()
+            # Find out of Archiver.ini file is configured for an Integration/Ops Tool.
+            # This can be set by putting "IntegrationMode = True" in Archiver.ini
+            # If so, we will set self.isIntegrationMode to True so the ArchiveGroup class
+            # can change the folder structure to support Ops/Integration tools.
+            try:
+                self.isIntegrationMode = self.config.get("MainConfig").as_bool("IntegrationMode")
+            except KeyError, e:
+                self.isIntegrationMode = False
+            except ValueError, e:
+                self.isIntegrationMode = False
+            except TypeError, e:
+                self.isIntegrationMode = False
             self.storageGroupNames.remove(_MAIN_CONFIG_SECTION)
         except BaseException:
             Log("Load config failed. %s %s" %
