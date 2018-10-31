@@ -19,7 +19,7 @@ except KeyError:
     min_ms_interval = 10
 
 
-class EventManagerProxy:
+class EventManagerProxyWithBuffer:
 
     def __init__(self, application_name,
                            dont_care_connection = True,
