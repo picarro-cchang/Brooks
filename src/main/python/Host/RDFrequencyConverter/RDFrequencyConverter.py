@@ -387,7 +387,7 @@ class SchemeBasedCalibrator(object):
                             vLaserNum, std(tunerVals)))
                     elif flag == 2:
                         #Log("WLM LCT Cal (VL %d) done, off-grid: %.3f, tuner std: %.1f" %
-                            (vLaserNum, off_grid, std(tunerVals)))
+                        #    (vLaserNum, off_grid, std(tunerVals)))
                         event_manager_proxy.Log("WLM LCT Cal (VL %d) done, off-grid: %.3f, tuner std: %.1f" %
                             (vLaserNum, off_grid, std(tunerVals)))
 
