@@ -294,7 +294,8 @@ class QuickGui(wx.Frame):
         except:
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
-            self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS
+
+        self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS
 
         # Set up instrument status panel source and key
         self.instStatSource = self.config.get("InstStatPanel", "Source", "Sensors")
