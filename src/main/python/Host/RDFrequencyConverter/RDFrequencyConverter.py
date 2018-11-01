@@ -775,7 +775,8 @@ class RDFrequencyConverter(Singleton):
 
             self.processedRdBroadcaster = Broadcaster.Broadcaster(
                 port=BROADCAST_PORT_RD_RECALC,
-                name="Ringdown frequency converter broadcaster", logFunc=Log)
+                #name="Ringdown frequency converter broadcaster", logFunc=Log)
+                name = "Ringdown frequency converter broadcaster", logFunc = event_manager_proxy.Log)
 
             self.freqScheme = {}
             self.angleScheme = {}
@@ -1223,7 +1224,8 @@ class RDFrequencyConverter(Singleton):
                                                 BROADCAST_PORT_RDRESULTS,
                                                 interface.RingdownEntryType,
                                                 retry=True,
-                                                name="Ringdown frequency converter listener", logFunc=Log)
+                                                #name="Ringdown frequency converter listener", logFunc=Log)
+                                                name="Ringdown frequency converter listener", logFunc=event_manager_proxy.Log)
             self.freqConvertersLoaded = True
         return "OK"
 
