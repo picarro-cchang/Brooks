@@ -60,7 +60,8 @@ class EventManagerProxyWithBuffer:
             time.sleep(self.buffer_periodical_flush_timing)
             self._buffer_lock_acquire()
             try:
-                self._flush_log()
+                if len(self.event_log_list) > 0:
+                    self._flush_log()
             finally:
                 self._buffer_lock_release()
 
