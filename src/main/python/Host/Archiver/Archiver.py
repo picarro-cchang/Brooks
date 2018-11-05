@@ -279,10 +279,10 @@ class ArchiveGroup(object):
                     os.path.split(
                         self.groupRoot)[0], pathName, os.path.basename(
                         self.groupRoot))  # date before file type name
-        return pathName
+        return now, timeTuple, pathName
 
     def startLiveArchive(self, source, timestamp=None, copier=False):
-        pathName = self.set_path_name(timestamp)
+        now, timeTuple, pathName = self.set_path_name(timestamp)
 
         if not os.path.exists(pathName):
             makeDirs(pathName)
@@ -364,7 +364,7 @@ class ArchiveGroup(object):
                 "Cannot archive non-existent file: %s" %
                 (fileToArchive,))
 
-        pathName = self.set_path_name(timestamp)
+        now, timeTuple, pathName = self.set_path_name(timestamp)
 
         renameFlag = True
         # Determine the target sourceFiles
