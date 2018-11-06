@@ -58,22 +58,8 @@ class EventManagerProxyWithBuffer:
         """
         while self.thread_running:
             time.sleep(self.buffer_periodical_flush_timing)
-            self._buffer_lock_acquire()
-            try:
-                if len(self.event_log_list) > 0:
-                    self._flush_log()
-            finally:
-                self._buffer_lock_release()
-
-    def _buffer_lock_acquire(self):
-        """Acquire lock on buffer (only if periodical flush is set)."""
-        if self.buffer_lock:
-            self.buffer_lock.acquire()
-
-    def _buffer_lock_release(self):
-        """Release lock on buffer (only if periodical flush is set)."""
-        if self.buffer_lock:
-            self.buffer_lock.release()
+            if len(self.event_log_list) > 0:
+                self._flush_log()
 
     def _create_event_log(self, Desc, Data="", Level=1, Code=-1, AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY, Verbose="",
                         SourceTime=0, SourceNameOverride=None):
@@ -103,14 +89,10 @@ class EventManagerProxyWithBuffer:
                     print "+++ VERBOSE DATA FOLLOWS +++\n%s" % Verbose
         this_event = self._create_event_log(Desc, Data=Data, Level=Level, Code=Code, \
                                          AccessLevel=AccessLevel, Verbose=Verbose, SourceTime=SourceTime)
-        self._buffer_lock_acquire()
-        try:
+        with self.buffer_lock:
             self.event_log_list.append(this_event)
-            if len(self.event_log_list) >= self.buffer_size:
-                self._flush_log()
-        finally:
-            self._buffer_lock_release()
-
+        if len(self.event_log_list) >= self.buffer_size:
+            self._flush_log()
 
     def LogExc(self, Msg="Exception occurred", Data={}, Level=2, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, SourceTime=0,
                LogInBuffer=False):
@@ -135,18 +117,12 @@ class EventManagerProxyWithBuffer:
         self._flush_log()
 
     def _flush_log(self):
-        self._buffer_lock_acquire()
-        try:
+        with self.buffer_lock:
             self.__event_manager_proxy.LogEvents(self.event_log_list)
             self._empty_buffer()
-        finally:
-            self._buffer_lock_release()
 
     def _empty_buffer(self):
         """Empty the buffer list."""
-        self._buffer_lock_acquire()
-        try:
+        with self.buffer_lock:
             del self.event_log_list
             self.event_log_list = []
-        finally:
-            self._buffer_lock_release()
