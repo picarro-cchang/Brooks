@@ -26,7 +26,7 @@ class EventManagerProxyWithBuffer:
                            print_everything = False,
                            min_ms_interval = min_ms_interval,
                            buffer_size = 10,
-                           buffer_periodical_flush_timing_ms=10.0):
+                           buffer_periodical_flush_timing_ms=100.0):
 
         # clean exit event
         import atexit
