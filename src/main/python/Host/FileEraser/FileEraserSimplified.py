@@ -113,6 +113,7 @@ import threading
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_FILE_ERASER
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.SingleInstance import SingleInstance
 
 APP_NAME = "FileEraserSimplified"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
@@ -215,18 +216,22 @@ def HandleCommandSwitches():
     return (config)
 
 def main():
-    #Get and handle the command line options...
-    config = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, config, Level = 0)
-    try:
-        fEraser = FileEraserSimplified(config)
-        fEraser.runApp()
-        Log("Exiting program")
-    except Exception, E:
-        # if DEBUG: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        #Get and handle the command line options...
+        config = HandleCommandSwitches()
+        Log("%s started." % APP_NAME, config, Level = 1)
+        try:
+            fEraser = FileEraserSimplified(config)
+            fEraser.runApp()
+            Log("Exiting program")
+        except Exception, E:
+            # if DEBUG: raise
+            msg = "Exception trapped outside execution"
+            print msg + ": %s %r" % (E, E)
+            Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
 
 if __name__ == "__main__":
     main()
