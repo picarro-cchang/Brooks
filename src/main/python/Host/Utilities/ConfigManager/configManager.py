@@ -10,6 +10,9 @@ import compiler
 import optparse
 import sys
 
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+
 # Flag used to set the default view of the config file tree widget
 _areFilesMissing = False
 
@@ -62,6 +65,10 @@ class ConfigNode(object):
            keyword"""
         self.absPath = os.path.abspath(fileName)
         self.basePath,n = os.path.split(self.absPath)
+        # Support new CONFIG_DIR environmental variable
+        if "--ini=" in self.basePath:
+            self.basePath = self.basePath.split('--ini=')
+            self.basePath = CONFIG_DIR + '/' + self.basePath[1]
         self.fileName = n
         self.fileExists = True
         self.childRefs = []
@@ -69,7 +76,6 @@ class ConfigNode(object):
         self.parent = kwargs.get('parent',None)
         childBasePath = kwargs.get('childBasePath',None)
         self.childBasePath = childBasePath if (childBasePath is not None) else self.basePath
-
     def addChild(self,p,option=None):
         f = os.path.join(self.childBasePath,p)
         n = ConfigNodeFactory(f,parent=self,
@@ -238,7 +244,34 @@ class SupervisorConfigNode(ConfigNode):
                         n = ConfigNodeFactory(f,parent=self,
                         childBasePath=self.getChildBasePath(),
                         nodeClass=self.nodeClass(e,None))
+                        # Support new CONFIG_DIR environmental variable
+                        if "--ini=" in n.absPath:
+                            n.absPath = n.absPath.split('--ini=')
+                            n.absPath = CONFIG_DIR + '/' + n.absPath[1]
+                        if "--user_ini=" in n.absPath:
+                            n.absPath = n.absPath.split('--user_ini=')
+                            n.absPath = CONFIG_DIR + '/' + n.absPath[1]
+                        if "--private_ini=" in n.absPath:
+                            n.absPath = n.absPath.split('--private_ini=')
+                            n.absPath = CONFIG_DIR + '/' + n.absPath[1]
+                        if "--alarm_ini=" in n.absPath:
+                            print s
+                            n.absPath = n.absPath.split('--alarm_ini=')
+                            n.absPath = CONFIG_DIR + '/' + n.absPath[1]
                         for c in self.children:
+                            # Support new CONFIG_DIR environmental variable
+                            if "--ini=" in c.absPath:
+                                c.absPath = c.absPath.split('--ini=')
+                                c.absPath = CONFIG_DIR + '/' + c.absPath[1]
+                            if "--user_ini=" in c.absPath:
+                                c.absPath = c.absPath.split('--user_ini=')
+                                c.absPath = CONFIG_DIR + '/' + c.absPath[1]
+                            if "--private_ini=" in c.absPath:
+                                c.absPath = c.absPath.split('--private_ini=')
+                                c.absPath = CONFIG_DIR + '/' + c.absPath[1]
+                            if "--alarm_ini=" in c.absPath:
+                                c.absPath = c.absPath.split('--alarm_ini=')
+                                c.absPath = CONFIG_DIR + '/' + c.absPath[1]
                             if n.absPath == c.absPath: break
                         else:
                             self.children.append(n)
@@ -732,7 +765,7 @@ def getConfigFromSupervisorLauncherIni(launcherFilename):
         dname = os.path.dirname(fname)
 
         if dname == "":
-            dname = "/Picarro/G2000/AppConfig/Config/Supervisor"
+            dname = "/home/picarro/I2000/AppConfig/Config/Supervisor/"
     dlg.Destroy()
 
     return dname, fname
@@ -816,7 +849,7 @@ if __name__ == "__main__":
         dlg = wx.FileDialog(None,
                             "Select Supervisor Configuration File",
                             #"C:/Picarro/G2000/AppConfig/Config/Supervisor",
-                            "/home/rsf/git/host/Config/AMADS/AppConfig/Config/Supervisor",
+                            "/home/picarro/I2000/AppConfig/Config/Supervisor",
                             "",
                             "*.ini",
                             wx.OPEN)
