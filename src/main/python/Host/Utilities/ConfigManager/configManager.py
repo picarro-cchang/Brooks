@@ -255,7 +255,6 @@ class SupervisorConfigNode(ConfigNode):
                             n.absPath = n.absPath.split('--private_ini=')
                             n.absPath = CONFIG_DIR + '/' + n.absPath[1]
                         if "--alarm_ini=" in n.absPath:
-                            print s
                             n.absPath = n.absPath.split('--alarm_ini=')
                             n.absPath = CONFIG_DIR + '/' + n.absPath[1]
                         for c in self.children:
