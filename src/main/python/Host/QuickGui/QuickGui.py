@@ -1562,7 +1562,7 @@ class QuickGui(wx.Frame):
                     if "error" in returnDict:
                         msg = returnDict["error"]
                         if "Password expire" in msg:
-                            msg = self.OnChangePwd(user, pwd)
+                            msg = self._OnChangePwd(user, pwd)
                             if len(msg) == "":
                                 break
                         elif "HTTPConnection" in msg:
@@ -1677,7 +1677,7 @@ class QuickGui(wx.Frame):
             self.sessionTimer.Stop()
 
     def _OnChangePwd(self, username, password):
-        msg = "Password Expired! Must change password."
+        msg = "Password Expired! Please change password."
         while True:
             d = Dialog.ChangePasswordDialog(self, msg=msg)
             setItemFont(d, self.fontDatabase.getFontFromIni("Dialogs"))
@@ -1688,7 +1688,7 @@ class QuickGui(wx.Frame):
             if not okClicked:
                 return ""
             elif pwd != pwd2:
-                msg = "Password not match!"
+                msg = "Passwords do not match!"
             else:
                 payload = {
                     "password": password,
