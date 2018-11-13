@@ -500,7 +500,7 @@ class MainWindow(UserAdminFrame):
             self.input_change_password.clear()
             self.input_change_password2.clear()
             self.change_password_widget.show()
-            self.label_change_pwd_info.setText("Password expires! Please change your password.")
+            self.label_change_pwd_info.setText("Password expired! Please change your password.")
             self.action = "change_expired_pwd"
         else:
             if "HTTPConnection" in return_dict["error"]:
@@ -558,7 +558,10 @@ def handleCommandSwitches():
     return (configFile,)
 
 if __name__ == "__main__":
-    userAdminApp = SingleInstance("PicarroUserAdmin")
+    # Save the pid file in the /tmp/ directory so Supervisor doesn't try to
+    # restart the app during its MonitorApps loop
+    path = "/tmp/"
+    userAdminApp = SingleInstance("UserAdmin", path)
     if not userAdminApp.alreadyrunning():
         app = QApplication(sys.argv)
         window = MainWindow(*handleCommandSwitches())
@@ -566,3 +569,5 @@ if __name__ == "__main__":
         window.show()
         app.installEventFilter(window)
         app.exec_()
+    else:
+        print "Instance of UserAdmin tool already running."
