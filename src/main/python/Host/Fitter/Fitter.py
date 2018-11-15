@@ -1206,7 +1206,7 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'd:hvo:'
+    shortOpts = 'c:d:hvo:'
     longOpts = ["help","viewer","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
@@ -1235,6 +1235,10 @@ def HandleCommandSwitches():
 
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
+        print "Config file specified at command line: %s" % configFile
+    # Allow Integration tools to use -c command switch
+    elif "-c" in options:
+        configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
 
     return (configFile, useViewer, options)
