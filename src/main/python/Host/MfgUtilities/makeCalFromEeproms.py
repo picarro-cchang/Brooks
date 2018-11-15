@@ -107,7 +107,9 @@ class CalFileFromEepromsMaker(object):
                 try:
                     laserEepromContents.append(Driver.fetchObject(ident)[0])
                     print "Read %s" % ident
-                except ValueError:
+                except ValueError, e:
+                    laserEepromContents.append(None)
+                except TypeError, e:
                     laserEepromContents.append(None)
             wlmEepromContents = Driver.fetchWlmCal()
             print "Read WLM_EEPROM"
