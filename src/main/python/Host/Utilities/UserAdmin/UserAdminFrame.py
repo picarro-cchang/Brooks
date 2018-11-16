@@ -120,7 +120,7 @@ class UserAdminFrame(QMainWindow):
         self.label_change_pwd_info = QLabel("")
         pwd_input = QFormLayout()
         pwd_input.addRow("New Password", self.input_change_password)
-        pwd_input.addRow("Confirmed Password", self.input_change_password2)
+        pwd_input.addRow("Confirm Password", self.input_change_password2)
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.button_change_user_pwd)
         button_layout.addStretch(1)
