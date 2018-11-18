@@ -12,6 +12,7 @@ from QPlotWidget import QPlotWidget
 from QTaskWizardWidget import QTaskWizardWidget
 from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
+from Host.Common.SingleInstance import SingleInstance
 
 class Window(QtGui.QMainWindow):
     def __init__(self, iniFile, debug_mode=False):
@@ -270,11 +271,18 @@ def HandleCommandSwitches():
     return (configFile, debug_mode)
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    (configFile, debug_mode) = HandleCommandSwitches()
-    GUI = Window(iniFile=configFile, debug_mode=debug_mode)
-    sys.exit(app.exec_())
+    # Save the pid file in the /tmp/ directory so Supervisor doesn't try to
+    # restart the app during its MonitorApps loop
+    path = "/tmp/"
+    userAdminApp = SingleInstance("CalibrationValidation", path)
+    if not userAdminApp.alreadyrunning():
+        app = QtGui.QApplication(sys.argv)
+        # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
+        (configFile, debug_mode) = HandleCommandSwitches()
+        GUI = Window(iniFile=configFile, debug_mode=debug_mode)
+        sys.exit(app.exec_())
+    else:
+        print "Instance of Calibration Validation Tool already running."
 
 if __name__ == "__main__":
     main()
