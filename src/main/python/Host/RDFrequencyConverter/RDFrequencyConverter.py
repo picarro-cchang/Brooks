@@ -57,11 +57,12 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
+from Host.Common.EventManagerProxyWithBuffer import EventManagerProxyWithBuffer
 
 APP_NAME = "RDFrequencyConverter"
 CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
 LOG_DIR = os.environ['PICARRO_LOG_DIR']
-EventManagerProxy_Init(APP_NAME)
+event_manager_proxy = EventManagerProxyWithBuffer(APP_NAME, buffer_size=50, buffer_periodical_flush_timing_ms=100)
 
 if hasattr(sys, "frozen"):  # we're running compiled with py2exe
     AppPath = sys.executable
@@ -161,7 +162,7 @@ class SchemeBasedCalibrator(object):
                 self.schemeNum = table
             else:
                 if self.schemeNum != table:
-                    Log("Scheme table mismatch while processing calibration row",
+                    event_manager_proxy.Log("Scheme table mismatch while processing calibration row",
                         dict(expectedScheme=self.schemeNum, schemeFound=table), Level=2)
                     self.clear()
                     return
@@ -199,7 +200,7 @@ class SchemeBasedCalibrator(object):
         if self.rdFreqConv.calFailed[vLaserNum - 1] >= int(scs['failureThreshold']):
             if Driver.getSpectCntrlMode() != interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode:
                 Driver.setMultipleNoRepeatScan()
-                Log("Setting multiple scheme no repeat mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
+                event_manager_proxy.Log("Setting multiple scheme no repeat mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
                                                                    calFailed=self.rdFreqConv.calFailed))
 
     def calSucceeded(self, vLaserNum):
@@ -220,7 +221,7 @@ class SchemeBasedCalibrator(object):
         if all(self.rdFreqConv.calFailed == 0) and all(self.rdFreqConv.calSucceeded[valid] >= int(scs['successThreshold'])):
             if Driver.getSpectCntrlMode() != interface.SPECT_CNTRL_SchemeMultipleMode:
                 Driver.setMultipleScan()
-                Log("Setting multiple scheme mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
+                event_manager_proxy.Log("Setting multiple scheme mode", dict(calSucceeded=self.rdFreqConv.calSucceeded,
                                                          calFailed=self.rdFreqConv.calFailed))
 
     # def misfit(self, xi, waveNumber, fsr):
@@ -281,7 +282,8 @@ class SchemeBasedCalibrator(object):
         except KeyError:
             pass
         except:
-            LogExc("Invalid UPDATE_PARAMS encountered for LASER_CURRENT_TUNING")
+            #LogExc("Invalid UPDATE_PARAMS encountered for LASER_CURRENT_TUNING")
+            event_manager_proxy.LogExc("Invalid UPDATE_PARAMS encountered for LASER_CURRENT_TUNING")
 
         scs = self.rdFreqConv.shortCircuitSchemes
         calDataByRow = self.calDataByRow
@@ -357,9 +359,9 @@ class SchemeBasedCalibrator(object):
                         wlmAngles = clusterMeans
 
                 if flag == 0:
-                    Log("WLM LCT Cal (VL %d) skipped" % vLaserNum)
+                    event_manager_proxy.Log("WLM LCT Cal (VL %d) skipped" % vLaserNum)
                 elif len(set(fsrIndices)) != len(wlmAngles):
-                    Log("WLM LCT Cal (VL %d) skipped because of coincident FSR indices" % vLaserNum, Level=2)
+                    event_manager_proxy.Log("WLM LCT Cal (VL %d) skipped because of coincident FSR indices" % vLaserNum, Level=2)
                 else:
                     extraFsr, extraAngles = self.getExtraFsr(
                         fsrIndices, wlmAngles, nextra=3)
@@ -370,10 +372,10 @@ class SchemeBasedCalibrator(object):
                         self.rdFreqConv.RPC_updateWlmCal(
                             vLaserNum, wlmAngles, waveNumbers, 1.0, 0.1, True)
                     if flag == 1:
-                        Log("WLM LCT Cal (VL %d) done using adjacent FSR: tuner std: %.1f" % (
+                        event_manager_proxy.Log("WLM LCT Cal (VL %d) done using adjacent FSR: tuner std: %.1f" % (
                             vLaserNum, std(tunerVals)))
                     elif flag == 2:
-                        Log("WLM LCT Cal (VL %d) done, off-grid: %.3f, tuner std: %.1f" %
+                        event_manager_proxy.Log("WLM LCT Cal (VL %d) done, off-grid: %.3f, tuner std: %.1f" %
                             (vLaserNum, off_grid, std(tunerVals)))
 
                 # numpts = 50
@@ -456,7 +458,7 @@ class SchemeBasedCalibrator(object):
                 #  calibration in such cases
                 jump = abs(diff(pzt)).max()
                 if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_JUMP")):
-                    Log("Calibration not done, maximum jump between calibration rows: %.1f" % (
+                    event_manager_proxy.Log("Calibration not done, maximum jump between calibration rows: %.1f" % (
                         jump,))
                     if scs:  # If short circuit schemes are enabled, this should be counted as a failed calibration
                         self.calFailed(vLaserNum)
@@ -520,7 +522,7 @@ class SchemeBasedCalibrator(object):
                     # Quantize fsrJump to indicate multiples of the FSR
                     fsrJumpRevised = round_(dtheta / anglePerFsr)
                     if (fsrJump != fsrJumpRevised).any():
-                        Log("During WLM calibration, counting of FSRs may have been inaccurate. vLaserNum: %d" % vLaserNum)
+                        event_manager_proxy.Log("During WLM calibration, counting of FSRs may have been inaccurate. vLaserNum: %d" % vLaserNum)
                     fsrJump = fsrJumpRevised
                     # Ensure that the differences between the WLM angles at the calibration rows are close
                     #  to multiples of the FSR before we do the calibration. This prevents calibrations from
@@ -528,7 +530,7 @@ class SchemeBasedCalibrator(object):
                     devs = abs(dtheta / anglePerFsr - fsrJump)
                     offGrid = devs.max()
                     if offGrid > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_OFFGRID")):
-                        Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" %
+                        event_manager_proxy.Log("Calibration not done, PZT sdev = %.1f, offGrid parameter = %.2f, fraction>0.25 = %.2f" %
                             (std(pztDev), offGrid, sum(devs > 0.25) / float(len(devs))))
                         if scs:
                             self.calFailed(vLaserNum)
@@ -643,9 +645,10 @@ class RpcServerThread(threading.Thread):
         self.rpcServer.serve_forever()
         try:  # it might be a threading.Event
             self.exitFunction()
-            Log("RpcServer exited and no longer serving.")
+            event_manager_proxy.Log("RpcServer exited and no longer serving.")
         except:
-            LogExc("Exception raised when calling exit function at exit of RPC server.")
+            #LogExc("Exception raised when calling exit function at exit of RPC server.")
+            event_manager_proxy.LogExc("Exception raised when calling exit function at exit of RPC server.")
 
 
 def validateChecksum(fname):
@@ -667,7 +670,7 @@ def validateChecksum(fname):
         cPos = calStr.find("#checksum=")
         lmPos = calStr.find("LASER_MAP")
         if lmPos < 0:
-            Log("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname, Level=3)
+            event_manager_proxy.Log("RDFreqConv reports %s corrupt, missing LASER_MAP" % fname, Level=3)
             raise ValueError(
                 "RDFreqConv reports %s corrupt, missing LASER_MAP" % fname)
         if cPos < 0:
@@ -752,7 +755,8 @@ class RDFrequencyConverter(Singleton):
 
             self.processedRdBroadcaster = Broadcaster.Broadcaster(
                 port=BROADCAST_PORT_RD_RECALC,
-                name="Ringdown frequency converter broadcaster", logFunc=Log)
+                #name="Ringdown frequency converter broadcaster", logFunc=Log)
+                name = "Ringdown frequency converter broadcaster", logFunc = event_manager_proxy.Log)
 
             self.freqScheme = {}
             self.angleScheme = {}
@@ -811,7 +815,7 @@ class RDFrequencyConverter(Singleton):
                     # The spectral point is close to the setpoint
                     self.sbc.processCalRingdownEntry(entry)
                 else:
-                    Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %
+                    event_manager_proxy.Log("WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %
                         (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
         return entry
 
@@ -836,7 +840,7 @@ class RDFrequencyConverter(Singleton):
             # Check if it's time to update and archive the warmbox calibration
             # file
             if self.timeToUpdateWarmBoxCal():
-                Log("Time to update warm box calibration file")
+                event_manager_proxy.Log("Time to update warm box calibration file")
 
                 # --- Threaded version, suspect warmbox corruption is due to a race condition here ---
                 # --- updateWarmBoxCal() doesn't use mutex and so is not thread safe. ---
@@ -856,7 +860,7 @@ class RDFrequencyConverter(Singleton):
                 rdQueueSize = self.rdQueue.qsize()
                 if rdQueueSize > self.rdQueueMaxLevel:
                     self.rdQueueMaxLevel = rdQueueSize
-                    Log("rdQueueSize reaches new peak level %d" %
+                    event_manager_proxy.Log("rdQueueSize reaches new peak level %d" %
                         self.rdQueueMaxLevel)
                 if rdQueueSize > MIN_SIZE or time.time() - startTime > timeout:
                     self.tuningMode = Driver.rdDasReg(
@@ -876,18 +880,19 @@ class RDFrequencyConverter(Singleton):
                     except IndexError:
                         break
             except Exception, e:
-                LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+                #LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+                event_manager_proxy.LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
                 # Request a restart from Supervisor via RPC call
                 restart = RequestRestart(APP_NAME)
                 if restart.requestRestart(APP_NAME) is True:
-                    Log("Restart request to supervisor sent", Level=0)
+                    event_manager_proxy.Log("Restart request to supervisor sent", Level=0)
                 else:
-                    Log("Restart request to supervisor not sent", Level=2)
+                    event_manager_proxy.Log("Restart request to supervisor not sent", Level=2)
                 while not self.rdQueue.empty():
                     self.rdQueue.get(False)
                 self.rdProcessedCache = []
                 time.sleep(0.02)
-        Log("RD Frequency Converter RPC handler shut down")
+        event_manager_proxy.Log("RD Frequency Converter RPC handler shut down")
 
     def _batchConvert(self):
         """Convert WLM angles and laser temperatures to wavenumbers in a vectorized way, using
@@ -1139,11 +1144,11 @@ class RDFrequencyConverter(Singleton):
                     validateChecksum(self.warmBoxCalFilePathActive)
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathActive
                 except ValueError:
-                    Log('Bad checksum in active warm box calibration file, using factory file', Level=2)
+                    event_manager_proxy.Log('Bad checksum in active warm box calibration file, using factory file', Level=2)
                     print('Bad checksum in active warm box calibration file, using factory file')
                     self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
             else:
-                Log('No active warm box calibration file, using factory file', Level=0)
+                event_manager_proxy.Log('No active warm box calibration file, using factory file', Level=0)
                 self.warmBoxCalFilePath = self.warmBoxCalFilePathFactory
         else:
             self.warmBoxCalFilePath = os.path.abspath(warmBoxCalFilePath)
@@ -1189,7 +1194,8 @@ class RDFrequencyConverter(Singleton):
                                                 BROADCAST_PORT_RDRESULTS,
                                                 interface.RingdownEntryType,
                                                 retry=True,
-                                                name="Ringdown frequency converter listener", logFunc=Log)
+                                                #name="Ringdown frequency converter listener", logFunc=Log)
+                                                name="Ringdown frequency converter listener", logFunc=event_manager_proxy.Log)
             self.freqConvertersLoaded = True
         return "OK"
 
@@ -1218,7 +1224,7 @@ class RDFrequencyConverter(Singleton):
     def RPC_setHotBoxCalParam(self, secName, optName, optValue):
         self.hotBoxCal[secName][optName] = optValue
         if self.timeToUpdateHotBoxCal():
-            Log("Time to update hot box calibration file")
+            event_manager_proxy.Log("Time to update hot box calibration file")
             self.RPC_updateHotBoxCal(self.hotBoxCalFilePathActive)
             self.resetHotBoxCalTime()
 
@@ -1265,7 +1271,7 @@ class RDFrequencyConverter(Singleton):
         shutil.copy2(self.hotBoxCalFilePath, hotBoxCalFilePathWithTime)
         Archiver.ArchiveFile(self.hbArchiveGroup,
                              hotBoxCalFilePathWithTime, True)
-        Log("Archived %s" % hotBoxCalFilePathWithTime)
+        event_manager_proxy.Log("Archived %s" % hotBoxCalFilePathWithTime)
 
         fp = None
         if self.hotBoxCal is None:
@@ -1322,7 +1328,7 @@ class RDFrequencyConverter(Singleton):
         try:
             config = CustomConfigObj(self.warmBoxCalFilePathFactory)
         except Exception as e:
-            Log("RPC_updateWarmBoxCal, failed to open factory file:", Data=e, Level=2)
+            event_manager_proxy.Log("RPC_updateWarmBoxCal, failed to open factory file:", Data=e, Level=2)
             return
 
         # Make a temporary local copy of the current wb active file before
@@ -1341,7 +1347,7 @@ class RDFrequencyConverter(Singleton):
         shutil.copy2(self.warmBoxCalFilePath, warmBoxCalFilePathWithTime)
         Archiver.ArchiveFile(self.wbArchiveGroup,
                              warmBoxCalFilePathWithTime, True)
-        Log("Archived %s" % warmBoxCalFilePathWithTime)
+        event_manager_proxy.Log("Archived %s" % warmBoxCalFilePathWithTime)
 
         # Update the wlm offset and spline coefficients.  The update here is
         # to the wb cal file in memory.  Results are written to disk below.
@@ -1369,7 +1375,7 @@ class RDFrequencyConverter(Singleton):
             filePtr = file(self.warmBoxCalFilePath, "wb")
             filePtr.write(calStr)
         except Exception as e:
-            Log("RPC_updateWarmBoxCal file update failure:", Data=e, Level=2)
+            event_manager_proxy.Log("RPC_updateWarmBoxCal file update failure:", Data=e, Level=2)
         finally:
             if calStrIO is not None:
                 calStrIO.close()
@@ -1382,18 +1388,18 @@ class RDFrequencyConverter(Singleton):
         try:
             rtn = validateChecksum(self.warmBoxCalFilePath)
             if rtn is not "OK":
-                Log("RPC_updateWarmBoxCal new wb active file failed the checksum test", Level=2)
+                event_manager_proxy.Log("RPC_updateWarmBoxCal new wb active file failed the checksum test", Level=2)
                 sanityCheckFailed = True
         except Exception as e:
-            Log("RPC_updateWarmBoxCal new wb active file failed the checksum test:", Data=e, Level=2)
+            event_manager_proxy.Log("RPC_updateWarmBoxCal new wb active file failed the checksum test:", Data=e, Level=2)
             sanityCheckFailed = True
         try:
             config = CustomConfigObj(self.warmBoxCalFilePath)
         except Exception as e:
-            Log("RPC_updateWarmBoxCal new wb active file failed CustomConfigObj test:", Data=e, Level=2)
+            event_manager_proxy.Log("RPC_updateWarmBoxCal new wb active file failed CustomConfigObj test:", Data=e, Level=2)
             sanityCheckFailed = True
         if sanityCheckFailed:
-            Log("RPC_updateWarmBoxCal wb sanity test failed, restoring previous file.", Level=2)
+            event_manager_proxy.Log("RPC_updateWarmBoxCal wb sanity test failed, restoring previous file.", Level=2)
             if os.path.isfile(tmpCopyOfCurrentCalFile):
                 os.rename(tmpCopyOfCurrentCalFile, self.warmBoxCalFilePath)
         else:
@@ -1451,7 +1457,7 @@ class TunerAdjuster(object):
         is value, and the minimum and maximum allowed center values are given. We preferentially
         choose a value close to minCen."""
         if maxCen < minCen:
-            Log("Invalid minCen and maxCen in findCenter",
+            event_manager_proxy.Log("Invalid minCen and maxCen in findCenter",
                 dict(minCen=minCen, maxCen=maxCen), Level=2)
         #
         n1 = floor((minCen - value) / fsr)
@@ -1517,7 +1523,7 @@ class TunerAdjuster(object):
                 centerValue = 0.5 * (self.minValue + self.maxValue)
                 rampAmpl = self.maxValue - centerValue - ditherPeakToPeak // 2
                 if 2 * rampAmpl < self.freeSpectralRange:
-                    Log("Insufficient PZT range to cover cavity FSR",
+                    event_manager_proxy.Log("Insufficient PZT range to cover cavity FSR",
                         dict(fsr=self.freeSpectralRange, rampAmpl=rampAmpl), Level=2)
             else:
                 centerValue = self.findCenter(
@@ -1588,13 +1594,13 @@ def handleCommandSwitches():
 def main():
     my_instance = SingleInstance(APP_NAME)
     if my_instance.alreadyrunning():
-        Log("Instance of %s already running" % APP_NAME, Level=2)
+        event_manager_proxy.Log("Instance of %s already running" % APP_NAME, Level=2)
     else:
         configFilename, virtualMode, options = handleCommandSwitches()
         rdFreqConvertApp = RDFrequencyConverter(configFilename, virtualMode)
-        Log("%s started." % APP_NAME, Level=1)
+        event_manager_proxy.Log("%s started." % APP_NAME, Level=1)
         rdFreqConvertApp.run()
-        Log("Exiting program")
+        event_manager_proxy.Log("Exiting program")
 
 
 if __name__ == "__main__":
