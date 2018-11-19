@@ -63,7 +63,7 @@ uriRegex = re.compile("http://(.*):(\d+)")
 Pyro4.config.SERIALIZER = 'pickle'
 Pyro4.config.THREADPOOL_SIZE = 80
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
-
+Pyro4.config.SOCK_REUSE = True
 
 class RemoteException(RuntimeError):
     pass
