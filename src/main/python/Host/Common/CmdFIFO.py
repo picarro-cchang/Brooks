@@ -455,10 +455,14 @@ class CmdFIFOServer(object):
         self.hostName, self.port = addr
         try:
             self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
-        except Exception:
+        except Exception, e:
             # Could not get port as it's being actively used by another (likely)
             # zombie process. Let's kill whatever process is using the port and
             # try again.
+            from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+            EventManagerProxy_Init("CmdFIFO")
+            Log("Port %s already in-use, killing offending application and "
+                   "trying again" % self.port)
             commands.getoutput("fuser -n tcp -k %s" % self.port)
             time.sleep(1)
             self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName, port=self.port)
