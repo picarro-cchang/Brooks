@@ -35,6 +35,7 @@ import re
 import sys
 import time
 import types
+import commands
 from Host.Common.SharedTypes import ClaimInterfaceError
 
 # This version requires Pyro4 v 4.43 because of a change in how internal class
@@ -452,7 +453,15 @@ class CmdFIFOServer(object):
         self.serverDescription = ServerDescription
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
-        self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
+        try:
+            self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
+        except Exception:
+            # Could not get port as it's being actively used by another (likely)
+            # zombie process. Let's kill whatever process is using the port and
+            # try again.
+            commands.getoutput("fuser -n tcp -k %s" % self.port)
+            time.sleep(1)
+            self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName, port=self.port)
         self.daemon = DummyDaemon(self.pyroDaemon)
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
