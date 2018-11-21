@@ -265,7 +265,7 @@ class ModbusScriptEnv(object):
             return 1
         else:
             error_code = Errors.NO_ERROR
-            if response.status_code == 403:
+            if response.status_code == 401 or response.status_code == 403:
                 error_code = Errors.ADMIN_RIGHT_REQUIRES
             elif response.status_code == 404:
                 error_code = Errors.NO_USER_EXIST
