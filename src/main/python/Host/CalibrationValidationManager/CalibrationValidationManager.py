@@ -93,7 +93,7 @@ class Window(QtGui.QMainWindow):
         self.plotWidget = QPlotWidget(self)
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
-        self.taskWizardWidget = QTaskWizardWidget(self.tm.co)
+        self.taskWizardWidget = QTaskWizardWidget(self.tm.co, self._db)
         self.taskEditorWidget = QTaskEditorWidget()
         gl = QtGui.QGridLayout()
         gl.addWidget(self.plotWidget, 0, 0)
