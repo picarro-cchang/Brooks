@@ -216,8 +216,6 @@ class TaskManager(QtCore.QObject):
                 self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
                 self.threads[self.running_task_idx].start()
             else:
-                logStr = "Completed surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
-                self.db.log(logStr)
                 self.reset_autologout_timer()   # Give the user time to inspect or download their report
                 self.job_complete_signal.emit()
                 self.running_task_idx = None
