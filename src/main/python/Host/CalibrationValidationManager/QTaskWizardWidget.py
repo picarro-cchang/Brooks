@@ -192,14 +192,14 @@ class QTaskWizardWidget(QtGui.QWidget):
         return
 
     def _view_report(self):
-        logStr = "Viewed surrogate gas validation report. Report file: {0}".format(self._reportFileName)
+        logStr = "viewed system validation report. Report file: {0}".format(self._reportFileName)
         self.db.log(logStr)
         report_dialog = QReportDisplayDialog(fileName = self._reportFileName, textDoc = self._reportTextObj, parent = self)
         report_dialog.exec_()
         return
 
     def _open_filemanager(self):
-        logStr = "Download surrogate gas validation report"
+        logStr = "clicked download system validation report"
         self.db.log(logStr)
         cmd = ["python",
                "/usr/local/picarro/qtLauncher/FileManager/main.py",
