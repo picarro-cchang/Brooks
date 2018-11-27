@@ -984,8 +984,20 @@ class QuickGui(wx.Frame):
             payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
             self._sendRequest("post", "action", payload, useToken=True)
             self.shutdownButton.Enable(False)
+            # lets disable menu bar items also as we are in Quit mode and parking
+            # so block all other functionalities
+            self._menu_bar_enable(False)
         dialog.Destroy()
         return
+
+    def _menu_bar_enable(self, enable):
+        """
+        Method use to enable/disable menu bar items
+        :return:
+        """
+        self.menuBar.EnableTop(0, enable)
+        self.menuBar.EnableTop(1, enable)
+        self.menuBar.EnableTop(2, enable)
 
     def _OnResetBuffers(self, evt):
         for s in self.dataStore.getSources():

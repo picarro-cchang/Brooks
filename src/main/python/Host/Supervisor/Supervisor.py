@@ -1088,7 +1088,7 @@ class Supervisor(object):
         #Now wait for the searches to complete...
         for appName in self.AppNameList[::-1]:
             A = self.AppDict[appName]
-            A._SearchComplete.wait()
+            A._SearchComplete.wait(1)
         while not self.messageQueue.empty():
             print self.messageQueue.get()
         #Now build our list of found apps...
