@@ -279,6 +279,7 @@ class TaskManager(QtCore.QObject):
         return
 
     def record_report_in_history_log_slot(self, filename, obj):
-        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], filename)
+        reportFileName = os.path.basename(str(filename))
+        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], reportFileName)
         self.db.log(logStr)
         return
