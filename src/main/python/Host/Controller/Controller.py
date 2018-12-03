@@ -266,13 +266,13 @@ class Controller(ControllerFrameGui):
             self.laser4Panel.update()
         elif pageText == "WarmBox":
             self.warmBoxPanel.update()
-        elif pageText == "FilterHeater":
+        elif pageText == "Filter":
             self.filterHeaterPanel.update()
         elif pageText == "HotBox":
             self.hotBoxPanel.update()
         elif pageText == "Pressure":
             self.pressurePanel.update()
-        elif pageText == "WavelengthMonitor":
+        elif pageText == "WLM":
             self.wlmPanel.update()
         elif pageText == "Ringdowns":
             self.ringdownPanel.update()
