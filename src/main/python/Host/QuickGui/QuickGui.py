@@ -980,6 +980,7 @@ class QuickGui(wx.Frame):
                 self._setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
+            Log("Quit software from QuickGui by User: %s" % self.currentUser["username"], Level=0)
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode, powerOffAnalyzer)
             payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
             self._sendRequest("post", "action", payload, useToken=True)
