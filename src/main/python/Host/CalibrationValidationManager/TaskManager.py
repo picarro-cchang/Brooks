@@ -186,7 +186,7 @@ class TaskManager(QtCore.QObject):
                 self.running_task_idx += 1
                 if (self.running_task_idx > len(self.tasks) - 1):
                     break
-            self.results["start_time"] = str(datetime.datetime.now())
+            self.results["start_time"] = str(datetime.datetime.now())[:-3]
             self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
