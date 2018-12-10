@@ -333,7 +333,7 @@ class ModbusScriptEnv(object):
 
     def _Modbus_Userdata_INI_File(self, file_path):
         '''Method use to open/create modbus userdata ini file and read it'''
-        self.userdata_file_path = sys.path[0] + "/" + file_path
+        self.userdata_file_path = file_path
         try:
             #check if directory is present, if not lets create directory
             directory = os.path.dirname(self.userdata_file_path)
