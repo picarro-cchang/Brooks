@@ -157,9 +157,9 @@ class Window(QtGui.QMainWindow):
         # before starting validation
         if self.taskEditorWidget.isEditing or self.tableWidget.isEditing:
             str = "Settings changed for:\n"
-            if self.taskEditorWidget.isEditing:
-                str += "    * Reference Gas Editor\n"
             if self.tableWidget.isEditing:
+                str += "    * Reference Gas Editor\n"
+            if self.taskEditorWidget.isEditing:
                 str += "    * Task Editor\n"
             str += "Either UNDO or SAVE settings and then click START"
             self.taskWizardWidget.abort_with_warning(str)
