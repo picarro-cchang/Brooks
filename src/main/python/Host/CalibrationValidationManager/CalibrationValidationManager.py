@@ -153,6 +153,17 @@ class Window(QtGui.QMainWindow):
         return
 
     def start_running_tasks(self):
+        # Remind user if user have edited parameter and forgot to save or undo
+        # before starting validation
+        if self.taskEditorWidget.isEditing or self.tableWidget.isEditing:
+            str = "Settings changed for:\n"
+            if self.taskEditorWidget.isEditing:
+                str += "    * Reference Gas Editor\n"
+            if self.tableWidget.isEditing:
+                str += "    * Task Editor\n"
+            str += "Either UNDO or SAVE settings and then click START"
+            self.taskWizardWidget.abort_with_warning(str)
+            return
         self.closeBtn.setEnabled(False)
         self.tm.start_work()
         return
