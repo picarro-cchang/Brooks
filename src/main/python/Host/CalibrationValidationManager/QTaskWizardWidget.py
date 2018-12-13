@@ -295,3 +295,15 @@ class QTaskWizardWidget(QtGui.QWidget):
         self.abort_signal.emit()    # This will re-enable the main GUI close button
         self._startup_settings()
         return
+
+    def abort_with_warning(self, msg):
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText(msg)
+        dialog.setIcon(QtGui.QMessageBox.Information)
+        dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        dialog.exec_()
+
+        self.abort_signal.emit()    # This will re-enable the main GUI close button
+        self._startup_settings()
+        return

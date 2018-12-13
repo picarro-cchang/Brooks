@@ -29,6 +29,7 @@ class QTaskEditorWidget(QtGui.QWidget):
         self.setLayout( self._init_gui() )
         self._set_connections()
         self._disable_undo_save()
+        self.isEditing = False
         return
 
     def _init_gui(self):
@@ -115,10 +116,12 @@ class QTaskEditorWidget(QtGui.QWidget):
     def _disable_undo_save(self):
         self._undoBtn.setDisabled(True)
         self._saveBtn.setDisabled(True)
+        self.isEditing = False
 
     def _enable_undo_save(self):
         self._undoBtn.setEnabled(True)
         self._saveBtn.setEnabled(True)
+        self.isEditing = True
     # def _widget_changed(self):
     #     print("Something changed!")
     #     return
