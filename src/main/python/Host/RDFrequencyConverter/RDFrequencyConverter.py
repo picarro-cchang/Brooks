@@ -363,10 +363,15 @@ class SchemeBasedCalibrator(object):
                 elif len(set(fsrIndices)) != len(wlmAngles):
                     event_manager_proxy.Log("WLM LCT Cal (VL %d) skipped because of coincident FSR indices" % vLaserNum, Level=2)
                 else:
-                    extraFsr, extraAngles = self.getExtraFsr(
-                        fsrIndices, wlmAngles, nextra=3)
-                    waveNumbers = fsr * r_[fsrIndices, extraFsr]
-                    wlmAngles = r_[wlmAngles, extraAngles]
+                    # Bug fix: I2-1321
+                    # Remove three extra points at edges of spline to remove discontinuity of slop during WLM corrections
+
+                    #extraFsr, extraAngles = self.getExtraFsr(
+                    #    fsrIndices, wlmAngles, nextra=3)
+                    #waveNumbers = fsr * r_[fsrIndices, extraFsr]
+                    #wlmAngles = r_[wlmAngles, extraAngles]
+                    
+                    waveNumbers = fsr * fsrIndices
 
                     for i in range(int(params[0])):
                         self.rdFreqConv.RPC_updateWlmCal(
