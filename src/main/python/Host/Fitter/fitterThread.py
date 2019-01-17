@@ -89,11 +89,12 @@ def getInstrParams(fname):
         fp.close()
 
 class Fitter(object):
-    def __init__(self,configFile):
+    def __init__(self,configFile, readyEvent = None):
         self.supervisor = CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
                                                      IsDontCareConnection=False)
         self.stopOnError = 1 # Show modal dialog (and stop fitter) on error
         configFile = os.path.abspath(configFile)
+        self.readyEvent = readyEvent
         self.iniBasePath = os.path.split(configFile)[0]
         self.config = CustomConfigObj(configFile)
         # Iterate through all script files, specified by keys which start with "script"
@@ -378,6 +379,14 @@ class Fitter(object):
         self.fitQueue = queue
         self.showViewer = useViewer
         self.startup()
+        # lets wait foe some time so rpc server starts and initialize properly
+        # during startup call
+        sleep(0.2)
+        # lets check if event is not none
+        # if event is not none then lets notify parent thread
+        # that clild thread is all setup
+        if self.readyEvent is not None:
+            self.readyEvent.set()
         while not self.exitFlag:
             try:
                 self.stateMachine()
@@ -421,8 +430,8 @@ class RpcServerThread(Thread):
                 Verbose = tbMsg)
             print tbMsg
 
-def main(configFile,queue,useViewer):
-    fitter = Fitter(configFile)
+def main(configFile,queue,useViewer,readyEvent = None):
+    fitter = Fitter(configFile, readyEvent)
     try:
         try:
             fitter.main(queue,useViewer)
