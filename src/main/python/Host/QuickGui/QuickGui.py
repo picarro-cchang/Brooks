@@ -291,6 +291,14 @@ class QuickGui(wx.Frame):
         try:
             self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
             self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+            # some of the suvervisor mode (Integration mode pressure cal) we do not requires sample manager
+            # and because of that we does not start sample manager process
+            # During that time CavityPressreS and CavityPressureTPer set as None
+            # and Quick gui process throws exception
+            if self.cavityPressureS is None:
+                self.cavityPressureS = 140.0
+            if self.cavityPressureTPer is None:
+                self.cavityPressureTPer = 0.05
         except:
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
