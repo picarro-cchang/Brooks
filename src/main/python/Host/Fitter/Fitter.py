@@ -41,7 +41,7 @@ from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_
 from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.SingleInstance import SingleInstance
 
 APP_NAME = "Fitter"
@@ -752,10 +752,18 @@ class FitViewer(wx.Frame):
         self.clearHistory()
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.OnTimer,self.updateTimer)
+        ready = threading.Event()
         # Start the fitter in a separate thread
-        self.fitterThread = threading.Thread(target=fitterMain,args=(configFile,self.fitQueue,useViewer))
+        self.fitterThread = threading.Thread(target=fitterMain,args=(configFile,self.fitQueue,useViewer,ready))
         self.fitterThread.setDaemon(True)
         self.fitterThread.start()
+        # wait to start fitter thread and fitter rpc server before calling it's method
+        # other wise race condition will happen
+        # Fix for bug I2-1328 Integration tool calibration FSR not working
+        # lets wait for 10 sec to initialize child thread properly
+        ready.wait(timeout=10)
+        if not ready._Event__flag:
+            LogExc('Unable to start fitter thread properly', Level=1)
         # sometimes RPC functions are called when fitter thread hasn't been started yet
         # so try calling RPC function several times
         counts = 0
