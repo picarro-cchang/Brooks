@@ -12,7 +12,7 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 8
+ModeCount = 9
 Mode_1 = warming_mode
 Mode_2 = pressure_cal_mode
 Mode_3 = cavity_temp_cycle_mode
@@ -21,6 +21,8 @@ Mode_5 = baseline_cal_mode
 Mode_6 = baseline_cal_HCl_mode
 Mode_7 = pressure_cal_HCl_mode
 Mode_8 = cavity_temp_cycle_HCl_mode
+Mode_9 = high_resolution_HCl_mode
+
 
 ############################################################################
 ###

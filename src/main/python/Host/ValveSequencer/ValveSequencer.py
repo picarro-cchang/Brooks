@@ -12,12 +12,6 @@ File History:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
-APP_NAME = "ValveSequencer"
-APP_DESCRIPTION = "Valve control with GUI"
-__version__ = 1.0
-DEFAULT_CONFIG_NAME = "ValveSequencer.ini"
-
 import sys
 import os
 import string
@@ -31,8 +25,19 @@ from Host.ValveSequencer.ValveSequencerFrame import ValveSequencerFrame
 from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.RotValveCtrl import RotValveCtrl
-from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
+from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER,\
+    RPC_PORT_SUPERVISOR
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
+
+APP_NAME = "ValveSequencer"
+APP_DESCRIPTION = "Valve control with GUI"
+__version__ = 1.0
+DEFAULT_CONFIG_NAME = "ValveSequencer.ini"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 #Set up a useful AppPath reference...
@@ -65,6 +70,8 @@ class RpcServerThread(threading.Thread):
 
 class ValveSequencer(ValveSequencerFrame):
     def __init__(self, configFile, showAtStart, *args, **kwds):
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.configFile = configFile
         self.co = CustomConfigObj(configFile)
         self.numSolValves = self.co.getint("MAIN", "numSolValves", 6)
@@ -645,7 +652,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:s", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "hs", ["help","ini="])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -662,8 +669,8 @@ def HandleCommandSwitches():
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     if "-s" in options:
@@ -673,14 +680,31 @@ def HandleCommandSwitches():
 
     return (configFile, showAtStart)
 
-if __name__ == "__main__":
-    #Get and handle the command line options...
+def main():
+    # Get and handle the command line options...
     (configFile, showAtStart) = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, Level = 0)
-    # app = wx.PySimpleApp()
-    # wx.InitAllImageHandlers()
-    app = wx.App(False)
-    frame = ValveSequencer(configFile, showAtStart, None, -1, "")
-    app.SetTopWindow(frame)
-    app.MainLoop()
-    Log("Exiting program")
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        Log("%s started." % APP_NAME, Level=1)
+        # app = wx.PySimpleApp()
+        # wx.InitAllImageHandlers()
+        try:
+            app = wx.App(False)
+            frame = ValveSequencer(configFile, showAtStart, None, -1, "")
+            app.SetTopWindow(frame)
+            app.MainLoop()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+        Log("Exiting program")
+
+
+if __name__ == "__main__":
+    main()

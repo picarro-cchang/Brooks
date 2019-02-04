@@ -19,11 +19,6 @@ File History:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "Fitter"
-__version__ = 1.0
-_DEFAULT_CONFIG_NAME = "Fitter.ini"
-_MAIN_CONFIG_SECTION = "Setup"
-
 import sys
 import os
 import wx
@@ -46,7 +41,16 @@ from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_
 from Host.Common.GraphPanel import GraphPanel, Sequence, Series
 from Host.Common.CmdFIFO import CmdFIFOServerProxy
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
+from Host.Common.SingleInstance import SingleInstance
+
+APP_NAME = "Fitter"
+__version__ = 1.0
+_DEFAULT_CONFIG_NAME = "Fitter.ini"
+_MAIN_CONFIG_SECTION = "Setup"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 
 if sys.platform == 'win32':
@@ -748,10 +752,18 @@ class FitViewer(wx.Frame):
         self.clearHistory()
         self.updateTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER,self.OnTimer,self.updateTimer)
+        ready = threading.Event()
         # Start the fitter in a separate thread
-        self.fitterThread = threading.Thread(target=fitterMain,args=(configFile,self.fitQueue,useViewer))
+        self.fitterThread = threading.Thread(target=fitterMain,args=(configFile,self.fitQueue,useViewer,ready))
         self.fitterThread.setDaemon(True)
         self.fitterThread.start()
+        # wait to start fitter thread and fitter rpc server before calling it's method
+        # other wise race condition will happen
+        # Fix for bug I2-1328 Integration tool calibration FSR not working
+        # lets wait for 10 sec to initialize child thread properly
+        ready.wait(timeout=10)
+        if not ready._Event__flag:
+            LogExc('Unable to start fitter thread properly', Level=1)
         # sometimes RPC functions are called when fitter thread hasn't been started yet
         # so try calling RPC function several times
         counts = 0
@@ -865,7 +877,7 @@ class FitViewer(wx.Frame):
                 self.modelList.Check(i,self.checkList[i])
 
             if len(analysis.xData) == 0:
-                Log('No xData; skipping rest of model analysis', Level=0)
+                Log('No xData; skipping rest of model analysis', Level=1)
                 return
 
             analysis.computeResiduals(self.anStage)
@@ -1203,7 +1215,7 @@ def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'c:d:hvo:'
-    longOpts = ["help","viewer"]
+    longOpts = ["help","viewer","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1227,21 +1239,49 @@ def HandleCommandSwitches():
         useViewer = True
 
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
+    configFile = ""
 
-    if "-c" in options:
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
+        print "Config file specified at command line: %s" % configFile
+    # Allow Integration tools to use -c command switch
+    elif "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
 
     return (configFile, useViewer, options)
 
 def main():
+    """
+    Allow Fitter to have up to 3 total instances running
+    for instruments with three lasers
+    We will start with the name Fitter1 and increment to
+    Fitter2, and Fitter3 if necessary
+    """
+    count = 1
+    max_count = 4
+    my_instance = SingleInstance((APP_NAME + str(count)))
+    if my_instance.alreadyrunning():
+        for x in range(count, max_count):
+            count += 1
+            my_instance = SingleInstance((APP_NAME + str(count)))
+            if my_instance.alreadyrunning():
+                continue
+            else:
+                start()
+                break
+    else:
+        start()
+
+
+def start():
     app = wx.PySimpleApp()
     configFile, useViewer, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = FitViewer(configFile,useViewer,options)
+    Log("%s started." % APP_NAME, Level=1)
+    frame = FitViewer(configFile, useViewer, options)
     app.MainLoop()
     Log("Exiting program")
+
 
 if __name__ == "__main__":
     main()

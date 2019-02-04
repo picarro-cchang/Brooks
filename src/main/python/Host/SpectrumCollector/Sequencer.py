@@ -133,7 +133,7 @@ class Sequencer(object):
                     _, ext = os.path.splitext(schemeFileName)
                     schemes.append((Scheme(schemeFileName), 1, ext.lower() == ".sch"))
                 self.sequences[name + name_suffix] = schemes
-                Log("Added named sequence: %s" % name + name_suffix, Level=0)
+                Log("Added named sequence: %s" % name + name_suffix, Level=1)
         except:
             LogExc("Error in processing scheme configuration for %s" % name, Level=3)
 

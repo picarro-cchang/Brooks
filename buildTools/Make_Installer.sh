@@ -35,6 +35,11 @@ dist_bin_config_directory="$dist_directory/home/picarro/bin"
 
 pth_file_dir="$dist_dir_home/picarro/anaconda2/lib/python2.7/site-packages"
 
+# dpkg does not allow '_', '+' or '.' as part of package name of control file
+# so lets replace all of them with '-' for project type like SADS_PFV, SADS_DCRDS
+# AMADS_PFV and AMADS_DCRDS
+installer_type_without_underscore=${installer_type//[_+.]/-}
+
 #lets read species information from version/*_types.json file
 species=( $(cat $version_file_path | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["buildTypes"]["'$installer_type'"]["species"];') )
 if [ $? != 0 ]
@@ -129,7 +134,7 @@ chmod -R 755 $dist_bin_config_directory
 
 # make control file
 cat <<EOM > "$debian_directory/control"
-Package: $project_name-$installer_type
+Package: $project_name-$installer_type_without_underscore
 Version: $raw_version
 Section: science
 Priority: required
@@ -141,6 +146,7 @@ Description: Picarro Host Software for Semiconductor Industry
  Version: $raw_version
 EOM
 
+echo $dist_directory
 if ! dpkg-deb --build $dist_directory
 then
   echo -e "\n***********************Error during creating debian package******************"

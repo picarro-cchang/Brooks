@@ -40,7 +40,7 @@ _MAIN_CONFIG_SECTION = "Setup"
 import os
 import sys
 from sys import argv
-from Host.Common.CmdFIFO import CmdFIFOServer
+from Host.Common.CmdFIFO import CmdFIFOServer, CmdFIFOServerProxy
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import getTimestamp
 from copy import copy, deepcopy
@@ -56,8 +56,9 @@ from Host.Fitter.fitterCoreWithFortran import loadPhysicalConstants, loadSpectra
 from Host.Fitter.fitterCoreWithFortran import pickledRepository, pickledRepositoryFromList, hdf5RepositoryFromList
 from Host.Fitter.fitterCoreWithFortran import RdfData, Analysis, InitialValues, Dependencies
 from Host.Common.FitterScriptFunctions import expAverage, initExpAverage, fitQuality
-from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, BROADCAST_PORT_FITTER_BASE, BROADCAST_PORT_SPECTRUM_COLLECTOR
+from Host.Common.SharedTypes import RPC_PORT_FITTER_BASE, RPC_PORT_SUPERVISOR, BROADCAST_PORT_FITTER_BASE, BROADCAST_PORT_SPECTRUM_COLLECTOR
 from Host.Common import Broadcaster, Listener, StringPickler
+from Host.Common.AppRequestRestart import RequestRestart
 
 EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
 FITTER_STATE_IDLE = 0
@@ -88,9 +89,12 @@ def getInstrParams(fname):
         fp.close()
 
 class Fitter(object):
-    def __init__(self,configFile):
+    def __init__(self,configFile, readyEvent = None):
+        self.supervisor = CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.stopOnError = 1 # Show modal dialog (and stop fitter) on error
         configFile = os.path.abspath(configFile)
+        self.readyEvent = readyEvent
         self.iniBasePath = os.path.split(configFile)[0]
         self.config = CustomConfigObj(configFile)
         # Iterate through all script files, specified by keys which start with "script"
@@ -375,6 +379,14 @@ class Fitter(object):
         self.fitQueue = queue
         self.showViewer = useViewer
         self.startup()
+        # lets wait foe some time so rpc server starts and initialize properly
+        # during startup call
+        sleep(0.2)
+        # lets check if event is not none
+        # if event is not none then lets notify parent thread
+        # that clild thread is all setup
+        if self.readyEvent is not None:
+            self.readyEvent.set()
         while not self.exitFlag:
             try:
                 self.stateMachine()
@@ -418,8 +430,8 @@ class RpcServerThread(Thread):
                 Verbose = tbMsg)
             print tbMsg
 
-def main(configFile,queue,useViewer):
-    fitter = Fitter(configFile)
+def main(configFile,queue,useViewer,readyEvent = None):
+    fitter = Fitter(configFile, readyEvent)
     try:
         try:
             fitter.main(queue,useViewer)
@@ -429,6 +441,12 @@ def main(configFile,queue,useViewer):
                 Data = dict(Note = "<See verbose for debug info>"),
                 Level = 3,
                 Verbose = tbMsg)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
             print tbMsg
             fitter.fitQueue.put((3,tbMsg))
     finally:

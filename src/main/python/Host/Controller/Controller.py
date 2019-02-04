@@ -266,13 +266,13 @@ class Controller(ControllerFrameGui):
             self.laser4Panel.update()
         elif pageText == "WarmBox":
             self.warmBoxPanel.update()
-        elif pageText == "FilterHeater":
+        elif pageText == "Filter":
             self.filterHeaterPanel.update()
         elif pageText == "HotBox":
             self.hotBoxPanel.update()
         elif pageText == "Pressure":
             self.pressurePanel.update()
-        elif pageText == "WavelengthMonitor":
+        elif pageText == "WLM":
             self.wlmPanel.update()
         elif pageText == "Ringdowns":
             self.ringdownPanel.update()
@@ -281,11 +281,12 @@ class Controller(ControllerFrameGui):
         elif pageText == "Statistics":
             self.statsPanel.update()
 
-    def onIdle(self, evt):
         # Deal with updating the command log panel
         self.commandLogPanel.setStreamFileState()
         acqState = self.commandLogPanel.updateAcquisitionState()
         self.controllerFrameGui_statusbar.SetStatusText(acqState, 0)
+
+    def onIdle(self, evt):
         # Deal with event manager log messages
         while True:
             msg = self.logListener.getLogMessage()

@@ -122,6 +122,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._table = QReferenceGasEditor()
         self.setLayout( self._init_gui() )
         self._set_connections()
+        self.isEditing = False
         return
 
     def _init_gui(self):
@@ -163,10 +164,12 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
     def _disable_undo_save(self):
         self._undoBtn.setDisabled(True)
         self._saveBtn.setDisabled(True)
+        self.isEditing = False
 
     def _enable_undo_save(self):
         self._undoBtn.setEnabled(True)
         self._saveBtn.setEnabled(True)
+        self.isEditing = True
 
 class QReferenceGasEditor(QtGui.QTableWidget):
     save_failed_signal = QtCore.pyqtSignal()

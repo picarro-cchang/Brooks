@@ -265,7 +265,7 @@ class ModbusScriptEnv(object):
             return 1
         else:
             error_code = Errors.NO_ERROR
-            if response.status_code == 403:
+            if response.status_code == 401 or response.status_code == 403:
                 error_code = Errors.ADMIN_RIGHT_REQUIRES
             elif response.status_code == 404:
                 error_code = Errors.NO_USER_EXIST
@@ -333,7 +333,7 @@ class ModbusScriptEnv(object):
 
     def _Modbus_Userdata_INI_File(self, file_path):
         '''Method use to open/create modbus userdata ini file and read it'''
-        self.userdata_file_path = sys.path[0] + "/" + file_path
+        self.userdata_file_path = file_path
         try:
             #check if directory is present, if not lets create directory
             directory = os.path.dirname(self.userdata_file_path)

@@ -16,33 +16,38 @@ from Host.Common.SharedTypes import BROADCAST_PORT_EVENTLOG
 
 # Name of file importing this module.
 APP_NAME = sys.argv[0]
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
+
 
 class EventStore(object):
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config
         self.loadConfig()
         self.queue = Queue.Queue()
         self.listener = TextListener.TextListener(self.queue,
                                                   BROADCAST_PORT_EVENTLOG,
-                                                  retry = True,
-                                                  name = "QuickGUI event log listener", logFunc = Log)
+                                                  retry=True,
+                                                  name="QuickGUI event log listener",
+                                                  logFunc=Log)
         self.eventDeque = collections.deque()
         self.firstEvent = 0
+        self.maxEvents = self.config.getint('EventManagerStream', 'Lines')
 
     def loadConfig(self):
-        self.maxEvents = self.config.getint('EventManagerStream','Lines')
+        self.maxEvents = self.config.getint('EventManagerStream', 'Lines')
 
     def getQueuedEvents(self):
         n = self.maxEvents
         while True:
             try:
                 line = self.queue.get_nowait()
-                index,time,source,level,code,desc = [s.strip() for s in line.split("|",6)]
-                date,time = [s.strip() for s in time.split()]
-                eventTuple = (int(index),date,time,source,float(level[1:]),int(code[1:]),desc)
-                # Level 1.5 = info only; message shows on both GUI and EventLog
-                if eventTuple[4] >= 1.5:
+                index, time, source, level, code, desc = [s.strip() for s in line.split("|", 6)]
+                date, time = [s.strip() for s in time.split()]
+                eventTuple = (int(index), date, time, source, float(level[1:]), int(code[1:]), desc)
+                # Level 1.5 = info only, Level 0 has info icon; message shows on both GUI and EventLog
+                if eventTuple[4] == 0:
+                    self.eventDeque.append(eventTuple)
+                elif eventTuple[4] >= 1.5:
                     self.eventDeque.append(eventTuple)
                 while len(self.eventDeque) > n:
                     self.eventDeque.popleft()
@@ -59,8 +64,8 @@ class EventStore(object):
     def getEventCount(self):
         return len(self.eventDeque)
 
-    def getEvent(self,item):
-        if item<self.firstEvent:
+    def getEvent(self, item):
+        if item < self.firstEvent:
             return None
         else:
-            return self.eventDeque[item-self.firstEvent]
+            return self.eventDeque[item - self.firstEvent]

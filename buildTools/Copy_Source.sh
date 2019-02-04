@@ -46,7 +46,8 @@ includeFolderList[14]="Host/PeriphIntrf"
 includeFolderList[15]="Host/SampleManager"
 includeFolderList[16]="Host/SpectrumCollector"
 includeFolderList[17]="Host/Supervisor"
-includeFolderList[18]="Host/ValveSequencer" 
+includeFolderList[18]="Host/ValveSequencer"
+includeFolderList[19]="Host/FileEraser"
 
 source_list=()
 # Lets get all .so files generated dring cythonization, init, setup and gui
@@ -56,7 +57,7 @@ do
   dirs=( $(find $working_Path -maxdepth 1 -type f -name "*.py") )
   for file_in_dir in ${dirs[*]}
   do
-    if [[ $file_in_dir =~ "__init__.py" ]] || [[ $file_in_dir =~ "setup.py" ]] || [[ $file_in_dir =~ "EventManagerGUI.py" ]] || [[ $file_in_dir =~ "GuiTools.py" ]] || [[ $file_in_dir =~ "GuiWidgets.py" ]] || [[ $file_in_dir =~ "ValveSequencerSimulator.py" ]]
+    if [[ $file_in_dir =~ "__init__.py" ]] || [[ $file_in_dir =~ "setup.py" ]] || [[ $file_in_dir =~ "EventManagerGUI.py" ]] || [[ $file_in_dir =~ "GuiTools.py" ]] || [[ $file_in_dir =~ "GuiWidgets.py" ]] || [[ $file_in_dir =~ "ValveSequencerSimulator.py" ]] || [[ $file_in_dir =~ "SupervisorTests.py" ]] 
     then
       source_list+=($file_in_dir)
     else

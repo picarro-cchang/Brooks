@@ -4,18 +4,26 @@ import sys
 import time
 import traceback
 import datetime
+from sys import exit
 from functools import wraps
 from flask import abort, Flask, make_response, Response, request
 from flask_restplus import Api, reqparse, Resource, inputs
 from flask_security import auth_token_required, Security, utils, current_user
 from DataBaseModel import pds
+from Host.Common import CmdFIFO
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import datetimeToTimestamp
+from Host.Common.EventManagerProxy import Log, LogExc, EventManagerProxy_Init
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 
-_DEFAULT_CONFIG_FILE = "/home/picarro/git/host/src/main/python/Host/WebServer/SQLiteDataBase.ini"
 
+# _DEFAULT_CONFIG_FILE = os.environ["PICARRO_CONF_DIR"] + "/Host/WebServer/SQLiteDataBase.ini"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
+EventManagerProxy_Init(APP_NAME)
 app = Flask(__name__, static_url_path='', static_folder='')
      
 api = Api(app, prefix='/api/v1.0', doc='/apidoc')
@@ -31,10 +39,12 @@ app.config['SECRET_KEY'] = 'picarro'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
 app.config['SECURITY_PASSWORD_SALT'] = 'xxxxxxxxxxxxxxxxxx'
 
-    
+
 class SQLiteServer(object):
     def __init__(self, dummy=False):
         self.user_login_attempts = {"username":None, "attempts":0}
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         if dummy:   # used for unit testing
             import DummyDataBase
             self.ds = DummyDataBase.DummyDataBase()
@@ -45,12 +55,15 @@ class SQLiteServer(object):
     def load_config_from_ini(self, configFile):
         if os.path.exists(configFile):
             self.config = CustomConfigObj(configFile)
+            self.setup = {'host': self.config.get('Setup', "Host_IP", "0.0.0.0"),
+                          'port': self.config.getint('Setup', "Port", 3600),
+                          'debug': self.config.getboolean('Setup', "Debug_Mode", True)}
         else:
-            print "Configuration file not found: %s" % configFile
-            sys.exit(1)
-        self.setup = {'host' : self.config.get('Setup', "Host_IP", "0.0.0.0"),
-                      'port' : self.config.getint('Setup', "Port", 3600),
-                      'debug' : self.config.getboolean('Setup', "Debug_Mode", True)}
+            print "Configuration file not found: %s. Using default settings." % configFile
+            # sys.exit(1)
+            self.setup = {'host' : "0.0.0.0",
+                          'port' : 3600,
+                          'debug' : False}
                       
     def load_config_from_database(self):
         vars = self.ds.get_all_from_model("system_model")
@@ -436,8 +449,8 @@ def PrintUsage():
     print HELP_STRING
 def HandleCommandSwitches():
     import getopt
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -458,10 +471,10 @@ def HandleCommandSwitches():
 
     #Start with option defaults...
     # configFile = "SQLiteDataBase.ini"
-    configFile = _DEFAULT_CONFIG_FILE
+    configFile = ""
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     print "Config file specified at command line: %s" % configFile
     
     return configFile
@@ -478,21 +491,21 @@ def before_first_request():
         pds.create_role(name='Technician')
         pds.create_role(name='Operator')
         # create a default admin account
-        admin = pds.create_user(username='admin', \
+        admin = pds.create_user(username='admin',
             password=utils.encrypt_password('admin'),
             phone_number='1-408-962-3900')
         pds.add_role_to_user(admin, pds.find_role("Admin"))
-        technician = pds.create_user(username='tech',\
+        technician = pds.create_user(username='tech',
             password=utils.encrypt_password('tech'))
         pds.add_role_to_user(technician, pds.find_role("Technician"))
-        operator = pds.create_user(username='operator', \
+        operator = pds.create_user(username='operator',
             password=utils.encrypt_password('operator'))
         pds.add_role_to_user(operator, pds.find_role("Operator"))
         # add default user policies
         default_policies = dict(
             password_length='6',
             password_mix_charset='False',
-            password_lifetime='182',    # days
+            password_lifetime='-1',    # days
             password_reuse_period='5',  # times
             user_login_attempts='3',    # times
             user_session_lifetime='10',  # minutes
@@ -601,8 +614,28 @@ class UsersAPI(Resource):
         return db_server.process_request_dict(self.post_parser.parse_args())
         
 
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        configFile = HandleCommandSwitches()
+        db_server.load_config_from_ini(configFile)
+        try:
+            db_server.run()
+            app.run(**db_server.setup)
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+            # Exit, in case the server running, but the app is not
+            # We don't want to get stuck in a restart loop here
+            exit(1)
+
+
 if __name__ == '__main__':
-    configFile = HandleCommandSwitches()
-    db_server.load_config_from_ini(configFile)
-    db_server.run()
-    app.run(**db_server.setup)
+    main()

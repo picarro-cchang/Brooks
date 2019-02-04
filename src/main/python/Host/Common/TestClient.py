@@ -296,7 +296,7 @@ class MyFrame(wx.Frame):
         except Exception, E:
             self.text_ctrl_1.AppendText("  Exception raised: %s\n" % E)
         else:
-            self.text_ctrl_1.AppendText("  Response = %r\n" % ret)
+            self.text_ctrl_1.AppendText("  Response = %r\n" % (ret,))
 
     def OnRPCButtonClick(self, event):
         assert isinstance(self.Server, CmdFIFO.CmdFIFOServerProxy)

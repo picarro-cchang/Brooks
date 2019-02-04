@@ -24,10 +24,6 @@ It serves for 2 purposes:
 #
 # 11NOV2017 RSF
 
-APP_NAME = "ModbusServer"
-ENDIAN = "Big"
-BYTE_SIZE = 8
-
 import os
 import sys
 import time
@@ -36,6 +32,7 @@ import math
 import random
 from struct import pack, unpack
 import threading
+from exceptions import Exception
 from Host.Utilities.ModbusServer.ErrorHandler import Errors, ErrorHandler
 from Queue import Queue
 from pymodbus.server.sync import ModbusSerialServer
@@ -53,6 +50,16 @@ from Host.Utilities.ModbusServer.ModbusUtils import get_variable_type, ModbusScr
 from Host.Common import AppStatus
 from Host.Common import InstMgrInc
 from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
+
+APP_NAME = "ModbusServer"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+ENDIAN = "Big"
+BYTE_SIZE = 8
+
 EventManagerProxy_Init(APP_NAME)
 
 import socket
@@ -69,7 +76,7 @@ def get_ip_address():
         s.close()
         return ip_address
     except Exception, e:
-        raise "Error in reading IpAddress in ModbusServer"
+        raise Exception("Error in reading IpAddress in ModbusServer, %s" % e.message)
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -94,108 +101,109 @@ def StartServer(rtu = True, context=None, framer=None, identity=None, **kwargs):
 
 class ModbusServer(object):
     def __init__(self, configFile, simulation, debug):
-        try:
-            if os.path.exists(configFile):
-                self.config = CustomConfigObj(configFile)
-            else:
-                raise Exception("Configuration file not found: %s" % configFile)
-            if debug:
-                import logging
-                logging.basicConfig()
-                log = logging.getLogger()
-                log.setLevel(logging.DEBUG)
-            self.slaveid = self.config.getint("SerialPortSetup", "SlaveId", 1)
-            self.rtu = self.config.getboolean("Main", "rtu", False)
-            self.debug = debug
-            self.get_register_info()
-            self.errorhandler = ErrorHandler(self, 'Errors')
-            self.data_queue = Queue()
-            self.command_queue = Queue()
-            sync_bits = {}
-            r = self.register_variables
-            for v in r[COIL-1]['variables']:
-                if self.variable_params[v]['sync'] and ("function" in self.variable_params[v]):
-                    sync_bits[self.variable_params[v]['address']] = self.variable_params[v]['function']
-            store = ModbusSlaveContext(
-                # PyModbus add one buffer index for each register address so adding 1 for each register size
-                # if we dont add 1 more space we will get address error when reading last register value
-                # read-only status and alarm bits
-                di = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[DISCRETE_INPUT-1]['size']))),
-                # remote control bits
-                co = ThreadSafeDataBlock(CallbackDataBlock(self.command_queue, sync_bits, 0x00, [0]*(1+r[COIL-1]['size']))),
-                # remote control parameters
-                hr = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[HOLDING_REGISTER-1]['size']))),
-                # read-only output variables
-                ir = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[INPUT_REGISTER-1]['size'])))
-            )
-            self.context = ModbusServerContext(slaves={self.slaveid:store}, single=False)
+        if os.path.exists(configFile):
+            self.config = CustomConfigObj(configFile)
+        else:
+            raise Exception("Configuration file not found: %s" % configFile)
+        if debug:
+            import logging
+            logging.basicConfig()
+            log = logging.getLogger()
+            log.setLevel(logging.DEBUG)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
+        self.slaveid = self.config.getint("SerialPortSetup", "SlaveId", 1)
+        self.rtu = self.config.getboolean("Main", "rtu", False)
+        self.debug = debug
+        self.get_register_info()
+        self.errorhandler = ErrorHandler(self, 'Errors')
+        self.data_queue = Queue()
+        self.command_queue = Queue()
+        sync_bits = {}
+        r = self.register_variables
+        for v in r[COIL-1]['variables']:
+            if self.variable_params[v]['sync'] and ("function" in self.variable_params[v]):
+                sync_bits[self.variable_params[v]['address']] = self.variable_params[v]['function']
+        store = ModbusSlaveContext(
+            # PyModbus add one buffer index for each register address so adding 1 for each register size
+            # if we dont add 1 more space we will get address error when reading last register value
+            # read-only status and alarm bits
+            di = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[DISCRETE_INPUT-1]['size']))),
+            # remote control bits
+            co = ThreadSafeDataBlock(CallbackDataBlock(self.command_queue, sync_bits, 0x00, [0]*(1+r[COIL-1]['size']))),
+            # remote control parameters
+            hr = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[HOLDING_REGISTER-1]['size']))),
+            # read-only output variables
+            ir = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[INPUT_REGISTER-1]['size'])))
+        )
+        self.context = ModbusServerContext(slaves={self.slaveid:store}, single=False)
 
-            identity = ModbusDeviceIdentification()
-            identity.VendorName  = 'Picarro'
-            identity.ProductCode = 'I2000'
-            identity.VendorUrl   = 'http://www.picarro.com'
-            identity.ProductName = 'Picarro Modbus Server'
-            identity.ModelName   = 'Picarro Modbus Server'
-            identity.MajorMinorRevision = '1.0'
-            if self.rtu:
-                framer = ModbusRtuFramer
-            else:
-                framer = ModbusSocketFramer
-            self.serverConfig = {
-                "rtu" : self.rtu,
-                "context": self.context,
-                "framer": framer,
-                "identity": identity,
-                "address" : (get_ip_address(), self.config.getint("Main", "TCPPort", 50500)),
-                "port": self.config.get("SerialPortSetup", "Port").strip(),
-                "baudrate": self.config.getint("SerialPortSetup", "BaudRate", 19200),
-                "timeout": self.config.getfloat("SerialPortSetup", "TimeOut", 1.0),
-                "bytesize": self.config.getint("SerialPortSetup", "ByteSize", BYTE_SIZE),
-                "parity": self.config.get("SerialPortSetup", "Parity", "N"),
-                "stopbits": self.config.getint("SerialPortSetup", "StopBits", 1),
-                "ignore_missing_slaves": True}
-            if simulation:
-                self.get_simulation_params()
-                self.data_thread = threading.Thread(target=self.simulate_data)
-                self.data_thread.daemon = True
-                self.data_thread.start()
-            else:
-                self.source = self.config.get("Main", "Source")
-                self.data_thread = Listener.Listener(self.data_queue,
-                                        SharedTypes.BROADCAST_PORT_DATA_MANAGER,
-                                        StringPickler.ArbitraryObject,
-                                        self._streamFilter,
+        identity = ModbusDeviceIdentification()
+        identity.VendorName  = 'Picarro'
+        identity.ProductCode = 'I2000'
+        identity.VendorUrl   = 'http://www.picarro.com'
+        identity.ProductName = 'Picarro Modbus Server'
+        identity.ModelName   = 'Picarro Modbus Server'
+        identity.MajorMinorRevision = '1.0'
+        if self.rtu:
+            framer = ModbusRtuFramer
+        else:
+            framer = ModbusSocketFramer
+        self.serverConfig = {
+            "rtu" : self.rtu,
+            "context": self.context,
+            "framer": framer,
+            "identity": identity,
+            "address" : (get_ip_address(), self.config.getint("Main", "TCPPort", 50500)),
+            "port": self.config.get("SerialPortSetup", "Port").strip(),
+            "baudrate": self.config.getint("SerialPortSetup", "BaudRate", 19200),
+            "timeout": self.config.getfloat("SerialPortSetup", "TimeOut", 1.0),
+            "bytesize": self.config.getint("SerialPortSetup", "ByteSize", BYTE_SIZE),
+            "parity": self.config.get("SerialPortSetup", "Parity", "N"),
+            "stopbits": self.config.getint("SerialPortSetup", "StopBits", 1),
+            "ignore_missing_slaves": True}
+        if simulation:
+            self.get_simulation_params()
+            self.data_thread = threading.Thread(target=self.simulate_data)
+            self.data_thread.daemon = True
+            self.data_thread.start()
+        else:
+            self.source = self.config.get("Main", "Source")
+            self.data_thread = Listener.Listener(self.data_queue,
+                                    SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                    StringPickler.ArbitraryObject,
+                                    self._streamFilter,
+                                    retry = True,
+                                    name = APP_NAME)
+            self.InstMgrStatusListener = Listener.Listener(None,
+                                        SharedTypes.STATUS_PORT_INST_MANAGER,
+                                        AppStatus.STREAM_Status,
+                                        self._InstMgrStatusFilter,
                                         retry = True,
                                         name = APP_NAME)
-                self.InstMgrStatusListener = Listener.Listener(None,
-                                            SharedTypes.STATUS_PORT_INST_MANAGER,
-                                            AppStatus.STREAM_Status,
-                                            self._InstMgrStatusFilter,
-                                            retry = True,
-                                            name = APP_NAME)
-            # writer thread gets data from queue and write to memory
-            self.writer_thread = threading.Thread(target=self.data_writer)
-            self.writer_thread.daemon = True
-            # control thread gets command from queue and execute
-            self.control_thread = threading.Thread(target=self.controller)
-            self.control_thread.daemon = True
-        except:
-            LogExc("Unable to Start Modbus Server")
-            time.sleep(1)
+        # writer thread gets data from queue and write to memory
+        self.writer_thread = threading.Thread(target=self.data_writer)
+        self.writer_thread.daemon = True
+        # control thread gets command from queue and execute
+        self.control_thread = threading.Thread(target=self.controller)
+        self.control_thread.daemon = True
     
     def get_register_info(self):
         self.register_variables = [{}, {}, {}, {}]
         self.variable_params = {}
         self.endian = ">" if self.config.get("Main", "Endian", ENDIAN).lower() == "big" else "<"
+        file_path = os.path.dirname(os.path.abspath(__file__))
         script_name = self.config.get("Main", "Script", "")
-        script_path = sys.path[0] + "/" + script_name
-        userdata_file_path = self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
+        script_path = file_path + "/" + script_name
+        userdata_file_path = file_path + "/" + self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
         scriptEnv_Obj = ModbusScriptEnv(self, userdata_file_path=userdata_file_path)
         scriptEnv = scriptEnv_Obj.create_script_env()
         if os.path.exists(script_path):
             script = file(script_path, 'r')
             scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
             exec scriptObj in scriptEnv
+        else:
+            raise Exception("Path does not exist: %s" % script_path)
         for s in self.config:
             name = ""
             d = {}
@@ -378,8 +386,9 @@ class ModbusServer(object):
             self.errorhandler.set_error(Errors.NO_ERROR)
             instr_cal_file_path = self.config.get("Main", "InstrumentCalFilePath", "")
             user_cal_file_path = self.config.get("Main", "UserCalFilePath", "")
-            instr_cal_file_path = sys.path[0] + "/" + instr_cal_file_path
-            user_cal_file_path = sys.path[0] + "/" + user_cal_file_path
+            file_path = os.path.dirname(os.path.abspath(__file__))
+            instr_cal_file_path = file_path + "/" + instr_cal_file_path
+            user_cal_file_path = file_path + "/" + user_cal_file_path
             try:
                 self.Write_Instrument_Cal_File_Data(instr_cal_file_path)
             except Exception as ex:
@@ -626,8 +635,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:s'
-    longOpts = ["help", "debug"]
+    shortOpts = 'hs'
+    longOpts = ["help", "debug", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -640,20 +649,42 @@ def handleCommandSwitches():
     if "/?" in args or "/h" in args:
         options.setdefault('-h',"")
     #Start with option defaults...
-    configFile = "./ModbusServer.ini"
+    file_path = os.path.dirname(os.path.abspath(__file__))
+    configFile = file_path + "../../../AppConfig/Config/Utilities/ModbusServer.ini"
     simulation = False
     debug = False
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     if "-s" in options:
         simulation = True
     if "--debug" in options:
         debug = True
     return (configFile, simulation, debug)
 
+
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            server = ModbusServer(*handleCommandSwitches())
+            server.run()
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+            # Exit, in case the server running, but the app is not
+            # We don't want to get stuck in a restart loop here
+            sys.exit(1)
+
+
 if __name__ == "__main__":
-    server = ModbusServer(*handleCommandSwitches())
-    server.run()
+    main()

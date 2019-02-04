@@ -145,7 +145,7 @@ class Task(QtCore.QObject):
 
         self._running = True
         if "Analysis" in self._settings:
-            self._results["end_time"] = str(datetime.datetime.now())
+            self._results["end_time"] = str(datetime.datetime.now())[:-3]
             if "Linear_Regression_Validation" in self._settings["Analysis"]:
                 self.linear_regression()
             elif "Span_Validation" in self._settings["Analysis"]:

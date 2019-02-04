@@ -13,19 +13,14 @@ Where the options can be a combination of the following:
 
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
-
-APP_NAME = "QuickGui"
-UPDATE_TIMER_INTERVAL = 1000
-
 import wx
 import Queue
 import requests
 import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
-import numpy
-
-
+import sys
+from time import localtime, strftime
 from Host.QuickGui.UserCalGui import UserCalGui
 from Host.QuickGui.SysAlarmGui import *
 from Host.QuickGui.MeasureAlarmGui import AlarmViewListCtrl
@@ -33,20 +28,25 @@ import Host.QuickGui.DialogUI as Dialog
 from Host.Common import CmdFIFO
 from Host.Common import GraphPanel
 from Host.Common.GuiTools import ColorDatabase, FontDatabase, SubstDatabase, StringDict, getInnerStr, setItemFont
-from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR, RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER
+from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER, RPC_PORT_SAMPLE_MGR,\
+    RPC_PORT_DRIVER, RPC_PORT_VALVE_SEQUENCER, RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
 from Host.Common.EventManagerProxy import *
-
 from Host.DataLogger.DataLoggerInterface import DataLoggerInterface
 from Host.InstMgr.InstMgrInterface import InstMgrInterface
 from Host.AlarmSystem.AlarmInterface import AlarmInterface
 from Host.EventManager.EventStore import EventStore
 from Host.DataManager.DataStore import DataStoreForGraphPanels
-
 from Host.Utilities.UserAdmin.UserAdmin import DB_SERVER_URL
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 
-AppPath = os.path.dirname(os.path.realpath(__file__))
+APP_NAME = "QuickGui"
+UPDATE_TIMER_INTERVAL = 1000
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
+AppPath = os.path.dirname(os.path.abspath(__file__))
 TimeStamp = time.time
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -66,10 +66,10 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.ilEventIcons = wx.ImageList(16, 16)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
-        self.IconIndex_Warning  = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png',
-                                                     wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Info     = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png',
-                                                     wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Warning = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png',
+                                                    wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Info = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png',
+                                                 wx.BITMAP_TYPE_ICO))
         self.IconIndex_Critical = myIL.Add(wx.Bitmap(AppPath + '/dialog-error.png',
                                                      wx.BITMAP_TYPE_ICO))
         self._DataSource = DataSource
@@ -190,7 +190,6 @@ class InstStatusPanel(wx.Panel):
 
 class QuickGui(wx.Frame):
     def __init__(self, configFile, defaultTitle = ""):
-
         wx.Frame.__init__(self,parent=None,id=-1,title='CRDS_Data_Viewer',size=(1200,700),
                           style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
 
@@ -200,6 +199,8 @@ class QuickGui(wx.Frame):
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
         self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         try:
             self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
         except:
@@ -290,9 +291,18 @@ class QuickGui(wx.Frame):
         try:
             self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
             self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+            # some of the supervisor mode (Integration mode pressure cal) we do not require sample manager
+            # and because of that we do not start sample manager process
+            # During that time CavityPressreS and CavityPressureTPer set as None
+            # and Quick gui process throws exception
+            if self.cavityPressureS is None:
+                self.cavityPressureS = 140.0
+            if self.cavityPressureTPer is None:
+                self.cavityPressureTPer = 0.05
         except:
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
+
         self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS
 
         # Set up instrument status panel source and key
@@ -452,6 +462,8 @@ class QuickGui(wx.Frame):
         self._OnStatDisplay(evt, self.showStat)
         self._OnInstStatDisplay(evt, self.showInstStat)
         self._OnTimer(evt)
+        self.Show(True)
+
 
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
@@ -486,6 +498,9 @@ class QuickGui(wx.Frame):
         copyLabel = "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0]
         footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=copyLabel, style=wx.ALIGN_CENTER)
         setItemFont(footerLabel,self.fontDatabase.getFontFromIni('Footer'))
+        # Add the time to the right of the footer label
+        current_time = self.get_time()
+        self.footerTime = wx.StaticText(parent=self.mainPanel, id=-1, label=current_time, style=wx.ALIGN_RIGHT)
 
         # Define the graph panels
         self.graphPanel = []
@@ -842,8 +857,10 @@ class QuickGui(wx.Frame):
         #
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1,proportion=1,flag=wx.GROW | wx.LEFT | wx.RIGHT,border=10)
-        footerSizer = wx.BoxSizer(wx.VERTICAL)
-        footerSizer.Add(footerLabel,proportion=0,flag=wx.ALIGN_CENTER)
+        footerSizer = wx.GridSizer(rows=1, cols=3, hgap=5, vgap=5)
+        footerSizer.AddStretchSpacer(0)
+        footerSizer.Add(footerLabel,1,wx.ALIGN_CENTER)
+        footerSizer.Add(self.footerTime,2,wx.ALIGN_RIGHT)
         vsizer1.Add(footerSizer,proportion=0,flag=wx.GROW | wx.ALL,border=10)
         self.mainPanel.SetSizer(vsizer1)
         box = wx.BoxSizer(wx.HORIZONTAL)
@@ -959,6 +976,10 @@ class QuickGui(wx.Frame):
         #     shutdownMode = 1
         #     # we dont need power off in this mode, but lets set to default as we need to pass to INSTMGR_ShutdownRpc call
         #     powerOff = True
+        # mode == 1 shutdown all process and exit to the desktop
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            shutdownMode = 1
+            message = "Do you really want to stop driver and data acquisition?"
 
         dialog = wx.MessageDialog(self, message, "", style=wx.YES_NO | wx.ICON_QUESTION)
         retCode = dialog.ShowModal()
@@ -967,12 +988,25 @@ class QuickGui(wx.Frame):
                 self._setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
+            Log("Quit software from QuickGui by User: %s" % self.currentUser["username"], Level=0)
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode, powerOffAnalyzer)
             payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
             self._sendRequest("post", "action", payload, useToken=True)
             self.shutdownButton.Enable(False)
+            # lets disable menu bar items also as we are in Quit mode and parking
+            # so block all other functionalities
+            self._menu_bar_enable(False)
         dialog.Destroy()
         return
+
+    def _menu_bar_enable(self, enable):
+        """
+        Method use to enable/disable menu bar items
+        :return:
+        """
+        self.menuBar.EnableTop(0, enable)
+        self.menuBar.EnableTop(1, enable)
+        self.menuBar.EnableTop(2, enable)
 
     def _OnResetBuffers(self, evt):
         for s in self.dataStore.getSources():
@@ -1125,6 +1159,10 @@ class QuickGui(wx.Frame):
         return
 
     def _OnTimer(self, evt):
+        # Update GUI Clock
+        time_now = self.get_time()
+        self.footerTime.SetLabel(time_now)
+
         defaultSourceIndex = None
         self.dataStore.getQueuedData()
         self.eventStore.getQueuedEvents()
@@ -1545,7 +1583,7 @@ class QuickGui(wx.Frame):
                     if "error" in returnDict:
                         msg = returnDict["error"]
                         if "Password expire" in msg:
-                            msg = self.OnChangePwd(user, pwd)
+                            msg = self._OnChangePwd(user, pwd)
                             if len(msg) == "":
                                 break
                         elif "HTTPConnection" in msg:
@@ -1660,7 +1698,7 @@ class QuickGui(wx.Frame):
             self.sessionTimer.Stop()
 
     def _OnChangePwd(self, username, password):
-        msg = "Password Expired! Must change password."
+        msg = "Password Expired! Please change password."
         while True:
             d = Dialog.ChangePasswordDialog(self, msg=msg)
             setItemFont(d, self.fontDatabase.getFontFromIni("Dialogs"))
@@ -1671,7 +1709,7 @@ class QuickGui(wx.Frame):
             if not okClicked:
                 return ""
             elif pwd != pwd2:
-                msg = "Password not match!"
+                msg = "Passwords do not match!"
             else:
                 payload = {
                     "password": password,
@@ -1744,12 +1782,18 @@ class QuickGui(wx.Frame):
         except Exception, err:
             return "%r" % err
 
+    def get_time(self):
+        current_time = strftime("%I:%M %p", localtime())
+        if current_time[0] == "0":
+            current_time = current_time[1:]
+        return current_time
+
 
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'hc:'
-    longOpts = ["help","test"]
+    shortOpts = 'h'
+    longOpts = ["help","test","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -1767,19 +1811,37 @@ def HandleCommandSwitches():
         PrintUsage()
         sys.exit(0)
 
-    configFile = "/home/picarro/git/host/src/main/python/AppConfig/Config/QuickGui/QuickGui.ini"
-    if "-c" in options:
-        configFile = options["-c"]
+    configFile = ""
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
 
     return configFile
 
 
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            app = wx.App(False)
+            app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
+            configFile = HandleCommandSwitches()
+            Log("%s started" % APP_NAME, Level=0)
+            frame = QuickGui(configFile)
+            app.MainLoop()
+            Log("Exiting program")
+        except KeyboardInterrupt:
+            sys.exit(0)
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+
+
 if __name__ == "__main__":
-    app = wx.App(False)
-    app.SetAssertMode(wx.PYAPP_ASSERT_SUPPRESS)
-    configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    frame = QuickGui(configFile)
-    frame.Show()
-    app.MainLoop()
-    Log("Exiting program")
+    main()

@@ -186,7 +186,7 @@ class TaskManager(QtCore.QObject):
                 self.running_task_idx += 1
                 if (self.running_task_idx > len(self.tasks) - 1):
                     break
-            self.results["start_time"] = str(datetime.datetime.now())
+            self.results["start_time"] = str(datetime.datetime.now())[:-3]
             self.tasks[self.running_task_idx].task_prompt_user_signal.connect(self.prompt_user_signal)
             self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
             self.threads[self.running_task_idx].start()
@@ -216,8 +216,6 @@ class TaskManager(QtCore.QObject):
                 self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
                 self.threads[self.running_task_idx].start()
             else:
-                logStr = "Completed surrogate gas validation with {0}.".format(self.co["TASKS"]["Data_Key"])
-                self.db.log(logStr)
                 self.reset_autologout_timer()   # Give the user time to inspect or download their report
                 self.job_complete_signal.emit()
                 self.running_task_idx = None
@@ -281,6 +279,7 @@ class TaskManager(QtCore.QObject):
         return
 
     def record_report_in_history_log_slot(self, filename, obj):
-        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], filename)
+        reportFileName = os.path.basename(str(filename))
+        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], reportFileName)
         self.db.log(logStr)
         return

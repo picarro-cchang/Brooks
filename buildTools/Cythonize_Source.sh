@@ -23,7 +23,8 @@ includeFolderList[14]="Host/PeriphIntrf"
 includeFolderList[15]="Host/SampleManager"
 includeFolderList[16]="Host/SpectrumCollector"
 includeFolderList[17]="Host/Supervisor"
-includeFolderList[18]="Host/ValveSequencer" 
+includeFolderList[18]="Host/ValveSequencer"
+includeFolderList[19]="Host/FileEraser"
 
 number_of_running_process=0
 
@@ -32,7 +33,7 @@ do
   working_Path=$dir_source_main_python/$includeFolder
   # we need to Cythonize python files from all above folder ecluding init, gui, setup and simulator files
   # so lets find all intrested files and create list of all files
-  dirs=( $(find $working_Path -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "setup.py" ! -name "EventManagerGUI.py" ! -name "GuiTools.py" ! -name "GuiWidgets.py" ! -name "ValveSequencerSimulator.py") )
+  dirs=( $(find $working_Path -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "setup.py" ! -name "EventManagerGUI.py" ! -name "GuiTools.py" ! -name "GuiWidgets.py" ! -name "ValveSequencerSimulator.py" ! -name "SupervisorTests.py") )
   
   #Now lets go over each file and one by one Cythonize intrested files
   for file_in_dir in ${dirs[*]}

@@ -35,15 +35,19 @@ from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
-from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER
+from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.Common.SingleInstance import SingleInstance
 from Host.Common.timestamp import getTimestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.SpectrumCollector.Sequencer import Sequencer
 from Host.SpectrumCollector.RdfFileOutput import writeSpectrumFile
 
 APP_NAME = "SpectrumCollector"
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -207,118 +211,141 @@ class SpectrumCollector(object):
         self.fsrModeBoundaries = {}
 
     def run(self):
-        self.sequencer = Sequencer()
-        # start the rpc server on another thread...
-        self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
-        self.rpcThread.start()
-        # start the sequencer on another thread
-        self.sequencer.runInThread()
-        # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
-        lastCount = -1
-        thisCount = -1
-        MAXLOOPS = 500
-        loops = 0
+        try:
+            self.sequencer = Sequencer()
+            # start the rpc server on another thread...
+            self.rpcThread = RpcServerThread(self.rpcServer, self.RPC_shutdown)
+            self.rpcThread.start()
+            # start the sequencer on another thread
+            self.sequencer.runInThread()
+            # The following count "spectra" which are delimited by scheme rows which have bit-15 set in the subschemeId
+            lastCount = -1
+            thisCount = -1
+            MAXLOOPS = 500
+            loops = 0
 
-        endOfSpectrum = False
-        endOfScheme = False
-        spectraInScheme = []
-        self.prepareForNewSpectrum()
+            endOfSpectrum = False
+            endOfScheme = False
+            spectraInScheme = []
+            self.prepareForNewSpectrum()
 
-        while not self._shutdownRequested:
-            #Pull a spectral point from the RD queue...
-            try:
-                rdData = self.getSpectralDataPoint(timeToRetry=0.5)
-                if rdData is None:
-                    time.sleep(0.5)
-                    loops = 0
-                    continue
-                now = TimeStamp()
-                if self.rdQueueGetLastTime != 0:
-                    rtt = now - self.rdQueueGetLastTime
-                    if rtt > 10:
-                        Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))
-                    if rtt > self.maxRdQueueGetRtt:
-                        Log("Maximum Processed Ringdowns loop RTT so far: %.3f" % (self.maxRdQueueGetRtt,))
-                        self.maxRdQueueGetRtt = rtt
-                self.rdQueueGetLastTime = now
+            # Some time file does not archive when user quit host application before
+            # whole scheme data collected or system crash in middle of
+            # data acquisition. In that case such file will be never archived and
+            # file will stay for life time in the directory and there is chance that
+            # down the road directory (it will take many years though) will be get
+            # filled and then os can not able to restart(Same as RDF bug)
+            # So before we start collecting ring down and save new ringdown in to .h5 files
+            # lets archive any unarchived file/s
+            files = os.listdir(self.streamDir)
+            for fileName in files:
+                if fileName.endswith(".h5"):
+                    filePath = os.path.join(self.streamDir, fileName)
+                    self.archiveSpectrumFile(filePath, None)
 
-                #localRdTime = Driver.hostGetTicks()
-                thisSubSchemeID = rdData.subschemeId
-                self.lastSpectrumID = self.spectrumID
-                self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
-                self.lastSchemeVersion = self.schemeVersion
-                self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
-                thisCount = rdData.count
+            while not self._shutdownRequested:
+                #Pull a spectral point from the RD queue...
+                try:
+                    rdData = self.getSpectralDataPoint(timeToRetry=0.5)
+                    if rdData is None:
+                        time.sleep(0.5)
+                        loops = 0
+                        continue
+                    now = TimeStamp()
+                    if self.rdQueueGetLastTime != 0:
+                        rtt = now - self.rdQueueGetLastTime
+                        if rtt > 10:
+                            Log("Processed Ringdowns loop RTT: %.3f" % (rtt,))
+                        if rtt > self.maxRdQueueGetRtt:
+                            Log("Maximum Processed Ringdowns loop RTT so far: %.3f" % (self.maxRdQueueGetRtt,))
+                            self.maxRdQueueGetRtt = rtt
+                    self.rdQueueGetLastTime = now
 
-                # The schemeCount is changed when a SCHEME starts, i.e. it tracks entire schemes, including the
-                #  repeat count. We make an HDF5 file each time a scheme is run
-                schemeStatus = rdData.status
-                schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
+                    #localRdTime = Driver.hostGetTicks()
+                    thisSubSchemeID = rdData.subschemeId
+                    self.lastSpectrumID = self.spectrumID
+                    self.spectrumID = thisSubSchemeID & SPECTRUM_ID_MASK
+                    self.lastSchemeVersion = self.schemeVersion
+                    self.schemeVersion = (rdData.schemeVersionAndTable & interface.SCHEME_VersionMask) >> interface.SCHEME_VersionShift
+                    thisCount = rdData.count
 
-                if self.lastSchemeCount != schemeCount:
-                    if self.lastSchemeCount >= 0:
+                    # The schemeCount is changed when a SCHEME starts, i.e. it tracks entire schemes, including the
+                    #  repeat count. We make an HDF5 file each time a scheme is run
+                    schemeStatus = rdData.status
+                    schemeCount = schemeStatus & interface.RINGDOWN_STATUS_SequenceMask
+
+                    if self.lastSchemeCount != schemeCount:
+                        if self.lastSchemeCount >= 0:
+                            endOfSpectrum = True
+                            endOfScheme = True
+                        self.lastSchemeCount = schemeCount
+                    else:
+                        self.lastSchemeTable = self.schemeTable
+                        self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
+                        self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable, None)
+
+                    # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file),
+                    #  we know a new SPECTRUM is coming and we have to process whatever we currently have.
+                    if thisCount != lastCount:
+                        # We "push back" the last data point so that it is fetched again next time as part
+                        #  of the next spectrum
+                        self.tempRdDataBuffer = rdData
+                        endOfSpectrum = True
+                    else: #still collecting the same spectrum
+                        if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
+                            self.appendRingdownToSpectrum(rdData)
+
+                except SpectrumCollectionTimeout:
+                    if self.numPts > 0:
+                        Log("Closing spectrum and scheme due to data timeout (count = %d)" % thisCount, Level = 0)
                         endOfSpectrum = True
                         endOfScheme = True
-                    self.lastSchemeCount = schemeCount
-                else:
-                    self.lastSchemeTable = self.schemeTable
-                    self.schemeTable = (rdData.schemeVersionAndTable & interface.SCHEME_TableMask) >> interface.SCHEME_TableShift
-                    self.schemesUsed[self.schemeTable] = self.sequencer.inDas.get(self.schemeTable, None)
 
-                # When the "count" is different (set by DSP when bit-15, the fit flag is set in the scheme file),
-                #  we know a new SPECTRUM is coming and we have to process whatever we currently have.
-                if thisCount != lastCount:
-                    # We "push back" the last data point so that it is fetched again next time as part
-                    #  of the next spectrum
-                    self.tempRdDataBuffer = rdData
-                    endOfSpectrum = True
-                else: #still collecting the same spectrum
-                    if not (thisSubSchemeID & SPECTRUM_IGNORE_MASK):
-                        self.appendRingdownToSpectrum(rdData)
+                # A spectrum is composed of one or more sub-schemes.
+                # As each spectrum is collected, broadcast them to the fitters, collecting them
+                # into spectraInScheme as the code works its way through a scheme.
+                # After all the sub-schemes of the scheme have been collected, save the
+                # scheme's worth of RD and sensor data to a RD*.h5 file for reprocessing.
+                #
+                # If the *.h5 is reprocessed, the fitter will split it into individual
+                # spectra and fit them in order.
+                #
+                if endOfSpectrum:
+                    spectrum = self.packageSpectrum()
+                    self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))
+                    spectraInScheme.append(spectrum)
+                    if endOfScheme:
+                        if self.enableSpectrumFiles and spectraInScheme:
+                            fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
+                            # Check to make sure the directory we want to write exists
+                            # Create it, if it doesn't exist
+                            if not os.path.isdir(self.streamDir):
+                                os.makedirs(self.streamDir)
+                                Log("Created streamDir in %s" % self.streamDir)
+                            # Write the file
+                            self.writeOut(fileName, spectraInScheme)
+                            self.lastSchemeCount = -1
+                        endOfScheme = False
+                        self.schemesUsed = {}
+                        spectraInScheme = []
+                    endOfSpectrum = False
+                    self.prepareForNewSpectrum()
 
-            except SpectrumCollectionTimeout:
-                if self.numPts > 0:
-                    Log("Closing spectrum and scheme due to data timeout (count = %d)" % thisCount, Level = 0)
-                    endOfSpectrum = True
-                    endOfScheme = True
-
-            # A spectrum is composed of one or more sub-schemes.
-            # As each spectrum is collected, broadcast them to the fitters, collecting them
-            # into spectraInScheme as the code works its way through a scheme.
-            # After all the sub-schemes of the scheme have been collected, save the
-            # scheme's worth of RD and sensor data to a RD*.h5 file for reprocessing.
-            #
-            # If the *.h5 is reprocessed, the fitter will split it into individual
-            # spectra and fit them in order.
-            #
-            if endOfSpectrum:
-                spectrum = self.packageSpectrum()
-                self.spectrumBroadcaster.send(StringPickler.PackArbitraryObject(spectrum))
-                spectraInScheme.append(spectrum)
-                if endOfScheme:
-                    if self.enableSpectrumFiles and spectraInScheme:
-                        fileName = os.path.join(self.streamDir, "RD_%013d.h5" % (int(time.time()*1000),))
-                        # Check to make sure the directory we want to write to exists
-                        # Create it, if it doesn't exist
-                        if not os.path.isdir(self.streamDir):
-                            os.makedirs(self.streamDir,0775)
-                            Log("Created streamDir in %s" % self.streamDir)
-                        # Write the file
-                        self.writeOut(fileName, spectraInScheme)
-                        self.lastSchemeCount = -1
-                    endOfScheme = False
-                    self.schemesUsed = {}
-                    spectraInScheme = []
-                endOfSpectrum = False
-                self.prepareForNewSpectrum()
-
-            lastCount = thisCount
-            loops += 1
-            if loops >= MAXLOOPS:
-                loops = 0
-                time.sleep(0.01)
-
+                lastCount = thisCount
+                loops += 1
+                if loops >= MAXLOOPS:
+                    loops = 0
+                    time.sleep(0.01)
+        except Exception, e:
+            LogExc("Unhandled exception in %s main loop: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
         Log("Spectrum Collector RPC handler shut down")
+
 
     def getSpectralDataPoint(self, timeToRetry, timeout = 10):
         """Pops rdData out of the local ringdown queue and returns it. If there are no ringdowns
@@ -632,8 +659,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:'
-    longOpts = ["help"]
+    shortOpts = 'h'
+    longOpts = ["help","ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -650,18 +677,25 @@ def handleCommandSwitches():
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     return configFile, options
 
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        multiprocessing.freeze_support()
+        try:
+            configFile, options = handleCommandSwitches()
+            spCollectorApp = SpectrumCollector(configFile)
+            Log("%s started" % APP_NAME, Level=1)
+            spCollectorApp.run()
+            # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
+            Log("Exiting program")
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+
 if __name__ == "__main__":
-    multiprocessing.freeze_support()
-    try:
-        configFile, options = handleCommandSwitches()
-        spCollectorApp = SpectrumCollector(configFile)
-        Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-        spCollectorApp.run()
-        # cProfile.run('spCollectorApp.run()','c:/spectrumCollectorProfile')
-        Log("Exiting program")
-    except Exception:
-        LogExc("Unhandled exception in SpectrumCollector", Level=3)
+    main()

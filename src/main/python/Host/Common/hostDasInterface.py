@@ -106,7 +106,7 @@ class DasInterface(Singleton):
         time.sleep(0.5)
         self.hostToDspSender = HostToDspSender(self.analyzerUsb,5.0)
         self.hostToDspSender.program(self.dspFile)
-        
+
     def getMessage(self):
         """Retrieves message from the analyzer or None if nothing is available"""
         timestamp = self.hostToDspSender.rdMessageTimestamp(self.messageIndex)
@@ -117,7 +117,7 @@ class DasInterface(Singleton):
             if self.messageIndex >= interface.NUM_MESSAGES:
                 self.messageIndex = 0
             return timestamp, msg
-                
+
     def getSensorData(self):
         """Retrieves sensor data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdSensorData(self.sensorIndex)
@@ -129,7 +129,7 @@ class DasInterface(Singleton):
             return data
 
     def getSensorDataBlock(self):
-        """Retrieves a block of sensor data from the analyzer. If there are valid entries in the block, the number  is 
+        """Retrieves a block of sensor data from the analyzer. If there are valid entries in the block, the number  is
         computed and returned together with the block itself. If there are no valid entries, return None."""
         block = self.hostToDspSender.rdSensorDataBlock(self.sensorIndex)
         validEntries = 0
@@ -143,7 +143,7 @@ class DasInterface(Singleton):
             else:
                 break
         return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
-                
+
     def getRingdownData(self):
         """Retrieves ringdown data from the analyzer or None if nothing is available"""
         data = self.hostToDspSender.rdRingdownData(
@@ -156,8 +156,8 @@ class DasInterface(Singleton):
             return data
 
     def getRingdownDataBlock(self):
-        """Retrieves a block of ringdown data from the analyzer. If there are valid entries in the block, 
-        the number is computed and returned together with the block itself. If there are no valid entries, 
+        """Retrieves a block of ringdown data from the analyzer. If there are valid entries in the block,
+        the number is computed and returned together with the block itself. If there are no valid entries,
         return None."""
         block = self.hostToDspSender.rdRingdownDataBlock(
               self.ringdownIndex)
@@ -196,8 +196,17 @@ class DasInterface(Singleton):
                 )
                 for opr in operation.operandList:
                     operandTable.append(int(opr))
-            operationTable.append((0,0))
-        groupTable.append(0)
+            if group.operationList:
+                operationTable.append((0,0))
+        if operationGroups:
+            groupTable.append(0)
+
+        table_dict = dict(groupTableLen=len(groupTable), groupTableSize=interface.GROUP_TABLE_SIZE,
+            operationTableLen=len(operationTable), operationTableSize=interface.NUM_OPERATIONS,
+            operandTableLen=len(operandTable), operandTableSize=interface.OPERAND_TABLE_SIZE)
+
+        Log("Scheduler utilization", Data=table_dict, Verbose="%s" % table_dict)
+
         if len(groupTable) > interface.GROUP_TABLE_SIZE:
             raise ValueError(
                 "%d operation groups needed, only %d available" %
@@ -205,7 +214,7 @@ class DasInterface(Singleton):
         if len(operationTable) > interface.NUM_OPERATIONS:
             raise ValueError(
                 "%d operations needed, only %d available" %
-                (len(operationTable),interface.OPERATION_TABLE_SIZE))
+                (len(operationTable),interface.NUM_OPERATIONS))
         if len(operandTable) > interface.OPERAND_TABLE_SIZE:
             raise ValueError(
                 "%d operands needed, only %d available" %

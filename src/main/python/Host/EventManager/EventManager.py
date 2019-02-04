@@ -60,12 +60,6 @@ Notes:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-APP_NAME = "EventManager"
-DEFAULT_EVENT_CODE = 0
-_DEFAULT_CONFIG_NAME = "EventManager.ini"
-_MAIN_CONFIG_SECTION = "MainConfig"
-LOGFILE_PREFIX = "EventLog_"
-LOGFILE_EXTENSION = "txt"
 
 import sys
 import os
@@ -76,7 +70,23 @@ from glob import glob
 from Host.Common import SharedTypes #to get the right TCP port to use
 from Host.Common import CmdFIFO
 from Host.Common import Broadcaster
+from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.AppRequestRestart import RequestRestart
+from Host.EventManager.EventInfo import EventInfo
+from Host.EventManager.EventLog import EventLog
+from Host.EventManager.EventLogFile import EventLogFile
+
+APP_NAME = "EventManager"
+DEFAULT_EVENT_CODE = 0
+_DEFAULT_CONFIG_NAME = "EventManager.ini"
+_MAIN_CONFIG_SECTION = "MainConfig"
+LOGFILE_PREFIX = "EventLog_"
+LOGFILE_EXTENSION = "txt"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
+LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
 if sys.platform == 'win32':
     TimeStamp = time.clock
@@ -92,180 +102,6 @@ CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.R
                                             APP_NAME,
                                             IsDontCareConnection = True)
 
-class EventInfo(object):
-    """The general class object for identifying event types - NOT discrete events.
-
-    Discrete events (with time and other instance data) are captured with the
-    EventLog class.
-
-      Description = The text description of the event (eg: 'Application started')
-      Level       = The severity of the event (from 0-3).  See below.
-                      3 = Causes a performance hit or crash (eg: top level
-                          exception trap, app restarted)
-                      2 = Significant (eg: Conc Alarm occurred, Flow stopped, etc)
-                      1 = info only; used to help with post-mortems (eg: Command
-                          received)
-                      0 = debug. ONLY for msg's that would normally be spam - only
-                          send if debugging.  Please wrap with 'if __debug__'
-      Code        = Numeric code for the event.  Should be unique across apps.
-                      - A value of -1 is default and generic
-      AccessLevel = Who should be able to see the event.
-                       0 = Public... anyone can see
-                       1 = Access level 1 (service tech?)
-                     100 = Picarro only (the default)
-                    eg: "Pump disabled" would be public
-      VerboseDesc = A nice lengthy explanation of a pre-defined event.  This
-                    should really not be used for one-time-only message events
-                    that are created.
-    """
-    def __init__(self, Description, Data = "", Level = 1, Code = 0, AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY,
-                 VerboseDesc = ""):
-        self.Description = Description
-        self.Level = Level
-        self.Code = Code      #Numeric code for the eventr.  Should be
-        self.AccessLevel = AccessLevel  #
-        self.VerboseDescription = VerboseDesc
-        if self.AccessLevel < SharedTypes.ACCESS_PICARRO_ONLY:
-            self.Public = True
-        else:
-            self.Public = False
-
-    def __str__(self):
-        if self.Code == 0:
-            codeStr = "n/a"
-        else:
-            codeStr = str(self.Code)
-        ret = "L%s | C%s | '%s'" % (self.Level, codeStr, self.Description)
-        return ret
-
-class EventLog(object):
-    """Adds additional info required to record an occurrence of a single event.
-
-    The actual event information is in the contained Event member (type EventInfo).
-
-    Full events can be created on the fly by defining the event with all of the
-    constructor args of this class (avoid using verbose if possible).
-
-    To record an event of a pre-defined type (EventInfo instance), pass in the
-    instance as the Description argument.
-
-    Special EventLog properties over and above EventInfo are:
-
-      Index     = The log entry # (starting at 1)
-      Source    = Which application logged the event
-      EventTime = The best guess at when the event occured. Options for this are
-                  (in order of preference):
-                      1. The client who requested the log sent a time
-                      2. The time at which the RPC server dispatcher received
-                         the log request
-                      3. The LogTime (see below)
-      LogTime   = The time at which the log entry is actually made.
-      Data      = Data for the particular event occurrence.  eg: an event type
-                  of 'Application started' might have data of 'CustomerGUI'. This
-                  can be any data type, but a dict is recommended.
-
-    There can be some lag between EventTime and LogTime (eg: if the logger is
-    archiving, or if it is slow due to lower priority), and this is stored as
-    the _LogLag attribute.
-
-    NOTE: a nice thing is that no matter what the time stamps are, the rpc
-    server implementation (and tcp queue) always ensures that events are
-    serialized in order of receipt.
-
-    The reason that EventLogger does not derive from EventInfo (which originally
-    made sense) is to allow arbitrary pre-definition of event types.  Making
-    EventInfo a member makse this easy.
-    """
-
-    InstanceCounter = 0 #for counting an index for all instances
-    def __init__(self, Source,
-                 Description = None,
-                 Data = "",
-                 Level = 1,
-                 Code = DEFAULT_EVENT_CODE,
-                 AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY,
-                 VerboseDescription = "",
-                 EventTime = 0):
-        EventLog.InstanceCounter += 1
-        self.Index = self.InstanceCounter
-        self.Data = Data
-        self.Source = Source
-        self.LogTime = time.time() #time at which the logger received the event
-        #self.Time = SourceTime or time.time()
-        self.EventTime = EventTime or self.LogTime #best guess at the event time
-        self._LogLag = self.LogTime - self.EventTime
-
-        if isinstance(Description, EventInfo):
-            self.Event = Description
-        else:
-            #Should be a string, but if not we're going to interpret it as a string...
-            self.Event = EventInfo(str(Description), Level = Level, Data = Data, Code = Code, AccessLevel = AccessLevel, VerboseDesc = VerboseDescription)
-
-        assert isinstance(self.Event, EventInfo) #for Wing
-
-    def __str__(self):
-        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(self.EventTime))
-        ret = "%4s | %s | %-10s | %s" % (self.Index, timeStr, self.Source, self.Event)
-        if self.Data:
-            ret += ": %s" % (self.Data)
-        return ret
-
-class EventLogFile(object):
-    """Class to manage writing (and reading) of event logs to disk."""
-    #TODO: Implement reading
-    FORMAT_VERSION = 1
-    def __init__(self, LogDir, TimeStandard="gmt"):
-        self.NumWrittenEvents = 0
-        self.LogDir = LogDir
-        self.LogPath = ""
-        self.TimeStandard = TimeStandard
-        if self.TimeStandard.lower() == "local":
-            self.maketimetuple = time.localtime
-        else:
-            self.maketimetuple = time.gmtime
-
-    def _CreateNewLogFilePath(self):
-        """Creates a new log file named with the current time stamp and with a version header."""
-        if self.TimeStandard.lower() == "local":
-            timeStr = time.strftime("%Y_%m_%d_%H_%M_%S",self.maketimetuple())
-        else:
-            timeStr = time.strftime("%Y_%m_%d_%H_%M_%SZ",self.maketimetuple())
-
-        fname = "%s%s.%s" % (LOGFILE_PREFIX,
-                             timeStr,
-                             LOGFILE_EXTENSION)
-        self.LogPath = os.path.join(self.LogDir, fname)
-        fp = file(self.LogPath, "w")
-        fp.write("v%s\n" % self.FORMAT_VERSION)
-        fp.close()
-
-    def WriteEvent(self, AnEventLog):
-        """Writes a string representation of the provided event log to disk."""
-        assert isinstance(AnEventLog, EventLog)
-        el = AnEventLog #character saver
-        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",self.maketimetuple(el.EventTime))
-        summaryLine = "%s\t%s\t%s\tL%s\tC%s\t%s" % (el.Index,
-                                                    timeStr,
-                                                    el.Source,
-                                                    el.Event.Level,
-                                                    el.Event.Code,
-                                                    el.Event.Description)
-        if el.Data:
-            summaryLine += " : %s" % (el.Data,)
-
-        if not self.LogPath:
-            self._CreateNewLogFilePath()
-        fp = file(self.LogPath, "a")
-        fp.write("%s\n" % summaryLine)
-        if el.Event.VerboseDescription:
-            verboseList = el.Event.VerboseDescription.splitlines()
-            #print "verboseList = %r" % verboseList
-            fp.write("~~ VERBOSE ~~ (%s)\n" % len(verboseList))
-            for line in verboseList:
-                fp.write("%s\n" % line) #Doing this rather than writelines and keepends to ensure terminating \n
-            fp.write("~~ END VERBOSE ~~\n")
-        fp.close()
-        self.NumWrittenEvents += 1
 
 class EventLogger(object):
     Version = "1.0"
@@ -280,6 +116,8 @@ class EventLogger(object):
             self.MaxResidentEvents = 0        # How many events to accumulate before truncating to MinResidentEvents
             self.MinResidentEvents = 0        # How many events to truncate to when Max is reached
             self.BroadcastEvents = False      # Whether events should be broadcasted
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                         IsDontCareConnection=False)
 
         def Load(self, IniPath):
             """Loads the configuration from the specified ini/config file."""
@@ -288,7 +126,8 @@ class EventLogger(object):
 
             cp = CustomConfigObj(IniPath)
             basePath = os.path.split(IniPath)[0]
-            self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            # self.LogFileDir = os.path.join(basePath, cp.get(_MAIN_CONFIG_SECTION, "LogFileDir"))
+            self.LogFileDir = os.path.join(LOG_DIR, "TransientData")
             self.LogToFile = cp.getboolean(_MAIN_CONFIG_SECTION, "LogToFile")
             self.LogFileLength = cp.getint(_MAIN_CONFIG_SECTION, "LogFileLength")
             self.ArchiveGroupName = cp.get(_MAIN_CONFIG_SECTION, "ArchiveGroupName")
@@ -315,6 +154,7 @@ class EventLogger(object):
                                                 threaded = True)
         cmdMode = CmdFIFO.CMD_TYPE_VerifyOnly
         self.RpcServer.register_function(self.RPC_LogEvent, DefaultMode = cmdMode, NameSlice = 4)
+        self.RpcServer.register_function(self.RPC_LogEvents, DefaultMode=cmdMode, NameSlice=4)
         self.RpcServer.register_function(self.RPC_LogEventCode, DefaultMode = cmdMode, NameSlice = 4)
         self.RpcServer.register_function(self.RPC_Debug_LogOne, DefaultMode = cmdMode, NameSlice = 4)
         self.RpcServer.register_function(self.RPC_Debug_LogMany, DefaultMode = cmdMode, NameSlice = 4)
@@ -392,12 +232,6 @@ class EventLogger(object):
         #Magically get the source name from the CmdFIFO server...
         source = SourceNameOverride or self.RpcServer.CurrentCmd_ClientName
 
-        #get the current count for this source (and add it to the trackers if not there)
-        countForThisSource = self.EventSourceCounter.setdefault(source, 0)
-        if countForThisSource == 0:
-            self.EventSourceList.append(source)
-        self.EventSourceCounter[source] = countForThisSource + 1
-
         #And the time that the dispatcher received the log (there may be some lag we
         #don't want if the log queue gets jammed while archiving or something)...
         #  - only do it this way if not provided by the caller...
@@ -416,6 +250,16 @@ class EventLogger(object):
 
     def _AddEventLog(self, TheEvent):
         assert isinstance(TheEvent, EventLog)
+
+        # Magically get the source name from the CmdFIFO server...
+        source = TheEvent.Source or self.RpcServer.CurrentCmd_ClientName
+
+        # get the current count for this source (and add it to the trackers if not there)
+        countForThisSource = self.EventSourceCounter.setdefault(source, 0)
+        if countForThisSource == 0:
+            self.EventSourceList.append(source)
+        self.EventSourceCounter[source] = countForThisSource + 1
+
         self.EventList.append(TheEvent)
 
         #Truncate the resident event list if too big...
@@ -475,6 +319,23 @@ class EventLogger(object):
         AccessLevel=AccessLevel, Verbose=Verbose, SourceTime=SourceTime)
         #Add the event to the log...
         self._AddEventLog(thisEvent)
+
+    def RPC_LogEvents(self, event_log_list=[]):
+        """
+        Method to log list of event as one request
+        :param event_log_list:
+        :return:
+        """
+        assert isinstance(event_log_list, list)
+        for eventLog in event_log_list:
+            # we keep event count by static variable of EventLog class
+            # where as this event log instance comes from different process
+            # it have its own EventLog count. So lets assign correct total
+            # EventLog count by using this process eventlog count
+            EventLog.InstanceCounter += 1
+            eventLog.Index = EventLog.InstanceCounter
+            self._AddEventLog(eventLog)
+
 
     def RPC_LogEventCode(self, EventCode, Data = "", SourceTime = 0):
         """Log an event that has been pre-defined.
@@ -590,8 +451,8 @@ def PrintUsage():
 def HandleCommandSwitches():
     import getopt
 
-    shortOpts = 'hvc:'
-    longOpts = ["help", "viewer"]
+    shortOpts = 'hv'
+    longOpts = ["help", "viewer", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -617,8 +478,8 @@ def HandleCommandSwitches():
     if "-v" in options or "--viewer" in options:
         showViewer = True
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         print "Config file specified at command line: %s" % configFile
 
     return (showViewer, configFile)
@@ -639,37 +500,51 @@ def LaunchViewerGUI(EL):
 
     del logViewer, EventManagerGUI
 
-def Main():
-    #General runtime philosophy is dictated by the fact that a wxApp needs to run
-    #on the main thread.  because of this...
-    #  1. Start the logger application on it's own thread
-    #  2. Main thread will wait for the logger to finish
-    #  3. While waiting, give the main thread to the wxApp if needed
-    #  4. Shutting down of the wxApp (to get the main thread back) will be done
-    #     by the wxApp being shut down when the logger exits.
 
-    showViewer, configFile = HandleCommandSwitches()
+def main():
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        try:
+            #General runtime philosophy is dictated by the fact that a wxApp needs to run
+            #on the main thread.  because of this...
+            #  1. Start the logger application on it's own thread
+            #  2. Main thread will wait for the logger to finish
+            #  3. While waiting, give the main thread to the wxApp if needed
+            #  4. Shutting down of the wxApp (to get the main thread back) will be done
+            #     by the wxApp being shut down when the logger exits.
 
-    #create and kick off the event logging engine...
-    EL = EventLogger(configFile)
-    t = threading.Thread(target = EL.Launch)
-    t.setDaemon(True)
-    t.start()
+            showViewer, configFile = HandleCommandSwitches()
 
-    if showViewer:
-        EL.ShowViewer = True
+            #create and kick off the event logging engine...
+            EL = EventLogger(configFile)
+            t = threading.Thread(target = EL.Launch)
+            t.setDaemon(True)
+            t.start()
 
-    #Now just loop and wait for the logger to shut down (while letting the
-    #viewer app be on the main thread)...
-    while not EL.LoggerStopped:
-        if EL.ShowViewer:
-            if EL.Viewer == None:
-                #Need to start it up. Blocks until GUI exits.
-                LaunchViewerGUI(EL)
-        else:
-            #We shouldn't be showing the viewer.
-            assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
-        time.sleep(1.0)
+            if showViewer:
+                EL.ShowViewer = True
+
+            #Now just loop and wait for the logger to shut down (while letting the
+            #viewer app be on the main thread)...
+            while not EL.LoggerStopped:
+                if EL.ShowViewer:
+                    if EL.Viewer == None:
+                        #Need to start it up. Blocks until GUI exits.
+                        LaunchViewerGUI(EL)
+                else:
+                    #We shouldn't be showing the viewer.
+                    assert not EL.Viewer, "Code error!  The viewer app should not be running at this time!"
+                time.sleep(1.0)
+        except Exception, e:
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
 
 # Viewer started by:
 #   1. command line
@@ -680,4 +555,4 @@ def Main():
 #   3. Logger server stopped
 
 if __name__ == "__main__":
-    Main()
+    main()

@@ -15,6 +15,11 @@
             "species": "NH3_HF",
             "installerSignature": "AMADS"
         }, 
+		
+        "AMADS_DCRDS": {
+            "species": "NH3_HF",
+            "installerSignature": "AMADS"
+        }, 
         
         "AMADS_PFV": {
             "species": "NH3_HF",
@@ -40,6 +45,11 @@
             "species": "HCl",
             "installerSignature": "SADS"
         },
+
+        "SADS_DCRDS": {
+            "species": "HCl",
+            "installerSignature": "SADS_DCRDS"
+        },		
         
         "SADS_PFV": {
             "species": "HCl",

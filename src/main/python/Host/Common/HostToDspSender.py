@@ -150,6 +150,8 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         if self.seqNum == None:
             self.seqNum = (self.getSequenceNumber() + 1) & 0xFF
         numInt = len(data)
+        if numInt + 3 > 256:
+            raise ValueError("Cannot send more than 1024 bytes at a time to DSP.")
         hostMsg = ((numInt + 3) * c_uint)()
         # The following is used to read back the host message to ensure
         #  that the EMIF transfer has taken place before signalling the DSPINT
@@ -243,16 +245,25 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
     ############################################################################
 
     @usbLockProtect
-    def wrBlock(self, *args):
+    def wrBlock(self, offset, *values):
         """Write a block of data to the DSP.
         
         Args: One or more quantities (int or float) to be written. Strings are looked up in the 
             interface file, so symbolic constants may also be passed.
         """
-        argList = []
-        for arg in args:
-            argList.append(lookup(arg))
-        return self.send(interface.ACTION_WRITE_BLOCK, argList)
+        offset = lookup(offset)
+        start = 0
+        chunkSize = 250
+        status = 0
+        while True:
+            chunk = [lookup(v) for v in values[start:start+chunkSize]]
+            n = len(chunk)
+            if n > 0:
+                status = self.send(interface.ACTION_WRITE_BLOCK, [offset+start,] + chunk)
+                start += n
+            else:
+                break
+        return status
 
     def wrRegFloat(self, reg, value):
         """Write a 32-bit floating point value to the specified DSP register.

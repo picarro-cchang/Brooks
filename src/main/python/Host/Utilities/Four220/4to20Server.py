@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 File Name: 4to20Server.py
 Purpose: 4-20 mA back end. It takes data obj from data manager, 
@@ -15,12 +14,12 @@ Copyright 2017 Picarro, Inc.
 
 
 import sys,time,os
-import math
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
-#from Host.Common.EventManagerProxy import Log, LogExc
+from Host.Common.EventManagerProxy import Log, LogExc
 from Host.Common import CmdFIFO, SharedTypes, Listener, StringPickler
+from Host.Common.AppRequestRestart import RequestRestart
 import threading
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
@@ -28,6 +27,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 APP_NAME = "4to20Server"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
@@ -55,8 +55,9 @@ class Four220Server(object):
         self.port = self.config.get('SERIAL_PORT_SETUP', 'PORT')
         self.baudrate = self.config.getint('SERIAL_PORT_SETUP', 'BAUDRATE')
         self.timeout = self.config.getfloat('SERIAL_PORT_SETUP', 'TIMEOUT')
-        
         self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
         except:
@@ -268,8 +269,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:s'
-    longOpts = ["help"]
+    shortOpts = 'hs'
+    longOpts = ["help", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -288,13 +289,26 @@ def handleCommandSwitches():
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     if "-s" in options:
         simulation = True
 
     return (configFile, simulation)
 
-if __name__ == "__main__":
+def main():
     server = Four220Server(*handleCommandSwitches())
-    server.run()
+    try:
+        server.run()
+    except Exception, e:
+        LogExc("Unhandled exception in %s: %s" % APP_NAME % e, Level=3)
+        # Request a restart from Supervisor via RPC call
+        restart = RequestRestart(APP_NAME)
+        if restart.requestRestart(APP_NAME) is True:
+            Log("Restart request to supervisor sent", Level=0)
+        else:
+            Log("Restart request to supervisor not sent", Level=2)
+
+
+if __name__ == "__main__":
+    main()

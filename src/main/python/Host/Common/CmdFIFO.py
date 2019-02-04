@@ -35,6 +35,8 @@ import re
 import sys
 import time
 import types
+import commands
+from Host.Common.SharedTypes import ClaimInterfaceError
 
 # This version requires Pyro4 v 4.43 because of a change in how internal class
 # methods and members can be exposed.
@@ -60,7 +62,10 @@ CMD_Types = [
 
 uriRegex = re.compile("http://(.*):(\d+)")
 Pyro4.config.SERIALIZER = 'pickle'
+Pyro4.config.THREADPOOL_SIZE = 80
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
+Pyro4.config.SOCK_REUSE = True
+
 class RemoteException(RuntimeError):
     pass
 
@@ -136,6 +141,9 @@ class CmdFIFOError(Exception):
     pass
 
 class TimeoutError(CmdFIFOError):
+    pass
+
+class CommunicationError(CmdFIFOError):
     pass
 
 class ShutdownInProgress(CmdFIFOError):
@@ -445,7 +453,19 @@ class CmdFIFOServer(object):
         self.serverDescription = ServerDescription
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
-        self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
+        try:
+            self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
+        except Exception, e:
+            # Could not get port as it's being actively used by another (likely)
+            # zombie process. Let's kill whatever process is using the port and
+            # try again.
+            from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
+            EventManagerProxy_Init("CmdFIFO")
+            Log("Port %s already in-use, killing offending application and "
+                   "trying again" % self.port)
+            commands.getoutput("fuser -n tcp -k %s" % self.port)
+            time.sleep(1)
+            self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName, port=self.port)
         self.daemon = DummyDaemon(self.pyroDaemon)
         if self.logger:
             self.logger.info("CmdFIFO %s started" % self.serverName)
@@ -845,8 +865,8 @@ class CmdFIFOServerProxy(object):
 
         # Check to see if it is too soon to process this rpc.
         now = time.time()
-        dt_ms = int( (now - self.time_since_last_rpc)*1000 )
-        if dt_ms < self.min_ms_interval:
+        dt_ms = ((now - self.time_since_last_rpc) * 1000)
+        if dt_ms < float(self.min_ms_interval):
             return
         self.time_since_last_rpc = now
 
@@ -877,22 +897,40 @@ class CmdFIFOServerProxy(object):
             elif modeOverride == "V": return "OK"
             else: return "CB"
         else:
-            for _ in range(2):
-                # Perform command and re-establish connection if necessary
-                if self.setup:
-                    try:
-                        return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
-                    except Pyro4.errors.TimeoutError,e:
-                        raise TimeoutError("%s" % e)
-                    except Pyro4.errors.ConnectionClosedError:
-                        pass
-                        # print "Retrying proxy call: %s" % (dottedMethodName,)
-                time.sleep(0.5)
+            # Perform command and re-establish connection if necessary
+            if self.setup:
                 try:
-                    self.setupRemoteObject()
-                except Pyro4.errors.ProtocolError:
-                    self.setup = False
-            raise RemoteException("Remote cannot be reached for RPC")
+                    return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                #
+                #Handle these exceptions later!!!
+                #
+                except Pyro4.errors.TimeoutError,e:
+                    #raise TimeoutError("%s" % e)
+                    pass
+                except Pyro4.errors.ConnectionClosedError:
+                    pass
+                    # print "Retrying proxy call: %s" % (dottedMethodName,)
+                except Pyro4.errors.CommunicationError,e:
+                    #raise CommunicationError("%s" % e)
+                    pass
+                # ClaimInterfaceError is not an attribute of Pyro4, but the applyRemoteFunction
+                # sometimes attempts to pass _Method.__call__ to claim a USB interface via RPC
+                # then choke and throw multiple unhandled exceptions when Driver is down.
+                except Exception,e:
+                    if "ClaimInterfaceError" in str(e):
+                        #raise ClaimInterfaceError("%s" % e)
+                        pass
+                    elif "claimInterface" in str(e):
+                        #raise ClaimInterfaceError("%s" % e)
+                        pass
+            # Give the Pyro4 socket time to set itself up. Removing this tends
+            # to give unpredictable behavior when establishing remote objects
+            time.sleep(0.5)
+            try:
+                self.setupRemoteObject()
+            except Pyro4.errors.ProtocolError:
+                self.setup = False
+                raise RemoteException("Remote cannot be reached for RPC")
 
     def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
         """Sets how the client would like a registered server function to behave.

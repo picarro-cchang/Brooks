@@ -63,6 +63,28 @@ Notes:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
+import sys
+import os
+import Queue
+import re
+import stat
+import time
+import threading
+import shutil
+import traceback
+from tables import *
+
+from Host.Common import CmdFIFO, StringPickler, Listener, timestamp
+from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, \
+                                    RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
+from Host.Common.CustomConfigObj import CustomConfigObj
+from Host.Common.SafeFile import FileExists
+from Host.Common.MeasData import MeasData
+from Host.Common.InstErrors import *
+from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
+from Host.Common.EventManagerProxy import *
+from Host.Common.SingleInstance import SingleInstance
+from Host.Common.AppRequestRestart import RequestRestart
 ####
 # Set constants for this file...
 ####
@@ -72,32 +94,10 @@ APP_DESCRIPTION = "The data logger"
 _CONFIG_NAME = "DataLogger.ini"
 _PRIVATE_CONFIG_NAME = "PrivateLog.ini"
 _USER_CONFIG_NAME = "UserLog.ini"
+# Env vars to set the ini and output file paths
+CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
+LOG_DIR = os.environ['PICARRO_LOG_DIR']
 
-import datetime
-import sys
-import os
-import Queue
-import re
-import stat
-import time
-import threading
-import socket #for transmitting data to the fitter
-import struct #for converting numbers to byte format
-import shutil
-import traceback
-from inspect import isclass
-from tables import *
-
-from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster, timestamp
-from Host.Common.SharedTypes import RPC_PORT_DATALOGGER, BROADCAST_PORT_DATA_MANAGER, RPC_PORT_INSTR_MANAGER, \
-                                    RPC_PORT_ARCHIVER, RPC_PORT_DRIVER
-from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Common.SafeFile import SafeFile, FileExists
-from Host.Common.MeasData import MeasData
-from Host.Common.AppStatus import STREAM_Status
-from Host.Common.InstErrors import *
-from Host.Common.parsePeriphIntrfConfig import parsePeriphIntrfConfig
-from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
 DATALOGGER_RPC_SUCCESS = 0
@@ -241,6 +241,13 @@ class DataLog(object):
         self.SourceScript = ConfigParser.get(self.LogName, "sourcescript")
         self.UpdateInterval = ConfigParser.getfloat(self.LogName, "updateInterval", 10.0)
 
+        # Permanently disable the file backup and mailbox options.
+        # No one uses this feature and all it does is create additional
+        # clutter in the Log directory.
+        #
+        self.MboxEnabled = False
+        self.backupEnabled = False
+
         print("LogName: %s MaxLogDuration in seconds: %s" % (LogName, self.MaxLogDuration))
 
         # Add peripheral columns if available
@@ -270,20 +277,25 @@ class DataLog(object):
             self.delimiter = re.sub(pattern2, r'\1', delimiter)
         else:
             self.delimiter = delimiter
-        if sys.platform == "win32":
-            relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
-        else:
-            relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
-        self.srcDir = os.path.join(basePath, relDir)
+        # if sys.platform == "win32":
+        #     relDir = "%s\%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        # else:
+        #     relDir = "%s/%s" % (ConfigParser.get(self.LogName, "srcfolder"),self.LogName)
+        # self.srcDir = os.path.join(basePath, relDir)
 
         # Handle Linux if we want the log in the default user home directory.
         # If in the ini we have 'srcfolder = ~/Picarro/Log', expand the '~' to
         # the home directory of the user running the code.
         # If the directories don't exist they are created in _Create().
         #
-        if relDir.startswith("~"):
-            relDir = os.path.expanduser(relDir)
-            self.srcDir = relDir
+        # if relDir.startswith("~"):
+        #     relDir = os.path.expanduser(relDir)
+        #     self.srcDir = relDir
+
+        # Eliminate the srcfolder in the ini file.  Now the destination dir
+        # is in the log directory, the path specified with a an env. var.
+        self.srcDir = os.path.join(LOG_DIR, 'DataLogger', self.ArchiveGroupName)
+        print("-------------- srcDir:", self.srcDir)
 
         if self.liveArchive and self.useHdf5:
             raise ValueError('Cannot use live archive with HDF5 files in %s' % LogName)
@@ -588,6 +600,8 @@ class DataLogger(object):
     def __init__(self, ConfigPath, UserConfigPath, PrivateConfigPath):
 
         if DEBUG: Log("Loading config options.")
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+                                                     IsDontCareConnection=False)
         self.ConfigPath = ConfigPath
         self.UserConfigPath = UserConfigPath
         self.PrivateConfigPath = PrivateConfigPath
@@ -967,7 +981,7 @@ def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:u:p:", ["help"])
+        switches, args = getopt.getopt(sys.argv[1:], "h", ["help","ini=","user_ini=","private_ini="])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -986,48 +1000,49 @@ def HandleCommandSwitches():
     privateConfigFile = os.path.dirname(AppPath) + "/" + _PRIVATE_CONFIG_NAME
     userConfigFile = os.path.dirname(AppPath) + "/" + _USER_CONFIG_NAME
 
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
         Log ("Config file specified at command line: %s" % configFile)
 
-    if "-u" in options:
-        userConfigFile = options["-u"]
+    if "--user_ini" in options:
+        userConfigFile = os.path.join(CONFIG_DIR, options["--user_ini"])
         Log ("User Config file specified at command line: %s" % userConfigFile)
 
-    if "-p" in options:
-        privateConfigFile = options["-p"]
+    if "--private_ini" in options:
+        privateConfigFile = os.path.join(CONFIG_DIR, options["--private_ini"])
         Log ("Private Config file specified at command line: %s" % privateConfigFile)
 
     return (configFile, userConfigFile, privateConfigFile)
 def main():
+    DEBUG = __debug__
     #Get and handle the command line options...
     configFile, userConfigFile, privateConfigFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
-    try:
-        app = DataLogger(configFile, userConfigFile, privateConfigFile)
-        app.DATALOGGER_start()
-    except Exception, E:
-        if DEBUG: raise
-        msg = "Exception trapped outside execution"
-        print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+    my_instance = SingleInstance(APP_NAME)
+    if my_instance.alreadyrunning():
+        Log("Instance of %s already running" % APP_NAME, Level=2)
+    else:
+        Log("%s started." % APP_NAME, Level=0)
+        try:
+            # workaround for exception: AttributeError: _strptime_time
+            # time.strptime() is not thread-safe
+            # details: http://code-trick.com/python-bug-attribute-error-_strptime/
+            time.strptime(time.ctime())
+            app = DataLogger(configFile, userConfigFile, privateConfigFile)
+            app.DATALOGGER_start()
+        except Exception, e:
+            if DEBUG:
+                raise
+            LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
+            # Request a restart from Supervisor via RPC call
+            restart = RequestRestart(APP_NAME)
+            if restart.requestRestart(APP_NAME) is True:
+                Log("Restart request to supervisor sent", Level=0)
+            else:
+                Log("Restart request to supervisor not sent", Level=2)
+                
 
 if __name__ == "__main__":
-    DEBUG = __debug__
-    try:
-        # workaround for exception: AttributeError: _strptime_time
-        # time.strptime() is not thread-safe
-        # details: http://code-trick.com/python-bug-attribute-error-_strptime/
-        time.strptime(time.ctime())
-        main()
-    except:
-        tbMsg = traceback.format_exc()
-        Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = tbMsg)
-    Log("Exiting program")
-    sys.stdout.flush()
+    main()
 else:
     # This file is included from within a test harness
     DEBUG = True

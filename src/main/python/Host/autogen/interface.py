@@ -373,11 +373,11 @@ MESSAGE_OFFSET = 0x2B00
 # Offset for group table in DSP shared memory
 GROUP_OFFSET = 0x2F00
 # Offset for operation table in DSP shared memory
-OPERATION_OFFSET = 0x2F20
+OPERATION_OFFSET = 0x3000
 # Offset for operand table in DSP shared memory
-OPERAND_OFFSET = 0x3300
+OPERAND_OFFSET = 0x3400
 # Offset for environment table in DSP shared memory
-ENVIRONMENT_OFFSET = 0x3700
+ENVIRONMENT_OFFSET = 0x3800
 # Offset for host area in DSP shared memory
 HOST_OFFSET = 0x3F00
 # Offset for ringdown buffer area in DSP shared memory

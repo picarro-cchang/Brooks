@@ -19,16 +19,16 @@ import wx
 from Host.Common import CmdFIFO, SharedTypes, timestamp
 from Host.Common.Listener import Listener
 from Host.Common.TextListener import TextListener
-from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.autogen import interface
 from collections import deque
+from Host.Common.EventManagerProxyWithBuffer import EventManagerProxyWithBuffer
 
 import inspect
 from Queue import Queue
 import socket
 import threading
 
-EventManagerProxy_Init("Controller")
+event_manager_proxy = EventManagerProxyWithBuffer("Controller", buffer_size=50, buffer_periodical_flush_timing_ms=100)
 
 waveforms = {}
 dasInfo = {}
@@ -95,7 +95,7 @@ class RingdownListener(SharedTypes.Singleton):
                                  streamFilter=self.filter,
                                  retry=True,
                                  name="Controller ringdown stream listener",
-                                 logFunc=Log)
+                                 logFunc=event_manager_proxy.Log)
 
     def filter(self, data):
         # if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask:
@@ -105,7 +105,7 @@ class RingdownListener(SharedTypes.Singleton):
         ringdownLock.acquire()
         try:
             if data.status & interface.RINGDOWN_STATUS_RingdownTimeout:
-                Log("Ringdown timeout at %s" % data.timestamp)
+                event_manager_proxy.Log("Ringdown timeout at %s" % data.timestamp)
             else:
                 ringdowns.append(data)
             if len(ringdowns) > ringdownPoints:
@@ -126,7 +126,7 @@ class SensorListener(SharedTypes.Singleton):
                                  streamFilter=self.filter,
                                  retry=True,
                                  name="Controller sensor stream listener",
-                                 logFunc=Log)
+                                 logFunc=event_manager_proxy.Log)
 
     def filter(self, data):
         utime = timestamp.unixTime(data.timestamp)
@@ -237,7 +237,7 @@ class LogListener(SharedTypes.Singleton):
                                      port=SharedTypes.BROADCAST_PORT_EVENTLOG,
                                      retry=True,
                                      name="Controller event log listener",
-                                     logFunc=Log)
+                                     logFunc=event_manager_proxy.Log)
 
     def getLogMessage(self):
         if not self.queue.empty():
@@ -279,7 +279,7 @@ class ControllerRpcHandler(SharedTypes.Singleton):
         """ Registers the functions accessible by XML-RPC """
         # register the functions contained in this file...
         self._register_rpc_functions_for_object(self)
-        Log("Registered RPC functions")
+        event_manager_proxy.Log("Registered RPC functions")
 
     def version(self):
         return "Controller 1.0"

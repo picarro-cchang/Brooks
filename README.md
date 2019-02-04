@@ -24,4 +24,4 @@ The only persons currently allowed to commit to this repo are
 * Chetan Vala
 * Gerald Sornsen
 * Patrick Pittier (administrator)
-* Raymond Fellers
+* Petr Khromov
