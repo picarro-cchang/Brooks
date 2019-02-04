@@ -57,8 +57,9 @@ class QTaskWizardWidget(QtGui.QWidget):
     view_editors_signal = QtCore.pyqtSignal()
     hide_editors_signal = QtCore.pyqtSignal()
 
-    def __init__(self, co=None, parent=None):
+    def __init__(self, co=None, db=None, parent=None):
         QtGui.QWidget.__init__(self)
+        self.db = db
         self._reportTextObj = None          # QTextDocument object containing the measurement report
         self._reportFileName = None         # File name of the PDF doc containing _reportTextObj
         self._running = False               # Track if we are in a validation run
@@ -191,11 +192,15 @@ class QTaskWizardWidget(QtGui.QWidget):
         return
 
     def _view_report(self):
+        logStr = "viewed system validation report. Report file: {0}".format(self._reportFileName)
+        self.db.log(logStr)
         report_dialog = QReportDisplayDialog(fileName = self._reportFileName, textDoc = self._reportTextObj, parent = self)
         report_dialog.exec_()
         return
 
     def _open_filemanager(self):
+        logStr = "clicked download system validation report"
+        self.db.log(logStr)
         cmd = ["python",
                "/usr/local/picarro/qtLauncher/FileManager/main.py",
                "--dir",
@@ -282,6 +287,18 @@ class QTaskWizardWidget(QtGui.QWidget):
         str += "Wait until data appears in the time series plot and then click START.\n"
         dialog = QtGui.QMessageBox(self)
         dialog.setText(str)
+        dialog.setIcon(QtGui.QMessageBox.Information)
+        dialog.setStandardButtons(QtGui.QMessageBox.Ok)
+        dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
+        dialog.exec_()
+
+        self.abort_signal.emit()    # This will re-enable the main GUI close button
+        self._startup_settings()
+        return
+
+    def abort_with_warning(self, msg):
+        dialog = QtGui.QMessageBox(self)
+        dialog.setText(msg)
         dialog.setIcon(QtGui.QMessageBox.Information)
         dialog.setStandardButtons(QtGui.QMessageBox.Ok)
         dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)

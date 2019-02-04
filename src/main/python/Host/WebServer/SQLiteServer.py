@@ -491,21 +491,21 @@ def before_first_request():
         pds.create_role(name='Technician')
         pds.create_role(name='Operator')
         # create a default admin account
-        admin = pds.create_user(username='admin', \
+        admin = pds.create_user(username='admin',
             password=utils.encrypt_password('admin'),
             phone_number='1-408-962-3900')
         pds.add_role_to_user(admin, pds.find_role("Admin"))
-        technician = pds.create_user(username='tech',\
+        technician = pds.create_user(username='tech',
             password=utils.encrypt_password('tech'))
         pds.add_role_to_user(technician, pds.find_role("Technician"))
-        operator = pds.create_user(username='operator', \
+        operator = pds.create_user(username='operator',
             password=utils.encrypt_password('operator'))
         pds.add_role_to_user(operator, pds.find_role("Operator"))
         # add default user policies
         default_policies = dict(
             password_length='6',
             password_mix_charset='False',
-            password_lifetime='182',    # days
+            password_lifetime='-1',    # days
             password_reuse_period='5',  # times
             user_login_attempts='3',    # times
             user_session_lifetime='10',  # minutes

@@ -291,6 +291,14 @@ class QuickGui(wx.Frame):
         try:
             self.cavityPressureS = self.sampleMgrRpc.ReadOperatePressureSetpoint()
             self.cavityPressureTPer = self.sampleMgrRpc.ReadPressureTolerancePer()
+            # some of the supervisor mode (Integration mode pressure cal) we do not require sample manager
+            # and because of that we do not start sample manager process
+            # During that time CavityPressreS and CavityPressureTPer set as None
+            # and Quick gui process throws exception
+            if self.cavityPressureS is None:
+                self.cavityPressureS = 140.0
+            if self.cavityPressureTPer is None:
+                self.cavityPressureTPer = 0.05
         except:
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
@@ -980,12 +988,25 @@ class QuickGui(wx.Frame):
                 self._setDisplayedSource(self.shutdownShippingSource)
             except Exception, err:
                 print "2003 %r" % err
+            Log("Quit software from QuickGui by User: %s" % self.currentUser["username"], Level=0)
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode, powerOffAnalyzer)
             payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
             self._sendRequest("post", "action", payload, useToken=True)
             self.shutdownButton.Enable(False)
+            # lets disable menu bar items also as we are in Quit mode and parking
+            # so block all other functionalities
+            self._menu_bar_enable(False)
         dialog.Destroy()
         return
+
+    def _menu_bar_enable(self, enable):
+        """
+        Method use to enable/disable menu bar items
+        :return:
+        """
+        self.menuBar.EnableTop(0, enable)
+        self.menuBar.EnableTop(1, enable)
+        self.menuBar.EnableTop(2, enable)
 
     def _OnResetBuffers(self, evt):
         for s in self.dataStore.getSources():
@@ -1562,7 +1583,7 @@ class QuickGui(wx.Frame):
                     if "error" in returnDict:
                         msg = returnDict["error"]
                         if "Password expire" in msg:
-                            msg = self.OnChangePwd(user, pwd)
+                            msg = self._OnChangePwd(user, pwd)
                             if len(msg) == "":
                                 break
                         elif "HTTPConnection" in msg:
@@ -1677,7 +1698,7 @@ class QuickGui(wx.Frame):
             self.sessionTimer.Stop()
 
     def _OnChangePwd(self, username, password):
-        msg = "Password Expired! Must change password."
+        msg = "Password Expired! Please change password."
         while True:
             d = Dialog.ChangePasswordDialog(self, msg=msg)
             setItemFont(d, self.fontDatabase.getFontFromIni("Dialogs"))
@@ -1688,7 +1709,7 @@ class QuickGui(wx.Frame):
             if not okClicked:
                 return ""
             elif pwd != pwd2:
-                msg = "Password not match!"
+                msg = "Passwords do not match!"
             else:
                 payload = {
                     "password": password,

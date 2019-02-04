@@ -44,9 +44,8 @@ class ParameterDialogGui(wx.Dialog):
         sizer_2.Add(self.discardButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 20)
         sizer_2.Add((5, 20), 1, 0, 0)
         self.panel_1.SetSizer(sizer_2)
-        sizer_1.Add(self.panel_1, 0, wx.EXPAND, 20)
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
+        sizer_1.Add(self.panel_1, 0, wx.EXPAND|wx.ALL, 20)
+        self.SetSizerAndFit(sizer_1)
         self.Layout()
         # end wxGlade
 
@@ -70,3 +69,4 @@ if __name__ == "__main__":
     dialog_1 = ParameterDialogGui(None, wx.ID_ANY, "")
     app.SetTopWindow(dialog_1)
     dialog_1.ShowModal()
+

@@ -12,32 +12,28 @@
 import sys
 if ".." not in sys.path: sys.path.append("..")
 from scipy.signal import lfilter, butter
-
-import wx
-import matplotlib
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx
-
-import socket
-import time
-from ctypes import *
-from tables import *
-from Host.autogen.interface import *
-from Host.Common import CmdFIFO, SharedTypes
-from Host.Common.SharedTypes import RPC_PORT_DRIVER
-
 import threading
 from numpy import *
 from tables import *
-from enthought.traits.api import *
-from enthought.traits.api import File as EnthoughtFile
-from enthought.traits.ui.api import *
-from enthought.traits.ui.menu import *
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.table_column import *
+from traits.api import *
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'wx'
+from traits.api import File as EnthoughtFile
+from traitsui.api import *
+from traitsui.menu import *
+from traitsui.wx.editor import Editor
+from traitsui.table_column import *
 from traceback import format_exc
 from numpy.linalg import solve
+import matplotlib
+matplotlib.use('WXAgg')
+import wx
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.figure import Figure
+import time
+from Host.autogen.interface import *
+from Host.Common import CmdFIFO
+from Host.Common.SharedTypes import RPC_PORT_DRIVER
 from Host.MfgUtilities.FigureInteraction import FigureInteraction
 
 def doFit(data,tSamp):

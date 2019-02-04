@@ -28,6 +28,7 @@ if hasattr(sys, "frozen"): #we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 APP_NAME = "4to20Server"
+CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
@@ -269,8 +270,8 @@ def printUsage():
     print HELP_STRING
 
 def handleCommandSwitches():
-    shortOpts = 'hc:s'
-    longOpts = ["help"]
+    shortOpts = 'hs'
+    longOpts = ["help", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -289,8 +290,8 @@ def handleCommandSwitches():
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
-    if "-c" in options:
-        configFile = options["-c"]
+    if "--ini" in options:
+        configFile = os.path.join(CONFIG_DIR, options["--ini"])
     if "-s" in options:
         simulation = True
 

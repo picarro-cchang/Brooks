@@ -229,6 +229,20 @@ class SpectrumCollector(object):
             spectraInScheme = []
             self.prepareForNewSpectrum()
 
+            # Some time file does not archive when user quit host application before
+            # whole scheme data collected or system crash in middle of
+            # data acquisition. In that case such file will be never archived and
+            # file will stay for life time in the directory and there is chance that
+            # down the road directory (it will take many years though) will be get
+            # filled and then os can not able to restart(Same as RDF bug)
+            # So before we start collecting ring down and save new ringdown in to .h5 files
+            # lets archive any unarchived file/s
+            files = os.listdir(self.streamDir)
+            for fileName in files:
+                if fileName.endswith(".h5"):
+                    filePath = os.path.join(self.streamDir, fileName)
+                    self.archiveSpectrumFile(filePath, None)
+
             while not self._shutdownRequested:
                 #Pull a spectral point from the RD queue...
                 try:

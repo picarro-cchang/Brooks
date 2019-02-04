@@ -12,6 +12,7 @@ from QPlotWidget import QPlotWidget
 from QTaskWizardWidget import QTaskWizardWidget
 from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
+from Host.Common.SingleInstance import SingleInstance
 
 class Window(QtGui.QMainWindow):
     def __init__(self, iniFile, debug_mode=False):
@@ -92,7 +93,7 @@ class Window(QtGui.QMainWindow):
         self.plotWidget = QPlotWidget(self)
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
         self.tableWidget = QReferenceGasEditorWidget()
-        self.taskWizardWidget = QTaskWizardWidget(self.tm.co)
+        self.taskWizardWidget = QTaskWizardWidget(self.tm.co, self._db)
         self.taskEditorWidget = QTaskEditorWidget()
         gl = QtGui.QGridLayout()
         gl.addWidget(self.plotWidget, 0, 0)
@@ -152,6 +153,17 @@ class Window(QtGui.QMainWindow):
         return
 
     def start_running_tasks(self):
+        # Remind user if user have edited parameter and forgot to save or undo
+        # before starting validation
+        if self.taskEditorWidget.isEditing or self.tableWidget.isEditing:
+            str = "Settings changed for:\n"
+            if self.tableWidget.isEditing:
+                str += "    * Reference Gas Editor\n"
+            if self.taskEditorWidget.isEditing:
+                str += "    * Task Editor\n"
+            str += "Either UNDO or SAVE settings and then click START"
+            self.taskWizardWidget.abort_with_warning(str)
+            return
         self.closeBtn.setEnabled(False)
         self.tm.start_work()
         return
@@ -270,11 +282,18 @@ def HandleCommandSwitches():
     return (configFile, debug_mode)
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
-    (configFile, debug_mode) = HandleCommandSwitches()
-    GUI = Window(iniFile=configFile, debug_mode=debug_mode)
-    sys.exit(app.exec_())
+    # Save the pid file in the /tmp/ directory so Supervisor doesn't try to
+    # restart the app during its MonitorApps loop
+    path = "/tmp/"
+    userAdminApp = SingleInstance("CalibrationValidation", path)
+    if not userAdminApp.alreadyrunning():
+        app = QtGui.QApplication(sys.argv)
+        # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt())
+        (configFile, debug_mode) = HandleCommandSwitches()
+        GUI = Window(iniFile=configFile, debug_mode=debug_mode)
+        sys.exit(app.exec_())
+    else:
+        print "Instance of Calibration Validation Tool already running."
 
 if __name__ == "__main__":
     main()
