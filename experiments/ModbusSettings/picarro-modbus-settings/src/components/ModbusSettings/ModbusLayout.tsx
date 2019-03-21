@@ -33,10 +33,6 @@ export class ModbusLayout extends Component<Props, any> {
     PicarroAPI.postData('http://localhost:4000/modbus_settings', {
       slave: slaveId,
       port: tcpPort,
-    }).then(response => {
-      response.text().then(text => {
-        console.log(text);
-      });
     });
   }
 

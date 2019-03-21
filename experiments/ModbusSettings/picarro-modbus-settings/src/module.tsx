@@ -11,10 +11,10 @@ console.log(defaults);
 
 PicarroAPI.getRequest('http://localhost:4000/modbus_settings').then(
   response => {
-    console.log(defaults);
     let localValues = { ...defaults };
     localValues['slaveId'] = parseInt(response['slave']);
     localValues['tcpPort'] = parseInt(response['port']);
+    console.log(localValues);
     reactPanel.setEditor(ModbusPanelEditor);
     reactPanel.setDefaults(localValues);
   }
