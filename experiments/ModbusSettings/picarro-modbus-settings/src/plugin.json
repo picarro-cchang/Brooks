@@ -2,7 +2,7 @@
   "type": "panel",
   "name": "Modbus Setting",
   "id": "modbus-setting",
-  "dataFormats": ["time_series"],
+  "dataFormats": [],
   "info": {
     "description": "Modbus Seting",
     "author": {
