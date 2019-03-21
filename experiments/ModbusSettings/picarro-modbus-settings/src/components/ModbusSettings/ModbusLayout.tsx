@@ -40,58 +40,49 @@ export class ModbusLayout extends Component<Props, any> {
     const { options } = this.props;
     const { slaveId, tcpPort } = options;
     return (
-      <div>
-        <div
-          style={{
-            display: 'flex',
-            width: '100%',
-            height: '100%',
-            flexDirection: 'column',
-          }}
-        />
-        <div className="gf-form-group">
-          <div className="gf-form">
-            <span className="gf-form-label min-width-10">Ip Address</span>
-            <input
-              type="text"
-              className="gf-form-input"
-              placeholder=""
-              value={this.state.ipAddress}
-              readOnly
-            />
-          </div>
-
-          <div className="gf-form">
-            <span className="gf-form-label min-width-10">Salve Id</span>
-            <input
-              type="text"
-              className="gf-form-input"
-              placeholder=""
-              value={slaveId}
-              readOnly
-            />
-          </div>
-
-          <div className="gf-form">
-            <span className="gf-form-label min-width-10">TCP Port</span>
-            <input
-              type="text"
-              className="gf-form-input"
-              placeholder=""
-              value={tcpPort}
-              readOnly
-            />
-          </div>
-          <div className="gf-form-button-row">
-            <button
-              onClick={() => this.onSaveClick(options)}
-              className="btn btn-primary"
-            >
-              Save and Restart Server
-            </button>
-          </div>
+      <form className="gf-form-group ng-pristine ng-invalid">
+        <div>&nbsp;</div>
+        <div className="gf-form">
+          <span className="gf-form-label min-width-10">Ip Address</span>
+          <input
+            type="text"
+            className="gf-form-input"
+            placeholder=""
+            value={this.state.ipAddress}
+            readOnly
+          />
         </div>
-      </div>
+
+        <div className="gf-form">
+          <span className="gf-form-label min-width-10">Salve Id</span>
+          <input
+            type="text"
+            className="gf-form-input"
+            placeholder=""
+            value={slaveId}
+            readOnly
+          />
+        </div>
+
+        <div className="gf-form">
+          <span className="gf-form-label min-width-10">TCP Port</span>
+          <input
+            type="text"
+            className="gf-form-input"
+            placeholder=""
+            value={tcpPort}
+            readOnly
+          />
+        </div>
+        <div className="gf-form-button-row">
+          <button
+            onClick={() => this.onSaveClick(options)}
+            className="btn btn-primary"
+          >
+            Save and Restart Server
+          </button>
+        </div>
+      </form>
     );
   }
 }
