@@ -49,9 +49,9 @@ export class ModbusLayout extends Component<Props, any> {
             flexDirection: 'column',
           }}
         />
-        <div className="gf-form-inline">
-          <div className="gf-form" ng-style="{height: ctrl.height}">
-            <span className="gf-form-label width-10">Ip Address</span>
+        <div className="gf-form-group">
+          <div className="gf-form">
+            <span className="gf-form-label min-width-10">Ip Address</span>
             <input
               type="text"
               className="gf-form-input"
@@ -61,8 +61,8 @@ export class ModbusLayout extends Component<Props, any> {
             />
           </div>
 
-          <div className="gf-form" ng-style="{height: ctrl.height}">
-            <span className="gf-form-label width-10">Salve Id</span>
+          <div className="gf-form">
+            <span className="gf-form-label min-width-10">Salve Id</span>
             <input
               type="text"
               className="gf-form-input"
@@ -72,8 +72,8 @@ export class ModbusLayout extends Component<Props, any> {
             />
           </div>
 
-          <div className="gf-form" ng-style="{height: ctrl.height}">
-            <span className="gf-form-label width-10">TCP Port</span>
+          <div className="gf-form">
+            <span className="gf-form-label min-width-10">TCP Port</span>
             <input
               type="text"
               className="gf-form-input"
