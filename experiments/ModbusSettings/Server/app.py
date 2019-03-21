@@ -6,19 +6,23 @@ from flask import Flask
 import argparse
 from flask_cors import CORS
 import json
-from Routes.NetworkRoutes import NetworkRoutes
-from Module.NetworkModule import NetworkModule
-from Module.ModbusSettingModule import ModbusSettingModule
-from Routes.ModbusSettingRoutes import ModbusSettingsRoutes
+from host.experiments.ModbusSettings.Server.Routes.NetworkRoutes import NetworkRoutes
+from host.experiments.ModbusSettings.Server.Module.NetworkModule import NetworkModule
+from host.experiments.ModbusSettings.Server.Module.ModbusSettingModule import ModbusSettingModule
+from host.experiments.ModbusSettings.Server.Routes.ModbusSettingRoutes import ModbusSettingsRoutes
+from host.experiments.DBDriver.InfluxDBWriter import InfluxDBWriter
 
 
 class App:
     def __init__(self):
 
+        # Lets create instance of mongo db so we can pass connection object to each routs
+        db_connection = InfluxDBWriter()
+
         # Create Fitter data routs object
         self.network_model_obj = NetworkModule()
 
-        self.modebus_settings_model_obj = ModbusSettingModule()
+        self.modebus_settings_model_obj = ModbusSettingModule(db_connection)
 
         # Create flask app
         self.app = Flask(__name__)
