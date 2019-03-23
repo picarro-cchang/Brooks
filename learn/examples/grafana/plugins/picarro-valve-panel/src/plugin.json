@@ -1,0 +1,19 @@
+{
+  "type": "panel",
+  "name": "Valve Panel",
+  "id": "picarro-valve-panel",
+  "dataFormats": [],
+  "info": {
+    "description": "Valve Panel",
+    "author": {
+      "name": "Picarro, Inc.",
+      "url": "https://picarro.com"
+    },
+    "version": "0.1.0",
+    "updated": "2019-03-20"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.x.x"
+  }
+}

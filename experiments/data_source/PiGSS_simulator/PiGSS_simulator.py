@@ -1,6 +1,6 @@
 import datetime
 import sys
-from threading import Thread
+from threading import Thread, Lock
 import time
 from collections import defaultdict, namedtuple
 from heapq import heappop, heappush
@@ -10,10 +10,10 @@ except ImportError:
     from Queue import Queue, Empty
 
 from InfluxDBWriter import InfluxDBWriter
-# import matplotlib.pyplot as plt
 import numpy as np
 import pytz
 
+import CmdFIFO
 
 ORIGIN = datetime.datetime(datetime.MINYEAR, 1, 1, 0, 0, 0, 0)
 UNIXORIGIN = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
@@ -33,7 +33,7 @@ Analyzer = namedtuple('Analyzer', ['name', 'species', 'source', 'mode', 'interva
 SimEvent = namedtuple('SimEvent', ['when', 'seq', 'gen'])
 
 
-def csinc(N, phi):
+def scale_func(N, phi):
     sphi = np.sin(phi)
     return N*np.exp(-0.5*N*sphi**2)
     # return np.sin(N * phi) / sphi if abs(sphi) > 1.0e-12 else float(N)
@@ -57,11 +57,11 @@ class SimMeas(object):
         self.last_meas = None
 
     def get_conc(self, when, valve_pos):
-        # Calculate concentration using a circular sinc function. The parameter N selects
+        # Calculate concentration using a function 'scale_func'. The parameter N selects
         #  how sharp the peak is
         N = 10
         phase = np.pi * ((when - self.time_origin) / self.cycle_time - self.peak_phase[valve_pos])
-        fac = 1.0 + csinc(N, phase) / N
+        fac = 1.0 + scale_func(N, phase) / N
         return fac * self.base_conc[valve_pos] + np.random.normal(0.0, self.fluct_conc[valve_pos])
 
     def get_meas(self, when, valve_pos):
@@ -74,33 +74,64 @@ class SimMeas(object):
 
 
 class PiGSS(object):
-    def __init__(self, analyzers, start_time, num_pos=16):
+    def __init__(self, analyzers, sim, num_pos=16, valve_period=60):
         self.data_queue = Queue()
         self.num_pos = num_pos
+        self.valve_period = valve_period
         self.valve_pos = 0
+        self.valve_lock = Lock()
+        self.valve_mode = -1
         self.mean_conc = {}
         self.std_conc = {}
         self.sim_meas = {}
         self.analyzers = analyzers
         self.species = []
         self.running = True
+        self.sim = sim
+        start_time = sim.sim_time
         for analyzer in analyzers:
             for species in analyzer.species:
                 self.sim_meas[species] = SimMeas(species, num_pos, start_time)
         self.last_valve_change_time = start_time
         self.results = defaultdict(list)
 
-    def valve_switcher_task(self, sim, period):
+    def get_valve_mode(self):
+        # If valve_mode == -1, we scan between the various valve positions in sequence
+        #  and if valve_mode > 0, the valve position is fixed to that value
+        return self.valve_mode
+
+    def set_valve_mode(self, mode):
+        if mode < -1 or mode >= self.num_pos:
+            raise ValueError("Invalid valve mode")
+        with self.valve_lock:
+            if mode != self.valve_mode:
+                self.valve_mode = mode
+                if mode >= 0:  # Switch to fixed valve position
+                    self.valve_pos = mode
+                    self.last_valve_change_time = time.time()
+                    print('Manual valve set %.3f: valve_position %d' % (self.last_valve_change_time, self.valve_pos))
+                else:  # (Re-)start the valve switcher task
+                    self.valve_pos = (self.valve_pos + 1) % self.num_pos
+                    self.last_valve_change_time = time.time()
+                    self.sim.enqueue_task(self.sim.sim_time, self.valve_switcher_task())
+
+    def valve_switcher_task(self):
+        period = self.valve_period
+        sim = self.sim
         name = 'Valve switcher'
         while True:
             print('%s running at %.3f: valve_position %d' % (name, sim.sim_time, self.valve_pos))
             yield sim.sim_time + period
-            self.valve_pos += 1
-            if self.valve_pos >= self.num_pos:
-                self.valve_pos = 0
-            self.last_valve_change_time = sim.sim_time
+            with self.valve_lock:
+                if self.valve_mode >= 0:
+                    yield None
+                self.valve_pos += 1
+                if self.valve_pos >= self.num_pos:
+                    self.valve_pos = 0
+                self.last_valve_change_time = sim.sim_time
 
-    def calc_data_task(self, sim, analyzer):
+    def calc_data_task(self, analyzer):
+        sim = self.sim
         filling = True
         queue_hwm = 300
         queue_lwm = 50
@@ -194,7 +225,11 @@ class Simulator(object):
                 self.enqueue_task(next_time, gen)
         print("Simulation complete")
 
-if __name__ == "__main__":
+def printer(x):
+    print(x)
+    return x
+
+def main():
     db_writer = InfluxDBWriter("localhost", "pigss_data", batch_size=500)
     sim = Simulator(real_time=True)
     num_pos = 16
@@ -204,11 +239,31 @@ if __name__ == "__main__":
         Analyzer('SBDS3002', ['HCl'], 'analyze_SADS', 'HCl_mode', 1.2),
         Analyzer('BFADS3003', ['H2S'], 'analyze_BFADS', 'BFADS_mode', 1.3)]
 
-    pigss = PiGSS(analyzers, sim.sim_time, num_pos)
-    sim.enqueue_task(sim.sim_time, pigss.valve_switcher_task(sim, 60))
+    pigss = PiGSS(analyzers, sim, num_pos, valve_period=60)
+    if pigss.valve_mode < 0:
+        sim.enqueue_task(sim.sim_time, pigss.valve_switcher_task())
     for analyzer in analyzers:
-        sim.enqueue_task(sim.sim_time, pigss.calc_data_task(sim, analyzer))
+        sim.enqueue_task(sim.sim_time, pigss.calc_data_task(analyzer))
     # sim.enqueue_task(sim.sim_time + 2 * 60 * num_pos**2, sim.stop_task())
+
+    rpcServer = CmdFIFO.CmdFIFOServer(("", 51234),
+                                      ServerName="RPCHost",
+                                      ServerDescription="RpcHost",
+                                      ServerVersion="1.0",
+                                      threaded=True)
+
+    def rpc_task():
+        rpcServer.serve_forever()
+        sim.stop()
+
+    rpcServer.register_function(printer)
+    rpcServer.register_function(pigss.set_valve_mode)
+    rpcServer.register_function(pigss.get_valve_mode)
+
+    rpc_thread = Thread(target=rpc_task)
+    rpc_thread.daemon = True
+    rpc_thread.start()
+
     th = Thread(target=db_writer.run, args=(pigss.data_gen,))
     th.daemon = True
     th.start()
@@ -216,6 +271,10 @@ if __name__ == "__main__":
     pigss.running = False
     print("Waiting for sending to database to complete")
     th.join()
+
+if __name__ == "__main__":
+    main()
+
     # for species in pigss.results:
     #     plt.figure()
     #     when = np.asarray([t for t, _ in pigss.results[species]])

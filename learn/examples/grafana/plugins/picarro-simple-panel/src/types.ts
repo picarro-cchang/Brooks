@@ -1,5 +1,7 @@
 import {
   GrafanaTheme,
+  TimeRange,
+//  TimeSeriesVMs,
 } from '@grafana/ui';
 
 export interface SimpleOptions {
@@ -15,6 +17,8 @@ export const defaults: SimpleOptions = {
 };
 
 export interface LayoutProps {
+//  timeSeries: TimeSeriesVMs;
+  timeRange: TimeRange;
   width: number;
   height: number;
   options: SimpleOptions;
