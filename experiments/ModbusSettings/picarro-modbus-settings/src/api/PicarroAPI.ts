@@ -1,6 +1,5 @@
 let PicarroAPI = {
   postData(url: string, data: object) {
-    console.log(data);
     return fetch(url, {
       method: 'POST',
       headers: {

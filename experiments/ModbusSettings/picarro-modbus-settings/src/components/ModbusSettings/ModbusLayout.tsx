@@ -21,15 +21,12 @@ export class ModbusLayout extends Component<Props, any> {
     let newstate = {};
     PicarroAPI.getRequest('http://localhost:4000/network').then(response => {
       newstate['ipAddress'] = response['ip'];
-      console.log(newstate);
       this.setState(newstate);
     });
   }
 
   onSaveClick(options) {
     const { slaveId, tcpPort } = options;
-    console.log(slaveId);
-    console.log(tcpPort);
     PicarroAPI.postData('http://localhost:4000/modbus_settings', {
       slave: slaveId,
       port: tcpPort,
@@ -39,8 +36,10 @@ export class ModbusLayout extends Component<Props, any> {
   render() {
     const { options } = this.props;
     const { slaveId, tcpPort } = options;
+    //console.log(slaveId);
+    //console.log(tcpPort);
     return (
-      <form className="gf-form-group ng-pristine ng-invalid">
+      <div className="gf-form-group ng-pristine ng-invalid">
         <div>&nbsp;</div>
         <div className="gf-form">
           <span className="gf-form-label min-width-10">Ip Address</span>
@@ -82,7 +81,7 @@ export class ModbusLayout extends Component<Props, any> {
             Save and Restart Server
           </button>
         </div>
-      </form>
+      </div>
     );
   }
 }
