@@ -40,7 +40,8 @@ class ModbusSettingModule:
                 "measurement": "modbusSettings",
                 "fields": {
                     "slave": int(data['slave']),
-                    "port": int(data['port'])
+                    "port": int(data['port']),
+                    "user":data['user']
                 }
             }]
             print(write_data)

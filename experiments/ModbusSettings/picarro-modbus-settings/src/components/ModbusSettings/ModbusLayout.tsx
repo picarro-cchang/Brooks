@@ -27,17 +27,19 @@ export class ModbusLayout extends Component<Props, any> {
 
   onSaveClick(options) {
     const { slaveId, tcpPort } = options;
-    PicarroAPI.postData('http://localhost:4000/modbus_settings', {
-      slave: slaveId,
-      port: tcpPort,
+    PicarroAPI.getRequest('http://localhost:3000/api/user').then(response => {
+      PicarroAPI.postData('http://localhost:4000/modbus_settings', {
+        slave: slaveId,
+        port: tcpPort,
+        user: response['email'],
+      });
     });
   }
 
   render() {
     const { options } = this.props;
     const { slaveId, tcpPort } = options;
-    //console.log(slaveId);
-    //console.log(tcpPort);
+
     return (
       <div className="gf-form-group ng-pristine ng-invalid">
         <div>&nbsp;</div>
