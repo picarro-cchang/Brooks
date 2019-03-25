@@ -35,7 +35,7 @@ $ npm run build
 
 #### Start the Flask Server:
 ```bash
-python /home/$USER/git/picarro-networking-plugin-jsx/src/flask_server.py
+$ python /home/$USER/git/picarro-networking-plugin-jsx/src/flask_server.py
 ```
 #### Open your browser to http://localhost:3000
 #### Import the plug-in
