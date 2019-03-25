@@ -1,4 +1,4 @@
-#Pure JSX Grafana Plugin
+# Pure JSX Grafana Plugin
 
 ### Currently working
 * @grafana/ui imports
