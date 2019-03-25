@@ -15,8 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 13,
-  "iteration": 1552589214496,
+  "id": 3,
+  "iteration": 1553304579022,
   "links": [
     {
       "icon": "external link",
@@ -204,13 +204,13 @@
         "x": 4,
         "y": 1
       },
-      "id": 72,
+      "id": 104,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -353,13 +353,13 @@
         "x": 8,
         "y": 1
       },
-      "id": 73,
+      "id": 105,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -502,13 +502,13 @@
         "x": 12,
         "y": 1
       },
-      "id": 74,
+      "id": 106,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -651,13 +651,13 @@
         "x": 16,
         "y": 1
       },
-      "id": 75,
+      "id": 107,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -800,13 +800,13 @@
         "x": 20,
         "y": 1
       },
-      "id": 76,
+      "id": 108,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -949,13 +949,13 @@
         "x": 0,
         "y": 6
       },
-      "id": 77,
+      "id": 109,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1098,13 +1098,13 @@
         "x": 4,
         "y": 6
       },
-      "id": 78,
+      "id": 110,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1247,13 +1247,13 @@
         "x": 8,
         "y": 6
       },
-      "id": 79,
+      "id": 111,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1396,13 +1396,13 @@
         "x": 12,
         "y": 6
       },
-      "id": 80,
+      "id": 112,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1545,13 +1545,13 @@
         "x": 16,
         "y": 6
       },
-      "id": 81,
+      "id": 113,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1694,13 +1694,13 @@
         "x": 20,
         "y": 6
       },
-      "id": 82,
+      "id": 114,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1843,13 +1843,13 @@
         "x": 0,
         "y": 11
       },
-      "id": 83,
+      "id": 115,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1992,13 +1992,13 @@
         "x": 4,
         "y": 11
       },
-      "id": 84,
+      "id": 116,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2141,13 +2141,13 @@
         "x": 8,
         "y": 11
       },
-      "id": 85,
+      "id": 117,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2290,13 +2290,13 @@
         "x": 12,
         "y": 11
       },
-      "id": 86,
+      "id": 118,
       "links": [],
       "maxPerRow": 6,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589214496,
+      "repeatIteration": 1553304579022,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2636,6 +2636,25 @@
         }
       ],
       "valueName": "avg"
+    },
+    {
+      "description": "",
+      "gridPos": {
+        "h": 2,
+        "w": 11,
+        "x": 6,
+        "y": 17
+      },
+      "id": 103,
+      "links": [],
+      "options": {
+        "buttonsPerRow": 9,
+        "numberOfValves": 16
+      },
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Valve Mode",
+      "type": "picarro-valve-panel"
     }
   ],
   "refresh": "5s",
@@ -2712,7 +2731,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -2743,5 +2762,5 @@
   "timezone": "",
   "title": "Summary Dashboard",
   "uid": "XU6v2lCik",
-  "version": 2
+  "version": 5
 }
