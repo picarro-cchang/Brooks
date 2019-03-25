@@ -12,12 +12,12 @@
 ***
 
 ### Usage
-####Clone this repository:
+#### Clone this repository:
 ```bash
 mkdir -p ~/git && cd ~/git
 git clone -b <branch> https://github.com/picarro/I2000-Host.git
 ```
-####Symlink the project directory to the Grafana plugin directory
+#### Symlink the project directory to the Grafana plugin directory
 
 Standalone binary:
 ```bash
@@ -27,13 +27,13 @@ Debian binary:
 ```bash
 $ sudo ln -s /home/$USER/git/picarro-networking-plugin-jsx /var/lib/grafana/data/plugin/picarro-networking-plugin-jsx
 ```
-####Build the project:
+#### Build the project:
 ```bash
 $ npm run build
 ```
-####Start the Grafana Server
+#### Start the Grafana Server
 
-####Start the Flask Server:
+#### Start the Flask Server:
 ```bash
 python /home/$USER/git/picarro-networking-plugin-jsx/src/flask_server.py
 ```
