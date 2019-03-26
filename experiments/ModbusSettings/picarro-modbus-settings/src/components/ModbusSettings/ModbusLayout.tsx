@@ -26,19 +26,31 @@ export class ModbusLayout extends Component<Props, any> {
   }
 
   onSaveClick(options) {
-    const { slaveId, tcpPort } = options;
-    PicarroAPI.getRequest('http://localhost:3000/api/user').then(response => {
-      PicarroAPI.postData('http://localhost:4000/modbus_settings', {
-        slave: slaveId,
-        port: tcpPort,
-        user: response['email'],
-      });
+    const { slaveId, tcpPort, user } = options;
+    PicarroAPI.postData('http://localhost:4000/modbus_settings', {
+      slave: slaveId,
+      port: tcpPort,
+      user: user['email'],
     });
   }
 
   render() {
     const { options } = this.props;
     const { slaveId, tcpPort } = options;
+
+    let SaveButton;
+    if (options['UserOrgInfo']['role'] === 'Admin') {
+      SaveButton = (
+        <div className="gf-form-button-row">
+          <button
+            onClick={() => this.onSaveClick(options)}
+            className="btn btn-primary"
+          >
+            Save and Restart Server
+          </button>
+        </div>
+      );
+    }
 
     return (
       <div className="gf-form-group ng-pristine ng-invalid">
@@ -53,7 +65,6 @@ export class ModbusLayout extends Component<Props, any> {
             readOnly
           />
         </div>
-
         <div className="gf-form">
           <span className="gf-form-label min-width-10">Salve Id</span>
           <input
@@ -64,7 +75,6 @@ export class ModbusLayout extends Component<Props, any> {
             readOnly
           />
         </div>
-
         <div className="gf-form">
           <span className="gf-form-label min-width-10">TCP Port</span>
           <input
@@ -75,14 +85,7 @@ export class ModbusLayout extends Component<Props, any> {
             readOnly
           />
         </div>
-        <div className="gf-form-button-row">
-          <button
-            onClick={() => this.onSaveClick(options)}
-            className="btn btn-primary"
-          >
-            Save and Restart Server
-          </button>
-        </div>
+        {SaveButton}
       </div>
     );
   }
