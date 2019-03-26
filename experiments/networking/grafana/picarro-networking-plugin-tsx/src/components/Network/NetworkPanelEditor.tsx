@@ -121,7 +121,6 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
                 labelWidth={labelWidth}
                 onChange={this.onGatewayChange}
                 value={gateway || ''}
-                placeholder={this.state.gateway}
             />
             <FormField
                 label="Netmask"
