@@ -1,33 +1,38 @@
 import React, { PureComponent } from 'react';
 import { PanelOptionsGroup, PanelEditorProps } from '@grafana/ui';
-import { Select, FormField } from '@grafana/ui';
+import { FormField, Select } from '@grafana/ui';
 import { NetworkOptions } from '../../types';
+//import PicarroAPI from '../../api/PicarroAPI';
 
 const networkOptions = [
   { value: 'Static', label: 'Static' },
   { value: 'DHCP', label: 'DHCP' }
 ];
+const labelWidth = 8;
 
 export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOptions>> {
   constructor(props) {
     super(props);
-    this.state = {
-      ip: '',
-      gateway: '',
-      netmask: '',
-      dns: '',
-      btnEnabled: false
-    };
-    this.handleChange = this.handleChange.bind(this);
-    this.handleClick = this.handleClick.bind(this);
+      this.state = {
+          networkType: '',
+          ip: '',
+          gateway: '',
+          netmask: '',
+          dns: '',
+      };
+    NetworkPanelEditor.handleClick = NetworkPanelEditor.handleClick.bind(this);
   }
   onNetworkTypeChange = networkType =>
     this.props.onChange({ ...this.props.options, networkType: networkType.value });
-  handleChange(event) {
-    const { name, value } = event.target;
-    this.setState( { [name]: value });
-    this.setState( { btnEnabled: true });
-  }
+  onIPChange = event =>
+    this.props.onChange( { ...this.props.options, ip: event.target.value });
+  onGatewayChange = event =>
+    this.props.onChange({ ...this.props.options, gateway: event.target.value });
+  onNetmaskChange = event =>
+    this.props.onChange({ ...this.props.options, netmask: event.target.value });
+  onDnsChange = event =>
+    this.props.onChange({ ...this.props.options, dns: event.target.value });
+  /*
   handleClick() {
     console.log(this.state.networkType);
     fetch("http://localhost:3030/set_network_settings",
@@ -45,6 +50,38 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       "dns": this.state.dns
     })
   });
+  */
+  static handleClick () {
+    console.log('Click');
+  }
+  /*
+  componentDidMount() {
+      PicarroAPI.getRequest("http://localhost:3030/get_network_settings").then( response => {
+          response.text().then(data => {
+              console.log('get_network_settings: \n' +
+                  'networkType: ' + data['networkType'] + '\n' +
+                  'ip: ' + data['ip'] + '\n'
+          )
+          })
+      });
+  }
+  */
+    componentDidMount () {
+        fetch("http://localhost:3030/get_network_settings")
+            .then(response => response.json())
+            .then(data => {
+                this.setState(function () {
+                    return {
+                        networkType: data['networkType'],
+                        ip: data['ip'],
+                        gateway: data['gateway'],
+                        netmask: data['netmask'],
+                        dns: data['dns']
+                    }
+                })
+            })
+    }
+
 
 
   render() {
@@ -54,79 +91,56 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       gateway,
       netmask,
       dns,
-      btnEnabled
+      //btnEnabled
     } = this.props.options;
     console.log(this.props.options);
 
-
     return (
-      /*
-      <PanelOptionsGroup title="Gauge value">
-        <div className="gf-form">
-          <FormLabel width={labelWidth}>Name</FormLabel>
-          <Select
-            width={8}
-            options={statOptions}
-            onChange={this.onNameChange}
-            value={statOptions.find(option => option.value === worldString)}
-            defaultValue={'World'}
-           backspaceRemovesValue isLoading/>
-        </div>
-      </PanelOptionsGroup>
-      */
         <PanelOptionsGroup title="Network Settings">
           <div className="gf-form-inline network-editor-combo-box">
             <div className="gf-form">
-              <span className="gf-form-label width-10">
-                Network Type
-              </span>
-              <Select
-                  options={networkOptions}
-                  name="networkType"
-                  value={networkOptions.find(option => option.value === networkType)}
-                  onChange={this.onNetworkTypeChange}
-                  backspaceRemovesValue isLoading/>
+              <span className="gf-form-label width-8">Network Type</span>
+                <Select
+                    width={6}
+                    options={networkOptions}
+                    onChange={this.onNetworkTypeChange}
+                    value={networkOptions.find(option => option.value === networkType)}
+                    backspaceRemovesValue isLoading
+                />
             </div>
           </div>
           <div className="network-editor-form">
             <FormField
                 label="IP"
-                labelWidth="10"
-                placeholder={this.props.ip}
-                onChange={this.handleChange}
-                value={this.state.ip}
-                name="ip"
+                labelWidth={labelWidth}
+                onChange={this.onIPChange}
+                value={ip || ''}
             />
             <FormField
                 label="Gateway"
-                labelWidth="10"
-                placeholder={this.props.gateway}
-                onChange={this.handleChange}
-                value={this.state.gateway}
-                name="gateway"
+                labelWidth={labelWidth}
+                onChange={this.onGatewayChange}
+                value={gateway || ''}
+                placeholder={this.state.gateway}
             />
             <FormField
                 label="Netmask"
-                labelWidth="10"
-                placeholder={this.props.netmask}
-                onChange={this.handleChange}
-                value={this.state.netmask}
-                name="netmask"
+                labelWidth={labelWidth}
+                onChange={this.onNetmaskChange}
+                value={netmask || ''}
             />
             <FormField
                 label="DNS"
-                labelWidth="10"
-                placeholder={this.props.dns}
-                onChange={this.handleChange}
-                value={this.state.dns}
-                name="dns"
+                labelWidth={labelWidth}
+                onChange={this.onDnsChange}
+                value={dns || ''}
             />
           </div>
           <div className="network-editor-button">
             <button
                 className="btn btn-primary"
-                disabled={!btnEnabled}
-                onClick={this.handleClick}
+                //disabled={!btnEnabled}
+                onClick={NetworkPanelEditor.handleClick}
             >
               Apply
             </button>

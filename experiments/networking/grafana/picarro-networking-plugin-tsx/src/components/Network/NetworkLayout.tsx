@@ -1,18 +1,11 @@
 import React, { Component } from 'react';
-
 import { NetworkProps } from '../../types';
+
 interface Props extends NetworkProps { }
 
 export class NetworkLayout extends Component<Props, any> {
     constructor(props) {
         super(props);
-        this.state = {
-            networkType: '',
-            ip: '',
-            gateway: '',
-            netmask: '',
-            dns: ''
-        };
     }
 
     render() {
@@ -25,16 +18,6 @@ export class NetworkLayout extends Component<Props, any> {
             dns
         } = options;
         return (
-          /*
-          <div className="gf-form">
-              <span className="gf-form-label width-4">Hello</span>
-              <input
-                type="text"
-                className="gf-form-input width-8"
-                value={worldString}
-              />
-          </div>
-          */
             <form className="gf-form-group ng-pristine ng-invalid network-grid">
                 <div className="gf-form">
                     <span className="gf-form-label width-10">Network Type</span>
