@@ -8,6 +8,7 @@ target/
 build/
 .doit.db.*
 .vscode/
+.idea
 node_modules/
 src/main/python/Host/build_version.py
 src/main/python/Host/Utilities/BuildHelper/BuildInfo.py
