@@ -1,10 +1,9 @@
 import { ReactPanelPlugin } from '@grafana/ui';
 import { NetworkPanel } from './components/Network/NetworkPanel';
 import { NetworkPanelEditor } from './components/Network/NetworkPanelEditor';
-import { defaults, NetworkOptions } from './types';
+import { defaults, NetworkOptions, getRoute } from './types';
 const request = require('sync-request');
 
-const url = 'http://localhost:3030/get_network_settings';
 setDefaults();
 
 export const reactPanel = new ReactPanelPlugin<NetworkOptions>(NetworkPanel);
@@ -13,7 +12,7 @@ reactPanel.setEditor(NetworkPanelEditor);
 reactPanel.setDefaults(defaults);
 
 function setDefaults () {
-    let res = request('GET', url);
+    let res = request('GET', getRoute);
     if (res.statusCode == 200) {
         let data = JSON.parse(res.getBody());
         defaults.networkType = data['networkType'];

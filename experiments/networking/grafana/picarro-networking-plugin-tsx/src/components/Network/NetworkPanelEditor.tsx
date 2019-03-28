@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { PanelOptionsGroup, PanelEditorProps } from '@grafana/ui';
 import { FormField, Select } from '@grafana/ui';
-import { NetworkOptions } from '../../types';
+import { NetworkOptions, getRoute, postRoute} from '../../types';
 import PicarroAPI from '../../api/PicarroAPI';
 import './Network.css';
 
@@ -63,7 +63,7 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
   handleApplyClick() {
     console.log('click');
     console.log(this.props.options);
-    PicarroAPI.postData('http://localhost:3030/set_network_settings', {
+    PicarroAPI.postData(postRoute, {
         'networkType': this.props.options['networkType'],
         'ip': this.props.options['ip'],
         'gateway': this.props.options['gateway'],
@@ -92,7 +92,7 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       this.props.options['undoEnabled'] = false;
   }
   getNetworkSettings () {
-       PicarroAPI.getRequest('http://localhost:3030/get_network_settings').then(response => {
+       PicarroAPI.getRequest(getRoute).then(response => {
            response.text().then(data => {
                const jsonData = JSON.parse(data);
                this.props.onChange({ ...this.props.options, networkType: jsonData['networkType']});

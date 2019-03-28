@@ -27,3 +27,8 @@ export interface NetworkProps {
   theme: GrafanaTheme;
 }
 
+const host = 'http://localhost:';
+const port = '3030';
+export const getRoute = host + port + '/get_network_settings';
+export const postRoute = host + port + '/set_network_settings';
+
