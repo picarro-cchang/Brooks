@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { NetworkProps } from '../../types';
-//import PicarroAPI from '../../api/PicarroAPI';
 
 interface Props extends NetworkProps { }
 
