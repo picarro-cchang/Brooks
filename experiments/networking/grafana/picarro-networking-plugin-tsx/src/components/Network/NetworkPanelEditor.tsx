@@ -16,12 +16,10 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
     super(props);
       this.handleApplyClick = this.handleApplyClick.bind(this);
       this.handleUndoClick = this.handleUndoClick.bind(this);
-  }
+  };
   componentDidMount(): void {
       this.getNetworkSettings();
-  }
-
-
+  };
   onNetworkTypeChange = networkType => {
     if (networkType.value === 'DHCP') {
         this.props.onChange({ ...this.props.options, ip: ''});
@@ -40,15 +38,12 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       this.enableApplyButton();
       this.enableUndoButton();
       this.props.onChange( { ...this.props.options, ip: event.target.value });
-
   };
-
   onGatewayChange = event => {
       this.enableApplyButton();
       this.enableUndoButton();
       this.props.onChange({...this.props.options, gateway: event.target.value});
   };
-
   onNetmaskChange = event => {
       this.enableApplyButton();
       this.enableUndoButton();
@@ -59,7 +54,6 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       this.enableUndoButton();
       this.props.onChange({...this.props.options, dns: event.target.value});
   };
-
   handleApplyClick() {
     console.log('click');
     console.log(this.props.options);
@@ -74,25 +68,25 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
     });
     this.disableApplyButton();
     this.disableUndoButton();
-  }
+  };
   handleUndoClick() {
       console.log('click');
       this.getNetworkSettings();
       this.disableApplyButton();
       this.disableUndoButton();
-  }
+  };
   enableApplyButton() {
       this.props.options['applyEnabled'] = true;
-  }
+  };
   enableUndoButton() {
       this.props.options['undoEnabled'] = true;
-  }
+  };
   disableApplyButton() {
       this.props.options['applyEnabled'] = false;
-  }
+  };
   disableUndoButton() {
       this.props.options['undoEnabled'] = false;
-  }
+  };
   getNetworkSettings () {
        PicarroAPI.getRequest(getRoute).then(response => {
            response.text().then(data => {
@@ -104,7 +98,7 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
                this.props.onChange({ ...this.props.options, dns: jsonData['dns']});
            })
        })
-   }
+   };
   render() {
     const {
       networkType,
