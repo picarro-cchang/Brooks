@@ -53,12 +53,12 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       this.enableApplyButton();
       this.enableUndoButton();
       this.props.onChange({...this.props.options, netmask: event.target.value});
-  }
+  };
   onDnsChange = event => {
       this.enableApplyButton();
       this.enableUndoButton();
       this.props.onChange({...this.props.options, dns: event.target.value});
-  }
+  };
 
   handleApplyClick() {
     console.log('click');
@@ -69,6 +69,8 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
         'gateway': this.props.options['gateway'],
         'netmask': this.props.options['netmask'],
         'dns': this.props.options['dns']
+    }).then(response => {
+        response.text().then(text => console.log(text));
     });
     this.disableApplyButton();
     this.disableUndoButton();
