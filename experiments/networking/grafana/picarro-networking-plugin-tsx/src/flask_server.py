@@ -99,6 +99,7 @@ class RackNetworkSettingsServer(object):
         settings = request.get_json()
         with open("network_settings.json", "w") as f:
             f.write(json.dumps(settings, indent=4, sort_keys=True))
+            f.write('\n')
         print(settings)
         return ""
 
