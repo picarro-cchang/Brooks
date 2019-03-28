@@ -2,7 +2,8 @@ import React, { PureComponent } from 'react';
 import { PanelOptionsGroup, PanelEditorProps } from '@grafana/ui';
 import { FormField, Select } from '@grafana/ui';
 import { NetworkOptions } from '../../types';
-//import PicarroAPI from '../../api/PicarroAPI';
+import PicarroAPI from '../../api/PicarroAPI';
+import './Network.css';
 
 const networkOptions = [
   { value: 'Static', label: 'Static' },
@@ -13,77 +14,95 @@ const labelWidth = 8;
 export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOptions>> {
   constructor(props) {
     super(props);
-      this.state = {
-          networkType: '',
-          ip: '',
-          gateway: '',
-          netmask: '',
-          dns: '',
-      };
-    NetworkPanelEditor.handleClick = NetworkPanelEditor.handleClick.bind(this);
+      this.handleApplyClick = this.handleApplyClick.bind(this);
+      this.handleUndoClick = this.handleUndoClick.bind(this);
   }
-  onNetworkTypeChange = networkType =>
-    this.props.onChange({ ...this.props.options, networkType: networkType.value });
-  onIPChange = event =>
-    this.props.onChange( { ...this.props.options, ip: event.target.value });
-  onGatewayChange = event =>
-    this.props.onChange({ ...this.props.options, gateway: event.target.value });
-  onNetmaskChange = event =>
-    this.props.onChange({ ...this.props.options, netmask: event.target.value });
-  onDnsChange = event =>
-    this.props.onChange({ ...this.props.options, dns: event.target.value });
-  /*
-  handleClick() {
-    console.log(this.state.networkType);
-    fetch("http://localhost:3030/set_network_settings",
-   {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      "networkType": this.state.networkType,
-      "ip": this.state.ip,
-      "gateway": this.state.gateway,
-      "netmask": this.state.netmask,
-      "dns": this.state.dns
-    })
-  });
-  */
-  static handleClick () {
-    console.log('Click');
+  componentDidMount(): void {
+      this.getNetworkSettings();
   }
-  /*
-  componentDidMount() {
-      PicarroAPI.getRequest("http://localhost:3030/get_network_settings").then( response => {
-          response.text().then(data => {
-              console.log('get_network_settings: \n' +
-                  'networkType: ' + data['networkType'] + '\n' +
-                  'ip: ' + data['ip'] + '\n'
-          )
-          })
-      });
-  }
-  */
-    componentDidMount () {
-        fetch("http://localhost:3030/get_network_settings")
-            .then(response => response.json())
-            .then(data => {
-                this.setState(function () {
-                    return {
-                        networkType: data['networkType'],
-                        ip: data['ip'],
-                        gateway: data['gateway'],
-                        netmask: data['netmask'],
-                        dns: data['dns']
-                    }
-                })
-            })
+
+
+  onNetworkTypeChange = networkType => {
+    if (networkType.value === 'DHCP') {
+        this.props.onChange({ ...this.props.options, ip: ''});
+        this.props.options['ip'] = '';
+        this.props.options['gateway'] = '';
+        this.props.options['netmask'] = '';
+        this.props.options['dns'] = '';
+    } else {
+        this.getNetworkSettings();
     }
+    this.enableUndoButton();
+    this.enableApplyButton();
+    this.props.onChange({ ...this.props.options, networkType: networkType.value});
+  };
+  onIPChange = event => {
+      this.enableApplyButton();
+      this.enableUndoButton();
+      this.props.onChange( { ...this.props.options, ip: event.target.value });
 
+  };
 
+  onGatewayChange = event => {
+      this.enableApplyButton();
+      this.enableUndoButton();
+      this.props.onChange({...this.props.options, gateway: event.target.value});
+  };
 
+  onNetmaskChange = event => {
+      this.enableApplyButton();
+      this.enableUndoButton();
+      this.props.onChange({...this.props.options, netmask: event.target.value});
+  }
+  onDnsChange = event => {
+      this.enableApplyButton();
+      this.enableUndoButton();
+      this.props.onChange({...this.props.options, dns: event.target.value});
+  }
+
+  handleApplyClick() {
+    console.log('click');
+    console.log(this.props.options);
+    PicarroAPI.postData('http://localhost:3030/set_network_settings', {
+        'networkType': this.props.options['networkType'],
+        'ip': this.props.options['ip'],
+        'gateway': this.props.options['gateway'],
+        'netmask': this.props.options['netmask'],
+        'dns': this.props.options['dns']
+    });
+    this.disableApplyButton();
+    this.disableUndoButton();
+  }
+  handleUndoClick() {
+      console.log('click');
+      this.getNetworkSettings();
+      this.disableApplyButton();
+      this.disableUndoButton();
+  }
+  enableApplyButton() {
+      this.props.options['applyEnabled'] = true;
+  }
+  enableUndoButton() {
+      this.props.options['undoEnabled'] = true;
+  }
+  disableApplyButton() {
+      this.props.options['applyEnabled'] = false;
+  }
+  disableUndoButton() {
+      this.props.options['undoEnabled'] = false;
+  }
+  getNetworkSettings () {
+       PicarroAPI.getRequest('http://localhost:3030/get_network_settings').then(response => {
+           response.text().then(data => {
+               const jsonData = JSON.parse(data);
+               this.props.onChange({ ...this.props.options, networkType: jsonData['networkType']});
+               this.props.onChange({ ...this.props.options, ip: jsonData['ip']});
+               this.props.onChange({ ...this.props.options, gateway: jsonData['gateway']});
+               this.props.onChange({ ...this.props.options, netmask: jsonData['netmask']});
+               this.props.onChange({ ...this.props.options, dns: jsonData['dns']});
+           })
+       })
+   }
   render() {
     const {
       networkType,
@@ -91,9 +110,9 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
       gateway,
       netmask,
       dns,
-      //btnEnabled
+      undoEnabled,
+      applyEnabled
     } = this.props.options;
-    console.log(this.props.options);
 
     return (
         <PanelOptionsGroup title="Network Settings">
@@ -105,6 +124,7 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
                     options={networkOptions}
                     onChange={this.onNetworkTypeChange}
                     value={networkOptions.find(option => option.value === networkType)}
+                    defaultValue={networkType}
                     backspaceRemovesValue isLoading
                 />
             </div>
@@ -135,14 +155,22 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
                 value={dns || ''}
             />
           </div>
-          <div className="network-editor-button">
+          <div className="network-editor-buttons">
             <button
-                className="btn btn-primary"
-                //disabled={!btnEnabled}
-                onClick={NetworkPanelEditor.handleClick}
+                className="apply btn btn-primary"
+                disabled={!applyEnabled}
+                onClick={this.handleApplyClick}
             >
               Apply
             </button>
+            <button
+                className="undo btn btn-primary"
+                disabled={!undoEnabled}
+                onClick={this.handleUndoClick}
+            >
+                Undo
+              </button>
+
           </div>
         </PanelOptionsGroup>
     );

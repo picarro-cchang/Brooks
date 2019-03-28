@@ -8,7 +8,8 @@ export interface NetworkOptions {
   gateway: string;
   netmask: string;
   dns: string;
-  btnEnabled: boolean;
+  applyEnabled: boolean;
+  undoEnabled: boolean;
 }
 
 export const defaults: NetworkOptions = {
@@ -17,10 +18,12 @@ export const defaults: NetworkOptions = {
   gateway: '',
   netmask: '',
   dns: '',
-  btnEnabled: false,
+  applyEnabled: false,
+  undoEnabled: false,
 };
 
 export interface NetworkProps {
   options: NetworkOptions;
   theme: GrafanaTheme;
-};
+}
+
