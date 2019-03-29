@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 11,
-  "iteration": 1552589162733,
+  "id": 1,
+  "iteration": 1553536096536,
   "links": [
     {
       "icon": "external link",
@@ -254,7 +254,7 @@
         "y": 1
       },
       "hideTimeOverride": false,
-      "id": 22,
+      "id": 27,
       "legend": {
         "avg": false,
         "current": false,
@@ -276,7 +276,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589162733,
+      "repeatIteration": 1553536096536,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -453,7 +453,7 @@
         "y": 6
       },
       "hideTimeOverride": false,
-      "id": 23,
+      "id": 28,
       "legend": {
         "avg": false,
         "current": false,
@@ -475,7 +475,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589162733,
+      "repeatIteration": 1553536096536,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -652,7 +652,7 @@
         "y": 6
       },
       "hideTimeOverride": false,
-      "id": 24,
+      "id": 29,
       "legend": {
         "avg": false,
         "current": false,
@@ -674,7 +674,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1552589162733,
+      "repeatIteration": 1553536096536,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -1047,6 +1047,24 @@
         }
       ],
       "valueName": "avg"
+    },
+    {
+      "gridPos": {
+        "h": 2,
+        "w": 11,
+        "x": 6,
+        "y": 12
+      },
+      "id": 26,
+      "links": [],
+      "options": {
+        "buttonsPerRow": 9,
+        "numberOfValves": 16
+      },
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Valve Mode",
+      "type": "picarro-valve-panel"
     }
   ],
   "refresh": "5s",
@@ -1151,7 +1169,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -1182,5 +1200,5 @@
   "timezone": "",
   "title": "Analyzer Output Dashboard",
   "uid": "vA5EsQjmk",
-  "version": 1
+  "version": 3
 }
