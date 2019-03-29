@@ -9,7 +9,6 @@ interface Props extends PanelProps<ModbusOptions> {}
 export class ModbusPanel extends PureComponent<Props> {
   render() {
     const { options, width, height } = this.props;
-
     return (
       <ThemeContext.Consumer>
         {theme => {

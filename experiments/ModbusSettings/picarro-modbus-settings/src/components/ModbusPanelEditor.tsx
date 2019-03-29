@@ -7,11 +7,32 @@ import { PanelOptionsGroup, PanelEditorProps } from '@grafana/ui';
 // Types
 import { FormField } from '@grafana/ui';
 import { ModbusOptions } from '../types';
+import PicarroAPI from '../api/PicarroAPI';
 
 export class ModbusPanelEditor extends PureComponent<
   PanelEditorProps<ModbusOptions>
 > {
   labelWidth = 8;
+
+  componentDidMount() {
+    this.getModbusSettings();
+  }
+
+  getModbusSettings() {
+    PicarroAPI.getRequest('http://localhost:4000/modbus_settings').then(
+      response => {
+        this.props.onChange({
+          ...this.props.options,
+          slaveId: response['slave'],
+        });
+
+        this.props.onChange({
+          ...this.props.options,
+          tcpPort: response['port'],
+        });
+      }
+    );
+  }
 
   onSalveIdChange = ({ target }) =>
     this.props.onChange({ ...this.props.options, slaveId: target.value });
@@ -20,6 +41,7 @@ export class ModbusPanelEditor extends PureComponent<
     this.props.onChange({ ...this.props.options, tcpPort: target.value });
 
   validatePort = ({ target }) => {
+    console.log('Called');
     if (target.value < 1024 || target.value > 65564) {
       alert('Invalide port value, port value has to be between 1024 and 65564');
       return;
@@ -33,15 +55,7 @@ export class ModbusPanelEditor extends PureComponent<
 
     let slaveIdSelection = [];
     for (let i = 1; i < 52; i++) {
-      if (slaveId === i) {
-        slaveIdSelection.push(
-          <option value={i} selected>
-            {slaveId}
-          </option>
-        );
-      } else {
-        slaveIdSelection.push(<option value={i}>{i}</option>);
-      }
+      slaveIdSelection.push(<option key={i}>{i}</option>);
     }
     return (
       <PanelOptionsGroup title="Modbus Settings">
@@ -52,6 +66,7 @@ export class ModbusPanelEditor extends PureComponent<
               className="input-small gf-form-input"
               ng-change="ctrl.render()"
               onChange={this.onSalveIdChange}
+              value={slaveId}
             >
               {slaveIdSelection}
             </select>

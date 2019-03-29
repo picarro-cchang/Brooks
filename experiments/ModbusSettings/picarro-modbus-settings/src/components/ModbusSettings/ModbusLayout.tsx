@@ -12,54 +12,65 @@ export class ModbusLayout extends Component<Props, any> {
       ipAddress: '127.0.0.1',
       user: {},
       UserOrgInfo: {},
+      slaveId: this.props.options.slaveId,
+      tcpPort: this.props.options.tcpPort,
     };
   }
 
   componentDidMount() {
-    this.getIpAddress();
-    this.getUserInfo();
+    this.updateState();
   }
 
-  getIpAddress() {
+  componentWillReceiveProps(nextProps) {
     let newstate = { ...this.state };
-    PicarroAPI.getRequest('http://localhost:4000/network').then(response => {
-      newstate['ipAddress'] = response['ip'];
-      this.setState(newstate);
-    });
+    newstate['slaveId'] = nextProps.options.slaveId;
+    newstate['tcpPort'] = nextProps.options.tcpPort;
+    this.setState(newstate);
   }
 
-  getUserInfo() {
+  updateState() {
     let newstate = { ...this.state };
-    PicarroAPI.getRequest('http://localhost:3000/api/user')
+    PicarroAPI.getRequest('http://localhost:4000/modbus_settings')
       .then(response => {
-        newstate['user'] = response;
+        newstate['slaveId'] = response['slave'];
+        newstate['tcpPort'] = response['port'];
       })
       .then(() => {
-        var url = 'http://localhost:3000/api/users/';
-        url += newstate['user']['id'];
-        url += '/orgs';
-        var auth = 'Basic ' + new Buffer('admin:admin').toString('base64');
-        var header = new Headers();
-        header.append('Authorization', auth);
-        PicarroAPI.getRequestWithHeader(url, header).then(response => {
-          newstate['UserOrgInfo'] = response[0];
-          this.setState(newstate);
-        });
+        PicarroAPI.getRequest('http://localhost:4000/network').then(
+          response => {
+            newstate['ipAddress'] = response['ip'];
+          }
+        );
+      })
+      .then(() => {
+        PicarroAPI.getRequest('http://localhost:3000/api/user')
+          .then(response => {
+            newstate['user'] = response;
+          })
+          .then(() => {
+            var url = 'http://localhost:3000/api/users/';
+            url += newstate['user']['id'];
+            url += '/orgs';
+            var auth = 'Basic ' + new Buffer('admin:admin').toString('base64');
+            var header = new Headers();
+            header.append('Authorization', auth);
+            PicarroAPI.getRequestWithHeader(url, header).then(response => {
+              newstate['UserOrgInfo'] = response[0];
+              this.setState(newstate);
+            });
+          });
       });
   }
 
-  onSaveClick(options) {
-    const { slaveId, tcpPort } = options;
+  onSaveClick() {
     PicarroAPI.postData('http://localhost:4000/modbus_settings', {
-      slave: slaveId,
-      port: tcpPort,
+      slave: this.state.slaveId,
+      port: this.state.tcpPort,
       user: this.state.user['email'],
     });
   }
 
   render() {
-    const { options } = this.props;
-    const { slaveId, tcpPort } = options;
     let SaveButton;
     if (
       Object.keys(this.state.UserOrgInfo).length !== 0 &&
@@ -68,7 +79,7 @@ export class ModbusLayout extends Component<Props, any> {
       SaveButton = (
         <div className="gf-form-button-row">
           <button
-            onClick={() => this.onSaveClick(options)}
+            onClick={() => this.onSaveClick()}
             className="btn btn-primary"
           >
             Save and Restart Server
@@ -96,7 +107,7 @@ export class ModbusLayout extends Component<Props, any> {
             type="text"
             className="gf-form-input"
             placeholder=""
-            value={slaveId}
+            value={this.state.slaveId}
             readOnly
           />
         </div>
@@ -106,7 +117,7 @@ export class ModbusLayout extends Component<Props, any> {
             type="text"
             className="gf-form-input"
             placeholder=""
-            value={tcpPort}
+            value={this.state.tcpPort}
             readOnly
           />
         </div>
