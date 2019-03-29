@@ -10,6 +10,7 @@ const networkOptions = [
   { value: 'DHCP', label: 'DHCP' }
 ];
 const labelWidth = 8;
+const regex = /\b(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\b/gm;
 
 export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOptions>> {
   constructor(props) {
@@ -19,6 +20,7 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
   };
   componentDidMount(): void {
       this.getNetworkSettings();
+      this.checkInput();
   };
   onNetworkTypeChange = networkType => {
     if (networkType.value === 'DHCP') {
@@ -99,6 +101,11 @@ export class NetworkPanelEditor extends PureComponent<PanelEditorProps<NetworkOp
            })
        })
    };
+  checkInput = () => {
+      let text = '192.168.1111111';
+      let test = regex.test(text);
+      console.log(test);
+  };
   render() {
     const {
       networkType,
