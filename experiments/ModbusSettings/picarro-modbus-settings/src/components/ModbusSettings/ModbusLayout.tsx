@@ -21,14 +21,14 @@ export class ModbusLayout extends Component<Props, any> {
 
   componentDidMount() {
     let newstate = { ...this.state };
-    let url = config.picarro_server_url + config.picarro_modbus_setting_rout;
+    let url = config.picarro_server_url + config.picarro_modbus_setting_route;
     PicarroAPI.getRequest(url)
       .then(response => {
         newstate['slaveId'] = response['slave'];
         newstate['tcpPort'] = response['port'];
       })
       .then(() => {
-        url = config.picarro_server_url + config.picarro_network_rout;
+        url = config.picarro_server_url + config.picarro_network_route;
         PicarroAPI.getRequest(url).then(response => {
           newstate['ipAddress'] = response['ip'];
           this.setState(newstate);

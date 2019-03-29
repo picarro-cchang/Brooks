@@ -16,10 +16,10 @@ from host.experiments.DBDriver.InfluxDBWriter import InfluxDBWriter
 class App:
     def __init__(self):
 
-        # Lets create instance of mongo db so we can pass connection object to each routs
+        # Lets create instance of influx db so we can pass connection object to each route/s
         db_connection = InfluxDBWriter()
 
-        # Create Fitter data routs object
+        # Create Fitter data route object
         self.network_model_obj = NetworkModule()
 
         self.modebus_settings_model_obj = ModbusSettingModule(db_connection)
@@ -32,7 +32,7 @@ class App:
 
     def start_server(self, **setup):
         """
-        Method use to register routs to Flask app and start Flask server
+        Method use to register routes to Flask app and start Flask server
         :param setup:
         :return:
         """
@@ -41,15 +41,15 @@ class App:
 
     def register_api(self):
         """
-        Method use to register routs
+        Method use to register routes
         :return:
         """
 
-        # Register all RDF data related routs
+        # Register all RDF data related routes
         network_view = NetworkRoutes.as_view('/network', self.network_model_obj)
         self.app.add_url_rule('/network', view_func=network_view, methods=['GET'])
 
-        # Register all modbus related routs
+        # Register all modbus related routes
         modbus_settings_view = ModbusSettingsRoutes.as_view('/modbus_settings', self.modebus_settings_model_obj)
         self.app.add_url_rule('/modbus_settings', view_func=modbus_settings_view, methods=['GET', 'POST'])
 

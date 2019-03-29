@@ -9,7 +9,7 @@ class ModbusSettingsRoutes(MethodView):
 
     def get(self):
         """
-        Routs to get modbus settings
+        Route to get modbus settings
         :return:
         """
 
@@ -19,7 +19,7 @@ class ModbusSettingsRoutes(MethodView):
 
     def post(self):
         """
-        Routs to save modbus settings
+        Route to save modbus settings
         :return:
         """
         # set modbus settings

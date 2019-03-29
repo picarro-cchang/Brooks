@@ -9,7 +9,7 @@ class NetworkRoutes(MethodView):
 
     def get(self):
         """
-        Routs to get ip address
+        Route to get ip address
         :return:
         """
 

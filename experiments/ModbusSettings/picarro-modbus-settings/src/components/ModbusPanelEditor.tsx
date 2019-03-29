@@ -21,7 +21,7 @@ export class ModbusPanelEditor extends PureComponent<
   }
 
   getModbusSettings() {
-    let url = config.picarro_server_url + config.picarro_modbus_setting_rout;
+    let url = config.picarro_server_url + config.picarro_modbus_setting_route;
     PicarroAPI.getRequest(url)
       .then(response => {
         this.props.onChange({
@@ -35,7 +35,7 @@ export class ModbusPanelEditor extends PureComponent<
         });
       })
       .then(() => {
-        url = config.grafana_backend_url + config.grafana_user_rout;
+        url = config.grafana_backend_url + config.grafana_user_route;
         PicarroAPI.getRequest(url)
           .then(response => {
             this.props.onChange({
@@ -45,7 +45,7 @@ export class ModbusPanelEditor extends PureComponent<
           })
           .then(() => {
             var url =
-              config.grafana_backend_url + config.grafana_users_rout + '/';
+              config.grafana_backend_url + config.grafana_users_route + '/';
             url += this.props.options.user['id'];
             url += config.grafana_org_out;
             var auth =
@@ -74,7 +74,7 @@ export class ModbusPanelEditor extends PureComponent<
     this.props.onChange({ ...this.props.options, tcpPort: target.value });
 
   validatePort = ({ target }) => {
-    console.log('Called');
+    console.log(target.value);
     if (target.value < 1024 || target.value > 65564) {
       alert('Invalide port value, port value has to be between 1024 and 65564');
       return;
@@ -84,7 +84,7 @@ export class ModbusPanelEditor extends PureComponent<
 
   onSaveClick(options) {
     const { slaveId, tcpPort, user } = options;
-    let url = config.picarro_server_url + config.picarro_modbus_setting_rout;
+    let url = config.picarro_server_url + config.picarro_modbus_setting_route;
     PicarroAPI.postData(url, {
       slave: slaveId,
       port: tcpPort,
