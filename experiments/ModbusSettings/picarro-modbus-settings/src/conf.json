@@ -1,0 +1,11 @@
+{
+  "grafana_backend_url": "http://localhost:3000",
+  "grafana_user_rout": "/api/user",
+  "grafana_users_rout": "/api/users",
+  "grafana_admin_username": "admin",
+  "grafana_admin_password": "admin",
+  "grafana_org_out": "/orgs",
+  "picarro_server_url": "http://localhost:4000",
+  "picarro_modbus_setting_rout": "/modbus_settings",
+  "picarro_network_rout": "/network"
+}

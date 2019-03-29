@@ -9,6 +9,8 @@ import { FormField } from '@grafana/ui';
 import { ModbusOptions } from '../types';
 import PicarroAPI from '../api/PicarroAPI';
 
+var config = require('../conf.json');
+
 export class ModbusPanelEditor extends PureComponent<
   PanelEditorProps<ModbusOptions>
 > {
@@ -19,7 +21,8 @@ export class ModbusPanelEditor extends PureComponent<
   }
 
   getModbusSettings() {
-    PicarroAPI.getRequest('http://localhost:4000/modbus_settings')
+    let url = config.picarro_server_url + config.picarro_modbus_setting_rout;
+    PicarroAPI.getRequest(url)
       .then(response => {
         this.props.onChange({
           ...this.props.options,
@@ -32,7 +35,8 @@ export class ModbusPanelEditor extends PureComponent<
         });
       })
       .then(() => {
-        PicarroAPI.getRequest('http://localhost:3000/api/user')
+        url = config.grafana_backend_url + config.grafana_user_rout;
+        PicarroAPI.getRequest(url)
           .then(response => {
             this.props.onChange({
               ...this.props.options,
@@ -40,10 +44,17 @@ export class ModbusPanelEditor extends PureComponent<
             });
           })
           .then(() => {
-            var url = 'http://localhost:3000/api/users/';
+            var url =
+              config.grafana_backend_url + config.grafana_users_rout + '/';
             url += this.props.options.user['id'];
-            url += '/orgs';
-            var auth = 'Basic ' + new Buffer('admin:admin').toString('base64');
+            url += config.grafana_org_out;
+            var auth =
+              'Basic ' +
+              new Buffer(
+                config.grafana_admin_username +
+                  ':' +
+                  config.grafana_admin_password
+              ).toString('base64');
             var header = new Headers();
             header.append('Authorization', auth);
             PicarroAPI.getRequestWithHeader(url, header).then(response => {
@@ -73,7 +84,8 @@ export class ModbusPanelEditor extends PureComponent<
 
   onSaveClick(options) {
     const { slaveId, tcpPort, user } = options;
-    PicarroAPI.postData('http://localhost:4000/modbus_settings', {
+    let url = config.picarro_server_url + config.picarro_modbus_setting_rout;
+    PicarroAPI.postData(url, {
       slave: slaveId,
       port: tcpPort,
       user: user['email'],

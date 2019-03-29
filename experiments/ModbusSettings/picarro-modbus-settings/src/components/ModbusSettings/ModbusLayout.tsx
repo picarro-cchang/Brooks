@@ -5,6 +5,8 @@ import PicarroAPI from '../../api/PicarroAPI';
 
 interface Props extends ModbusProps {}
 
+var config = require('../../conf.json');
+
 export class ModbusLayout extends Component<Props, any> {
   constructor(props) {
     super(props);
@@ -19,18 +21,18 @@ export class ModbusLayout extends Component<Props, any> {
 
   componentDidMount() {
     let newstate = { ...this.state };
-    PicarroAPI.getRequest('http://localhost:4000/modbus_settings')
+    let url = config.picarro_server_url + config.picarro_modbus_setting_rout;
+    PicarroAPI.getRequest(url)
       .then(response => {
         newstate['slaveId'] = response['slave'];
         newstate['tcpPort'] = response['port'];
       })
       .then(() => {
-        PicarroAPI.getRequest('http://localhost:4000/network').then(
-          response => {
-            newstate['ipAddress'] = response['ip'];
-            this.setState(newstate);
-          }
-        );
+        url = config.picarro_server_url + config.picarro_network_rout;
+        PicarroAPI.getRequest(url).then(response => {
+          newstate['ipAddress'] = response['ip'];
+          this.setState(newstate);
+        });
       });
   }
 
