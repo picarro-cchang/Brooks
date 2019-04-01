@@ -1,0 +1,26 @@
+{
+  "type": "panel",
+  "name": "Picarro Clock",
+  "id": "picarro-clock-panel",
+  "dataFormats": [],
+
+  "info": {
+    "description": "Picarro clock panel for grafana",
+    "author": {
+      "name": "Picarro, Inc.",
+      "url": "http://picarro.com"
+    },
+    "keywords": ["clock", "panel"],
+    "logos": {
+      "small": "img/clock_panel_logo.svg",
+      "large": "img/clock_panel_logo.svg"
+    },
+    "version": "1.0.0",
+    "updated": "2019-03-26"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "5.x.x",
+    "plugins": [ ]
+  }
+}
