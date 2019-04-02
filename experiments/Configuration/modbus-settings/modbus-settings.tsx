@@ -97,8 +97,6 @@ export class ModbusSettings extends PureComponent<Props, State> {
     for (let i = 1; i < 52; i++) {
       slaveIdSelection.push(<option key={i}>{i}</option>);
     }
-    console.log(this.state.slaveId);
-    console.log(this.state.tcpPort);
     return (
       <Page navModel={navModel}>
         <Page.Contents>
