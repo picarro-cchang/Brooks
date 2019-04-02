@@ -24,7 +24,6 @@ import SoloPanelPage from '../features/dashboard/containers/SoloPanelPage';
 import DashboardPage from '../features/dashboard/containers/DashboardPage';
 import config from 'app/core/config';
 import modbussettings from '../features/modbus-settings/modbus-settings';
-import Test from '../features/test/Test';
 
 // Types
 import { DashboardRouteInfo } from 'app/types';
@@ -342,12 +341,6 @@ export function setupAngularRoutes($routeProvider, $locationProvider) {
       templateUrl: 'public/app/features/alerting/partials/notification_edit.html',
       controller: 'AlertNotificationEditCtrl',
       controllerAs: 'ctrl',
-    })
-    .when('/Test', {
-      template: '<react-container />',
-      resolve: {
-        component: () => Test,
-      },
     })
     .when('/modbussettings', {
       template: '<react-container />',
