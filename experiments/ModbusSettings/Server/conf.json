@@ -1,0 +1,7 @@
+{
+    "Setup":{
+        "Host_IP" : "0.0.0.0",
+        "Port" : "4000",
+        "Debug_Mode" : "False"
+    }
+}
