@@ -301,6 +301,14 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 					Icon:        "gicon gicon-preferences",
 					Url:         setting.AppSubUrl + "/modbussettings",
 				},
+
+				{
+                    Text:        "Network-Settings",
+                    Id:          "network",
+                    Description: "Update Network Settings",
+                    Icon:        "gicon gicon-preferences",
+                    Url:         setting.AppSubUrl + "/networksettings",
+                },
 			},
 		}
 
