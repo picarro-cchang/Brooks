@@ -67,7 +67,7 @@ export class ModbusPanelEditor extends PureComponent<
       });
   }
 
-  onSalveIdChange = ({ target }) =>
+  onSlaveIdChange = ({ target }) =>
     this.props.onChange({ ...this.props.options, slaveId: target.value });
 
   onTCPPortChange = ({ target }) =>
@@ -108,7 +108,7 @@ export class ModbusPanelEditor extends PureComponent<
             <select
               className="input-small gf-form-input"
               ng-change="ctrl.render()"
-              onChange={this.onSalveIdChange}
+              onChange={this.onSlaveIdChange}
               value={slaveId}
             >
               {slaveIdSelection}

@@ -79,7 +79,7 @@ export class ModbusSettings extends PureComponent<Props, State> {
     });
   }
 
-  onSalveIdChange(event) {
+  onSlaveIdChange(event) {
     const newState = { ...this.state };
     newState['slaveId'] = event.target.value;
     this.setState(newState);
@@ -106,7 +106,7 @@ export class ModbusSettings extends PureComponent<Props, State> {
               <select
                 className="input-small gf-form-input"
                 ng-change="ctrl.render()"
-                onChange={this.onSalveIdChange.bind(this)}
+                onChange={this.onSlaveIdChange.bind(this)}
                 value={this.state.slaveId}
               >
                 {slaveIdSelection}
