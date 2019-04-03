@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Page from 'app/core/components/Page/Page';
 import { getNavModel } from 'app/core/selectors/navModel';
 import { NavModel } from 'app/types';
-import { FormField } from '@grafana/ui';
+//import { FormField } from '@grafana/ui';
 import PicarroAPI from './api/PicarroAPI';
 //import {getRoute} from "../../networking/grafana/picarro-networking-plugin-tsx/src/types";
 
@@ -62,9 +62,9 @@ export class NetworkSettings extends PureComponent<Props, State> {
                 newState['netmask'] = jsonData['netmask'];
                 newState['dns'] = jsonData['dns'];
                 this.setState(newState);
-            })
-        })
-    };
+            });
+        });
+    }
 
   render() {
     const { navModel } = this.props;
