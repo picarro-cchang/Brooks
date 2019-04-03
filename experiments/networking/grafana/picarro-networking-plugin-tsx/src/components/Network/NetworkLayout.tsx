@@ -7,6 +7,7 @@ export class NetworkLayout extends Component<Props, any> {
     constructor(props) {
         super(props);
     }
+
     render() {
         const { options } = this.props;
         const {
@@ -16,6 +17,7 @@ export class NetworkLayout extends Component<Props, any> {
             netmask,
             dns
         } = options;
+
         return (
             <form className="gf-form-group ng-pristine ng-invalid network-grid">
                 <div className="gf-form">
@@ -63,6 +65,7 @@ export class NetworkLayout extends Component<Props, any> {
                     />
                 </div>
             </form>
+
         );
     }
 }
