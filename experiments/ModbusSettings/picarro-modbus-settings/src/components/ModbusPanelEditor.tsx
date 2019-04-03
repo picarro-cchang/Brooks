@@ -67,7 +67,7 @@ export class ModbusPanelEditor extends PureComponent<
       });
   }
 
-  onSalveIdChange = ({ target }) =>
+  onSlaveIdChange = ({ target }) =>
     this.props.onChange({ ...this.props.options, slaveId: target.value });
 
   onTCPPortChange = ({ target }) =>
@@ -103,12 +103,12 @@ export class ModbusPanelEditor extends PureComponent<
     return (
       <PanelOptionsGroup title="Modbus Settings">
         <div className="gf-form">
-          <label className="gf-form-label width-8">Salve ID</label>
+          <label className="gf-form-label width-8">Slave ID</label>
           <div className="gf-form-select-wrapper max-width-12">
             <select
               className="input-small gf-form-input"
               ng-change="ctrl.render()"
-              onChange={this.onSalveIdChange}
+              onChange={this.onSlaveIdChange}
               value={slaveId}
             >
               {slaveIdSelection}
