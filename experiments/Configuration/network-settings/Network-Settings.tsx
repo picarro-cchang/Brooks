@@ -6,19 +6,23 @@ import { getNavModel } from 'app/core/selectors/navModel';
 import { NavModel } from 'app/types';
 import { FormField } from '@grafana/ui';
 import PicarroAPI from './api/PicarroAPI';
-import {getRoute} from "../../networking/grafana/picarro-networking-plugin-tsx/src/types";
+//import {getRoute} from "../../networking/grafana/picarro-networking-plugin-tsx/src/types";
 
 export interface Props {
     navModel: NavModel;
 }
 
 export interface State {
-    networkType: string,
-    ip: string,
-    gateway: string,
-    netmask: string,
-    dns: string
+    networkType: string;
+    ip: string;
+    gateway: string;
+    netmask: string;
+    dns: string;
 }
+
+const host = 'http://localhost:';
+const port = '3030';
+const getRoute = host + port + '/get_network_settings';
 
 
 export class NetworkSettings extends PureComponent<Props, State> {
@@ -41,15 +45,23 @@ export class NetworkSettings extends PureComponent<Props, State> {
     }
 
     getNetworkSettings () {
+        const newState = { ...this.state };
         PicarroAPI.getRequest(getRoute).then(response => {
             response.text().then(data => {
                 const jsonData = JSON.parse(data);
+                /*
                 this.state.onChange({ ...this.state.options, networkType: jsonData['networkType']});
                 this.state.onChange({ ...this.state.options, ip: jsonData['ip']});
                 this.state.onChange({ ...this.state.options, gateway: jsonData['gateway']});
                 this.state.onChange({ ...this.state.options, netmask: jsonData['netmask']});
                 this.state.onChange({ ...this.state.options, dns: jsonData['dns']});
-
+                */
+                newState['networkType'] = jsonData['networkType'];
+                newState['ip'] = jsonData['ip'];
+                newState['gateway'] = jsonData['gateway'];
+                newState['netmask'] = jsonData['netmask'];
+                newState['dns'] = jsonData['dns'];
+                this.setState(newState);
             })
         })
     };

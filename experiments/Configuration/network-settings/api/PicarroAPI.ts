@@ -1,4 +1,4 @@
-let  PicarroAPI = {
+const  PicarroAPI = {
     postData(url: string, data: object) {
         return fetch(url, {
             method: 'POST',
