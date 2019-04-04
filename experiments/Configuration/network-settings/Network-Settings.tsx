@@ -30,7 +30,7 @@ export class NetworkSettings extends PureComponent<Props, State> {
     constructor(Props) {
     super(Props);
     this.state = {
-      networkType: 'Static',
+      networkType: '',
         ip: '',
         gateway: '',
         netmask: '',
