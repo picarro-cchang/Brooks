@@ -74,6 +74,7 @@ export class NetworkSettings extends PureComponent<Props, State> {
             newState['inputEnabled'] = false;
         } else {
             newState['inputEnabled'] = true;
+            this.getNetworkSettings(false);
         }
         newState['networkType'] = event.target.value;
         newState['applyEnabled'] = true;
