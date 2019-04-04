@@ -18,6 +18,7 @@ export interface State {
     dns: string;
     undoEnabled: boolean;
     applyEnabled: boolean;
+    inputEnabled: boolean;
 }
 const host = 'http://localhost:';
 const port = '3030';
@@ -37,6 +38,7 @@ export class NetworkSettings extends PureComponent<Props, State> {
         dns: '',
         applyEnabled: false,
         undoEnabled: false,
+        inputEnabled: true,
     };
     }
     componentDidMount() {
@@ -56,12 +58,26 @@ export class NetworkSettings extends PureComponent<Props, State> {
                     newState['applyEnabled'] = false;
                     newState['undoEnabled'] = false;
                 }
+                if ( jsonData['networkType'] === 'DHCP') {
+                    newState['inputEnabled'] = false;
+                } else {
+                    newState['inputEnabled'] = true;
+                }
                 this.setState(newState);
             });
         });
     }
     onNetworkTypeChange = (event) => {
         const newState = { ...this.state };
+        if (event.target.value === 'DHCP') {
+            newState['ip'] = '';
+            newState['gateway'] = '';
+            newState['netmask'] = '';
+            newState['dns'] = '';
+            newState['inputEnabled'] = false;
+        } else {
+            newState['inputEnabled'] = true;
+        }
         newState['networkType'] = event.target.value;
         newState['applyEnabled'] = true;
         newState['undoEnabled'] = true;
@@ -138,28 +154,28 @@ export class NetworkSettings extends PureComponent<Props, State> {
                     labelWidth={labelWidth}
                     onChange={this.onIPChange}
                     value={this.state.ip}
-                    name="ip"
+                    disabled={!this.state.inputEnabled}
                 />
                 <FormField
                     label="Gateway"
                     labelWidth={labelWidth}
                     onChange={this.onGatewayChange}
                     value={this.state.gateway}
-                    name="gateway"
+                    disabled={!this.state.inputEnabled}
                 />
                 <FormField
                     label="Netmask"
                     labelWidth={labelWidth}
                     onChange={this.onNetmaskChange}
                     value={this.state.netmask}
-                    name="netmask"
+                    disabled={!this.state.inputEnabled}
                 />
                 <FormField
                     label="DNS"
                     labelWidth={labelWidth}
                     onChange={this.onDnsChange}
                     value={this.state.dns}
-                    name="dns"
+                    disabled={!this.state.inputEnabled}
                 />
             </div>
             <div className="gf-form-button-row">
@@ -169,12 +185,12 @@ export class NetworkSettings extends PureComponent<Props, State> {
                     onClick={this.handleApplyClick}>
                     Apply
                 </button>
-                    <button
-                        className="undo-btn btn btn-primary"
-                        disabled={!this.state.undoEnabled}
-                        onClick={this.handleUndoClick}>
-                        Undo
-                    </button>
+                <button
+                    className="undo-btn btn btn-primary"
+                    disabled={!this.state.undoEnabled}
+                    onClick={this.handleUndoClick}>
+                    Undo
+                </button>
             </div>
         </Page.Contents>
       </Page>
