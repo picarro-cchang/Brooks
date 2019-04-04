@@ -58,16 +58,13 @@ export class NetworkSettings extends PureComponent<Props, State> {
                     newState['applyEnabled'] = false;
                     newState['undoEnabled'] = false;
                 }
-                if ( jsonData['networkType'] === 'DHCP') {
-                    newState['inputEnabled'] = false;
-                } else {
-                    newState['inputEnabled'] = true;
-                }
+                // Disable all input forms if DHCP is selected
+                newState['inputEnabled'] = jsonData['networkType'] !== 'DHCP';
                 this.setState(newState);
             });
         });
     }
-    onNetworkTypeChange = (event) => {
+    handleNetworkTypeChange = (event) => {
         const newState = { ...this.state };
         if (event.target.value === 'DHCP') {
             newState['ip'] = '';
@@ -83,32 +80,12 @@ export class NetworkSettings extends PureComponent<Props, State> {
         newState['undoEnabled'] = true;
         this.setState(newState);
     };
-    onIPChange = (event) => {
+    handleInputChange = (event) => {
         const newState = { ...this.state };
+        const { name, value } = event.target;
+        newState[name] = value;
         newState['applyEnabled'] = true;
         newState['undoEnabled'] = true;
-        newState['ip'] = event.target.value;
-        this.setState(newState);
-    };
-    onGatewayChange = (event) => {
-        const newState = { ...this.state };
-        newState['applyEnabled'] = true;
-        newState['undoEnabled'] = true;
-        newState['gateway'] = event.target.value;
-        this.setState(newState);
-    };
-    onNetmaskChange = (event) => {
-        const newState = { ...this.state };
-        newState['applyEnabled'] = true;
-        newState['undoEnabled'] = true;
-        newState['netmask'] = event.target.value;
-        this.setState(newState);
-    };
-    onDnsChange = (event) => {
-        const newState = { ...this.state };
-        newState['applyEnabled'] = true;
-        newState['undoEnabled'] = true;
-        newState['dns'] = event.target.value;
         this.setState(newState);
     };
     handleApplyClick = () => {
@@ -122,10 +99,10 @@ export class NetworkSettings extends PureComponent<Props, State> {
             'dns': this.state.dns
         }).then(response => {
             response.text().then(text => console.log(text));
+            newState['applyEnabled'] = false;
+            newState['undoEnabled'] = false;
+            this.setState(newState);
         });
-        newState['applyEnabled'] = false;
-        newState['undoEnabled'] = false;
-        this.setState(newState);
     };
     handleUndoClick = () => {
         this.getNetworkSettings(true);
@@ -141,7 +118,7 @@ export class NetworkSettings extends PureComponent<Props, State> {
                         <select
                             className="input-small gf-form-input"
                             ng-change="ctrl.render()"
-                            onChange={this.onNetworkTypeChange}
+                            onChange={this.handleNetworkTypeChange}
                             value={this.state.networkType}>
                             <option value="DHCP" key="DHCP">DHCP</option>
                             <option value="Static" key="Static">Static</option>
@@ -152,30 +129,34 @@ export class NetworkSettings extends PureComponent<Props, State> {
                 <FormField
                     label="IP"
                     labelWidth={labelWidth}
-                    onChange={this.onIPChange}
+                    onChange={this.handleInputChange}
                     value={this.state.ip}
                     disabled={!this.state.inputEnabled}
+                    name="ip"
                 />
                 <FormField
                     label="Gateway"
                     labelWidth={labelWidth}
-                    onChange={this.onGatewayChange}
+                    onChange={this.handleInputChange}
                     value={this.state.gateway}
                     disabled={!this.state.inputEnabled}
+                    name="gateway"
                 />
                 <FormField
                     label="Netmask"
                     labelWidth={labelWidth}
-                    onChange={this.onNetmaskChange}
+                    onChange={this.handleInputChange}
                     value={this.state.netmask}
                     disabled={!this.state.inputEnabled}
+                    name="netmask"
                 />
                 <FormField
                     label="DNS"
                     labelWidth={labelWidth}
-                    onChange={this.onDnsChange}
+                    onChange={this.handleInputChange}
                     value={this.state.dns}
                     disabled={!this.state.inputEnabled}
+                    name="dns"
                 />
             </div>
             <div className="gf-form-button-row">
