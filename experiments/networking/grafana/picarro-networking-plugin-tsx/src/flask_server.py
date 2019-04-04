@@ -8,6 +8,8 @@ import datetime
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash, make_response, send_file
 from flask_cors import CORS, cross_origin
 
+my_path = os.path.dirname(os.path.abspath(__file__))
+
 
 class RackNetworkSettingsServer(object):
     def __init__(self):
@@ -81,7 +83,7 @@ class RackNetworkSettingsServer(object):
         return ""
 
     def get_network_settings(self):
-        with open("network_settings.json", "r") as f:
+        with open(my_path + "/network_settings.json", "r") as f:
             settings = f.read()
             json_settings = json.dumps(settings)
         """
@@ -97,7 +99,7 @@ class RackNetworkSettingsServer(object):
 
     def set_network_settings(self, request):
         settings = request.get_json()
-        with open("network_settings.json", "w") as f:
+        with open(my_path + "/network_settings.json", "w") as f:
             f.write(json.dumps(settings, indent=4, sort_keys=True))
             f.write('\n')
         print(settings)
@@ -107,5 +109,6 @@ class RackNetworkSettingsServer(object):
 
 if __name__ == '__main__':
     print(datetime.datetime.now())
+    print(my_path)
     server = RackNetworkSettingsServer()
     server.run()
