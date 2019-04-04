@@ -50,7 +50,7 @@ export class ModbusLayout extends Component<Props, any> {
       <div className="gf-form-group ng-pristine ng-invalid">
         <div>&nbsp;</div>
         <div className="gf-form">
-          <span className="gf-form-label min-width-10">Ip Address</span>
+          <span className="gf-form-label min-width-10">IP Address</span>
           <input
             type="text"
             className="gf-form-input"
@@ -60,7 +60,7 @@ export class ModbusLayout extends Component<Props, any> {
           />
         </div>
         <div className="gf-form">
-          <span className="gf-form-label min-width-10">Salve Id</span>
+          <span className="gf-form-label min-width-10">Slave Id</span>
           <input
             type="text"
             className="gf-form-input"
