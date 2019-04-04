@@ -10,6 +10,20 @@ class ModbusSettingModule:
         if not isinstance(writer, IWriter):
             raise TypeError('Expected connection object of IWriter ')
         self._writer = writer
+        # lets check if we have default value in data base or not
+        # if not lets create default value
+        data = self._writer.read_data("select port,slave from modbusSettings ORDER BY time DESC LIMIT 1")
+        if len(data) == 0:
+            write_data = [{
+                "measurement": "modbusSettings",
+                "fields": {
+                    "slave": 1,
+                    "port": 50500,
+                    "user": "default"
+                }
+            }]
+            print(write_data)
+            self._writer.write_data(write_data)
 
 
     def get_modbus_settings(self, req):
