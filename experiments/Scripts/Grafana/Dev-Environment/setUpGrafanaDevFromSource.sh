@@ -61,6 +61,7 @@ ln -s ${HOME}/git/host/experiments/Configuration/modbus-settings ${featuresDir}
 ln -s ${HOME}/git/host/experiments/Configuration/network-settings ${featuresDir}
 
 # symlink Picarro plugins
+mkdir -p ${HOME}/go/src/github.com/grafana/grafana/data/plugins
 ln -s ${HOME}/git/host/experiments/networking/grafana/picarro-networking-plugin-tsx ${HOME}/go/src/github.com/grafana/grafana/data/plugins/picarro-networking-plugin-tsx
 ln -s ${HOME}/git/host/experiments/ModbusSettings/picarro-modbus-settings ${HOME}/go/src/github.com/grafana/grafana/data/plugins/picarro-modbus-settings
 ln -s ${HOME}/git/host/learn/examples/grafana/plugins/picarro-valve-panel ${HOME}/go/src/github.com/grafana/grafana/data/plugins/picarro-valve-panel
