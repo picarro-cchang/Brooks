@@ -76,10 +76,14 @@ def query():
     if 'target' in req['targets'][0]:
         target = req['targets'][0]['target']
         adhoc_filter = req['adhocFilters']
-        where_clause = make_adhoc_filter(adhoc_filter)
+        where_clauses = []
+        clause = make_adhoc_filter(adhoc_filter)
+        if clause:
+            where_clauses.append(clause)
         aux_data = req['targets'][0].get('data')
         if aux_data and 'where' in aux_data:
-            where_clause += ' AND ' + aux_data['where']
+            where_clauses.append(aux_data['where'])
+        where_clause = " AND ".join(where_clauses)
         if where_clause:
             where_clause += ' AND '
         max_data_points = req['maxDataPoints']
@@ -87,6 +91,7 @@ def query():
         stop_time_ms = int(req['scopedVars']['__to']['value'])
         interval = req['scopedVars']['__interval']['value']
         range_ms = stop_time_ms - start_time_ms
+        print(where_clause)
         if range_ms / 1000 < max_data_points:
             rs = client.query(
                 'SELECT mean("{target}") as mean, max("{target}") AS max, min("{target}") AS min FROM "crds" '
