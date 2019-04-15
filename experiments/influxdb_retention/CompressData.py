@@ -74,6 +74,8 @@ for src_duration, dest_duration, dest_duration_ms in zip(durations[:-1], duratio
     src_meas = measurement + "_" + src_duration
     dest_meas = measurement + "_" + dest_duration
     tlast = get_last_time(client, src_meas)
+    if tlast is None:
+        continue
     last_decim = get_last_decim(client, src_meas)
     start_time_ms = last_decim[0] if last_decim else 0
     stop_time_ms = int(dest_duration_ms * math.floor(tlast / dest_duration_ms))
