@@ -9,7 +9,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2018 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
  */
 #ifndef _INTERFACE_H
 #define _INTERFACE_H
@@ -1387,6 +1387,10 @@ typedef enum {
 #define KERNEL_FAN_FAN2_B (1) // State of fan2 bit position
 #define KERNEL_FAN_FAN2_W (1) // State of fan2 bit width
 
+#define KERNEL_SEL_DETECTOR_MODE (14) // 
+#define KERNEL_SEL_DETECTOR_MODE_MODE_B (0) //  bit position
+#define KERNEL_SEL_DETECTOR_MODE_MODE_W (4) //  bit width
+
 
 /* Block PWM Pulse width modulator */
 #define PWM_CS (0) // Control/Status register
@@ -1719,26 +1723,26 @@ typedef enum {
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
-#define FPGA_PWM_LASER1 (14) // Laser 1 TEC pulse width modulator registers
-#define FPGA_PWM_LASER2 (16) // Laser 2 TEC pulse width modulator registers
-#define FPGA_PWM_LASER3 (18) // Laser 3 TEC pulse width modulator registers
-#define FPGA_PWM_LASER4 (20) // Laser 4 TEC pulse width modulator registers
-#define FPGA_PWM_WARMBOX (22) // Warm box TEC pulse width modulator registers
-#define FPGA_PWM_HOTBOX (24) // Hot box TEC pulse width modulator registers
-#define FPGA_PWM_ENGINE1 (26) // Engine 1 TEC pulse width modulator registers
-#define FPGA_PWM_ENGINE2 (28) // Engine 2 TEC pulse width modulator registers
-#define FPGA_PWM_HEATER (30) // Heater pulse width modulator registers
-#define FPGA_PWM_FILTER_HEATER (32) // Filter Heater pulse width modulator registers
-#define FPGA_RDSIM (34) // Ringdown simulator registers
-#define FPGA_LASERLOCKER (42) // Laser frequency locker registers
-#define FPGA_RDMAN (70) // Ringdown manager registers
-#define FPGA_TWGEN (97) // Tuner waveform generator
-#define FPGA_INJECT (106) // Optical Injection Subsystem
-#define FPGA_WLMSIM (132) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (141) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (146) // Outlet proportional valve dynamic PWM
-#define FPGA_SCALER (151) // Scaler for PZT waveform
-#define FPGA_LASERCURRENTGENERATOR (152) // Laser current generator
+#define FPGA_PWM_LASER1 (15) // Laser 1 TEC pulse width modulator registers
+#define FPGA_PWM_LASER2 (17) // Laser 2 TEC pulse width modulator registers
+#define FPGA_PWM_LASER3 (19) // Laser 3 TEC pulse width modulator registers
+#define FPGA_PWM_LASER4 (21) // Laser 4 TEC pulse width modulator registers
+#define FPGA_PWM_WARMBOX (23) // Warm box TEC pulse width modulator registers
+#define FPGA_PWM_HOTBOX (25) // Hot box TEC pulse width modulator registers
+#define FPGA_PWM_ENGINE1 (27) // Engine 1 TEC pulse width modulator registers
+#define FPGA_PWM_ENGINE2 (29) // Engine 2 TEC pulse width modulator registers
+#define FPGA_PWM_HEATER (31) // Heater pulse width modulator registers
+#define FPGA_PWM_FILTER_HEATER (33) // Filter Heater pulse width modulator registers
+#define FPGA_RDSIM (35) // Ringdown simulator registers
+#define FPGA_LASERLOCKER (43) // Laser frequency locker registers
+#define FPGA_RDMAN (71) // Ringdown manager registers
+#define FPGA_TWGEN (98) // Tuner waveform generator
+#define FPGA_INJECT (107) // Optical Injection Subsystem
+#define FPGA_WLMSIM (133) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (142) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (147) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (152) // Scaler for PZT waveform
+#define FPGA_LASERCURRENTGENERATOR (153) // Laser current generator
 
 /* Environment addresses */
 

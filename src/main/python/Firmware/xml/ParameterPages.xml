@@ -52,6 +52,7 @@
             <fpga_register offset="FPGA_KERNEL">INTRONIX_3</fpga_register>
             <fpga_register offset="FPGA_KERNEL">STATUS_LED</fpga_register>
             <fpga_register offset="FPGA_KERNEL">FAN</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">SEL_DETECTOR_MODE</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser 1 Parameters</title>

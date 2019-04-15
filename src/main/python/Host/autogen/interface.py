@@ -10,7 +10,7 @@
 # SEE ALSO:
 #   Specify any related information.
 #
-#  Copyright (c) 2008-2018 Picarro, Inc. All rights reserved
+#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
 #
 
 from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
@@ -3353,6 +3353,10 @@ KERNEL_FAN_FAN1_W = 1 # State of fan1 bit width
 KERNEL_FAN_FAN2_B = 1 # State of fan2 bit position
 KERNEL_FAN_FAN2_W = 1 # State of fan2 bit width
 
+KERNEL_SEL_DETECTOR_MODE = 14 # 
+KERNEL_SEL_DETECTOR_MODE_MODE_B = 0 #  bit position
+KERNEL_SEL_DETECTOR_MODE_MODE_W = 4 #  bit width
+
 
 # Block PWM Pulse width modulator
 PWM_CS = 0 # Control/Status register
@@ -3698,6 +3702,7 @@ fpgaRegByName["KERNEL_DOUT_LO"] = KERNEL_DOUT_LO
 fpgaRegByName["KERNEL_DIN"] = KERNEL_DIN
 fpgaRegByName["KERNEL_STATUS_LED"] = KERNEL_STATUS_LED
 fpgaRegByName["KERNEL_FAN"] = KERNEL_FAN
+fpgaRegByName["KERNEL_SEL_DETECTOR_MODE"] = KERNEL_SEL_DETECTOR_MODE
 fpgaRegByName["PWM_CS"] = PWM_CS
 fpgaRegByName["PWM_PULSE_WIDTH"] = PWM_PULSE_WIDTH
 fpgaRegByName["RDSIM_OPTIONS"] = RDSIM_OPTIONS
@@ -3828,26 +3833,26 @@ fpgaRegByName["LASERCURRENTGENERATOR_SEQUENCE_ID"] = LASERCURRENTGENERATOR_SEQUE
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
-FPGA_PWM_LASER1 = 14 # Laser 1 TEC pulse width modulator registers
-FPGA_PWM_LASER2 = 16 # Laser 2 TEC pulse width modulator registers
-FPGA_PWM_LASER3 = 18 # Laser 3 TEC pulse width modulator registers
-FPGA_PWM_LASER4 = 20 # Laser 4 TEC pulse width modulator registers
-FPGA_PWM_WARMBOX = 22 # Warm box TEC pulse width modulator registers
-FPGA_PWM_HOTBOX = 24 # Hot box TEC pulse width modulator registers
-FPGA_PWM_ENGINE1 = 26 # Engine 1 TEC pulse width modulator registers
-FPGA_PWM_ENGINE2 = 28 # Engine 2 TEC pulse width modulator registers
-FPGA_PWM_HEATER = 30 # Heater pulse width modulator registers
-FPGA_PWM_FILTER_HEATER = 32 # Filter Heater pulse width modulator registers
-FPGA_RDSIM = 34 # Ringdown simulator registers
-FPGA_LASERLOCKER = 42 # Laser frequency locker registers
-FPGA_RDMAN = 70 # Ringdown manager registers
-FPGA_TWGEN = 97 # Tuner waveform generator
-FPGA_INJECT = 106 # Optical Injection Subsystem
-FPGA_WLMSIM = 132 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 141 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 146 # Outlet proportional valve dynamic PWM
-FPGA_SCALER = 151 # Scaler for PZT waveform
-FPGA_LASERCURRENTGENERATOR = 152 # Laser current generator
+FPGA_PWM_LASER1 = 15 # Laser 1 TEC pulse width modulator registers
+FPGA_PWM_LASER2 = 17 # Laser 2 TEC pulse width modulator registers
+FPGA_PWM_LASER3 = 19 # Laser 3 TEC pulse width modulator registers
+FPGA_PWM_LASER4 = 21 # Laser 4 TEC pulse width modulator registers
+FPGA_PWM_WARMBOX = 23 # Warm box TEC pulse width modulator registers
+FPGA_PWM_HOTBOX = 25 # Hot box TEC pulse width modulator registers
+FPGA_PWM_ENGINE1 = 27 # Engine 1 TEC pulse width modulator registers
+FPGA_PWM_ENGINE2 = 29 # Engine 2 TEC pulse width modulator registers
+FPGA_PWM_HEATER = 31 # Heater pulse width modulator registers
+FPGA_PWM_FILTER_HEATER = 33 # Filter Heater pulse width modulator registers
+FPGA_RDSIM = 35 # Ringdown simulator registers
+FPGA_LASERLOCKER = 43 # Laser frequency locker registers
+FPGA_RDMAN = 71 # Ringdown manager registers
+FPGA_TWGEN = 98 # Tuner waveform generator
+FPGA_INJECT = 107 # Optical Injection Subsystem
+FPGA_WLMSIM = 133 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 142 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 147 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 152 # Scaler for PZT waveform
+FPGA_LASERCURRENTGENERATOR = 153 # Laser current generator
 
 # FPGA map dictionary
 fpgaMapByName = {}
@@ -3874,7 +3879,7 @@ fpgaMapByName["FPGA_SCALER"] = FPGA_SCALER
 fpgaMapByName["FPGA_LASERCURRENTGENERATOR"] = FPGA_LASERCURRENTGENERATOR
 
 persistent_fpga_registers = []
-persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_CONFIG', u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3']))
+persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_CONFIG', u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3', u'KERNEL_SEL_DETECTOR_MODE']))
 persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
 persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_OFF_DURATION', u'RDMAN_EXTRA_DURATION']))
@@ -4040,6 +4045,7 @@ __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_2,[(255, u'Intronix displa
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_3,[(255, u'Intronix display 3 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)'), (16, u'Etalon 1 ADC (LS)'), (17, u'Etalon 1 ADC (MS)'), (18, u'Reference 1 ADC (LS)'), (19, u'Reference 1 ADC (MS)'), (20, u'Etalon 2 ADC (LS)'), (21, u'Etalon 2 ADC (MS)'), (22, u'Reference 2 ADC (LS)'), (23, u'Reference 2 ADC (MS)'), (24, u'WLM ADC signals'), (25, u'System clocks'), (26, u'PWM signals'), (27, u'I2C signals')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_STATUS_LED,[(1, u'State of Red LED', [(0, u'Red LED OFF'), (1, u'Red LED ON')]), (2, u'State of green LED', [(0, u'Green LED OFF'), (2, u'Green LED ON')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_FAN,[(1, u'State of fan1', [(0, u'Fan1 OFF'), (1, u'Fan1 ON')]), (2, u'State of fan2', [(0, u'Fan2 OFF'), (2, u'Fan2 ON')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_SEL_DETECTOR_MODE,[(15, u'', [(0, u'All lasers on first detector'), (14, u'Laser  1 on first detector'), (12, u'Lasers 1, 2 on first detector'), (8, u'Lasers 1, 2, 3 on first detector'), (15, u'All lasers on second detector'), (1, u'Lasers 2, 3, 4 on first detector'), (2, u'Lasers 1, 3, 4 on first detector'), (3, u'Lasers 3, 4 on first detector'), (4, u'Lasers 1, 2, 4 on first detector'), (5, u'Lasers 2, 4 on first detector'), (6, u'Lasers 1, 4 on first detector'), (7, u'Laser  4 on first detector'), (9, u'Lasers 2, 3 on first detector'), (10, u'Lasers 1, 3 on first detector'), (11, u'Laser  3 on first detector'), (13, u'Laser  2 on first detector')])],None,None,1,1))
 parameter_forms.append(('System Parameters',__p))
 
 # Form: Laser 1 Parameters
