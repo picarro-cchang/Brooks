@@ -293,6 +293,14 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 					Icon:        "gicon gicon-apikeys",
 					Url:         setting.AppSubUrl + "/org/apikeys",
 				},
+
+				{
+					Text:        "Modbus-Settings",
+					Id:          "modbus",
+					Description: "Update modbus Settings",
+					Icon:        "gicon gicon-preferences",
+					Url:         setting.AppSubUrl + "/modbussettings",
+				},
 			},
 		}
 

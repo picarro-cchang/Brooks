@@ -36,7 +36,9 @@ public/css/*.min.css
 .vscode/
 .vs/
 
-/data/*
+/data/log
+/data/png
+/data/grafana.db
 /bin/*
 
 conf/custom.ini
