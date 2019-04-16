@@ -24,8 +24,9 @@ import os
 import time
 import types
 #from Host.autogen import interface
-import interface
-from namedtuple import namedtuple
+#import interface
+#from namedtuple import namedtuple
+from collections import namedtuple
 
 # Constants...
 ACCESS_PUBLIC = 0
