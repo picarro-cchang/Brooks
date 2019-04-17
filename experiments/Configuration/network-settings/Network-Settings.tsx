@@ -167,7 +167,6 @@ export class NetworkSettings extends PureComponent<Props, State> {
                     <div className="gf-form-select-wrapper max-width-12">
                         <select
                             className="input-small gf-form-input"
-                            ng-change="ctrl.render()"
                             onChange={this.handleNetworkTypeChange}
                             value={this.state.networkType}>
                             <option value="DHCP" key="DHCP">DHCP</option>
