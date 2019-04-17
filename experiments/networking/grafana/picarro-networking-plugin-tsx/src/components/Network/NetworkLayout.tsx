@@ -14,10 +14,10 @@ export class NetworkLayout extends Component<Props, any> {
             netmask: this.props.options.netmask,
             dns: this.props.options.dns
         };
-    };
+    }
     componentDidMount(): void {
         this.getNetworkSettings();
-    };
+    }
     getNetworkSettings () {
         const newState = { ...this.state };
         PicarroAPI.getRequest(getRoute).then(response => {
@@ -29,9 +29,9 @@ export class NetworkLayout extends Component<Props, any> {
                 newState['netmask'] = jsonData['netmask'];
                 newState['dns'] = jsonData['dns'];
                 this.setState(newState);
-            })
-        })
-    };
+            });
+        });
+    }
     render() {
         return (
             <form className="gf-form-group ng-pristine ng-invalid network-grid">

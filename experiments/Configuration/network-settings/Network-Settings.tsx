@@ -19,6 +19,8 @@ export interface State {
     undoEnabled: boolean;
     applyEnabled: boolean;
     inputEnabled: boolean;
+    touched: object;
+    valid: object;
 }
 const host = 'http://localhost:';
 const port = '3030';
@@ -32,13 +34,25 @@ export class NetworkSettings extends PureComponent<Props, State> {
     super(Props);
     this.state = {
       networkType: '',
-        ip: '',
-        gateway: '',
-        netmask: '',
-        dns: '',
-        applyEnabled: false,
-        undoEnabled: false,
-        inputEnabled: true,
+      ip: '',
+      gateway: '',
+      netmask: '',
+      dns: '',
+      applyEnabled: false,
+      undoEnabled: false,
+      inputEnabled: true,
+      touched: {
+        ip: false,
+        gateway: false,
+        netmask: false,
+        dns: false
+      },
+      valid: {
+        ip: false,
+        gateway: false,
+        netmask: false,
+        dns: false
+      },
     };
     }
     componentDidMount() {
@@ -57,6 +71,11 @@ export class NetworkSettings extends PureComponent<Props, State> {
                 if (undo === true) {
                     newState['applyEnabled'] = false;
                     newState['undoEnabled'] = false;
+                    // Re-set all input fields as not touched since
+                    // we are undoing all changes.
+                    for (const key of Object.keys(newState['touched'])) {
+                        newState['touched'][key] = false;
+                    }
                 }
                 // Disable all input forms if DHCP is selected
                 newState['inputEnabled'] = jsonData['networkType'] !== 'DHCP';
@@ -84,10 +103,40 @@ export class NetworkSettings extends PureComponent<Props, State> {
     handleInputChange = (event) => {
         const newState = { ...this.state };
         const { name, value } = event.target;
+        let message = 'Error in: ';
         newState[name] = value;
-        newState['applyEnabled'] = true;
         newState['undoEnabled'] = true;
+        newState['touched'][name] = true;
+        if (newState['networkType'] !== 'DHCP' ) {
+            let count = 0;
+            let validCount = 0;
+            for (const key of Object.keys(newState['valid'])) {
+                const validation = this.checkInput(newState[key]);
+                count += 1;
+                if (validation === true) {
+                    validCount += 1;
+                    newState['valid'][key] = true;
+                } else {
+                    message += key;
+                    console.log(message);
+                    newState['applyEnabled'] = false;
+                    newState['valid'][key] = false;
+                }
+                if (count === validCount) {
+                    newState['applyEnabled'] = true;
+                }
+            }
+        } else {
+            newState['applyEnabled'] = true;
+        }
         this.setState(newState);
+    };
+    checkInput = (value) => {
+        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(value)) {
+            return (true);
+        } else {
+          return (false);
+        }
     };
     handleApplyClick = () => {
         const newState = { ...this.state };
