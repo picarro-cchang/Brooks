@@ -52,8 +52,8 @@ fi
 
 # Brute force copy/replace index.go file to add Picarro configuration
 # items to config menu in grafana
-cp -rv $configDir/index.go /home/gerald/go/src/github.com/grafana/grafana/pkg/api/
-cp -rv $configDir/routes.ts /home/gerald/go/src/github.com/grafana/grafana/public/app/routes/
+cp -rv $configDir/index.go ${HOME}/go/src/github.com/grafana/grafana/pkg/api/
+cp -rv $configDir/routes.ts ${HOME}/go/src/github.com/grafana/grafana/public/app/routes/
 
 # symlink Picarro config ui items into features folder
 featuresDir="${HOME}/go/src/github.com/grafana/grafana/public/app/features/"
