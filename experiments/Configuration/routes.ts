@@ -24,6 +24,7 @@ import SoloPanelPage from '../features/dashboard/containers/SoloPanelPage';
 import DashboardPage from '../features/dashboard/containers/DashboardPage';
 import config from 'app/core/config';
 import modbussettings from '../features/modbus-settings/modbus-settings';
+import NetworkSettings from '../features/network-settings/Network-Settings';
 
 // Types
 import { DashboardRouteInfo } from 'app/types';
@@ -346,6 +347,12 @@ export function setupAngularRoutes($routeProvider, $locationProvider) {
       template: '<react-container />',
       resolve: {
         component: () => modbussettings,
+      },
+    })
+    .when('/networksettings', {
+      template: '<react-container />',
+      resolve: {
+        component: () => NetworkSettings,
       },
     })
     .otherwise({
