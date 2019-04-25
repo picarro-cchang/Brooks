@@ -1,7 +1,9 @@
 import yaml
 import os
+import cerberus
 from pprint import pprint
 from ipaddress import IPv4Interface
+from host.experiments.networking.netplan.schema.schema import netplan_schema
 
 
 def get_ip_with_network_bits(ip, netmask):
@@ -78,11 +80,13 @@ if __name__ == '__main__':
     print(my_ip.network)
     my_configuration = load_network_configuration('./templates/static-settings.yaml')
     print_network_configuration(my_configuration, 'object')
-    my_template = load_yaml_template('static')
+    my_template = load_yaml_template('dhcp')
     for adapter in my_template['network']['ethernets']:
         print(my_template['network']['ethernets'][adapter])
         my_template['network']['ethernets'][adapter]['dhcp4'] = True
         print(my_template)
     print_yaml_template(my_template)
-
-
+    my_validator = cerberus.Validator(netplan_schema)
+    print(my_validator.validate(my_template, netplan_schema))
+    if my_validator.errors:
+        print(my_validator.errors)
