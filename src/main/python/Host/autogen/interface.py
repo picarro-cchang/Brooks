@@ -3353,9 +3353,9 @@ KERNEL_FAN_FAN1_W = 1 # State of fan1 bit width
 KERNEL_FAN_FAN2_B = 1 # State of fan2 bit position
 KERNEL_FAN_FAN2_W = 1 # State of fan2 bit width
 
-KERNEL_SEL_DETECTOR_MODE = 14 # 
-KERNEL_SEL_DETECTOR_MODE_MODE_B = 0 #  bit position
-KERNEL_SEL_DETECTOR_MODE_MODE_W = 4 #  bit width
+KERNEL_SEL_DETECTOR_MODE = 14 # Detector selection options
+KERNEL_SEL_DETECTOR_MODE_MODE_B = 0 # Detector selection options bit position
+KERNEL_SEL_DETECTOR_MODE_MODE_W = 4 # Detector selection options bit width
 
 
 # Block PWM Pulse width modulator
@@ -4045,7 +4045,7 @@ __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_2,[(255, u'Intronix displa
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_INTRONIX_3,[(255, u'Intronix display 3 channel', [(0, u'Tuner waveform (LS)'), (1, u'Tuner waveform (MS)'), (2, u'Ringdown ADC waveform (LS)'), (3, u'Ringdown ADC waveform (MS)'), (4, u'Ringdown simulator waveform (LS)'), (5, u'Ringdown simulator waveform (MS)'), (6, u'Laser fine current (LS)'), (7, u'Laser fine current (MS)'), (8, u'Locker error (LS)'), (9, u'Locker error (MS)'), (10, u'Ratio 1 (LS)'), (11, u'Ratio 1 (MS)'), (12, u'Ratio 2 (LS)'), (13, u'Ratio 2 (MS)'), (14, u'PZT (LS)'), (15, u'PZT (MS)'), (16, u'Etalon 1 ADC (LS)'), (17, u'Etalon 1 ADC (MS)'), (18, u'Reference 1 ADC (LS)'), (19, u'Reference 1 ADC (MS)'), (20, u'Etalon 2 ADC (LS)'), (21, u'Etalon 2 ADC (MS)'), (22, u'Reference 2 ADC (LS)'), (23, u'Reference 2 ADC (MS)'), (24, u'WLM ADC signals'), (25, u'System clocks'), (26, u'PWM signals'), (27, u'I2C signals')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_STATUS_LED,[(1, u'State of Red LED', [(0, u'Red LED OFF'), (1, u'Red LED ON')]), (2, u'State of green LED', [(0, u'Green LED OFF'), (2, u'Green LED ON')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_KERNEL+KERNEL_FAN,[(1, u'State of fan1', [(0, u'Fan1 OFF'), (1, u'Fan1 ON')]), (2, u'State of fan2', [(0, u'Fan2 OFF'), (2, u'Fan2 ON')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_SEL_DETECTOR_MODE,[(15, u'', [(0, u'All lasers on first detector'), (14, u'Laser  1 on first detector'), (12, u'Lasers 1, 2 on first detector'), (8, u'Lasers 1, 2, 3 on first detector'), (15, u'All lasers on second detector'), (1, u'Lasers 2, 3, 4 on first detector'), (2, u'Lasers 1, 3, 4 on first detector'), (3, u'Lasers 3, 4 on first detector'), (4, u'Lasers 1, 2, 4 on first detector'), (5, u'Lasers 2, 4 on first detector'), (6, u'Lasers 1, 4 on first detector'), (7, u'Laser  4 on first detector'), (9, u'Lasers 2, 3 on first detector'), (10, u'Lasers 1, 3 on first detector'), (11, u'Laser  3 on first detector'), (13, u'Laser  2 on first detector')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_KERNEL+KERNEL_SEL_DETECTOR_MODE,[(15, u'Detector selection options', [(0, u'All lasers on first detector'), (14, u'Laser  1 on first detector'), (12, u'Lasers 1, 2 on first detector'), (8, u'Lasers 1, 2, 3 on first detector'), (15, u'All lasers on second detector'), (1, u'Lasers 2, 3, 4 on first detector'), (2, u'Lasers 1, 3, 4 on first detector'), (3, u'Lasers 3, 4 on first detector'), (4, u'Lasers 1, 2, 4 on first detector'), (5, u'Lasers 2, 4 on first detector'), (6, u'Lasers 1, 4 on first detector'), (7, u'Laser  4 on first detector'), (9, u'Lasers 2, 3 on first detector'), (10, u'Lasers 1, 3 on first detector'), (11, u'Laser  3 on first detector'), (13, u'Laser  2 on first detector')])],None,None,1,1))
 parameter_forms.append(('System Parameters',__p))
 
 # Form: Laser 1 Parameters
