@@ -363,7 +363,6 @@ else:
             pzt3_adjust = (f70-f0)*pzt_per_fsr/fsr
         else:
             pzt3_adjust = 0.0
-
     if (d["spectrumId"] == 63) and (d["ngroups"] < spectrum_min_groups):
         incomplete_spectrum = 1
         r = anHCl[6](d, init, deps)
@@ -409,10 +408,10 @@ else:
         RESULT.update(d.sensorDict)
 
     # Determine if we can raise the threshold to the original value
-    if not(disable_dynamic_threshold) and (rd_rate >= min_rd_rate) and np.all(d.uncorrectedAbsorbance > 0.0) and np.all(d.uncorrectedAbsorbance < 0.001*safe_loss_level):
-        if current_threshold != original_rd_threshold:
-            degraded_performance = 0
-            Driver.wrDasReg("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER", original_rd_threshold)
-            Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", original_rd_threshold)
-            Log("Fitter changes threshold to %d" % original_rd_threshold)
+        if not(disable_dynamic_threshold) and (rd_rate >= min_rd_rate) and np.all(d.uncorrectedAbsorbance > 0.0) and np.all(d.uncorrectedAbsorbance < 0.001*safe_loss_level):
+            if current_threshold != original_rd_threshold:
+                degraded_performance = 0
+                Driver.wrDasReg("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER", original_rd_threshold)
+                Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", original_rd_threshold)
+                Log("Fitter changes threshold to %d" % original_rd_threshold)
 

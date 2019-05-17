@@ -81,7 +81,7 @@ if _PERSISTENT_["init"]:
 # REPORT_UPPER_LIMIT = 5000.0
 # REPORT_LOWER_LIMIT = -5000.0
 
-TARGET_SPECIES = [2, 4, 60, 61]
+TARGET_SPECIES = [2, 4, 60, 61, 63]
 
 # def clipReportData(value):
     # if value > REPORT_UPPER_LIMIT:
