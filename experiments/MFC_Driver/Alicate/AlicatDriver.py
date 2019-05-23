@@ -23,11 +23,14 @@ class AlicatDriver:
             raise e
 
     def send(self, command):
+        self.serial.write(command)
+        return self.read()
+
+    def read(self):
         command_buffer = ""
         """ waits for a complete input line and returns command to caller """
         while not self.terminate:
             try:
-                self.serial.write(command)
                 s = self.serial.read()
                 if s[0] == carriage_return:
                     return command_buffer
@@ -48,4 +51,6 @@ class AlicatDriver:
 
 if __name__ == "__main__":
     obj = AlicatDriver()
-    print(obj.send("A"+carriage_return))
+    for x in range(10):
+        print(obj.send("A"+carriage_return))
+        time.sleep(1)
