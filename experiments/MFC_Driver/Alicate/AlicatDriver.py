@@ -25,17 +25,24 @@ class AlicatDriver:
     def send(self, command):
         command_buffer = ""
         """ waits for a complete input line and returns command to caller """
-        try:
-            self.serial.write(command)
-            command_buffer = self.serial.read(carriage_return)
-        except serial.SerialException as e:
-            msg = "Unable to read command. EXCEPTION: %s" % e
-            print(msg)
-            time.sleep(0.2)
-        except serial.SerialTimeoutException as e:
-            msg = "Unable to read command. TIMEOUTEXCEPTION: %s" % e
-            print(msg)
-            time.sleep(0.2)
+        while not self.terminate:
+            try:
+                self.serial.write(command)
+                s = self.serial.read()
+                if s[0] == carriage_return:
+                    return command_buffer
+                else:
+                    command_buffer += s
+            except serial.SerialException as e:
+                msg = "Unable to read command. EXCEPTION: %s" % e
+                print(msg)
+                time.sleep(0.2)
+                continue
+            except serial.SerialTimeoutException as e:
+                msg = "Unable to read command. TIMEOUTEXCEPTION: %s" % e
+                print(msg)
+                time.sleep(0.2)
+                continue
         return command_buffer
 
 
