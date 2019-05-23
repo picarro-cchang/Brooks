@@ -42,8 +42,16 @@ class SerialInterface(object):
             if not self.serial.isOpen():
                 self.serial.close()
 
-    def read(self, read=self.serial.read()):
-        return read
+    def read(self, carriage_return=None):
+        if carriage_return is not None:
+            command_buffer = ""
+            while True:
+                data = self.serial.read().decode()
+                if data[0] == carriage_return:
+                    return command_buffer
+                else:
+                    command_buffer += data
+        return self.serial.read().decode()
 
     def write(self, msg):
         self.serial.write(msg.encode())
