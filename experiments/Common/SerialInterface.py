@@ -10,7 +10,6 @@ import serial
 class SerialInterface(object):
     def __init__(self):
         """ Initializes Serial Interface """
-        self.terminate = False
         self.serial = None
 
     def config(self, port=None, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
