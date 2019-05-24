@@ -11,3 +11,7 @@ class IMFCDriver(ABC):
     def send(self, command):
         pass
 
+    @abstractmethod
+    def close(self):
+        pass
+
