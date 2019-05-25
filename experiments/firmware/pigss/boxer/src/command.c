@@ -46,6 +46,9 @@
 // Provides commands to work with the eeprom
 #include "eeprom.h"
 
+// Provides commands to work with channels
+#include "channel.h"
+
 
 
 
@@ -151,6 +154,24 @@ command_t command_array[] = {
    "uint16",
    5,
    &cmd_write_sernum,
+   helpstr_sernum},
+  // chanena -- Enable channel n
+  {"chanena",
+   "uint16",
+   1,
+   &cmd_chanena,
+   helpstr_sernum},
+  // chanoff -- Disable channel n
+  {"chanoff",
+   "uint16",
+   1,
+   &cmd_chanoff,
+   helpstr_sernum},
+  // chanset -- Set the channel enable byte
+  {"chanset",
+   "uint16",
+   3,
+   &cmd_chanset,
    helpstr_sernum},
   // help -- Print all the help strings
   {"help",
@@ -259,9 +280,12 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
 	  // The command is specified to have an argument
 	  uint8_t arg_ok = check_argsize(recv_cmd_state_ptr,command_array);
 	  if (arg_ok != 0) {
+	    // The argument is too large
 	    logger_msg_p("command",log_level_ERROR,
 			 PSTR("Argument to '%s' is out of range."),
 			 command_array -> name);
+	    command_nack();
+	    return;
 	  }
 	  else {
 	    // The argument is the right size
@@ -288,12 +312,13 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
       command_array++;
     }
     // If we didn't find a match, send an error message to the logger
-    // and a -1 to the command interface.
+    // and a NACK to the command interface.
     if (pbuffer_match == 0) {
       logger_msg_p("command",log_level_ERROR,
 		   PSTR("Unrecognized command: '%s'."),
 		   recv_cmd_state_ptr -> pbuffer);
-      usart_printf(USART_CHANNEL_COMMAND, "-1%s", LINE_TERMINATION_CHARACTERS);
+      // usart_printf(USART_CHANNEL_COMMAND, "-1%s", LINE_TERMINATION_CHARACTERS);
+      command_nack();
       recv_cmd_state_ptr -> pbuffer_locked = false;
     }
   }
@@ -356,4 +381,8 @@ void command_exec( command_t *command, char *argument,
 
 void command_ack() {
   usart_printf(USART_CHANNEL_COMMAND, "0%s", LINE_TERMINATION_CHARACTERS);
+}
+
+void command_nack() {
+  usart_printf(USART_CHANNEL_COMMAND, "-1%s", LINE_TERMINATION_CHARACTERS);
 }

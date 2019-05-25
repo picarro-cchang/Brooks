@@ -32,7 +32,7 @@ void bargraph_init() {
   // Assume spi has already been initialized
 }
 
-uint8_t bargraph_write( uint16_t (*cs_ptr)(uint8_t), uint16_t value ) {
+uint8_t bargraph_write( void (*cs_ptr)(uint8_t), uint16_t value ) {
   // Make a union to write bytes of value one at a time
   union {
     uint8_t bytes[2];

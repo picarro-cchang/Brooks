@@ -7,7 +7,7 @@
 #include <util/delay.h>
 
 #include "functions.h"
-#include "main.h"
+
 
 // Functions for setting the system clock prescaler
 #include "clock.h"

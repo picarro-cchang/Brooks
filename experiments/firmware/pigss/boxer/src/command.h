@@ -111,4 +111,7 @@ void rbuffer_erase( recv_cmd_state_t *recv_cmd_state_ptr );
 // Send an acknowledge signal
 void command_ack( void );
 
+// Send a non-acknowledged signaljj
+void command_nack( void );
+
 #endif // End the include guard

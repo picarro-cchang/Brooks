@@ -16,6 +16,6 @@ void bargraph_init(void);
 //   cs_ptr -- Pointer to the function that sets or clears the cs line
 //   data -- 16-bit value to write
 //
-uint8_t bargraph_write( uint16_t (*cs_ptr)(uint8_t), uint16_t data );
+uint8_t bargraph_write( void (*cs_ptr)(uint8_t), uint16_t data );
 
 #endif

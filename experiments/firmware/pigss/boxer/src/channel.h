@@ -25,6 +25,15 @@ uint8_t channel_update(void);
 // Drive the active channel display hardware
 uint8_t channel_display(void);
 
+// Enable channel n
+void cmd_chanena( command_arg_t *command_arg_ptr );
+
+// Disable channel n
+void cmd_chanoff( command_arg_t *command_arg_ptr );
+
+// Set the channel enable register
+void cmd_chanset( command_arg_t *command_arg_ptr );
+
 
 
 

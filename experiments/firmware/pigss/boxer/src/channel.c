@@ -22,6 +22,9 @@
 // Provide cs functions
 #include "cs.h"
 
+// Provides command_ack and command_nack
+#include "command.h"
+
 
 #include "spi.h"
 
@@ -36,8 +39,7 @@ channel_config_t *channel_config_ptr = &channel_config;
 
 void channel_init() {
   // Disable all channels
-  channel_config_ptr -> enable = 0;
-  channel_update;
+  channel_write(0);
 }
 
 uint8_t channel_write(uint8_t channel_settings) {
@@ -49,6 +51,7 @@ uint8_t channel_write(uint8_t channel_settings) {
 
   retval = channel_update();
   retval = channel_display();
+  return 0;
 }
 
 uint8_t channel_update() {
@@ -60,5 +63,62 @@ uint8_t channel_update() {
 uint8_t channel_display() {
   bargraph_write( &cs_manifold_b_sr, (uint16_t) channel_config_ptr -> enable );
   return 0;
+}
+
+void cmd_chanena( command_arg_t *command_arg_ptr ) {
+  uint16_t channel = command_arg_ptr -> uint16_arg;
+  uint8_t channel_settings = channel_config_ptr -> enable;
+  uint8_t retval = 0;
+  if (channel == 0 || channel > 8 ) {
+    // Argument is out of range
+    command_nack();
+    return;
+  }
+  uint8_t bitshift = channel - 1;
+
+  // Enable the channel
+  channel_settings |= (1 << bitshift);
+
+
+  // channel_settings &= ~(1 << 0);
+
+  retval = channel_write(channel_settings);
+  // Acknowledge the successful commmand
+  command_ack();
+  return;
+}
+
+void cmd_chanoff( command_arg_t *command_arg_ptr ) {
+  uint16_t channel = command_arg_ptr -> uint16_arg;
+  uint8_t channel_settings = channel_config_ptr -> enable;
+  uint8_t retval = 0;
+  if (channel == 0 || channel > 8 ) {
+    // Argument is out of range
+    command_nack();
+    return;
+  }
+  uint8_t bitshift = channel - 1;
+
+  // Disable the channel
+  channel_settings &= ~(1 << bitshift);
+
+  retval = channel_write(channel_settings);
+  // Acknowledge the successful commmand
+  command_ack();
+  return;
+}
+
+void cmd_chanset( command_arg_t *command_arg_ptr ) {
+  uint16_t channel_settings = command_arg_ptr -> uint16_arg;
+  uint8_t retval = 0;
+  if (channel_settings > 255) {
+    // Argument is out of range
+    command_nack();
+    return;
+  }
+  retval = channel_write(channel_settings);
+  // Acknowledge the successful command
+  command_ack();
+  return;
 }
 
