@@ -1,0 +1,13 @@
+# Ignore emacs temporary files
+*~
+
+# Ignore dependency directory
+src/.dep
+
+# Ignore hex, elf and map files
+src/*.hex
+src/*.elf
+src/*.map
+
+$ Ignore object files
+src/obj
