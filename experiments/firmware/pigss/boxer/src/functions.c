@@ -36,7 +36,7 @@
 // ----------------------- Globals ------------------------------------
 
 // idnstr format: Organization, model, serial, version
-const char idnstr[] PROGMEM = "Picarro,Boxer,SN%u,%s\r\n";
+const char idnstr[] PROGMEM = "Picarro,Boxer,SN%u,%s";
 
 /* System status structure
 
@@ -58,11 +58,10 @@ void functions_init(void) {
   eeprom_load_sernum(system_state_ptr);
 }
 
-
-
 // The function called by the "*IDN?" query
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
   usart_printf_p(USART_CHANNEL_COMMAND, idnstr, system_state_ptr -> sernum,REVCODE);
+  usart_printf(USART_CHANNEL_COMMAND, LINE_TERMINATION_CHARACTERS);
 }
 
 

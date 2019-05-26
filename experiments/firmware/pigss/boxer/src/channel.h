@@ -28,6 +28,9 @@ uint8_t channel_display(void);
 // Enable channel n
 void cmd_chanena( command_arg_t *command_arg_ptr );
 
+// Query the enable status of channel n
+void cmd_chanena_q( command_arg_t *command_arg_ptr );
+
 // Disable channel n
 void cmd_chanoff( command_arg_t *command_arg_ptr );
 

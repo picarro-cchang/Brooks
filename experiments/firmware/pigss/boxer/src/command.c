@@ -155,6 +155,11 @@ command_t command_array[] = {
    "uint16",
    1,
    &cmd_chanena},
+  // chanena? -- Query the enable status of channel n
+  {"chanena?",
+   "uint16",
+   1,
+   &cmd_chanena_q},
   // chanoff -- Disable channel n
   {"chanoff",
    "uint16",

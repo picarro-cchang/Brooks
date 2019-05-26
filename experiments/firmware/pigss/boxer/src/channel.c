@@ -25,6 +25,9 @@
 // Provides command_ack and command_nack
 #include "command.h"
 
+// Provides functions for working with the UART
+#include "usart.h"
+
 
 #include "spi.h"
 
@@ -67,6 +70,7 @@ uint8_t channel_display() {
 
 void cmd_chanena( command_arg_t *command_arg_ptr ) {
   uint16_t channel = command_arg_ptr -> uint16_arg;
+  uint8_t bitshift = channel - 1;  
   uint8_t channel_settings = channel_config_ptr -> enable;
   uint8_t retval = 0;
   if (channel == 0 || channel > 8 ) {
@@ -74,18 +78,30 @@ void cmd_chanena( command_arg_t *command_arg_ptr ) {
     command_nack();
     return;
   }
-  uint8_t bitshift = channel - 1;
-
   // Enable the channel
   channel_settings |= (1 << bitshift);
-
-
-  // channel_settings &= ~(1 << 0);
-
   retval = channel_write(channel_settings);
+
   // Acknowledge the successful commmand
   command_ack();
   return;
+}
+
+void cmd_chanena_q( command_arg_t *command_arg_ptr ) {
+  uint16_t channel = command_arg_ptr -> uint16_arg;
+  uint8_t bitshift = channel - 1;  
+  uint8_t channel_settings = channel_config_ptr -> enable;
+  uint8_t retval = 0;
+  if (channel == 0 || channel > 8 ) {
+    // Argument is out of range
+    command_nack();
+    return;
+  }
+  if (channel_settings & (1 << bitshift)) {
+    usart_printf(USART_CHANNEL_COMMAND, "1%s", LINE_TERMINATION_CHARACTERS);
+  } else {
+    usart_printf(USART_CHANNEL_COMMAND, "0%s", LINE_TERMINATION_CHARACTERS);
+  }
 }
 
 void cmd_chanoff( command_arg_t *command_arg_ptr ) {
