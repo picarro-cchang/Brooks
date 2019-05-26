@@ -37,6 +37,9 @@ void cmd_chanoff( command_arg_t *command_arg_ptr );
 // Set the channel enable register
 void cmd_chanset( command_arg_t *command_arg_ptr );
 
+// Query the channel enable register
+void cmd_chanset_q( command_arg_t *command_arg_ptr );
+
 
 
 

@@ -50,78 +50,6 @@
 #include "channel.h"
 
 
-
-
-
-
-/* Initialize command help strings.
- 
-   The help text for each command needs to be defined outside of the
-   rest of the command array initialization.  I don't know another way
-   to keep the text from being copied into RAM.  There's probably a
-   better way to do this.
- 
-*/
-const char helpstr_idn[] PROGMEM = 
-    "*IDN? -- Print instrument identifier.\r\n"
-    "    Argument: None\r\n"
-    "    Return: Identification string\r\n";
-
-const char helpstr_loglevel[] PROGMEM =
-    "loglev -- Set the logger severity level.\r\n"
-    "    Argument: 0-3\r\n"
-    "    Return: None\r\n";
-
-const char helpstr_logreg[] PROGMEM =
-    "logreg -- Set the logger enable register.\r\n"
-    "    Argument: 16-bit unsigned hex number\r\n"
-    "    Return: None\r\n";
-
-const char helpstr_logreg_q[] PROGMEM =
-    "logreg? -- Query the logger enable register.\r\n"
-    "    Argument: None\r\n"
-    "    Return: 16-bit unsigned hex number\r\n";
-
-const char helpstr_adcval_q[] PROGMEM =
-    "$adcval? -- Query the raw ADC counts.\r\n"
-    "    Argument: None\r\n"
-    "    Return: 16-bit unsigned hex number\r\n";
-
-const char helpstr_volt_q[] PROGMEM =
-    "volt? -- Query the calibrated voltage measurement.\r\n"
-    "    Argument: None\r\n"
-    "    Return: Voltage in millivolts\r\n";
-
-const char helpstr_curslp[] PROGMEM =
-  "$curslp -- Set the current slope value.\r\n"
-  "    Argument: 16-bit unsigned integer\r\n"
-  "    Return: None\r\n";
-
-const char helpstr_curoff[] PROGMEM =
-  "$curoff -- Set the current offset value.\r\n"
-  "    Argument: 16-bit signed integer.\r\n"
-  "    Return: None\r\n";
-
-const char helpstr_sernum[] PROGMEM =
-  "sernum -- Set the serial number.\r\n"
-  "    Argument: 16-bit unsigned integer.\r\n"
-  "    Return: None\r\n";
-
-const char helpstr_curout[] PROGMEM =
-  "curout? -- Query the output current in uA.\r\n"
-  "    Argument: None\r\n"
-  "    Return: integer current in uA\r\n";
-
-const char helpstr_curper[] PROGMEM =
-  "curper -- Set the sampling period in ms.\r\n"
-  "    Argument: 16-bit unsigned integer.\r\n"
-  "    Return: None\r\n";
-
-const char helpstr_help[] PROGMEM =
-    "help -- Print the command help.\r\n";
-
-const char nullstr[] PROGMEM = "";
-
 /* Define the remote commands recognized by the system.
  */
 command_t command_array[] = {
@@ -170,6 +98,11 @@ command_t command_array[] = {
    "uint16",
    3,
    &cmd_chanset},
+  // chanset? -- Query the channel enable byte
+  {"chanset?",
+   "none",
+   0,
+   &cmd_chanset_q},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

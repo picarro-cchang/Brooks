@@ -9,5 +9,8 @@ src/*.hex
 src/*.elf
 src/*.map
 
-$ Ignore object files
+# Ignore object files
 src/obj
+
+# Ignore hex outputs
+bin/*.hex

@@ -138,3 +138,10 @@ void cmd_chanset( command_arg_t *command_arg_ptr ) {
   return;
 }
 
+void cmd_chanset_q( command_arg_t *command_arg_ptr ) {
+  uint8_t channel_settings = channel_config_ptr -> enable;
+  uint8_t retval = 0;
+  usart_printf(USART_CHANNEL_COMMAND,"%d%s",
+	       channel_settings, LINE_TERMINATION_CHARACTERS);
+  return;
+}

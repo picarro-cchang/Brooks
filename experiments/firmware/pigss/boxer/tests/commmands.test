@@ -1,0 +1,172 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# tcltest::test name description ?constraints? body result
+
+# Note that the body of a test is not like the body of a proc...all
+# scripts are evaluated in the context of the caller of test.  So we
+# can define variables outside of test bodies and use them inside.
+
+# We need to test both the upper and lower case forms of each command.
+
+############################### *idn? ################################
+
+# Query the instrument's identity
+
+set command "*idn?"
+set description "Identification query"
+set ok_result {Picarro,Boxer,SN.*,1.0.0}
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command]"
+    set return_string [boxer::readline $channel]
+    # Command should return four comma separated fields:
+    # Manufacturer name, Model number, Serial number, Revision code
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+############################### sernum ###############################
+
+# Set the instrument's serial number. First, just make sure the
+# command returns properly.
+
+set command "sernum"
+set description "Set serial number"
+set ok_result 0
+set serial_number 8
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $serial_number"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $serial_number"
+    set return_string [boxer::readline $channel]
+} -match regexp -result $ok_result
+
+# Now make sure the serial number was set.  The test will return some
+# value if we get the right serial number.  We'll match this returned
+# value for the test.
+tcltest::test "sernum" "Check serial number" -body {
+    boxer::sendcmd $channel "*idn?"
+    set return_string [boxer::readline $channel]
+    # The return string should be Picarro,Boxer,SN<serial number>,<revcode>
+    set return_list [split $return_string ","]
+    set return_sernum "[lindex $return_list 2]"
+    if {[string equal $return_sernum "SN$serial_number"]} {
+	return ok
+    } else {
+	return $return_sernum
+    }
+} -result ok
+
+# Write a new serial number
+set serial_number 65000
+
+tcltest::test "sernum" "Check new serial number" -body {
+    boxer::sendcmd $channel "sernum $serial_number"
+    # Read the return (should just be 0)
+    set return_string [boxer::readline $channel]
+    boxer::sendcmd $channel "*idn?"
+    set return_string [boxer::readline $channel]
+    # The return string should be Picarro,Boxer,SN<serial number>,<revcode>
+    set return_list [split $return_string ","]
+    set return_sernum "[lindex $return_list 2]"
+    if {[string equal $return_sernum "SN$serial_number"]} {
+	return ok
+    } else {
+	return $return_sernum
+    }
+} -result ok
+
+############################## chanena ###############################
+
+set command "chanena"
+set description "Enable channels 1-8"
+set ok_result 0
+set manifold_channel 1
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $manifold_channel"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $manifold_channel"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+
+set command "chanena?"
+set description "Query enable status of channels 1-8"
+set ok_result 1
+set manifold_channel 1
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $manifold_channel"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $manifold_channel"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+set command "chanoff"
+set description "Disable channels 1-8"
+set ok_result 0
+set manifold_channel 1
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $manifold_channel"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $manifold_channel"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+set command "chanset"
+set description "Set channel enable status"
+set ok_result 0
+set channel_byte 170
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $channel_byte"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $channel_byte"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+set command "chanset?"
+set description "Query channel enable status"
+set ok_result 170
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result

@@ -1,9 +1,10 @@
-# Boxer -- Manifold Box Controller version REVCODE #
+# Boxer -- Manifold Box Controller #
 
 Boxer code will run on two incarnations of the system board: Out of
 Form Factor (OFF) and In Form Factor (IFF).  OFF hardware will use the
 [Arduino Mega](https://www.sparkfun.com/products/11061), while IFF
 hardware will be a custom PCB.
+
 
 ## Serial connection details ##
 
@@ -100,18 +101,87 @@ None
 
 ### System-level commands ###
 
-#### SERNUM ####
-<a id="SERNUM"></a>
+#### SERNUM n ####
+[SERNUM](#sernum-n)
 
-Set the instrument's serial number.  Query the serial number with [*IDN?](#*IDN?).
+Set the instrument's serial number to n.  Query the serial number with
+[*IDN?](#*IDN?).
 
-##### Parameter #####
+##### Parameter (n) #####
 
 16-bit integer (0-65535) formatted as a decimal.
 
 ##### Typical Return #####
 
 `0`
+
+### Channel commands ###
+
+#### CHANENA n ####
+[CHANENA](#chanena-n)
+
+Enable channel n.
+
+##### Parameter (n) #####
+
+Integers 1-8
+
+##### Typical Return #####
+
+`0`
+
+#### CHANENA? n ####
+[CHANENA?](#chanena-n)
+
+Returns 1 if channel n is enabled, or 0 if it's disabled.
+
+##### Parameter (n) #####
+
+Integers 1-8
+
+##### Typical Return #####
+
+`0`
+
+
+#### CHANOFF n ####
+[CHANOFF](#chanoff-n)
+
+Disable channel n.
+
+##### Parameter (n) #####
+
+Integers 1-8
+
+##### Typical Return #####
+
+`0`
+
+#### CHANSET n ####
+[CHANSET](#chanset-n)
+
+Set the channel enable register.  Each channel has a position in the
+enable register bitfield, starting with channel 1 and ending with
+channel 8.  Enable a channel by setting the channel's bit.  Disable a
+channel by clearing the channel's bit.
+
+##### Parameter (n) #####
+
+Integers 0-255
+
+##### Typical Return #####
+
+`0`
+
+#### CHANSET? ####
+[CHANSET?](#chanset)
+
+Query the channel enable register.
+
+##### Typical Return #####
+
+`8`
+
 
 
 
@@ -127,3 +197,5 @@ device.
 **The `SERNUM` command will likely go away!**  You can use this
    command to test writing the serial number, but the command will
    likely change in the next version.
+   
+   

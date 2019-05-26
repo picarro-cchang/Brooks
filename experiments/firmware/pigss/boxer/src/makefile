@@ -3,7 +3,7 @@
 project_name = boxer
 
 # Project version code.  This will set the REVCODE symbol in the image
-REVCODE = 1.0.0
+REVCODE = 1.0.1
 
 # MCU name
 #
@@ -352,6 +352,10 @@ browser = chrome
 # eventuallabs site.
 css_url = http://www.eventuallabs.com/pandoc.css
 
+########################## Release settings ##########################
+
+release_directory = ../bin
+
 
 
 ###################### Done with configuration #######################
@@ -443,11 +447,11 @@ help:
 	@echo '                                with VCP com port'
 	@echo '   make bootfuse                Write fuses to execute bootlader  '
 	@echo '   make devfuse                 Write fuses to skip bootloader    '
-	@echo '   make reset                   Reset the part with avrdude       '
 	@echo '   make terminal                Start a serial terminal           '
 	@echo '   make debug_make              Debug the makefile                '
 	@echo '   make doc                     Create html documentation         '
 	@echo '   make docview                 View the documentation in a browser '
+	@echo '   make release                 Create release hex file           '
 	@echo '   make clean                   Clean up temporary files          '
 	@echo '                                                         '
 
@@ -456,14 +460,6 @@ debug_make:
 	@echo 'Output from uname is $(uname_value)'
 	@echo 'Source files are $(SRC)'
 
-# Reset the part with the programmer
-#
-# avrdude always does a signature check, and it resets the part when
-# it does this.  I can exploit this to just reset the part
-# programmatically, provided the programmer is connected.
-.PHONY: reset
-reset :
-	$(AVRDUDE) $(avrdude_flags)
 
 pandoc_source = $(doc_directory)/pandoc_source.markdown
 
@@ -481,6 +477,12 @@ $(pandoc_source): $(readme_file)
 .PHONY: docview
 docview:
 	$(browser) $(html_documentation_file)
+
+.PHONY: release
+release: $(release_directory)/$(project_name)_$(REVCODE).hex
+
+$(release_directory)/$(project_name)_$(REVCODE).hex: $(TARGET).hex
+	cp $< $@
 
 
 .PHONY: fuseread
