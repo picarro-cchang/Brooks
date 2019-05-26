@@ -38,11 +38,17 @@
 // Functions dealing with periodic interrupts
 #include "metronome.h"
 
+// Functions for working with the SPI hardware
+#include "spi.h"
+
 // Functions for setting SPI chip-selects
 #include "cs.h"
 
 // Functions for simple scheduling
 #include "OS.h"
+
+// Functions for working with Gas channels
+#include "channel.h"
 
 
 

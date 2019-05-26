@@ -71,7 +71,6 @@ typedef struct command_struct {
   char *arg_type; // A string representing the type of argument expected
   uint8_t arg_max_chars; // The maximum number of characters in the argument
   fpointer_t execute; // The function to execute
-  const char *help;
 } command_t;
 
 

@@ -129,58 +129,44 @@ command_t command_array[] = {
   {"*idn?",           // Name of the command
    "none",            // Argument type (none, hex16, uint16, sint16)
    0,                 // Maximum number of characters in argument
-   &cmd_idn_q,        // Address of function to execute
-   helpstr_idn},      // The help text (defined above)
+   &cmd_idn_q},       // Address of function to execute
   //loglev -- Set the logger severity level.
   {"loglev",
    "uint16",
    1,
-   &cmd_loglevel,
-   helpstr_loglevel},
+   &cmd_loglevel},
   // logreg -- Set the logger enable register.
   {"logreg",
    "uint16",
    4,
-   &cmd_logreg,
-   helpstr_logreg},
+   &cmd_logreg},
   // logreg? -- Query the logger enable register.
   {"logreg?",
    "none",
    0,
-   &cmd_logreg_q,
-   helpstr_logreg_q},
+   &cmd_logreg_q},
   // sernum -- Set the system's serial number
   {"sernum",
    "uint16",
    5,
-   &cmd_write_sernum,
-   helpstr_sernum},
+   &cmd_write_sernum},
   // chanena -- Enable channel n
   {"chanena",
    "uint16",
    1,
-   &cmd_chanena,
-   helpstr_sernum},
+   &cmd_chanena},
   // chanoff -- Disable channel n
   {"chanoff",
    "uint16",
    1,
-   &cmd_chanoff,
-   helpstr_sernum},
+   &cmd_chanoff},
   // chanset -- Set the channel enable byte
   {"chanset",
    "uint16",
    3,
-   &cmd_chanset,
-   helpstr_sernum},
-  // help -- Print all the help strings
-  {"help",
-   "none",
-   0,
-   &cmd_help,
-   helpstr_help},
+   &cmd_chanset},
   // End of table indicator.  Must be last.
-  {"","",0,0,nullstr}
+  {"","",0,0}
 };
 
 /* Declare a structure to hold function arguments
