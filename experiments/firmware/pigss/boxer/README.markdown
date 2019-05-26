@@ -198,4 +198,9 @@ device.
    command to test writing the serial number, but the command will
    likely change in the next version.
    
+### Version 1.0.1 ###
+
+This version is for testing the channel enable commands with the
+bargraph LEDs.
+   
    
