@@ -160,6 +160,29 @@ Set the instrument's serial number to n.  Query the serial number with
 
 `0`
 
+#### SLOTID n ####
+
+Set the manifold box's slot ID.  There can be more than one manifold
+box in a rack, and this will help us keep track of which rack position
+it was installed into.  This setting is non-volatile -- it will
+persist across power cycles.
+
+##### Parameter (n) #####
+
+Integers 0-9
+
+##### Typical Return #####
+
+`0`
+
+#### SLOTID? ####
+
+Query the manifold box's slot ID.
+
+##### Typical Return #####
+
+`3`
+
 ### Channel commands ###
 
 #### CHANENA n ####
@@ -222,28 +245,7 @@ Query the channel enable register.
 
 `8`
 
-#### SLOTID n ####
 
-Set the manifold box's slot ID.  There can be more than one manifold
-box in a rack, and this will help us keep track of which rack position
-it was installed into.  This setting is non-volatile -- it will
-persist across power cycles.
-
-##### Parameter (n) #####
-
-Integers 0-9
-
-##### Typical Return #####
-
-`0`
-
-#### SLOTID? ####
-
-Query the manifold box's slot ID.
-
-##### Typical Return #####
-
-`3`
 
 ## Release history ##
 
