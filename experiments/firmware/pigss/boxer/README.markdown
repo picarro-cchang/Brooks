@@ -216,9 +216,28 @@ Query the channel enable register.
 
 `8`
 
+#### SLOTID n ####
 
+Set the manifold box's slot ID.  There can be more than one manifold
+box in a rack, and this will help us keep track of which rack position
+it was installed into.  This setting is non-volatile -- it will
+persist across power cycles.
 
+##### Parameter (n) #####
 
+Integers 0-9
+
+##### Typical Return #####
+
+`0`
+
+#### SLOTID? ####
+
+Query the manifold box's slot ID.
+
+##### Typical Return #####
+
+`3`
 
 ## Release history ##
 
@@ -236,5 +255,11 @@ device.
 
 This version is for testing the channel enable commands with the
 bargraph LEDs.
+
+### Version 1.0.2 ###
+
+Added `SLOTID` command and its query.  This will help us keep track of
+where the manifold box is in the rack, and thus to number its
+channels.
    
    

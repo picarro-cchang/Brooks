@@ -72,7 +72,7 @@ void eeprom_write_char( uint16_t address, uint8_t data ) {
   EECR |= _BV(EEPE); // Write the data
   sei(); // Turn interrupts back on 
   logger_msg_p("eeprom",log_level_INFO,
-	       PSTR("Wrote %i to address %i\r\n"),data,address);
+	       PSTR("Wrote %i to address %i"),data,address);
 }
 
 /* eeprom_read_char( address )
@@ -95,13 +95,13 @@ uint8_t eeprom_read_char( uint16_t address ) {
   /* Return data from data register */
   sei(); // Turn interrupts back on
   logger_msg_p("eeprom",log_level_INFO,
-	       PSTR("Read %i from address %i\r\n"),EEDR,address);
+	       PSTR("Read %i from address %i"),EEDR,address);
   return EEDR;
 }
 
 void eeprom_save_sernum( uint16_t sernum ) {
   logger_msg_p( "eeprom", log_level_DEBUG,
-		PSTR("Writing serial number %u\r\n"),sernum);
+		PSTR("Writing serial number %u"),sernum);
   uint8_t lowbyte = (uint8_t)(sernum & 0xff);
   uint8_t highbyte = (uint8_t)( (sernum & 0xff00) >> 8);
   eeprom_write_char(SERNUM_ADDR,lowbyte);
@@ -113,13 +113,35 @@ void eeprom_load_sernum( system_state_t *system_state_ptr ) {
   uint8_t highbyte = eeprom_read_char(SERNUM_ADDR + 1);
   system_state_ptr -> sernum = (uint16_t)( (highbyte << 8) + lowbyte );
   logger_msg_p( "eeprom", log_level_DEBUG,
-		PSTR("Writing serial number of %u\r\n"),
+		PSTR("Loading serial number %u"),
 		system_state_ptr -> sernum);
 }
 
 void cmd_write_sernum( command_arg_t *command_arg_ptr ) {
   uint16_t sernum = (command_arg_ptr -> uint16_arg);
   eeprom_save_sernum(sernum);
+  functions_init();
+  // Acknowledge the successful command
+  command_ack();
+}
+
+void eeprom_save_slotid( uint8_t slotid ) {
+  logger_msg_p( "eeprom", log_level_DEBUG,
+		PSTR("Writing slot ID %u"),slotid);
+  eeprom_write_char(SLOTID_ADDR,slotid);
+}
+
+void eeprom_load_slotid( system_state_t *system_state_ptr ) {
+  uint8_t slotid = eeprom_read_char(SLOTID_ADDR);
+  system_state_ptr -> slotid = slotid;
+  logger_msg_p( "eeprom", log_level_DEBUG,
+		PSTR("Loading slot ID %u"),
+		system_state_ptr -> slotid);
+}
+
+void cmd_write_slotid( command_arg_t *command_arg_ptr ) {
+  uint8_t slotid = (uint8_t)(command_arg_ptr -> uint16_arg);
+  eeprom_save_slotid(slotid);
   functions_init();
   // Acknowledge the successful command
   command_ack();

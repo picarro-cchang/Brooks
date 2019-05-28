@@ -1,4 +1,7 @@
 
+// The functions module provides miscellaneous structures and
+// functions to support the system.
+
 #ifndef FUN_H
 #define FUN_H
 
@@ -11,21 +14,20 @@
 
 // Overall system state structure
 typedef struct system_status_struct {
+  // System serial number
   uint16_t sernum;
+  // System slot ID -- where the instrument is in the rack
+  uint8_t slotid;
 } system_state_t;
 
-
-/* cmd_idn_q( pointer to command argument structure )
-
-   The function called by the "*IDN?" query
-*/
+// Function called by the *idn? command
 void cmd_idn_q( command_arg_t *command_arg_ptr );
 
-/* functions_init()
+// Function called by the slotid? command
+void cmd_slotid_q( command_arg_t *command_arg_ptr );
 
-   Calls cal_load_sernum(pointer to system status structure) to fill
-   in the serial number.
-*/
+// Initialize the system state structure.  This populates the
+// structure with non-volatile values from eeprom.
 void functions_init( void );
 
 #endif // End the include guard

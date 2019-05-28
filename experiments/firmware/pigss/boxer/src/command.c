@@ -103,6 +103,16 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_chanset_q},
+  // slotid -- Set the slot ID
+  {"slotid",
+   "uint16",
+   1,
+   &cmd_write_slotid},
+  // slotid? -- Query the slot ID
+  {"slotid?",
+   "none",
+   0,
+   &cmd_slotid_q},  
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

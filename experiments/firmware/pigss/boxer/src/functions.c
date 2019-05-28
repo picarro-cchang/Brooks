@@ -49,20 +49,23 @@ system_state_t *system_state_ptr = &system_state;
 // ----------------------- Functions ----------------------------------
 
 
-/* functions_init()
-
-   Calls cal_load_sernum(pointer to system status structure) to fill
-   in the serial number.
-*/
-void functions_init(void) {
+void functions_init( void ) {
   eeprom_load_sernum(system_state_ptr);
+  eeprom_load_slotid(system_state_ptr);
 }
 
-// The function called by the "*IDN?" query
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
   usart_printf_p(USART_CHANNEL_COMMAND, idnstr, system_state_ptr -> sernum,REVCODE);
   usart_printf(USART_CHANNEL_COMMAND, LINE_TERMINATION_CHARACTERS);
 }
+
+void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
+  usart_printf(USART_CHANNEL_COMMAND, "%u%s",
+	       system_state_ptr -> slotid,
+	       LINE_TERMINATION_CHARACTERS);
+}
+
+
 
 
 

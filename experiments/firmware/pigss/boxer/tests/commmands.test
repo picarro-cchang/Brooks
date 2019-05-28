@@ -14,7 +14,7 @@
 
 set command "*idn?"
 set description "Identification query"
-set ok_result {Picarro,Boxer,SN.*,1.0.1}
+set ok_result {Picarro,Boxer,SN.*,1.0.2}
 tcltest::test "[string tolower $command]" "$description" -body {
     boxer::sendcmd $channel "[string tolower $command]"
     set return_string [boxer::readline $channel]
@@ -170,3 +170,54 @@ tcltest::test "[string toupper $command]" "$description" -body {
     set return_string [boxer::readline $channel]
     return $return_string
 } -match regexp -result $ok_result
+
+############################### slotid ###############################
+
+# Set the instrument's slot ID. First, just make sure the
+# command returns properly.
+
+set command "slotid"
+set description "Set slot ID"
+set ok_result 0
+set slot_id 8
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $slot_id"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $slot_id"
+    set return_string [boxer::readline $channel]
+} -match regexp -result $ok_result
+
+# Now make sure the serial number was set.  The test will return some
+# value if we get the right serial number.  We'll match this returned
+# value for the test.
+set command "slotid?"
+set description "Query slot ID"
+set ok_result $slot_id
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+# Write a new slot ID
+set slot_id 2
+
+tcltest::test "slotid" "Check new slot ID" -body {
+    boxer::sendcmd $channel "slotid $slot_id"
+    # Read the return (should just be 0)
+    set return_string [boxer::readline $channel]
+    boxer::sendcmd $channel "slotid?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $slot_id

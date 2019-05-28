@@ -14,3 +14,6 @@ src/obj
 
 # Ignore hex outputs
 bin/*.hex
+
+# Ignore log files from the tests
+tests/log
