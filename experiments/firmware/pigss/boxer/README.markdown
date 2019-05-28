@@ -122,7 +122,6 @@ sending a command is enough for all commands to produce their returns.
 ### IEEE-488 common commands ###
 
 #### \*IDN? ####
-<a id="*IDN?"></a>
 
 Returns the instrument's identification string containing four
 comma-separated fields:
@@ -143,10 +142,9 @@ None
 ### System-level commands ###
 
 #### SERNUM n ####
-[SERNUM](#sernum-n)
 
 Set the instrument's serial number to n.  Query the serial number with
-[*IDN?](#*IDN?).
+[\*IDN?](#idn).
 
 ##### Parameter (n) #####
 
@@ -159,7 +157,6 @@ Set the instrument's serial number to n.  Query the serial number with
 ### Channel commands ###
 
 #### CHANENA n ####
-[CHANENA](#chanena-n)
 
 Enable channel n.
 
@@ -172,7 +169,6 @@ Integers 1-8
 `0`
 
 #### CHANENA? n ####
-[CHANENA?](#chanena-n)
 
 Returns 1 if channel n is enabled, or 0 if it's disabled.
 
@@ -186,7 +182,6 @@ Integers 1-8
 
 
 #### CHANOFF n ####
-[CHANOFF](#chanoff-n)
 
 Disable channel n.
 
@@ -199,7 +194,6 @@ Integers 1-8
 `0`
 
 #### CHANSET n ####
-[CHANSET](#chanset-n)
 
 Set the channel enable register.  Each channel has a position in the
 enable register bitfield, starting with channel 1 and ending with
@@ -215,7 +209,6 @@ Integers 0-255
 `0`
 
 #### CHANSET? ####
-[CHANSET?](#chanset)
 
 Query the channel enable register.
 
