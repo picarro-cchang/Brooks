@@ -5,6 +5,47 @@ Form Factor (OFF) and In Form Factor (IFF).  OFF hardware will use the
 [Arduino Mega](https://www.sparkfun.com/products/11061), while IFF
 hardware will be a custom PCB.
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Boxer -- Manifold Box Controller](#boxer----manifold-box-controller)
+    - [Serial connection details](#serial-connection-details)
+        - [OFF hardware](#off-hardware)
+            - [Command interface](#command-interface)
+            - [Debug interface](#debug-interface)
+    - [Uploading new firmware](#uploading-new-firmware)
+        - [OFF hardware](#off-hardware-1)
+    - [Command reference](#command-reference)
+        - [IEEE-488 common commands](#ieee-488-common-commands)
+            - [\*IDN?](#idn)
+                - [Parameter](#parameter)
+                - [Typical Return](#typical-return)
+        - [System-level commands](#system-level-commands)
+            - [SERNUM n](#sernum-n)
+                - [Parameter (n)](#parameter-n)
+                - [Typical Return](#typical-return-1)
+        - [Channel commands](#channel-commands)
+            - [CHANENA n](#chanena-n)
+                - [Parameter (n)](#parameter-n-1)
+                - [Typical Return](#typical-return-2)
+            - [CHANENA? n](#chanena-n)
+                - [Parameter (n)](#parameter-n-2)
+                - [Typical Return](#typical-return-3)
+            - [CHANOFF n](#chanoff-n)
+                - [Parameter (n)](#parameter-n-3)
+                - [Typical Return](#typical-return-4)
+            - [CHANSET n](#chanset-n)
+                - [Parameter (n)](#parameter-n-4)
+                - [Typical Return](#typical-return-5)
+            - [CHANSET?](#chanset)
+                - [Typical Return](#typical-return-6)
+    - [Release history](#release-history)
+        - [Version 1.0.0](#version-100)
+        - [Version 1.0.1](#version-101)
+
+<!-- markdown-toc end -->
+
+
 
 ## Serial connection details ##
 
