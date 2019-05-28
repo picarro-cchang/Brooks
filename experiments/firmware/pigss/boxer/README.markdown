@@ -39,9 +39,15 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-5)
             - [CHANSET?](#chanset)
                 - [Typical Return](#typical-return-6)
+            - [SLOTID n](#slotid-n)
+                - [Parameter (n)](#parameter-n-5)
+                - [Typical Return](#typical-return-7)
+            - [SLOTID?](#slotid)
+                - [Typical Return](#typical-return-8)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
+        - [Version 1.0.2](#version-102)
 
 <!-- markdown-toc end -->
 
