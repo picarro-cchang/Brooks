@@ -145,6 +145,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@types/socket.io-client": "^1.4.32",
+    "socket.io-client": "^2.2.0",
+    "url-loader": "^1.1.2",
     "@babel/polyfill": "^7.0.0",
     "@torkelo/react-select": "2.1.1",
     "@types/reselect": "^2.2.0",

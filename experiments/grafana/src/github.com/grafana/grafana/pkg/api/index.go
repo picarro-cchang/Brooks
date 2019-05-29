@@ -309,6 +309,13 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
                     Icon:        "gicon gicon-preferences",
                     Url:         setting.AppSubUrl + "/networksettings",
                 },
+                {
+					Text:        "SystemConfigurationSettings",
+					Id:          "system_configuration_settings",
+					Description: "Instruments settings",
+					Icon:        "gicon gicon-preferences",
+					Url:         setting.AppSubUrl + "/SystemConfigurationSettings",
+				},
 			},
 		}
 
