@@ -5,10 +5,8 @@
 #ifndef FUN_H
 #define FUN_H
 
-/* command.h 
-
-   Contains the definition of command_t -- the variable type containing
-   the attributes of each remote command. */
+// Provides the definition of command_t -- the variable type
+// containing the attributes of each remote command.
 #include "command.h"
 
 // System states
@@ -27,7 +25,6 @@ typedef struct system_status_struct {
   // System state -- one of an enumerated type
   system_state_value_t state_enum;
 } system_state_t;
-
 
 // The system state structure variable will have global scope, and
 // will be defined in functions.c
