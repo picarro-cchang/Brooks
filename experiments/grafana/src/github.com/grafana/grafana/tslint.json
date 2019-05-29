@@ -2,10 +2,9 @@
   "rules": {
     "array-type": [true, "array-simple"],
     "arrow-return-shorthand": true,
-    "ban": [true,
-      {"name": "Array", "message": "tsstyle#array-constructor"}
-    ],
-    "ban-types": [true,
+    "ban": [true, { "name": "Array", "message": "tsstyle#array-constructor" }],
+    "ban-types": [
+      true,
       ["Object", "Use {} instead."],
       ["String", "Use 'string' instead."],
       ["Number", "Use 'number' instead."],
@@ -27,7 +26,7 @@
     "indent": [true, "spaces", 2],
     "jsdoc-format": true,
     "label-position": true,
-    "max-line-length": [true, 150],
+    "max-line-length": [true, 300],
     "member-access": [true, "no-public"],
     "new-parens": true,
     "no-angle-bracket-type-assertion": true,
