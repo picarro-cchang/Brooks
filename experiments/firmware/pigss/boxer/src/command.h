@@ -75,7 +75,7 @@ typedef struct command_struct {
 
 
 /* The array of command structures will have global scope.  The
-   variable command_array should be initialized in bx_command.c
+   variable command_array should be initialized in command.c
 */
 extern command_t command_array[];
 

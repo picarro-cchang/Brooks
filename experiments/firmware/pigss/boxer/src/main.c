@@ -6,8 +6,8 @@
 // Convenience functions for busy-wait loops
 #include <util/delay.h>
 
+// Provides the system state enumerated type
 #include "functions.h"
-
 
 // Functions for setting the system clock prescaler
 #include "clock.h"
@@ -50,13 +50,8 @@
 // Functions for working with Gas channels
 #include "channel.h"
 
-
-
-/* eeprom.h
-
-   Provides functions for writing to and reading from the eeprom.
-*/
-// #include "eeprom.h"
+// Provides functions for writing to and reading from the eeprom.
+#include "eeprom.h"
 
 /* led.h
 
@@ -161,16 +156,29 @@ int main() {
   memset(measurement_array,0,MEASUREMENT_ARRAY_SIZE);
 
 
-  // The main loop
 
-
-  logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s\r\n"),
+  logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
 
   // Schedule some tasks
   OS_TaskCreate(&test_task, 1000, BLOCKED);
 
+
+  // The main loop
   for(;;) {
+
+    switch(system_state_ptr -> state_enum) {
+    case system_state_INIT:
+      break;
+    case system_state_ID_CHANNELS:
+      break;
+    default:
+      logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
+		   system_state_ptr -> state_enum);
+      
+    }
+    
+    
     // Process the parse buffer to look for commands loaded with the
     // received character ISR.
     command_process_pbuffer( recv_cmd_state_ptr, command_array );
