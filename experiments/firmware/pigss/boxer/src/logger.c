@@ -59,8 +59,8 @@ logger_system_t system_array[] ={
     {"sound",
      6
     },
-    // The real time clock module (rtc)
-    {"rtc",
+    // The TCA9539 I/O expander
+    {"tca9539",
      7
     },
     // The eeprom module

@@ -53,12 +53,15 @@
 // Provides functions for writing to and reading from the eeprom.
 #include "eeprom.h"
 
+// Provides functions for writing to and reading from the TCA9539 I2C
+// GPIO expander
+#include "tca9539.h"
+
 /* led.h
 
    Provides functions for turning the LED on and off.
 */
 #include "led.h"
-
 
 // Provide support for i2c devices
 #include "i2c.h"
@@ -105,15 +108,11 @@ int main() {
   // Start the SPI module
   spi_init();
 
-  // Start the I2C module
-  i2c_init();
-
   /* To configure the logger, first clear the logger enable register
      by disabling it with logger_disable().  Then set individual bits
      with logger_setsystem().
   */
   logger_disable(); // Disable logging from all systems
-  
 
   // Enable logger system logging
   logger_setsystem( "logger" );
@@ -123,7 +122,7 @@ int main() {
 
   // Enable channel module logging
   logger_setsystem( "channel" );
-  
+
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
   logger_setsystem( "adc" ); // Enable adc module logging
@@ -132,37 +131,38 @@ int main() {
   logger_setsystem( "eeprom" ); // Enable eeprom module logging
   logger_setsystem( "cal" ); // Enable calibration module logging
   // logger_setsystem( "mcp79411" ); // Enable mcp79411 RTC logging
+  logger_setsystem( "tca9539" );
   logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
 
   logger_setsystem( "lm75" );
   logger_setsystem( "main" );
-  functions_init(); // Load the serial number
-  // adc_init(); // Set the ADCs reference and SAR prescaler
-  // adc_mux(4); // Set the ADC mux to channel 4
 
-  
-  
-  
+  // Start the I2C module
+  i2c_init();
+
+  // Load the serial number and slotid
+  functions_init();
+
   // Start the metronome
   metronome_init();
 
   // Start the channel module
   channel_init();
 
+  // Start the TCA9539 module
+  // tca9539_init(TCA9539_I2C_ADDRESS);
+
   command_init( recv_cmd_state_ptr );
 
   // current_init();
   memset(measurement_array,0,MEASUREMENT_ARRAY_SIZE);
-
-
 
   logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
 
   // Schedule some tasks
   OS_TaskCreate(&test_task, 1000, BLOCKED);
-
 
   // The main loop
   for(;;) {
@@ -175,17 +175,15 @@ int main() {
     default:
       logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
 		   system_state_ptr -> state_enum);
-      
+
     }
-    
-    
+
     // Process the parse buffer to look for commands loaded with the
     // received character ISR.
     command_process_pbuffer( recv_cmd_state_ptr, command_array );
 
     // Execute scheduled tasks
     OS_TaskExecution();
-    
 
   }// end main for loop
 

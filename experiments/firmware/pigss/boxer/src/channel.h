@@ -3,12 +3,18 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
+#include <stdbool.h>
+
 // Channel configuration structure
 typedef struct channel_config_struct {
   // Each channel has a position in the enable bitfield.  Set the bit
   // to enable the channel, and clear it to disable it.  Channels
   // start with 1 -- not 0.
   uint8_t enable;
+
+  // The clean channel should only be open when all the sample valves
+  // are disabled.
+  bool clean_open;
 } channel_config_t;
 
 void channel_init(void);

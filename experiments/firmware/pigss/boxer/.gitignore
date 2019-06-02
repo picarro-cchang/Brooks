@@ -8,6 +8,7 @@ src/.dep
 src/*.hex
 src/*.elf
 src/*.map
+src/*.eep
 
 # Ignore object files
 src/obj

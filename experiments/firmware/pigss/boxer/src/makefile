@@ -43,13 +43,15 @@ OBJDIR = obj
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c \
-      functions.c \
       command.c \
       usart.c \
       logger.c \
       numbers.c \
       ascii.c \
       clock.c
+
+# General system functions
+SRC += functions.c
 
 # EEPROM module
 SRC += eeprom.c
@@ -80,6 +82,9 @@ SRC += bargraph.c
 
 # Channel module
 SRC += channel.c
+
+# TCA9539 module
+SRC += tca9539.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

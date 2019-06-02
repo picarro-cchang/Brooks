@@ -32,6 +32,9 @@
 // Functions for working with channels
 #include "channel.h"
 
+// Functions for working with the TCA9539 I2C GPIO expander
+#include "tca9539.h"
+
 #include "metronome.h"
 
 void metronome_init() {
@@ -74,8 +77,6 @@ void test_task() {
   if (dac_value >= 0x8000) {
     dac_value = 1;
   }
-  // bargraph_write(&cs_manifold_b_sr, bargraph_value);
-  // channel_write( (uint8_t) bargraph_value );
   ltc2601_write(&cs_manifold_a_sr, 0x3, dac_value);
   bargraph_value = bargraph_value << 1;
   dac_value = dac_value << 1;

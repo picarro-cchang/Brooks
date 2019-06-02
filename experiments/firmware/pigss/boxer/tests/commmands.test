@@ -20,8 +20,12 @@ tcltest::test "[string tolower $command]" "$description" -body {
     set return_string [boxer::readline $channel]
     # Command should return four comma separated fields:
     # Manufacturer name, Model number, Serial number, Revision code
+    set return_list [split $return_string ","]
+    set version_code [lindex $return_list 3]
     return $return_string
 } -match regexp -result $ok_result
+
+${log}::info "Found firmware version $version_code"
 
 tcltest::test "[string toupper $command]" "$description" -body {
     boxer::sendcmd $channel "[string toupper $command]"

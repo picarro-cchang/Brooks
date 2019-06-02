@@ -17,12 +17,6 @@
 
 #include "i2c.h"
 
-// |--------------+----------+---------|
-// | Click socket | Port pin | I2C pin |
-// |--------------+----------+---------|
-// | 1 and 2      | PC5      | SCL     |
-// | 1 and 2      | PC4      | SDA     |
-// |--------------+----------+---------|
 
 void i2c_init() {
   // Set the TWI clock prescaler
@@ -32,8 +26,8 @@ void i2c_init() {
   //
   // Fscl = Fosc / (16 + 2 * TWBR * prescaler)
   //
-  // With Fosc = 8MHz and prescaler = 1, TWBR = 32 gives 100kHz SCL
+  // With Fosc = 16MHz and prescaler = 1, TWBR = 64 gives 100kHz SCL
   TWSR = 0;
-  TWBR = 32;
+  TWBR = 64;
 }
 
