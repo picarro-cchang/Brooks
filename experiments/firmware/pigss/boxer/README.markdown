@@ -270,4 +270,13 @@ Added `SLOTID` command and its query.  This will help us keep track of
 where the manifold box is in the rack, and thus to number its
 channels.
    
-   
+### Version 1.0.3 ###
+
+Added default log level setting to makefile.  This allows producing
+hex release files tagged with the log level.
+
+The command interface will now emit a NACK (-1) when the received
+character buffer overflows.  This may allow the rack PC to simply send
+characters and look for a NACK when waiting for the remote interface
+to be ready.
+
