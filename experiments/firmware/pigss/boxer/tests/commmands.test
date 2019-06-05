@@ -14,7 +14,7 @@
 
 set command "*idn?"
 set description "Identification query"
-set ok_result {Picarro,Boxer,SN.*,1.0.2}
+set ok_result {Picarro,Boxer,SN.*,1.0.3}
 tcltest::test "[string tolower $command]" "$description" -body {
     boxer::sendcmd $channel "[string tolower $command]"
     set return_string [boxer::readline $channel]

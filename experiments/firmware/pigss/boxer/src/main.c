@@ -96,12 +96,10 @@ int main() {
   //  the USART for output.
   usart_init();
 
-  // Initialize the logger.  Note that nothing can be logged before
-  // this line.  Also note that the logger won't be able to make error
-  // sounds until sound_init() is called.
+  // Initialize the logger.  The default log level is set in the
+  // makefile.  Note that nothing can be logged before this line.
   logger_init();
-  logger_setlevel(log_level_DEBUG);
-
+  
   // Start the SPI chip-select module
   cs_init();
 
@@ -127,7 +125,7 @@ int main() {
   logger_setsystem( "command" ); // Enable command system logging
   logger_setsystem( "adc" ); // Enable adc module logging
   logger_setsystem( "sound" ); // Enable sound module logging
-  logger_setsystem( "rtc" ); // Enable real time clock module logging
+
   logger_setsystem( "eeprom" ); // Enable eeprom module logging
   logger_setsystem( "cal" ); // Enable calibration module logging
   // logger_setsystem( "mcp79411" ); // Enable mcp79411 RTC logging
@@ -248,6 +246,7 @@ ISR(USART0_RX_vect) {
     if ((recv_cmd_state_ptr -> rbuffer_count) >= (RECEIVE_BUFFER_SIZE-1)) {
       logger_msg_p("rxchar",log_level_ERROR,
 		   PSTR("Received character number above limit"));
+      command_nack();
       rbuffer_erase(recv_cmd_state_ptr);
       return;
     }

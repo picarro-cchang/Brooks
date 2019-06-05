@@ -5,6 +5,16 @@ project_name = boxer
 # Project version code.  This will set the REVCODE symbol in the image
 REVCODE = 1.0.3
 
+# Log level
+#
+# Known values are:
+#   isr -- Emit messages inside the received character ISR
+#   debug -- General purpose debugging
+#   info -- Potentially interested stuff
+#   warning -- Maybe bad stuff
+#   error -- You want to know about this
+LOG_LEVEL = warning
+
 # MCU name
 #
 # Use avr-gcc --target-help to see a list of MCU names
@@ -124,8 +134,9 @@ EXTRAINCDIRS =
 CSTANDARD = -std=gnu99
 
 # Place -D or -U options here for C sources
-CDEFS = -DF_CPU=$(F_CPU)UL
-CDEFS += -D REVCODE=\"$(REVCODE)\"
+CDEFS = -D F_CPU=$(F_CPU)UL
+CDEFS += -D REVCODE=\"$(strip $(REVCODE))\"
+CDEFS += -D LOG_LEVEL=\"$(strip $(LOG_LEVEL))\"
 
 # Place -D or -U options here for ASM sources
 ADEFS = -DF_CPU=$(F_CPU)
@@ -361,6 +372,8 @@ css_url = http://www.eventuallabs.com/pandoc.css
 
 release_directory = ../bin
 
+release_file = $(project_name)_$(REVCODE)_$(LOG_LEVEL).hex
+
 
 
 ###################### Done with configuration #######################
@@ -484,7 +497,7 @@ docview:
 	$(browser) $(html_documentation_file)
 
 .PHONY: release
-release: $(release_directory)/$(project_name)_$(REVCODE).hex
+release: $(release_directory)/$(release_file)
 
 $(release_directory)/$(project_name)_$(REVCODE).hex: $(TARGET).hex
 	cp $< $@

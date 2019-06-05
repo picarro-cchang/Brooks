@@ -105,14 +105,25 @@ logger_system_t system_array[] ={
 
 // ----------------------- Functions ----------------------------------
 
-/* Initialize the logger system:
- * Log messages above the "informational" level
- * All systems enabled for logging.
- */
+
 void logger_init() {
-    logger_config_ptr -> enable = 0xffffffff;  /* Logs from all systems enabled
-                                            * by default. */
+  // Log all systems by default
+  logger_config_ptr -> enable = 0xffffffff;
+  // Set log level from makefile
+  if (strcmp( LOG_LEVEL, "isr" ) == 0) {
+    logger_config_ptr -> loglevel = log_level_ISR;
+  } else if (strcmp( LOG_LEVEL, "debug" ) == 0) {
+    logger_config_ptr -> loglevel = log_level_DEBUG;
+  } else if (strcmp( LOG_LEVEL, "info" ) == 0) {
     logger_config_ptr -> loglevel = log_level_INFO;
+  } else if (strcmp( LOG_LEVEL, "warning" ) == 0) {
+    logger_config_ptr -> loglevel = log_level_WARNING;
+  } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
+    logger_config_ptr -> loglevel = log_level_ERROR;
+  } else {
+    logger_config_ptr -> loglevel = log_level_ERROR;
+  }
+  return;
 }
 
 /* Set the logging threshold level.
@@ -120,7 +131,7 @@ void logger_init() {
 void logger_setlevel( logger_level_t loglevel ) {
     logger_config_ptr -> loglevel = loglevel;
     logger_msg_p( "logger", log_level_INFO,
-                 PSTR("Logging set to level %i\r\n"),loglevel);
+                 PSTR("Logging set to level %i"),loglevel);
 }
 
 /* Function called by the remote command "loglev"
@@ -133,14 +144,16 @@ void cmd_loglevel( command_arg_t *command_arg_ptr ) {
   switch(setval) {
   case 0: logger_setlevel(log_level_ISR);
     break;
-  case 1: logger_setlevel(log_level_INFO);
+  case 1: logger_setlevel(log_level_DEBUG);
+    break;  
+  case 2: logger_setlevel(log_level_INFO);
     break;
-  case 2: logger_setlevel(log_level_WARNING);
+  case 3: logger_setlevel(log_level_WARNING);
     break;
-  case 3: logger_setlevel(log_level_ERROR);
+  case 4: logger_setlevel(log_level_ERROR);
     break;
   default: logger_msg_p( "logger", log_level_ERROR,
-			 PSTR("Log level %u is not recognized.\r\n"),setval);
+			 PSTR("Log level %u is not recognized."),setval);
   }
 }
 
