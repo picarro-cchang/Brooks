@@ -48,6 +48,7 @@ hardware will be a custom PCB.
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
         - [Version 1.0.2](#version-102)
+        - [Version 1.0.3](#version-103)
 
 <!-- markdown-toc end -->
 
