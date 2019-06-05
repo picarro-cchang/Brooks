@@ -10,7 +10,7 @@ import { ValvePanelOptions } from '../types';
 
 export class ValvePanelEditor extends PureComponent<PanelEditorProps<ValvePanelOptions>> 
 {
-    buttonsPerRowOptions: SelectOptionItem[] = [
+    buttonsPerRowOptions: SelectOptionItem<any>[] = [
         {value: 1, label: '1'},
         {value: 2, label: '2'},
         {value: 3, label: '3'},
@@ -26,11 +26,11 @@ export class ValvePanelEditor extends PureComponent<PanelEditorProps<ValvePanelO
     labelWidth = 12;
 
     onNumberOfValvesChange = ({ target }) =>
-        this.props.onChange({ ...this.props.options, numberOfValves: Number(target.value) });
+        this.props.onOptionsChange({ ...this.props.options, numberOfValves: Number(target.value) });
 
-    onButtonsPerRowChange = ( item: SelectOptionItem ) =>
+    onButtonsPerRowChange = ( item: SelectOptionItem<any> ) =>
         {
-            return this.props.onChange({ ...this.props.options, buttonsPerRow: Number(item.value) });
+            return this.props.onOptionsChange({ ...this.props.options, buttonsPerRow: Number(item.value) });
         };
 
     render() {

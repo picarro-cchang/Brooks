@@ -1,4 +1,5 @@
-import { ReactPanelPlugin } from '@grafana/ui';
+// import { ReactPanelPlugin } from '@grafana/ui';
+import { PanelPlugin } from '@grafana/ui';
 import store from './store';
 import { getValveMode } from './actions/valveActions';
 
@@ -7,10 +8,10 @@ import { ValvePanelEditor } from './components/ValvePanelEditor';
 
 import { defaults, ValvePanelOptions } from './types';
 
-export const reactPanel = new ReactPanelPlugin<ValvePanelOptions>(ValvePanel);
+export const plugin = new PanelPlugin<ValvePanelOptions>(ValvePanel);
 
-reactPanel.setEditor(ValvePanelEditor);
-reactPanel.setDefaults(defaults);
+plugin.setEditor(ValvePanelEditor);
+plugin.setDefaults(defaults);
 
 setInterval(()=> {
     store.dispatch(getValveMode());
