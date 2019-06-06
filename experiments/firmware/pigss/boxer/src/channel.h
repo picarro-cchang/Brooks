@@ -5,6 +5,19 @@
 
 #include <stdbool.h>
 
+// Channel data structure
+typedef struct channel_struct {
+  // We'll have channels with numbers 1-8 
+  uint8_t number;
+  // Enabled channels are enabled for flowing sample gas
+  bool enabled;
+} channel_t;
+
+// We'll have an array of channels
+channel_t channel_array[];
+
+  
+
 // Channel configuration structure
 typedef struct channel_config_struct {
   // Each channel has a position in the enable bitfield.  Set the bit

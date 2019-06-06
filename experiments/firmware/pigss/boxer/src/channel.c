@@ -35,6 +35,28 @@
 
 #include "channel.h"
 
+// Initialize the channel array
+channel_t channel_array[] = {
+			     {1,      // Channel number
+			      false}, // Channel enabled for sampling
+			     {2,
+			      false},
+			     {3,
+			      false},
+			     {4,
+			      false},
+			     {5,
+			      false},
+			     {6,
+			      false},
+			     {7,
+			      false},
+			     {8,
+			      {false},
+			      // End of array indicator.  Must be last
+			      {0,false}
+}
+
 // Define a pointer to the channel configuration
 channel_config_t channel_config;
 channel_config_t *channel_config_ptr = &channel_config;
