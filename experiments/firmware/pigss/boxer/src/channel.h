@@ -13,8 +13,6 @@ typedef struct channel_struct {
   bool enabled;
 } channel_t;
 
-// We'll have an array of channels
-channel_t channel_array[];
 
   
 
@@ -32,11 +30,6 @@ typedef struct channel_config_struct {
 
 void channel_init(void);
 
-// Set the active channelsj
-//
-// Arguments:
-//   channel_settings -- byte with 1s in the active channel positions
-uint8_t channel_write(uint8_t channel_settings);
 
 // Update the channel hardware and display
 uint8_t channel_update(void);
