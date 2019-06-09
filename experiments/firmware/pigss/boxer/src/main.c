@@ -57,6 +57,10 @@
 // GPIO expander
 #include "tca9539.h"
 
+// Provides functions and definitions for working with the TCA954xA
+// I2C switch family.
+#include "tca954xa.h"
+
 /* led.h
 
    Provides functions for turning the LED on and off.
@@ -124,7 +128,9 @@ int main() {
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
   logger_setsystem( "adc" ); // Enable adc module logging
-  logger_setsystem( "sound" ); // Enable sound module logging
+
+  // Enable logging the TCA954xA I2C switch system
+  logger_setsystem( "tca954xa" );
 
   logger_setsystem( "eeprom" ); // Enable eeprom module logging
   logger_setsystem( "cal" ); // Enable calibration module logging
@@ -148,8 +154,13 @@ int main() {
   // Start the channel module
   channel_init();
 
-  // Start the TCA9539 module
+  // Start the TCA954xA I2C switch module
+  // tca9548a_init(TCA9548A_I2C_ADDRESS);
+
+  // Start the TCA9539 I2C GPIO module
   // tca9539_init(TCA9539_I2C_ADDRESS);
+
+  
 
   command_init( recv_cmd_state_ptr );
 

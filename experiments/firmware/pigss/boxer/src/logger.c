@@ -79,8 +79,8 @@ logger_system_t system_array[] ={
     {"channel",
      11
     },
-    // The tas5753 module
-    {"tas5753",
+    // The TCA954xA I2C switch module
+    {"tca954xa",
      12
     },
     // The SPI module

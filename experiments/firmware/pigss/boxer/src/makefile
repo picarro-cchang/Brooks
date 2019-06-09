@@ -13,7 +13,7 @@ REVCODE = 1.0.4
 #   info -- Potentially interested stuff
 #   warning -- Maybe bad stuff
 #   error -- You want to know about this
-LOG_LEVEL = warning
+LOG_LEVEL = debug
 
 # MCU name
 #
@@ -95,6 +95,9 @@ SRC += channel.c
 
 # TCA9539 module
 SRC += tca9539.c
+
+# TCA954xA I2C switch module
+SRC += tca954xa.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
