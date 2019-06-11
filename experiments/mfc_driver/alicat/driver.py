@@ -36,13 +36,13 @@ class AlicatDriver:
                     return command_buffer
                 else:
                     command_buffer += s
-            except serial.SerialException as e:
-                msg = "Unable to read command. EXCEPTION: %s" % e
+            except serial.SerialTimeoutException as e:
+                msg = "Unable to read command. TIMEOUTEXCEPTION: %s" % e
                 print(msg)
                 time.sleep(0.2)
                 continue
-            except serial.SerialTimeoutException as e:
-                msg = "Unable to read command. TIMEOUTEXCEPTION: %s" % e
+            except serial.SerialException as e:
+                msg = "Unable to read command. EXCEPTION: %s" % e
                 print(msg)
                 time.sleep(0.2)
                 continue
