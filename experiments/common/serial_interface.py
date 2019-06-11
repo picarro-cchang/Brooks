@@ -42,16 +42,25 @@ class SerialInterface(object):
                 self.serial.close()
 
     def read(self):
-        return self.serial.read().decode()
+        return self.serial.read_all().decode()
 
     def write(self, msg):
         self.serial.write(msg.encode())
 
 
 if __name__ == "__main__":
+    import time
     s = SerialInterface()
-    s.config(port='/dev/ttyS1', timeout=1)
-    s.open()
-    print(s.write("Hello from PySerial\r\n"))
-    print(s.read())
-    s.close()
+    s.config(
+        port='/dev/ttyUSB1',
+        baudrate=19200
+    )
+    try:
+        s.open()
+        s.write("A\r")
+        time.sleep(0.2)
+        print(s.read())
+    except Exception as e:
+        raise
+    finally:
+        s.close()
