@@ -1,6 +1,6 @@
-from host.experiments.MFC_Driver.IMFCDriver import IMFCDriver
-from host.experiments.Common.SerialInterface import SerialInterface
-from host.experiments.MFC_Driver.conf import port, baudrate, carriage_return
+from host.experiments.mfc_driver.i_mfc_driver import IMFCDriver
+from host.experiments.common.serial_interface import SerialInterface
+from host.experiments.mfc_driver.conf import port, baudrate, carriage_return
 import serial
 import time
 
