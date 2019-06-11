@@ -38,7 +38,7 @@ class SerialInterface(object):
     def close(self):
         """ Closes port """
         if self.serial is not None:
-            if not self.serial.isOpen():
+            if self.serial.isOpen():
                 self.serial.close()
 
     def read(self):
