@@ -100,9 +100,20 @@ class AlicatDriver:
         gas_id = self.get_data_dict().get('gas_id', None)
         return gas_id
 
+    def get_flow_delta(self):
+        set_point = float(self.get_set_point())
+        flow_rate = float(self.get_mass_flow())
+        return set_point - flow_rate
+
+    def set_set_point(self, set_point):
+        self.send("AS" + set_point)
+
 
 if __name__ == "__main__":
     from pprint import pprint
     obj = AlicatDriver()
-    obj.send("AS0.0")
-    pprint(obj.get_data_dict())
+    obj.set_set_point('0')
+    print(obj.get_set_point())
+    print(obj.get_mass_flow())
+    print(obj.get_flow_delta())
+    # pprint(obj.get_data_dict())
