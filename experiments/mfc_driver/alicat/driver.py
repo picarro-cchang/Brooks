@@ -36,7 +36,11 @@ class AlicatDriver:
         """
         self.serial.write(command + carriage_return)
         time.sleep(0.2)
-        return self.serial.read()
+        response = self.serial.read()
+        if response == '?':
+            # Alicat doesn't recognize the command
+            response = None
+        return response
 
     def close(self):
         """
@@ -101,9 +105,13 @@ class AlicatDriver:
         return gas_id
 
     def get_flow_delta(self):
-        set_point = float(self.get_set_point())
-        flow_rate = float(self.get_mass_flow())
-        return set_point - flow_rate
+        try:
+            set_point = float(self.get_set_point())
+            flow_rate = float(self.get_mass_flow())
+            delta = abs(set_point - flow_rate)
+        except TypeError:
+            delta = None
+        return delta
 
     def set_set_point(self, set_point):
         self.send("AS" + set_point)
@@ -112,7 +120,7 @@ class AlicatDriver:
 if __name__ == "__main__":
     from pprint import pprint
     obj = AlicatDriver()
-    obj.set_set_point('0')
+    obj.set_set_point('5')
     print(obj.get_set_point())
     print(obj.get_mass_flow())
     print(obj.get_flow_delta())
