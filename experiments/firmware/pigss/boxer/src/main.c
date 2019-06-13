@@ -134,7 +134,7 @@ int main() {
 
   logger_setsystem( "eeprom" ); // Enable eeprom module logging
   logger_setsystem( "cal" ); // Enable calibration module logging
-  // logger_setsystem( "mcp79411" ); // Enable mcp79411 RTC logging
+
   logger_setsystem( "tca9539" );
   logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
@@ -159,8 +159,6 @@ int main() {
 
   // Start the TCA9539 I2C GPIO module
   // tca9539_init(TCA9539_I2C_ADDRESS);
-
-  
 
   command_init( recv_cmd_state_ptr );
 

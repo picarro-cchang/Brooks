@@ -1,8 +1,5 @@
 // Miscellaneous system functions
 
-
-
-
 // ----------------------- Include files ------------------------------
 #include <stdio.h>
 #include <string.h>
