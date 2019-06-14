@@ -13,7 +13,8 @@ vLaser1 = 0
 vLaser2 = 1
 vLaser3 = 2
 vLaser4 = 3
-vLaser = vLaser2
+vLaser = vLaser3
+# AMSADS HCl is in vLaser3
 subschemeId = 0
 fit = 32768
 idea1 = []
