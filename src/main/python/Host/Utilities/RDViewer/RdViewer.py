@@ -178,7 +178,8 @@ class Plot2D(HasTraits):
         if autoscale:
             self.autoscale()
         if self.plot2dFigure.canvas and not self.figureInteraction.isActive():
-            self.plot2dFigure.canvas.draw()
+            wx.CallAfter(self.plot2dFigure.canvas.draw)
+	    #self.plot2dFigure.canvas.draw()
         self.lock.release()
 
     def autoscale(self):
