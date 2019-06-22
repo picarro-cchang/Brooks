@@ -187,6 +187,10 @@ class HotBoxPanelGui(wx.Panel):
         self.cavityTemperatureCheckbox_2 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity temperature 2")
         self.cavityTemperatureCheckbox_3 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity temperature 3")
         self.cavityTemperatureCheckbox_4 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity temperature 4")
+        self.cavity2TemperatureCheckbox_1 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity2 temperature 1")
+        self.cavity2TemperatureCheckbox_2 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity2 temperature 2")
+        self.cavity2TemperatureCheckbox_3 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity2 temperature 3")
+        self.cavity2TemperatureCheckbox_4 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity2 temperature 4")
 
         self.__set_properties()
         self.__do_layout()
@@ -199,6 +203,10 @@ class HotBoxPanelGui(wx.Panel):
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavityTemperatureCheckbox_2)
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavityTemperatureCheckbox_3)
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavityTemperatureCheckbox_4)
+        self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavity2TemperatureCheckbox_1)
+        self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavity2TemperatureCheckbox_2)
+        self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavity2TemperatureCheckbox_3)
+        self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavity2TemperatureCheckbox_4)
         # end wxGlade
 
     def __set_properties(self):
@@ -210,6 +218,10 @@ class HotBoxPanelGui(wx.Panel):
         self.cavityTemperatureCheckbox_2.SetValue(1)
         self.cavityTemperatureCheckbox_3.SetValue(1)
         self.cavityTemperatureCheckbox_4.SetValue(1)
+        self.cavity2TemperatureCheckbox_1.SetValue(1)
+        self.cavity2TemperatureCheckbox_2.SetValue(1)
+        self.cavity2TemperatureCheckbox_3.SetValue(1)
+        self.cavity2TemperatureCheckbox_4.SetValue(1)
         # end wxGlade
 
     def __do_layout(self):
@@ -230,6 +242,10 @@ class HotBoxPanelGui(wx.Panel):
         sizer_3_copy.Add(self.cavityTemperatureCheckbox_2, 0, wx.BOTTOM | wx.FIXED_MINSIZE | wx.LEFT | wx.TOP, 5)
         sizer_3_copy.Add(self.cavityTemperatureCheckbox_3, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_3_copy.Add(self.cavityTemperatureCheckbox_4, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
+        sizer_3_copy.Add(self.cavity2TemperatureCheckbox_1, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
+        sizer_3_copy.Add(self.cavity2TemperatureCheckbox_2, 0, wx.BOTTOM | wx.FIXED_MINSIZE | wx.LEFT | wx.TOP, 5)
+        sizer_3_copy.Add(self.cavity2TemperatureCheckbox_3, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
+        sizer_3_copy.Add(self.cavity2TemperatureCheckbox_4, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_2.Add(sizer_3_copy, 1, 0, 0)
         self.panel_1.SetSizer(sizer_2)
         sizer_1.Add(self.panel_1, 0, 0, 0)
@@ -526,6 +542,8 @@ class PressurePanelGui(wx.Panel):
         self.clearButton = wx.Button(self.panel_1, wx.ID_CLEAR, "")
         self.ambientPressureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Ambient pressure")
         self.cavityPressureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity pressure")
+        self.ambient2PressureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Ambient2 pressure")
+        self.cavity2PressureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity2 pressure")
         self.flowRateCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Flow Rate")
         self.inletValveCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Inlet valve")
         self.outletValveCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Outlet valve")
@@ -542,6 +560,8 @@ class PressurePanelGui(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.onClear, self.clearButton)
         self.Bind(wx.EVT_CHECKBOX, self.onPressureWaveformSelectChanged, self.ambientPressureCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onPressureWaveformSelectChanged, self.cavityPressureCheckbox)
+        self.Bind(wx.EVT_CHECKBOX, self.onPressureWaveformSelectChanged, self.ambient2PressureCheckbox)
+        self.Bind(wx.EVT_CHECKBOX, self.onPressureWaveformSelectChanged, self.cavity2PressureCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onPressureWaveformSelectChanged, self.flowRateCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onValveWaveformSelectChanged, self.inletValveCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onValveWaveformSelectChanged, self.outletValveCheckbox)
@@ -550,6 +570,7 @@ class PressurePanelGui(wx.Panel):
     def __set_properties(self):
         # begin wxGlade: PressurePanelGui.__set_properties
         self.cavityPressureCheckbox.SetValue(1)
+        self.cavity2PressureCheckbox.SetValue(1)
         self.inletValveCheckbox.SetValue(1)
         self.outletValveCheckbox.SetValue(1)
         # end wxGlade
@@ -567,6 +588,8 @@ class PressurePanelGui(wx.Panel):
         sizer_2.Add(self.clearButton, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 15)
         sizer_3.Add(self.ambientPressureCheckbox, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_3.Add(self.cavityPressureCheckbox, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP, 5)
+        sizer_3.Add(self.ambient2PressureCheckbox, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP, 5)
+        sizer_3.Add(self.cavity2PressureCheckbox, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_3.Add(self.flowRateCheckbox, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_2.Add(sizer_3, 0, wx.EXPAND, 0)
         sizer_4.Add(self.inletValveCheckbox, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP, 5)

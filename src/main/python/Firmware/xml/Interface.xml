@@ -422,6 +422,8 @@
             <enum_value ident="STREAM_Laser4Current" />
             <enum_value ident="STREAM_CavityPressure" />
             <enum_value ident="STREAM_AmbientPressure" />
+            <enum_value ident="STREAM_Cavity2Pressure" />
+            <enum_value ident="STREAM_Ambient2Pressure" />
             <!-- <enum_value ident="STREAM_InletPressure" />
             <enum_value ident="STREAM_OutletPressure" /> -->
             <enum_value ident="STREAM_Laser1Tec" />
@@ -452,6 +454,10 @@
             <enum_value ident="STREAM_CavityTemp2" />
             <enum_value ident="STREAM_CavityTemp3" />
             <enum_value ident="STREAM_CavityTemp4" />
+            <enum_value ident="STREAM_Cavity2Temp1" />
+            <enum_value ident="STREAM_Cavity2Temp2" />
+            <enum_value ident="STREAM_Cavity2Temp3" />
+            <enum_value ident="STREAM_Cavity2Temp4" />
             <enum_value ident="STREAM_FilterHeaterTemp" />
             <enum_value ident="STREAM_FilterHeater" />
         </enum>
@@ -2100,6 +2106,105 @@
             <initial>124000</initial>
             <save/>
         </register>
+        <register ident="CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE1_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 thermistor 1 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE1_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE2_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity thermistor 2 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE2_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity temperature 2</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE3_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 thermistor 3 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE3_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature 3</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE4_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 thermistor 4 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE4_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
         <register ident="CAVITY_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity TEC value</description>
             <initial>32768.0</initial>
@@ -2639,6 +2744,40 @@
             <save/>
         </register>
         <register ident="AMBIENT_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Ambient pressure</description>
+        </register>
+        <register ident="CAVITY2_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
+            <description>Cavity2 pressure ADC register</description>
+            <initial>32768</initial>
+        </register>
+       <register ident="CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 pressure scaling</description>
+            <initial>1.5258789E-2</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 pressure offset</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 pressure</description>
+        </register>
+        <register ident="AMBIENT2_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
+            <description>Ambient2 pressure ADC register</description>
+            <initial>32768</initial>
+        </register>
+        <register ident="CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient2 pressure scaling</description>
+            <initial>1.5258789E-2</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient2 pressure offset</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
+        <register ident="AMBIENT2_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Ambient pressure</description>
         </register>
         <register ident="ANALYZER_TUNING_MODE_REGISTER" type="ANALYZER_TUNING_ModeType" minver="1.0" access="rw">
@@ -3703,6 +3842,13 @@
         <i2c ident="CAVITY_THERMISTOR_3_ADC" chain="0" mux="7" address="0x14" />
         <i2c ident="CAVITY_THERMISTOR_4_ADC" chain="0" mux="7" address="0x15" />
         <i2c ident="FILTER_HEATER_THERMISTOR_ADC" chain="0" mux="5" address="0x26" />
+
+        <i2c ident="CAVITY2_THERMISTOR_1_ADC" chain="1" mux="4" address="0x27" />
+        <i2c ident="CAVITY2_THERMISTOR_2_ADC" chain="1" mux="4" address="0x26" />
+        <i2c ident="CAVITY2_THERMISTOR_3_ADC" chain="1" mux="4" address="0x14" />
+        <i2c ident="CAVITY2_THERMISTOR_4_ADC" chain="1" mux="4" address="0x15" />
+        <i2c ident="CAVITY2_PRESSURE_ADC" chain="1" mux="4" address="0x24" />
+        <i2c ident="AMBIENT2_PRESSURE_ADC" chain="1" mux="4" address="0x17" />
 
         <i2c ident="HOT_BOX_HEATSINK_THERMISTOR_ADC" chain="0" mux="7" address="0x54" />
         <i2c ident="RDD_POTENTIOMETERS" chain="0" mux="7" address="0x2C" />

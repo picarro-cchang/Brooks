@@ -195,6 +195,14 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["HotBox"]["cavityTemperature3"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_CavityTemp4:
             waveforms["HotBox"]["cavityTemperature4"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Cavity2Temp1:
+            waveforms["HotBox"]["cavity2Temperature1"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Cavity2Temp2:
+            waveforms["HotBox"]["cavity2Temperature2"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Cavity2Temp3:
+            waveforms["HotBox"]["cavity2Temperature3"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Cavity2Temp4:
+            waveforms["HotBox"]["cavity2Temperature4"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_HotBoxHeatsinkTemp:
             waveforms["HotBox"]["heatsinkTemperature"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_DasTemp:
@@ -207,6 +215,10 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Pressure"]["ambientPressure"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_CavityPressure:
             waveforms["Pressure"]["cavityPressure"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Ambient2Pressure:
+            waveforms["Pressure"]["ambient2Pressure"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Cavity2Pressure:
+            waveforms["Pressure"]["cavity2Pressure"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Flow1:
             waveforms["Pressure"]["flow1"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_InletValve:

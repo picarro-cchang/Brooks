@@ -520,10 +520,12 @@ class PressurePanel(PressurePanelGui):
             backgroundColour=wx.SystemSettings_GetColour(
                 wx.SYS_COLOUR_3DFACE))
         self.ambientPressureWfm = Series(wfmPoints)
+        self.ambient2PressureWfm = Series(wfmPoints)
         # Don't show ambient pressure at initialization
         #self.pressureGraph.AddSeriesAsLine(self.ambientPressureWfm,
         #    colour='red',width=2)
         self.cavityPressureWfm = Series(wfmPoints)
+        self.cavity2PressureWfm = Series(wfmPoints)
         self.pressureGraph.AddSeriesAsLine(self.cavityPressureWfm,
             colour='green',width=2)
         self.flow1Wfm = Series(wfmPoints)
@@ -566,7 +568,12 @@ class PressurePanel(PressurePanelGui):
         if self.flowRateCheckbox.IsChecked():
             self.pressureGraph.AddSeriesAsLine(self.flow1Wfm,
                 colour='blue',width=2)
-
+        if self.ambient2PressureCheckbox.IsChecked():
+            self.pressureGraph.AddSeriesAsLine(self.ambient2PressureWfm,
+                colour='cyan',width=2)
+        if self.cavity2PressureCheckbox.IsChecked():
+            self.pressureGraph.AddSeriesAsLine(self.cavity2PressureWfm,
+                colour='black',width=2)
     def onValveWaveformSelectChanged(self, event):
         self.propValveGraph.RemoveAllSeries()
         if self.inletValveCheckbox.IsChecked():
@@ -661,6 +668,19 @@ class HotBoxPanel(HotBoxPanelGui):
         self.cavityTemperature4Wfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature4Wfm,
             colour='magenta',width=2)
+        
+        self.cavity2Temperature1Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature1Wfm,
+            colour='yellow',width=2)
+        self.cavity2Temperature2Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature2Wfm,
+            colour='black',width=2)
+        self.cavity2Temperature3Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature3Wfm,
+            colour='cyan',width=2)
+        self.cavity2Temperature4Wfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature4Wfm,
+            colour='magenta',width=2)
 
         self.heatsinkTemperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.heatsinkTemperatureWfm,
@@ -704,6 +724,22 @@ class HotBoxPanel(HotBoxPanelGui):
 
         if self.cavityTemperatureCheckbox_4.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature4Wfm,
+                colour='blue',width=2)
+
+        if self.cavity2TemperatureCheckbox_1.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature1Wfm,
+                colour='yellow',width=2)
+
+        if self.cavity2TemperatureCheckbox_2.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature2Wfm,
+                colour='black',width=2)
+
+        if self.cavity2TemperatureCheckbox_3.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature3Wfm,
+                colour='cyan',width=2)
+
+        if self.cavity2TemperatureCheckbox_4.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature4Wfm,
                 colour='blue',width=2)
 
         if self.heatsinkTemperatureCheckbox.IsChecked():

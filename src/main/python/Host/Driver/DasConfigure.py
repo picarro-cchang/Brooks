@@ -67,7 +67,7 @@ class DasConfigure(SharedTypes.Singleton):
             # CAVITY_THERMISTOR_CONFIG = 1 for four separate 24-bit cavity thermistor ADC and
             #  a 16-bit hot box heatsink thermistor
             self.cavityThermistorConfig = self.installed.get(
-                "CAVITY_THERMISTOR_CONFIG", 2)
+                "CAVITY_THERMISTOR_CONFIG", 3)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
             self.extraSchedule = None
@@ -450,7 +450,7 @@ class DasConfigure(SharedTypes.Singleton):
                     status = sender.doOperation(
                         Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
                     self.i2cConfig[ident] = (status >= 0)
-                    if "CAVITY_THERMISTOR_4_ADC" in ident and self.cavityThermistorConfig == 2:
+                    if "CAVITY_THERMISTOR_4_ADC" in ident and self.cavityThermistorConfig == 3:
                         if self.i2cConfig[ident] is True:
                             # New "RevC" Hardware
                             print("Hardware: RevC")
@@ -459,6 +459,10 @@ class DasConfigure(SharedTypes.Singleton):
                             # Legacy "RevB" Hardware
                             print("Hardware: RevB")
                             self.cavityThermistorConfig = 0
+                        if "CAVITY2_THERMISTOR_4_ADC" in ident:
+                            print("Hardware: DualCavity")
+                            self.cavityThermistorConfig == 2
+
                     print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
                 if self.cavityThermistorConfig == 0:
                     # This represents the legacy mode in which the hot box heatsink thermistor is connected
@@ -508,6 +512,30 @@ class DasConfigure(SharedTypes.Singleton):
                                   ["I2C_HOT_BOX_HEATSINK_THERMISTOR_ADC",
                                    "HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
                                    "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
+                    if self.cavityThermistorConfig == 2:
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                    ["I2C_CAVITY2_THERMISTOR_1_ADC",
+                                    "CAVITY2_RESISTANCE1_REGISTER",
+                                    "CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER"]))
+
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                    ["I2C_CAVITY2_THERMISTOR_2_ADC",
+                                    "CAVITY2_RESISTANCE2_REGISTER",
+                                    "CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER"]))
+
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                    ["I2C_CAVITY2_THERMISTOR_3_ADC",
+                                    "CAVITY2_RESISTANCE3_REGISTER",
+                                    "CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER"]))
+
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                    ["I2C_CAVITY2_THERMISTOR_4_ADC",
+                                    "CAVITY2_RESISTANCE4_REGISTER",
+                                    "CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER"]))
 
             if self.cavityThermistorConfig == 0:
                 # This represents the legacy mode in which the hot box heatsink thermistor is connected
@@ -576,6 +604,66 @@ class DasConfigure(SharedTypes.Singleton):
                     Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                               ["STREAM_CavityTemp4", "CAVITY_TEMPERATURE4_REGISTER"]))
 
+                if self.cavityThermistorConfig == 2:
+                    # This represents the new mode in which there are four addtional thermistors for cavity 2
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                ["CAVITY2_RESISTANCE1_REGISTER",
+                                "CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER",
+                                "CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER",
+                                "CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER",
+                                "CAVITY2_TEMPERATURE1_REGISTER"]))
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                ["CAVITY2_RESISTANCE2_REGISTER",
+                                "CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER",
+                                "CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER",
+                                "CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER",
+                                "CAVITY2_TEMPERATURE2_REGISTER"]))
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                ["CAVITY2_RESISTANCE3_REGISTER",
+                                "CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER",
+                                "CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER",
+                                "CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER",
+                                "CAVITY2_TEMPERATURE3_REGISTER"]))
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                ["CAVITY2_RESISTANCE4_REGISTER",
+                                "CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER",
+                                "CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER",
+                                "CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER",
+                                "CAVITY2_TEMPERATURE4_REGISTER"]))
+                    # We average the individual temperatures to give the reported
+                    # cavity temperature
+                    # self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
+                    #     Operation("ACTION_AVERAGE_FLOAT_REGISTERS",
+                    #             ["CAVITY_TEMPERATURE1_REGISTER",
+                    #             "CAVITY_TEMPERATURE2_REGISTER",
+                    #             "CAVITY_TEMPERATURE3_REGISTER",
+                    #             "CAVITY_TEMPERATURE4_REGISTER",
+                    #             "CAVITY_TEMPERATURE_REGISTER"]))
+                    # Stream the individual cavity temperature readings
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE1_REGISTER"]))
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Temp2", "CAVITY2_TEMPERATURE2_REGISTER"]))
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Temp3", "CAVITY2_TEMPERATURE3_REGISTER"]))
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Temp4", "CAVITY2_TEMPERATURE4_REGISTER"]))
+                    # Cavity 2 Pressure and Ambient 2 stream
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Pressure", "CAVITY2_PRESSURE_REGISTER"]))
+
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Ambient2Pressure", "AMBIENT2_PRESSURE_REGISTER"]))
             # The following is either from the measurement of a single ADC or from the average
             #  readings of the four thermistors
             self.opGroups["SLOW"]["STREAMER"].addOperation(
@@ -757,7 +845,7 @@ class DasConfigure(SharedTypes.Singleton):
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                           ["STREAM_AmbientPressure", "AMBIENT_PRESSURE_REGISTER"]))
-
+                          
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                           ["STREAM_InletValve", "VALVE_CNTRL_INLET_VALVE_REGISTER"]))
