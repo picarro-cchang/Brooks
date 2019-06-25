@@ -21,4 +21,7 @@ void ltc2601_init(void);
 // |----+----+----+----+---------+---------------------------------------------|
 uint8_t ltc2601_write( uint16_t (*cs_ptr)(uint8_t), uint8_t command, uint16_t data );
 
+// Calling this function over and over again will produce a voltage ramp
+uint8_t ltc2601_ramp_test(void);
+
 #endif

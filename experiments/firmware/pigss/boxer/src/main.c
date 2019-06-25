@@ -61,6 +61,9 @@
 // I2C switch family.
 #include "tca954xa.h"
 
+// Functions for working with the LTC2601 16-bit voltage DAC
+#include "ltc2601.h"
+
 /* led.h
 
    Provides functions for turning the LED on and off.
@@ -176,6 +179,7 @@ int main() {
 
   // Schedule some tasks
   OS_TaskCreate(&test_task, 500, BLOCKED);
+  // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
 
   // The main loop
   for(;;) {
