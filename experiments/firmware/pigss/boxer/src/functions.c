@@ -9,6 +9,10 @@
  * flash.
  */
 #include <avr/pgmspace.h>
+
+// Watchdog timer
+#include <avr/wdt.h>
+
 #include "usart.h"
 
 
@@ -55,6 +59,12 @@ void functions_init( void ) {
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
   usart_printf_p(USART_CHANNEL_COMMAND, idnstr, system_state_ptr -> sernum,REVCODE);
   usart_printf(USART_CHANNEL_COMMAND, LINE_TERMINATION_CHARACTERS);
+}
+
+void cmd_rst( command_arg_t *command_arg_ptr ) {
+  // Set watchdog to lowest interval and delay longer than that
+  wdt_enable(WDTO_15MS);
+  while(1);
 }
 
 void cmd_slotid_q( command_arg_t *command_arg_ptr ) {

@@ -102,6 +102,9 @@ SRC += tca954xa.c
 # Honeywell MPR pressure sensor
 SRC += mpr.c
 
+# AVR Watchdog
+SRC += watchdog.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =

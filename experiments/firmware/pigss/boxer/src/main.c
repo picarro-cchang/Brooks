@@ -3,6 +3,9 @@
 #include <string.h>
 #include <avr/interrupt.h>
 
+// Watchdog timer
+#include <avr/wdt.h>
+
 // Convenience functions for busy-wait loops
 #include <util/delay.h>
 
@@ -96,6 +99,8 @@ int main() {
   // Set up the system clock.  Do this before setting up the USART,
   // as the USART depends on this for an accurate buad rate.
   fosc_16MHz();
+
+  watchdog_init();
 
   LED_init();
 
@@ -201,6 +206,9 @@ int main() {
 
     // Execute scheduled tasks
     OS_TaskExecution();
+
+    // Reset the watchdog
+    wdt_reset();
 
   }// end main for loop
 

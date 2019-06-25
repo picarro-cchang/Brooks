@@ -146,6 +146,18 @@ None
 
 `Picarro,Boxer,SN0,1.0.0`
 
+#### \*RST ####
+
+Initiates a system reset.
+
+##### Parameter #####
+
+None
+
+##### Typical Return #####
+
+None
+
 ### System-level commands ###
 
 #### SERNUM n ####
@@ -281,3 +293,9 @@ character buffer overflows.  This may allow the rack PC to simply send
 characters and look for a NACK when waiting for the remote interface
 to be ready.
 
+### Version 1.0.4 ###
+
+Added watchdog timer.  The system will reset after 1 second if it
+hangs anywhere.
+
+Added the *RST command to initiate a reset over the command interface.

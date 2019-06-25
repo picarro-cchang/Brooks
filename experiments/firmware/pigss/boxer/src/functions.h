@@ -33,6 +33,9 @@ extern system_state_t *system_state_ptr;
 // Function called by the *idn? command
 void cmd_idn_q( command_arg_t *command_arg_ptr );
 
+// Function called by the *rst command
+void cmd_rst( command_arg_t *command_arg_ptr );
+
 // Function called by the slotid? command
 void cmd_slotid_q( command_arg_t *command_arg_ptr );
 

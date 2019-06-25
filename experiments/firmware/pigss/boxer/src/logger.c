@@ -167,7 +167,7 @@ void cmd_loglevel( command_arg_t *command_arg_ptr ) {
 void cmd_logreg( command_arg_t *command_arg_ptr ) {
   logger_config_ptr -> enable = command_arg_ptr -> uint16_arg;
   logger_msg_p( "logger", log_level_INFO,
-		PSTR("Logger enable register set to %u.\r\n"),
+		PSTR("Logger enable register set to %u."),
 		command_arg_ptr -> uint16_arg );
 }
 
@@ -193,12 +193,12 @@ bool logger_setsystem( char *logsys ) {
       // We've found a matching system
       (logger_config_ptr -> enable) |= 1UL << (system_array_ptr -> bitshift);
       logger_msg_p("logger", log_level_INFO,
-		   PSTR("Now logging system %s\r\n"), system_array_ptr -> name);
+		   PSTR("Now logging system %s"), system_array_ptr -> name);
       return 0;
     }
     system_array_ptr++;
   }
-  logger_msg_p("logger", log_level_ERROR, PSTR("System %s not found\r\n"),logsys);
+  logger_msg_p("logger", log_level_ERROR, PSTR("System %s not found"),logsys);
   return 1;
 }
 

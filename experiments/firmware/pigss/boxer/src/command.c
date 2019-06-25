@@ -58,6 +58,11 @@ command_t command_array[] = {
    "none",            // Argument type (none, hex16, uint16, sint16)
    0,                 // Maximum number of characters in argument
    &cmd_idn_q},       // Address of function to execute
+  // *RST -- System reset
+  {"*rst",
+   "none",
+   0,
+   &cmd_rst},
   //loglev -- Set the logger severity level.
   {"loglev",
    "uint16",
