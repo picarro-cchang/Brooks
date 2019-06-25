@@ -107,7 +107,7 @@ int main() {
   // Start the SPI chip-select module
   cs_init();
 
-  // Start the SPI module
+  // Start the SPI module.
   spi_init();
 
   /* To configure the logger, first clear the logger enable register
@@ -124,6 +124,9 @@ int main() {
 
   // Enable channel module logging
   logger_setsystem( "channel" );
+
+  // Enable MPR pressure sensor module logging
+  logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
@@ -154,6 +157,9 @@ int main() {
   // Start the channel module
   channel_init();
 
+  // Start the MPR pressure sensor module
+  mpr_init( &cs_manifold_a_sr );
+
   // Start the TCA954xA I2C switch module
   // tca9548a_init(TCA9548A_I2C_ADDRESS);
 
@@ -169,7 +175,7 @@ int main() {
 	       REVCODE);
 
   // Schedule some tasks
-  OS_TaskCreate(&test_task, 1000, BLOCKED);
+  OS_TaskCreate(&test_task, 500, BLOCKED);
 
   // The main loop
   for(;;) {

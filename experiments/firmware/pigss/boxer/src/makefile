@@ -99,6 +99,9 @@ SRC += tca9539.c
 # TCA954xA I2C switch module
 SRC += tca954xa.c
 
+# Honeywell MPR pressure sensor
+SRC += mpr.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =
@@ -394,6 +397,7 @@ ifeq ($(findstring CYGWIN, $(uname_value)), CYGWIN)
 	# correctly.
 	platform = cygwin
 	tclsh = "c:/Tcl/bin/tclsh.exe"
+	etags = "d:/programs/emacs-26.2-x86_64/bin/etags.exe"
 endif
 
 ifeq ($(findstring MINGW32, $(uname_value)), MINGW32)
@@ -468,7 +472,6 @@ help:
 	@echo '                                with VCP com port'
 	@echo '   make bootfuse                Write fuses to execute bootlader  '
 	@echo '   make devfuse                 Write fuses to skip bootloader    '
-	@echo '   make terminal                Start a serial terminal           '
 	@echo '   make debug_make              Debug the makefile                '
 	@echo '   make doc                     Create html documentation         '
 	@echo '   make docview                 View the documentation in a browser '
@@ -480,6 +483,7 @@ help:
 debug_make:
 	@echo 'Output from uname is $(uname_value)'
 	@echo 'Source files are $(SRC)'
+
 
 
 pandoc_source = $(doc_directory)/pandoc_source.markdown
@@ -498,6 +502,10 @@ $(pandoc_source): $(readme_file)
 .PHONY: docview
 docview:
 	$(browser) $(html_documentation_file)
+
+.PHONY: tags
+tags:
+	$(ctags) -R 
 
 .PHONY: release
 release: $(release_directory)/$(release_file)

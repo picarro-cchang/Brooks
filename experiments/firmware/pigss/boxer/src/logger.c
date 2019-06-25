@@ -71,8 +71,8 @@ logger_system_t system_array[] ={
     {"cal",
      9
     },
-    // The buttons module
-    {"buttons",
+    // The MPR pressure sensor module
+    {"mpr",
      10
     },
     // The channel module

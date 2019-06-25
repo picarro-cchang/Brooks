@@ -65,21 +65,11 @@ void metronome_init() {
   return;
 }
 
-
+uint32_t pressure_reading  = 0;
 
 void test_task() {
-  // logger_msg_p("metronome",log_level_INFO,PSTR("Test task"));
-  static uint8_t bargraph_value = 1;
-  static uint16_t dac_value = 1;
-  if (bargraph_value > 80) {
-    bargraph_value = 1;
-  }
-  if (dac_value >= 0x8000) {
-    dac_value = 1;
-  }
-  ltc2601_write(&cs_manifold_a_sr, 0x3, dac_value);
-  bargraph_value = bargraph_value << 1;
-  dac_value = dac_value << 1;
+  logger_msg_p("metronome",log_level_DEBUG,PSTR("Test task"));
+  
 }
 
 

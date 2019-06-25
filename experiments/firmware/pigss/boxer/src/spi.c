@@ -61,7 +61,7 @@ void spi_init() {
 }
 
 uint8_t spi_write( uint8_t data ) {
-  // Returns 0 if data was written to SPI
+  // Returns the byte received when data is written to SPI
   //
   // The SS must be handled elsewhere.
 
@@ -73,5 +73,6 @@ uint8_t spi_write( uint8_t data ) {
   while(!(SPSR & _BV(SPIF)));
   logger_msg_p("spi", log_level_INFO, PSTR("Wrote 0x%x"),data);
 
-  return 0;
+  // Return received data
+  return(SPDR);
 }

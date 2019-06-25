@@ -43,7 +43,7 @@ uint8_t bargraph_write( void (*cs_ptr)(uint8_t), uint16_t value ) {
   // Pull cs low
   (*cs_ptr)(0);
 
-  // Write the data
+  // Write the data MSB first
   for (int8_t bytenum = 1; bytenum >= 0; bytenum--) {
     spi_write(data.bytes[bytenum]);
     logger_msg_p("bargraph", log_level_DEBUG, PSTR("Wrote 0x%x"),data.bytes[bytenum]);
