@@ -1,6 +1,7 @@
 import serial
 import time
 from host.experiments.common.serial_interface import SerialInterface
+from host.experiments.common.timeutils import get_local_timestamp
 
 
 class AlicatDriver(object):
@@ -124,6 +125,7 @@ if __name__ == "__main__":
     count = 0
     while True:
         obj.get_data_dict()
+        print('Time: {}'.format(get_local_timestamp()))
         print('Mass Flow Setpoint: {}'.format(obj.get_set_point()))
         print('Mass Flow: {}'.format(obj.get_mass_flow()))
         print('Delta Flow: {}'.format(obj.get_flow_delta()))
