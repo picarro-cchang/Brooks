@@ -119,7 +119,7 @@ class AlicatDriver(object):
 
 if __name__ == "__main__":
     obj = AlicatDriver(mfc_id='A', port='/dev/ttyUSB0', baudrate=19200, carriage_return='\r')
-    sp = 0.02
+    sp = 5
     print('Setting setpoint to: {}'.format(sp))
     obj.set_set_point(sp)
     count = 0
