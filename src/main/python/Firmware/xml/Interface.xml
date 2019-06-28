@@ -2106,6 +2106,11 @@
             <initial>124000</initial>
             <save/>
         </register>
+        <register ident="CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
         <register ident="CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity2 thermistor 1 constant B</description>
             <initial>0.000205610005651</initial>

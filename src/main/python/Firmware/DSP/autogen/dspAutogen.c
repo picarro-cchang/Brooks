@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[569];
+RegTypes regTypes[570];
 
 /* I2C devices */
 I2C_device i2c_devices[40] = {
@@ -540,6 +540,8 @@ void initRegisters()
     writeRegister(CONVERSION_CAVITY_THERM4_CONSTC_REGISTER,d);
     d.asFloat = 124000;
     writeRegister(CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER,d);
     d.asFloat = 0.000205610005651;
     writeRegister(CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER,d);
     d.asFloat = 9.26699996739e-008;
@@ -1373,6 +1375,7 @@ void initRegisters()
     regTypes[CAVITY_RESISTANCE4_REGISTER] = float_type;
     regTypes[CAVITY_TEMPERATURE4_REGISTER] = float_type;
     regTypes[CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER] = float_type;
     regTypes[CAVITY2_RESISTANCE1_REGISTER] = float_type;
