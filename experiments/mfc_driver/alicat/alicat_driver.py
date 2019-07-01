@@ -3,6 +3,12 @@ import time
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.timeutils import get_local_timestamp
 
+# TODO
+#   Remove local import for CmdFIFO
+#   Remove hardcoded host
+#   Remove hardcoded port
+import CmdFIFO
+
 
 class AlicatDriver(object):
     """
@@ -17,7 +23,16 @@ class AlicatDriver(object):
         self.port = port
         self.baudrate = baudrate
         self.carriage_return = carriage_return
+        self.rpc_server = CmdFIFO.CmdFIFOServer(
+            ("", 6667),
+            ServerName="AlicatDriver",
+            ServerDescription="RPC Server for AlicatDriver",
+            ServerVersion=1.0,
+            threaded=True
+        )
         self.connect()
+        self.register_rpc_functions()
+        self.rpc_server.Launch()
 
     def connect(self):
         """
@@ -77,34 +92,58 @@ class AlicatDriver(object):
         return self.data_dict
 
     def get_id(self):
+        """
+        :return:
+        """
         alicat_id = self.data_dict.get('id', None)
         return alicat_id
 
     def get_pressure(self):
+        """
+        :return:
+        """
         pressure = self.data_dict.get('pressure', None)
         return pressure
 
     def get_temperature(self):
+        """
+        :return:
+        """
         temperature = self.data_dict.get('temperature', None)
         return temperature
 
     def get_volumetric_flow(self):
+        """
+        :return:
+        """
         v_flow = self.data_dict.get('v_flow', None)
         return v_flow
 
     def get_mass_flow(self):
+        """
+        :return:
+        """
         mass_flow = self.data_dict.get('m_flow', None)
         return mass_flow
 
     def get_set_point(self):
+        """
+        :return:
+        """
         set_point = self.data_dict.get('set_point', None)
         return set_point
 
     def get_gas_id(self):
+        """
+        :return:
+        """
         gas_id = self.data_dict.get('gas_id', None)
         return gas_id
 
     def get_flow_delta(self):
+        """
+        :return:
+        """
         try:
             set_point = float(self.get_set_point())
             flow_rate = float(self.get_mass_flow())
@@ -114,7 +153,25 @@ class AlicatDriver(object):
         return delta
 
     def set_set_point(self, set_point):
+        """
+        :param set_point:
+        :return:
+        """
         self.send(self.id + "S" + str(set_point))
+
+    def register_rpc_functions(self):
+        self.rpc_server.register_function(self.send)
+        self.rpc_server.register_function(self.get_data)
+        self.rpc_server.register_function(self.get_data_dict)
+        self.rpc_server.register_function(self.get_id)
+        self.rpc_server.register_function(self.get_pressure)
+        self.rpc_server.register_function(self.get_temperature)
+        self.rpc_server.register_function(self.get_volumetric_flow)
+        self.rpc_server.register_function(self.get_mass_flow)
+        self.rpc_server.register_function(self.get_set_point)
+        self.rpc_server.register_function(self.get_gas_id)
+        self.rpc_server.register_function(self.get_flow_delta)
+        self.rpc_server.register_function(self.set_set_point)
 
 
 if __name__ == "__main__":

@@ -42,4 +42,6 @@ if __name__ == '__main__':
     time.sleep(0.2)
     print(f'Current Setpoint: {get_flow_setpoint()}')
     print('\n')
+    get_flow_delta()
+
 
