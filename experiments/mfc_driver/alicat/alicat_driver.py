@@ -50,7 +50,12 @@ class AlicatDriver(object):
         :return:
         """
         self.serial.write(command + self.carriage_return)
-        time.sleep(0.1)
+        """
+        Alicat recommends an optimal baud rate of 19200
+        We start getting garbage data from the MFC if we try
+        to poll faster than 5 Hz at this baud rate.
+        """
+        time.sleep(0.2)
         response = self.serial.read()
         if response == '?':
             # Alicat doesn't recognize the command
