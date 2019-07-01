@@ -32,7 +32,7 @@ class AlicatDriver(object):
         )
         self.connect()
         self.register_rpc_functions()
-        self.rpc_server.Launch()
+        self.rpc_server.serve_forever()
 
     def connect(self):
         """
@@ -181,6 +181,7 @@ class AlicatDriver(object):
 
 if __name__ == "__main__":
     obj = AlicatDriver(mfc_id='A', port='/dev/ttyUSB0', baudrate=19200, carriage_return='\r')
+    """
     sp = 5
     print('Setting setpoint to: {}'.format(sp))
     obj.set_set_point(sp)
@@ -196,3 +197,4 @@ if __name__ == "__main__":
         print('Temperature: {}'.format(obj.get_temperature()))
         print('Count: {}\n'.format(count))
         count += 1
+    """

@@ -32,6 +32,16 @@ def get_flow_setpoint():
     return flow_setpoint
 
 
+def get_data():
+    data = TestClient.get_data()
+    return data
+
+
+def get_data_dict():
+    data_dict = TestClient.get_data_dict()
+    return data_dict
+
+
 if __name__ == '__main__':
     print('\n')
     print(f'Current Setpoint: {get_flow_setpoint()}')
@@ -39,9 +49,11 @@ if __name__ == '__main__':
     print('Starting AlicatDriver TestClient')
     print(f'Setting MFC Setpoint to {setpoint}')
     set_flow_setpoint(setpoint)
-    time.sleep(0.2)
+    time.sleep(0.5)
     print(f'Current Setpoint: {get_flow_setpoint()}')
     print('\n')
-    get_flow_delta()
+    while True:
+        print(get_data_dict())
+        time.sleep(0.2)
 
 
