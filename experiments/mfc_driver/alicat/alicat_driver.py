@@ -36,6 +36,9 @@ class AlicatDriver(object):
 
     def connect(self):
         """
+        This function opens the serial port defined when the
+        class is instantiated.
+
         :return:
         """
         try:
@@ -46,6 +49,11 @@ class AlicatDriver(object):
 
     def send(self, command):
         """
+        This function will send any string to the MFC. If the MFC does not
+        recognize the command, it will response with: '?'. If an unrecognized command
+        is sent, we will disregard the response, otherwise we will
+        return the response.
+
         :param command:
         :return:
         """
@@ -64,6 +72,7 @@ class AlicatDriver(object):
 
     def close(self):
         """
+        This function will close the serial port if it is open.
         :return:
         """
         if self.serial is not None:
@@ -71,6 +80,12 @@ class AlicatDriver(object):
 
     def get_data(self):
         """
+        This function will send a command to the MFC, the MFC will then
+        reply back with a string containing all of its pertinent data.
+
+        Example:
+            A +014.44 +026.92 +000.00 +000.00 000.00     Air
+
         :return:
         """
         data = self.send(self.id)
@@ -96,6 +111,9 @@ class AlicatDriver(object):
             {'id': 'A', 'pressure': '+007.55', 'temperature': '+024.79', 'v_flow': '+007.05',
             'm_flow': '+003.34', 'set_point': '003.50', 'gas_id': 'Air', 'timestamp': '2019-07-02 10:30:47'}
 
+        This function will automatically grab a new data string from the MFC,
+        parse the string, and return a timestamped dictionary.
+
         :return:
         """
         data = self.get_data()
@@ -108,6 +126,12 @@ class AlicatDriver(object):
 
     def get_id(self):
         """
+        This function will get the id of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         alicat_id = self.data_dict.get('id', None)
@@ -115,6 +139,12 @@ class AlicatDriver(object):
 
     def get_pressure(self):
         """
+        This function will get the pressure of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         pressure = self.data_dict.get('pressure', None)
@@ -122,6 +152,12 @@ class AlicatDriver(object):
 
     def get_temperature(self):
         """
+        This function will get the temperature of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         temperature = self.data_dict.get('temperature', None)
@@ -129,6 +165,12 @@ class AlicatDriver(object):
 
     def get_volumetric_flow(self):
         """
+        This function will get the volumetric flow of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         v_flow = self.data_dict.get('v_flow', None)
@@ -136,6 +178,12 @@ class AlicatDriver(object):
 
     def get_mass_flow(self):
         """
+        This function will get the mass flow of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         mass_flow = self.data_dict.get('m_flow', None)
@@ -143,6 +191,12 @@ class AlicatDriver(object):
 
     def get_set_point(self):
         """
+        This function will get the flow set point of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         set_point = self.data_dict.get('set_point', None)
@@ -150,13 +204,29 @@ class AlicatDriver(object):
 
     def get_gas_id(self):
         """
+        This function will get the gas id of the MFC provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
         :return:
         """
         gas_id = self.data_dict.get('gas_id', None)
         return gas_id
 
     def get_flow_delta(self):
-        """
+        """This function will calculate the difference in flow between
+        the current mass flow rate and the current mass flow set point.
+        The data used in the calculation is from the get_set_point and
+        the get_mass_flow functions.
+
+        If no data exists, is a None type, or is garbled from the MFC,
+        it will either fall into a TypeError, or ValueError and the
+        function will return None. The function get_data_dict will need
+        to be run to gather updated data, otherwise this function will
+        continue to return the last gathered data.
+
         :return:
         """
         try:
@@ -170,15 +240,41 @@ class AlicatDriver(object):
         return delta
 
     def get_timestamp(self):
+        """
+        This function will get current local timestamp provided by the
+        get_data_dict function. If no data exists, it will return None.
+        Otherwise, it will return the value in the dict. The function
+        get_data_dict will need to be run to gather updated data, otherwise
+        this function will continue to return the last gathered data.
+
+        :return:
+        """
         timestamp = self.data_dict.get('timestamp', None)
         return timestamp
 
     def set_set_point(self, set_point):
         """
+        This function will accept any string and attempt to convert
+        it into a float with a precision of 2. The MFC will reject any
+        flow set point with a precision > 2. If the conversion to a float
+        fails, the command will not be sent to the MFC and this function
+        will return None. Otherwise, the set point will be sent to the MFC
+        and we will return the set point.
+
         :param set_point:
         :return:
         """
-        self.send(self.id + "S" + str(set_point))
+        try:
+            # We need to convert the string into a float, and
+            # set the precision to 2, otherwise the MFC will
+            # reject the setpoint.
+            set_point = float(set_point)
+            set_point = round(set_point, 2)
+            self.send(self.id + "S" + str(set_point))
+        except TypeError:
+            set_point = None
+        except ValueError:
+            set_point = None
         return set_point
 
     def register_rpc_functions(self):
