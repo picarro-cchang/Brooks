@@ -88,12 +88,22 @@ class AlicatDriver(object):
             4: Mass Flow Rate
             5: Setpoint
             6: Gas Select
+
+        A current local time will be appended to the dict in ISO 8601
+        format.
+
+        Example of returned dict:
+            {'id': 'A', 'pressure': '+007.55', 'temperature': '+024.79', 'v_flow': '+007.05',
+            'm_flow': '+003.34', 'set_point': '003.50', 'gas_id': 'Air', 'timestamp': '2019-07-02 10:30:47'}
+
         :return:
         """
         data = self.get_data()
+        current_time = get_local_timestamp()
         data_keys = ['id', 'pressure', 'temperature', 'v_flow', 'm_flow', 'set_point', 'gas_id']
         data_values = ''.join(data).split()
         self.data_dict = dict(zip(data_keys, data_values))
+        self.data_dict['timestamp'] = current_time
         return self.data_dict
 
     def get_id(self):
@@ -155,7 +165,13 @@ class AlicatDriver(object):
             delta = abs(set_point - flow_rate)
         except TypeError:
             delta = None
+        except ValueError:
+            delta = None
         return delta
+
+    def get_timestamp(self):
+        timestamp = self.data_dict.get('timestamp', None)
+        return timestamp
 
     def set_set_point(self, set_point):
         """
@@ -177,6 +193,7 @@ class AlicatDriver(object):
         self.rpc_server.register_function(self.get_set_point)
         self.rpc_server.register_function(self.get_gas_id)
         self.rpc_server.register_function(self.get_flow_delta)
+        self.rpc_server.register_function(self.get_timestamp)
         self.rpc_server.register_function(self.set_set_point)
 
 
