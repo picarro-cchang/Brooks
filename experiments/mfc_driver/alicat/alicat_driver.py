@@ -25,8 +25,8 @@ class AlicatDriver(object):
         self.carriage_return = carriage_return
         self.rpc_server = CmdFIFO.CmdFIFOServer(
             ("", 6667),
-            ServerName="AlicatDriver",
-            ServerDescription="RPC Server for AlicatDriver",
+            ServerName=__class__.__name__,
+            ServerDescription=f"RPC Server for {__class__.__name__}",
             ServerVersion=1.0,
             threaded=True
         )
@@ -163,6 +163,7 @@ class AlicatDriver(object):
         :return:
         """
         self.send(self.id + "S" + str(set_point))
+        return set_point
 
     def register_rpc_functions(self):
         self.rpc_server.register_function(self.send)
