@@ -69,7 +69,6 @@ uint32_t pressure_reading  = 0;
 
 void test_task() {
   logger_msg_p("metronome",log_level_DEBUG,PSTR("Test task"));
-  
 }
 
 

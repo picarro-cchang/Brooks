@@ -53,7 +53,6 @@ system_state_t *system_state_ptr = &system_state;
 void functions_init( void ) {
   eeprom_load_sernum(system_state_ptr);
   eeprom_load_slotid(system_state_ptr);
-  system_state_ptr -> state_enum = system_state_INIT;
 }
 
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
@@ -61,10 +60,41 @@ void cmd_idn_q( command_arg_t *command_arg_ptr ) {
   usart_printf(USART_CHANNEL_COMMAND, LINE_TERMINATION_CHARACTERS);
 }
 
+system_state_value_t set_system_state(system_state_value_t requested_state) {
+  // For now, just set the state to the requested value
+  system_state_ptr -> state_enum = requested_state;
+  return(system_state_ptr -> state_enum);
+}
+
+system_state_value_t get_system_state( void ) {
+  // Return the current system state
+  return(system_state_ptr -> state_enum);
+}
+
 void cmd_rst( command_arg_t *command_arg_ptr ) {
   // Set watchdog to lowest interval and delay longer than that
   wdt_enable(WDTO_15MS);
   while(1);
+}
+
+void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
+  switch( system_state_ptr -> state_enum ) {
+  case system_state_INIT:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "init",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  case system_state_STANDBY:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "standby",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  default:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "none",
+		 LINE_TERMINATION_CHARACTERS );
+  }
+  
 }
 
 void cmd_slotid_q( command_arg_t *command_arg_ptr ) {

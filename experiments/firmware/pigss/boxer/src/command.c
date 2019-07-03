@@ -117,7 +117,12 @@ command_t command_array[] = {
   {"slotid?",
    "none",
    0,
-   &cmd_slotid_q},  
+   &cmd_slotid_q},
+  // opstate? -- Query the operational state
+  {"opstate?",
+   "none",
+   0,
+   &cmd_opstate_q},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
@@ -164,7 +169,7 @@ uint8_t check_argsize(recv_cmd_state_t *recv_cmd_state_ptr ,
     uint8_t isok = 0;
     uint8_t argsize = strlen(recv_cmd_state_ptr -> pbuffer_arg_ptr);
     logger_msg_p("command",log_level_INFO,
-        PSTR("Argument size is %d.\r\n"), argsize);
+        PSTR("Argument size is %d"), argsize);
     if (argsize > (command_array -> arg_max_chars)) {
         isok = -1;
     }

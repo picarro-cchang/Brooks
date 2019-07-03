@@ -102,6 +102,9 @@ int main() {
 
   watchdog_init();
 
+  // Set the system state to INIT
+  set_system_state(system_state_INIT);
+
   LED_init();
 
   //  Set up the USART before setting up the logger -- the logger uses
@@ -182,14 +185,19 @@ int main() {
   logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
 
+  // Set state to standby
+  set_system_state(system_state_STANDBY);
+  
   // Schedule some tasks
-  OS_TaskCreate(&test_task, 500, BLOCKED);
+  // OS_TaskCreate(&test_task, 500, BLOCKED);
   // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
 
   // The main loop
   for(;;) {
 
     switch(system_state_ptr -> state_enum) {
+    case system_state_STANDBY:
+      break;
     case system_state_INIT:
       break;
     case system_state_ID_CHANNELS:

@@ -196,6 +196,14 @@ Query the manifold box's slot ID.
 
 `3`
 
+#### OPSTATE? ####
+
+Query the system's operational state.
+
+#### Typical Return ####
+
+`standby`
+
 ### Channel commands ###
 
 #### CHANENA n ####
@@ -258,8 +266,6 @@ Query the channel enable register.
 
 `8`
 
-
-
 ## Release history ##
 
 ### Version 1.0.0 ###
@@ -298,4 +304,8 @@ to be ready.
 Added watchdog timer.  The system will reset after 1 second if it
 hangs anywhere.
 
-Added the *RST command to initiate a reset over the command interface.
+Added the `*RST` command to initiate a reset over the command interface.
+
+### Version 1.0.5 ###
+
+Added the `OPSTATE` command to query the current operating state.

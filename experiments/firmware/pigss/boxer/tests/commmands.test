@@ -8,13 +8,16 @@
 
 # We need to test both the upper and lower case forms of each command.
 
+# Firmware version code
+set firmware_version "1.0.5"
+
 ############################### *idn? ################################
 
 # Query the instrument's identity
 
 set command "*idn?"
 set description "Identification query"
-set ok_result {Picarro,Boxer,SN.*,1.0.4}
+set ok_result "Picarro,Boxer,SN.*,$firmware_version"
 tcltest::test "[string tolower $command]" "$description" -body {
     boxer::sendcmd $channel "[string tolower $command]"
     set return_string [boxer::readline $channel]
@@ -225,3 +228,25 @@ tcltest::test "slotid" "Check new slot ID" -body {
     set return_string [boxer::readline $channel]
     return $return_string
 } -match regexp -result $slot_id
+
+############################## opstate ###############################
+
+set command "opstate?"
+set description "Query the operational state"
+
+# The box should be in standby state after booting.  But it may be in
+# control after the channel commands issued during testing.  For right
+# now, this test result should just be standby.
+set ok_result "standby"
+
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
