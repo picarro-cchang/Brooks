@@ -35,6 +35,9 @@
 // Functions for working with the TCA9539 I2C GPIO expander
 #include "tca9539.h"
 
+// Functions for working with the MPR pressure sensors
+#include "mpr.h"
+
 #include "metronome.h"
 
 void metronome_init() {
@@ -68,7 +71,19 @@ void metronome_init() {
 uint32_t pressure_reading  = 0;
 
 void test_task() {
-  logger_msg_p("metronome",log_level_DEBUG,PSTR("Test task"));
+  // logger_msg_p("metronome",log_level_DEBUG,PSTR("Test task"));
+  mpr_trigger( &cs_manifold_a_sr );
+
+  // Schedule the read
+  OS_SetTaskState(1, BLOCKED);
+				   
+}
+
+void offset_task() {
+  mpr_read( &cs_manifold_a_sr, &pressure_reading );
+
+  // Cancel task
+  OS_SetTaskState(1, SUSPENDED);
 }
 
 

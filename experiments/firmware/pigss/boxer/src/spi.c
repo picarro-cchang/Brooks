@@ -38,7 +38,10 @@ void spi_init() {
   // |     0 |    1 |    1 |     128 |
   // |-------+------+------+---------|
   
-  SPCR |= _BV(SPR0); // Set fosc / 16 = 1MHz
+  // SPCR |= _BV(SPR0); // Set fosc / 16 = 1MHz
+
+  // MPR sensors have a maximum SPI clock of 800kHz
+  SPCR |= _BV(SPR1); // Set fosc / 64 = 250 kHz
 
   // The clock idles low by default (CPOL = 0)
   // The data is sampled on the clock's rising edge (CPHA = 0) by default
@@ -71,7 +74,7 @@ uint8_t spi_write( uint8_t data ) {
   
   // Wait for the transmission complete flag to be set
   while(!(SPSR & _BV(SPIF)));
-  logger_msg_p("spi", log_level_INFO, PSTR("Wrote 0x%x"),data);
+  logger_msg_p("spi", log_level_DEBUG, PSTR("Wrote 0x%x"),data);
 
   // Return received data
   return(SPDR);

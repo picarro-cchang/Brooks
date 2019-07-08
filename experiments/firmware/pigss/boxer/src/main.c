@@ -188,8 +188,16 @@ int main() {
   // Set state to standby
   set_system_state(system_state_STANDBY);
   
-  // Schedule some tasks
-  // OS_TaskCreate(&test_task, 500, BLOCKED);
+  //********************* Schedule some tasks **********************//
+
+  // Task 0
+  OS_TaskCreate(&test_task, 500, BLOCKED);
+
+  // Offset task -- this gets enabled by another task
+  //
+  // Task 1
+  OS_TaskCreate(&offset_task, 50, SUSPENDED);
+  
   // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
 
   // The main loop

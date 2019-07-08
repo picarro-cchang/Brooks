@@ -77,7 +77,7 @@ void OS_TaskExecution(void);
 OS_state OS_GetTaskSate(uint8_t task_number);
 uint16_t OS_GetTaskBurstTime(uint8_t task_number);
 uint16_t OS_GetTaskCntTime(uint8_t task_number);
-void OS_SetTaskSate(uint8_t task_number, OS_state new_state);
+void OS_SetTaskState(uint8_t task_number, OS_state new_state);
 void OS_SetTaskBurstTime(uint8_t task_number, uint16_t new_time_burst);
 void OS_SetTaskCntTime(uint8_t task_number, uint16_t new_time_cnt);
 
