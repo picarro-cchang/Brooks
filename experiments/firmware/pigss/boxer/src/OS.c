@@ -83,11 +83,15 @@ void OS_TaskTimer(void)
       if (SUSPENDED != task_array[i].state)
         {
 	  /* Put it into READY state. */
-	  if (task_array[i].time_burst <= task_array[i].time_cnt)
-            {
-	      task_array[i].time_cnt = 0;
-	      task_array[i].state	= READY;	      
-            }
+	  if (task_array[i].time_burst <= task_array[i].time_cnt) {
+	    // The task's timer is larger than the scheduled interval.
+	    // Zero the task's timer and queue it for execution.
+	    //
+	    // Zero the timer to the metronome period because the
+	    // timer is incremented after the time comparison.
+	    task_array[i].time_cnt = METRONOME_PERIOD_MS;
+	    task_array[i].state	= READY;	      
+	  }
 	  /* Or keep counting. */
 	  else
             {
@@ -105,14 +109,15 @@ void OS_TaskTimer(void)
  */
 void OS_TaskExecution(void)
 {
-    for (uint8_t i = 0u; i < task_number; i++)
+  for (uint8_t i = 0u; i < task_number; i++)
     {
-        /* If it is ready, then call it.*/
-        if (READY == task_array[i].state)
-        {
-            task_array[i].function();
-            task_array[i].state = BLOCKED;
-        }
+      /* If it is ready, then call it.*/
+      if (READY == task_array[i].state) {
+	// Set the state to BLOCKED to prevent the function from
+	// immediately being called again.
+	task_array[i].state = BLOCKED;
+	task_array[i].function();
+      }
     }
 }
 
