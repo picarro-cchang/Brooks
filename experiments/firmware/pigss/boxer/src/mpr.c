@@ -57,11 +57,12 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
 int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
   // Make a union to read data bytes one at a time
   union {
-    uint8_t bytes[3];
+    uint8_t bytes[4];
     uint32_t word;
   } data_union;
 
   uint8_t status = 0;
+  data_union.word = 0;
 
   // Pull cs low
   (*cs_ptr)(0);
@@ -74,10 +75,10 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
       data_union.bytes[bytenum] = 0;
     } else {
       // The lower 3 bytes will be sensor data
-      data_union.bytes[bytenum] = spi_write(0x00);
+      data_union.bytes[bytenum] = spi_write(0);
     }
-    logger_msg_p("mpr", log_level_DEBUG, PSTR("Read 0x%x"),data_union.bytes[bytenum]);
   }
+  logger_msg_p("mpr", log_level_INFO, PSTR("Pressure code 0x%lx"),data_union.word);
   *data_ptr = data_union.word;
   
   // Return cs high
