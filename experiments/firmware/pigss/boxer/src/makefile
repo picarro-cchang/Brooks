@@ -13,7 +13,7 @@ REVCODE = 1.0.5
 #   info -- Potentially interested stuff
 #   warning -- Maybe bad stuff
 #   error -- You want to know about this
-LOG_LEVEL = error
+LOG_LEVEL = debug
 
 # MCU name
 #
@@ -104,6 +104,9 @@ SRC += tca954xa.c
 
 # Honeywell MPR pressure sensor
 SRC += mpr.c
+
+# Fujitsu FRAM
+SRC += mb85rc256v.c
 
 # AVR Watchdog
 SRC += watchdog.c

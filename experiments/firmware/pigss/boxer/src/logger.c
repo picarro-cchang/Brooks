@@ -103,6 +103,10 @@ logger_system_t system_array[] ={
     {"ltc2607",
      17
     },
+    // The mb85rc256v FRAM
+    {"mb85rc256v",
+     18
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

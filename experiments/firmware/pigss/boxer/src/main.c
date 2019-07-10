@@ -64,6 +64,9 @@
 // I2C switch family.
 #include "tca954xa.h"
 
+// Provides functions for working with FRAM
+#include "mb85rc256v.h"
+
 // Functions for working with the LTC2601 16-bit voltage DAC
 #include "ltc2601.h"
 
@@ -149,6 +152,9 @@ int main() {
   // Enable logging the TCA954xA I2C switch system
   logger_setsystem( "tca954xa" );
 
+  // Enable logging the FRAM system
+  logger_setsystem( "mb85rc256v" );
+
   logger_setsystem( "eeprom" ); // Enable eeprom module logging
   logger_setsystem( "cal" ); // Enable calibration module logging
 
@@ -204,6 +210,9 @@ int main() {
   OS_TaskCreate(&offset_task, 500, SUSPENDED);
   
   // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
+
+  logger_msg_p("main", log_level_DEBUG, PSTR("Read %u from address %u"),
+	       retval, 0x00);
 
   // The main loop
   for(;;) {
