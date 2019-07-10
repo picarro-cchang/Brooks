@@ -10,6 +10,8 @@
 //   register_address -- The internal register address
 //   data -- Data to store
 //
+// Addresses 0x0000 to 0x7fff are available
+//
 // Example:
 //   mb85rc256v_write(0x50, 0x00, 0xbe);
 //   ...writes 0xbe to register address 0 of I2C slave 0x50
