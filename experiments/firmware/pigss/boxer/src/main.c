@@ -67,6 +67,9 @@
 // Functions for working with the LTC2601 16-bit voltage DAC
 #include "ltc2601.h"
 
+// Functions for working with the LTC2607 16-bit I2C DAC
+#include "ltc2607.h"
+
 /* led.h
 
    Provides functions for turning the LED on and off.
@@ -152,6 +155,8 @@ int main() {
   logger_setsystem( "tca9539" );
   logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
+
+  logger_setsystem( "ltc2607" );
 
   logger_setsystem( "lm75" );
   logger_setsystem( "main" );

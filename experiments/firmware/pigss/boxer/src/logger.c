@@ -98,7 +98,11 @@ logger_system_t system_array[] ={
     // The main loop
     {"main",
      16
-    },    
+    },
+    // The ltc2607 DAC
+    {"ltc2607",
+     17
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };
@@ -108,7 +112,7 @@ logger_system_t system_array[] ={
 
 void logger_init() {
   // Log all systems by default
-  logger_config_ptr -> enable = 0xffffffff;
+  logger_config_ptr -> enable = 0xfffffffful;
   // Set log level from makefile
   if (strcmp( LOG_LEVEL, "isr" ) == 0) {
     logger_config_ptr -> loglevel = log_level_ISR;

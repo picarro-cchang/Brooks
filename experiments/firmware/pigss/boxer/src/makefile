@@ -87,6 +87,9 @@ SRC += cs.c
 # LTC2601 DAC
 SRC += ltc2601.c
 
+# LTC2607 DAC
+SRC += ltc2607.c
+
 # Bargraph click board
 SRC += bargraph.c
 
