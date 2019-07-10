@@ -279,6 +279,8 @@ class AlicatDriver(object):
 
     def register_rpc_functions(self):
         self.rpc_server.register_function(self.send)
+        self.rpc_server.register_function(self.connect)
+        self.rpc_server.register_function(self.close)
         self.rpc_server.register_function(self.get_data)
         self.rpc_server.register_function(self.get_data_dict)
         self.rpc_server.register_function(self.get_id)
