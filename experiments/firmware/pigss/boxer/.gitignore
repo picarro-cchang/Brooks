@@ -1,0 +1,20 @@
+# Ignore emacs temporary files
+*~
+
+# Ignore dependency directory
+src/.dep
+
+# Ignore hex, elf and map files
+src/*.hex
+src/*.elf
+src/*.map
+src/*.eep
+
+# Ignore object files
+src/obj
+
+# Ignore hex outputs
+bin/*.hex
+
+# Ignore log files from the tests
+tests/log
