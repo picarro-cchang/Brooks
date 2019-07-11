@@ -812,6 +812,16 @@ class DasConfigure(SharedTypes.Singleton):
                               ["I2C_AMBIENT_PRESSURE_ADC",
                                "AMBIENT_PRESSURE_ADC_REGISTER"]))
 
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_PRESSURE_ADC",
+                              ["I2C_CAVITY2_PRESSURE_ADC",
+                               "CAVITY2_PRESSURE_ADC_REGISTER"]))
+
+                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                    Operation("ACTION_READ_PRESSURE_ADC",
+                              ["I2C_AMBIENT2_PRESSURE_ADC",
+                               "AMBIENT2_PRESSURE_ADC_REGISTER"]))
+
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_SET_INLET_VALVE",
                               ["VALVE_CNTRL_INLET_VALVE_REGISTER", "VALVE_CNTRL_INLET_VALVE_DITHER_REGISTER"]))
@@ -837,6 +847,20 @@ class DasConfigure(SharedTypes.Singleton):
                            "CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",
                            "CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",
                            "AMBIENT_PRESSURE_REGISTER"]))
+
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_ADC_TO_PRESSURE",
+                          ["CAVITY2_PRESSURE_ADC_REGISTER",
+                           "CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER",
+                           "CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER",
+                           "CAVITY2_PRESSURE_REGISTER"]))
+
+            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                Operation("ACTION_ADC_TO_PRESSURE",
+                          ["AMBIENT2_PRESSURE_ADC_REGISTER",
+                           "CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER",
+                           "CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER",
+                           "AMBIENT2_PRESSURE_REGISTER"]))
 
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
