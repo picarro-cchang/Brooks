@@ -1,5 +1,6 @@
 import serial
 import time
+import argparse
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.timeutils import get_local_timestamp
 
@@ -15,7 +16,8 @@ class AlicatDriver(object):
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
-    def __init__(self, mfc_id, port, baudrate, carriage_return):
+    def __init__(self, port, carriage_return='\r',
+                 mfc_id='A', baudrate=19200):
         self.serial = None
         self.terminate = False
         self.data_dict = None
@@ -301,8 +303,38 @@ class AlicatDriver(object):
         self.rpc_server.register_function(self.set_set_point)
 
 
+def get_cli_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--mfc_id', help='Alicat MFC ID')
+    parser.add_argument('-p', '--mfc_port', help='Alicat MFC Port')
+    parser.add_argument('-b', '--baudrate', help='Alicat MFC baudrate')
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    cli_args = get_cli_args()
+    if cli_args.mfc_id:
+        id = cli_args.mfc_id.upper()
+        if __debug__:
+            print(f'Alicat MFC ID: {id}')
+    if cli_args.mfc_port:
+        port = cli_args.mfc_port
+        if __debug__:
+            print(f'Alicat MFC Port: {port}')
+    if cli_args.baudrate:
+        baudrate = cli_args.baudrate
+        if __debug__:
+            print(f'Alicat MFC baudrate: {baudrate}')
+
+    mfc_driver = AlicatDriver(mfc_id=id, port=port, baudrate=baudrate)
+    if __debug__:
+        print('AlicatDriver stopped.')
+
+
 if __name__ == "__main__":
-    obj = AlicatDriver(mfc_id='A', port='/dev/ttyUSB0', baudrate=19200, carriage_return='\r')
+    main()
+    # obj = AlicatDriver(mfc_id='A', port='/dev/ttyUSB0', baudrate=19200, carriage_return='\r')
     """
     sp = 5
     print('Setting setpoint to: {}'.format(sp))
