@@ -1,5 +1,6 @@
 import serial
 import time
+import argparse
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.timeutils import get_local_timestamp
 
@@ -361,9 +362,35 @@ class PigletDriver(object):
         self.rpc_server.register_function(self.get_timestamp)
 
 
+def get_cli_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--piglet_port', help='Piglet port')
+    parser.add_argument('-b', '--baudrate', help='Piglet baudrate')
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    cli_args = get_cli_args()
+    # Get the Piglet Port from the CLI
+    if cli_args.piglet_port:
+        port = cli_args.piglet_port
+    else:
+        port = '/dev/ttyACM0'
+    if __debug__:
+        print(f'Piglet Port: {port}')
+    # Get the Piglet baudrate from the CLI
+    if cli_args.baudrate:
+        baudrate = cli_args.baudrate
+    else:
+        baudrate = 38400
+    if __debug__:
+        print(f'Piglet baudrate: {baudrate}')
+    # Instantiate the object and serve the RPC Port forever
+    piglet_driver = PigletDriver(port=port, baudrate=baudrate)
+    if __debug__:
+        print('PigletDriver stopped.')
+
+
 if __name__ == '__main__':
-    obj = PigletDriver(port='/dev/ttyACM0')
-    #obj.rpc_server.serve_forever()
-    # print(obj.send('*rst'))
-    # print(obj.send('*idn?'))
-    obj.close()
+    main()
