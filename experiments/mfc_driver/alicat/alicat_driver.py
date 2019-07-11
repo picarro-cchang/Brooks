@@ -44,6 +44,8 @@ class AlicatDriver(object):
         try:
             self.serial = SerialInterface()
             self.serial.config(port=self.port, baudrate=self.baudrate)
+            if __debug__:
+                print(f'\nConnecting to Alicat on {self.port}\n')
         except serial.SerialException:
             raise
 
@@ -67,7 +69,11 @@ class AlicatDriver(object):
         response = self.serial.read()
         if response == '?':
             # Alicat doesn't recognize the command
+            if __debug__:
+                print(f'Command not recognized: {command}')
             response = None
+        if __debug__:
+            print(f'Command sent: {command}\nResponse received: {response}')
         return response
 
     def close(self):
