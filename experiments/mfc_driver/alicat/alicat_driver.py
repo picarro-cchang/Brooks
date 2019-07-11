@@ -73,7 +73,7 @@ class AlicatDriver(object):
                 print(f'Command not recognized: {command}')
             response = None
         if __debug__:
-            print(f'Command sent: {command}\nResponse received: {response}')
+            print(f'Command sent: {command}\nResponse received: {response}\n')
         return response
 
     def close(self):
