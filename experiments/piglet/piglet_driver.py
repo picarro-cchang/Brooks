@@ -387,7 +387,7 @@ def main():
     if __debug__:
         print(f'Piglet baudrate: {baudrate}')
     # Instantiate the object and serve the RPC Port forever
-    piglet_driver = PigletDriver(port=port, baudrate=baudrate)
+    PigletDriver(port=port, baudrate=baudrate)
     if __debug__:
         print('PigletDriver stopped.')
 

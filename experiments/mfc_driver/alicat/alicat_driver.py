@@ -336,7 +336,7 @@ def main():
     if __debug__:
         print(f'Alicat MFC baudrate: {baudrate}')
     # Instantiate the object and serve the RPC Port forever
-    mfc_driver = AlicatDriver(mfc_id=id, port=port, baudrate=baudrate)
+    AlicatDriver(mfc_id=id, port=port, baudrate=baudrate)
     if __debug__:
         print('AlicatDriver stopped.')
 
