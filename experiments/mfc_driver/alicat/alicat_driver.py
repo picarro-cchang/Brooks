@@ -314,19 +314,28 @@ def get_cli_args():
 
 def main():
     cli_args = get_cli_args()
+    # Get the MFC ID from the CLI
     if cli_args.mfc_id:
         id = cli_args.mfc_id.upper()
-        if __debug__:
-            print(f'Alicat MFC ID: {id}')
+    else:
+        id = 'A'
+    if __debug__:
+        print(f'Alicat MFC ID: {id}')
+    # Get the MFC Port from the CLI
     if cli_args.mfc_port:
         port = cli_args.mfc_port
-        if __debug__:
-            print(f'Alicat MFC Port: {port}')
+    else:
+        port = '/dev/ttyUSB0'
+    if __debug__:
+        print(f'Alicat MFC Port: {port}')
+    # Get the MFC baudrate from the CLI
     if cli_args.baudrate:
         baudrate = cli_args.baudrate
-        if __debug__:
-            print(f'Alicat MFC baudrate: {baudrate}')
-
+    else:
+        baudrate = 19200
+    if __debug__:
+        print(f'Alicat MFC baudrate: {baudrate}')
+    # Instantiate the object and serve the RPC Port forever
     mfc_driver = AlicatDriver(mfc_id=id, port=port, baudrate=baudrate)
     if __debug__:
         print('AlicatDriver stopped.')
@@ -334,21 +343,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # obj = AlicatDriver(mfc_id='A', port='/dev/ttyUSB0', baudrate=19200, carriage_return='\r')
-    """
-    sp = 5
-    print('Setting setpoint to: {}'.format(sp))
-    obj.set_set_point(sp)
-    count = 0
-    while True:
-        obj.get_data_dict()
-        print('Time: {}'.format(get_local_timestamp()))
-        print('Mass Flow Setpoint: {}'.format(obj.get_set_point()))
-        print('Mass Flow: {}'.format(obj.get_mass_flow()))
-        print('Delta Flow: {}'.format(obj.get_flow_delta()))
-        print('Gas ID: {}'.format(obj.get_gas_id()))
-        print('Pressure: {}'.format(obj.get_pressure()))
-        print('Temperature: {}'.format(obj.get_temperature()))
-        print('Count: {}\n'.format(count))
-        count += 1
-    """
