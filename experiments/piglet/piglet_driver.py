@@ -69,7 +69,7 @@ class PigletDriver(object):
 
         In the event of the Piglet being busy, we will sleep for 10 ms and attempt to
         read the response 10 times, for a total of 100 ms. If successful, we will return
-        the response. If not successfull, we will return -2
+        the response. If not successful, we will return -2
 
         :param command:
         :return:
@@ -92,6 +92,8 @@ class PigletDriver(object):
                 response = self.serial.read()
                 if '-2' not in response:
                     break
+        if __debug__:
+            print(f'Command sent: {command}\nResponse received: {response}')
         return response.replace('\n', '')
 
     def close(self):
