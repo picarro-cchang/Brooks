@@ -669,6 +669,9 @@ class HotBoxPanel(HotBoxPanelGui):
         self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature4Wfm,
             colour='magenta',width=2)
         
+        self.cavity2TemperatureWfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.cavity2TemperatureWfm,
+            colour='red',width=2)
         self.cavity2Temperature1Wfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature1Wfm,
             colour='yellow',width=2)
@@ -725,6 +728,10 @@ class HotBoxPanel(HotBoxPanelGui):
         if self.cavityTemperatureCheckbox_4.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.cavityTemperature4Wfm,
                 colour='blue',width=2)
+
+        if self.cavity2TemperatureCheckbox.IsChecked():
+            self.temperatureGraph.AddSeriesAsLine(self.cavity2TemperatureWfm,
+                colour='red',width=2)
 
         if self.cavity2TemperatureCheckbox_1.IsChecked():
             self.temperatureGraph.AddSeriesAsLine(self.cavity2Temperature1Wfm,

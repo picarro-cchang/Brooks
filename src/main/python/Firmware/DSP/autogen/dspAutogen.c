@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[570];
+RegTypes regTypes[571];
 
 /* I2C devices */
 I2C_device i2c_devices[40] = {
@@ -1678,6 +1678,7 @@ void initRegisters()
     regTypes[ACCELEROMETER_X_REGISTER] = float_type;
     regTypes[ACCELEROMETER_Y_REGISTER] = float_type;
     regTypes[ACCELEROMETER_Z_REGISTER] = float_type;
+    regTypes[CAVITY2_TEMPERATURE_REGISTER] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

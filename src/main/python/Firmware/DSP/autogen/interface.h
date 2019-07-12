@@ -509,7 +509,8 @@ typedef enum {
     STREAM_Cavity2Temp3 = 54, // 
     STREAM_Cavity2Temp4 = 55, // 
     STREAM_FilterHeaterTemp = 56, // 
-    STREAM_FilterHeater = 57 // 
+    STREAM_FilterHeater = 57, // 
+    STREAM_Cavity2Temp = 58 // 
 } STREAM_MemberType;
 
 typedef enum {
@@ -761,7 +762,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (570)
+#define INTERFACE_NUMBER_OF_REGISTERS (571)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1333,6 +1334,7 @@ typedef enum {
 #define ACCELEROMETER_X_REGISTER (567)
 #define ACCELEROMETER_Y_REGISTER (568)
 #define ACCELEROMETER_Z_REGISTER (569)
+#define CAVITY2_TEMPERATURE_REGISTER (570)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0
@@ -1431,9 +1433,9 @@ typedef enum {
 #define KERNEL_FAN_FAN2_B (1) // State of fan2 bit position
 #define KERNEL_FAN_FAN2_W (1) // State of fan2 bit width
 
-#define KERNEL_SEL_DETECTOR_MODE (14) // 
-#define KERNEL_SEL_DETECTOR_MODE_MODE_B (0) //  bit position
-#define KERNEL_SEL_DETECTOR_MODE_MODE_W (4) //  bit width
+#define KERNEL_SEL_DETECTOR_MODE (14) // Select Detector Mode
+#define KERNEL_SEL_DETECTOR_MODE_MODE_B (0) // Select Detector bit position
+#define KERNEL_SEL_DETECTOR_MODE_MODE_W (4) // Select Detector bit width
 
 
 /* Block PWM Pulse width modulator */

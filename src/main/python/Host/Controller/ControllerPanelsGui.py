@@ -181,6 +181,7 @@ class HotBoxPanelGui(wx.Panel):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.clearButton = wx.Button(self.panel_1, wx.ID_CLEAR, "")
         self.cavityTemperatureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity Temperature")
+        self.cavity2TemperatureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity2 Temperature")
         self.heatsinkTemperatureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Heatsink temperature")
         self.dasTemperatureCheckbox = wx.CheckBox(self.panel_1, wx.ID_ANY, "DAS temperature")
         self.cavityTemperatureCheckbox_1 = wx.CheckBox(self.panel_1, wx.ID_ANY, "Cavity temperature 1")
@@ -197,6 +198,7 @@ class HotBoxPanelGui(wx.Panel):
 
         self.Bind(wx.EVT_BUTTON, self.onClear, self.clearButton)
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavityTemperatureCheckbox)
+        self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavity2TemperatureCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.heatsinkTemperatureCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.dasTemperatureCheckbox)
         self.Bind(wx.EVT_CHECKBOX, self.onWaveformSelectChanged, self.cavityTemperatureCheckbox_1)
@@ -212,6 +214,7 @@ class HotBoxPanelGui(wx.Panel):
     def __set_properties(self):
         # begin wxGlade: HotBoxPanelGui.__set_properties
         self.cavityTemperatureCheckbox.SetValue(1)
+        self.cavity2TemperatureCheckbox.SetValue(1)
         self.heatsinkTemperatureCheckbox.SetValue(1)
         self.dasTemperatureCheckbox.SetValue(1)
         self.cavityTemperatureCheckbox_1.SetValue(1)
@@ -236,6 +239,7 @@ class HotBoxPanelGui(wx.Panel):
         sizer_1.Add(self.heaterGraph, 1, wx.EXPAND, 0)
         sizer_2.Add(self.clearButton, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 15)
         sizer_3.Add(self.cavityTemperatureCheckbox, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
+        sizer_3.Add(self.cavity2TemperatureCheckbox, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_3.Add(self.heatsinkTemperatureCheckbox, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_3.Add(self.dasTemperatureCheckbox, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 5)
         sizer_2.Add(sizer_3, 1, wx.EXPAND, 0)

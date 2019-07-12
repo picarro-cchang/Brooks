@@ -460,6 +460,7 @@
             <enum_value ident="STREAM_Cavity2Temp4" />
             <enum_value ident="STREAM_FilterHeaterTemp" />
             <enum_value ident="STREAM_FilterHeater" />
+            <enum_value ident="STREAM_Cavity2Temp" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -3818,6 +3819,9 @@
         <register ident="ACCELEROMETER_Z_REGISTER" type="float" minver="1.0" access="rw">
             <description>Accelerometer Z register</description>
         </register>
+        <register ident="CAVITY2_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature</description>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -4071,9 +4075,9 @@
                     <fielddef value="1">Fan2 ON</fielddef>
                 </bitfield>
             </reg>
-            <reg type="mask" ident="SEL_DETECTOR_MODE" description="" access="rw">
+            <reg type="mask" ident="SEL_DETECTOR_MODE" description="Select Detector Mode" access="rw">
                 <save />
-                <bitfield ident="MODE" description="" lsb="0" width="4">
+                <bitfield ident="MODE" description="Select Detector" lsb="0" width="4">
                     <fielddef value="0">All lasers on first detector</fielddef>
                     <fielddef value="14">Laser  1 on first detector</fielddef>
                     <fielddef value="12">Lasers 1, 2 on first detector</fielddef>

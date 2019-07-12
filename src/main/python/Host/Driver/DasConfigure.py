@@ -635,15 +635,22 @@ class DasConfigure(SharedTypes.Singleton):
                                 "CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER",
                                 "CAVITY2_TEMPERATURE4_REGISTER"]))
                     # We average the individual temperatures to give the reported
-                    # cavity temperature
-                    # self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
-                    #     Operation("ACTION_AVERAGE_FLOAT_REGISTERS",
-                    #             ["CAVITY_TEMPERATURE1_REGISTER",
-                    #             "CAVITY_TEMPERATURE2_REGISTER",
-                    #             "CAVITY_TEMPERATURE3_REGISTER",
-                    #             "CAVITY_TEMPERATURE4_REGISTER",
-                    #             "CAVITY_TEMPERATURE_REGISTER"]))
+                    # cavity2 temperature
+                    self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
+                        Operation("ACTION_AVERAGE_FLOAT_REGISTERS",
+                                ["CAVITY2_TEMPERATURE1_REGISTER",
+                                 "CAVITY2_TEMPERATURE2_REGISTER",
+                                 "CAVITY2_TEMPERATURE3_REGISTER",
+                                 "CAVITY2_TEMPERATURE4_REGISTER",
+                                 "CAVITY2_TEMPERATURE_REGISTER"]))
+
                     # Stream the individual cavity temperature readings
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Temp", "CAVITY2_TEMPERATURE_REGISTER"]))
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE_REGISTER"]))
                     self.opGroups["SLOW"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                                 ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE1_REGISTER"]))
