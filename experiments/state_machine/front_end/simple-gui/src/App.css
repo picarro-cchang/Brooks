@@ -46,6 +46,16 @@
 
 .btn-outline-success:hover {
   color: #080;
-  background-color: #FFFFFF;
+  background-color: #DFD;
   /* border-color: #080; /*set the color you want here*/
+}
+
+.disabled.my-disabled {
+  color: #333;
+  background-color: #444;
+}
+
+.disabled.command-disabled {
+  color: #EEE;
+  background-color: #FFF;
 }

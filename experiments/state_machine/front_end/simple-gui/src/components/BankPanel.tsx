@@ -7,6 +7,7 @@ interface BankPanelOptions {
         clean?: {[bankNum:string]: string}
         channel?: {[bankNum:string]: {[channelNum:string]: string}}
     }
+    ws_sender: (o: object)=>void;
 }
 
 class BankPanel extends PureComponent<BankPanelOptions> {
@@ -16,10 +17,10 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         CLEAN:{color:"#fff", backgroundColor:"#008"}, 
         REFERENCE:{color:"#440", backgroundColor:"#CC0"}};
     cleanClassNameOpt = {
-        DISABLED:"btn-light disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-primary"
+        DISABLED:"btn-light disabled my-disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-primary"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-light disabled", READY: "btn-light", ACTIVE:"btn-success", CLEAN:"btn-primary", REFERENCE:"btn-light"
+        DISABLED:"btn-light disabled my-disabled", READY: "btn-light", ACTIVE:"btn-success", CLEAN:"btn-primary", REFERENCE:"btn-light"
     };
 
     render() {
@@ -30,6 +31,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         let getChannelDisabled = (_:number) => true;
 
         if ("bank" in (this.props.uistatus as any)) {
+            console.log("In bankPanel.render", this.props.uistatus);
             const bankStatus: string = (this.props.uistatus.bank as any)[this.props.bank];
             const channelStatus: {[key:number]: string} = (this.props.uistatus.channel as any)[this.props.bank];
             const cleanStatus: string = (this.props.uistatus.clean as any)[this.props.bank];
@@ -43,7 +45,9 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         for (let i=1; i<=8; i++) {
             channelButtons.push(
                 <button
+                    onClick={e => this.props.ws_sender({element: "channel", bank: this.props.bank, channel: i})}
                     disabled={getChannelDisabled(i)}
+                    key={i}
                     className={"btn btn-lg btn-bank " + getChannelClassNames(i)}>
                     Ch {i}
                 </button>
@@ -59,7 +63,9 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                         <div className="grid-bank">
                             {channelButtons}
                         </div>
-                        <button style={{width:"100%", border:"3px solid #CCC"}}
+                        <button 
+                            style={{width:"100%", border:"3px solid #CCC"}}
+                            onClick={e => this.props.ws_sender({element: "clean", bank: this.props.bank})}
                             disabled={cleanDisabled}
                             className={"btn btn-lg " + cleanClassNames}>
                             Clean
