@@ -49,6 +49,9 @@
 // Provides commands to work with channels
 #include "channel.h"
 
+// Provides commands to work with Topaz PCBs
+#include "topaz.h"
+
 
 /* Define the remote commands recognized by the system.
  */
@@ -123,6 +126,16 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_opstate_q},
+  // tza.sn -- Set the serial number for the Topaz A PCB
+  {"tza.sn",
+   "uint16",
+   5,
+   &cmd_topaz_a_set_serial_number},
+  // tza.sn? -- Query the serial number for the Topaz A PCB
+  {"tza.sn?",
+   "none",
+   0,
+   &cmd_topaz_a_get_serial_number},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

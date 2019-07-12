@@ -73,6 +73,9 @@
 // Functions for working with the LTC2607 16-bit I2C DAC
 #include "ltc2607.h"
 
+// Functions for working with Topaz boards
+#include "topaz.h"
+
 /* led.h
 
    Provides functions for turning the LED on and off.
@@ -202,17 +205,18 @@ int main() {
   //********************* Schedule some tasks **********************//
 
   // Task 0
-  OS_TaskCreate(&test_task, 1000, BLOCKED);
+  // OS_TaskCreate(&test_task, 1000, BLOCKED);
 
   // Offset task -- this gets enabled by another task
   //
   // Task 1
-  OS_TaskCreate(&offset_task, 500, SUSPENDED);
+  // OS_TaskCreate(&offset_task, 500, SUSPENDED);
   
   // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
-
-  logger_msg_p("main", log_level_DEBUG, PSTR("Read %u from address %u"),
-	       retval, 0x00);
+  topaz_set_serial_number('a', 12);
+  uint16_t retval = topaz_get_serial_number('a');
+  logger_msg_p("main", log_level_DEBUG, PSTR("Topaz sernum is %u"),
+	       retval);
 
   // The main loop
   for(;;) {

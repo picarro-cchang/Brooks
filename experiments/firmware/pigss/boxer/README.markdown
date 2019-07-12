@@ -211,7 +211,25 @@ Query the system's operational state.
 
 `standby`
 
+#### TZA.SN n ####
+
+Set the serial number for manifold (Topaz) board A.
+
+##### Parameter (n) #####
+
+Integers 0-65535
+
+##### Typical Return #####
+
+`0`
+
 ### Channel commands ###
+
+Each manifold box (piglet) has 8 channels.  Internally, there are 4 channels on two manifold (topaz) boards.  Channels are arranged on boards as shown below.
+
+![Topaz channel names][topaz_channel_names]
+
+[topaz_channel_names]: media/topaz_channel_names.png
 
 #### CHANENA n ####
 

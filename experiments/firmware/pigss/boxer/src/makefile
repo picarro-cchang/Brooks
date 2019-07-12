@@ -111,6 +111,9 @@ SRC += mb85rc256v.c
 # AVR Watchdog
 SRC += watchdog.c
 
+# Topaz board
+SRC += topaz.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =
