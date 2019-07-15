@@ -25,6 +25,10 @@ typedef struct system_status_struct {
   uint8_t slotid;
   // System state -- one of an enumerated type
   system_state_value_t state_enum;
+  // Topaz A serial number (0 if board not connected)
+  uint16_t topaz_a_sernum;
+  // Topaz B serial number (0 if board not connected)
+  uint16_t topaz_b_sernum;
 } system_state_t;
 
 // The system state structure variable will have global scope, and
@@ -50,5 +54,11 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr );
 // Initialize the system state structure.  This populates the
 // structure with non-volatile values from eeprom.
 void functions_init( void );
+
+// Set the topaz a serial number in the system state struction
+int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);
+
+// Get the Topaz serial number in the system state struction
+uint16_t system_state_get_topaz_sernum(char board);
 
 #endif // End the include guard

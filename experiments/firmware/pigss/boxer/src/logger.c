@@ -107,6 +107,10 @@ logger_system_t system_array[] ={
     {"mb85rc256v",
      18
     },
+    // The topaz module
+    {"topaz",
+     19
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

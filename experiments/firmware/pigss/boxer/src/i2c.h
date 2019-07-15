@@ -10,7 +10,7 @@
 // µs.  The longest write period is supposed to not exceed ~ 10 ms.
 // Thus, normal operation should not require more than 100 iterations
 // to get the device to respond to a selection.
-#define MAX_I2C_TRIES 200
+#define MAX_I2C_TRIES 10
 
 void i2c_init(void);
 

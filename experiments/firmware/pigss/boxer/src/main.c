@@ -169,6 +169,7 @@ int main() {
 
   logger_setsystem( "lm75" );
   logger_setsystem( "main" );
+  logger_setsystem( "topaz" );
 
   // Start the I2C module
   i2c_init();
@@ -179,6 +180,9 @@ int main() {
   // Start the metronome
   metronome_init();
 
+  // Set up Topaz boards
+  // topaz_init('a');
+
   // Start the channel module
   channel_init();
 
@@ -188,8 +192,6 @@ int main() {
   // Start the TCA954xA I2C switch module
   // tca9548a_init(TCA9548A_I2C_ADDRESS);
 
-  // Start the TCA9539 I2C GPIO module
-  // tca9539_init(TCA9539_I2C_ADDRESS);
 
   command_init( recv_cmd_state_ptr );
 
@@ -213,10 +215,7 @@ int main() {
   // OS_TaskCreate(&offset_task, 500, SUSPENDED);
   
   // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
-  topaz_set_serial_number('a', 12);
-  uint16_t retval = topaz_get_serial_number('a');
-  logger_msg_p("main", log_level_DEBUG, PSTR("Topaz sernum is %u"),
-	       retval);
+
 
   // The main loop
   for(;;) {

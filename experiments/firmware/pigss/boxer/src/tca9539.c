@@ -21,22 +21,6 @@
 
 #include "tca9539.h"
 
-int8_t tca9539_init(uint8_t slave_address) {
-  // Set all pins in register 0 to be inputs
-  tca9539_write(TCA9539_I2C_ADDRESS, 0x06, 1);
-
-  // Set all pins in register 1 to be outputs
-  tca9539_write(TCA9539_I2C_ADDRESS, 0x07, 0);
-
-  // Set the value in register 1
-  tca9539_write(TCA9539_I2C_ADDRESS, 0x03, 255);
-
-  // Read the value in register 0
-  uint8_t retval = tca9539_read(TCA9539_I2C_ADDRESS, 0x00);
-  logger_msg_p("tca9539", log_level_DEBUG, PSTR("Read 0x%x from register 0"),
-	       retval);
-  return 0;
-}
 
 // Saved TWI status register, for error messages only.  We need to
 // save it in a variable, since the datasheet only guarantees the TWSR

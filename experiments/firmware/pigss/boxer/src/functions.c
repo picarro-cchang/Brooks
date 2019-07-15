@@ -31,6 +31,9 @@
 // Provides commands for writing to SPI
 #include "spi.h"
 
+// Provides definitions and functions for using the Topaz manifold boards
+#include "topaz.h"
+
 #include "functions.h"
 
 
@@ -51,8 +54,10 @@ system_state_t *system_state_ptr = &system_state;
 
 
 void functions_init( void ) {
+  uint16_t sernum;
   eeprom_load_sernum(system_state_ptr);
   eeprom_load_slotid(system_state_ptr);
+  sernum = topaz_get_serial_number('a');
 }
 
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
@@ -102,6 +107,26 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
 	       system_state_ptr -> slotid,
 	       LINE_TERMINATION_CHARACTERS);
 }
+
+int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
+  if (board == 'a') {
+    system_state.topaz_a_sernum = sernum;    
+  } else {
+    system_state.topaz_b_sernum = sernum;    
+  }
+  return 0;
+}
+
+uint16_t system_state_get_topaz_sernum(char board ) {
+  if (board == 'a') {
+    return system_state.topaz_a_sernum;    
+  } else {
+    return system_state.topaz_b_sernum;    
+  }
+
+}
+
+
 
 
 

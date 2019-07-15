@@ -13,9 +13,6 @@ typedef struct channel_struct {
   bool enabled;
 } channel_t;
 
-
-  
-
 // Channel configuration structure
 typedef struct channel_config_struct {
   // Each channel has a position in the enable bitfield.  Set the bit
@@ -32,7 +29,7 @@ void channel_init(void);
 
 
 // Update the channel hardware and display
-uint8_t channel_update(void);
+int8_t channel_update(void);
 
 // Drive the active channel display hardware
 uint8_t channel_display(void);
