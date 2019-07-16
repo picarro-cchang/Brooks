@@ -120,13 +120,34 @@ void cmd_chanena( command_arg_t *command_arg_ptr ) {
     command_nack();
     return;
   }
-  // Enable the channel
-  channel_array[channel_index].enabled = true;
-  channel_update();
-
-  // Acknowledge the successful commmand
-  command_ack();
-  return;
+  if (channel <= 4 && topaz_is_connected('a')) {
+    // Enable the channel
+    channel_array[channel_index].enabled = true;
+    channel_update();
+    command_ack();
+    return;
+  }
+  if (channel <= 4 && !topaz_is_connected('a')) {
+    // The 1-4 channel Topaz isn't connected
+    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
+		 'a');
+    command_nack();
+    return;
+  }
+  if (channel <= 8 && topaz_is_connected('b')) {
+    // Enable the channel
+    channel_array[channel_index].enabled = true;
+    channel_update();
+    command_ack();
+    return;
+  }
+  if (channel <= 8 && !topaz_is_connected('a')) {
+    // The 5-8 channel Topaz isn't connected
+    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
+		 'b');
+    command_nack();
+    return;
+  }
 }
 
 void cmd_chanena_q( command_arg_t *command_arg_ptr ) {

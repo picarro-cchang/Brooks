@@ -174,24 +174,20 @@ int main() {
   // Start the I2C module
   i2c_init();
 
-  // Load the serial number and slotid
+  // Load the serial number and slotid.  Check for connected hardware.
   functions_init();
 
   // Start the metronome
   metronome_init();
 
   // Set up Topaz boards
-  // topaz_init('a');
+  topaz_init('a');
 
   // Start the channel module
   channel_init();
 
   // Start the MPR pressure sensor module
   mpr_init( &cs_manifold_a_sr );
-
-  // Start the TCA954xA I2C switch module
-  // tca9548a_init(TCA9548A_I2C_ADDRESS);
-
 
   command_init( recv_cmd_state_ptr );
 
@@ -201,6 +197,7 @@ int main() {
   logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
 
+  //tca9539_write(0x74,0x06,0);
   // Set state to standby
   set_system_state(system_state_STANDBY);
   

@@ -27,21 +27,28 @@
 
 int8_t topaz_init(char board) {
   int8_t retval = 0;
-  retval = topaz_connect(board);
-  // Make P00, P01, P02, P03 GPIO outputs (clear bit positions)
-  tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
-		TCA9539_PORT_0_CONFIG_COMMAND,
-		~(_BV(TOPAZ_SOLENOID_1_SHIFT)) &
-		~(_BV(TOPAZ_SOLENOID_2_SHIFT)) &
-		~(_BV(TOPAZ_SOLENOID_3_SHIFT)) &
-		~(_BV(TOPAZ_SOLENOID_4_SHIFT)) );
-  // Initialize the outputs to zero
-  tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
-		TCA9539_OUTPUT_PORT_0_REG,
-		~(_BV(TOPAZ_SOLENOID_1_SHIFT)) &
-		~(_BV(TOPAZ_SOLENOID_2_SHIFT)) &
-		~(_BV(TOPAZ_SOLENOID_3_SHIFT)) &
-		~(_BV(TOPAZ_SOLENOID_4_SHIFT)) );
+  // Handle Topaz A
+  if (topaz_is_connected('a')) {
+    // Make P00, P01, P02, P03 GPIO outputs (clear bit positions)
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_PORT_0_CONFIG_COMMAND,
+		  ~(_BV(TOPAZ_SOLENOID_1_SHIFT)) &
+		  ~(_BV(TOPAZ_SOLENOID_2_SHIFT)) &
+		  ~(_BV(TOPAZ_SOLENOID_3_SHIFT)) &
+		  ~(_BV(TOPAZ_SOLENOID_4_SHIFT)) );
+    tca9539_write(0x74,0x06,0);
+    // Initialize the outputs to zero
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_0_REG,
+		  ~(_BV(TOPAZ_SOLENOID_1_SHIFT)) &
+		  ~(_BV(TOPAZ_SOLENOID_2_SHIFT)) &
+		  ~(_BV(TOPAZ_SOLENOID_3_SHIFT)) &
+		  ~(_BV(TOPAZ_SOLENOID_4_SHIFT)) );
+  } else {
+    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
+		 'a');
+    return -1;
+  }
   return 0;
 }
 
@@ -107,9 +114,6 @@ uint16_t topaz_get_serial_number(char board) {
     i2c_address = TOPAZ_I2C_MUX_ADDRESS;
   }
 
-  // Configure I2C mux on Topaz.  The only active mux position is 1.
-  // tca9548a_write(i2c_address,1);
-
   // Try to connect to the Topaz board
   retval = topaz_connect(board);
 
@@ -121,7 +125,9 @@ uint16_t topaz_get_serial_number(char board) {
 	       board);
     return 0;
   }
-  
+
+  // We were able to connect just fine.  Get the serial number and set
+  // it in the system state structure.
   uint16_t register_address;
   for (int8_t bytenum = 1; bytenum >= 0; bytenum--) {
     // MSB is byte 1
@@ -129,6 +135,9 @@ uint16_t topaz_get_serial_number(char board) {
     sernum_union.b[bytenum] = mb85rc256v_read(TOPAZ_I2C_NVM_ADDRESS,
 					      register_address);    
   }
+  system_state_set_topaz_sernum(board, sernum_union.w);
+  logger_msg_p("topaz", log_level_INFO, PSTR("Found serial %u for board %c"),
+	       sernum_union.w, board);
   return sernum_union.w;
 }
 

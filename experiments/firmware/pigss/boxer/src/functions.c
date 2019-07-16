@@ -57,6 +57,10 @@ void functions_init( void ) {
   uint16_t sernum;
   eeprom_load_sernum(system_state_ptr);
   eeprom_load_slotid(system_state_ptr);
+
+  // The system status structure needs to know about what's connected.
+  // We can only talk to Topaz boards if they have a serial number, so
+  // try to get that.
   sernum = topaz_get_serial_number('a');
 }
 
