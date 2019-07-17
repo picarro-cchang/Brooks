@@ -1,7 +1,7 @@
 {
   "name": "grafana-image-panel",
   "version": "0.0.1",
-  "description": "Grafana Panel for MFC",
+  "description": "Grafana panel practice",
   "author": "Emma Peatfield",
   "license": "MIT",
   "scripts": {

@@ -1,12 +1,12 @@
 {
   "type": "panel",
-  "name": "MFC Panel",
-  "id": "picarro-mfc-panel",
+  "name": "Multi Panel",
+  "id": "image-panel",
 
   "dataFormats": [],
 
   "info": {
-    "description": "Grafana Panel for MFC",
+    "description": "Grafana panel introduction",
     "author": {
       "name": "Emma Peatfield"
     },
@@ -14,7 +14,7 @@
     "links": [],
     "screenshots": [],
     "version": "0.0.1",
-    "updated": "2019-04-05"
+    "updated": "2019-07-17"
   },
 
   "dependencies": {

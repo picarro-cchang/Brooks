@@ -1,9 +1,9 @@
 import { ReactPanelPlugin } from "@grafana/ui";
-import { ImagePanel } from "./components/ImagePanel";
+import { MFCPanel } from "./components/MFCPanel";
 import { Options, defaults } from "./types";
-import { ImagePanelEditor } from "./components/ImagePanelEditor";
+//import { MFCLayout } from "./components/MFCLayout";
 
-export const reactPanel = new ReactPanelPlugin<Options>(ImagePanel);
+export const reactPanel = new ReactPanelPlugin<Options>(MFCPanel);
 
-reactPanel.setEditor(ImagePanelEditor);
+//reactPanel.setEditor(MFCLayout);
 reactPanel.setDefaults(defaults);

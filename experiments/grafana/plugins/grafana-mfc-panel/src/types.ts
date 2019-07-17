@@ -1,9 +1,13 @@
 export interface Options {
-  imageUrl: string;
-  updateInterval: number;
+  setPoint: number;
+  flowRate: number;
 }
 
 export const defaults: Options = {
-  imageUrl: "",
-  updateInterval: 60 * 5
+  setPoint: 1.5,
+  flowRate: 200
 };
+
+export interface MyProps {
+  options: Options
+}

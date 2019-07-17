@@ -1,65 +1,18 @@
-import React, { PureComponent } from "react";
-import { FormField, PanelOptionsGroup, PanelEditorProps } from "@grafana/ui";
-import { Options } from "../types";
+import React, { PureComponent} from 'react';
+import {MyProps} from "../types";
+import {FormField, FormLabel} from "@grafana/ui";
 
-interface State {
-  imageUrl: string;
-  updateInterval: number;
-}
+export interface Props extends MyProps {}
 
-export class ImagePanelEditor extends PureComponent<
-  PanelEditorProps<Options>,
-  State
-> {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      imageUrl: props.options.imageUrl,
-      updateInterval: props.options.updateInterval
-    };
-  }
-
-  onUpdatePanel = () =>
-    this.props.onChange({
-      ...this.props.options,
-      imageUrl: this.state.imageUrl,
-      updateInterval: this.state.updateInterval
-    });
-
-  onImageUrlChange = ({ target }) => this.setState({ imageUrl: target.value });
-
-  onUpdateIntervalChange = ({ target }) =>
-    this.setState({ updateInterval: target.value });
-
+export class MFCLayout extends PureComponent<Props> {
   render() {
-    const { imageUrl, updateInterval } = this.state;
-
+    const {options} = this.props;
+    const {flowRate, setPoint} = options;
     return (
-      <>
-        <PanelOptionsGroup>
-          <div className="gf-form">
-            <FormField
-              label="Image url"
-              labelWidth={12}
-              inputWidth={25}
-              value={imageUrl}
-              onChange={this.onImageUrlChange}
-              onBlur={this.onUpdatePanel}
-            />
-          </div>
-          <div className="gf-form">
-            <FormField
-              label="Update interval (s)"
-              labelWidth={12}
-              inputWidth={25}
-              value={updateInterval}
-              onChange={this.onUpdateIntervalChange}
-              onBlur={this.onUpdatePanel}
-            />
-          </div>
-        </PanelOptionsGroup>
-      </>
+        <div>
+          <FormField label="Flow Rate: " value={flowRate}/>
+          <FormField label="Set Point: " value={setPoint}/>
+        </div>
     );
   }
 }
