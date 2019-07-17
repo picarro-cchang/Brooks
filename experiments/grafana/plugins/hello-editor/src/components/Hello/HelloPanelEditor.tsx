@@ -6,7 +6,7 @@ import { HelloOptions } from '../../types';
 const labelWidth = 4;
 const statOptions = [
   { value: 'World', label: 'World' },
-  { value: 'Gerald', label: 'Gerald' },
+  { value: 'Emma', label: 'Emma' },
   { value: 'Joel', label: 'Joel' },
   { value: 'Jordan', label: 'Jordan' },
   { value: 'Kevin', label: 'Kevin' }
