@@ -49,7 +49,7 @@
     "object-literal-sort-keys": false,
     "one-line": [true, "check-open-brace", "check-catch", "check-else"],
     "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
-    "prefer-const": true,
+    "prefer-const": false,
     "radix": true,
     "typedef-whitespace": [
       true,
@@ -67,7 +67,8 @@
       "ban-keywords",
       "allow-leading-underscore",
       "allow-trailing-underscore",
-      "allow-pascal-case"
+      "allow-pascal-case",
+      "allow-snake-case"
     ],
     "use-isnan": true,
     "whitespace": [true, "check-branch", "check-decl", "check-type", "check-preblock"]

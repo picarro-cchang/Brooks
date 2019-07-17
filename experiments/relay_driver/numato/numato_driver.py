@@ -80,7 +80,7 @@ class NumatoDriver(object):
 
 
 if __name__ == '__main__':
-    obj = NumatoDriver(port='/dev/ttyACM2')
+    obj = NumatoDriver(port='/dev/ttyACM1')
     """
     obj.send('ver')
     print()
