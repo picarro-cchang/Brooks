@@ -201,7 +201,7 @@ int main() {
 	       REVCODE);
 
   // cs_ch1_dac(0);
-  pressure_dac_set(4, 2.2);
+  pressure_dac_set(4, 0xbbbb);
 
   //tca9539_write(0x74,0x06,0);
   // Set state to standby

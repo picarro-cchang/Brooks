@@ -40,8 +40,7 @@
 
 #include "pressure.h"
 
-int8_t pressure_dac_set(uint8_t channel, float voltage) {
-  uint16_t counts = (uint16_t) ((voltage / PRESSURE_DAC_REFERENCE_VOLTS) * UINT16_MAX);
+int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   switch(channel) {
   case 1 :
     cs_ch1_dac_mux();

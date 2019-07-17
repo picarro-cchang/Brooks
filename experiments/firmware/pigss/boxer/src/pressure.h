@@ -11,8 +11,8 @@
 //
 // Arguments:
 //   channel -- 1-8
-//   voltage -- floating-point voltage
-int8_t pressure_dac_set(uint8_t channel, float voltage);
+//   counts -- counts sent to the DAC
+int8_t pressure_dac_set(uint8_t channel, uint16_t counts);
 
 
 #endif
