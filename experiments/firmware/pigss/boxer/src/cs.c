@@ -105,6 +105,8 @@ void cs_topaz_a_target(uint8_t state) {
   return;  
 }
 
+//******************** Proportional valve DACs *********************//
+
 void cs_ch1_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
@@ -133,7 +135,35 @@ void cs_ch4_dac_mux(void) {
   cs_manifold_a_sr(1); 
 }
 
+//************************ Pressure sensors ************************//
 
+void cs_ch1_mpr_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(1);
+  cs_manifold_a_sr(1);
+}
+
+void cs_ch2_mpr_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(3);
+  cs_manifold_a_sr(1);
+}
+
+void cs_ch3_mpr_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(5);
+  cs_manifold_a_sr(1);
+}
+
+void cs_ch4_mpr_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(7);
+  cs_manifold_a_sr(1);
+}
 
 
 // cs_manifold_a_dac_1

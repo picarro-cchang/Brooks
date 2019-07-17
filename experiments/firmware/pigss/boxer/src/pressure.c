@@ -62,3 +62,46 @@ int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   
   return 0;
 }
+
+int8_t pressure_mpr_trigger(uint8_t channel) {
+  switch(channel) {
+  case 1 :
+    cs_ch1_mpr_mux();
+    mpr_trigger( &cs_topaz_a_target );
+    break;
+  case 2 :
+    cs_ch2_mpr_mux();
+    mpr_trigger( &cs_topaz_a_target );
+    break;
+  case 3 :
+    cs_ch3_mpr_mux();
+    mpr_trigger( &cs_topaz_a_target );
+    break;
+  case 4 :
+    cs_ch4_mpr_mux();
+    mpr_trigger( &cs_topaz_a_target );
+    break; 
+  }
+  
+}
+
+int8_t pressure_mpr_read(uint8_t channel, uint32_t *data_ptr) {
+  switch(channel) {
+  case 1 :
+    cs_ch1_mpr_mux();
+    mpr_read( &cs_topaz_a_target, data_ptr);
+    break;
+  case 2 :
+    cs_ch2_mpr_mux();
+    mpr_read( &cs_topaz_a_target, data_ptr);
+    break;
+  case 3 :
+    cs_ch3_mpr_mux();
+    mpr_read( &cs_topaz_a_target, data_ptr);
+    break;
+  case 4 :
+    cs_ch4_mpr_mux();
+    mpr_read( &cs_topaz_a_target, data_ptr);
+    break;
+  }
+}

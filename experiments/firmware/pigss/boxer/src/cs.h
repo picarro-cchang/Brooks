@@ -14,6 +14,8 @@ void cs_manifold_b_sr(uint8_t);
 //   state -- 1 for CS high, 0 for CS low
 void cs_topaz_a_target(uint8_t state);
 
+//******************** Proportional valve DACs *********************//
+
 // Set the cs mux position to point to the channel 1 proportional
 // valve DAC
 void cs_ch1_dac_mux(void);
@@ -29,5 +31,21 @@ void cs_ch3_dac_mux(void);
 // Set the cs mux position to point to the channel 4 proportional
 // valve DAC
 void cs_ch4_dac_mux(void);
+
+//************************ Pressure sensors ************************//
+
+// Set the cs mux position to point to the channel 1 pressure sensor
+void cs_ch1_mpr_mux(void);
+
+// Set the cs mux position to point to the channel 2 pressure sensor
+void cs_ch2_mpr_mux(void);
+
+// Set the cs mux position to point to the channel 3 pressure sensor
+void cs_ch3_mpr_mux(void);
+
+// Set the cs mux position to point to the channel 4 pressure sensor
+void cs_ch4_mpr_mux(void);
+
+
 
 #endif // End the include guard

@@ -201,7 +201,7 @@ int main() {
 	       REVCODE);
 
   // cs_ch1_dac(0);
-  pressure_dac_set(4, 0xbbbb);
+  // pressure_dac_set(4, 0xbbbb);
 
   //tca9539_write(0x74,0x06,0);
   // Set state to standby
@@ -210,12 +210,12 @@ int main() {
   //********************* Schedule some tasks **********************//
 
   // Task 0
-  // OS_TaskCreate(&test_task, 1000, BLOCKED);
+  OS_TaskCreate(&test_task, 1000, BLOCKED);
 
   // Offset task -- this gets enabled by another task
   //
   // Task 1
-  // OS_TaskCreate(&offset_task, 500, SUSPENDED);
+  OS_TaskCreate(&offset_task, 500, SUSPENDED);
   
   // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
 

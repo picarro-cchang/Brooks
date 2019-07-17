@@ -14,5 +14,11 @@
 //   counts -- counts sent to the DAC
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts);
 
+// Trigger one of the pressure sensors
+int8_t pressure_mpr_trigger(uint8_t channel);
+
+// Read one of the pressure sensors
+int8_t pressure_mpr_read(uint8_t channel, uint32_t *data_ptr);
+
 
 #endif
