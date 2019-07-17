@@ -20,6 +20,8 @@ int8_t watchdog_init(void) {
   // Enable resets after timer expiration
   WDTCSR |= _BV(WDE);
   // Set timeout to 1 second
-  wdt_enable(WDTO_1S);
+  // wdt_enable(WDTO_1S);
+  // Set timeout to 2 seconds
+  wdt_enable(WDTO_2S);
   return 0;
 }

@@ -25,6 +25,9 @@
 #define TOPAZ_SOLENOID_3_SHIFT 2
 #define TOPAZ_SOLENOID_4_SHIFT 3
 
+// CLR (reset) line bitshift.  This is in the second output port.
+#define TOPAZ_CLR_SHIFT 7
+
 //************************ Memory locations ************************//
 // Topaz boards have a 32K x 8 non-volatile memory array.
 
@@ -38,6 +41,9 @@ int8_t topaz_connect(char board);
 
 // Set up GPIO on the Topaz board
 int8_t topaz_init(char board);
+
+// Toggle the reset line on the Topaz board
+int8_t topaz_reset(char board);
 
 // Return the serial number from a Topaz board
 //

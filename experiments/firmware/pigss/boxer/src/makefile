@@ -114,6 +114,9 @@ SRC += watchdog.c
 # Topaz board
 SRC += topaz.c
 
+# Pressure control
+SRC += pressure.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =

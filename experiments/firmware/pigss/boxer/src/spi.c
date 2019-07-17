@@ -73,10 +73,10 @@ uint8_t spi_write( uint8_t data ) {
 
   // Wait for the transmission complete flag to be set
   while(!(SPSR & _BV(SPIF)));
-  logger_msg_p("spi", log_level_DEBUG, PSTR("Wrote 0x%x"),data);
+  // logger_msg_p("spi", log_level_DEBUG, PSTR("Wrote 0x%x"),data);
 
   uint8_t rx_data = SPDR;
-  logger_msg_p("spi", log_level_DEBUG, PSTR("Read 0x%x"),rx_data);
+  // logger_msg_p("spi", log_level_DEBUG, PSTR("Read 0x%x"),rx_data);
   // Return received data
   return(rx_data);
 }

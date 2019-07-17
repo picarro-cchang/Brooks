@@ -85,6 +85,9 @@
 // Provide support for i2c devices
 #include "i2c.h"
 
+// Pressure control module
+#include "pressure.h"
+
 /* Set the measurement array size.
 
    As things are now, this will also be the number of readings to
@@ -196,6 +199,9 @@ int main() {
 
   logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
+
+  // cs_ch1_dac(0);
+  pressure_dac_set(4, 2.2);
 
   //tca9539_write(0x74,0x06,0);
   // Set state to standby

@@ -24,17 +24,35 @@
 void cs_init() {
   // Initialize all cs lines
 
-  //**************** Shift register for manifold A *****************//
+  //*************************** Topaz A ****************************//
 
-  // Make PB0 an output initialized high
+  // Make PB0 an output initialized high for Topaz A shift register
   PORTB |= _BV(PORTB0);
   DDRB |= _BV(DDB0);
 
-  //**************** Shift register for manifold B *****************//
+  // Make PE3 an output initialized low for Topaz A output enable
+  PORTE &= ~(_BV(PORTE3));
+  DDRE |= _BV(PORTE3);
 
-  // Make PL3 an output initialized high
+  // Make PF0 an output initialized high for Topaz A multiplexed CS
+  PORTF |= _BV(PORTF0);
+  DDRF |= _BV(DDF0);
+
+  //*************************** Topaz B ****************************//
+
+  // Make PL3 an output initialized high for Topaz B shift register
   PORTL |= _BV(PORTL3);
   DDRL |= _BV(DDL3);
+
+  // Make PE4 an output initialized low for Topaz B output enable
+  PORTE &= ~(_BV(PORTE4));
+  DDRE |= _BV(PORTE4);
+
+  // Make PF1 an output initialized high for Topaz B multiplexed CS
+  PORTF |= _BV(PORTF1);
+  DDRF |= _BV(DDF1);
+
+
   return;
 }
 
@@ -73,6 +91,50 @@ void cs_manifold_b_sr(uint8_t state) {
   }
   return;
 }
+
+void cs_topaz_a_target(uint8_t state) {
+  if ( state ) {
+    // Set cs high
+    PORTF |= _BV(PORTF0);
+    loop_until_bit_is_set(PORTF, PORTF0);
+  } else {
+    // Set cs low
+    PORTF &= ~(_BV(PORTF0));
+    loop_until_bit_is_clear(PORTF, PORTF0);
+  }
+  return;  
+}
+
+void cs_ch1_dac_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(0);
+  cs_manifold_a_sr(1); 
+}
+
+void cs_ch2_dac_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(2);
+  cs_manifold_a_sr(1); 
+}
+
+void cs_ch3_dac_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(4);
+  cs_manifold_a_sr(1); 
+}
+
+void cs_ch4_dac_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(6);
+  cs_manifold_a_sr(1); 
+}
+
+
+
 
 // cs_manifold_a_dac_1
 // cs_manifold_a_dac_2

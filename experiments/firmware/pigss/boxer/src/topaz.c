@@ -29,7 +29,8 @@ int8_t topaz_init(char board) {
   int8_t retval = 0;
   // Handle Topaz A
   if (topaz_is_connected('a')) {
-    // Make P00, P01, P02, P03 GPIO outputs (clear bit positions)
+    // Make P00, P01, P02, P03 GPIO outputs (clear bit positions) for
+    // valve control.
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_PORT_0_CONFIG_COMMAND,
 		  ~(_BV(TOPAZ_SOLENOID_1_SHIFT)) &
@@ -44,6 +45,15 @@ int8_t topaz_init(char board) {
 		  ~(_BV(TOPAZ_SOLENOID_2_SHIFT)) &
 		  ~(_BV(TOPAZ_SOLENOID_3_SHIFT)) &
 		  ~(_BV(TOPAZ_SOLENOID_4_SHIFT)) );
+    // Make P17 an output for the reset line
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_PORT_1_CONFIG_COMMAND,
+		  ~(_BV(TOPAZ_CLR_SHIFT)) );
+    // Initialize the reset line high
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+    		  TCA9539_OUTPUT_PORT_1_REG,
+    		  _BV(TOPAZ_CLR_SHIFT) );
+    topaz_reset('a');
   } else {
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
 		 'a');
@@ -63,6 +73,22 @@ int8_t topaz_connect(char board) {
   if (retval != 0) {
     // We were unable to connect
     return -1;
+  }
+  return 0;
+}
+
+int8_t topaz_reset(char board) {
+  int8_t retval = 0;
+  if (board == 'a') {
+    // Bring the reset line low
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_1_REG,
+		  0);
+    // Bring the reset line back up
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_1_REG,
+		  _BV(TOPAZ_CLR_SHIFT));
+  } else {
   }
   return 0;
 }
