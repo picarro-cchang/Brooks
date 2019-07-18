@@ -1,5 +1,6 @@
 import serial
 import time
+import argparse
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.timeutils import get_local_timestamp
 
@@ -15,7 +16,8 @@ class AlicatDriver(object):
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
-    def __init__(self, mfc_id, port, baudrate, carriage_return):
+    def __init__(self, port, carriage_return='\r',
+                 mfc_id='A', baudrate=19200):
         self.serial = None
         self.terminate = False
         self.data_dict = None
@@ -44,6 +46,8 @@ class AlicatDriver(object):
         try:
             self.serial = SerialInterface()
             self.serial.config(port=self.port, baudrate=self.baudrate)
+            if __debug__:
+                print(f'\nConnecting to Alicat on {self.port}\n')
         except serial.SerialException:
             raise
 
@@ -67,7 +71,11 @@ class AlicatDriver(object):
         response = self.serial.read()
         if response == '?':
             # Alicat doesn't recognize the command
+            if __debug__:
+                print(f'Command not recognized: {command}')
             response = None
+        if __debug__:
+            print(f'Command sent: {command}\nResponse received: {response}\n')
         return response
 
     def close(self):
@@ -279,6 +287,8 @@ class AlicatDriver(object):
 
     def register_rpc_functions(self):
         self.rpc_server.register_function(self.send)
+        self.rpc_server.register_function(self.connect)
+        self.rpc_server.register_function(self.close)
         self.rpc_server.register_function(self.get_data)
         self.rpc_server.register_function(self.get_data_dict)
         self.rpc_server.register_function(self.get_id)
@@ -293,22 +303,47 @@ class AlicatDriver(object):
         self.rpc_server.register_function(self.set_set_point)
 
 
+def get_cli_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--mfc_id', help='Alicat MFC ID')
+    parser.add_argument('-p', '--mfc_port', help='Alicat MFC Port')
+    parser.add_argument('-b', '--baudrate', help='Alicat MFC baudrate')
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    cli_args = get_cli_args()
+    # Get the MFC ID from the CLI
+    if cli_args.mfc_id:
+        id = cli_args.mfc_id.upper()
+    else:
+        id = 'A'
+    if __debug__:
+        print(f'Alicat MFC ID: {id}')
+    # Get the MFC Port from the CLI
+    if cli_args.mfc_port:
+        port = cli_args.mfc_port
+    else:
+        port = '/dev/ttyUSB0'
+    if __debug__:
+        print(f'Alicat MFC Port: {port}')
+    # Get the MFC baudrate from the CLI
+    if cli_args.baudrate:
+        baudrate = cli_args.baudrate
+    else:
+        baudrate = 19200
+    if __debug__:
+        print(f'Alicat MFC baudrate: {baudrate}')
+    # Instantiate the object and serve the RPC Port forever
+    AlicatDriver(mfc_id=id, port=port, baudrate=baudrate)
+    if __debug__:
+        print('AlicatDriver stopped.')
+
+
 if __name__ == "__main__":
-    obj = AlicatDriver(mfc_id='A', port='/dev/ttyUSB0', baudrate=19200, carriage_return='\r')
-    """
-    sp = 5
-    print('Setting setpoint to: {}'.format(sp))
-    obj.set_set_point(sp)
-    count = 0
-    while True:
-        obj.get_data_dict()
-        print('Time: {}'.format(get_local_timestamp()))
-        print('Mass Flow Setpoint: {}'.format(obj.get_set_point()))
-        print('Mass Flow: {}'.format(obj.get_mass_flow()))
-        print('Delta Flow: {}'.format(obj.get_flow_delta()))
-        print('Gas ID: {}'.format(obj.get_gas_id()))
-        print('Pressure: {}'.format(obj.get_pressure()))
-        print('Temperature: {}'.format(obj.get_temperature()))
-        print('Count: {}\n'.format(count))
-        count += 1
-    """
+    import sys
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(0)
