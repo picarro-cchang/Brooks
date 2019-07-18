@@ -1,6 +1,6 @@
 import React, { PureComponent} from 'react';
 import {MyProps} from "../types";
-import {FormField, FormLabel} from "@grafana/ui";
+import {FormField} from "@grafana/ui";
 
 export interface Props extends MyProps {}
 
@@ -10,8 +10,9 @@ export class MFCLayout extends PureComponent<Props> {
     const {flowRate, setPoint} = options;
     return (
         <div>
-          <FormField label="Flow Rate: " value={flowRate}/>
-          <FormField label="Set Point: " value={setPoint}/>
+            <br/>
+          <FormField label="Flow Rate: " value={flowRate} readOnly />
+          <FormField label="Set Point: " value={setPoint} readOnly />
         </div>
     );
   }
