@@ -113,7 +113,7 @@ class PigletSimulator:
                     self.bypass_values[i] = 0.0
                 self.clean_solenoid_state = 0
                 start = time.time()
-                while time.time() < start + 2.0:
+                while time.time() < start + 1.0:
                     if self.opstate != "ident":
                         break
                     await asyncio.sleep(0.1)
@@ -126,7 +126,7 @@ class PigletSimulator:
                 for i, _ in enumerate(self.bypass_values):
                     self.bypass_values[i] = 0.0
                 start = time.time()
-                while time.time() < start + 3.0:
+                while time.time() < start + 1.0:
                     if self.opstate != "ident_2":
                         break
                     await asyncio.sleep(0.1)

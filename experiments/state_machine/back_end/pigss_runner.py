@@ -64,6 +64,40 @@ class HttpHandlers:
         except KeyError:
             raise web.HTTPBadRequest()
 
+    async def handle_modal_info(self, request):
+        """
+        ---
+        description: fetch UI modal info
+
+        tags:
+            -   diagnostics
+        summary: fetch UI modal info
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation. Returns UI modal info
+        """
+        controller = self.farm.controller
+        return web.json_response(controller.get_modal_info())
+
+    async def handle_plan(self, request):
+        """
+        ---
+        description: fetch plan
+
+        tags:
+            -   diagnostics
+        summary: fetch UI plan
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation. Returns plan info
+        """
+        controller = self.farm.controller
+        return web.json_response(controller.get_plan())
+
     async def handle_uistatus(self, request):
         """
         ---
@@ -91,7 +125,7 @@ class HttpHandlers:
     async def websocket_send_task(self, app):
         while True:
             msg = await self.farm.send_queue.get()
-            print(f"Websocket send: {msg}")
+            # print(f"Websocket send: {msg}")
             for ws in app['websockets']:
                 await ws.send_str(msg)
 
@@ -100,7 +134,7 @@ class HttpHandlers:
         await ws.prepare(request)
         request.app['websockets'].append(ws)
         async for msg in ws:
-            print(f"Websocket receive: {msg}")
+            # print(f"Websocket receive: {msg}")
             await self.farm.receive_queue.put(msg.data)
         request.app['websockets'].remove(ws)
         return ws
@@ -121,6 +155,8 @@ class HttpHandlers:
             web.get('/', self.handle),
             web.post('/event', self.handle_event),
             web.get('/uistatus', self.handle_uistatus),
+            web.get('/plan', self.handle_plan),
+            web.get('/modal_info', self.handle_modal_info),
             web.get('/ws', self.websocket_handler),
         ])
 

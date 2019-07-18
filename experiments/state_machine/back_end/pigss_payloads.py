@@ -8,3 +8,10 @@ class PcSendPayload:
 @attr.s
 class PcResponsePayload:
     message = attr.ib(str)
+
+@attr.s
+class PlanError:
+    error = attr.ib(False)
+    message = attr.ib("OK")
+    row = attr.ib(0)
+    column = attr.ib(0)

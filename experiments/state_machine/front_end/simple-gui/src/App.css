@@ -24,10 +24,10 @@
     padding: 20px;
 }
 
-.panel-command {
+/*.panel-command {
   width: 300px;
   float: left;
-}
+}*/
 
 .grid-bank {
   display: grid;
@@ -40,8 +40,21 @@
   float: left;
 }
 
+.panel-plan {
+  margin-top: -80px;
+  background-color: #ccc;
+  padding: 10px;
+  border: 3px solid #111;
+  border-radius: 10px  
+}
+/*
 .wrapper {
   display: flex;
+}
+*/
+.small-input {
+  font-size: 10pt;
+  height: 18px
 }
 
 .btn-outline-success:hover {

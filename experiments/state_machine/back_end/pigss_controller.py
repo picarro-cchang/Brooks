@@ -5,13 +5,15 @@ import json
 from enum import Enum
 
 from async_hsm import Ahsm, Event, Framework, run_forever, Signal, Spy, TimeEvent, state
-from pigss_payloads import PcResponsePayload, PcSendPayload
+from pigss_payloads import PcResponsePayload, PcSendPayload, PlanError
 
 from piglet_manager import PigletManager
+
 
 class UiStatus(str, Enum):
     DISABLED = "DISABLED"
     READY = "READY"
+    AVAILABLE = "AVAILABLE"
     ACTIVE = "ACTIVE"
     CLEAN = "CLEAN"
     REFERENCE = "REFERENCE"
@@ -36,6 +38,28 @@ class PigssController(Ahsm):
     def __init__(self):
         super().__init__()
         self.status = {}
+        self.plan = {
+            "max_steps": 20,
+            "show": False,
+            "current_step": 0,
+            "looping": False,
+            "focus": {"row": 1, "column": 1},
+            "last_step": 0,
+            "steps": {
+                1: {"bank": 3, "channel": 2, "duration": 4}, 
+                2: {"bank": 1, "channel": 5, "duration": 3},
+                3: {"bank": 2, "channel": 4, "duration": 6}                      
+            }
+        }
+        self.modal_info = {
+            "show": False,
+            "html": "<h2>Example Modal Dialog</h2><p>Test message</p>",
+            "num_buttons": 2,
+            "buttons": {
+                1: {"caption": "OK", "className": "btn btn-success btn-large", "response": "modal_ok"},
+                2: {"caption": "Cancel", "className": "btn btn-danger btn-large", "response": "modal_close"}
+            }
+        }
         self.send_queue = None
         self.receive_queue = None
         self.piglet_manager = None
@@ -52,6 +76,14 @@ class PigssController(Ahsm):
             standby=Signal.BTN_STANDBY,
             identify=Signal.BTN_IDENTIFY,
             reference=Signal.BTN_REFERENCE,
+            modal_close=Signal.MODAL_CLOSE,
+            modal_ok=Signal.MODAL_OK,
+            plan=Signal.BTN_PLAN,
+            plan_delete=Signal.BTN_PLAN_DELETE,
+            plan_insert=Signal.BTN_PLAN_INSERT,
+            plan_loop=Signal.BTN_PLAN_LOOP,
+            plan_panel=Signal.PLAN_PANEL_UPDATE,
+            plan_ok=Signal.BTN_PLAN_OK,
             clean=Signal.BTN_CLEAN,
             run=Signal.BTN_RUN,
             channel=Signal.BTN_CHANNEL,
@@ -59,44 +91,184 @@ class PigssController(Ahsm):
         while True:
             try:
                 msg = json.loads(await self.receive_queue.get())
-                print(f"Received from socket {msg}")
+                # print(f"Received from socket {msg}")
                 Framework.publish(Event(event_by_element[msg["element"]], msg))
             except KeyError:
                 print("Cannot find event associated with socket message - ignoring")
 
+    def get_modal_info(self):
+        return self.modal_info
+
     def get_status(self):
         return self.status
 
+    def get_plan(self):
+        return self.plan
+
+    def modify_value_in_nested_dict(self, target, path, value=None):
+        """Modify a portion of the "target" which is a nested dictionary. The
+        specified "path" is a list of strings which navigate through the levels
+        of the dictionary. For example, if "target" is the dictionary
+        {
+            "identify": READY, 
+            "clean": {1: DISABLED, 2: READY}, 
+            "channel": {
+                1: {1: READY, 2: READY},
+                2: {1: ACTIVE, 2: DISABLED}
+            }
+        }
+        we may specify paths such as ["identify"], ["clean", 2], ["channel", 2, 1]
+        and ["channel", 1] to refer to specific elements of the target that we wish 
+        to replace by "value".
+        
+        If the path does not yet exist in the target, it is created and set to the
+        specified value.
+
+        The function modifies the target in place and returns a "shadow" dictionary
+        containing the portion of the target that was modified. For example with the
+        above target, path=["channel", 1] and value={4: DISABLED, 5:ACTIVE} the returned
+        dictionary is {"channel": {1: {4: DISABLED, 5: ACTIVE}}}.
+        """
+        if path:
+            d = target
+            shadow = {}
+            o = shadow
+            for p in path[:-1]:
+                o[p] = {}
+                if p not in d:
+                    d[p] = {}
+                d = d[p]
+                o = o[p]
+            d[path[-1]] = value
+            o[path[-1]] = value
+            return shadow
+        else:
+            target.clear()
+            target.update(value)
+            return value
+
+
+    def set_modal_info(self, path, value):
+        """Set the portion of self.modal_info specified by `path` to the given `value`.
+        A shadow dictionary containing the change is sent via a websocket to inform the UI 
+        of the change in the plan.
+        """
+        shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
+        # print(f"Setting plan {path} to {value}, shadow is {shadow}")
+        asyncio.ensure_future(self.send_queue.put(json.dumps({"modal_info": shadow})))
+
+    def set_plan(self, path, value):
+        """Set the portion of self.plan specified by `path` to the given `value`.
+        A shadow dictionary containing the change is sent via a websocket to inform the UI 
+        of the change in the plan.
+        """
+        shadow = self.modify_value_in_nested_dict(self.plan, path, value)
+        # print(f"Setting plan {path} to {value}, shadow is {shadow}")
+        asyncio.ensure_future(self.send_queue.put(json.dumps({"plan": shadow})))
+
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
-        The status is kept in the nested dictionary `self.status`, and `path` is a
-        list of strings which navigate through the levels of the dictionary. Thus
-        for example, ["identify"] is the path to the Identify button, the path to 
-        the Chan 3 button in bank 2 is ["channel", 2, 3] and ["clean",3] is the 
-        path to the Clean button in bank 3.
-        We construct a shadow object which is the portion of self.status that has
-        to be updated. This is sent to the front end via a web socket in order to 
-        allow the UI to be updated.
+        The self.status attribute is modified in place and a shadow dictionary containing
+        the change is sent via a websocket to inform the UI of the change of status.
         """
-        d = self.status
-        shadow = {}
-        o = shadow
-        for p in path[:-1]:
-            o[p] = {}
-            if p not in d:
-                d[p] = {}
-            d = d[p]
-            o = o[p]
-        d[path[-1]] = value
-        o[path[-1]] = value
-        print(f"Setting status of {path} to {value}")
-        asyncio.ensure_future(self.send_queue.put(json.dumps(shadow)))
+        shadow = self.modify_value_in_nested_dict(self.status, path, value)
+        # print(f"Setting status of {path} to {value}, shadow is {shadow}")
+        asyncio.ensure_future(self.send_queue.put(json.dumps({"uistatus": shadow})))
+
+    def plan_panel_update(self, msg):
+        """Handle change of focus and edits in the duration column of the plan panel"""
+        if "focus" in msg:
+            data = msg["focus"]
+            row = data["row"]
+            column = data["column"]
+            if row <= self.plan["last_step"] or (row == self.plan["last_step"] + 1 and column == 1):
+                self.set_plan(["focus"], {"row": row, "column": column})
+            else:
+                self.set_plan(["focus"], self.plan["focus"])
+        elif "duration" in msg:
+            row = msg["row"]
+            if row <= self.plan["last_step"]:
+                try:
+                    duration = int(msg["duration"]) if msg["duration"] else 0
+                    self.set_plan(["steps", row, "duration"], duration)
+                except ValueError:
+                    pass
+        else:
+            print(f"Unknown message {msg}")
+
+    def add_channel_to_plan(self, msg):
+        """Handle a channel button press, adding the bank and channel to the plan
+        at the location of the focussed row"""
+        bank = msg["bank"]
+        channel = msg["channel"]
+        row = self.plan["focus"]["row"]
+        column = self.plan["focus"]["column"]
+        if column == 2:
+            row += 1
+        if row <= self.plan["last_step"]:
+            duration = self.plan["steps"][row]["duration"]
+        else:
+            duration = 0
+        self.set_plan(["steps", row], {"bank": bank, "channel": channel, "duration": duration})
+        if self.plan["last_step"] < row:
+            self.set_plan(["last_step"], row)    
+        self.set_plan(["focus"], {"row": row, "column": 2})
+
+    def plan_row_delete(self, msg):
+        """Delete a row from the plan at the focussed row, moving up the remaining entries"""
+        row = self.plan["focus"]["row"]
+        column = self.plan["focus"]["column"]
+        num_steps = self.plan["last_step"]
+        if num_steps > 0 and row <= num_steps:
+            for r in range(row, self.plan["last_step"]):
+                s = self.plan["steps"][r + 1]
+                self.set_plan(["steps", r], {"bank": s["bank"], "channel": s["channel"], "duration": s["duration"]})
+            self.set_plan(["last_step"], num_steps - 1)
+        self.set_plan(["focus"], {"row": row, "column": column})
+
+    def plan_row_insert(self, msg):
+        """Insert a row into the plan at the focussed row, moving down the remaining entries"""
+        row = self.plan["focus"]["row"]
+        column = self.plan["focus"]["column"]
+        num_steps = self.plan["last_step"]
+        if num_steps < self.plan["max_steps"] and row <= num_steps:
+            for r in range(self.plan["last_step"], row - 1, -1):
+                s = self.plan["steps"][r]
+                self.set_plan(["steps", r + 1], {"bank": s["bank"], "channel": s["channel"], "duration": s["duration"]})
+            self.set_plan(["steps", row], {"bank": 0, "channel": 0, "duration": 0})
+            self.set_plan(["last_step"], num_steps + 1)
+        self.set_plan(["focus"], {"row": row, "column": column})
+
+    def validate_plan(self):
+        """Check that there are no errors in the plan. If an error is present,
+        return the row and column of the first error and a string describing 
+        the problem"""
+        for i in range(self.plan["last_step"]):
+            row = i + 1
+            s = self.plan["steps"][row]
+            if not(1 <= s["bank"] <= self.num_banks and 1 <= s["channel"] <= self.num_chans_per_bank):
+                return PlanError(True, f"Invalid port at step {row}", row, 1)
+            elif not(s["duration"] > 0):
+                return PlanError(True, f"Invalid duration at step {row}", row, 2)
+        return PlanError(False)
+
+    def get_current_step_from_focus(self):
+        step = self.plan["focus"]["row"]
+        column = self.plan["focus"]["column"]
+        if column == 2:
+            step = step + 1
+        if step > self.plan["last_step"]:
+            step = step - self.plan["last_step"]
+        return step
 
     @state
     def _initial(self, e):
         self.bank = None
         self.bank_to_update = None
         self.channel = None
+        self.plan_error = None
+        self.plan_step_te = TimeEvent("PLAN_STEP_TIMER")
+
         # Keyed by bank. Its values are the masks corresponding to active channels
         # e.g. {1: 0, 2:64, 3:0, 4:0} represents channel active 7 in bank 2
         self.chan_active = {1: 0, 2: 0, 3: 0, 4: 0}
@@ -110,10 +282,19 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_STANDBY", self)
         Framework.subscribe("BTN_IDENTIFY", self)
         Framework.subscribe("BTN_PLAN", self)
+        Framework.subscribe("BTN_PLAN_INSERT", self)
+        Framework.subscribe("BTN_PLAN_DELETE", self)
+        Framework.subscribe("BTN_PLAN_LOAD", self)
+        Framework.subscribe("BTN_PLAN_SAVE", self)
+        Framework.subscribe("BTN_PLAN_LOOP", self)
+        Framework.subscribe("BTN_PLAN_OK", self)
+        Framework.subscribe("PLAN_PANEL_UPDATE", self)
         Framework.subscribe("BTN_RUN", self)
         Framework.subscribe("BTN_REFERENCE", self)
         Framework.subscribe("BTN_CLEAN", self)
         Framework.subscribe("BTN_CHANNEL", self)
+        Framework.subscribe("MODAL_CLOSE", self)
+        Framework.subscribe("MODAL_OK", self)
         Framework.subscribe("TERMINATE", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._operational)
@@ -121,7 +302,9 @@ class PigssController(Ahsm):
     @state
     def _operational(self, e):
         sig = e.signal
-        if sig == Signal.ENTRY:
+        if sig == Signal.INIT:
+            return self.tran(self._standby)
+        elif sig == Signal.ENTRY:
             self.set_status(["standby"], UiStatus.READY)
             self.set_status(["identify"], UiStatus.READY)
             self.set_status(["run"], UiStatus.DISABLED)
@@ -133,6 +316,9 @@ class PigssController(Ahsm):
                 self.set_status(["bank", i+1], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
                     self.set_status(["channel", i+1, j+1], UiStatus.DISABLED)
+            return self.handled(e)
+        elif sig == Signal.MODAL_CLOSE:
+            self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.TERMINATE:
             Framework.stop()
@@ -243,12 +429,14 @@ class PigssController(Ahsm):
 
             Framework.publish(Event(Signal.PC_ABORT, None))
             return self.handled(e)
+        """
         elif sig == Signal.BTN_CLEAN:  # and self.get_status()["clean"][e.value["bank"]] == UiStatus.CLEAN:
             self.bank = e.value["bank"]
             if self.get_status()["clean"][self.bank] == UiStatus.CLEAN:
                 return self.handled(e)
             else:
                 return self.tran(self._clean1)
+        """
         return self.super(self._operational)
 
     @state
@@ -312,9 +500,8 @@ class PigssController(Ahsm):
             self.set_status(["bank", self.bank], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            print(e.value)
             msg = json.loads(e.value)
-            print(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
+            # print(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
             if msg['status'][self.bank-1]['STATE'].startswith('ident'):
                 return self.tran(self._identify3)
         return self.super(self._identify)
@@ -324,7 +511,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.PIGLET_STATUS:
             msg = json.loads(e.value)
-            print(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
+            # print(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
             if msg['status'][self.bank-1]['STATE'] == 'standby':
                 return self.tran(self._identify4)
         return self.super(self._identify)
@@ -340,7 +527,7 @@ class PigssController(Ahsm):
             active = [1 if int(c) else 0 for c in reversed(format(msg, '08b'))]
             # Update the states of the channel buttons in the bank
             for i, stat in enumerate(active):
-                self.set_status(["channel", self.bank, i+1], UiStatus.READY if stat else UiStatus.DISABLED)
+                self.set_status(["channel", self.bank, i+1], UiStatus.AVAILABLE if stat else UiStatus.DISABLED)
             self.set_status(["bank", self.bank], UiStatus.READY)
             # Go to the next bank, and continue identification if the bank is present
             self.bank += 1
@@ -350,46 +537,66 @@ class PigssController(Ahsm):
                 # Otherwise, enable run and plan buttons and go back to standby since identification is complete
                 self.set_status(["run"], UiStatus.READY)
                 self.set_status(["plan"], UiStatus.READY)
-                return self.tran(self._standby1)
+                return self.tran(self._operational)
         return self.super(self._identify)
 
     @state
     def _run(self, e):
         sig = e.signal
-        if sig == Signal.ENTRY:
-            for i in range(self.num_banks):
-                self.chan_active[i+1] = 0
-            asyncio.create_task(self.piglet_manager.send_to_all_piglets("CHANSET 0"))
-            return self.handled(e)
+        if sig == Signal.INIT:
+            return self.tran(self._run1)
         elif sig == Signal.EXIT:
-            for i in range(self.num_banks):
-                mask = self.chan_active[i+1]
-                # Turn off ACTIVE states in UI for active channels
-                for j in setbits(mask):
-                    self.set_status(["channel", i+1, j+1], UiStatus.READY)
-                self.chan_active[i+1] = 0
-            asyncio.create_task(self.piglet_manager.send_to_all_piglets("CHANSET 0"))
             self.set_status(["run"], UiStatus.READY)
             Framework.publish(Event(Signal.PC_ABORT, None))
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
-            return self.tran(self._run1)
         elif sig == Signal.BTN_RUN:
             return self.handled(e)
+        elif sig == Signal.PIGLET_RESPONSE:
+            return self.tran(self._operational)
         return self.super(self._operational)
 
     @state
     def _run1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            asyncio.create_task(self.piglet_manager.send_to_all_piglets("OPSTATE sampling"))
+            for i in range(self.num_banks):
+                self.chan_active[i+1] = 0
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][i+1][j+1] == UiStatus.AVAILABLE:
+                        self.set_status(["channel", i+1, j+1], UiStatus.READY)
+            asyncio.create_task(self.piglet_manager.send_to_all_piglets("CHANSET 0"))
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            """
+            for i in range(self.num_banks):
+                mask = self.chan_active[i+1]
+                # Turn off ACTIVE states in UI for active channels
+                for j in setbits(mask):
+                    self.set_status(["channel", i+1, j+1], UiStatus.AVAILABLE)
+                self.chan_active[i+1] = 0
+            """
+            for i in range(self.num_banks):
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][i+1][j+1] in [UiStatus.READY, UiStatus.ACTIVE]:
+                        self.set_status(["channel", i+1, j+1], UiStatus.AVAILABLE)
+            asyncio.create_task(self.piglet_manager.send_to_all_piglets("CHANSET 0"))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
-            return self.tran(self._run2)
+            return self.tran(self._run11)
         return self.super(self._run)
 
     @state
-    def _run2(self, e):
+    def _run11(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            asyncio.create_task(self.piglet_manager.send_to_all_piglets("OPSTATE sampling"))
+            return self.handled(e)
+        elif sig == Signal.PIGLET_RESPONSE:
+            return self.tran(self._run12)
+        return self.super(self._run1)
+
+    @state
+    def _run12(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["run"], UiStatus.ACTIVE)
@@ -399,7 +606,7 @@ class PigssController(Ahsm):
                 self.bank_to_update = 1
                 self.bank = e.value["bank"]
                 self.channel = e.value["channel"]
-                print(f"\nBTN_CHANNEL: {self.bank} {self.channel}")
+                # print(f"\nBTN_CHANNEL: {self.bank} {self.channel}")
                 mask = 1 << (self.channel - 1)
                 # For this version, we can only have one active channel, so
                 #  replace the currently active channel with the selected one
@@ -413,15 +620,14 @@ class PigssController(Ahsm):
                         self.chan_active[bank] = mask
                     else:
                         self.chan_active[bank] = 0
-                return self.tran(self._run21)
-        return self.super(self._run)
+                return self.tran(self._run121)
+        return self.super(self._run1)
 
     @state
-    def _run21(self, e):
+    def _run121(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
             mask = self.chan_active[self.bank_to_update]
-            print(f"\nSending to piglet at {self.bank_to_update}, CHANSET {mask}")
             asyncio.create_task(self.piglet_manager.send_to_one_piglet(self.bank_to_update, f"CHANSET {mask}"))
             for j in setbits(mask):
                 self.set_status(["channel", self.bank_to_update, j+1], UiStatus.ACTIVE)
@@ -429,10 +635,234 @@ class PigssController(Ahsm):
         elif sig == Signal.PIGLET_RESPONSE:
             self.bank_to_update += 1
             if self.bank_to_update <= self.num_banks:
-                return self.tran(self._run21)
+                return self.tran(self._run121)
             else:     
-                return self.tran(self._run2)
-        return self.super(self._run2)
+                return self.handled(e)
+        return self.super(self._run12)
+
+    @state
+    def _plan(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            for i in range(self.num_banks):
+                self.set_status(["clean", i+1], UiStatus.DISABLED)
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][i+1][j+1] == UiStatus.AVAILABLE:
+                        self.set_status(["channel", i+1, j+1], UiStatus.READY)
+            self.set_plan(["show"], True)
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            for i in range(self.num_banks):
+                self.set_status(["clean", i+1], UiStatus.READY)
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][i+1][j+1] == UiStatus.READY:
+                        self.set_status(["channel", i+1, j+1], UiStatus.AVAILABLE)
+            self.set_plan(["show"], False)
+            return self.handled(e)
+        elif sig == Signal.BTN_PLAN:
+            return self.handled(e)
+        elif sig == Signal.BTN_PLAN_OK:
+            self.plan_error = self.validate_plan()
+            if not self.plan_error.error:
+                self.set_plan(["looping"], False)
+                self.set_plan(["current_step"], self.get_current_step_from_focus())
+                return self.tran(self._plan2)
+            else:
+                return self.tran(self._plan1)
+        elif sig == Signal.BTN_PLAN_LOOP:
+            self.plan_error = self.validate_plan()
+            if not self.plan_error.error:
+                self.set_plan(["looping"], True)
+                self.set_plan(["current_step"], self.get_current_step_from_focus())
+                return self.tran(self._plan2)
+            else:
+                return self.tran(self._plan1)
+        elif sig == Signal.BTN_PLAN_DELETE:
+            self.plan_row_delete(e.value)
+            return self.handled(e)
+        elif sig == Signal.BTN_PLAN_INSERT:
+            self.plan_row_insert(e.value)
+            return self.handled(e)
+        elif sig == Signal.PLAN_PANEL_UPDATE:
+            self.plan_panel_update(e.value)
+            return self.handled(e)
+        elif sig == Signal.BTN_CHANNEL:
+            self.add_channel_to_plan(e.value)
+            return self.handled(e)
+        return self.super(self._operational)
+
+    @state
+    def _plan1(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h3>Plan error</h3><p>{self.plan_error.message}</p>",
+                "num_buttons": 0
+            })
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_plan(["focus"], {"row": self.plan_error.row, "column": self.plan_error.column})
+            return self.handled(e)
+        elif sig == Signal.MODAL_CLOSE:
+            self.set_modal_info(["show"], False)
+            return self.tran(self._plan)
+        return self.super(self._plan)
+
+    @state
+    def _plan2(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            msg = "Loop" if self.plan['looping'] else "Run"
+            msg += f" plan starting at step {self.plan['current_step']}"
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h2>Confirm Plan</h2><p>{msg}</p>",
+                "num_buttons": 2,
+                "buttons": {
+                    1: {"caption": "OK", "className": "btn btn-success btn-large", "response": "modal_ok"},
+                    2: {"caption": "Cancel", "className": "btn btn-danger btn-large", "response": "modal_close"}
+                }
+            })
+            return self.handled(e)
+        elif sig == Signal.MODAL_OK:
+            self.set_modal_info(["show"], False)
+            return self.tran(self._run_plan)
+        elif sig == Signal.MODAL_CLOSE:
+            self.set_modal_info(["show"], False)
+            return self.tran(self._plan)
+        return self.super(self._plan)
+
+    @state
+    def _run_plan(self, e):
+        sig = e.signal
+        if sig == Signal.INIT:
+            return self.tran(self._run_plan1)
+        elif sig == Signal.BTN_RUN:
+            return self.handled(e)
+        elif sig == Signal.BTN_PLAN:
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_status(["run"], UiStatus.READY)
+            self.set_status(["plan"], UiStatus.READY)
+        if sig == Signal.PIGLET_RESPONSE:
+            return self.tran(self._operational)
+        return self.super(self._operational)
+
+    @state
+    def _run_plan1(self, e):
+        sig = e.signal
+        if sig == Signal.PIGLET_RESPONSE:
+            return self.tran(self._run_plan11)
+        elif sig == Signal.ENTRY:
+            for i in range(self.num_banks):
+                self.chan_active[i+1] = 0
+            asyncio.create_task(self.piglet_manager.send_to_all_piglets("CHANSET 0"))
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            asyncio.create_task(self.piglet_manager.send_to_all_piglets("CHANSET 0"))
+            return self.handled(e)
+        return self.super(self._run_plan)
+
+    @state
+    def _run_plan11(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            asyncio.create_task(self.piglet_manager.send_to_all_piglets("OPSTATE sampling"))
+            return self.handled(e)
+        elif sig == Signal.PIGLET_RESPONSE:
+            return self.tran(self._run_plan12)
+        return self.super(self._run_plan1)
+
+    @state
+    def _run_plan12(self, e):
+        sig = e.signal
+        if sig == Signal.INIT:
+            return self.tran(self._run_plan121)
+        elif sig == Signal.ENTRY:
+            self.set_status(["run"], UiStatus.ACTIVE)
+            self.set_status(["plan"], UiStatus.ACTIVE)
+            current_step = self.plan["current_step"]
+            self.plan_step_te.postIn(self, self.plan["steps"][current_step]["duration"])
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.plan_step_te.disarm()
+            for i in range(self.num_banks):
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][i+1][j+1] == UiStatus.ACTIVE:
+                        self.set_status(["channel", i+1, j+1], UiStatus.AVAILABLE)
+            return self.handled(e)
+        elif sig == Signal.PLAN_STEP_TIMER:
+            current_step = self.plan["current_step"]
+            last_step = self.plan["last_step"]
+            looping = self.plan["looping"]
+            if current_step >= last_step and not looping:
+                # All steps done
+                return self.tran(self._operational)
+            else:
+                # Set up for next step
+                current_step += 1
+                if current_step > last_step:
+                    current_step -= last_step
+                self.set_plan(["current_step"], current_step)
+                return self.tran(self._run_plan12)
+        return self.super(self._run_plan1)
+
+    @state
+    def _run_plan121(self, e):
+        sig = e.signal
+        if sig == Signal.INIT:
+            return self.tran(self._run_plan1211)
+        elif sig == Signal.ENTRY:
+            self.bank_to_update = 1
+            current_step = self.plan["current_step"]
+            self.bank = self.plan["steps"][current_step]["bank"]
+            self.channel = self.plan["steps"][current_step]["channel"]
+            mask = 1 << (self.channel - 1)
+            # For this version, we can only have one active channel, so
+            #  replace the currently active channel with the selected one
+            for i in range(self.num_banks):
+                bank = i + 1
+                # Turn off ACTIVE states in UI for active channels
+                for j in setbits(self.chan_active[bank]):
+                    self.set_status(["channel", bank, j+1], UiStatus.AVAILABLE)
+                # Replace with the selected channel
+                if bank == self.bank:
+                    self.chan_active[bank] = mask
+                else:
+                    self.chan_active[bank] = 0
+            return self.handled(e)
+        elif sig == Signal.PIGLET_STATUS:
+            msg = json.loads(e.value)
+            for i in range(self.num_banks):
+                mask = msg['status'][i]['SOLENOID_VALVES']
+                sel = setbits(mask)
+                for j in range(self.num_chans_per_bank):
+                    current = self.status["channel"][i+1][j+1]
+                    if current != UiStatus.DISABLED:
+                        if j in sel:
+                            if current != UiStatus.ACTIVE:
+                                self.set_status(["channel", i+1, j+1], UiStatus.ACTIVE)
+                        else:
+                            if current != UiStatus.AVAILABLE:
+                                self.set_status(["channel", i+1, j+1], UiStatus.AVAILABLE)
+            return self.handled(e)
+        return self.super(self._run_plan12)
+
+    @state
+    def _run_plan1211(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            mask = self.chan_active[self.bank_to_update]
+            asyncio.create_task(self.piglet_manager.send_to_one_piglet(self.bank_to_update, f"CHANSET {mask}"))
+            return self.handled(e)
+        elif sig == Signal.PIGLET_RESPONSE:
+            self.bank_to_update += 1
+            if self.bank_to_update <= self.num_banks:
+                return self.tran(self._run_plan1211)
+            else:
+                return self.handled(e)
+        return self.super(self._run_plan121)
 
 
 if __name__ == "__main__":

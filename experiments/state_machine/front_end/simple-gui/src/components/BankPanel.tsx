@@ -20,7 +20,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         DISABLED:"btn-light disabled my-disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-primary"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-light disabled my-disabled", READY: "btn-light", ACTIVE:"btn-success", CLEAN:"btn-primary", REFERENCE:"btn-light"
+        DISABLED:"btn-light disabled my-disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-success", CLEAN:"btn-primary", REFERENCE:"btn-light"
     };
 
     render() {
@@ -37,25 +37,48 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             const cleanStatus: string = (this.props.uistatus.clean as any)[this.props.bank];
             bankStyle = (this.bankStyleOpt as any)[bankStatus];
             cleanClassNames = (this.cleanClassNameOpt as any)[cleanStatus];
-            cleanDisabled = cleanStatus === "DISABLED";
+            cleanDisabled = cleanStatus !== "READY";
             getChannelClassNames = (chan) => (this.channelClassNameOpt as any)[(channelStatus as any)[chan]];
-            getChannelDisabled = (chan) => (channelStatus as any)[chan] === "DISABLED";
+            getChannelDisabled = (chan) => (channelStatus as any)[chan] !== "READY";
         }
         let channelButtons = [];
         for (let i=1; i<=8; i++) {
             channelButtons.push(
-                <button
-                    onClick={e => this.props.ws_sender({element: "channel", bank: this.props.bank, channel: i})}
-                    disabled={getChannelDisabled(i)}
-                    key={i}
-                    className={"btn btn-lg btn-bank " + getChannelClassNames(i)}>
-                    Ch {i}
-                </button>
+                (getChannelDisabled(i)) ? (
+                    <div
+                        style={{display:"flex", alignItems:"center", justifyContent:"center"}}
+                        key={i}
+                        className={"btn btn-lg btn-bank " + getChannelClassNames(i)}>
+                        {"Ch " + i}
+                    </div>
+                ) : (
+                    <button
+                        onClick={e => this.props.ws_sender({element: "channel", bank: this.props.bank, channel: i})}
+                        disabled={getChannelDisabled(i)}
+                        key={i}
+                        className={"btn btn-lg btn-bank " + getChannelClassNames(i)}>
+                        {"Ch " + i}
+                    </button>
+                )
             );
         }
 
-        return (
+        const cleanButton = (cleanDisabled) ? (
+            <div 
+                style={{width:"100%", border:"3px solid #CCC"}}
+                className={"btn btn-lg " + cleanClassNames}>
+                {"Clean"}
+            </div>
+        ) : (
+            <button 
+                style={{width:"100%", border:"3px solid #CCC"}}
+                onClick={e => this.props.ws_sender({element: "clean", bank: this.props.bank})}
+                className={"btn btn-lg " + cleanClassNames}>
+                {"Clean"}
+            </button>
+        );
 
+        return (
             <div style={{padding: "10px"}}>
                 <div className="panel-bank" style={{...{border: "3px solid #111", borderRadius: "10px", padding:"10px"},...bankStyle}}>
                     <div style={{width: "100%"}}>
@@ -63,13 +86,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                         <div className="grid-bank">
                             {channelButtons}
                         </div>
-                        <button 
-                            style={{width:"100%", border:"3px solid #CCC"}}
-                            onClick={e => this.props.ws_sender({element: "clean", bank: this.props.bank})}
-                            disabled={cleanDisabled}
-                            className={"btn btn-lg " + cleanClassNames}>
-                            Clean
-                        </button>
+                        {cleanButton}
                     </div>
                 </div>
             </div>
