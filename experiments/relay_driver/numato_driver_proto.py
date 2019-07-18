@@ -1,4 +1,4 @@
-""
+"""
     A module to control a Numato Lab’s 4 Channel USB Powered Relay Module.
     python numato_driver_proto.py "/dev/ttyACM1" 6668
 """
