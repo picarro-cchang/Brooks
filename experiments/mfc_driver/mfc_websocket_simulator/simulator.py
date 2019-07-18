@@ -8,7 +8,6 @@ socketio = SocketIO(app)
 
 @socketio.on('update')
 def test_connect():
-    # print("Welcome, aaa received")
     emit('update', {'set_point': 5.0,
          'flow_rate': round(random.uniform(4.901, 5.101), 2)})
 
