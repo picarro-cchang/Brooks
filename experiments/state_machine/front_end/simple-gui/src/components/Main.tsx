@@ -44,7 +44,8 @@ class Main extends Component<any, any> {
     }
 
     onButtonGetStatusClick(e: any) {
-        let p1 = PicarroAPI.getRequest('http://localhost:8000/uistatus').then(
+    	let baseUrl = window.location.href.replace("3001","8000");
+        let p1 = PicarroAPI.getRequest(baseUrl + 'uistatus').then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -52,7 +53,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p2 = PicarroAPI.getRequest('http://localhost:8000/plan').then(
+        let p2 = PicarroAPI.getRequest(baseUrl + 'plan').then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -60,7 +61,8 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p3 = PicarroAPI.getRequest('http://localhost:8000/modal_info').then(
+
+        let p3 = PicarroAPI.getRequest(baseUrl + 'modal_info').then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -68,7 +70,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        Promise.all([p1, p2]).then(() => {
+        Promise.all([p1, p2, p3]).then(() => {
             this.setState(deepmerge(this.state, {initialized: true}));
             console.log("State after getting uistatus, plan and modal info", this.state);
         })
@@ -123,6 +125,7 @@ class Main extends Component<any, any> {
     };
 
     render() {
+    	let baseUrl = window.location.href.replace("3001","8000").replace("http://", "");
         const left_panel = this.state.plan.show ? (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan} 
             setFocus={(row, column) => this.setFocus(row, column)} 
@@ -162,7 +165,7 @@ class Main extends Component<any, any> {
                         <div className="col-sm-2">
                             <BankPanel bank={4} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
                         </div>
-                        <Websocket url='ws://localhost:8000/ws'
+                        <Websocket url={"ws://" + baseUrl + "ws"}
                             onMessage={this.handleData.bind(this)}
                             reconnect={true} debug={true}
                             ref={(Websocket: any) => {

@@ -169,7 +169,7 @@ class HttpHandlers:
 
         self.runner = web.AppRunner(app)
         await self.runner.setup()
-        site = web.TCPSite(self.runner, 'localhost', port)
+        site = web.TCPSite(self.runner, '0.0.0.0', port)
         await site.start()
         return app
 
