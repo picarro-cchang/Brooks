@@ -24,11 +24,6 @@
     padding: 20px;
 }
 
-/*.panel-command {
-  width: 300px;
-  float: left;
-}*/
-
 .grid-bank {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -41,17 +36,13 @@
 }
 
 .panel-plan {
-  margin-top: -80px;
+  margin-top: -50px;
   background-color: #ccc;
   padding: 10px;
   border: 3px solid #111;
   border-radius: 10px  
 }
-/*
-.wrapper {
-  display: flex;
-}
-*/
+
 .small-input {
   font-size: 10pt;
   height: 18px
@@ -60,7 +51,6 @@
 .btn-outline-success:hover {
   color: #080;
   background-color: #DFD;
-  /* border-color: #080; /*set the color you want here*/
 }
 
 .disabled.my-disabled {

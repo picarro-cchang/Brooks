@@ -159,17 +159,16 @@ class HttpHandlers:
             web.get('/modal_info', self.handle_modal_info),
             web.get('/ws', self.websocket_handler),
         ])
+        setup_swagger(app)
 
         for route in app.router.routes():
             cors.add(route)
-
-        setup_swagger(app)
 
         self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))
 
         self.runner = web.AppRunner(app)
         await self.runner.setup()
-        site = web.TCPSite(self.runner, 'localhost', port)
+        site = web.TCPSite(self.runner, '0.0.0.0', port)
         await site.start()
         return app
 

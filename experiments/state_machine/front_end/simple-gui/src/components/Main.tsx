@@ -44,7 +44,7 @@ class Main extends Component<any, any> {
     }
 
     onButtonGetStatusClick(e: any) {
-        let p1 = PicarroAPI.getRequest('http://localhost:8000/uistatus').then(
+        let p1 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/uistatus`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -52,7 +52,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p2 = PicarroAPI.getRequest('http://localhost:8000/plan').then(
+        let p2 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/plan`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -60,7 +60,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p3 = PicarroAPI.getRequest('http://localhost:8000/modal_info').then(
+        let p3 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/modal_info`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -162,7 +162,7 @@ class Main extends Component<any, any> {
                         <div className="col-sm-2">
                             <BankPanel bank={4} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
                         </div>
-                        <Websocket url='ws://localhost:8000/ws'
+                        <Websocket url={`ws://${window.location.hostname}:8000/ws`}
                             onMessage={this.handleData.bind(this)}
                             reconnect={true} debug={true}
                             ref={(Websocket: any) => {
