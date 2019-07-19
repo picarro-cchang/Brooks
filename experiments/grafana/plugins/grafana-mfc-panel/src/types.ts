@@ -1,11 +1,11 @@
 export interface Options {
-  setPoint: number;
-  flowRate: number;
+  set_point: number;
+  flow_rate: number;
 }
 
 export const defaults: Options = {
-  setPoint: 1.5,
-  flowRate: 200
+  set_point: 0,
+  flow_rate: 0
 };
 
 export interface MyProps {
