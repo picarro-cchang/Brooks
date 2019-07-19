@@ -4,7 +4,7 @@ repeat = 1
 schemeRows = []
 fmin = 7822.8
 fincr = 0.001
-nfreq = 2501
+nfreq = 2500
 vLaser = 0
 fit = 32768
 

@@ -129,6 +129,19 @@ H2O_a_CONC = (_INSTR_["concentration_h2o_a_slope"],_INSTR_["concentration_h2o_a_
 CH4_CONC = (_INSTR_["concentration_ch4_slope"],_INSTR_["concentration_ch4_intercept"])
 # Import empirical cross-talk parameters
 C2H4_to_HCl = _INSTR_["c2h4_to_hcl"]
+
+# Define linear pressure correction for HCl cavity
+HCl_P_correction = (_INSTR_["pressure_hcl_slope"],_INSTR_["pressure_hcl_intercept"])
+H2O_a_P_correction = (_INSTR_["pressure_h2o_a_slope"],_INSTR_["pressure_h2o_a_intercept"])
+CH4_P_correction= (_INSTR_["pressure_ch4_slope"],_INSTR_["pressure_ch4_intercept"])
+C2H4_P_correction = (_INSTR_["pressure_c2h4_slope"],_INSTR_["pressure_c2h4_intercept"])
+
+# Define linear temp correction for HCl cavity
+HCl_T_correction = (_INSTR_["temp_hcl_slope"],_INSTR_["temp_hcl_intercept"])
+H2O_a_T_correction = (_INSTR_["temp_h2o_a_slope"],_INSTR_["temp_h2o_a_intercept"])
+#CH4_T_correction= (_INSTR_["temp_ch4_slope"],_INSTR_["temp_ch4_intercept"])
+C2H4_T_correction = (_INSTR_["temp_c2h4_slope"],_INSTR_["temp_c2h4_intercept"])
+
 ###################################################################################################
 
 # Import water selfbroadening, cross-talk and cross-broadening parameters
@@ -271,8 +284,37 @@ except:
 #  Analysis script for HCl 
 
 try:
+    if "hcl_conc" in _DATA_:  
+        pressureRatio = _DATA_["CavityPressure"]/_DATA_["Cavity2Pressure"]
+        tempRatio = (_DATA_["CavityTemp"]+273.15)/(_DATA_["Cavity2Temp"]+273.15)
+       #Only apply correction in certain range --- cavity2 pressure, temp 
+        if pressureRatio > 1.1:
+            pressureRatio =1.1
+        if pressureRatio < 0.9:
+            pressureRatio = 0.9
+        if tempRatio > 1.007:
+            tempRatio =1.007
+        if tempRatio < 0.993:
+            tempRatio = 0.993
+        HCl_P_corr = applyLinear(pressureRatio,HCl_P_correction) 
+        H2O_a_P_corr = applyLinear(pressureRatio,H2O_a_P_correction)
+        CH4_P_corr = applyLinear(pressureRatio,CH4_P_correction)
+        C2H4_P_corr = applyLinear(pressureRatio,C2H4_P_correction)
+
+        HCl_T_corr = applyLinear(tempRatio,HCl_T_correction) 
+        H2O_a_T_corr = applyLinear(tempRatio,H2O_a_T_correction)
+        CH4_T_corr = tempRatio*tempRatio*_INSTR_["temp_ch4_c2"] + tempRatio * _INSTR_["temp_ch4_c1"]+ _INSTR_["temp_ch4_c0"]
+        C2H4_T_corr = applyLinear(tempRatio,C2H4_T_correction)
+        print "HCl_P_corr=",HCl_P_corr,"H2O_a_P_corr=",H2O_a_P_corr,"CH4_P_corr",CH4_P_corr,"C2H4_P_corr=",C2H4_P_corr
+        print "HCl_T_corr=",HCl_T_corr,"H2O_a_P_corr=",H2O_a_T_corr,"CH4_T_corr",CH4_T_corr,"C2H4_T_corr=",C2H4_T_corr
+        hcl_conc = _DATA_["hcl_conc"] * HCl_P_corr * HCl_T_corr
+        h2o_a_conc_raw = _DATA_["h2o_a_conc_raw"] * H2O_a_P_corr * H2O_a_T_corr
+        ch4_conc_raw = _DATA_["ch4_conc_raw"] * CH4_P_corr * CH4_T_corr
+        c2h4_conc = _DATA_["c2h4_conc"] * C2H4_P_corr * C2H4_T_corr
+        
     if "hcl_conc" in _DATA_:   
-        temp = applyLinear(_DATA_["hcl_conc"]+ C2H4_to_HCl*_DATA_["c2h4_conc"],HCl_CONC) 
+        #temp = applyLinear(_DATA_["hcl_conc"]+ C2H4_to_HCl*_DATA_["c2h4_conc"],HCl_CONC) 
+        temp = applyLinear(hcl_conc+ C2H4_to_HCl*c2h4_conc,HCl_CONC)
         _NEW_DATA_["HCl_raw"] = temp
         now = _OLD_DATA_["HCl_raw"][-2].time
         _NEW_DATA_["HCl_30sec"] = boxAverage(_PERSISTENT_["bufferHCl30"],temp,now,30)
@@ -287,7 +329,7 @@ try:
         _NEW_DATA_["HCl_ExpAvg"]=_PERSISTENT_["previousS_HCl"]
         _NEW_DATA_["HCl_tau"]=_PERSISTENT_["tau_HCl"]
         _NEW_DATA_["HCl_P_filter"] = _PERSISTENT_["HCl_filter"]
-        _NEW_DATA_["HClraw-HClexpavg"] = _NEW_DATA_["HCl_P_filter"] - _NEW_DATA_["HCl_ExpAvg"]
+        #_NEW_DATA_["HClraw-HClexpavg"] = _NEW_DATA_["HCl_P_filter"] - _NEW_DATA_["HCl_ExpAvg"]
         _NEW_DATA_["HCl_ExpAvg_NZ"] = negative_number_filter("HCl",_NEW_DATA_["HCl_ExpAvg"])
         _NEW_DATA_["HCl"] = _NEW_DATA_["HCl_ExpAvg_NZ"]
 
@@ -299,7 +341,8 @@ except Exception, e:
     
 try:
     if "hcl_conc" in _DATA_:
-        _NEW_DATA_["H2O_a"] = applyLinear(_DATA_["h2o_a_conc_raw"],H2O_a_CONC)
+        #_NEW_DATA_["H2O_a"] = applyLinear(_DATA_["h2o_a_conc_raw"],H2O_a_CONC)
+        _NEW_DATA_["H2O_a"] = applyLinear(h2o_a_conc_raw,H2O_a_CONC)
         now = _OLD_DATA_["H2O_a"][-2].time
         _NEW_DATA_["H2O_a_30sec"] = boxAverage(_PERSISTENT_["bufferHCl30_H2O"],_NEW_DATA_["H2O_a"],now,30)
 except Exception, e:
@@ -308,7 +351,8 @@ except Exception, e:
 
 try:
    if "hcl_conc" in _DATA_:
-        _NEW_DATA_["CH4"] = applyLinear(_DATA_["ch4_conc_raw"],CH4_CONC)
+        #_NEW_DATA_["CH4"] = applyLinear(_DATA_["ch4_conc_raw"],CH4_CONC)
+        _NEW_DATA_["CH4"] = applyLinear(ch4_conc_raw,CH4_CONC)
 except:
    pass
          

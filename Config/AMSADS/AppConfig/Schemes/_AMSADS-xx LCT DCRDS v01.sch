@@ -189,5 +189,6 @@ scanH2O_a += makeScan_HCl(f_HCl,fsr,[(-23,8),(-22,4),(-21,4),(-20,4),(-19,4),(-1
 scanH2O_a.append(Row(f_HCl+HCl_baseline_offset*fsr,1,H2O_a|fit,HCl_laser,th_HCl,extra2=1))
 
 schemeRows = scan_H2O + goto_start_NH3 + scan_HF + goto_start_O2 + scan_NH3 + goto_start_H2O + scan_O2 + goto_start_HF + scanHCl_first + scanHCl + scanHCl + scanHCl + scanHCl_last + scanH2O_a
+#schemeRows = scan_H2O + goto_start_NH3 + scan_HF + goto_start_O2 + scan_NH3 + scan_O2 + goto_start_HF + scan_NH3 + goto_start_H2O + scanHCl_first + scanHCl + scanHCl+ scanHCl_last + scanH2O_a
 
 $$$

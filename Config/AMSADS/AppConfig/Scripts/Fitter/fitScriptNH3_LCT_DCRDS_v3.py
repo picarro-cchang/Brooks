@@ -70,7 +70,8 @@ if INIT:
     fname = os.path.join(
         BASEPATH, r"../../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal_lct.ini")
     cavityParams = getInstrParams(fname)
-    fsr = cavityParams['AUTOCAL']['CAVITY_FSR']
+    #fsr = cavityParams['AUTOCAL']['CAVITY_FSR']
+    fsr = cavityParams['AUTOCAL']['CAVITY_FSR_VLASER_2']
     fname = os.path.join(
         BASEPATH, r"../../../InstrConfig/Calibration/InstrCal/Master_lct.ini")
     masterParams = getInstrParams(fname)

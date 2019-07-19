@@ -58,7 +58,8 @@ if INIT:
     instrParams = getInstrParams(fname)
     fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal_lct.ini")
     cavityParams = getInstrParams(fname)
-    fsr =  cavityParams['AUTOCAL']['CAVITY_FSR']
+    #fsr =  cavityParams['AUTOCAL']['CAVITY_FSR']
+    fsr =  cavityParams['AUTOCAL']['CAVITY_FSR_VLASER_3']
     fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/Master_lct.ini")
     masterParams = getInstrParams(fname)
     pzt_per_fsr =  masterParams['DAS_REGISTERS']['PZT_INCR_PER_CAVITY_FSR']
@@ -212,6 +213,13 @@ deps = Dependencies()
 ANALYSIS = []
 d = DATA
 
+# redirect the fitting Pressure and Temperature to HCl --- Cavity 2 
+tempT = d.sensorDict["CavityTemp"]
+d.sensorDict["CavityTemp"] = d.sensorDict["Cavity2Temp"]
+d.cavityPressure += (d.sensorDict["Cavity2Pressure"]-d.sensorDict["CavityPressure"])
+# d.sensorDict["Cavity2Pressure"]
+print "cavity2T=",d["cavitytemperature"]
+print "cavity2P=",d["cavitypressure"]
 current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
 # If ringdown rate is less than 75rd/s lower the threshold and return empty result
 rd_rate = 0
@@ -286,7 +294,9 @@ else:
     d.defineFitData(freq=d.groupMeans["waveNumber"], loss=1000 * d.groupMeans[
                     "uncorrectedAbsorbance"], sdev=1 / sqrt(d.groupSizes))
     P = d["cavitypressure"]
+    #P = d.sensorDict["Cavity2Pressure"]
     T = d["cavitytemperature"]
+    #T = d.sensorDict["Cavity2Temp"] 
     tunerMean = mean(d.tunerValue)
     solValves = d.sensorDict["ValveMask"]
     dasTemp = d.sensorDict["DasTemp"]
@@ -403,8 +413,9 @@ else:
                 "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,# "threshold":current_threshold
                 }
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
-                    "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
+                    "cavity2_pressure":P,"cavity2_temperature":T,"solenoid_valves":solValves,
                     "das_temp":dasTemp})
+        d.sensorDict["CavityTemp"] = tempT
         RESULT.update(d.sensorDict)
 
     # Determine if we can raise the threshold to the original value
