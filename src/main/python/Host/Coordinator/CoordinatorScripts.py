@@ -872,6 +872,10 @@ def getCavityPressure():
     """Read the current cavity pressure"""
     return DRIVER.rdDasReg("CAVITY_PRESSURE_REGISTER")
 
+def getCavity2Pressure():
+    """Read the pressure for cavity 2 HCl"""
+    return DRIVER.rdDasReg("CAVITY2_PRESSURE_REGISTER")
+
 def getCavityPressureSetPoint():
     """Get cavity pressure set point in torr """
     return DRIVER.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
@@ -1239,6 +1243,17 @@ def getCavityPressureCalibration():
 def setCavityPressureCalibration(scale,offset):
     return (DRIVER.wrDasReg('CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER',scale),
             DRIVER.wrDasReg('CONVERSION_CAVITY_PRESSURE_OFFSET_REGISTER',offset))
+
+#################
+# Setting and getting pressure calibration constants
+#################
+def getCavity2PressureCalibration():
+    return (DRIVER.rdDasReg('CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER'),
+            DRIVER.rdDasReg('CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER'))
+
+def setCavity2PressureCalibration(scale,offset):
+    return (DRIVER.wrDasReg('CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER',scale),
+            DRIVER.wrDasReg('CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER',offset))
 
 #################
 # Loading and saving Master.ini file

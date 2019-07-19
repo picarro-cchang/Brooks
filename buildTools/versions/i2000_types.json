@@ -26,6 +26,11 @@
             "installerSignature": "AMADS_PFV"
         }, 
 
+        "AMSADS": {
+            "species": "NH3_HF_HCl",
+            "installerSignature": "AMSADS"
+        }, 
+        
         "BxDS": {
             "species": "H2S",
             "installerSignature": "BxDS"
