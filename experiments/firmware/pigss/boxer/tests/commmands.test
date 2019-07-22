@@ -9,7 +9,7 @@
 # We need to test both the upper and lower case forms of each command.
 
 # Firmware version code
-set firmware_version "1.0.5"
+set firmware_version "1.0.6"
 
 ############################### *idn? ################################
 
@@ -250,3 +250,55 @@ tcltest::test "[string toupper $command]" "$description" -body {
     set return_string [boxer::readline $channel]
     return $return_string
 } -match regexp -result $ok_result
+
+############################### tza.sn ###############################
+
+# Set the instrument's Topaz A serial number.
+
+# First, just make sure the command returns properly.
+
+set command "tza.sn"
+set description "Set the Topaz A serial number"
+set ok_result 0
+set topaz_sn 10
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command] $topaz_sn"
+    set return_string [boxer::readline $channel]
+    # Command should return 0 on successful completion
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command] $topaz_sn"
+    set return_string [boxer::readline $channel]
+} -match regexp -result $ok_result
+
+# Now make sure the serial number was set.  The test will return some
+# value if we get the right serial number.  We'll match this returned
+# value for the test.
+set command "tza.sn?"
+set description "Query the Topaz A serial number"
+set ok_result $topaz_sn
+tcltest::test "[string tolower $command]" "$description" -body {
+    boxer::sendcmd $channel "[string tolower $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+tcltest::test "[string toupper $command]" "$description" -body {
+    boxer::sendcmd $channel "[string toupper $command]"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $ok_result
+
+# Write a new slot ID
+set topaz_sn 2
+
+tcltest::test "tza.sn" "Check setting a new Topaz A serial number" -body {
+    boxer::sendcmd $channel "tza.sn $topaz_sn"
+    # Read the return (should just be 0)
+    set return_string [boxer::readline $channel]
+    boxer::sendcmd $channel "tza.sn?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -match regexp -result $topaz_sn

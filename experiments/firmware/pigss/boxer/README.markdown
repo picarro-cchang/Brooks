@@ -34,21 +34,26 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-4)
             - [OPSTATE?](#opstate)
             - [Typical Return](#typical-return-5)
-        - [Channel commands](#channel-commands)
-            - [CHANENA n](#chanena-n)
+            - [TZA.SN n](#tzasn-n)
                 - [Parameter (n)](#parameter-n-2)
                 - [Typical Return](#typical-return-6)
-            - [CHANENA? n](#chanena-n)
-                - [Parameter (n)](#parameter-n-3)
+            - [TZA.SN?](#tzasn)
                 - [Typical Return](#typical-return-7)
-            - [CHANOFF n](#chanoff-n)
-                - [Parameter (n)](#parameter-n-4)
+        - [Channel commands](#channel-commands)
+            - [CHANENA n](#chanena-n)
+                - [Parameter (n)](#parameter-n-3)
                 - [Typical Return](#typical-return-8)
-            - [CHANSET n](#chanset-n)
-                - [Parameter (n)](#parameter-n-5)
+            - [CHANENA? n](#chanena-n)
+                - [Parameter (n)](#parameter-n-4)
                 - [Typical Return](#typical-return-9)
-            - [CHANSET?](#chanset)
+            - [CHANOFF n](#chanoff-n)
+                - [Parameter (n)](#parameter-n-5)
                 - [Typical Return](#typical-return-10)
+            - [CHANSET n](#chanset-n)
+                - [Parameter (n)](#parameter-n-6)
+                - [Typical Return](#typical-return-11)
+            - [CHANSET?](#chanset)
+                - [Typical Return](#typical-return-12)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -56,6 +61,7 @@ hardware will be a custom PCB.
         - [Version 1.0.3](#version-103)
         - [Version 1.0.4](#version-104)
         - [Version 1.0.5](#version-105)
+        - [Version 1.0.6](#version-106)
 
 <!-- markdown-toc end -->
 
@@ -221,7 +227,21 @@ Integers 0-65535
 
 ##### Typical Return #####
 
-`0`
+| Return | Condition             |
+|--------|-----------------------|
+| `0`    | Serial number set     |
+| `-1`   | Topaz A not connected |
+
+#### TZA.SN? ####
+
+Query the serial number for manifold (Topaz) board A.
+
+##### Typical Return #####
+
+| Return | Condition                            |
+|--------|--------------------------------------|
+| `10`   | Successful return for Topaz board 10 |
+| `-1`   | Topaz A not connected                |
 
 ### Channel commands ###
 
@@ -334,3 +354,9 @@ Added the `*RST` command to initiate a reset over the command interface.
 ### Version 1.0.5 ###
 
 Added the `OPSTATE` command to query the current operating state.
+
+### Version 1.0.6 ###
+
+Added the `TZA.SN` and `TZA.SN?` commands to set and get the serial
+number for Topaz A.  These commands, for now, simply return -1 if the
+board isn't connected.

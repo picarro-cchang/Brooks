@@ -110,18 +110,26 @@ foreach alias [connection::get_potential_aliases] {
 	puts -nonewline $channel "*idn?\r"
 	after 5000
 	# Read the response
-	set data [boxer::readline $channel]
-	${log}::debug "Response to *idn? was $data"
-	if {[string last "Picarro" $data] >= 0} {
-	    # We found the string we wanted to find in the response
-	    ${log}::info "Successful connection to Boxer at $alias"
-	    break
+	try {
+	    set data [boxer::readline $channel]
+	    ${log}::debug "Response to *idn? was $data"
+	    if {[string last "Picarro" $data] >= 0} {
+		# We found the string we wanted to find in the response
+		${log}::info "Successful connection to Boxer at $alias"
+		break
+	    } else {
+		dict set state channel "none"
+		dict set state alias "none"
+	    }
+	} trap {} {message optdict} {
+	    # We couldn't read from the channel -- this is definitely
+	    # not a device we want to talk to.
+	    dict set state channel "none"
+	    dict set state alias "none" 
 	}
-    } else {
-	dict set state channel "none"
-	dict set state alias "none"
     }
 }
+
 if [string equal [dict get $state channel] "none"] {
     ${log}::error "Did not find a connected Boxer"
     exit

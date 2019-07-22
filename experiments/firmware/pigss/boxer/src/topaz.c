@@ -168,6 +168,11 @@ uint16_t topaz_get_serial_number(char board) {
 }
 
 void cmd_topaz_a_set_serial_number( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('a')) {
+    // There's no Topaz A
+    command_nack();
+    return;
+  }  
   uint16_t sernum = (command_arg_ptr -> uint16_arg);
   topaz_set_serial_number('a', sernum);
   
@@ -176,6 +181,11 @@ void cmd_topaz_a_set_serial_number( command_arg_t *command_arg_ptr ) {
 }
 
 void cmd_topaz_a_get_serial_number( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('a')) {
+    // There's no Topaz A
+    command_nack();
+    return;
+  }
   uint16_t sernum;
   sernum = topaz_get_serial_number('a');
   usart_printf(USART_CHANNEL_COMMAND, "%u%s",
