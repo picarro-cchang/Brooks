@@ -120,7 +120,7 @@ void eeprom_load_sernum( system_state_t *system_state_ptr ) {
 void cmd_write_sernum( command_arg_t *command_arg_ptr ) {
   uint16_t sernum = (command_arg_ptr -> uint16_arg);
   eeprom_save_sernum(sernum);
-  functions_init();
+  system_init();
   // Acknowledge the successful command
   command_ack();
 }
@@ -142,7 +142,7 @@ void eeprom_load_slotid( system_state_t *system_state_ptr ) {
 void cmd_write_slotid( command_arg_t *command_arg_ptr ) {
   uint8_t slotid = (uint8_t)(command_arg_ptr -> uint16_arg);
   eeprom_save_slotid(slotid);
-  functions_init();
+  system_init();
   // Acknowledge the successful command
   command_ack();
 }

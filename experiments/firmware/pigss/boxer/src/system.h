@@ -53,7 +53,7 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr );
 
 // Initialize the system state structure.  This populates the
 // structure with non-volatile values from eeprom.
-void functions_init( void );
+void system_init( void );
 
 // Set the topaz a serial number in the system state struction
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);

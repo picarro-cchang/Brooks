@@ -178,7 +178,7 @@ int main() {
   i2c_init();
 
   // Load the serial number and slotid.  Check for connected hardware.
-  functions_init();
+  system_init();
 
   // Start the metronome
   metronome_init();

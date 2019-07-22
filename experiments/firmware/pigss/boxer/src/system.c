@@ -53,7 +53,7 @@ system_state_t *system_state_ptr = &system_state;
 // ----------------------- Functions ----------------------------------
 
 
-void functions_init( void ) {
+void system_init( void ) {
   uint16_t sernum;
   eeprom_load_sernum(system_state_ptr);
   eeprom_load_slotid(system_state_ptr);
