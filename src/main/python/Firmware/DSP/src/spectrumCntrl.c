@@ -85,6 +85,15 @@ int spectCntrlInit(void)
     s->schemeOffsetByVirtualLaser_[5] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER6);
     s->schemeOffsetByVirtualLaser_[6] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER7);
     s->schemeOffsetByVirtualLaser_[7] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER8);
+    s->schemeThresholdFactorByVirtualLaser_[0] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER1);
+    s->schemeThresholdFactorByVirtualLaser_[1] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER2);
+    s->schemeThresholdFactorByVirtualLaser_[2] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER3);
+    s->schemeThresholdFactorByVirtualLaser_[3] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER4);
+    s->schemeThresholdFactorByVirtualLaser_[4] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER5);
+    s->schemeThresholdFactorByVirtualLaser_[5] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER6);
+    s->schemeThresholdFactorByVirtualLaser_[6] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER7);
+    s->schemeThresholdFactorByVirtualLaser_[7] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER8);
+    s->schemeThresholdBase_ = (unsigned int *)registerAddr(SCHEME_THRESHOLD_BASE);
     s->etalonTemperature_ = (float *)registerAddr(ETALON_TEMPERATURE_REGISTER);
     s->cavityPressure_ = (float *)registerAddr(CAVITY_PRESSURE_REGISTER);
     s->ambientPressure_ = (float *)registerAddr(AMBIENT_PRESSURE_REGISTER);
@@ -423,6 +432,13 @@ void setupNextRdParams(void)
         r->ringdownThreshold = schemeTable->rows[*(s->row_)].threshold;
         if (r->ringdownThreshold == 0)
             r->ringdownThreshold = *(s->defaultThreshold_);
+        else
+        {
+            float base = *(s->schemeThresholdBase_);
+			unsigned int vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
+            r->ringdownThreshold = base + (r->ringdownThreshold - base) * (*(s->schemeThresholdFactorByVirtualLaser_[vLaserNum - 1]));
+        }
+        
         r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SequenceMask);
         if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
             SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||

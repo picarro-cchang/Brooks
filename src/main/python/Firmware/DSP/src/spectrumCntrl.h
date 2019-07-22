@@ -39,6 +39,8 @@ typedef struct SPECT_CNTRL_PARAMS
     float *pztOffsetUpdateFactor_;      // PZT offset update factor
     float *pztOffsetByVirtualLaser_[8]; // PZT offsets for each virtual laser
     float *schemeOffsetByVirtualLaser_[8]; // Scheme temperature offsets for each virtual laser
+    float *schemeThresholdFactorByVirtualLaser_[8]; // Scheme temperature offsets for each virtual laser
+    unsigned int *schemeThresholdBase_;  // scheme ringdown threshold base
     unsigned int *defaultThreshold_;  // Default ringdown threshol
     unsigned int *analyzerTuningMode_;  // Analyzer tuning mode
     // Local variables for controller

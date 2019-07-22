@@ -3077,6 +3077,60 @@
             <save/>
             <display format="%.3f">Virtual laser 8 scheme temperature offset</display>
         </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER1" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 1</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 1 scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER2" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 2</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 2 Scheme threshold factort</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER3" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 3</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 3 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER4" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 4</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 4 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER5" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 5</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 5 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER6" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 6</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 6 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER7" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 7</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 7 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER8" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 8</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 8 Scheme threshold factor</display>
+        </register>
+        <register ident="SCHEME_THRESHOLD_BASE" type="uint32" minver="1.0" access="rw">
+            <description>Scheme threshold base</description>
+            <initial>3000</initial>
+            <save/>
+            <display format="%d">Scheme threshold base</display>
+        </register>
         <register ident="VALVE_CNTRL_STATE_REGISTER" type="VALVE_CNTRL_StateType" minver="1.0" access="rw">
             <description>Valve control app state register</description>
             <initial>VALVE_CNTRL_DisabledState</initial>

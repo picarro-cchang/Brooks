@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[571];
+RegTypes regTypes[580];
 
 /* I2C devices */
 I2C_device i2c_devices[40] = {
@@ -850,6 +850,24 @@ void initRegisters()
     writeRegister(SCHEME_OFFSET_VIRTUAL_LASER7,d);
     d.asFloat = 0;
     writeRegister(SCHEME_OFFSET_VIRTUAL_LASER8,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER1,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER2,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER3,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER4,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER5,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER6,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER7,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER8,d);
+    d.asUint = 3000;
+    writeRegister(SCHEME_THRESHOLD_BASE,d);
     d.asUint = VALVE_CNTRL_DisabledState;
     writeRegister(VALVE_CNTRL_STATE_REGISTER,d);
     d.asFloat = 140.0;
@@ -1545,6 +1563,15 @@ void initRegisters()
     regTypes[SCHEME_OFFSET_VIRTUAL_LASER6] = float_type;
     regTypes[SCHEME_OFFSET_VIRTUAL_LASER7] = float_type;
     regTypes[SCHEME_OFFSET_VIRTUAL_LASER8] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER1] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER2] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER3] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER4] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER5] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER6] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER7] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER8] = float_type;
+    regTypes[SCHEME_THRESHOLD_BASE] = uint_type;
     regTypes[VALVE_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_USER_INLET_VALVE_REGISTER] = float_type;
