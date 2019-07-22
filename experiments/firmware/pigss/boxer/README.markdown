@@ -249,7 +249,7 @@ Each manifold box (piglet) has 8 channels.  Internally, there are 4 channels on 
 
 ![Topaz channel names][topaz_channel_names]
 
-[topaz_channel_names]: media/topaz_channel_names.png
+[topaz_channel_names]: media/topaz_channel_names_600.png
 
 #### CHANENA n ####
 
