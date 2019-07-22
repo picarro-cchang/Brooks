@@ -46,6 +46,9 @@ void cs_ch3_mpr_mux(void);
 // Set the cs mux position to point to the channel 4 pressure sensor
 void cs_ch4_mpr_mux(void);
 
+// Set the cs mux position to point to the manifold a outlet
+void cs_outlet_a_mpr_mux(void);
+
 
 
 #endif // End the include guard

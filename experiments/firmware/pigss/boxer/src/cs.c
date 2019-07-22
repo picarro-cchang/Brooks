@@ -165,6 +165,13 @@ void cs_ch4_mpr_mux(void) {
   cs_manifold_a_sr(1);
 }
 
+void cs_outlet_a_mpr_mux(void) {
+  // Set the mux address
+  cs_manifold_a_sr(0);
+  spi_write(8);
+  cs_manifold_a_sr(1);
+}
+
 
 // cs_manifold_a_dac_1
 // cs_manifold_a_dac_2

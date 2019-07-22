@@ -35,6 +35,13 @@
 // lower byte.  The next open address will be this + 2
 #define TOPAZ_SERNUM_ADDR 0u
 
+//******************* Proportional valve scaling *******************//
+
+// Scaling for proportional valve drive (counts / mA)
+#define TOPAZ_COUNTS_PER_MA 290u
+
+//********************** Function prototypes ***********************//
+
 // Connect to the Topaz board.  This will return -1 if the connection
 // fails.
 int8_t topaz_connect(char board);
