@@ -17,10 +17,8 @@
    containing all the commands understood by the system. */
 #include "command.h"
 
-/* functions.h 
 
-   Provides some sample functions for the command handler to call. */
-#include "functions.h"
+#include "system.h"
 
 /* usart.h 
 

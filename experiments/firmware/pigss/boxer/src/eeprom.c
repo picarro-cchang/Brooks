@@ -38,7 +38,7 @@
 #include <avr/interrupt.h>
 
 // Provide definition of system_state_t
-#include "functions.h"
+#include "system.h"
 
 #include "eeprom.h"
 

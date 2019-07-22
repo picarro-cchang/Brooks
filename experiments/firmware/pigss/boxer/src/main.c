@@ -10,7 +10,7 @@
 #include <util/delay.h>
 
 // Provides the system state enumerated type
-#include "functions.h"
+#include "system.h"
 
 // Functions for setting the system clock prescaler
 #include "clock.h"

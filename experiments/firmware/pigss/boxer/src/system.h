@@ -2,8 +2,8 @@
 // The functions module provides miscellaneous structures and
 // functions to support the system.
 
-#ifndef FUN_H
-#define FUN_H
+#ifndef SYSTEM_H
+#define SYSTEM_H
 
 // Provides the definition of command_t -- the variable type
 // containing the attributes of each remote command.

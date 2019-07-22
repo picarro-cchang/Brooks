@@ -3,7 +3,7 @@
 #define EEPROM_H
 
 // Provides definition of system_state_t
-#include "functions.h"
+#include "system.h"
 
 // Define the offset for general system variables. The eeprom has 512
 // total locations.  I'll allocate addresses 0-99 for general system

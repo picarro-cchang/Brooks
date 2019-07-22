@@ -34,7 +34,7 @@
 // Provides definitions and functions for using the Topaz manifold boards
 #include "topaz.h"
 
-#include "functions.h"
+#include "system.h"
 
 
 // ----------------------- Globals ------------------------------------

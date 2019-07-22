@@ -61,7 +61,7 @@ SRC = $(TARGET).c \
       clock.c
 
 # General system functions
-SRC += functions.c
+SRC += system.c
 
 # EEPROM module
 SRC += eeprom.c
