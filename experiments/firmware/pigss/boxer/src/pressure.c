@@ -123,3 +123,17 @@ int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
   }
   return 0;
 }
+
+int8_t pressure_mpr_outlet_read(char board, uint32_t *data_ptr) {
+  switch(board) {
+  case 'a' :
+    cs_outlet_a_mpr_mux();
+    mpr_read( &cs_topaz_a_target, data_ptr);
+    break;
+  case 'b' :
+    cs_outlet_b_mpr_mux();
+    mpr_read( &cs_topaz_b_target, data_ptr);
+    break;
+  }
+  return 0;
+}

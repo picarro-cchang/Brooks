@@ -13,7 +13,7 @@ REVCODE = 1.0.7
 #   info -- Potentially interested stuff
 #   warning -- Maybe bad stuff
 #   error -- You want to know about this
-LOG_LEVEL = error
+LOG_LEVEL = debug
 
 # MCU name
 #
