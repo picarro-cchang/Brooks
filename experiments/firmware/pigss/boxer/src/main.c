@@ -209,15 +209,13 @@ int main() {
   
   //********************* Schedule some tasks **********************//
 
-  // Task 0
-  OS_TaskCreate(&test_task, 1000, BLOCKED);
-
-  // Offset task -- this gets enabled by another task
-  //
-  // Task 1
-  OS_TaskCreate(&offset_task, 500, SUSPENDED);
+  // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
   
-  // OS_TaskCreate(&ltc2601_ramp_test, 500, BLOCKED);
+  // Task 0 -- Trigger all the pressure sensors
+  OS_TaskCreate(&pressure_mpr_trigger_task, 2000, BLOCKED);
+
+  // Task 1 -- Read all the pressure sensors
+  OS_TaskCreate(&pressure_mpr_read_task, 1000, SUSPENDED);
 
 
   // The main loop
