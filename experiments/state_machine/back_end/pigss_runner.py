@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import aiohttp
 import aiohttp_cors
@@ -16,6 +17,7 @@ class HttpHandlers:
     app = attr.ib(None)
     runner = attr.ib(None)
     tasks = attr.ib(factory=list)
+    socket_stats = attr.ib(factory=lambda:{"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0})
 
     async def handle(self, request):
         name = request.match_info.get('name', "Anonymous")
@@ -29,7 +31,7 @@ class HttpHandlers:
 
         tags:
             -   diagnostics
-        summary: Issues an event 
+        summary: Issues an event
         consumes:
             -   application/json
         produces:
@@ -115,6 +117,31 @@ class HttpHandlers:
         controller = self.farm.controller
         return web.json_response(controller.get_status())
 
+    async def handle_stats(self, request):
+        """
+        ---
+        description: fetch server statistics for diagnostics
+
+        tags:
+            -   diagnostics
+        summary: fetch UI status
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation. Returns statistics
+        """
+        controller = self.farm.controller
+        result = {
+            "time": time.time(),
+            "ws_open": self.socket_stats["ws_open"],
+            "ws_connections": self.socket_stats["ws_connections"],
+            "ws_disconnections": self.socket_stats["ws_disconnections"],
+            "framework": Framework.get_info(),
+            "errors": [e for e in controller.error_list]
+        }
+        return web.json_response(result)
+
     # The following code handles multiple clients connected
     #  to the server. A single send task is used to send
     #  queue entries to all connected clients so that their
@@ -132,11 +159,15 @@ class HttpHandlers:
     async def websocket_handler(self, request):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
+        self.socket_stats['ws_connections'] += 1
         request.app['websockets'].append(ws)
+        self.socket_stats['ws_open'] = len(request.app['websockets'])
         async for msg in ws:
             # print(f"Websocket receive: {msg}")
             await self.farm.receive_queue.put(msg.data)
         request.app['websockets'].remove(ws)
+        self.socket_stats['ws_open'] = len(request.app['websockets'])
+        self.socket_stats['ws_disconnections'] += 1
         return ws
 
     async def server_init(self, port):
@@ -157,6 +188,7 @@ class HttpHandlers:
             web.get('/uistatus', self.handle_uistatus),
             web.get('/plan', self.handle_plan),
             web.get('/modal_info', self.handle_modal_info),
+            web.get('/stats', self.handle_stats),
             web.get('/ws', self.websocket_handler),
         ])
         setup_swagger(app)
@@ -187,6 +219,7 @@ class HttpHandlers:
     async def startup(self):
         await self.farm.startup()
         self.tasks.append(asyncio.create_task(self.server_init(8000)))
+
 
 if __name__ == "__main__":
     handlers = HttpHandlers()

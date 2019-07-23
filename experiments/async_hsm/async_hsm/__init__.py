@@ -190,6 +190,8 @@ class Hsm(object):
         # We initialize this to self.top, the default message handler
         self.state = self.top
 
+        self.state_receiving_dispatch = None
+
         # Async_hsm differs from QP here in that we hardcode
         # the initial state to be "_initial"
 
@@ -338,6 +340,7 @@ class Hsm(object):
 
         # Save the current state
         t = self.state
+        self.state_receiving_dispatch = t
 
         # Proceed to superstates if event is not handled, we wish to find the superstate
         #  (if any) that does handle the event and to record the path to that state
@@ -369,6 +372,7 @@ class Hsm(object):
 
         # Restore the state
         self.state = t
+        self.state_receiving_dispatch = None
 
 
 class Framework(object):
@@ -616,13 +620,30 @@ class Framework(object):
         Spy.on_framework_stop()
 
     @staticmethod
+    def get_info():
+        """Gets the name and current state
+        of each actor in the framework.
+        """
+        result = {}
+        for act in Framework._ahsm_registry:
+            if act.state_receiving_dispatch is not None:
+                result[act.__class__.__name__] = {
+                    "state_handling_event": act.state.__name__,
+                    "state_receiving_dispatch": act.state_receiving_dispatch.__name__
+                }
+            else:
+                result[act.__class__.__name__] = {"state": act.state.__name__}
+        return result
+
+    @staticmethod
     def print_info():
         """Prints the name and current state
         of each actor in the framework.
         Meant to be called when ctrl+T (SIGINFO/29) is issued.
         """
-        for act in Framework._ahsm_registry:
-            print(act.__class__.__name__, act.state.__name__)
+        info_dict = Framework.get_info()
+        for actor in info_dict:
+            print(actor, info_dict[actor])
 
     # Bind a useful set of POSIX signals to the handler
     # (ignore a NotImplementedError on Windows)
@@ -692,6 +713,7 @@ class Factory(Ahsm):
             for sig in signal_list:
                 Framework.subscribe(sig, self)
             return self.tran(initial_state)
+
         handler = state(copy(_initial))
         handler.__name__ = "_initial"
         handler.__qualname__ = handler.__name__
@@ -708,6 +730,7 @@ class Factory(Ahsm):
                 if ret_val is not None:
                     return ret_val
             return self.super(parent)
+
         handler = state(copy(state_handler))
         handler.__name__ = name
         handler.__qualname__ = handler.__name__

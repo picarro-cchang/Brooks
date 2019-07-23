@@ -4,93 +4,105 @@ and gathers status information from them periodically.
 
 The piglet objects are stored in a dictionary, keyed by the bank number (1-origin)
 
-The run() coroutine starts up the finite state machines within the piglet simulators as well
-    as a scheduler which runs the get_status coroutines, one for each piglet. These get_status
-    coroutines are called at the multiples of POLL_PERIOD, as measured by the time.monotonic
-    clock.
+The manager is written as an HSM with a single "_manager" state which handles
+events of types PIGLET_REQUEST and PIGLET_STATUS_TIMER.
 
-Calls to get_status() for each piglet make a dictionary which is populated via calls to the
-    command line interface of the piglet. In the actual hardware, this will involve serial
-    communications. After status is collected from all the piglets, we can aggregate the MFC
-    setpoint requests and send the sum to the MFC (not yet implemented).
+When a PIGLET_REQUEST event arrives, its payload is of type PigletRequestPayload. This
+contains a command that is to be sent to one or more piglets specified by bank_list.
+The send_to_piglets method sends the command to the specified piglets and gathers the
+results into a dictionary keyed by bank. It generates a PIGLET_RESPONSE event with a
+dictionary containing the responses keyed by bank.
 
-An additional coroutine command_handler(bank, command) allows for direct communications with
-    the individual piglets. These accesses have to be interleaved with the status gathering,
-    and this is achieved by using a mutex lock (self.comm_lock) which ensures that 
-    accessing the piglet CLIs do not interfere with each other. Note that the lock is held
-    by the staus collection routine until the status from all piglets have been collected. 
-    This will hopefully mean that the all of these status requests occur close to each other 
-    in time.
+When a PIGLET_STATUS_TIMER event arrives, the coroutine get_status is performed which
+send a collection of requests to all the piglets (specified in self.bank_list). These
+data are aggregated into a dictionary keyed by bank. The values are themselves dictionaries,
+consisting of the status data obtained from the piglet. An timestamp (from Unix epoch) 
+is included in the result dictionary. It generates a PIGLET_STATUS event.
 
-An Event of type PIGLET_STATUS is published whenever status has been collected from all the 
-    piglets. It contains a JSON payload with a timestamp (normal epoch time, not the monotonic) 
-    and all the status information collected.
-    
+A lock (self.comm_lock) is used to ensure that status discovery and piglet requests do not
+occur at the same time. 
+
 """
 import asyncio
-import json
-import math
 import time
 
-import attr
-
-from async_hsm import Event, Framework, Signal
+from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
+from async_hsm.SimpleSpy import SimpleSpy
 from piglet_simulator import PigletSimulator
+from pigss_payloads import PigletRequestPayload
 
-NUM_PIGLETS = 4
 POLL_PERIOD = 0.5
 
-@attr.s
-class PigletManager:
-    piglets = attr.ib(factory=lambda: {i+1: PigletSimulator(bank=i+1) for i in range(NUM_PIGLETS)})
-    comm_lock = attr.ib(factory=lambda: asyncio.Lock())
-    tasks = attr.ib(factory=list)
 
-    async def send_to_one_piglet(self, bank, command):
-        result = await self.command_handler(bank, command)
-        Framework.publish(Event(Signal.PIGLET_RESPONSE, result))
-        return result
+class PigletManager(Ahsm):
+    def __init__(self, bank_list):
+        super().__init__()
+        self.bank_list = bank_list
+        self.piglets = {bank: PigletSimulator(bank=bank) for bank in bank_list}
+        self.comm_lock = asyncio.Lock()
+        self.tasks = []
 
-    async def send_to_all_piglets(self, command):
-        result = {}
-        for bank in self.piglets:
-            result[bank] = await self.command_handler(bank, command)
-        Framework.publish(Event(Signal.PIGLET_RESPONSE, result))
-        return result
-
-    async def shutdown(self):
-        for task in self.tasks:
-            task.cancel()
-
-    async def startup(self):
-        Signal.register("PIGLET_STATUS")
-        Signal.register("PIGLET_RESPONSE")
-        self.tasks.append(asyncio.create_task(self.scheduler(POLL_PERIOD)))
+    @state
+    def _initial(self, e):
         for piglet in self.piglets.values():
             self.tasks.append(asyncio.create_task(piglet.fsm()))
+        self.piglet_status_te = TimeEvent("PIGLET_STATUS_TIMER")
+        Framework.subscribe("PIGLET_REQUEST", self)
+        Framework.subscribe("PIGLET_STATUS", self)
+        Framework.subscribe("PIGLET_RESPONSE", self)
+        Framework.subscribe("MFC_SET", self)
+        Framework.subscribe("SIGTERM", self)
+        return self.tran(self._manager)
 
-        # await asyncio.gather(self.scheduler(POLL_PERIOD), *[piglet.fsm() for piglet in self.piglets.values()])
+    @state
+    def _manager(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.piglet_status_te.postEvery(self, POLL_PERIOD)
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.piglet_status_te.disarm()
+            return self.handled(e)
+        elif sig == Signal.SIGTERM:
+            return self.tran(self._exit)
+        elif sig == Signal.PIGLET_REQUEST:
+            payload = e.value
+            assert isinstance(payload, PigletRequestPayload)
+            asyncio.create_task(self.send_to_piglets(payload.command, payload.bank_list))
+            return self.handled(e)
+        elif sig == Signal.PIGLET_STATUS_TIMER:
+            asyncio.create_task(self.get_status(self.bank_list))
+            return self.handled(e)
+        elif sig == Signal.PIGLET_STATUS:
+            print(f"Received PIGLET_STATUS, {e.value}")
+            piglet_status = e.value
+            mfc_total = 0
+            for bank in self.bank_list:
+                mfc_total += piglet_status[bank]["MFC"]
+            Framework.publish(Event(Signal.MFC_SET, {"time": piglet_status["time"], "mfc_setpoint": mfc_total}))
+            return self.handled(e)
+        elif sig == Signal.PIGLET_RESPONSE:
+            # print(f"Received PIGLET_RESPONSE, {e.value}")
+            return self.handled(e)
+        elif sig == Signal.MFC_SET:
+            print(f"Setting MFC, {e.value}")
+            return self.handled(e)
+        return self.super(self.top)
 
-    async def command_handler(self, bank, command):
-        async with self.comm_lock:
-            piglet = self.piglets[bank]
-            return await piglet.cli(command)
+    @state
+    def _exit(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            for task in self.tasks:
+                task.cancel()
+            return self.handled(e)
+        return self.super(self.top)
 
-    async def scheduler(self, period):
-        when = 0
-        while True:
-            now = time.monotonic()
-            when = max(when + period, period * math.ceil(now / period))
-            if when > now:
-                await asyncio.sleep(when - now)
-            actual = time.time()
-            async with self.comm_lock:
-                result = await asyncio.gather(*[self.get_status(i+1) for i in range(NUM_PIGLETS)])
-            msg = {"time": actual, "status": result}
-            Framework.publish(Event(Signal.PIGLET_STATUS, json.dumps(msg)))
-            print(f"Completed get_status for all piglets at {actual}, {result}")
+    async def command_handler(self, command, bank):
+        piglet = self.piglets[bank]
+        return await piglet.cli(command)
 
-    async def get_status(self, bank):
+    async def get_status_of_bank(self, bank):
         status = {}
         piglet = self.piglets[bank]
         status["STATE"] = await piglet.cli("OPSTATE?")
@@ -98,11 +110,37 @@ class PigletManager:
         status["SOLENOID_VALVES"] = int(await piglet.cli("CHANSET?"))
         return status
 
+    async def exec_on_banks(self, coroutine_function, bank_list):
+        async with self.comm_lock:
+            responses = await asyncio.gather(*[coroutine_function(bank) for bank in bank_list])
+            result = {bank: response for bank, response in zip(bank_list, responses)}
+            return result
+
+    async def send_to_piglets(self, command, bank_list):
+        response = await self.exec_on_banks(lambda bank: self.command_handler(command, bank), bank_list)
+        Framework.publish(Event(Signal.PIGLET_RESPONSE, response))
+
+    async def get_status(self, bank_list):
+        response = await self.exec_on_banks(self.get_status_of_bank, bank_list)
+        response["time"] = time.time()
+        Framework.publish(Event(Signal.PIGLET_STATUS, response))
+
 
 async def main():
-    pm = PigletManager()
-    await pm.run()
+    pm = PigletManager([1, 2, 3, 4])
+    pm.start(1)
+    event = Event(Signal.PIGLET_REQUEST, PigletRequestPayload("*IDN?", [1, 3, 4]))
+    Framework.publish(event)
+    event = Event(Signal.PIGLET_REQUEST, PigletRequestPayload("OPSTATE standby", [1, 3, 4]))
+    Framework.publish(event)
+    event = Event(Signal.PIGLET_REQUEST, PigletRequestPayload("OPSTATE ident", [4]))
+    Framework.publish(event)
+    await asyncio.sleep(10)
+    Framework.stop()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Uncomment this line to get a visual execution trace (to demonstrate debugging)
+    # Spy.enable_spy(SimpleSpy)
+    asyncio.ensure_future(main())
+    asyncio.get_event_loop().run_forever()

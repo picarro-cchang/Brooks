@@ -15,3 +15,8 @@ class PlanError:
     message = attr.ib("OK")
     row = attr.ib(0)
     column = attr.ib(0)
+
+@attr.s
+class PigletRequestPayload:
+    command = attr.ib(str)
+    bank_list = attr.ib(factory=list)
