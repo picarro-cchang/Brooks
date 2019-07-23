@@ -5,17 +5,23 @@
 // Provides boolean datatypes
 #include <stdbool.h>
 
-/* Received character (and parse) buffer size
-
-   Define the size of the received character buffer.  This buffer must
-   be big enough to hold the biggest remote command along with its
-   biggest argument and a space between the two.
-   
-   The parse buffer will also be made this size, since I don't allow
-   received commands to pile up -- they have to be processed one at a
-   time.
-*/
+// Received character (and parse) buffer size
+// 
+// Define the size of the received character buffer.  This buffer must
+// be big enough to hold the biggest remote command along with its
+// biggest argument and a space between the two.
+// 
+// The parse buffer will also be made this size, since I don't allow
+// received commands to pile up -- they have to be processed one at a
+// time.
 #define RECEIVE_BUFFER_SIZE 20
+
+// NACK return codes
+#define NACK_COMMAND_NOT_RECOGNIZED -1
+#define NACK_SYSTEM_BUSY -2
+#define NACK_COMMAND_FAILED -3
+#define NACK_BUFFER_OVERFLOW -4
+#define NACK_ARGUMENT_OUT_OF_RANGE -5
 
 
 /* Define the received command state structure.
@@ -110,7 +116,10 @@ void rbuffer_erase( recv_cmd_state_t *recv_cmd_state_ptr );
 // Send an acknowledge signal
 void command_ack( void );
 
-// Send a non-acknowledged signaljj
-void command_nack( void );
+// Send a non-acknowledged signal
+//
+// Arguments:
+//   nack_code -- Negative integer corresponding to failure condition
+void command_nack( int8_t nack_code );
 
 #endif // End the include guard

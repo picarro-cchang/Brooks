@@ -239,7 +239,7 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
 	    logger_msg_p("command",log_level_ERROR,
 			 PSTR("Argument to '%s' is out of range."),
 			 command_array -> name);
-	    command_nack();
+	    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
 	    return;
 	  }
 	  else {
@@ -273,7 +273,7 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
 		   PSTR("Unrecognized command: '%s'."),
 		   recv_cmd_state_ptr -> pbuffer);
       // usart_printf(USART_CHANNEL_COMMAND, "-1%s", LINE_TERMINATION_CHARACTERS);
-      command_nack();
+      command_nack(NACK_COMMAND_NOT_RECOGNIZED);
       recv_cmd_state_ptr -> pbuffer_locked = false;
     }
   }
@@ -338,6 +338,7 @@ void command_ack() {
   usart_printf(USART_CHANNEL_COMMAND, "0%s", LINE_TERMINATION_CHARACTERS);
 }
 
-void command_nack() {
-  usart_printf(USART_CHANNEL_COMMAND, "-1%s", LINE_TERMINATION_CHARACTERS);
+void command_nack( int8_t nack_code ) {
+  usart_printf(USART_CHANNEL_COMMAND, "%i%s", nack_code,
+	       LINE_TERMINATION_CHARACTERS);
 }

@@ -309,7 +309,7 @@ ISR(USART0_RX_vect) {
     if ((recv_cmd_state_ptr -> rbuffer_count) >= (RECEIVE_BUFFER_SIZE-1)) {
       logger_msg_p("rxchar",log_level_ERROR,
 		   PSTR("Received character number above limit"));
-      command_nack();
+      command_nack(NACK_BUFFER_OVERFLOW);
       rbuffer_erase(recv_cmd_state_ptr);
       return;
     }

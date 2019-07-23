@@ -62,6 +62,7 @@ hardware will be a custom PCB.
         - [Version 1.0.4](#version-104)
         - [Version 1.0.5](#version-105)
         - [Version 1.0.6](#version-106)
+        - [Version 1.0.7](#version-107)
 
 <!-- markdown-toc end -->
 
@@ -116,10 +117,6 @@ examples are `/dev/ttyUSB0`, `/dev/ttyUSB1`, etc.
 OFF hardware uses 38400 baud.  IFF hardware may use something
 different.
 
-
-
-
-
 ## Command reference ##
 
 Commands are not case-sensitive -- the command `*IDN?` is the same as
@@ -127,7 +124,16 @@ Commands are not case-sensitive -- the command `*IDN?` is the same as
 
 Commands always return something.  If the command doesn't have an
 explicit return value or string, it will return 0 (ACK).  Unrecognized
-commands or commands causing other problems will return -1 (NACK).
+commands or commands causing other problems will return one of the
+not-acknowledged (NACK) codes shown below.
+
+| NACK code | Condition                |
+|-----------|--------------------------|
+| -1        | Command not recognized   |
+| -2        | System is busy           |
+| -3        | Command execution failed |
+| -4        | Buffer overflow          |
+| -5        | Argument out of range    |
 
 A naked carriage return is not considered a command, and as such may
 be used to clear the instrument's receive queue.  The first carriage
@@ -360,3 +366,10 @@ Added the `OPSTATE` command to query the current operating state.
 Added the `TZA.SN` and `TZA.SN?` commands to set and get the serial
 number for Topaz A.  These commands, for now, simply return -1 if the
 board isn't connected.
+
+### Version 1.0.7 ###
+
+Started to add NACK codes.  See the [command
+reference](#command-reference) for the current list.  Commands without
+an explicit return will still simply return 0 for successful
+completion.

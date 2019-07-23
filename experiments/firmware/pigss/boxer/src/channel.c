@@ -117,7 +117,7 @@ void cmd_chanena( command_arg_t *command_arg_ptr ) {
   uint8_t channel_settings = channel_config_ptr -> enable;
   if (channel == 0 || channel > 8 ) {
     // Argument is out of range
-    command_nack();
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
     return;
   }
   if (channel <= 4 && topaz_is_connected('a')) {
@@ -131,7 +131,7 @@ void cmd_chanena( command_arg_t *command_arg_ptr ) {
     // The 1-4 channel Topaz isn't connected
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
 		 'a');
-    command_nack();
+    command_nack(NACK_COMMAND_FAILED);
     return;
   }
   if (channel <= 8 && topaz_is_connected('b')) {
@@ -145,7 +145,7 @@ void cmd_chanena( command_arg_t *command_arg_ptr ) {
     // The 5-8 channel Topaz isn't connected
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
 		 'b');
-    command_nack();
+    command_nack(NACK_COMMAND_FAILED);
     return;
   }
 }
@@ -156,7 +156,7 @@ void cmd_chanena_q( command_arg_t *command_arg_ptr ) {
   uint8_t channel_index = channel - 1;  
   if (channel == 0 || channel > 8 ) {
     // Argument is out of range
-    command_nack();
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
     return;
   }
   if (channel_array[channel_index].enabled) {
@@ -173,7 +173,7 @@ void cmd_chanoff( command_arg_t *command_arg_ptr ) {
   uint8_t channel_index = channel - 1;
   if (channel == 0 || channel > 8 ) {
     // Argument is out of range
-    command_nack();
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
     return;
   }
   // Disable the channel
@@ -190,7 +190,7 @@ void cmd_chanset( command_arg_t *command_arg_ptr ) {
   uint16_t channel_settings = command_arg_ptr -> uint16_arg;
   if (channel_settings > 255) {
     // Argument is out of range
-    command_nack();
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
     return;
   }
   uint8_t channel_array_index = 0;
