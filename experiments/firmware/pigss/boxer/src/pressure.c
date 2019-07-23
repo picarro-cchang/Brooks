@@ -38,6 +38,9 @@
 
 #include "bargraph.h"
 
+// Provides functions for working with Honeywell MPR pressure sensors
+#include "mpr.h"
+
 #include "pressure.h"
 
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
@@ -63,7 +66,7 @@ int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   return 0;
 }
 
-int8_t pressure_mpr_trigger(uint8_t channel) {
+int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
   switch(channel) {
   case 1 :
     cs_ch1_mpr_mux();
@@ -82,10 +85,24 @@ int8_t pressure_mpr_trigger(uint8_t channel) {
     mpr_trigger( &cs_topaz_a_target );
     break; 
   }
-  
+  return 0;
 }
 
-int8_t pressure_mpr_read(uint8_t channel, uint32_t *data_ptr) {
+int8_t pressure_mpr_outlet_trigger(char board) {
+  switch(board) {
+  case 'a' :
+    cs_outlet_a_mpr_mux();
+    mpr_trigger( &cs_topaz_a_target );
+    break;
+  case 'b' :
+    cs_outlet_b_mpr_mux();
+    mpr_trigger( &cs_topaz_b_target );
+    break;
+  }
+  return 0;
+}
+
+int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
   switch(channel) {
   case 1 :
     cs_ch1_mpr_mux();
@@ -104,4 +121,5 @@ int8_t pressure_mpr_read(uint8_t channel, uint32_t *data_ptr) {
     mpr_read( &cs_topaz_a_target, data_ptr);
     break;
   }
+  return 0;
 }

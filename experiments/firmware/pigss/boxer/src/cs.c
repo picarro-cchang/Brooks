@@ -105,6 +105,19 @@ void cs_topaz_a_target(uint8_t state) {
   return;  
 }
 
+void cs_topaz_b_target(uint8_t state) {
+  if ( state ) {
+    // Set cs high
+    PORTF |= _BV(PORTF1);
+    loop_until_bit_is_set(PORTF, PORTF1);
+  } else {
+    // Set cs low
+    PORTF &= ~(_BV(PORTF1));
+    loop_until_bit_is_clear(PORTF, PORTF1);
+  }
+  return;  
+}
+
 //******************** Proportional valve DACs *********************//
 
 void cs_ch1_dac_mux(void) {
@@ -172,18 +185,12 @@ void cs_outlet_a_mpr_mux(void) {
   cs_manifold_a_sr(1);
 }
 
-
-// cs_manifold_a_dac_1
-// cs_manifold_a_dac_2
-// ...
-// cs_manifold_a_dac_4
-
-// cs_manifold_a_pmi_1
-// cs_manifold_a_pmi_2
-// ...
-// cs_manifold_a_pmi_4
-
-// cs_manifold_a_pmx
+void cs_outlet_b_mpr_mux(void) {
+  // Set the mux address
+  cs_manifold_b_sr(0);
+  spi_write(8);
+  cs_manifold_b_sr(1);
+}
 
 
 
