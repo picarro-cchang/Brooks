@@ -14,7 +14,6 @@
     "react-list": "^0.8.11",
     "react-responsive-modal": "^4.0.1",
     "react-scripts": "3.0.1",
-    "react-websocket": "^2.0.1",
     "typescript": "3.5.2"
   },
   "scripts": {

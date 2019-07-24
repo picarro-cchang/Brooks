@@ -19,14 +19,13 @@ class PigssFarm:
         the piglets. The comms state machine is used to communicate with
         the serial ports and to handle errors.
     """
-    num_banks = 4
     send_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
     receive_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
     # comms = attr.ib(factory=PigssComms)
     tasks = attr.ib(factory=list)
 
     def __attrs_post_init__(self):
-        self.all_banks = [i+1 for i in range(self.num_banks)]
+        self.all_banks = [1, 2, 3, 4]
         self.controller = PigssController(self.all_banks)
         self.piglet_manager = PigletManager(self.all_banks)
     
