@@ -5,7 +5,6 @@ import CommandPanel from './CommandPanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
 import PlanSavePanel from './PlanSavePanel';
-import Websocket from 'react-websocket';
 import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
 import { ModalInfo, PlanPanelTypes } from './Types';
