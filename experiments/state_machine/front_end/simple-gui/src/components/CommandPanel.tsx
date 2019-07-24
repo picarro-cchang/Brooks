@@ -1,12 +1,5 @@
 import React, {Component, PureComponent} from 'react';
-import { stat } from 'fs';
-
-interface CommandPanelOptions {
-    uistatus: {
-        [key: string]: string;
-    }
-    ws_sender: (o: object)=>void;
-}
+import {CommandPanelOptions} from './Types';
 
 class CommandPanel extends PureComponent<CommandPanelOptions> {
     classNameOpt = { DISABLED:"btn-outline-info disabled command-disabled", READY: "btn-outline-success", ACTIVE:"btn-success" }

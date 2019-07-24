@@ -98,6 +98,7 @@ class HttpHandlers:
                 description: successful operation. Returns plan info
         """
         controller = self.farm.controller
+        controller.get_plan_filenames()
         return web.json_response(controller.get_plan())
 
     async def handle_uistatus(self, request):

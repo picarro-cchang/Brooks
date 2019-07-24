@@ -1,32 +1,6 @@
-import React, {Component, PureComponent} from 'react';
-import { stat } from 'fs';
-import { ENGINE_METHOD_NONE } from 'constants';
-
-interface PlanStep {
-    bank: number;
-    channel: number;
-    duration: number;
-}
-
-interface PlanFocus {
-    row: number;
-    column: number;
-}
-
-interface Plan {
-    show: boolean,
-    focus: PlanFocus,
-    last_step: number,
-    steps: { [key: string]: PlanStep }
-}
-
-interface PlanPanelOptions {
-    uistatus: { [key: string]: string; }
-    plan: Plan;
-    setFocus: (row: number, column: number) => void;
-    ws_sender: (o: object) => void;
-}
-
+import React, {Component, PureComponent, ReactText} from 'react';
+import ReactList from 'react-list';
+import {Plan, PlanFocus, PlanPanelOptions, PlanStep} from './Types';
 
 class PlanPanel extends PureComponent<PlanPanelOptions> {
     focusComponent:any = null;
@@ -66,7 +40,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         return (
             <div className="form-row" key={row}>
                 <label className="col-sm-1  small-input">{row}</label>
-                <div className="col-sm-7">
+                <div className="col-sm-6">
                     <input ref={input => input && (this.props.plan.focus.row === row) && 
                                 (this.props.plan.focus.column === 1) && this.manageFocus(input)} 
                      type="text" className="form-control small-input" id={"plan-port-" + row} 
@@ -89,60 +63,81 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         );
     }
 
+    renderItem = (index: number, key: ReactText) => <div key={key}>{this.makePlanRow(index + 1)}</div>
+
     render() {
+        /*
         let planRows = [];
-        for (let row=1; row<=20; row++) {
+        for (let row=1; row<=this.props.plan.max_steps; row++) {
             planRows.push(this.makePlanRow(row));
         }
+        */
         return (
             <div className="panel-plan" >
                 <h2>Schedule</h2>
-                <form style={{marginBottom: "10px"}}>
-                    {planRows}
-                </form>
+                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:520}}>
+                    <form>
+                        <ReactList
+                            itemRenderer={this.renderItem}
+                            length={this.props.plan.max_steps}
+                            type={"uniform"} 
+                        /> 
+                    </form>
+                </div>
                 <div className="container">
-                    <div className="row text-center">
-                        <div className="col-sm-2">
+                    <div className="row text-center" style={{marginTop: "10px"}}>
+                        <div className="col-sm-6">
                             <button type="button"
                                 disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                 onClick={e => this.props.ws_sender({element: "plan_insert"})}
-                                className={"btn btn-sm btn-info"}>
+                                className={"btn btn-sm btn-block btn-info"}>
                                 Insert
                             </button>
                         </div>
-                        <div className="col-sm-2">
+                        <div className="col-sm-6">
                             <button type="button"
                                 disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                 onClick={e => this.props.ws_sender({element: "plan_delete"})}
-                                className={"btn btn-sm btn-danger"}>
+                                className={"btn btn-sm btn-block btn-danger"}>
                                 Delete
                             </button>
                         </div>
-                        <div className="col-sm-2">
+                    </div>
+                    <div className="row text-center" style={{marginTop: "10px"}}>
+                        <div className="col-sm-6">
                             <button type="button"
                                 onClick={e => this.props.ws_sender({element: "plan_load"})}
-                                className={"btn btn-sm btn-dark"}>
+                                className={"btn btn-sm btn-block btn-dark"}>
                                 Load
                             </button>
                         </div>
-                        <div className="col-sm-2">
+                        <div className="col-sm-6">
                             <button type="button"
                                 onClick={e => this.props.ws_sender({element: "plan_save"})}
-                                className={"btn btn-sm btn-dark"}>
+                                className={"btn btn-sm btn-block btn-dark"}>
                                 Save
                             </button>
                         </div>
-                        <div className="col-sm-2">
+                    </div>
+                    <div className="row text-center" style={{marginTop: "10px"}}>
+                        <div className="col-sm-4">
+                            <button type="button"
+                                onClick={e => this.props.ws_sender({element: "plan_cancel"})}
+                                className={"btn btn-sm btn-block btn-danger"}>
+                                Cancel
+                            </button>
+                        </div>
+                        <div className="col-sm-4">
                             <button type="button"
                                 onClick={e => this.props.ws_sender({element: "plan_loop"})}
-                                className={"btn btn-sm btn-success"}>
+                                className={"btn btn-sm btn-block btn-success"}>
                                 Loop
                             </button>
                         </div>
-                        <div className="col-sm-2">
+                        <div className="col-sm-4">
                             <button type="button"
                                 onClick={e => this.props.ws_sender({element: "plan_ok"})}
-                                className={"btn btn-sm btn-success"}>
+                                className={"btn btn-sm btn-block btn-success"}>
                                 OK
                             </button>
                         </div>

@@ -3,22 +3,13 @@ import PicarroAPI from '../api/PicarroAPI';
 import BankPanel from './BankPanel';
 import CommandPanel from './CommandPanel';
 import PlanPanel from './PlanPanel';
+import PlanLoadPanel from './PlanLoadPanel';
+import PlanSavePanel from './PlanSavePanel';
 import Websocket from 'react-websocket';
 import deepmerge from 'deepmerge'; 
 import Modal from 'react-responsive-modal';
+import {ModalInfo, PlanPanelTypes} from './Types';
 
-interface ButtonInfo {
-    caption: string;
-    className: string;
-    response: string;
-}
-
-interface ModalInfo {
-    show: boolean,
-    html: string,
-    num_buttons: number,
-    buttons: { [key: string]: ButtonInfo }
-}
 class Main extends Component<any, any> {
     state = { 
         initialized: false,
@@ -30,10 +21,14 @@ class Main extends Component<any, any> {
         }, 
         uistatus: {},
         plan: {
-            show: false,
+            max_steps: 10,
+            panel_to_show: 0,
             focus: {row: 0, column: 0},
             last_step: 0,
-            steps: {}
+            steps: {},
+            num_plan_files: 0,
+            plan_files: {},
+            plan_filename: ""
         }
     };
 
@@ -68,14 +63,10 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        Promise.all([p1, p2]).then(() => {
+        Promise.all([p1, p2, p3]).then(() => {
             this.setState(deepmerge(this.state, {initialized: true}));
             console.log("State after getting uistatus, plan and modal info", this.state);
         })
-    }
-
-    onButtonTogglePlanClick(e: any) {
-        this.setState(deepmerge(this.state, {plan: {show: !this.state.plan.show}}));
     }
 
     /*
@@ -123,13 +114,31 @@ class Main extends Component<any, any> {
     };
 
     render() {
-        const left_panel = this.state.plan.show ? (
-            <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan} 
-            setFocus={(row, column) => this.setFocus(row, column)} 
-            ws_sender={this.ws_sender} />
-        ) : (
-            <CommandPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-        );
+        let left_panel;
+        switch (this.state.plan.panel_to_show) {
+        case PlanPanelTypes.NONE:
+            left_panel = (<CommandPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
+            break;
+        case PlanPanelTypes.PLAN:
+            left_panel = (
+                <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan} 
+                setFocus={(row, column) => this.setFocus(row, column)} 
+                ws_sender={this.ws_sender} />    
+            )
+            break;
+        case PlanPanelTypes.LOAD:
+                left_panel = (
+                    <PlanLoadPanel plan={this.state.plan} 
+                    ws_sender={this.ws_sender} />    
+                )
+                break;
+        case PlanPanelTypes.SAVE:
+            left_panel = (
+                <PlanSavePanel plan={this.state.plan} 
+                ws_sender={this.ws_sender} />    
+            )
+            break;
+        }
 
         let modalButtons=[];
         for (let i=1; i<=this.state.modal_info.num_buttons; i++) {
@@ -186,20 +195,3 @@ class Main extends Component<any, any> {
 }
 
 export default Main;
-
-/*
-<div>
-<button
-    onClick={e => this.onButtonGetStatusClick(e)}
-    className="btn btn-primary btn-lg"
-    style={{margin: "10px"}}>
-    Get Status
-</button>
-<button
-    onClick={e => this.onButtonTogglePlanClick(e)}
-    className="btn btn-primary btn-lg"
-    style={{margin: "10px"}}>
-    Toggle Plan
-</button>
-</div>
-*/
