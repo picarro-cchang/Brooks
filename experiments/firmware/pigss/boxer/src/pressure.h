@@ -45,10 +45,15 @@ void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr );
 // Pascals
 void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr );
 
-// Return a calibrated pressure in Pascals
+// Return a calibrated pressure in Pascals for outlet sensors.
+//
+// This can't be an all-sensor function, since calibration constants
+// are unique to each sensor.  And outlet sensors are called A and B,
+// where inlet sensors are 1-8.
 //
 // Arguments:
+//   board -- Board A or B
 //   raw -- Raw sensor counts
-uint32_t pressure_convert_pascals( uint32_t raw );
+uint32_t pressure_convert_outlet_pascals( char board, uint32_t raw );
 
 #endif
