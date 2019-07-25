@@ -650,9 +650,6 @@ class DasConfigure(SharedTypes.Singleton):
                                 ["STREAM_Cavity2Temp", "CAVITY2_TEMPERATURE_REGISTER"]))
                     self.opGroups["SLOW"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE_REGISTER"]))
-                    self.opGroups["SLOW"]["STREAMER"].addOperation(
-                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                                 ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE1_REGISTER"]))
                     self.opGroups["SLOW"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
