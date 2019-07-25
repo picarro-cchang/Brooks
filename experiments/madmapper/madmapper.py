@@ -31,11 +31,6 @@ class MadMapper(object):
         """
         TODO - Docstring
         """
-        # Hack for TestClient -- TestClient can
-        # only pass arguments as strings
-        if type(should_write) == str:
-            if should_write[0].lower() == 't':
-                should_write = True
         network_devices = self.networkmapper.get_all_picarro_hosts()
         serial_devices = self.serialmapper.get_usb_serial_devices()
         self.device_dict['Devices'].update(network_devices)
@@ -76,6 +71,7 @@ class MadMapper(object):
         except Exception as e:
             print(f'Exception: {e}')
             raise
+
 
     def register_rpc_functions(self):
         self.rpc_server.register_function(self.map_devices)
