@@ -12,9 +12,6 @@ class SerialMapper(object):
         self.relay_count = 0
         self.mfc_count = 0
         self.piglet_count = 0
-        print(f'Relay Port: {self.relay_port}\n'
-              f'MFC Port: {self.mfc_port}\n'
-              f'Piglet Port: {self.piglet_port}')
 
     def get_usb_serial_devices(self):
         context = pyudev.Context()
@@ -48,7 +45,7 @@ class SerialMapper(object):
                     slot_id = -1
                 self.devices['Serial_Devices'].update({
                     f'{device.get("DEVNAME")}': {'Driver': 'PigletDriver',
-                                                 'Bank_ID': slot_id,
+                                                 'Bank_ID': int(slot_id),
                                                  'Path': device.get('DEVNAME'),
                                                  'Baudrate': 38400,
                                                  'RPC_Port': self.piglet_port + self.piglet_count}})

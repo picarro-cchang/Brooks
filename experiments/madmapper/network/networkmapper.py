@@ -92,7 +92,7 @@ class NetworkMapper(object):
                     self.picarro_hosts['Network_Devices'].update({
                         f'{serial_number}': {'IP': f'{ip_address}',
                                              'Driver': 'IDriver',
-                                             'RPC_Port': f'{self.intrument_rpc_port + instrument_count}'}})
+                                             'RPC_Port': self.intrument_rpc_port + instrument_count}})
                     instrument_count += 1
             except Exception as e:
                 print(e)
