@@ -161,11 +161,11 @@ int main() {
   // Enable logging the FRAM system
   logger_setsystem( "mb85rc256v" );
 
-  logger_setsystem( "eeprom" ); // Enable eeprom module logging
-  logger_setsystem( "cal" ); // Enable calibration module logging
+  logger_setsystem( "eeprom" );
+  logger_setsystem( "cal" );
 
   logger_setsystem( "tca9539" );
-  logger_setsystem( "spi" );
+  // logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
 
   logger_setsystem( "ltc2607" );
