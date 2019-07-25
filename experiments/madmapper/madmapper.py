@@ -17,7 +17,6 @@ class MadMapper(object):
         self.path = f'{os.getenv("HOME")}/.config/picarro'
         self.file_name = 'madmapper.json'
         self.rpc_port = rpc_ports.get('madmapper')
-        print(self.rpc_port)
         self.rpc_server = CmdFIFO.CmdFIFOServer(
             ("", self.rpc_port),
             ServerName=__class__.__name__,
@@ -84,6 +83,8 @@ class MadMapper(object):
 
 
 def main():
+    if __debug__:
+        print(f'Starting MadMapper on port: {rpc_ports.get("madmapper")}')
     MadMapper()
 
 if __name__ == '__main__':
