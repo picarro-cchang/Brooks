@@ -142,11 +142,17 @@ command_t command_array[] = {
    "uint16",
    1,
    &cmd_out_prs_raw_q},
+  // prs.in.raw? -- Query the raw counts from inlet pressure sensor 1-8
+  {"prs.in.raw?",
+   "uint16",
+   1,
+   &cmd_in_prs_raw_q},
   // prs.out.pas? -- Query the output pressure sensor 1 or 2 in Pascals
   {"prs.out.pas?",
    "uint16",
    1,
    &cmd_out_prs_pas_q},
+  
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

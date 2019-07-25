@@ -252,6 +252,20 @@ void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr ) {
   }
 }
 
+void cmd_in_prs_raw_q( command_arg_t *command_arg_ptr ) {
+  uint16_t channel = (command_arg_ptr -> uint16_arg);
+  if (channel < 1 || channel > 8) {
+    // Argument is out of range
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
+    return;
+  }
+  uint8_t index = channel - 1;
+  usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
+		pressure_inlet_old_counts[index],
+		LINE_TERMINATION_CHARACTERS );
+
+}
+
 uint32_t pressure_convert_outlet_pascals( char board, uint32_t raw ) {
   uint32_t nmin = 0;
   uint32_t nmax = 0;
