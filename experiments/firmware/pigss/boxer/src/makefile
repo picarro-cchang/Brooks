@@ -117,6 +117,9 @@ SRC += topaz.c
 # Pressure control
 SRC += pressure.c
 
+# Math functions
+SRC += math.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =

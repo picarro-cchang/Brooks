@@ -78,7 +78,7 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
       data_union.bytes[bytenum] = spi_write(0);
     }
   }
-  logger_msg_p("mpr", log_level_INFO, PSTR("Pressure code 0x%lx"),data_union.word);
+  logger_msg_p("mpr", log_level_DEBUG, PSTR("Pressure code 0x%lx"),data_union.word);
   *data_ptr = data_union.word;
   
   // Return cs high

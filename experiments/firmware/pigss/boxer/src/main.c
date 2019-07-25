@@ -173,6 +173,7 @@ int main() {
   logger_setsystem( "lm75" );
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
+  logger_setsystem( "pressure" );
 
   // Start the I2C module
   i2c_init();

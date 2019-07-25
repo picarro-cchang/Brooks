@@ -111,6 +111,10 @@ logger_system_t system_array[] ={
     {"topaz",
      19
     },
+    // The pressure module
+    {"pressure",
+     20
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

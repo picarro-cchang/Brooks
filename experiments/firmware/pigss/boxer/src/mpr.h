@@ -5,6 +5,11 @@
 #ifndef MPR_H
 #define MPR_H
 
+// Calibration values for MPR sensors
+#define MPR_NMIN 0x19999aul
+#define MPR_NMAX 0xe66666ul
+#define MPR_PMAX_PASCAL 103421
+
 // Set initial values
 //
 // Chip-select functions take a 1 or a 0 argument to set the

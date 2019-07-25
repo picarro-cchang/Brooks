@@ -50,6 +50,9 @@
 // Provides commands to work with Topaz PCBs
 #include "topaz.h"
 
+// Provides commands to work with pressure sensors
+#include "pressure.h"
+
 
 /* Define the remote commands recognized by the system.
  */
@@ -134,6 +137,11 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_topaz_a_get_serial_number},
+  // prs.out.raw? -- Query the raw counts from output pressure sensor 1 or 2
+  {"prs.out.raw?",
+   "uint16",
+   1,
+   &cmd_out_prs_raw_q},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
