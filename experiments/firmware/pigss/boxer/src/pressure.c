@@ -200,7 +200,8 @@ void pressure_mpr_read_task(void) {
   pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
 						pressure_outlet_old_counts[0],
 						PRESSURE_EMA_ALPHA);
-  pressure_outlet_old_pascals[0] = pressure_convert_pascals(pressure_outlet_old_counts[0]);
+  pressure_outlet_old_pascals[0] =
+    pressure_convert_pascals(pressure_outlet_old_counts[0]);
   logger_msg_p("pressure", log_level_INFO,
 	       PSTR("Old pressure code 0x%lx"),
 	       pressure_outlet_old_counts[0]);
@@ -223,8 +224,26 @@ void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr ) {
   }
 }
 
+void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr ) {
+  uint16_t board_number = (command_arg_ptr -> uint16_arg);
+  switch(board_number) {
+  case 1 :
+    usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
+	       pressure_outlet_old_pascals[0],
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  default :
+    // This is an out of range input
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
+  }
+}
+
 uint32_t pressure_convert_pascals( uint32_t raw ) {
-  uint64_t temp = 0;
-  temp = (uint64_t) (raw - MPR_NMIN) * MPR_PMAX_PASCAL;
-  return (uint32_t) temp/(MPR_NMAX - MPR_NMIN);
+  uint64_t pascals = 0;
+  pascals = (uint64_t) (raw - MPR_NMIN) * MPR_PMAX_PASCAL /
+    (MPR_NMAX - MPR_NMIN);
+  logger_msg_p("pressure", log_level_DEBUG,
+	       PSTR("Converted pressure is %lu Pascals"),
+	       pascals);
+  return (uint32_t) pascals;
 }

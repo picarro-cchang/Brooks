@@ -41,6 +41,10 @@ void pressure_mpr_read_task(void);
 // Command to return the averaged counts from outlet pressure sensors
 void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr );
 
+// Command to return the averaged pressure from an outlet sensor in
+// Pascals
+void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr );
+
 // Return a calibrated pressure in Pascals
 //
 // Arguments:
