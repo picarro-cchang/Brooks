@@ -52,14 +52,14 @@
 //*************** Uncalibrated (counts) data storage ***************//
 
 // Last smoothed pressure value for all inlets (uncalibrated)
-uint32_t pressure_channel_inlet_old_counts[8] =
+uint32_t pressure_inlet_old_counts[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 // Last smoothed pressure value for all outlets (uncalibrated)
 uint32_t pressure_outlet_old_counts[2] = {0ul,0ul};
 
 // New smoothed pressure values for all inlets (uncalibrated)
-uint32_t pressure_channel_inlet_new_counts[8] =
+uint32_t pressure_inlet_new_counts[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 // New smoothed pressure value for all outlets (uncalibrated)
@@ -68,14 +68,14 @@ uint32_t pressure_outlet_new_counts[2] = {0ul,0ul};
 //*************** Calibrated (Pascals) data storage ****************//
 
 // Last smoothed pressure value for all inlets (uncalibrated)
-uint32_t pressure_channel_inlet_old_pascals[8] =
+uint32_t pressure_inlet_old_pascals[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 // Last smoothed pressure value for all outlets (uncalibrated)
 uint32_t pressure_outlet_old_pascals[2] = {0ul,0ul};
 
 // New smoothed pressure values for all inlets (uncalibrated)
-uint32_t pressure_channel_inlet_new_pascals[8] =
+uint32_t pressure_inlet_new_pascals[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 // New smoothed pressure value for all outlets (uncalibrated)
@@ -196,6 +196,20 @@ void pressure_mpr_trigger_task(void) {
 }
 
 void pressure_mpr_read_task(void) {
+  uint8_t index = 0;
+
+  // All inlets
+  for (uint8_t channel = 1; channel < 5; channel++) {
+    index = channel - 1;
+    pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
+    pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
+						     pressure_inlet_old_counts[index],
+						     PRESSURE_EMA_ALPHA);
+    pressure_inlet_old_pascals[index] =
+      pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
+  }
+  
+  // Outlet A
   pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
   pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
 						pressure_outlet_old_counts[0],
@@ -244,6 +258,52 @@ uint32_t pressure_convert_outlet_pascals( char board, uint32_t raw ) {
   uint32_t pmax_pascal = 0;
   switch(board) {
   case 'a' :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  }
+  uint64_t pascals = 0;
+  pascals = (uint64_t) (raw - nmin) * pmax_pascal / (nmax - nmin);
+  logger_msg_p("pressure", log_level_DEBUG,
+	       PSTR("Converted pressure is %lu Pascals"),
+	       pascals);
+  return (uint32_t) pascals;
+}
+
+uint32_t pressure_convert_inlet_pascals( uint8_t channel, uint32_t raw ) {
+  uint32_t nmin = 0;
+  uint32_t nmax = 0;
+  uint32_t pmax_pascal = 0;
+  switch(channel) {
+  case 1 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 2 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 3 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 4 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 5 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 6 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 7 :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 8 :
     nmin = MPR_NMIN;
     nmax = MPR_NMAX;
     pmax_pascal = MPR_PMAX_PASCAL;
