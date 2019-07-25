@@ -226,7 +226,6 @@ class Hsm(object):
             self.state = getattr(self, superState) if isinstance(superState, str) else superState
         return Hsm.RET_SUPER  # p. 158
 
-    @state
     def top(self, event):
         """This is the default state handler.
         This handler ignores all signals except
