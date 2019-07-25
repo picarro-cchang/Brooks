@@ -263,19 +263,10 @@ class MyFrame(wx.Frame):
             #make a tuple out of what gets entered...
             dlgValue = dlg.GetValue()
             dlg.Destroy()
-            execStr = "argTuple = (" + dlgValue + ")"
             try:
-                #security hole here since this executes code...
-                # eval(execStr)
-                argTuple = ()
-                for arg in dlgValue.split(","):
-                    a = arg.strip()
-                    if a.isdigit():
-                        a = int(a)
-                    argTuple = argTuple + (a,)
-
-                # print(argTuple)
-                # print(execStr)
+                # This is required for test_client to pass anything than
+                # integers or strings
+                argTuple = eval("(" + dlgValue + ")")
             except Exception as e:
                 print(e)
                 argsOkay = False
@@ -295,7 +286,7 @@ class MyFrame(wx.Frame):
             else:
                 if not isinstance(argTuple, tuple):
                     argTuple = (argTuple, )
-                    print("convertind to tuple")
+                    print(f"converting to tuple: {argTuple}")
         if argsOkay == False:
             argTuple = None
         return argTuple
