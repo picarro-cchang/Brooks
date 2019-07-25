@@ -3,6 +3,7 @@ import time
 import argparse
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.timeutils import get_local_timestamp
+from host.experiments.common.rpc_ports import rpc_ports
 
 # TODO
 #   Remove local import for CmdFIFO
@@ -16,7 +17,7 @@ class AlicatDriver(object):
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
-    def __init__(self, port, carriage_return='\r',
+    def __init__(self, port, rpc_port, carriage_return='\r',
                  mfc_id='A', baudrate=19200):
         self.serial = None
         self.terminate = False
@@ -25,8 +26,9 @@ class AlicatDriver(object):
         self.port = port
         self.baudrate = baudrate
         self.carriage_return = carriage_return
+        self.rpc_port = rpc_port
         self.rpc_server = CmdFIFO.CmdFIFOServer(
-            ("", 6667),
+            ("", self.rpc_port),
             ServerName=__class__.__name__,
             ServerDescription=f"RPC Server for {__class__.__name__}",
             ServerVersion=1.0,
@@ -308,6 +310,7 @@ def get_cli_args():
     parser.add_argument('-i', '--mfc_id', help='Alicat MFC ID')
     parser.add_argument('-p', '--mfc_port', help='Alicat MFC Port')
     parser.add_argument('-b', '--baudrate', help='Alicat MFC baudrate')
+    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port')
     args = parser.parse_args()
     return args
 
@@ -335,8 +338,14 @@ def main():
         baudrate = 19200
     if __debug__:
         print(f'Alicat MFC baudrate: {baudrate}')
+    if cli_args.rpc_port:
+        rpc_port = cli_args.rpc_port
+    else:
+        rpc_port = rpc_ports.get('mfc_drivers')
+    if __debug__:
+        print(f'Alicat RPC Port: {rpc_port}')
     # Instantiate the object and serve the RPC Port forever
-    AlicatDriver(mfc_id=id, port=port, baudrate=baudrate)
+    AlicatDriver(mfc_id=id, port=port, baudrate=baudrate, rpc_port=int(rpc_port))
     if __debug__:
         print('AlicatDriver stopped.')
 
