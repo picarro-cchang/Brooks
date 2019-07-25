@@ -366,9 +366,9 @@ class PigletDriver(object):
 
 def get_cli_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--piglet-port', help='Piglet port')
+    parser.add_argument('-p', '--piglet_port', help='Piglet port')
     parser.add_argument('-b', '--baudrate', help='Piglet baudrate')
-    parser.add_argument('-r', '--rpc-port', help='Piglet RPC Port')
+    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port')
     args = parser.parse_args()
     return args
 
