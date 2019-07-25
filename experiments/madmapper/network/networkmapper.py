@@ -1,10 +1,15 @@
 import socket
 import subprocess
-import CmdFIFO
-from conf import network_prefix, host_port
+from host.experiments.madmapper.network import CmdFIFO
+from host.experiments.common.rpc_ports import rpc_ports
 
 
 class NetworkMapper(object):
+    def __init__(self):
+        self.picarro_hosts = {"Network_Devices": {}}
+        self.network_prefix = '192.168.10.'
+        self.host_port = 50010
+        self.intrument_rpc_port = rpc_ports.get('instrument_drivers')
 
     @staticmethod
     def get_ip_addresses():
@@ -15,7 +20,7 @@ class NetworkMapper(object):
     def get_rack_lan_ip(self, ip_addresses):
         ip = None
         for ip in range(0, len(ip_addresses)):
-            if network_prefix in ip_addresses[ip]:
+            if self.network_prefix in ip_addresses[ip]:
                 ip = ip_addresses[ip]
                 break
         return ip
@@ -52,14 +57,14 @@ class NetworkMapper(object):
         end = 255
         hosts = []
         ip_addresses = [subprocess.Popen(
-            ['ping', '-c', '1', '-W', '1', f'{network_prefix}{x}'],
+            ['ping', '-c', '1', '-W', '1', f'{self.network_prefix}{x}'],
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE) for x in range(start, end)]
         for ip in ip_addresses:
             ip.communicate()
             return_code = ip.returncode
             if return_code == 0:
-                hosts.append(f'{network_prefix}{current}')
+                hosts.append(f'{self.network_prefix}{current}')
             current += 1
         if __debug__:
             print(f'\nActive hosts: {hosts}'
@@ -68,7 +73,7 @@ class NetworkMapper(object):
         return hosts
 
     def get_all_picarro_hosts(self):
-        picarro_hosts = {}
+        instrument_count = 0
         active_hosts = self.get_all_active_hosts()
         rack_ip = self.get_rack_lan_ip(self.get_ip_addresses())
         if rack_ip in active_hosts:
@@ -76,20 +81,24 @@ class NetworkMapper(object):
         for ip_address in active_hosts:
             if self.is_picarro_host(ip_address) is True:
                 driver = CmdFIFO.CmdFIFOServerProxy(
-                    f'http://{ip_address}:{host_port}',
+                    f'http://{ip_address}:{self.host_port}',
                     ClientName='NetworkMapper')
             try:
                 instrument_dict = driver.fetchLogicEEPROM()[0]
                 serial_number = f'{instrument_dict.get("Chassis")}-' \
                     f'{instrument_dict.get("Analyzer")}' \
                     f'{instrument_dict.get("AnalyzerNum")}'
-                if not picarro_hosts.get(serial_number):
-                    picarro_hosts.update({f'{serial_number}': f'{ip_address}'})
+                if serial_number not in self.picarro_hosts['Network_Devices']:
+                    self.picarro_hosts['Network_Devices'].update({
+                        f'{serial_number}': {'IP': f'{ip_address}',
+                                             'Driver': 'IDriver',
+                                             'RPC_Port': f'{self.intrument_rpc_port + instrument_count}'}})
+                    instrument_count += 1
             except Exception as e:
                 print(e)
         if __debug__:
-            print(f'Picarro hosts: {picarro_hosts}\n')
-        return picarro_hosts
+            print(f'Picarro hosts: {self.picarro_hosts}\n')
+        return self.picarro_hosts
 
 
 if __name__ == '__main__':
