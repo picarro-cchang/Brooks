@@ -755,9 +755,6 @@ class PigssController(Ahsm):
             return self.tran(self._plan_plan)
         elif sig == Signal.BTN_PLAN:
             return self.handled(e)
-        elif sig == Signal.BTN_PLAN_DELETE_FILENAME:
-            self.filename_to_delete = e.value["name"]
-            return self.tran(self._plan_delete_file)
         return self.super(self._operational)
 
     @state
@@ -842,6 +839,15 @@ class PigssController(Ahsm):
             return self.tran(self._plan_load)
         return self.super(self._plan)
 
+
+    @state
+    def _plan_file(self, e):
+        sig = e.signal
+        if sig == Signal.BTN_PLAN_DELETE_FILENAME:
+            self.filename_to_delete = e.value["name"]
+            return self.tran(self._plan_delete_file)
+        return self.super(self._plan)
+
     @state
     def _plan_load(self, e):
         sig = e.signal
@@ -854,7 +860,7 @@ class PigssController(Ahsm):
         elif sig == Signal.PLAN_LOAD_FILENAME:
             self.set_plan(["plan_filename"], e.value["name"])
             return self.tran(self._plan_load1)
-        return self.super(self._plan)
+        return self.super(self._plan_file)
 
     @state
     def _plan_load1(self, e):
@@ -905,7 +911,7 @@ class PigssController(Ahsm):
                 return self.tran(self._plan_save1)
             else:
                 return self.tran(self._plan_save2)
-        return self.super(self._plan)
+        return self.super(self._plan_file)
 
     @state
     def _plan_save1(self, e):
