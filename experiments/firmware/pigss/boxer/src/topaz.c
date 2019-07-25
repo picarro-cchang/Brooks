@@ -95,23 +95,16 @@ int8_t topaz_reset(char board) {
 
 int8_t topaz_set_serial_number(char board, uint16_t serial_number) {
   uint8_t i2c_address;
+  int8_t retval = 0;
 
   union {
     uint8_t b[2];
     uint16_t w;
   } sernum_union;
   sernum_union.w = serial_number;
-  
-  if (board == 'a') {
-    // Configure system board I2C mux or I2C address here
-    i2c_address = TOPAZ_I2C_MUX_ADDRESS;
-  } else {
-    i2c_address = TOPAZ_I2C_MUX_ADDRESS;
-  }
 
-  // Configure I2C mux on Topaz.  The only active mux position is 1.
-  tca9548a_write(i2c_address,1);
- 
+  // Enable I2C communication on the chosen board
+  retval = topaz_connect(board);
 
   uint16_t register_address;
   for (int8_t bytenum = 1; bytenum >= 0; bytenum--) {
@@ -121,7 +114,7 @@ int8_t topaz_set_serial_number(char board, uint16_t serial_number) {
 		     register_address,
 		     sernum_union.b[bytenum]);    
   }
-  return 0;
+  return retval;
 }
 
 uint16_t topaz_get_serial_number(char board) {
@@ -168,16 +161,15 @@ uint16_t topaz_get_serial_number(char board) {
 }
 
 void cmd_topaz_a_set_serial_number( command_arg_t *command_arg_ptr ) {
-  if (!topaz_is_connected('a')) {
-    // There's no Topaz A
-    command_nack(NACK_COMMAND_FAILED);
-    return;
-  }  
+  int8_t retval = 0;
   uint16_t sernum = (command_arg_ptr -> uint16_arg);
-  topaz_set_serial_number('a', sernum);
-  
-  // Acknowledge the successful command
-  command_ack();
+  retval = topaz_set_serial_number('a', sernum);
+  if (retval < 0) {
+    command_nack(NACK_COMMAND_FAILED);
+  } else {
+    // Acknowledge the successful command
+    command_ack();
+  }
 }
 
 void cmd_topaz_a_get_serial_number( command_arg_t *command_arg_ptr ) {
