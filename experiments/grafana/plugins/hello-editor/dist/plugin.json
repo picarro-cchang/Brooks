@@ -1,0 +1,23 @@
+{
+  "type": "panel",
+  "name": "Hello Editor",
+  "id": "hello-editor",
+  "dataFormats": [],
+  "info": {
+    "description": "Hello World with Panel Editor",
+    "author": {
+      "name": "Gerald Sornsen",
+      "url": "https://github.com/gsornsen"
+    },
+    "keywords": ["Hello", "World"],
+    "links": [],
+    "screenshots": [],
+    "version": "0.1.0",
+    "updated": "2019-02-21"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.x.x",
+    "plugins": []
+  }
+}
