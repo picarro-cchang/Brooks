@@ -9,7 +9,7 @@
 # We need to test both the upper and lower case forms of each command.
 
 # Firmware version code
-set firmware_version "1.0.7"
+set firmware_version "1.0.8"
 
 ############################### *idn? ################################
 
@@ -229,7 +229,7 @@ tcltest::test "slotid" "Check new slot ID" -body {
     return $return_string
 } -match regexp -result $slot_id
 
-############################## opstate ###############################
+############################## opstate? ##############################
 
 set command "opstate?"
 set description "Query the operational state"
@@ -302,3 +302,28 @@ tcltest::test "tza.sn" "Check setting a new Topaz A serial number" -body {
     set return_string [boxer::readline $channel]
     return $return_string
 } -match regexp -result $topaz_sn
+
+
+############################ prs.in.raw? #############################
+
+set command "prs.in.raw?"
+set description "Query raw inlet pressure readings"
+
+# We'll check the return value and compare it against a range.  Return
+# 0 if things are ok.
+set ok_result 0
+
+set channel_list "1 2 3 4 5 6 7 8"
+foreach inlet_channel $channel_list {
+    tcltest::test "[string tolower $command] $inlet_channel" "$description" -body {
+	boxer::sendcmd $channel "[string tolower $command] $inlet_channel"
+	set return_string [boxer::readline $channel]
+	if {$return_string > 13319000 && $return_string < 16279000} {
+	    return 0
+	} else {
+	    return -1
+	}
+    } -match regexp -result $ok_result  
+}
+
+

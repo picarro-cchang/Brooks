@@ -33,7 +33,7 @@ hardware will be a custom PCB.
             - [SLOTID?](#slotid)
                 - [Typical Return](#typical-return-4)
             - [OPSTATE?](#opstate)
-            - [Typical Return](#typical-return-5)
+                - [Typical Return](#typical-return-5)
             - [TZA.SN n](#tzasn-n)
                 - [Parameter (n)](#parameter-n-2)
                 - [Typical Return](#typical-return-6)
@@ -54,6 +54,10 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-11)
             - [CHANSET?](#chanset)
                 - [Typical Return](#typical-return-12)
+        - [Pressure commands](#pressure-commands)
+            - [PRS.IN.RAW? n](#prsinraw-n)
+                - [Parameter (n)](#parameter-n-7)
+                - [Typical Return](#typical-return-13)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -63,6 +67,7 @@ hardware will be a custom PCB.
         - [Version 1.0.5](#version-105)
         - [Version 1.0.6](#version-106)
         - [Version 1.0.7](#version-107)
+        - [Version 1.0.8](#version-108)
 
 <!-- markdown-toc end -->
 
@@ -219,7 +224,7 @@ Query the manifold box's slot ID.
 
 Query the system's operational state.
 
-#### Typical Return ####
+##### Typical Return #####
 
 `standby`
 
@@ -281,7 +286,6 @@ Integers 1-8
 
 `0`
 
-
 #### CHANOFF n ####
 
 Disable channel n.
@@ -316,6 +320,22 @@ Query the channel enable register.
 ##### Typical Return #####
 
 `8`
+
+### Pressure commands ###
+
+#### PRS.IN.RAW? n ####
+
+Query the raw digital pressure reading from one of the inlet sensors.
+Each channel has one inlet sensor.  The raw pressure reading is a
+24-bit number.
+
+##### Parameter (n) #####
+
+Channel number 1-8.
+
+##### Typical Return #####
+
+14799059
 
 ## Release history ##
 
@@ -373,3 +393,15 @@ Started to add NACK codes.  See the [command
 reference](#command-reference) for the current list.  Commands without
 an explicit return will still simply return 0 for successful
 completion.
+
+### Version 1.0.8 ###
+
+Added the [PRS.IN.RAW?](#prsinraw-n) query for the 8 inlet pressure
+sensors.  This is the first sensor data command.  The command takes an
+argument (1-8) to select the inlet channel.  The return is raw counts
+from the sensor.  Revision A boards have 15 PSI sensors, while newer
+revisions will probably have 25 PSI sensors.
+
+Pressures are currently sampled at a **very slow** rate -- about once
+every 2 seconds.  This is to make room for debug messages.  I'll
+increase the speed when I'm more confident.
