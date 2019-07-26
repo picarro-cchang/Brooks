@@ -48,6 +48,10 @@ void cmd_in_prs_raw_q( command_arg_t *command_arg_ptr );
 // Pascals
 void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr );
 
+// Command to return the averaged pressure from an inlet sensor in
+// Pascals
+void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr );
+
 // Return a calibrated pressure in Pascals for outlet sensors.
 //
 // This can't be an all-sensor function, since calibration constants
