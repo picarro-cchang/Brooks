@@ -210,13 +210,27 @@ int main() {
   
   //********************* Schedule some tasks **********************//
 
+  uint16_t pressure_read_period_ms = 0;
+  uint16_t mpr_read_delay_ms = 0;
+
+  if (strcmp( LOG_LEVEL, "debug" ) == 0) {
+    // We're debugging.  Slow the reads way down.
+    pressure_read_period_ms = 2000;
+    mpr_read_delay_ms = 1000;
+  } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
+    // This could be a release.  The minimum read delay is 5ms.
+    pressure_read_period_ms = 10;
+    mpr_read_delay_ms = 6;
+  }
+
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
   
   // Task 0 -- Trigger all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_trigger_task, 2000, BLOCKED);
+  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
 
   // Task 1 -- Read all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_read_task, 1000, SUSPENDED);
+  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
+
 
 
   // The main loop

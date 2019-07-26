@@ -36,12 +36,17 @@ void spi_init() {
   // |     0 |    0 |    1 |      16 |
   // |     0 |    1 |    0 |      64 |
   // |     0 |    1 |    1 |     128 |
+  // |     1 |    0 |    0 |       2 |
+  // |     1 |    0 |    1 |       8 |
+  // |     1 |    1 |    0 |      32 |
+  // |     1 |    1 |    1 |      64 |
   // |-------+------+------+---------|
   
   // SPCR |= _BV(SPR0); // Set fosc / 16 = 1MHz
 
-  // MPR sensors have a maximum SPI clock of 800kHz
-  SPCR |= _BV(SPR1); // Set fosc / 64 = 250 kHz
+  // MPR sensors have a maximum SPI clock of 800kHz.  Closest divider is 32.
+  SPCR |= _BV(SPR1); // Set fosc / 32 = 500 kHz
+  SPSR |= _BV(SPI2X);
 
   // The clock idles low by default (CPOL = 0)
   // The data is sampled on the clock's rising edge (CPHA = 0) by default
