@@ -1,0 +1,24 @@
+{
+  "type": "panel",
+  "name": "Picarro State Machine Panel",
+  "id": "picarro-state-machine-panel",
+
+  "dataFormats": [],
+
+  "info": {
+    "description": "",
+    "author": {
+      "name": "Picarro"
+    },
+    "keywords": [],
+    "links": [],
+    "screenshots": [],
+    "version": "0.0.1",
+    "updated": "2019-04-05"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.0.x",
+    "plugins": []
+  }
+}
