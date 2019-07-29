@@ -76,25 +76,47 @@ void channel_init() {
 }
 
 int8_t channel_update() {
-  uint8_t retval = 0;
-  uint8_t gpio_byte = 0;
+  int8_t retval = 0;
+
+  // Bits in the channel_hardware_byte will be cleared if the channel is
+  // enabled.
+  uint8_t channel_hardware_byte = 0;
   uint8_t channel_array_index = 0;
   while ((channel_array[channel_array_index].number) != 0) {
     if (channel_array[channel_array_index].enabled == true) {
-      gpio_byte |= _BV(channel_array_index);      
+      channel_hardware_byte &= ~(_BV(channel_array_index));      
+    } else {
+      channel_hardware_byte |= _BV(channel_array_index);
     }
     channel_array_index++;
   }
+  // Update hardware.  Disabled channels are energized.
+  uint8_t topaz_a_byte = channel_hardware_byte;
+  uint8_t topaz_b_byte = channel_hardware_byte >> 4;
+  
   // Handle Topaz A hardware
   if (topaz_is_connected('a')) {
-    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS, TCA9539_OUTPUT_PORT_0_REG, gpio_byte);
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_0_REG,
+		  topaz_a_byte);
     retval = channel_display();
-    return 0;
   } else {
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
 		 'a');
-    return -1;
+    retval += -1;
   }
+  // Handle Topaz B hardware
+  if (topaz_is_connected('b')) {
+    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_0_REG,
+		  topaz_b_byte);
+    retval = channel_display();
+  } else {
+    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
+		 'b');
+    retval += -1;
+  }
+  return retval;
 }
 
 uint8_t channel_display() {

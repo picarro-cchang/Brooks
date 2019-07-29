@@ -54,7 +54,7 @@ system_state_t *system_state_ptr = &system_state;
 
 
 void system_init( void ) {
-  uint16_t sernum;
+  uint16_t sernum = 0;
   eeprom_load_sernum(system_state_ptr);
   eeprom_load_slotid(system_state_ptr);
 
@@ -62,6 +62,8 @@ void system_init( void ) {
   // We can only talk to Topaz boards if they have a serial number, so
   // try to get that.
   sernum = topaz_get_serial_number('a');
+  logger_msg_p("system",log_level_INFO,PSTR("Topaz A serial number is %i"),
+	       sernum);
 }
 
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {

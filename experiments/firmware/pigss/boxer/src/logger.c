@@ -52,7 +52,7 @@ logger_system_t system_array[] ={
     4
     },
     // Miscellaneous system functions
-    {"functions",
+    {"system",
     5
     },
     // The sound module

@@ -145,6 +145,8 @@ int main() {
   // Enable metronome logging
   logger_setsystem( "metronome" );
 
+  logger_setsystem( "system" );
+
   // Enable channel module logging
   logger_setsystem( "channel" );
 
@@ -164,7 +166,7 @@ int main() {
   logger_setsystem( "eeprom" );
   logger_setsystem( "cal" );
 
-  logger_setsystem( "tca9539" );
+  // logger_setsystem( "tca9539" );
   // logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
 
@@ -186,7 +188,10 @@ int main() {
 
   // Set up Topaz boards
   topaz_init('a');
-
+  bool connected = topaz_is_connected('a');
+  logger_msg_p("main", log_level_DEBUG, PSTR("topaz_is_connected returns %d"),
+	       connected);
+ 
   // Start the channel module
   channel_init();
 
