@@ -9,11 +9,11 @@ class SerialMapper(object):
         self.relay_port = rpc_ports.get('relay_drivers')
         self.mfc_port = rpc_ports.get('mfc_drivers')
         self.piglet_port = rpc_ports.get('piglet_drivers')
+
+    def get_usb_serial_devices(self):
         self.relay_count = 0
         self.mfc_count = 0
         self.piglet_count = 0
-
-    def get_usb_serial_devices(self):
         context = pyudev.Context()
         for device in context.list_devices(subsystem='tty',
                                            ID_BUS='usb'):
