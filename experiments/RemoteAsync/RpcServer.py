@@ -17,23 +17,31 @@ class RpcServer:
         self.rpc_server.register_function(self.quotient)
         self.rpc_server.register_function(self.varsum)
         self.rpc_server.register_function(self.delay)
+        self.rpc_server.register_function(self.ping)
 
     def product(self, x, y):
         "Computes product of x and y"
+        print(f"Computing product of {x} and {y}")
         return x * y
 
     def quotient(self, x, y):
         "Computes quotient of x and y"
+        print(f"Computing quotient of {x} and {y}")
         return x / y
 
     def varsum(self, *a):
         "Computes sum of any number of arguments"
+        print(f"Computing sum of elements in {a}")
         return sum([x for x in a])
 
     def delay(self, x):
         "Delay by x seconds and return epoch time at completion"
+        print(f"Delaying for {x} seconds")
         time.sleep(x)
         return time.time()
+
+    def ping(self):
+        return "OK"
 
 
 @click.command()
