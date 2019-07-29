@@ -249,7 +249,8 @@ class MyFrame(wx.Frame):
 
     def _GetArgsFromDialog(self, FuncName, Args):
         argsOkay = True
-        argTuple = None
+        args = ()
+        kwargs = {}
         dlg = wx.TextEntryDialog(
                 self, "The selected RPC function requires arguments of the form:"
                       "\n\n%s\n\n"
@@ -266,7 +267,9 @@ class MyFrame(wx.Frame):
             try:
                 # This is required for test_client to pass anything than
                 # integers or strings
-                argTuple = eval("(" + dlgValue + ")")
+                def my_wrapper(*args, **kwargs):
+                    return args, kwargs
+                args, kwargs = eval("my_wrapper(" + dlgValue + ")")
             except Exception as e:
                 print(e)
                 argsOkay = False
@@ -284,20 +287,24 @@ class MyFrame(wx.Frame):
                 dlg.ShowModal()
                 dlg.Destroy()
             else:
-                if not isinstance(argTuple, tuple):
-                    argTuple = (argTuple, )
-                    print(f"converting to tuple: {argTuple}")
-        if argsOkay == False:
-            argTuple = None
-        return argTuple
+                if not isinstance(args, tuple):
+                    args = (args, )
+        if not argsOkay:
+            args = None
+        return args, kwargs
 
-    def _InvokeRPC(self, FuncName, ArgTuple):
-        assert isinstance(ArgTuple,tuple)
+    def _InvokeRPC(self, FuncName, ArgTuple, KwArgDict={}):
+        assert isinstance(ArgTuple, tuple)
+        assert isinstance(KwArgDict, dict)
         assert isinstance(self.Server, CmdFIFO.CmdFIFOServerProxy)
         argStr = ", ".join([repr(x) for x in ArgTuple])
+        if KwArgDict:
+            if argStr:
+                argStr += ", "
+            argStr += ", ".join([f"{k}={repr(v)}" for k, v in KwArgDict.items()])
         self.text_ctrl_1.AppendText("Calling function: %s(%s)\n" % (FuncName, argStr))
         try:
-            ret = self.Server.__getattr__(FuncName)(*ArgTuple)
+            ret = self.Server.__getattr__(FuncName)(*ArgTuple, **KwArgDict)
         except Exception as E:
             self.text_ctrl_1.AppendText("  Exception raised: %s\n" % E)
         else:
@@ -316,13 +323,14 @@ class MyFrame(wx.Frame):
             self.Server.SetFunctionMode(funcName, funcMethod)
         #if args exist, prompt for this...
         args = self.RPCMethodDict[funcName]
-        if args == '':
-            argTuple = ()
+        if args == '()':
+            args = ()
+            kwargs = {}
         else:
             #need to ask user for the argTuple to invoke the function...
-            argTuple = self._GetArgsFromDialog(funcName, args)
-        if argTuple != None:
-            self._InvokeRPC(funcName, argTuple)
+            args, kwargs = self._GetArgsFromDialog(funcName, args)
+        if args is not None:
+            self._InvokeRPC(funcName, args, kwargs)
 
     def OnGetNameClick(self, event):
         self._InvokeRPC('CmdFIFO.GetName', ())
@@ -365,9 +373,9 @@ class MyFrame(wx.Frame):
         dlg.Destroy()
 
     def OnDebugDelayClick(self, event):
-        argTuple = self._GetArgsFromDialog("CmdFIFO.DebugDelay", "DelayTime_s")
-        if argTuple != None:
-            self._InvokeRPC('CmdFIFO.DebugDelay', argTuple)
+        args, kwargs = self._GetArgsFromDialog("CmdFIFO.DebugDelay", "DelayTime_s")
+        if args != None:
+            self._InvokeRPC('CmdFIFO.DebugDelay', args, kwargs)
 
     def CallbackTest(self, ReturnedVars, Fault):
         self.text_ctrl_1.AppendText("  *** Callback received.  Ret = %r  Fault = %r\n" %(ReturnedVars,Fault))
@@ -432,11 +440,8 @@ def main():
                 #describing the args...
                 rpcDict = {}
                 for method in rpcMethodList:
-                    sig = server.system.methodSignature(method)
-                    assert isinstance(sig, str)
-                    #strip the self arg if a method...
-                    sig = sig.replace("(self,","(",1)
-                    sig = sig.replace("(self)","",1)
+                    sig = str(server.system.methodSignature(method))
+                    # assert isinstance(sig, str)
                     rpcDict.setdefault(method, sig)
                 #print "RPCDict = ", repr(rpcDict)
                 if len(rpcDict) == 0:
@@ -449,7 +454,7 @@ def main():
             app = wx.App(0)
             wx.InitAllImageHandlers()
             frame_1 = MyFrame(None, -1, "")
-            frame_1.SetMinSize(wx.Size(1280, 960))
+            frame_1.SetMinSize(wx.Size(960, 720))
             #attach the server to the frame (bad code, but anyway)...
             frame_1.Server=server
             #Set some visuals...

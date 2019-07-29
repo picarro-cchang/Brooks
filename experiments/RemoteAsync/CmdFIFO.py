@@ -26,6 +26,7 @@
 #
 import Pyro4
 import Pyro4.util
+import inspect
 import logging
 import os
 import pydoc
@@ -579,7 +580,7 @@ class CmdFIFOServer(object):
         self.stop_server()
 
     def system_listMethods(self):
-        """system.listMethods() => ['add', 'subtract', 'multiple']
+        """system.listMethods() => ['add', 'subtract', 'multiply']
 
         Returns a list of the methods supported by the server."""
 
@@ -610,24 +611,7 @@ class CmdFIFOServer(object):
         if method_name not in self.serverObject.funcs:
             return "%s method not found" % method_name
         f = self.serverObject.funcs[method_name]
-        argCount = getattr(f, "__wrapped_co_argcount", f.__code__.co_argcount)
-        optionalCount = 0
-        defaults = getattr(f, "__wrapped_defaults", f.__defaults__)
-        if defaults:
-            optionalCount = len(defaults)
-
-        if argCount == 0:
-            ret = ''
-        else:
-            varNames = getattr(f, "__wrapped_co_varnames",
-                               f.__code__.co_varnames)
-            args = list(varNames)[:argCount]
-            # wrap the optionals in square brackets...
-            if optionalCount > 0:
-                args[-optionalCount:] = ["[%s]" %
-                                         (s,) for s in args[-optionalCount:]]
-            ret = '(' + ', '.join(args[:argCount]) + ')'
-        return ret
+        return inspect.signature(f)
 
     def system_methodHelp(self, method_name):
         """system.methodHelp('add') => "Adds two integers together"
