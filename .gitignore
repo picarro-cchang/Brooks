@@ -6,6 +6,7 @@
 *~
 target/
 build/
+attic/
 .doit.db.*
 .vscode/
 .idea
