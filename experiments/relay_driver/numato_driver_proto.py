@@ -4,7 +4,7 @@
 """
 import time
 import serial
-import numato.CmdFIFO as CmdFIFO
+from experiments.testing.cmd_fifo import CmdFIFO
 
 GPIO_MODES = ["D_IN", "D_OUT", "A_IN"]
 
