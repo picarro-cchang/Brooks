@@ -1,0 +1,13 @@
+CmdFIFO.py					move to common and change paths
+CmdFIFO_tunnel.py			move to CmdFIFO.py and change paths
+DBWriter/					keep here for now
+easy_run.sh*				just in case
+IDriver.py					the most important file here
+__init__.py					
+Listener.py					remove and change path to common
+__pycache__/				
+redundant_shit/				delete
+rpc_tunnel_configs.json		leave here
+StringPickler.py			remove and change path to common
+tag_adder.py				helper for development until zookeeper will do it
+TestClient3.py				delete

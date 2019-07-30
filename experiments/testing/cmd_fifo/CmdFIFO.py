@@ -999,3 +999,142 @@ class _Method:
             return self.__send(self.__name, args, kwargs)
         except Exception as e:
             raise RemoteException("".join(Pyro4.util.getPyroTraceback())) from e
+
+
+class CmdFIFOServerTunnel(CmdFIFOServer):
+    """
+    Subclass of CmdFIFO, that allows tunneling RPC functions 
+    from multiple CmdFIFOProxys into one common RPC server
+    """
+    def __init__(self, *args, **kwargs):
+        self.proxys = {}
+        super(CmdFIFOServerTunnel, self).__init__(*args, **kwargs)
+
+    def register_function(self, 
+                          function, 
+                          name=None, 
+                          DefaultMode="B", 
+                          NameSlice=0, 
+                          EscapeDoubleUS=False, 
+                          proxy=None,
+                          original_name=None,
+                          ):
+        """Registers a function to respond to RPC requests.
+
+        if argument proxy is not supplied - we consider the registered
+        function to be a direct function of this server.
+        if argument proxy is supplied - we consider the registered function 
+        to be a function from a proxy server and we apply tunneling to it
+        also if proxy is supplied - name and original_name is not longer optional variables
+        """
+
+        if proxy is None:
+            if name is None:
+                name = function.__name__
+        else:
+            if name is None or original_name is None:
+                raise CmdFIFOError("Need to supply both name and original_name")
+            self.proxys[name] = (proxy, original_name)
+
+        if NameSlice > 0:
+            name = name[NameSlice:]
+        elif NameSlice < 0:
+            name = name[:NameSlice]
+        if not EscapeDoubleUS:
+            name = name.replace("__", ".")
+        self.serverObject.funcs[name] = function
+        self.serverObject.funcModes[name] = DefaultMode
+
+        return name
+
+
+    def system_methodSignature(self, method_name):
+        """system.methodSignature('add') => (x,y)
+
+        Returns a string containing the argument list for the method, with
+        optionals wrapped in square brackets."""
+        if method_name in self.proxys:
+            return self.proxys[method_name][0].system.methodSignature(self.proxys[method_name][1])
+        else:
+            return super().system_methodSignature(method_name)
+
+    def system_methodHelp(self, method_name):
+        """system.methodHelp('add') => "Adds two integers together"
+        Returns a string containing documentation for the specified method."""
+        if method_name in self.proxys:
+            return self.proxys[method_name][0].system.methodHelp(self.proxys[method_name][1])
+        else:
+            return super().system_methodHelp(method_name)
+
+def register_proxy_rpcs_from_configs(rpc_tunnel_configs, RpcTunnelServer, master_ip=None):
+    """
+    takes a config object and a server object and registered 
+    functions and proxys against supplied server
+    example of the config object:
+    [
+        {
+            "proxy_server_addres":"localhost",
+            "proxy_server_name":"first_server",
+            "proxy_server_port":"10001",
+            "new_methods_prefix":"FS_",
+            "new_methods_postfix":"_tunnel",
+            "functions":[
+                {
+                    "original_name":"get_counter",
+                    "new_name":"get_counter_tunnel_FIRST_SERVER_RULES"
+                },
+                {
+                    "original_name":"increase_counter",
+                    "new_name":""
+                }
+            ]
+        },
+        {
+            "proxy_server_addres":"localhost",
+            "proxy_server_name":"second_server",
+            "proxy_server_port":"10002",
+            "new_methods_prefix":"",
+            "new_methods_postfix":"",
+            "functions":[
+                {
+                    "original_name":"get_counter",
+                    "new_name":""
+                }
+            ]
+        }
+    ]
+    """
+    # print(RpcTunnelServer.__class__.__name__)
+
+    proxys = []
+    for proxy_config in rpc_tunnel_configs:
+        if master_ip is None:
+            ip = proxy_config["proxy_server_addres"]
+        else:
+            ip = master_ip
+        proxy = CmdFIFOServerProxy(
+             "http://{}:{}".format(ip, proxy_config["proxy_server_port"]), 
+             ClientName="some_dummy_client_name", 
+             IsDontCareConnection = False)
+        proxys.append(proxy)
+        for f in proxy_config["functions"]:
+            function = getattr(proxy, f["original_name"])
+            # if new name is not supplied - original name is used
+            if "new_name" not in f or f["new_name"] == "" or f["new_name"] is None:
+                new_name = f["original_name"]
+            else:
+                new_name = f["new_name"]
+            
+            # wrap new name with prefix and postfix, if supplied
+            if "new_methods_prefix" in proxy_config:
+                new_name = "{}{}".format(proxy_config["new_methods_prefix"], 
+                                       new_name)
+            if "new_methods_postfix" in proxy_config:
+                new_name = "{}{}".format(new_name,
+                                       proxy_config["new_methods_postfix"])
+
+            RpcTunnelServer.register_function(function,
+                                             name=new_name,
+                                             proxy=proxy,
+                                             original_name=f["original_name"])
+    return proxys
