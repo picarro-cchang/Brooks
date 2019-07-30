@@ -91,6 +91,7 @@ class NetworkMapper(object):
                 if serial_number not in self.picarro_hosts['Network_Devices']:
                     self.picarro_hosts['Network_Devices'].update({
                         f'{serial_number}': {'IP': f'{ip_address}',
+                                             'SN': serial_number,
                                              'Driver': 'IDriver',
                                              'RPC_Port': self.intrument_rpc_port + instrument_count}})
                     instrument_count += 1
