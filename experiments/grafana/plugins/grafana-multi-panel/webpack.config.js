@@ -11,7 +11,8 @@ module.exports = {
   },
   context: path.join(__dirname, "src"),
   entry: {
-    module: "./module.tsx"
+    './module': "./module.tsx",
+    'panels/module': "./panels/module.tsx",
   },
   devtool: "source-map",
   output: {
@@ -25,7 +26,16 @@ module.exports = {
     new webpack.optimize.OccurrenceOrderPlugin(),
     new CopyWebpackPlugin([
       { from: "plugin.json", to: "." },
-      { from: "../README.md", to: "." }
+      { from: "../README.md", to: "." },
+      { from: 'img', to: "./img"},
+
+      { from: 'panels/plugin.json', to: "./panels/plugin.json"},
+     // { from: 'config', to: "./config"},
+      { from: 'dashboards', to: "./dashboards"}
+
+      // { from: 'panels/plugin.json', to: "."},
+
+      //{ from: 'dashboards/DashboardCopy.json', to: "."}
     ])
   ],
   resolve: {
@@ -47,3 +57,5 @@ module.exports = {
     ]
   }
 };
+
+

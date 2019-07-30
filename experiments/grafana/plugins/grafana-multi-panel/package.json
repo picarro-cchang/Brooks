@@ -10,12 +10,14 @@
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {
-    "@grafana/ui": "^6.0.1-alpha.0",
+    "@grafana/data": "6.3.0-alpha.0",
+    "@grafana/ui": "6.3.0-alpha.32",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.3.4",
     "babel-loader": "^8.0.5",
     "babel-preset-env": "^1.7.0",
     "clean-webpack-plugin": "^2.0.1",
