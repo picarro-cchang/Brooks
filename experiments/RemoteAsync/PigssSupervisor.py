@@ -72,75 +72,63 @@ class PigssSupervisor:
         self.RPC = {}  # Asynchronous interface to RPC handlers of spervisees
         self.device_dict = {}
 
-    async def error_recovery(self, period):
-        relay_id = 0
-        while True:
-            await asyncio.sleep(period)
-            if not self.process_wrappers["MadMapper"].process.is_alive():
-                print(f"Restarting MadMapper")
-                process_wrapper = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'))
-                self.process_wrappers["MadMapper"] = process_wrapper
-                self.RPC["MadMapper"] = await process_wrapper.start()
-
-            for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
-                if dev_params['Driver'] == 'PigletDriver':
-                    if not self.process_wrappers[key].process.is_alive():
-                        print(f"Restarting {key}")
-                        process_wrapper = ProcessWrapper(PigletDriver, dev_params['RPC_Port'])
-                        self.process_wrappers[key] = process_wrapper
-                        self.RPC[f"Piglet_{dev_params['Bank_ID']}"] = await process_wrapper.start(
-                            port=dev_params['Path'], rpc_port=dev_params['RPC_Port'], baudrate=dev_params['Baudrate']
-                        )
-                elif dev_params['Driver'] == 'AlicatDriver':
-                    if not self.process_wrappers[key].process.is_alive():
-                        print(f"Restarting {key}")
-                        process_wrapper = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'])
-                        self.process_wrappers[key] = process_wrapper
-                        self.RPC["MFC"] = await process_wrapper.start(
-                            port=dev_params['Path'], rpc_port=dev_params['RPC_Port'], baudrate=dev_params['Baudrate']
-                        )
-                elif dev_params['Driver'] == 'NumatoDriver':
-                    if not self.process_wrappers[key].process.is_alive():
-                        print(f"Restarting {key}")
-                        process_wrapper = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'])
-                        self.process_wrappers[key] = process_wrapper
-                        relay_id += 1
-                        self.RPC[f"Relay_{relay_id}"] = await process_wrapper.start(
-                            device_port_name=dev_params['Path'], rpc_server_port=dev_params['RPC_Port']
-                        )
-
-
-    async def main(self):
-        process_wrapper = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'))
-        self.process_wrappers["MadMapper"] = process_wrapper
-        asyncio.create_task(process_wrapper.pinger(5))
-        self.RPC["MadMapper"] = await process_wrapper.start()
-        self.device_dict = await self.RPC["MadMapper"].read_json()
-        print(f"\nResult of MadMapper.read_json {self.device_dict}")
+    async def setup_processes(self, at_start=True):
+        if at_start or not self.process_wrappers["MadMapper"].process.is_alive():
+            process_wrapper = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'))
+            self.process_wrappers["MadMapper"] = process_wrapper
+            self.RPC["MadMapper"] = await process_wrapper.start()
+            self.device_dict = await self.RPC["MadMapper"].read_json()
+            print(f"\nResult of MadMapper.read_json {self.device_dict}")
+            if at_start:
+                asyncio.create_task(process_wrapper.pinger(5))
+            else:
+                print(f"Restarting {key}")
         relay_id = 0
         for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
             if dev_params['Driver'] == 'PigletDriver':
-                process_wrapper = ProcessWrapper(PigletDriver, dev_params['RPC_Port'])
-                self.process_wrappers[key] = process_wrapper
-                self.RPC[f"Piglet_{dev_params['Bank_ID']}"] = await process_wrapper.start(
-                    port=dev_params['Path'], rpc_port=dev_params['RPC_Port'], baudrate=dev_params['Baudrate']
-                )
+                if at_start or not self.process_wrappers[key].process.is_alive():
+                    process_wrapper = ProcessWrapper(PigletDriver, dev_params['RPC_Port'])
+                    self.process_wrappers[key] = process_wrapper
+                    self.RPC[f"Piglet_{dev_params['Bank_ID']}"] = await process_wrapper.start(
+                        port=dev_params['Path'], rpc_port=dev_params['RPC_Port'], baudrate=dev_params['Baudrate']
+                    )
+                    if at_start:
+                        asyncio.create_task(process_wrapper.pinger(2))
+                    else:
+                        print(f"Restarting {key}")
             elif dev_params['Driver'] == 'AlicatDriver':
-                process_wrapper = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'])
-                self.process_wrappers[key] = process_wrapper
-                self.RPC["MFC"] = await process_wrapper.start(
-                    port=dev_params['Path'], rpc_port=dev_params['RPC_Port'], baudrate=dev_params['Baudrate']
-                )
+                if at_start or not self.process_wrappers[key].process.is_alive():
+                    process_wrapper = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'])
+                    self.process_wrappers[key] = process_wrapper
+                    self.RPC["MFC"] = await process_wrapper.start(
+                        port=dev_params['Path'], rpc_port=dev_params['RPC_Port'], baudrate=dev_params['Baudrate']
+                    )
+                    if at_start:
+                        asyncio.create_task(process_wrapper.pinger(2))
+                    else:
+                        print(f"Restarting {key}")
             elif dev_params['Driver'] == 'NumatoDriver':
-                process_wrapper = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'])
-                self.process_wrappers[key] = process_wrapper
-                relay_id += 1
-                self.RPC[f"Relay_{relay_id}"] = await process_wrapper.start(
-                    device_port_name=dev_params['Path'], rpc_server_port=dev_params['RPC_Port']
-                )
-            asyncio.create_task(process_wrapper.pinger(2))
+                if at_start or not self.process_wrappers[key].process.is_alive():
+                    process_wrapper = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'])
+                    self.process_wrappers[key] = process_wrapper
+                    relay_id += 1
+                    self.RPC[f"Relay_{relay_id}"] = await process_wrapper.start(
+                        device_port_name=dev_params['Path'], rpc_server_port=dev_params['RPC_Port']
+                    )
+                    if at_start:
+                        asyncio.create_task(process_wrapper.pinger(2))
+                    else:
+                        print(f"Restarting {key}")
 
+    async def error_recovery(self, period):
+        while True:
+            await asyncio.sleep(period)
+            await self.setup_processes(at_start=False)
+
+    async def main(self):
+        await self.setup_processes(at_start=True)
         await self.error_recovery(5.0)
+
 
 if __name__ == "__main__":
     ps = PigssSupervisor()
