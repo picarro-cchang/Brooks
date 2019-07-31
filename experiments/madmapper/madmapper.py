@@ -15,7 +15,6 @@ class MadMapper(object):
         self.device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
         self.networkmapper = NetworkMapper()
         self.serialmapper = SerialMapper()
-        # self.path = f'{os.getenv("HOME")}/.config/picarro'
         self.path = os.path.join(os.getenv('HOME'), '.config/picarro')
         self.file_name = 'madmapper.json'
         self.rpc_port = rpc_ports.get('madmapper')
