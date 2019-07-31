@@ -231,10 +231,10 @@ int main() {
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
   
   // Task 0 -- Trigger all the pressure sensors
-  // OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
+  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
 
   // Task 1 -- Read all the pressure sensors
-  // OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
+  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
 
 

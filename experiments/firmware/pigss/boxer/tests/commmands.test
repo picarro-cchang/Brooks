@@ -9,7 +9,7 @@
 # We need to test both the upper and lower case forms of each command.
 
 # Firmware version code
-set firmware_version "1.0.8"
+set firmware_version "1.0.9"
 
 ############################### *idn? ################################
 
@@ -323,7 +323,22 @@ foreach inlet_channel $channel_list {
 	} else {
 	    return -1
 	}
-    } -match regexp -result $ok_result  
+    } -match regexp -result $ok_result
 }
 
+############################ chx.byp.dac #############################
+
+# This will just test the set commands.  The correct return should be 0.
+set ok_result 0
+set dac_setting 100
+
+foreach inlet_channel $channel_list {
+    set command "ch${inlet_channel}.byp.dac"
+    set description "Set proportional valve bypass DAC for channel $inlet_channel"
+    tcltest::test "[string tolower $command] $dac_setting" "$description" -body {
+	boxer::sendcmd $channel "[string tolower $command] $dac_setting"
+	set return_string [boxer::readline $channel]
+	return $return_string
+    } -match regexp -result $ok_result
+}
 

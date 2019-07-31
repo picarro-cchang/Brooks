@@ -58,6 +58,10 @@ hardware will be a custom PCB.
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-7)
                 - [Typical Return](#typical-return-13)
+        - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
+            - [CHx.BYP.DAC n](#chxbypdac-n)
+                - [Parameter (n)](#parameter-n-8)
+                - [Typical return](#typical-return)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -68,6 +72,7 @@ hardware will be a custom PCB.
         - [Version 1.0.6](#version-106)
         - [Version 1.0.7](#version-107)
         - [Version 1.0.8](#version-108)
+        - [Version 1.0.9](#version-109)
 
 <!-- markdown-toc end -->
 
@@ -139,6 +144,10 @@ not-acknowledged (NACK) codes shown below.
 | -3        | Command execution failed |
 | -4        | Buffer overflow          |
 | -5        | Argument out of range    |
+
+A command may fail with the "command execution failed" code if some
+hardware is missing.  For example, CH5.BYP.DAC 100 will fail if one of
+the **Topaz** boards isn't plugged in.
 
 A naked carriage return is not considered a command, and as such may
 be used to clear the instrument's receive queue.  The first carriage
@@ -337,6 +346,28 @@ Channel number 1-8.
 
 14799059
 
+### Proportional bypass valve commands ###
+
+#### CHx.BYP.DAC n ####
+
+Set the voltage DAC output controlling the proportional valve current
+source.  There are 8 of these commands: CH1.BYP.DAC, CH2.BYP.DAC, ...,
+CH8.BYP.DAC. The table below relates DAC codes to output current.  For
+example, the revision A Topaz boards will produce 65535 * 3.4492
+uA/count = 226 mA maximum.
+
+| Hardware version | uA / count |
+|------------------|------------|
+| A                | 3.4492     |
+
+##### Parameter (n) #####
+
+0-65535
+
+##### Typical return #####
+
+0
+
 ## Release history ##
 
 ### Version 1.0.0 ###
@@ -405,3 +436,13 @@ revisions will probably have 25 PSI sensors.
 Pressures are currently sampled at a **very slow** rate -- about once
 every 2 seconds.  This is to make room for debug messages.  I'll
 increase the speed when I'm more confident.
+
+### Version 1.0.9 ###
+
+Added the [CHx.BYP.DAC n](#chxbypdac-n) commands to set the sample
+bypass proportional valve positions.  Note that the proportional valve
+current control circuit has some offset issues with revision A
+**Topaz**.  The current through the proportional valves will change
+when solenoid valve selections change.
+
+Pressures are now sampled at 100Hz when the log level is set to "error."
