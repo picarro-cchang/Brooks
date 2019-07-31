@@ -81,6 +81,12 @@ uint32_t pressure_inlet_new_pascals[8] =
 // New smoothed pressure value for all outlets (uncalibrated)
 uint32_t pressure_outlet_new_pascals[2] = {0ul,0ul};
 
+//******************* Propotional valve settings *******************//
+
+// Each DAC will have an entry in this array.  Channel 1 will be the
+// first entry.
+uint16_t pressure_dac_counts[8] =
+  {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
@@ -88,22 +94,74 @@ int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   case 1 :
     cs_ch1_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
+    pressure_dac_counts[0] = counts;
     break;
   case 2 :
     cs_ch2_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
+    pressure_dac_counts[1] = counts;
     break;
   case 3 :
     cs_ch3_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
+    pressure_dac_counts[2] = counts;
     break;
   case 4 :
     cs_ch4_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
+    pressure_dac_counts[3] = counts;
     break;  
   }
   
   return 0;
+}
+
+void cmd_pressure_dac_set_1( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(1, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_2( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(2, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_3( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(3, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_4( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(4, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_5( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(5, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_6( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(6, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_7( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(7, setting);
+  command_ack();
+}
+
+void cmd_pressure_dac_set_8( command_arg_t *command_arg_ptr ) {
+  uint16_t setting = (command_arg_ptr -> uint16_arg);
+  pressure_dac_set(8, setting);
+  command_ack();
 }
 
 int8_t pressure_mpr_inlet_trigger(uint8_t channel) {

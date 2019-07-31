@@ -33,8 +33,6 @@
 
 #include "spi.h"
 
-#include "bargraph.h"
-
 #include "channel.h"
 
 // Initialize the channel array

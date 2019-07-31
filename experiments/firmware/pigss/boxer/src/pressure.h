@@ -74,4 +74,28 @@ uint32_t pressure_convert_outlet_pascals( char board, uint32_t raw );
 //   raw -- Raw sensor counts
 uint32_t pressure_convert_inlet_pascals( uint8_t channel, uint32_t raw );
 
+// Set the bypass proportional valve DAC for channel 1
+void cmd_pressure_dac_set_1( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 2
+void cmd_pressure_dac_set_2( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 3
+void cmd_pressure_dac_set_3( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 4
+void cmd_pressure_dac_set_4( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 5
+void cmd_pressure_dac_set_5( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 6
+void cmd_pressure_dac_set_6( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 7
+void cmd_pressure_dac_set_7( command_arg_t *command_arg_ptr );
+
+// Set the bypass proportional valve DAC for channel 8
+void cmd_pressure_dac_set_8( command_arg_t *command_arg_ptr );
+
 #endif

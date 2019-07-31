@@ -207,7 +207,7 @@ int main() {
 	       REVCODE);
 
   // cs_ch1_dac(0);
-  // pressure_dac_set(4, 0xbbbb);
+  // pressure_dac_set(1, 0xbbbb);
 
   //tca9539_write(0x74,0x06,0);
   // Set state to standby
@@ -231,10 +231,10 @@ int main() {
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
   
   // Task 0 -- Trigger all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
+  // OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
 
   // Task 1 -- Read all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
+  // OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
 
 

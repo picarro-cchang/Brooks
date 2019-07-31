@@ -157,7 +157,46 @@ command_t command_array[] = {
    "uint16",
    1,
    &cmd_in_prs_pas_q},
-  
+  // ch1.byp.dac -- Set the proportional valve DAC for channel 1 bypass
+  {"ch1.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_1},
+  // ch2.byp.dac -- Set the proportional valve DAC for channel 2 bypass
+  {"ch2.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_2},
+  // ch3.byp.dac -- Set the proportional valve DAC for channel 3 bypass
+  {"ch3.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_3},
+  // ch4.byp.dac -- Set the proportional valve DAC for channel 4 bypass
+  {"ch4.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_4},
+  // ch5.byp.dac -- Set the proportional valve DAC for channel 5 bypass
+  {"ch5.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_5},
+  // ch6.byp.dac -- Set the proportional valve DAC for channel 6 bypass
+  {"ch6.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_6},
+  // ch7.byp.dac -- Set the proportional valve DAC for channel 7 bypass
+  {"ch7.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_7},
+  // ch8.byp.dac -- Set the proportional valve DAC for channel 8 bypass
+  {"ch8.byp.dac",
+   "uint16",
+   5,
+   &cmd_pressure_dac_set_8},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
