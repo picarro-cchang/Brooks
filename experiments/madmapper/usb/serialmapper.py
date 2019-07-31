@@ -2,6 +2,7 @@ import pyudev
 import time
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.rpc_ports import rpc_ports
+from host.experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
 class SerialMapper(object):
     def __init__(self):
@@ -12,6 +13,7 @@ class SerialMapper(object):
         self.relay_count = 0
         self.mfc_count = 0
         self.piglet_count = 0
+        self.logger = LOLoggerClient(client_name=__class__.__name__)
 
     def get_usb_serial_devices(self):
         self.relay_count = 0
@@ -20,9 +22,7 @@ class SerialMapper(object):
         context = pyudev.Context()
         for device in context.list_devices(subsystem='tty',
                                            ID_BUS='usb'):
-            if __debug__:
-                from pprint import pprint
-                pprint(f'\n\n{dict(device)}\n\n')
+            self.logger.debug(f'Device found: {dict(device)}')
             if 'Numato' in device.get('ID_SERIAL'):
                 serial_interface = SerialInterface()
                 serial_interface.config(
@@ -37,7 +37,7 @@ class SerialMapper(object):
                     numato_id = int(f'{serial_interface.read()}'.split('\n')[1][-1])
                     serial_interface.close()
                 except Exception as e:
-                    print(f'\n\n\nException: {e}\n\n\n')
+                    self.logger.critical(f'Unhandled Exception: {e}')
                 self.devices['Serial_Devices'].update({
                     f"{device.get('DEVNAME')}": {'Driver': 'NumatoDriver',
                                                  'Path': device.get('DEVNAME'),
@@ -59,7 +59,7 @@ class SerialMapper(object):
                     slot_id = int(f'{serial_interface.read()}'.rstrip('\n'))
                     serial_interface.close()
                 except Exception as e:
-                    print(f'\n\n\nException: {e}\n\n\n')
+                    self.logger.critical(f'Unhandled Exception: {e}')
                 self.devices['Serial_Devices'].update({
                     f'{device.get("DEVNAME")}': {'Driver': 'PigletDriver',
                                                  'Bank_ID': slot_id,
@@ -74,9 +74,7 @@ class SerialMapper(object):
                                                  'Baudrate': 19200,
                                                  'RPC_Port': self.mfc_port + self.mfc_count}})
                 self.mfc_count += 1
-        if __debug__:
-            import json
-            print(json.dumps(self.devices))
+        self.logger.debug(f'USB Serial Devices: {self.devices}')
         return self.devices
 
 

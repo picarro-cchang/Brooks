@@ -2,6 +2,7 @@ import socket
 import subprocess
 from host.experiments.madmapper.network import CmdFIFO
 from host.experiments.common.rpc_ports import rpc_ports
+from host.experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
 
 class NetworkMapper(object):
@@ -10,6 +11,7 @@ class NetworkMapper(object):
         self.network_prefix = '192.168.10.'
         self.host_port = 50010
         self.intrument_rpc_port = rpc_ports.get('instrument_drivers')
+        self.logger = LOLoggerClient(client_name=__class__.__name__)
 
     @staticmethod
     def get_ip_addresses():
@@ -34,11 +36,9 @@ class NetworkMapper(object):
             s.close()
             result = True
         except socket.error as e:
-            if __debug__:
-                print(f'Socket Exception: {e}')
+            self.logger.warning(f'Socket Exception: {e}')
         finally:
-            if __debug__:
-                print(f'{host} is Picarro Instrument: {result}')
+            self.logger.debug(f'{host} is Picarro Instrument: {result}')
         return result
 
     def ping_host(self, host):
@@ -66,10 +66,9 @@ class NetworkMapper(object):
             if return_code == 0:
                 hosts.append(f'{self.network_prefix}{current}')
             current += 1
-        if __debug__:
-            print(f'\nActive hosts: {hosts}'
-                  f'Total hosts up: {len(hosts)}'
-                  f'Hosts scanned: {end - start}\n')
+        self.logger.debug(f'Active hosts: {hosts}'
+                          f'\nTotal hosts up: {len(hosts)}'
+                          f'\nHosts scanned: {end - start} ({self.network_prefix}{start} - {self.network_prefix}{end})\n')
         return hosts
 
     def get_all_picarro_hosts(self):
@@ -96,9 +95,8 @@ class NetworkMapper(object):
                                              'RPC_Port': self.intrument_rpc_port + instrument_count}})
                     instrument_count += 1
             except Exception as e:
-                print(e)
-        if __debug__:
-            print(f'Picarro hosts: {self.picarro_hosts}\n')
+                self.logger.warning(f'Unhandled Exception: {e}')
+        self.logger.debug(f'Picarro hosts: {self.picarro_hosts}\n')
         return self.picarro_hosts
 
 

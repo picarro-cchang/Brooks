@@ -3,7 +3,8 @@ import json
 from host.experiments.madmapper.network.networkmapper import NetworkMapper
 from host.experiments.madmapper.usb.serialmapper import SerialMapper
 from host.experiments.common.rpc_ports import rpc_ports
-from host.experiments.madmapper.network import CmdFIFO
+from host.experiments.testing.cmd_fifo import CmdFIFO
+from host.experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
 
 class MadMapper(object):
@@ -14,7 +15,8 @@ class MadMapper(object):
         self.device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
         self.networkmapper = NetworkMapper()
         self.serialmapper = SerialMapper()
-        self.path = f'{os.getenv("HOME")}/.config/picarro'
+        # self.path = f'{os.getenv("HOME")}/.config/picarro'
+        self.path = os.path.join(os.getenv('HOME'), '.config/picarro')
         self.file_name = 'madmapper.json'
         self.rpc_port = rpc_ports.get('madmapper')
         self.rpc_server = CmdFIFO.CmdFIFOServer(
@@ -24,6 +26,8 @@ class MadMapper(object):
             ServerVersion=1.0,
             threaded=True
         )
+        self.logger = LOLoggerClient(client_name=__class__.__name__)
+        self.logger.debug(f'Started')
         self.register_rpc_functions()
         self.rpc_server.serve_forever()
 
@@ -35,8 +39,7 @@ class MadMapper(object):
         serial_devices = self.serialmapper.get_usb_serial_devices()
         self.device_dict['Devices'].update(network_devices)
         self.device_dict['Devices'].update(serial_devices)
-        if __debug__:
-            print(json.dumps(self.device_dict, indent=2))
+        self.logger.debug(f'Devices found: \n{json.dumps(self.device_dict, indent=2)}')
         if should_write is True:
             self._write_json(self.device_dict)
         return self.device_dict
@@ -47,40 +50,43 @@ class MadMapper(object):
         """
         try:
             if not os.path.isdir(self.path):
-                if __debug__:
-                    print(f'Making directory: {self.path}')
+                self.logger.debug(f'Making directory: {self.path}')
                 os.mkdir(self.path, mode=0o755)
-            with open(f'{self.path}/{self.file_name}', 'w') as f:
+            with open(os.path.join(self.path, self.file_name), 'w') as f:
+                self.logger.debug(f'Writing to '
+                                  f'{os.path.join(self.path, self.file_name)}:\n'
+                                  f'{json.dumps(obj, indent=2)}')
                 f.write(f'{json.dumps(obj, indent=2)}\n')
         except Exception as e:
-            if __debug__:
-                print(f'Exception: {e}')
+            self.logger.critical(f'Unhandled Exception: {e}')
             raise
 
     def read_json(self):
         """
         TODO - Docstring
         """
-        json_path = f'{self.path}/{self.file_name}'
+        json_path = os.path.join(self.path, self.file_name)
         try:
             with open(json_path, 'r') as f:
                 json_contents = json.load(f)
-                if __debug__:
-                    print(json.dumps(json_contents, indent=2))
+                self.logger.debug(f'Reading from {json_path}: \n{json.dumps(json_contents, indent=2)}')
                 return json_contents
+        except FileNotFoundError:
+            self.logger.warning(f'File does not exist: {json_path}')
         except Exception as e:
-            print(f'Exception: {e}')
+            self.logger.critical(f'Unhandled Exception: {e}')
             raise
 
 
     def register_rpc_functions(self):
+        self.logger.debug(f'Registering RPC Functions')
         self.rpc_server.register_function(self.map_devices)
         self.rpc_server.register_function(self.read_json)
 
 
 def main():
     if __debug__:
-        print(f'Starting MadMapper on port: {rpc_ports.get("madmapper")}')
+        print(f'Starting MadMapper on port {rpc_ports.get("madmapper")}')
     MadMapper()
 
 if __name__ == '__main__':
