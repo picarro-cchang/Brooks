@@ -67,6 +67,9 @@ class SerialMapper(object):
                         f'{device.get("DEVNAME")}':
                             {'Driver': 'PigletDriver',
                              'Bank_ID': slot_id,
+                             'Topaz_A_HW_Rev': 'Null',
+                             'Topaz_B_HW_Rev': 'Null',
+                             'Whitfield_HW_Rev': 'Null',
                              'Path': device.get('DEVNAME'),
                              'Baudrate': 38400,
                              'RPC_Port': piglet_rpc_port}})
