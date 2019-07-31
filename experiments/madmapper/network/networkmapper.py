@@ -10,7 +10,7 @@ class NetworkMapper(object):
         self.picarro_hosts = {"Network_Devices": {}}
         self.network_prefix = '192.168.10.'
         self.host_port = 50010
-        self.intrument_rpc_port = rpc_ports.get('instrument_drivers')
+        self.instrument_rpc_port = rpc_ports.get('instrument_drivers')
         self.logger = LOLoggerClient(client_name=__class__.__name__)
 
     @staticmethod
@@ -41,7 +41,8 @@ class NetworkMapper(object):
             self.logger.debug(f'{host} is Picarro Instrument: {result}')
         return result
 
-    def ping_host(self, host):
+    @staticmethod
+    def ping_host(host):
         ping = subprocess.Popen(['ping', '-c', '1', '-W', '1', f'{host}'],
                                 stderr=subprocess.PIPE,
                                 stdout=subprocess.PIPE)
@@ -68,7 +69,9 @@ class NetworkMapper(object):
             current += 1
         self.logger.debug(f'Active hosts: {hosts}'
                           f'\nTotal hosts up: {len(hosts)}'
-                          f'\nHosts scanned: {end - start} ({self.network_prefix}{start} - {self.network_prefix}{end})\n')
+                          f'\nHosts scanned: {end - start} '
+                          f'({self.network_prefix}{start} - '
+                          f'{self.network_prefix}{end})\n')
         return hosts
 
     def get_all_picarro_hosts(self):
@@ -79,23 +82,24 @@ class NetworkMapper(object):
             active_hosts.remove(rack_ip)
         for ip_address in active_hosts:
             if self.is_picarro_host(ip_address) is True:
-                driver = CmdFIFO.CmdFIFOServerProxy(
-                    f'http://{ip_address}:{self.host_port}',
-                    ClientName='NetworkMapper')
-            try:
-                instrument_dict = driver.fetchLogicEEPROM()[0]
-                serial_number = f'{instrument_dict.get("Chassis")}-' \
-                    f'{instrument_dict.get("Analyzer")}' \
-                    f'{instrument_dict.get("AnalyzerNum")}'
-                if serial_number not in self.picarro_hosts['Network_Devices']:
-                    self.picarro_hosts['Network_Devices'].update({
-                        f'{serial_number}': {'IP': f'{ip_address}',
-                                             'SN': serial_number,
-                                             'Driver': 'IDriver',
-                                             'RPC_Port': self.intrument_rpc_port + instrument_count}})
-                    instrument_count += 1
-            except Exception as e:
-                self.logger.warning(f'Unhandled Exception: {e}')
+                try:
+                    driver = CmdFIFO.CmdFIFOServerProxy(
+                        f'http://{ip_address}:{self.host_port}',
+                        ClientName='NetworkMapper')
+                    instrument_dict = driver.fetchLogicEEPROM()[0]
+                    serial_number = f'{instrument_dict.get("Chassis")}-' \
+                        f'{instrument_dict.get("Analyzer")}' \
+                        f'{instrument_dict.get("AnalyzerNum")}'
+                    if serial_number not in self.picarro_hosts['Network_Devices']:
+                        rpc_port = self.instrument_rpc_port + instrument_count
+                        self.picarro_hosts['Network_Devices'].update({
+                            f'{serial_number}': {'IP': f'{ip_address}',
+                                                 'SN': serial_number,
+                                                 'Driver': 'IDriver',
+                                                 'RPC_Port': rpc_port}})
+                        instrument_count += 1
+                except Exception as e:
+                    self.logger.warning(f'Unhandled Exception: {e}')
         self.logger.debug(f'Picarro hosts: {self.picarro_hosts}\n')
         return self.picarro_hosts
 

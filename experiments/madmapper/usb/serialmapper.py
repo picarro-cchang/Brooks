@@ -4,6 +4,7 @@ from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.rpc_ports import rpc_ports
 from host.experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
+
 class SerialMapper(object):
     def __init__(self):
         self.devices = {"Serial_Devices": {}}
@@ -34,17 +35,20 @@ class SerialMapper(object):
                     time.sleep(0.5)
                     serial_interface.write('id get\r')
                     time.sleep(0.25)
-                    numato_id = int(f'{serial_interface.read()}'.split('\n')[1][-1])
+                    numato_id = int(f'{serial_interface.read()}'
+                                    .split('\n')[1][-1])
                     serial_interface.close()
+                    relay_rpc_port = self.relay_port + numato_id
+                    self.devices['Serial_Devices'].update({
+                        f"{device.get('DEVNAME')}":
+                            {'Driver': 'NumatoDriver',
+                             'Path': device.get('DEVNAME'),
+                             'Baudrate': 19200,
+                             'Numato_ID': numato_id,
+                             'RPC_Port': relay_rpc_port}})
+                    self.relay_count += 1
                 except Exception as e:
                     self.logger.critical(f'Unhandled Exception: {e}')
-                self.devices['Serial_Devices'].update({
-                    f"{device.get('DEVNAME')}": {'Driver': 'NumatoDriver',
-                                                 'Path': device.get('DEVNAME'),
-                                                 'Baudrate': 19200,
-                                                 'Numato_ID': numato_id,
-                                                 'RPC_Port': self.relay_port + numato_id}})
-                self.relay_count += 1
             elif 'Mega 2560 R3' in device.get('ID_MODEL_FROM_DATABASE'):
                 serial_interface = SerialInterface()
                 serial_interface.config(
@@ -58,21 +62,24 @@ class SerialMapper(object):
                     time.sleep(0.25)
                     slot_id = int(f'{serial_interface.read()}'.rstrip('\n'))
                     serial_interface.close()
+                    piglet_rpc_port = self.piglet_port + (slot_id - 1)
+                    self.devices['Serial_Devices'].update({
+                        f'{device.get("DEVNAME")}':
+                            {'Driver': 'PigletDriver',
+                             'Bank_ID': slot_id,
+                             'Path': device.get('DEVNAME'),
+                             'Baudrate': 38400,
+                             'RPC_Port': piglet_rpc_port}})
+                    self.piglet_count += 1
                 except Exception as e:
                     self.logger.critical(f'Unhandled Exception: {e}')
-                self.devices['Serial_Devices'].update({
-                    f'{device.get("DEVNAME")}': {'Driver': 'PigletDriver',
-                                                 'Bank_ID': slot_id,
-                                                 'Path': device.get('DEVNAME'),
-                                                 'Baudrate': 38400,
-                                                 'RPC_Port': self.piglet_port + (slot_id - 1)}})
-                self.piglet_count += 1
             elif 'FTDI_FT232R_USB_UART_AL04J9KM' in device.get('ID_SERIAL'):
+                mfc_rpc_port = self.mfc_port + self.mfc_count
                 self.devices['Serial_Devices'].update({
                     f'{device.get("DEVNAME")}': {'Driver': 'AlicatDriver',
                                                  'Path': device.get('DEVNAME'),
                                                  'Baudrate': 19200,
-                                                 'RPC_Port': self.mfc_port + self.mfc_count}})
+                                                 'RPC_Port': mfc_rpc_port}})
                 self.mfc_count += 1
         self.logger.debug(f'USB Serial Devices: {self.devices}')
         return self.devices
