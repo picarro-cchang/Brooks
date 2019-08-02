@@ -36,9 +36,7 @@
    system and severity. */
 #include "logger.h"
 
-/* numbers.h
-
-   Provides ascii to number conversion. */
+// Provides ascii to number conversion
 #include "numbers.h"
 
 // Provides commands to work with the eeprom
@@ -197,6 +195,11 @@ command_t command_array[] = {
    "uint16",
    5,
    &cmd_pressure_dac_set_8},
+  // byp.dac? -- Query the proportional valve DAC setting for channels 1-8
+  {"byp.dac?",
+   "uint16",
+   1,
+   &cmd_pressure_dac_query},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

@@ -98,4 +98,7 @@ void cmd_pressure_dac_set_7( command_arg_t *command_arg_ptr );
 // Set the bypass proportional valve DAC for channel 8
 void cmd_pressure_dac_set_8( command_arg_t *command_arg_ptr );
 
+// Query one of the proportional valve DAC values
+void cmd_pressure_dac_query( command_arg_t *command_arg_ptr );
+
 #endif

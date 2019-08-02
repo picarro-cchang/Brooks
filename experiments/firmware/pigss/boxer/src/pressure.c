@@ -208,6 +208,19 @@ void cmd_pressure_dac_set_8( command_arg_t *command_arg_ptr ) {
   }
 }
 
+void cmd_pressure_dac_query( command_arg_t *command_arg_ptr ) {
+  uint16_t channel = (command_arg_ptr -> uint16_arg);
+  if (channel < 1 || channel > 8) {
+    command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
+    return;
+  }
+  uint8_t index = channel - 1;
+  usart_printf( USART_CHANNEL_COMMAND, "%u%s",
+		pressure_dac_counts[index],
+		LINE_TERMINATION_CHARACTERS );
+  return;
+}
+
 int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
   switch(channel) {
   case 1 :
