@@ -1,1 +1,1 @@
-#Basic React Grafana App
+# Basic React Grafana App
