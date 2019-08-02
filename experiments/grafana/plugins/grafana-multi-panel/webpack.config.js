@@ -12,7 +12,8 @@ module.exports = {
   context: path.join(__dirname, "src"),
   entry: {
     './module': "./module.tsx",
-    'panels/module': "./panels/module.tsx",
+    'panels/MultiPanel/module': "./panels/MultiPanel/module.tsx",
+    'panels/StateMachine/module': "./panels/StateMachine/module.tsx"
   },
   devtool: "source-map",
   output: {
@@ -28,10 +29,11 @@ module.exports = {
       { from: "plugin.json", to: "." },
       { from: "../README.md", to: "." },
       { from: 'img', to: "./img"},
+      { from: 'panels/StateMachine/*.json', to: "."},
 
-      { from: 'panels/plugin.json', to: "./panels/plugin.json"},
+      { from: 'panels/MultiPanel/*.json', to: "."},
      // { from: 'config', to: "./config"},
-      { from: 'dashboards', to: "./dashboards"}
+      { from: 'dashboards/*', to: "."}
 
       // { from: 'panels/plugin.json', to: "."},
 

@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Multi App",
+  "name": "State Machine",
   "id": "multi-app",
   "info": {
     "author": {
@@ -8,17 +8,30 @@
       "url": "https://grafana.com"
     },
     "logos": {
-      "small": "img/logo.png",
-      "large": "img/logo.png"
+      "small": "img/Touch.png",
+      "large": "img/Touch.png"
     }
   },
 
   "includes": [
     {
       "type": "dashboard",
-      "name": "State Machine",
+      "name": "StateMachine",
       "path": "dashboards/StateMachine.json",
-      "addToNav": true
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "panel",
+      "name": "Multi Panel"
+    },
+    {
+      "type": "panel",
+      "name": "Picarro State Machine"
     }
-  ]
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
 }
