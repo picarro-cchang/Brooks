@@ -30,8 +30,10 @@
 
 #include "topaz.h"
 
-
 #include "spi.h"
+
+// Provides commands for working with bypass DACs
+#include "pressure.h"
 
 #include "channel.h"
 
@@ -75,15 +77,25 @@ void channel_init() {
 
 int8_t channel_update() {
   int8_t retval = 0;
+  uint8_t channel = 0;
 
   // Bits in the channel_hardware_byte will be cleared if the channel is
   // enabled.
   uint8_t channel_hardware_byte = 0;
   uint8_t channel_array_index = 0;
+  // Loop through the channel array to set the hardware byte for
+  // active or inactive channels.  Set the bypass DACs for inactive
+  // channels.
   while ((channel_array[channel_array_index].number) != 0) {
+    channel = channel_array[channel_array_index].number;
     if (channel_array[channel_array_index].enabled == true) {
+      // Channel is enabled for sampling
       channel_hardware_byte &= ~(_BV(channel_array_index));      
     } else {
+      // Channel has been disabled.  Set the bypass DAC to get the
+      // inactive flow level.
+      retval = pressure_dac_set(channel, PRESSURE_DAC_INACTIVE_COUNTS);
+      // Clear the bit in the hardware byte
       channel_hardware_byte |= _BV(channel_array_index);
     }
     channel_array_index++;
@@ -126,7 +138,6 @@ uint8_t channel_display() {
     }
     channel_array_index++;
   }
-  bargraph_write( &cs_manifold_b_sr, bargraph_word );
   return 0;
 }
 

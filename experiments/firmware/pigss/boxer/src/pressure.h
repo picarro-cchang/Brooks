@@ -10,6 +10,9 @@
 // Alpha value for pressure moving average
 #define PRESSURE_EMA_ALPHA 65535
 
+// Setpoint for bypass DACs when channels are disabled
+#define PRESSURE_DAC_INACTIVE_COUNTS 17134
+
 // Set the voltage output from one of the pressure-control DACs
 //
 // Arguments:
