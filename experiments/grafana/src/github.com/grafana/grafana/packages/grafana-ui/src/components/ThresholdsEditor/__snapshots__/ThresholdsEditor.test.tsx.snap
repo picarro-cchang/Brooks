@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`Render should render with base threshold 1`] = `
-<ContextConsumer>
-  <Component />
-</ContextConsumer>
-`;
