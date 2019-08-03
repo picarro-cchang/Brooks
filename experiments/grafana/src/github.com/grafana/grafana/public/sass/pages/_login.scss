@@ -1,4 +1,4 @@
-$login-border: #ffffff;
+$login-border: #8daac5;
 
 .login {
   min-height: 100vh;
@@ -10,8 +10,7 @@ $login-border: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  // background-image: url(../img/heatmap_bg_test.svg);
-  background-color: #262628;
+  background-image: url(../img/heatmap_bg_test.svg);
   background-size: cover;
   color: #d8d9da;
 
@@ -20,8 +19,7 @@ $login-border: #ffffff;
   }
 
   & .btn-primary {
-    @include buttonBackground(#333333, #666666);
-    height: 40px;
+    @include buttonBackground(#ff6600, #bc3e06);
   }
 }
 
@@ -35,9 +33,9 @@ textarea:-webkit-autofill:focus,
 select:-webkit-autofill,
 select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px $input-bg inset !important;
-  -webkit-text-fill-color: $input-color !important;
-  box-shadow: 0 0 0px 1000px $input-bg inset;
+  -webkit-box-shadow: 0 0 0px 1000px $black inset !important;
+  -webkit-text-fill-color: #fbfbfb !important;
+  box-shadow: 0 0 0px 1000px $black inset;
 }
 
 .login-form-group {
@@ -45,11 +43,11 @@ select:-webkit-autofill:focus {
   flex-direction: column;
   width: 100%;
   align-items: center;
-  margin-bottom: $space-md;
+  margin-bottom: 1rem;
 }
 
 .login-form {
-  margin-bottom: $space-md;
+  margin-bottom: 1rem;
   width: 100%;
 }
 
@@ -71,19 +69,19 @@ select:-webkit-autofill:focus {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-top: $space-sm;
+  margin-top: 0.5rem;
 
   &--right {
     justify-content: flex-end;
 
     & .btn {
-      margin-left: $space-md;
+      margin-left: 1rem;
     }
   }
   & .btn-inverse {
     color: #e3e3e3;
     text-shadow: 0px 1px 0 rgba(0, 0, 0, 0.1);
-    background-color: #8daac5;
+    background-color: #2a2a2c;
     background-image: linear-gradient(to bottom, #262628, #303032);
     background-repeat: repeat-x;
     border-color: #262628;
@@ -92,7 +90,7 @@ select:-webkit-autofill:focus {
 }
 
 .login-button-forgot-password {
-  padding-top: $space-md;
+  padding-top: 1rem;
 }
 
 .login-text {
@@ -119,7 +117,7 @@ select:-webkit-autofill:focus {
   align-items: center;
   justify-content: center;
   flex-grow: 0;
-  padding-top: $space-xl;
+  padding-top: 2rem;
 
   .logo-icon {
     width: 70px;
@@ -129,7 +127,7 @@ select:-webkit-autofill:focus {
 
 .app-grafana {
   .logo-wordmark {
-    background: url('../img/picarro_typelogo.svg') top center no-repeat;
+    background: url('../img/grafana_typelogo.svg') top center no-repeat;
     width: 100%;
     height: 70px;
   }
@@ -137,7 +135,7 @@ select:-webkit-autofill:focus {
 
 .app-enterprise {
   .logo-wordmark {
-    background: url('../img/picarro_typelogo.svg') top center no-repeat;
+    background: url('../img/grafana_enterprise_typelogo.svg') top center no-repeat;
     width: 100%;
     height: 70px;
   }
@@ -152,7 +150,7 @@ select:-webkit-autofill:focus {
 
 .login-inner-box {
   text-align: center;
-  padding: $space-xl;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,8 +176,14 @@ select:-webkit-autofill:focus {
   }
 }
 
+.login-tab-header {
+  background: $tight-form-bg;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
 .login-change-password-info {
-  padding-bottom: $space-lg;
+  padding-bottom: 1.5rem;
 
   & h5 {
     text-align: left;
@@ -189,6 +193,46 @@ select:-webkit-autofill:focus {
   color: $white;
   border: 1px solid $login-border;
   background-color: $btn-semi-transparent;
+}
+
+.btn-login-tab {
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  padding: 10px 10px;
+  font-weight: bold;
+  display: inline-block;
+  width: 170px;
+  color: $text-color;
+
+  &.active {
+    background: darken($tight-form-bg, 5%);
+    color: $white;
+  }
+
+  &:focus {
+    outline: 0;
+  }
+}
+
+.password-strength {
+  display: block;
+  width: 15%;
+  overflow: visible;
+  white-space: nowrap;
+  padding-top: 3px;
+  color: darken($text-color, 20%);
+  border-top: 3px solid $red;
+
+  &.password-strength-ok {
+    width: 40%;
+    border-top: 3px solid lighten($yellow, 10%);
+  }
+
+  &.password-strength-good {
+    width: 100%;
+    border-top: 3px solid lighten($green, 10%);
+  }
 }
 
 .login-submit-button-row {
@@ -208,10 +252,19 @@ select:-webkit-autofill:focus {
   width: 100%;
 }
 
+.password-recovery {
+  background: $tight-form-bg;
+  padding: 10px;
+
+  a {
+    color: $gray-2;
+  }
+}
+
 .login-divider {
   float: left;
   width: 100%;
-  margin: 0 25% $space-md 25%;
+  margin: 0 25% 1rem 25%;
   display: flex;
   justify-content: space-between;
 
@@ -233,7 +286,7 @@ select:-webkit-autofill:focus {
   align-items: center;
   justify-content: flex-end;
   width: 100%;
-  margin-top: $space-md;
+  margin-top: 1rem;
 }
 
 .login-signup-title {
@@ -244,7 +297,7 @@ select:-webkit-autofill:focus {
 
 .login-btn {
   width: 100%;
-  margin: 0 0 $space-md;
+  margin: 0 0 1rem;
 }
 
 .signup-page-background {
@@ -289,7 +342,7 @@ select:-webkit-autofill:focus {
 
 @include media-breakpoint-up(sm) {
   .login-branding {
-    padding: $space-md;
+    padding: 1rem;
 
     .logo-icon {
       width: 80px;
@@ -311,7 +364,7 @@ select:-webkit-autofill:focus {
 
   .login-branding {
     width: 45%;
-    padding: $space-xl;
+    padding: 2rem;
     flex-grow: 1;
     border-right: 1px solid $login-border;
 
@@ -322,7 +375,7 @@ select:-webkit-autofill:focus {
 
   .login-inner-box {
     width: 55%;
-    padding: $space-md 56px;
+    padding: 1rem 4rem;
   }
 
   .login-button-group {

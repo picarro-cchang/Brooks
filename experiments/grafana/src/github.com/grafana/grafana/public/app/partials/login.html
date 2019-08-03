@@ -1,32 +1,32 @@
 <div class="login container">
   <div class="login-content">
     <div class="login-branding">
-      <img class="logo-icon" src="public/img/picarro_logo.svg" alt="picarro.com" />
+      <img class="logo-icon" src="public/img/grafana_icon.svg" alt="Grafana" />
       <div class="logo-wordmark" />
     </div>
     <div class="login-outer-box">
       <div class="login-inner-box" id="login-view">
         <form name="loginForm" class="login-form-group gf-form-group" ng-hide="disableLoginForm">
           <div class="login-form">
-            <input type="text" name="username" class="gf-form-input login-form-input" required ng-model='formModel.user' placeholder={{loginHint}} aria-label="Username input field"
+            <input type="text" name="username" class="gf-form-input login-form-input" required ng-model='formModel.user' placeholder={{loginHint}}
               autofocus autofill-event-fix>
           </div>
           <div class="login-form">
             <input type="password" name="password" class="gf-form-input login-form-input" required ng-model="formModel.password" id="inputPassword"
-              placeholder="{{passwordHint}}" aria-label="Password input field">
+              placeholder="password">
           </div>
           <div class="login-button-group">
-            <button type="submit" aria-label="Login button" class="btn btn-large p-x-2" ng-if="!loggingIn" ng-click="submit();" ng-class="{'btn-inverse': !loginForm.$valid, 'btn-primary': loginForm.$valid}">
+            <button type="submit" class="btn btn-large p-x-2" ng-if="!loggingIn" ng-click="submit();" ng-class="{'btn-inverse': !loginForm.$valid, 'btn-primary': loginForm.$valid}">
               Log In
             </button>
             <button type="submit" class="btn btn-large p-x-2 btn-inverse btn-loading" ng-if="loggingIn">
               Logging In<span>.</span><span>.</span><span>.</span>
             </button>
-            <!-- <div class="small login-button-forgot-password" ng-hide="ldapEnabled || authProxyEnabled">
+            <div class="small login-button-forgot-password" ng-hide="ldapEnabled || authProxyEnabled">
               <a href="user/password/send-reset-email">
                 Forgot your password?
               </a>
-            </div> -->
+            </div>
           </div>
         </form>
         <div class="text-center login-divider" ng-show="oauthEnabled">
@@ -45,10 +45,6 @@
           </div>
         </div>
         <div class="clearfix"></div>
-        <a class="btn btn-medium btn-service btn-service--github login-btn" href="login/saml" target="_self" ng-if="samlEnabled">
-          <i class="btn-service-icon fa fa-key"></i>
-          Sign in with SAML
-        </a>
         <div class="login-oauth text-center" ng-show="oauthEnabled">
           <a class="btn btn-medium btn-service btn-service--google login-btn" href="login/google" target="_self" ng-if="oauth.google">
             <i class="btn-service-icon fa fa-google"></i>
