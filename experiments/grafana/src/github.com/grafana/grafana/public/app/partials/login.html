@@ -1,7 +1,7 @@
 <div class="login container">
   <div class="login-content">
     <div class="login-branding">
-      <img class="logo-icon" src="public/img/grafana_icon.svg" alt="Grafana" />
+      <img class="logo-icon" src="public/img/picarro_logo.svg" alt="picarro.com" />
       <div class="logo-wordmark" />
     </div>
     <div class="login-outer-box">
@@ -22,11 +22,11 @@
             <button type="submit" class="btn btn-large p-x-2 btn-inverse btn-loading" ng-if="loggingIn">
               Logging In<span>.</span><span>.</span><span>.</span>
             </button>
-            <div class="small login-button-forgot-password" ng-hide="ldapEnabled || authProxyEnabled">
+            <!-- <div class="small login-button-forgot-password" ng-hide="ldapEnabled || authProxyEnabled">
               <a href="user/password/send-reset-email">
                 Forgot your password?
               </a>
-            </div>
+            </div> -->
           </div>
         </form>
         <div class="text-center login-divider" ng-show="oauthEnabled">

@@ -1,4 +1,4 @@
-$login-border: #8daac5;
+$login-border: #ffffff;
 
 .login {
   min-height: 100vh;
@@ -10,7 +10,8 @@ $login-border: #8daac5;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url(../img/heatmap_bg_test.svg);
+  // background-image: url(../img/heatmap_bg_test.svg);
+  background-color: #262628;
   background-size: cover;
   color: #d8d9da;
 
@@ -19,7 +20,7 @@ $login-border: #8daac5;
   }
 
   & .btn-primary {
-    @include buttonBackground(#ff6600, #bc3e06);
+    @include buttonBackground(#333333, #666666);
     height: 40px;
   }
 }
@@ -82,7 +83,7 @@ select:-webkit-autofill:focus {
   & .btn-inverse {
     color: #e3e3e3;
     text-shadow: 0px 1px 0 rgba(0, 0, 0, 0.1);
-    background-color: #2a2a2c;
+    background-color: #8daac5;
     background-image: linear-gradient(to bottom, #262628, #303032);
     background-repeat: repeat-x;
     border-color: #262628;
@@ -128,7 +129,7 @@ select:-webkit-autofill:focus {
 
 .app-grafana {
   .logo-wordmark {
-    background: url('../img/grafana_typelogo.svg') top center no-repeat;
+    background: url('../img/picarro_typelogo.svg') top center no-repeat;
     width: 100%;
     height: 70px;
   }
@@ -136,7 +137,7 @@ select:-webkit-autofill:focus {
 
 .app-enterprise {
   .logo-wordmark {
-    background: url('../img/grafana_enterprise_typelogo.svg') top center no-repeat;
+    background: url('../img/picarro_typelogo.svg') top center no-repeat;
     width: 100%;
     height: 70px;
   }
