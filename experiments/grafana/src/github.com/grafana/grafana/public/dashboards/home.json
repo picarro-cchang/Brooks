@@ -17,26 +17,7 @@
   "graphTooltip": 0,
   "id": null,
   "links": [],
-  "panels": [
-    {
-      "content": "<div class=\"text-center dashboard-header\">\n  <span>Home Dashboard</span>\n</div>",
-      "editable": true,
-      "gridPos": {
-        "h": 3,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
-      "links": [],
-      "mode": "html",
-      "options": {},
-      "style": {},
-      "title": "",
-      "transparent": true,
-      "type": "text"
-    }
-  ],
+  "panels": [],
   "schemaVersion": 19,
   "style": "dark",
   "tags": [],
