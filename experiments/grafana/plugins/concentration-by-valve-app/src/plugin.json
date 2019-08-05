@@ -1,0 +1,27 @@
+{
+  "type": "app",
+  "name": "Picarro Concentration Page",
+  "id": "picarro-concentration-page",
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/analyze-icon.png",
+      "large": "img/analyze-icon.png"
+    }
+  },
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Concentration By Valve",
+      "path": "dashboards/ConcentrationByValve.json",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}

@@ -1,24 +1,37 @@
 {
-  "type": "panel",
-  "name": "Multi Panel",
-  "id": "image-panel",
-
-  "dataFormats": [],
-
+  "type": "app",
+  "name": "State Machine",
+  "id": "multi-app",
   "info": {
-    "description": "Grafana panel introduction",
     "author": {
-      "name": "Emma Peatfield"
+      "name": "Grafana Project",
+      "url": "https://grafana.com"
     },
-    "keywords": [],
-    "links": [],
-    "screenshots": [],
-    "version": "0.0.1",
-    "updated": "2019-07-17"
+    "logos": {
+      "small": "img/Touch.png",
+      "large": "img/Touch.png"
+    }
   },
 
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "StateMachine",
+      "path": "dashboards/StateMachine.json",
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "panel",
+      "name": "Multi Panel"
+    },
+    {
+      "type": "panel",
+      "name": "Picarro State Machine"
+    }
+  ],
   "dependencies": {
-    "grafanaVersion": "6.0.x",
+    "grafanaVersion": "6.3.x",
     "plugins": []
   }
 }

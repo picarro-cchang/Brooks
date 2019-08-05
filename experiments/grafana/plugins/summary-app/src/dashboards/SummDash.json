@@ -1,0 +1,2782 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 9,
+  "iteration": 1564687534298,
+  "links": [
+    {
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "pigss"
+      ],
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 54,
+      "panels": [],
+      "title": "Average Concentrations Over Interval",
+      "type": "row"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": "valve_pos",
+      "repeatDirection": "h",
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "0",
+          "value": "0"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 104,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "1",
+          "value": "1"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 105,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "2",
+          "value": "2"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 106,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "3",
+          "value": "3"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "id": 107,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "4",
+          "value": "4"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "id": 108,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "5",
+          "value": "5"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "id": 109,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "6",
+          "value": "6"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "id": 110,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "7",
+          "value": "7"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 11
+      },
+      "id": 111,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "8",
+          "value": "8"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 11
+      },
+      "id": 112,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "9",
+          "value": "9"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 11
+      },
+      "id": 113,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "10",
+          "value": "10"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 11
+      },
+      "id": 114,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "11",
+          "value": "11"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 16
+      },
+      "id": 115,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "12",
+          "value": "12"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 16
+      },
+      "id": 116,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "13",
+          "value": "13"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 16
+      },
+      "id": 117,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "14",
+          "value": "14"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 16
+      },
+      "id": 118,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564687534298,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "15",
+          "value": "15"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": true,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "NH3.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "H2S.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HF.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "HCl.$valve_pos"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 71,
+      "panels": [],
+      "title": "Valve Switching",
+      "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "PiGSS data source",
+      "description": "",
+      "format": "none",
+      "gauge": {
+        "maxValue": 15,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 22
+      },
+      "hideTimeOverride": true,
+      "id": 36,
+      "interval": "",
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "valve_pos",
+      "targets": [
+        {
+          "groupBy": [],
+          "limit": "1",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT mean(\"valve_pos\") FROM \"crds\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve Position",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "PiGSS data source",
+      "description": "",
+      "format": "s",
+      "gauge": {
+        "maxValue": 15,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 3,
+        "y": 22
+      },
+      "hideTimeOverride": true,
+      "id": 37,
+      "interval": "",
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "valve_stable_time",
+      "targets": [
+        {
+          "groupBy": [],
+          "limit": "1",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT mean(\"valve_pos\") FROM \"crds\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Time since switch",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+    {
+      "description": "",
+      "gridPos": {
+        "h": 2,
+        "w": 11,
+        "x": 6,
+        "y": 22
+      },
+      "id": 103,
+      "links": [],
+      "options": {
+        "buttonsPerRow": 9,
+        "numberOfValves": 16
+      },
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Valve Mode",
+      "type": "picarro-valve-panel"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 19,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "PiGSS data source",
+        "definition": "show tag values on pigss_data with key=\"valve_pos\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "valve_pos",
+        "options": [],
+        "query": "show tag values on pigss_data with key=\"valve_pos\"",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "text": "16m",
+          "value": "16m"
+        },
+        "hide": 0,
+        "label": "Interval to average",
+        "name": "avg_time",
+        "options": [
+          {
+            "text": "1h",
+            "value": "1h"
+          }
+        ],
+        "query": "16m",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "15",
+          "value": "15"
+        },
+        "hide": 0,
+        "label": null,
+        "name": "stabilization_time",
+        "options": [
+          {
+            "selected": true,
+            "text": "15",
+            "value": "15"
+          }
+        ],
+        "query": "15",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "Summary Dashboard",
+  "uid": "qmFbidDWk",
+  "version": 1
+}

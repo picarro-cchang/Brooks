@@ -1,0 +1,37 @@
+{
+  "type": "app",
+  "name": "Settings",
+  "id": "settings-app",
+  "info": {
+    "author": {
+      "name": "Grafana Project",
+      "url": "https://grafana.com"
+    }
+  },
+
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Settings",
+      "path": "dashboards/SettingsGrafana.json",
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "panel",
+      "name": "Modbus Setting Panel"
+    },
+    {
+      "type": "panel",
+      "name": "MFC App Panel"
+    },
+    {
+      "type": "panel",
+      "name": "Network Settings Panel"
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}
