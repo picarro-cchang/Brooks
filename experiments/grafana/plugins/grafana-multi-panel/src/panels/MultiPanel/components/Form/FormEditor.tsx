@@ -2,7 +2,7 @@ import React, { PureComponent } from "react";
 import {Select, PanelOptionsGroup, PanelEditorProps, FormField, FormLabel, PanelOptionsGrid} from "@grafana/ui";
 import { Options } from "../../types";
 // import {LayoutOptions} from "./LayoutOptions";
-// import {SingleStatValueOptions} from "../../../../combo-panel/src/types";
+// import {SingleStatValueOptions} from "../../../../combo-panel/Hello-Editor/types";
 
 interface Props {
     options: Options;

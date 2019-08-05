@@ -28,7 +28,7 @@ export class MyPanelEditor extends PureComponent<
     //         [target.name] : target.value,
     //     });
     onValueOptionsChanged = (formOptions: Options) =>
-        this.props.onChange({
+        this.props.onOptionsChange({
             ...this.props.options,
             formOptions,
         });
@@ -36,7 +36,7 @@ export class MyPanelEditor extends PureComponent<
     //     this.props.onChange({ ...this.props.options, gender: gender.value });
     //
     onLayoutChange = layout =>
-        this.props.onChange({ ...this.props.options, layout: layout });
+        this.props.onOptionsChange({ ...this.props.options, layout: layout });
 
   render() {
       const { options } = this.props;

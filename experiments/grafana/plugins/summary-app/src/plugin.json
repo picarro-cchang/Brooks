@@ -1,0 +1,27 @@
+{
+  "type": "app",
+  "name": "Picarro Summary Page",
+  "id": "picarro-summary-page",
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/summary.png",
+      "large": "img/summary.png"
+    }
+  },
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Summary",
+      "path": "dashboards/Summary.json",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}

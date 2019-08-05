@@ -1,0 +1,29 @@
+{
+  "type": "app",
+  "name": "Hello Editor App",
+  "id": "hello-editor-app",
+  "info": {
+    "author": {
+      "name": "Grafana Project",
+      "url": "https://grafana.com"
+    }
+  },
+
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Hello Editor",
+      "path": "dashboards/HelloEditor.json",
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "panel",
+      "name": "Hello Editor Panel"
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}
