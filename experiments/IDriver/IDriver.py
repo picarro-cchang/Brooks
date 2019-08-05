@@ -307,23 +307,23 @@ class PicarroAnalyzerDriver:
         with self.stopwatch_database_tags_lock:
             self.stopwatch_database_tags[tag_name] = timestamp_of_event
 
-    def delete_stopwatch_tags(self, tag_name):
-        """Delete a stopwatch tag."""
+    def remove_stopwatch_tag(self, tag_name):
+        """Remove a stopwatch tag."""
         with self.stopwatch_database_tags_lock:
             if tag_name in self.stopwatch_database_tags:
                 self.stopwatch_database_tags.remove(tag_name)
 
-    def delete_all_stopwatch_tags(self):
-        """Delete all stopwatch tags."""
+    def remove_all_stopwatch_tags(self):
+        """Remove all stopwatch tags."""
         with self.stopwatch_database_tags_lock:
             self.stopwatch_database_tags = {}
 
     def get_stopwatch_tags(self):
         """Get stopwatch tags, pretty self explanatory."""
         with self.stopwatch_database_tags_lock:
-            stopwatch_database_tags_return = self.stopwatch_database_tags.copy(
-            )
-        return stopwatch_database_tags_return
+            stopwatch_db_tags_return = self.stopwatch_database_tags.copy()
+        return stopwatch_db_tags_return
+
 
     def __create_listener(self, ip):
         """
@@ -371,6 +371,18 @@ class PicarroAnalyzerDriver:
                                       name="IDRIVER_add_dynamic_tags")
         self.server.register_function(self.adjust_dynamic_tags,
                                       name="IDRIVER_adjust_dynamic_tags")
+
+        # Stopwatch tags controls - value is a time calculated as 
+        # difference between measurement time and event time
+        self.server.register_function(self.remove_stopwatch_tag,
+                                      name="IDRIVER_remove_stopwatch_tag")
+        self.server.register_function(self.remove_all_stopwatch_tags,
+                                      name="IDRIVER_remove_all_stopwatch_tags")
+        self.server.register_function(self.get_stopwatch_tags,
+                                      name="IDRIVER_get_stopwatch_tags")
+        self.server.register_function(self.add_stopwatch_tag,
+                                      name="IDRIVER_add_stopwatch_tag")
+
 
 
 class IDriverThread(threading.Thread):
@@ -435,10 +447,12 @@ class IDriverThread(threading.Thread):
                     data['tags'][tag] = obj[tag]
         return data
 
-    # def equip_data_object_with_stopwatch_tags(self, data, obj):
-    #     with self.parent_idriver.stopwatch_database_tags_lock:
-    #         for tag in self.parent_idriver.stopwatch_database_tags:
-    #             time_passed = obj['time']
+    def equip_data_object_with_stopwatch_tags(self, data, obj):
+        with self.parent_idriver.stopwatch_database_tags_lock:
+            for tag in self.parent_idriver.stopwatch_database_tags:
+                time_passed = obj['time'] - self.parent_idriver.stopwatch_database_tags[tag]
+                data['tags'][tag] = time_passed
+        return data
 
     def generate_data_for_database(self, queue):
         """
@@ -448,25 +462,25 @@ class IDriverThread(threading.Thread):
             try:
                 obj = queue.get(timeout=5.0)
 
+                if 'time' in obj:
+                    data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
+                    # print(obj['time'])
+                else:
+                    self.logger.error("Measurment with no 'time' value passed, gonna ignore it")
+                    continue
+
                 data = {
                     'measurement': 'crds',
                     'fields': {},
-                    'tags': {
-                        # 'analyzer': self.parent_idriver.analyzer_name,
-                        # 'chassis': self.parent_idriver.chassis
-                    }
+                    'tags': {}
                 }
+
+                # equip measurement with tags
                 data = self.equip_data_object_with_defined_tags(data)
-                if 'time' in obj:
-                    data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
-                    print(obj['time'])
-                else:
-                    self.logger.error("Measurment with no 'time' value passed")
-                    continue
-
-                # equip measurement with defined tags with imported values from an obj
                 data = self.equip_data_object_with_dynamic_tags(data, obj)
+                data = self.equip_data_object_with_stopwatch_tags(data, obj)
 
+                # equip measurement with fields
                 for field in obj['data']:
                     data['fields'][field] = obj['data'][field]
                 yield data
