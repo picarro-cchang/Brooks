@@ -34,31 +34,171 @@
         "x": 0,
         "y": 0
       },
-      "id": 2,
-      "links": [],
+      "id": 8,
+      "options": {
+        "applyEnabled": true,
+        "dns": "",
+        "gateway": "",
+        "ip": "",
+        "netmask": "",
+        "networkType": "DHCP",
+        "undoEnabled": true
+      },
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Network Settings",
-      "type": "network-settings"
+      "title": "NetworkSettings",
+      "type": "network-settings-panel"
     },
     {
-      "description": "",
       "gridPos": {
         "h": 6,
         "w": 5,
         "x": 5,
         "y": 0
       },
-      "id": 4,
-      "links": [],
+      "id": 10,
+      "options": {
+        "slaveId": 1,
+        "tcpPort": 50500,
+        "user": {},
+        "userOrgInfo": {}
+      },
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
       "timeFrom": null,
       "timeShift": null,
       "title": "Modbus Settings",
-      "type": "modbus-setting"
+      "type": "modbus-setting-panel"
+    },
+    {
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 10,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "flow_rate": 0,
+        "set_point": 0
+      },
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "MFC",
+      "type": "mfc-panel"
     }
   ],
   "refresh": false,
-  "schemaVersion": 18,
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [
     "pigss"
