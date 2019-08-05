@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
+import { ScopedVars } from '@grafana/ui';
 
-import { PanelHeaderCorner } from './PanelHeaderCorner';
+import PanelHeaderCorner from './PanelHeaderCorner';
 import { PanelHeaderMenu } from './PanelHeaderMenu';
 import templateSrv from 'app/features/templating/template_srv';
 
 import { DashboardModel } from 'app/features/dashboard/state/DashboardModel';
 import { PanelModel } from 'app/features/dashboard/state/PanelModel';
-import { ClickOutsideWrapper } from 'app/core/components/ClickOutsideWrapper/ClickOutsideWrapper';
+import { ClickOutsideWrapper } from '@grafana/ui';
+import { DataLink } from '@grafana/data';
 
 export interface Props {
   panel: PanelModel;
@@ -16,8 +18,8 @@ export interface Props {
   timeInfo: string;
   title?: string;
   description?: string;
-  scopedVars?: string;
-  links?: [];
+  scopedVars?: ScopedVars;
+  links?: DataLink[];
   error?: string;
   isFullscreen: boolean;
 }
@@ -71,22 +73,30 @@ export class PanelHeader extends Component<Props, State> {
 
   render() {
     const { panel, dashboard, timeInfo, scopedVars, error, isFullscreen } = this.props;
-
-    const panelHeaderClass = classNames({ 'panel-header': true, 'grid-drag-handle': !isFullscreen });
     const title = templateSrv.replaceWithText(panel.title, scopedVars);
+
+    const panelHeaderClass = classNames({
+      'panel-header': true,
+      'grid-drag-handle': !isFullscreen,
+    });
 
     return (
       <>
-        <PanelHeaderCorner
-          panel={panel}
-          title={panel.title}
-          description={panel.description}
-          scopedVars={panel.scopedVars}
-          links={panel.links}
-          error={error}
-        />
         <div className={panelHeaderClass}>
-          <div className="panel-title-container" onClick={this.onMenuToggle} onMouseDown={this.onMouseDown}>
+          <PanelHeaderCorner
+            panel={panel}
+            title={panel.title}
+            description={panel.description}
+            scopedVars={panel.scopedVars}
+            links={panel.links}
+            error={error}
+          />
+          <div
+            className="panel-title-container"
+            onClick={this.onMenuToggle}
+            onMouseDown={this.onMouseDown}
+            aria-label="Panel Title"
+          >
             <div className="panel-title">
               <span className="icon-gf panel-alert-icon" />
               <span className="panel-title-text">

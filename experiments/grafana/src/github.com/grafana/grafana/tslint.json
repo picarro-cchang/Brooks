@@ -2,13 +2,18 @@
   "rules": {
     "array-type": [true, "array-simple"],
     "arrow-return-shorthand": true,
-    "ban": [true, { "name": "Array", "message": "tsstyle#array-constructor" }],
+    "ban": [
+      true,
+      { "name": "Array", "message": "tsstyle#array-constructor" }
+      // { "name": "moment", "message": "Use 'dateTime' instead." }
+    ],
     "ban-types": [
       true,
       ["Object", "Use {} instead."],
       ["String", "Use 'string' instead."],
       ["Number", "Use 'number' instead."],
-      ["Boolean", "Use 'boolean' instead."]
+      ["Boolean", "Use 'boolean' instead."],
+      ["Moment", "Use 'DateTime' instead."]
     ],
     "interface-name": [true, "never-prefix"],
     "no-string-throw": true,
@@ -26,7 +31,7 @@
     "indent": [true, "spaces", 2],
     "jsdoc-format": true,
     "label-position": true,
-    "max-line-length": [true, 300],
+    "max-line-length": [true, 150],
     "member-access": [true, "no-public"],
     "new-parens": true,
     "no-angle-bracket-type-assertion": true,
@@ -49,7 +54,7 @@
     "object-literal-sort-keys": false,
     "one-line": [true, "check-open-brace", "check-catch", "check-else"],
     "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
-    "prefer-const": false,
+    "prefer-const": true,
     "radix": true,
     "typedef-whitespace": [
       true,
@@ -67,10 +72,10 @@
       "ban-keywords",
       "allow-leading-underscore",
       "allow-trailing-underscore",
-      "allow-pascal-case",
-      "allow-snake-case"
+      "allow-pascal-case"
     ],
     "use-isnan": true,
-    "whitespace": [true, "check-branch", "check-decl", "check-type", "check-preblock"]
+    "whitespace": [true, "check-branch", "check-decl", "check-type", "check-preblock"],
+    "import-blacklist": [true, "moment"]
   }
 }

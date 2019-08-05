@@ -74,7 +74,7 @@ class PigletManager(Ahsm):
             asyncio.create_task(self.get_status(self.bank_list))
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            print(f"Received PIGLET_STATUS, {e.value}")
+            print(f"Received PIGLET_STATUS, {e.value}; ", end="")
             piglet_status = e.value
             mfc_total = 0
             for bank in self.bank_list:
@@ -85,7 +85,7 @@ class PigletManager(Ahsm):
             # print(f"Received PIGLET_RESPONSE, {e.value}")
             return self.handled(e)
         elif sig == Signal.MFC_SET:
-            print(f"Setting MFC, {e.value}")
+            print(f"Setting MFC, {e.value}; ", end="")
             return self.handled(e)
         return self.super(self.top)
 

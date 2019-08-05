@@ -1,12 +1,12 @@
 import React from 'react';
-import _ from 'lodash';
+import { Input } from '@grafana/ui';
 
 import { TemplateSrv } from 'app/features/templating/template_srv';
 
 import StackdriverDatasource from '../datasource';
 import { Metrics } from './Metrics';
 import { Filter } from './Filter';
-import { AnnotationTarget } from '../types';
+import { AnnotationTarget, MetricDescriptor } from '../types';
 import { AnnotationsHelp } from './AnnotationsHelp';
 
 export interface Props {
@@ -40,7 +40,7 @@ export class AnnotationQueryEditor extends React.Component<Props, State> {
     });
   }
 
-  onMetricTypeChange = ({ valueType, metricKind, type, unit }) => {
+  onMetricTypeChange = ({ valueType, metricKind, type, unit }: MetricDescriptor) => {
     const { onQueryChange } = this.props;
     this.setState(
       {
@@ -55,7 +55,7 @@ export class AnnotationQueryEditor extends React.Component<Props, State> {
     );
   };
 
-  onChange(prop, value) {
+  onChange(prop: string, value: string | string[]) {
     this.setState({ [prop]: value }, () => {
       this.props.onQueryChange(this.state);
     });
@@ -91,7 +91,7 @@ export class AnnotationQueryEditor extends React.Component<Props, State> {
         <div className="gf-form gf-form-inline">
           <div className="gf-form">
             <span className="gf-form-label query-keyword width-9">Title</span>
-            <input
+            <Input
               type="text"
               className="gf-form-input width-20"
               value={title}
@@ -100,7 +100,7 @@ export class AnnotationQueryEditor extends React.Component<Props, State> {
           </div>
           <div className="gf-form">
             <span className="gf-form-label query-keyword width-9">Text</span>
-            <input
+            <Input
               type="text"
               className="gf-form-input width-20"
               value={text}

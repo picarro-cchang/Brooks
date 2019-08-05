@@ -3,6 +3,7 @@ import time
 import argparse
 from host.experiments.common.serial_interface import SerialInterface
 from host.experiments.common.timeutils import get_local_timestamp
+from host.experiments.common.rpc_ports import rpc_ports
 
 # TODO
 #   Remove local import for CmdFIFO
@@ -17,15 +18,16 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
-    def __init__(self, port, baudrate=38400, carriage_return='\r'):
+    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r'):
         self.serial = None
         self.terminate = False
         self.port = port
         self.baudrate = baudrate
         self.carriage_return = carriage_return
         self.id_string = None
+        self.rpc_port = rpc_port
         self.rpc_server = CmdFIFO.CmdFIFOServer(
-            ("", 6669),
+            ("", self.rpc_port),
             ServerName=__class__.__name__,
             ServerDescription=f'RPC Server for {__class__.__name__}',
             ServerVersion=1.0,
@@ -366,6 +368,7 @@ def get_cli_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--piglet_port', help='Piglet port')
     parser.add_argument('-b', '--baudrate', help='Piglet baudrate')
+    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port')
     args = parser.parse_args()
     return args
 
@@ -386,8 +389,14 @@ def main():
         baudrate = 38400
     if __debug__:
         print(f'Piglet baudrate: {baudrate}')
+    if cli_args.rpc_port:
+        rpc_port = cli_args.rpc_port
+    else:
+        rpc_port = rpc_ports.get('piglet_drivers')
+    if __debug__:
+        print(f'Piglet RPC Port: {rpc_port}')
     # Instantiate the object and serve the RPC Port forever
-    PigletDriver(port=port, baudrate=baudrate)
+    PigletDriver(port=port, baudrate=baudrate, rpc_port=int(rpc_port))
     if __debug__:
         print('PigletDriver stopped.')
 

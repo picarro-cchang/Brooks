@@ -3,6 +3,7 @@ import { appEvents } from 'app/core/app_events';
 import locationUtil from 'app/core/utils/location_util';
 import { DashboardModel } from '../state/DashboardModel';
 import { removePanel } from '../utils/panel';
+import { DashboardMeta } from 'app/types';
 
 export class DashboardSrv {
   dashboard: DashboardModel;
@@ -12,9 +13,12 @@ export class DashboardSrv {
     appEvents.on('save-dashboard', this.saveDashboard.bind(this), $rootScope);
     appEvents.on('panel-change-view', this.onPanelChangeView);
     appEvents.on('remove-panel', this.onRemovePanel);
+
+    // Export to react
+    setDashboardSrv(this);
   }
 
-  create(dashboard, meta) {
+  create(dashboard: any, meta: DashboardMeta) {
     return new DashboardModel(dashboard, meta);
   }
 
@@ -43,6 +47,7 @@ export class DashboardSrv {
         delete urlParams.fullscreen;
         delete urlParams.edit;
         delete urlParams.panelId;
+        delete urlParams.tab;
         this.$location.search(urlParams);
         return;
       }
@@ -58,6 +63,7 @@ export class DashboardSrv {
       urlParams.edit = true;
     } else {
       delete urlParams.edit;
+      delete urlParams.tab;
     }
 
     if (options.panelId || options.panelId === 0) {
@@ -221,3 +227,17 @@ export class DashboardSrv {
 }
 
 coreModule.service('dashboardSrv', DashboardSrv);
+
+//
+// Code below is to export the service to react components
+//
+
+let singletonInstance: DashboardSrv;
+
+export function setDashboardSrv(instance: DashboardSrv) {
+  singletonInstance = instance;
+}
+
+export function getDashboardSrv(): DashboardSrv {
+  return singletonInstance;
+}

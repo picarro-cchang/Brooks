@@ -1,71 +1,24 @@
 {
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
   },
   "editable": true,
-  "folderId": null,
   "gnetId": null,
   "graphTooltip": 0,
-  "hideControls": true,
   "id": null,
   "links": [],
-  "panels": [
-    {
-      "content": "<div class=\"text-center dashboard-header\">\n  <span>Home Dashboard</span>\n</div>",
-      "editable": true,
-      "id": 1,
-      "links": [],
-      "mode": "html",
-      "style": {},
-      "title": "",
-      "transparent": true,
-      "type": "text",
-      "gridPos": {
-        "w": 24,
-        "h": 3,
-        "x": 0,
-        "y": 0
-      }
-    },
-    {
-      "folderId": 0,
-      "headings": true,
-      "id": 3,
-      "limit": 30,
-      "links": [],
-      "query": "",
-      "recent": true,
-      "search": false,
-      "starred": true,
-      "tags": [],
-      "title": "",
-      "transparent": false,
-      "type": "dashlist",
-      "gridPos": {
-        "w": 12,
-        "h": 17,
-        "x": 0,
-        "y": 6
-      }
-    },
-    {
-      "editable": true,
-      "error": false,
-      "id": 4,
-      "links": [],
-      "title": "",
-      "transparent": false,
-      "type": "pluginlist",
-      "gridPos": {
-        "w": 12,
-        "h": 17,
-        "x": 12,
-        "y": 6
-      }
-    }
-  ],
-  "rows": [],
-  "schemaVersion": 17,
+  "panels": [],
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -104,5 +57,6 @@
   },
   "timezone": "browser",
   "title": "Home",
+  "uid": null,
   "version": 0
 }

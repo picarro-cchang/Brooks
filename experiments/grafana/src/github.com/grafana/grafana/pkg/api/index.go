@@ -233,7 +233,7 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 
 			if len(appLink.Children) > 0 && c.OrgRole == m.ROLE_ADMIN {
 				appLink.Children = append(appLink.Children, &dtos.NavLink{Divider: true})
-				appLink.Children = append(appLink.Children, &dtos.NavLink{Text: "Plugin Config", Icon: "gicon gicon-cog", Url: setting.AppSubUrl + "/plugins/" + plugin.Id + "/edit"})
+				appLink.Children = append(appLink.Children, &dtos.NavLink{Text: "Plugin Config", Icon: "gicon gicon-cog", Url: setting.AppSubUrl + "/plugins/" + plugin.Id + "/"})
 			}
 
 			if len(appLink.Children) > 0 {
@@ -242,132 +242,95 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 		}
 	}
 
-	if c.IsGrafanaAdmin || c.OrgRole == m.ROLE_ADMIN {
-		cfgNode := &dtos.NavLink{
-			Id:       "cfg",
-			Text:     "Configuration",
-			SubTitle: "Organization: " + c.OrgName,
-			Icon:     "gicon gicon-cog",
-			Url:      setting.AppSubUrl + "/datasources",
+	configNodes := []*dtos.NavLink{}
+
+	if c.OrgRole == m.ROLE_ADMIN {
+		configNodes = append(configNodes, &dtos.NavLink{
+			Text:        "Data Sources",
+			Icon:        "gicon gicon-datasources",
+			Description: "Add and configure data sources",
+			Id:          "datasources",
+			Url:         setting.AppSubUrl + "/datasources",
+		})
+		configNodes = append(configNodes, &dtos.NavLink{
+			Text:        "Users",
+			Id:          "users",
+			Description: "Manage org members",
+			Icon:        "gicon gicon-user",
+			Url:         setting.AppSubUrl + "/org/users",
+		})
+	}
+
+	if c.OrgRole == m.ROLE_ADMIN || hs.Cfg.EditorsCanAdmin {
+		configNodes = append(configNodes, &dtos.NavLink{
+			Text:        "Teams",
+			Id:          "teams",
+			Description: "Manage org groups",
+			Icon:        "gicon gicon-team",
+			Url:         setting.AppSubUrl + "/org/teams",
+		})
+	}
+
+	configNodes = append(configNodes, &dtos.NavLink{
+		Text:        "Plugins",
+		Id:          "plugins",
+		Description: "View and configure plugins",
+		Icon:        "gicon gicon-plugins",
+		Url:         setting.AppSubUrl + "/plugins",
+	})
+
+	if c.OrgRole == m.ROLE_ADMIN {
+		configNodes = append(configNodes, &dtos.NavLink{
+			Text:        "Preferences",
+			Id:          "org-settings",
+			Description: "Organization preferences",
+			Icon:        "gicon gicon-preferences",
+			Url:         setting.AppSubUrl + "/org",
+		})
+		configNodes = append(configNodes, &dtos.NavLink{
+			Text:        "API Keys",
+			Id:          "apikeys",
+			Description: "Create & manage API keys",
+			Icon:        "gicon gicon-apikeys",
+			Url:         setting.AppSubUrl + "/org/apikeys",
+		})
+	}
+
+	data.NavTree = append(data.NavTree, &dtos.NavLink{
+		Id:       "cfg",
+		Text:     "Configuration",
+		SubTitle: "Organization: " + c.OrgName,
+		Icon:     "gicon gicon-cog",
+		Url:      configNodes[0].Url,
+		Children: configNodes,
+	})
+
+	if c.IsGrafanaAdmin {
+		data.NavTree = append(data.NavTree, &dtos.NavLink{
+			Text:         "Server Admin",
+			SubTitle:     "Manage all users & orgs",
+			HideFromTabs: true,
+			Id:           "admin",
+			Icon:         "gicon gicon-shield",
+			Url:          setting.AppSubUrl + "/admin/users",
 			Children: []*dtos.NavLink{
-				{
-					Text:        "Data Sources",
-					Icon:        "gicon gicon-datasources",
-					Description: "Add and configure data sources",
-					Id:          "datasources",
-					Url:         setting.AppSubUrl + "/datasources",
-				},
-				{
-					Text:        "Users",
-					Id:          "users",
-					Description: "Manage org members",
-					Icon:        "gicon gicon-user",
-					Url:         setting.AppSubUrl + "/org/users",
-				},
-				{
-					Text:        "Teams",
-					Id:          "teams",
-					Description: "Manage org groups",
-					Icon:        "gicon gicon-team",
-					Url:         setting.AppSubUrl + "/org/teams",
-				},
-				{
-					Text:        "Plugins",
-					Id:          "plugins",
-					Description: "View and configure plugins",
-					Icon:        "gicon gicon-plugins",
-					Url:         setting.AppSubUrl + "/plugins",
-				},
-				{
-					Text:        "Preferences",
-					Id:          "org-settings",
-					Description: "Organization preferences",
-					Icon:        "gicon gicon-preferences",
-					Url:         setting.AppSubUrl + "/org",
-				},
-
-				{
-					Text:        "API Keys",
-					Id:          "apikeys",
-					Description: "Create & manage API keys",
-					Icon:        "gicon gicon-apikeys",
-					Url:         setting.AppSubUrl + "/org/apikeys",
-				},
-
-				{
-					Text:        "Modbus-Settings",
-					Id:          "modbus",
-					Description: "Update modbus Settings",
-					Icon:        "gicon gicon-preferences",
-					Url:         setting.AppSubUrl + "/modbussettings",
-				},
-
-				{
-                    Text:        "Network-Settings",
-                    Id:          "network",
-                    Description: "Update Network Settings",
-                    Icon:        "gicon gicon-preferences",
-                    Url:         setting.AppSubUrl + "/networksettings",
-                },
-                {
-					Text:        "SystemConfigurationSettings",
-					Id:          "system_configuration_settings",
-					Description: "Instruments settings",
-					Icon:        "gicon gicon-preferences",
-					Url:         setting.AppSubUrl + "/SystemConfigurationSettings",
-				},
+				{Text: "Users", Id: "global-users", Url: setting.AppSubUrl + "/admin/users", Icon: "gicon gicon-user"},
+				{Text: "Orgs", Id: "global-orgs", Url: setting.AppSubUrl + "/admin/orgs", Icon: "gicon gicon-org"},
+				{Text: "Settings", Id: "server-settings", Url: setting.AppSubUrl + "/admin/settings", Icon: "gicon gicon-preferences"},
+				{Text: "Stats", Id: "server-stats", Url: setting.AppSubUrl + "/admin/stats", Icon: "fa fa-fw fa-bar-chart"},
 			},
-		}
-
-		if c.OrgRole != m.ROLE_ADMIN {
-			cfgNode = &dtos.NavLink{
-				Id:       "cfg",
-				Text:     "Configuration",
-				SubTitle: "Organization: " + c.OrgName,
-				Icon:     "gicon gicon-cog",
-				Url:      setting.AppSubUrl + "/admin/users",
-				Children: make([]*dtos.NavLink, 0),
-			}
-		}
-
-		if c.OrgRole == m.ROLE_ADMIN && c.IsGrafanaAdmin {
-			cfgNode.Children = append(cfgNode.Children, &dtos.NavLink{
-				Divider: true, HideFromTabs: true, Id: "admin-divider", Text: "Text",
-			})
-		}
-
-		if c.IsGrafanaAdmin {
-			cfgNode.Children = append(cfgNode.Children, &dtos.NavLink{
-				Text:         "Server Admin",
-				HideFromTabs: true,
-				SubTitle:     "Manage all users & orgs",
-				Id:           "admin",
-				Icon:         "gicon gicon-shield",
-				Url:          setting.AppSubUrl + "/admin/users",
-				Children: []*dtos.NavLink{
-					{Text: "Users", Id: "global-users", Url: setting.AppSubUrl + "/admin/users", Icon: "gicon gicon-user"},
-					{Text: "Orgs", Id: "global-orgs", Url: setting.AppSubUrl + "/admin/orgs", Icon: "gicon gicon-org"},
-					{Text: "Settings", Id: "server-settings", Url: setting.AppSubUrl + "/admin/settings", Icon: "gicon gicon-preferences"},
-					{Text: "Stats", Id: "server-stats", Url: setting.AppSubUrl + "/admin/stats", Icon: "fa fa-fw fa-bar-chart"},
-					{Text: "Style Guide", Id: "styleguide", Url: setting.AppSubUrl + "/styleguide", Icon: "fa fa-fw fa-eyedropper"},
-				},
-			})
-		}
-
-		data.NavTree = append(data.NavTree, cfgNode)
+		})
 	}
 
 	data.NavTree = append(data.NavTree, &dtos.NavLink{
 		Text:         "Help",
-		SubTitle:     fmt.Sprintf(`%s v%s (%s)`, setting.ApplicationName, setting.BuildVersion, setting.BuildCommit),
+		SubTitle:     fmt.Sprintf(`%s v%s`, setting.ApplicationName, setting.BuildVersion),
 		Id:           "help",
 		Url:          "#",
 		Icon:         "gicon gicon-question",
 		HideFromMenu: true,
 		Children: []*dtos.NavLink{
 			{Text: "Keyboard shortcuts", Url: "/shortcuts", Icon: "fa fa-fw fa-keyboard-o", Target: "_self"},
-			{Text: "Community site", Url: "http://community.grafana.com", Icon: "fa fa-fw fa-comment", Target: "_blank"},
-			{Text: "Documentation", Url: "http://docs.grafana.org", Icon: "fa fa-fw fa-file", Target: "_blank"},
 		},
 	})
 

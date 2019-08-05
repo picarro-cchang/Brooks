@@ -1,0 +1,4 @@
+[submodule "experiments/grafana/src/github.com/grafana/grafana"]
+	path = experiments/grafana/src/github.com/grafana/grafana
+	url = https://github.com/grafana/grafana
+	branch = v6.3.x

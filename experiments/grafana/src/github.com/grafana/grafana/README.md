@@ -1,5 +1,5 @@
-[Grafana](https://grafana.com) [![Circle CI](https://circleci.com/gh/grafana/grafana.svg?style=svg)](https://circleci.com/gh/grafana/grafana) [![Go Report Card](https://goreportcard.com/badge/github.com/grafana/grafana)](https://goreportcard.com/report/github.com/grafana/grafana) [![codecov](https://codecov.io/gh/grafana/grafana/branch/master/graph/badge.svg)](https://codecov.io/gh/grafana/grafana)
-================
+# [Grafana](https://grafana.com) [![Circle CI](https://circleci.com/gh/grafana/grafana.svg?style=svg)](https://circleci.com/gh/grafana/grafana) [![Go Report Card](https://goreportcard.com/badge/github.com/grafana/grafana)](https://goreportcard.com/report/github.com/grafana/grafana) [![codecov](https://codecov.io/gh/grafana/grafana/branch/master/graph/badge.svg)](https://codecov.io/gh/grafana/grafana)
+
 [Website](https://grafana.com) |
 [Twitter](https://twitter.com/grafana) |
 [Community & Forum](https://community.grafana.com)
@@ -7,30 +7,26 @@
 Grafana is an open source, feature rich metrics dashboard and graph editor for
 Graphite, Elasticsearch, OpenTSDB, Prometheus and InfluxDB.
 
-![](https://www.grafanacon.org/2019/images/grafanacon_la_nav-logo.png)
-
-Join us Feb 25-26 in Los Angeles, California for GrafanaCon - a two-day event with talks focused on Grafana and the surrounding open source monitoring ecosystem. Get deep dives into Loki, the Explore workflow and all of the new features of Grafana 6, plus participate in hands on workshops to help you get the most out of your data. 
-
-Time is running out - grab your ticket now! http://grafanacon.org
-
 <!---
 ![](http://docs.grafana.org/assets/img/features/dashboard_ex1.png)
 -->
 
 ## Installation
+
 Head to [docs.grafana.org](http://docs.grafana.org/installation/) for documentation or [download](https://grafana.com/get) to get the latest release.
 
 ## Documentation & Support
+
 Be sure to read the [getting started guide](http://docs.grafana.org/guides/gettingstarted/) and the other feature guides.
 
 ## Run from master
+
 If you want to build a package yourself, or contribute - here is a guide for how to do that. You can always find
 the latest master builds [here](https://grafana.com/grafana/download)
 
 ### Dependencies
 
 - Go (Latest Stable)
-  - bra [`go get github.com/Unknwon/bra`]
 - Node.js LTS
   - yarn [`npm install -g yarn`]
 
@@ -43,6 +39,42 @@ go get github.com/grafana/grafana
 cd $GOPATH/src/github.com/grafana/grafana
 ```
 
+### Run and rebuild on source change
+
+#### Backend
+
+To run the backend and rebuild on source change:
+
+```bash
+make run
+```
+
+#### Frontend
+
+Rebuild on file change, and serve them by Grafana's webserver (http://localhost:3000):
+
+```bash
+yarn start
+```
+
+Build the assets, rebuild on file change with Hot Module Replacement (HMR), and serve them by webpack-dev-server (http://localhost:3333):
+
+```bash
+yarn start:hot
+# OR set a theme
+env GRAFANA_THEME=light yarn start:hot
+```
+
+_Note: HMR for Angular is not supported. If you edit files in the Angular part of the app, the whole page will reload._
+
+Run tests and rebuild on source change:
+
+```bash
+yarn jest
+```
+
+**Open grafana in your browser (default: e.g. `http://localhost:3000`) and login with admin user (default: `user/pass = admin/admin`).**
+
 ### Building
 
 #### The backend
@@ -54,47 +86,11 @@ go run build.go build
 
 #### Frontend assets
 
-*For this you need Node.js (LTS version).*
+_For this you need Node.js (LTS version)._
 
 ```bash
 yarn install --pure-lockfile
 ```
-
-### Run and rebuild on source change
-
-#### Backend
-
-To run the backend and rebuild on source change:
-
-```bash
-$GOPATH/bin/bra run
-```
-
-#### Frontend
-
-Rebuild on file change, and serve them by Grafana's webserver (http://localhost:3000):
-
-```bash
-yarn watch
-```
-
-Build the assets, rebuild on file change with Hot Module Replacement (HMR), and serve them by webpack-dev-server (http://localhost:3333):
-
-```bash
-yarn start
-# OR set a theme
-env GRAFANA_THEME=light yarn start
-```
-
-*Note: HMR for Angular is not supported. If you edit files in the Angular part of the app, the whole page will reload.*
-
-Run tests and rebuild on source change:
-
-```bash
-yarn jest
-```
-
-**Open grafana in your browser (default: e.g. `http://localhost:3000`) and login with admin user (default: `user/pass = admin/admin`).**
 
 ### Building a Docker image
 
@@ -119,6 +115,8 @@ The resulting image will be tagged as `grafana/grafana:dev`
 
 Notice: If you are using Docker for MacOS, be sure to set the memory limit to be larger than 2 GiB (at docker -> Preferences -> Advanced), otherwise `grunt build` may fail.
 
+## Development
+
 ### Dev config
 
 Create a custom.ini in the conf directory to override default configuration options.
@@ -132,7 +130,9 @@ In your custom.ini uncomment (remove the leading `;`) sign. And set `app_mode = 
 ### Running tests
 
 #### Frontend
+
 Execute all frontend tests
+
 ```bash
 yarn test
 ```
@@ -143,6 +143,7 @@ Writing & watching frontend tests
 - Jest will run all test files that end with the name ".test.ts"
 
 #### Backend
+
 ```bash
 # Run Golang tests using sqlite3 as database (default)
 go test ./pkg/...
@@ -154,11 +155,36 @@ GRAFANA_TEST_DB=mysql go test ./pkg/...
 GRAFANA_TEST_DB=postgres go test ./pkg/...
 ```
 
+#### End-to-end
+
+Execute all end-to-end tests
+
+```bash
+yarn e2e-tests
+```
+
+Execute all end-to-end tests using using a specific url
+
+```bash
+ENV BASE_URL=http://localhost:3333 yarn e2e-tests
+```
+
+Debugging all end-to-end tests (BROWSER=1 will start the browser and SLOWMO=1 will delay each puppeteer operation by 100ms)
+
+```bash
+ENV BROWSER=1 SLOWMO=1 yarn e2e-tests
+```
+
+### Datasource and dashboard provisioning
+
+[Here](https://github.com/grafana/grafana/tree/master/devenv) you can find helpful scripts and docker-compose setup
+that will populate your dev environment for quicker testing end experimenting.
+
 ## Contribute
 
 If you have any ideas for improvement or have found a bug, do not hesitate to open an issue.
 And if you have time, clone this repo and submit a pull request to help me make Grafana
-the kickass metrics & devops dashboard we all dream about! 
+the kickass metrics & devops dashboard we all dream about!
 
 Read the [contributing](https://github.com/grafana/grafana/blob/master/CONTRIBUTING.md) guide then check the [`beginner friendly`](https://github.com/grafana/grafana/issues?q=is%3Aopen+is%3Aissue+label%3A%22beginner+friendly%22) label to find issues that are easy and that we would like help with.
 
@@ -169,5 +195,4 @@ plugin development.
 
 ## License
 
-Grafana is distributed under [Apache 2.0 License](https://github.com/grafana/grafana/blob/master/LICENSE.md).
-
+Grafana is distributed under [Apache 2.0 License](https://github.com/grafana/grafana/blob/master/LICENSE).

@@ -3,7 +3,7 @@
   "name": "Plugin list",
   "id": "pluginlist",
 
-  "dataFormats": [],
+  "skipDataQuery": true,
 
   "info": {
     "description": "Plugin List for Grafana",
@@ -14,7 +14,6 @@
     "logos": {
       "small": "img/icn-dashlist-panel.svg",
       "large": "img/icn-dashlist-panel.svg"
-    },
-    "version": "5.0.0"
+    }
   }
 }

@@ -2,20 +2,22 @@
 import React, { PureComponent, ChangeEvent, FocusEvent } from 'react';
 
 // Utils
-import { isValidTimeSpan } from 'app/core/utils/rangeutil';
+import { rangeUtil } from '@grafana/data';
 
 // Components
-import { Switch } from '@grafana/ui';
-import { Input } from 'app/core/components/Form';
-import { EventsWithValidation } from 'app/core/components/Form/Input';
-import { InputStatus } from 'app/core/components/Form/Input';
+import {
+  DataSourceSelectItem,
+  EventsWithValidation,
+  Input,
+  InputStatus,
+  Switch,
+  ValidationEvents,
+  FormLabel,
+} from '@grafana/ui';
 import { DataSourceOption } from './DataSourceOption';
-import { FormLabel } from '@grafana/ui';
 
 // Types
-import { PanelModel } from '../state/PanelModel';
-import { DataSourceSelectItem } from '@grafana/ui/src/types';
-import { ValidationEvents } from 'app/types';
+import { PanelModel } from '../state';
 
 const timeRangeValidationEvents: ValidationEvents = {
   [EventsWithValidation.onBlur]: [
@@ -24,7 +26,7 @@ const timeRangeValidationEvents: ValidationEvents = {
         if (!value) {
           return true;
         }
-        return isValidTimeSpan(value);
+        return rangeUtil.isValidTimeSpan(value);
       },
       errorMessage: 'Not a valid timespan',
     },
@@ -210,10 +212,11 @@ export class QueryOptions extends PureComponent<Props, State> {
             value={timeShift}
           />
         </div>
-
-        <div className="gf-form-inline">
-          <Switch label="Hide time info" checked={hideTimeOverride} onChange={this.onToggleTimeOverride} />
-        </div>
+        {(timeShift || relativeTime) && (
+          <div className="gf-form-inline">
+            <Switch label="Hide time info" checked={hideTimeOverride} onChange={this.onToggleTimeOverride} />
+          </div>
+        )}
       </div>
     );
   }

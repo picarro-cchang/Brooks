@@ -6,6 +6,8 @@ import { transformDataToTable } from './transformers';
 import { tablePanelEditor } from './editor';
 import { columnOptionsTab } from './column_options';
 import { TableRenderer } from './renderer';
+import { isTableData } from '@grafana/data';
+import { TemplateSrv } from 'app/features/templating/template_srv';
 
 class TablePanelCtrl extends MetricsPanelCtrl {
   static templateUrl = 'module.html';
@@ -15,7 +17,7 @@ class TablePanelCtrl extends MetricsPanelCtrl {
   table: any;
   renderer: any;
 
-  panelDefaults = {
+  panelDefaults: any = {
     targets: [{}],
     transform: 'timeseries_to_columns',
     pageSize: null,
@@ -45,7 +47,14 @@ class TablePanelCtrl extends MetricsPanelCtrl {
   };
 
   /** @ngInject */
-  constructor($scope, $injector, templateSrv, private annotationsSrv, private $sanitize, private variableSrv) {
+  constructor(
+    $scope: any,
+    $injector: any,
+    templateSrv: TemplateSrv,
+    private annotationsSrv: any,
+    private $sanitize: any,
+    private variableSrv: any
+  ) {
     super($scope, $injector);
 
     this.pageIndex = 0;
@@ -71,11 +80,11 @@ class TablePanelCtrl extends MetricsPanelCtrl {
     this.addEditorTab('Column Styles', columnOptionsTab, 3);
   }
 
-  onInitPanelActions(actions) {
+  onInitPanelActions(actions: any[]) {
     actions.push({ text: 'Export CSV', click: 'ctrl.exportCsv()' });
   }
 
-  issueQueries(datasource) {
+  issueQueries(datasource: any) {
     this.pageIndex = 0;
 
     if (this.panel.transform === 'annotations') {
@@ -85,26 +94,30 @@ class TablePanelCtrl extends MetricsPanelCtrl {
           panel: this.panel,
           range: this.range,
         })
-        .then(annotations => {
-          return { data: annotations };
+        .then((anno: any) => {
+          this.loading = false;
+          this.dataRaw = anno;
+          this.pageIndex = 0;
+          this.render();
+          return { data: this.dataRaw }; // Not used
         });
     }
 
     return super.issueQueries(datasource);
   }
 
-  onDataError(err) {
+  onDataError(err: any) {
     this.dataRaw = [];
     this.render();
   }
 
-  onDataReceived(dataList) {
+  onDataReceived(dataList: any) {
     this.dataRaw = dataList;
     this.pageIndex = 0;
 
     // automatically correct transform mode based on data
     if (this.dataRaw && this.dataRaw.length) {
-      if (this.dataRaw[0].type === 'table') {
+      if (isTableData(this.dataRaw[0])) {
         this.panel.transform = 'table';
       } else {
         if (this.dataRaw[0].type === 'docs') {
@@ -136,7 +149,7 @@ class TablePanelCtrl extends MetricsPanelCtrl {
     return super.render(this.table);
   }
 
-  toggleColumnSort(col, colIndex) {
+  toggleColumnSort(col: any, colIndex: any) {
     // remove sort flag from current column
     if (this.table.columns[this.panel.sort.col]) {
       this.table.columns[this.panel.sort.col].sort = false;
@@ -166,8 +179,8 @@ class TablePanelCtrl extends MetricsPanelCtrl {
     });
   }
 
-  link(scope, elem, attrs, ctrl: TablePanelCtrl) {
-    let data;
+  link(scope: any, elem: JQuery, attrs: any, ctrl: TablePanelCtrl) {
+    let data: any;
     const panel = ctrl.panel;
     let pageCount = 0;
 
@@ -181,19 +194,19 @@ class TablePanelCtrl extends MetricsPanelCtrl {
       return panelHeight - 31 + 'px';
     }
 
-    function appendTableRows(tbodyElem) {
+    function appendTableRows(tbodyElem: JQuery) {
       ctrl.renderer.setTable(data);
       tbodyElem.empty();
       tbodyElem.html(ctrl.renderer.render(ctrl.pageIndex));
     }
 
-    function switchPage(e) {
+    function switchPage(e: any) {
       const el = $(e.currentTarget);
       ctrl.pageIndex = parseInt(el.text(), 10) - 1;
       renderPanel();
     }
 
-    function appendPaginationControls(footerElem) {
+    function appendPaginationControls(footerElem: JQuery) {
       footerElem.empty();
 
       const pageSize = panel.pageSize || 100;
@@ -238,7 +251,7 @@ class TablePanelCtrl extends MetricsPanelCtrl {
       selector: '[data-link-tooltip]',
     });
 
-    function addFilterClicked(e) {
+    function addFilterClicked(e: any) {
       const filterData = $(e.currentTarget).data();
       const options = {
         datasource: panel.datasource,
@@ -259,7 +272,7 @@ class TablePanelCtrl extends MetricsPanelCtrl {
       unbindDestroy();
     });
 
-    ctrl.events.on('render', renderData => {
+    ctrl.events.on('render', (renderData: any) => {
       data = renderData || data;
       if (data) {
         renderPanel();

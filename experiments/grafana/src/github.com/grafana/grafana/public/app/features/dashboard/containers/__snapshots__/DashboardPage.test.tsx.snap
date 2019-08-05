@@ -78,7 +78,7 @@ exports[`DashboardPage Dashboard init completed  Should render dashboard grid 1`
         ],
         "refresh": undefined,
         "revision": undefined,
-        "schemaVersion": 18,
+        "schemaVersion": 19,
         "snapshot": undefined,
         "style": "dark",
         "tags": Array [],
@@ -109,9 +109,9 @@ exports[`DashboardPage Dashboard init completed  Should render dashboard grid 1`
       autoHide={false}
       autoHideDuration={200}
       autoHideTimeout={200}
-      customClassName="custom-scrollbars"
+      className="custom-scrollbar--page"
       hideTracksWhenNotNeeded={false}
-      scrollTop={0}
+      scrollTop={null}
       setScrollTop={[Function]}
       updateAfterMountMs={500}
     >
@@ -191,7 +191,7 @@ exports[`DashboardPage Dashboard init completed  Should render dashboard grid 1`
               ],
               "refresh": undefined,
               "revision": undefined,
-              "schemaVersion": 18,
+              "schemaVersion": 19,
               "snapshot": undefined,
               "style": "dark",
               "tags": Array [],
@@ -211,6 +211,7 @@ exports[`DashboardPage Dashboard init completed  Should render dashboard grid 1`
           }
           isEditing={false}
           isFullscreen={false}
+          scrollTop={0}
         />
       </div>
     </CustomScrollbar>
@@ -314,7 +315,7 @@ exports[`DashboardPage When dashboard has editview url state should render setti
         ],
         "refresh": undefined,
         "revision": undefined,
-        "schemaVersion": 18,
+        "schemaVersion": 19,
         "snapshot": undefined,
         "style": "dark",
         "tags": Array [],
@@ -346,9 +347,9 @@ exports[`DashboardPage When dashboard has editview url state should render setti
       autoHide={false}
       autoHideDuration={200}
       autoHideTimeout={200}
-      customClassName="custom-scrollbars"
+      className="custom-scrollbar--page"
       hideTracksWhenNotNeeded={false}
-      scrollTop={0}
+      scrollTop={null}
       setScrollTop={[Function]}
       updateAfterMountMs={500}
     >
@@ -425,7 +426,7 @@ exports[`DashboardPage When dashboard has editview url state should render setti
             ],
             "refresh": undefined,
             "revision": undefined,
-            "schemaVersion": 18,
+            "schemaVersion": 19,
             "snapshot": undefined,
             "style": "dark",
             "tags": Array [],
@@ -520,7 +521,7 @@ exports[`DashboardPage When dashboard has editview url state should render setti
               ],
               "refresh": undefined,
               "revision": undefined,
-              "schemaVersion": 18,
+              "schemaVersion": 19,
               "snapshot": undefined,
               "style": "dark",
               "tags": Array [],
@@ -540,6 +541,7 @@ exports[`DashboardPage When dashboard has editview url state should render setti
           }
           isEditing={false}
           isFullscreen={false}
+          scrollTop={0}
         />
       </div>
     </CustomScrollbar>

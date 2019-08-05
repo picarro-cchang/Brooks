@@ -3,6 +3,7 @@
 *.pyd
 *.bak
 *.so
+*.db
 *~
 target/
 build/

@@ -3,7 +3,7 @@
   "name": "Dashboard list",
   "id": "dashlist",
 
-  "dataFormats": [],
+  "skipDataQuery": true,
 
   "info": {
     "description": "List of dynamic links to other dashboards",
@@ -14,7 +14,6 @@
     "logos": {
       "small": "img/icn-dashlist-panel.svg",
       "large": "img/icn-dashlist-panel.svg"
-    },
-    "version": "5.0.0"
+    }
   }
 }

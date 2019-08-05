@@ -1,5 +1,6 @@
-import _ from 'lodash';
-import { getValueFormat, getValueFormatterIndex, getValueFormats } from '@grafana/ui';
+import { has } from 'lodash';
+import { getValueFormat, getValueFormatterIndex, getValueFormats, deprecationWarning } from '@grafana/ui';
+import { stringToJsRegex } from '@grafana/data';
 
 const kbn: any = {};
 
@@ -132,7 +133,7 @@ kbn.secondsToHms = seconds => {
 };
 
 kbn.secondsToHhmmss = seconds => {
-  const strings = [];
+  const strings: string[] = [];
   const numhours = Math.floor(seconds / 3600);
   const numminutes = Math.floor((seconds % 3600) / 60);
   const numseconds = Math.floor((seconds % 3600) % 60);
@@ -192,7 +193,7 @@ kbn.calculateInterval = (range, resolution, lowLimitInterval) => {
 
 kbn.describe_interval = str => {
   const matches = str.match(kbn.interval_regex);
-  if (!matches || !_.has(kbn.intervals_in_seconds, matches[2])) {
+  if (!matches || !has(kbn.intervals_in_seconds, matches[2])) {
     throw new Error('Invalid interval string, expecting a number followed by one of "Mwdhmsy"');
   } else {
     return {
@@ -228,13 +229,10 @@ kbn.slugifyForUrl = str => {
     .replace(/ +/g, '-');
 };
 
+/** deprecated since 6.1, use grafana/ui */
 kbn.stringToJsRegex = str => {
-  if (str[0] !== '/') {
-    return new RegExp('^' + str + '$');
-  }
-
-  const match = str.match(new RegExp('^/(.*?)/(g?i?m?y?)$'));
-  return new RegExp(match[1], match[2]);
+  deprecationWarning('kbn.ts', 'kbn.stringToJsRegex()', '@grafana/data');
+  return stringToJsRegex(str);
 };
 
 kbn.toFixed = (value, decimals) => {

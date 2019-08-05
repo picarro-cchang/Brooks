@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import moment from 'moment';
 
 import {
   CompletionItem,
@@ -9,12 +8,12 @@ import {
   TypeaheadOutput,
 } from 'app/types/explore';
 
-import { parseSelector, processLabels } from './language_utils';
+import { parseSelector, processLabels, processHistogramLabels } from './language_utils';
 import PromqlSyntax, { FUNCTIONS, RATE_RANGES } from './promql';
+import { dateTime } from '@grafana/data';
 
 const DEFAULT_KEYS = ['job', 'instance'];
 const EMPTY_SELECTOR = '{}';
-const HISTOGRAM_SELECTOR = '{le!=""}'; // Returns all timeseries for histograms
 const HISTORY_ITEM_COUNT = 5;
 const HISTORY_COUNT_CUTOFF = 1000 * 60 * 60 * 24; // 24h
 
@@ -32,7 +31,7 @@ export function addHistoryMetadata(item: CompletionItem, history: any[]): Comple
   const recent = historyForItem[0];
   let hint = `Queried ${count} times in the last 24h.`;
   if (recent) {
-    const lastQueried = moment(recent.ts).fromNow();
+    const lastQueried = dateTime(recent.ts).fromNow();
     hint = `${hint} Last queried ${lastQueried}.`;
   }
   return {
@@ -43,6 +42,7 @@ export function addHistoryMetadata(item: CompletionItem, history: any[]): Comple
 
 export default class PromQlLanguageProvider extends LanguageProvider {
   histogramMetrics?: string[];
+  timeRange?: { start: number; end: number };
   labelKeys?: { [index: string]: string[] }; // metric -> [labelKey,...]
   labelValues?: { [index: string]: { [index: string]: string[] } }; // metric -> labelKey -> [labelValue,...]
   metrics?: string[];
@@ -53,6 +53,7 @@ export default class PromQlLanguageProvider extends LanguageProvider {
 
     this.datasource = datasource;
     this.histogramMetrics = [];
+    this.timeRange = { start: 0, end: 0 };
     this.labelKeys = {};
     this.labelValues = {};
     this.metrics = [];
@@ -60,21 +61,49 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     Object.assign(this, initialValues);
   }
   // Strip syntax chars
-  cleanText = s => s.replace(/[{}[\]="(),!~+\-*/^%]/g, '').trim();
+  cleanText = (s: string) => s.replace(/[{}[\]="(),!~+\-*/^%]/g, '').trim();
 
   getSyntax() {
     return PromqlSyntax;
   }
 
-  request = url => {
-    return this.datasource.metadataRequest(url);
+  request = async (url: string) => {
+    try {
+      const res = await this.datasource.metadataRequest(url);
+      const body = await (res.data || res.json());
+
+      return body.data;
+    } catch (error) {
+      console.error(error);
+    }
+
+    return [];
   };
 
   start = () => {
     if (!this.startTask) {
-      this.startTask = this.fetchMetricNames().then(() => [this.fetchHistogramMetrics()]);
+      this.startTask = this.fetchMetrics();
     }
     return this.startTask;
+  };
+
+  fetchMetrics = async () => {
+    this.metrics = await this.fetchMetricNames();
+    this.processHistogramMetrics(this.metrics);
+
+    return Promise.resolve([]);
+  };
+
+  fetchMetricNames = async (): Promise<string[]> => {
+    return this.request('/api/v1/label/__name__/values');
+  };
+
+  processHistogramMetrics = (data: string[]) => {
+    const { values } = processHistogramLabels(data);
+
+    if (values && values['__name__']) {
+      this.histogramMetrics = values['__name__'].slice().sort();
+    }
   };
 
   // Keep this DOM-free for testing
@@ -125,12 +154,12 @@ export default class PromQlLanguageProvider extends LanguageProvider {
 
     if (history && history.length > 0) {
       const historyItems = _.chain(history)
-        .map(h => h.query.expr)
+        .map((h: any) => h.query.expr)
         .filter()
         .uniq()
         .take(HISTORY_ITEM_COUNT)
         .map(wrapLabel)
-        .map(item => addHistoryMetadata(item, history))
+        .map((item: CompletionItem) => addHistoryMetadata(item, history))
         .value();
 
       suggestions.push({
@@ -178,13 +207,25 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     };
   }
 
+  roundToMinutes(seconds: number): number {
+    return Math.floor(seconds / 60);
+  }
+
+  timeRangeChanged(): boolean {
+    const dsRange = this.datasource.getTimeRange();
+    return (
+      this.roundToMinutes(dsRange.end) !== this.roundToMinutes(this.timeRange.end) ||
+      this.roundToMinutes(dsRange.start) !== this.roundToMinutes(this.timeRange.start)
+    );
+  }
+
   getAggregationCompletionItems({ value }: TypeaheadInput): TypeaheadOutput {
     const refresher: Promise<any> = null;
     const suggestions: CompletionItemGroup[] = [];
 
     // Stitch all query lines together to support multi-line queries
     let queryOffset;
-    const queryText = value.document.getBlocks().reduce((text, block) => {
+    const queryText = value.document.getBlocks().reduce((text: string, block: any) => {
       const blockText = block.getText();
       if (value.anchorBlock.key === block.key) {
         // Newline characters are not accounted for but this is irrelevant
@@ -226,7 +267,7 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     const selector = parseSelector(selectorString, selectorString.length - 2).selector;
 
     const labelKeys = this.labelKeys[selector];
-    if (labelKeys) {
+    if (labelKeys && !this.timeRangeChanged()) {
       suggestions.push({ label: 'Labels', items: labelKeys.map(wrapLabel) });
     } else {
       result.refresher = this.fetchSeriesLabels(selector);
@@ -277,7 +318,7 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     }
 
     // Query labels for selector
-    if (selector && !this.labelValues[selector]) {
+    if (selector && (!this.labelValues[selector] || this.timeRangeChanged())) {
       if (selector === EMPTY_SELECTOR) {
         // Query label values for default labels
         refresher = Promise.all(DEFAULT_KEYS.map(key => this.fetchLabelValues(key)));
@@ -289,60 +330,30 @@ export default class PromQlLanguageProvider extends LanguageProvider {
     return { context, refresher, suggestions };
   }
 
-  async fetchMetricNames() {
-    const url = '/api/v1/label/__name__/values';
+  fetchLabelValues = async (key: string) => {
     try {
-      const res = await this.request(url);
-      const body = await (res.data || res.json());
-      this.metrics = body.data;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async fetchHistogramMetrics() {
-    await this.fetchSeriesLabels(HISTOGRAM_SELECTOR, true);
-    const histogramSeries = this.labelValues[HISTOGRAM_SELECTOR];
-    if (histogramSeries && histogramSeries['__name__']) {
-      this.histogramMetrics = histogramSeries['__name__'].slice().sort();
-    }
-  }
-
-  async fetchLabelValues(key: string) {
-    const url = `/api/v1/label/${key}/values`;
-    try {
-      const res = await this.request(url);
-      const body = await (res.data || res.json());
-      const exisingValues = this.labelValues[EMPTY_SELECTOR];
+      const data = await this.request(`/api/v1/label/${key}/values`);
+      const existingValues = this.labelValues[EMPTY_SELECTOR];
       const values = {
-        ...exisingValues,
-        [key]: body.data,
+        ...existingValues,
+        [key]: data,
       };
-      this.labelValues = {
-        ...this.labelValues,
-        [EMPTY_SELECTOR]: values,
-      };
+      this.labelValues[EMPTY_SELECTOR] = values;
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
-  async fetchSeriesLabels(name: string, withName?: boolean) {
-    const url = `/api/v1/series?match[]=${name}`;
+  fetchSeriesLabels = async (name: string, withName?: boolean) => {
     try {
-      const res = await this.request(url);
-      const body = await (res.data || res.json());
-      const { keys, values } = processLabels(body.data, withName);
-      this.labelKeys = {
-        ...this.labelKeys,
-        [name]: keys,
-      };
-      this.labelValues = {
-        ...this.labelValues,
-        [name]: values,
-      };
+      const tRange = this.datasource.getTimeRange();
+      const data = await this.request(`/api/v1/series?match[]=${name}&start=${tRange['start']}&end=${tRange['end']}`);
+      const { keys, values } = processLabels(data, withName);
+      this.labelKeys[name] = keys;
+      this.labelValues[name] = values;
+      this.timeRange = tRange;
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 }

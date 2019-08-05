@@ -6,7 +6,7 @@ import xss from 'xss';
  * See https://github.com/bvaughn/react-highlight-words#props
  */
 export function findHighlightChunksInText({ searchWords, textToHighlight }) {
-  return findMatchesInText(textToHighlight, searchWords.join(' '));
+  return searchWords.reduce((acc, term) => [...acc, ...findMatchesInText(textToHighlight, term)], []);
 }
 
 const cleanNeedle = (needle: string): string => {
@@ -22,10 +22,10 @@ export function findMatchesInText(haystack: string, needle: string): TextMatch[]
     return [];
   }
   const matches = [];
-  const cleaned = cleanNeedle(needle);
+  const { cleaned, flags } = parseFlags(cleanNeedle(needle));
   let regexp: RegExp;
   try {
-    regexp = new RegExp(`(?:${cleaned})`, 'g');
+    regexp = new RegExp(`(?:${cleaned})`, flags);
   } catch (error) {
     return matches;
   }
@@ -42,6 +42,35 @@ export function findMatchesInText(haystack: string, needle: string): TextMatch[]
     return '';
   });
   return matches;
+}
+
+const CLEAR_FLAG = '-';
+const FLAGS_REGEXP = /\(\?([ims-]+)\)/g;
+
+/**
+ * Converts any mode modifers in the text to the Javascript equivalent flag
+ */
+export function parseFlags(text: string): { cleaned: string; flags: string } {
+  const flags: Set<string> = new Set(['g']);
+
+  const cleaned = text.replace(FLAGS_REGEXP, (str, group) => {
+    const clearAll = group.startsWith(CLEAR_FLAG);
+
+    for (let i = 0; i < group.length; ++i) {
+      const flag = group.charAt(i);
+      if (clearAll || group.charAt(i - 1) === CLEAR_FLAG) {
+        flags.delete(flag);
+      } else if (flag !== CLEAR_FLAG) {
+        flags.add(flag);
+      }
+    }
+    return ''; // Remove flag from text
+  });
+
+  return {
+    cleaned: cleaned,
+    flags: Array.from(flags).join(''),
+  };
 }
 
 const XSSWL = Object.keys(xss.whiteList).reduce((acc, element) => {
@@ -67,4 +96,16 @@ export function sanitize(unsanitizedString: string): string {
     console.log('String could not be sanitized', unsanitizedString);
     return unsanitizedString;
   }
+}
+
+export function hasAnsiCodes(input: string): boolean {
+  return /\u001b\[\d{1,2}m/.test(input);
+}
+
+export function escapeHtml(str: string): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
