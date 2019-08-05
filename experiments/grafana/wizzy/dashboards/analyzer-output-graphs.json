@@ -16,18 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1553536096536,
-  "links": [
-    {
-      "icon": "external link",
-      "includeVars": true,
-      "keepTime": true,
-      "tags": [
-        "pigss"
-      ],
-      "type": "dashboards"
-    }
-  ],
+  "iteration": 1564765480579,
+  "links": [],
   "panels": [
     {
       "collapsed": false,
@@ -49,6 +39,7 @@
       "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 5,
         "w": 12,
@@ -71,6 +62,9 @@
       "links": [],
       "maxPerRow": 2,
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "paceLength": 10,
       "percentage": false,
       "pointradius": 2,
@@ -92,6 +86,7 @@
           "pointradius": 1
         }
       ],
+      "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
@@ -246,6 +241,7 @@
       "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 5,
         "w": 12,
@@ -253,7 +249,7 @@
         "y": 1
       },
       "hideTimeOverride": false,
-      "id": 27,
+      "id": 17,
       "legend": {
         "avg": false,
         "current": false,
@@ -268,6 +264,9 @@
       "links": [],
       "maxPerRow": 2,
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "paceLength": 10,
       "percentage": false,
       "pointradius": 2,
@@ -275,7 +274,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1553536096536,
+      "repeatIteration": 1564765480579,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -291,6 +290,7 @@
           "pointradius": 1
         }
       ],
+      "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
@@ -445,6 +445,7 @@
       "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 5,
         "w": 12,
@@ -452,7 +453,7 @@
         "y": 6
       },
       "hideTimeOverride": false,
-      "id": 28,
+      "id": 18,
       "legend": {
         "avg": false,
         "current": false,
@@ -467,6 +468,9 @@
       "links": [],
       "maxPerRow": 2,
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "paceLength": 10,
       "percentage": false,
       "pointradius": 2,
@@ -474,7 +478,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1553536096536,
+      "repeatIteration": 1564765480579,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -490,6 +494,7 @@
           "pointradius": 1
         }
       ],
+      "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
@@ -644,6 +649,7 @@
       "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 5,
         "w": 12,
@@ -651,7 +657,7 @@
         "y": 6
       },
       "hideTimeOverride": false,
-      "id": 29,
+      "id": 19,
       "legend": {
         "avg": false,
         "current": false,
@@ -666,6 +672,9 @@
       "links": [],
       "maxPerRow": 2,
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "paceLength": 10,
       "percentage": false,
       "pointradius": 2,
@@ -673,7 +682,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1553536096536,
+      "repeatIteration": 1564765480579,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -689,6 +698,7 @@
           "pointradius": 1
         }
       ],
+      "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
@@ -835,243 +845,12 @@
         "align": false,
         "alignLevel": null
       }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 11
-      },
-      "id": 21,
-      "panels": [],
-      "title": "Valve Switching",
-      "type": "row"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "PiGSS data source",
-      "description": "",
-      "format": "none",
-      "gauge": {
-        "maxValue": 15,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 0,
-        "y": 12
-      },
-      "id": 7,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false
-      },
-      "tableColumn": "valve_pos",
-      "targets": [
-        {
-          "groupBy": [],
-          "limit": "1",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT mean(\"valve_pos\") FROM \"crds\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "*"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Valve Position",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "PiGSS data source",
-      "description": "",
-      "format": "s",
-      "gauge": {
-        "maxValue": 15,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 3,
-        "y": 12
-      },
-      "id": 11,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false
-      },
-      "tableColumn": "valve_stable_time",
-      "targets": [
-        {
-          "groupBy": [],
-          "limit": "1",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT mean(\"valve_pos\") FROM \"crds\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "*"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Time since switch",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
-    },
-    {
-      "gridPos": {
-        "h": 2,
-        "w": 11,
-        "x": 6,
-        "y": 12
-      },
-      "id": 26,
-      "links": [],
-      "options": {
-        "buttonsPerRow": 9,
-        "numberOfValves": 16
-      },
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Valve Mode",
-      "type": "picarro-valve-panel"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 18,
+  "schemaVersion": 19,
   "style": "dark",
-  "tags": [
-    "pigss"
-  ],
+  "tags": [],
   "templating": {
     "list": [
       {
@@ -1197,6 +976,6 @@
     ]
   },
   "timezone": "",
-  "title": "Analyzer Output Dashboard",
-  "uid": "vA5EsQjmk"
+  "title": "Analyzer Output Graphs",
+  "uid": "0C5NddvZk"
 }
