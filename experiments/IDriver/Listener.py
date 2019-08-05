@@ -25,18 +25,23 @@ from typing import Any, Callable, Dict, List, Union, Optional
 from queue import Empty, Full, Queue
 
 import zmq
-import StringPickler
+from experiments.IDriver import StringPickler
 
 
 class Listener(threading.Thread):
     """ Listener object which allows access to broadcasts via ZMQ sockets """
 
-    def __init__(self, queue: Optional[Queue], port: int, elementType: Any,
-                 streamFilter: Optional[Callable]=None,
-                 host: str="localhost", notify: Optional[Callable]=None,
-                 retry: bool=False,
-                 name: str="Listener", logFunc: Optional[Callable]=None,
-                 autoDropOldest: bool=False) -> None:
+    def __init__(self,
+                 queue: Optional[Queue],
+                 port: int,
+                 elementType: Any,
+                 streamFilter: Optional[Callable] = None,
+                 host: str = "localhost",
+                 notify: Optional[Callable] = None,
+                 retry: bool = False,
+                 name: str = "Listener",
+                 logFunc: Optional[Callable] = None,
+                 autoDropOldest: bool = False) -> None:
         """ Create a listener running in a new daemonic thread which subscribes to broadcasts at
         the specified "port". The broadcast consists of entries of type "elementType" (a subclass of
         ctypes.Structure)
@@ -107,7 +112,7 @@ class Listener(threading.Thread):
         except:
             pass
 
-    def stop(self, timeout: Optional[float]=None) -> None:
+    def stop(self, timeout: Optional[float] = None) -> None:
         """ Used to stop the main loop.
         This blocks until the thread completes execution of its .run() implementation.
         """
@@ -133,8 +138,8 @@ class Listener(threading.Thread):
                                             (self.host, self.port))
                         self.socket.setsockopt(zmq.SUBSCRIBE, b"")
                         poller.register(self.socket, zmq.POLLIN)
-                        self.safeLog("Connection made by %s to port %d." % (
-                            self.name, self.port))
+                        self.safeLog("Connection made by %s to port %d." %
+                                     (self.name, self.port))
                     except Exception:
                         self.socket = None
                         if self.notify is not None:
@@ -149,12 +154,14 @@ class Listener(threading.Thread):
                             return
                     self.data = b""
                 try:
-                    socks = dict(poller.poll(timeout=1000))  # type: Dict[zmq.socket, Any]
+                    socks = dict(poller.poll(
+                        timeout=1000))  # type: Dict[zmq.socket, Any]
                     if socks.get(self.socket) == zmq.POLLIN:
                         self.data += self.socket.recv()
                 except Exception as e:  # Error accessing or reading from socket
-                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (
-                        self.port, self.name, e))
+                    self.safeLog(
+                        "Error accessing or reading from port %d by %s. Error: %s."
+                        % (self.port, self.name, e))
                     if self.socket is not None:
                         self.socket.close()
                         self.socket = None
@@ -165,8 +172,9 @@ class Listener(threading.Thread):
                 else:
                     self._ProcessCtypesStream()
             except Exception as e:
-                self.safeLog("Communication from %s to port %d disconnected." % (
-                    self.name, self.port), verbose=traceback.format_exc())
+                self.safeLog("Communication from %s to port %d disconnected." %
+                             (self.name, self.port),
+                             verbose=traceback.format_exc())
                 if self.socket is not None:
                     self.socket.close()
                     self.socket = None
@@ -184,7 +192,8 @@ class Listener(threading.Thread):
     def _ProcessArbitraryObjectStream(self) -> None:
         while 1:
             try:
-                obj, residual = StringPickler.unpack_arbitrary_object(self.data)  # type: Any, bytes
+                obj, residual = StringPickler.unpack_arbitrary_object(
+                    self.data)  # type: Any, bytes
                 if self.streamFilter is not None:
                     obj = self.streamFilter(obj)
                 if obj is not None and self.queue is not None:
@@ -211,7 +220,8 @@ class Listener(threading.Thread):
 
     def _ProcessCtypesStream(self) -> None:
         while len(self.data) >= self.recordLength:
-            result = StringPickler.bytes_as_object(self.data[0:self.recordLength], self.elementType)  # type: Any
+            result = StringPickler.bytes_as_object(
+                self.data[0:self.recordLength], self.elementType)  # type: Any
             if self.streamFilter is not None:
                 obj = self.streamFilter(result)  # type: Any
             else:
@@ -245,10 +255,10 @@ if __name__ == "__main__":
         ]
 
     def myNotify(e: str) -> None:
-        print("Notification: %s" % (e,))
+        print("Notification: %s" % (e, ))
 
     def myLogger(s: str) -> None:
-        print("Log: %s" % (s,))
+        print("Log: %s" % (s, ))
 
     def myFilter(m: Any) -> Any:
         assert isinstance(m, MyTime * 10000)
@@ -260,11 +270,22 @@ if __name__ == "__main__":
     use_arbitrary_object_pickler = False
 
     if use_arbitrary_object_pickler:
-        listener = Listener(q, port, ArbitraryObject, retry=True,
-                            notify=myNotify, name="Test Listener", logFunc=myLogger)
+        listener = Listener(q,
+                            port,
+                            ArbitraryObject,
+                            retry=True,
+                            notify=myNotify,
+                            name="Test Listener",
+                            logFunc=myLogger)
     else:
-        listener = Listener(q, port, MyTime * 10000, myFilter, retry=True,
-                            notify=myNotify, name="Test Listener", logFunc=myLogger)
+        listener = Listener(q,
+                            port,
+                            MyTime * 10000,
+                            myFilter,
+                            retry=True,
+                            notify=myNotify,
+                            name="Test Listener",
+                            logFunc=myLogger)
 
     while listener.is_alive():
         try:
