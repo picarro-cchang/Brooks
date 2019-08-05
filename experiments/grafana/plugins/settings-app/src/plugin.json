@@ -13,13 +13,13 @@
     {
       "type": "dashboard",
       "name": "Settings",
-      "path": "dashboards/Settings.json",
+      "path": "dashboards/SettingsGrafana.json",
       "addToNav": true,
       "defaultNav": true
     },
     {
       "type": "panel",
-      "name": "Modbus Settings Panel"
+      "name": "Modbus Setting Panel"
     },
     {
       "type": "panel",
