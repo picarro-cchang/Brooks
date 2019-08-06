@@ -15,10 +15,9 @@
 
 #include "usart.h"
 
+/* logger.h
 
-/* logger.h 
-
-   Sets up logging 
+   Sets up logging
 */
 #include "logger.h"
 
@@ -36,7 +35,6 @@
 
 #include "system.h"
 
-
 // ----------------------- Globals ------------------------------------
 
 // idnstr format: Organization, model, serial, version
@@ -51,7 +49,6 @@ system_state_t system_state;
 system_state_t *system_state_ptr = &system_state;
 
 // ----------------------- Functions ----------------------------------
-
 
 void system_init( void ) {
   uint16_t sernum = 0;
@@ -82,6 +79,26 @@ system_state_value_t get_system_state( void ) {
   return(system_state_ptr -> state_enum);
 }
 
+int8_t system_enter_standby(void) {
+  switch( system_state.state_enum ) {
+  case system_state_INIT:
+    // Transition from INIT to STANDBY
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // Clean solenoid --> OFF
+    logger_msg_p("system",log_level_INFO,PSTR("State change INIT to STANDBY"));
+    set_system_state(system_state_STANDBY);
+
+    break;
+  case system_state_STANDBY:
+    break;
+  default:
+    break;
+  }
+  return 0;
+}
+
 void cmd_rst( command_arg_t *command_arg_ptr ) {
   // Set watchdog to lowest interval and delay longer than that
   wdt_enable(WDTO_15MS);
@@ -105,7 +122,7 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
 		 "none",
 		 LINE_TERMINATION_CHARACTERS );
   }
-  
+
 }
 
 void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
@@ -116,25 +133,19 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
 
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
   if (board == 'a') {
-    system_state.topaz_a_sernum = sernum;    
+    system_state.topaz_a_sernum = sernum;
   } else {
-    system_state.topaz_b_sernum = sernum;    
+    system_state.topaz_b_sernum = sernum;
   }
   return 0;
 }
 
 uint16_t system_state_get_topaz_sernum(char board ) {
   if (board == 'a') {
-    return system_state.topaz_a_sernum;    
+    return system_state.topaz_a_sernum;
   } else {
-    return system_state.topaz_b_sernum;    
+    return system_state.topaz_b_sernum;
   }
 
 }
-
-
-
-
-
-
 

@@ -35,6 +35,8 @@ typedef struct system_status_struct {
 // will be defined in functions.c
 extern system_state_t *system_state_ptr;
 
+//********************** Function prototypes ***********************//
+
 // Try to set the system state.  Return the actual system state, which
 // may not be what you asked for.
 system_state_value_t set_system_state(system_state_value_t requested_state);
@@ -60,5 +62,8 @@ int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);
 
 // Get the Topaz serial number in the system state struction
 uint16_t system_state_get_topaz_sernum(char board);
+
+// Enter standby mode
+int8_t system_enter_standby(void);
 
 #endif // End the include guard
