@@ -63,7 +63,6 @@ channel_t channel_array[] = {
 channel_config_t channel_config;
 channel_config_t *channel_config_ptr = &channel_config;
 
-
 void channel_init() {
   uint8_t channel_array_index = 0;
   // Disable all channels
@@ -73,6 +72,21 @@ void channel_init() {
   }
   // Update the hardware and display
   channel_update();
+}
+
+int8_t channel_set( uint8_t setting ) {
+  uint8_t channel_array_index = 0;
+  while ((channel_array[channel_array_index].number) != 0) {
+    if ((1 << channel_array_index) & setting) {
+      // Turn this channel on
+      channel_array[channel_array_index].enabled = true;
+    } else {
+      channel_array[channel_array_index].enabled = false;
+    }
+    channel_array_index++;
+  }
+  channel_update();
+  return 0;
 }
 
 int8_t channel_update() {
@@ -90,7 +104,7 @@ int8_t channel_update() {
     channel = channel_array[channel_array_index].number;
     if (channel_array[channel_array_index].enabled == true) {
       // Channel is enabled for sampling
-      channel_hardware_byte &= ~(_BV(channel_array_index));      
+      channel_hardware_byte &= ~(_BV(channel_array_index));
     } else {
       // Channel has been disabled.  Set the bypass DAC to get the
       // inactive flow level.
@@ -103,7 +117,7 @@ int8_t channel_update() {
   // Update hardware.  Disabled channels are energized.
   uint8_t topaz_a_byte = channel_hardware_byte;
   uint8_t topaz_b_byte = channel_hardware_byte >> 4;
-  
+
   // Handle Topaz A hardware
   if (topaz_is_connected('a')) {
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
@@ -144,7 +158,7 @@ uint8_t channel_display() {
 void cmd_chanena( command_arg_t *command_arg_ptr ) {
   // Channel to enable
   uint16_t channel = command_arg_ptr -> uint16_arg;
-  uint8_t channel_index = channel - 1;  
+  uint8_t channel_index = channel - 1;
   uint8_t channel_settings = channel_config_ptr -> enable;
   if (channel == 0 || channel > 8 ) {
     // Argument is out of range
@@ -184,7 +198,7 @@ void cmd_chanena( command_arg_t *command_arg_ptr ) {
 void cmd_chanena_q( command_arg_t *command_arg_ptr ) {
   // Channel to query
   uint16_t channel = command_arg_ptr -> uint16_arg;
-  uint8_t channel_index = channel - 1;  
+  uint8_t channel_index = channel - 1;
   if (channel == 0 || channel > 8 ) {
     // Argument is out of range
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
@@ -210,7 +224,7 @@ void cmd_chanoff( command_arg_t *command_arg_ptr ) {
   // Disable the channel
   channel_array[channel_index].enabled = false;
   channel_update();
-  
+
   // Acknowledge the successful commmand
   command_ack();
   return;
@@ -245,7 +259,7 @@ void cmd_chanset_q( command_arg_t *command_arg_ptr ) {
   uint8_t channel_array_index = 0;
   while ((channel_array[channel_array_index].number) != 0) {
     if (channel_array[channel_array_index].enabled == true) {
-      channel_settings += 1 << channel_array_index;      
+      channel_settings += 1 << channel_array_index;
     }
     channel_array_index++;
   }

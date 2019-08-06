@@ -7,7 +7,7 @@
 
 // Channel data structure
 typedef struct channel_struct {
-  // We'll have channels with numbers 1-8 
+  // We'll have channels with numbers 1-8
   uint8_t number;
   // Enabled channels are enabled for flowing sample gas
   bool enabled;
@@ -25,8 +25,15 @@ typedef struct channel_config_struct {
   bool clean_open;
 } channel_config_t;
 
+//********************** Function prototypes ***********************//
+
 void channel_init(void);
 
+// Set the channel configuration
+//
+// Bits that are set indicate enabled channels.  For example, 0x1 will
+// enable channel 1 and disable everything else.
+int8_t channel_set( uint8_t setting );
 
 // Update the channel hardware and display
 int8_t channel_update(void);
@@ -48,9 +55,5 @@ void cmd_chanset( command_arg_t *command_arg_ptr );
 
 // Query the channel enable register
 void cmd_chanset_q( command_arg_t *command_arg_ptr );
-
-
-
-
 
 #endif
