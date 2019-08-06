@@ -1,10 +1,14 @@
 import asyncio
+import json
+import os
 
 import attr
 from aiomultiprocess import Process
 
 import CmdFIFO
 from experiments.common.rpc_ports import rpc_ports
+from experiments.IDriver.DBWriter.InfluxDBWriter import InfluxDBWriter
+from experiments.IDriver.IDriver import PicarroAnalyzerDriver
 from experiments.madmapper.madmapper import MadMapper
 from experiments.mfc_driver.alicat.alicat_driver import AlicatDriver
 from experiments.piglet.piglet_driver import PigletDriver
@@ -12,6 +16,9 @@ from experiments.relay_driver.numato.numato_driver import NumatoDriver
 
 host = "10.100.3.28"
 port = rpc_ports.get('madmapper')
+
+my_path = os.path.dirname(os.path.abspath(__file__))
+tunnel_configs = os.path.normpath(os.path.join(my_path, 'rpc_tunnel_configs.json'))
 
 
 class AsyncWrapper:
@@ -74,6 +81,9 @@ class PigssSupervisor:
         self.process_wrappers = {}  # List of Process objects
         self.RPC = {}  # Asynchronous interface to RPC handlers of spervisees
         self.device_dict = {}
+        with open(tunnel_configs, "r") as f:
+            self.rpc_tunnel_config = json.loads(f.read())
+        print(f"RPC Tunnel settings loaded from {tunnel_configs}")
 
     async def setup_processes(self, at_start=True):
         if at_start or not self.process_wrappers["MadMapper"].process.is_alive():
@@ -117,6 +127,28 @@ class PigssSupervisor:
                     relay_id = dev_params['Numato_ID']
                     self.RPC[f"Relay_{relay_id}"] = await process_wrapper.start(device_port_name=dev_params['Path'],
                                                                                 rpc_server_port=dev_params['RPC_Port'])
+                    if at_start:
+                        asyncio.create_task(process_wrapper.pinger(2))
+                    else:
+                        print(f"Restarting {key}")
+
+        for key, dev_params in sorted(self.device_dict['Devices']['Network_Devices'].items()):
+            if dev_params['Driver'] == 'IDriver':
+                if at_start or not self.process_wrappers[key].process.is_alive():
+                    process_wrapper = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'])
+                    self.process_wrappers[key] = process_wrapper
+                    chassis, analyzer = dev_params['SN'].split("-")
+                    self.RPC[f"Picarro_{dev_params['SN']}"] = await process_wrapper.start(
+                        instrument_ip_address=dev_params['IP'],
+                        database_writer=InfluxDBWriter(),
+                        rpc_server_port=dev_params['RPC_Port'],
+                        rpc_server_name=f"Picarro_{dev_params['SN']}",
+                        start_now=True,
+                        rpc_tunnel_config=self.rpc_tunnel_config,
+                        database_tags={
+                            "analyzer": analyzer,
+                            "chassis": chassis
+                        })
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
