@@ -117,7 +117,7 @@ int8_t channel_update() {
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_OUTPUT_PORT_0_REG,
 		  topaz_a_byte);
-    retval = channel_display();
+
   } else {
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
 		 'a');
@@ -128,7 +128,7 @@ int8_t channel_update() {
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_OUTPUT_PORT_0_REG,
 		  topaz_b_byte);
-    retval = channel_display();
+
   } else {
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
 		 'b');

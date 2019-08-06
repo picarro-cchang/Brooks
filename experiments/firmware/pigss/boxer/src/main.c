@@ -191,9 +191,6 @@ int main() {
   bool connected = topaz_is_connected('a');
   logger_msg_p("main", log_level_DEBUG, PSTR("topaz_is_connected returns %d"),
 	       connected);
- 
-  // Start the channel module
-  channel_init();
 
   // Start the MPR pressure sensor module
   mpr_init( &cs_manifold_a_sr );
@@ -207,8 +204,7 @@ int main() {
 	       REVCODE);
 
   // Set state to standby
-  // set_system_state(system_state_STANDBY);
-  // system_enter_standby();
+  system_enter_standby();
 
   
   //********************* Schedule some tasks **********************//
