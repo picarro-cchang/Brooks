@@ -63,7 +63,7 @@ fi
 echo 'Formatting staged Python files . . .'
 
 ########## PIP VERSION #############
-yapf -i -r "${PYTHON_FILES[@]}"
+yapf -i --style="{column_limit: 132}" -r "${PYTHON_FILES[@]}"
 ######### END PIP VERSION ##########
 
 ########## PIPENV VERSION ##########
