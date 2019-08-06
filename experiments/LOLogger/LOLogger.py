@@ -5,11 +5,14 @@ import signal
 import sqlite3
 import inspect
 import threading
-# from function_timer import FunctionTimer # fix when path fixed
-from datetime import datetime # fix when path fixed
+from datetime import datetime
+
 import host.experiments.testing.cmd_fifo.CmdFIFO as CmdFIFO
 import host.experiments.common.timeutils as timeutils
 from host.experiments.common.rpc_ports import rpc_ports
+# import CmdFIFO as CmdFIFO # path for pk debugging
+# import timeutils as timeutils # path for pk debugging
+# from rpc_ports import rpc_ports # path for pk debugging
 """
     LOLogger: a logging service with RPC server capabilities. At current implementation it 
     accepts logs using RPC function LogEvent() with multiple optional arguments. It is
@@ -33,15 +36,13 @@ from host.experiments.common.rpc_ports import rpc_ports
 
 # DB table scheme stuff
 db_table_name = "Events"
-db_fields = [("ClientTimestamp", str), 
-             ("ClientName", str), 
-             ("EpochTime", str), 
-             ("LogMessage", str), 
-             ("Level", int), 
-             ("IP", str)]
+db_fields = [("ClientTimestamp", str), ("ClientName", str), ("EpochTime", str),
+             ("LogMessage", str), ("Level", int), ("IP", str)]
 
-python_to_sqlite_types_cast_map = {"<class 'str'>": "text",
-                                   "<class 'int'>": "int"}
+python_to_sqlite_types_cast_map = {
+    "<class 'str'>": "text",
+    "<class 'int'>": "int"
+}
 
 # database flushing stuff:
 FLUSHING_MODES = ["BATCHING", "TIMED"]
@@ -51,80 +52,84 @@ DEFAULT_FLUSHING_BATCH_SIZE = 10
 DEFAULT_FLUSHING_BATCHING_TIMEOUT = 60
 DEFAULT_FLUSHING_TIMEOUT = 1
 
-LOG_LEVELS_RANGE = range(0,51)
-LOG_LEVELS = {"CRITICAL":50,
-              "ERROR":40,
-              "WARNING":30,
-              "INFO":20,
-              "DEBUG":10,
-              "NOTSET":0}
+LOG_LEVELS_RANGE = range(0, 51)
+LOG_LEVELS = {
+    "CRITICAL": 50,
+    "ERROR": 40,
+    "WARNING": 30,
+    "INFO": 20,
+    "DEBUG": 10,
+    "NOTSET": 0
+}
 
 MOVE_TO_NEW_FILE_EVERY_MONTH = True
-ZIP_OLD_FILE = False # not emplemented yet, might be not nessecarry
-DO_DATABASE_TRANSITION = False # not emplemented yet, might be not nessecarry
+ZIP_OLD_FILE = False  # not emplemented yet, might be not nessecarry
+DO_DATABASE_TRANSITION = False  # not emplemented yet, might be not nessecarry
 
-DEFAULT_DB_PATH = "." # TODO
+DEFAULT_DB_PATH = "."  # TODO
+
+
 def get_current_year_month():
     today = datetime.today()
     return f"{today.year}_{today.month:0{2}}"
 
 
 class LOLogger(object):
-    def __init__(self,
-                 db_folder_path,
-                 db_filename_prefix,
-                 rpc_port,
-                 rpc_server_name="LOLogger",
-                 rpc_server_description="Universal log collector, flushes to sqlite",
-                 flushing_mode=TIMED,
-                 flushing_batch_size=10,
-                 flushing_timeout=1,
-                 move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
-                 zip_old_file=ZIP_OLD_FILE,
-                 do_database_transition=DO_DATABASE_TRANSITION,
-                 verbose=True
-                 ):
+    def __init__(
+            self,
+            db_folder_path,
+            db_filename_prefix,
+            rpc_port,
+            rpc_server_name="LOLogger",
+            rpc_server_description="Universal log collector, flushes to sqlite",
+            flushing_mode=TIMED,
+            flushing_batch_size=10,
+            flushing_timeout=1,
+            move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
+            zip_old_file=ZIP_OLD_FILE,
+            do_database_transition=DO_DATABASE_TRANSITION,
+            verbose=True):
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
         self.rpc_port = rpc_port
         self.rpc_server_name = rpc_server_name
         self.rpc_server_description = rpc_server_description
 
-        self.flushing_mode=flushing_mode
-        self.flushing_batch_size=flushing_batch_size
-        self.flushing_timeout=flushing_timeout
+        self.flushing_mode = flushing_mode
+        self.flushing_batch_size = flushing_batch_size
+        self.flushing_timeout = flushing_timeout
 
         self.move_to_new_file_every_month = move_to_new_file_every_month
         self.zip_old_file = zip_old_file
         self.do_database_transition = do_database_transition
-
 
         self.queue = queue.Queue(200)
         self.verbose = verbose
         self.LogLevel = 1
         self.logs_passed_to_queue = 0
 
-        self.server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
-                                            ServerName=self.rpc_server_name,
-                                            ServerDescription=self.rpc_server_description,
-                                            threaded=True)
+        self.server = CmdFIFO.CmdFIFOServer(
+            ("", self.rpc_port),
+            ServerName=self.rpc_server_name,
+            ServerDescription=self.rpc_server_description,
+            threaded=True)
 
-        self.lologger_thread = LOLoggerThread(db_folder_path=self.db_folder_path, 
-                                              db_filename_prefix=self.db_filename_prefix, 
-                                              queue=self.queue,
-                                              parent=self,
-                                              flushing_mode=self.flushing_mode,
-                                              flushing_batch_size=self.flushing_batch_size,
-                                              flushing_timeout=self.flushing_timeout,
-                                              move_to_new_file_every_month=self.move_to_new_file_every_month,
-                                              zip_old_file=self.zip_old_file,
-                                              do_database_transition=self.do_database_transition)
+        self.lologger_thread = LOLoggerThread(
+            db_folder_path=self.db_folder_path,
+            db_filename_prefix=self.db_filename_prefix,
+            queue=self.queue,
+            parent=self,
+            flushing_mode=self.flushing_mode,
+            flushing_batch_size=self.flushing_batch_size,
+            flushing_timeout=self.flushing_timeout,
+            move_to_new_file_every_month=self.move_to_new_file_every_month,
+            zip_old_file=self.zip_old_file,
+            do_database_transition=self.do_database_transition)
         self.register_rpc_functions()
 
         signal.signal(signal.SIGINT, self._signal_handler)
 
         self.server.serve_forever()
-
 
     def LogEvent(self,
                  log_message,
@@ -141,12 +146,14 @@ class LOLogger(object):
                 client_timestamp = str(timeutils.get_local_timestamp())
             EpochTime = str(timeutils.get_epoch_timestamp())
 
-            values = [client_timestamp, client_name, EpochTime, log_message, level, ip]
+            values = [
+                client_timestamp, client_name, EpochTime, log_message, level,
+                ip
+            ]
             self.queue.put_nowait(values)
-            self.logs_passed_to_queue+=1
+            self.logs_passed_to_queue += 1
             if self.verbose:
                 print(f"{client_timestamp}:::{client_name}  -  {log_message}")
-
 
     def register_rpc_functions(self):
         self.server.register_function(self.LogEvent)
@@ -154,7 +161,6 @@ class LOLogger(object):
         self.server.register_function(self.get_verbose)
         self.server.register_function(self.set_log_level)
         self.server.register_function(self.get_log_level)
-
 
     def flip_verbose(self):
         """
@@ -201,32 +207,35 @@ class LOLogger(object):
         self.lologger_thread._sigint_handler()
         self.lologger_thread.join()
 
+
 class LOLoggerThread(threading.Thread):
     """
         Thread that will be dealing with sqlite database.
     """
-    def __init__(self,
-                 db_folder_path, 
-                 db_filename_prefix, 
-                 queue, 
-                 parent,
-                 flushing_mode=TIMED,
-                 flushing_batch_size=10,
-                 flushing_timeout=1,
-                 move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
-                 zip_old_file=ZIP_OLD_FILE,
-                 do_database_transition=DO_DATABASE_TRANSITION,
-                 ):
+
+    def __init__(
+            self,
+            db_folder_path,
+            db_filename_prefix,
+            queue,
+            parent,
+            flushing_mode=TIMED,
+            flushing_batch_size=10,
+            flushing_timeout=1,
+            move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
+            zip_old_file=ZIP_OLD_FILE,
+            do_database_transition=DO_DATABASE_TRANSITION,
+    ):
         threading.Thread.__init__(self, name="LOLoggerThread")
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
-        self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix)
+        self.db_path = self._create_database_file_path(self.db_folder_path,
+                                                       self.db_filename_prefix)
         self.queue = queue
         self.parent = parent
-        self.move_to_new_file_every_month = move_to_new_file_every_month 
-        self.zip_old_file = zip_old_file 
-        self.do_database_transition = do_database_transition 
-
+        self.move_to_new_file_every_month = move_to_new_file_every_month
+        self.zip_old_file = zip_old_file
+        self.do_database_transition = do_database_transition
 
         self.current_year_month = get_current_year_month()
 
@@ -243,28 +252,31 @@ class LOLoggerThread(threading.Thread):
         self.setDaemon(True)
         self.start()
 
-
-    def _create_database_file_path(self,
-                                   db_folder_path,
-                                   db_filename_prefix):
+    def _create_database_file_path(self, db_folder_path, db_filename_prefix):
         """Create a filename for the new sqlite file."""
         db_filename = f"{db_filename_prefix}_{get_current_year_month()}.db"
         return os.path.join(db_folder_path, db_filename)
 
     def _create_new_databade_table(self):
         """Create table."""
-        query_arguments = ",".join(["{} {}".format(t[0], python_to_sqlite_types_cast_map[str(t[1])]) for t in db_fields])
+        query_arguments = ",".join([
+            "{} {}".format(t[0], python_to_sqlite_types_cast_map[str(t[1])])
+            for t in db_fields
+        ])
         query = f"CREATE TABLE {db_table_name} ({query_arguments})"
         self.connection.execute(query)
 
     def _check_tupple_types(self, t):
         """Check if a content of the passed tupple corresponds to the db fields types."""
         if len(t) != len(db_fields):
-            raise ValueError(f"Tupple value is {len(t)}, should be {len(db_fields)}")
+            raise ValueError(
+                f"Tupple value is {len(t)}, should be {len(db_fields)}")
             return False
-        for obj in zip(t,db_fields):
+        for obj in zip(t, db_fields):
             if not isinstance(obj[0], obj[1][1]):
-                raise ValueError(f"Tupple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
+                raise ValueError(
+                    f"Tupple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}"
+                )
                 return False
         return True
 
@@ -281,7 +293,7 @@ class LOLoggerThread(threading.Thread):
         if self.current_year_month != get_current_year_month():
             self.current_year_month = get_current_year_month()
             return True
-        return False 
+        return False
 
     def archive_old_file(self, filepath):
         """
@@ -306,7 +318,6 @@ class LOLoggerThread(threading.Thread):
         """
         self._sigint_event.set()
 
-
     def run(self):
         """Get tuples from queue and flush it to database."""
         self.get_connection(self.db_path)
@@ -323,44 +334,57 @@ class LOLoggerThread(threading.Thread):
                         data_to_flush.append(obj)
 
                     # if batch reached size
-                if ((self.flushing_mode == BATCHING and
-                    len(data_to_flush) > self.flushing_batch_size) or 
-                    # if batch been waiting for too long
-                    (self.flushing_mode == BATCHING and
-                    time_since_last_flush + DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or 
-                    # if it is time bit.ly/30RJTbw
-                    (self.flushing_mode == TIMED and
-                    time_since_last_flush + self.flushing_timeout <= time.time())): 
+                if ((self.flushing_mode == BATCHING
+                     and len(data_to_flush) > self.flushing_batch_size) or
+                        # if batch been waiting for too long
+                    (self.flushing_mode == BATCHING and time_since_last_flush +
+                     DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or
+                        # if it is time bit.ly/30RJTbw
+                    (self.flushing_mode == TIMED and time_since_last_flush +
+                     self.flushing_timeout <= time.time())):
                     gonna_flush_now = True
 
-                if gonna_flush_now:                    
+                if gonna_flush_now:
                     placeholders = f'({",".join("?"*len(db_fields))})'
-                    self.connection.executemany(f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
+                    self.connection.executemany(
+                        f"INSERT INTO {db_table_name} VALUES {placeholders}",
+                        data_to_flush)
                     self.connection.commit()
                     gonna_flush_now = False
-                    flushed_counter+=len(data_to_flush)
+                    flushed_counter += len(data_to_flush)
                     data_to_flush = []
                     time_since_last_flush = time.time()
 
                 if self.queue.empty():
-                    if len(data_to_flush)==0:
+                    if len(data_to_flush) == 0:
                         # if we have no logs waiting anywhere - we can check if need move to a new file
-                        if self.move_to_new_file_every_month and self.check_if_need_to_switch_file():
+                        if self.move_to_new_file_every_month and self.check_if_need_to_switch_file(
+                        ):
                             if self.zip_old_file:
                                 self.archive_old_file(self.db_path)
                             if self.do_database_transition:
                                 self.transition_to_new_database(self.db_path)
-                            self.db_path = self._create_database_file_path(self.db_folder_path, 
-                                                                           self.db_filename_prefix)
+                            self.db_path = self._create_database_file_path(
+                                self.db_folder_path, self.db_filename_prefix)
                             self.get_connection(self.db_path)
 
                         if self._sigint_event.is_set():
                             break
                     time.sleep(0.005)
+            except sqlite3.OperationalError:
+                import traceback
+                print(traceback.format_exc())
+                if not os.path.exists(self.db_path):
+                    print(
+                        "Seems like the database file has been deleted, don't worry, gonna create new one"
+                    )
+                    self.get_connection(self.db_path)
 
             except Exception:
                 import traceback
                 print(traceback.format_exc())
+                print(data_to_flush)
+                time.sleep(0.5)
 
 
 def parse_arguments():
@@ -369,29 +393,61 @@ def parse_arguments():
     """
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports["logger"])
+    parser.add_argument('-r',
+                        '--rpc_port',
+                        help='Piglet RPC Port',
+                        default=rpc_ports["logger"])
     parser.add_argument('-l', '--log_level', help='LogLevel', default=20)
-    parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=".")
-    parser.add_argument('-pr', '--db_filename_prefix', help='SQLite filename will be started with that prefix', default="")
-    parser.add_argument('-m', '--move_to_new_file_every_month', help='Every month it will create new db file', default=True) # this is kinda wrong
-    parser.add_argument('-z', '--zip_old_file', help='Archive old log files to preserve disk space, not implemented yet', default=False, action="store_true")
-    parser.add_argument('-t', '--transition_to_new_database', help='Do a smooth DB file transition, not implemented yet', default=False, action="store_true")
-    parser.add_argument('-v', '--verbose', help='Print all recieved logs', default=False, action="store_true")
+    parser.add_argument(
+        '-p',
+        '--db_path',
+        help='Path to where sqlite files with logs will be stored',
+        default=".")
+    parser.add_argument(
+        '-pr',
+        '--db_filename_prefix',
+        help='SQLite filename will be started with that prefix',
+        default="")
+    parser.add_argument('-m',
+                        '--move_to_new_file_every_month',
+                        help='Every month it will create new db file',
+                        default=True)  # this is kinda wrong
+    parser.add_argument(
+        '-z',
+        '--zip_old_file',
+        help=
+        'Archive old log files to preserve disk space, not implemented yet',
+        default=False,
+        action="store_true")
+    parser.add_argument(
+        '-t',
+        '--transition_to_new_database',
+        help='Do a smooth DB file transition, not implemented yet',
+        default=False,
+        action="store_true")
+    parser.add_argument('-v',
+                        '--verbose',
+                        help='Print all recieved logs',
+                        default=False,
+                        action="store_true")
 
     args = parser.parse_args()
     return args
+
 
 def main():
     args = parse_arguments()
     print(f"LOLogger is about to start.")
     print(f"RPC server will be available at {args.rpc_port} in a sec.")
-    lologger = LOLogger(db_folder_path=args.db_path,
-                        db_filename_prefix=args.db_filename_prefix,
-                        rpc_port=args.rpc_port,
-                        move_to_new_file_every_month=args.move_to_new_file_every_month,
-                        zip_old_file=args.zip_old_file,
-                        do_database_transition=args.transition_to_new_database,
-                        verbose=args.verbose)
+    lologger = LOLogger(
+        db_folder_path=args.db_path,
+        db_filename_prefix=args.db_filename_prefix,
+        rpc_port=args.rpc_port,
+        move_to_new_file_every_month=args.move_to_new_file_every_month,
+        zip_old_file=args.zip_old_file,
+        do_database_transition=args.transition_to_new_database,
+        verbose=args.verbose)
+
 
 # def test_shit():
 #     # query_arguments = ",".join(" {} {}".format(t[0], python_to_sqlite_types_cast_map[str(t[1])]) for t in db_fields)
@@ -416,7 +472,6 @@ def main():
 #     # # We can also close the connection if we are done with it.
 #     # # Just be sure any changes have been committed or they will be lost.
 #     # conn.close()
-
 
 if __name__ == "__main__":
     # test_shit()
