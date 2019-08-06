@@ -206,12 +206,10 @@ int main() {
   logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
 
-  // cs_ch1_dac(0);
-  // pressure_dac_set(1, 0xbbbb);
-
-  //tca9539_write(0x74,0x06,0);
   // Set state to standby
-  set_system_state(system_state_STANDBY);
+  // set_system_state(system_state_STANDBY);
+  // system_enter_standby();
+
   
   //********************* Schedule some tasks **********************//
 

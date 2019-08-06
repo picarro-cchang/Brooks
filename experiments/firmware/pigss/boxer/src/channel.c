@@ -64,14 +64,8 @@ channel_config_t channel_config;
 channel_config_t *channel_config_ptr = &channel_config;
 
 void channel_init() {
-  uint8_t channel_array_index = 0;
   // Disable all channels
-  while ((channel_array[channel_array_index].number) != 0) {
-    channel_array[channel_array_index].enabled = false;
-    channel_array_index++;
-  }
-  // Update the hardware and display
-  channel_update();
+  channel_set(0);
 }
 
 int8_t channel_set( uint8_t setting ) {
