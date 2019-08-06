@@ -62,6 +62,9 @@ hardware will be a custom PCB.
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-8)
                 - [Typical return](#typical-return)
+            - [BYP.DAC? n](#bypdac-n)
+                - [Parameter (n)](#parameter-n-9)
+                - [Typical return](#typical-return-1)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -367,6 +370,18 @@ uA/count = 226 mA maximum.
 ##### Typical return #####
 
 0
+
+#### BYP.DAC? n ####
+
+Query the bypass DAC setting for channel `n`.  Returns a value in counts.
+
+##### Parameter (n) #####
+
+1-8
+
+##### Typical return #####
+
+17134
 
 ## Release history ##
 
