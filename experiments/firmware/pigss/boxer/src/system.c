@@ -4,10 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-/* pgmspace.h
- * Contains macros and functions for saving and reading data out of
- * flash.
- */
+// Contains macros and functions for saving and reading data out of
+// flash.
 #include <avr/pgmspace.h>
 
 // Watchdog timer
@@ -15,10 +13,7 @@
 
 #include "usart.h"
 
-/* logger.h
-
-   Sets up logging
-*/
+// Sets up logging
 #include "logger.h"
 
 // Provides commands for working with the eeprom
@@ -32,6 +27,9 @@
 
 // Provides definitions and functions for using the Topaz manifold boards
 #include "topaz.h"
+
+// Provides channel_set() for turning channels on and off
+#include "channel.h"
 
 #include "system.h"
 
@@ -142,6 +140,11 @@ int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
 
 int8_t system_state_set_system_sernum(uint16_t sernum) {
   system_state.sernum = sernum;
+  return 0;
+}
+
+int8_t system_state_set_system_slotid( uint8_t slotid ) {
+  system_state.slotid = slotid;
   return 0;
 }
 

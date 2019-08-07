@@ -1,16 +1,15 @@
 
 // EEPROM module
-// 
+//
 // The ATmega2560 contains 4K bytes of data EEPROM memory.  It is
 // organized as a separate data space in which single bytes can be
 // read and written.
-
 
 // ----------------------- Include files ------------------------------
 #include <stdio.h>
 
 /* avr/io.h
-   
+
    Device-specific port definitions.  Also provides special
    bit-manipulations functions like bit_is_clear and
    loop_until_bit_is_set.
@@ -25,7 +24,7 @@
 #include "logger.h"
 
 /* pgmspace.h
-   
+
    Provides macros and functions for saving and reading data out of
    flash.
 */
@@ -60,7 +59,7 @@ void eeprom_write_char( uint16_t address, uint8_t data ) {
   // written.
   loop_until_bit_is_clear(EECR, EEPE);
   /* EEAR is the eeprom address register.  Even though there's 9 bits
-     of address space, you can just write to the EEAR location. 
+     of address space, you can just write to the EEAR location.
   */
   EEAR = address;
   EEDR = data;
@@ -70,7 +69,7 @@ void eeprom_write_char( uint16_t address, uint8_t data ) {
   // an init function.
   EECR |= _BV(EEMPE);
   EECR |= _BV(EEPE); // Write the data
-  sei(); // Turn interrupts back on 
+  sei(); // Turn interrupts back on
   logger_msg_p("eeprom",log_level_INFO,
 	       PSTR("Wrote %i to address %i"),data,address);
 }
@@ -87,7 +86,7 @@ uint8_t eeprom_read_char( uint16_t address ) {
   // bit in the EECR register is set, data is being written.
   loop_until_bit_is_clear(EECR, EEPE);
   /* EEAR is the eeprom address register.  Even though there's 9 bits
-     of address space, you can just write to the EEAR location. 
+     of address space, you can just write to the EEAR location.
   */
   EEAR = address;
   /* Start eeprom read by writing EERE */
@@ -117,21 +116,6 @@ void eeprom_load_sernum( system_state_t *system_state_ptr ) {
 		system_state_ptr -> sernum);
 }
 
-void cmd_write_sernum( command_arg_t *command_arg_ptr ) {
-  uint16_t sernum = (command_arg_ptr -> uint16_arg);
-  int8_t retval = 0;
-  eeprom_save_sernum(sernum);
-  // Update the system serial number in the system_state structure
-  retval += system_state_set_system_sernum(sernum);
-  if (retval == 0) {
-    // Acknowledge the successful command
-    command_ack();
-  } else {
-    command_nack(NACK_COMMAND_FAILED);
-  }
-
-}
-
 void eeprom_save_slotid( uint8_t slotid ) {
   logger_msg_p( "eeprom", log_level_DEBUG,
 		PSTR("Writing slot ID %u"),slotid);
@@ -146,16 +130,31 @@ void eeprom_load_slotid( system_state_t *system_state_ptr ) {
 		system_state_ptr -> slotid);
 }
 
-void cmd_write_slotid( command_arg_t *command_arg_ptr ) {
-  uint8_t slotid = (uint8_t)(command_arg_ptr -> uint16_arg);
-  eeprom_save_slotid(slotid);
-  system_init();
-  // Acknowledge the successful command
-  command_ack();
+void cmd_write_sernum( command_arg_t *command_arg_ptr ) {
+  uint16_t sernum = (command_arg_ptr -> uint16_arg);
+  int8_t retval = 0;
+  eeprom_save_sernum(sernum);
+  // Update the system serial number in the system_state structure
+  retval += system_state_set_system_sernum(sernum);
+  if (retval == 0) {
+    // Acknowledge the successful command
+    command_ack();
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+  }
 }
 
-
-
-
-
+void cmd_write_slotid( command_arg_t *command_arg_ptr ) {
+  uint8_t slotid = (uint8_t)(command_arg_ptr -> uint16_arg);
+  int8_t retval = 0;
+  eeprom_save_slotid(slotid);
+  // Update the system serial number in the system state structure
+  retval += system_state_set_system_slotid(slotid);
+  if (retval == 0) {
+    // Acknowledge the successful command
+    command_ack();
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+  }
+}
 

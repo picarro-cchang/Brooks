@@ -60,8 +60,11 @@ void system_init( void );
 
 //******* Set and get members of the system_state structure ********//
 
-// Set the topaz a serial number in the system state struction
+// Set the topaz a serial number in the system state structure
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);
+
+// Set the system slotid in the system state structure
+int8_t system_state_set_system_slotid(uint8_t slotid);
 
 // Get the Topaz serial number in the system state struction
 uint16_t system_state_get_topaz_sernum(char board);
