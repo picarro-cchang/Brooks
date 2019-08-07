@@ -65,6 +65,7 @@ class RackNetworkSettingsServer:
     def __init__(self):
         self.afuncs = AsyncWrapper(SyncInterface())
         self.app = web.Application()
+        self.app.on_shutdown.append(self.on_shutdown)
         self.app.router.add_routes([
             web.get('/get_instruments', self.end_point_get_instruments),
             web.post('/apply_changes', self.end_point_apply_changes),
@@ -76,6 +77,9 @@ class RackNetworkSettingsServer:
             web.post('/set_network_settings',
                      self.end_point_set_network_settings)
         ])
+
+    async def on_shutdown(self, app):
+        print("RackNetworkSettingsServer is shutting down")
 
     async def end_point_get_instruments(self, request):
         """

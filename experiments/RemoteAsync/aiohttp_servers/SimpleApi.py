@@ -6,104 +6,48 @@ from aiohttp import web
 import functools
 import traceback
 
-def exception(coroutine):
-    """
-    A decorator that wraps the passed in co-routine and logs 
-    exceptions should one occur
-    """
-    @functools.wraps(coroutine)
-    async def wrapper(*args, **kwargs):
-        try:
-            await coroutine(*args, **kwargs)
-        except:
-            # log the exception and stop everything
-            print(traceback.format_exc())
-            print("Stopping event loop due to unexpected exception in coroutine")
-            # re-raise the exception
-            asyncio.get_event_loop().stop()
-            raise
-    return wrapper
-
 class SimpleApi:
-    def __init__(self, port, addr='0.0.0.0'):
-        self.tasks = []
-        self.app = None
-        self.runner = None
-        self.port = port
-        self.addr = addr
-
-    @exception
-    async def server_init(self):
+    def __init__(self):
         self.app = web.Application()
+        self.app.router.add_route("GET", "/api1", self.api1)
+        self.app.router.add_route("GET", "/api2", self.api2)
+        self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
-        cors = aiohttp_cors.setup(
-            self.app, defaults={"*": aiohttp_cors.ResourceOptions(
-                allow_credentials=True,
-                expose_headers="*",
-                allow_headers="*",
-            )})
 
-        self.app.add_routes([
-            web.get('/', self.handle),
-            web.get('/{name}', self.handle),
-            web.get('/api', self.api),
-        ])
-        setup_swagger(self.app)
+    async def on_startup(self, app):
+        print("SimpleApi server is starting up")
 
-        for route in self.app.router.routes():
-            cors.add(route)
+    async def on_shutdown(self, app):
+        print("SimpleApi server is shutting down")
 
-        self.runner = web.AppRunner(self.app)
-        await self.runner.setup()
-        site = web.TCPSite(self.runner, self.addr, self.port)
-        await site.start()
-        print(f"======== Running on http://{site._host}:{site._port} ========")
-
-    async def handle(self, request):
-        name = request.match_info.get('name', "Anonymous")
-        text = "Hello, " + name
-        return web.Response(text=text)
-
-    async def api(self, request):
+    async def api1(self, request):
         """
         ---
-        description: api demo
+        description: Sample API method 1
 
         tags:
-            -   diagnostics
-        summary: fetch UI modal info
+            -   simple
+        summary: Sample API method 1
         produces:
             -   application/json
         responses:
             "200":
                 description: successful operation.
         """
-        return web.json_response({"message": "Hello from API"})
+        return web.json_response({"message": f"Hello from simple method api1 where data is {request.app['data']}"})
 
-    async def on_shutdown(self, app):
-        return
+    async def api2(self, request):
+        """
+        ---
+        description: Sample API method 2
 
-    async def shutdown(self):
-        for task in self.tasks:
-            task.cancel()
-        if self.runner is not None:
-            await self.app.shutdown()
-            await self.app.cleanup()
-            await self.runner.cleanup()
-
-    async def startup(self):
-        self.tasks.append(asyncio.create_task(self.server_init()))
-
-if __name__ == "__main__":
-    service1 = SimpleApi(port=8004)
-    service2 = SimpleApi(port=8005)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(asyncio.gather(service1.startup(), service2.startup()))
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        print('Stop server begin')
-    finally:
-        loop.run_until_complete(asyncio.gather(service1.shutdown(), service2.shutdown()))
-        loop.close()
-    print('Stop server end')
+        tags:
+            -   simple
+        summary: Sample API method 2
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation.
+        """
+        return web.json_response({"message": f"Hello from simple method api2 where data is {request.app['data']}"})

@@ -45,6 +45,7 @@ class MyView2(web.View, CorsViewMixin):
 class AdminApi:
     def __init__(self):
         self.app = web.Application()
+        self.app.on_shutdown.append(self.on_shutdown)
         self.app.router.add_routes([web.view("/method1", MyView1)])
         self.app.router.add_routes([web.view("/method2", MyView2)])
         aiohttp_cors.setup(
@@ -53,3 +54,6 @@ class AdminApi:
                 expose_headers="*",
                 allow_headers="*",
             )})
+
+    async def on_shutdown(self, app):
+        print("AdminApi server is shutting down")
