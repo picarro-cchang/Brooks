@@ -39,6 +39,9 @@
 
 #include "spi.h"
 
+// Provides ltc2601_write() for proportional DACs
+#include "ltc2601.h"
+
 #include "bargraph.h"
 
 // Provides functions for working with Honeywell MPR pressure sensors
