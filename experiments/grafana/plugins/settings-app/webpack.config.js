@@ -32,7 +32,7 @@ module.exports = {
             { from: 'panels/Modbus-Settings/*.json', to: "."},
             { from: 'panels/Network-Settings/*.json', to: "."},
             { from: 'panels/MFC/*.json', to: "."},
-
+            { from: 'img', to: "./img"},
             { from: 'dashboards/*', to: "."}
             ])
     ],

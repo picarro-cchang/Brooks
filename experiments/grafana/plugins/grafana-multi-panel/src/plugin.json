@@ -2,14 +2,15 @@
   "type": "app",
   "name": "State Machine",
   "id": "multi-app",
+  "enabled": true,
   "info": {
     "author": {
       "name": "Grafana Project",
       "url": "https://grafana.com"
     },
     "logos": {
-      "small": "img/Touch.png",
-      "large": "img/Touch.png"
+      "small": "img/icon_org.svg",
+      "large": "img/icon_org.svg"
     }
   },
 

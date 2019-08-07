@@ -6,6 +6,10 @@
     "author": {
       "name": "Grafana Project",
       "url": "https://grafana.com"
+    },
+    "logos": {
+      "small": "img/icn-app.svg",
+      "large": "img/icn-app.svg"
     }
   },
 
