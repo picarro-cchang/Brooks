@@ -3,8 +3,17 @@
 from grafana_api.grafana_api import GrafanaAPI
 import yaml
 import json
+from os import getenv
+
+
+username = getenv('GRAFANA_LOGIN')
+passwd = getenv('GRAFANA_PASS')
+
+if username is None or passwd is None:
+    raise KeyError('Grafana environmental variables not found!')
+
 ids = []
-stream = open("app_plugins.yaml", 'r')
+stream = open("./configuration/app_plugins.yaml", 'r')
 dictionary = list(yaml.safe_load_all(stream))
 for x in dictionary:
     path = x['path']
@@ -13,7 +22,7 @@ for x in dictionary:
         ids.append(data["id"])
 # We can authenticate either with an API key or using basic authentication
 
-auth = ("picarro", "picarro")
+auth = (username, passwd)
 api = GrafanaAPI(auth=auth, host='localhost:3000')
 
 for x in range(0, len(ids)):

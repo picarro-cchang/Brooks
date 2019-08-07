@@ -13,7 +13,7 @@ if username is None or passwd is None:
     raise KeyError('Grafana environmental variables not found!')
 
 ids = []
-stream = open("app_plugins.yaml", 'r')
+stream = open("./configuration/app_plugins.yaml", 'r')
 dictionary = list(yaml.safe_load_all(stream))
 for x in dictionary:
     path = x['path']
