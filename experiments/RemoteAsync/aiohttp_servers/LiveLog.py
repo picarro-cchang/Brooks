@@ -1,7 +1,6 @@
 import json
 import random
 import time
-import sys
 from datetime import datetime
 
 

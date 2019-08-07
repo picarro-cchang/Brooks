@@ -1,11 +1,4 @@
-import asyncio
-import aiohttp
-import aiohttp_cors
-from aiohttp_cors.mixin import CorsViewMixin
-from aiohttp_swagger import setup_swagger
 from aiohttp import web
-import functools
-import traceback
 
 
 class AdminApi:

@@ -1,11 +1,7 @@
-import asyncio
-import aiohttp
 import aiohttp_cors
 from aiohttp_cors.mixin import CorsViewMixin
-from aiohttp_swagger import setup_swagger
 from aiohttp import web
-import functools
-import traceback
+
 
 class MyView1(web.View, CorsViewMixin):
     async def get(self):
@@ -23,6 +19,7 @@ class MyView1(web.View, CorsViewMixin):
                 description: successful operation.
         """
         return web.json_response({"message": f"Hello from first administrative method, data is {self.request.app['data']}"})
+
 
 class MyView2(web.View, CorsViewMixin):
     async def get(self):
