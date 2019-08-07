@@ -119,10 +119,17 @@ void eeprom_load_sernum( system_state_t *system_state_ptr ) {
 
 void cmd_write_sernum( command_arg_t *command_arg_ptr ) {
   uint16_t sernum = (command_arg_ptr -> uint16_arg);
+  int8_t retval = 0;
   eeprom_save_sernum(sernum);
-  system_init();
-  // Acknowledge the successful command
-  command_ack();
+  // Update the system serial number in the system_state structure
+  retval += system_state_set_system_sernum(sernum);
+  if (retval == 0) {
+    // Acknowledge the successful command
+    command_ack();
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+  }
+
 }
 
 void eeprom_save_slotid( uint8_t slotid ) {

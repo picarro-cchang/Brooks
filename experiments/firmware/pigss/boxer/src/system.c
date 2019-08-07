@@ -140,6 +140,11 @@ int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
   return 0;
 }
 
+int8_t system_state_set_system_sernum(uint16_t sernum) {
+  system_state.sernum = sernum;
+  return 0;
+}
+
 uint16_t system_state_get_topaz_sernum(char board ) {
   if (board == 'a') {
     return system_state.topaz_a_sernum;

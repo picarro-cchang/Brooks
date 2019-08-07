@@ -41,6 +41,7 @@ extern system_state_t *system_state_ptr;
 // may not be what you asked for.
 system_state_value_t set_system_state(system_state_value_t requested_state);
 
+
 // Function called by the *idn? command
 void cmd_idn_q( command_arg_t *command_arg_ptr );
 
@@ -57,11 +58,16 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr );
 // structure with non-volatile values from eeprom.
 void system_init( void );
 
+//******* Set and get members of the system_state structure ********//
+
 // Set the topaz a serial number in the system state struction
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);
 
 // Get the Topaz serial number in the system state struction
 uint16_t system_state_get_topaz_sernum(char board);
+
+// Set the system-level serial number
+int8_t system_state_set_system_sernum(uint16_t sernum);
 
 // Enter standby mode
 int8_t system_enter_standby(void);
