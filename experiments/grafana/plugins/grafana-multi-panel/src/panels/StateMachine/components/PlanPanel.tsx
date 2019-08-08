@@ -39,7 +39,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         return (
             <div className="gf-form-inline" key={row}>
-                <label className="col-sm-1">{row}</label>
+                <label className="col-sm-1" style={{color: "black", marginRight: -20}}>{row}</label>
                 <div className="col-sm-6">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
                         (this.props.plan.focus.column === 1) && this.manageFocus(input)}
@@ -47,7 +47,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            onFocus={(e) => {
                                this.props.ws_sender({element: "plan_panel", focus:{row, column:1}})
                            }}
-                           style={{ backgroundColor: 'white', borderRadius: 3, marginRight: -20, color: 'black'}}
+                           style={{ backgroundColor: 'white', border: "1px solid black", borderRadius: 2, marginRight: -20, color: 'black'}}
                            value={portString} placeholder="Select port"  readOnly/>
                 </div>
                 <div className="col-sm-4">
@@ -58,7 +58,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                this.props.ws_sender({element: "plan_panel", focus:{row, column:2}})
                            }}
                            type="text" className="form-control input-small" id={"plan-duration-" + row}
-                           style={{ backgroundColor: 'white', borderRadius: 3, marginBottom: 5, color: 'black'}}
+                           style={{ backgroundColor: 'white', border: "1px solid black", borderRadius: 2, marginBottom: 5, color: 'black'}}
 
                            value={durationString} placeholder="Duration" />
                 </div>
@@ -76,9 +76,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         */
         return (
-            <div className="panel-plan" style={{marginTop: 10, height: 550, backgroundColor: "#888", padding: 10, border: "3px solid #111", borderRadius: 10 }}>
-                <h2>Schedule</h2>
-                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:340}}>
+            <div className="panel-plan" style={{ height: 650, backgroundColor: "#d9d9d9", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
+                <h2 style={{color: "black"}}>Schedule</h2>
+                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:440, border: "1px solid gray"}}>
                     <form>
                         <ReactList
                             itemRenderer={this.renderItem}
@@ -87,13 +87,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                         />
                     </form>
                 </div>
-                <div className="container">
+                <div className="container" style={{width: "90%"}}>
                     <div className="row text-center" style={{marginTop: "10px"}}>
                         <div className="col-sm-6">
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => this.props.ws_sender({element: "plan_insert"})}
-                                    className={"btn btn-large btn-block btn-secondary"}>
+                                    className={"btn btn-block btn-secondary"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 Insert
                             </button>
                         </div>
@@ -101,7 +101,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => this.props.ws_sender({element: "plan_delete"})}
-                                    className={"btn btn-large btn-block btn-danger"}>
+                                    className={"btn btn-block btn-danger"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 Delete
                             </button>
                         </div>
@@ -110,37 +110,37 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                         <div className="col-sm-6">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load"})}
-                                    className={"btn btn-large btn-block btn-inverse"}>
+                                    className={"btn btn-block btn-inverse"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 Load
                             </button>
                         </div>
                         <div className="col-sm-6">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save"})}
-                                    className={"btn btn-large btn-block btn-inverse"}>
+                                    className={"btn btn-block btn-inverse"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 Save
                             </button>
                         </div>
                     </div>
-                    <div className="row text-center" style={{marginTop: "10px", marginBottom: "10px"}}>
+                    <div className="row text-center" style={{marginTop: "10px", marginBottom: "10px", marginLeft: -25}}>
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_cancel"})}
-                                    className={"btn btn-large btn-block btn-danger"}  style={{ marginBottom: 10}}>
+                                    className={"btn btn-block btn-danger"}  style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 Cancel
                             </button>
                         </div>
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_loop"})}
-                                    className={"btn btn-large btn-block btn-success"} style={{ marginBottom: 10}}>
+                                    className={"btn btn-block btn-success"} style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 Loop
                             </button>
                         </div>
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_ok"})}
-                                    className={"btn btn-large btn-block btn-success"} style={{ marginBottom: 10}}>
+                                    className={"btn btn-block btn-success"} style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
                                 OK
                             </button>
                         </div>
