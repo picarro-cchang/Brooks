@@ -44,6 +44,7 @@ class ProcessWrapper:
     name = attr.ib(type=str)
     process = attr.ib(None, type=Process)
     rpc_wrapper = attr.ib(None)
+    killed = attr.ib(False)
 
     async def start(self, *args, **kwargs):
         async def start_driver():
@@ -53,7 +54,7 @@ class ProcessWrapper:
         if self.process is not None and self.process.is_alive():
             self.process.kill()
             await self.process.join()
-        log.info(f"Starting process {self.name}")
+        log.info(f"Starting process {self.name}.")
         self.process = Process(target=start_driver)
         self.process.daemon = True
         self.process.start()
@@ -68,11 +69,13 @@ class ProcessWrapper:
                 if await asyncio.wait_for(self.rpc_wrapper.CmdFIFO.PingFIFO(), timeout=2 * period) == 'Ping OK':
                     print("+", end="", flush=True)
         except CmdFIFO.RemoteException:
-            log.warning("Ping caused exception")
+            log.warning(f"Ping to process {self.name} raised exception. Killing process.")
             self.process.kill()
+            self.killed = True
         except asyncio.TimeoutError:
-            log.warning("Ping timeout")
+            log.warning(f"Ping to process {self.name} timed out. Killing process.")
             self.process.kill()
+            self.killed = True
 
 
 async def dotty():
@@ -92,7 +95,7 @@ class PigssSupervisor:
         log.info(f"RPC Tunnel settings loaded from {tunnel_configs}")
 
     async def setup_processes(self, at_start=True):
-        if at_start or not self.process_wrappers["MadMapper"].process.is_alive():
+        if at_start or self.process_wrappers["MadMapper"].killed:
             process_wrapper = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'), "MadMapper")
             self.process_wrappers["MadMapper"] = process_wrapper
             self.RPC["MadMapper"] = await process_wrapper.start()
@@ -102,10 +105,10 @@ class PigssSupervisor:
             if at_start:
                 asyncio.create_task(process_wrapper.pinger(5))
             else:
-                log.info(f"Restarting Madmapper")
+                log.info(f"Restarted Madmapper")
         for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
             if dev_params['Driver'] == 'PigletDriver':
-                if at_start or not self.process_wrappers[key].process.is_alive():
+                if at_start or self.process_wrappers[key].killed:
                     name = f"Piglet_{dev_params['Bank_ID']}"
                     process_wrapper = ProcessWrapper(PigletDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
@@ -115,9 +118,9 @@ class PigssSupervisor:
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
-                        log.info(f"Restarting piglet driver: {key}")
+                        log.info(f"Restarted piglet driver: {key}")
             elif dev_params['Driver'] == 'AlicatDriver':
-                if at_start or not self.process_wrappers[key].process.is_alive():
+                if at_start or self.process_wrappers[key].killed:
                     name = "MFC"
                     process_wrapper = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
@@ -127,9 +130,9 @@ class PigssSupervisor:
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
-                        log.info(f"Restarting Alicat driver: {key}")
+                        log.info(f"Restarted Alicat driver: {key}")
             elif dev_params['Driver'] == 'NumatoDriver':
-                if at_start or not self.process_wrappers[key].process.is_alive():
+                if at_start or self.process_wrappers[key].killed:
                     relay_id = dev_params['Numato_ID']
                     name = f"Relay_{relay_id}"
                     process_wrapper = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'], name)
@@ -139,11 +142,11 @@ class PigssSupervisor:
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
-                        log.info(f"Restarting Numato driver: {key}")
+                        log.info(f"Restarted Numato driver: {key}")
 
         for key, dev_params in sorted(self.device_dict['Devices']['Network_Devices'].items()):
             if dev_params['Driver'] == 'IDriver':
-                if at_start or not self.process_wrappers[key].process.is_alive():
+                if at_start or self.process_wrappers[key].killed:
                     name = f"Picarro_{dev_params['SN']}"
                     process_wrapper = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
@@ -161,16 +164,26 @@ class PigssSupervisor:
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
-                        log.info(f"Restarting IDriver: {key}")
+                        log.info(f"Restarted IDriver: {key}")
 
     async def error_recovery(self, period):
         while True:
             await asyncio.sleep(period)
             await self.setup_processes(at_start=False)
 
+    def handle_exception(self, loop, context):
+        msg = context.get("exception", context["message"])
+        log.error(f"Unhandled exception: {msg}")
+        loop.stop()
+
     async def main(self):
-        await self.setup_processes(at_start=True)
-        await self.error_recovery(5.0)
+        loop = asyncio.get_event_loop()
+        loop.set_exception_handler(self.handle_exception)
+        try:
+            await self.setup_processes(at_start=True)
+            await self.error_recovery(5.0)
+        finally:
+            log.info("Program terminated")
 
 
 if __name__ == "__main__":
