@@ -25,7 +25,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
     render() {
         return (
             <div className="panel-command" >
-                <div style={{width: "100%"}}>
+                <div style={{width: "100%", marginTop: 60}}>
                     <div className="grid-command" style={{display: "grid", gridTemplateColumns: "1fr 1fr", gridGap: 20, padding: 20 }}>
                         <button
                             onClick={e => this.props.ws_sender({element: "standby"})}

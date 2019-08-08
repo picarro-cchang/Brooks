@@ -18,10 +18,10 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         REFERENCE:{color:"#440", backgroundColor:"#CC0"},
         DISABLED:{ display: "none" }}; //hope this will work to not display any inactive banks
     cleanClassNameOpt = {
-        DISABLED:"btn-inverse disabled my-disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-secondary"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-secondary"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-inverse disabled my-disabled", READY: "", AVAILABLE:"", ACTIVE:"btn-primary", CLEAN:"btn-primary", REFERENCE:"btn-warning"
+        DISABLED:"btn-inverse disabled", READY: "", AVAILABLE:"", ACTIVE:"btn-primary", CLEAN:"btn-primary", REFERENCE:"btn-warning"
     };
 
     render() {
@@ -51,14 +51,13 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             channelButtons.push(
                 (getChannelDisabled(i)) ? (
                     <div
-                        style={{ height: 90, width: 90,  color: 'black', backgroundColor: 'white'}}
+                        style={{ height: 90, width: 90,  color: 'black', backgroundColor: "white", position: "relative"}}
                         key={i}
                         className={"btn btn-large " + getChannelClassNames(i)}>
-                        {"Ch " + i}
-                        <br/>
-                        <br/>
+                        <p style={{ position: "absolute", top: 20, left: "-0.37em", bottom: 0, right: 0}}>{"Ch " + i}</p>
 
-                        <p style={{ fontSize: 10 }}>Status: {test[i]}</p>
+                        <p style={{fontSize: 10, marginTop: 30}}>Status: {test[i]} </p>
+
                     </div>
                 ) : (
                     <button
@@ -66,12 +65,10 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                         disabled={getChannelDisabled(i)}
                         key={i}
                         className={"btn btn-large " + getChannelClassNames(i)}
-                        style={{height: 90, width: 90, backgroundColor: 'white', color: 'black'}}>
-                        {"Ch " + i}
-                        <br/>
-                        <br/>
+                        style={{ height: 90, width: 90,  color: 'black', backgroundColor: "white", position: "relative"}}>
+                        <p style={{ position: "absolute", top: 20, left: "-0.37em", bottom: 0, right: 0}}>{"Ch " + i}</p>
 
-                        <p style={{ fontSize: 10 }}>Status: {test[i]}</p>
+                        <p style={{ fontSize: 10, marginTop: 30 }}>Status: {test[i]}</p>
                     </button>
                 )
             );
