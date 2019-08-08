@@ -78,7 +78,7 @@ class PigletSimulator:
                     result = f"{self.bank}"
                 else:
                     result = "-1"
-        except:
+        except Exception:
             result = "-1"
         return result
 

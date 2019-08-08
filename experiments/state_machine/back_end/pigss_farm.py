@@ -5,7 +5,6 @@ import traceback
 
 from async_hsm import Spy, Event, Framework, Signal
 
-from pigss_comms import PigssComms
 from pigss_controller import PigssController
 from piglet_manager import PigletManager
 
@@ -28,7 +27,7 @@ class PigssFarm:
         self.all_banks = [1, 2, 3, 4]
         self.controller = PigssController(self.all_banks)
         self.piglet_manager = PigletManager(self.all_banks)
-    
+
     async def shutdown(self):
         for task in self.tasks:
             task.cancel()
@@ -42,7 +41,7 @@ class PigssFarm:
             self.tasks.append(asyncio.create_task(self.controller.process_receive_queue_task()))
             self.piglet_manager.start(2)
             self.controller.start(1)
-        except:
+        except Exception:
             print("Error starting up farm")
             print(traceback.format_exc())
             raise
