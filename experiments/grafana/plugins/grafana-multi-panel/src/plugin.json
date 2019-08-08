@@ -18,7 +18,7 @@
     {
       "type": "dashboard",
       "name": "StateMachine",
-      "path": "dashboards/StateMachine.json",
+      "path": "../../../wizzy/dashboards/statemachine.json",
       "addToNav": true,
       "defaultNav": true
     },

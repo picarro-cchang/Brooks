@@ -14,14 +14,14 @@ class BankPanel extends PureComponent<BankPanelOptions> {
     bankStyleOpt = {
         READY:{color:"#fff", backgroundColor:"#888"},
         ACTIVE:{color:"#fff", backgroundColor:"#080"},
-        CLEAN:{color:"#fff", backgroundColor:"#008"},
-        REFERENCE:{color:"#440", backgroundColor:"#CC0"},
+        CLEAN:{color:"#fff", backgroundColor:"#4BBEE3"},
+        REFERENCE:{color:"#440", backgroundColor:"#febb00"},
         DISABLED:{ display: "none" }}; //hope this will work to not display any inactive banks
     cleanClassNameOpt = {
         DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-secondary"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-inverse disabled", READY: "", AVAILABLE:"", ACTIVE:"btn-primary", CLEAN:"btn-primary", REFERENCE:"btn-warning"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-primary", CLEAN:"btn-primary", REFERENCE:"btn-warning"
     };
 
     render() {
@@ -50,22 +50,23 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         for (let i=1; i<=8; i++) {
             channelButtons.push(
                 (getChannelDisabled(i)) ? (
-                    <div
-                        style={{ height: 90, width: 90,  color: 'black', backgroundColor: "white", position: "relative"}}
+                    <button
                         key={i}
-                        className={"btn btn-large " + getChannelClassNames(i)}>
+                        className={"btn btn-large " + getChannelClassNames(i)}
+                        style={{ height: 90, width: 90,  color: 'black', position: "relative"}}>
                         <p style={{ position: "absolute", top: 20, left: "-0.37em", bottom: 0, right: 0}}>{"Ch " + i}</p>
 
                         <p style={{fontSize: 10, marginTop: 30}}>Status: {test[i]} </p>
 
-                    </div>
+
+                    </button>
                 ) : (
                     <button
                         onClick={e => this.props.ws_sender({element: "channel", bank: this.props.bank, channel: i})}
                         disabled={getChannelDisabled(i)}
                         key={i}
                         className={"btn btn-large " + getChannelClassNames(i)}
-                        style={{ height: 90, width: 90,  color: 'black', backgroundColor: "white", position: "relative"}}>
+                        style={{ height: 90, width: 90,  color: 'black',  position: "relative"}}>
                         <p style={{ position: "absolute", top: 20, left: "-0.37em", bottom: 0, right: 0}}>{"Ch " + i}</p>
 
                         <p style={{ fontSize: 10, marginTop: 30 }}>Status: {test[i]}</p>

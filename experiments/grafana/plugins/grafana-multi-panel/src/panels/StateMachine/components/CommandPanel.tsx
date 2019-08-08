@@ -32,7 +32,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             disabled = {this.getDisabled("standby")}
                             value="standby"
                             className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("standby")}
-                            style={{ color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
+                            style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
                             Standby
                         </button>
                         <button
@@ -40,7 +40,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             disabled = {this.getDisabled("identify")}
                             value="identify"
                             className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("identify")}
-                            style={{  color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
+                            style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
                             Identify
                         </button>
                         <button
@@ -48,7 +48,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             disabled = {this.getDisabled("run")}
                             value="run"
                             className={"btn btn-large btn-command " + this.getClassNameOpt("run")}
-                            style={{  color: 'black', height: 80 }}>
+                            style={{ borderRadius: 5, color: 'black', height: 80 }}>
                             Run
                         </button>
                         <button
@@ -56,7 +56,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             disabled = {this.getDisabled("plan")}
                             value="plan"
                             className={"btn btn-large btn-command " + this.getClassNameOpt("plan")}
-                            style={{  color: 'black', height: 80 }}>
+                            style={{ borderRadius: 5, color: 'black', height: 80 }}>
                             Plan
                         </button>
                         <button
@@ -64,7 +64,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             disabled = {this.getDisabled("reference")}
                             value="reference"
                             className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("reference")}
-                            style={{  color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
+                            style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
                             Reference
                         </button>
                     </div>
