@@ -4,9 +4,10 @@ import aiohttp_cors
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
 
-from experiments.state_machine.back_end.controller_service import ControllerService
-from experiments.state_machine.back_end.pigss_farm import PigssFarm
 from experiments.common.async_helper import log_async_exception
+from experiments.state_machine.back_end.controller_service import \
+    ControllerService
+from experiments.state_machine.back_end.pigss_farm import PigssFarm
 
 
 class Server:

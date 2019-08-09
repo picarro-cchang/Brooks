@@ -5,8 +5,9 @@ import traceback
 
 from async_hsm import Spy, Event, Framework, Signal
 
-from pigss_controller import PigssController
-from piglet_manager import PigletManager
+from experiments.state_machine.back_end.pigss_controller import PigssController
+from experiments.state_machine.back_end.piglet_manager import PigletManager
+from experiments.state_machine.back_end.dummy_supervisor import DummySupervisor as PigssSupervisor
 
 
 @attr.s
@@ -20,13 +21,12 @@ class PigssFarm:
     """
     send_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
     receive_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
-    # comms = attr.ib(factory=PigssComms)
     tasks = attr.ib(factory=list)
 
     def __attrs_post_init__(self):
-        self.all_banks = [1, 2, 3, 4]
-        self.controller = PigssController(self.all_banks)
-        self.piglet_manager = PigletManager(self.all_banks)
+        self.controller = PigssController()
+        self.piglet_manager = PigletManager()
+        self.pigss_supervisor = PigssSupervisor()
 
     async def shutdown(self):
         for task in self.tasks:
@@ -39,8 +39,9 @@ class PigssFarm:
             from async_hsm.SimpleSpy import SimpleSpy
             Spy.enable_spy(SimpleSpy)
             self.tasks.append(asyncio.create_task(self.controller.process_receive_queue_task()))
-            self.piglet_manager.start(2)
-            self.controller.start(1)
+            self.piglet_manager.start(3)
+            self.controller.start(2)
+            self.pigss_supervisor.start(1)
         except Exception:
             print("Error starting up farm")
             print(traceback.format_exc())

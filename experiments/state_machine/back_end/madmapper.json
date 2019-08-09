@@ -1,0 +1,71 @@
+{
+  "Name": "MadMapper",
+  "Devices": {
+    "Network_Devices": {
+      "2755-SBDS2015": {
+        "IP": "192.168.10.100",
+        "SN": "2755-SBDS2015",
+        "Driver": "IDriver",
+        "RPC_Port": 33000
+      },
+      "2633-AMBDS2002": {
+        "IP": "192.168.10.103",
+        "SN": "2633-AMBDS2002",
+        "Driver": "IDriver",
+        "RPC_Port": 33001
+      }
+    },
+    "Serial_Devices": {
+      "/dev/ttyACM4": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 1,
+        "Topaz_A_HW_Rev": "Null",
+        "Topaz_B_HW_Rev": "Null",
+        "Whitfield_HW_Rev": "Null",
+        "Path": "/dev/ttyACM4",
+        "Baudrate": 38400,
+        "RPC_Port": 33040
+      },
+      "/dev/ttyUSB0": {
+        "Driver": "AlicatDriver",
+        "Path": "/dev/ttyUSB0",
+        "Baudrate": 19200,
+        "RPC_Port": 33020
+      },
+      "/dev/ttyACM3": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 3,
+        "Topaz_A_HW_Rev": "Null",
+        "Topaz_B_HW_Rev": "Null",
+        "Whitfield_HW_Rev": "Null",
+        "Path": "/dev/ttyACM3",
+        "Baudrate": 38400,
+        "RPC_Port": 33042
+      },
+      "/dev/ttyACM0": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 4,
+        "Topaz_A_HW_Rev": "Null",
+        "Topaz_B_HW_Rev": "Null",
+        "Whitfield_HW_Rev": "Null",
+        "Path": "/dev/ttyACM0",
+        "Baudrate": 38400,
+        "RPC_Port": 33043
+      },
+      "/dev/ttyACM1": {
+        "Driver": "NumatoDriver",
+        "Path": "/dev/ttyACM1",
+        "Baudrate": 19200,
+        "Numato_ID": 0,
+        "RPC_Port": 33030
+      },
+      "/dev/ttyACM2": {
+        "Driver": "NumatoDriver",
+        "Path": "/dev/ttyACM2",
+        "Baudrate": 19200,
+        "Numato_ID": 1,
+        "RPC_Port": 33031
+      }
+    }
+  }
+}
