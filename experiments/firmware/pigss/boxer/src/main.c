@@ -88,18 +88,6 @@
 // Pressure control module
 #include "pressure.h"
 
-/* Set the measurement array size.
-
-   As things are now, this will also be the number of readings to
-   average to create an output datum.  But this size can grow
-   independent of the number of averages.
-*/
-#define MEASUREMENT_ARRAY_SIZE 4
-
-/* This array will hold measurements made in the main loop.
- */
-uint16_t measurement_array[MEASUREMENT_ARRAY_SIZE];
-
 // Define a pointer to the received command state
 recv_cmd_state_t  recv_cmd_state;
 recv_cmd_state_t *recv_cmd_state_ptr = &recv_cmd_state;
@@ -126,7 +114,7 @@ int main() {
   // Initialize the logger.  The default log level is set in the
   // makefile.  Note that nothing can be logged before this line.
   logger_init();
-  
+
   // Start the SPI chip-select module
   cs_init();
 
@@ -197,16 +185,12 @@ int main() {
 
   command_init( recv_cmd_state_ptr );
 
-  // current_init();
-  memset(measurement_array,0,MEASUREMENT_ARRAY_SIZE);
-
   logger_msg_p("main", log_level_INFO, PSTR("Firmware version is %s"),
 	       REVCODE);
 
   // Set state to standby
   system_enter_standby();
 
-  
   //********************* Schedule some tasks **********************//
 
   uint16_t pressure_read_period_ms = 0;
@@ -223,14 +207,12 @@ int main() {
   }
 
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
-  
+
   // Task 0 -- Trigger all the pressure sensors
   OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
 
   // Task 1 -- Read all the pressure sensors
   OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
-
-
 
   // The main loop
   for(;;) {
