@@ -12,10 +12,9 @@ import time
 import traceback
 from enum import Enum, IntEnum
 
-from async_hsm import (Ahsm, Event, Framework, Signal, Spy, TimeEvent,
-                       run_forever, state)
-from pigss_payloads import (PcResponsePayload, PcSendPayload,
-                            PigletRequestPayload, PlanError)
+from async_hsm import (Ahsm, Event, Framework, Signal, Spy, TimeEvent, run_forever, state)
+from experiments.state_machine.back_end.pigss_payloads import (PcResponsePayload, PcSendPayload, PigletRequestPayload, PlanError,
+                                                               SystemConfiguration)
 
 PLAN_FILE_DIR = "/temp/plan_files"
 
@@ -51,11 +50,11 @@ def setbits(mask):
 class PigssController(Ahsm):
     num_chans_per_bank = 8
 
-    def __init__(self, all_banks):
+    def __init__(self):
         super().__init__()
         self.error_list = collections.deque(maxlen=32)
         self.status = {}
-        self.all_banks = all_banks
+        self.all_banks = []
         self.plan = {
             "max_steps": 32,
             "panel_to_show": int(PlanPanelType.NONE),
@@ -314,7 +313,7 @@ class PigssController(Ahsm):
         steps = {}
         last_step = len(plan)
         for i in range(last_step):
-            row = i+1
+            row = i + 1
             assert str(row) in plan, f"Plan is missing step {row}"
             step = plan[str(row)]
             assert "active" in step, f"Plan row {row} is missing 'active' key"
@@ -322,7 +321,7 @@ class PigssController(Ahsm):
             steps[row] = {"bank": step["active"]["bank"], "channel": step["active"]["channel"], "duration": step["duration"]}
         self.set_plan(["steps"], steps)
         self.set_plan(["last_step"], last_step)
-        self.set_plan(["focus"], {"row": last_step+1, "column": 1})
+        self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
@@ -386,10 +385,20 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_CHANNEL", self)
         Framework.subscribe("MODAL_CLOSE", self)
         Framework.subscribe("MODAL_OK", self)
+        Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("TERMINATE", self)
         Framework.subscribe("ERROR", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._operational)
+
+    @state
+    def _configure(self, e):
+        sig = e.signal
+        if sig == Signal.SYSTEM_CONFIGURE:
+            payload = e.value
+            self.all_banks = payload.bank_list
+            return self.tran(self._operational)
+        return self.super(self.top)
 
     @state
     def _operational(self, e):
@@ -436,7 +445,7 @@ class PigssController(Ahsm):
             payload = e.value
             self.handle_error_signal(time.time(), payload)
             return self.handled(e)
-        return self.super(self.top)
+        return self.super(self._configure)
 
     @state
     def _standby(self, e):
@@ -839,7 +848,6 @@ class PigssController(Ahsm):
             return self.tran(self._plan_load)
         return self.super(self._plan)
 
-
     @state
     def _plan_file(self, e):
         sig = e.signal
@@ -883,7 +891,11 @@ class PigssController(Ahsm):
     def _plan_load11(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_modal_info([], {"show": True, "html": f"<h3>Plan load error</h3><p>{self.plan_error.message}</p>", "num_buttons": 0})
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h3>Plan load error</h3><p>{self.plan_error.message}</p>",
+                "num_buttons": 0
+            })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
@@ -968,7 +980,11 @@ class PigssController(Ahsm):
     def _plan_save21(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_modal_info([], {"show": True, "html": f"<h3>Plan save error</h3><p>{self.plan_error.message}</p>", "num_buttons": 0})
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h3>Plan save error</h3><p>{self.plan_error.message}</p>",
+                "num_buttons": 0
+            })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
@@ -1170,6 +1186,8 @@ if __name__ == "__main__":
     pc = PigssController()
     pc.start(1)
 
+    event = Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=[1, 3, 4]))
+    Framework.publish(event)
     event = Event(Signal.BTN_STANDBY, None)
     Framework.publish(event)
     event = Event(Signal.TERMINATE, None)

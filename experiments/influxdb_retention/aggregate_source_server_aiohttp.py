@@ -193,7 +193,7 @@ class HttpHandlers:
                     epoch='ms')
                 times = [result[0] for result in iterpoints(rs)]
                 if times:
-                    candidates.append(Candidate(abs(times[0] - start_time_ms), duration_ms, duration, range_ms//duration_ms))
+                    candidates.append(Candidate(abs(times[0] - start_time_ms), duration_ms, duration, range_ms // duration_ms))
             if which == 0:
                 # Also need to consider the undecimated data
                 rs = await self.client.query(
@@ -228,20 +228,15 @@ class HttpHandlers:
                 # print([row for key, row_gen in rs.items() for row in row_gen])
 
             data = [{
-                        "target":
-                        "mean_" + target,
-                        "datapoints": [[result[1], result[0]] for result in iterpoints(rs)]
-                    },
-                    {
-                        "target":
-                        "max",
-                        "datapoints": [[result[3], result[0]] for result in iterpoints(rs)]
-                    },
-                    {
-                        "target":
-                        "min",
-                        "datapoints": [[result[2], result[0]] for result in iterpoints(rs)]
-                    }]
+                "target": "mean_" + target,
+                "datapoints": [[result[1], result[0]] for result in iterpoints(rs)]
+            }, {
+                "target": "max",
+                "datapoints": [[result[3], result[0]] for result in iterpoints(rs)]
+            }, {
+                "target": "min",
+                "datapoints": [[result[2], result[0]] for result in iterpoints(rs)]
+            }]
         return web.json_response(data)
 
     async def get_field_keys(self, measurement):
@@ -266,7 +261,7 @@ class HttpHandlers:
         return ' AND '.join(result).strip()
 
     async def server_init(self, port):
-        self.client = InfluxDBClient(host='localhost', port=8086, db='pigss_data')  # Host/Port for InfluxDB
+        self.client = InfluxDBClient(host='localhost', port=8086, db='pigss_sim_data')  # Host/Port for InfluxDB
         app = web.Application()
         self.app = app
         app.on_shutdown.append(self.on_shutdown)

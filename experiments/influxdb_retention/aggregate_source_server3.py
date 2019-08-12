@@ -89,6 +89,7 @@ def query():
         for which, duration_ms in enumerate(durations_ms):
             if range_ms < max_data_points * duration_ms:
                 break
+        print(f"which {which}, duration_ms {duration_ms}")
         # which is probably best, but check all coarser resolutions in case one
         #  has data closer to the starting time
 
@@ -100,7 +101,7 @@ def query():
         candidates = []
         for duration, duration_ms in zip(durations[which:], durations_ms[which:]):
             rs = client.query(
-                'SELECT "mean_{target}" FROM crds_{interval} '
+                'SELECT "mean_{target}" FROM crds1_{interval} '
                 'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1'.format(
                     target=target,
                     where_clause=where_clause,
@@ -111,17 +112,18 @@ def query():
             times = [row['time'] for key, row_gen in rs.items() for row in row_gen]
             if times:
                 candidates.append(Candidate(abs(times[0] - start_time_ms), duration_ms, duration, range_ms // duration_ms))
+
         if which == 0:
             # Also need to consider the undecimated data
             rs = client.query(
                 'SELECT "{target}" FROM crds '
-                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1'.format(
-                    target=target, where_clause=where_clause, start_time_ms=start_time_ms, stop_time_ms=stop_time_ms),
+                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms AND valve_stable_time>30 ORDER BY time ASC LIMIT 1'
+                .format(target=target, where_clause=where_clause, start_time_ms=start_time_ms, stop_time_ms=stop_time_ms),
                 epoch='ms')
             times = [row['time'] for key, row_gen in rs.items() for row in row_gen]
             rs = client.query(
                 'SELECT COUNT("{target}") as count FROM crds '
-                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms'.format(
+                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms AND valve_stable_time>30'.format(
                     target=target, where_clause=where_clause, start_time_ms=start_time_ms, stop_time_ms=stop_time_ms),
                 epoch='ms')
             counts = [row['count'] for key, row_gen in rs.items() for row in row_gen]
@@ -131,11 +133,12 @@ def query():
         good_candidates.sort()
         best_duration = good_candidates[0].duration
 
+        print(f"Good candidates are {good_candidates}. Best duration is {best_duration}")
         if best_duration == '0':
             rs = client.query(
                 'SELECT mean("{target}") as mean, max("{target}") AS max, min("{target}") AS min FROM "crds" '
-                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms GROUP BY time({interval}) fill(none)'.
-                format(
+                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms AND valve_stable_time>30 GROUP BY time({interval}) fill(none)'
+                .format(
                     target=target,
                     where_clause=where_clause,
                     start_time_ms=start_time_ms,
@@ -147,10 +150,9 @@ def query():
                 'SELECT sum_tot/sum_count AS mean, min, max FROM'
                 ' (SELECT sum(tot) AS sum_tot, sum(count) AS sum_count, max(max) AS max, min(min) AS min FROM'
                 ' (SELECT ("mean_{target}"*"count_{target}") AS tot, "count_{target}" AS count, "max_{target}" AS max, "min_{target}" AS min'
-                ' FROM crds_{interval} WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms) GROUP BY time({interval}))'
+                ' FROM crds1_{interval} WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms) GROUP BY time({interval}))'
                 .format(
                     target=target,
-                    meas='crds_1m',
                     where_clause=where_clause,
                     start_time_ms=start_time_ms - duration_ms,
                     stop_time_ms=stop_time_ms + duration_ms,

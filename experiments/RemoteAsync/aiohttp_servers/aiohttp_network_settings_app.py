@@ -1,42 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
-import time
 import json
-import logging
 import datetime
 
 import asyncio
-import aiohttp
-import aiohttp_cors
-from aiohttp_swagger import setup_swagger
 from aiohttp import web
-import functools
-import traceback
 
 my_path = os.path.dirname(os.path.abspath(__file__))
-
-
-def exception(coroutine):
-    """
-    A decorator that wraps the passed in co-routine logging 
-    an exception and stopping the event loop if one should occur
-    """
-
-    @functools.wraps(coroutine)
-    async def wrapper(*args, **kwargs):
-        try:
-            await coroutine(*args, **kwargs)
-        except:
-            # log the exception and stop everything
-            print(traceback.format_exc())
-            print(
-                "Stopping event loop due to unexpected exception in coroutine")
-            # re-raise the exception
-            asyncio.get_event_loop().stop()
-            raise
-
-    return wrapper
 
 
 class AsyncWrapper:
@@ -49,8 +19,7 @@ class AsyncWrapper:
         return AsyncWrapper(getattr(self.proxy, attr))
 
     async def __call__(self, *args, **kwargs):
-        return await asyncio.get_running_loop().run_in_executor(
-            None, self.proxy, *args, **kwargs)
+        return await asyncio.get_running_loop().run_in_executor(None, self.proxy, *args, **kwargs)
 
 
 class RequestObj:
@@ -65,17 +34,19 @@ class RackNetworkSettingsServer:
     def __init__(self):
         self.afuncs = AsyncWrapper(SyncInterface())
         self.app = web.Application()
+        self.app.on_shutdown.append(self.on_shutdown)
         self.app.router.add_routes([
             web.get('/get_instruments', self.end_point_get_instruments),
             web.post('/apply_changes', self.end_point_apply_changes),
             web.post('/destroy_instrument', self.end_point_destroy_instrument),
             web.post('/restart_instrument', self.end_point_restart_instrument),
             web.post('/resolve_warning', self.end_point_resolve_warning),
-            web.get('/get_network_settings',
-                    self.end_point_get_network_settings),
-            web.post('/set_network_settings',
-                     self.end_point_set_network_settings)
+            web.get('/get_network_settings', self.end_point_get_network_settings),
+            web.post('/set_network_settings', self.end_point_set_network_settings)
         ])
+
+    async def on_shutdown(self, app):
+        print("RackNetworkSettingsServer is shutting down")
 
     async def end_point_get_instruments(self, request):
         """
@@ -95,8 +66,7 @@ class RackNetworkSettingsServer:
 
     async def end_point_apply_changes(self, request):
         data = await request.json()
-        return web.Response(
-            text=await self.afuncs.apply_changes(RequestObj(data)))
+        return web.Response(text=await self.afuncs.apply_changes(RequestObj(data)))
 
     async def end_point_destroy_instrument(self, request):
         """
@@ -128,8 +98,7 @@ class RackNetworkSettingsServer:
                 description: error."
         """
         data = await request.json()
-        return web.Response(
-            text=await self.afuncs.destroy_instrument(RequestObj(data)))
+        return web.Response(text=await self.afuncs.destroy_instrument(RequestObj(data)))
 
     async def end_point_restart_instrument(self, request):
         """
@@ -161,13 +130,11 @@ class RackNetworkSettingsServer:
                 description: error."
         """
         data = await request.json()
-        return web.Response(
-            text=await self.afuncs.restart_instrument(RequestObj(data)))
+        return web.Response(text=await self.afuncs.restart_instrument(RequestObj(data)))
 
     async def end_point_resolve_warning(self, request):
         data = await request.json()
-        return web.Response(
-            text=await self.afuncs.resolve_warning(RequestObj(data)))
+        return web.Response(text=await self.afuncs.resolve_warning(RequestObj(data)))
 
     async def end_point_get_network_settings(self, request):
         """
@@ -223,16 +190,12 @@ class RackNetworkSettingsServer:
                 description: error."
         """
         data = await request.json()
-        return web.Response(
-            text=await self.afuncs.set_network_settings(RequestObj(data)))
+        return web.Response(text=await self.afuncs.set_network_settings(RequestObj(data)))
 
 
 class SyncInterface:
     def __init__(self):
-        with open(
-                os.path.join(my_path,
-                             "./instruments_backend_meta_master.json"),
-                "r") as fp:
+        with open(os.path.join(my_path, "./instruments_backend_meta_master.json"), "r") as fp:
             self.instruments = json.load(fp)
 
     def get_instruments(self):
@@ -253,9 +216,7 @@ class SyncInterface:
         for instrument in self.instruments:
             if instrument["ip"] == ip:
                 instrument["warnings"] = []
-                instrument["warnings"].append(
-                    "instrument received a destroy warning at {}".format(
-                        datetime.datetime.now()))
+                instrument["warnings"].append("instrument received a destroy warning at {}".format(datetime.datetime.now()))
         return ""
 
     def restart_instrument(self, request):
@@ -265,8 +226,7 @@ class SyncInterface:
 
     def resolve_warning(self, request):
         ip, resolved_warning = request.get_json()["warning"].split("@")
-        print("instruments by {} warning '{}' is resolved".format(
-            ip, resolved_warning))
+        print("instruments by {} warning '{}' is resolved".format(ip, resolved_warning))
         for instrument in self.instruments:
             if instrument["ip"] == ip:
                 for warning in instrument["warnings"]:
