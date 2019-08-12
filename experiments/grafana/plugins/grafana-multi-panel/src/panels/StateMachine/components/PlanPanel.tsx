@@ -76,9 +76,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         */
         return (
-            <div className="panel-plan" style={{ height: 650, backgroundColor: "#d9d9d9", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
+            <div className="panel-plan" style={{ height: 650, backgroundColor: "#888", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
                 <h2 style={{color: "black"}}>Schedule</h2>
-                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:440, border: "1px solid gray"}}>
+                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:440, borderRadius: 3}}>
                     <form>
                         <ReactList
                             itemRenderer={this.renderItem}

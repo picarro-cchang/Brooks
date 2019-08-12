@@ -1,6 +1,7 @@
 $panel-header-no-title-zindex: 1;
 
 .panel-header {
+  height:40px;
   &:hover {
     transition: background-color 0.1s ease-in-out;
     background-color: $panel-header-hover-bg;
@@ -39,9 +40,11 @@ $panel-header-no-title-zindex: 1;
 .panel-title-text {
   text-overflow: ellipsis;
   overflow: hidden;
+  margin-top: 20px;
   white-space: nowrap;
   max-width: calc(100% - 38px);
   cursor: pointer;
+  font-size: 35px;
   font-weight: $font-weight-semi-bold;
 
   &:hover {

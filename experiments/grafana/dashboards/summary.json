@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1565626256677,
+  "iteration": 1564769210253,
   "links": [],
   "panels": [
     {
@@ -47,17 +47,16 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 6,
+        "w": 4,
         "x": 0,
         "y": 1
       },
-      "hideTimeOverride": true,
       "id": 2,
       "links": [],
-      "maxPerRow": 4,
+      "maxPerRow": 6,
       "options": {},
       "pageSize": null,
       "repeat": "valve_pos",
@@ -122,7 +121,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -199,6 +198,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -217,22 +217,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 6,
+        "h": 6,
+        "w": 4,
+        "x": 4,
         "y": 1
       },
-      "hideTimeOverride": true,
       "id": 55,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -294,7 +293,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -390,22 +389,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 12,
+        "h": 6,
+        "w": 4,
+        "x": 8,
         "y": 1
       },
-      "hideTimeOverride": true,
       "id": 56,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -467,7 +465,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -563,22 +561,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 18,
+        "h": 6,
+        "w": 4,
+        "x": 12,
         "y": 1
       },
-      "hideTimeOverride": true,
       "id": 57,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -640,7 +637,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -736,22 +733,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 0,
-        "y": 9
+        "h": 6,
+        "w": 4,
+        "x": 16,
+        "y": 1
       },
-      "hideTimeOverride": true,
       "id": 58,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -813,7 +809,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -909,22 +905,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 6,
-        "y": 9
+        "h": 6,
+        "w": 4,
+        "x": 20,
+        "y": 1
       },
-      "hideTimeOverride": true,
       "id": 59,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -986,7 +981,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1082,368 +1077,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 12,
-        "y": 9
-      },
-      "hideTimeOverride": true,
-      "id": 60,
-      "links": [],
-      "maxPerRow": 6,
-      "options": {},
-      "pageSize": null,
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "6",
-          "value": "6"
-        }
-      },
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": null,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Species",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Metric",
-          "preserveFormat": false,
-          "rangeMaps": [],
-          "sanitize": false,
-          "thresholds": [],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "NH3",
-              "value": "crds.NH3"
-            },
-            {
-              "text": "H2S",
-              "value": "crds.H2S"
-            },
-            {
-              "text": "HF",
-              "value": "crds.HF"
-            },
-            {
-              "text": "HCl",
-              "value": "crds.HCl"
-            }
-          ]
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
-          "link": false,
-          "linkTooltip": "",
-          "linkUrl": "",
-          "mappingType": 1,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
-      "targets": [
-        {
-          "alias": "",
-          "groupBy": [],
-          "limit": "500",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "NH3"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "HCl"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ],
-          "tz": ""
-        }
-      ],
-      "timeFrom": "$avg_time",
-      "timeShift": null,
-      "title": "Valve:  $valve_pos",
-      "transform": "timeseries_aggregations",
-      "transparent": true,
-      "type": "table"
-    },
-    {
-      "columns": [
-        {
-          "text": "Avg",
-          "value": "avg"
-        },
-        {
-          "text": "Min",
-          "value": "min"
-        },
-        {
-          "text": "Max",
-          "value": "max"
-        }
-      ],
-      "datasource": "PiGSS data source",
-      "fontSize": "110%",
-      "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 18,
-        "y": 9
-      },
-      "hideTimeOverride": true,
-      "id": 61,
-      "links": [],
-      "maxPerRow": 6,
-      "options": {},
-      "pageSize": null,
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "7",
-          "value": "7"
-        }
-      },
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": null,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Species",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Metric",
-          "preserveFormat": false,
-          "rangeMaps": [],
-          "sanitize": false,
-          "thresholds": [],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "NH3",
-              "value": "crds.NH3"
-            },
-            {
-              "text": "H2S",
-              "value": "crds.H2S"
-            },
-            {
-              "text": "HF",
-              "value": "crds.HF"
-            },
-            {
-              "text": "HCl",
-              "value": "crds.HCl"
-            }
-          ]
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
-          "link": false,
-          "linkTooltip": "",
-          "linkUrl": "",
-          "mappingType": 1,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
-      "targets": [
-        {
-          "alias": "",
-          "groupBy": [],
-          "limit": "500",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "NH3"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "HCl"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ],
-          "tz": ""
-        }
-      ],
-      "timeFrom": "$avg_time",
-      "timeShift": null,
-      "title": "Valve:  $valve_pos",
-      "transform": "timeseries_aggregations",
-      "transparent": true,
-      "type": "table"
-    },
-    {
-      "columns": [
-        {
-          "text": "Avg",
-          "value": "avg"
-        },
-        {
-          "text": "Min",
-          "value": "min"
-        },
-        {
-          "text": "Max",
-          "value": "max"
-        }
-      ],
-      "datasource": "PiGSS data source",
-      "fontSize": "110%",
-      "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 0,
-        "y": 17
+        "y": 7
       },
-      "hideTimeOverride": true,
       "id": 62,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1505,7 +1153,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1601,22 +1249,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 6,
-        "y": 17
+        "y": 7
       },
-      "hideTimeOverride": true,
       "id": 63,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1678,7 +1325,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1774,28 +1421,27 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 12,
-        "y": 17
+        "y": 7
       },
-      "hideTimeOverride": true,
-      "id": 64,
+      "id": 60,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
           "selected": false,
-          "text": "10",
-          "value": "10"
+          "text": "6",
+          "value": "6"
         }
       },
       "scroll": true,
@@ -1851,7 +1497,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1947,28 +1593,27 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 18,
-        "y": 17
+        "y": 7
       },
-      "hideTimeOverride": true,
-      "id": 65,
+      "id": 61,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
           "selected": false,
-          "text": "11",
-          "value": "11"
+          "text": "7",
+          "value": "7"
         }
       },
       "scroll": true,
@@ -2024,7 +1669,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2120,22 +1765,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 0,
-        "y": 25
+        "y": 14
       },
-      "hideTimeOverride": true,
       "id": 66,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2197,7 +1841,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2293,22 +1937,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 6,
-        "y": 25
+        "y": 14
       },
-      "hideTimeOverride": true,
       "id": 67,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2370,7 +2013,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2466,22 +2109,365 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 12,
-        "y": 25
+        "y": 14
       },
-      "hideTimeOverride": true,
-      "id": 68,
+      "id": 64,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "10",
+          "value": "10"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "id": 65,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564769210253,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "valve_pos": {
+          "selected": false,
+          "text": "11",
+          "value": "11"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$valve_pos$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "Valve:  $valve_pos",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 21
+      },
+      "id": 68,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2543,7 +2529,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2639,22 +2625,21 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
-        "h": 8,
-        "w": 5,
+        "h": 7,
+        "w": 6,
         "x": 18,
-        "y": 25
+        "y": 21
       },
-      "hideTimeOverride": true,
       "id": 69,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1564769210253,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2716,7 +2701,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2899,6 +2884,5 @@
   },
   "timezone": "",
   "title": "Summary",
-  "uid": "vCQ3IOvWk",
-  "version": 1
+  "uid": "vCQ3IOvWk"
 }

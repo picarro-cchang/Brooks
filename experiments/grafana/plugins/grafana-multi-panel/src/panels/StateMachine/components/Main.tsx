@@ -147,7 +147,7 @@ export class Main extends Component<any, any> {
       const modal_info = this.state.modal_info as ModalInfo;
       modalButtons.push(
           <button className={modal_info.buttons[i].className}
-                  style={{ margin: "10px" }}
+                  style={{ margin: "10px"}}
                   onClick={() => this.ws_sender({ element: modal_info.buttons[i].response })}>
             {modal_info.buttons[i].caption}
           </button>
@@ -176,11 +176,13 @@ export class Main extends Component<any, any> {
             </div>
           </div>
           <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
-            <div style={{ margin: "20px" }}>
+            <div style={{ margin: "20px"}}>
               <div dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}>
               </div>
             </div>
-            {modalButtons}
+            <div style={{color: "black"}}>
+              {modalButtons}
+            </div>
           </Modal>
         </div>
     );
