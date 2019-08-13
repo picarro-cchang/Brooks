@@ -96,77 +96,74 @@ class PigletSimulator:
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
     async def fsm(self):
-        try:
-            self.opstate_changed.set()
-            while True:
-                await self.opstate_changed.wait()
-                self.opstate_changed.clear()
-                # print(self.opstate)
-                if self.opstate == "power_off":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 1
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = 0
-                    self.clean_solenoid_state = 0
-                elif self.opstate == "power_up":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 1
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = 0
-                    self.clean_solenoid_state = 0
-                elif self.opstate == "standby":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 0
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = self.BYPASS_ACTIVE
-                    self.clean_solenoid_state = 0
-                elif self.opstate == "ident":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 0
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = 0.0
-                    self.clean_solenoid_state = 0
-                    start = time.time()
-                    while time.time() < start + 1.0:
-                        if self.opstate != "ident":
-                            break
-                        await asyncio.sleep(0.1)
-                    else:
-                        self.opstate = "ident_2"
-                        self.opstate_changed.set()
-                elif self.opstate == "ident_2":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 1
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = 0.0
-                    start = time.time()
-                    while time.time() < start + 1.0:
-                        if self.opstate != "ident_2":
-                            break
-                        await asyncio.sleep(0.1)
-                    else:
-                        self.opstate = "standby"
-                        for i, _ in enumerate(self.active_chan):
-                            self.active_chan[i] = 1 if random.uniform(0.0, 1.0) > 0.5 else 0
-                        # print(self.active_chan)
-                        self.opstate_changed.set()
-                elif self.opstate == "clean":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 0
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = self.BYPASS_ACTIVE
-                    self.clean_solenoid_state = 1
-                elif self.opstate == "reference":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 0
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = self.BYPASS_ACTIVE
-                    self.clean_solenoid_state = 1
-                elif self.opstate == "fault":
-                    for i, _ in enumerate(self.solenoid_state):
-                        self.solenoid_state[i] = 1
-                    for i, _ in enumerate(self.bypass_values):
-                        self.bypass_values[i] = 0
-                    self.clean_solenoid_state = 0
-        except asyncio.CancelledError:
-            pass
+        self.opstate_changed.set()
+        while True:
+            await self.opstate_changed.wait()
+            self.opstate_changed.clear()
+            # print(self.opstate)
+            if self.opstate == "power_off":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 1
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = 0
+                self.clean_solenoid_state = 0
+            elif self.opstate == "power_up":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 1
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = 0
+                self.clean_solenoid_state = 0
+            elif self.opstate == "standby":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 0
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = self.BYPASS_ACTIVE
+                self.clean_solenoid_state = 0
+            elif self.opstate == "ident":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 0
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = 0.0
+                self.clean_solenoid_state = 0
+                start = time.time()
+                while time.time() < start + 1.0:
+                    if self.opstate != "ident":
+                        break
+                    await asyncio.sleep(0.1)
+                else:
+                    self.opstate = "ident_2"
+                    self.opstate_changed.set()
+            elif self.opstate == "ident_2":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 1
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = 0.0
+                start = time.time()
+                while time.time() < start + 1.0:
+                    if self.opstate != "ident_2":
+                        break
+                    await asyncio.sleep(0.1)
+                else:
+                    self.opstate = "standby"
+                    for i, _ in enumerate(self.active_chan):
+                        self.active_chan[i] = 1 if random.uniform(0.0, 1.0) > 0.5 else 0
+                    # print(self.active_chan)
+                    self.opstate_changed.set()
+            elif self.opstate == "clean":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 0
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = self.BYPASS_ACTIVE
+                self.clean_solenoid_state = 1
+            elif self.opstate == "reference":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 0
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = self.BYPASS_ACTIVE
+                self.clean_solenoid_state = 1
+            elif self.opstate == "fault":
+                for i, _ in enumerate(self.solenoid_state):
+                    self.solenoid_state[i] = 1
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = 0
+                self.clean_solenoid_state = 0

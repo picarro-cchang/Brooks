@@ -3,6 +3,7 @@ import asyncio
 import aiohttp_cors
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
+from async_hsm import Spy, Event, Framework, Signal
 
 from experiments.common.async_helper import log_async_exception
 from experiments.state_machine.back_end.controller_service import \
@@ -28,6 +29,7 @@ class Server:
         await app['farm'].shutdown()
 
     async def on_cleanup(self, app):
+        print("Top level server is cleaning up")
         pass
 
     @log_async_exception(stop_loop=True)
@@ -70,9 +72,7 @@ if __name__ == "__main__":
     loop.run_until_complete(asyncio.gather(service.startup()))
     try:
         loop.run_forever()
-    except KeyboardInterrupt:
-        print('Stop server begin')
     finally:
         loop.run_until_complete(asyncio.gather(service.runner.cleanup()))
-        loop.close()
+        Framework.stop()
     print('Stop server end')

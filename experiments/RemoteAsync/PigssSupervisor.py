@@ -5,7 +5,7 @@ import os
 import attr
 from aiomultiprocess import Process
 
-import CmdFIFO
+from experiments.testing.cmd_fifo import CmdFIFO
 from experiments.common.rpc_ports import rpc_ports
 from experiments.IDriver.DBWriter.InfluxDBWriter import InfluxDBWriter
 from experiments.IDriver.IDriver import PicarroAnalyzerDriver
@@ -85,10 +85,10 @@ async def dotty():
 
 
 class PigssSupervisor:
-    def __init__(self):
+    def __init__(self, farm=None):
         log.info("Starting PigssSupervisor")
+        self.farm = farm
         self.process_wrappers = {}  # List of Process objects
-        self.RPC = {}  # Asynchronous interface to RPC handlers of spervisees
         self.device_dict = {}
         with open(tunnel_configs, "r") as f:
             self.rpc_tunnel_config = json.loads(f.read())
@@ -98,9 +98,9 @@ class PigssSupervisor:
         if at_start or self.process_wrappers["MadMapper"].killed:
             process_wrapper = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'), "MadMapper")
             self.process_wrappers["MadMapper"] = process_wrapper
-            self.RPC["MadMapper"] = await process_wrapper.start()
-            # self.device_dict = await self.RPC["MadMapper"].read_json()
-            self.device_dict = await self.RPC["MadMapper"].map_devices(True)
+            self.farm.RPC["MadMapper"] = await process_wrapper.start()
+            # self.device_dict = await self.farm.RPC["MadMapper"].read_json()
+            self.device_dict = await self.farm.RPC["MadMapper"].map_devices(True)
             log.info(f"\nResult of MadMapper.map_devices {self.device_dict}")
             if at_start:
                 asyncio.create_task(process_wrapper.pinger(5))
@@ -112,9 +112,9 @@ class PigssSupervisor:
                     name = f"Piglet_{dev_params['Bank_ID']}"
                     process_wrapper = ProcessWrapper(PigletDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
-                    self.RPC[name] = await process_wrapper.start(port=dev_params['Path'],
-                                                                 rpc_port=dev_params['RPC_Port'],
-                                                                 baudrate=dev_params['Baudrate'])
+                    self.farm.RPC[name] = await process_wrapper.start(port=dev_params['Path'],
+                                                                      rpc_port=dev_params['RPC_Port'],
+                                                                      baudrate=dev_params['Baudrate'])
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
@@ -124,9 +124,9 @@ class PigssSupervisor:
                     name = "MFC"
                     process_wrapper = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
-                    self.RPC[name] = await process_wrapper.start(port=dev_params['Path'],
-                                                                 rpc_port=dev_params['RPC_Port'],
-                                                                 baudrate=dev_params['Baudrate'])
+                    self.farm.RPC[name] = await process_wrapper.start(port=dev_params['Path'],
+                                                                      rpc_port=dev_params['RPC_Port'],
+                                                                      baudrate=dev_params['Baudrate'])
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
@@ -137,8 +137,8 @@ class PigssSupervisor:
                     name = f"Relay_{relay_id}"
                     process_wrapper = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
-                    self.RPC[name] = await process_wrapper.start(device_port_name=dev_params['Path'],
-                                                                 rpc_server_port=dev_params['RPC_Port'])
+                    self.farm.RPC[name] = await process_wrapper.start(device_port_name=dev_params['Path'],
+                                                                      rpc_server_port=dev_params['RPC_Port'])
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
@@ -151,16 +151,16 @@ class PigssSupervisor:
                     process_wrapper = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name)
                     self.process_wrappers[key] = process_wrapper
                     chassis, analyzer = dev_params['SN'].split("-")
-                    self.RPC[name] = await process_wrapper.start(instrument_ip_address=dev_params['IP'],
-                                                                 database_writer=InfluxDBWriter(),
-                                                                 rpc_server_port=dev_params['RPC_Port'],
-                                                                 rpc_server_name=name,
-                                                                 start_now=True,
-                                                                 rpc_tunnel_config=self.rpc_tunnel_config,
-                                                                 database_tags={
-                                                                     "analyzer": analyzer,
-                                                                     "chassis": chassis
-                                                                 })
+                    self.farm.RPC[name] = await process_wrapper.start(instrument_ip_address=dev_params['IP'],
+                                                                      database_writer=InfluxDBWriter(),
+                                                                      rpc_server_port=dev_params['RPC_Port'],
+                                                                      rpc_server_name=name,
+                                                                      start_now=True,
+                                                                      rpc_tunnel_config=self.rpc_tunnel_config,
+                                                                      database_tags={
+                                                                          "analyzer": analyzer,
+                                                                          "chassis": chassis
+                                                                      })
                     if at_start:
                         asyncio.create_task(process_wrapper.pinger(2))
                     else:
@@ -184,8 +184,3 @@ class PigssSupervisor:
             await self.error_recovery(5.0)
         finally:
             log.info("Program terminated")
-
-
-if __name__ == "__main__":
-    ps = PigssSupervisor()
-    asyncio.run(ps.main())

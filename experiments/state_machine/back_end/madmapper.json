@@ -24,7 +24,7 @@
         "Whitfield_HW_Rev": "Null",
         "Path": "/dev/ttyACM4",
         "Baudrate": 38400,
-        "RPC_Port": 33040
+        "RPC_Port": 33070
       },
       "/dev/ttyUSB0": {
         "Driver": "AlicatDriver",
@@ -40,7 +40,7 @@
         "Whitfield_HW_Rev": "Null",
         "Path": "/dev/ttyACM3",
         "Baudrate": 38400,
-        "RPC_Port": 33042
+        "RPC_Port": 33072
       },
       "/dev/ttyACM0": {
         "Driver": "PigletDriver",
@@ -50,7 +50,7 @@
         "Whitfield_HW_Rev": "Null",
         "Path": "/dev/ttyACM0",
         "Baudrate": 38400,
-        "RPC_Port": 33043
+        "RPC_Port": 33073
       },
       "/dev/ttyACM1": {
         "Driver": "NumatoDriver",

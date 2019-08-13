@@ -35,11 +35,12 @@ POLL_PERIOD = 0.5
 
 
 class PigletManager(Ahsm):
-    def __init__(self):
+    def __init__(self, farm):
         super().__init__()
+        self.farm = farm
         self.bank_list = None
         self.comm_lock = asyncio.Lock()
-        self.piglets = {}
+        # self.piglets = {}
         self.tasks = []
 
     @state
@@ -50,7 +51,7 @@ class PigletManager(Ahsm):
         Framework.subscribe("PIGLET_RESPONSE", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("MFC_SET", self)
-        Framework.subscribe("SIGTERM", self)
+        Framework.subscribe("TERMINATE", self)
         return self.tran(self._configure)
 
     @state
@@ -66,15 +67,15 @@ class PigletManager(Ahsm):
     def _manager(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.piglets = {bank: PigletSimulator(bank=bank) for bank in self.bank_list}
+            # self.piglets = {bank: PigletSimulator(bank=bank) for bank in self.bank_list}
             self.piglet_status_te.postEvery(self, POLL_PERIOD)
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.piglet_status_te.disarm()
-            for piglet in self.piglets.values():
-                piglet.shutdown()
+            # for piglet in self.piglets.values():
+            #    piglet.shutdown()
             return self.handled(e)
-        elif sig == Signal.SIGTERM:
+        elif sig == Signal.TERMINATE:
             return self.tran(self._exit)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
@@ -112,15 +113,19 @@ class PigletManager(Ahsm):
         return self.super(self.top)
 
     async def command_handler(self, command, bank):
-        piglet = self.piglets[bank]
-        return await piglet.cli(command)
+        # piglet = self.piglets[bank]
+        # return await piglet.cli(command)
+        return await self.farm.RPC[f"Piglet_{bank}"].send(command)
 
     async def get_status_of_bank(self, bank):
         status = {}
-        piglet = self.piglets[bank]
-        status["STATE"] = await piglet.cli("OPSTATE?")
-        status["MFC"] = float(await piglet.cli("MFC?"))
-        status["SOLENOID_VALVES"] = int(await piglet.cli("CHANSET?"))
+        # piglet = self.piglets[bank]
+        # status["STATE"] = await piglet.cli("OPSTATE?")
+        # status["MFC"] = float(await piglet.cli("MFC?"))
+        # status["SOLENOID_VALVES"] = int(await piglet.cli("CHANSET?"))
+        status["STATE"] = await self.farm.RPC[f"Piglet_{bank}"].send("OPSTATE?")
+        status["MFC"] = float(await self.farm.RPC[f"Piglet_{bank}"].send("MFC?"))
+        status["SOLENOID_VALVES"] = int(await self.farm.RPC[f"Piglet_{bank}"].send("CHANSET?"))
         return status
 
     async def exec_on_banks(self, coroutine_function, bank_list):

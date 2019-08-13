@@ -22,16 +22,17 @@ class PigssFarm:
     send_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
     receive_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
     tasks = attr.ib(factory=list)
+    RPC = attr.ib(factory=dict)
 
     def __attrs_post_init__(self):
-        self.controller = PigssController()
-        self.piglet_manager = PigletManager()
-        self.pigss_supervisor = PigssSupervisor()
+        self.controller = PigssController(self)
+        self.piglet_manager = PigletManager(self)
+        self.pigss_supervisor = PigssSupervisor(self)
 
     async def shutdown(self):
         for task in self.tasks:
             task.cancel()
-        Framework.publish(Event(Signal.TERMINATE, None))
+        # Framework.publish(Event(Signal.TERMINATE, None))
 
     async def startup(self):
         try:
