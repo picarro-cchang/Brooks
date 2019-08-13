@@ -23,6 +23,9 @@
 // system and severity.
 #include "logger.h"
 
+// Provides setter and getter functions for the system state structure
+#include "system.h"
+
 #include "topaz.h"
 
 int8_t topaz_init(char board) {

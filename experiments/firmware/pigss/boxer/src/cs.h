@@ -3,13 +3,12 @@
 
 void cs_init(void);
 
-// Set the state of the CS line for Topaz A shift register
+// Set the state of the CS line for Topaz A and B shift registers
 //
 // Arguments:
 //   state -- 1 for CS high, 0 for CS low
 int8_t cs_manifold_a_sr(uint8_t state);
-
-void cs_manifold_b_sr(uint8_t);
+int8_t cs_manifold_b_sr(uint8_t state);
 
 // Set the state of the target CS line.  This CS is multiplexed to
 // handle all DACs and pressure sensors.

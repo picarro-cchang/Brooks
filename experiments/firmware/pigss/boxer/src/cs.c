@@ -52,10 +52,8 @@ void cs_init() {
   PORTF |= _BV(PORTF1);
   DDRF |= _BV(DDF1);
 
-
   return;
 }
-
 
 int8_t cs_manifold_a_sr(uint8_t state) {
   if ( state ) {
@@ -71,8 +69,7 @@ int8_t cs_manifold_a_sr(uint8_t state) {
   return 0;
 }
 
-
-void cs_manifold_b_sr(uint8_t state) {
+int8_t cs_manifold_b_sr(uint8_t state) {
   // Set the state of the CS line for the shift register on manifold B
   //
   // Arguments:
@@ -86,7 +83,8 @@ void cs_manifold_b_sr(uint8_t state) {
     PORTL &= ~(_BV(PORTL3));
     loop_until_bit_is_clear(PORTL, PORTL3);
   }
-  return;
+  // There aren't a lot of ways for this to fail.
+  return 0;
 }
 
 void cs_topaz_a_target(uint8_t state) {
@@ -99,7 +97,7 @@ void cs_topaz_a_target(uint8_t state) {
     PORTF &= ~(_BV(PORTF0));
     loop_until_bit_is_clear(PORTF, PORTF0);
   }
-  return;  
+  return;
 }
 
 void cs_topaz_b_target(uint8_t state) {
@@ -112,7 +110,7 @@ void cs_topaz_b_target(uint8_t state) {
     PORTF &= ~(_BV(PORTF1));
     loop_until_bit_is_clear(PORTF, PORTF1);
   }
-  return;  
+  return;
 }
 
 //******************** Proportional valve DACs *********************//
@@ -121,28 +119,28 @@ void cs_ch1_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
   spi_write(0);
-  cs_manifold_a_sr(1); 
+  cs_manifold_a_sr(1);
 }
 
 void cs_ch2_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
   spi_write(2);
-  cs_manifold_a_sr(1); 
+  cs_manifold_a_sr(1);
 }
 
 void cs_ch3_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
   spi_write(4);
-  cs_manifold_a_sr(1); 
+  cs_manifold_a_sr(1);
 }
 
 void cs_ch4_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
   spi_write(6);
-  cs_manifold_a_sr(1); 
+  cs_manifold_a_sr(1);
 }
 
 //************************ Pressure sensors ************************//
@@ -188,7 +186,4 @@ void cs_outlet_b_mpr_mux(void) {
   spi_write(8);
   cs_manifold_b_sr(1);
 }
-
-
-
 
