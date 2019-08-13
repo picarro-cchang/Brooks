@@ -21,7 +21,7 @@
 */
 #include <avr/interrupt.h>
 
-
+#include "clock.h"
 
 //------------------------- Functions -------------------------------
 

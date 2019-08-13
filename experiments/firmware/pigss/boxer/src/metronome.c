@@ -38,6 +38,9 @@
 // Functions for working with the MPR pressure sensors
 #include "mpr.h"
 
+// Provides pressure_mpr_trigger_cycle
+#include "pressure.h"
+
 #include "metronome.h"
 
 void metronome_init() {

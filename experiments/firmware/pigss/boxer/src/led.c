@@ -7,6 +7,8 @@
 // loop_until_bit_is_set.
 #include <avr/io.h>
 
+#include "led.h"
+
 // ----------------------- Functions ----------------------------------
 
 void LED_init(void) {

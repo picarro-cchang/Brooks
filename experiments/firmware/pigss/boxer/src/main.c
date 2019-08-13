@@ -76,14 +76,14 @@
 // Functions for working with Topaz boards
 #include "topaz.h"
 
-/* led.h
-
-   Provides functions for turning the LED on and off.
-*/
+// Provides functions for turning the LED on and off.
 #include "led.h"
 
 // Provide support for i2c devices
 #include "i2c.h"
+
+// Provide support for mpr pressure sensors
+#include "mpr.h"
 
 // Pressure control module
 #include "pressure.h"
@@ -206,7 +206,7 @@ int main(void) {
   } else if (strcmp( LOG_LEVEL, "info" ) == 0) {
     // We're debugging.  Slow the reads way down.
     pressure_read_period_ms = 2000;
-    mpr_read_delay_ms = 1000;  
+    mpr_read_delay_ms = 1000;
   } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
     // This could be a release.  The minimum read delay is 5ms.
     pressure_read_period_ms = 10;

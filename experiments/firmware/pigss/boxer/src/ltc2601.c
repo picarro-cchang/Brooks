@@ -60,15 +60,3 @@ uint8_t ltc2601_write( void (*cs_ptr)(uint8_t), uint8_t command, uint16_t value 
   return 0;
 }
 
-uint8_t ltc2601_ramp_test(void) {
-  // Use the manifold a chip select
-  uint16_t increment = 10000;
-  static uint16_t setting = 0;
-  ltc2601_write( &cs_manifold_a_sr, 0x3, setting);
-  setting += increment;
-  if (setting > UINT16_MAX) {
-    // Roll over
-    setting = 0;
-  }
-  return 0;
-}

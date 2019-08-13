@@ -54,7 +54,7 @@ int8_t topaz_init(char board) {
     // Make P17 an output for the reset line
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_PORT_1_CONFIG_COMMAND,
-		  ~(_BV(TOPAZ_CLR_SHIFT)) );
+		  (uint8_t) ~(_BV(TOPAZ_CLR_SHIFT)) );
     // Initialize the reset line high
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
     		  TCA9539_OUTPUT_PORT_1_REG,
