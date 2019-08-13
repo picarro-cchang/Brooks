@@ -77,4 +77,7 @@ int8_t system_state_set_system_sernum(uint16_t sernum);
 // Enter standby mode
 int8_t system_enter_standby(void);
 
+// Enter control mode
+int8_t system_enter_control(void);
+
 #endif // End the include guard

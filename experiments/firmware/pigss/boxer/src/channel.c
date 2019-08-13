@@ -90,6 +90,10 @@ int8_t channel_update() {
   // Bits in the channel_hardware_byte will be cleared if the channel is
   // enabled.
   uint8_t channel_hardware_byte = 0;
+
+  // Keep track of how many channels have been enabled
+  uint8_t enabled_channels = 0;
+  
   uint8_t channel_array_index = 0;
   // Loop through the channel array to set the hardware byte for
   // active or inactive channels.  Set the bypass DACs for inactive
@@ -98,6 +102,10 @@ int8_t channel_update() {
     channel = channel_array[channel_array_index].number;
     if (channel_array[channel_array_index].enabled == true) {
       // Channel is enabled for sampling
+      enabled_channels += 1;
+      // Set hardware byte for configuring solenoid valves.  Solenoid
+      // valves are energized when a channel is disabled, so enabled
+      // channel bits are cleared in the hardware byte.
       channel_hardware_byte &= ~(_BV(channel_array_index));
     } else {
       // Channel has been disabled.  Set the bypass DAC to get the

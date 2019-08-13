@@ -104,6 +104,27 @@ int8_t system_enter_standby(void) {
   return retval;
 }
 
+int8_t system_enter_control(void) {
+  int8_t retval = 0;
+  switch( system_state.state_enum ) {
+  case system_state_INIT:
+    // Transition from INIT to CONTROL is forbidden
+    break;
+  case system_state_STANDBY:
+    set_system_state(system_state_CONTROL);
+    break;
+  case system_state_CONTROL:
+    break;
+  default:
+    logger_msg_p("system", log_level_ERROR,
+		 PSTR("Enter control from bad system state %d"),
+		 system_state.state_enum);
+    retval += -1;
+    break;
+  }
+  return retval;
+}
+
 void cmd_rst( command_arg_t *command_arg_ptr ) {
   // Set watchdog to lowest interval and delay longer than that
   wdt_enable(WDTO_15MS);
