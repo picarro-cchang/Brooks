@@ -1,7 +1,6 @@
 import asyncio
 import time
 
-import aiohttp
 import aiohttp_cors
 import attr
 from aiohttp import web
@@ -17,7 +16,7 @@ class HttpHandlers:
     app = attr.ib(None)
     runner = attr.ib(None)
     tasks = attr.ib(factory=list)
-    socket_stats = attr.ib(factory=lambda:{"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0})
+    socket_stats = attr.ib(factory=lambda: {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0})
 
     async def handle(self, request):
         name = request.match_info.get('name', "Anonymous")

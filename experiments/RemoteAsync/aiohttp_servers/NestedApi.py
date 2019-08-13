@@ -1,35 +1,14 @@
 import asyncio
+
 import aiohttp_cors
+from aiohttp import web
 from aiohttp_cors.mixin import CorsViewMixin
 from aiohttp_swagger import setup_swagger
-from aiohttp import web
+
 # Can replace AdminApiClass by AdminApiSimple
 from AdminApiClass import AdminApi
 from aiohttp_network_settings_app import RackNetworkSettingsServer
-import functools
-import traceback
-
-
-def exception(coroutine):
-    """
-    A decorator that wraps the passed in co-routine and logs 
-    exceptions should one occur
-    """
-
-    @functools.wraps(coroutine)
-    async def wrapper(*args, **kwargs):
-        try:
-            await coroutine(*args, **kwargs)
-        except:
-            # log the exception and stop everything
-            print(traceback.format_exc())
-            print(
-                "Stopping event loop due to unexpected exception in coroutine")
-            # re-raise the exception
-            asyncio.get_event_loop().stop()
-            raise
-
-    return wrapper
+from experiments.common.async_helper import log_async_exception
 
 
 class MyView(web.View, CorsViewMixin):
@@ -47,10 +26,7 @@ class MyView(web.View, CorsViewMixin):
             "200":
                 description: successful operation.
         """
-        return web.json_response({
-            "message":
-            f"Hello from API, my data is {self.request.app['data']}"
-        })
+        return web.json_response({"message": f"Hello from API, my data is {self.request.app['data']}"})
 
 
 class SimpleApi:
@@ -62,24 +38,21 @@ class SimpleApi:
         self.addr = addr
         self.data = data
 
-    @exception
+    @log_async_exception(stop_loop=True)
     async def server_init(self):
         self.app = web.Application()
         self.app['data'] = self.data
         self.app.on_shutdown.append(self.on_shutdown)
-        cors = aiohttp_cors.setup(self.app,
-                                  defaults={
-                                      "*":
-                                      aiohttp_cors.ResourceOptions(
-                                          allow_credentials=True,
-                                          expose_headers="*",
-                                          allow_headers="*",
-                                      )
-                                  })
+        cors = aiohttp_cors.setup(
+            self.app, defaults={"*": aiohttp_cors.ResourceOptions(
+                allow_credentials=True,
+                expose_headers="*",
+                allow_headers="*",
+            )})
 
-        #self.app.router.add_route("GET", "/", self.handle)
+        # self.app.router.add_route("GET", "/", self.handle)
         self.app.router.add_routes([web.view("/api", MyView)])
-        #self.app.router.add_route("GET", "/{name}", self.handle)
+        # self.app.router.add_route("GET", "/{name}", self.handle)
 
         admin = AdminApi()
         admin.app['data'] = self.data
@@ -124,14 +97,12 @@ if __name__ == "__main__":
     service1 = SimpleApi(port=8004, data="foo")
     service2 = SimpleApi(port=8005, data="bar")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(
-        asyncio.gather(service1.startup(), service2.startup()))
+    loop.run_until_complete(asyncio.gather(service1.startup(), service2.startup()))
     try:
         loop.run_forever()
     except KeyboardInterrupt:
         print('Stop server begin')
     finally:
-        loop.run_until_complete(
-            asyncio.gather(service1.shutdown(), service2.shutdown()))
+        loop.run_until_complete(asyncio.gather(service1.shutdown(), service2.shutdown()))
         loop.close()
     print('Stop server end')

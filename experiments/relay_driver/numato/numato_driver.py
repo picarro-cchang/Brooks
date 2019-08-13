@@ -3,9 +3,11 @@
     python numato_driver_proto.py "/dev/ttyACM1" 6668
 """
 import time
+
 import serial
-from experiments.testing.cmd_fifo import CmdFIFO
+
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.testing.cmd_fifo import CmdFIFO
 
 GPIO_MODES = ["D_IN", "D_OUT", "A_IN"]
 
@@ -13,12 +15,7 @@ GPIO_MODES = ["D_IN", "D_OUT", "A_IN"]
 class UsbRelay:
     """A class to control a Numato USB relay module."""
 
-    def __init__(self,
-                 port_name,
-                 relay_count=4,
-                 gpio_count=4,
-                 debug=False,
-                 logger=None):
+    def __init__(self, port_name, relay_count=4, gpio_count=4, debug=False, logger=None):
         """Init function."""
         self.portName = port_name
         self.debug = debug
@@ -39,8 +36,7 @@ class UsbRelay:
         if isinstance(logger, LOLoggerClient):
             self.logger = logger
         if logger is None:
-            self.logger = LOLoggerClient(
-                client_name=f"{self.port_name}_NUMATO")
+            self.logger = LOLoggerClient(client_name=f"{self.port_name}_NUMATO")
 
     def init(self):
         """
@@ -56,8 +52,7 @@ class UsbRelay:
             self.set_gpio_status(i, False)
 
     def __wait_for_echo(self, command):
-        while self.serPort.readline().decode().strip().replace(">",
-                                                               "") != command:
+        while self.serPort.readline().decode().strip().replace(">", "") != command:
             time.sleep(0.001)
 
     def __send(self, command, answer_needed=False, wait_after=0.01):
@@ -127,8 +122,7 @@ class UsbRelay:
 
     def do_full_disco(self, cycles):
         for k in range(cycles):
-            self.logger.info(
-                f"Cycle {k} in progress, {100*((k+1.)/cycles)}% done")
+            self.logger.info(f"Cycle {k} in progress, {100*((k+1.)/cycles)}% done")
             for i in range(self.relayCount):
                 self.do_disco(i)
 
@@ -142,9 +136,7 @@ class UsbRelay:
             raise ValueError("gpioNum is bigger than gpioCount")
         if required_mode is not None:
             if self.gpioModes[gpioNum] != required_mode:
-                raise ValueError(
-                    "current gpio mode is wrong, should be {}".format(
-                        required_mode))
+                raise ValueError("current gpio mode is wrong, should be {}".format(required_mode))
 
     def get_gpio_mode(self, gpioNum):
         """
@@ -232,8 +224,7 @@ class NumatoDriver(object):
         if isinstance(logger, LOLoggerClient):
             self.logger = logger
         if logger is None:
-            self.logger = LOLoggerClient(
-                client_name=f"RPC_NUMATO_{self.port_name}")
+            self.logger = LOLoggerClient(client_name=f"RPC_NUMATO_{self.device_port_name}")
 
         self.ur = UsbRelay(port_name=self.device_port_name,
                            relay_count=self.relay_count,
@@ -241,46 +232,35 @@ class NumatoDriver(object):
                            debug=debug,
                            logger=self.logger)
 
-        self.server = CmdFIFO.CmdFIFOServer(
-            ("", self.rpc_server_port),
-            ServerName=self.rpc_server_name,
-            ServerDescription=self.rpc_server_description,
-            threaded=True)
+        self.server = CmdFIFO.CmdFIFOServer(("", self.rpc_server_port),
+                                            ServerName=self.rpc_server_name,
+                                            ServerDescription=self.rpc_server_description,
+                                            threaded=True)
 
         self.register_numato_driver_rpc_functions()
 
     def register_numato_driver_rpc_functions(self):
         """Register all public methods to the rpc server."""
         # disco functions, delete in production
-        self.server.register_function(self.ur.do_full_disco,
-                                      name="NUMATO_full_disco")
+        self.server.register_function(self.ur.do_full_disco, name="NUMATO_full_disco")
         self.server.register_function(self.ur.do_disco, name="NUMATO_do_disco")
 
         # relay functions
-        self.server.register_function(self.ur.get_relay_status,
-                                      name="NUMATO_get_relay_status")
-        self.server.register_function(self.ur.set_relay,
-                                      name="NUMATO_set_relay")
-        self.server.register_function(self.ur.flip_relay,
-                                      name="NUMATO_flip_relay")
+        self.server.register_function(self.ur.get_relay_status, name="NUMATO_get_relay_status")
+        self.server.register_function(self.ur.set_relay, name="NUMATO_set_relay")
+        self.server.register_function(self.ur.flip_relay, name="NUMATO_flip_relay")
 
         # board ID functions
         self.server.register_function(self.ur.set_id, name="NUMATO_set_id")
         self.server.register_function(self.ur.get_id, name="NUMATO_get_id")
 
         # gpio functions
-        self.server.register_function(self.ur.get_gpio_mode,
-                                      name="NUMATO_get_gpio_mode")
-        self.server.register_function(self.ur.set_gpio_mode,
-                                      name="NUMATO_set_gpio_mode")
-        self.server.register_function(self.ur.set_gpio_status,
-                                      name="NUMATO_set_gpio_status")
-        self.server.register_function(self.ur.get_gpio_status,
-                                      name="NUMATO_get_gpio_status")
-        self.server.register_function(self.ur.get_gpio_reading,
-                                      name="NUMATO_get_gpio_reading")
-        self.server.register_function(self.ur.get_gpio_analog_reading,
-                                      name="NUMATO_get_gpio_analog_reading")
+        self.server.register_function(self.ur.get_gpio_mode, name="NUMATO_get_gpio_mode")
+        self.server.register_function(self.ur.set_gpio_mode, name="NUMATO_set_gpio_mode")
+        self.server.register_function(self.ur.set_gpio_status, name="NUMATO_set_gpio_status")
+        self.server.register_function(self.ur.get_gpio_status, name="NUMATO_get_gpio_status")
+        self.server.register_function(self.ur.get_gpio_reading, name="NUMATO_get_gpio_reading")
+        self.server.register_function(self.ur.get_gpio_analog_reading, name="NUMATO_get_gpio_analog_reading")
 
     def rpc_serve_forever(self):
         """
@@ -296,25 +276,11 @@ def parse_arguments():
     """
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("serial_port_name",
-                        help="serial port name of the Numato relay board",
-                        default="/dev/ttyACM1")
-    parser.add_argument("rpc_server_port",
-                        type=int,
-                        help="port for an rpc server to accept client",
-                        default=6668)
-    parser.add_argument("-n",
-                        "--name",
-                        help="name for an rpc server",
-                        default="NumatoDriver")
-    parser.add_argument("-rc",
-                        "--relay_count",
-                        help="how many relays in this board",
-                        default=4)
-    parser.add_argument("-gc",
-                        "--gpio_count",
-                        help="how many gpios in this board",
-                        default=4)
+    parser.add_argument("serial_port_name", help="serial port name of the Numato relay board", default="/dev/ttyACM1")
+    parser.add_argument("rpc_server_port", type=int, help="port for an rpc server to accept client", default=6668)
+    parser.add_argument("-n", "--name", help="name for an rpc server", default="NumatoDriver")
+    parser.add_argument("-rc", "--relay_count", help="how many relays in this board", default=4)
+    parser.add_argument("-gc", "--gpio_count", help="how many gpios in this board", default=4)
 
     args = parser.parse_args()
     return args
@@ -328,28 +294,22 @@ def main():
     else:
         rpc_server_name = "NUMATO_{}".format(args.serial_port_name)
 
-    logger = LOLoggerClient(client_name=f"RPC_NUMATO_{args.serial_port_name}",
-                            verbose=True)
+    logger = LOLoggerClient(client_name=f"RPC_NUMATO_{args.serial_port_name}", verbose=True)
 
-    numato_driver = NumatoDriver(
-        device_port_name=args.serial_port_name,
-        rpc_server_port=args.rpc_server_port,
-        rpc_server_name=args.name,
-        rpc_server_description="Driver for Numato RelayBoard",
-        relay_count=args.relay_count,
-        gpio_count=args.gpio_count,
-        logger=logger)
-    logger.info(
-        f"Numato Relay Board Driver for {args.serial_port_name} created.")
-    logger.info(
-        f"RPC server will be available at {args.rpc_server_port} in a sec.")
+    numato_driver = NumatoDriver(device_port_name=args.serial_port_name,
+                                 rpc_server_port=args.rpc_server_port,
+                                 rpc_server_name=args.name,
+                                 rpc_server_description="Driver for Numato RelayBoard",
+                                 relay_count=args.relay_count,
+                                 gpio_count=args.gpio_count,
+                                 logger=logger)
+    logger.info(f"Numato Relay Board Driver for {args.serial_port_name} created.")
+    logger.info(f"RPC server will be available at {args.rpc_server_port} in a sec.")
 
     try:
         numato_driver.rpc_serve_forever()
     except KeyboardInterrupt:
-        logger.info(
-            "RPC server has ended it's lifecycle after brutal KeyboardInterrupt, good job."
-        )
+        logger.info("RPC server has ended it's lifecycle after brutal KeyboardInterrupt, good job.")
 
     logger.info("RPC server has ended")
 

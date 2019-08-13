@@ -119,6 +119,7 @@ Signal.register("EMPTY")  # 0
 Signal.register("ENTRY")  # 1
 Signal.register("EXIT")  # 2
 Signal.register("INIT")  # 3
+Signal.register("TERMINATE")  # 3
 
 # Signals that mirror POSIX signals
 Signal.register("SIGINT")  # (i.e. Ctrl+C)
@@ -138,6 +139,7 @@ Event.EMPTY = Event(Signal.EMPTY, None)
 Event.ENTRY = Event(Signal.ENTRY, None)
 Event.EXIT = Event(Signal.EXIT, None)
 Event.INIT = Event(Signal.INIT, None)
+Event.TERMINATE = Event(Signal.TERMINATE, None)
 
 # Events for POSIX signals
 Event.SIGINT = Event(Signal.SIGINT, None)  # (i.e. Ctrl+C)
@@ -610,12 +612,11 @@ class Framework(object):
 
         # Post SIGTERM to all Ahsms so they execute their EXIT handler
         for act in Framework._ahsm_registry:
-            Framework.post(Event.SIGTERM, act)
+            Framework.post(Event.TERMINATE, act)
 
         # Run to completion so each Ahsm will process SIGTERM
         Framework.run()
         Framework._event_loop.stop()
-
         Spy.on_framework_stop()
 
     @staticmethod

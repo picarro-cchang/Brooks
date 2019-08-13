@@ -17,22 +17,21 @@ ds_name = "test_datasource"
 
 # Create a test datasource
 sample_ds = {
-  "name": ds_name,
-  "type": "influxdb",
-  "url": "http://localhost:8086",
-  "database": "pigss_data",
-  "access": "proxy",
-  "basicAuth": False
+    "name": ds_name,
+    "type": "influxdb",
+    "url": "http://localhost:8086",
+    "database": "pigss_sim_data",
+    "access": "proxy",
+    "basicAuth": False
 }
 
 try:
     print(grafana_api.datasource.find_datasource(ds_name))
 except GrafanaClientError:
     print("Datasource does not exist - Creating")
-    print(grafana_api.datasource.create_datasource(sample_ds))    
+    print(grafana_api.datasource.create_datasource(sample_ds))
 else:
     print("Datasource already exists")
-
 
 result = grafana_api.datasource.list_datasources()
 print(result)

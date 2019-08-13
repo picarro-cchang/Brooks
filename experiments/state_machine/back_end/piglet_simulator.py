@@ -9,7 +9,11 @@ import time
 
 import attr
 
+from experiments.common.async_helper import log_async_exception
+from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+
 opstates = {"power_up", "standby", "ident", "ident_2", "sampling", "clean", "reference", "fault", "power_off"}
+log = LOLoggerClient(client_name=f"PigletSimulator", verbose=True)
 
 
 @attr.s
@@ -25,6 +29,10 @@ class PigletSimulator:
     active_chan = attr.ib(factory=lambda: 8 * [0])
     mfc_value = attr.ib(0)
     clean_solenoid_state = attr.ib(0)
+
+    def __attrs_post_init__(self):
+        self.task = asyncio.create_task(self.fsm())
+        log.info(f"Starting piglet simulator at bank {self.bank}")
 
     async def cli(self, command):
         atoms = command.upper().split()
@@ -78,10 +86,15 @@ class PigletSimulator:
                     result = f"{self.bank}"
                 else:
                     result = "-1"
-        except:
+        except Exception:
             result = "-1"
         return result
 
+    def shutdown(self):
+        log.info(f"Stopping piglet simulator at bank {self.bank}")
+        self.task.cancel()
+
+    @log_async_exception(log_func=log.warning, stop_loop=True)
     async def fsm(self):
         self.opstate_changed.set()
         while True:
