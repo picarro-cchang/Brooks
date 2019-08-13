@@ -35,14 +35,11 @@ class ControllerService:
          affect the system.
         """
         farm = app['farm']
-        try:
-            while True:
-                msg = await farm.send_queue.get()
-                # print(f"Websocket send: {msg}")
-                for ws in app['websockets']:
-                    await ws.send_str(msg)
-        except asyncio.CancelledError:
-            pass
+        while True:
+            msg = await farm.send_queue.get()
+            # print(f"Websocket send: {msg}")
+            for ws in app['websockets']:
+                await ws.send_str(msg)
 
     async def on_startup(self, app):
         self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))

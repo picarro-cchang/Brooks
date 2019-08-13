@@ -33,12 +33,9 @@ class Server:
 
     @log_async_exception(stop_loop=True)
     async def dotty(self):
-        try:
-            while True:
-                await asyncio.sleep(1.0)
-                print(".", end="", flush=True)
-        except asyncio.CancelledError:
-            pass
+        while True:
+            await asyncio.sleep(1.0)
+            print(".", end="", flush=True)
 
     @log_async_exception(stop_loop=True)
     async def server_init(self):

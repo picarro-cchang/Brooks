@@ -50,8 +50,9 @@ def setbits(mask):
 class PigssController(Ahsm):
     num_chans_per_bank = 8
 
-    def __init__(self):
+    def __init__(self, farm=None):
         super().__init__()
+        self.farm = farm
         self.error_list = collections.deque(maxlen=32)
         self.status = {}
         self.all_banks = []
@@ -392,12 +393,21 @@ class PigssController(Ahsm):
         return self.tran(self._operational)
 
     @state
+    def _exit(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            return self.handled(e)
+        return self.super(self.top)
+
+    @state
     def _configure(self, e):
         sig = e.signal
         if sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
             return self.tran(self._operational)
+        elif sig == Signal.TERMINATE:
+            return self.tran(self._exit)
         return self.super(self.top)
 
     @state
@@ -420,9 +430,6 @@ class PigssController(Ahsm):
             return self.tran(self._standby)
         elif sig == Signal.MODAL_CLOSE:
             self.set_modal_info(["show"], False)
-            return self.handled(e)
-        elif sig == Signal.TERMINATE:
-            Framework.stop()
             return self.handled(e)
         elif sig == Signal.BTN_STANDBY:
             return self.tran(self._standby)
