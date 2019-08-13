@@ -93,6 +93,13 @@ int8_t system_enter_standby(void) {
   case system_state_STANDBY:
     break;
   case system_state_CONTROL:
+    // Transition from CONTROL to STANDBY
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // Clean solenoid --> OFF
+    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to STANDBY"));
+    set_system_state(system_state_STANDBY);
     break;
   default:
     logger_msg_p("system", log_level_ERROR,
