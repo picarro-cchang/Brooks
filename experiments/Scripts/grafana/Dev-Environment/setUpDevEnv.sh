@@ -73,12 +73,6 @@ if [ ! -d /usr/local/go ]; then
     source ${HOME}/.bashrc
 fi
 
-# Clone I2000-Host repo
-echo "Cloning I2000-Host Repo... Enter a branch: "
-read branchName
-git clone -b "${branchName}" https://github.com/picarro/I2000-Host.git host
-
-
 # Build Grafana back-end
 export GOPATH=$HOME/go
 export PATH=/usr/local/go/bin
