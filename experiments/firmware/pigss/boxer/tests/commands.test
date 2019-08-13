@@ -147,7 +147,8 @@ tcltest::test "[string toupper $command]" "$description" -body {
 
 ############################## chanset ###############################
 
-tcltest::test chanset {
+# Test recognizing the command
+tcltest::test chanset.recognize {
     Test recognizing the chanset command
 } -setup {
     boxer::sendcmd $channel "*rst"
@@ -158,6 +159,19 @@ tcltest::test chanset {
 } -cleanup {
 
 } -match regexp -result 0
+
+# System should go into control when a channel is enabled
+tcltest::test chanset.control {
+    Make sure system goes into control when a channel is enabled.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "opstate?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+
+} -match regexp -result "control"
 
 ############################## chanset? ##############################
 

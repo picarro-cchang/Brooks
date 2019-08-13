@@ -143,6 +143,11 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
 		 "standby",
 		 LINE_TERMINATION_CHARACTERS );
     break;
+  case system_state_CONTROL:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "control",
+		 LINE_TERMINATION_CHARACTERS );
+    break; 
   default:
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "none",

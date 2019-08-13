@@ -32,6 +32,9 @@
 
 #include "spi.h"
 
+// Provides functions for handling system states
+#include "system.h"
+
 // Provides commands for working with bypass DACs
 #include "pressure.h"
 
@@ -116,6 +119,14 @@ int8_t channel_update() {
     }
     channel_array_index++;
   }
+  if (enabled_channels > 0) {
+    // If any channel is enabled, we need to be in control mode
+    retval += system_enter_control();
+  } else {
+    // There are no enabled channels.  This means we're in standby.
+    // retval += system_enter_standby();
+  }
+  
   // Update hardware.  Disabled channels are energized.
   uint8_t topaz_a_byte = channel_hardware_byte;
   uint8_t topaz_b_byte = channel_hardware_byte >> 4;
@@ -142,6 +153,8 @@ int8_t channel_update() {
 		 'b');
     retval += -1;
   }
+
+  
   return retval;
 }
 
