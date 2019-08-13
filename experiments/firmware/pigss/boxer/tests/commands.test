@@ -111,7 +111,6 @@ tcltest::test "[string toupper $command]" "$description" -body {
     return $return_string
 } -match regexp -result $ok_result
 
-
 set command "chanena?"
 set description "Query enable status of channels 1-8"
 set ok_result 1
@@ -157,25 +156,40 @@ tcltest::test chanset {
     set return_string [boxer::readline $channel]
     return $return_string
 } -cleanup {
-    
+
 } -match regexp -result 0
 
 ############################## chanset? ##############################
 
-tcltest::test "chanset?" \
-    "Test using chanset? to query the channel configuration" \
-    -setup {
-	boxer::sendcmd $channel "*rst"
-	boxer::sendcmd $channel "chanset 10"
-	set return_string [boxer::readline $channel]
-    } -body {
-	boxer::sendcmd $channel "chanset?"
-	set return_string [boxer::readline $channel]
-	return $return_string
-    } -cleanup {
-	
-    } -match regexp -result 10
+tcltest::test chanset? {
+    Test using chanset? to query the channel configuration
+} -setup {
+    boxer::sendcmd $channel "*rst"
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 10"
+    set return_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
 
+} -match regexp -result 10
+
+############################## standby ###############################
+
+tcltest::test standby {
+    Test recognizing the standby command
+} -setup {
+    boxer::sendcmd $channel "*rst"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 0
 
 ############################### slotid ###############################
 
@@ -301,7 +315,6 @@ tcltest::test "tza.sn" "Check setting a new Topaz A serial number" -body {
     set return_string [boxer::readline $channel]
     return $return_string
 } -match regexp -result $topaz_sn
-
 
 ############################ prs.in.raw? #############################
 

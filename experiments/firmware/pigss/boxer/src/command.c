@@ -200,6 +200,11 @@ command_t command_array[] = {
    "uint16",
    1,
    &cmd_pressure_dac_query},
+  // standby -- Enter standby state
+  {"standby",
+   "none",
+   0,
+   &cmd_standby},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
@@ -400,7 +405,7 @@ void command_exec( command_t *command, char *argument,
   }
 }
 
-void command_ack() {
+void command_ack( void ) {
   usart_printf(USART_CHANNEL_COMMAND, "0%s", LINE_TERMINATION_CHARACTERS);
 }
 

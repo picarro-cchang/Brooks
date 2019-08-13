@@ -224,9 +224,12 @@ int main() {
       break;
     case system_state_ID_CHANNELS:
       break;
+    case system_state_CONTROL:
+      break;
     default:
       logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
 		   system_state_ptr -> state_enum);
+      break;
 
     }
 

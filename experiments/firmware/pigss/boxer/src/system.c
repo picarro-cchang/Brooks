@@ -78,6 +78,7 @@ system_state_value_t get_system_state( void ) {
 }
 
 int8_t system_enter_standby(void) {
+  int8_t retval = 0;
   switch( system_state.state_enum ) {
   case system_state_INIT:
     // Transition from INIT to STANDBY
@@ -91,10 +92,16 @@ int8_t system_enter_standby(void) {
     break;
   case system_state_STANDBY:
     break;
+  case system_state_CONTROL:
+    break;
   default:
+    logger_msg_p("system", log_level_ERROR,
+		 PSTR("Enter standby from bad system state %d"),
+		 system_state_ptr -> state_enum);
+    retval += -1;
     break;
   }
-  return 0;
+  return retval;
 }
 
 void cmd_rst( command_arg_t *command_arg_ptr ) {
@@ -127,6 +134,18 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
   usart_printf(USART_CHANNEL_COMMAND, "%u%s",
 	       system_state_ptr -> slotid,
 	       LINE_TERMINATION_CHARACTERS);
+}
+
+void cmd_standby( command_arg_t *command_arg_ptr ) {
+  int8_t retval = 0;
+  retval = system_enter_standby();
+  if (retval == 0) {
+    command_ack();
+    return;
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
 }
 
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {

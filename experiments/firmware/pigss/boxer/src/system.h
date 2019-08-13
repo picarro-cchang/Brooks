@@ -14,7 +14,7 @@ typedef enum system_state_enum {
 				system_state_STANDBY,
 				system_state_INIT,
 				system_state_ID_CHANNELS,
-				system_state_CONTROLLING
+				system_state_CONTROL
 } system_state_value_t;
 
 // Overall system state structure
@@ -41,7 +41,6 @@ extern system_state_t *system_state_ptr;
 // may not be what you asked for.
 system_state_value_t set_system_state(system_state_value_t requested_state);
 
-
 // Function called by the *idn? command
 void cmd_idn_q( command_arg_t *command_arg_ptr );
 
@@ -53,6 +52,9 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr );
 
 // Function called by the slotid? command
 void cmd_slotid_q( command_arg_t *command_arg_ptr );
+
+// Function called by the standby command
+void cmd_standby( command_arg_t *command_arg_ptr );
 
 // Initialize the system state structure.  This populates the
 // structure with non-volatile values from eeprom.

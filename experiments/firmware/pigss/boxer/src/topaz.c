@@ -23,6 +23,9 @@
 // system and severity.
 #include "logger.h"
 
+// Provides functions for working with the TCA9548 I2C switch
+#include "tca954xa.h"
+
 // Provides setter and getter functions for the system state structure
 #include "system.h"
 
