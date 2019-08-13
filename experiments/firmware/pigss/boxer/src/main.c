@@ -158,7 +158,7 @@ int main(void) {
   logger_setsystem( "cal" );
 
   // logger_setsystem( "tca9539" );
-  // logger_setsystem( "spi" );
+  logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
 
   logger_setsystem( "ltc2607" );
@@ -264,6 +264,7 @@ int main(void) {
 
 // Interrupt on character received via the USART
 ISR(USART0_RX_vect) {
+  cli();
   // Write the received character to the buffer
   *(recv_cmd_state_ptr -> rbuffer_write_ptr) = UDR0;
   if (*(recv_cmd_state_ptr -> rbuffer_write_ptr) == '\r') {
@@ -273,6 +274,7 @@ ISR(USART0_RX_vect) {
       // We got a terminator, but the received character buffer is
       // empty.  The user is trying to clear the transmit and
       // receive queues.
+      sei();
       return;
     }
     else {
@@ -284,6 +286,7 @@ ISR(USART0_RX_vect) {
 	logger_msg_p("rxchar",log_level_ERROR,
 		     PSTR("Command process speed error!"));
 	rbuffer_erase(recv_cmd_state_ptr);
+	sei();
 	return;
       }
       else {
@@ -299,6 +302,7 @@ ISR(USART0_RX_vect) {
 		     PSTR("Parse buffer contains '%s'"),
 		     (recv_cmd_state_ptr -> pbuffer));
 	rbuffer_erase(recv_cmd_state_ptr);
+	sei();
 	return;
       }
     }
@@ -315,6 +319,7 @@ ISR(USART0_RX_vect) {
 		   PSTR("Received character number above limit"));
       command_nack(NACK_BUFFER_OVERFLOW);
       rbuffer_erase(recv_cmd_state_ptr);
+      sei();
       return;
     }
     else {
@@ -322,6 +327,7 @@ ISR(USART0_RX_vect) {
       (recv_cmd_state_ptr -> rbuffer_write_ptr)++;
     }
   }
+  sei();
   return;
 }
 

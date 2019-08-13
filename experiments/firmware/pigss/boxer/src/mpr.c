@@ -37,21 +37,33 @@ int8_t mpr_init( void (*cs_ptr)(uint8_t) ) {
 }
 
 int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
+  int8_t retval = 0;
   // Write 0xaa, followed by 0x0 and 0x0 to trigger the measurement
   uint8_t bytes[3] = {0xaa, 0x00, 0x00};
+  uint8_t status_byte = 0;
 
   // Pull cs low
   (*cs_ptr)(0);
 
   // Write the data starting with bytes[0] (0xaa)
   for (int8_t bytenum = 0; bytenum <= 2; bytenum++) {
-    spi_write(bytes[bytenum]);
+    if (bytenum == 0) {
+      // The first 0xaa write will return the status byte
+      status_byte = spi_write(bytes[bytenum]);
+    } else {
+      spi_write(bytes[bytenum]);
+    }
   }
-
+  if (status_byte != 0x40) {
+    // The correct status byte is 0x40
+    // logger_msg_p("mpr", log_level_ERROR, PSTR("MPR status is %i"),
+    // 		 status_byte);
+    retval += -1;
+  }
   // Return cs high
   (*cs_ptr)(1);
 
-  return 0;
+  return retval;
 }
 
 int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
@@ -80,7 +92,7 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
   }
   logger_msg_p("mpr", log_level_DEBUG, PSTR("Pressure code 0x%lx"),data_union.word);
   *data_ptr = data_union.word;
-  
+
   // Return cs high
   (*cs_ptr)(1);
 

@@ -93,10 +93,15 @@ void offset_task() {
 
 // The metronome interrupt -- interrupt for timer 1 compare match C
 ISR(TIMER1_COMPC_vect) {
-  // logger_msg_p("metronome", log_level_INFO, PSTR("Tick"));
+  // Disable interrupts.  This may affect incoming characters, but
+  // this interrupt gets top priority.
+  cli();
 
   // Reset the counter
   TCNT1 = 0;
   OS_TaskTimer();
+
+  // Re-enable interrupts
+  sei();
   return;
 }

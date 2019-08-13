@@ -85,6 +85,17 @@ ${log}::warn "Warn message"
 package require tcltest
 tcltest::configure -singleproc true
 
+set skiplist [list]
+# lappend skiplist chanset.*
+# lappend skiplist slotid*
+# lappend skiplist slotid?*
+# lappend skiplist standby*
+
+
+
+
+tcltest::configure -skip $skiplist
+
 # Set verbosity to print output when a test passes
 tcltest::configure -verbose {body pass start error}
 
