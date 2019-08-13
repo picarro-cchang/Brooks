@@ -76,7 +76,7 @@ fi
 
 # Build Grafana back-end
 export GOPATH=$HOME/go
-export PATH=/usr/local/go/bin
+export PATH=/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 export PYTHONPATH=${gitDir}
 cd $grafanaDir
 go run build.go setup
