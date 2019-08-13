@@ -57,11 +57,7 @@ void cs_init() {
 }
 
 
-void cs_manifold_a_sr(uint8_t state) {
-  // Set the state of the CS line for the shift register on manifold A
-  //
-  // Arguments:
-  //   state -- 1 for CS high, 0 for CS low
+int8_t cs_manifold_a_sr(uint8_t state) {
   if ( state ) {
     // Set cs high
     PORTB |= _BV(PORTB0);
@@ -71,7 +67,8 @@ void cs_manifold_a_sr(uint8_t state) {
     PORTB &= ~(_BV(PORTB0));
     loop_until_bit_is_clear(PORTB, PORTB0);
   }
-  return;
+  // There aren't a lot of ways for this to fail.
+  return 0;
 }
 
 

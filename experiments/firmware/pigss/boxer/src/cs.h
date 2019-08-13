@@ -3,7 +3,11 @@
 
 void cs_init(void);
 
-void cs_manifold_a_sr(uint8_t);
+// Set the state of the CS line for Topaz A shift register
+//
+// Arguments:
+//   state -- 1 for CS high, 0 for CS low
+int8_t cs_manifold_a_sr(uint8_t state);
 
 void cs_manifold_b_sr(uint8_t);
 
