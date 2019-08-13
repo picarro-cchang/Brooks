@@ -25,12 +25,14 @@
 
 #include "spi.h"
 
+#include "ltc2601.h"
+
 
 void ltc2601_init() {
   // Assume spi has already been initialized
 }
 
-uint8_t ltc2601_write( uint16_t (*cs_ptr)(uint8_t), uint8_t command, uint16_t value ) {
+uint8_t ltc2601_write( void (*cs_ptr)(uint8_t), uint8_t command, uint16_t value ) {
   // Make a union to write bytes of value one at a time
   union {
     uint8_t bytes[2];

@@ -19,6 +19,9 @@
 // Functions for using the logger
 #include "logger.h"
 
+// Functions for working with SPI bus
+#include "spi.h"
+
 #include "cs.h"
 
 void cs_init() {

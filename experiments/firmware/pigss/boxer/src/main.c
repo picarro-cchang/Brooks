@@ -88,11 +88,14 @@
 // Pressure control module
 #include "pressure.h"
 
+// Provides watchdog_init()
+#include "watchdog.h"
+
 // Define a pointer to the received command state
 recv_cmd_state_t  recv_cmd_state;
 recv_cmd_state_t *recv_cmd_state_ptr = &recv_cmd_state;
 
-int main() {
+int main(void) {
 
   sei(); // Enable interrupts
 
@@ -200,6 +203,10 @@ int main() {
     // We're debugging.  Slow the reads way down.
     pressure_read_period_ms = 2000;
     mpr_read_delay_ms = 1000;
+  } else if (strcmp( LOG_LEVEL, "info" ) == 0) {
+    // We're debugging.  Slow the reads way down.
+    pressure_read_period_ms = 2000;
+    mpr_read_delay_ms = 1000;  
   } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
     // This could be a release.  The minimum read delay is 5ms.
     pressure_read_period_ms = 10;

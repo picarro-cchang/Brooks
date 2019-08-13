@@ -111,6 +111,7 @@ int8_t system_enter_control(void) {
     // Transition from INIT to CONTROL is forbidden
     break;
   case system_state_STANDBY:
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CONTROL"));
     set_system_state(system_state_CONTROL);
     break;
   case system_state_CONTROL:

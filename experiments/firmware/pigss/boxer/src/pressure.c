@@ -89,7 +89,7 @@ uint32_t pressure_outlet_new_pascals[2] = {0ul,0ul};
 // Each DAC will have an entry in this array.  Channel 1 will be the
 // first entry.
 uint16_t pressure_dac_counts[8] =
-  {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
+  {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {

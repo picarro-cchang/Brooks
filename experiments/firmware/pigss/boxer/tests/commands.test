@@ -192,7 +192,7 @@ tcltest::test chanset? {
 
 ############################## standby ###############################
 
-tcltest::test standby {
+tcltest::test standby.recognize {
     Test recognizing the standby command
 } -setup {
     boxer::sendcmd $channel "*rst"

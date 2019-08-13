@@ -19,7 +19,7 @@ void ltc2601_init(void);
 // |  0 |  1 |  0 |  0 |     0x4 | Power down                                  |
 // |  1 |  1 |  1 |  1 |     0xf | No operation                                |
 // |----+----+----+----+---------+---------------------------------------------|
-uint8_t ltc2601_write( uint16_t (*cs_ptr)(uint8_t), uint8_t command, uint16_t data );
+uint8_t ltc2601_write( void (*cs_ptr)(uint8_t), uint8_t command, uint16_t data );
 
 // Calling this function over and over again will produce a voltage ramp
 uint8_t ltc2601_ramp_test(void);

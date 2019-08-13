@@ -99,16 +99,14 @@ foreach alias [connection::get_potential_aliases] {
 	# channel is configured, resetting the part.  We have to wait
 	# for the bootloader to time out and for rebooting to happen
 	# before we can send commands.
-	after 2000
+	after 5000
 	${log}::debug "Alias $alias can be configured"
 	dict set state channel $channel
 	dict set state alias $alias
 	# Set up snowball to accept commands
 	# boxer::init $channel
 	# Ask for identity
-	# boxer::sendcmd $channel "*idn?"
-	puts -nonewline $channel "*idn?\r"
-	after 5000
+	boxer::sendcmd $channel "*idn?"
 	# Read the response
 	try {
 	    set data [boxer::readline $channel]
