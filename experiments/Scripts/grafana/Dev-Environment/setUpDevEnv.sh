@@ -6,7 +6,7 @@
 
 # Picarro Git paths
 gitDir="${HOME}/git"
-grafanaDir="${gitDir}/experiments/grafana/src/github.com/grafana/grafana"
+grafanaDir="${gitDir}/host/experiments/grafana/src/github.com/grafana/grafana"
 
 # Do a full update/upgrade
 sudo apt update
