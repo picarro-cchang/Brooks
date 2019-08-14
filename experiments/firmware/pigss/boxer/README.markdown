@@ -240,6 +240,14 @@ Query the system's operational state.
 
 `standby`
 
+#### STANDBY ####
+
+Put the system in standby mode.  This will disable all channels and configure their bypass valves for the default flow.  This command may fail if the `standby` state isn't accessible from the current state.
+
+##### Typical Return #####
+
+`0`
+
 #### TZA.SN n ####
 
 Set the serial number for manifold (Topaz) board A.
