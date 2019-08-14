@@ -173,6 +173,21 @@ tcltest::test chanset.control {
 
 } -match regexp -result "control"
 
+# System should go back to standby when no channels are enabled
+tcltest::test chanset.standby {
+    Make sure system goes into standby when all channels are disabled
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 0"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "opstate?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+
+} -match regexp -result "standby"
+
 ############################## chanset? ##############################
 
 tcltest::test chanset? {

@@ -124,7 +124,7 @@ int8_t channel_update() {
     retval += system_enter_control();
   } else {
     // There are no enabled channels.  This means we're in standby.
-    // retval += system_enter_standby();
+    set_system_state(system_state_STANDBY);
   }
   
   // Update hardware.  Disabled channels are energized.
