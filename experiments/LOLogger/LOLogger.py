@@ -346,7 +346,7 @@ class LOLoggerThread(threading.Thread):
                             obj_for_json = {col_name[0]: value for col_name, value in zip(db_fields, data)}
                             obj_for_json["rowid"] = self.rowid
                             self.rowid += 1
-                            string_row = json.dumps(obj_for_json["rowid"])
+                            string_row = json.dumps(obj_for_json)
                             string_to_flush = f"{string_to_flush}{string_row}\n"
                         self.json_file.write(string_to_flush)
                         self.json_file.flush()
