@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1565626256677,
+  "iteration": 1565629969457,
   "links": [],
   "panels": [
     {
@@ -50,7 +50,7 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 0,
         "y": 1
       },
@@ -195,7 +195,7 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
@@ -220,19 +220,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 6,
         "y": 1
       },
       "hideTimeOverride": true,
       "id": 55,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -367,11 +367,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -393,19 +392,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 12,
         "y": 1
       },
       "hideTimeOverride": true,
       "id": 56,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -540,11 +539,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -566,19 +564,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 18,
         "y": 1
       },
       "hideTimeOverride": true,
       "id": 57,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -713,11 +711,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -739,19 +736,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 0,
         "y": 9
       },
       "hideTimeOverride": true,
       "id": 58,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -886,11 +883,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -912,19 +908,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 6,
         "y": 9
       },
       "hideTimeOverride": true,
       "id": 59,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1059,11 +1055,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1085,19 +1080,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 12,
         "y": 9
       },
       "hideTimeOverride": true,
       "id": 60,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1232,11 +1227,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1258,19 +1252,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 18,
         "y": 9
       },
       "hideTimeOverride": true,
       "id": 61,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1405,11 +1399,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1431,19 +1424,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 0,
         "y": 17
       },
       "hideTimeOverride": true,
       "id": 62,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1578,11 +1571,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1604,19 +1596,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 6,
         "y": 17
       },
       "hideTimeOverride": true,
       "id": 63,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1751,11 +1743,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1777,19 +1768,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 12,
         "y": 17
       },
       "hideTimeOverride": true,
       "id": 64,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1924,11 +1915,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1950,19 +1940,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 18,
         "y": 17
       },
       "hideTimeOverride": true,
       "id": 65,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2097,11 +2087,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -2123,19 +2112,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 0,
         "y": 25
       },
       "hideTimeOverride": true,
       "id": 66,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2270,11 +2259,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -2296,19 +2284,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 6,
         "y": 25
       },
       "hideTimeOverride": true,
       "id": 67,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2443,11 +2431,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -2469,19 +2456,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 12,
         "y": 25
       },
       "hideTimeOverride": true,
       "id": 68,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2616,11 +2603,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -2642,19 +2628,19 @@
       "fontSize": "110%",
       "gridPos": {
         "h": 8,
-        "w": 5,
+        "w": 6,
         "x": 18,
         "y": 25
       },
       "hideTimeOverride": true,
       "id": 69,
       "links": [],
-      "maxPerRow": 6,
+      "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565626256677,
+      "repeatIteration": 1565629969457,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2789,11 +2775,10 @@
           "tz": ""
         }
       ],
-      "timeFrom": "$avg_time",
+      "timeFrom": null,
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     }
   ],
@@ -2827,24 +2812,6 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
-      },
-      {
-        "current": {
-          "text": "16m",
-          "value": "16m"
-        },
-        "hide": 0,
-        "label": "Interval to average",
-        "name": "avg_time",
-        "options": [
-          {
-            "text": "1h",
-            "value": "1h"
-          }
-        ],
-        "query": "16m",
-        "skipUrlSync": false,
-        "type": "textbox"
       },
       {
         "current": {
@@ -2900,5 +2867,5 @@
   "timezone": "",
   "title": "Summary",
   "uid": "vCQ3IOvWk",
-  "version": 1
+  "version": 3
 }
