@@ -1188,7 +1188,7 @@ class PigssController(Ahsm):
 if __name__ == "__main__":
     # Uncomment this line to get a visual execution trace (to demonstrate debugging)
     from async_hsm.SimpleSpy import SimpleSpy
-    Spy.enable_spy(SimpleSpy)
+    # Spy.enable_spy(SimpleSpy)
 
     pc = PigssController()
     pc.start(1)

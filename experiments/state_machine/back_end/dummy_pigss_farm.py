@@ -7,7 +7,7 @@ from async_hsm import Spy, Event, Framework, Signal
 
 from experiments.state_machine.back_end.pigss_controller import PigssController
 from experiments.state_machine.back_end.piglet_manager import PigletManager
-from experiments.state_machine.back_end.pigss_supervisor import PigssSupervisor
+from experiments.state_machine.back_end.dummy_supervisor import DummySupervisor as PigssSupervisor
 
 
 @attr.s

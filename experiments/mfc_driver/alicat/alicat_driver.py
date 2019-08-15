@@ -9,7 +9,7 @@ from host.experiments.common.rpc_ports import rpc_ports
 #   Remove local import for CmdFIFO
 #   Remove hardcoded host
 #   Remove hardcoded port
-import CmdFIFO
+from host.experiments.testing.cmd_fifo import CmdFIFO
 
 
 class AlicatDriver(object):
@@ -17,8 +17,8 @@ class AlicatDriver(object):
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
-    def __init__(self, port, rpc_port, carriage_return='\r',
-                 mfc_id='A', baudrate=19200):
+
+    def __init__(self, port, rpc_port, carriage_return='\r', mfc_id='A', baudrate=19200):
         self.serial = None
         self.terminate = False
         self.data_dict = None
@@ -27,13 +27,11 @@ class AlicatDriver(object):
         self.baudrate = baudrate
         self.carriage_return = carriage_return
         self.rpc_port = rpc_port
-        self.rpc_server = CmdFIFO.CmdFIFOServer(
-            ("", self.rpc_port),
-            ServerName=__class__.__name__,
-            ServerDescription=f"RPC Server for {__class__.__name__}",
-            ServerVersion=1.0,
-            threaded=True
-        )
+        self.rpc_server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
+                                                ServerName=__class__.__name__,
+                                                ServerDescription=f"RPC Server for {__class__.__name__}",
+                                                ServerVersion=1.0,
+                                                threaded=True)
         self.connect()
         self.register_rpc_functions()
         self.rpc_server.serve_forever()

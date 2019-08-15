@@ -9,7 +9,9 @@ import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
 import { ModalInfo, PlanPanelTypes } from './Types';
 
-const socketURL = `ws://${window.location.hostname}:8004/controller/ws`
+const apiLoc = `${window.location.hostname}:8004/controller`;
+// const apiLoc = `${window.location.hostname}:8000`;
+const socketURL = `ws://${apiLoc}/ws`
 class Main extends Component<any, any> {
     state = {
         initialized: false,
@@ -55,7 +57,7 @@ class Main extends Component<any, any> {
     }
 
     getDataViaApi = () => {
-        let p1 = PicarroAPI.getRequest(`http://${window.location.hostname}:8004/controller/uistatus`).then(
+        let p1 = PicarroAPI.getRequest(`http://${apiLoc}/uistatus`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -63,7 +65,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p2 = PicarroAPI.getRequest(`http://${window.location.hostname}:8004/controller/plan`).then(
+        let p2 = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -71,7 +73,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p3 = PicarroAPI.getRequest(`http://${window.location.hostname}:8004/controller/modal_info`).then(
+        let p3 = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");

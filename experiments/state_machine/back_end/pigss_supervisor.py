@@ -5,15 +5,21 @@ import os
 import attr
 from aiomultiprocess import Process
 
-from experiments.testing.cmd_fifo import CmdFIFO
+from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
+from async_hsm.SimpleSpy import SimpleSpy
+from experiments.common.async_helper import log_async_exception
 from experiments.common.rpc_ports import rpc_ports
 from experiments.IDriver.DBWriter.InfluxDBWriter import InfluxDBWriter
 from experiments.IDriver.IDriver import PicarroAnalyzerDriver
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.madmapper.madmapper import MadMapper
 from experiments.mfc_driver.alicat.alicat_driver import AlicatDriver
-from experiments.piglet.piglet_driver import PigletDriver
 from experiments.relay_driver.numato.numato_driver import NumatoDriver
+# from experiments.piglet.piglet_driver import PigletDriver
+from experiments.state_machine.back_end.dummy_piglet_driver import PigletDriver
+from experiments.state_machine.back_end.pigss_payloads import \
+    SystemConfiguration
+from experiments.testing.cmd_fifo import CmdFIFO
 
 host = "10.100.3.28"
 port = rpc_ports.get('madmapper')
@@ -62,6 +68,7 @@ class ProcessWrapper:
         await asyncio.sleep(0.1)
         return self.rpc_wrapper
 
+    @log_async_exception(log_func=log.warning, stop_loop=True)
     async def pinger(self, period):
         try:
             while True:
@@ -84,17 +91,53 @@ async def dotty():
         await asyncio.sleep(0.5)
 
 
-class PigssSupervisor:
+class PigssSupervisor(Ahsm):
     def __init__(self, farm=None):
         log.info("Starting PigssSupervisor")
         self.farm = farm
+        self.farm.RPC = {}
         self.process_wrappers = {}  # List of Process objects
+        self.tasks = []
         self.device_dict = {}
+        self.bank_list = []
         with open(tunnel_configs, "r") as f:
             self.rpc_tunnel_config = json.loads(f.read())
         log.info(f"RPC Tunnel settings loaded from {tunnel_configs}")
 
+    @state
+    def _initial(self, e):
+        Framework.subscribe("SYSTEM_CONFIGURE", self)
+        Framework.subscribe("TERMINATE", self)
+        return self.tran(self._operational)
+
+    @state
+    def _exit(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            for task in self.tasks:
+                task.cancel()
+            self.tasks = []
+            for wrapper in self.process_wrappers.values():
+                wrapper.process.kill()
+            return self.handled(e)
+        return self.super(self.top)
+
+    @state
+    def _operational(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.tasks.append(asyncio.create_task(self.startup_processes()))
+            return self.handled(e)
+        elif sig == Signal.SYSTEM_CONFIGURE:
+            self.tasks.append(asyncio.create_task(self.error_recovery(5.0)))
+            return self.handled(e)
+        elif sig == Signal.TERMINATE:
+            return self.tran(self._exit)
+        return self.super(self.top)
+
     async def setup_processes(self, at_start=True):
+        if at_start:
+            self.bank_list = []
         if at_start or self.process_wrappers["MadMapper"].killed:
             process_wrapper = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'), "MadMapper")
             self.process_wrappers["MadMapper"] = process_wrapper
@@ -103,7 +146,7 @@ class PigssSupervisor:
             self.device_dict = await self.farm.RPC["MadMapper"].map_devices(True)
             log.info(f"\nResult of MadMapper.map_devices {self.device_dict}")
             if at_start:
-                asyncio.create_task(process_wrapper.pinger(5))
+                self.tasks.append(asyncio.create_task(process_wrapper.pinger(5)))
             else:
                 log.info(f"Restarted Madmapper")
         for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
@@ -116,7 +159,8 @@ class PigssSupervisor:
                                                                       rpc_port=dev_params['RPC_Port'],
                                                                       baudrate=dev_params['Baudrate'])
                     if at_start:
-                        asyncio.create_task(process_wrapper.pinger(2))
+                        self.bank_list.append(dev_params["Bank_ID"])
+                        self.tasks.append(asyncio.create_task(process_wrapper.pinger(2)))
                     else:
                         log.info(f"Restarted piglet driver: {key}")
             elif dev_params['Driver'] == 'AlicatDriver':
@@ -128,7 +172,7 @@ class PigssSupervisor:
                                                                       rpc_port=dev_params['RPC_Port'],
                                                                       baudrate=dev_params['Baudrate'])
                     if at_start:
-                        asyncio.create_task(process_wrapper.pinger(2))
+                        self.tasks.append(asyncio.create_task(process_wrapper.pinger(2)))
                     else:
                         log.info(f"Restarted Alicat driver: {key}")
             elif dev_params['Driver'] == 'NumatoDriver':
@@ -140,7 +184,7 @@ class PigssSupervisor:
                     self.farm.RPC[name] = await process_wrapper.start(device_port_name=dev_params['Path'],
                                                                       rpc_server_port=dev_params['RPC_Port'])
                     if at_start:
-                        asyncio.create_task(process_wrapper.pinger(2))
+                        self.tasks.append(asyncio.create_task(process_wrapper.pinger(2)))
                     else:
                         log.info(f"Restarted Numato driver: {key}")
 
@@ -162,25 +206,19 @@ class PigssSupervisor:
                                                                           "chassis": chassis
                                                                       })
                     if at_start:
-                        asyncio.create_task(process_wrapper.pinger(2))
+                        self.tasks.append(asyncio.create_task(process_wrapper.pinger(2)))
                     else:
                         log.info(f"Restarted IDriver: {key}")
 
+    @log_async_exception(log_func=log.warning, stop_loop=True)
+    async def startup_processes(self):
+        await self.setup_processes(at_start=True)
+        Framework.publish(
+            Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=sorted(self.bank_list),
+                                                               mad_mapper_result=self.device_dict)))
+
+    @log_async_exception(log_func=log.warning, stop_loop=True)
     async def error_recovery(self, period):
         while True:
             await asyncio.sleep(period)
             await self.setup_processes(at_start=False)
-
-    def handle_exception(self, loop, context):
-        msg = context.get("exception", context["message"])
-        log.error(f"Unhandled exception: {msg}")
-        loop.stop()
-
-    async def main(self):
-        loop = asyncio.get_event_loop()
-        loop.set_exception_handler(self.handle_exception)
-        try:
-            await self.setup_processes(at_start=True)
-            await self.error_recovery(5.0)
-        finally:
-            log.info("Program terminated")

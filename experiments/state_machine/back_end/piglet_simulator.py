@@ -10,7 +10,8 @@ import time
 import attr
 
 from experiments.common.async_helper import log_async_exception
-from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+# from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.state_machine.back_end.dummy_logger import DummyLoggerClient as LOLoggerClient
 
 opstates = {"power_up", "standby", "ident", "ident_2", "sampling", "clean", "reference", "fault", "power_off"}
 log = LOLoggerClient(client_name=f"PigletSimulator", verbose=True)

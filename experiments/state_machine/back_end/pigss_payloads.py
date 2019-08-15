@@ -30,3 +30,10 @@ class PigletRequestPayload:
 class SystemConfiguration:
     bank_list = attr.ib(factory=list)
     mad_mapper_result = attr.ib(None)
+
+
+@attr.s
+class ValvePositionPayload:
+    time = attr.ib(float)
+    valve_pos = attr.ib(int)
+    valve_mask = attr.ib(int)

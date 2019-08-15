@@ -8,7 +8,9 @@ from async_hsm import Spy, Event, Framework, Signal
 from experiments.common.async_helper import log_async_exception
 from experiments.state_machine.back_end.controller_service import \
     ControllerService
-from experiments.state_machine.back_end.pigss_farm import PigssFarm
+from experiments.state_machine.back_end.supervisor_service import \
+    SupervisorService
+from experiments.state_machine.back_end.dummy_pigss_farm import PigssFarm
 
 
 class Server:
@@ -50,6 +52,10 @@ class Server:
         controller_service = ControllerService()
         controller_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/controller/", controller_service.app)
+
+        supervisor_service = SupervisorService()
+        supervisor_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/supervisor/", supervisor_service.app)
 
         setup_swagger(self.app)
 

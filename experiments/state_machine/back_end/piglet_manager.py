@@ -29,7 +29,7 @@ import time
 from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
 from async_hsm.SimpleSpy import SimpleSpy
 from experiments.state_machine.back_end.piglet_simulator import PigletSimulator
-from experiments.state_machine.back_end.pigss_payloads import PigletRequestPayload, SystemConfiguration
+from experiments.state_machine.back_end.pigss_payloads import PigletRequestPayload, SystemConfiguration, ValvePositionPayload
 
 POLL_PERIOD = 0.5
 
@@ -40,7 +40,7 @@ class PigletManager(Ahsm):
         self.farm = farm
         self.bank_list = None
         self.comm_lock = asyncio.Lock()
-        # self.piglets = {}
+        self.valve_mask = 0
         self.tasks = []
 
     @state
@@ -50,6 +50,7 @@ class PigletManager(Ahsm):
         Framework.subscribe("PIGLET_STATUS", self)
         Framework.subscribe("PIGLET_RESPONSE", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
+        Framework.subscribe("VALVE_POSITION", self)
         Framework.subscribe("MFC_SET", self)
         Framework.subscribe("TERMINATE", self)
         return self.tran(self._configure)
@@ -79,7 +80,7 @@ class PigletManager(Ahsm):
             return self.tran(self._exit)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
-            print(f"Piglet request: {payload}")
+            # print(f"Piglet request: {payload}")
             assert isinstance(payload, PigletRequestPayload)
             asyncio.create_task(self.send_to_piglets(payload.command, payload.bank_list))
             return self.handled(e)
@@ -87,7 +88,7 @@ class PigletManager(Ahsm):
             asyncio.create_task(self.get_status(self.bank_list))
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            print(f"Received PIGLET_STATUS, {e.value}; ", end="")
+            # print(f"Received PIGLET_STATUS, {e.value}; ", end="")
             piglet_status = e.value
             mfc_total = 0
             for bank in self.bank_list:
@@ -95,10 +96,13 @@ class PigletManager(Ahsm):
             Framework.publish(Event(Signal.MFC_SET, {"time": piglet_status["time"], "mfc_setpoint": mfc_total}))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
-            print(f"Received PIGLET_RESPONSE, {e.value}")
+            # print(f"Received PIGLET_RESPONSE, {e.value}")
             return self.handled(e)
         elif sig == Signal.MFC_SET:
             print(f"Setting MFC, {e.value}; ", end="")
+            return self.handled(e)
+        elif sig == Signal.VALVE_POSITION:
+            print(f"\n\nReceived VALVE_POSITION: {e.value}\n")
             return self.handled(e)
         return self.super(self._configure)
 
@@ -135,13 +139,32 @@ class PigletManager(Ahsm):
             return result
 
     async def send_to_piglets(self, command, bank_list):
-        response = await self.exec_on_banks(lambda bank: self.command_handler(command, bank), bank_list)
-        Framework.publish(Event(Signal.PIGLET_RESPONSE, response))
+        try:
+            response = await self.exec_on_banks(lambda bank: self.command_handler(command, bank), bank_list)
+            Framework.publish(Event(Signal.PIGLET_RESPONSE, response))
+        except Exception:
+            raise
+            # print("Send to piglets failed!")
 
     async def get_status(self, bank_list):
-        response = await self.exec_on_banks(self.get_status_of_bank, bank_list)
-        response["time"] = time.time()
-        Framework.publish(Event(Signal.PIGLET_STATUS, response))
+        try:
+            response = await self.exec_on_banks(self.get_status_of_bank, bank_list)
+            now = time.time()
+            # Calculate the states of all the solenoid valves
+            mask = 0
+            # Get the states of all the valves as a 32 bit integer
+            for bank in bank_list:
+                mask += response[bank]['SOLENOID_VALVES'] << (8 * (bank - 1))
+            if mask != self.valve_mask:
+                self.valve_mask = mask
+                # Find index of first set bit using bit-twiddling hack
+                valve_pos = (mask & (-mask)).bit_length()
+                Framework.publish(Event(Signal.VALVE_POSITION, ValvePositionPayload(now, valve_pos, self.valve_mask)))
+            response["time"] = now
+            Framework.publish(Event(Signal.PIGLET_STATUS, response))
+        except Exception:
+            raise
+            # print("Get piglet status failed!")
 
 
 async def main():

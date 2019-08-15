@@ -9,7 +9,7 @@ from host.experiments.common.rpc_ports import rpc_ports
 #   Remove local import for CmdFIFO
 #   Remove hardcoded host
 #   Remove hardcoded port
-import CmdFIFO
+from host.experiments.testing.cmd_fifo import CmdFIFO
 
 
 class PigletDriver(object):
@@ -18,6 +18,7 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
+
     def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r'):
         self.serial = None
         self.terminate = False
@@ -26,13 +27,11 @@ class PigletDriver(object):
         self.carriage_return = carriage_return
         self.id_string = None
         self.rpc_port = rpc_port
-        self.rpc_server = CmdFIFO.CmdFIFOServer(
-            ("", self.rpc_port),
-            ServerName=__class__.__name__,
-            ServerDescription=f'RPC Server for {__class__.__name__}',
-            ServerVersion=1.0,
-            threaded=True
-        )
+        self.rpc_server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
+                                                ServerName=__class__.__name__,
+                                                ServerDescription=f'RPC Server for {__class__.__name__}',
+                                                ServerVersion=1.0,
+                                                threaded=True)
         self.connect()
         self.register_rpc_functions()
         self.rpc_server.serve_forever()
@@ -195,7 +194,7 @@ class PigletDriver(object):
         :return:
         """
         try:
-            return not(int(number) >> 16)
+            return not (int(number) >> 16)
         except ValueError:
             return False
 

@@ -55,7 +55,6 @@ class ControllerService:
 
     async def handle_event(self, request):
         """
-        ---
         description: Publishes specified event to the AHSM framework
 
         tags:
@@ -97,7 +96,6 @@ class ControllerService:
 
     async def handle_modal_info(self, request):
         """
-        ---
         description: Fetch UI modal info from PigssController
 
         tags:
@@ -114,7 +112,6 @@ class ControllerService:
 
     async def handle_plan(self, request):
         """
-        ---
         description: fetch plan
 
         tags:
@@ -132,7 +129,6 @@ class ControllerService:
 
     async def handle_stats(self, request):
         """
-        ---
         description: Fetch server statistics from PigssController
 
         tags:
@@ -157,7 +153,6 @@ class ControllerService:
 
     async def handle_uistatus(self, request):
         """
-        ---
         description: Fetch status of UI elements from PigssController
 
         tags:
