@@ -53,10 +53,12 @@ fi
 sudo apt install -y openssh-server chromium-browser
 
 # Install influxdb from site -- apt version is too old
-wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.5_amd64.deb
-sudo dpkg -i influxdb_1.7.5_amd64.deb
-# Enable and start influxdb services
-sudo systemctl daemon-reload && sudo systemctl enable influxdb.service && sudo systemctl start influxd.service && sudo systemctl start influxdb.service
+if ! which influx 2> /dev/null; then
+    wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.5_amd64.deb
+    sudo dpkg -i influxdb_1.7.5_amd64.deb
+    # Enable and start influxdb services
+    sudo systemctl daemon-reload && sudo systemctl enable influxdb.service && sudo systemctl start influxd.service && sudo systemctl start influxdb.service
+fi
 
 # Make sure golang is installed
 if [ ! -d /usr/local/go ]; then
