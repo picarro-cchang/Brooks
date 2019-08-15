@@ -202,6 +202,7 @@ class PigssSupervisor(Ahsm):
                                                                       start_now=True,
                                                                       rpc_tunnel_config=self.rpc_tunnel_config,
                                                                       database_tags={
+                                                                          "valve_pos": 0,
                                                                           "analyzer": analyzer,
                                                                           "chassis": chassis
                                                                       })

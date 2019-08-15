@@ -10,13 +10,18 @@ from aiomultiprocess import Process
 from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
 from async_hsm.SimpleSpy import SimpleSpy
 from experiments.common.async_helper import log_async_exception
+from experiments.IDriver.IDriver import PicarroAnalyzerDriver
+from experiments.state_machine.back_end.dummy_influx_writer import \
+    InfluxDBWriter
 from experiments.state_machine.back_end.dummy_logger import DummyLoggerClient
 from experiments.state_machine.back_end.dummy_piglet_driver import PigletDriver
-from experiments.state_machine.back_end.pigss_payloads import SystemConfiguration
+from experiments.state_machine.back_end.pigss_payloads import \
+    SystemConfiguration
 from experiments.testing.cmd_fifo import CmdFIFO
 
 my_path = os.path.dirname(os.path.abspath(__file__))
 log = DummyLoggerClient(client_name="DummySupervisor", verbose=True)
+tunnel_configs = os.path.normpath(os.path.join(my_path, 'rpc_tunnel_configs.json'))
 
 
 class AsyncWrapper:
@@ -96,6 +101,9 @@ class DummySupervisor(Ahsm):
         self.old_processes = deque(maxlen=32)
         self.te = TimeEvent("MONITOR_PROCESSES")
         self.mon_task = None
+        with open(tunnel_configs, "r") as f:
+            self.rpc_tunnel_config = json.loads(f.read())
+        log.info(f"RPC Tunnel settings loaded from {tunnel_configs}")
 
     def get_device_map(self):
         return self.device_dict
@@ -302,24 +310,30 @@ class DummySupervisor(Ahsm):
         #         else:
         #             log.info(f"Restarted Numato driver: {key}")
 
-        # for key, dev_params in sorted(self.device_dict['Devices']['Network_Devices'].items()):
-        #     if dev_params['Driver'] == 'IDriver':
-        #         if at_start or self.wrapped_processes[key].killed:
-        #             name = f"Picarro_{dev_params['SN']}"
-        #             wrapped_process = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name, dev_name=key)
-        #             self.wrapped_processes[key] = wrapped_process
-        #             chassis, analyzer = dev_params['SN'].split("-")
-        #             self.farm.RPC[name] = await wrapped_process.start(instrument_ip_address=dev_params['IP'],
-        #                                                              database_writer=InfluxDBWriter(),
-        #                                                              rpc_server_port=dev_params['RPC_Port'],
-        #                                                              rpc_server_name=name,
-        #                                                              start_now=True,
-        #                                                              rpc_tunnel_config=self.rpc_tunnel_config,
-        #                                                              database_tags={
-        #                                                                  "analyzer": analyzer,
-        #                                                                  "chassis": chassis
-        #                                                              })
-        #             if at_start:
-        #                 self.tasks.append(asyncio.create_task(wrapped_process.pinger(2)))
-        #             else:
-        #                 log.info(f"Restarted IDriver: {key}")
+        for key, dev_params in sorted(self.device_dict['Devices']['Network_Devices'].items()):
+            if dev_params['Driver'] == 'IDriver':
+                if at_start:
+                    # Connect to existing RPC port
+                    rpc_name = f"Picarro_{dev_params['SN']}"
+                    self.farm.RPC[rpc_name] = AsyncWrapper(
+                        CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{dev_params['RPC_Port']}", "PigssSupervisor"))
+                # if at_start or not self.wrapped_processes[key].process.is_alive():
+                #     name = f"Picarro_{dev_params['SN']}"
+                #     wrapped_process = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name, dev_name=key)
+                #     chassis, analyzer = dev_params['SN'].split("-")
+                #     await self.register_process(key,
+                #                                 wrapped_process,
+                #                                 name,
+                #                                 2.0,
+                #                                 at_start,
+                #                                 instrument_ip_address=dev_params['IP'],
+                #                                 database_writer=InfluxDBWriter(),
+                #                                 rpc_server_port=dev_params['RPC_Port'],
+                #                                 rpc_server_name=name,
+                #                                 start_now=True,
+                #                                 rpc_tunnel_config=self.rpc_tunnel_config,
+                #                                 database_tags={
+                #                                     "valve_pos": 0,
+                #                                     "analyzer": analyzer,
+                #                                     "chassis": chassis
+                #                                 })

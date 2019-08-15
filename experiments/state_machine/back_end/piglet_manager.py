@@ -29,7 +29,7 @@ import time
 from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
 from async_hsm.SimpleSpy import SimpleSpy
 from experiments.state_machine.back_end.piglet_simulator import PigletSimulator
-from experiments.state_machine.back_end.pigss_payloads import PigletRequestPayload, SystemConfiguration, ValvePositionPayload
+from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayload, SystemConfiguration, ValvePositionPayload)
 
 POLL_PERIOD = 0.5
 
@@ -39,6 +39,8 @@ class PigletManager(Ahsm):
         super().__init__()
         self.farm = farm
         self.bank_list = None
+        self.mad_mapper_result = None
+        self.picarro_analyzers = []
         self.comm_lock = asyncio.Lock()
         self.valve_mask = 0
         self.tasks = []
@@ -59,8 +61,12 @@ class PigletManager(Ahsm):
     def _configure(self, e):
         sig = e.signal
         if sig == Signal.SYSTEM_CONFIGURE:
+            # Received configuration information. This also means that supervised processes have started,
+            # so the async wrapped RPC servers are also accessible
             payload = e.value
             self.bank_list = payload.bank_list
+            self.mad_mapper_result = payload.mad_mapper_result
+            self.picarro_analyzers = [rpc_name for rpc_name in self.farm.RPC if rpc_name.startswith("Picarro_")]
             return self.tran(self._manager)
         return self.super(self.top)
 
@@ -103,6 +109,7 @@ class PigletManager(Ahsm):
             return self.handled(e)
         elif sig == Signal.VALVE_POSITION:
             print(f"\n\nReceived VALVE_POSITION: {e.value}\n")
+            asyncio.create_task(self.handle_valve_position(e.value))
             return self.handled(e)
         return self.super(self._configure)
 
@@ -165,6 +172,13 @@ class PigletManager(Ahsm):
         except Exception:
             raise
             # print("Get piglet status failed!")
+
+    async def handle_valve_position(self, valve_pos_payload):
+        # We need to add a tag for valve_pos as well as set up the field valve_stable_time
+        #  for each analyzer
+        for analyzer_rpc_name in self.picarro_analyzers:
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"valve_pos": valve_pos_payload.valve_pos})
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time", valve_pos_payload.time)
 
 
 async def main():

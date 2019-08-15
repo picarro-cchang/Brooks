@@ -9,8 +9,8 @@ import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
 import { ModalInfo, PlanPanelTypes } from './Types';
 
-const apiLoc = `${window.location.hostname}:8004/controller`;
-// const apiLoc = `${window.location.hostname}:8000`;
+// const apiLoc = `${window.location.hostname}:8004/controller`;
+const apiLoc = `${window.location.hostname}:8000`;
 const socketURL = `ws://${apiLoc}/ws`
 class Main extends Component<any, any> {
     state = {
