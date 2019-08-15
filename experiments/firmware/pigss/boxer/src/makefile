@@ -1,4 +1,4 @@
-# Hey Emacs, this is a -*- makefile -*-
+# Hey Emacs, this is a -*- makefile-gmake -*- file
 
 project_name = boxer
 
@@ -20,6 +20,14 @@ LOG_LEVEL = info
 # Use avr-gcc --target-help to see a list of MCU names
 MCU = atmega2560
 
+# PCB
+#
+# Known values are:
+#   mega -- Arduino MEGA
+#   whitfield -- Picarro's 90071 PCB
+PCB = mega
+# PCB = whitfield
+
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the
 #     processor frequency. You can then use this symbol in your source code to
@@ -38,7 +46,15 @@ MCU = atmega2560
 #         F_CPU = 16000000
 #         F_CPU = 18432000
 #         F_CPU = 20000000
-F_CPU = 16000000
+ifeq ($(PCB),mega)
+# Platform is Arduino MEGA
+	F_CPU = 16000000
+endif
+
+ifeq ($(PCB),whitfield)
+# Platform is Picarro's 90071
+	F_CPU = 14745600
+endif
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
@@ -161,6 +177,7 @@ CSTANDARD = -std=gnu99
 CDEFS = -D F_CPU=$(F_CPU)UL
 CDEFS += -D REVCODE=\"$(strip $(REVCODE))\"
 CDEFS += -D LOG_LEVEL=\"$(strip $(LOG_LEVEL))\"
+CDEFS += -D PCB=\"$(strip $(PCB))\"
 
 # Place -D or -U options here for ASM sources
 ADEFS = -DF_CPU=$(F_CPU)
@@ -297,18 +314,37 @@ avrdude_part = m2560
 # Type: avrdude -c ?
 # to get a full listing.
 #
-AVRDUDE_PROGRAMMER = dragon_isp
+# AVRDUDE_PROGRAMMER = dragon_isp
+AVRDUDE_PROGRAMMER = atmelice_isp
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = usb
 
 # Baud rate for bootloader
-avrdude_baud = 38400
+ifeq ($(PCB),mega)
+# Platform is Arduino MEGA
+	avrdude_baud = 38400
+endif
+
+ifeq ($(PCB),whitfield)
+# Platform is Picarro's 90071
+	avrdude_baud = 230400
+endif
 
 # Set the delay between programmer clock cycles.
 #
 # Set to ~1/10 of the AVR's default (by fuses) clock setting.
-avrdude_bitdelay_us = 1
+ifeq ($(PCB),mega)
+# Platform is Arduino MEGA
+	avrdude_bitdelay_us = 1	
+endif
+
+ifeq ($(PCB),whitfield)
+# Platform is Picarro's 90071
+	avrdude_bitdelay_us = 1
+endif
+
+
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
@@ -336,15 +372,42 @@ avrdude_flags += -B $(avrdude_bitdelay_us)
 
 ####################### Fuse settings ########################
 
+ifeq ($(PCB),mega)
+# Platform is Arduino MEGA
+
 # Fuse settings for development without a bootloader
-devfuse_low = 0xff
-devfuse_high = 0xd8
-devfuse_extended = 0xfd
+	devfuse_low = 0xff
+	devfuse_high = 0xd8
+	devfuse_extended = 0xfd
 
 # Fuse settings for use with Optiboot
-bootfuse_low = 0xff
-bootfuse_high = 0xde
-bootfuse_extended = 0xfd
+	bootfuse_low = 0xff
+	bootfuse_high = 0xde
+	bootfuse_extended = 0xfd
+
+# Bootloader
+	bootloader_hex = ../bootloader/optiboot_atmega2560_16000000Hz_38400baud.hex
+endif
+
+ifeq ($(PCB),whitfield)
+# Platform is Picarro's 90071
+
+# Fuse settings for development without a bootloader
+	devfuse_low = 0xf0
+	devfuse_high = 0xdf
+	devfuse_extended = 0xfd
+
+# Fuse settings for use with Optiboot
+	bootfuse_low = 0xf0
+	bootfuse_high = 0xde
+	bootfuse_extended = 0xfd
+
+# Bootloader
+	bootloader_hex = ../bootloader/optiboot_atmega2560_14745600Hz_230400baud.hex
+endif
+
+
+
 
 #---------------- Debugging Options ----------------
 
@@ -476,20 +539,20 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 # Default target.
 help:
-	@echo 'Makefile for $(project_name) on $(platform)              '
+	@echo 'Makefile for $(project_name) on $(platform) targeting $(PCB)      '
 	@echo '                                                         '
 	@echo 'Usage:                                                   '
 	@echo '   make gccversion              Show the avr-gcc version          '
 	@echo '   make fuseread                Read fuses                        '
-	@echo '   make hex                     Just build to create the hex file '
+	@echo '   make hex                     Just build to create the hex file for $(PCB) '
 	@echo '   make lockprom                EEPROM not erased during program  '
 	@echo '   make unlockprom              EEPROM erased during program      '
-	@echo '   make appflash                Build and program using avrdude and $(AVRDUDE_PROGRAMMER)'
-	@echo '   make bootflash               Flash the bootloader with avrdude and $(AVRDUDE_PROGRAMMER)'
-	@echo '   make bootload VCP=comxx      Flash the application via bootloader'
+	@echo '   make appflash                Build for $(PCB) and program using avrdude and $(AVRDUDE_PROGRAMMER)'
+	@echo '   make bootflash               Flash the bootloader to $(PCB) with avrdude and $(AVRDUDE_PROGRAMMER)'
+	@echo '   make bootload VCP=comxx      Build for $(PCB), flash the application via bootloader'
 	@echo '                                with VCP com port'
-	@echo '   make bootfuse                Write fuses to execute bootlader  '
-	@echo '   make devfuse                 Write fuses to skip bootloader    '
+	@echo '   make bootfuse                Write fuses to execute bootloader on $(PCB)  '
+	@echo '   make devfuse                 Write fuses to skip bootloader on $(PCB)    '
 	@echo '   make debug_make              Debug the makefile                '
 	@echo '   make doc                     Create html documentation         '
 	@echo '   make docview                 View the documentation in a browser '
@@ -501,6 +564,8 @@ help:
 debug_make:
 	@echo 'Output from uname is $(uname_value)'
 	@echo 'Source files are $(SRC)'
+	@echo 'Processor frequency is $(F_CPU) Hz'
+	@echo 'PCB is $(PCB)'
 
 
 
@@ -622,7 +687,7 @@ bootload: $(TARGET).hex $(TARGET).eep
 # Write the bootloader to flash
 .PHONY: bootflash
 bootflash:
-	$(AVRDUDE) $(avrdude_flags) -U flash:w:../bootloader/optiboot_atmega2560.hex
+	$(AVRDUDE) $(avrdude_flags) -U flash:w:$(bootloader_hex)
 
 
 # Generate avr-gdb config/init file which does the following:
