@@ -16,19 +16,18 @@ dictionary containing the responses keyed by bank.
 When a PIGLET_STATUS_TIMER event arrives, the coroutine get_status is performed which
 send a collection of requests to all the piglets (specified in self.bank_list). These
 data are aggregated into a dictionary keyed by bank. The values are themselves dictionaries,
-consisting of the status data obtained from the piglet. An timestamp (from Unix epoch) 
+consisting of the status data obtained from the piglet. An timestamp (from Unix epoch)
 is included in the result dictionary. It generates a PIGLET_STATUS event.
 
 A lock (self.comm_lock) is used to ensure that status discovery and piglet requests do not
-occur at the same time. 
+occur at the same time.
 
 """
 import asyncio
 import time
 
 from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
-from async_hsm.SimpleSpy import SimpleSpy
-from experiments.state_machine.back_end.piglet_simulator import PigletSimulator
+# from async_hsm.SimpleSpy import SimpleSpy
 from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayload, SystemConfiguration, ValvePositionPayload)
 
 POLL_PERIOD = 0.5
@@ -74,19 +73,15 @@ class PigletManager(Ahsm):
     def _manager(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            # self.piglets = {bank: PigletSimulator(bank=bank) for bank in self.bank_list}
             self.piglet_status_te.postEvery(self, POLL_PERIOD)
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.piglet_status_te.disarm()
-            # for piglet in self.piglets.values():
-            #    piglet.shutdown()
             return self.handled(e)
         elif sig == Signal.TERMINATE:
             return self.tran(self._exit)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
-            # print(f"Piglet request: {payload}")
             assert isinstance(payload, PigletRequestPayload)
             asyncio.create_task(self.send_to_piglets(payload.command, payload.bank_list))
             return self.handled(e)

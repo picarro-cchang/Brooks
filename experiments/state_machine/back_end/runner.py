@@ -3,7 +3,7 @@ import asyncio
 import aiohttp_cors
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
-from async_hsm import Spy, Event, Framework, Signal
+from async_hsm import Framework
 
 from experiments.common.async_helper import log_async_exception
 from experiments.state_machine.back_end.controller_service import \

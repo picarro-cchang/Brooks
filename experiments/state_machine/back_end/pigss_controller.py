@@ -5,16 +5,19 @@ import collections
 import glob
 import html
 import json
-import ntpath
 import os
 import re
 import time
 import traceback
 from enum import Enum, IntEnum
 
-from async_hsm import (Ahsm, Event, Framework, Signal, Spy, TimeEvent, run_forever, state)
-from experiments.state_machine.back_end.pigss_payloads import (PcResponsePayload, PcSendPayload, PigletRequestPayload, PlanError,
-                                                               SystemConfiguration)
+import ntpath
+
+from async_hsm import (Ahsm, Event, Framework, Signal, TimeEvent, run_forever, state)
+from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayload, PlanError, SystemConfiguration)
+
+log = LOLoggerClient(client_name="PigssController", verbose=True)
 
 PLAN_FILE_DIR = "/temp/plan_files"
 
@@ -132,10 +135,10 @@ class PigssController(Ahsm):
         while True:
             try:
                 msg = json.loads(await self.receive_queue.get())
-                # print(f"Received from socket {msg}")
+                # log.info(f"Received from socket {msg}")
                 Framework.publish(Event(event_by_element[msg["element"]], msg))
             except KeyError:
-                print("Cannot find event associated with socket message - ignoring")
+                log.warning(f"Cannot find event associated with socket message {msg['element']} - ignoring")
 
     def get_modal_info(self):
         return self.modal_info
@@ -194,7 +197,7 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
-        # print(f"Setting plan {path} to {value}, shadow is {shadow}")
+        # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
         asyncio.ensure_future(self.send_queue.put(json.dumps({"modal_info": shadow})))
 
     def set_plan(self, path, value):
@@ -203,7 +206,7 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
-        # print(f"Setting plan {path} to {value}, shadow is {shadow}")
+        # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
         asyncio.ensure_future(self.send_queue.put(json.dumps({"plan": shadow})))
 
     def set_status(self, path, value):
@@ -212,7 +215,7 @@ class PigssController(Ahsm):
         the change is sent via a websocket to inform the UI of the change of status.
         """
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
-        # print(f"Setting status of {path} to {value}, shadow is {shadow}")
+        # log.info(f"Setting status of {path} to {value}, shadow is {shadow}")
         asyncio.ensure_future(self.send_queue.put(json.dumps({"uistatus": shadow})))
 
     def plan_panel_update(self, msg):
@@ -233,8 +236,6 @@ class PigssController(Ahsm):
                     self.set_plan(["steps", row, "duration"], duration)
                 except ValueError:
                     pass
-        else:
-            print(f"Unknown message {msg}")
 
     def add_channel_to_plan(self, msg):
         """Handle a channel button press, adding the bank and channel to the plan
@@ -611,7 +612,7 @@ class PigssController(Ahsm):
             self.set_status(["bank", self.bank], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            # print(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
+            # log.info(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
             if e.value[self.bank]['STATE'].startswith('ident'):
                 return self.tran(self._identify3)
         return self.super(self._identify)
@@ -620,7 +621,7 @@ class PigssController(Ahsm):
     def _identify3(self, e):
         sig = e.signal
         if sig == Signal.PIGLET_STATUS:
-            # print(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
+            # log.info(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
             if e.value[self.bank]['STATE'] == 'standby':
                 return self.tran(self._identify4)
         return self.super(self._identify)
@@ -884,7 +885,7 @@ class PigssController(Ahsm):
             try:
                 self.load_plan_from_file()
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
-            except:
+            except Exception:
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, traceback.format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
@@ -972,7 +973,7 @@ class PigssController(Ahsm):
             try:
                 self.save_plan_to_file()
                 self.postFIFO(Event(Signal.PLAN_SAVE_SUCCESSFUL, None))
-            except:
+            except Exception:
                 self.postFIFO(Event(Signal.PLAN_SAVE_FAILED, traceback.format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_SAVE_SUCCESSFUL:
@@ -1142,9 +1143,11 @@ class PigssController(Ahsm):
             # For this version, we can only have one active channel, so
             #  replace the currently active channel with the selected one
             for bank in self.all_banks:
+                chan_status = self.status["channel"][bank].copy()
                 # Turn off ACTIVE states in UI for active channels
                 for j in setbits(self.chan_active[bank]):
-                    self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                    chan_status[j + 1] = UiStatus.AVAILABLE
+                self.set_status(["channel", bank], chan_status)
                 # Replace with the selected channel
                 if bank == self.bank:
                     self.chan_active[bank] = mask
@@ -1154,18 +1157,23 @@ class PigssController(Ahsm):
         elif sig == Signal.INIT:
             return self.tran(self._run_plan1211)
         elif sig == Signal.PIGLET_STATUS:
+            # Update the channel button states on the UI from SOLENOID_VALVES in piglet status
+            result = {}
             for bank in self.all_banks:
                 mask = e.value[bank]['SOLENOID_VALVES']
                 sel = setbits(mask)
+                chan_status = self.status["channel"][bank].copy()
                 for j in range(self.num_chans_per_bank):
-                    current = self.status["channel"][bank][j + 1]
+                    current = chan_status[j + 1]
                     if current != UiStatus.DISABLED:
                         if j in sel:
                             if current != UiStatus.ACTIVE:
-                                self.set_status(["channel", bank, j + 1], UiStatus.ACTIVE)
+                                chan_status[j + 1] = UiStatus.ACTIVE
                         else:
                             if current != UiStatus.AVAILABLE:
-                                self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                                chan_status[j + 1] = UiStatus.AVAILABLE
+                result[bank] = chan_status
+            self.set_status(["channel"], result)
             return self.handled(e)
         return self.super(self._run_plan12)
 
@@ -1187,7 +1195,7 @@ class PigssController(Ahsm):
 
 if __name__ == "__main__":
     # Uncomment this line to get a visual execution trace (to demonstrate debugging)
-    from async_hsm.SimpleSpy import SimpleSpy
+    # from async_hsm.SimpleSpy import SimpleSpy
     # Spy.enable_spy(SimpleSpy)
 
     pc = PigssController()

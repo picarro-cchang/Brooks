@@ -3,8 +3,6 @@ import asyncio
 import attr
 import traceback
 
-from async_hsm import Spy, Event, Framework, Signal
-
 from experiments.state_machine.back_end.pigss_controller import PigssController
 from experiments.state_machine.back_end.piglet_manager import PigletManager
 from experiments.state_machine.back_end.dummy_supervisor import DummySupervisor as PigssSupervisor
@@ -36,9 +34,9 @@ class PigssFarm:
 
     async def startup(self):
         try:
-            self.controller.set_queues(self.send_queue, self.receive_queue)
-            from async_hsm.SimpleSpy import SimpleSpy
+            # from async_hsm.SimpleSpy import SimpleSpy
             # Spy.enable_spy(SimpleSpy)
+            self.controller.set_queues(self.send_queue, self.receive_queue)
             self.tasks.append(asyncio.create_task(self.controller.process_receive_queue_task()))
             self.piglet_manager.start(3)
             self.controller.start(2)

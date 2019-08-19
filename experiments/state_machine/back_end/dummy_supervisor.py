@@ -8,9 +8,8 @@ import attr
 from aiomultiprocess import Process
 
 from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
-from async_hsm.SimpleSpy import SimpleSpy
+# from async_hsm.SimpleSpy import SimpleSpy
 from experiments.common.async_helper import log_async_exception
-from experiments.IDriver.IDriver import PicarroAnalyzerDriver
 from experiments.state_machine.back_end.dummy_influx_writer import \
     InfluxDBWriter
 from experiments.state_machine.back_end.dummy_logger import DummyLoggerClient
@@ -22,6 +21,19 @@ from experiments.testing.cmd_fifo import CmdFIFO
 my_path = os.path.dirname(os.path.abspath(__file__))
 log = DummyLoggerClient(client_name="DummySupervisor", verbose=True)
 tunnel_configs = os.path.normpath(os.path.join(my_path, 'rpc_tunnel_configs.json'))
+
+
+class DummyAsyncRpc:
+    """Provides an interface resembling asynchronous RPC functions, but which do nothing"""
+
+    def __init__(self, name):
+        self.__name = name
+
+    def __getattr__(self, attr):
+        async def do_nothing(*a, **k):
+            print(f"DummyAsyncRpc {attr} for {self.__name} called with {a}, {k}")
+
+        return do_nothing
 
 
 class AsyncWrapper:
@@ -188,7 +200,7 @@ class DummySupervisor(Ahsm):
     def _supervising(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            ## TODO: Change to a symbolic constant
+            # TODO: Change to a symbolic constant
             self.te.postIn(self, 4.0)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -224,10 +236,10 @@ class DummySupervisor(Ahsm):
             Framework.publish(Event(Signal.MADMAPPER_DONE, mapper_dict))
 
     async def register_process(self, key, wrapped_process, rpc_name, ping_period, at_start, **process_kwargs):
-        """Store the `wrapped_process` in the wrapped_processes dictionary under the keyname `key`, archiving 
+        """Store the `wrapped_process` in the wrapped_processes dictionary under the keyname `key`, archiving
             any process already there into `old_processes`. This `wrapped_process` contains a Driver with an
-            RPC server which is registered with the farm under the name `rpc_name`. If this is the first time 
-            that this is run for a process, `at_start` is True, and we also start a ping process to check the 
+            RPC server which is registered with the farm under the name `rpc_name`. If this is the first time
+            that this is run for a process, `at_start` is True, and we also start a ping process to check the
             health of the RPC server every `ping_period` seconds. When the Driver is constructed, it is passed
             ``process_kwargs`` as its arguments.
         """
@@ -315,8 +327,10 @@ class DummySupervisor(Ahsm):
                 if at_start:
                     # Connect to existing RPC port
                     rpc_name = f"Picarro_{dev_params['SN']}"
-                    self.farm.RPC[rpc_name] = AsyncWrapper(
-                        CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{dev_params['RPC_Port']}", "PigssSupervisor"))
+                    # self.farm.RPC[rpc_name] = AsyncWrapper(
+                    #     CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{dev_params['RPC_Port']}", "PigssSupervisor"))
+                    self.farm.RPC[rpc_name] = DummyAsyncRpc(rpc_name)
+
                 # if at_start or not self.wrapped_processes[key].process.is_alive():
                 #     name = f"Picarro_{dev_params['SN']}"
                 #     wrapped_process = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name, dev_name=key)
