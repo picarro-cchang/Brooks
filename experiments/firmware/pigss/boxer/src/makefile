@@ -459,7 +459,7 @@ css_url = http://www.eventuallabs.com/pandoc.css
 
 release_directory = ../bin
 
-release_file = $(project_name)_$(REVCODE)_$(LOG_LEVEL).hex
+release_file = $(project_name)_$(REVCODE)_$(LOG_LEVEL)_$(PCB).hex
 
 
 

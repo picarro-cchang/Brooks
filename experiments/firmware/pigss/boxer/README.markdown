@@ -34,30 +34,32 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-4)
             - [OPSTATE?](#opstate)
                 - [Typical Return](#typical-return-5)
+            - [STANDBY](#standby)
+                - [Typical Return](#typical-return-6)
             - [TZA.SN n](#tzasn-n)
                 - [Parameter (n)](#parameter-n-2)
-                - [Typical Return](#typical-return-6)
-            - [TZA.SN?](#tzasn)
                 - [Typical Return](#typical-return-7)
+            - [TZA.SN?](#tzasn)
+                - [Typical Return](#typical-return-8)
         - [Channel commands](#channel-commands)
             - [CHANENA n](#chanena-n)
                 - [Parameter (n)](#parameter-n-3)
-                - [Typical Return](#typical-return-8)
+                - [Typical Return](#typical-return-9)
             - [CHANENA? n](#chanena-n)
                 - [Parameter (n)](#parameter-n-4)
-                - [Typical Return](#typical-return-9)
+                - [Typical Return](#typical-return-10)
             - [CHANOFF n](#chanoff-n)
                 - [Parameter (n)](#parameter-n-5)
-                - [Typical Return](#typical-return-10)
+                - [Typical Return](#typical-return-11)
             - [CHANSET n](#chanset-n)
                 - [Parameter (n)](#parameter-n-6)
-                - [Typical Return](#typical-return-11)
-            - [CHANSET?](#chanset)
                 - [Typical Return](#typical-return-12)
+            - [CHANSET?](#chanset)
+                - [Typical Return](#typical-return-13)
         - [Pressure commands](#pressure-commands)
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-7)
-                - [Typical Return](#typical-return-13)
+                - [Typical Return](#typical-return-14)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-8)
@@ -76,6 +78,7 @@ hardware will be a custom PCB.
         - [Version 1.0.7](#version-107)
         - [Version 1.0.8](#version-108)
         - [Version 1.0.9](#version-109)
+        - [Version 1.0.10](#version-1010)
 
 <!-- markdown-toc end -->
 
@@ -469,3 +472,14 @@ current control circuit has some offset issues with revision A
 when solenoid valve selections change.
 
 Pressures are now sampled at 100Hz when the log level is set to "error."
+
+### Version 1.0.10 ###
+
+Increased pressure sensor read frequency to 100Hz.  The delay between
+pressure sensor triggers and reads is now 6ms.  The minimum value here
+is 5ms, but I worry about timing variations at that level violating
+this 5ms limit.  100Hz is a safe reading frequency.  
+
+Hex file releases now have an extra attribute: `_mega` or
+`_whitfield`.  Use `_mega` releases for the Arduino Mega, and
+`_whitfield` for Picarro's 90071 PCBs.
