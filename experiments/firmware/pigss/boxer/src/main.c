@@ -210,7 +210,7 @@ int main(void) {
   } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
     // This could be a release.  The minimum read delay is 5ms.
     pressure_read_period_ms = 10;
-    mpr_read_delay_ms = 6;
+    mpr_read_delay_ms = 8;
   }
 
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)

@@ -1,7 +1,7 @@
 // Uses timer1 to create periodic interrupts
 
 // Set the period between metronome interrupts (ms)
-#define METRONOME_PERIOD_MS 10
+#define METRONOME_PERIOD_MS 1
 
 void metronome_init(void);
 
