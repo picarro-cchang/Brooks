@@ -7,6 +7,8 @@
 # Picarro Git paths
 gitDir="${HOME}/git"
 
+scriptDir=$PWD
+
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
@@ -78,3 +80,7 @@ if [ ! -d /usr/local/go ]; then
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
 fi
+
+echo "Ready to build! Launching menu..."; sleep 1s
+# Launch the build menu
+cd $scriptDir/../Build && ./buildMenu.sh
