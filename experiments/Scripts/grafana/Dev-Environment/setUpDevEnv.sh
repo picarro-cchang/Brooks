@@ -8,6 +8,12 @@
 gitDir="${HOME}/git"
 grafanaDir="${gitDir}/host/experiments/grafana/src/github.com/grafana/grafana"
 
+# Add environmental variables to .bashrc
+echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
+echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
+source ${HOME}/.bashrc
+
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
@@ -69,11 +75,6 @@ if [ ! -d /usr/local/go ]; then
     cd $HOME/Downloads
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
-    # Add environmental variables to .bashrc
-    echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
-    echo "export PATH=/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
-    echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
-    source ${HOME}/.bashrc
 fi
 
 # Build Grafana back-end
@@ -88,11 +89,8 @@ go run build.go build
 yarn install --pure-lockfile
 yarn build
 
-# Start Grafana
-bin/linux-amd64/grafana-server
+# Start Grafana as background process
+bin/linux-amd64/grafana-server &
 
-# echo ""
-# echo "Please run the setUpGrafanaDevFromSource.sh"
-# echo ""
-
-
+# Launch Chromium/Grafana fullscreen
+chromium-browser --start-fullscreen http://localhost:3000
