@@ -1,10 +1,10 @@
 import { PanelPlugin } from '@grafana/ui';
-import { HelloPanel } from './components/Hello/HelloPanel';
-import { HelloPanelEditor } from './components/Hello/HelloPanelEditor';
+import { TablePanel } from './components/DataTable/TablePanel';
+import { TablePanelEditor } from './components/DataTable/TablePanelEditor';
+import { TableOptions } from './components/DataTable/types';
+import { LogService } from '../src/services/LogService';
 
-import { defaults, HelloOptions } from './types';
+export const plugin = new PanelPlugin<TableOptions>(TablePanel);
 
-export const plugin = new PanelPlugin<HelloOptions>(HelloPanel);
-plugin.setEditor(HelloPanelEditor);
-
-plugin.setDefaults(defaults);
+plugin.setEditor(TablePanelEditor);
+plugin.setDefaults(LogService.getDefaults());

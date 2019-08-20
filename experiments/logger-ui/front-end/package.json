@@ -1,18 +1,26 @@
 {
-    "name": "simple-react-panel",
-    "version": "1.0.0",
-    "description": "Grafana RSS Panel",
-    "scripts": {
-      "build": "grafana-toolkit plugin:build",
-      "test": "grafana-toolkit plugin:test",
-      "dev": "grafana-toolkit plugin:dev",
-      "watch": "grafana-toolkit plugin:dev --watch"
-    },
-    "author": "Grafana Labs",
-    "license": "Apache-2.0",
-    "devDependencies": {
-      "@grafana/data": "latest",
-      "@grafana/toolkit": "next",
-      "@grafana/ui": "latest"
-    }
+  "name": "simple-react-panel",
+  "version": "1.0.0",
+  "description": "Grafana RSS Panel",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch"
+  },
+  "author": "Grafana Labs",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@grafana/data": "latest",
+    "@grafana/toolkit": "next",
+    "@grafana/ui": "latest"
+  },
+  "dependencies": {
+    "@types/socket.io-client": "^1.4.32",
+    "@types/styled-components": "^4.1.18",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "socket.io-client": "^2.2.0",
+    "styled-components": "^4.3.2"
   }
+}
