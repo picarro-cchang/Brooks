@@ -6,14 +6,13 @@
 
 # Picarro Git paths
 gitDir="${HOME}/git"
-grafanaDir="${gitDir}/host/experiments/grafana/src/github.com/grafana/grafana"
 
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
 
 # Install git and build tools
-sudo apt install -y git build-essential
+sudo apt install -y git ruby ruby-dev rubygems build-essential
 
 # Configure git
 echo "Enter your Picarro GitHub Username: "
@@ -38,6 +37,9 @@ sudo apt install -y npm
 # Install global Node.js dependencies
 sudo npm install -g node-gyp
 sudo npm install -g yarn
+
+# Install fpm (required to build native grafana production packages)
+sudo gem install fpm
 
 # Put our files in the ~/Downloads folder
 cd ${HOME}/Downloads
@@ -76,21 +78,3 @@ if [ ! -d /usr/local/go ]; then
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
 fi
-
-# Build Grafana back-end
-export GOPATH=$HOME/go
-export PATH=/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-export PYTHONPATH=${gitDir}
-cd $grafanaDir
-go run build.go setup
-go run build.go build
-
-# Build Grafana front-end
-yarn install --pure-lockfile
-yarn build
-
-# Start Grafana as background process
-bin/linux-amd64/grafana-server &
-
-# Launch Chromium/Grafana fullscreen
-chromium-browser --start-fullscreen http://localhost:3000
