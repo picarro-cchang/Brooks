@@ -1,18 +1,12 @@
 #!/bin/bash
 
 # Set-up the dev environment for PIGSS
-# Assumes a bare Ubuntu-Mate 18.04.2 iso has been used
+# Assumes a bare/minimal Ubuntu 18.04.x iso has been used
 
 
 # Picarro Git paths
 gitDir="${HOME}/git"
 grafanaDir="${gitDir}/host/experiments/grafana/src/github.com/grafana/grafana"
-
-# Add environmental variables to .bashrc
-echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
-echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
-echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
-source ${HOME}/.bashrc
 
 # Do a full update/upgrade
 sudo apt update
@@ -52,8 +46,14 @@ cd ${HOME}/Downloads
 if [ ! -d /home/$USER/miniconda3 ]; then
 	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 	chmod +x Miniconda3-latest-Linux-x86_64.sh
-	./Miniconda3-latest-Linux-x86_64.sh
+	./Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
 fi
+
+# Add environmental variables to .bashrc
+echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
+echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
+source ${HOME}/.bashrc
 
 # Install apt packages we need
 sudo apt install -y openssh-server chromium-browser
