@@ -423,8 +423,8 @@ else:
         try:
             hcl_adjust = _DATA_["hcl_adjust"]*hcl_gain
             hcl_adjust = min(max_adjust,max(-max_adjust,hcl_adjust))
-            newOffset0 = _FREQ_CONV_.getWlmOffset(3) + hcl_adjust
-            _PERSISTENT_["wlm3_offset"] = newOffset0
+            newOffset3 = _FREQ_CONV_.getWlmOffset(3) + hcl_adjust
+            _PERSISTENT_["wlm3_offset"] = newOffset3
             _FREQ_CONV_.setWlmOffset(3,float(newOffset3))
             # print "New HCl (virtual laser 1) offset: %.5f" % newOffset0 
         except:
