@@ -6,17 +6,15 @@ import OptionsPanel from './OptionsPanel';
 // import OverridePanel from './OverridePanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
-//import * as styles from './module.css';
-
 import PlanSavePanel from './PlanSavePanel';
 import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
-import {ButtonInfo, ModalInfo, PlanFocus, PlanPanelTypes, PlanStep, OptionsPanelTypes} from './../types';
+import {ModalInfo, PlanPanelTypes} from './../types';
 import EditPanel from "./EditPanel";
 
 
-
-const socketURL = `ws://${window.location.hostname}:8000/ws`
+const apiLoc = `${window.location.hostname}:8000/controller`;
+const socketURL = `ws://${apiLoc}:8000/ws`;
 export class Main extends Component<any, any> {
 
   state = {
@@ -69,7 +67,7 @@ export class Main extends Component<any, any> {
   }
 
   getDataViaApi = () => {
-    let p1 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/uistatus`).then(
+    let p1 = PicarroAPI.getRequest(`http://${apiLoc}/uistatus`).then(
         response => {
           response.json().then(obj => {
             // this.refWebSocket.sendMessage("message via websocket");
@@ -77,7 +75,7 @@ export class Main extends Component<any, any> {
           })
         }
     );
-    let p2 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/plan`).then(
+    let p2 = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
         response => {
           response.json().then(obj => {
             // this.refWebSocket.sendMessage("message via websocket");
@@ -85,7 +83,7 @@ export class Main extends Component<any, any> {
           })
         }
     );
-    let p3 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/modal_info`).then(
+    let p3 = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
         response => {
           response.json().then(obj => {
             // this.refWebSocket.sendMessage("message via websocket");
@@ -97,7 +95,7 @@ export class Main extends Component<any, any> {
       this.setState(deepmerge(this.state, { initialized: true }));
       console.log("State after getting uistatus, plan and modal info", this.state);
     })
-  }
+  };
 
   setFocus(row: number, column: number) {
     this.setState(deepmerge(this.state, { plan: { focus: { row, column } } }));
@@ -133,15 +131,6 @@ export class Main extends Component<any, any> {
     console.log(this.state.plan.panel_to_show)
   }
 
-  // renderComponent(){
-  //
-  //   switch (this.state.options.panel_to_show) {
-  //     case OptionsPanelTypes.NONE:
-  //       return ();
-  //     // case OptionsPanelTypes.EDIT:
-  //     //   return (<EditPanel  switches={this.switchPanel} uistatus={this.state.uistatus} ws_sender={this.ws_sender}/>);
-  //   }
-  // }
 
   render() {
     let left_panel;
@@ -174,9 +163,6 @@ export class Main extends Component<any, any> {
     }
 
 
-
-
-
     let modalButtons = [];
     for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
       const modal_info = this.state.modal_info as ModalInfo;
@@ -188,6 +174,22 @@ export class Main extends Component<any, any> {
           </button>
       )
     }
+
+    let bankPanels = [];
+    if ("bank" in this.state.uistatus as any) {
+      for (let i=1; i<=4; i++) {
+        if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
+          bankPanels.push(
+              <div className="col-sm-2">
+                <BankPanel bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
+              </div>
+          )
+        }
+
+      }
+
+    }
+
 //TODO: Make the banks only show if they are available/on/exist
     //Currently banks is set to have [1, 2, 3, 4].... need to change this to be dynamic..
     // for each bank that someone hooks up, we show that number of banks
@@ -198,24 +200,11 @@ export class Main extends Component<any, any> {
               <div className="col-sm-3">
                 {left_panel}
               </div>
-              <div className="col-sm-2">
-                <BankPanel bank={1} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-              <div className="col-sm-2">
-                <BankPanel bank={2} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-              <div className="col-sm-2">
-                <BankPanel bank={3} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-              <div className="col-sm-2">
-                <BankPanel bank={4} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-
+              {bankPanels}
             </div>
-            <br/>
-            <br/>
             <div className="row" >
-              <OptionsPanel uistatus={this.state.uistatus} options={this.state.options} ws_sender={this.ws_sender} switches={this.switchPanel}/>            </div>
+              <OptionsPanel uistatus={this.state.uistatus} options={this.state.options} ws_sender={this.ws_sender} switches={this.switchPanel}/>
+            </div>
           </div>
 
           <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
@@ -223,9 +212,7 @@ export class Main extends Component<any, any> {
               <div dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}>
               </div>
             </div>
-            <div style={{color: "black"}}>
-              {modalButtons}
-            </div>
+            {modalButtons}
           </Modal>
         </div>
     );

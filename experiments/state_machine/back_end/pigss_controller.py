@@ -35,7 +35,6 @@ class PlanPanelType(IntEnum):
     LOAD = 2
     SAVE = 3
 
-
 def setbits(mask):
     """Return the bits set in the integer `mask` """
     result = []

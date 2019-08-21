@@ -13,9 +13,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     makeEditRow = () => {
         let edit_list = [];
 
-        //  const test = this.props.uistatus;
         this.banks = this.props.uistatus.bank;
-        // console.log(banks)
         for (let key in this.banks) {
             let value = this.banks[key];
             if (value === "READY") {
@@ -103,7 +101,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                             }} type="text" value={"Bank " + key + ", Channel 8"}/>
                         </div>
                     </div>
-                )
+                );
             }
         }
         return (
