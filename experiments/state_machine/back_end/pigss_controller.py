@@ -5,17 +5,19 @@ import collections
 import glob
 import html
 import json
-import ntpath
 import os
 import re
 import time
 import traceback
 from enum import Enum, IntEnum
 
-from async_hsm import (Ahsm, Event, Framework, Signal, Spy, TimeEvent,
-                       run_forever, state)
-from pigss_payloads import (PcResponsePayload, PcSendPayload,
-                            PigletRequestPayload, PlanError)
+import ntpath
+
+from async_hsm import (Ahsm, Event, Framework, Signal, TimeEvent, run_forever, state)
+from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayload, PlanError, SystemConfiguration)
+
+log = LOLoggerClient(client_name="PigssController", verbose=True)
 
 PLAN_FILE_DIR = "/temp/plan_files"
 
@@ -50,11 +52,12 @@ def setbits(mask):
 class PigssController(Ahsm):
     num_chans_per_bank = 8
 
-    def __init__(self, all_banks):
+    def __init__(self, farm=None):
         super().__init__()
+        self.farm = farm
         self.error_list = collections.deque(maxlen=32)
         self.status = {}
-        self.all_banks = all_banks
+        self.all_banks = []
         self.plan = {
             "max_steps": 32,
             "panel_to_show": int(PlanPanelType.NONE),
@@ -131,10 +134,10 @@ class PigssController(Ahsm):
         while True:
             try:
                 msg = json.loads(await self.receive_queue.get())
-                # print(f"Received from socket {msg}")
+                # log.info(f"Received from socket {msg}")
                 Framework.publish(Event(event_by_element[msg["element"]], msg))
             except KeyError:
-                print("Cannot find event associated with socket message - ignoring")
+                log.warning(f"Cannot find event associated with socket message {msg['element']} - ignoring")
 
     def get_modal_info(self):
         return self.modal_info
@@ -193,7 +196,7 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
-        # print(f"Setting plan {path} to {value}, shadow is {shadow}")
+        # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
         asyncio.ensure_future(self.send_queue.put(json.dumps({"modal_info": shadow})))
 
     def set_plan(self, path, value):
@@ -202,7 +205,7 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
-        # print(f"Setting plan {path} to {value}, shadow is {shadow}")
+        # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
         asyncio.ensure_future(self.send_queue.put(json.dumps({"plan": shadow})))
 
     def set_status(self, path, value):
@@ -211,7 +214,7 @@ class PigssController(Ahsm):
         the change is sent via a websocket to inform the UI of the change of status.
         """
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
-        # print(f"Setting status of {path} to {value}, shadow is {shadow}")
+        # log.info(f"Setting status of {path} to {value}, shadow is {shadow}")
         asyncio.ensure_future(self.send_queue.put(json.dumps({"uistatus": shadow})))
 
     def plan_panel_update(self, msg):
@@ -232,8 +235,6 @@ class PigssController(Ahsm):
                     self.set_plan(["steps", row, "duration"], duration)
                 except ValueError:
                     pass
-        else:
-            print(f"Unknown message {msg}")
 
     def add_channel_to_plan(self, msg):
         """Handle a channel button press, adding the bank and channel to the plan
@@ -313,7 +314,7 @@ class PigssController(Ahsm):
         steps = {}
         last_step = len(plan)
         for i in range(last_step):
-            row = i+1
+            row = i + 1
             assert str(row) in plan, f"Plan is missing step {row}"
             step = plan[str(row)]
             assert "active" in step, f"Plan row {row} is missing 'active' key"
@@ -321,7 +322,7 @@ class PigssController(Ahsm):
             steps[row] = {"bank": step["active"]["bank"], "channel": step["active"]["channel"], "duration": step["duration"]}
         self.set_plan(["steps"], steps)
         self.set_plan(["last_step"], last_step)
-        self.set_plan(["focus"], {"row": last_step+1, "column": 1})
+        self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
@@ -385,10 +386,29 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_CHANNEL", self)
         Framework.subscribe("MODAL_CLOSE", self)
         Framework.subscribe("MODAL_OK", self)
+        Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("TERMINATE", self)
         Framework.subscribe("ERROR", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._operational)
+
+    @state
+    def _exit(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            return self.handled(e)
+        return self.super(self.top)
+
+    @state
+    def _configure(self, e):
+        sig = e.signal
+        if sig == Signal.SYSTEM_CONFIGURE:
+            payload = e.value
+            self.all_banks = payload.bank_list
+            return self.tran(self._operational)
+        elif sig == Signal.TERMINATE:
+            return self.tran(self._exit)
+        return self.super(self.top)
 
     @state
     def _operational(self, e):
@@ -411,9 +431,6 @@ class PigssController(Ahsm):
         elif sig == Signal.MODAL_CLOSE:
             self.set_modal_info(["show"], False)
             return self.handled(e)
-        elif sig == Signal.TERMINATE:
-            Framework.stop()
-            return self.handled(e)
         elif sig == Signal.BTN_STANDBY:
             return self.tran(self._standby)
         elif sig == Signal.BTN_IDENTIFY:
@@ -435,7 +452,7 @@ class PigssController(Ahsm):
             payload = e.value
             self.handle_error_signal(time.time(), payload)
             return self.handled(e)
-        return self.super(self.top)
+        return self.super(self._configure)
 
     @state
     def _standby(self, e):
@@ -594,7 +611,7 @@ class PigssController(Ahsm):
             self.set_status(["bank", self.bank], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            # print(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
+            # log.info(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
             if e.value[self.bank]['STATE'].startswith('ident'):
                 return self.tran(self._identify3)
         return self.super(self._identify)
@@ -603,7 +620,7 @@ class PigssController(Ahsm):
     def _identify3(self, e):
         sig = e.signal
         if sig == Signal.PIGLET_STATUS:
-            # print(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
+            # log.info(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
             if e.value[self.bank]['STATE'] == 'standby':
                 return self.tran(self._identify4)
         return self.super(self._identify)
@@ -838,7 +855,6 @@ class PigssController(Ahsm):
             return self.tran(self._plan_load)
         return self.super(self._plan)
 
-
     @state
     def _plan_file(self, e):
         sig = e.signal
@@ -868,7 +884,7 @@ class PigssController(Ahsm):
             try:
                 self.load_plan_from_file()
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
-            except:
+            except Exception:
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, traceback.format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
@@ -882,7 +898,11 @@ class PigssController(Ahsm):
     def _plan_load11(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_modal_info([], {"show": True, "html": f"<h3>Plan load error</h3><p>{self.plan_error.message}</p>", "num_buttons": 0})
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h3>Plan load error</h3><p>{self.plan_error.message}</p>",
+                "num_buttons": 0
+            })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
@@ -952,7 +972,7 @@ class PigssController(Ahsm):
             try:
                 self.save_plan_to_file()
                 self.postFIFO(Event(Signal.PLAN_SAVE_SUCCESSFUL, None))
-            except:
+            except Exception:
                 self.postFIFO(Event(Signal.PLAN_SAVE_FAILED, traceback.format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_SAVE_SUCCESSFUL:
@@ -967,7 +987,11 @@ class PigssController(Ahsm):
     def _plan_save21(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_modal_info([], {"show": True, "html": f"<h3>Plan save error</h3><p>{self.plan_error.message}</p>", "num_buttons": 0})
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h3>Plan save error</h3><p>{self.plan_error.message}</p>",
+                "num_buttons": 0
+            })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
@@ -1118,9 +1142,11 @@ class PigssController(Ahsm):
             # For this version, we can only have one active channel, so
             #  replace the currently active channel with the selected one
             for bank in self.all_banks:
+                chan_status = self.status["channel"][bank].copy()
                 # Turn off ACTIVE states in UI for active channels
                 for j in setbits(self.chan_active[bank]):
-                    self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                    chan_status[j + 1] = UiStatus.AVAILABLE
+                self.set_status(["channel", bank], chan_status)
                 # Replace with the selected channel
                 if bank == self.bank:
                     self.chan_active[bank] = mask
@@ -1130,18 +1156,23 @@ class PigssController(Ahsm):
         elif sig == Signal.INIT:
             return self.tran(self._run_plan1211)
         elif sig == Signal.PIGLET_STATUS:
+            # Update the channel button states on the UI from SOLENOID_VALVES in piglet status
+            result = {}
             for bank in self.all_banks:
                 mask = e.value[bank]['SOLENOID_VALVES']
                 sel = setbits(mask)
+                chan_status = self.status["channel"][bank].copy()
                 for j in range(self.num_chans_per_bank):
-                    current = self.status["channel"][bank][j + 1]
+                    current = chan_status[j + 1]
                     if current != UiStatus.DISABLED:
                         if j in sel:
                             if current != UiStatus.ACTIVE:
-                                self.set_status(["channel", bank, j + 1], UiStatus.ACTIVE)
+                                chan_status[j + 1] = UiStatus.ACTIVE
                         else:
                             if current != UiStatus.AVAILABLE:
-                                self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                                chan_status[j + 1] = UiStatus.AVAILABLE
+                result[bank] = chan_status
+            self.set_status(["channel"], result)
             return self.handled(e)
         return self.super(self._run_plan12)
 
@@ -1163,12 +1194,14 @@ class PigssController(Ahsm):
 
 if __name__ == "__main__":
     # Uncomment this line to get a visual execution trace (to demonstrate debugging)
-    from async_hsm.SimpleSpy import SimpleSpy
-    Spy.enable_spy(SimpleSpy)
+    # from async_hsm.SimpleSpy import SimpleSpy
+    # Spy.enable_spy(SimpleSpy)
 
     pc = PigssController()
     pc.start(1)
 
+    event = Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=[1, 3, 4]))
+    Framework.publish(event)
     event = Event(Signal.BTN_STANDBY, None)
     Framework.publish(event)
     event = Event(Signal.TERMINATE, None)

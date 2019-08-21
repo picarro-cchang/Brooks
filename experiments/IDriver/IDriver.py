@@ -1,13 +1,15 @@
-import time
 import json
-import threading
-import StringPickler
 import queue as Queue
-from Listener import Listener
-import host.experiments.testing.cmd_fifo.CmdFIFO as CmdFIFO
+import threading
+import time
 from datetime import datetime, timedelta, tzinfo
-from DBWriter.InfluxDBWriter import InfluxDBWriter
-from host.experiments.LOLogger.LOLoggerClient import LOLoggerClient 
+
+import experiments.common.timeutils as timeutils
+import experiments.testing.cmd_fifo.CmdFIFO as CmdFIFO
+from experiments.IDriver import StringPickler
+from experiments.IDriver.DBWriter.InfluxDBWriter import InfluxDBWriter
+from experiments.IDriver.Listener import Listener
+from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
 ZERO = timedelta(0)
 HOUR = timedelta(hours=1)
@@ -38,6 +40,7 @@ class UTC(tzinfo):
     def dst(self, dt):
         return ZERO
 
+
 utc = UTC()
 
 
@@ -47,6 +50,7 @@ class PicarroAnalyzerDriver:
         it pipelines measurement point from instrument to the database and
         is responsible for passing to the instrument commands from upper layer
     """
+
     def __init__(self,
                  instrument_ip_address,
                  database_writer,
@@ -73,16 +77,18 @@ class PicarroAnalyzerDriver:
         self.database_tags_lock = threading.Lock()
         self.dynamic_database_tags = dynamic_database_tags if dynamic_database_tags is not None else []
         self.dynamic_database_tags_lock = threading.Lock()
+        self.stopwatch_database_tags = {}
+        self.stopwatch_database_tags_lock = threading.Lock()
         self.flushing_mode = flushing_mode
         self.flushing_batch_size = flushing_batch_size
         self.flushing_timeout = flushing_timeout
-        
+
         if isinstance(logger, str):
             self.logger = LOLoggerClient(client_name=logger)
         if isinstance(logger, LOLoggerClient):
             self.logger = logger
         if logger is None:
-            self.logger = LOLoggerClient(client_name=self.rpc_server_name)
+            self.logger = LOLoggerClient(client_name=self.rpc_server_name, verbose=True)
 
         if database_tags is not None:
             for database_tag in database_tags:
@@ -109,10 +115,9 @@ class PicarroAnalyzerDriver:
                                                       ServerDescription=self.rpc_server_description,
                                                       threaded=True)
             # if self.rpc_tunnel_config is not None:
-            self.proxys = CmdFIFO.register_proxy_rpcs_from_configs(
-                rpc_tunnel_configs=self.rpc_tunnel_config,
-                RpcTunnelServer=self.server,
-                master_ip=self.instrument_ip_address)
+            self.proxys = CmdFIFO.register_proxy_rpcs_from_configs(rpc_tunnel_configs=self.rpc_tunnel_config,
+                                                                   RpcTunnelServer=self.server,
+                                                                   master_ip=self.instrument_ip_address)
 
         # start instrument listener for data points
         self.__create_listener(self.instrument_ip_address)
@@ -138,11 +143,10 @@ class PicarroAnalyzerDriver:
         Method to start thread that reporting data to database
         """
         if not self.thread_created:
-            self.IDriverThread = IDriverThread(
-                self,
-                flushing_mode=self.flushing_mode,
-                flushing_batch_size=self.flushing_batch_size,
-                flushing_timeout=self.flushing_timeout)
+            self.IDriverThread = IDriverThread(self,
+                                               flushing_mode=self.flushing_mode,
+                                               flushing_batch_size=self.flushing_batch_size,
+                                               flushing_timeout=self.flushing_timeout)
             self.thread_created = True
             self.logger.info("IDriver loop has started")
         else:
@@ -181,7 +185,6 @@ class PicarroAnalyzerDriver:
                 self.database_tags.pop(tag, None)
         self.logger.info(f"Static tags {tags} have been removed")
 
-
     def remove_all_tags(self):
         """
             removes all tags, will be writing to database without any tags
@@ -189,7 +192,6 @@ class PicarroAnalyzerDriver:
         with self.database_tags_lock:
             self.database_tags = {}
         self.logger.info(f"All static tags have been removed")
-
 
     def get_tags(self):
         """
@@ -236,7 +238,7 @@ class PicarroAnalyzerDriver:
         with self.dynamic_database_tags_lock:
             for tag in tags:
                 if tag in self.dynamic_database_tags:
-                    dynamic_database_tags.remove(tag)
+                    self.dynamic_database_tags.remove(tag)
         self.logger.info(f"Dynamic tags {tags} have been removed")
 
     def remove_all_dynamic_tags(self):
@@ -246,8 +248,6 @@ class PicarroAnalyzerDriver:
         with self.dynamic_database_tags_lock:
             self.dynamic_database_tags = []
         self.logger.info(f"All Dynamic tags have been removed")
-
-
 
     def get_dynamic_tags(self):
         """
@@ -272,7 +272,6 @@ class PicarroAnalyzerDriver:
                 self.dynamic_database_tags.append(tag)
         self.logger.info(f"Dynamic tags {tags} have been added")
 
-
     def adjust_dynamic_tags(self, remove_tags=None, add_tags=None, remove_all_tags=False):
         """
             adjust tags by passing tags to be added, removed or
@@ -285,18 +284,47 @@ class PicarroAnalyzerDriver:
         if remove_all_tags:
             self.remove_all_dynamic_tags()
 
+    def add_stopwatch_tag(self, tag_name, timestamp_of_event=None):
+        """
+            eVENT, lol, you got it? bcz it will mostly be used for 
+            changing VENTs. this will add a stopwatch tag - this tag's
+            value will be calculated time since some event. name of 
+            the event is passed as tag_name. if time_stamp_of_event
+            is passed - it will be used for calculation
+        """
+        if timestamp_of_event is None:
+            timestamp_of_event = timeutils.get_epoch_timestamp()
+        with self.stopwatch_database_tags_lock:
+            self.stopwatch_database_tags[tag_name] = timestamp_of_event
+
+    def remove_stopwatch_tag(self, tag_name):
+        """Remove a stopwatch tag."""
+        with self.stopwatch_database_tags_lock:
+            if tag_name in self.stopwatch_database_tags:
+                self.stopwatch_database_tags.remove(tag_name)
+
+    def remove_all_stopwatch_tags(self):
+        """Remove all stopwatch tags."""
+        with self.stopwatch_database_tags_lock:
+            self.stopwatch_database_tags = {}
+
+    def get_stopwatch_tags(self):
+        """Get stopwatch tags, pretty self explanatory."""
+        with self.stopwatch_database_tags_lock:
+            stopwatch_db_tags_return = self.stopwatch_database_tags.copy()
+        return stopwatch_db_tags_return
+
     def __create_listener(self, ip):
         """
             create an instrument listener by given IP address
         """
         self.queue = Queue.Queue(200)
-        self.listener = Listener(
-            host=ip,
-            queue=self.queue,
-            port=40060,
-            elementType=StringPickler.ArbitraryObject,
-            retry=True,
-            name="Sensor stream listener")
+        self.listener = Listener(host=ip,
+                                 queue=self.queue,
+                                 port=40060,
+                                 elementType=StringPickler.ArbitraryObject,
+                                 retry=True,
+                                 name="Sensor stream listener")
         return self.queue
 
     def register_idriver_rpc_functions(self):
@@ -321,19 +349,22 @@ class PicarroAnalyzerDriver:
         self.server.register_function(self.get_dynamic_tags, name="IDRIVER_get_dynamic_tags")
         self.server.register_function(self.add_dynamic_tags, name="IDRIVER_add_dynamic_tags")
         self.server.register_function(self.adjust_dynamic_tags, name="IDRIVER_adjust_dynamic_tags")
- 
+
+        # Stopwatch tags controls - value is a time calculated as
+        # difference between measurement time and event time
+        self.server.register_function(self.remove_stopwatch_tag, name="IDRIVER_remove_stopwatch_tag")
+        self.server.register_function(self.remove_all_stopwatch_tags, name="IDRIVER_remove_all_stopwatch_tags")
+        self.server.register_function(self.get_stopwatch_tags, name="IDRIVER_get_stopwatch_tags")
+        self.server.register_function(self.add_stopwatch_tag, name="IDRIVER_add_stopwatch_tag")
+
 
 class IDriverThread(threading.Thread):
     """
         A thread which is meant to collect measurement points from
         an instrument and when unpaused - write it to database
     """
-    def __init__(self,
-                 parent_idriver,
-                 flushing_mode=BATCHING,
-                 flushing_batch_size=10,
-                 flushing_timeout=1,
-                 logger=None):
+
+    def __init__(self, parent_idriver, flushing_mode=BATCHING, flushing_batch_size=10, flushing_timeout=1, logger=None):
         threading.Thread.__init__(self, name="IDriverThread")
         self.parent_idriver = parent_idriver
         self.queue = parent_idriver.queue
@@ -355,7 +386,6 @@ class IDriverThread(threading.Thread):
             self.logger = logger
         if logger is None:
             self.logger = LOLoggerClient(client_name=f"{self.parent_idriver.rpc_server_name}_subthread")
-
 
         # self starting thread
         self.setDaemon(True)
@@ -383,6 +413,13 @@ class IDriverThread(threading.Thread):
                     data['tags'][tag] = obj[tag]
         return data
 
+    def equip_data_object_with_stopwatch_tags(self, data, obj):
+        with self.parent_idriver.stopwatch_database_tags_lock:
+            for tag in self.parent_idriver.stopwatch_database_tags:
+                time_passed = obj['time'] - self.parent_idriver.stopwatch_database_tags[tag]
+                data['tags'][tag] = time_passed
+        return data
+
     def generate_data_for_database(self, queue):
         """
 
@@ -391,20 +428,21 @@ class IDriverThread(threading.Thread):
             try:
                 obj = queue.get(timeout=5.0)
 
-                data = {'measurement': 'crds',
-                        'fields': {},
-                        'tags': {
-                            # 'analyzer': self.parent_idriver.analyzer_name,
-                            # 'chassis': self.parent_idriver.chassis
-                        }
-                        }
-                data = self.equip_data_object_with_defined_tags(data)
+                data = {'measurement': 'crds', 'fields': {}, 'tags': {}}
+
                 if 'time' in obj:
                     data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
+                    # print(obj['time'])
+                else:
+                    self.logger.error("Measurment with no 'time' value passed, gonna ignore it")
+                    continue
 
-                # equip measurement with defined tags with imported values from an obj
+                # equip measurement with tags
+                data = self.equip_data_object_with_defined_tags(data)
                 data = self.equip_data_object_with_dynamic_tags(data, obj)
+                data = self.equip_data_object_with_stopwatch_tags(data, obj)
 
+                # equip measurement with fields
                 for field in obj['data']:
                     data['fields'][field] = obj['data'][field]
                 yield data
@@ -442,11 +480,9 @@ class IDriverThread(threading.Thread):
 
                 # check if it is time to flush to database
                 # print(f"time since last flush - {time_since_last_flush}")
-                if ((self.flushing_mode == BATCHING and
-                    len(data_to_flush) > self.flushing_batch_size) or
-                    (self.flushing_mode == TIMED and
-                    time_since_last_flush + self.flushing_timeout <= time.time()) or
-                   datum is None):
+                if ((self.flushing_mode == BATCHING and len(data_to_flush) > self.flushing_batch_size)
+                        or (self.flushing_mode == TIMED and time_since_last_flush + self.flushing_timeout <= time.time())
+                        or datum is None):
                     gonna_flush_now = True
 
                 loop_just_was_just_running = True
@@ -491,14 +527,23 @@ def parse_arguments():
     parser.add_argument("-dbn", "--database_name", help="name of the influxdb database", default=None)
     parser.add_argument("-dbi", "--database_ip", help="ip address of the influxdb database", default=None)
     parser.add_argument("-dbp", "--database_port", help="port of the influxdb database", default=None)
-    parser.add_argument("-t", "--tunnel_configs", help="path to the rpc tunnel configuration file",
+    parser.add_argument("-t",
+                        "--tunnel_configs",
+                        help="path to the rpc tunnel configuration file",
                         default=DEFAULT_RPC_TUNNEL_CONFIG_FILE)
-    parser.add_argument("-f", "--flushing_mode", help="""flushing mode - data will be flushed to database
+    parser.add_argument("-f",
+                        "--flushing_mode",
+                        help="""flushing mode - data will be flushed to database
                                                         either after time period, or after some buffer is
-                                                        full""", choices=["TIMED", "BATCHING"], default="TIMED")
-    parser.add_argument("-ddt", "--dynamic_database_tags", help="""database tags that will have a dynamic
+                                                        full""",
+                        choices=["TIMED", "BATCHING"],
+                        default="TIMED")
+    parser.add_argument("-ddt",
+                        "--dynamic_database_tags",
+                        help="""database tags that will have a dynamic
                                                                    value taken from each measurement""",
-                        nargs="*", default=DEFAULT_DYNAMIC_DATABASE_TAGS)
+                        nargs="*",
+                        default=DEFAULT_DYNAMIC_DATABASE_TAGS)
     parser.add_argument("-adt", "--add_default_tags", help="add default static tags for testing", action="store_true")
 
     args = parser.parse_args()
@@ -513,16 +558,11 @@ def main():
     else:
         rpc_server_name = "IDRIVER_{}".format(args.instrument_ip_address)
 
-
     log = LOLoggerClient(client_name=f"{rpc_server_name}__main__", verbose=True)
 
-    db_writer = InfluxDBWriter(db_name=args.database_name,
-                               address=args.database_ip,
-                               db_port=args.database_port)
-    log.info("Connected to Database '{}' on {}:{}".format(
-        db_writer.get_db_name(),
-        db_writer.get_db_address(),
-        db_writer.get_db_port()))
+    db_writer = InfluxDBWriter(db_name=args.database_name, address=args.database_ip, db_port=args.database_port)
+    log.info("Connected to Database '{}' on {}:{}".format(db_writer.get_db_name(), db_writer.get_db_address(),
+                                                          db_writer.get_db_port()))
 
     with open(args.tunnel_configs, "r") as f:
         rpc_tunnel_config = json.loads(f.read())
@@ -542,8 +582,7 @@ def main():
     log.info(f"RPC server will be available at {args.rpc_server_port} in a sec.")
 
     if args.add_default_tags:
-        tags = {'analyzer': "AMADS2002",
-                'chassis': "2633"}
+        tags = {'analyzer': "AMADS2002", 'chassis': "2633"}
         ipdriver.add_tags(tags)
         log.info(f"Static tags added: {tags}")
 
@@ -561,6 +600,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-

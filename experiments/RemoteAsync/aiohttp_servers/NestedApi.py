@@ -1,33 +1,14 @@
 import asyncio
+
 import aiohttp_cors
+from aiohttp import web
 from aiohttp_cors.mixin import CorsViewMixin
 from aiohttp_swagger import setup_swagger
-from aiohttp import web
+
 # Can replace AdminApiClass by AdminApiSimple
 from AdminApiClass import AdminApi
-import functools
-import traceback
-
-
-def exception(coroutine):
-    """
-    A decorator that wraps the passed in co-routine and logs 
-    exceptions should one occur
-    """
-
-    @functools.wraps(coroutine)
-    async def wrapper(*args, **kwargs):
-        try:
-            await coroutine(*args, **kwargs)
-        except:
-            # log the exception and stop everything
-            print(traceback.format_exc())
-            print("Stopping event loop due to unexpected exception in coroutine")
-            # re-raise the exception
-            asyncio.get_event_loop().stop()
-            raise
-
-    return wrapper
+from aiohttp_network_settings_app import RackNetworkSettingsServer
+from experiments.common.async_helper import log_async_exception
 
 
 class MyView(web.View, CorsViewMixin):
@@ -57,7 +38,7 @@ class SimpleApi:
         self.addr = addr
         self.data = data
 
-    @exception
+    @log_async_exception(stop_loop=True)
     async def server_init(self):
         self.app = web.Application()
         self.app['data'] = self.data
@@ -69,13 +50,17 @@ class SimpleApi:
                 allow_headers="*",
             )})
 
-        self.app.router.add_route("GET", "/", self.handle)
+        # self.app.router.add_route("GET", "/", self.handle)
         self.app.router.add_routes([web.view("/api", MyView)])
-        self.app.router.add_route("GET", "/{name}", self.handle)
+        # self.app.router.add_route("GET", "/{name}", self.handle)
 
         admin = AdminApi()
         admin.app['data'] = self.data
         self.app.add_subapp("/admin/", admin.app)
+
+        network = RackNetworkSettingsServer()
+        network.app['data'] = self.data
+        self.app.add_subapp("/network/", network.app)
 
         setup_swagger(self.app)
 

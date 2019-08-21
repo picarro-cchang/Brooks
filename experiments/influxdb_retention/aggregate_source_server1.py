@@ -1,7 +1,7 @@
 #! /usr/local/bin/python
 # -*- coding: utf-8 -*-
 from calendar import timegm
-from collections import namedtuple    
+from collections import namedtuple
 from datetime import datetime
 import _strptime  # https://bugs.python.org/issue7980
 from flask import Flask, request, jsonify
@@ -14,25 +14,21 @@ app.debug = True
 address = "localhost"
 port = 8086
 client = InfluxDBClient(host=address, port=port)
-dbase_name = 'pigss_data'
+dbase_name = 'pigss_sim_data'
 if dbase_name not in [result["name"] for result in client.get_list_database()]:
     print("Database %s not found" % dbase_name)
 client.switch_database(dbase_name)
 durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "24h"]
-durations_ms = [
-    15000, 1 * 60000, 5 * 60000, 15 * 60000, 1 * 3600000, 4 * 3600000,
-    12 * 3600000, 24 * 3600000
-]
+durations_ms = [15000, 1 * 60000, 5 * 60000, 15 * 60000, 1 * 3600000, 4 * 3600000, 12 * 3600000, 24 * 3600000]
+
 
 def convert_to_time_ms(timestamp):
-    return 1000 * timegm(
-        datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ').timetuple())
+    return 1000 * timegm(datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ').timetuple())
 
 
 def get_field_keys(client, measurement):
     rs = client.query("SHOW FIELD KEYS FROM %s" % measurement)
-    return [(row["fieldKey"], row["fieldType"]) for key, row_gen in rs.items()
-            for row in row_gen]
+    return [(row["fieldKey"], row["fieldType"]) for key, row_gen in rs.items() for row in row_gen]
 
 
 def get_tag_keys():
@@ -48,8 +44,7 @@ def health_check():
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     items = get_field_keys(client, "crds")
-    return jsonify(
-        [key for key, ftype in items if ftype in ['float', 'integer']])
+    return jsonify([key for key, ftype in items if ftype in ['float', 'integer']])
 
 
 def make_adhoc_filter(filters):
@@ -59,9 +54,7 @@ def make_adhoc_filter(filters):
         # Strings for tags which are not regexs must be in single quotes
         if filt['key'] in tag_keys:
             value = filt['value']
-            if isinstance(
-                    value,
-                    str) and value and value[0] != '/' and value[-1] != '/':
+            if isinstance(value, str) and value and value[0] != '/' and value[-1] != '/':
                 value = "'" + value + "'"
             filt['value'] = value
         result.append('"{key}"{operator}{value}'.format(**filt))
@@ -109,8 +102,7 @@ def query():
         for duration, duration_ms in zip(durations[which:], durations_ms[which:]):
             rs = client.query(
                 'SELECT "mean_{target}" FROM crds1_{interval} '
-                'WHERE {where_clause} time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1'
-                .format(
+                'WHERE {where_clause} time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1'.format(
                     target=target,
                     where_clause=where_clause,
                     start_time_ms=start_time_ms,
@@ -119,28 +111,20 @@ def query():
                 epoch='ms')
             times = [row['time'] for key, row_gen in rs.items() for row in row_gen]
             if times:
-                candidates.append(Candidate(max(0, times[0] - start_time_ms), duration_ms, duration, range_ms//duration_ms))
-         
+                candidates.append(Candidate(max(0, times[0] - start_time_ms), duration_ms, duration, range_ms // duration_ms))
+
         if which == 0:
             # Also need to consider the undecimated data
             rs = client.query(
                 'SELECT "{target}" FROM crds '
-                'WHERE {where_clause}  time<{stop_time_ms}ms AND valve_stable_time>30 ORDER BY time ASC LIMIT 1'
-                .format(
-                    target=target,
-                    where_clause=where_clause,
-                    start_time_ms=start_time_ms,
-                    stop_time_ms=stop_time_ms),
+                'WHERE {where_clause}  time<{stop_time_ms}ms AND valve_stable_time>30 ORDER BY time ASC LIMIT 1'.format(
+                    target=target, where_clause=where_clause, start_time_ms=start_time_ms, stop_time_ms=stop_time_ms),
                 epoch='ms')
             times = [row['time'] for key, row_gen in rs.items() for row in row_gen]
             rs = client.query(
                 'SELECT COUNT("{target}") as count FROM crds '
-                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms AND valve_stable_time>30'
-                .format(
-                    target=target,
-                    where_clause=where_clause,
-                    start_time_ms=start_time_ms,
-                    stop_time_ms=stop_time_ms),
+                'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms AND valve_stable_time>30'.format(
+                    target=target, where_clause=where_clause, start_time_ms=start_time_ms, stop_time_ms=stop_time_ms),
                 epoch='ms')
             counts = [row['count'] for key, row_gen in rs.items() for row in row_gen]
             if times:
@@ -170,30 +154,22 @@ def query():
                 .format(
                     target=target,
                     where_clause=where_clause,
-                    start_time_ms=start_time_ms-duration_ms,
-                    stop_time_ms=stop_time_ms+duration_ms,
+                    start_time_ms=start_time_ms - duration_ms,
+                    stop_time_ms=stop_time_ms + duration_ms,
                     interval=best_duration),
                 epoch='ms')
             # print([row for key, row_gen in rs.items() for row in row_gen])
 
         data = [{
-            "target":
-            "mean_" + target,
-            "datapoints": [[row['mean'], row['time']] for key, row_gen in rs.items() for row in row_gen]},
-                {
-                    "target":
-                    "max",
-                    "datapoints": [[row['max'], row['time']]
-                                   for key, row_gen in rs.items()
-                                   for row in row_gen]
-                },
-                {
-                    "target":
-                    "min",
-                    "datapoints": [[row['min'], row['time']]
-                                   for key, row_gen in rs.items()
-                                   for row in row_gen]
-                }]
+            "target": "mean_" + target,
+            "datapoints": [[row['mean'], row['time']] for key, row_gen in rs.items() for row in row_gen]
+        }, {
+            "target": "max",
+            "datapoints": [[row['max'], row['time']] for key, row_gen in rs.items() for row in row_gen]
+        }, {
+            "target": "min",
+            "datapoints": [[row['min'], row['time']] for key, row_gen in rs.items() for row in row_gen]
+        }]
     return jsonify(data)
 
 
@@ -221,11 +197,8 @@ def tag_keys():
 def tag_values():
     req = request.get_json()
     keyname = req['key']
-    rs = client.query(
-        'SHOW TAG VALUES FROM crds WITH key={keyname}'.format(keyname=keyname))
-    data = [{
-        "text": row["value"]
-    } for key, row_gen in rs.items() for row in row_gen]
+    rs = client.query('SHOW TAG VALUES FROM crds WITH key={keyname}'.format(keyname=keyname))
+    data = [{"text": row["value"]} for key, row_gen in rs.items() for row in row_gen]
     return jsonify(data)
 
 
