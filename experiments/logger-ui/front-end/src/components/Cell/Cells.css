@@ -1,7 +1,8 @@
 .log-row {
   padding-left: 12px;
   margin-bottom: 6px;
-  border-left: 4px solid white;
+  border-left: 6px solid #828282;
+  border-radius: 6px;
 }
 
 .log-fields {

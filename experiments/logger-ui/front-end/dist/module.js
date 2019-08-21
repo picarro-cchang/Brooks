@@ -86,16 +86,16 @@ define(["@grafana/data","@grafana/ui","react"], function(__WEBPACK_EXTERNAL_MODU
 /************************************************************************/
 /******/ ({
 
-/***/ "../node_modules/css-loader/dist/cjs.js?!../node_modules/postcss-loader/src/index.js?!../node_modules/sass-loader/lib/loader.js!./components/DataTable/Cells.css":
-/*!********************************************************************************************************************************************************************************!*\
-  !*** ../node_modules/css-loader/dist/cjs.js??ref--7-1!../node_modules/postcss-loader/src??ref--7-2!../node_modules/sass-loader/lib/loader.js!./components/DataTable/Cells.css ***!
-  \********************************************************************************************************************************************************************************/
+/***/ "../node_modules/css-loader/dist/cjs.js?!../node_modules/postcss-loader/src/index.js?!../node_modules/sass-loader/lib/loader.js!./components/Cell/Cells.css":
+/*!***************************************************************************************************************************************************************************!*\
+  !*** ../node_modules/css-loader/dist/cjs.js??ref--7-1!../node_modules/postcss-loader/src??ref--7-2!../node_modules/sass-loader/lib/loader.js!./components/Cell/Cells.css ***!
+  \***************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/dist/runtime/api.js */ "../node_modules/css-loader/dist/runtime/api.js")(true);
 // Module
-exports.push([module.i, ".log-row {\n  padding-left: 12px;\n  margin-bottom: 6px;\n  border-left: 4px solid white; }\n\n.log-fields {\n  margin: 4px; }\n\n.client-name {\n  background-color: #00a3da;\n  color: rgba(60,60,60,0.96863);\n  padding: 0px 8px 0px 8px;\n  font-weight: 600; }\n\n.severity-level-10 {\n  background-color: #f88787;\n  color: rgba(60,60,60,0.96863);\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-20 {\n  background-color: #f85757;\n  color: rgba(60,60,60,0.96863);\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-30 {\n  background-color: red;\n  color: #000;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.log-message {\n  border-bottom: 2px solid #5f5f5f; }\n", "",{"version":3,"sources":["Cells.css"],"names":[],"mappings":"AAAA;EACE,kBAAkB;EAClB,kBAAkB;EAClB,4BAA4B,EAAE;;AAEhC;EACE,WAAW,EAAE;;AAEf;EACE,yBAAyB;EACzB,6BAAgB;EAChB,wBAAwB;EACxB,gBAAgB,EAAE;;AAEpB;EACE,yBAAyB;EACzB,6BAAgB;EAChB,gBAAgB;EAChB,wBAAwB,EAAE;;AAE5B;EACE,yBAAyB;EACzB,6BAAgB;EAChB,gBAAgB;EAChB,wBAAwB,EAAE;;AAE5B;EACE,qBAAqB;EACrB,WAAW;EACX,gBAAgB;EAChB,wBAAwB,EAAE;;AAE5B;EACE,gCAAgC,EAAE","file":"Cells.css","sourcesContent":[".log-row {\n  padding-left: 12px;\n  margin-bottom: 6px;\n  border-left: 4px solid white; }\n\n.log-fields {\n  margin: 4px; }\n\n.client-name {\n  background-color: #00a3da;\n  color: #3c3c3cf7;\n  padding: 0px 8px 0px 8px;\n  font-weight: 600; }\n\n.severity-level-10 {\n  background-color: #f88787;\n  color: #3c3c3cf7;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-20 {\n  background-color: #f85757;\n  color: #3c3c3cf7;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-30 {\n  background-color: red;\n  color: #000;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.log-message {\n  border-bottom: 2px solid #5f5f5f; }\n"]}]);
+exports.push([module.i, ".log-row {\n  padding-left: 12px;\n  margin-bottom: 6px;\n  border-left: 6px solid #828282;\n  border-radius: 6px; }\n\n.log-fields {\n  margin: 4px; }\n\n.client-name {\n  background-color: #00a3da;\n  color: rgba(60,60,60,0.96863);\n  padding: 0px 8px 0px 8px;\n  font-weight: 600; }\n\n.severity-level-10 {\n  background-color: #f88787;\n  color: rgba(60,60,60,0.96863);\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-20 {\n  background-color: #f85757;\n  color: rgba(60,60,60,0.96863);\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-30 {\n  background-color: red;\n  color: #000;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.log-message {\n  border-bottom: 2px solid #5f5f5f; }\n", "",{"version":3,"sources":["Cells.css"],"names":[],"mappings":"AAAA;EACE,kBAAkB;EAClB,kBAAkB;EAClB,8BAA8B;EAC9B,kBAAkB,EAAE;;AAEtB;EACE,WAAW,EAAE;;AAEf;EACE,yBAAyB;EACzB,6BAAgB;EAChB,wBAAwB;EACxB,gBAAgB,EAAE;;AAEpB;EACE,yBAAyB;EACzB,6BAAgB;EAChB,gBAAgB;EAChB,wBAAwB,EAAE;;AAE5B;EACE,yBAAyB;EACzB,6BAAgB;EAChB,gBAAgB;EAChB,wBAAwB,EAAE;;AAE5B;EACE,qBAAqB;EACrB,WAAW;EACX,gBAAgB;EAChB,wBAAwB,EAAE;;AAE5B;EACE,gCAAgC,EAAE","file":"Cells.css","sourcesContent":[".log-row {\n  padding-left: 12px;\n  margin-bottom: 6px;\n  border-left: 6px solid #828282;\n  border-radius: 6px; }\n\n.log-fields {\n  margin: 4px; }\n\n.client-name {\n  background-color: #00a3da;\n  color: #3c3c3cf7;\n  padding: 0px 8px 0px 8px;\n  font-weight: 600; }\n\n.severity-level-10 {\n  background-color: #f88787;\n  color: #3c3c3cf7;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-20 {\n  background-color: #f85757;\n  color: #3c3c3cf7;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.severity-level-30 {\n  background-color: red;\n  color: #000;\n  font-weight: 600;\n  padding: 0px 8px 0px 8px; }\n\n.log-message {\n  border-bottom: 2px solid #5f5f5f; }\n"]}]);
 
 
 /***/ }),
@@ -939,10 +939,10 @@ function __importDefault(mod) {
 
 /***/ }),
 
-/***/ "./components/DataTable/Cell.tsx":
-/*!***************************************!*\
-  !*** ./components/DataTable/Cell.tsx ***!
-  \***************************************/
+/***/ "./components/Cell/Cell.tsx":
+/*!**********************************!*\
+  !*** ./components/Cell/Cell.tsx ***!
+  \**********************************/
 /*! exports provided: Cell */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -952,7 +952,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "../node_modules/tslib/tslib.es6.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _Cells_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Cells.css */ "./components/DataTable/Cells.css");
+/* harmony import */ var _Cells_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Cells.css */ "./components/Cell/Cells.css");
 /* harmony import */ var _Cells_css__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_Cells_css__WEBPACK_IMPORTED_MODULE_2__);
 
 
@@ -968,18 +968,18 @@ function (_super) {
   }
 
   Cell.prototype.render = function () {
-    var data = this.props.data;
+    var row = this.props.row;
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "row log-row"
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "log-fields timestamp"
-    }, data[0]), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    }, row[0]), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "log-fields client-name"
-    }, data[1]), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
-      className: "log-fields " + "severity-level-" + data[3]
-    }, data[3]), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    }, row[1]), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+      className: 'log-fields ' + 'severity-level-' + row[3]
+    }, row[3]), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "log-fields log-message"
-    }, data[2]));
+    }, row[2]));
   };
 
   return Cell;
@@ -989,15 +989,15 @@ function (_super) {
 
 /***/ }),
 
-/***/ "./components/DataTable/Cells.css":
-/*!****************************************!*\
-  !*** ./components/DataTable/Cells.css ***!
-  \****************************************/
+/***/ "./components/Cell/Cells.css":
+/*!***********************************!*\
+  !*** ./components/Cell/Cells.css ***!
+  \***********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../../node_modules/css-loader/dist/cjs.js??ref--7-1!../../../node_modules/postcss-loader/src??ref--7-2!../../../node_modules/sass-loader/lib/loader.js!./Cells.css */ "../node_modules/css-loader/dist/cjs.js?!../node_modules/postcss-loader/src/index.js?!../node_modules/sass-loader/lib/loader.js!./components/DataTable/Cells.css");
+var content = __webpack_require__(/*! !../../../node_modules/css-loader/dist/cjs.js??ref--7-1!../../../node_modules/postcss-loader/src??ref--7-2!../../../node_modules/sass-loader/lib/loader.js!./Cells.css */ "../node_modules/css-loader/dist/cjs.js?!../node_modules/postcss-loader/src/index.js?!../node_modules/sass-loader/lib/loader.js!./components/Cell/Cells.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -1019,160 +1019,133 @@ if(false) {}
 
 /***/ }),
 
-/***/ "./components/DataTable/TableLayout.tsx":
-/*!**********************************************!*\
-  !*** ./components/DataTable/TableLayout.tsx ***!
-  \**********************************************/
-/*! exports provided: TableLayout */
+/***/ "./components/LogLayout.tsx":
+/*!**********************************!*\
+  !*** ./components/LogLayout.tsx ***!
+  \**********************************/
+/*! exports provided: LogLayout */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TableLayout", function() { return TableLayout; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogLayout", function() { return LogLayout; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "../node_modules/tslib/tslib.es6.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _Cell__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Cell */ "./components/DataTable/Cell.tsx");
+/* harmony import */ var _Cell_Cell__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Cell/Cell */ "./components/Cell/Cell.tsx");
 
 
 
-var tbody = [['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '10'], ['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '20'], ['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '30'], ['2019-08-01 17:41:33.923678', 'MadMapper', "Reading from /home/picarro/.config/picarro/madmapper.json:\n{\n  \"\"Name\"\": \"\"MadMapper\"\",\n  \"\"Devices\"\": {\n    \"\"Network_Devices\"\": {\n      \"\"2755-SBDS2015\"\": {\n        \"\"IP\"\": \"\"192.168.10.100\"\",\n        \"\"SN\"\": \"\"2755-SBDS2015\"\",\n        \"\"Driver\"\": \"\"IDriver\"\",\n        \"\"RPC_Port\"\": 33000\n      },\n      \"\"2633-AMBDS2002\"\": {\n        \"\"IP\"\": \"\"192.168.10.103\"\",\n        \"\"SN\"\": \"\"2633-AMBDS2002\"\",\n        \"\"Driver\"\": \"\"IDriver\"\",\n        \"\"RPC_Port\"\": 33001\n      }\n    },\n    \"\"Serial_Devices\"\": {\n      \"\"/dev/ttyUSB1\"\": {\n        \"\"Driver\"\": \"\"AlicatDriver\"\",\n        \"\"Path\"\": \"\"/dev/ttyUSB1\"\",\n        \"\"Baudrate\"\": 19200,\n        \"\"RPC_Port\"\": 33020\n      },\n      \"\"/dev/ttyACM3\"\": {\n        \"\"Driver\"\": \"\"PigletDriver\"\",\n        \"\"Bank_ID\"\": 3,\n        \"\"Topaz_A_HW_Rev\"\": \"\"Null\"\",\n        \"\"Topaz_B_HW_Rev\"\": \"\"Null\"\",\n        \"\"Whitfield_HW_Rev\"\": \"\"Null\"\",\n        \"\"Path\"\": \"\"/dev/ttyACM3\"\",\n        \"\"Baudrate\"\": 38400,\n        \"\"RPC_Port\"\": 33042\n      },\n      \"\"/dev/ttyACM0\"\": {\n        \"\"Driver\"\": \"\"PigletDriver\"\",\n        \"\"Bank_ID\"\": 4,\n        \"\"Topaz_A_HW_Rev\"\": \"\"Null\"\",\n        \"\"Topaz_B_HW_Rev\"\": \"\"Null\"\",\n        \"\"Whitfield_HW_Rev\"\": \"\"Null\"\",\n        \"\"Path\"\": \"\"/dev/ttyACM0\"\",\n        \"\"Baudrate\"\": 38400,\n        \"\"RPC_Port\"\": 33043\n      },\n      \"\"/dev/ttyACM1\"\": {\n        \"\"Driver\"\": \"\"NumatoDriver\"\",\n        \"\"Path\"\": \"\"/dev/ttyACM1\"\",\n        \"\"Baudrate\"\": 19200,\n        \"\"Numato_ID\"\": 0,\n        \"\"RPC_Port\"\": 33030\n      },\n      \"\"/dev/ttyACM2\"\": {\n        \"\"Driver\"\": \"\"NumatoDriver\"\",\n        \"\"Path\"\": \"\"/dev/ttyACM2\"\",\n        \"\"Baudrate\"\": 19200,\n        \"\"Numato_ID\"\": 1,\n        \"\"RPC_Port\"\": 33031\n      }\n    }\n  }\n}", '10']];
 
-var TableLayout =
+var LogLayout =
 /** @class */
 function (_super) {
-  tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](TableLayout, _super);
+  tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](LogLayout, _super);
 
-  function TableLayout(props) {
-    var _this = _super.call(this, props) || this;
-
-    _this.state = {
-      level: '',
-      limit: 0,
-      date: '',
-      tbody: []
-    };
-    _this.fetchLogs = _this.fetchLogs.bind(_this);
-    return _this;
+  function LogLayout(props) {
+    return _super.call(this, props) || this;
   }
 
-  TableLayout.prototype.fetchLogs = function () {
-    return tbody;
-  };
-
-  TableLayout.prototype.componentWillMount = function () {
-    this.setState({
-      tbody: this.fetchLogs()
-    });
-  };
-
-  TableLayout.prototype.componentDidUpdate = function (prevProps) {
-    var _this = this;
-
-    if (this.props.options.level !== prevProps.options.level || this.props.options.limit !== prevProps.options.limit || this.props.options.date !== prevProps.options.date) {
-      console.log('Make call to the API');
-      this.setState(function () {
-        return {
-          tbody: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](_this.fetchLogs(), [['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '90']])
-        };
-      });
-    }
-  };
-
-  TableLayout.prototype.render = function () {
-    var options = this.props.options;
-    var thead = options.thead;
-    var data = this.state.tbody;
-    var tableStyle = {
-      border: '1px solid white',
-      width: '100%'
-    };
-    var theadStyle = {
-      border: '1px solid white',
-      fontSize: '1.25em',
-      fontWeight: 600
-    };
-    var trStyle = {
-      border: '1px solid white'
-    };
-    var tdStyle = {
-      padding: '4px'
-    };
+  LogLayout.prototype.render = function () {
+    var data = this.props.options.data;
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1__["Fragment"], null, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "container-fluid"
-    }, tbody.map(function (cell) {
-      return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_Cell__WEBPACK_IMPORTED_MODULE_2__["Cell"], {
+    }, data.map(function (cell) {
+      return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_Cell_Cell__WEBPACK_IMPORTED_MODULE_2__["Cell"], {
         key: Math.random(),
-        data: cell
+        row: cell
       });
     })));
   };
 
-  return TableLayout;
+  return LogLayout;
 }(react__WEBPACK_IMPORTED_MODULE_1__["Component"]);
 
 
 
 /***/ }),
 
-/***/ "./components/DataTable/TablePanel.tsx":
-/*!*********************************************!*\
-  !*** ./components/DataTable/TablePanel.tsx ***!
-  \*********************************************/
-/*! exports provided: TablePanel */
+/***/ "./components/LogPanel.tsx":
+/*!*********************************!*\
+  !*** ./components/LogPanel.tsx ***!
+  \*********************************/
+/*! exports provided: LogPanel */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TablePanel", function() { return TablePanel; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogPanel", function() { return LogPanel; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "../node_modules/tslib/tslib.es6.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @grafana/ui */ "@grafana/ui");
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _TableLayout__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./TableLayout */ "./components/DataTable/TableLayout.tsx");
+/* harmony import */ var _LogLayout__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./LogLayout */ "./components/LogLayout.tsx");
 
 
 
 
 
-var TablePanel =
+var LogPanel =
 /** @class */
 function (_super) {
-  tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](TablePanel, _super);
+  tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](LogPanel, _super);
 
-  function TablePanel() {
-    return _super !== null && _super.apply(this, arguments) || this;
+  function LogPanel(props) {
+    var _this = _super.call(this, props) || this;
+
+    _this.state = {
+      data: [['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '10'], ['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '20'], ['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '30'], ['2019-08-01 17:41:33.923678', 'MadMapper', "Reading from /home/picarro/.config/picarro/madmapper.json:\n      {\n        \"\"Name\"\": \"\"MadMapper\"\",\n        \"\"Devices\"\": {\n          \"\"Network_Devices\"\": {\n            \"\"2755-SBDS2015\"\": {\n              \"\"IP\"\": \"\"192.168.10.100\"\",\n              \"\"SN\"\": \"\"2755-SBDS2015\"\",\n              \"\"Driver\"\": \"\"IDriver\"\",\n              \"\"RPC_Port\"\": 33000\n            },\n            \"\"2633-AMBDS2002\"\": {\n              \"\"IP\"\": \"\"192.168.10.103\"\",\n              \"\"SN\"\": \"\"2633-AMBDS2002\"\",\n              \"\"Driver\"\": \"\"IDriver\"\",\n              \"\"RPC_Port\"\": 33001\n            }\n          },\n          \"\"Serial_Devices\"\": {\n            \"\"/dev/ttyUSB1\"\": {\n              \"\"Driver\"\": \"\"AlicatDriver\"\",\n              \"\"Path\"\": \"\"/dev/ttyUSB1\"\",\n              \"\"Baudrate\"\": 19200,\n              \"\"RPC_Port\"\": 33020\n            },\n            \"\"/dev/ttyACM3\"\": {\n              \"\"Driver\"\": \"\"PigletDriver\"\",\n              \"\"Bank_ID\"\": 3,\n              \"\"Topaz_A_HW_Rev\"\": \"\"Null\"\",\n              \"\"Topaz_B_HW_Rev\"\": \"\"Null\"\",\n              \"\"Whitfield_HW_Rev\"\": \"\"Null\"\",\n              \"\"Path\"\": \"\"/dev/ttyACM3\"\",\n              \"\"Baudrate\"\": 38400,\n              \"\"RPC_Port\"\": 33042\n            },\n            \"\"/dev/ttyACM0\"\": {\n              \"\"Driver\"\": \"\"PigletDriver\"\",\n              \"\"Bank_ID\"\": 4,\n              \"\"Topaz_A_HW_Rev\"\": \"\"Null\"\",\n              \"\"Topaz_B_HW_Rev\"\": \"\"Null\"\",\n              \"\"Whitfield_HW_Rev\"\": \"\"Null\"\",\n              \"\"Path\"\": \"\"/dev/ttyACM0\"\",\n              \"\"Baudrate\"\": 38400,\n              \"\"RPC_Port\"\": 33043\n            },\n            \"\"/dev/ttyACM1\"\": {\n              \"\"Driver\"\": \"\"NumatoDriver\"\",\n              \"\"Path\"\": \"\"/dev/ttyACM1\"\",\n              \"\"Baudrate\"\": 19200,\n              \"\"Numato_ID\"\": 0,\n              \"\"RPC_Port\"\": 33030\n            },\n            \"\"/dev/ttyACM2\"\": {\n              \"\"Driver\"\": \"\"NumatoDriver\"\",\n              \"\"Path\"\": \"\"/dev/ttyACM2\"\",\n              \"\"Baudrate\"\": 19200,\n              \"\"Numato_ID\"\": 1,\n              \"\"RPC_Port\"\": 33031\n            }\n          }\n        }\n      }", '10']]
+    };
+    return _this;
   }
 
-  TablePanel.prototype.render = function () {
+  LogPanel.prototype.componentDidMount = function () {// To Do: Call rest service
+  };
+
+  LogPanel.prototype.componentDidUpdate = function (prevProps) {
+    if (this.props.options.level !== prevProps.options.level || this.props.options.limit !== prevProps.options.limit || this.props.options.date !== prevProps.options.date) {
+      // TO DO: Make API
+      console.log('Make call to the API');
+      this.setState(function (prevState) {
+        return {
+          data: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](prevState.data, [['2019-08-01 01:13:14.281224', 'IDRIVER_192.168.10.103_subthread', 'flushing to db failed, try again in 5 seconds', '10']])
+        };
+      });
+    }
+  };
+
+  LogPanel.prototype.render = function () {
+    var _this = this;
+
     var options = this.props.options;
-    console.log('TablePanel', options);
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["ThemeContext"].Consumer, null, function (theme) {
-      return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_TableLayout__WEBPACK_IMPORTED_MODULE_3__["TableLayout"], {
-        options: options,
+      return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_LogLayout__WEBPACK_IMPORTED_MODULE_3__["LogLayout"], {
+        options: tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, options, {
+          data: _this.state.data
+        }),
         theme: theme
       });
     });
   };
 
-  return TablePanel;
+  return LogPanel;
 }(react__WEBPACK_IMPORTED_MODULE_1__["PureComponent"]);
 
 
 
 /***/ }),
 
-/***/ "./components/DataTable/TablePanelEditor.tsx":
-/*!***************************************************!*\
-  !*** ./components/DataTable/TablePanelEditor.tsx ***!
-  \***************************************************/
-/*! exports provided: TablePanelEditor */
+/***/ "./components/LogPanelEditor.tsx":
+/*!***************************************!*\
+  !*** ./components/LogPanelEditor.tsx ***!
+  \***************************************/
+/*! exports provided: LogPanelEditor */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TablePanelEditor", function() { return TablePanelEditor; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogPanelEditor", function() { return LogPanelEditor; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "../node_modules/tslib/tslib.es6.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
@@ -1207,12 +1180,12 @@ var limitOptions = [{
   label: '50'
 }];
 
-var TablePanelEditor =
+var LogPanelEditor =
 /** @class */
 function (_super) {
-  tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](TablePanelEditor, _super);
+  tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](LogPanelEditor, _super);
 
-  function TablePanelEditor() {
+  function LogPanelEditor() {
     var _this = _super !== null && _super.apply(this, arguments) || this;
 
     _this.onLevelChange = function (level) {
@@ -1236,7 +1209,7 @@ function (_super) {
     return _this;
   }
 
-  TablePanelEditor.prototype.render = function () {
+  LogPanelEditor.prototype.render = function () {
     console.log(this.props);
     var _a = this.props.options,
         level = _a.level,
@@ -1340,7 +1313,7 @@ function (_super) {
     }))));
   };
 
-  return TablePanelEditor;
+  return LogPanelEditor;
 }(react__WEBPACK_IMPORTED_MODULE_1__["PureComponent"]);
 
 
@@ -1359,15 +1332,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "plugin", function() { return plugin; });
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/ui */ "@grafana/ui");
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _components_DataTable_TablePanel__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/DataTable/TablePanel */ "./components/DataTable/TablePanel.tsx");
-/* harmony import */ var _components_DataTable_TablePanelEditor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/DataTable/TablePanelEditor */ "./components/DataTable/TablePanelEditor.tsx");
+/* harmony import */ var _components_LogPanel__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/LogPanel */ "./components/LogPanel.tsx");
+/* harmony import */ var _components_LogPanelEditor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/LogPanelEditor */ "./components/LogPanelEditor.tsx");
 /* harmony import */ var _src_services_LogService__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../src/services/LogService */ "./services/LogService.ts");
 
 
 
 
-var plugin = new _grafana_ui__WEBPACK_IMPORTED_MODULE_0__["PanelPlugin"](_components_DataTable_TablePanel__WEBPACK_IMPORTED_MODULE_1__["TablePanel"]);
-plugin.setEditor(_components_DataTable_TablePanelEditor__WEBPACK_IMPORTED_MODULE_2__["TablePanelEditor"]);
+var plugin = new _grafana_ui__WEBPACK_IMPORTED_MODULE_0__["PanelPlugin"](_components_LogPanel__WEBPACK_IMPORTED_MODULE_1__["LogPanel"]);
+plugin.setEditor(_components_LogPanelEditor__WEBPACK_IMPORTED_MODULE_2__["LogPanelEditor"]);
 plugin.setDefaults(_src_services_LogService__WEBPACK_IMPORTED_MODULE_3__["LogService"].getDefaults());
 
 /***/ }),
@@ -1393,7 +1366,6 @@ var LogService = function () {
   return {
     getDefaults: function getDefaults() {
       var defaults = {
-        thead: ['Time', 'Client', 'LogMessage', 'Level'],
         level: '10',
         limit: 20,
         date: {
@@ -1403,7 +1375,8 @@ var LogService = function () {
             from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
             to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])()
           }
-        }
+        },
+        data: [[]]
       };
       return defaults;
     },

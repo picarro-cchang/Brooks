@@ -1,10 +1,10 @@
 import { PanelPlugin } from '@grafana/ui';
-import { TablePanel } from './components/DataTable/TablePanel';
-import { TablePanelEditor } from './components/DataTable/TablePanelEditor';
-import { TableOptions } from './components/DataTable/types';
+import { LogPanel } from './components/LogPanel';
+import { LogPanelEditor } from './components/LogPanelEditor';
+import { LogProps } from './components/types';
 import { LogService } from '../src/services/LogService';
 
-export const plugin = new PanelPlugin<TableOptions>(TablePanel);
+export const plugin = new PanelPlugin<LogProps>(LogPanel);
 
-plugin.setEditor(TablePanelEditor);
+plugin.setEditor(LogPanelEditor);
 plugin.setDefaults(LogService.getDefaults());

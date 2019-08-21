@@ -1,6 +1,6 @@
 import { dateTime } from '@grafana/data';
 // import { LoggerGetColumnsAPI } from '../constants/API';
-import { TableOptions } from 'components/DataTable/types';
+import { LogProps } from 'components/types';
 
 export const LogService = (() => {
   function getLogs() {
@@ -9,11 +9,11 @@ export const LogService = (() => {
 
   return {
     getDefaults: () => {
-      const defaults: TableOptions = {
-        thead: ['Time', 'Client', 'LogMessage', 'Level'],
+      const defaults: LogProps = {
         level: '10',
         limit: 20,
         date: { from: dateTime(), to: dateTime(), raw: { from: dateTime(), to: dateTime() } },
+        data: [[]],
       };
       return defaults;
     },

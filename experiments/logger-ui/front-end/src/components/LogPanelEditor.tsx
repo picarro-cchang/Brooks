@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { PanelOptionsGroup, PanelEditorProps, Select, FormLabel, TimePicker } from '@grafana/ui';
 import { dateTime } from '@grafana/data';
-import { TableOptions } from './types';
+import { LogProps } from './types';
 
 const labelWidth = 6;
 const selectWidth = 12;
@@ -9,7 +9,7 @@ const selectWidth = 12;
 const levelOptions = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '30', label: '30' }];
 const limitOptions = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '50', label: '50' }];
 
-export class TablePanelEditor extends PureComponent<PanelEditorProps<TableOptions>> {
+export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
   onLevelChange = (level: any) => this.props.onOptionsChange({ ...this.props.options, level: level.value });
   onLimitChange = (limit: any) => this.props.onOptionsChange({ ...this.props.options, limit: limit.value });
   onDateChange = (timeRange: any) => this.props.onOptionsChange({ ...this.props.options, date: timeRange });

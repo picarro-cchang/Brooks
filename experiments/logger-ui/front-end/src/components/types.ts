@@ -1,18 +1,18 @@
 import { GrafanaTheme } from '@grafana/ui';
 import { TimeRange } from '@grafana/data';
 
-export interface TableOptions {
-  thead: string[];
+export interface LogProps {
   level: string;
   limit: number;
   date: TimeRange;
+  data: string[][];
 }
 
-export interface TableProps {
-  options: TableOptions;
+export interface LogSectionProps {
+  options: LogProps;
   theme: GrafanaTheme;
 }
 
-export interface CellType {
-  data: string[];
+export interface CellProps {
+  row: string[];
 }
