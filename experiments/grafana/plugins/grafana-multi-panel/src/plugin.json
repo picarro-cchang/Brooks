@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "State Machine",
+  "name": "Sampler Setup",
   "id": "multi-app",
   "enabled": true,
   "info": {
@@ -17,7 +17,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "StateMachine",
+      "name": "Sampler Setup",
       "path": "../../../wizzy/dashboards/statemachine.json",
       "addToNav": true,
       "defaultNav": true

@@ -89,12 +89,12 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                 {"Clean"}
             </button>
         );
-
+        const value: string = "Bank " + this.props.bank;
         return (
             <div style={{padding: "10px"}}>
                 <div className="panel-bank" style={{...{border: "3px solid #111", borderRadius: "10px", padding:"10px", float: "left"},...bankStyle}}>
                     <div style={{width: "100%"}}>
-                        <h2>Bank {this.props.bank}</h2>
+                        <h2>{value}</h2>
                         <div className="grid-bank" style={{display: "grid", gridGap: 10, gridTemplateColumns: "1fr 1fr", paddingBottom: 10}}>
                             {channelButtons}
                         </div>

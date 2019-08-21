@@ -2,6 +2,8 @@ import React, { Component, PureComponent, useImperativeHandle } from 'react';
 import PicarroAPI from './../api/PicarroAPI';
 import BankPanel from './BankPanel';
 import CommandPanel from './CommandPanel';
+import OptionsPanel from './OptionsPanel';
+// import OverridePanel from './OverridePanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
 //import * as styles from './module.css';
@@ -9,11 +11,14 @@ import PlanLoadPanel from './PlanLoadPanel';
 import PlanSavePanel from './PlanSavePanel';
 import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
-import {ButtonInfo, ModalInfo, PlanFocus, PlanPanelTypes, PlanStep} from './../types';
+import {ButtonInfo, ModalInfo, PlanFocus, PlanPanelTypes, PlanStep, OptionsPanelTypes} from './../types';
+import EditPanel from "./EditPanel";
+
 
 
 const socketURL = `ws://${window.location.hostname}:8000/ws`
 export class Main extends Component<any, any> {
+
   state = {
     initialized: false,
     modal_info: {
@@ -32,8 +37,15 @@ export class Main extends Component<any, any> {
       num_plan_files: 0,
       plan_files: {},
       plan_filename: ""
+    },
+    options: {
+      panel_to_show: 0
     }
   };
+  constructor(props) {
+    super(props);
+    this.switchPanel = this.switchPanel.bind(this)
+  }
 
   ws = new WebSocket(socketURL);
   componentDidMount() {
@@ -115,6 +127,22 @@ export class Main extends Component<any, any> {
     this.ws.send(JSON.stringify(o));
   };
 
+
+  switchPanel(value){
+    this.setState({plan:{panel_to_show: value}} );
+    console.log(this.state.plan.panel_to_show)
+  }
+
+  // renderComponent(){
+  //
+  //   switch (this.state.options.panel_to_show) {
+  //     case OptionsPanelTypes.NONE:
+  //       return ();
+  //     // case OptionsPanelTypes.EDIT:
+  //     //   return (<EditPanel  switches={this.switchPanel} uistatus={this.state.uistatus} ws_sender={this.ws_sender}/>);
+  //   }
+  // }
+
   render() {
     let left_panel;
     switch (this.state.plan.panel_to_show) {
@@ -126,21 +154,28 @@ export class Main extends Component<any, any> {
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
                        setFocus={(row, column) => this.setFocus(row, column)}
                        ws_sender={this.ws_sender} />
-        )
+        );
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
             <PlanLoadPanel plan={this.state.plan}
                            ws_sender={this.ws_sender} />
-        )
+        );
         break;
       case PlanPanelTypes.SAVE:
         left_panel = (
             <PlanSavePanel plan={this.state.plan}
                            ws_sender={this.ws_sender} />
-        )
+        );
+        break;
+      case PlanPanelTypes.EDIT:
+        left_panel = (<EditPanel  switches={this.switchPanel} uistatus={this.state.uistatus} ws_sender={this.ws_sender}/>);
         break;
     }
+
+
+
+
 
     let modalButtons = [];
     for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
@@ -154,6 +189,8 @@ export class Main extends Component<any, any> {
       )
     }
 //TODO: Make the banks only show if they are available/on/exist
+    //Currently banks is set to have [1, 2, 3, 4].... need to change this to be dynamic..
+    // for each bank that someone hooks up, we show that number of banks
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
@@ -173,8 +210,14 @@ export class Main extends Component<any, any> {
               <div className="col-sm-2">
                 <BankPanel bank={4} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
               </div>
+
             </div>
+            <br/>
+            <br/>
+            <div className="row" >
+              <OptionsPanel uistatus={this.state.uistatus} options={this.state.options} ws_sender={this.ws_sender} switches={this.switchPanel}/>            </div>
           </div>
+
           <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
             <div style={{ margin: "20px"}}>
               <div dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}>

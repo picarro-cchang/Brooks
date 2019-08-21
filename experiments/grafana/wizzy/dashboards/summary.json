@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1565629969457,
+  "iteration": 1565900524091,
   "links": [],
   "panels": [
     {
@@ -57,7 +57,7 @@
       "hideTimeOverride": true,
       "id": 2,
       "links": [],
-      "maxPerRow": 4,
+      "maxPerRow": null,
       "options": {},
       "pageSize": null,
       "repeat": "valve_pos",
@@ -199,6 +199,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -232,7 +233,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -371,6 +372,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -404,7 +406,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -543,6 +545,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -576,7 +579,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -715,6 +718,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -748,7 +752,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -887,6 +891,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -920,7 +925,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1059,6 +1064,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -1092,7 +1098,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1231,6 +1237,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -1264,7 +1271,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1403,6 +1410,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -1436,7 +1444,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1575,6 +1583,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -1608,7 +1617,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1747,6 +1756,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -1780,7 +1790,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -1919,6 +1929,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -1952,7 +1963,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2091,6 +2102,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -2124,7 +2136,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2263,6 +2275,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -2296,7 +2309,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2435,6 +2448,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -2468,7 +2482,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2607,6 +2621,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -2640,7 +2655,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565629969457,
+      "repeatIteration": 1565900524091,
       "repeatPanelId": 2,
       "scopedVars": {
         "valve_pos": {
@@ -2779,6 +2794,7 @@
       "timeShift": null,
       "title": "Valve:  $valve_pos",
       "transform": "timeseries_aggregations",
+      "transparent": true,
       "type": "table"
     }
   ],
@@ -2867,5 +2883,5 @@
   "timezone": "",
   "title": "Summary",
   "uid": "vCQ3IOvWk",
-  "version": 3
+  "version": 1
 }

@@ -25,6 +25,15 @@ export interface CommandPanelOptions {
   ws_sender: (o: object)=>void;
 }
 
+export interface OptionsPanelOptions {
+  uistatus: {
+    [key: string]: string;
+  }
+  ws_sender: (o: object)=>void;
+  options: Options;
+  switches: (v: any) => void;
+}
+
 export interface ModalInfo {
   show: boolean,
   html: string,
@@ -65,6 +74,7 @@ export enum PlanPanelTypes {
   PLAN = 1,
   LOAD = 2,
   SAVE = 3,
+  EDIT = 4,
 }
 
 export interface PlanSavePanelOptions {
@@ -76,4 +86,22 @@ export interface PlanStep {
   bank: number;
   channel: number;
   duration: number;
+}
+
+export interface Options {
+  panel_to_show: number;
+}
+
+export enum OptionsPanelTypes {
+  NONE = 0,
+  EDIT = 1,
+}
+
+export interface EditPanelOptions {
+  uistatus: {
+    [key: string]: string;
+  }
+  ws_sender: (o: object)=>void;
+  switches: (v: any) => void;
+
 }
