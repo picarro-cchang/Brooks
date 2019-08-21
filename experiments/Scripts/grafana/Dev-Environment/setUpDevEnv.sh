@@ -82,5 +82,6 @@ if [ ! -d /usr/local/go ]; then
 fi
 
 echo "Ready to build! Launching menu..."; sleep 1s
+
 # Launch the build menu
-cd $scriptDir/../Build && ./buildMenu.sh
+gnome-terminal -- $scriptDir/../Build/buildMenu.sh
