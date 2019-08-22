@@ -33,7 +33,7 @@ case $choice in
 	2) $scriptsDir/buildBackEnd.sh;;
 	3) $scriptsDir/buildDebianPackage.sh;;
 	4) gnome-terminal -- $scriptsDir/startGrafanaServer.sh;;
-	5) gnome-terminal -- chromium-browser --password-store=basic --start-fullscreen http://localhost:3000;;
+	5) gnome-terminal -- chromium-browser --disable-save-password-bubble --password-store=basic --start-fullscreen http://localhost:3000;;
 	6) exit;;
 	*) echo "\"$choice\" is not an option."; sleep 1s ;;
 esac

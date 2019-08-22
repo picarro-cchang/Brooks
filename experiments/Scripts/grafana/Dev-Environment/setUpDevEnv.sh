@@ -3,7 +3,6 @@
 # Set-up the dev and production environment for PiGSS
 # Assumes a bare/minimal Ubuntu 18.04.x iso has been used
 
-# TODO - Get Picarro wallpaper and set background using gsettings
 # TODO - Set keybidings
 # TODO - Setup scrot add to keybidings
 
@@ -35,6 +34,11 @@ kill $(pidof gnome-software)
 kill $(pidof ubuntu-software)
 kill $(pidof update-notifier)
 sudo apt remove -y ubuntu-software gnome-software update-notifier
+
+# Remove CUPS (printer service)
+sudo systemctl disable cups.service
+sudo systemctl disable cups-browsed.service
+sudo apt remove -y cups
 
 # Disable desktop icons
 gsettings set org.gnome.desktop.background show-desktop-icons false
@@ -74,6 +78,13 @@ gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true
 
 # Disable geolocation
 gsettings set org.gnome.system.location enabled false
+
+# Set wallpaper
+sudo cp -r $scriptDir/picarro_logo.png /usr/share/backgrounds/
+gsettings set org.gnome.desktop.background primary-color '#ffffff'
+gsettings set org.gnome.desktop.background secondary-color '#ffffff'
+gsettings set org.gnome.desktop.background picture-options 'scaled'
+gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/picarro_logo.png'
 
 # Do a full update/upgrade
 sudo apt update
@@ -147,10 +158,21 @@ sudo apt install -y gnome-tweaks
 # Install dconf-editor
 sudo apt install -y dconf-editor
 
+# Install nmap
+sudo apt install -y nmap
+
+# Install bat
+if ! which bat 2> /dev/null; then
+    wget https://github.com/sharkdp/bat/releases/download/v0.11.0/bat_0.11.0_amd64.deb
+    sudo dpkg -i bat_0.11.0_amd64.deb
+    rm -rf bat_0.11.0_amd64.deb
+fi
+
 # Install influxdb from site -- apt version is too old
 if ! which influx 2> /dev/null; then
     wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.5_amd64.deb
     sudo dpkg -i influxdb_1.7.5_amd64.deb
+    rm -rf influxdb_1.7.5_amd64.deb
     # Enable and start influxdb services
     sudo systemctl daemon-reload && sudo systemctl enable influxdb.service \
     && sudo systemctl start influxd.service && sudo systemctl start influxdb.service
@@ -165,6 +187,7 @@ if [ ! -d /usr/local/go ]; then
     cd $HOME/Downloads
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
+    rm -rf go*.tar.gz
 fi
 
 echo "Ready to build! Launching menu..."; sleep 1s
