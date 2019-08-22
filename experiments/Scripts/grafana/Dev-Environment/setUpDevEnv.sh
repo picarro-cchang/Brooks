@@ -4,7 +4,7 @@
 # Assumes a bare/minimal Ubuntu 18.04.x iso has been used
 
 # TODO - Set keybidings
-# TODO - Setup scrot add to keybidings
+# TODO - Fix Alt+Print Scrot Keybinding
 
 # Picarro Git paths
 gitDir="${HOME}/git"
@@ -95,9 +95,9 @@ sudo apt autoremove
 sudo apt install -y git ruby ruby-dev rubygems build-essential
 
 # Configure git
-echo "Enter your Picarro GitHub Username: "
+echo "\nEnter your Picarro GitHub Username:\n"
 read githubUserName
-echo "Enter your Picarro GitHub Email: "
+echo "\nEnter your Picarro GitHub Email:\n"
 read githubEmail
 git config --global user.name "${githubUserName}"
 git config --global user.email "${githubEmail}"
@@ -152,16 +152,30 @@ xdg-settings set default-web-browser chromium-browser.desktop
 # Install gnome-terminal
 sudo apt install -y gnome-terminal
 
-# Install gnome tweaks
+# Install gnome tweaks (GUI to tweak gnome desktop)
 sudo apt install -y gnome-tweaks
 
-# Install dconf-editor
+# Install dconf-editor (gnome settings GUI editor)
 sudo apt install -y dconf-editor
 
-# Install nmap
+# Install nmap (network mapping utility)
 sudo apt install -y nmap
 
-# Install bat
+# Install htop (tui process/system monitor)
+sudo apt install -y htop
+
+# Install scrot (screen shots)
+sudo apt install -y scrot
+# Set custom keybindings for scrot
+gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/']"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ name "Scrot Fullscreen"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ command "scrot ${HOME}/Pictures/$HOSTNAME-$(date +%Y%m%d_%H%M%S).png"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ binding "Print"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ name "Scrot Focused"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ command "scrot -u ${HOME}/Pictures/$HOSTNAME-$(date +%Y%m%d_%H%M%S).png"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ binding "<Alt>Print"
+
+# Install bat (like cat but with syntax highlighting)
 if ! which bat 2> /dev/null; then
     wget https://github.com/sharkdp/bat/releases/download/v0.11.0/bat_0.11.0_amd64.deb
     sudo dpkg -i bat_0.11.0_amd64.deb
@@ -180,17 +194,15 @@ fi
 
 # Make sure golang is installed
 if [ ! -d /usr/local/go ]; then
-    echo "Go not found!"
-    echo ""
-    echo "Downloading Go..."
-    echo ""
+    echo "\nGo not found!\n"
+    echo "\nDownloading Go...\n"
     cd $HOME/Downloads
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
     rm -rf go*.tar.gz
 fi
 
-echo "Ready to build! Launching menu..."; sleep 1s
+echo "\nReady to build! Launching menu...\n"; sleep 1s
 
 # Launch the build menu
 gnome-terminal -- $scriptDir/../Build/buildMenu.sh
