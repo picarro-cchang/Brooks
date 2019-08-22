@@ -6,6 +6,8 @@
 # TODO - Set keybidings
 # TODO - Fix Alt+Print Scrot Keybinding
 # TODO - Change GTK Theme
+# TODO - Modify Kernel Args -- quiet mode -- no splash
+# TODO - Maybe implement plymouth picarro splash screen
 
 # Picarro Git paths
 gitDir="${HOME}/git"
