@@ -78,6 +78,7 @@ gsettings set org.gnome.system.location enabled false
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
+sudo apt autoremove
 
 # Install git and build tools
 sudo apt install -y git ruby ruby-dev rubygems build-essential
@@ -120,6 +121,9 @@ if [ ! -d /home/$USER/miniconda3 ]; then
 	chmod +x Miniconda3-latest-Linux-x86_64.sh
 	./Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
 fi
+
+# Set up miniconda environment(s)
+conda env update -f $scriptDir/pigss_conda_env.yaml
 
 # Add environmental variables to .bashrc
 echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
