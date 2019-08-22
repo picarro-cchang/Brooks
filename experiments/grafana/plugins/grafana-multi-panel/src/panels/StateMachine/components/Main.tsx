@@ -13,8 +13,8 @@ import {ModalInfo, PlanPanelTypes} from './../types';
 import EditPanel from "./EditPanel";
 
 
-const apiLoc = `${window.location.hostname}:8000/controller`;
-const socketURL = `ws://${apiLoc}:8000/ws`;
+const apiLoc = `${window.location.hostname}:8004/controller`;
+const socketURL = `ws://${apiLoc}/ws`;
 export class Main extends Component<any, any> {
 
   state = {
