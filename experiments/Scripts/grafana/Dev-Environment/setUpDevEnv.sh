@@ -86,6 +86,9 @@ gsettings set org.gnome.desktop.background secondary-color '#ffffff'
 gsettings set org.gnome.desktop.background picture-options 'scaled'
 gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/picarro_logo.png'
 
+# Set the display resolution to 1080p
+xrandr --output `xrandr | grep " connected"|cut -f1 -d" "` --mode 1920x1080
+
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
