@@ -98,9 +98,9 @@ sudo apt autoremove
 sudo apt install -y git ruby ruby-dev rubygems build-essential
 
 # Configure git
-echo "\nEnter your Picarro GitHub Username:\n"
+printf "\nEnter your Picarro GitHub Username: "
 read githubUserName
-echo "\nEnter your Picarro GitHub Email:\n"
+printf "\nEnter your Picarro GitHub Email: "
 read githubEmail
 git config --global user.name "${githubUserName}"
 git config --global user.email "${githubEmail}"
@@ -197,15 +197,15 @@ fi
 
 # Make sure golang is installed
 if [ ! -d /usr/local/go ]; then
-    echo "\nGo not found!\n"
-    echo "\nDownloading Go...\n"
+    printf "\nGo not found!\n\n"
+    printf "\nDownloading Go...\n\n"
     cd $HOME/Downloads
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
     rm -rf go*.tar.gz
 fi
 
-echo "\nReady to build! Launching menu...\n"; sleep 1s
+printf "\nReady to build! Launching menu...\n\n"; sleep 1s
 
 # Launch the build menu
 gnome-terminal -- $scriptDir/../Build/buildMenu.sh
