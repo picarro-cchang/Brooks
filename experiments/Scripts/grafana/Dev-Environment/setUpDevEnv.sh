@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# Set-up the dev environment for PIGSS
+# Set-up the dev and production environment for PiGSS
 # Assumes a bare/minimal Ubuntu 18.04.x iso has been used
 
-# Check if gnome desktop environment exists
+# TODO - Get Picarro wallpaper and set background using gsettings
+# TODO - Set keybidings
+# TODO - Setup scrot add to keybidings
 
 # Picarro Git paths
 gitDir="${HOME}/git"
@@ -53,6 +55,15 @@ gsettings set org.gnome.desktop.notifications show-in-lock-screen false
 # Disable screensaver
 gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
 gsettings set org.gnome.desktop.screensaver lock-enabled false
+
+# Set default file browser view to list-view
+gsettings set org.gnome.nautilus.preferences default-folder-viewer list-view
+
+# Enable on-screen keyboard
+gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true
+
+# Disable geolocation
+gsettings set org.gnome.system.location enabled false
 
 # Do a full update/upgrade
 sudo apt update
