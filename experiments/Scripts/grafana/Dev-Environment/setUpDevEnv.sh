@@ -3,11 +3,16 @@
 # Set-up the dev environment for PIGSS
 # Assumes a bare/minimal Ubuntu 18.04.x iso has been used
 
-
 # Picarro Git paths
 gitDir="${HOME}/git"
-
 scriptDir=$PWD
+
+# Disable auto package updates and unattended upgrades
+if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
+    sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
+else
+    sudo sh -c "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' > /etc/apt/apt.conf.d/20auto-upgrades"
+fi
 
 # Do a full update/upgrade
 sudo apt update
