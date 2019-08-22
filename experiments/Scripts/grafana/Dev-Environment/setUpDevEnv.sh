@@ -122,8 +122,9 @@ source ${HOME}/.bashrc
 # Install openssh-server
 sudo apt install -y openssh-server
 
-# Install chromium
+# Install chromium and set as default browser
 sudo apt install -y chromium-browser
+xdg-settings set default-web-browser chromium-browser.desktop
 
 # Install gnome-terminal
 sudo apt install -y gnome-terminal
