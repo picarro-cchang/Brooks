@@ -15,8 +15,8 @@ scriptDir=$PWD
 # apt will reject authentication if the date/time is too far off
 sudo systemctl restart systemd-timesyncd
 
-# Add "picarro" user to dialout group
-sudo usermod -a -G dialout picarro
+# Add user to dialout group
+groups | grep dialout || sudo usermod -a -G dialout ${USER}
 
 # Disable auto package updates and unattended upgrades
 if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
@@ -94,7 +94,9 @@ git config --global user.email "${githubEmail}"
 sudo apt install -y curl
 
 # Configure the Node.js Repo
-curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+if [ ! -f /etc/apt/sources.list.d/nodesource.list ]; then
+    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+fi
 
 # Install Node.js
 sudo apt install -y nodejs
@@ -103,11 +105,11 @@ sudo apt install -y nodejs
 sudo apt install -y npm
 
 # Install global Node.js dependencies
-sudo npm install -g node-gyp
-sudo npm install -g yarn
+sudo npm list -g | grep node-gyp || sudo npm install -g node-gyp
+sudo npm list -g | grep yarn || sudo npm install -g yarn
 
 # Install fpm (required to build native grafana production packages)
-sudo gem install fpm
+gem list fpm | grep fpm || sudo gem install fpm
 
 # Put our files in the ~/Downloads folder
 cd ${HOME}/Downloads
@@ -120,11 +122,10 @@ if [ ! -d /home/$USER/miniconda3 ]; then
 fi
 
 # Add environmental variables to .bashrc
-echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
-echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" \
+echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+echo $PATH | grep miniconda || echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" \
 >> ${HOME}/.bashrc
-echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
-source ${HOME}/.bashrc
+echo $PYTHONPATH | grep git || echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
 
 # Install openssh-server
 sudo apt install -y openssh-server
