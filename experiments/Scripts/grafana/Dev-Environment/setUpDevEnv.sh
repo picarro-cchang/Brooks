@@ -5,6 +5,7 @@
 
 # TODO - Set keybidings
 # TODO - Fix Alt+Print Scrot Keybinding
+# TODO - Change GTK Theme
 
 # Picarro Git paths
 gitDir="${HOME}/git"
@@ -197,8 +198,8 @@ fi
 
 # Make sure golang is installed
 if [ ! -d /usr/local/go ]; then
-    printf "\nGo not found!\n\n"
-    printf "\nDownloading Go...\n\n"
+    printf '\nGo not found!\n'
+    printf 'Downloading Go...\n\n'
     cd $HOME/Downloads
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go*.tar.gz
