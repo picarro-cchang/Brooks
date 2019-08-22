@@ -3,6 +3,8 @@
 # Set-up the dev environment for PIGSS
 # Assumes a bare/minimal Ubuntu 18.04.x iso has been used
 
+# Check if gnome desktop environment exists
+
 # Picarro Git paths
 gitDir="${HOME}/git"
 scriptDir=$PWD
@@ -15,6 +17,42 @@ else
     "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' \
     > /etc/apt/apt.conf.d/20auto-upgrades"
 fi
+
+# Disable auto screen lock
+gsettings set org.gnome.desktop.session idle-delay 0
+
+# Remove gnome/ubuntu software GUIs and update-notifier
+sudo apt remove -y ubuntu-software gnome-software update-notifier
+
+# Disable desktop icons
+gsettings set org.gnome.desktop.background show-desktop-icons false
+
+# Prevent gnome from opening file manager when external media is plugged in
+gsettings set org.gnome.desktop.media-handling automount-open false
+
+# Prevent the user from locking the screen
+gsettings set org.gnome.desktop.lockdown disable-lock-screen true
+
+# Prevent the user from logging out
+gsettings set org.gnome.desktop.lockdown disable-log-out true
+
+# Disable gnome user administration
+gsettings set org.gnome.desktop.lockdown user-administration-disabled true
+
+# Prevent the user from switching users in an active session
+gsettings set org.gnome.desktop.lockdown disable-user-switching true
+
+# Prevent the user from opening print dialogs
+gsettings set org.gnome.desktop.lockdown disable-printing true
+gsettings set org.gnome.desktop.lockdown disable-print-setup true
+
+# Disable banner notifications
+gsettings set org.gnome.desktop.notifications show-banners false
+gsettings set org.gnome.desktop.notifications show-in-lock-screen false
+
+# Disable screensaver
+gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
+gsettings set org.gnome.desktop.screensaver lock-enabled false
 
 # Do a full update/upgrade
 sudo apt update
@@ -67,8 +105,20 @@ echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/b
 echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
 source ${HOME}/.bashrc
 
-# Install apt packages we need
-sudo apt install -y openssh-server chromium-browser
+# Install openssh-server
+sudo apt install -y openssh-server
+
+# Install chromium
+sudo apt install -y chromium-browser
+
+# Install gnome-terminal
+sudo apt install -y gnome-terminal
+
+# Install gnome tweaks
+sudo apt install -y gnome-tweaks
+
+# Install dconf-editor
+sudo apt install -y dconf-editor
 
 # Install influxdb from site -- apt version is too old
 if ! which influx 2> /dev/null; then
