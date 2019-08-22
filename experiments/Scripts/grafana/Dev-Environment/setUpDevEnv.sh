@@ -11,6 +11,10 @@
 gitDir="${HOME}/git"
 scriptDir=$PWD
 
+# Force a time sync -- useful for when using an old VM snapshot
+# apt will reject authentication if the date/time is too far off
+sudo systemctl restart systemd-timesyncd
+
 # Add "picarro" user to dialout group
 sudo usermod -a -G dialout picarro
 
@@ -27,6 +31,9 @@ fi
 gsettings set org.gnome.desktop.session idle-delay 0
 
 # Remove gnome/ubuntu software GUIs and update-notifier
+kill $(pidof gnome-software)
+kill $(pidof ubuntu-software)
+kill $(pidof update-notifier)
 sudo apt remove -y ubuntu-software gnome-software update-notifier
 
 # Disable desktop icons
