@@ -6,7 +6,6 @@
 # TODO - Set keybidings
 # TODO - Fix Alt+Print Scrot Keybinding
 # TODO - Change GTK Theme
-# TODO - Modify Kernel Args -- quiet mode -- no splash
 # TODO - Maybe implement plymouth picarro splash screen
 
 # Picarro Git paths
@@ -207,6 +206,10 @@ if [ ! -d /usr/local/go ]; then
     sudo tar -C /usr/local -xzf go*.tar.gz
     rm -rf go*.tar.gz
 fi
+
+# Disable ubuntu splash at boot
+sudo sed -i 's/"quiet splash"/"quiet"/g' /etc/default/grub
+sudo update-grub
 
 printf "\nReady to build! Launching menu...\n\n"; sleep 1s
 
