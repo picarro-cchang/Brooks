@@ -11,7 +11,9 @@ scriptDir=$PWD
 if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
     sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
 else
-    sudo sh -c "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' > /etc/apt/apt.conf.d/20auto-upgrades"
+    sudo sh -c \
+    "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' \
+    > /etc/apt/apt.conf.d/20auto-upgrades"
 fi
 
 # Do a full update/upgrade
@@ -60,7 +62,8 @@ fi
 
 # Add environmental variables to .bashrc
 echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
-echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
+echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" \
+>> ${HOME}/.bashrc
 echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
 source ${HOME}/.bashrc
 
@@ -72,7 +75,8 @@ if ! which influx 2> /dev/null; then
     wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.5_amd64.deb
     sudo dpkg -i influxdb_1.7.5_amd64.deb
     # Enable and start influxdb services
-    sudo systemctl daemon-reload && sudo systemctl enable influxdb.service && sudo systemctl start influxd.service && sudo systemctl start influxdb.service
+    sudo systemctl daemon-reload && sudo systemctl enable influxdb.service \
+    && sudo systemctl start influxd.service && sudo systemctl start influxdb.service
 fi
 
 # Make sure golang is installed
