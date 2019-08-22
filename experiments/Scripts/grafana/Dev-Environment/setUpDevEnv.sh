@@ -11,6 +11,9 @@
 gitDir="${HOME}/git"
 scriptDir=$PWD
 
+# Add "picarro" user to dialout group
+sudo usermod -a -G dialout picarro
+
 # Disable auto package updates and unattended upgrades
 if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
     sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
