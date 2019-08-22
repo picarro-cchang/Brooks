@@ -125,21 +125,35 @@ void usart_init() {
 
   // Set the USART baudrate registers. UBRR is a 12-bit register, so
   // it has a high and a low byte.
-  // 
+  //
+  // Set baud rate
+  // |--------+-------------+----+--------+--------|
+  // |   Baud | fosc        | 2x | UBRR0H | UBRR0L |
+  // |--------+-------------+----+--------+--------|
+  // |   9600 | 16 MHz      |  0 |      0 |    103 |
+  // |  38400 | 16 MHz      |  0 |      0 |     25 |
+  // |  38400 | 14.7456 MHz |  0 |      0 |     23 |
+  // | 115200 | 16 MHz      |  0 |      0 |      8 |
+  // | 115200 | 16 MHz      |  1 |      0 |     16 |
+  // | 230400 | 14.7456 MHz |  0 |      0 |      3 |
+  // |--------+-------------+----+--------+--------|
 
 
   //**************************** USART0 ****************************//
 
-  // Set speed mode and the desired baud rate
-  if ( USART_U2X ) {
-    // Set double speed
-    UCSR0A |= _BV(U2X0); 
-  } else {
-    // Set single speed
-    UCSR0A &= ~(_BV(U2X0));
-  }
+  // Set single speed
+  UCSR0A &= ~(_BV(U2X0));
+
+  // All our baud rates have a 0 UBRRnH
   UBRR0H = 0;
-  UBRR0L = USART_UBRR;
+
+  if (strcmp( PCB, "mega" ) == 0) {
+    // We're using the Arduino Mega -- 38400 baud rate with 16 MHz crystal
+    UBRR0L = 25;
+  } else if (strcmp( PCB, "whitfield" ) == 0) {
+    // We're using the Whitfield board -- 230400 baud rate with 14.7456 MHz crystal
+    UBRR0L = 3;
+  }
 
   // Enable receiver and transmitter
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
@@ -162,16 +176,19 @@ void usart_init() {
 
   //**************************** USART3 ****************************//
 
-  // Set speed mode and the desired baud rate
-  if ( USART_U2X ) {
-    // Set double speed
-    UCSR3A |= _BV(U2X3); 
-  } else {
-    // Set single speed
-    UCSR3A &= ~(_BV(U2X3));
-  }
+  // Set single speed
+  UCSR3A &= ~(_BV(U2X3));
+
+  // All our baud rates have a 0 UBRRnH
   UBRR3H = 0;
-  UBRR3L = USART_UBRR;
+
+  if (strcmp( PCB, "mega" ) == 0) {
+    // We're using the Arduino Mega -- 38400 baud rate with 16 MHz crystal
+    UBRR3L = 25;
+  } else if (strcmp( PCB, "whitfield" ) == 0) {
+    // We're using the Whitfield board -- 230400 baud rate with 14.7456 MHz crystal
+    UBRR3L = 3;
+  }
 
   // Enable receiver and transmitter
   UCSR3B = _BV(RXEN3) | _BV(TXEN3);
@@ -190,21 +207,4 @@ void usart_init() {
   UCSR3C |= _BV(UCSZ31) | _BV(UCSZ30);
 }
 
-/* usart_76k8_baud()
-
-   Set the USART's baud rate to 76.8k baud.  This is a strange baud,
-   and it won't be available with slower system clocks.  Call
-   usart_init() before using this.
-*/
-void usart_76k8_baud() {
-  /* Set the USART baudrate registers for 76.8k.  With double speed
-     operation enabled:
-       
-     fosc  UBRR0H  UBRROL
-     --------------------
-     8MHz    0        12
-  */
-  UBRR0H = 0;
-  UBRR0L = 12;
-} // end usart_76k8_baud
   

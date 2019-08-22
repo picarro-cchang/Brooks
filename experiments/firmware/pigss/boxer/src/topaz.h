@@ -11,7 +11,7 @@
 
 // Rev A Topaz boards ship with an I2C mux address of 0x70.  This can
 // be switched to 0x71 by swapping two resistors.
-#define TOPAZ_I2C_MUX_ADDRESS 0x70
+#define TOPAZ_I2C_MUX_ADDRESS 0x71
 
 // Non-volatile memory I2C address
 #define TOPAZ_I2C_NVM_ADDRESS 0x50

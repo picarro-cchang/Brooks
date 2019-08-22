@@ -3,7 +3,7 @@
 project_name = boxer
 
 # Project version code.  This will set the REVCODE symbol in the image
-REVCODE = 1.0.10
+REVCODE = 1.1.0
 
 # Log level
 #
@@ -13,7 +13,9 @@ REVCODE = 1.0.10
 #   info -- Potentially interested stuff
 #   warning -- Maybe bad stuff
 #   error -- You want to know about this
-LOG_LEVEL = error
+#
+# LOG_LEVEL = error
+LOG_LEVEL = debug
 
 # MCU name
 #
@@ -25,8 +27,8 @@ MCU = atmega2560
 # Known values are:
 #   mega -- Arduino MEGA
 #   whitfield -- Picarro's 90071 PCB
-PCB = mega
-# PCB = whitfield
+# PCB = mega
+PCB = whitfield
 
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the
@@ -135,6 +137,9 @@ SRC += pressure.c
 
 # Math functions
 SRC += math.c
+
+# Power board
+SRC += vernon.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
@@ -314,8 +319,8 @@ avrdude_part = m2560
 # Type: avrdude -c ?
 # to get a full listing.
 #
-# AVRDUDE_PROGRAMMER = dragon_isp
-AVRDUDE_PROGRAMMER = atmelice_isp
+AVRDUDE_PROGRAMMER = dragon_isp
+# AVRDUDE_PROGRAMMER = atmelice_isp
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = usb
@@ -336,12 +341,12 @@ endif
 # Set to ~1/10 of the AVR's default (by fuses) clock setting.
 ifeq ($(PCB),mega)
 # Platform is Arduino MEGA
-	avrdude_bitdelay_us = 1	
+	avrdude_bitdelay_us = 10	
 endif
 
 ifeq ($(PCB),whitfield)
 # Platform is Picarro's 90071
-	avrdude_bitdelay_us = 1
+	avrdude_bitdelay_us = 10
 endif
 
 
@@ -566,6 +571,7 @@ debug_make:
 	@echo 'Source files are $(SRC)'
 	@echo 'Processor frequency is $(F_CPU) Hz'
 	@echo 'PCB is $(PCB)'
+	@echo 'Shell is $(SHELL)'
 
 
 

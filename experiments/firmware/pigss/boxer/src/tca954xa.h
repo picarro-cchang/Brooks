@@ -3,6 +3,18 @@
 #ifndef TCA954xA_H
 #define TCA954xA_H
 
+// All parts in this series communicate the same way -- with one
+// control register.  The tca9548_set_channel() function can work with
+// all parts.
+
+// |----------+--------+----------+----------------------------|
+// | Part     | Reset? | channels | comment                    |
+// |----------+--------+----------+----------------------------|
+// | TCA9543A | Yes    |        2 | 1 or both channels at once |
+// | TCA9544A | No     |        4 | 1 channel at a time        |
+// | TCA9548A | Yes    |        8 | 1 or more channels at once |
+// |----------+--------+----------+----------------------------|
+
 #define TCA9548A_I2C_ADDRESS 0x74
 
 // Set initial values

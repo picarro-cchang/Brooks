@@ -115,6 +115,10 @@ logger_system_t system_array[] ={
     {"pressure",
      20
     },
+    // The power board module
+    {"vernon",
+     21
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

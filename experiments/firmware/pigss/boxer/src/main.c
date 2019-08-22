@@ -158,7 +158,7 @@ int main(void) {
   logger_setsystem( "cal" );
 
   // logger_setsystem( "tca9539" );
-  logger_setsystem( "spi" );
+  // logger_setsystem( "spi" );
   logger_setsystem( "ltc2601" );
 
   logger_setsystem( "ltc2607" );
@@ -166,13 +166,17 @@ int main(void) {
   logger_setsystem( "lm75" );
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
-  logger_setsystem( "pressure" );
+  // logger_setsystem( "pressure" );
+  logger_setsystem( "vernon" );
 
   // Start the I2C module
   i2c_init();
 
   // Load the serial number and slotid.  Check for connected hardware.
   system_init();
+
+  // Start the power board
+  vernon_init();
 
   // Start the metronome
   metronome_init();

@@ -29,6 +29,9 @@
 // Provides setter and getter functions for the system state structure
 #include "system.h"
 
+// Provides functions and definitions for working with Whitfield boards
+#include "whitfield.h"
+
 #include "topaz.h"
 
 int8_t topaz_init(char board) {
@@ -69,8 +72,24 @@ int8_t topaz_init(char board) {
 }
 
 int8_t topaz_connect(char board) {
-  // Configure I2C mux on Topaz.  Channel 1 is the only active channel.
   int8_t retval = 0;
+  if (strcmp( PCB, "whitfield" ) == 0) {
+    // We're using the Whitfield board.  This has a TCA9544A I2C mux
+    // in front of the Topaz connectors.
+    if (board == 'a') {
+      // Board A is on channel 1
+      retval = tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 4);
+      if (retval != 0) {
+	logger_msg_p("topaz", log_level_ERROR, PSTR("Whitfield I2C switch problem"));
+      } else {
+	logger_msg_p("topaz", log_level_DEBUG, PSTR("Whitfield I2C switch to %c"),'a');
+      }
+    }
+  }
+
+  
+  // Configure I2C mux on Topaz.  Channel 1 is the only active channel.
+
   if (board == 'a') {
     retval = tca9548a_write(TOPAZ_I2C_MUX_ADDRESS, 1);    
   } else {
@@ -80,7 +99,7 @@ int8_t topaz_connect(char board) {
     // We were unable to connect
     return -1;
   }
-  return 0;
+  return retval;
 }
 
 int8_t topaz_reset(char board) {

@@ -27,6 +27,22 @@ set loglevel debug
 
 set root_directory [file dirname $argv0]
 
+# ---------------------- Command line parsing -------------------------
+package require cmdline
+set usage "usage: [file tail $argv0] \[options]"
+
+set options {
+    {b.arg "Board name" "mega"}
+}
+
+try {
+    array set params [::cmdline::getoptions argv $options $usage]
+} trap {CMDLINE USAGE} {msg o} {
+    # Trap the usage signal, print the message, and exit the application.
+    # Note: Other errors are not caught and passed through to higher levels!
+    puts $msg
+    exit 1
+}
 
 # Create a dictionary to keep track of global state
 # State variables:
@@ -103,7 +119,12 @@ source connection.tcl
 source boxer.tcl
 ${log}::debug "Potential connection nodes: [connection::get_potential_aliases]"
 foreach alias [connection::get_potential_aliases] {
-    set channel [connection::is_available $alias "38400,n,8,1"]
+    if {$params(b) == "whitfield"} {
+	set channel [connection::is_available $alias "230400,n,8,1"]	
+    } else {
+	set channel [connection::is_available $alias "38400,n,8,1"]	
+    }
+
     if { ![string equal $channel false] } {
 	# This is a viable connection alias, and it's now going
 	# through a reset.  The USB connection asserts DTR after the
@@ -124,7 +145,7 @@ foreach alias [connection::get_potential_aliases] {
 	    ${log}::debug "Response to *idn? was $data"
 	    if {[string last "Picarro" $data] >= 0} {
 		# We found the string we wanted to find in the response
-		${log}::info "Successful connection to Boxer at $alias"
+		${log}::info "Successful connection to boxer running on $params(b) at $alias"
 		break
 	    } else {
 		dict set state channel "none"
@@ -140,7 +161,7 @@ foreach alias [connection::get_potential_aliases] {
 }
 
 if [string equal [dict get $state channel] "none"] {
-    ${log}::error "Did not find a connected Boxer"
+    ${log}::error "Could not talk to boxer running on $params(b).  Check -b parameter."
     exit
 }
 
