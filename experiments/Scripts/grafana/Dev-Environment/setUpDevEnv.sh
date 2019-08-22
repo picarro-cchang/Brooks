@@ -211,7 +211,5 @@ fi
 sudo sed -i 's/"quiet splash"/"quiet"/g' /etc/default/grub
 sudo update-grub
 
-printf "\nReady to build! Launching menu...\n\n"; sleep 1s
-
-# Launch the build menu
-gnome-terminal -- $scriptDir/../Build/buildMenu.sh
+sudo cp -r $scriptDir/../Build/buildMenu.sh /usr/bin/picarro-build-menu
+printf "\nReady to build! Enter picarro-build-menu in terminal to launch...\n\n"; sleep 1s
