@@ -13,23 +13,11 @@ class OptionsPanel extends PureComponent<OptionsPanelOptions> {
                       <button
                           value="edit"
                           className={"btn btn-large btn-command btn-danger"}
-                          // onClick={e => this.props.ws_sender({element: "edit"})}
                           onClick={ (e) =>
-                              this.props.switches(4)
-                              // this.props.ws_sender({element: "edit"});
-                              // console.log(this.state.options.panel_to_show);
-                              // this.setState(deepmerge(this.state, { options: { panel_to_show: 4  } }));
-                              // console.log(this.state.options.panel_to_show);
-
+                              this.props.ws_sender({element: "edit"})
                           }
                           style={{ borderRadius: 5, color: 'white', height: 40, width: 100, marginRight: 20}}>
                           Edit
-                      </button>
-                      <button
-                          value="override"
-                          className={"btn btn-large btn-command btn-secondary"}
-                          style={{ borderRadius: 5, color: 'white', height: 40, width: 100 }}>
-                          Override
                       </button>
                   </div>
               </div>

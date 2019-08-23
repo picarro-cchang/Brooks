@@ -34,7 +34,61 @@ export class Main extends Component<any, any> {
       steps: {},
       num_plan_files: 0,
       plan_files: {},
-      plan_filename: ""
+      plan_filename: "",
+      bank_names: {
+        1: {
+          name: "Bank 1",
+          channels: {
+            1: "Channel 1",
+            2: "Channel 2",
+            3: "Channel 3",
+            4: "Channel 4",
+            5: "Channel 5",
+            6: "Channel 6",
+            7: "Channel 7",
+            8: "Channel 8",
+          }
+        },
+        2: {
+          name: "Bank 2",
+          channels: {
+            1: "Channel 1",
+            2: "Channel 2",
+            3: "Channel 3",
+            4: "Channel 4",
+            5: "Channel 5",
+            6: "Channel 6",
+            7: "Channel 7",
+            8: "Channel 8",
+          }
+        },
+        3: {
+          name: "Bank 3",
+          channels: {
+            1: "Channel 1",
+            2: "Channel 2",
+            3: "Channel 3",
+            4: "Channel 4",
+            5: "Channel 5",
+            6: "Channel 6",
+            7: "Channel 7",
+            8: "Channel 8",
+          }
+        },
+        4: {
+          name: "Bank 4",
+          channels: {
+            1: "Channel 1",
+            2: "Channel 2",
+            3: "Channel 3",
+            4: "Channel 4",
+            5: "Channel 5",
+            6: "Channel 6",
+            7: "Channel 7",
+            8: "Channel 8",
+          }
+        }
+      },
     },
     options: {
       panel_to_show: 0
@@ -42,7 +96,7 @@ export class Main extends Component<any, any> {
   };
   constructor(props) {
     super(props);
-    this.switchPanel = this.switchPanel.bind(this)
+  //  this.switchPanel = this.switchPanel.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -126,10 +180,10 @@ export class Main extends Component<any, any> {
   };
 
 
-  switchPanel(value){
-    this.setState({plan:{panel_to_show: value}} );
-    console.log(this.state.plan.panel_to_show)
-  }
+  // switchPanel(value){
+  //   this.setState({plan:{panel_to_show: value}} );
+  //   console.log(this.state.plan.panel_to_show)
+  // }
 
 
   render() {
@@ -158,7 +212,9 @@ export class Main extends Component<any, any> {
         );
         break;
       case PlanPanelTypes.EDIT:
-        left_panel = (<EditPanel  switches={this.switchPanel} uistatus={this.state.uistatus} ws_sender={this.ws_sender}/>);
+        left_panel = (
+            <EditPanel  plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
+        );
         break;
     }
 
@@ -181,7 +237,7 @@ export class Main extends Component<any, any> {
         if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
           bankPanels.push(
               <div className="col-sm-2">
-                <BankPanel bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
+                <BankPanel plan={this.state.plan} bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
               </div>
           )
         }
@@ -190,9 +246,7 @@ export class Main extends Component<any, any> {
 
     }
 
-//TODO: Make the banks only show if they are available/on/exist
-    //Currently banks is set to have [1, 2, 3, 4].... need to change this to be dynamic..
-    // for each bank that someone hooks up, we show that number of banks
+
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
@@ -202,9 +256,9 @@ export class Main extends Component<any, any> {
               </div>
               {bankPanels}
             </div>
-            <div className="row" >
-              <OptionsPanel uistatus={this.state.uistatus} options={this.state.options} ws_sender={this.ws_sender} switches={this.switchPanel}/>
-            </div>
+            {/*<div className="row" >*/}
+            {/*  /!*<OptionsPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} plan={this.state.plan}/>*!/*/}
+            {/*</div>*/}
           </div>
 
           <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>

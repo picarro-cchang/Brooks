@@ -30,8 +30,9 @@ export interface OptionsPanelOptions {
     [key: string]: string;
   }
   ws_sender: (o: object)=>void;
-  options: Options;
-  switches: (v: any) => void;
+  //options: Options;
+  //switches: (v: any) => void;
+  plan: Plan
 }
 
 export interface ModalInfo {
@@ -49,7 +50,13 @@ export interface Plan {
   steps: { [key: string]: PlanStep }
   num_plan_files: number,
   plan_files: { [key: string]: string },
-  plan_filename: string
+  plan_filename: string,
+  bank_names: {
+    [key: number]: {
+      name: string,
+      channels: { [key: number]: string }
+    }
+  }
 }
 
 export interface PlanFocus {
@@ -102,6 +109,6 @@ export interface EditPanelOptions {
     [key: string]: string;
   }
   ws_sender: (o: object)=>void;
-  switches: (v: any) => void;
-
+  //switches: (v: any) => void;
+  plan: Plan
 }

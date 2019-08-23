@@ -36,6 +36,7 @@ class PlanPanelType(IntEnum):
     PLAN = 1
     LOAD = 2
     SAVE = 3
+    EDIT = 4
 
 def setbits(mask):
     """Return the bits set in the integer `mask` """
@@ -72,6 +73,60 @@ class PigssController(Ahsm):
             "num_plan_files": 0,
             "plan_files": {},
             "plan_filename": "",
+            "bank_names": {
+                1: {
+                    "name": "Bank 1",
+                    "channels": {
+                        1: "Channel 1",
+                        2: "Channel 2",
+                        3: "Channel 3",
+                        4: "Channel 4",
+                        5: "Channel 5",
+                        6: "Channel 6",
+                        7: "Channel 7",
+                        8: "Channel 8"
+                    }
+                },
+                2: {
+                    "name": "Bank 2",
+                    "channels": {
+                        1: "Channel 1",
+                        2: "Channel 2",
+                        3: "Channel 3",
+                        4: "Channel 4",
+                        5: "Channel 5",
+                        6: "Channel 6",
+                        7: "Channel 7",
+                        8: "Channel 8"
+                    }
+                },
+                3: {
+                    "name": "Bank 3",
+                    "channels": {
+                        1: "Channel 1",
+                        2: "Channel 2",
+                        3: "Channel 3",
+                        4: "Channel 4",
+                        5: "Channel 5",
+                        6: "Channel 6",
+                        7: "Channel 7",
+                        8: "Channel 8"
+                    }
+                },
+                4: {
+                    "name": "Bank 4",
+                    "channels": {
+                        1: "Channel 1",
+                        2: "Channel 2",
+                        3: "Channel 3",
+                        4: "Channel 4",
+                        5: "Channel 5",
+                        6: "Channel 6",
+                        7: "Channel 7",
+                        8: "Channel 8"
+                    }
+                }
+            },
         }
         self.modal_info = {
             "show": False,
@@ -130,6 +185,10 @@ class PigssController(Ahsm):
             clean=Signal.BTN_CLEAN,
             run=Signal.BTN_RUN,
             channel=Signal.BTN_CHANNEL,
+            edit=Signal.BTN_EDIT,
+            edit_panel=Signal.CHANGE_NAME_BANK,
+            edit_cancel=Signal.EDIT_CANCEL,
+            edit_save=Signal.EDIT_SAVE,
         )
         while True:
             try:
@@ -236,6 +295,7 @@ class PigssController(Ahsm):
                 except ValueError:
                     pass
 
+
     def add_channel_to_plan(self, msg):
         """Handle a channel button press, adding the bank and channel to the plan
         at the location of the focussed row"""
@@ -336,6 +396,24 @@ class PigssController(Ahsm):
     def handle_error_signal(self, epoch_time, payload):
         self.error_list.append({"time": epoch_time, "payload": payload, "framework": Framework.get_info()})
 
+    def change_name_bank(self, msg):
+        if "bank_names" in msg:
+            banks = msg["bank_names"]
+            b1 = banks["1"]["name"]
+            b2 = banks["2"]["name"]
+            b3 = banks["3"]["name"]
+            b4 = banks["4"]["name"]
+            channels1 = banks["1"]["channels"]
+            channels2 = banks["2"]["channels"]
+            channels3 = banks["3"]["channels"]
+            channels4 = banks["4"]["channels"]
+
+            self.set_plan(["bank_names"], {"1": {"name": b1, "channels": channels1},
+                                           "2": {"name": b2, "channels": channels2},
+                                           "3": {"name": b3, "channels": channels3},
+                                           "4": {"name": b4, "channels": channels4}})
+
+
     @state
     def _initial(self, e):
         self.bank = None
@@ -389,6 +467,10 @@ class PigssController(Ahsm):
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("TERMINATE", self)
         Framework.subscribe("ERROR", self)
+        Framework.subscribe("BTN_EDIT", self)
+        Framework.subscribe("CHANGE_NAME_BANK", self)
+        Framework.subscribe("EDIT_CANCEL", self)
+        Framework.subscribe("EDIT_SAVE", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._operational)
 
@@ -448,6 +530,8 @@ class PigssController(Ahsm):
             if self.status["clean"][e.value["bank"]] != UiStatus.DISABLED:
                 self.bank = e.value["bank"]
                 return self.tran(self._clean)
+        elif sig == Signal.BTN_EDIT:
+            return self.tran(self._edit)
         elif sig == Signal.ERROR:
             payload = e.value
             self.handle_error_signal(time.time(), payload)
@@ -1191,6 +1275,35 @@ class PigssController(Ahsm):
                 return self.handled(e)
         return self.super(self._run_plan121)
 
+    @state
+    def _edit(self, e):
+        sig = e.signal
+        if sig == Signal.INIT:
+            return self.tran(self._edit_edit)
+        elif sig == Signal.EXIT:
+            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            return self.handled(e)
+        elif sig == Signal.BTN_EDIT:
+            return self.handled(e)
+        return self.super(self._operational)
+
+    @state
+    def _edit_edit(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.set_plan(["panel_to_show"], int(PlanPanelType.EDIT))
+            return self.handled(e)
+        # elif sig == Signal.CHANGE_NAME_BANK:
+        #     self.change_name_bank(e.value)
+        #     return self.tran(self._operational)
+        elif sig == Signal.EDIT_CANCEL:
+            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            return self.tran(self._operational)
+        elif sig == Signal.EDIT_SAVE:
+            self.change_name_bank(e.value)
+            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            return self.tran(self._operational)
+        return self.super(self._edit)
 
 if __name__ == "__main__":
     # Uncomment this line to get a visual execution trace (to demonstrate debugging)

@@ -67,6 +67,15 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
                             Reference
                         </button>
+                        <button
+                            value="edit"
+                            className={"btn btn-large btn-command btn-danger"}
+                            onClick={ (e) =>
+                                this.props.ws_sender({element: "edit"})
+                            }
+                            style={{ borderRadius: 5, color: 'white', height: 40, width: 100, marginRight: 20}}>
+                            Edit
+                        </button>
                     </div>
                 </div>
             </div>
