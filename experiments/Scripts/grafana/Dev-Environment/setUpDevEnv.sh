@@ -114,6 +114,7 @@ scriptDir=$PWD
 # Set up miniconda environment(s)
 conda env update -f $scriptDir/pigss_conda_env.yaml
 conda init bash
+conda activate base
 
 # Configure the Node.js Repo
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
@@ -193,4 +194,4 @@ sudo sed -i 's/"quiet splash"/"quiet"/g' /etc/default/grub
 sudo update-grub
 
 sudo cp -r $scriptDir/../Build/buildMenu.sh /usr/bin/picarro-build-menu
-printf "\nReady to build! Enter picarro-build-menu in terminal to launch...\n\n"; sleep 1s
+printf "\nReady to build! Enter picarro-build-menu in new terminal to launch...\n\n"; sleep 1s
