@@ -100,6 +100,7 @@ fi
 
 # Set up miniconda environment(s)
 conda env update -f $scriptDir/pigss_conda_env.yaml
+conda init bash
 
 # Configure the Node.js Repo
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
@@ -107,13 +108,13 @@ curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
-sudo apt autoremove
+sudo apt autoremove -y
 
 # Build and install pigss-meta package
 printf '\n\nBuilding pigss-meta package\n\n\n'
 $scriptDir/../Build/pigss_meta/build_pigss_meta
 printf '\n\nInstalling pigss-meta package\n\n\n'
-sudo apt install /tmp/pigss-meta*.deb
+sudo apt install -y /tmp/pigss-meta*.deb
 printf '\n\nRemoving pigss-meta package from /tmp'
 rm -rf /tmp/pigss-meta*.deb
 
