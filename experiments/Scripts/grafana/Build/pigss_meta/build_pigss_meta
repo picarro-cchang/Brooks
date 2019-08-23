@@ -3,6 +3,7 @@ import argparse
 import subprocess
 from sys import exit
 from os import devnull as DEVNULL
+from os import path
 
 
 def get_cli_args():
@@ -75,5 +76,5 @@ if __name__ == '__main__':
     if return_value != 0:
         print('equivs dependency not installed!')
         exit(1)
-    file_name = 'pigss-meta'
+    file_name = path.join(path.dirname(path.abspath(__file__)), 'pigss-meta')
     main(file_name)
