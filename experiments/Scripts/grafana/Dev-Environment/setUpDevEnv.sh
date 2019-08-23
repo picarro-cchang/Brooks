@@ -28,9 +28,6 @@ else
     > /etc/apt/apt.conf.d/20auto-upgrades"
 fi
 
-# Disable auto screen lock
-gsettings set org.gnome.desktop.session idle-delay 0
-
 # Remove gnome/ubuntu software GUIs and update-notifier
 kill $(pidof gnome-software)
 kill $(pidof ubuntu-software)
@@ -41,6 +38,9 @@ sudo apt remove -y ubuntu-software gnome-software update-notifier
 sudo systemctl disable cups.service
 sudo systemctl disable cups-browsed.service
 sudo apt remove -y cups
+
+# Disable auto screen lock
+gsettings set org.gnome.desktop.session idle-delay 0
 
 # Disable desktop icons
 gsettings set org.gnome.desktop.background show-desktop-icons false
@@ -91,13 +91,35 @@ gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgr
 # Set the display resolution to 1080p
 xrandr --output `xrandr | grep " connected"|cut -f1 -d" "` --mode 1920x1080
 
+# Configure the Node.js Repo
+if [ ! -f /etc/apt/sources.list.d/nodesource.list ]; then
+    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+fi
+
 # Do a full update/upgrade
 sudo apt update
 sudo apt upgrade -y
 sudo apt autoremove
 
-# Install git and build tools
-sudo apt install -y git ruby ruby-dev rubygems build-essential
+# Build and install pigss-meta package
+printf '\n\nBuilding pigss-meta package\n\n\n'
+$scriptDir/../Build/pigss_meta/build_pigss_meta
+printf '\n\nInstalling pigss-meta package\n\n\n'
+sudo apt install /tmp/pigss-meta*.deb
+printf '\n\nRemoving pigss-meta package from /tmp'
+rm -rf /tmp/pigss-meta*.deb
+
+# Set chromium as default browser
+xdg-settings set default-web-browser chromium-browser.desktop
+
+# Set custom keybindings for scrot
+gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/']"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ name "Scrot Fullscreen"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ command "scrot ${HOME}/Pictures/$HOSTNAME-$(date +%Y%m%d_%H%M%S).png"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ binding "Print"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ name "Scrot Focused"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ command "scrot -u ${HOME}/Pictures/$HOSTNAME-$(date +%Y%m%d_%H%M%S).png"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ binding "<Alt>Print"
 
 # Configure git
 printf "\nEnter your Picarro GitHub Username: "
@@ -106,20 +128,6 @@ printf "\nEnter your Picarro GitHub Email: "
 read githubEmail
 git config --global user.name "${githubUserName}"
 git config --global user.email "${githubEmail}"
-
-# Install curl
-sudo apt install -y curl
-
-# Configure the Node.js Repo
-if [ ! -f /etc/apt/sources.list.d/nodesource.list ]; then
-    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-fi
-
-# Install Node.js
-sudo apt install -y nodejs
-
-# Install Node Package Manager
-sudo apt install -y npm
 
 # Install global Node.js dependencies
 sudo npm list -g | grep node-gyp || sudo npm install -g node-gyp
@@ -146,39 +154,6 @@ echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
 echo $PATH | grep miniconda || echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" \
 >> ${HOME}/.bashrc
 echo $PYTHONPATH | grep git || echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
-
-# Install openssh-server
-sudo apt install -y openssh-server
-
-# Install chromium and set as default browser
-sudo apt install -y chromium-browser
-xdg-settings set default-web-browser chromium-browser.desktop
-
-# Install gnome-terminal
-sudo apt install -y gnome-terminal
-
-# Install gnome tweaks (GUI to tweak gnome desktop)
-sudo apt install -y gnome-tweaks
-
-# Install dconf-editor (gnome settings GUI editor)
-sudo apt install -y dconf-editor
-
-# Install nmap (network mapping utility)
-sudo apt install -y nmap
-
-# Install htop (tui process/system monitor)
-sudo apt install -y htop
-
-# Install scrot (screen shots)
-sudo apt install -y scrot
-# Set custom keybindings for scrot
-gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/']"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ name "Scrot Fullscreen"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ command "scrot ${HOME}/Pictures/$HOSTNAME-$(date +%Y%m%d_%H%M%S).png"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_full_screenshot/ binding "Print"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ name "Scrot Focused"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ command "scrot -u ${HOME}/Pictures/$HOSTNAME-$(date +%Y%m%d_%H%M%S).png"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_focused_screenshot/ binding "<Alt>Print"
 
 # Install bat (like cat but with syntax highlighting)
 if ! which bat 2> /dev/null; then
