@@ -102,9 +102,7 @@ fi
 conda env update -f $scriptDir/pigss_conda_env.yaml
 
 # Configure the Node.js Repo
-if [ ! -f /etc/apt/sources.list.d/nodesource.list ]; then
-    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-fi
+curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 
 # Do a full update/upgrade
 sudo apt update
