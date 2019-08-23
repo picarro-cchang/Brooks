@@ -26,6 +26,7 @@
 #  2019-05-10:  Branched new version for LCT mode
 #  2019_05-11:  HCl is in virtual laser 3 for dual cavities; H2O is H2O_a
 #  2019-07-24:  Dynamic thresholds go to the new register Threshold_factor_for_virtual_laser 
+#  2019-08-19:  changed degraded performance to degraded_hcl_performance and incomplete_hcl_spectrum
 
 from numpy import any, amin, amax, argmin, mean, std, sqrt, log10, round_
 import numpy as np
@@ -175,9 +176,9 @@ if INIT:
     sigma0 = 0
 
     goodLCT = 0
-    incomplete_spectrum = 0
+    incomplete_hcl_spectrum = 0
     noBaseline = 0
-    degraded_performance = 0
+    degraded_hcl_performance = 0
     baseMean = instrParams['HCl_Baseline_level']
     baseStdev = 0.0
     baseLinIntercept = 0.0
@@ -224,16 +225,18 @@ d.cavityPressure += (d.sensorDict["Cavity2Pressure"]-d.sensorDict["CavityPressur
 current_threshold_factor = Driver.rdDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3") 
 current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
 # If ringdown rate is less than 75rd/s lower the threshold and return empty result
-rd_rate = 0
-if len(d.timestamp) > 1:
+rd_rate = -1
+if (len(d.timestamp) > 1) and (d["spectrumId"] == 63) and (d["ngroups"] < spectrum_min_groups):
     ms_between_rds = d.timestamp.ptp() / (len(d.timestamp) - 1)  # Ringdowns / second
     rd_rate = 1000.0 / ms_between_rds
 
-if not(disable_dynamic_threshold) and (rd_rate < min_rd_rate) and (current_threshold_factor > min_rd_threshold_factor):
-    degraded_performance = 1
+#print rd_rate
+
+if not(disable_dynamic_threshold) and (rd_rate != -1) and (rd_rate < min_rd_rate) and (current_threshold_factor > min_rd_threshold_factor):
+    degraded_hcl_performance = 1
     Driver.wrDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3", min_rd_threshold_factor)
     #Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", min_rd_threshold)
-    Log("Fitter changes threshold factor to %f" % min_rd_threshold_factor)
+    Log ("Fitter changes threshold factor to %f" % min_rd_threshold_factor)
     RESULT = {}
 else:
     # Ringdown rate is appropriate for correct operation
@@ -306,7 +309,7 @@ else:
 
     tstart = time.clock()
     if (d["spectrumId"] == 63) and (d["ngroups"] >= spectrum_min_groups):
-        incomplete_spectrum = 0
+        incomplete_hcl_spectrum = 0
         initialize_Baseline()
         # Fit wide spectrum with water, methane and HCl using frequencies from WLM
         r = anHCl[0](d, init, deps)
@@ -376,7 +379,7 @@ else:
         else:
             pzt3_adjust = 0.0
     if (d["spectrumId"] == 63) and (d["ngroups"] < spectrum_min_groups):
-        incomplete_spectrum = 1
+        incomplete_hcl_spectrum = 1
         r = anHCl[6](d, init, deps)
         ANALYSIS.append(r)
         hcl_adjust = 0.0
@@ -399,7 +402,7 @@ else:
 
 
     if (ignore_count ==0) and not IgnoreThis:   # and not bad_baseline:
-        RESULT = {"res":res,"degraded_performance":degraded_performance,"baseline_level":baseline_level,"baseline_slope":baseline_slope,"base70":base70,
+        RESULT = {"res":res,"degraded_hcl_performance":degraded_hcl_performance,"baseline_level":baseline_level,"baseline_slope":baseline_slope,"base70":base70,
                 "peak62":peak62,"str62":str62,"y62":y62,"peak70":peak70,"str70":str70,"y70":y70,"ch4_ampl":ch4_ampl,
                 "hcl_shift":hcl_shift,"hcl_adjust":hcl_adjust,"hcl_conc_raw":hcl_conc_raw,"hcl_conc":hcl_conc,
                 "h2o_a_conc_raw":h2o_a_conc_raw,"ch4_conc_raw":ch4_conc_raw,
@@ -408,7 +411,7 @@ else:
                 "baseMean":1000*baseMean,"baseStdev":1000*baseStdev,
                 "baseLinIntercept":baseLinIntercept,"baseLinSlope":baseLinSlope,
                 "baseQuadIntercept":baseQuadIntercept,"baseQuadSlope":baseQuadSlope,"baseQuadCurvature":baseQuadCurvature,
-                "noBaseline":noBaseline,"incomplete_spectrum":incomplete_spectrum,
+                "noBaseline":noBaseline,"incomplete_hcl_spectrum":incomplete_hcl_spectrum,
                 "minBasePoints":minBasePoints,"maxBasePoints":maxBasePoints,"meanBasePoints":meanBasePoints,
                 "ch3oh_conc":ch3oh_conc,"c2h4_conc":c2h4_conc,
                 "pzt3_adjust":pzt3_adjust,"pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,
@@ -421,10 +424,10 @@ else:
         RESULT.update(d.sensorDict)
 
     # Determine if we can raise the threshold to the original value
-        if not(disable_dynamic_threshold) and (rd_rate >= min_rd_rate) and np.all(d.uncorrectedAbsorbance > 0.0) and np.all(d.uncorrectedAbsorbance < 0.001*safe_loss_level):
+        if not(disable_dynamic_threshold) and (rd_rate != -1) and (rd_rate >= min_rd_rate) and np.all(d.uncorrectedAbsorbance > 0.0) and np.all(d.uncorrectedAbsorbance < 0.001*safe_loss_level):
             if current_threshold_factor != original_rd_threshold_factor:
-                degraded_performance = 0
+                degraded_hcl_performance = 0
                 Driver.wrDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3", original_rd_threshold_factor)
                 #Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", original_rd_threshold)
                 Log("Fitter changes threshold factor to %d" % original_rd_threshold_factor)
-
+                #print "Fitter changes threshold factor to %d" % original_rd_threshold_factor

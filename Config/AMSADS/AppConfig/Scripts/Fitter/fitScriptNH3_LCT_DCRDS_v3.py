@@ -70,8 +70,8 @@ if INIT:
     fname = os.path.join(
         BASEPATH, r"../../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal_lct.ini")
     cavityParams = getInstrParams(fname)
-    #fsr = cavityParams['AUTOCAL']['CAVITY_FSR']
-    fsr = cavityParams['AUTOCAL']['CAVITY_FSR_VLASER_2']
+    fsr = cavityParams['AUTOCAL']['CAVITY_FSR']
+    #fsr = cavityParams['AUTOCAL']['CAVITY_FSR_VLASER_2']
     fname = os.path.join(
         BASEPATH, r"../../../InstrConfig/Calibration/InstrCal/Master_lct.ini")
     masterParams = getInstrParams(fname)
@@ -303,6 +303,7 @@ d.defineFitData(freq=d.groupMeans["waveNumber"], loss=1000 * d.groupMeans[
                 "uncorrectedAbsorbance"], sdev=1 / sqrt(d.groupSizes))
 P = d["cavitypressure"]
 T = d["cavitytemperature"]
+#current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
 tunerMean = mean(d.tunerValue)
 tunerStdev = std(d.tunerValue)
 solValves = d.sensorDict["ValveMask"]
@@ -592,6 +593,7 @@ RESULT = {"res_a": res_a, "res_11": res_11, "res_12": res_12,
           "PF_res_a": PF_res_a, "PF_res": PF_res, "PF_res_11": PF_res_11, "PF_res_12": PF_res_12,
           "PF_nh3_peak_11": PF_nh3_peak_11, "PF_nh3_peak_12": PF_nh3_peak_12, "PF_nh3_conc_ave": PF_nh3_conc_ave,
           "ngroups": d["ngroups"], "numRDs": d["datapoints"], "degraded_nh3_performance": degraded_nh3_performance}
+          #"threshold":current_threshold}
 RESULT.update({"species": d["spectrumId"], "fittime": time.clock() - tstart,
                "cavity_pressure": P, "cavity_temperature": T, "solenoid_valves": solValves,
                "das_temp": dasTemp})

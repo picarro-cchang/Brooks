@@ -172,9 +172,9 @@ warmboxTempLocked = _INSTR_STATUS_ & INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 warmingUp =         _INSTR_STATUS_ & INSTMGR_STATUS_WARMING_UP
 systemError =       _INSTR_STATUS_ & INSTMGR_STATUS_SYSTEM_ERROR
 good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
-if abs(_DATA_["CavityPressure"]-140.0) > 0.1:
+if abs(_DATA_["CavityPressure"]-140.0) > 12: #0.1:
     good = False
-
+_NEW_DATA_["good"] = good
 try:
     # This if condition is False if the NH3 fit hasn't yet be run for the first time
     if "nh3_conc_ave" in _DATA_:
@@ -285,17 +285,18 @@ except:
 
 try:
     if "hcl_conc" in _DATA_:  
-        pressureRatio = _DATA_["CavityPressure"]/_DATA_["Cavity2Pressure"]
-        tempRatio = (_DATA_["CavityTemp"]+273.15)/(_DATA_["Cavity2Temp"]+273.15)
+        pressureRatio = 140.0/_DATA_["Cavity2Pressure"]
+        tempRatio = (45.0+273.15)/(_DATA_["Cavity2Temp"]+273.15)
+        #regulate to 140 torr and 45 degree C
        #Only apply correction in certain range --- cavity2 pressure, temp 
-        if pressureRatio > 1.1:
-            pressureRatio =1.1
-        if pressureRatio < 0.9:
-            pressureRatio = 0.9
-        if tempRatio > 1.007:
-            tempRatio =1.007
-        if tempRatio < 0.993:
-            tempRatio = 0.993
+        if pressureRatio > 1.2:
+            pressureRatio =1.2
+        if pressureRatio < 0.8:
+            pressureRatio = 0.8
+        if tempRatio > 1.014:
+            tempRatio =1.014
+        if tempRatio < 0.986:
+            tempRatio = 0.986
         HCl_P_corr = applyLinear(pressureRatio,HCl_P_correction) 
         H2O_a_P_corr = applyLinear(pressureRatio,H2O_a_P_correction)
         CH4_P_corr = applyLinear(pressureRatio,CH4_P_correction)
@@ -305,12 +306,17 @@ try:
         H2O_a_T_corr = applyLinear(tempRatio,H2O_a_T_correction)
         CH4_T_corr = tempRatio*tempRatio*_INSTR_["temp_ch4_c2"] + tempRatio * _INSTR_["temp_ch4_c1"]+ _INSTR_["temp_ch4_c0"]
         C2H4_T_corr = applyLinear(tempRatio,C2H4_T_correction)
-        print "HCl_P_corr=",HCl_P_corr,"H2O_a_P_corr=",H2O_a_P_corr,"CH4_P_corr",CH4_P_corr,"C2H4_P_corr=",C2H4_P_corr
-        print "HCl_T_corr=",HCl_T_corr,"H2O_a_P_corr=",H2O_a_T_corr,"CH4_T_corr",CH4_T_corr,"C2H4_T_corr=",C2H4_T_corr
+        #print "HCl_P_corr=",HCl_P_corr,"H2O_a_P_corr=",H2O_a_P_corr,"CH4_P_corr",CH4_P_corr,"C2H4_P_corr=",C2H4_P_corr
+        #print "HCl_T_corr=",HCl_T_corr,"H2O_a_T_corr=",H2O_a_T_corr,"CH4_T_corr",CH4_T_corr,"C2H4_T_corr=",C2H4_T_corr
         hcl_conc = _DATA_["hcl_conc"] * HCl_P_corr * HCl_T_corr
         h2o_a_conc_raw = _DATA_["h2o_a_conc_raw"] * H2O_a_P_corr * H2O_a_T_corr
         ch4_conc_raw = _DATA_["ch4_conc_raw"] * CH4_P_corr * CH4_T_corr
         c2h4_conc = _DATA_["c2h4_conc"] * C2H4_P_corr * C2H4_T_corr
+        _DATA_["hcl_conc_correct"] = hcl_conc
+        _DATA_["h2o_a_conc_raw_correct"] = h2o_a_conc_raw
+        _DATA_["ch4_conc_raw_correct"] = ch4_conc_raw
+        _DATA_["c2h4_conc_correct"] = c2h4_conc
+        
         
     if "hcl_conc" in _DATA_:   
         #temp = applyLinear(_DATA_["hcl_conc"]+ C2H4_to_HCl*_DATA_["c2h4_conc"],HCl_CONC) 
@@ -426,10 +432,10 @@ else:
             newOffset3 = _FREQ_CONV_.getWlmOffset(3) + hcl_adjust
             _PERSISTENT_["wlm3_offset"] = newOffset3
             _FREQ_CONV_.setWlmOffset(3,float(newOffset3))
-            # print "New HCl (virtual laser 1) offset: %.5f" % newOffset0 
+            # print "New HCl (virtual laser 3) offset: %.5f" % newOffset0 
         except:
             pass
-            # print "No new HCl (virtual laser 1) offset"
+            # print "No new HCl (virtual laser 3) offset"
 
 #  PZT voltage control goes here.
         try:
