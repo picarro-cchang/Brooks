@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -i
 
 # Set-up the dev and production environment for PiGSS
 # Assumes a bare/minimal Ubuntu 18.04.x iso has been used
@@ -8,7 +8,7 @@
 # TODO - Change GTK Theme
 # TODO - Maybe implement plymouth picarro splash screen
 
-# Picarro Git paths
+# Paths used in this script
 gitDir="${HOME}/git"
 scriptDir=$PWD
 
@@ -91,12 +91,25 @@ gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgr
 # Set the display resolution to 1080p
 xrandr --output `xrandr | grep " connected"|cut -f1 -d" "` --mode 1920x1080
 
+# Add environmental variables to .bashrc
+echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+echo $PATH | grep miniconda || echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" \
+>> ${HOME}/.bashrc
+echo $PYTHONPATH | grep git || echo "export PYTHONPATH="${gitDir}:${gitDir}/host$PYTHONPATH"" >> ${HOME}/.bashrc
+
 # Get Miniconda install script and install
 if [ ! -d /home/$USER/miniconda3 ]; then
 	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 	chmod +x Miniconda3-latest-Linux-x86_64.sh
 	./Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
 fi
+
+# Update this shell to use the new environment vars
+source ${HOME}/.bashrc
+# We have to re-define all variables after sourcing a
+# .bashrc file when the script is run in interactive mode
+gitDir="${HOME}/git"
+scriptDir=$PWD
 
 # Set up miniconda environment(s)
 conda env update -f $scriptDir/pigss_conda_env.yaml
@@ -147,12 +160,6 @@ gem list fpm | grep fpm || sudo gem install fpm
 
 # Put our files in the ~/Downloads folder
 cd ${HOME}/Downloads
-
-# Add environmental variables to .bashrc
-echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
-echo $PATH | grep miniconda || echo "export PATH=$HOME/miniconda3/bin:$HOME/miniconda3/condabin:/usr/local/go/bin:$PATH" \
->> ${HOME}/.bashrc
-echo $PYTHONPATH | grep git || echo "export PYTHONPATH="${gitDir}$PYTHONPATH"" >> ${HOME}/.bashrc
 
 # Install bat (like cat but with syntax highlighting)
 if ! which bat 2> /dev/null; then
