@@ -11,7 +11,7 @@ Package: pigss-meta
 Version: 1.0.0
 Maintainer: gsornsen@picarro.com
 # Pre-Depends: <comma-separated list of packages>
-Depends: git, ruby, ruby-dev, rubygems, build-essential, curl, npm, openssh-server, chromium-browser, gnome-terminal, gnome-tweaks, dconf-editor, nmap, htop, scrot
+Depends: git, ruby, ruby-dev, rubygems, build-essential, curl, npm, openssh-server, chromium-browser, gnome-terminal, gnome-tweaks, dconf-editor, nmap, htop, scrot, nodejs, npm
 # Packages to add: nodejs (requires sources.list addition)
 # Recommends: <comma-separated list of packages>
 # Suggests: <comma-separated list of packages>
