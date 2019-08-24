@@ -1,0 +1,8 @@
+- name: Install python-psutil package
+  apt: name=python-psutil
+
+- name: Copy wallpaper
+  copy: src=files/picarro_wallpaper.png dest=/home/picarro/.wallpaper.png owner=picarro mode=600
+
+- name: Set wallpaper
+  dconf: key="/org/gnome/desktop/background/picture-uri" value="'file:///home/picarro/.wallpaper.png'"
