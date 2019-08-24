@@ -39,7 +39,11 @@ class ControllerService:
             msg = await farm.send_queue.get()
             # print(f"Websocket send: {msg}")
             for ws in app['websockets']:
-                await ws.send_str(msg)
+                try:
+                    await ws.send_str(msg)
+                except ConnectionError as e:
+                    log.warning(f"{e} in websocket_send_task")
+                    pass
 
     async def on_startup(self, app):
         self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))
