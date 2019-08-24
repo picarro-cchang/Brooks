@@ -1,14 +1,17 @@
 - name: Install python-psutil package
+  become_user: sudo
+  become: true
   apt: name=python-psutil
 
 - name: Install scrot package
+  become_user: sudo
+  become: true
   apt: name=scrot
 
 - name: Copy wallpaper
   copy: src=files/picarro_wallpaper.png dest=/home/picarro/.wallpaper.png owner=picarro mode=0600
 
 - name: Set wallpaper
-  become_user: picarro
   dconf:
     key: "/org/gnome/desktop/background/picture-uri"
     value: "'file:///home/picarro/.wallpaper.png'"
