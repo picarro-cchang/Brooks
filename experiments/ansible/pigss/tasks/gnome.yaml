@@ -2,10 +2,12 @@
   apt: name=python-psutil
 
 - name: Copy wallpaper
-  copy: src=files/picarro_wallpaper.png dest=/home/picarro/.wallpaper.png owner=picarro mode=600
+  copy: src=files/picarro_wallpaper.png dest=/home/picarro/.wallpaper.png owner=picarro mode=0600
 
 - name: Set wallpaper
-  gsetting:
-    user: picarro
-    key: org.gnome.desktop.background.picture-uri
+  become_user: picarro
+  dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
     value: "'file:///home/picarro/.wallpaper.png'"
+    state: present
+
