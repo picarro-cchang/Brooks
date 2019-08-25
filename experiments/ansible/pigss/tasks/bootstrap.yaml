@@ -4,13 +4,13 @@
   become: yes
 
 - name: Disable auto package updates and unattended upgrades
-  shell: "sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades"
+  shell: "sudo sed -i 's/'1'/'0'/g' /etc/apt/apt.conf.d/20auto-upgrades"
   become: yes
 
 - name: Add user to dialout group
   user:
-    name: {{ playbook_user }}
-    comment: {{ playbook_user }}
+    name: picarro
+    comment: picarro
     group: dialout
   become: yes
 
@@ -78,9 +78,9 @@
   apt: name=chromium-browser
   become: yes
 
-- name: Make chromium default browser
-  shell: "xdg-settings set default-web-browser chromium-browser.desktop"
-  become: yes
+#- name: Make chromium default browser
+#  shell: "sleep 1 && xdg-settings set default-web-browser chromium-browser.desktop"
+#  become: yes
 
 - name: Install curl
   apt: name=curl
