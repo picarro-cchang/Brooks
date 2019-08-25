@@ -1,114 +1,104 @@
-- name: Install python-psutil package
-  become_user: sudo
-  become: true
-  apt: name=python-psutil
-
-- name: Install scrot package
-  become_user: sudo
-  become: true
-  apt: name=scrot
-
 - name: Copy wallpaper
-  copy: src=files/picarro_wallpaper.png dest=/home/picarro/.wallpaper.png owner=picarro mode=0600
+  copy: src=files/picarro_wallpaper.png dest={{ playbook_home }}/.wallpaper.png owner={{ playbook_user }} mode=0600
 
 - name: Set wallpaper
   dconf:
     key: "/org/gnome/desktop/background/picture-uri"
-    value: "'file:///home/picarro/.wallpaper.png'"
+    value: "'file://{{ playbook_home }}/.wallpaper.png'"
     state: present
 
 - name: Disable auto screen lock
   dconf:
     key: "/org/gnome/desktop/session/idle-delay"
-    value: 0
+    value: '0'
     state: present
 
 - name: Disable desktop icons
   dconf:
     key: "/org/gnome/desktop/background/show-desktop-icons"
-    value: false
+    value: 'false'
     state: present
 
 - name: Prevent gnome from auto-opening file manager when media is plugged in
   dconf:
     key: "/org/gnome/desktop/media-handling/automount-open"
-    value: false
+    value: 'false'
     state: present
 
 - name: Prevent user from locking screen
   dconf:
     key: "/org/gnome/desktop/lockdown/disable-lock-screen"
-    value: true
+    value: 'true'
     state: present
 
 - name: Prevent user from logging out
   dconf:
     key: "/org/gnome/desktop/lockdown/disable-log-out"
-    value: true
+    value: 'true'
     state: present
 
 - name: Disable gnome user administration
   dconf:
     key: "/org/gnome/desktop/lockdown/user-administration-disabled"
-    value: true
+    value: 'true'
     state: present
 
 - name: Prevent the user from switching users
   dconf:
     key: "/org/gnome/desktop/lockdown/disable-user-switching"
-    value: true
+    value: 'true'
     state: present
 
 - name: Disabling printing
   dconf:
     key: "/org/gnome/desktop/lockdown/disable-printing"
-    value: true
+    value: 'true'
     state: present
 
 - name: Disable print dialogs
   dconf:
     key: "/org/gnome/desktop/lockdown/disable-print-setup"
-    value: true
+    value: 'true'
     state: present
 
 - name: Disable banner notifications
   dconf:
     key: "/org/gnome/desktop/notifications/show-banner"
-    value: false
+    value: 'false'
     state: present
 
 - name: Disable lock-screen notifications
   dconf:
     key: "/org/gnome/desktop/notification/show-in-lock-screen"
-    value: false
+    value: 'false'
     state: present
 
 - name: Disable screensaver
   dconf:
     key: "/org/gnome/desktop/screensaver/idle-activation-enabled"
-    value: false
+    value: 'false'
     state: present
 
 - name: Disable screensaver auto-lock on wake
   dconf:
     key: "/org/gnome/desktop/screensaver/lock-enabled"
-    value: false
+    value: 'false'
     state: present
 
 - name: Set file browser default view to list-view
   dconf:
     key: "/org/gnome/nautilus/preferences/default-folder-viewer"
-    value: 'list-view'
+    value: "'list-view'"
     state: present
 
 - name: Enable on-screen keyboard
   dconf:
     key: "/org/gnome/desktop/a11y/applications/screen-keyboard-enabled"
-    value: true
+    value: 'true'
     state: present
 
 - name: Disable geolocation
   dconf:
     key: "/org/gnome/system/location/enabled"
-    value: false
+    value: 'false'
     state: present
