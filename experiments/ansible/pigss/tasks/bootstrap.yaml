@@ -10,3 +10,34 @@
 - name: Install scrot package
   apt: name=scrot
   become: yes
+
+- name: Install GTK theme
+  apt: name=materia-gtk-theme
+  become: yes
+
+- name: Install gnome-tweaks package
+  apt: name=gnome-tweaks
+  become: yes
+
+- name: Install chrome-gnome-shell package
+  apt: name=chrome-gnome-shell
+  become: yes
+
+- name: Install fira fonts
+  apt: name=fonts-firacode
+  become: yes
+
+- name: Install roboto fonts
+  apt: name=fonts-roboto
+
+- name: Install gnome-shell-extensions package
+  apt: name=gnome-shell-extensions
+  become: yes
+
+- name: Install Icons
+  apt: name=papirus-icon-theme
+  become: yes
+
+- name: Install chromium-browser
+  apt: name=chromium-browser
+  become: yes
