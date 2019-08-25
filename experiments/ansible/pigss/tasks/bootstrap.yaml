@@ -8,9 +8,9 @@
   ignore_errors: yes
   become: yes
 
-- name: Disable auto package updates and unattended upgrades
-  shell: 'if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades; else sudo sh -c "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' > /etc/apt/apt.conf.d/20auto-upgrades"; fi'
-  become: yes
+#- name: Disable auto package updates and unattended upgrades
+#  shell: 'if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades; else sudo sh -c "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' > /etc/apt/apt.conf.d/20auto-upgrades"; fi'
+#  become: yes
 
 - name: Remove ubuntu-software
   apt:
