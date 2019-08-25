@@ -62,6 +62,7 @@
 
 - name: Install roboto fonts
   apt: name=fonts-roboto
+  become: yes
 
 - name: Install gnome-shell-extensions package
   apt: name=gnome-shell-extensions
