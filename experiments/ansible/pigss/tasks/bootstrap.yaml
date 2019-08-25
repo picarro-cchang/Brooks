@@ -3,6 +3,39 @@
   changed_when: False
   become: yes
 
+- name: Kill software manager processes
+  shell: "kill $(pidof gnome-software) || kill $(pidof ubuntu-software) || kill $(pidof update-notifier) || echo "Killed" >> /dev/null"
+  ignore_errors: yes
+  become: yes
+
+- name: Disable auto package updates and unattended upgrades
+  shell: "if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades; else sudo sh -c "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' > /etc/apt/apt.conf.d/20auto-upgrades"; fi"
+  become: yes
+
+- name: Remove ubuntu-software
+  apt:
+    pkg: ubuntu-software
+    state: absent
+  become: yes
+
+- name: Remove gnome-sfotware
+  apt:
+    pkg: gnome-software
+    state: absent
+  become: yes
+
+- name: Remove update-notifier
+  apt:
+    pkg: update-notifier
+    state: absent
+  become: yes
+
+- name: Remove CUPS
+  apt:
+    pkg: cups
+    state: absent
+  become: yes
+
 - name: Install python-psutil package
   apt: name=python-psutil
   become: yes
