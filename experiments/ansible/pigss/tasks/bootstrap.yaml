@@ -3,14 +3,16 @@
   changed_when: False
   become: yes
 
-- name: Kill software manager processes
-  shell: "kill $(pidof gnome-software) || kill $(pidof ubuntu-software) || kill $(pidof update-notifier) || echo 'Killed' >> /dev/null"
-  ignore_errors: yes
+- name: Disable auto package updates and unattended upgrades
+  shell: "sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades"
   become: yes
 
-#- name: Disable auto package updates and unattended upgrades
-#  shell: 'if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then sudo sed -i 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades; else sudo sh -c "printf 'APT::Periodic::Update-Package-Lists "0";\nAPT::Periodic::Unattended-Upgrade "0";' > /etc/apt/apt.conf.d/20auto-upgrades"; fi'
-#  become: yes
+- name: Add user to dialout group
+  user:
+    name: {{ playbook_user }}
+    comment: {{ playbook_user }}
+    group: dialout
+  become: yes
 
 - name: Remove ubuntu-software
   apt:
@@ -74,4 +76,12 @@
 
 - name: Install chromium-browser
   apt: name=chromium-browser
+  become: yes
+
+- name: Make chromium default browser
+  shell: "xdg-settings set default-web-browser chromium-browser.desktop"
+  become: yes
+
+- name: Install curl
+  apt: name=curl
   become: yes
