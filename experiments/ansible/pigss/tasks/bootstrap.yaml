@@ -46,6 +46,12 @@
     state: absent
   become: yes
 
+- name: Remove nodejs
+  apt:
+    pkg: nodejs
+    state: absent
+  become: yes
+
 - name: Install python-psutil package
   apt: name=python-psutil
   become: yes
@@ -123,4 +129,10 @@
 
 - name: Install dconf-editor
   apt: name=dconf-editor
+  become: yes
+
+# ansible keeps installing an old version of nodejs even after adding
+# a new repository and updating apt -- this is a hacky workaround
+- name: Upgrade all packages to the latest version
+  shell: apt upgrade -y
   become: yes
