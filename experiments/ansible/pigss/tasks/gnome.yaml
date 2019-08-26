@@ -63,11 +63,9 @@
     value: "'#ffffff'"
     state: present
 
+# dconf writes to this register improperly
 - name: Disable auto screen lock
-  dconf:
-    key: "/org/gnome/desktop/session/idle-delay"
-    value: '0'
-    state: present
+  shell: /usr/bin/gsettings set org.gnome.desktop.session idle-delay 0
 
 - name: Disable desktop icons
   dconf:
