@@ -13,6 +13,28 @@
     value: "['chromium-browser.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.gedit.desktop']"
     state: present
 
+- name: Set wallpaper
+  dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
+    value: "'file://{{ playbook_home }}/.wallpaper.png'"
+    state: present
+
+- name: Set login wallpaper (ubuntu.css)
+  replace:
+    path: /usr/share/gnome-shell/theme/ubuntu.css
+    after: 'url'
+    regexp: 'resource:///org/gnome/shell/theme/noise-texture.png'
+    replace: 'file:///home/picarro/.lockscreen.png'
+  become: yes
+
+- name: Set login logo
+# dconf cannot read or write this register
+  shell: gsettings set org.gnome.login-screen logo "'{{ playbook_home }}/.type_logo.png'"
+
+- name: Set lockscreen image
+# dconf cannot read or write this register
+  shell: gsettings set org.gnome.desktop.screensaver picture-uri "'file://{{ playbook_home }}/.lockscreen.png'"
+
 - name: Enable Gnome Shell extensions
   dconf:
     key: "/org/gnome/shell/enabled-extensions"
@@ -50,28 +72,6 @@
 - name: Set window title font
 # dconf seems to have a bug that only allows us to read this register
   shell: /usr/bin/gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Roboto 11'
-
-- name: Set wallpaper
-  dconf:
-    key: "/org/gnome/desktop/background/picture-uri"
-    value: "'file://{{ playbook_home }}/.wallpaper.png'"
-    state: present
-
-- name: Set login wallpaper (ubuntu.css)
-  replace:
-    path: /usr/share/gnome-shell/theme/ubuntu.css
-    after: 'url'
-    regexp: 'resource:///org/gnome/shell/theme/noise-texture.png'
-    replace: 'file:///home/picarro/.lockscreen.png'
-  become: yes
-
-- name: Set login logo
-# dconf cannot read or write this register
-  shell: gsettings set org.gnome.login-screen logo "'{{ playbook_home }}/.type_logo.png'"
-
-- name: Set lockscreen image
-# dconf cannot read or write this register
-  shell: gsettings set org.gnome.desktop.screensaver picture-uri "'file://{{ playbook_home }}/.lockscreen.png'"
 
 - name: Set background primary color
   dconf:
