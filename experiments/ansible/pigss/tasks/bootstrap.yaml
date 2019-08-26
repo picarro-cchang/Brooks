@@ -85,3 +85,11 @@
 - name: Install curl
   apt: name=curl
   become: yes
+
+- name: Install git
+  apt: name=git
+  become: yes
+
+- name: Disable splash at boot
+  shell: sudo sed -i 's/"quiet splash"/"quiet"/g' /etc/default/grub && sudo update-grub
+  become: yes

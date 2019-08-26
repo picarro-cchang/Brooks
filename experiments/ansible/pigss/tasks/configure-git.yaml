@@ -1,0 +1,5 @@
+- name: Set git username
+  shell: printf "\nEnter your Picarro GitHub Username: " && read username && git config --global user.name "${username}"
+
+- name: Set git email
+  shell: printf "\nEnter your Picarro GitHub Email: " && read email && git config --global user.email "${email}"

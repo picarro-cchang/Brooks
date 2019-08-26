@@ -15,7 +15,7 @@
 
 - name: Set icon theme
   # dconf seems to have a bug that only allows us to read this register
-  shell: gsettings set org.gnome.desktop.interface icon-theme 'Papirus'
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface icon-theme 'Papirus'
 
 - name: Set GTK theme
   dconf:
@@ -31,19 +31,19 @@
 
 - name: Set document font
 # dconf seems to have a bug that only allows us to read this register
-  shell: gsettings set org.gnome.desktop.interface document-font-name 'Roboto 11'
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface document-font-name 'Roboto 11'
 
 - name: Set interface font
 # dconf seems to have a bug that only allows us to read this register
-  shell: gsettings set org.gnome.desktop.interface font-name 'Roboto 10'
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface font-name 'Roboto 10'
 
 - name: Set monospace font
 # dconf seems to have a bug that only allows us to read this register
-  shell: gsettings set org.gnome.desktop.interface monospace-font-name 'Fira Code 11'
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface monospace-font-name 'Fira Code 11'
 
 - name: Set window title font
 # dconf seems to have a bug that only allows us to read this register
-  shell: gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Roboto 11'
+  shell: /usr/bin/gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Roboto 11'
 
 - name: Set wallpaper
   dconf:
@@ -157,3 +157,31 @@
     key: "/org/gnome/system/location/enabled"
     value: 'false'
     state: present
+
+# dconf doesn't have access to this register
+- name: Display line numbers in gedit
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor display-line-numbers true
+
+# dconf doesn't have access to this register
+- name: Display minimap in gedit
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor display-overview-map true
+
+# dconf doesn't have access to this register
+- name: Set gedit font
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor editor-font 'Fira Code 11'
+
+# dconf doesn't have access to this register
+- name: Set gedit to insert spaces instead of tab
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor insert-spaces true
+
+# dconf doesn't have access to this register
+- name: Disable word wrap in gedit
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor wrap-mode none
+
+# dconf doesn't have access to this register
+- name: Set default tab-size to 4
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor tabs-size 4
+
+# dconf doesn't have access to this register
+- name: Set gedit theme
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor scheme oblivion

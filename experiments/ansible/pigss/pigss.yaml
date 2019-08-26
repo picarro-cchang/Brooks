@@ -6,3 +6,5 @@
       set_fact: playbook_user="{{ lookup('env','USER') }}" playbook_home="{{  lookup('env','HOME')  }}"
     - include: tasks/gnome.yaml
     - include: tasks/miniconda.yaml
+    - include: tasks/non-apt-install.yaml
+    - include: tasks/configure-git.yaml
