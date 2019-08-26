@@ -1,6 +1,12 @@
 - name: Copy wallpaper
   copy: src=files/picarro_wallpaper.png dest={{ playbook_home }}/.wallpaper.png owner={{ playbook_user }} mode=0600
 
+- name: Copy lockscreen
+  copy: src=files/picarro_lockscreen.png dest={{ playbook_home }}/.lockscreen.png owner={{ playbook_user }} mode=0600
+
+- name: Copy logo
+  copy: src=files/picarro_typelogo.png dest={{ playbook_home }}/.type_logo.png owner={{ playbook_user }} mode=0600
+
 - name: Set favorite apps
   dconf:
     key: "/org/gnome/shell/favorite-apps"
@@ -51,6 +57,22 @@
     value: "'file://{{ playbook_home }}/.wallpaper.png'"
     state: present
 
+- name: Set login wallpaper (ubuntu.css)
+  replace:
+    path: /usr/share/gnome-shell/theme/ubuntu.css
+    after: 'url'
+    regexp: 'resource:///org/gnome/shell/theme/noise-texture.png'
+    replace: 'file:///home/picarro/.lockscreen.png'
+  become: yes
+
+- name: Set login logo
+# dconf cannot read or write this register
+  shell: gsettings set org.gnome.login-screen logo "'{{ playbook_home }}/.type_logo.png'"
+
+- name: Set lockscreen image
+# dconf cannot read or write this register
+  shell: gsettings set org.gnome.desktop.screensaver picture-uri "'file://{{ playbook_home }}/.lockscreen.png'"
+
 - name: Set background primary color
   dconf:
     key: "/org/gnome/desktop/background/primary-color"
@@ -72,6 +94,10 @@
     key: "/org/gnome/desktop/background/show-desktop-icons"
     value: 'false'
     state: present
+
+- name: Disable multiple workspaces
+# dconf cannot read or write to this register
+  shell: gsettings set org.gnome.shell.window-switcher current-workspace-only true
 
 - name: Prevent gnome from auto-opening file manager when media is plugged in
   dconf:
