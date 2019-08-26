@@ -1,0 +1,8 @@
+- name: Update GOPATH
+  shell: echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+
+- name: Update PATH
+  shell: echo $PATH | grep miniconda || echo "export PATH=/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
+
+- name: Update PYTHONPATH
+  shell: echo $PYTHONPATH | grep git || echo "export PYTHONPATH=${HOME}/git:${HOME}/git/host$PYTHONPATH" >> ${HOME}/.bashrc

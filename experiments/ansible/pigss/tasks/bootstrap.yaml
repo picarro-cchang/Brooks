@@ -3,8 +3,8 @@
   become: yes
 
 - name: update repositories
-  apt: update_cache=yes
-  changed_when: False
+  apt:
+    update_cache: yes
   become: yes
 
 - name: Disable auto package updates and unattended upgrades
