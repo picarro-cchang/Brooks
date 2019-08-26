@@ -1,4 +1,20 @@
 .bank-btn {
     border-radius: 25%;
     border: 4px solid #bbbbbbbd;
+    height: 90px;
+    width: 90px;
+    color: black;
+    position: relative;
+}
+.chn-label {
+    position: absolute;
+    top: 20px;
+    left: -0.37em;
+    bottom: 0;
+    right: 0;
+}
+.btn-clean {
+    width:100%;
+    border:3px solid #CCC;
+    color: black;
 }

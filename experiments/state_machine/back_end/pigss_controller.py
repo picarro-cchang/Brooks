@@ -77,53 +77,53 @@ class PigssController(Ahsm):
                 1: {
                     "name": "Bank 1",
                     "channels": {
-                        1: "Channel 1",
-                        2: "Channel 2",
-                        3: "Channel 3",
-                        4: "Channel 4",
-                        5: "Channel 5",
-                        6: "Channel 6",
-                        7: "Channel 7",
-                        8: "Channel 8"
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
                     }
                 },
                 2: {
                     "name": "Bank 2",
                     "channels": {
-                        1: "Channel 1",
-                        2: "Channel 2",
-                        3: "Channel 3",
-                        4: "Channel 4",
-                        5: "Channel 5",
-                        6: "Channel 6",
-                        7: "Channel 7",
-                        8: "Channel 8"
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
                     }
                 },
                 3: {
                     "name": "Bank 3",
                     "channels": {
-                        1: "Channel 1",
-                        2: "Channel 2",
-                        3: "Channel 3",
-                        4: "Channel 4",
-                        5: "Channel 5",
-                        6: "Channel 6",
-                        7: "Channel 7",
-                        8: "Channel 8"
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
                     }
                 },
                 4: {
                     "name": "Bank 4",
                     "channels": {
-                        1: "Channel 1",
-                        2: "Channel 2",
-                        3: "Channel 3",
-                        4: "Channel 4",
-                        5: "Channel 5",
-                        6: "Channel 6",
-                        7: "Channel 7",
-                        8: "Channel 8"
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
                     }
                 }
             },

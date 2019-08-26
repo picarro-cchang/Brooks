@@ -41,7 +41,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             value="identify"
                             className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("identify")}
                             style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
-                            Identify
+                            Identify Available Channels
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "run"})}
@@ -57,7 +57,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             value="plan"
                             className={"btn btn-large btn-command " + this.getClassNameOpt("plan")}
                             style={{ borderRadius: 5, color: 'black', height: 80 }}>
-                            Plan
+                            Edit Plan
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "reference"})}
@@ -73,8 +73,8 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             onClick={ (e) =>
                                 this.props.ws_sender({element: "edit"})
                             }
-                            style={{ borderRadius: 5, color: 'white', height: 40, width: 100, marginRight: 20}}>
-                            Edit
+                            style={{ borderRadius: 5, color: 'white', height: 55, width: 100, marginRight: 20}}>
+                            Edit Labels
                         </button>
                     </div>
                 </div>

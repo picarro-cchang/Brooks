@@ -37,22 +37,22 @@ export class Main extends Component<any, any> {
       plan_filename: "",
       bank_names: {
         1: {
-          name: "Bank 1",
+          name: "",
           channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8",
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
           }
         },
         2: {
-          name: "Bank 2",
+          name: "",
           channels: {
-            1: "Channel 1",
+            1: "",
             2: "Channel 2",
             3: "Channel 3",
             4: "Channel 4",
@@ -63,29 +63,29 @@ export class Main extends Component<any, any> {
           }
         },
         3: {
-          name: "Bank 3",
+          name: "",
           channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8",
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
           }
         },
         4: {
-          name: "Bank 4",
+          name: "",
           channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8",
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
           }
         }
       },

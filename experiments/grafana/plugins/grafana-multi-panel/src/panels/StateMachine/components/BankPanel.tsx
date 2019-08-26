@@ -62,22 +62,17 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                     <button
                         key={i}
                         className={"btn btn-large bank-btn " + getChannelClassNames(i)}
-                        style={{ height: 90, width: 90,  color: 'black', position: "relative"}}>
-                        <p style={{ position: "absolute", top: 20, left: "-0.37em", bottom: 0, right: 0}}>{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
-
+                        style={{color: 'black'}}>
+                        <p className="chn-label">{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
                         <p style={{fontSize: 10, marginTop: 30}}>Status: {test[i]} </p>
-
-
                     </button>
                 ) : (
                     <button
                         onClick={e => this.props.ws_sender({element: "channel", bank: this.props.bank, channel: i})}
                         disabled={getChannelDisabled(i)}
                         key={i}
-                        className={"btn btn-large bank-btn " + getChannelClassNames(i)}
-                        style={{ height: 90, width: 90,  color: 'black',  position: "relative"}}>
-                        <p style={{ position: "absolute", top: 20, left: "-0.37em", bottom: 0, right: 0}}>{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
-
+                        className={"btn btn-large bank-btn " + getChannelClassNames(i)}>
+                        <p className="chn-label">{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
                         <p style={{ fontSize: 10, marginTop: 30 }}>Status: {test[i]}</p>
                     </button>
                 )
@@ -86,15 +81,13 @@ class BankPanel extends PureComponent<BankPanelOptions> {
 
         const cleanButton = (cleanDisabled) ? (
             <div
-                style={{width:"100%", border:"3px solid #CCC", color: "black"}}
-                className={"btn btn-large " + cleanClassNames}>
+                className={"btn btn-large btn-clean " + cleanClassNames}>
                 {"Clean"}
             </div>
         ) : (
             <button
-                style={{width:"100%", border:"3px solid #CCC", color: 'black'}}
                 onClick={e => this.props.ws_sender({element: "clean", bank: this.props.bank})}
-                className={"btn btn-large " + cleanClassNames}>
+                className={"btn btn-large btn-clean " + cleanClassNames}>
                 {"Clean"}
             </button>
         );

@@ -30,8 +30,11 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         let durationString = "";
         if (this.props.plan.last_step >= row) {
             const planRow = this.props.plan.steps[row];
+            const bank_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].name;
+            const ch_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].channels[this.props.plan.steps[row].channel];
             if (planRow.bank !== 0) {
-                portString = `Bank ${planRow.bank}, Channel ${planRow.channel}`;
+                // portString = `Bank ${planRow.bank}, Channel ${planRow.channel}`;
+                portString = bank_name + ", " + ch_name;
             }
             if (planRow.duration !== 0) {
                 durationString = `${planRow.duration}`;
@@ -76,8 +79,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         */
         return (
-            <div className="panel-plan" style={{ height: 650, backgroundColor: "#888", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
-                <h2 style={{color: "black"}}>Schedule</h2>
+            <div className="panel-plan" style={{ height: 675, backgroundColor: "#888", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
+                <h2 style={{color: "white"}}>Schedule</h2>
+                <h6>Please click on available channels to select port.</h6>
                 <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:440, borderRadius: 3}}>
                     <form>
                         <ReactList
