@@ -171,9 +171,9 @@ fi
 
 # Install influxdb from site -- apt version is too old
 if ! which influx 2> /dev/null; then
-    wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.5_amd64.deb
-    sudo dpkg -i influxdb_1.7.5_amd64.deb
-    rm -rf influxdb_1.7.5_amd64.deb
+    wget https://dl.influxdata.com/influxdb/releases/influxdb_1.7.7_amd64.deb
+    sudo dpkg -i influxdb_1.7.7_amd64.deb
+    rm -rf influxdb_1.7.7_amd64.deb
     # Enable and start influxdb services
     sudo systemctl daemon-reload && sudo systemctl enable influxdb.service \
     && sudo systemctl start influxd.service && sudo systemctl start influxdb.service

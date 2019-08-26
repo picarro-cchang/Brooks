@@ -6,7 +6,7 @@
 
 - name: Download influxdb
   get_url:
-    url: https://dl.influxdata.com/influxdb/releases/influxdb_1.7.5_amd64.deb
+    url: https://dl.influxdata.com/influxdb/releases/influxdb_1.7.7_amd64.deb
     dest: /tmp/
   become: yes
 
@@ -16,7 +16,7 @@
     state: present
   with_items:
     - /tmp/bat_0.11.0_amd64.deb
-    - /tmp/influxdb_1.7.5_amd64.deb
+    - /tmp/influxdb_1.7.7_amd64.deb
   become: yes
 
 - name: Download go
