@@ -13,7 +13,7 @@
 - name: Install downloaded debian packages
   apt:
     deb: '{{ item }}'
-    state: installed
+    state: present
   with_items:
     - /tmp/bat_0.11.0_amd64.deb
     - /tmp/influxdb_1.7.5_amd64.deb
@@ -26,5 +26,5 @@
   become: yes
 
 - name: Install go
-  shell: tar -C /usr/local -xzf /tmp/go*.tar.gz
+  shell: tar -C /usr/local -xzf /tmp/go*.tar.gz warn=False
   become: yes

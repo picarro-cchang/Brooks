@@ -1,5 +1,19 @@
-- name: Set git username
-  shell: printf "\nEnter your Picarro GitHub Username: " && read username && git config --global user.name "${username}"
+#- name: Get git vars
+#  hosts: localhost
+#  vars_prompt:
+#    - name: "githubuser"
+#      prompt: "Enter your github username"
+#      private: no
+#    - name: "githubemail"
+#      prompt: "Enter your github email"
+#      private: no
+#  tasks:
+#    - name: Set github username
+#      shell: git config --global user.name {{ githubuser }}
+#    - name: set github email
+#      shell: git config --global user.email {{ githubemail }}
+- name: Set github username
+  shell: git config --global user.name {{ githubuser }}
+- name: set github email
+  shell: git config --global user.email {{ githubemail }}
 
-- name: Set git email
-  shell: printf "\nEnter your Picarro GitHub Email: " && read email && git config --global user.email "${email}"

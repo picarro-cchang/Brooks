@@ -1,4 +1,11 @@
 - hosts: localhost
+  vars_prompt:
+  - name: "githubuser"
+    prompt: "Enter your github username"
+    private: no
+  - name: "githubemail"
+    prompt: "Enter your github email"
+    private: no
   pre_tasks:
     - include: tasks/bootstrap.yaml
   tasks:
@@ -8,3 +15,6 @@
     - include: tasks/miniconda.yaml
     - include: tasks/non-apt-install.yaml
     - include: tasks/configure-git.yaml
+    - include: tasks/pigss-meta.yaml
+    - include: tasks/grafana-npm-gem.yaml
+    - include: tasks/build-menu.yaml

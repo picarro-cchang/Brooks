@@ -1,10 +1,18 @@
+- name: Add nodejs repo
+  shell: curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - warn=False
+  become: yes
+
 - name: update repositories
   apt: update_cache=yes
   changed_when: False
   become: yes
 
 - name: Disable auto package updates and unattended upgrades
-  shell: "sudo sed -i 's/'1'/'0'/g' /etc/apt/apt.conf.d/20auto-upgrades"
+  replace:
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    after: 'APT::Periodic'
+    regexp: '[1]'
+    replace: '0'
   become: yes
 
 - name: Add user to dialout group
@@ -78,9 +86,8 @@
   apt: name=chromium-browser
   become: yes
 
-#- name: Make chromium default browser
-#  shell: "sleep 1 && xdg-settings set default-web-browser chromium-browser.desktop"
-#  become: yes
+- name: Make chromium default browser
+  shell: xdg-settings set default-web-browser chromium-browser.desktop
 
 - name: Install curl
   apt: name=curl
@@ -91,5 +98,29 @@
   become: yes
 
 - name: Disable splash at boot
-  shell: sudo sed -i 's/"quiet splash"/"quiet"/g' /etc/default/grub && sudo update-grub
+  replace:
+    path: /etc/default/grub
+    after: 'GRUB_CMDLINE_LINUX_DEFAULT'
+    regexp: 'quiet splash'
+    replace: 'quiet'
+  become: yes
+
+- name: Install libssl
+  apt: name=libssl1.0-dev
+  become: yes
+
+- name: Install nodejs
+  apt: name=nodejs
+  become: yes
+
+- name: Install node-gyp
+  apt: name=node-gyp
+  become: yes
+
+- name: Install equivs
+  apt: name=equivs
+  become: yes
+
+- name: Install dconf-editor
+  apt: name=dconf-editor
   become: yes

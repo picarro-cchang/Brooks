@@ -1,8 +1,11 @@
 - name: Download miniconda3
-  shell: "wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && chmod +x Miniconda*.sh && mv Miniconda*.sh ~/Downloads"
+  get_url:
+    url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    dest: /tmp/
+    mode: 0755
 
 - name: Install miniconda3
-  shell: "~/Downloads/Miniconda*.sh -b -p ~/miniconda3 && ~/miniconda3/bin/conda init"
+  shell: /tmp/Miniconda3-latest-Linux-x86_64.sh -b -p /home/picarro/miniconda3 -u && /home/picarro/miniconda3/bin/conda init bash
 
 - name: Set up conda env
-  shell: "~/miniconda3/bin/conda env update -f ~/git/host/experiments/ansible/pigss/tasks/files/pigss_conda_env.yaml"
+  shell: /home/picarro/miniconda3/bin/conda env update -f /home/picarro/git/host/experiments/ansible/pigss/tasks/files/pigss_conda_env.yaml

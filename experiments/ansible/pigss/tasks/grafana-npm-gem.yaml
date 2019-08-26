@@ -1,0 +1,19 @@
+- name: Install node-gyp
+  npm:
+    name: node-gyp
+    global: yes
+    state: present
+  become: yes
+
+- name: Install yarn
+  npm:
+    name: yarn
+    global: yes
+    state: present
+  become: yes
+
+- name: Install fpm
+  gem:
+    name: fpm
+    state: present
+  become: yes
