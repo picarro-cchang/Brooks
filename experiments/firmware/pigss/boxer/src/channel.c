@@ -15,6 +15,9 @@
 // flash.
 #include <avr/pgmspace.h>
 
+// Provides strcmp()
+#include <string.h>
+
 // Provides logger_msg and logger_msg_p for log messages tagged with a
 // system and severity.
 #include "logger.h"
@@ -30,6 +33,9 @@
 
 #include "topaz.h"
 
+// Provides definitions for working with the Whitfield PCB
+#include "whitfield.h"
+
 #include "spi.h"
 
 // Provides functions for handling system states
@@ -37,6 +43,11 @@
 
 // Provides commands for working with bypass DACs
 #include "pressure.h"
+
+// Provides commands for working with the TCA954xA I2C multiplexers
+#include "tca954xa.h"
+
+
 
 #include "channel.h"
 
@@ -96,7 +107,7 @@ int8_t channel_update() {
 
   // Keep track of how many channels have been enabled
   uint8_t enabled_channels = 0;
-  
+
   uint8_t channel_array_index = 0;
   // Loop through the channel array to set the hardware byte for
   // active or inactive channels.  Set the bypass DACs for inactive
@@ -126,35 +137,46 @@ int8_t channel_update() {
     // There are no enabled channels.  This means we're in standby.
     set_system_state(system_state_STANDBY);
   }
-  
+
   // Update hardware.  Disabled channels are energized.
   uint8_t topaz_a_byte = channel_hardware_byte;
   uint8_t topaz_b_byte = channel_hardware_byte >> 4;
 
   // Handle Topaz A hardware
   if (topaz_is_connected('a')) {
+    if (strcmp( PCB, "whitfield") == 0) {
+      // We're using the Whitfield board.  This has a TCA9544A I2C mux
+      // in front of the Topaz connectors.
+
+      // Topaz A is on channel 0 (SD0 / SC0)
+      retval += tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 4);
+      logger_msg_p("whitfield", log_level_DEBUG, PSTR("I2C mux to Topaz A"));
+    }
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_OUTPUT_PORT_0_REG,
 		  topaz_a_byte);
-
   } else {
-    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
-		 'a');
+    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),'a');
     retval += -1;
   }
   // Handle Topaz B hardware
   if (topaz_is_connected('b')) {
+    if (strcmp( PCB, "whitfield") == 0) {
+      // We're using the Whitfield board.  This has a TCA9544A I2C mux
+      // in front of the Topaz connectors.
+
+      // Topaz B is on channel 1 (SD1 / SC1)
+      retval += tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 5);
+    }
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_OUTPUT_PORT_0_REG,
 		  topaz_b_byte);
 
   } else {
-    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),
-		 'b');
+    logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),'b');
     retval += -1;
   }
 
-  
   return retval;
 }
 

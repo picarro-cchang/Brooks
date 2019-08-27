@@ -119,6 +119,10 @@ logger_system_t system_array[] ={
     {"vernon",
      21
     },
+    // The Whitfield board module
+    {"whitfield",
+     22
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

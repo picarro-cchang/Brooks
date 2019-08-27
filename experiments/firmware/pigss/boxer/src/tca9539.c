@@ -310,8 +310,8 @@ int8_t tca9539_write(uint8_t slave_address, uint8_t register_address, uint8_t da
     case TW_MT_DATA_ACK:
       logger_msg_p("tca9539", log_level_DEBUG, PSTR("Slave ACKed data byte %u."),
 		   bytenum);
-      logger_msg_p("tca9539", log_level_DEBUG, PSTR("Wrote 0x%x to register 0x%x"),
-		   data_union.b[bytenum], register_address);
+      logger_msg_p("tca9539", log_level_DEBUG, PSTR("Wrote 0x%x to register 0x%x at address 0x%x"),
+		   data_union.b[bytenum], register_address, slave_address);
       // Data transmitted, ACK received
       break;
 

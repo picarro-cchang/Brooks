@@ -31,6 +31,9 @@
 // Provides channel_set() for turning channels on and off
 #include "channel.h"
 
+// Provides definitions and functions for working with Vernon
+#include "vernon.h"
+
 #include "system.h"
 
 // ----------------------- Globals ------------------------------------

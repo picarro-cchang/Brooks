@@ -76,6 +76,8 @@
 // Functions for working with Topaz boards
 #include "topaz.h"
 
+#include "vernon.h"
+
 // Provides functions for turning the LED on and off.
 #include "led.h"
 
@@ -152,14 +154,15 @@ int main(void) {
   logger_setsystem( "tca954xa" );
 
   // Enable logging the FRAM system
-  logger_setsystem( "mb85rc256v" );
+  // logger_setsystem( "mb85rc256v" );
 
   logger_setsystem( "eeprom" );
   logger_setsystem( "cal" );
 
-  // logger_setsystem( "tca9539" );
+  // Enable logging the TCA9539 I2C GPIO system
+  logger_setsystem( "tca9539" );
   // logger_setsystem( "spi" );
-  logger_setsystem( "ltc2601" );
+  // logger_setsystem( "ltc2601" );
 
   logger_setsystem( "ltc2607" );
 
@@ -168,6 +171,7 @@ int main(void) {
   logger_setsystem( "topaz" );
   // logger_setsystem( "pressure" );
   logger_setsystem( "vernon" );
+  logger_setsystem( "whitfield" );
 
   // Start the I2C module
   i2c_init();
