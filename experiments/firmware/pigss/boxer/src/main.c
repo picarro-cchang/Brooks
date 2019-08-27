@@ -142,7 +142,7 @@ int main(void) {
   logger_setsystem( "channel" );
 
   // Enable MPR pressure sensor module logging
-  logger_setsystem( "mpr" );
+  // logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging

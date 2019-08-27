@@ -29,6 +29,8 @@ typedef struct system_status_struct {
   uint16_t topaz_a_sernum;
   // Topaz B serial number (0 if board not connected)
   uint16_t topaz_b_sernum;
+  // Vernon serial number (0 if board not connected)
+  uint16_t vernon_sernum;
 } system_state_t;
 
 // The system state structure variable will have global scope, and
@@ -62,8 +64,11 @@ void system_init( void );
 
 //******* Set and get members of the system_state structure ********//
 
-// Set the topaz a serial number in the system state structure
+// Set the Topaz A or B serial number in the system state structure
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);
+
+// Set the Vernon serial number in the system state structure
+int8_t system_state_set_vernon_sernum(uint16_t sernum);
 
 // Set the system slotid in the system state structure
 int8_t system_state_set_system_slotid(uint8_t slotid);

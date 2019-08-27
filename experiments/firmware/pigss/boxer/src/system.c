@@ -59,6 +59,11 @@ void system_init( void ) {
   sernum = topaz_get_serial_number('a');
   logger_msg_p("system",log_level_INFO,PSTR("Topaz A serial number is %i"),
 	       sernum);
+
+  // Get the serial number for Vernon
+  sernum = vernon_get_serial_number();
+  logger_msg_p("system",log_level_INFO,PSTR("Vernon serial number is %i"),
+	       sernum);
 }
 
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
@@ -155,7 +160,7 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "control",
 		 LINE_TERMINATION_CHARACTERS );
-    break; 
+    break;
   default:
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "none",
@@ -188,6 +193,13 @@ int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
   } else {
     system_state.topaz_b_sernum = sernum;
   }
+  return 0;
+}
+
+int8_t system_state_set_vernon_sernum(uint16_t sernum) {
+
+  system_state.vernon_sernum = sernum;
+
   return 0;
 }
 

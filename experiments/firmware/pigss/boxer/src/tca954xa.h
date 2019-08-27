@@ -7,6 +7,8 @@
 // control register.  The tca9548_set_channel() function can work with
 // all parts.
 
+// It looks like TCA parts are lower-voltage versions of PCA parts.
+
 // |----------+--------+----------+----------------------------|
 // | Part     | Reset? | channels | comment                    |
 // |----------+--------+----------+----------------------------|
