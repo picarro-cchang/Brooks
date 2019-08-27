@@ -46,12 +46,12 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                 <div className="col-sm-6">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
                         (this.props.plan.focus.column === 1) && this.manageFocus(input)}
-                           type="text" className="form-control input-medium" id={"plan-port-" + row}
+                           type="text" className="form-control plan-input" id={"plan-port-" + row}
                            onFocus={(e) => {
                                this.props.ws_sender({element: "plan_panel", focus:{row, column:1}})
                            }}
-                           style={{ backgroundColor: 'white', border: "1px solid black", borderRadius: 2, marginRight: -20, color: 'black'}}
-                           value={portString} placeholder="Select port"  readOnly/>
+                           style={{ backgroundColor: 'white'}}
+                           value={portString} placeholder="Select port" readOnly/>
                 </div>
                 <div className="col-sm-4">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
@@ -60,9 +60,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            onFocus={(e) => {
                                this.props.ws_sender({element: "plan_panel", focus:{row, column:2}})
                            }}
-                           type="text" className="form-control input-small" id={"plan-duration-" + row}
-                           style={{ backgroundColor: 'white', border: "1px solid black", borderRadius: 2, marginBottom: 5, color: 'black'}}
-
+                           type="text" className="form-control input-small plan-input" id={"plan-duration-" + row}
                            value={durationString} placeholder="Duration" />
                 </div>
             </div>
@@ -79,10 +77,10 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         */
         return (
-            <div className="panel-plan" style={{ height: 675, backgroundColor: "#888", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
+            <div className="panel-plan" >
                 <h2 style={{color: "white"}}>Schedule</h2>
                 <h6>Please click on available channels to select port.</h6>
-                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:440, borderRadius: 3}}>
+                <div className="panel-plan-inner" >
                     <form>
                         <ReactList
                             itemRenderer={this.renderItem}
@@ -92,59 +90,59 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                     </form>
                 </div>
                 <div className="container" style={{width: "90%"}}>
-                    <div className="row text-center" style={{marginTop: "10px"}}>
-                        <div className="col-sm-6">
+                    <div className="row text-center btn-row-1" >
+                        <div className="col-sm-4">
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => this.props.ws_sender({element: "plan_insert"})}
-                                    className={"btn btn-block btn-secondary"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-secondary btn-group-1"} >
                                 Insert
                             </button>
                         </div>
-                        <div className="col-sm-6">
+                        <div className="col-sm-4">
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => this.props.ws_sender({element: "plan_delete"})}
-                                    className={"btn btn-block btn-danger"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-danger btn-group-1"}>
                                 Delete
                             </button>
                         </div>
                     </div>
-                    <div className="row text-center" style={{marginTop: "10px"}}>
-                        <div className="col-sm-6">
+                    <div className="row  btn-row-1">
+                        <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load"})}
-                                    className={"btn btn-block btn-inverse"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-inverse btn-group-1"} >
                                 Load
                             </button>
                         </div>
-                        <div className="col-sm-6">
+                        <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save"})}
-                                    className={"btn btn-block btn-inverse"} style={{ width: 110, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-inverse btn-group-1"} >
                                 Save
                             </button>
                         </div>
                     </div>
-                    <div className="row text-center" style={{marginTop: "10px", marginBottom: "10px", marginLeft: -25}}>
+                    <div className="row text-center btn-row-2" >
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_cancel"})}
-                                    className={"btn btn-block btn-danger"}  style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-danger btn-group-2"} >
                                 Cancel
                             </button>
                         </div>
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_loop"})}
-                                    className={"btn btn-block btn-success"} style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-success btn-group-2"}>
                                 Loop
                             </button>
                         </div>
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_ok"})}
-                                    className={"btn btn-block btn-success"} style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-success btn-group-2"}>
                                 OK
                             </button>
                         </div>

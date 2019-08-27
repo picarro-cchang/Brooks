@@ -31,49 +31,43 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             onClick={e => this.props.ws_sender({element: "standby"})}
                             disabled = {this.getDisabled("standby")}
                             value="standby"
-                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("standby")}
-                            style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
+                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("standby")}>
                             Standby
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "identify"})}
                             disabled = {this.getDisabled("identify")}
                             value="identify"
-                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("identify")}
-                            style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
+                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("identify")} >
                             Identify Available Channels
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "run"})}
                             disabled = {this.getDisabled("run")}
                             value="run"
-                            className={"btn btn-large btn-command " + this.getClassNameOpt("run")}
-                            style={{ borderRadius: 5, color: 'black', height: 80 }}>
+                            className={"btn btn-large btn-command " + this.getClassNameOpt("run")} >
                             Run
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "plan"})}
                             disabled = {this.getDisabled("plan")}
                             value="plan"
-                            className={"btn btn-large btn-command " + this.getClassNameOpt("plan")}
-                            style={{ borderRadius: 5, color: 'black', height: 80 }}>
+                            className={"btn btn-large btn-command " + this.getClassNameOpt("plan")} >
                             Edit Plan
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "reference"})}
                             disabled = {this.getDisabled("reference")}
                             value="reference"
-                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("reference")}
-                            style={{ borderRadius: 5, color: 'black', height: 80, gridColumnStart: 1, gridColumnEnd: 3, width: "100%" }}>
+                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("reference")}>
                             Reference
                         </button>
                         <button
                             value="edit"
-                            className={"btn btn-large btn-command btn-danger"}
+                            className={"btn btn-large btn-edit btn-danger"}
                             onClick={ (e) =>
                                 this.props.ws_sender({element: "edit"})
-                            }
-                            style={{ borderRadius: 5, color: 'white', height: 55, width: 100, marginRight: 20}}>
+                            }>
                             Edit Labels
                         </button>
                     </div>
@@ -83,13 +77,4 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
     }
 }
 
-/*
-    <button style={{fontSize: "0.9em"}}
-        className="btn btn-info btn-lg btn-command btn-1-3">
-        <div style={{textAlign: "left"}}>
-            Testing<br/>
-            div in button
-        </div>
-    </button>
-*/
 export default CommandPanel;

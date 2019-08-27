@@ -2,8 +2,6 @@ import React, { Component, PureComponent, useImperativeHandle } from 'react';
 import PicarroAPI from './../api/PicarroAPI';
 import BankPanel from './BankPanel';
 import CommandPanel from './CommandPanel';
-import OptionsPanel from './OptionsPanel';
-// import OverridePanel from './OverridePanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
 import PlanSavePanel from './PlanSavePanel';

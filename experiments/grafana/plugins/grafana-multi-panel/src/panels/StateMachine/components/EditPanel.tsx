@@ -56,101 +56,57 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                 edit_list.push(
                     <div className="gf-form-group">
                         <div className="row">
-                            <label style={{marginLeft: 20, marginRight: 10, fontSize: 15}}> Bank {key}</label>
-                            <input name={"bank" + key} className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text"
+                            <label className="edit-label"> Bank {key}</label>
+                            <input name={"bank" + key} className="col-sm-6 edit-panel"  type="text"
                             onChange={(e) => this.handleBankInputChange(e, key)}
                             value={this.state.plan.bank_names[key].name}/>
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 1 </label>
-                            <input name={"1"} className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[1]}
+                            <label className="edit-label"> Channel 1 </label>
+                            <input name={"1"} className="col-sm-6 edit-panel" type="text"
+                                   value={this.state.plan.bank_names[key].channels[1]}
                                   onChange={(e) => this.handleChannelChange(e, key, 1)}
                             />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 2 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[2]}
+                            <label className="edit-label"> Channel 2 </label>
+                            <input className="col-sm-6 edit-panel" type="text" value={this.state.plan.bank_names[key].channels[2]}
                                   onChange={(e) => this.handleChannelChange(e, key, 2)}
                             />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 3 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[3]}
+                            <label className="edit-label"> Channel 3 </label>
+                            <input className="col-sm-6 edit-panel" type="text" value={this.state.plan.bank_names[key].channels[3]}
                                   onChange={(e) => this.handleChannelChange(e, key, 3)}
                              />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 4 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[4]}
+                            <label className="edit-label"> Channel 4 </label>
+                            <input className="col-sm-6 edit-panel" type="text" value={this.state.plan.bank_names[key].channels[4]}
                                    onChange={(e) => this.handleChannelChange(e, key, 4)}
                             />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 5 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[5]}
+                            <label className="edit-label"> Channel 5 </label>
+                            <input className="col-sm-6 edit-panel"  type="text" value={this.state.plan.bank_names[key].channels[5]}
                                    onChange={(e) => this.handleChannelChange(e, key, 5)}
                             />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 6 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[6]}
+                            <label className="edit-label"> Channel 6 </label>
+                            <input className="col-sm-6 edit-panel"  type="text" value={this.state.plan.bank_names[key].channels[6]}
                                   onChange={(e) => this.handleChannelChange(e, key, 6)}
                             />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 7 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[7]}
+                            <label className="edit-label"> Channel 7 </label>
+                            <input className="col-sm-6 edit-panel"  type="text" value={this.state.plan.bank_names[key].channels[7]}
                                    onChange={(e) => this.handleChannelChange(e, key, 7)}
                             />
                         </div>
                         <div className="row">
-                            <label style={{marginLeft: 30, marginRight: 10, fontSize: 15}}> Channel 8 </label>
-                            <input className="col-sm-6" style={{
-                                color: "black",
-                                background: "white",
-                                border: "1px solid black",
-                                borderRadius: 2,
-                            }} type="text" value={this.state.plan.bank_names[key].channels[8]}
+                            <label className="edit-label" > Channel 8 </label>
+                            <input className="col-sm-6 edit-panel" type="text" value={this.state.plan.bank_names[key].channels[8]}
                                    onChange={(e) => this.handleChannelChange(e, key, 8)}
                             />
                         </div>
@@ -180,9 +136,9 @@ class EditPanel extends PureComponent<EditPanelOptions> {
 
 
         return (
-                <div className="panel-plan" style={{ height: 550, backgroundColor: "#888", padding: 10, border: "3px solid #111", borderRadius: 7 }}>
+                <div className="panel-edit">
                         <h2 style={{color: "white"}}>Edit Bank & Channel Names</h2>
-                        <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:440, borderRadius: 3}}>
+                        <div className="panel-plan-inner">
                                 <ReactList
                                     itemRenderer={this.renderItem}
                                     length={1}
@@ -205,14 +161,14 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                                                 4: {name: this.state.plan.bank_names[4].name, channels: channels4}
                                             }
                                         }); console.log("ehhlo")}}
-                                    className={"btn btn-block btn-success"}  style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-success btn-edit-panel"}  >
                                 Ok
                             </button>
                         </div>
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "edit_cancel"})}
-                                    className={"btn btn-block btn-danger"} style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
+                                    className={"btn btn-block btn-danger btn-edit-panel"}>
                                 Cancel
                             </button>
                         </div>
