@@ -206,7 +206,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                                             }
                                         }); console.log("ehhlo")}}
                                     className={"btn btn-block btn-success"}  style={{ marginBottom: 10,  width: 95, height: 40, borderRadius: 5, textAlign: "center", fontSize: 20}}>
-                                Save
+                                Ok
                             </button>
                         </div>
                         <div className="col-sm-4">

@@ -19,8 +19,9 @@ from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayl
 
 log = LOLoggerClient(client_name="PigssController", verbose=True)
 
-PLAN_FILE_DIR = "/temp/plan_files"
-
+PLAN_FILE_DIR = "/tmp/plan_files"
+if not os.path.isdir(PLAN_FILE_DIR):
+    os.makedirs(PLAN_FILE_DIR, 0o755)
 
 class UiStatus(str, Enum):
     DISABLED = "DISABLED"
@@ -364,12 +365,14 @@ class PigssController(Ahsm):
             s = self.plan["steps"][row]
             plan[str(row)] = {"active": {"bank": s["bank"], "channel": s["channel"]}, "duration": s["duration"]}
         with open(fname, "w") as fp:
-            json.dump(plan, fp, indent=4)
+            json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
 
     def load_plan_from_file(self):
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
         with open(fname, "r") as fp:
-            plan = json.load(fp)
+            data = json.load(fp)
+            plan = data["plan"]
+            bank_names = data["bank_names"]
         assert isinstance(plan, dict), "Plan should be a dictionary"
         steps = {}
         last_step = len(plan)
@@ -383,6 +386,7 @@ class PigssController(Ahsm):
         self.set_plan(["steps"], steps)
         self.set_plan(["last_step"], last_step)
         self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
+        self.set_plan(["bank_names"], bank_names)
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]

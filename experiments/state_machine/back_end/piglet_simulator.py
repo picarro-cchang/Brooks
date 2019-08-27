@@ -30,6 +30,7 @@ class PigletSimulator:
     active_chan = attr.ib(factory=lambda: 8 * [0])
     mfc_value = attr.ib(0)
     clean_solenoid_state = attr.ib(0)
+    random_ids = attr.ib(0)
 
     def __attrs_post_init__(self):
         self.task = asyncio.create_task(self.fsm())
@@ -147,7 +148,10 @@ class PigletSimulator:
                 else:
                     self.opstate = "standby"
                     for i, _ in enumerate(self.active_chan):
-                        self.active_chan[i] = 1 if random.uniform(0.0, 1.0) > 0.5 else 0
+                        if self.random_ids:
+                            self.active_chan[i] = 1 if random.uniform(0.0, 1.0) > 0.5 else 0
+                        else:
+                            self.active_chan[i] = i % 2
                     # print(self.active_chan)
                     self.opstate_changed.set()
             elif self.opstate == "clean":
