@@ -103,6 +103,9 @@ int8_t system_enter_standby(void) {
 
     break;
   case system_state_STANDBY:
+    // We're already in standby, but disabling all channels resets the
+    // proportional valves.
+    channel_set(0);
     break;
   case system_state_CONTROL:
     // Transition from CONTROL to STANDBY

@@ -118,33 +118,46 @@ void cs_topaz_b_target(uint8_t state) {
 
 //******************** Proportional valve DACs *********************//
 
-void cs_ch1_dac_mux(void) {
+// We can set both muxes at the same time, since that only uses one
+// SPI write.  The correct device will still be identified by the A or
+// B target CS line.
+
+void cs_nw_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(0);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_ch2_dac_mux(void) {
+void cs_sw_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(2);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_ch3_dac_mux(void) {
+void cs_se_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(4);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_ch4_dac_mux(void) {
+void cs_ne_dac_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(6);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
+
 
 //************************ Pressure sensors ************************//
 

@@ -21,21 +21,24 @@ void cs_topaz_b_target(uint8_t state);
 
 //******************** Proportional valve DACs *********************//
 
-// Set the cs mux position to point to the channel 1 proportional
-// valve DAC
-void cs_ch1_dac_mux(void);
+// Each Topaz board has 4 quadrants, which ultimately get mapped to
+// channels.  The north position is set by the 4-pin MTA100 connector.
 
-// Set the cs mux position to point to the channel 2 proportional
+// Set the cs mux position to point to the NW quadrant proportional
 // valve DAC
-void cs_ch2_dac_mux(void);
+void cs_nw_dac_mux(void);
 
-// Set the cs mux position to point to the channel 3 proportional
+// Set the cs mux position to point to the NW quadrant proportional
 // valve DAC
-void cs_ch3_dac_mux(void);
+void cs_sw_dac_mux(void);
 
-// Set the cs mux position to point to the channel 4 proportional
+// Set the cs mux position to point to the SE quadrant proportional
 // valve DAC
-void cs_ch4_dac_mux(void);
+void cs_se_dac_mux(void);
+
+// Set the cs mux position to point to the NE quadrant proportional
+// valve DAC
+void cs_ne_dac_mux(void);
 
 //************************ Pressure sensors ************************//
 

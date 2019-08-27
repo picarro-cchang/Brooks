@@ -95,27 +95,46 @@ uint16_t pressure_dac_counts[8] =
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   switch(channel) {
   case 1 :
-    cs_ch1_dac_mux();
+    cs_ne_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
     pressure_dac_counts[0] = counts;
     break;
   case 2 :
-    cs_ch2_dac_mux();
+    cs_se_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
     pressure_dac_counts[1] = counts;
     break;
   case 3 :
-    cs_ch3_dac_mux();
+    cs_nw_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
     pressure_dac_counts[2] = counts;
     break;
   case 4 :
-    cs_ch4_dac_mux();
+    cs_sw_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
     pressure_dac_counts[3] = counts;
     break;  
+  case 5 :
+    cs_ne_dac_mux();
+    ltc2601_write( &cs_topaz_b_target, 0x3, counts);
+    pressure_dac_counts[3] = counts;
+    break;  
+  case 6 :
+    cs_se_dac_mux();
+    ltc2601_write( &cs_topaz_b_target, 0x3, counts);
+    pressure_dac_counts[3] = counts;
+    break;  
+  case 7 :
+    cs_nw_dac_mux();
+    ltc2601_write( &cs_topaz_b_target, 0x3, counts);
+    pressure_dac_counts[3] = counts;
+    break;  
+  case 8 :
+    cs_sw_dac_mux();
+    ltc2601_write( &cs_topaz_b_target, 0x3, counts);
+    pressure_dac_counts[3] = counts;
+    break;  
   }
-  
   return 0;
 }
 
