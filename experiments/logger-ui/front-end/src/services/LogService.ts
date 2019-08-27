@@ -1,10 +1,20 @@
 import { dateTime } from '@grafana/data';
-// import { LoggerGetColumnsAPI } from '../constants/API';
+import { LoggerGetLogsAPI } from '../constants/API';
 import { LogProps } from 'components/types';
 
 export const LogService = (() => {
-  function getLogs() {
-    return [];
+  function getLogs(query = '') {
+    const url = LoggerGetLogsAPI + query;
+    console.log('url', url);
+    return fetch(url, {
+      method: 'GET',
+    }).then(response => {
+      if (!response.ok) {
+        throw Error('Network GET request failed');
+      }
+      console.log('Response to GET', response);
+      return response;
+    });
   }
 
   return {

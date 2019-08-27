@@ -15,9 +15,11 @@ export class Cell extends Component<Props> {
         {/* Client Name */}
         <div className="log-fields client-name">{row[1]}</div>
         {/* Severity Level */}
-        <div className={'log-fields ' + 'severity-level-' + row[3]}>{row[3]}</div>
+        <div className={'log-fields ' + 'severity-level-' + row[4]}>{row[4]}</div>
+        {/* Epoch Time */}
+        {/* <div className="log-fields">{row[2]}</div> */}
         {/* Log Message */}
-        <div className="log-fields log-message">{row[2]}</div>
+        <div className="log-fields log-message">{row[3]}</div>
       </div>
     );
   }

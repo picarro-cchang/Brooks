@@ -2,7 +2,7 @@ import os
 import sqlite3
 from flask import g
 
-DATABASE = '../db/Logs.db'
+DATABASE = "Logs.db"
 
 
 def get_connection():

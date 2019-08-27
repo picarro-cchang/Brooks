@@ -21,36 +21,22 @@ class EventsModel:
         return:
             query: string
         """
-        print('-->', query_params)
+        columns = last_accessed_rowid = client = limit = level = start_date = limit_tpl = end_date = None
         try:
             if 'columns' in query_params:
                 columns = query_params['columns']
-            else:
-                columns = None
             if 'last_accessed_rowid' in query_params:
                 last_accessed_rowid = query_params['last_accessed_rowid']
-            else:
-                last_accessed_rowid = None
             if 'client' in query_params:
                 client = query_params['client']
-            else:
-                client = None
             if 'level' in query_params:
                 level = query_params['level']
-            else:
-                level = None
             if 'start_date' in query_params:
                 start_date = query_params['start_date']
-            else:
-                start_date = None
             if 'end_date' in query_params:
                 end_date = query_params['end_date']
-            else:
-                end_date = None
             if 'limit' in query_params:
                 limit = query_params['limit']
-            else:
-                limit = None
 
             # Sequential Query Building, careful
             query = ''
@@ -67,13 +53,15 @@ class EventsModel:
                 constraints.append(f'EpochTime >= {start_date}')
             if end_date:
                 constraints.append(f'EpochTime <= {end_date}')
-
             if limit:
                 limit_tpl = (f'LIMIT {limit}')
 
             query += f'SELECT {columns_tpl} FROM {table_name} '
-            query += f'WHERE {" AND ".join(constraints)} '
-            query += f'ORDER BY rowid DESC {limit_tpl}'
+            if len(constraints) > 0:
+                query += f'WHERE {" AND ".join(constraints)} '
+            query += f'ORDER BY rowid DESC '
+            if limit_tpl:
+                query += f'{limit_tpl}'
             query += ';'
             print(query)
         except Exception as ex:

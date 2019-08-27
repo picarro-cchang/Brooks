@@ -20,21 +20,21 @@
 }
 
 .severity-level-10 {
-  background-color: #f88787;
+  background-color: #f7a7a7;
   color: #3c3c3cf7;
   font-weight: 600;
   padding: 0px 8px 0px 8px;
 }
 
 .severity-level-20 {
-  background-color: #f85757;
+  background-color: #fd7474;
   color: #3c3c3cf7;
   font-weight: 600;
   padding: 0px 8px 0px 8px;
 }
 
 .severity-level-30 {
-  background-color: red;
+  background-color: #ff6f6f;
   color: #000;
   font-weight: 600;
   padding: 0px 8px 0px 8px;
