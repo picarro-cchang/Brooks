@@ -151,7 +151,7 @@ int main(void) {
   logger_setsystem( "adc" ); // Enable adc module logging
 
   // Enable logging the TCA954xA I2C switch system
-  logger_setsystem( "tca954xa" );
+  // logger_setsystem( "tca954xa" );
 
   // Enable logging the FRAM system
   // logger_setsystem( "mb85rc256v" );
@@ -160,7 +160,8 @@ int main(void) {
   logger_setsystem( "cal" );
 
   // Enable logging the TCA9539 I2C GPIO system
-  logger_setsystem( "tca9539" );
+  // logger_setsystem( "tca9539" );
+  
   // logger_setsystem( "spi" );
   // logger_setsystem( "ltc2601" );
 

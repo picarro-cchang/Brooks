@@ -141,6 +141,9 @@ SRC += math.c
 # Power board
 SRC += vernon.c
 
+# Whitfield (system) board
+SRC += whitfield.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =

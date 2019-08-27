@@ -63,6 +63,10 @@ void system_init( void ) {
   logger_msg_p("system",log_level_INFO,PSTR("Topaz A serial number is %i"),
 	       sernum);
 
+  sernum = topaz_get_serial_number('b');
+  logger_msg_p("system",log_level_INFO,PSTR("Topaz B serial number is %i"),
+	       sernum);
+
   // Get the serial number for Vernon
   sernum = vernon_get_serial_number();
   logger_msg_p("system",log_level_INFO,PSTR("Vernon serial number is %i"),

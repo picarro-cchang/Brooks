@@ -12,6 +12,9 @@
 // Definitions of Two Wire Interface statuses
 #include <util/twi.h>
 
+// Provides strcmp()
+#include <string.h>
+
 // Functions for working with UART interfaces.
 // Definition of LINE_TERMINATION_CHARACTERS
 #include "usart.h"
@@ -43,8 +46,7 @@ int8_t topaz_init(char board) {
       // in front of the Topaz connectors.
 
       // Topaz A is on channel 0 (SD0 / SC0)
-      retval += tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 4);
-      logger_msg_p("whitfield", log_level_DEBUG, PSTR("I2C mux to Topaz A"));
+      retval += whitfield_set_i2c_mux(0);
     }
     // Make P00, P01, P02, P03 GPIO outputs (clear bit positions) for
     // valve control.
@@ -83,8 +85,7 @@ int8_t topaz_init(char board) {
       // in front of the Topaz connectors.
 
       // Topaz B is on channel 1 (SD1 / SC1)
-      retval += tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 5);
-      logger_msg_p("whitfield", log_level_DEBUG, PSTR("I2C mux to Topaz B"));
+      retval += whitfield_set_i2c_mux(1);
     }
     // Make P00, P01, P02, P03 GPIO outputs (clear bit positions) for
     // valve control.
@@ -127,20 +128,14 @@ int8_t topaz_connect(char board) {
     switch(board) {
     case 'a':
       // Topaz A is on channel 0 (SD0 / SC0)
-      retval = tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 4);
+      retval += whitfield_set_i2c_mux(0);
       break;
     case 'b':
       // Topaz B is on channel 1 (SD1 / SC1)
-      retval = tca9548a_write(WHITFIELD_I2C_MUX_ADDRESS, 5);
+      retval += whitfield_set_i2c_mux(1);
       break;
     default:
       return -1;
-    }
-
-    if (retval != 0) {
-      logger_msg_p("topaz", log_level_ERROR, PSTR("Whitfield I2C switch problem"));
-    } else {
-      logger_msg_p("topaz", log_level_DEBUG, PSTR("Whitfield I2C switch to %c"),board);
     }
   }
 
@@ -202,12 +197,6 @@ uint16_t topaz_get_serial_number(char board) {
     uint16_t w;
   } sernum_union;
 
-  if (board == 'a') {
-    // Configure system board I2C mux or I2C address here
-    i2c_address = TOPAZ_I2C_MUX_ADDRESS;
-  } else {
-    i2c_address = TOPAZ_I2C_MUX_ADDRESS;
-  }
 
   // Try to connect to the Topaz board
   retval = topaz_connect(board);
@@ -248,6 +237,18 @@ void cmd_topaz_a_set_serial_number( command_arg_t *command_arg_ptr ) {
   }
 }
 
+void cmd_topaz_b_set_serial_number( command_arg_t *command_arg_ptr ) {
+  int8_t retval = 0;
+  uint16_t sernum = (command_arg_ptr -> uint16_arg);
+  retval += topaz_set_serial_number('b', sernum);
+  if (retval < 0) {
+    command_nack(NACK_COMMAND_FAILED);
+  } else {
+    // Acknowledge the successful command
+    command_ack();
+  }
+}
+
 void cmd_topaz_a_get_serial_number( command_arg_t *command_arg_ptr ) {
   if (!topaz_is_connected('a')) {
     // There's no Topaz A
@@ -261,21 +262,19 @@ void cmd_topaz_a_get_serial_number( command_arg_t *command_arg_ptr ) {
 	       LINE_TERMINATION_CHARACTERS );
 }
 
-void cmd_topaz_b_set_serial_number( command_arg_t *command_arg_ptr ) {
-  uint16_t sernum = (command_arg_ptr -> uint16_arg);
-  topaz_set_serial_number('b', sernum);
-
-  // Acknowledge the successful command
-  command_ack();
-}
-
 void cmd_topaz_b_get_serial_number( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('b')) {
+    // There's no Topaz B
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
   uint16_t sernum;
   sernum = topaz_get_serial_number('b');
   usart_printf(USART_CHANNEL_COMMAND, "%u%s",
 	       sernum,
 	       LINE_TERMINATION_CHARACTERS );
 }
+
 
 bool topaz_is_connected(char board) {
   uint16_t sernum = system_state_get_topaz_sernum(board);

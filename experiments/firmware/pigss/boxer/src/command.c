@@ -130,11 +130,21 @@ command_t command_array[] = {
    "uint16",
    5,
    &cmd_topaz_a_set_serial_number},
+    // tzb.sn -- Set the serial number for the Topaz B PCB
+  {"tzb.sn",
+   "uint16",
+   5,
+   &cmd_topaz_b_set_serial_number},
   // tza.sn? -- Query the serial number for the Topaz A PCB
   {"tza.sn?",
    "none",
    0,
    &cmd_topaz_a_get_serial_number},
+  // tzb.sn? -- Query the serial number for the Topaz B PCB
+  {"tzb.sn?",
+   "none",
+   0,
+   &cmd_topaz_b_get_serial_number},
   // prs.out.raw? -- Query the raw counts from output pressure sensor 1 or 2
   {"prs.out.raw?",
    "uint16",
