@@ -6,9 +6,10 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
     renderItem = (index: number, key: ReactText) => (
         <div className="container" style={{paddingTop: "5px"}} key={key}>
             <div className="btn-group d-flex">
-                <button type="button" className="btn btn-light w-100 btn-small"
+                <button type="button" className="btn w-100 btn-small"
                         onClick={e => this.props.ws_sender({element: "plan_load_filename",
-                            name: this.props.plan.plan_files[index+1]})}>
+                            name: this.props.plan.plan_files[index+1]})}
+                style={{color: "black"}}>
                     {this.props.plan.plan_files[index+1]}
                 </button>
                 <button type="button" className="btn btn-danger btn-small"

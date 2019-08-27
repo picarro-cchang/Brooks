@@ -131,7 +131,7 @@ class PigssController(Ahsm):
         }
         self.modal_info = {
             "show": False,
-            "html": "<h2>Example Modal Dialog</h2><p>Test message</p>",
+            "html": "<h2 class='test'>Example Modal Dialog</h2><p>Test message</p>",
             "num_buttons": 2,
             "buttons": {
                 1: {
@@ -869,7 +869,7 @@ class PigssController(Ahsm):
             self.set_modal_info(
                 [], {
                     "show": True,
-                    "html": f"<h2>Confirm file deletion</h2><p>{msg}</p>",
+                    "html": f"<h2 class='test'>Confirm file deletion</h2><p>{msg}</p>",
                     "num_buttons": 2,
                     "buttons": {
                         1: {
@@ -988,7 +988,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_modal_info([], {
                 "show": True,
-                "html": f"<h3>Plan load error</h3><p>{self.plan_error.message}</p>",
+                "html": f"<h3 class='test'>Plan load error</h3><p>{self.plan_error.message}</p>",
                 "num_buttons": 0
             })
             return self.handled(e)
@@ -1028,7 +1028,7 @@ class PigssController(Ahsm):
             self.set_modal_info(
                 [], {
                     "show": True,
-                    "html": f"<h2>Confirm file overwrite</h2><p>{msg}</p>",
+                    "html": f"<h2 class='test'>Confirm file overwrite</h2><p>{msg}</p>",
                     "num_buttons": 2,
                     "buttons": {
                         1: {
@@ -1077,7 +1077,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_modal_info([], {
                 "show": True,
-                "html": f"<h3>Plan save error</h3><p>{self.plan_error.message}</p>",
+                "html": f"<h3 class='test'>Plan save error</h3><p>{self.plan_error.message}</p>",
                 "num_buttons": 0
             })
             return self.handled(e)
@@ -1094,7 +1094,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_modal_info([], {
                 "show": True,
-                "html": f"<h3>Plan error</h3><p>{self.plan_error.message}</p>",
+                "html": f"<h3 class='test'>Plan error</h3><p>{self.plan_error.message}</p>",
                 "num_buttons": 0
             })
             return self.handled(e)
@@ -1115,7 +1115,7 @@ class PigssController(Ahsm):
             self.set_modal_info(
                 [], {
                     "show": True,
-                    "html": f"<h2>Confirm Plan</h2><p>{msg}</p>",
+                    "html": f"<h2 class='test'>Confirm Plan</h2><p>{msg}</p>",
                     "num_buttons": 2,
                     "buttons": {
                         1: {

@@ -53,13 +53,13 @@ export class Main extends Component<any, any> {
           name: "",
           channels: {
             1: "",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
           }
         },
         3: {
@@ -246,7 +246,6 @@ export class Main extends Component<any, any> {
 
     }
 
-
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
@@ -261,7 +260,7 @@ export class Main extends Component<any, any> {
             {/*</div>*/}
           </div>
 
-          <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
+          <Modal styles={{overlay: {color: "black"}}} open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
             <div style={{ margin: "20px"}}>
               <div dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}>
               </div>
@@ -273,99 +272,3 @@ export class Main extends Component<any, any> {
   }
 }
 
-//export default Main;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { PureComponent } from "react";
-// import { PanelProps, getTheme } from "@grafana/ui";
-// import { Options } from "../types";
-//
-// interface Props extends PanelProps<Options> {}
-//
-// interface State {
-//   error: string;
-//   imageUrl: string;
-// }
-//
-// export class Main extends PureComponent<Props, State> {
-//
-//   constructor(props) {
-//     super(props);
-//
-//     this.state = {
-//       error: null,
-//       imageUrl: null
-//     };
-//   }
-//
-//   updateImage = () => {
-//     if (!this.props.options.imageUrl) {
-//       return;
-//     }
-//
-//     fetch(this.props.options.imageUrl, {
-//       method: "head",
-//       mode: "cors"
-//     })
-//       .then(response => {
-//         if (response.status >= 400) {
-//           throw Error(response.statusText);
-//         }
-//
-//         const url = this.props.options.imageUrl;
-//         this.setState({imageUrl: url, error: null });
-//
-//       })
-//       .catch((error: Error) =>
-//         this.setState({
-//           imageUrl: null,
-//           error: error.message
-//         })
-//       );
-//   };
-//
-//
-//   componentDidMount() {
-//     this.updateImage();
-//   }
-//
-//
-//   render() {
-//     if (!this.state.imageUrl) {
-//       return null;
-//     }
-//
-//     if (this.state.error) {
-//       const theme = getTheme();
-//       return (
-//         <strong style={{ color: theme.colors.critical }}>
-//           Could not load image: {this.state.error}
-//         </strong>
-//       );
-//     }
-//
-//     return (
-//       <img Hello-Editor={this.state.imageUrl} width={this.props.width} height="auto" />
-//     );
-//   }
-// }

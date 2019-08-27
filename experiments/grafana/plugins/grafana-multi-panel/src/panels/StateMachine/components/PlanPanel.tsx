@@ -30,9 +30,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         let durationString = "";
         if (this.props.plan.last_step >= row) {
             const planRow = this.props.plan.steps[row];
-            const bank_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].name;
-            const ch_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].channels[this.props.plan.steps[row].channel];
             if (planRow.bank !== 0) {
+                const bank_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].name;
+                const ch_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].channels[this.props.plan.steps[row].channel];
                 // portString = `Bank ${planRow.bank}, Channel ${planRow.channel}`;
                 portString = bank_name + ", " + ch_name;
             }
