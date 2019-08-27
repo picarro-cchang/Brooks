@@ -54,23 +54,31 @@
 // Initialize the channel array
 channel_t channel_array[] = {
 			     {1,      // Channel number
-			      false}, // Channel enabled for sampling
+			      false,  // Channel enabled for sampling
+			      3},     // Position in the hardware byte
 			     {2,
-			      false},
+			      false,
+			     2},
 			     {3,
-			      false},
+			      false,
+			     0},
 			     {4,
-			      false},
+			      false,
+			     1},
 			     {5,
-			      false},
+			      false,
+			     7},
 			     {6,
-			      false},
+			      false,
+			     6},
 			     {7,
-			      false},
+			      false,
+			     4},
 			     {8,
-			      false},
+			      false,
+			     5},
 			      // End of array indicator.  Must be last
-			      {0,false}
+			     {0,false,0}
 			     };
 
 // Define a pointer to the channel configuration
@@ -120,13 +128,13 @@ int8_t channel_update() {
       // Set hardware byte for configuring solenoid valves.  Solenoid
       // valves are energized when a channel is disabled, so enabled
       // channel bits are cleared in the hardware byte.
-      channel_hardware_byte &= ~(_BV(channel_array_index));
+      channel_hardware_byte &= ~(_BV(channel_array[channel_array_index].bitshift));
     } else {
       // Channel has been disabled.  Set the bypass DAC to get the
       // inactive flow level.
       retval = pressure_dac_set(channel, PRESSURE_DAC_INACTIVE_COUNTS);
       // Clear the bit in the hardware byte
-      channel_hardware_byte |= _BV(channel_array_index);
+      channel_hardware_byte |= _BV(channel_array[channel_array_index].bitshift);
     }
     channel_array_index++;
   }

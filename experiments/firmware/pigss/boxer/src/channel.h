@@ -11,6 +11,8 @@ typedef struct channel_struct {
   uint8_t number;
   // Enabled channels are enabled for flowing sample gas
   bool enabled;
+  // Channels have an offset position in the hardware byte
+  uint8_t bitshift;
 } channel_t;
 
 // Channel configuration structure
