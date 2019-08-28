@@ -161,45 +161,48 @@ void cs_ne_dac_mux(void) {
 
 //************************ Pressure sensors ************************//
 
-void cs_ch1_mpr_mux(void) {
+void cs_nw_mpr_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(1);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_ch2_mpr_mux(void) {
+void cs_sw_mpr_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(3);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_ch3_mpr_mux(void) {
+void cs_se_mpr_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(5);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_ch4_mpr_mux(void) {
+void cs_ne_mpr_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
+  cs_manifold_b_sr(0);
   spi_write(7);
   cs_manifold_a_sr(1);
+  cs_manifold_b_sr(1);
 }
 
-void cs_outlet_a_mpr_mux(void) {
+void cs_outlet_mpr_mux(void) {
   // Set the mux address
   cs_manifold_a_sr(0);
-  spi_write(8);
-  cs_manifold_a_sr(1);
-}
-
-void cs_outlet_b_mpr_mux(void) {
-  // Set the mux address
   cs_manifold_b_sr(0);
   spi_write(8);
+  cs_manifold_a_sr(1);
   cs_manifold_b_sr(1);
 }
 

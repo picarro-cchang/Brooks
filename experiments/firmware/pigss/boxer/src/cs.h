@@ -25,40 +25,38 @@ void cs_topaz_b_target(uint8_t state);
 // channels.  The north position is set by the 4-pin MTA100 connector.
 
 // Set the cs mux position to point to the NW quadrant proportional
-// valve DAC
+// valve DACs
 void cs_nw_dac_mux(void);
 
 // Set the cs mux position to point to the NW quadrant proportional
-// valve DAC
+// valve DACs
 void cs_sw_dac_mux(void);
 
 // Set the cs mux position to point to the SE quadrant proportional
-// valve DAC
+// valve DACs
 void cs_se_dac_mux(void);
 
 // Set the cs mux position to point to the NE quadrant proportional
-// valve DAC
+// valve DACs
 void cs_ne_dac_mux(void);
 
 //************************ Pressure sensors ************************//
 
-// Set the cs mux position to point to the channel 1 pressure sensor
-void cs_ch1_mpr_mux(void);
+// Set the cs mux position to point to the NW quadrant pressure sensors
+void cs_nw_mpr_mux(void);
 
-// Set the cs mux position to point to the channel 2 pressure sensor
-void cs_ch2_mpr_mux(void);
+// Set the cs mux position to point to the SW quadrant pressure sensors
+void cs_sw_mpr_mux(void);
 
-// Set the cs mux position to point to the channel 3 pressure sensor
-void cs_ch3_mpr_mux(void);
+// Set the cs mux position to point to the SE quadrant pressure sensors
+void cs_se_mpr_mux(void);
 
-// Set the cs mux position to point to the channel 4 pressure sensor
-void cs_ch4_mpr_mux(void);
+// Set the cs mux position to point to the NE quadrant pressure sensors
+void cs_ne_mpr_mux(void);
 
-// Set the cs mux position to point to the Topaz A outlet
-void cs_outlet_a_mpr_mux(void);
+// Set the cs mux position to point to the outlet pressure sensors
+void cs_outlet_mpr_mux(void);
 
-// Set the cs mux position to point to the Topaz B outlet
-void cs_outlet_b_mpr_mux(void);
 
 
 

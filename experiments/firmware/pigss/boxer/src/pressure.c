@@ -246,21 +246,37 @@ void cmd_pressure_dac_query( command_arg_t *command_arg_ptr ) {
 int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
   switch(channel) {
   case 1 :
-    cs_ch1_mpr_mux();
+    cs_ne_mpr_mux();
     mpr_trigger( &cs_topaz_a_target );
     break;
   case 2 :
-    cs_ch2_mpr_mux();
+    cs_se_mpr_mux();
     mpr_trigger( &cs_topaz_a_target );
     break;
   case 3 :
-    cs_ch3_mpr_mux();
+    cs_nw_mpr_mux();
     mpr_trigger( &cs_topaz_a_target );
     break;
   case 4 :
-    cs_ch4_mpr_mux();
+    cs_sw_mpr_mux();
     mpr_trigger( &cs_topaz_a_target );
-    break; 
+    break;
+  case 5 :
+    cs_ne_mpr_mux();
+    mpr_trigger( &cs_topaz_b_target );
+    break;
+  case 6 :
+    cs_se_mpr_mux();
+    mpr_trigger( &cs_topaz_b_target );
+    break;
+  case 7 :
+    cs_nw_mpr_mux();
+    mpr_trigger( &cs_topaz_b_target );
+    break;
+  case 8 :
+    cs_sw_mpr_mux();
+    mpr_trigger( &cs_topaz_b_target );
+    break;
   }
   return 0;
 }
@@ -268,11 +284,11 @@ int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
 int8_t pressure_mpr_outlet_trigger(char board) {
   switch(board) {
   case 'a' :
-    cs_outlet_a_mpr_mux();
+    cs_outlet_mpr_mux();
     mpr_trigger( &cs_topaz_a_target );
     break;
   case 'b' :
-    cs_outlet_b_mpr_mux();
+    cs_outlet_mpr_mux();
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
@@ -281,32 +297,50 @@ int8_t pressure_mpr_outlet_trigger(char board) {
 
 int8_t pressure_mpr_trigger_cycle( void ) {
   // Trigger all the inlet channels
-  for (uint8_t channel = 1; channel < 5; channel++) {
+  for (uint8_t channel = 1; channel < 9; channel++) {
     pressure_mpr_inlet_trigger(channel);
   }
   // Trigger the outlet channels
   pressure_mpr_outlet_trigger('a');
+  pressure_mpr_outlet_trigger('b');
   return 0;
 }
 
 int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
   switch(channel) {
   case 1 :
-    cs_ch1_mpr_mux();
+    cs_ne_mpr_mux();
     mpr_read( &cs_topaz_a_target, data_ptr);
     break;
   case 2 :
-    cs_ch2_mpr_mux();
+    cs_se_mpr_mux();
     mpr_read( &cs_topaz_a_target, data_ptr);
     break;
   case 3 :
-    cs_ch3_mpr_mux();
+    cs_nw_mpr_mux();
     mpr_read( &cs_topaz_a_target, data_ptr);
     break;
   case 4 :
-    cs_ch4_mpr_mux();
+    cs_sw_mpr_mux();
     mpr_read( &cs_topaz_a_target, data_ptr);
     break;
+  case 5 :
+    cs_ne_mpr_mux();
+    mpr_read( &cs_topaz_b_target, data_ptr);
+    break;
+  case 6 :
+    cs_se_mpr_mux();
+    mpr_read( &cs_topaz_b_target, data_ptr);
+    break;
+  case 7 :
+    cs_nw_mpr_mux();
+    mpr_read( &cs_topaz_b_target, data_ptr);
+    break;
+  case 8 :
+    cs_sw_mpr_mux();
+    mpr_read( &cs_topaz_b_target, data_ptr);
+    break;
+    
   }
   return 0;
 }
@@ -314,11 +348,11 @@ int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
 int8_t pressure_mpr_outlet_read(char board, uint32_t *data_ptr) {
   switch(board) {
   case 'a' :
-    cs_outlet_a_mpr_mux();
+    cs_outlet_mpr_mux();
     mpr_read( &cs_topaz_a_target, data_ptr);
     break;
   case 'b' :
-    cs_outlet_b_mpr_mux();
+    cs_outlet_mpr_mux();
     mpr_read( &cs_topaz_b_target, data_ptr);
     break;
   }
@@ -336,7 +370,7 @@ void pressure_mpr_read_task(void) {
   uint8_t index = 0;
 
   // All inlets
-  for (uint8_t channel = 1; channel < 5; channel++) {
+  for (uint8_t channel = 1; channel < 9; channel++) {
     index = channel - 1;
     pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
     pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
@@ -353,9 +387,14 @@ void pressure_mpr_read_task(void) {
 						PRESSURE_EMA_ALPHA);
   pressure_outlet_old_pascals[0] =
     pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
-  logger_msg_p("pressure", log_level_INFO,
-	       PSTR("Old pressure code 0x%lx"),
-	       pressure_outlet_old_counts[0]);
+
+  // Outlet B
+  pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
+  pressure_outlet_old_counts[1] = math_ema_ui32(pressure_outlet_new_counts[1],
+						pressure_outlet_old_counts[1],
+						PRESSURE_EMA_ALPHA);
+  pressure_outlet_old_pascals[1] =
+    pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
 
   // Cancel the read
   OS_SetTaskState(1, SUSPENDED);
@@ -369,6 +408,11 @@ void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr ) {
 	       pressure_outlet_old_counts[0],
 		 LINE_TERMINATION_CHARACTERS );
     break;
+  case 2 :
+    usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
+		  pressure_outlet_old_counts[1],
+		  LINE_TERMINATION_CHARACTERS );
+    break; 
   default :
     // This is an out of range input
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
@@ -380,9 +424,14 @@ void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr ) {
   switch(board_number) {
   case 1 :
     usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
-	       pressure_outlet_old_pascals[0],
-		 LINE_TERMINATION_CHARACTERS );
+		  pressure_outlet_old_pascals[0],
+		  LINE_TERMINATION_CHARACTERS );
     break;
+  case 2 :
+    usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
+		  pressure_outlet_old_pascals[1],
+		  LINE_TERMINATION_CHARACTERS );
+    break; 
   default :
     // This is an out of range input
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
@@ -421,6 +470,14 @@ uint32_t pressure_convert_outlet_pascals( char board, uint32_t raw ) {
   uint32_t pmax_pascal = 0;
   switch(board) {
   case 'a' :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  case 'b' :
+    nmin = MPR_NMIN;
+    nmax = MPR_NMAX;
+    pmax_pascal = MPR_PMAX_PASCAL;
+  default:
     nmin = MPR_NMIN;
     nmax = MPR_NMAX;
     pmax_pascal = MPR_PMAX_PASCAL;
