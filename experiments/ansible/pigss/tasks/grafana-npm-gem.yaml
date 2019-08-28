@@ -24,3 +24,7 @@
     global: yes
     state: present
   become: yes
+
+- name: Fix .npm permissions
+  shell: chown -R /home/picarro/.npm picarro:picarro
+  become: yes
