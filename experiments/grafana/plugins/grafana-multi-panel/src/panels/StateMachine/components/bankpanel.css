@@ -18,7 +18,7 @@
     width:100%;
     border: 3px solid hsla(0, 0%, 100%, 0.34);
     color: black;
-    border-radius: 5px;
+    border-radius: 10px;
 }
 .btn-clean-act {
     border: none;
@@ -55,10 +55,13 @@
 }
 .panel-plan {
     height: 640px;
-    background-color: #888;
+    /*background-color: #888;*/
+    /*border: 3px solid #111;*/
+    /*border-radius: 7px;*/
+    background-color: #82828287;
     padding: 10px;
-    border: 3px solid #111;
-    border-radius: 7px;
+    border: 2px solid #1111117a;
+    border-radius: 5px;
 }
 .panel-plan-inner {
     overflow-x: hidden;
@@ -75,10 +78,13 @@
     margin-bottom: 5px;
 }
 .panel-bank {
-    border: 3px solid #111;
+    /*border: 2px solid #111;*/
+    border: 2px solid #1111117a;
     border-radius: 10px;
     padding:10px;
     float: left;
+    background-color: rgba(136, 136, 136, 0.51);
+
 }
 .grid-bank {
     display: grid;
@@ -132,4 +138,8 @@
 }
 .btn-run {
     width: 100%;
+}
+.btn-inverse.disabled {
+    background-color: #333;
+    opacity: .9;
 }

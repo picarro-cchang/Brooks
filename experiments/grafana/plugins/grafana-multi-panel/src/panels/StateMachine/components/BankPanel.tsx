@@ -22,7 +22,7 @@ interface BankPanelOptions {
 
 class BankPanel extends PureComponent<BankPanelOptions> {
     bankStyleOpt = {
-        READY:{color:"#fff", backgroundColor:"#888"},
+        READY:{color:"#fff", backgroundColor:"#c5d2e6"},
         ACTIVE:{color:"#fff", backgroundColor:"#080"},
         CLEAN:{color:"#fff", backgroundColor:"#4BBEE3"},
         REFERENCE:{color:"#440", backgroundColor:"#febb00"}}; //hope this will work to not display any inactive banks
@@ -97,7 +97,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             <div style={{padding: "10px"}}>
                 <div className="panel-bank" style={bankStyle}>
                     <div style={{width: "100%"}}>
-                        <h2>{value}</h2>
+                        <h2 style={{color: "white"}}>{value}</h2>
                         <div className="grid-bank">
                             {channelButtons}
                         </div>
