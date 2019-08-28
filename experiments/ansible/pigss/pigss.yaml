@@ -10,7 +10,7 @@
     prompt: "Enter the default grafana username"
     private: no
   - name: "grafanapass"
-    prompt": "Enter the default grafana password"
+    prompt: "Enter the default grafana password"
     private: yes
   pre_tasks:
     - include: tasks/bootstrap.yaml
