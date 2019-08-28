@@ -17,3 +17,10 @@
     name: fpm
     state: present
   become: yes
+
+- name: Install wizzy
+  npm:
+    name: wizzy
+    global: yes
+    state: present
+  become: yes
