@@ -23,10 +23,12 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
     }
 
     render() {
+        console.log("lame", this.props.plan)
+
         return (
             <div className="panel-command" >
-                <div style={{width: "100%", marginTop: 60}}>
-                    <div className="grid-command" style={{display: "grid", gridTemplateColumns: "1fr 1fr", gridGap: 20, padding: 20 }}>
+                <div style={{width: "100%", marginTop: 20}}>
+                    <div className="grid-command" style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridGap: 5, padding: 20 }}>
                         <button
                             onClick={e => this.props.ws_sender({element: "standby"})}
                             disabled = {this.getDisabled("standby")}
@@ -41,19 +43,33 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                             className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("identify")} >
                             Identify Available Channels
                         </button>
-                        <button
-                            onClick={e => this.props.ws_sender({element: "run"})}
-                            disabled = {this.getDisabled("run")}
-                            value="run"
-                            className={"btn btn-large btn-command " + this.getClassNameOpt("run")} >
-                            Run
-                        </button>
+
                         <button
                             onClick={e => this.props.ws_sender({element: "plan"})}
                             disabled = {this.getDisabled("plan")}
                             value="plan"
-                            className={"btn btn-large btn-command " + this.getClassNameOpt("plan")} >
+                            className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("plan")} >
                             Edit Plan
+                        </button>
+                        <button
+                            onClick={e => this.props.ws_sender({element: "run"})}
+                            disabled = {this.getDisabled("run")}
+                            value="run"
+                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("run")} >
+                            Run Channel
+                        </button>
+                        <button
+                            onClick={e => this.props.ws_sender({element: "plan_run"})}
+                            disabled = {this.getDisabled("run")}
+                            value="run_plan"
+                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("run")}>
+                            Run Plan
+                        </button>
+                        <button
+                            onClick={e => this.props.ws_sender({element: "plan_loop1"})}
+                            disabled = {this.getDisabled("run")}
+                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("run")}>
+                            Loop Plan
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "reference"})}

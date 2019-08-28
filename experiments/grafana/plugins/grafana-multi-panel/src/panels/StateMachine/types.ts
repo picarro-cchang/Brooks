@@ -23,6 +23,7 @@ export interface CommandPanelOptions {
     [key: string]: string;
   }
   ws_sender: (o: object)=>void;
+  plan: Plan;
 }
 
 export interface OptionsPanelOptions {

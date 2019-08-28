@@ -188,7 +188,7 @@ export class Main extends Component<any, any> {
     let left_panel;
     switch (this.state.plan.panel_to_show) {
       case PlanPanelTypes.NONE:
-        left_panel = (<CommandPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
+        left_panel = (<CommandPanel plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
         break;
       case PlanPanelTypes.PLAN:
         left_panel = (

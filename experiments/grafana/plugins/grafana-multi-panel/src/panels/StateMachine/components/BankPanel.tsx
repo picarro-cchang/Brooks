@@ -27,10 +27,10 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         CLEAN:{color:"#fff", backgroundColor:"#4BBEE3"},
         REFERENCE:{color:"#440", backgroundColor:"#febb00"}}; //hope this will work to not display any inactive banks
     cleanClassNameOpt = {
-        DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-secondary"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-light", CLEAN:"btn-secondary btn-clean-act"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-primary", CLEAN:"btn-primary", REFERENCE:"btn-warning"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-primary", CLEAN:"btn-light", REFERENCE:"btn-warning"
     };
 
     render() {

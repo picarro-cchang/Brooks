@@ -132,13 +132,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                 Cancel
                             </button>
                         </div>
-                        <div className="col-sm-4">
-                            <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "plan_loop"})}
-                                    className={"btn btn-block btn-success btn-group-2"}>
-                                Loop
-                            </button>
-                        </div>
+                        {/*<div className="col-sm-4">*/}
+                        {/*    <button type="button"*/}
+                        {/*            onClick={e => this.props.ws_sender({element: "plan_loop"})}*/}
+                        {/*            className={"btn btn-block btn-success btn-group-2"}>*/}
+                        {/*        Loop*/}
+                        {/*    </button>*/}
+                        {/*</div>*/}
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_ok"})}
