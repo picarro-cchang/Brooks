@@ -19,6 +19,23 @@
     - /tmp/influxdb_1.7.7_amd64.deb
   become: yes
 
+- name: Start InfluxDB Service
+  shell: systemctl start influxdb.service
+  become: yes
+
+- name: Enable InfluxDB Service
+  shell: systemctl enable influxdb.service
+  become: yes
+
+- name: Create pigss_data database
+  shell: influx -execute 'show databases' | grep pigss_data || influx -execute 'create database pigss_data'
+
+- name: Create pigss_sim_data database
+  shell: influx -execute 'show databases' | grep pigss_sim_data || influx -execute 'create database pigss_sim_data'
+
+- name: Create telegraf database
+  shell: influx -execute 'show databases' | grep telegraf || influx -execute 'create database telegraf'
+
 - name: Download go
   get_url:
     url: https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz

@@ -111,6 +111,10 @@
     replace: 'quiet'
   become: yes
 
+- name: Update grub
+  shell: update-grub
+  become: yes
+
 - name: Install libssl
   apt: name=libssl1.0-dev
   become: yes
