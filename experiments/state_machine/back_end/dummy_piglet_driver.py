@@ -36,6 +36,7 @@ class PigletDriver(object):
                                                 ServerVersion=1.0,
                                                 threaded=True)
         self.piglet_simulator = SyncWrapper(PigletSimulator, bank=bank).wrap(['cli'])
+        self.piglet_simulator.random_ids = False
         self.connect()
         self.register_rpc_functions()
         self.rpc_server.serve_forever()

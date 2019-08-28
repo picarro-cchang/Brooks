@@ -19,8 +19,9 @@ from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayl
 
 log = LOLoggerClient(client_name="PigssController", verbose=True)
 
-PLAN_FILE_DIR = "/temp/plan_files"
-
+PLAN_FILE_DIR = "/tmp/plan_files"
+if not os.path.isdir(PLAN_FILE_DIR):
+    os.makedirs(PLAN_FILE_DIR, 0o755)
 
 class UiStatus(str, Enum):
     DISABLED = "DISABLED"
@@ -36,7 +37,7 @@ class PlanPanelType(IntEnum):
     PLAN = 1
     LOAD = 2
     SAVE = 3
-
+    EDIT = 4
 
 def setbits(mask):
     """Return the bits set in the integer `mask` """
@@ -73,10 +74,64 @@ class PigssController(Ahsm):
             "num_plan_files": 0,
             "plan_files": {},
             "plan_filename": "",
+            "bank_names": {
+                1: {
+                    "name": "Bank 1",
+                    "channels": {
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
+                    }
+                },
+                2: {
+                    "name": "Bank 2",
+                    "channels": {
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
+                    }
+                },
+                3: {
+                    "name": "Bank 3",
+                    "channels": {
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
+                    }
+                },
+                4: {
+                    "name": "Bank 4",
+                    "channels": {
+                        1: "Ch. 1",
+                        2: "Ch. 2",
+                        3: "Ch. 3",
+                        4: "Ch. 4",
+                        5: "Ch. 5",
+                        6: "Ch. 6",
+                        7: "Ch. 7",
+                        8: "Ch. 8"
+                    }
+                }
+            },
         }
         self.modal_info = {
             "show": False,
-            "html": "<h2>Example Modal Dialog</h2><p>Test message</p>",
+            "html": "<h2 class='test'>Example Modal Dialog</h2><p>Test message</p>",
             "num_buttons": 2,
             "buttons": {
                 1: {
@@ -131,6 +186,12 @@ class PigssController(Ahsm):
             clean=Signal.BTN_CLEAN,
             run=Signal.BTN_RUN,
             channel=Signal.BTN_CHANNEL,
+            edit=Signal.BTN_EDIT,
+            edit_panel=Signal.CHANGE_NAME_BANK,
+            edit_cancel=Signal.EDIT_CANCEL,
+            edit_save=Signal.EDIT_SAVE,
+            plan_run=Signal.BTN_PLAN_RUN,
+            plan_loop1=Signal.BTN_LOOP
         )
         while True:
             try:
@@ -237,6 +298,7 @@ class PigssController(Ahsm):
                 except ValueError:
                     pass
 
+
     def add_channel_to_plan(self, msg):
         """Handle a channel button press, adding the bank and channel to the plan
         at the location of the focussed row"""
@@ -305,12 +367,14 @@ class PigssController(Ahsm):
             s = self.plan["steps"][row]
             plan[str(row)] = {"active": {"bank": s["bank"], "channel": s["channel"]}, "duration": s["duration"]}
         with open(fname, "w") as fp:
-            json.dump(plan, fp, indent=4)
+            json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
 
     def load_plan_from_file(self):
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
         with open(fname, "r") as fp:
-            plan = json.load(fp)
+            data = json.load(fp)
+            plan = data["plan"]
+            bank_names = data["bank_names"]
         assert isinstance(plan, dict), "Plan should be a dictionary"
         steps = {}
         last_step = len(plan)
@@ -324,6 +388,7 @@ class PigssController(Ahsm):
         self.set_plan(["steps"], steps)
         self.set_plan(["last_step"], last_step)
         self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
+        self.set_plan(["bank_names"], bank_names)
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
@@ -336,6 +401,24 @@ class PigssController(Ahsm):
 
     def handle_error_signal(self, epoch_time, payload):
         self.error_list.append({"time": epoch_time, "payload": payload, "framework": Framework.get_info()})
+
+    def change_name_bank(self, msg):
+        if "bank_names" in msg:
+            banks = msg["bank_names"]
+            b1 = banks["1"]["name"]
+            b2 = banks["2"]["name"]
+            b3 = banks["3"]["name"]
+            b4 = banks["4"]["name"]
+            channels1 = banks["1"]["channels"]
+            channels2 = banks["2"]["channels"]
+            channels3 = banks["3"]["channels"]
+            channels4 = banks["4"]["channels"]
+
+            self.set_plan(["bank_names"], {"1": {"name": b1, "channels": channels1},
+                                           "2": {"name": b2, "channels": channels2},
+                                           "3": {"name": b3, "channels": channels3},
+                                           "4": {"name": b4, "channels": channels4}})
+
 
     @state
     def _initial(self, e):
@@ -390,6 +473,12 @@ class PigssController(Ahsm):
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("TERMINATE", self)
         Framework.subscribe("ERROR", self)
+        Framework.subscribe("BTN_EDIT", self)
+        Framework.subscribe("CHANGE_NAME_BANK", self)
+        Framework.subscribe("EDIT_CANCEL", self)
+        Framework.subscribe("EDIT_SAVE", self)
+        Framework.subscribe("BTN_PLAN_RUN", self)
+        Framework.subscribe("BTN_LOOP", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._operational)
 
@@ -442,6 +531,34 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_PLAN:
             if self.status["plan"] != UiStatus.DISABLED:
                 return self.tran(self._plan)
+        elif sig == Signal.BTN_PLAN_RUN:
+            for bank in self.all_banks:
+                self.chan_active[bank] = 0
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
+                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
+            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("CHANSET 0", self.all_banks)))
+            self.plan_error = self.validate_plan(check_avail=True)
+            if not self.plan_error.error:
+                self.set_plan(["looping"], False)
+                self.set_plan(["current_step"], self.get_current_step_from_focus())
+                return self.tran(self._run_saved2)
+            else:
+                return self.tran(self._run_saved1)
+        elif sig == Signal.BTN_LOOP:
+            for bank in self.all_banks:
+                self.chan_active[bank] = 0
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
+                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
+            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("CHANSET 0", self.all_banks)))
+            self.plan_error = self.validate_plan(check_avail=True)
+            if not self.plan_error.error:
+                self.set_plan(["looping"], True)
+                self.set_plan(["current_step"], self.get_current_step_from_focus())
+                return self.tran(self._run_saved2)
+            else:
+                return self.tran(self._run_saved1)
         elif sig == Signal.BTN_REFERENCE:
             if self.status["reference"] != UiStatus.DISABLED:
                 return self.tran(self._reference)
@@ -449,6 +566,8 @@ class PigssController(Ahsm):
             if self.status["clean"][e.value["bank"]] != UiStatus.DISABLED:
                 self.bank = e.value["bank"]
                 return self.tran(self._clean)
+        elif sig == Signal.BTN_EDIT:
+            return self.tran(self._edit)
         elif sig == Signal.ERROR:
             payload = e.value
             self.handle_error_signal(time.time(), payload)
@@ -782,7 +901,7 @@ class PigssController(Ahsm):
             self.set_modal_info(
                 [], {
                     "show": True,
-                    "html": f"<h2>Confirm file deletion</h2><p>{msg}</p>",
+                    "html": f"<h2 class='test'>Confirm file deletion</h2><p>{msg}</p>",
                     "num_buttons": 2,
                     "buttons": {
                         1: {
@@ -819,19 +938,19 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_PLAN_OK:
             self.plan_error = self.validate_plan(check_avail=True)
             if not self.plan_error.error:
-                self.set_plan(["looping"], False)
-                self.set_plan(["current_step"], self.get_current_step_from_focus())
-                return self.tran(self._plan_plan2)
+                # self.set_plan(["looping"], False)
+                # self.set_plan(["current_step"], self.get_current_step_from_focus())
+                return self.tran(self._operational)
             else:
                 return self.tran(self._plan_plan1)
-        elif sig == Signal.BTN_PLAN_LOOP:
-            self.plan_error = self.validate_plan(check_avail=True)
-            if not self.plan_error.error:
-                self.set_plan(["looping"], True)
-                self.set_plan(["current_step"], self.get_current_step_from_focus())
-                return self.tran(self._plan_plan2)
-            else:
-                return self.tran(self._plan_plan1)
+        # elif sig == Signal.BTN_PLAN_LOOP:
+        #     self.plan_error = self.validate_plan(check_avail=True)
+        #     if not self.plan_error.error:
+        #         self.set_plan(["looping"], True)
+        #         self.set_plan(["current_step"], self.get_current_step_from_focus())
+        #         return self.tran(self._plan_plan2)
+        #     else:
+        #         return self.tran(self._plan_plan1)
         elif sig == Signal.BTN_PLAN_CANCEL:
             return self.tran(self._operational)
         elif sig == Signal.BTN_PLAN_DELETE:
@@ -901,7 +1020,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_modal_info([], {
                 "show": True,
-                "html": f"<h3>Plan load error</h3><p>{self.plan_error.message}</p>",
+                "html": f"<h3 class='test'>Plan load error</h3><p>{self.plan_error.message}</p>",
                 "num_buttons": 0
             })
             return self.handled(e)
@@ -941,7 +1060,7 @@ class PigssController(Ahsm):
             self.set_modal_info(
                 [], {
                     "show": True,
-                    "html": f"<h2>Confirm file overwrite</h2><p>{msg}</p>",
+                    "html": f"<h2 class='test'>Confirm file overwrite</h2><p>{msg}</p>",
                     "num_buttons": 2,
                     "buttons": {
                         1: {
@@ -990,7 +1109,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_modal_info([], {
                 "show": True,
-                "html": f"<h3>Plan save error</h3><p>{self.plan_error.message}</p>",
+                "html": f"<h3 class='test'>Plan save error</h3><p>{self.plan_error.message}</p>",
                 "num_buttons": 0
             })
             return self.handled(e)
@@ -1007,7 +1126,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_modal_info([], {
                 "show": True,
-                "html": f"<h3>Plan error</h3><p>{self.plan_error.message}</p>",
+                "html": f"<h3 class='test'>Plan error</h3><p>{self.plan_error.message}</p>",
                 "num_buttons": 0
             })
             return self.handled(e)
@@ -1019,39 +1138,39 @@ class PigssController(Ahsm):
             return self.tran(self._plan)
         return self.super(self._plan_plan)
 
-    @state
-    def _plan_plan2(self, e):
-        sig = e.signal
-        if sig == Signal.ENTRY:
-            msg = "Loop" if self.plan['looping'] else "Run"
-            msg += f" plan starting at step {self.plan['current_step']}"
-            self.set_modal_info(
-                [], {
-                    "show": True,
-                    "html": f"<h2>Confirm Plan</h2><p>{msg}</p>",
-                    "num_buttons": 2,
-                    "buttons": {
-                        1: {
-                            "caption": "OK",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_ok"
-                        },
-                        2: {
-                            "caption": "Cancel",
-                            "className": "btn btn-danger btn-large",
-                            "response": "modal_close"
-                        }
-                    }
-                })
-            return self.handled(e)
-        elif sig == Signal.EXIT:
-            self.set_modal_info(["show"], False)
-            return self.handled(e)
-        elif sig == Signal.MODAL_OK:
-            return self.tran(self._run_plan)
-        elif sig == Signal.MODAL_CLOSE:
-            return self.tran(self._plan)
-        return self.super(self._plan_plan)
+    # @state
+    # def _plan_plan2(self, e):
+    #     sig = e.signal
+    #     if sig == Signal.ENTRY:
+    #         msg = "Loop" if self.plan['looping'] else "Run"
+    #         msg += f" plan starting at step {self.plan['current_step']}"
+    #         self.set_modal_info(
+    #             [], {
+    #                 "show": True,
+    #                 "html": f"<h2 class='test'>Confirm Plan</h2><p>{msg}</p>",
+    #                 "num_buttons": 2,
+    #                 "buttons": {
+    #                     1: {
+    #                         "caption": "OK",
+    #                         "className": "btn btn-success btn-large",
+    #                         "response": "modal_ok"
+    #                     },
+    #                     2: {
+    #                         "caption": "Cancel",
+    #                         "className": "btn btn-danger btn-large",
+    #                         "response": "modal_close"
+    #                     }
+    #                 }
+    #             })
+    #         return self.handled(e)
+    #     elif sig == Signal.EXIT:
+    #         self.set_modal_info(["show"], False)
+    #         return self.handled(e)
+    #     elif sig == Signal.MODAL_OK:
+    #         return self.tran(self._run_plan)
+    #     elif sig == Signal.MODAL_CLOSE:
+    #         return self.tran(self._plan)
+    #     return self.super(self._plan_plan)
 
     @state
     def _run_plan(self, e):
@@ -1191,6 +1310,93 @@ class PigssController(Ahsm):
             else:
                 return self.handled(e)
         return self.super(self._run_plan121)
+
+    @state
+    def _edit(self, e):
+        sig = e.signal
+        if sig == Signal.INIT:
+            return self.tran(self._edit_edit)
+        elif sig == Signal.EXIT:
+            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            return self.handled(e)
+        elif sig == Signal.BTN_EDIT:
+            return self.handled(e)
+        return self.super(self._operational)
+
+    @state
+    def _edit_edit(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.set_plan(["panel_to_show"], int(PlanPanelType.EDIT))
+            return self.handled(e)
+        # elif sig == Signal.CHANGE_NAME_BANK:
+        #     self.change_name_bank(e.value)
+        #     return self.tran(self._operational)
+        elif sig == Signal.EDIT_CANCEL:
+            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            return self.tran(self._operational)
+        elif sig == Signal.EDIT_SAVE:
+            self.change_name_bank(e.value)
+            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            return self.tran(self._operational)
+        return self.super(self._edit)
+
+    @state
+    def _run_saved1(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h3 class='test'>Plan error</h3><p>{self.plan_error.message}</p>",
+                "num_buttons": 0
+            })
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_modal_info(["show"], False)
+            self.set_plan(["focus"], {"row": self.plan_error.row, "column": self.plan_error.column})
+            return self.handled(e)
+        elif sig == Signal.MODAL_CLOSE:
+            return self.tran(self._operational)
+        return self.super(self._operational)
+
+    @state
+    def _run_saved2(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            msg = "Loop" if self.plan['looping'] else "Run"
+            msg += f" plan starting at step {self.plan['current_step']}"
+            self.set_modal_info(
+                [], {
+                    "show": True,
+                    "html": f"<h2 class='test'>Confirm Plan</h2><p>{msg}</p>",
+                    "num_buttons": 2,
+                    "buttons": {
+                        1: {
+                            "caption": "OK",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_ok"
+                        },
+                        2: {
+                            "caption": "Cancel",
+                            "className": "btn btn-danger btn-large",
+                            "response": "modal_close"
+                        }
+                    }
+                })
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_modal_info(["show"], False)
+            return self.handled(e)
+        elif sig == Signal.MODAL_OK:
+            return self.tran(self._run_plan)
+        elif sig == Signal.MODAL_CLOSE:
+            for bank in self.all_banks:
+                self.set_status(["clean", bank], UiStatus.READY)
+                for j in range(self.num_chans_per_bank):
+                    if self.status["channel"][bank][j + 1] == UiStatus.READY:
+                        self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+            return self.tran(self._operational)
+        return self.super(self._operational)
 
 
 if __name__ == "__main__":

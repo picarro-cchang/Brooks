@@ -23,6 +23,17 @@ export interface CommandPanelOptions {
     [key: string]: string;
   }
   ws_sender: (o: object)=>void;
+  plan: Plan;
+}
+
+export interface OptionsPanelOptions {
+  uistatus: {
+    [key: string]: string;
+  }
+  ws_sender: (o: object)=>void;
+  //options: Options;
+  //switches: (v: any) => void;
+  plan: Plan
 }
 
 export interface ModalInfo {
@@ -40,7 +51,13 @@ export interface Plan {
   steps: { [key: string]: PlanStep }
   num_plan_files: number,
   plan_files: { [key: string]: string },
-  plan_filename: string
+  plan_filename: string,
+  bank_names: {
+    [key: number]: {
+      name: string,
+      channels: { [key: number]: string }
+    }
+  }
 }
 
 export interface PlanFocus {
@@ -65,6 +82,7 @@ export enum PlanPanelTypes {
   PLAN = 1,
   LOAD = 2,
   SAVE = 3,
+  EDIT = 4,
 }
 
 export interface PlanSavePanelOptions {
@@ -76,4 +94,22 @@ export interface PlanStep {
   bank: number;
   channel: number;
   duration: number;
+}
+
+export interface Options {
+  panel_to_show: number;
+}
+
+export enum OptionsPanelTypes {
+  NONE = 0,
+  EDIT = 1,
+}
+
+export interface EditPanelOptions {
+  uistatus: {
+    [key: string]: string;
+  }
+  ws_sender: (o: object)=>void;
+  //switches: (v: any) => void;
+  plan: Plan
 }

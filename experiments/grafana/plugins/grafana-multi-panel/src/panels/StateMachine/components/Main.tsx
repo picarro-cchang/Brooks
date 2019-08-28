@@ -4,16 +4,17 @@ import BankPanel from './BankPanel';
 import CommandPanel from './CommandPanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
-//import * as styles from './module.css';
-
 import PlanSavePanel from './PlanSavePanel';
 import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
-import {ButtonInfo, ModalInfo, PlanFocus, PlanPanelTypes, PlanStep} from './../types';
+import {ModalInfo, PlanPanelTypes} from './../types';
+import EditPanel from "./EditPanel";
 
 
-const socketURL = `ws://${window.location.hostname}:8000/ws`
+const apiLoc = `${window.location.hostname}:8004/controller`;
+const socketURL = `ws://${apiLoc}/ws`;
 export class Main extends Component<any, any> {
+
   state = {
     initialized: false,
     modal_info: {
@@ -31,9 +32,70 @@ export class Main extends Component<any, any> {
       steps: {},
       num_plan_files: 0,
       plan_files: {},
-      plan_filename: ""
+      plan_filename: "",
+      bank_names: {
+        1: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
+          }
+        },
+        2: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
+          }
+        },
+        3: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
+          }
+        },
+        4: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: "",
+          }
+        }
+      },
+    },
+    options: {
+      panel_to_show: 0
     }
   };
+  constructor(props) {
+    super(props);
+  //  this.switchPanel = this.switchPanel.bind(this)
+  }
 
   ws = new WebSocket(socketURL);
   componentDidMount() {
@@ -57,7 +119,7 @@ export class Main extends Component<any, any> {
   }
 
   getDataViaApi = () => {
-    let p1 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/uistatus`).then(
+    let p1 = PicarroAPI.getRequest(`http://${apiLoc}/uistatus`).then(
         response => {
           response.json().then(obj => {
             // this.refWebSocket.sendMessage("message via websocket");
@@ -65,7 +127,7 @@ export class Main extends Component<any, any> {
           })
         }
     );
-    let p2 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/plan`).then(
+    let p2 = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
         response => {
           response.json().then(obj => {
             // this.refWebSocket.sendMessage("message via websocket");
@@ -73,7 +135,7 @@ export class Main extends Component<any, any> {
           })
         }
     );
-    let p3 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/modal_info`).then(
+    let p3 = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
         response => {
           response.json().then(obj => {
             // this.refWebSocket.sendMessage("message via websocket");
@@ -85,7 +147,7 @@ export class Main extends Component<any, any> {
       this.setState(deepmerge(this.state, { initialized: true }));
       console.log("State after getting uistatus, plan and modal info", this.state);
     })
-  }
+  };
 
   setFocus(row: number, column: number) {
     this.setState(deepmerge(this.state, { plan: { focus: { row, column } } }));
@@ -115,45 +177,73 @@ export class Main extends Component<any, any> {
     this.ws.send(JSON.stringify(o));
   };
 
+
+  // switchPanel(value){
+  //   this.setState({plan:{panel_to_show: value}} );
+  //   console.log(this.state.plan.panel_to_show)
+  // }
+
+
   render() {
     let left_panel;
     switch (this.state.plan.panel_to_show) {
       case PlanPanelTypes.NONE:
-        left_panel = (<CommandPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
+        left_panel = (<CommandPanel plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
         break;
       case PlanPanelTypes.PLAN:
         left_panel = (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
                        setFocus={(row, column) => this.setFocus(row, column)}
                        ws_sender={this.ws_sender} />
-        )
+        );
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
             <PlanLoadPanel plan={this.state.plan}
                            ws_sender={this.ws_sender} />
-        )
+        );
         break;
       case PlanPanelTypes.SAVE:
         left_panel = (
             <PlanSavePanel plan={this.state.plan}
                            ws_sender={this.ws_sender} />
-        )
+        );
+        break;
+      case PlanPanelTypes.EDIT:
+        left_panel = (
+            <EditPanel  plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
+        );
         break;
     }
+
 
     let modalButtons = [];
     for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
       const modal_info = this.state.modal_info as ModalInfo;
       modalButtons.push(
           <button className={modal_info.buttons[i].className}
-                  style={{ margin: "10px" }}
+                  style={{ margin: "10px"}}
                   onClick={() => this.ws_sender({ element: modal_info.buttons[i].response })}>
             {modal_info.buttons[i].caption}
           </button>
       )
     }
-//TODO: Make the banks only show if they are available/on/exist
+
+    let bankPanels = [];
+    if ("bank" in this.state.uistatus as any) {
+      for (let i=1; i<=4; i++) {
+        if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
+          bankPanels.push(
+              <div className="col-sm-2">
+                <BankPanel plan={this.state.plan} bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
+              </div>
+          )
+        }
+
+      }
+
+    }
+
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
@@ -161,22 +251,15 @@ export class Main extends Component<any, any> {
               <div className="col-sm-3">
                 {left_panel}
               </div>
-              <div className="col-sm-2">
-                <BankPanel bank={1} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-              <div className="col-sm-2">
-                <BankPanel bank={2} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-              <div className="col-sm-2">
-                <BankPanel bank={3} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
-              <div className="col-sm-2">
-                <BankPanel bank={4} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-              </div>
+              {bankPanels}
             </div>
+            {/*<div className="row" >*/}
+            {/*  /!*<OptionsPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} plan={this.state.plan}/>*!/*/}
+            {/*</div>*/}
           </div>
-          <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
-            <div style={{ margin: "20px" }}>
+
+          <Modal styles={{overlay: {color: "black"}}} open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>
+            <div style={{ margin: "20px"}}>
               <div dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}>
               </div>
             </div>
@@ -187,99 +270,3 @@ export class Main extends Component<any, any> {
   }
 }
 
-//export default Main;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { PureComponent } from "react";
-// import { PanelProps, getTheme } from "@grafana/ui";
-// import { Options } from "../types";
-//
-// interface Props extends PanelProps<Options> {}
-//
-// interface State {
-//   error: string;
-//   imageUrl: string;
-// }
-//
-// export class Main extends PureComponent<Props, State> {
-//
-//   constructor(props) {
-//     super(props);
-//
-//     this.state = {
-//       error: null,
-//       imageUrl: null
-//     };
-//   }
-//
-//   updateImage = () => {
-//     if (!this.props.options.imageUrl) {
-//       return;
-//     }
-//
-//     fetch(this.props.options.imageUrl, {
-//       method: "head",
-//       mode: "cors"
-//     })
-//       .then(response => {
-//         if (response.status >= 400) {
-//           throw Error(response.statusText);
-//         }
-//
-//         const url = this.props.options.imageUrl;
-//         this.setState({imageUrl: url, error: null });
-//
-//       })
-//       .catch((error: Error) =>
-//         this.setState({
-//           imageUrl: null,
-//           error: error.message
-//         })
-//       );
-//   };
-//
-//
-//   componentDidMount() {
-//     this.updateImage();
-//   }
-//
-//
-//   render() {
-//     if (!this.state.imageUrl) {
-//       return null;
-//     }
-//
-//     if (this.state.error) {
-//       const theme = getTheme();
-//       return (
-//         <strong style={{ color: theme.colors.critical }}>
-//           Could not load image: {this.state.error}
-//         </strong>
-//       );
-//     }
-//
-//     return (
-//       <img Hello-Editor={this.state.imageUrl} width={this.props.width} height="auto" />
-//     );
-//   }
-// }

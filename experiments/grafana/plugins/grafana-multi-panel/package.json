@@ -16,7 +16,8 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-list": "^0.8.11",
-    "react-responsive-modal": "^4.0.1"
+    "react-responsive-modal": "^4.0.1",
+    "style-loader": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
@@ -25,6 +26,7 @@
     "babel-preset-env": "^1.7.0",
     "clean-webpack-plugin": "^2.0.1",
     "copy-webpack-plugin": "^5.0.2",
+    "css-loader": "^3.2.0",
     "ts-loader": "^5.3.3",
     "typescript": "^3.4.1",
     "uglifyjs-webpack-plugin": "^2.1.2",

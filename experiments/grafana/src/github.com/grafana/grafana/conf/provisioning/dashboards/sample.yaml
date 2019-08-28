@@ -1,11 +1,24 @@
 # # config file version
 apiVersion: 1
 
-#providers:
-# - name: 'default'
-#   orgId: 1
-#   folder: ''
-#   folderUid: ''
-#   type: file
-#   options:
-#     path: /var/lib/grafana/dashboards
+#  - name: State Machine Plugin
+#    uri:
+#      url: "http://localhost:3000/api/plugins/multi-app/settings?enabled=true"
+#      method: POST
+#      user: "picarro"
+#      password: "picarro"
+#      body: ''
+#      body_format: json
+#      force_basic_auth: yes
+#      headers:
+#        Content-Type: "application/json"
+
+providers:
+ - name: 'Picarro'
+   orgId: 1
+   folder: ''
+   folderUid: ''
+   type: file
+   options:
+     path: ../../../../../../../grafana/wizzy/dashboards
+

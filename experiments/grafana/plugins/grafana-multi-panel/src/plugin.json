@@ -1,29 +1,26 @@
 {
   "type": "app",
-  "name": "State Machine",
+  "name": "Sampler Setup",
   "id": "multi-app",
+  "enabled": true,
   "info": {
     "author": {
       "name": "Grafana Project",
       "url": "https://grafana.com"
     },
     "logos": {
-      "small": "img/Touch.png",
-      "large": "img/Touch.png"
+      "small": "img/icon_org.svg",
+      "large": "img/icon_org.svg"
     }
   },
 
   "includes": [
     {
       "type": "dashboard",
-      "name": "StateMachine",
-      "path": "dashboards/StateMachine.json",
+      "name": "Sampler Setup",
+      "path": "../../../wizzy/dashboards/statemachine.json",
       "addToNav": true,
       "defaultNav": true
-    },
-    {
-      "type": "panel",
-      "name": "Multi Panel"
     },
     {
       "type": "panel",

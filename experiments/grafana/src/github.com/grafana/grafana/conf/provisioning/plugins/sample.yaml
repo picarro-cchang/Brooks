@@ -1,0 +1,16 @@
+# # config file version
+apiVersion: 1
+
+   # <string, required> name of the datasource. Required
+- name: State Machine Plugin
+  uri:
+    url: "http://localhost:3000/api/plugins/multi-app/settings?enabled=true"
+    method: POST
+    user: "picarro"
+    password: "picarro"
+    body: ''
+    body_format: json
+    force_basic_auth: yes
+    headers:
+      Content-Type: "application/json"
+
