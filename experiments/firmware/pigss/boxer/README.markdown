@@ -501,3 +501,13 @@ this 5ms limit.  100Hz is a safe reading frequency.
 Hex file releases now have an extra attribute: `_mega` or
 `_whitfield`.  Use `_mega` releases for the Arduino Mega, and
 `_whitfield` for Picarro's 90071 PCBs.
+
+### Version 1.1.0 ###
+
+This release supports two Topaz boards with the new system board --
+Whitfield.  You'll need to use the new 230.4k baud rate instead of the
+old 38.4k.
+
+Added the TZB.SN command.  Note that you can't communicate with new
+Topaz boards until they have serial numbers.  Getting the serial
+number is the system board's way of discovering the hardware.

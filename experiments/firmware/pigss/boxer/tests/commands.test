@@ -188,6 +188,8 @@ tcltest::test chanset.standby {
 
 } -match regexp -result "standby"
 
+
+
 ############################## chanset? ##############################
 
 tcltest::test chanset? {
@@ -308,55 +310,65 @@ tcltest::test "[string toupper $command]" "$description" -body {
 
 ############################### tza.sn ###############################
 
-# Set the instrument's Topaz A serial number.
-
-# First, just make sure the command returns properly.
-
-set command "tza.sn"
-set description "Set the Topaz A serial number"
-set ok_result 0
-set topaz_sn 10
-tcltest::test "[string tolower $command]" "$description" -body {
-    boxer::sendcmd $channel "[string tolower $command] $topaz_sn"
+tcltest::test tza.sn_query_old {
+    Test querying the serial number for Topaz A.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tza.sn?"
     set return_string [boxer::readline $channel]
-    # Command should return 0 on successful completion
+    set tza_old_serial_number $return_string
     return $return_string
-} -match regexp -result $ok_result
+} -cleanup {
+    
+} -match regexp -result {^[1-9]\d*$}
 
-tcltest::test "[string toupper $command]" "$description" -body {
-    boxer::sendcmd $channel "[string toupper $command] $topaz_sn"
-    set return_string [boxer::readline $channel]
-} -match regexp -result $ok_result
-
-# Now make sure the serial number was set.  The test will return some
-# value if we get the right serial number.  We'll match this returned
-# value for the test.
-set command "tza.sn?"
-set description "Query the Topaz A serial number"
-set ok_result $topaz_sn
-tcltest::test "[string tolower $command]" "$description" -body {
-    boxer::sendcmd $channel "[string tolower $command]"
-    set return_string [boxer::readline $channel]
-    return $return_string
-} -match regexp -result $ok_result
-
-tcltest::test "[string toupper $command]" "$description" -body {
-    boxer::sendcmd $channel "[string toupper $command]"
-    set return_string [boxer::readline $channel]
-    return $return_string
-} -match regexp -result $ok_result
-
-# Write a new slot ID
-set topaz_sn 2
-
-tcltest::test "tza.sn" "Check setting a new Topaz A serial number" -body {
-    boxer::sendcmd $channel "tza.sn $topaz_sn"
-    # Read the return (should just be 0)
+tcltest::test tza.sn_set {
+    Test setting the serial number for Topaz A.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tza.sn [expr $tza_old_serial_number + 1]"
     set return_string [boxer::readline $channel]
     boxer::sendcmd $channel "tza.sn?"
     set return_string [boxer::readline $channel]
     return $return_string
-} -match regexp -result $topaz_sn
+} -cleanup {
+    # Set the serial number back to what it was
+    boxer::sendcmd $channel "tza.sn $tza_old_serial_number"
+    set return_string [boxer::readline $channel]
+} -match regexp -result [expr $tza_old_serial_number + 1]
+
+############################### tzb.sn ###############################
+
+tcltest::test tzb.sn_query_old {
+    Test querying the serial number for Topaz B.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tzb.sn?"
+    set return_string [boxer::readline $channel]
+    set tzb_old_serial_number $return_string
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result {^[1-9]\d*$}
+
+tcltest::test tzb.sn_set {
+    Test setting the serial number for Topaz B.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tzb.sn [expr $tzb_old_serial_number + 1]"
+    set return_string [boxer::readline $channel]
+    boxer::sendcmd $channel "tzb.sn?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    # Set the serial number back to what it was
+    boxer::sendcmd $channel "tzb.sn $tzb_old_serial_number"
+    set return_string [boxer::readline $channel]
+} -match regexp -result [expr $tzb_old_serial_number + 1]
 
 ############################ prs.in.raw? #############################
 

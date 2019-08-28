@@ -228,7 +228,7 @@ uint16_t topaz_get_serial_number(char board) {
 void cmd_topaz_a_set_serial_number( command_arg_t *command_arg_ptr ) {
   int8_t retval = 0;
   uint16_t sernum = (command_arg_ptr -> uint16_arg);
-  retval = topaz_set_serial_number('a', sernum);
+  retval += topaz_set_serial_number('a', sernum);
   if (retval < 0) {
     command_nack(NACK_COMMAND_FAILED);
   } else {

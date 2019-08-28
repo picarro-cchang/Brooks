@@ -15,7 +15,7 @@ REVCODE = 1.1.0
 #   error -- You want to know about this
 #
 # LOG_LEVEL = error
-LOG_LEVEL = debug
+LOG_LEVEL = error
 
 # MCU name
 #
@@ -324,6 +324,10 @@ avrdude_part = m2560
 #
 AVRDUDE_PROGRAMMER = dragon_isp
 # AVRDUDE_PROGRAMMER = atmelice_isp
+
+# The Pocket AVR Programmer from Sparkfun
+# Sparkfun part PGM-09825
+# AVRDUDE_PROGRAMMER = usbtiny
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = usb

@@ -2,12 +2,11 @@
 
 # The name of this program.  This will get used to identify logfiles,
 # configuration files and other file outputs.
-set program_name unotest
-
+set program_name boxertest
 
 # The base filename for the execution log.  The actual filename will add
 # a number after this to make a unique logfile name.
-set execution_logbase "unotest"
+set execution_logbase "boxertest"
 
 # This software's version.  Anything set here will be clobbered by the
 # makefile when starpacks are built.
@@ -23,7 +22,6 @@ set revcode 1.0
 # alert
 # emergency
 set loglevel debug
-
 
 set root_directory [file dirname $argv0]
 
@@ -62,7 +60,10 @@ set state [dict create \
 	  ]
 
 # --------------------- Tools for code modules ------------------------
-source [file join $root_directory module_tools.tcl]	
+source [file join $root_directory module_tools.tcl]
+
+# Math tools
+source [file join $root_directory jpmath.tcl]
 
 #----------------------------- Set up logger --------------------------
 
@@ -72,7 +73,6 @@ source [file join $root_directory module_tools.tcl]
 package require logger
 source loggerconf.tcl
 ${log}::info [modinfo logger]
-
 
 proc source_script {file args} {
     # Execute a tcl script by sourcing it.  Note that this will
@@ -107,10 +107,11 @@ set skiplist [list]
 # lappend skiplist slotid?*
 # lappend skiplist standby*
 
-
-
-
 tcltest::configure -skip $skiplist
+
+# Only run the channel locations test.  Comment this out to run all
+# tests.
+# tcltest::configure -file "channel_locations.test"
 
 # Set verbosity to print output when a test passes
 tcltest::configure -verbose {body pass start error}
@@ -120,9 +121,9 @@ source boxer.tcl
 ${log}::debug "Potential connection nodes: [connection::get_potential_aliases]"
 foreach alias [connection::get_potential_aliases] {
     if {$params(b) == "whitfield"} {
-	set channel [connection::is_available $alias "230400,n,8,1"]	
+	set channel [connection::is_available $alias "230400,n,8,1"]
     } else {
-	set channel [connection::is_available $alias "38400,n,8,1"]	
+	set channel [connection::is_available $alias "38400,n,8,1"]
     }
 
     if { ![string equal $channel false] } {
@@ -155,7 +156,7 @@ foreach alias [connection::get_potential_aliases] {
 	    # We couldn't read from the channel -- this is definitely
 	    # not a device we want to talk to.
 	    dict set state channel "none"
-	    dict set state alias "none" 
+	    dict set state alias "none"
 	}
     }
 }
@@ -166,6 +167,4 @@ if [string equal [dict get $state channel] "none"] {
 }
 
 tcltest::runAllTests
-
-
 
