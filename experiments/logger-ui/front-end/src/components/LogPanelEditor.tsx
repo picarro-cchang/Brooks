@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { PanelOptionsGroup, PanelEditorProps, Select, FormLabel, TimePicker } from '@grafana/ui';
-import { dateTime } from '@grafana/data';
+// @ts-ignore
+import { TimeFragment, dateTime } from '@grafana/data';
 import { LogProps } from './types';
 
 const labelWidth = 6;
@@ -12,11 +13,14 @@ const limitOptions = [{ value: '10', label: '10' }, { value: '20', label: '20' }
 export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
   onLevelChange = (level: any) => this.props.onOptionsChange({ ...this.props.options, level: level.value });
   onLimitChange = (limit: any) => this.props.onOptionsChange({ ...this.props.options, limit: limit.value });
-  onDateChange = (timeRange: any) => this.props.onOptionsChange({ ...this.props.options, date: timeRange });
+  onDateChange = (timeRange: any) => {
+    this.props.onOptionsChange({ ...this.props.options, date: timeRange })
+  };
 
   render() {
     console.log(this.props);
     const { level, limit } = this.props.options;
+
     return (
       <PanelOptionsGroup title="Configuration">
         <div className="row">
@@ -46,6 +50,8 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
           </div>
           <div className="gf-form col-md-6 col-sm-6">
             <FormLabel width={labelWidth}>Date</FormLabel>
+
+
             <TimePicker
               selectOptions={[
                 { from: 'now-5m', to: 'now', display: 'Last 5 minutes', section: 3 },

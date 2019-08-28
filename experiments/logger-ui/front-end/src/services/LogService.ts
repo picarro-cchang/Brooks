@@ -1,4 +1,4 @@
-import { dateTime } from '@grafana/data';
+import { TimeFragment, dateTime } from '@grafana/data';
 import { LoggerGetLogsAPI } from '../constants/API';
 import { LogProps } from 'components/types';
 
@@ -22,7 +22,11 @@ export const LogService = (() => {
       const defaults: LogProps = {
         level: '10',
         limit: 20,
-        date: { from: dateTime(), to: dateTime(), raw: { from: dateTime(), to: dateTime() } },
+        date: {
+          from: dateTime(),
+          to: dateTime(),
+          raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment }
+        },
         data: [[]],
       };
       return defaults;

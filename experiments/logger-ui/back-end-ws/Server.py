@@ -2,16 +2,18 @@ from aiohttp import web, WSMsgType
 import asyncio
 import aiohttp_cors
 from aiohttp_swagger import setup_swagger
+from json import loads as json_to_dict
 
 from experiments.common.async_helper import log_async_exception
 
 from db import QueryParser, EventsModel
 
+
 class Server:
 
     def __init__(self):
         self.app = web.Application()
-        self.app.router.add_route("GET", "/getlogs", self.get_logs)
+        self.app.router.add_route("GET", "/getlogs", self.get_logs_handler)
         self.app.router.add_route("GET", "/ws", self.websocket_handler)
         self.tasks = []
         self.app.on_startup.append(self.on_startup)
@@ -19,6 +21,7 @@ class Server:
         self.app.on_cleanup.append(self.on_cleanup)
         self.rowid = 0
         self.current_query_params = {"limit": 20}
+        self.counter = 0
 
     async def on_startup(self, app):
         app['websockets'] = []
@@ -39,9 +42,8 @@ class Server:
         print("TODO: on_cleanup")
         pass
 
-    async def get_logs(self, request):
+    async def get_logs_handler(self, request):
         """
-        ---
         description: API for getting logs
 
         tags:
@@ -53,28 +55,25 @@ class Server:
             "200":
                 description: successful operation.
         """
-        parsed = query = None
+        parsed =  None
         if request.query_string:
             parsed = QueryParser.parse(request.query_string)
-            query = EventsModel.build_sql_select_query(parsed)
-            self.current_query_params = parsed
+        return web.json_response(await self.get_logs(parsed))
+
+    async def get_logs(self, query_params={}):
+        """
+        Returns logs as a json to caller
+        """
+        query = None
+        if len(query_params) > 0:
+            query = EventsModel.build_sql_select_query(query_params)
         else:
             query = EventsModel.build_select_default()
-        logs = EventsModel.execute_query(query)
-        # print(logs[0][0])
-        self.rowid = logs[-1][0]
-        return web.json_response(logs)
+        return EventsModel.execute_query(query)
 
-
-    async def get_logs_by_last_accessed_rowid(self):
-        logs = []
-        self.current_query_params['rowid'] = self.rowid
-        query = EventsModel.build_sql_select_query(self.current_query_params)
-        # print(self.rowid, query)
-        logs = EventsModel.execute_query(query)
-        if len(logs) > 0:
-            self.rowid = logs[-1][0]
-        return logs
+    @classmethod
+    def print_query_params(cls, query_params):
+        print("--> Check Query Params", query_params)
 
     @log_async_exception(stop_loop=True)
     async def websocket_handler(self, request):
@@ -84,22 +83,21 @@ class Server:
         print("Inside Websocket handler")
         ws = web.WebSocketResponse()
         await ws.prepare(request)
+        ws["counter"] = self.counter
+        self.counter += 1
         request.app['websockets'].append(ws)
         async for msg in ws:
             print(f"From websocket: {msg}")
             if msg.type == WSMsgType.TEXT:
                 if msg.data == 'close':
                     await ws.close(message="Server Shutdown Initiated from Client")
-                    # request.app['websockets'].remove(ws)
                 else:
-                    # Need to do something with the data here
-                    print("Data received", msg.data)
-                    # await self.app['send_queue'].put("We will send new data")
+                    i = request.app['websockets'].index(ws)
+                    request.app['websockets'][i]["query_params"] = json_to_dict(msg.data)
             elif msg.type == WSMsgType.ERROR:
-                # request.app['websockets'].remove(ws)
+                request.app['websockets'].remove(ws)
                 print("ws connection failed with exception %s ", ws.exception())
         print('websocket connection closed')
-        request.app['websockets'].remove(ws)
         return ws
 
     @log_async_exception(stop_loop=True)
@@ -111,22 +109,17 @@ class Server:
          affect the system.
         """
         while True:
-            # await self.app['send_queue'].put(await self.get_logs())
-            # Get all the logs in a msg object and send as json
-            # logs = await app['send_queue'].get()
-            logs = None
-            # print("Logs before:", logs)
-            # print('---> Check', self.app['websockets'])
-            if len(self.app['websockets']) > 0:
-                # print('---> Check', self.app['websockets'])
-                logs = await self.get_logs_by_last_accessed_rowid()
-            await asyncio.sleep(1.0)
-            # print(f"websocket_send_task: {logs}, {len(app['websockets'])}")
 
-            for ws in app['websockets']:
-                try:
-                    if logs is not None:
-                        await ws.send_json(logs)
-                    await ws.drain()
-                except ConnectionError as e:
-                    print(f"{e} in websocket_send_task")
+            await asyncio.sleep(1.0)
+            if len(self.app['websockets']) > 0:
+                for i, ws in enumerate(app['websockets']):
+                    try:
+                        if "query_params" not in ws:
+                            ws["query_params"] = {}
+                        logs = await self.get_logs(ws["query_params"])
+                        if len(logs) > 0:
+                            ws["query_params"]["rowid"] = logs[-1][0]
+                            await ws.send_json(logs)
+                            await ws.drain()
+                    except ConnectionError as e:
+                        print(f"{e} in websocket_send_task")

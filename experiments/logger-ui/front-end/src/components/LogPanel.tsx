@@ -9,59 +9,60 @@ import { LogLayout } from './LogLayout';
 import { SocketURL } from '../constants/API';
 import { LogService } from './../services/LogService';
 
-interface Props extends PanelProps<LogProps> {}
+interface Props extends PanelProps<LogProps> { }
 
 interface State {
   data: string[][];
+  query: Object;
 }
+
+const LIMIT = 100;
 
 export class LogPanel extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
       data: [],
+      query: {}
     };
   }
 
   ws: WebSocket = new WebSocket(SocketURL);
   componentDidMount() {
-    // Call REST to get the data
-    // Set up web sockets to continually update the ui
-    // this.updateLogsData(`?level=${this.props.options.level}&limit=${this.props.options.limit}`);
-    this.getLogsData();
 
     this.ws.onopen = () => {
-      // on connecting, do nothing but log it to the console
       console.log('web socket connected');
+      // @ts-ignore
+      const start_date = new Date(this.props.options.date.from).getTime();
+      // @ts-ignore
+      const end_date = new Date(this.props.options.date.to).getTime();
+      const query: any = {
+        level: this.props.options.level,
+        limit: this.props.options.level,
+        start_date,
+        end_date
+      }
+      this.setState({query});
+      this.updateLogsData(query);
     }
 
     this.ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
       const rows = JSON.parse(evt.data);
       // console.log('-->', rows)
-
       // Remove the previous logs data on front-end, if the rows are more than 1000.
-      if(this.state.data.length > 1000) {
-        this.setState({data: []})
+      if (this.state.data.length > LIMIT) {
+        this.setState({ data: [] })
       }
-      this.setState({data: [...rows, ...this.state.data]});
+      this.setState({ data: [...rows, ...this.state.data] });
     }
 
     this.ws.onclose = () => {
       console.log('web socket disconnected');
       this.ws = new WebSocket(SocketURL);
-      this.updateLogsData(`?level=${this.props.options.level}&limit=${this.props.options.limit}`);
+      this.updateLogsData(this.state.query);
     }
   }
-
-  wsSendParams = (o: object) => {
-    console.error('Sending to websocket:', o);
-    this.ws.send(JSON.stringify(o));
-  };
-
-  // componentWillUpdate() {
-  //   // If the
-  // }
 
   componentDidUpdate(prevProps: Props) {
     if (
@@ -69,28 +70,31 @@ export class LogPanel extends PureComponent<Props, State> {
       this.props.options.limit !== prevProps.options.limit ||
       this.props.options.date !== prevProps.options.date
     ) {
-      // TO DO: Make API
-      console.log('Make call to the API', this.props);
-      const query = `?level=${this.props.options.level}&limit=${this.props.options.limit}`;
+      // @ts-ignore
+      const start_date = new Date(this.props.options.date.from).getTime();
+      // @ts-ignore
+      const end_date = new Date(this.props.options.date.to).getTime();
+      const query: any = {
+        level: this.props.options.level,
+        limit: this.props.options.limit,
+        start_date,
+        end_date
+      }
+      this.setState({query});
       this.updateLogsData(query);
     }
   }
 
-  getLogsData = () => {
-    LogService.getLogs().then(response => {
+  getLogsData = (query: any) => {
+    LogService.getLogs(query).then(response => {
       response.json().then(logArr => {
-        this.setState({ data: [...this.state.data, ...logArr]})
+        this.setState({ data: [...this.state.data, ...logArr] })
       });
     })
   };
 
-  updateLogsData = (query = '') => {
-    LogService.getLogs(query).then(response => {
-      response.json().then(logArr => {
-        // console.log('logArr here', logArr);
-        this.setState({ data: [...logArr] });
-      });
-    });
+  updateLogsData = (query: Object) => {
+    this.ws.send(JSON.stringify(query));
   };
 
   render() {

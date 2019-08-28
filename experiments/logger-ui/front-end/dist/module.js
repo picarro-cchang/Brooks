@@ -1130,7 +1130,8 @@ function (_super) {
     _this.updateLogsData = function (query) {
       if (query === void 0) {
         query = '';
-      }
+      } // Send the data through websockets
+
 
       _services_LogService__WEBPACK_IMPORTED_MODULE_5__["LogService"].getLogs(query).then(function (response) {
         response.json().then(function (logArr) {
@@ -1183,10 +1184,7 @@ function (_super) {
 
       _this.updateLogsData("?level=" + _this.props.options.level + "&limit=" + _this.props.options.limit);
     };
-  }; // componentWillUpdate() {
-  //   // If the
-  // }
-
+  };
 
   LogPanel.prototype.componentDidUpdate = function (prevProps) {
     if (this.props.options.level !== prevProps.options.level || this.props.options.limit !== prevProps.options.limit || this.props.options.date !== prevProps.options.date) {

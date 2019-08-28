@@ -20,7 +20,6 @@ class Main:
         self.ws_send_queue = asyncio.Queue(256)
 
     async def on_startup(self, app):
-        self.tasks.append(asyncio.create_task(self.ws_getlogs()))
         print("Top Level Server is Starting Up")
 
     async def on_shutdown(self, app):
@@ -31,19 +30,6 @@ class Main:
     async def on_cleanup(self, app):
         print("TODO: Implement cleanup")
         pass
-
-    @log_async_exception(stop_loop=True)
-    async def ws_getlogs(self):
-        """
-        This function will use API.getlogs to fetch logs after a certain rowid, 
-        waiting certain interval
-        """
-        i = 0
-        while True:
-            await asyncio.sleep(1.0)
-            # await self.ws_send_queue.put(f"Hello {i} via websocket")
-            i += 1
-            # print(".", end="", flush=True)
 
     async def server_init(self):
         self.app = web.Application()

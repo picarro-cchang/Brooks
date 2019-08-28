@@ -19,10 +19,6 @@ class QueryParser:
         for item in query_arr:
             key, value = item.split("=")
             query_dict[key] = value
-        
-        # TO DO: Parse date
-        if "date" in query_dict:
-            pass
         return query_dict
 
 
@@ -84,10 +80,6 @@ class EventsModel:
             print("Exception", ex)
             return f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level FROM {EventsModel.table_name} ORDER BY rowid ASC LIMIT 20"
         return query
-
-    @classmethod
-    def build_sql_select_last_rowid(cls, rowid):
-        return f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level FROM {EventsModel.table_name} WHERE rowid > {rowid} ORDER BY rowid ASC LIMIT 20"
 
     @classmethod
     def build_select_default(cls):
