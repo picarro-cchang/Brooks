@@ -296,14 +296,16 @@ int8_t pressure_mpr_outlet_trigger(char board) {
 }
 
 int8_t pressure_mpr_trigger_cycle( void ) {
+  uint8_t retval = 0;
   // Trigger all the inlet channels
   for (uint8_t channel = 1; channel < 9; channel++) {
-    pressure_mpr_inlet_trigger(channel);
+    retval += pressure_mpr_inlet_trigger(channel);
+    _delay_ms(5);
   }
   // Trigger the outlet channels
-  pressure_mpr_outlet_trigger('a');
-  pressure_mpr_outlet_trigger('b');
-  return 0;
+  retval += pressure_mpr_outlet_trigger('a');
+  retval += pressure_mpr_outlet_trigger('b');
+  return retval;
 }
 
 int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
@@ -378,6 +380,8 @@ void pressure_mpr_read_task(void) {
 						     PRESSURE_EMA_ALPHA);
     pressure_inlet_old_pascals[index] =
       pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
+    // This delay has to be here to avoid SPI read errors
+    _delay_ms(5);
   }
   
   // Outlet A

@@ -14,7 +14,7 @@ REVCODE = 1.1.0
 #   warning -- Maybe bad stuff
 #   error -- You want to know about this
 #
-# LOG_LEVEL = error
+# LOG_LEVEL = debug
 LOG_LEVEL = error
 
 # MCU name
@@ -160,7 +160,7 @@ ASRC =
 # Optimization level, can be [0, 1, 2, 3, s].
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = 0
+OPT = s
 
 # Debugging format.
 #     Native formats for AVR-GCC's -g are dwarf-2 [default] or stabs.

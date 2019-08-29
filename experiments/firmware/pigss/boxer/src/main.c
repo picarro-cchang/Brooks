@@ -144,7 +144,7 @@ int main(void) {
   logger_setsystem( "channel" );
 
   // Enable MPR pressure sensor module logging
-  // logger_setsystem( "mpr" );
+  logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
@@ -192,8 +192,6 @@ int main(void) {
   logger_msg_p("main", log_level_DEBUG, PSTR("topaz_is_connected returns %d"),
 	       connected);
 
-  // Start the MPR pressure sensor module
-  mpr_init( &cs_manifold_a_sr );
 
   command_init( recv_cmd_state_ptr );
 
@@ -210,16 +208,16 @@ int main(void) {
 
   if (strcmp( LOG_LEVEL, "debug" ) == 0) {
     // We're debugging.  Slow the reads way down.
-    pressure_read_period_ms = 2000;
-    mpr_read_delay_ms = 1000;
+    pressure_read_period_ms = 1000;
+    mpr_read_delay_ms = 500;
   } else if (strcmp( LOG_LEVEL, "info" ) == 0) {
     // We're debugging.  Slow the reads way down.
     pressure_read_period_ms = 2000;
     mpr_read_delay_ms = 1000;
   } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
     // This could be a release.  The minimum read delay is 5ms.
-    pressure_read_period_ms = 10;
-    mpr_read_delay_ms = 8;
+    pressure_read_period_ms = 100;
+    mpr_read_delay_ms = 50;
   }
 
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
@@ -249,12 +247,15 @@ int main(void) {
 
     }
 
+    // Execute scheduled tasks
+    OS_TaskExecution();
+
+
     // Process the parse buffer to look for commands loaded with the
     // received character ISR.
     command_process_pbuffer( recv_cmd_state_ptr, command_array );
 
-    // Execute scheduled tasks
-    OS_TaskExecution();
+
 
     // Reset the watchdog
     wdt_reset();

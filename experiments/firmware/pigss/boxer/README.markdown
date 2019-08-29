@@ -44,25 +44,27 @@ hardware will be a custom PCB.
             - [TZB.SN n](#tzbsn-n)
                 - [Parameter (n)](#parameter-n-3)
                 - [Typical Return](#typical-return-9)
+            - [TZB.SN?](#tzbsn)
+                - [Typical Return](#typical-return-10)
         - [Channel commands](#channel-commands)
             - [CHANENA n](#chanena-n)
                 - [Parameter (n)](#parameter-n-4)
-                - [Typical Return](#typical-return-10)
+                - [Typical Return](#typical-return-11)
             - [CHANENA? n](#chanena-n)
                 - [Parameter (n)](#parameter-n-5)
-                - [Typical Return](#typical-return-11)
+                - [Typical Return](#typical-return-12)
             - [CHANOFF n](#chanoff-n)
                 - [Parameter (n)](#parameter-n-6)
-                - [Typical Return](#typical-return-12)
+                - [Typical Return](#typical-return-13)
             - [CHANSET n](#chanset-n)
                 - [Parameter (n)](#parameter-n-7)
-                - [Typical Return](#typical-return-13)
-            - [CHANSET?](#chanset)
                 - [Typical Return](#typical-return-14)
+            - [CHANSET?](#chanset)
+                - [Typical Return](#typical-return-15)
         - [Pressure commands](#pressure-commands)
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-8)
-                - [Typical Return](#typical-return-15)
+                - [Typical Return](#typical-return-16)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-9)
@@ -82,6 +84,7 @@ hardware will be a custom PCB.
         - [Version 1.0.8](#version-108)
         - [Version 1.0.9](#version-109)
         - [Version 1.0.10](#version-1010)
+        - [Version 1.1.0](#version-110)
 
 <!-- markdown-toc end -->
 
@@ -294,6 +297,17 @@ Integers 0-65535
 |--------|-----------------------|
 | `0`    | Serial number set     |
 | `-1`   | Topaz B not connected |
+
+#### TZB.SN? ####
+
+Query the serial number for manifold (Topaz) board B.
+
+##### Typical Return #####
+
+| Return | Condition                            |
+|--------|--------------------------------------|
+| `10`   | Successful return for Topaz board 10 |
+| `-1`   | Topaz A not connected                |
 
 ### Channel commands ###
 

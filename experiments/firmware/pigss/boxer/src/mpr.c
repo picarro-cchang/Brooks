@@ -12,6 +12,9 @@
 // Definitions of Two Wire Interface statuses
 #include <util/twi.h>
 
+// Provides _delay_ms
+#include <util/delay.h>
+
 // Definitions common to i2c devices
 #include "i2c.h"
 
@@ -30,11 +33,6 @@
 
 #include "mpr.h"
 
-int8_t mpr_init( void (*cs_ptr)(uint8_t) ) {
-  // Assume spi has already been initialized
-  logger_msg_p("mpr", log_level_DEBUG, PSTR("Initializing sensor"));
-  return 0;
-}
 
 int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   int8_t retval = 0;
@@ -42,22 +40,33 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   uint8_t bytes[3] = {0xaa, 0x00, 0x00};
   uint8_t status_byte = 0;
 
+  uint8_t maxtries = 100;
+  uint8_t tries = 0;
+
   // Pull cs low
   (*cs_ptr)(0);
 
   // Write the data starting with bytes[0] (0xaa)
-  for (int8_t bytenum = 0; bytenum <= 2; bytenum++) {
-    if (bytenum == 0) {
-      // The first 0xaa write will return the status byte
-      status_byte = spi_write(bytes[bytenum]);
-    } else {
-      spi_write(bytes[bytenum]);
+  tries = 1;
+  while ((status_byte != 0x40) && (tries < maxtries)) {
+    for (int8_t bytenum = 0; bytenum <= 2; bytenum++) {
+      if (bytenum == 0) {
+	// The first 0xaa write will return the status byte
+	status_byte = spi_write(bytes[bytenum]);
+	if (status_byte != 0x40) {
+	  logger_msg_p("mpr", log_level_DEBUG, PSTR("MPR trigger --> 0x%x after %i tries"),
+		       status_byte, tries);
+	}
+      } else {
+	spi_write(bytes[bytenum]);
+      }
     }
+    tries++;
   }
-  if (status_byte != 0x40) {
-    // The correct status byte is 0x40
-    // logger_msg_p("mpr", log_level_ERROR, PSTR("MPR status is %i"),
-    // 		 status_byte);
+  if (status_byte != 0x40 && status_byte != 0x60) {
+    // The correct status byte is 0x40, but 0x60 means the MPR is busy
+    logger_msg_p("mpr", log_level_ERROR, PSTR("MPR trigger --> 0x%x after %i tries"),
+		 status_byte, tries);
     retval += -1;
   }
   // Return cs high
@@ -67,14 +76,18 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
 }
 
 int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
+  int8_t retval = 0;
+  uint8_t status_byte = 0;
   // Make a union to read data bytes one at a time
   union {
     uint8_t bytes[4];
     uint32_t word;
   } data_union;
 
-  uint8_t status = 0;
   data_union.word = 0;
+
+  uint8_t maxtries = 10;
+  uint8_t tries = 0;
 
   // Pull cs low
   (*cs_ptr)(0);
@@ -82,9 +95,24 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
   // Read the data MSB first.  The first byte returned will be status
   for (int8_t bytenum = 3; bytenum >= 0; bytenum--) {
     if (bytenum == 3) {
-      // Write the NOP command first and read sensor status
-      status = spi_write(0xf0);
-      data_union.bytes[bytenum] = 0;
+      tries = 1;
+      while ((status_byte != 0x40) && (tries < maxtries)) {
+	// Write the NOP command first and read sensor status
+	status_byte = spi_write(0xf0);
+	data_union.bytes[bytenum] = 0;
+	if (status_byte != 0x40) {
+	  logger_msg_p("mpr", log_level_DEBUG, PSTR("MPR read --> 0x%x after %i tries"),
+		       status_byte, tries);
+	}
+	tries++;
+      }
+
+      if (status_byte != 0x40) {
+	// The correct status byte is 0x40
+	logger_msg_p("mpr", log_level_ERROR, PSTR("MPR read --> 0x%x after %i tries"),
+		     status_byte, tries);
+	retval += -1;
+      }
     } else {
       // The lower 3 bytes will be sensor data
       data_union.bytes[bytenum] = spi_write(0);
@@ -96,5 +124,5 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
   // Return cs high
   (*cs_ptr)(1);
 
-  return 0;
+  return retval;
 }

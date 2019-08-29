@@ -1,6 +1,9 @@
 
 #include <stdio.h>
 
+// Provides strcmp
+#include <string.h>
+
 /* stdarg.h
  * Allows functions to accept an indefinite number of arguments.
  */
