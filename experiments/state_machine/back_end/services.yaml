@@ -1,0 +1,10 @@
+- Name: RpcServer
+  RPC_Port: 32769
+  Parameters:
+    alpha: 1
+    bravo: 2
+    charlie: 3
+
+- Name: CompressDataPeriodic
+
+- Name: AggregateSourceServer

@@ -26,7 +26,7 @@ class InfluxDBWriter:
         """
         if not isinstance(data_dict, list):
             raise TypeError(FILE_NAME, ": input data is not dictionary type")
-        self._client.write_points(data_dict)
+        self._client.write_points(data_dict, time_precision='ms')
 
     def read_data(self, query, **args):
         return self._client.query(query)
@@ -43,6 +43,7 @@ class InfluxDBWriter:
     def get_db_name(self):
         return self.db_name
 
+
 def create_dict(measurement, fields, tags=None):
     if not isinstance(measurement, str):
         raise ValueError("measurement must be string")
@@ -52,18 +53,12 @@ def create_dict(measurement, fields, tags=None):
         raise ValueError("tags must be dictionary")
     if not isinstance(fields, dict):
         raise ValueError("fields must be dictionary")
-    return {
-        "measurement": measurement,
-        "tags": tags,
-        "fields": fields}
+    return {"measurement": measurement, "tags": tags, "fields": fields}
+
 
 if __name__ == "__main__":
     db_Writer = InfluxDBWriter()
-    data = [{
-        "measurement": "modbusSettings",
-        "tags": {},
-        "fields": {"sslave": 4, "port": 505}
-    }]
+    data = [{"measurement": "modbusSettings", "tags": {}, "fields": {"sslave": 4, "port": 505}}]
     db_Writer.write_data(data)
     data = db_Writer.read_data("select * from modbusSettings ")
     print(list(data.get_points()))

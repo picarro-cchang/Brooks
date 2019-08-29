@@ -34,9 +34,10 @@ POLL_PERIOD = 0.5
 
 
 class PigletManager(Ahsm):
-    def __init__(self, farm):
+    def __init__(self, farm, simulation=False):
         super().__init__()
         self.farm = farm
+        self.simulation = simulation
         self.bank_list = None
         self.mad_mapper_result = None
         self.picarro_analyzers = []
@@ -174,6 +175,8 @@ class PigletManager(Ahsm):
         for analyzer_rpc_name in self.picarro_analyzers:
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"valve_pos": valve_pos_payload.valve_pos})
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time", valve_pos_payload.time)
+            # The next line is for the simulator
+            await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos_payload.valve_pos)
 
 
 async def main():

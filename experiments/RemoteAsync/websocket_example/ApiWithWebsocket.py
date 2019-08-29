@@ -84,6 +84,5 @@ class ApiWithWebsocket:
             for ws in app['websockets']:
                 try:
                     await ws.send_str(msg)
-                    await ws.drain()
                 except ConnectionError as e:
                     print(f"{e} in websocket_send_task")

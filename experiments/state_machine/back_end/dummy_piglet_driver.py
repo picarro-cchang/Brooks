@@ -1,13 +1,13 @@
 import serial
 import time
 import argparse
-from host.experiments.common.serial_interface import SerialInterface
-from host.experiments.common.timeutils import get_local_timestamp
-from host.experiments.common.rpc_ports import rpc_ports
-from host.experiments.testing.cmd_fifo import CmdFIFO
+from experiments.common.serial_interface import SerialInterface
+from experiments.common.timeutils import get_local_timestamp
+from experiments.common.rpc_ports import rpc_ports
+from experiments.testing.cmd_fifo import CmdFIFO
 
-from host.experiments.common.async_helper import SyncWrapper
-from host.experiments.state_machine.back_end.piglet_simulator import PigletSimulator
+from experiments.common.async_helper import SyncWrapper
+from experiments.state_machine.back_end.piglet_simulator import PigletSimulator
 
 # TODO
 #   Remove local import for CmdFIFO
@@ -21,7 +21,6 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
-
     def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1):
         self.serial = None
         self.terminate = False

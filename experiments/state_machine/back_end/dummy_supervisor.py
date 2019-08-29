@@ -6,6 +6,7 @@ from collections import deque
 
 import attr
 from aiomultiprocess import Process
+from setproctitle import setproctitle
 
 from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
 # from async_hsm.SimpleSpy import SimpleSpy
@@ -25,7 +26,6 @@ tunnel_configs = os.path.normpath(os.path.join(my_path, 'rpc_tunnel_configs.json
 
 class DummyAsyncRpc:
     """Provides an interface resembling asynchronous RPC functions, but which do nothing"""
-
     def __init__(self, name):
         self.__name = name
 
@@ -38,7 +38,6 @@ class DummyAsyncRpc:
 
 class AsyncWrapper:
     """Returns asynchronous version of a method by wrapping it in an executor"""
-
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -63,6 +62,7 @@ class ProcessWrapper:
 
     async def start(self, *args, **kwargs):
         async def start_driver():
+            setproctitle(f"python Supervised {self.name}")
             d = self.driver(*args, **kwargs)
             d.rpc_serve_forever()
 

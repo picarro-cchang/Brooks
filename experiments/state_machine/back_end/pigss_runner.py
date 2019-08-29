@@ -1,17 +1,18 @@
 import asyncio
 
 import aiohttp_cors
+import click
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
 
 from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
+from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.state_machine.back_end.controller_service import \
     ControllerService
 from experiments.state_machine.back_end.pigss_farm import PigssFarm
 from experiments.state_machine.back_end.supervisor_service import \
     SupervisorService
-from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
 log = LOLoggerClient(client_name="PigssServer", verbose=True)
 
@@ -38,13 +39,13 @@ class Server:
         pass
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
-    async def server_init(self):
+    async def server_init(self, simulation=False):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
         self.app.on_cleanup.append(self.on_cleanup)
 
-        self.app['farm'] = PigssFarm()
+        self.app['farm'] = PigssFarm(simulation=simulation)
         cors = aiohttp_cors.setup(
             self.app, defaults={"*": aiohttp_cors.ResourceOptions(
                 allow_credentials=True,
@@ -71,8 +72,8 @@ class Server:
         await site.start()
         print(f"======== Running on http://{site._host}:{site._port} ========")
 
-    async def startup(self):
-        self.tasks.append(asyncio.create_task(self.server_init()))
+    async def startup(self, simulation=False):
+        self.tasks.append(asyncio.create_task(self.server_init(simulation)))
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
@@ -81,14 +82,21 @@ class Server:
         loop.stop()
 
 
-if __name__ == "__main__":
+@click.command()
+@click.option('--simulation/--no-simulation', '-s/ ', is_flag=True, help="Use simulation")
+def main(simulation):
     service = Server(port=8000)
     loop = asyncio.get_event_loop()
     loop.set_exception_handler(service.handle_exception)
-    loop.run_until_complete(asyncio.gather(service.startup()))
+    loop.run_until_complete(asyncio.gather(service.startup(simulation)))
     try:
         loop.run_forever()
     finally:
         loop.run_until_complete(asyncio.gather(service.runner.cleanup()))
         Framework.stop()
+        # log_process.kill()
     log.info('Server stopped')
+
+
+if __name__ == "__main__":
+    main()

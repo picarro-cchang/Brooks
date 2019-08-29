@@ -5,26 +5,30 @@ from host.experiments.madmapper.usb.serialmapper import SerialMapper
 from host.experiments.common.rpc_ports import rpc_ports
 from host.experiments.testing.cmd_fifo import CmdFIFO
 from host.experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from host.experiments.Simulators.sim_serial_mapper import SimSerialMapper
+from host.experiments.Simulators.sim_network_mapper import SimNetworkMapper
 
 
 class MadMapper(object):
     """
     TODO - Docstring
     """
-    def __init__(self):
+    def __init__(self, simulation=False):
         self.device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
-        self.networkmapper = NetworkMapper()
-        self.serialmapper = SerialMapper()
+        if simulation:
+            self.networkmapper = SimNetworkMapper()
+            self.serialmapper = SimSerialMapper()
+        else:
+            self.networkmapper = NetworkMapper()
+            self.serialmapper = SerialMapper()
         self.path = os.path.join(os.getenv('HOME'), '.config/picarro')
         self.file_name = 'madmapper.json'
         self.rpc_port = rpc_ports.get('madmapper')
-        self.rpc_server = CmdFIFO.CmdFIFOServer(
-            ("", self.rpc_port),
-            ServerName=__class__.__name__,
-            ServerDescription=f'RPC Server for {__class__.__name__}',
-            ServerVersion=1.0,
-            threaded=True
-        )
+        self.rpc_server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
+                                                ServerName=__class__.__name__,
+                                                ServerDescription=f'RPC Server for {__class__.__name__}',
+                                                ServerVersion=1.0,
+                                                threaded=True)
         self.logger = LOLoggerClient(client_name=__class__.__name__)
         self.logger.debug(f'Started')
         self.register_rpc_functions()
@@ -38,8 +42,7 @@ class MadMapper(object):
         serial_devices = self.serialmapper.get_usb_serial_devices()
         self.device_dict['Devices'].update(network_devices)
         self.device_dict['Devices'].update(serial_devices)
-        self.logger.debug(f'Devices found: \n'
-                          f'{json.dumps(self.device_dict, indent=2)}')
+        self.logger.debug(f'Devices found: \n' f'{json.dumps(self.device_dict, indent=2)}')
         if should_write is True:
             self._write_json(self.device_dict)
         return self.device_dict
@@ -53,9 +56,7 @@ class MadMapper(object):
                 self.logger.debug(f'Making directory: {self.path}')
                 os.mkdir(self.path, mode=0o755)
             with open(os.path.join(self.path, self.file_name), 'w') as f:
-                self.logger.debug(f'Writing to '
-                                  f'{os.path.join(self.path, self.file_name)}'
-                                  f':\n{json.dumps(obj, indent=2)}')
+                self.logger.debug(f'Writing to ' f'{os.path.join(self.path, self.file_name)}' f':\n{json.dumps(obj, indent=2)}')
                 f.write(f'{json.dumps(obj, indent=2)}\n')
         except Exception as e:
             self.logger.critical(f'Unhandled Exception: {e}')
@@ -69,8 +70,7 @@ class MadMapper(object):
         try:
             with open(json_path, 'r') as f:
                 json_contents = json.load(f)
-                self.logger.debug(f'Reading from {json_path}: \n'
-                                  f'{json.dumps(json_contents, indent=2)}')
+                self.logger.debug(f'Reading from {json_path}: \n' f'{json.dumps(json_contents, indent=2)}')
                 return json_contents
         except FileNotFoundError:
             self.logger.warning(f'File does not exist: {json_path}')

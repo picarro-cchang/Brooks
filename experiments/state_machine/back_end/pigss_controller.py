@@ -53,9 +53,10 @@ def setbits(mask):
 class PigssController(Ahsm):
     num_chans_per_bank = 8
 
-    def __init__(self, farm=None):
+    def __init__(self, farm=None, simulation=False):
         super().__init__()
         self.farm = farm
+        self.simulation = simulation
         self.error_list = collections.deque(maxlen=32)
         self.status = {}
         self.all_banks = []

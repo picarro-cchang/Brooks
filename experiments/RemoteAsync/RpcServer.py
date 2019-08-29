@@ -2,14 +2,14 @@ import time
 
 import click
 
-import CmdFIFO
+from experiments.testing.cmd_fifo import CmdFIFO
 
 # Functions to make available for remote calls
 
 
 class RpcServer:
-    def __init__(self, port):
-        self.rpc_server = CmdFIFO.CmdFIFOServer(("", port),
+    def __init__(self, rpc_port, **kwargs):
+        self.rpc_server = CmdFIFO.CmdFIFOServer(("", rpc_port),
                                                 ServerName="TestCmdFIFO",
                                                 ServerDescription="Test server for CmdFIFO functionality",
                                                 threaded=True)
@@ -18,6 +18,8 @@ class RpcServer:
         self.rpc_server.register_function(self.varsum)
         self.rpc_server.register_function(self.delay)
         self.rpc_server.register_function(self.ping)
+        print(f"RPC server received kwargs {kwargs} and started at port {rpc_port}.")
+        self.rpc_server.serve_forever()
 
     def product(self, x, y):
         "Computes product of x and y"
@@ -49,10 +51,9 @@ class RpcServer:
 def main(port):
     try:
         server = RpcServer(port)
-        print(f"RPC server started at port {port}.")
-        server.rpc_server.serve_forever()
     finally:
         print(f"RPC server terminated.")
+
 
 if __name__ == "__main__":
     main()

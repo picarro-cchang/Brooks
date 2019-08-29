@@ -1,0 +1,37 @@
+{
+  "Name": "MadMapper",
+  "Devices": {
+    "Serial_Devices": {
+      "/dev/ttyACM4": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 1,
+        "Topaz_A_HW_Rev": "Null",
+        "Topaz_B_HW_Rev": "Null",
+        "Whitfield_HW_Rev": "Null",
+        "Path": "/dev/ttyACM4",
+        "Baudrate": 38400,
+        "RPC_Port": 33070
+      },
+      "/dev/ttyACM3": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 3,
+        "Topaz_A_HW_Rev": "Null",
+        "Topaz_B_HW_Rev": "Null",
+        "Whitfield_HW_Rev": "Null",
+        "Path": "/dev/ttyACM3",
+        "Baudrate": 38400,
+        "RPC_Port": 33072
+      },
+      "/dev/ttyACM0": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 4,
+        "Topaz_A_HW_Rev": "Null",
+        "Topaz_B_HW_Rev": "Null",
+        "Whitfield_HW_Rev": "Null",
+        "Path": "/dev/ttyACM0",
+        "Baudrate": 38400,
+        "RPC_Port": 33073
+      }
+    }
+  }
+}
