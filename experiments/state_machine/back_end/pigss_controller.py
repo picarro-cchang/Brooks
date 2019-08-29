@@ -509,6 +509,9 @@ class PigssController(Ahsm):
             self.set_status(["run"], UiStatus.DISABLED)
             self.set_status(["plan"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
+            self.set_status(["manual_run"], UiStatus.DISABLED)
+            self.set_status(["run_plan"], UiStatus.DISABLED)
+            self.set_status(["loop_plan"], UiStatus.DISABLED)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -532,6 +535,9 @@ class PigssController(Ahsm):
             if self.status["plan"] != UiStatus.DISABLED:
                 return self.tran(self._plan)
         elif sig == Signal.BTN_PLAN_RUN:
+            self.set_status(["manual_run"], UiStatus.DISABLED)
+            self.set_status(["run_plan"], UiStatus.ACTIVE)
+            self.set_status(["loop_plan"], UiStatus.READY)
             for bank in self.all_banks:
                 self.chan_active[bank] = 0
                 for j in range(self.num_chans_per_bank):
@@ -546,19 +552,30 @@ class PigssController(Ahsm):
             else:
                 return self.tran(self._run_saved1)
         elif sig == Signal.BTN_LOOP:
-            for bank in self.all_banks:
-                self.chan_active[bank] = 0
-                for j in range(self.num_chans_per_bank):
-                    if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
-                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("CHANSET 0", self.all_banks)))
-            self.plan_error = self.validate_plan(check_avail=True)
-            if not self.plan_error.error:
+            if self.status["run_plan"] == UiStatus.ACTIVE:
+                self.set_status(["loop_plan"], UiStatus.ACTIVE)
+                self.set_status(["run_plan"], UiStatus.ACTIVE)
+                self.set_status(["manual_run"], UiStatus.DISABLED)
                 self.set_plan(["looping"], True)
-                self.set_plan(["current_step"], self.get_current_step_from_focus())
+                current_step = self.plan["current_step"]
                 return self.tran(self._run_saved2)
             else:
-                return self.tran(self._run_saved1)
+                self.set_status(["manual_run"], UiStatus.DISABLED)
+                self.set_status(["run_plan"], UiStatus.ACTIVE)
+                self.set_status(["loop_plan"], UiStatus.ACTIVE)
+                for bank in self.all_banks:
+                    self.chan_active[bank] = 0
+                    for j in range(self.num_chans_per_bank):
+                        if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
+                            self.set_status(["channel", bank, j + 1], UiStatus.READY)
+                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("CHANSET 0", self.all_banks)))
+                self.plan_error = self.validate_plan(check_avail=True)
+                if not self.plan_error.error:
+                    self.set_plan(["looping"], True)
+                    self.set_plan(["current_step"], self.get_current_step_from_focus())
+                    return self.tran(self._run_saved2)
+                else:
+                    return self.tran(self._run_saved1)
         elif sig == Signal.BTN_REFERENCE:
             if self.status["reference"] != UiStatus.DISABLED:
                 return self.tran(self._reference)
@@ -765,6 +782,9 @@ class PigssController(Ahsm):
             else:
                 # Otherwise, enable run and plan buttons and go back to standby since identification is complete
                 self.set_status(["run"], UiStatus.READY)
+                self.set_status(["manual_run"], UiStatus.READY)
+                self.set_status(["run_plan"], UiStatus.READY)
+                self.set_status(["loop_plan"], UiStatus.READY)
                 self.set_status(["plan"], UiStatus.READY)
                 return self.tran(self._operational)
         return self.super(self._identify)
@@ -774,6 +794,9 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.EXIT:
             self.set_status(["run"], UiStatus.READY)
+            self.set_status(["manual_run"], UiStatus.READY)
+            self.set_status(["run_plan"], UiStatus.READY)
+            self.set_status(["loop_plan"], UiStatus.READY)
             Framework.publish(Event(Signal.PC_ABORT, None))
             return self.handled(e)
         elif sig == Signal.INIT:
@@ -829,6 +852,9 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["run"], UiStatus.ACTIVE)
+            self.set_status(["manual_run"], UiStatus.ACTIVE)
+            self.set_status(["run_plan"], UiStatus.DISABLED)
+            self.set_status(["loop_plan"], UiStatus.DISABLED)
             return self.handled(e)
         elif sig == Signal.BTN_CHANNEL:
             if self.status["channel"][e.value["bank"]][e.value["channel"]] == UiStatus.READY:
@@ -1178,6 +1204,9 @@ class PigssController(Ahsm):
         if sig == Signal.EXIT:
             self.set_status(["run"], UiStatus.READY)
             self.set_status(["plan"], UiStatus.READY)
+            self.set_status(["manual_run"], UiStatus.READY)
+            self.set_status(["run_plan"], UiStatus.READY)
+            self.set_status(["loop_plan"], UiStatus.READY)
         elif sig == Signal.INIT:
             return self.tran(self._run_plan1)
         elif sig == Signal.BTN_RUN:
@@ -1229,7 +1258,8 @@ class PigssController(Ahsm):
             for bank in self.all_banks:
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.ACTIVE:
-                        self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
+
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._run_plan121)
@@ -1265,7 +1295,7 @@ class PigssController(Ahsm):
                 chan_status = self.status["channel"][bank].copy()
                 # Turn off ACTIVE states in UI for active channels
                 for j in setbits(self.chan_active[bank]):
-                    chan_status[j + 1] = UiStatus.AVAILABLE
+                    chan_status[j + 1] = UiStatus.READY
                 self.set_status(["channel", bank], chan_status)
                 # Replace with the selected channel
                 if bank == self.bank:
@@ -1289,8 +1319,8 @@ class PigssController(Ahsm):
                             if current != UiStatus.ACTIVE:
                                 chan_status[j + 1] = UiStatus.ACTIVE
                         else:
-                            if current != UiStatus.AVAILABLE:
-                                chan_status[j + 1] = UiStatus.AVAILABLE
+                            if current != UiStatus.READY:
+                                chan_status[j + 1] = UiStatus.READY
                 result[bank] = chan_status
             self.set_status(["channel"], result)
             return self.handled(e)
@@ -1356,6 +1386,9 @@ class PigssController(Ahsm):
             self.set_plan(["focus"], {"row": self.plan_error.row, "column": self.plan_error.column})
             return self.handled(e)
         elif sig == Signal.MODAL_CLOSE:
+            self.set_status(["manual_run"], UiStatus.READY)
+            self.set_status(["run_plan"], UiStatus.READY)
+            self.set_status(["loop_plan"], UiStatus.READY)
             return self.tran(self._operational)
         return self.super(self._operational)
 
@@ -1395,6 +1428,9 @@ class PigssController(Ahsm):
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.READY:
                         self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+            # self.set_status(["manual_run"], UiStatus.READY)
+            # self.set_status(["run_plan"], UiStatus.READY)
+            # self.set_status(["loop_plan"], UiStatus.READY)
             return self.tran(self._operational)
         return self.super(self._operational)
 
