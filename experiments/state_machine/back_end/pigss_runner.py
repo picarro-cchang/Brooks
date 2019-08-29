@@ -11,6 +11,8 @@ from experiments.state_machine.back_end.controller_service import \
 from experiments.state_machine.back_end.pigss_farm import PigssFarm
 from experiments.state_machine.back_end.supervisor_service import \
     SupervisorService
+from experiments.state_machine.back_end.bank_name_service import \
+    BankNameService
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 
 log = LOLoggerClient(client_name="PigssServer", verbose=True)
@@ -59,6 +61,10 @@ class Server:
         supervisor_service = SupervisorService()
         supervisor_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/supervisor/", supervisor_service.app)
+
+        bank_name_service = BankNameService()
+        bank_name_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/bank_name/", bank_name_service.app)
 
         setup_swagger(self.app)
 

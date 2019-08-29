@@ -3,14 +3,16 @@ import asyncio
 import aiohttp_cors
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
-from async_hsm import Framework
 
+from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
+from experiments.state_machine.back_end.bank_name_service import \
+    BankNameService
 from experiments.state_machine.back_end.controller_service import \
     ControllerService
+from experiments.state_machine.back_end.dummy_pigss_farm import PigssFarm
 from experiments.state_machine.back_end.supervisor_service import \
     SupervisorService
-from experiments.state_machine.back_end.dummy_pigss_farm import PigssFarm
 
 
 class Server:
@@ -57,6 +59,10 @@ class Server:
         supervisor_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/supervisor/", supervisor_service.app)
 
+        bank_name_service = BankNameService()
+        bank_name_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/bank_name/", bank_name_service.app)
+
         setup_swagger(self.app)
 
         for route in self.app.router.routes():
@@ -73,7 +79,7 @@ class Server:
 
 
 if __name__ == "__main__":
-    service = Server(port=8004)
+    service = Server(port=8000)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.gather(service.startup()))
     try:

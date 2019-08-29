@@ -1,5 +1,4 @@
 from aiohttp import web
-import json
 
 
 class BankNameService:
@@ -45,9 +44,8 @@ class BankNameService:
             "200":
                 description: successful operation.
         """
-        with open("/tmp/plan_files/new_style_plan.pln") as fp:
-            data = json.load(fp)
-            bank_names = data["bank_names"]
+        controller = request.app['farm'].controller
+        bank_names = controller.get_bank_names()
 
         ports = []
         valve_pos = 1

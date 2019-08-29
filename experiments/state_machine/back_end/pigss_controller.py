@@ -23,6 +23,7 @@ PLAN_FILE_DIR = "/tmp/plan_files"
 if not os.path.isdir(PLAN_FILE_DIR):
     os.makedirs(PLAN_FILE_DIR, 0o755)
 
+
 class UiStatus(str, Enum):
     DISABLED = "DISABLED"
     READY = "READY"
@@ -38,6 +39,7 @@ class PlanPanelType(IntEnum):
     LOAD = 2
     SAVE = 3
     EDIT = 4
+
 
 def setbits(mask):
     """Return the bits set in the integer `mask` """
@@ -153,6 +155,9 @@ class PigssController(Ahsm):
         self.send_queue = send_queue
         self.receive_queue = receive_queue
 
+    def get_bank_names(self):
+        return self.plan["bank_names"]
+
     def get_plan_filenames(self):
         # Get list of plan filenames and update the entry in self.plan. This also
         #  informs any clients connected via a web socket of the list
@@ -162,37 +167,35 @@ class PigssController(Ahsm):
         return filenames
 
     async def process_receive_queue_task(self):
-        event_by_element = dict(
-            standby=Signal.BTN_STANDBY,
-            identify=Signal.BTN_IDENTIFY,
-            reference=Signal.BTN_REFERENCE,
-            modal_close=Signal.MODAL_CLOSE,
-            modal_ok=Signal.MODAL_OK,
-            plan=Signal.BTN_PLAN,
-            plan_cancel=Signal.BTN_PLAN_CANCEL,
-            plan_delete=Signal.BTN_PLAN_DELETE,
-            plan_insert=Signal.BTN_PLAN_INSERT,
-            plan_load=Signal.BTN_PLAN_LOAD,
-            plan_load_cancel=Signal.BTN_PLAN_LOAD_CANCEL,
-            plan_load_filename=Signal.PLAN_LOAD_FILENAME,
-            plan_loop=Signal.BTN_PLAN_LOOP,
-            plan_ok=Signal.BTN_PLAN_OK,
-            plan_panel=Signal.PLAN_PANEL_UPDATE,
-            plan_save=Signal.BTN_PLAN_SAVE,
-            plan_save_cancel=Signal.BTN_PLAN_SAVE_CANCEL,
-            plan_save_filename=Signal.PLAN_SAVE_FILENAME,
-            plan_delete_filename=Signal.BTN_PLAN_DELETE_FILENAME,
-            plan_save_ok=Signal.BTN_PLAN_SAVE_OK,
-            clean=Signal.BTN_CLEAN,
-            run=Signal.BTN_RUN,
-            channel=Signal.BTN_CHANNEL,
-            edit=Signal.BTN_EDIT,
-            edit_panel=Signal.CHANGE_NAME_BANK,
-            edit_cancel=Signal.EDIT_CANCEL,
-            edit_save=Signal.EDIT_SAVE,
-            plan_run=Signal.BTN_PLAN_RUN,
-            plan_loop1=Signal.BTN_LOOP
-        )
+        event_by_element = dict(standby=Signal.BTN_STANDBY,
+                                identify=Signal.BTN_IDENTIFY,
+                                reference=Signal.BTN_REFERENCE,
+                                modal_close=Signal.MODAL_CLOSE,
+                                modal_ok=Signal.MODAL_OK,
+                                plan=Signal.BTN_PLAN,
+                                plan_cancel=Signal.BTN_PLAN_CANCEL,
+                                plan_delete=Signal.BTN_PLAN_DELETE,
+                                plan_insert=Signal.BTN_PLAN_INSERT,
+                                plan_load=Signal.BTN_PLAN_LOAD,
+                                plan_load_cancel=Signal.BTN_PLAN_LOAD_CANCEL,
+                                plan_load_filename=Signal.PLAN_LOAD_FILENAME,
+                                plan_loop=Signal.BTN_PLAN_LOOP,
+                                plan_ok=Signal.BTN_PLAN_OK,
+                                plan_panel=Signal.PLAN_PANEL_UPDATE,
+                                plan_save=Signal.BTN_PLAN_SAVE,
+                                plan_save_cancel=Signal.BTN_PLAN_SAVE_CANCEL,
+                                plan_save_filename=Signal.PLAN_SAVE_FILENAME,
+                                plan_delete_filename=Signal.BTN_PLAN_DELETE_FILENAME,
+                                plan_save_ok=Signal.BTN_PLAN_SAVE_OK,
+                                clean=Signal.BTN_CLEAN,
+                                run=Signal.BTN_RUN,
+                                channel=Signal.BTN_CHANNEL,
+                                edit=Signal.BTN_EDIT,
+                                edit_panel=Signal.CHANGE_NAME_BANK,
+                                edit_cancel=Signal.EDIT_CANCEL,
+                                edit_save=Signal.EDIT_SAVE,
+                                plan_run=Signal.BTN_PLAN_RUN,
+                                plan_loop1=Signal.BTN_LOOP)
         while True:
             try:
                 msg = json.loads(await self.receive_queue.get())
@@ -297,7 +300,6 @@ class PigssController(Ahsm):
                     self.set_plan(["steps", row, "duration"], duration)
                 except ValueError:
                     pass
-
 
     def add_channel_to_plan(self, msg):
         """Handle a channel button press, adding the bank and channel to the plan
@@ -414,11 +416,25 @@ class PigssController(Ahsm):
             channels3 = banks["3"]["channels"]
             channels4 = banks["4"]["channels"]
 
-            self.set_plan(["bank_names"], {"1": {"name": b1, "channels": channels1},
-                                           "2": {"name": b2, "channels": channels2},
-                                           "3": {"name": b3, "channels": channels3},
-                                           "4": {"name": b4, "channels": channels4}})
-
+            self.set_plan(
+                ["bank_names"], {
+                    "1": {
+                        "name": b1,
+                        "channels": channels1
+                    },
+                    "2": {
+                        "name": b2,
+                        "channels": channels2
+                    },
+                    "3": {
+                        "name": b3,
+                        "channels": channels3
+                    },
+                    "4": {
+                        "name": b4,
+                        "channels": channels4
+                    }
+                })
 
     @state
     def _initial(self, e):
