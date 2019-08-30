@@ -372,24 +372,48 @@ tcltest::test tzb.sn_set {
 
 ############################ prs.in.raw? #############################
 
-set command "prs.in.raw?"
-set description "Query raw inlet pressure readings"
 
-# We'll check the return value and compare it against a range.  Return
-# 0 if things are ok.
-set ok_result 0
-
-set channel_list "1 2 3 4"
-foreach inlet_channel $channel_list {
-    tcltest::test "[string tolower $command] $inlet_channel" "$description" -body {
-	boxer::sendcmd $channel "[string tolower $command] $inlet_channel"
+set inlet_channel_list "1 2 3 4 5 6 7 8"
+foreach pressure_channel $inlet_channel_list {
+    tcltest::test prs.in_raw_$pressure_channel {
+	Test querying the raw inlet pressure values.
+    } -setup {
+	set garbage_string [boxer::readline $channel]
+    } -body {
+	boxer::sendcmd $channel "prs.in.raw? $pressure_channel"
 	set return_string [boxer::readline $channel]
 	if {$return_string > 13319000 && $return_string < 16279000} {
 	    return 0
 	} else {
 	    return -1
 	}
-    } -match regexp -result $ok_result
+	return $return_string
+    } -cleanup {
+	
+    } -match regexp -result 0
+}
+
+
+############################ prs.out.raw? ############################
+
+set outlet_channel_list "1 2"
+foreach pressure_channel $outlet_channel_list {
+    tcltest::test prs.in_raw_$pressure_channel {
+	Test querying the raw outlet pressure values.
+    } -setup {
+	set garbage_string [boxer::readline $channel]
+    } -body {
+	boxer::sendcmd $channel "prs.out.raw? $pressure_channel"
+	set return_string [boxer::readline $channel]
+	if {$return_string > 13319000 && $return_string < 16279000} {
+	    return 0
+	} else {
+	    return -1
+	}
+	return $return_string
+    } -cleanup {
+	
+    } -match regexp -result 0
 }
 
 ############################ chx.byp.dac #############################
@@ -398,7 +422,8 @@ foreach inlet_channel $channel_list {
 set ok_result 0
 set dac_setting 100
 
-foreach inlet_channel $channel_list {
+
+foreach inlet_channel $inlet_channel_list {
     set command "ch${inlet_channel}.byp.dac"
     set description "Set proportional valve bypass DAC for channel $inlet_channel"
     tcltest::test "[string tolower $command] $dac_setting" "$description" -body {
@@ -418,7 +443,7 @@ boxer::sendcmd $channel "chanset 0"
 # Read the result to clear the input queue
 set return_string [boxer::readline $channel]
 
-foreach inlet_channel $channel_list {
+foreach inlet_channel $inlet_channel_list {
     set command "byp.dac? $inlet_channel"
     set description "Query proportional valve bypass DAC for channel $inlet_channel"
     tcltest::test "[string tolower $command]" "$description" -body {

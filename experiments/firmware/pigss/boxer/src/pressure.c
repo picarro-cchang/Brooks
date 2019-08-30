@@ -117,22 +117,22 @@ int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   case 5 :
     cs_ne_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
-    pressure_dac_counts[3] = counts;
+    pressure_dac_counts[4] = counts;
     break;  
   case 6 :
     cs_se_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
-    pressure_dac_counts[3] = counts;
+    pressure_dac_counts[5] = counts;
     break;  
   case 7 :
     cs_nw_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
-    pressure_dac_counts[3] = counts;
+    pressure_dac_counts[6] = counts;
     break;  
   case 8 :
     cs_sw_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
-    pressure_dac_counts[3] = counts;
+    pressure_dac_counts[7] = counts;
     break;  
   }
   return 0;
